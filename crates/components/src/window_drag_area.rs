@@ -1,8 +1,5 @@
 use dioxus::prelude::*;
-use freya_elements::{
-    elements as dioxus_elements,
-    events::MouseEvent,
-};
+use freya_elements::{elements as dioxus_elements, events::MouseEvent};
 use freya_hooks::use_platform;
 use winit::event::MouseButton;
 

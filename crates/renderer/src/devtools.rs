@@ -1,13 +1,6 @@
-use freya_core::prelude::{
-    get_node_state,
-    FreyaDOM,
-    NodeState,
-};
+use freya_core::prelude::{get_node_state, FreyaDOM, NodeState};
 use freya_native_core::{
-    prelude::{
-        NodeId,
-        NodeImmutable,
-    },
+    prelude::{NodeId, NodeImmutable},
     tags::TagName,
 };
 use tokio::sync::watch;

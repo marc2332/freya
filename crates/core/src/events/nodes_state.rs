@@ -4,15 +4,8 @@ use freya_native_core::NodeId;
 use rustc_hash::FxHashMap;
 
 use crate::{
-    events::{
-        DomEvent,
-        PlatformEvent,
-    },
-    prelude::{
-        EventName,
-        PotentialEvent,
-        PotentialEvents,
-    },
+    events::{DomEvent, PlatformEvent},
+    prelude::{EventName, PotentialEvent, PotentialEvents},
 };
 
 #[derive(Clone)]

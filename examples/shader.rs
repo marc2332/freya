@@ -3,19 +3,10 @@
     windows_subsystem = "windows"
 )]
 
-use std::{
-    sync::Arc,
-    time::Instant,
-};
+use std::{sync::Arc, time::Instant};
 
 use freya::prelude::*;
-use skia_safe::{
-    Color,
-    Data,
-    Paint,
-    Rect,
-    RuntimeEffect,
-};
+use skia_safe::{Color, Data, Paint, Rect, RuntimeEffect};
 
 fn main() {
     launch(app);

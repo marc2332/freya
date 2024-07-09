@@ -3,27 +3,14 @@ use freya_native_core::{
     exports::shipyard::Component,
     node::OwnedAttributeValue,
     node_ref::NodeView,
-    prelude::{
-        AttributeMaskBuilder,
-        Dependancy,
-        NodeMaskBuilder,
-        State,
-    },
+    prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
     SendAnyMap,
 };
 use freya_native_core_macro::partial_derive_state;
 
 use crate::{
-    parsing::ExtSplit,
-    AttributesBytes,
-    Border,
-    BorderAlignment,
-    CornerRadius,
-    CustomAttributeValues,
-    Fill,
-    OverflowMode,
-    Parse,
-    Shadow,
+    parsing::ExtSplit, AttributesBytes, Border, BorderAlignment, CornerRadius,
+    CustomAttributeValues, Fill, OverflowMode, Parse, Shadow,
 };
 
 #[derive(Default, Debug, Clone, PartialEq, Component)]

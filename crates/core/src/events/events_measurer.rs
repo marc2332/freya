@@ -1,21 +1,9 @@
 use freya_engine::prelude::*;
-use freya_native_core::{
-    real_dom::NodeImmutable,
-    tree::TreeRef,
-    NodeId,
-};
-use freya_node_state::{
-    Fill,
-    StyleState,
-    ViewportState,
-};
+use freya_native_core::{real_dom::NodeImmutable, tree::TreeRef, NodeId};
+use freya_node_state::{Fill, StyleState, ViewportState};
 use itertools::sorted;
 
-pub use crate::events::{
-    DomEvent,
-    NodesState,
-    PlatformEvent,
-};
+pub use crate::events::{DomEvent, NodesState, PlatformEvent};
 use crate::prelude::*;
 
 /// Process the events and emit them to the VirtualDOM

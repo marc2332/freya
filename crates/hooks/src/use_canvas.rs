@@ -1,20 +1,9 @@
 use std::sync::Arc;
 
 use dioxus_core::AttributeValue;
-use dioxus_hooks::{
-    use_memo,
-    use_reactive,
-    Dependency,
-};
-use dioxus_signals::{
-    Memo,
-    Readable,
-};
-use freya_node_state::{
-    CanvasReference,
-    CanvasRunner,
-    CustomAttributeValues,
-};
+use dioxus_hooks::{use_memo, use_reactive, Dependency};
+use dioxus_signals::{Memo, Readable};
+use freya_node_state::{CanvasReference, CanvasRunner, CustomAttributeValues};
 
 /// Holds a rendering hook callback that allows to render to the Canvas.
 #[derive(PartialEq, Clone)]

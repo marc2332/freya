@@ -2,21 +2,13 @@ pub use accesskit::NodeId as AccessibilityId;
 use rustc_hash::FxHashMap;
 use smallvec::SmallVec;
 use tokio::sync::{
-    mpsc::{
-        UnboundedReceiver,
-        UnboundedSender,
-    },
+    mpsc::{UnboundedReceiver, UnboundedSender},
     watch,
 };
 
 use crate::{
     events::DomEvent,
-    prelude::{
-        EventName,
-        NativePlatformState,
-        PlatformEvent,
-        PotentialEvent,
-    },
+    prelude::{EventName, NativePlatformState, PlatformEvent, PotentialEvent},
 };
 
 /// Send platform updates from the platform

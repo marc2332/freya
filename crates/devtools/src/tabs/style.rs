@@ -1,20 +1,13 @@
 use dioxus::prelude::*;
 use freya_components::*;
 use freya_core::prelude::*;
-use freya_hooks::{
-    theme_with,
-    ScrollViewThemeWith,
-};
+use freya_hooks::{theme_with, ScrollViewThemeWith};
 use freya_native_core::NodeId;
 
 use crate::{
     hooks::use_node_info,
     property::{
-        BorderProperty,
-        ColorProperty,
-        LinearGradientProperty,
-        Property,
-        ShadowProperty,
+        BorderProperty, ColorProperty, GradientProperty, Property, ShadowProperty,
         TextShadowProperty,
     },
     NodeIdSerializer,
@@ -82,9 +75,9 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
                             }
                         }
                     }
-                    AttributeType::LinearGradient(fill) => {
+                    AttributeType::LinearGradient(fill) | AttributeType::RadialGradient(fill) | AttributeType::ConicGradient(fill) => {
                         rsx!{
-                            LinearGradientProperty {
+                            GradientProperty {
                                 key: "{i}",
                                 name: "{name}",
                                 fill: fill.clone()

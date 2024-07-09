@@ -110,10 +110,7 @@ impl EditorHistory {
 mod test {
     use ropey::Rope;
 
-    use super::{
-        EditorHistory,
-        HistoryChange,
-    };
+    use super::{EditorHistory, HistoryChange};
 
     #[test]
     fn test() {

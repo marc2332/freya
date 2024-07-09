@@ -1,50 +1,23 @@
-use std::{
-    fs::File,
-    io::Write,
-    path::PathBuf,
-    sync::Arc,
-    time::Duration,
-};
+use std::{fs::File, io::Write, path::PathBuf, sync::Arc, time::Duration};
 
 use dioxus_core::VirtualDom;
-use freya_common::{
-    EventMessage,
-    TextGroupMeasurement,
-};
+use freya_common::{EventMessage, TextGroupMeasurement};
 use freya_core::prelude::*;
 use freya_engine::prelude::{
-    raster_n32_premul,
-    Color,
-    EncodedImageFormat,
-    FontCollection,
-    FontMgr,
+    raster_n32_premul, Color, EncodedImageFormat, FontCollection, FontMgr,
 };
 use freya_native_core::dioxus::NodeImmutableDioxusExt;
 use tokio::{
     sync::{
         broadcast,
-        mpsc::{
-            UnboundedReceiver,
-            UnboundedSender,
-        },
+        mpsc::{UnboundedReceiver, UnboundedSender},
     },
-    time::{
-        interval,
-        timeout,
-    },
+    time::{interval, timeout},
 };
-use torin::geometry::{
-    Area,
-    Size2D,
-};
+use torin::geometry::{Area, Size2D};
 use winit::window::CursorIcon;
 
-use crate::{
-    config::TestingConfig,
-    test_node::TestNode,
-    test_utils::TestUtils,
-    SCALE_FACTOR,
-};
+use crate::{config::TestingConfig, test_node::TestNode, test_utils::TestUtils, SCALE_FACTOR};
 
 /// Manages the lifecycle of your tests.
 pub struct TestingHandler {

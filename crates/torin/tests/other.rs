@@ -1,9 +1,6 @@
 use rustc_hash::FxHashSet;
 #[cfg(test)]
-use torin::{
-    prelude::*,
-    test_utils::*,
-};
+use torin::{prelude::*, test_utils::*};
 
 #[test]
 pub fn caching() {

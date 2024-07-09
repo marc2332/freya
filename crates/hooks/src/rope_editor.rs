@@ -1,19 +1,10 @@
-use std::{
-    cmp::Ordering,
-    fmt::Display,
-    ops::Range,
-};
+use std::{cmp::Ordering, fmt::Display, ops::Range};
 
 use dioxus_sdk::clipboard::UseClipboard;
 use ropey::iter::Lines;
 pub use ropey::Rope;
 
-use crate::{
-    text_editor::*,
-    EditableMode,
-    EditorHistory,
-    HistoryChange,
-};
+use crate::{text_editor::*, EditableMode, EditorHistory, HistoryChange};
 
 /// TextEditor implementing a Rope
 pub struct RopeEditor {

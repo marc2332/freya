@@ -1,58 +1,30 @@
-use std::{
-    ffi::CString,
-    mem,
-    num::NonZeroU32,
-};
+use std::{ffi::CString, mem, num::NonZeroU32};
 
 use dioxus_core::VirtualDom;
 use freya_common::EventMessage;
 use freya_core::dom::SafeDOM;
 use freya_engine::prelude::*;
-use gl::{
-    types::*,
-    *,
-};
+use gl::{types::*, *};
 use glutin::{
-    config::{
-        ConfigTemplateBuilder,
-        GlConfig,
-    },
+    config::{ConfigTemplateBuilder, GlConfig},
     context::{
-        ContextApi,
-        ContextAttributesBuilder,
-        GlProfile,
-        NotCurrentGlContext,
+        ContextApi, ContextAttributesBuilder, GlProfile, NotCurrentGlContext,
         PossiblyCurrentContext,
     },
-    display::{
-        GetGlDisplay,
-        GlDisplay,
-    },
+    display::{GetGlDisplay, GlDisplay},
     surface::{
-        GlSurface,
-        Surface as GlutinSurface,
-        SurfaceAttributesBuilder,
-        SwapInterval,
-        WindowSurface,
+        GlSurface, Surface as GlutinSurface, SurfaceAttributesBuilder, SwapInterval, WindowSurface,
     },
 };
 use glutin_winit::DisplayBuilder;
 use winit::{
     dpi::LogicalSize,
-    event_loop::{
-        ActiveEventLoop,
-        EventLoopProxy,
-    },
+    event_loop::{ActiveEventLoop, EventLoopProxy},
     raw_window_handle::HasWindowHandle,
     window::Window,
 };
 
-use crate::{
-    app::Application,
-    config::WindowConfig,
-    devtools::Devtools,
-    LaunchConfig,
-};
+use crate::{app::Application, config::WindowConfig, devtools::Devtools, LaunchConfig};
 
 pub struct NotCreatedState<'a, State: Clone + 'static> {
     pub(crate) sdom: SafeDOM,

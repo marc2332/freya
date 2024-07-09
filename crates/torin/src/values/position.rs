@@ -1,11 +1,7 @@
 use std::ops::Deref;
 
 use crate::{
-    prelude::{
-        Area,
-        Point2D,
-        Size2D,
-    },
+    prelude::{Area, Point2D, Size2D},
     scaled::Scaled,
 };
 

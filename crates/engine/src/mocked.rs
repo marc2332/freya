@@ -1328,11 +1328,7 @@ pub enum BlurStyle {
 }
 
 pub mod svg {
-    use super::{
-        Canvas,
-        FontMgr,
-        Size,
-    };
+    use super::{Canvas, FontMgr, Size};
 
     pub struct Dom;
 
@@ -1400,10 +1396,7 @@ pub enum ColorType {
 
 pub struct SurfaceProps;
 
-use std::ops::{
-    Deref,
-    DerefMut,
-};
+use std::ops::{Deref, DerefMut};
 
 pub struct RecordingContext;
 
@@ -1419,11 +1412,7 @@ pub enum SurfaceOrigin {
 pub struct ContextOptions;
 
 pub mod direct_contexts {
-    use super::{
-        ContextOptions,
-        DirectContext,
-        Interface,
-    };
+    use super::{ContextOptions, DirectContext, Interface};
     pub fn make_gl<'a>(
         _interface: impl Into<Option<Interface>>,
         _options: impl Into<Option<&'a ContextOptions>>,

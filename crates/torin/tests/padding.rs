@@ -1,7 +1,4 @@
-use torin::{
-    prelude::*,
-    test_utils::*,
-};
+use torin::{prelude::*, test_utils::*};
 
 #[test]
 pub fn padding() {

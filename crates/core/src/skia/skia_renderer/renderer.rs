@@ -1,31 +1,16 @@
 use freya_engine::prelude::*;
 use freya_native_core::{
-    node::NodeType,
-    prelude::ElementNode,
-    real_dom::NodeImmutable,
-    tags::TagName,
-    NodeId,
+    node::NodeType, prelude::ElementNode, real_dom::NodeImmutable, tags::TagName, NodeId,
 };
-use freya_node_state::{
-    StyleState,
-    TransformState,
-    ViewportState,
-};
+use freya_node_state::{StyleState, TransformState, ViewportState};
 use torin::{
     geometry::Area,
-    prelude::{
-        LayoutNode,
-        Torin,
-    },
+    prelude::{LayoutNode, Torin},
 };
 
 use super::{
-    image::render_image,
-    label::render_label,
-    paragraph::render_paragraph,
-    rect::render_rect,
-    svg::render_svg,
-    wireframe,
+    image::render_image, label::render_label, paragraph::render_paragraph, rect::render_rect,
+    svg::render_svg, wireframe,
 };
 use crate::dom::DioxusNode;
 

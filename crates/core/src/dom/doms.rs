@@ -1,38 +1,15 @@
-use std::sync::{
-    Arc,
-    Mutex,
-    MutexGuard,
-};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 use dioxus_core::VirtualDom;
-use freya_common::{
-    Layers,
-    ParagraphElements,
-    TextGroupMeasurement,
-};
+use freya_common::{Layers, ParagraphElements, TextGroupMeasurement};
 use freya_native_core::{
-    prelude::{
-        DioxusState,
-        State,
-    },
-    real_dom::{
-        NodeRef,
-        RealDom,
-    },
-    NodeId,
-    SendAnyMap,
+    prelude::{DioxusState, State},
+    real_dom::{NodeRef, RealDom},
+    NodeId, SendAnyMap,
 };
 use freya_node_state::{
-    AccessibilityNodeState,
-    CursorState,
-    CustomAttributeValues,
-    FontStyleState,
-    LayerState,
-    LayoutState,
-    ReferencesState,
-    StyleState,
-    TransformState,
-    ViewportState,
+    AccessibilityNodeState, CursorState, CustomAttributeValues, FontStyleState, LayerState,
+    LayoutState, ReferencesState, StyleState, TransformState, ViewportState,
 };
 use torin::prelude::*;
 use tracing::info;

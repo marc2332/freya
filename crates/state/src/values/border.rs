@@ -2,10 +2,7 @@ use std::fmt;
 
 use torin::scaled::Scaled;
 
-use crate::{
-    Fill,
-    Parse,
-};
+use crate::{Fill, Parse};
 
 #[derive(Default, Clone, Copy, Debug, PartialEq)]
 pub enum BorderStyle {

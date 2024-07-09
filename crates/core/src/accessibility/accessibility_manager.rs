@@ -1,25 +1,10 @@
-use std::sync::{
-    Arc,
-    Mutex,
-};
+use std::sync::{Arc, Mutex};
 
-use accesskit::{
-    Action,
-    DefaultActionVerb,
-    Node,
-    NodeBuilder,
-    Rect,
-    Role,
-    Tree,
-    TreeUpdate,
-};
+use accesskit::{Action, DefaultActionVerb, Node, NodeBuilder, Rect, Role, Tree, TreeUpdate};
 use freya_node_state::AccessibilityNodeState;
 use torin::prelude::LayoutNode;
 
-use crate::{
-    accessibility::*,
-    dom::DioxusNode,
-};
+use crate::{accessibility::*, dom::DioxusNode};
 
 pub type SharedAccessibilityManager = Arc<Mutex<AccessibilityManager>>;
 

@@ -1,24 +1,11 @@
-use dioxus_core::{
-    ElementId,
-    WriteMutations,
-};
-use freya_common::{
-    Layers,
-    ParagraphElements,
-};
+use dioxus_core::{ElementId, WriteMutations};
+use freya_common::{Layers, ParagraphElements};
 use freya_native_core::{
-    prelude::{
-        DioxusNativeCoreMutationWriter,
-        NodeImmutable,
-    },
+    prelude::{DioxusNativeCoreMutationWriter, NodeImmutable},
     tree::TreeRef,
     NodeId,
 };
-use freya_node_state::{
-    CursorState,
-    CustomAttributeValues,
-    LayerState,
-};
+use freya_node_state::{CursorState, CustomAttributeValues, LayerState};
 use torin::torin::Torin;
 
 use crate::prelude::DioxusDOMAdapter;

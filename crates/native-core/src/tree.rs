@@ -2,13 +2,7 @@
 
 use std::fmt::Debug;
 
-use shipyard::{
-    Component,
-    EntitiesViewMut,
-    Get,
-    View,
-    ViewMut,
-};
+use shipyard::{Component, EntitiesViewMut, Get, View, ViewMut};
 
 use crate::NodeId;
 

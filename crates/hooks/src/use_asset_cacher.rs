@@ -1,30 +1,15 @@
 use std::{
-    collections::{
-        HashMap,
-        HashSet,
-    },
+    collections::{HashMap, HashSet},
     time::Duration,
 };
 
 use bytes::Bytes;
 use dioxus_core::{
-    prelude::{
-        current_scope_id,
-        spawn,
-        ScopeId,
-        Task,
-    },
+    prelude::{current_scope_id, spawn, ScopeId, Task},
     Runtime,
 };
-use dioxus_hooks::{
-    use_context,
-    use_context_provider,
-};
-use dioxus_signals::{
-    Readable,
-    Signal,
-    Writable,
-};
+use dioxus_hooks::{use_context, use_context_provider};
+use dioxus_signals::{Readable, Signal, Writable};
 use tokio::time::sleep;
 
 /// Defines the duration for which an Asset will remain cached after it's user has stopped using it.

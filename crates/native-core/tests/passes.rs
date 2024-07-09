@@ -1,13 +1,6 @@
-use freya_native_core::{
-    node::NodeType,
-    prelude::*,
-    tags::TagName,
-};
+use freya_native_core::{node::NodeType, prelude::*, tags::TagName};
 use freya_native_core_macro::partial_derive_state;
-use rustc_hash::{
-    FxHashMap,
-    FxHashSet,
-};
+use rustc_hash::{FxHashMap, FxHashSet};
 use shipyard::Component;
 
 fn create_blank_element() -> NodeType {

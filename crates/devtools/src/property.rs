@@ -1,11 +1,7 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_engine::prelude::*;
-use freya_node_state::{
-    Border,
-    Fill,
-    Shadow,
-};
+use freya_node_state::{Border, Fill, Shadow};
 
 #[allow(non_snake_case)]
 #[component]
@@ -41,7 +37,7 @@ pub fn Property(name: String, value: String) -> Element {
 
 #[allow(non_snake_case)]
 #[component]
-pub fn LinearGradientProperty(name: String, fill: Fill) -> Element {
+pub fn GradientProperty(name: String, fill: Fill) -> Element {
     rsx!(
         rect {
             padding: "5 10",

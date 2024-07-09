@@ -1,32 +1,14 @@
 use std::time::Duration;
 
-use dioxus_core::prelude::{
-    spawn,
-    use_hook,
-    Task,
-};
-use dioxus_hooks::{
-    use_memo,
-    use_reactive,
-    use_signal,
-    Dependency,
-};
-use dioxus_signals::{
-    Memo,
-    ReadOnlySignal,
-    Readable,
-    Signal,
-    Writable,
-};
+use dioxus_core::prelude::{spawn, use_hook, Task};
+use dioxus_hooks::{use_memo, use_reactive, use_signal, Dependency};
+use dioxus_signals::{Memo, ReadOnlySignal, Readable, Signal, Writable};
 use easer::functions::*;
 use freya_engine::prelude::Color;
 use freya_node_state::Parse;
 use tokio::time::Instant;
 
-use crate::{
-    use_platform,
-    UsePlatform,
-};
+use crate::{use_platform, UsePlatform};
 
 pub fn apply_value(
     origin: f32,

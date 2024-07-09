@@ -1,13 +1,7 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::{
-    use_animation,
-    use_applied_theme,
-    AnimNum,
-    Ease,
-    Function,
-    SnackBarTheme,
-    SnackBarThemeWith,
+    use_animation, use_applied_theme, AnimNum, Ease, Function, SnackBarTheme, SnackBarThemeWith,
 };
 
 /// `SnackBar` component. Use in combination with other components.

@@ -1,33 +1,16 @@
 use dioxus::prelude::*;
 use freya_elements::{
     elements as dioxus_elements,
-    events::{
-        keyboard::Key,
-        KeyboardEvent,
-        MouseEvent,
-        WheelEvent,
-    },
+    events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent},
 };
 use freya_hooks::{
-    use_applied_theme,
-    use_focus,
-    use_node,
-    ScrollBarThemeWith,
-    ScrollViewThemeWith,
+    use_applied_theme, use_focus, use_node, ScrollBarThemeWith, ScrollViewThemeWith,
 };
 
 use crate::{
-    get_container_size,
-    get_corrected_scroll_position,
-    get_scroll_position_from_cursor,
-    get_scroll_position_from_wheel,
-    get_scrollbar_pos_and_size,
-    is_scrollbar_visible,
-    manage_key_event,
-    Axis,
-    ScrollBar,
-    ScrollThumb,
-    SCROLL_SPEED_MULTIPLIER,
+    get_container_size, get_corrected_scroll_position, get_scroll_position_from_cursor,
+    get_scroll_position_from_wheel, get_scrollbar_pos_and_size, is_scrollbar_visible,
+    manage_key_event, Axis, ScrollBar, ScrollThumb, SCROLL_SPEED_MULTIPLIER,
 };
 
 /// Properties for the [`ScrollView`] component.

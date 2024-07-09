@@ -1,9 +1,4 @@
-use freya_native_core::{
-    prelude::NodeType,
-    real_dom::NodeImmutable,
-    tree::TreeRef,
-    NodeId,
-};
+use freya_native_core::{prelude::NodeType, real_dom::NodeImmutable, tree::TreeRef, NodeId};
 use freya_node_state::LayoutState;
 use rustc_hash::FxHashMap;
 use torin::prelude::*;

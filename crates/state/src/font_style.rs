@@ -1,31 +1,17 @@
-use std::sync::{
-    Arc,
-    Mutex,
-};
+use std::sync::{Arc, Mutex};
 
 use freya_engine::prelude::*;
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
     node_ref::NodeView,
-    prelude::{
-        AttributeMaskBuilder,
-        Dependancy,
-        NodeMaskBuilder,
-        State,
-    },
-    NodeId,
-    SendAnyMap,
+    prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
+    NodeId, SendAnyMap,
 };
 use freya_native_core_macro::partial_derive_state;
 use torin::torin::Torin;
 
-use crate::{
-    CustomAttributeValues,
-    ExtSplit,
-    Parse,
-    TextOverflow,
-};
+use crate::{CustomAttributeValues, ExtSplit, Parse, TextOverflow};
 
 #[derive(Debug, Clone, PartialEq, Component)]
 pub struct FontStyleState {

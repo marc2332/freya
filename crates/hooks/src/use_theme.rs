@@ -1,12 +1,6 @@
 use dioxus_core::prelude::try_consume_context;
-use dioxus_hooks::{
-    use_context,
-    use_context_provider,
-};
-use dioxus_signals::{
-    Readable,
-    Signal,
-};
+use dioxus_hooks::{use_context, use_context_provider};
+use dioxus_signals::{Readable, Signal};
 
 use crate::theming::*;
 

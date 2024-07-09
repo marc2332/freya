@@ -1,8 +1,5 @@
 use std::{
-    any::{
-        Any,
-        TypeId,
-    },
+    any::{Any, TypeId},
     collections::BTreeMap,
     marker::PhantomData,
     ops::Deref,
@@ -10,40 +7,15 @@ use std::{
 };
 
 use parking_lot::RwLock;
-use rustc_hash::{
-    FxHashMap,
-    FxHashSet,
-};
-use shipyard::{
-    Borrow,
-    BorrowInfo,
-    Component,
-    Unique,
-    UniqueView,
-    View,
-    WorkloadSystem,
-};
+use rustc_hash::{FxHashMap, FxHashSet};
+use shipyard::{Borrow, BorrowInfo, Component, Unique, UniqueView, View, WorkloadSystem};
 
 use crate::{
-    node::{
-        FromAnyValue,
-        NodeType,
-    },
-    node_ref::{
-        NodeMaskBuilder,
-        NodeView,
-    },
-    real_dom::{
-        DirtyNodesResult,
-        SendAnyMapWrapper,
-    },
-    tree::{
-        TreeRef,
-        TreeRefView,
-    },
-    NodeId,
-    NodeMask,
-    SendAnyMap,
+    node::{FromAnyValue, NodeType},
+    node_ref::{NodeMaskBuilder, NodeView},
+    real_dom::{DirtyNodesResult, SendAnyMapWrapper},
+    tree::{TreeRef, TreeRefView},
+    NodeId, NodeMask, SendAnyMap,
 };
 
 #[derive(Default)]

@@ -1,10 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{
-    use_applied_theme,
-    RadioTheme,
-    RadioThemeWith,
-};
+use freya_hooks::{use_applied_theme, RadioTheme, RadioThemeWith};
 
 /// Controlled `Radio` component.
 ///

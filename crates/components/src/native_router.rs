@@ -2,11 +2,7 @@ use dioxus::prelude::*;
 use dioxus_router::prelude::use_navigator;
 use freya_elements::{
     elements as dioxus_elements,
-    events::{
-        MouseButton,
-        PointerEvent,
-        PointerType,
-    },
+    events::{MouseButton, PointerEvent, PointerType},
 };
 
 /// Provides native functionalities for a dioxus-router.
@@ -38,16 +34,9 @@ pub fn NativeRouter(children: Element) -> Element {
 
 #[cfg(test)]
 mod test {
-    use dioxus_router::prelude::{
-        Outlet,
-        Routable,
-        Router,
-    };
+    use dioxus_router::prelude::{Outlet, Routable, Router};
     use freya::prelude::*;
-    use freya_core::events::{
-        EventName,
-        PlatformEvent,
-    };
+    use freya_core::events::{EventName, PlatformEvent};
     use freya_testing::prelude::*;
 
     #[tokio::test]

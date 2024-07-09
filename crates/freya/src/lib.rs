@@ -95,35 +95,19 @@ pub mod plugins;
 pub mod prelude {
     pub use dioxus_core::{
         prelude::*,
-        {
-            self,
-        },
+        {self},
     };
     pub use dioxus_core_macro::*;
     pub use dioxus_hooks::*;
-    pub use dioxus_hot_reload::{
-        self,
-        hot_reload_init,
-        Config,
-    };
+    pub use dioxus_hot_reload::{self, hot_reload_init, Config};
     pub use dioxus_signals::*;
     pub use freya_components::*;
     pub use freya_core::prelude::PreferredTheme;
-    pub use freya_elements::{
-        elements as dioxus_elements,
-        events::*,
-    };
+    pub use freya_elements::{elements as dioxus_elements, events::*};
     pub use freya_hooks::*;
-    pub use freya_node_state::{
-        dynamic_bytes,
-        static_bytes,
-        CustomAttributeValues,
-    };
+    pub use freya_node_state::{dynamic_bytes, static_bytes, CustomAttributeValues};
     pub use freya_renderer::*;
     pub use torin::prelude::*;
 
-    pub use crate::{
-        launch::*,
-        plugins::*,
-    };
+    pub use crate::{launch::*, plugins::*};
 }

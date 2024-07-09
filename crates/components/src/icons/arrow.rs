@@ -1,10 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{
-    use_applied_theme,
-    IconTheme,
-    IconThemeWith,
-};
+use freya_hooks::{use_applied_theme, IconTheme, IconThemeWith};
 
 /// Properties for the [`ArrowIcon`] component.
 #[derive(Props, Clone, PartialEq)]

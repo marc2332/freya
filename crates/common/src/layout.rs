@@ -1,10 +1,7 @@
 use std::ops::Div;
 
 use freya_engine::prelude::Paragraph;
-use torin::geometry::{
-    Area,
-    Size2D,
-};
+use torin::geometry::{Area, Size2D};
 
 /// Layout info of a certain Node, used by `use_node`.
 #[derive(Clone, Debug, Default, PartialEq)]

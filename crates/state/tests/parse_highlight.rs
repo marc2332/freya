@@ -1,7 +1,4 @@
-use freya_node_state::{
-    HighlightMode,
-    Parse,
-};
+use freya_node_state::{HighlightMode, Parse};
 
 #[test]
 fn parse_expanded_highlight_mode() {

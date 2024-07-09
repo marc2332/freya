@@ -1,16 +1,8 @@
 use std::path::PathBuf;
 
-use freya_elements::events::keyboard::{
-    Code,
-    Key,
-    Modifiers,
-};
+use freya_elements::events::keyboard::{Code, Key, Modifiers};
 use torin::prelude::*;
-use winit::event::{
-    Force,
-    MouseButton,
-    TouchPhase,
-};
+use winit::event::{Force, MouseButton, TouchPhase};
 
 use crate::prelude::EventName;
 

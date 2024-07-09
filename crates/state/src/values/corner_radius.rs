@@ -1,7 +1,4 @@
-use std::{
-    f32::consts::SQRT_2,
-    fmt,
-};
+use std::{f32::consts::SQRT_2, fmt};
 
 use freya_engine::prelude::*;
 use torin::scaled::Scaled;

@@ -2,64 +2,25 @@
 
 use std::{
     any::TypeId,
-    ops::{
-        Deref,
-        DerefMut,
-    },
+    ops::{Deref, DerefMut},
     sync::Arc,
 };
 
-use rustc_hash::{
-    FxHashMap,
-    FxHashSet,
-};
+use rustc_hash::{FxHashMap, FxHashSet};
 use shipyard::{
-    error::GetStorage,
-    track::Untracked,
-    Component,
-    Get,
-    IntoBorrow,
-    ScheduledWorkload,
-    SystemModificator,
-    Unique,
-    View,
-    ViewMut,
-    Workload,
-    World,
+    error::GetStorage, track::Untracked, Component, Get, IntoBorrow, ScheduledWorkload,
+    SystemModificator, Unique, View, ViewMut, Workload, World,
 };
 
 use crate::{
     events::EventName,
-    node::{
-        ElementNode,
-        FromAnyValue,
-        NodeType,
-        OwnedAttributeValue,
-    },
-    node_ref::{
-        NodeMask,
-        NodeMaskBuilder,
-    },
-    passes::{
-        Dependant,
-        DirtyNodeStates,
-        PassDirection,
-        TypeErasedState,
-    },
-    prelude::{
-        AttributeMaskBuilder,
-        AttributeName,
-    },
+    node::{ElementNode, FromAnyValue, NodeType, OwnedAttributeValue},
+    node_ref::{NodeMask, NodeMaskBuilder},
+    passes::{Dependant, DirtyNodeStates, PassDirection, TypeErasedState},
+    prelude::{AttributeMaskBuilder, AttributeName},
     tags::TagName,
-    tree::{
-        TreeMut,
-        TreeMutView,
-        TreeRef,
-        TreeRefView,
-    },
-    FxDashSet,
-    NodeId,
-    SendAnyMap,
+    tree::{TreeMut, TreeMutView, TreeRef, TreeRefView},
+    FxDashSet, NodeId, SendAnyMap,
 };
 
 /// The context passes can receive when they are executed

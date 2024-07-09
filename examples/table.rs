@@ -6,10 +6,7 @@
 use std::fmt::Display;
 
 use freya::prelude::*;
-use itertools::{
-    Either,
-    Itertools,
-};
+use itertools::{Either, Itertools};
 
 fn main() {
     launch(app);

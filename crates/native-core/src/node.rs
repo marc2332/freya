@@ -1,21 +1,11 @@
 //! Items related to Nodes in the RealDom
 
-use std::{
-    any::Any,
-    fmt::Debug,
-};
+use std::{any::Any, fmt::Debug};
 
-use rustc_hash::{
-    FxHashMap,
-    FxHashSet,
-};
+use rustc_hash::{FxHashMap, FxHashSet};
 use shipyard::Component;
 
-use crate::{
-    events::EventName,
-    prelude::AttributeName,
-    tags::TagName,
-};
+use crate::{events::EventName, prelude::AttributeName, tags::TagName};
 
 /// A element node in the RealDom
 #[derive(Debug, Clone)]

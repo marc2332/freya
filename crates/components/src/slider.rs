@@ -1,18 +1,9 @@
 use dioxus::prelude::*;
 use freya_elements::{
     elements as dioxus_elements,
-    events::{
-        MouseEvent,
-        WheelEvent,
-    },
+    events::{MouseEvent, WheelEvent},
 };
-use freya_hooks::{
-    use_applied_theme,
-    use_focus,
-    use_node,
-    use_platform,
-    SliderThemeWith,
-};
+use freya_hooks::{use_applied_theme, use_focus, use_node, use_platform, SliderThemeWith};
 use tracing::info;
 use winit::window::CursorIcon;
 

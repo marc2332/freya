@@ -1,7 +1,4 @@
-use std::{
-    any::Any,
-    hash::BuildHasherDefault,
-};
+use std::{any::Any, hash::BuildHasherDefault};
 
 use node_ref::NodeMask;
 use rustc_hash::FxHasher;
@@ -33,35 +30,14 @@ pub mod prelude {
         attributes::*,
         dioxus::*,
         events::*,
-        node::{
-            ElementNode,
-            FromAnyValue,
-            NodeType,
-            OwnedAttributeView,
-        },
-        node_ref::{
-            AttributeMaskBuilder,
-            NodeMaskBuilder,
-            NodeView,
-        },
+        node::{ElementNode, FromAnyValue, NodeType, OwnedAttributeView},
+        node_ref::{AttributeMaskBuilder, NodeMaskBuilder, NodeView},
         passes::{
-            run_pass,
-            Dependancy,
-            DependancyView,
-            Dependants,
-            PassDirection,
-            RunPassView,
-            State,
+            run_pass, Dependancy, DependancyView, Dependants, PassDirection, RunPassView, State,
             TypeErasedState,
         },
-        real_dom::{
-            NodeImmutable,
-            NodeMut,
-            NodeRef,
-            RealDom,
-        },
-        NodeId,
-        SendAnyMap,
+        real_dom::{NodeImmutable, NodeMut, NodeRef, RealDom},
+        NodeId, SendAnyMap,
     };
 }
 

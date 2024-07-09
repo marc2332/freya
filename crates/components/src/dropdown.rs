@@ -3,21 +3,11 @@ use std::fmt::Display;
 use dioxus::prelude::*;
 use freya_elements::{
     elements as dioxus_elements,
-    events::{
-        keyboard::Key,
-        KeyboardEvent,
-        MouseEvent,
-    },
+    events::{keyboard::Key, KeyboardEvent, MouseEvent},
 };
 use freya_hooks::{
-    theme_with,
-    use_applied_theme,
-    use_focus,
-    use_platform,
-    DropdownItemThemeWith,
-    DropdownTheme,
-    DropdownThemeWith,
-    IconThemeWith,
+    theme_with, use_applied_theme, use_focus, use_platform, DropdownItemThemeWith, DropdownTheme,
+    DropdownThemeWith, IconThemeWith,
 };
 use winit::window::CursorIcon;
 

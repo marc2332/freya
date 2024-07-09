@@ -1,17 +1,9 @@
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::{
-    BorderAlignment,
-    BorderStyle,
-    Fill,
-    ReferencesState,
-    ShadowPosition,
-    StyleState,
+    BorderAlignment, BorderStyle, Fill, ReferencesState, ShadowPosition, StyleState,
 };
-use torin::{
-    prelude::Area,
-    scaled::Scaled,
-};
+use torin::{prelude::Area, scaled::Scaled};
 
 use crate::dom::DioxusNode;
 
@@ -39,6 +31,12 @@ pub fn render_rect(
             paint.set_color(*color);
         }
         Fill::LinearGradient(gradient) => {
+            paint.set_shader(gradient.into_shader(area));
+        }
+        Fill::RadialGradient(gradient) => {
+            paint.set_shader(gradient.into_shader(area));
+        }
+        Fill::ConicGradient(gradient) => {
             paint.set_shader(gradient.into_shader(area));
         }
     }
@@ -80,6 +78,12 @@ pub fn render_rect(
                     shadow_paint.set_color(*color);
                 }
                 Fill::LinearGradient(gradient) => {
+                    shadow_paint.set_shader(gradient.into_shader(area));
+                }
+                Fill::RadialGradient(gradient) => {
+                    shadow_paint.set_shader(gradient.into_shader(area));
+                }
+                Fill::ConicGradient(gradient) => {
                     shadow_paint.set_shader(gradient.into_shader(area));
                 }
             }
@@ -156,6 +160,12 @@ pub fn render_rect(
                 border_paint.set_color(*color);
             }
             Fill::LinearGradient(gradient) => {
+                border_paint.set_shader(gradient.into_shader(area));
+            }
+            Fill::RadialGradient(gradient) => {
+                border_paint.set_shader(gradient.into_shader(area));
+            }
+            Fill::ConicGradient(gradient) => {
                 border_paint.set_shader(gradient.into_shader(area));
             }
         }

@@ -1,25 +1,14 @@
-use dioxus_core::{
-    fc_to_builder,
-    Element,
-    VirtualDom,
-};
+use dioxus_core::{fc_to_builder, Element, VirtualDom};
 use dioxus_core_macro::rsx;
 use freya_common::EventMessage;
 use freya_components::NativeContainer;
 use freya_core::prelude::*;
 use freya_engine::prelude::*;
-use tokio::sync::{
-    broadcast,
-    mpsc::unbounded_channel,
-    watch,
-};
+use tokio::sync::{broadcast, mpsc::unbounded_channel, watch};
 use winit::window::CursorIcon;
 
 use crate::{
-    config::TestingConfig,
-    test_handler::TestingHandler,
-    test_utils::TestUtils,
-    SCALE_FACTOR,
+    config::TestingConfig, test_handler::TestingHandler, test_utils::TestUtils, SCALE_FACTOR,
 };
 
 /// Run a Component in a headless testing environment.

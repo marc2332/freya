@@ -1,9 +1,6 @@
 use torin::{
     geometry::Length,
-    size::{
-        DynamicCalculation,
-        Size,
-    },
+    size::{DynamicCalculation, Size},
 };
 
 use crate::Parse;

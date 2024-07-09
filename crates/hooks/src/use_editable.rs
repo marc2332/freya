@@ -1,42 +1,17 @@
 use std::rc::Rc;
 
-use dioxus_core::{
-    prelude::spawn,
-    use_hook,
-    AttributeValue,
-};
+use dioxus_core::{prelude::spawn, use_hook, AttributeValue};
 use dioxus_sdk::clipboard::use_clipboard;
-use dioxus_signals::{
-    Readable,
-    Signal,
-    Writable,
-};
-use freya_common::{
-    CursorLayoutResponse,
-    EventMessage,
-    TextGroupMeasurement,
-};
-use freya_elements::events::{
-    Code,
-    KeyboardData,
-    MouseData,
-};
-use freya_node_state::{
-    CursorReference,
-    CustomAttributeValues,
-};
+use dioxus_signals::{Readable, Signal, Writable};
+use freya_common::{CursorLayoutResponse, EventMessage, TextGroupMeasurement};
+use freya_elements::events::{Code, KeyboardData, MouseData};
+use freya_node_state::{CursorReference, CustomAttributeValues};
 use tokio::sync::mpsc::unbounded_channel;
 use torin::geometry::CursorPoint;
 use uuid::Uuid;
 
 use crate::{
-    use_platform,
-    EditorHistory,
-    RopeEditor,
-    TextCursor,
-    TextEditor,
-    TextEvent,
-    UsePlatform,
+    use_platform, EditorHistory, RopeEditor, TextCursor, TextEditor, TextEvent, UsePlatform,
 };
 
 /// Events emitted to the [`UseEditable`].

@@ -3,16 +3,8 @@
     windows_subsystem = "windows"
 )]
 
-use freya::{
-    common::EventMessage,
-    prelude::*,
-};
-use skia_safe::{
-    Color,
-    Font,
-    FontStyle,
-    Paint,
-};
+use freya::{common::EventMessage, prelude::*};
+use skia_safe::{Color, Font, FontStyle, Paint};
 
 fn main() {
     launch(app);

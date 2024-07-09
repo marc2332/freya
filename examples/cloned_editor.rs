@@ -1,7 +1,4 @@
-use freya::{
-    events::MouseEvent,
-    prelude::*,
-};
+use freya::{events::MouseEvent, prelude::*};
 
 fn main() {
     launch_cfg(

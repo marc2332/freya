@@ -2,21 +2,13 @@ use accesskit_winit::Adapter;
 use freya_common::EventMessage;
 use freya_core::{
     prelude::{
-        AccessibilityFocusDirection,
-        AccessibilityManager,
-        SharedAccessibilityManager,
+        AccessibilityFocusDirection, AccessibilityManager, SharedAccessibilityManager,
         ACCESSIBILITY_ROOT_ID,
     },
-    types::{
-        AccessibilityId,
-        NativePlatformSender,
-    },
+    types::{AccessibilityId, NativePlatformSender},
 };
 use winit::{
-    dpi::{
-        LogicalPosition,
-        LogicalSize,
-    },
+    dpi::{LogicalPosition, LogicalSize},
     event::WindowEvent,
     event_loop::EventLoopProxy,
     window::Window,

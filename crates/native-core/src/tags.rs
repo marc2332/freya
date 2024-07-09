@@ -1,7 +1,4 @@
-use std::{
-    fmt::Display,
-    str::FromStr,
-};
+use std::{fmt::Display, str::FromStr};
 
 #[derive(Clone, Copy, PartialEq, Debug, Hash)]
 pub enum TagName {

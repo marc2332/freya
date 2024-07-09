@@ -1,16 +1,10 @@
 use dioxus::prelude::*;
 use freya_components::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{
-    theme_with,
-    ScrollViewThemeWith,
-};
+use freya_hooks::{theme_with, ScrollViewThemeWith};
 use freya_native_core::NodeId;
 
-use crate::{
-    hooks::use_node_info,
-    NodeIdSerializer,
-};
+use crate::{hooks::use_node_info, NodeIdSerializer};
 
 #[allow(non_snake_case)]
 #[component]

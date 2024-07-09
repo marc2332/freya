@@ -1,28 +1,16 @@
 use std::{
     any::Any,
-    fmt::{
-        Debug,
-        Display,
-    },
-    sync::{
-        Arc,
-        Mutex,
-    },
+    fmt::{Debug, Display},
+    sync::{Arc, Mutex},
 };
 
 use accesskit::NodeId as AccessibilityId;
 use bytes::Bytes;
 use dioxus_core::AttributeValue;
-use freya_common::{
-    CursorLayoutResponse,
-    NodeReferenceLayout,
-};
+use freya_common::{CursorLayoutResponse, NodeReferenceLayout};
 use freya_engine::prelude::*;
 use freya_native_core::node::FromAnyValue;
-use tokio::sync::{
-    mpsc::UnboundedSender,
-    watch,
-};
+use tokio::sync::{mpsc::UnboundedSender, watch};
 use torin::geometry::Area;
 use uuid::Uuid;
 

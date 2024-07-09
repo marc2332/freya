@@ -1,9 +1,6 @@
 pub use euclid::Rect;
 
-use crate::{
-    geometry::Length,
-    scaled::Scaled,
-};
+use crate::{geometry::Length, scaled::Scaled};
 
 #[derive(PartialEq, Clone, Debug, Default, Copy)]
 pub struct Gaps {

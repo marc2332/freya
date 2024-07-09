@@ -2,25 +2,12 @@
 
 use std::str::FromStr;
 
-use dioxus_core::{
-    AttributeValue,
-    ElementId,
-    TemplateNode,
-    WriteMutations,
-};
-use rustc_hash::{
-    FxHashMap,
-    FxHashSet,
-};
+use dioxus_core::{AttributeValue, ElementId, TemplateNode, WriteMutations};
+use rustc_hash::{FxHashMap, FxHashSet};
 use shipyard::Component;
 
 use crate::{
-    node::{
-        ElementNode,
-        FromAnyValue,
-        NodeType,
-        OwnedAttributeValue,
-    },
+    node::{ElementNode, FromAnyValue, NodeType, OwnedAttributeValue},
     prelude::*,
     real_dom::NodeTypeMut,
     tags::TagName,

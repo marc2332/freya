@@ -1,19 +1,11 @@
 pub mod accessibility_manager;
 pub use accessibility_manager::*;
-use freya_native_core::{
-    node::NodeType,
-    real_dom::NodeImmutable,
-    tags::TagName,
-    NodeId,
-};
+use freya_native_core::{node::NodeType, real_dom::NodeImmutable, tags::TagName, NodeId};
 use freya_node_state::AccessibilityNodeState;
 use torin::torin::Torin;
 
 use crate::{
-    dom::{
-        DioxusDOM,
-        DioxusNode,
-    },
+    dom::{DioxusDOM, DioxusNode},
     types::AccessibilityId,
 };
 

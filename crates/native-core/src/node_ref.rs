@@ -3,12 +3,7 @@
 use rustc_hash::FxHashSet;
 
 use crate::{
-    node::{
-        ElementNode,
-        FromAnyValue,
-        NodeType,
-        OwnedAttributeView,
-    },
+    node::{ElementNode, FromAnyValue, NodeType, OwnedAttributeView},
     prelude::AttributeName,
     tags::TagName,
     NodeId,

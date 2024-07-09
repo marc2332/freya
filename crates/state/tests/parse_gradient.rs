@@ -1,9 +1,5 @@
 use freya_engine::prelude::*;
-use freya_node_state::{
-    GradientStop,
-    LinearGradient,
-    Parse,
-};
+use freya_node_state::{GradientStop, LinearGradient, Parse};
 
 #[test]
 fn parse_basic_gradient() {
@@ -50,7 +46,7 @@ fn parse_gradient_angle() {
     assert_eq!(
         LinearGradient::parse("linear-gradient(45deg, red 0%, blue 100%)"),
         Ok(LinearGradient {
-            angle: f32::to_radians(45.0),
+            angle: 45.0,
             stops: vec![
                 GradientStop {
                     color: Color::from_rgb(255, 0, 0),

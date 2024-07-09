@@ -2,18 +2,14 @@ use std::fmt;
 
 use freya_engine::prelude::Color;
 
-use crate::{
-    DisplayColor,
-    LinearGradient,
-    Parse,
-};
+use crate::{ConicGradient, DisplayColor, LinearGradient, Parse, RadialGradient};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Fill {
     Color(Color),
     LinearGradient(LinearGradient),
-    // RadialGradient(RadialGradient),
-    // ConicGradient(ConicGradient),
+    RadialGradient(RadialGradient),
+    ConicGradient(ConicGradient),
 }
 
 impl Default for Fill {
@@ -37,6 +33,10 @@ impl Parse for Fill {
     fn parse(value: &str) -> Result<Self, Self::Err> {
         Ok(if value.starts_with("linear-gradient(") {
             Self::LinearGradient(LinearGradient::parse(value).map_err(|_| ParseFillError)?)
+        } else if value.starts_with("radial-gradient(") {
+            Self::RadialGradient(RadialGradient::parse(value).map_err(|_| ParseFillError)?)
+        } else if value.starts_with("conic-gradient(") {
+            Self::ConicGradient(ConicGradient::parse(value).map_err(|_| ParseFillError)?)
         } else {
             Self::Color(Color::parse(value).map_err(|_| ParseFillError)?)
         })
@@ -48,6 +48,8 @@ impl fmt::Display for Fill {
         match self {
             Self::Color(color) => color.fmt_rgb(f),
             Self::LinearGradient(gradient) => gradient.fmt(f),
+            Self::RadialGradient(gradient) => gradient.fmt(f),
+            Self::ConicGradient(gradient) => gradient.fmt(f),
         }
     }
 }

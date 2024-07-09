@@ -1,33 +1,11 @@
-use std::sync::{
-    Arc,
-    Mutex,
-};
+use std::sync::{Arc, Mutex};
 
-use dioxus_core::{
-    prelude::spawn,
-    use_hook,
-    AttributeValue,
-};
+use dioxus_core::{prelude::spawn, use_hook, AttributeValue};
 use dioxus_hooks::use_signal;
-use dioxus_signals::{
-    Signal,
-    Writable,
-};
-use freya_node_state::{
-    CustomAttributeValues,
-    ImageReference,
-};
-pub use nokhwa::utils::{
-    CameraIndex,
-    RequestedFormatType,
-    Resolution,
-};
-use nokhwa::{
-    pixel_format::RgbFormat,
-    utils::RequestedFormat,
-    Camera,
-    NokhwaError,
-};
+use dioxus_signals::{Signal, Writable};
+use freya_node_state::{CustomAttributeValues, ImageReference};
+pub use nokhwa::utils::{CameraIndex, RequestedFormatType, Resolution};
+use nokhwa::{pixel_format::RgbFormat, utils::RequestedFormat, Camera, NokhwaError};
 
 use crate::use_platform;
 

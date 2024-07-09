@@ -1,25 +1,9 @@
-use std::time::{
-    Duration,
-    Instant,
-};
+use std::time::{Duration, Instant};
 
-use freya_core::plugins::{
-    FreyaPlugin,
-    PluginEvent,
-};
+use freya_core::plugins::{FreyaPlugin, PluginEvent};
 use freya_engine::prelude::{
-    Color,
-    FontStyle,
-    Paint,
-    PaintStyle,
-    ParagraphBuilder,
-    ParagraphStyle,
-    Rect,
-    Slant,
-    TextShadow,
-    TextStyle,
-    Weight,
-    Width,
+    Color, FontStyle, Paint, PaintStyle, ParagraphBuilder, ParagraphStyle, Rect, Slant, TextShadow,
+    TextStyle, Weight, Width,
 };
 
 #[derive(Default)]

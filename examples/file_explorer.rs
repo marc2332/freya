@@ -3,10 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use std::path::{
-    Path,
-    PathBuf,
-};
+use std::path::{Path, PathBuf};
 
 use freya::prelude::*;
 use home::home_dir;

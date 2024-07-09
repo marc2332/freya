@@ -3,11 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus_router::prelude::{
-    Outlet,
-    Routable,
-    Router,
-};
+use dioxus_router::prelude::{Outlet, Routable, Router};
 use freya::prelude::*;
 
 fn main() {

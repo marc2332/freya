@@ -1,36 +1,15 @@
 use std::sync::Arc;
 
-use freya_common::{
-    CachedParagraph,
-    NodeReferenceLayout,
-};
+use freya_common::{CachedParagraph, NodeReferenceLayout};
 use freya_engine::prelude::*;
 use freya_native_core::{
-    prelude::{
-        ElementNode,
-        NodeType,
-        SendAnyMap,
-    },
+    prelude::{ElementNode, NodeType, SendAnyMap},
     real_dom::NodeImmutable,
     tags::TagName,
     NodeId,
 };
-use freya_node_state::{
-    CursorState,
-    FontStyleState,
-    HighlightMode,
-    LayoutState,
-    TextOverflow,
-};
-use torin::prelude::{
-    Alignment,
-    Area,
-    LayoutMeasurer,
-    LayoutNode,
-    Node,
-    Point2D,
-    Size2D,
-};
+use freya_node_state::{CursorState, FontStyleState, HighlightMode, LayoutState, TextOverflow};
+use torin::prelude::{Alignment, Area, LayoutMeasurer, LayoutNode, Node, Point2D, Size2D};
 
 use crate::dom::*;
 

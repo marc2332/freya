@@ -1,24 +1,10 @@
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::{
-    Border,
-    CornerRadius,
-    CursorState,
-    Fill,
-    FontStyleState,
-    LayoutState,
-    ReferencesState,
-    Shadow,
-    StyleState,
-    TextOverflow,
-    TransformState,
+    Border, CornerRadius, CursorState, Fill, FontStyleState, LayoutState, ReferencesState, Shadow,
+    StyleState, TextOverflow, TransformState,
 };
-use torin::{
-    alignment::Alignment,
-    direction::DirectionMode,
-    gaps::Gaps,
-    size::Size,
-};
+use torin::{alignment::Alignment, direction::DirectionMode, gaps::Gaps, size::Size};
 
 use crate::dom::DioxusNode;
 
@@ -129,6 +115,8 @@ impl<'a> Iterator for NodeStateIterator<'a> {
                 let fill = match *background {
                     Fill::Color(_) => AttributeType::Color(background.clone()),
                     Fill::LinearGradient(_) => AttributeType::LinearGradient(background.clone()),
+                    Fill::RadialGradient(_) => AttributeType::RadialGradient(background.clone()),
+                    Fill::ConicGradient(_) => AttributeType::ConicGradient(background.clone()),
                 };
                 Some(("background", fill))
             }
@@ -198,6 +186,8 @@ impl<'a> Iterator for NodeStateIterator<'a> {
 pub enum AttributeType<'a> {
     Color(Fill),
     LinearGradient(Fill),
+    RadialGradient(Fill),
+    ConicGradient(Fill),
     Size(&'a Size),
     Measure(f32),
     Measures(Gaps),

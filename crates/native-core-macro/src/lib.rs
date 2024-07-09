@@ -3,17 +3,8 @@ extern crate proc_macro;
 use std::collections::HashSet;
 
 use proc_macro::TokenStream;
-use quote::{
-    format_ident,
-    quote,
-};
-use syn::{
-    parse_macro_input,
-    ItemImpl,
-    Type,
-    TypePath,
-    TypeTuple,
-};
+use quote::{format_ident, quote};
+use syn::{parse_macro_input, ItemImpl, Type, TypePath, TypeTuple};
 
 /// A helper attribute for deriving `State` for a struct.
 #[proc_macro_attribute]

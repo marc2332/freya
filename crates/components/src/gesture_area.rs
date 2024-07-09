@@ -1,15 +1,9 @@
-use std::{
-    collections::VecDeque,
-    time::Instant,
-};
+use std::{collections::VecDeque, time::Instant};
 
 use dioxus::prelude::*;
 use freya_elements::{
     elements as dioxus_elements,
-    events::{
-        touch::TouchPhase,
-        TouchEvent,
-    },
+    events::{touch::TouchPhase, TouchEvent},
 };
 use futures_util::StreamExt;
 
