@@ -146,7 +146,7 @@ impl ElementUtils for RectElement {
                     Fill::RadialGradient(gradient) => {
                         shadow_paint.set_shader(gradient.into_shader(area));
                     }
-                    Fill::RadialGradient(gradient) => {
+                    Fill::ConicGradient(gradient) => {
                         shadow_paint.set_shader(gradient.into_shader(area));
                     }
                 }

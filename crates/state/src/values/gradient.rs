@@ -99,13 +99,13 @@ impl Parse for LinearGradient {
         } else {
             gradient
                 .stops
-                .push(GradientStop::parse(angle_or_first_stop).map_err(|_| ParseError)?);
+                .push(GradientStop::parse(angle_or_first_stop)?);
         }
 
         for stop in split {
             gradient
                 .stops
-                .push(GradientStop::parse(stop).map_err(|_| ParseError)?);
+                .push(GradientStop::parse(stop)?);
         }
 
         Ok(gradient)
@@ -151,26 +151,21 @@ impl RadialGradient {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct ParseRadialGradientError;
-
 impl Parse for RadialGradient {
-    type Err = ParseRadialGradientError;
-
-    fn parse(value: &str) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, ParseError> {
         if !value.starts_with("radial-gradient(") || !value.ends_with(')') {
-            return Err(ParseRadialGradientError);
+            return Err(ParseError);
         }
 
         let mut gradient = RadialGradient::default();
         let mut value = value.replacen("radial-gradient(", "", 1);
 
-        value.remove(value.rfind(')').ok_or(ParseRadialGradientError)?);
+        value.remove(value.rfind(')').ok_or(ParseError)?);
 
         for stop in value.split_excluding_group(',', '(', ')') {
             gradient
                 .stops
-                .push(GradientStop::parse(stop).map_err(|_| ParseRadialGradientError)?);
+                .push(GradientStop::parse(stop)?);
         }
 
         Ok(gradient)
@@ -205,7 +200,7 @@ impl ConicGradient {
 
         let center = bounds.center();
 
-        let matrix = Matrix::rotate_deg_pivot(self.angle.unwrap_or(-90.0), (center.x, center.y));
+        let matrix = Matrix::rotate_deg_pivot(-90.0 + self.angle.unwrap_or(0.0), (center.x, center.y));
 
         Shader::sweep_gradient(
             (center.x, center.y),
@@ -219,25 +214,20 @@ impl ConicGradient {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct ParseConicGradientError;
-
 impl Parse for ConicGradient {
-    type Err = ParseConicGradientError;
-
-    fn parse(value: &str) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, ParseError> {
         if !value.starts_with("conic-gradient(") || !value.ends_with(')') {
-            return Err(ParseConicGradientError);
+            return Err(ParseError);
         }
 
         let mut gradient = ConicGradient::default();
         let mut value = value.replacen("conic-gradient(", "", 1);
 
-        value.remove(value.rfind(')').ok_or(ParseConicGradientError)?);
+        value.remove(value.rfind(')').ok_or(ParseError)?);
 
         let mut split = value.split_excluding_group(',', '(', ')');
 
-        let angle_or_first_stop = split.next().ok_or(ParseConicGradientError)?.trim();
+        let angle_or_first_stop = split.next().ok_or(ParseError)?.trim();
 
         if angle_or_first_stop.ends_with("deg") {
             if let Ok(angle) = angle_or_first_stop.replacen("deg", "", 1).parse::<f32>() {
@@ -245,7 +235,7 @@ impl Parse for ConicGradient {
             }
         } else {
             gradient.stops.push(
-                GradientStop::parse(angle_or_first_stop).map_err(|_| ParseConicGradientError)?,
+                GradientStop::parse(angle_or_first_stop).map_err(|_| ParseError)?,
             );
         }
 
@@ -268,8 +258,7 @@ impl Parse for ConicGradient {
                 }
             } else {
                 gradient.stops.push(
-                    GradientStop::parse(angles_or_second_stop)
-                        .map_err(|_| ParseConicGradientError)?,
+                    GradientStop::parse(angles_or_second_stop)?,
                 );
             }
         }
@@ -277,7 +266,7 @@ impl Parse for ConicGradient {
         for stop in split {
             gradient
                 .stops
-                .push(GradientStop::parse(stop).map_err(|_| ParseConicGradientError)?);
+                .push(GradientStop::parse(stop)?);
         }
 
         Ok(gradient)
