@@ -25,20 +25,20 @@ custom-tokio-rt = ["freya/custom-tokio-rt"]
 
 [workspace.dependencies]
 freya = { path = "crates/freya", version = "0.2" }
-freya-devtools = { path = "crates/devtools", version = "0.2" }
-freya-node-state = { path = "crates/state", version = "0.2" }
-freya-renderer = { path = "crates/renderer", version = "0.2" }
-freya-elements = { path = "crates/elements", version = "0.2" }
-freya-common = { path = "crates/common", version = "0.2" }
-freya-hooks = { path = "crates/hooks", version = "0.2" }
-freya-core = { path = "crates/core", version = "0.2" }
-freya-components = { path = "crates/components", version = "0.2" }
+freya-devtools = { path = "crates/devtools", version = "0.3" }
+freya-node-state = { path = "crates/state", version = "0.3" }
+freya-renderer = { path = "crates/renderer", version = "0.3" }
+freya-elements = { path = "crates/elements", version = "0.3" }
+freya-common = { path = "crates/common", version = "0.3" }
+freya-hooks = { path = "crates/hooks", version = "0.3" }
+freya-core = { path = "crates/core", version = "0.3" }
+freya-components = { path = "crates/components", version = "0.3" }
 freya-testing = { path = "crates/testing", version = "0.2" }
-freya-engine = { path = "crates/engine", version = "0.2" }
-torin = { path = "crates/torin", version = "0.2" }
+freya-engine = { path = "crates/engine", version = "0.3" }
+torin = { path = "crates/torin", version = "0.3" }
 
 freya-native-core-macro = { path = "crates/native-core-macro", version = "0.2" }
-freya-native-core = { path = "crates/native-core", version = "0.2" }
+freya-native-core = { path = "crates/native-core", version = "0.3" }
 
 dioxus = { version = "0.5", default-features = false, features = ["macro", "signals", "hooks"]}
 dioxus-rsx = { version = "0.5", features = ["hot_reload"] }
