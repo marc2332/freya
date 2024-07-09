@@ -48,6 +48,9 @@ impl ParseAttribute for StyleState {
         match attr.attribute {
             AttributeName::Background => {
                 if let Some(value) = attr.value.as_text() {
+                    if value == "none" {
+                        return Ok(());
+                    }
                     self.background = Fill::parse(value)?;
                 }
             }
