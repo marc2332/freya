@@ -18,7 +18,7 @@ pub struct ParagraphElement;
 
 impl ElementUtils for ParagraphElement {
     fn render(
-        self: Box<Self>,
+        self,
         layout_node: &torin::prelude::LayoutNode,
         node_ref: &DioxusNode,
         canvas: &Canvas,

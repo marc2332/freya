@@ -10,7 +10,7 @@ pub struct SvgElement;
 
 impl ElementUtils for SvgElement {
     fn render(
-        self: Box<Self>,
+        self,
         layout_node: &LayoutNode,
         node_ref: &DioxusNode,
         canvas: &Canvas,
