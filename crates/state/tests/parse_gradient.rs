@@ -1,5 +1,11 @@
 use freya_engine::prelude::*;
-use freya_node_state::{ConicGradient, GradientStop, LinearGradient, Parse, RadialGradient};
+use freya_node_state::{
+    ConicGradient,
+    GradientStop,
+    LinearGradient,
+    Parse,
+    RadialGradient,
+};
 
 #[test]
 fn parse_basic_linear_gradient() {
@@ -166,7 +172,8 @@ fn invalid_linear_gradients() {
     let missing_rparen = LinearGradient::parse("linear-gradient(red 0%, blue 100%");
     let missing_commas = LinearGradient::parse("linear-gradient(red 0% blue 100%)");
     let extra_commas = LinearGradient::parse("linear-gradient(red 0%, blue 100%,)");
-    let extra_stop_component = LinearGradient::parse("linear-gradient(red 0% something, blue 100%)");
+    let extra_stop_component =
+        LinearGradient::parse("linear-gradient(red 0% something, blue 100%)");
     let bad_angle_unit = LinearGradient::parse("linear-gradient(45ft, red 0%, blue 100%)");
     let bad_offset_unit = LinearGradient::parse("linear-gradient(45deg, red 0atm, blue 100kpa)");
     let missing_color = LinearGradient::parse("linear-gradient(45deg, 0%, blue 100%)");
@@ -193,7 +200,8 @@ fn invalid_radial_gradients() {
     let missing_rparen = RadialGradient::parse("radial-gradient(red 0%, blue 100%");
     let missing_commas = RadialGradient::parse("radial-gradient(red 0% blue 100%)");
     let extra_commas = RadialGradient::parse("radial-gradient(red 0%, blue 100%,)");
-    let extra_stop_component = RadialGradient::parse("radial-gradient(red 0% something, blue 100%)");
+    let extra_stop_component =
+        RadialGradient::parse("radial-gradient(red 0% something, blue 100%)");
     let bad_offset_unit = RadialGradient::parse("radial-gradient(red 0atm, blue 100kpa)");
     let missing_color = RadialGradient::parse("radial-gradient(0%, blue 100%)");
     let missing_offset = RadialGradient::parse("radial-gradient(red, blue 100%)");
@@ -221,7 +229,8 @@ fn invalid_conic_gradients() {
     let extra_stop_component = ConicGradient::parse("conic-gradient(red 0% something, blue 100%)");
     let bad_angle_unit = ConicGradient::parse("conic-gradient(45ft, red 0%, blue 100%)");
     let bad_offset_unit = ConicGradient::parse("conic-gradient(red 0atm, blue 100kpa)");
-    let bad_angles = ConicGradient::parse("conic-gradient(45deg, from 60rft to 90fft, red 0%, blue 100%)");
+    let bad_angles =
+        ConicGradient::parse("conic-gradient(45deg, from 60rft to 90fft, red 0%, blue 100%)");
     let missing_color = ConicGradient::parse("conic-gradient(0%, blue 100%)");
     let missing_offset = ConicGradient::parse("conic-gradient(red, blue 100%)");
 

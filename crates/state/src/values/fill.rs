@@ -7,8 +7,8 @@ use crate::{
     DisplayColor,
     LinearGradient,
     Parse,
-    RadialGradient,
     ParseError,
+    RadialGradient,
 };
 
 #[derive(Clone, Debug, PartialEq)]

@@ -103,9 +103,7 @@ impl Parse for LinearGradient {
         }
 
         for stop in split {
-            gradient
-                .stops
-                .push(GradientStop::parse(stop)?);
+            gradient.stops.push(GradientStop::parse(stop)?);
         }
 
         Ok(gradient)
@@ -163,9 +161,7 @@ impl Parse for RadialGradient {
         value.remove(value.rfind(')').ok_or(ParseError)?);
 
         for stop in value.split_excluding_group(',', '(', ')') {
-            gradient
-                .stops
-                .push(GradientStop::parse(stop)?);
+            gradient.stops.push(GradientStop::parse(stop)?);
         }
 
         Ok(gradient)
@@ -200,7 +196,8 @@ impl ConicGradient {
 
         let center = bounds.center();
 
-        let matrix = Matrix::rotate_deg_pivot(-90.0 + self.angle.unwrap_or(0.0), (center.x, center.y));
+        let matrix =
+            Matrix::rotate_deg_pivot(-90.0 + self.angle.unwrap_or(0.0), (center.x, center.y));
 
         Shader::sweep_gradient(
             (center.x, center.y),
@@ -234,9 +231,9 @@ impl Parse for ConicGradient {
                 gradient.angle = Some(angle);
             }
         } else {
-            gradient.stops.push(
-                GradientStop::parse(angle_or_first_stop).map_err(|_| ParseError)?,
-            );
+            gradient
+                .stops
+                .push(GradientStop::parse(angle_or_first_stop).map_err(|_| ParseError)?);
         }
 
         if let Some(angles_or_second_stop) = split.next().map(str::trim) {
@@ -257,16 +254,14 @@ impl Parse for ConicGradient {
                     gradient.angles = Some((start, end));
                 }
             } else {
-                gradient.stops.push(
-                    GradientStop::parse(angles_or_second_stop)?,
-                );
+                gradient
+                    .stops
+                    .push(GradientStop::parse(angles_or_second_stop)?);
             }
         }
 
         for stop in split {
-            gradient
-                .stops
-                .push(GradientStop::parse(stop)?);
+            gradient.stops.push(GradientStop::parse(stop)?);
         }
 
         Ok(gradient)
