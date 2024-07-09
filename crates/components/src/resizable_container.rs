@@ -436,7 +436,7 @@ mod test {
         // Horizontal but pushing two handles
         utils.push_event(PlatformEvent::Mouse {
             name: EventName::MouseDown,
-            cursor: (341.0, 300.0).into(),
+            cursor: (340.0, 300.0).into(),
             button: Some(MouseButton::Left),
         });
         utils.push_event(PlatformEvent::Mouse {
