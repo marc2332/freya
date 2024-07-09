@@ -1,8 +1,20 @@
 use dioxus::prelude::*;
-use freya_elements::{elements as dioxus_elements, events::KeyboardEvent};
-use freya_hooks::{theme_with, use_applied_theme, ButtonThemeWith, PopupTheme, PopupThemeWith};
+use freya_elements::{
+    elements as dioxus_elements,
+    events::KeyboardEvent,
+};
+use freya_hooks::{
+    theme_with,
+    use_applied_theme,
+    ButtonThemeWith,
+    PopupTheme,
+    PopupThemeWith,
+};
 
-use crate::{Button, CrossIcon};
+use crate::{
+    Button,
+    CrossIcon,
+};
 
 /// The background of the [`Popup`] component.
 #[allow(non_snake_case)]
@@ -165,7 +177,11 @@ pub fn PopupContent(children: Element) -> Element {
 mod test {
     use dioxus::prelude::use_signal;
     use freya::prelude::*;
-    use freya_elements::events::keyboard::{Code, Key, Modifiers};
+    use freya_elements::events::keyboard::{
+        Code,
+        Key,
+        Modifiers,
+    };
     use freya_testing::prelude::*;
 
     #[tokio::test]

@@ -1,7 +1,13 @@
 use dioxus::prelude::*;
 use freya_common::EventMessage;
-use freya_elements::{elements as dioxus_elements, events::KeyboardEvent};
-use freya_hooks::{use_init_native_platform, use_platform};
+use freya_elements::{
+    elements as dioxus_elements,
+    events::KeyboardEvent,
+};
+use freya_hooks::{
+    use_init_native_platform,
+    use_platform,
+};
 
 #[allow(non_snake_case)]
 #[component]

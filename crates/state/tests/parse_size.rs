@@ -1,7 +1,10 @@
 use freya_node_state::Parse;
 use torin::{
     geometry::Length,
-    size::{DynamicCalculation, Size},
+    size::{
+        DynamicCalculation,
+        Size,
+    },
 };
 
 #[test]

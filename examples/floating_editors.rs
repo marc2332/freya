@@ -3,7 +3,10 @@
     windows_subsystem = "windows"
 )]
 
-use freya::{events::MouseEvent, prelude::*};
+use freya::{
+    events::MouseEvent,
+    prelude::*,
+};
 
 fn main() {
     launch_with_props(app, "Floating Editors", (700., 600.))

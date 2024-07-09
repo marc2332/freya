@@ -1,32 +1,61 @@
-use std::{num::NonZeroU32, path::PathBuf};
+use std::{
+    num::NonZeroU32,
+    path::PathBuf,
+};
 
 use dioxus_core::VirtualDom;
 use freya_common::EventMessage;
 use freya_core::{
     accessibility::AccessibilityFocusDirection,
     dom::SafeDOM,
-    events::{EventName, PlatformEvent},
+    events::{
+        EventName,
+        PlatformEvent,
+    },
     prelude::NavigationMode,
 };
 use freya_elements::events::{
-    map_winit_key, map_winit_modifiers, map_winit_physical_key, Code, Key,
+    map_winit_key,
+    map_winit_modifiers,
+    map_winit_physical_key,
+    Code,
+    Key,
 };
-use glutin::prelude::{GlSurface, PossiblyCurrentGlContext};
+use glutin::prelude::{
+    GlSurface,
+    PossiblyCurrentGlContext,
+};
 use torin::geometry::CursorPoint;
 use winit::{
     application::ApplicationHandler,
     event::{
-        ElementState, Ime, KeyEvent, MouseButton, MouseScrollDelta, StartCause, Touch, TouchPhase,
+        ElementState,
+        Ime,
+        KeyEvent,
+        MouseButton,
+        MouseScrollDelta,
+        StartCause,
+        Touch,
+        TouchPhase,
         WindowEvent,
     },
-    event_loop::{EventLoop, EventLoopProxy},
+    event_loop::{
+        EventLoop,
+        EventLoopProxy,
+    },
     keyboard::ModifiersState,
 };
 
 use crate::{
     devtools::Devtools,
-    window_state::{create_surface, CreatedState, NotCreatedState, WindowState},
-    HoveredNode, LaunchConfig,
+    window_state::{
+        create_surface,
+        CreatedState,
+        NotCreatedState,
+        WindowState,
+    },
+    HoveredNode,
+    LaunchConfig,
 };
 
 const WHEEL_SPEED_MODIFIER: f32 = 53.0;

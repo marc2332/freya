@@ -1,9 +1,18 @@
 use std::borrow::Cow;
 
 use dioxus::prelude::*;
-use dioxus_router::prelude::{navigator, IntoRoutable};
-use freya_elements::{elements as dioxus_elements, events::MouseEvent};
-use freya_hooks::{use_applied_theme, LinkThemeWith};
+use dioxus_router::prelude::{
+    navigator,
+    IntoRoutable,
+};
+use freya_elements::{
+    elements as dioxus_elements,
+    events::MouseEvent,
+};
+use freya_hooks::{
+    use_applied_theme,
+    LinkThemeWith,
+};
 use winit::event::MouseButton;
 
 use crate::Tooltip;
@@ -183,7 +192,11 @@ pub fn Link(
 
 #[cfg(test)]
 mod test {
-    use dioxus_router::prelude::{Outlet, Routable, Router};
+    use dioxus_router::prelude::{
+        Outlet,
+        Routable,
+        Router,
+    };
     use freya::prelude::*;
     use freya_testing::prelude::*;
 

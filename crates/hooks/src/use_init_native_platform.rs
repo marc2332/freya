@@ -1,11 +1,22 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{
+    cell::RefCell,
+    rc::Rc,
+};
 
 use dioxus_core::{
-    prelude::{consume_context, provide_context, spawn},
+    prelude::{
+        consume_context,
+        provide_context,
+        spawn,
+    },
     use_hook,
 };
 use dioxus_hooks::use_context_provider;
-use dioxus_signals::{Readable, Signal, Writable};
+use dioxus_signals::{
+    Readable,
+    Signal,
+    Writable,
+};
 use freya_core::prelude::NativePlatformReceiver;
 
 use crate::use_init_asset_cacher;
@@ -86,7 +97,10 @@ pub fn use_init_native_platform() -> UsePlatformEvents {
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
-    use freya_core::{accessibility::ACCESSIBILITY_ROOT_ID, events::EventName};
+    use freya_core::{
+        accessibility::ACCESSIBILITY_ROOT_ID,
+        events::EventName,
+    };
     use freya_testing::prelude::*;
 
     #[tokio::test]

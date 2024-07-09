@@ -1,5 +1,8 @@
 use dioxus::prelude::*;
-use dioxus_router::prelude::{use_route, Routable};
+use dioxus_router::prelude::{
+    use_route,
+    Routable,
+};
 
 #[derive(Clone)]
 pub enum AnimatedRouterContext<R: Routable + PartialEq> {

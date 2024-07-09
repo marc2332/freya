@@ -1,7 +1,16 @@
-use std::{borrow::Cow, cmp::Ordering, fmt::Display, ops::Range};
+use std::{
+    borrow::Cow,
+    cmp::Ordering,
+    fmt::Display,
+    ops::Range,
+};
 
 use dioxus_sdk::clipboard::UseClipboard;
-use freya_elements::events::keyboard::{Code, Key, Modifiers};
+use freya_elements::events::keyboard::{
+    Code,
+    Key,
+    Modifiers,
+};
 
 /// Holds the position of a cursor in a text
 #[derive(Clone, Default, PartialEq, Debug)]

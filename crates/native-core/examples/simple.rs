@@ -1,5 +1,8 @@
 use freya_native_core::{
-    exports::shipyard::Component, node_ref::*, prelude::*, real_dom::NodeTypeMut,
+    exports::shipyard::Component,
+    node_ref::*,
+    prelude::*,
+    real_dom::NodeTypeMut,
 };
 use freya_native_core_macro::partial_derive_state;
 

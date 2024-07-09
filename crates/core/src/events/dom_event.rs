@@ -1,16 +1,28 @@
-use std::{any::Any, rc::Rc};
+use std::{
+    any::Any,
+    rc::Rc,
+};
 
 use freya_elements::{
     elements::PlatformEventData,
     events::{
-        pointer::PointerType, FileData, KeyboardData, MouseData, PointerData, TouchData, WheelData,
+        pointer::PointerType,
+        FileData,
+        KeyboardData,
+        MouseData,
+        PointerData,
+        TouchData,
+        WheelData,
     },
 };
 use freya_native_core::NodeId;
 use torin::prelude::*;
 
 use super::event_name::EventName;
-use crate::{events::PlatformEvent, prelude::PotentialEvent};
+use crate::{
+    events::PlatformEvent,
+    prelude::PotentialEvent,
+};
 
 /// Event emitted to the DOM.
 #[derive(Debug, Clone, PartialEq)]

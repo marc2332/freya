@@ -1,4 +1,8 @@
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::{
+    Arc,
+    Mutex,
+    MutexGuard,
+};
 
 use freya_native_core::NodeId;
 use rustc_hash::FxHashMap;

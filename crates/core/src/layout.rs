@@ -1,7 +1,10 @@
 use freya_engine::prelude::*;
 use torin::geometry::Area;
 
-use crate::{dom::*, skia::SkiaMeasurer};
+use crate::{
+    dom::*,
+    skia::SkiaMeasurer,
+};
 
 /// Process the layout of the DOM
 pub fn process_layout(

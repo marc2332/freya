@@ -2,7 +2,13 @@ use std::fmt;
 
 use freya_engine::prelude::Color;
 
-use crate::{ConicGradient, DisplayColor, LinearGradient, Parse, RadialGradient};
+use crate::{
+    ConicGradient,
+    DisplayColor,
+    LinearGradient,
+    Parse,
+    RadialGradient,
+};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Fill {

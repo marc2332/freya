@@ -1,7 +1,10 @@
 use std::sync::Arc;
 
 use freya_common::EventMessage;
-use futures_task::{waker, ArcWake};
+use futures_task::{
+    waker,
+    ArcWake,
+};
 use winit::event_loop::EventLoopProxy;
 
 /// Used to enqueue a new polling for the VirtualDOM once the current one has finished

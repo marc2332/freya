@@ -1,7 +1,10 @@
 use dioxus_core::Template;
 use torin::prelude::CursorPoint;
 use uuid::Uuid;
-use winit::window::{CursorIcon, Window};
+use winit::window::{
+    CursorIcon,
+    Window,
+};
 
 pub struct TextGroupMeasurement {
     pub text_id: Uuid,

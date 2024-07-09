@@ -1,9 +1,15 @@
 use std::time::Duration;
 
 use dioxus_core::use_hook;
-use freya::{events::pointer::MouseButton, prelude::*};
+use freya::{
+    events::pointer::MouseButton,
+    prelude::*,
+};
 use freya_engine::prelude::Color;
-use freya_node_state::{Fill, Parse};
+use freya_node_state::{
+    Fill,
+    Parse,
+};
 use freya_testing::prelude::*;
 use tokio::time::sleep;
 

@@ -118,9 +118,15 @@ mod test {
 
     #[test]
     fn tree() {
-        use std::{path::PathBuf, str::FromStr};
+        use std::{
+            path::PathBuf,
+            str::FromStr,
+        };
 
-        use crate::{ExpandableItemState, TreeItem};
+        use crate::{
+            ExpandableItemState,
+            TreeItem,
+        };
 
         let mut tree = TreeItem::Expandable {
             id: PathBuf::from_str("/").unwrap(),

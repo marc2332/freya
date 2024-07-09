@@ -1,4 +1,7 @@
-use crate::{cow_borrowed, theming::*};
+use crate::{
+    cow_borrowed,
+    theming::*,
+};
 
 pub const DARK_THEME: Theme = Theme {
     name: "dark",

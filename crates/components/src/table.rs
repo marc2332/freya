@@ -1,6 +1,15 @@
 use dioxus::prelude::*;
-use freya_elements::{elements as dioxus_elements, events::MouseEvent};
-use freya_hooks::{use_applied_theme, use_get_theme, FontTheme, TableTheme, TableThemeWith};
+use freya_elements::{
+    elements as dioxus_elements,
+    events::MouseEvent,
+};
+use freya_hooks::{
+    use_applied_theme,
+    use_get_theme,
+    FontTheme,
+    TableTheme,
+    TableThemeWith,
+};
 
 use crate::icons::ArrowIcon;
 

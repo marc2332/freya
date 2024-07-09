@@ -12,7 +12,16 @@ pub mod types;
 
 pub mod prelude {
     pub use crate::{
-        accessibility::*, dom::*, events::*, layout::*, node::*, platform_state::*, plugins::*,
-        render::*, skia::*, style::*, types::*,
+        accessibility::*,
+        dom::*,
+        events::*,
+        layout::*,
+        node::*,
+        platform_state::*,
+        plugins::*,
+        render::*,
+        skia::*,
+        style::*,
+        types::*,
     };
 }

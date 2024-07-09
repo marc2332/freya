@@ -1,6 +1,9 @@
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
-use freya_node_state::{ReferencesState, StyleState};
+use freya_node_state::{
+    ReferencesState,
+    StyleState,
+};
 use torin::geometry::Area;
 
 use crate::dom::DioxusNode;

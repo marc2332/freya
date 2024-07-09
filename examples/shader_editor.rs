@@ -1,9 +1,22 @@
-use std::{sync::Arc, time::Instant};
+use std::{
+    sync::Arc,
+    time::Instant,
+};
 
-use freya::{events::MouseEvent, prelude::*};
+use freya::{
+    events::MouseEvent,
+    prelude::*,
+};
 use skia_safe::{
-    textlayout::{ParagraphBuilder, ParagraphStyle},
-    Color, Data, Paint, Rect, RuntimeEffect,
+    textlayout::{
+        ParagraphBuilder,
+        ParagraphStyle,
+    },
+    Color,
+    Data,
+    Paint,
+    Rect,
+    RuntimeEffect,
 };
 
 const SHADER: &str = "

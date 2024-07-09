@@ -1,7 +1,11 @@
 use freya::prelude::*;
 use freya_testing::prelude::*;
 
-use crate::{use_editable, EditableMode, TextEditor};
+use crate::{
+    use_editable,
+    EditableMode,
+    TextEditor,
+};
 
 #[tokio::test]
 pub async fn multiple_lines_single_editor() {

@@ -1,9 +1,16 @@
 use std::fmt;
 
 use freya_engine::prelude::*;
-use torin::{prelude::Measure, size::Rect};
+use torin::{
+    prelude::Measure,
+    size::Rect,
+};
 
-use crate::{DisplayColor, ExtSplit, Parse};
+use crate::{
+    DisplayColor,
+    ExtSplit,
+    Parse,
+};
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct GradientStop {

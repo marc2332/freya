@@ -1,11 +1,21 @@
 use std::ops::Mul;
 
-use freya_common::{CachedParagraph, CursorLayoutResponse, TextGroupMeasurement};
+use freya_common::{
+    CachedParagraph,
+    CursorLayoutResponse,
+    TextGroupMeasurement,
+};
 use freya_native_core::prelude::NodeImmutable;
 use freya_node_state::CursorState;
-use torin::prelude::{CursorPoint, LayoutNode};
+use torin::prelude::{
+    CursorPoint,
+    LayoutNode,
+};
 
-use crate::prelude::{align_main_align_paragraph, DioxusNode};
+use crate::prelude::{
+    align_main_align_paragraph,
+    DioxusNode,
+};
 
 /// Merasure the cursor positio and text selection and notify the subscribed component of the element.
 pub fn measure_paragraph(

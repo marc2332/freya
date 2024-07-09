@@ -1,8 +1,16 @@
 use dioxus::prelude::*;
-use freya_elements::{elements as dioxus_elements, events::MouseEvent};
+use freya_elements::{
+    elements as dioxus_elements,
+    events::MouseEvent,
+};
 use freya_hooks::{
-    use_applied_theme, use_focus, use_platform, MenuContainerTheme, MenuContainerThemeWith,
-    MenuItemTheme, MenuItemThemeWith,
+    use_applied_theme,
+    use_focus,
+    use_platform,
+    MenuContainerTheme,
+    MenuContainerThemeWith,
+    MenuItemTheme,
+    MenuItemThemeWith,
 };
 use winit::window::CursorIcon;
 

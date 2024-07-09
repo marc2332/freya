@@ -1,6 +1,12 @@
 use dioxus::prelude::*;
-use freya_components::{ArrowIcon, ButtonStatus};
-use freya_elements::{elements as dioxus_elements, events::MouseEvent};
+use freya_components::{
+    ArrowIcon,
+    ButtonStatus,
+};
+use freya_elements::{
+    elements as dioxus_elements,
+    events::MouseEvent,
+};
 use freya_native_core::prelude::NodeId;
 
 use crate::hooks::use_node_info;

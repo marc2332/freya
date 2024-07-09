@@ -1,6 +1,10 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{use_applied_theme, ProgressBarTheme, ProgressBarThemeWith};
+use freya_hooks::{
+    use_applied_theme,
+    ProgressBarTheme,
+    ProgressBarThemeWith,
+};
 
 /// Properties for the [`ProgressBar`] component.
 #[derive(Props, Clone, PartialEq)]

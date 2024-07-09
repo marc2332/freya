@@ -1,5 +1,11 @@
 use crate::prelude::{
-    get_align_axis, AlignAxis, AlignmentDirection, Area, DirectionMode, Node, Size2D,
+    get_align_axis,
+    AlignAxis,
+    AlignmentDirection,
+    Area,
+    DirectionMode,
+    Node,
+    Size2D,
 };
 
 /// Measurement data for the inner Nodes of a Node

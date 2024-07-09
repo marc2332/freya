@@ -1,9 +1,17 @@
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::{
-    BorderAlignment, BorderStyle, Fill, ReferencesState, ShadowPosition, StyleState,
+    BorderAlignment,
+    BorderStyle,
+    Fill,
+    ReferencesState,
+    ShadowPosition,
+    StyleState,
 };
-use torin::{prelude::Area, scaled::Scaled};
+use torin::{
+    prelude::Area,
+    scaled::Scaled,
+};
 
 use crate::dom::DioxusNode;
 

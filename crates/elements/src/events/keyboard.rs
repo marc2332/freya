@@ -1,5 +1,12 @@
-pub use keyboard_types::{Code, Key, Modifiers};
-use winit::keyboard::{self, NamedKey};
+pub use keyboard_types::{
+    Code,
+    Key,
+    Modifiers,
+};
+use winit::keyboard::{
+    self,
+    NamedKey,
+};
 
 use crate::definitions::PlatformEventData;
 

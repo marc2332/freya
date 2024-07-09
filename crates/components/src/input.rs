@@ -1,11 +1,23 @@
 use dioxus::prelude::*;
 use freya_elements::{
     elements as dioxus_elements,
-    events::{keyboard::Key, KeyboardData, MouseEvent},
+    events::{
+        keyboard::Key,
+        KeyboardData,
+        MouseEvent,
+    },
 };
 use freya_hooks::{
-    use_applied_theme, use_editable, use_focus, use_platform, EditableConfig, EditableEvent,
-    EditableMode, InputTheme, InputThemeWith, TextEditor,
+    use_applied_theme,
+    use_editable,
+    use_focus,
+    use_platform,
+    EditableConfig,
+    EditableEvent,
+    EditableMode,
+    InputTheme,
+    InputThemeWith,
+    TextEditor,
 };
 use winit::window::CursorIcon;
 

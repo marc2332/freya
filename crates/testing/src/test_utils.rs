@@ -1,5 +1,9 @@
 use freya_core::prelude::*;
-use freya_native_core::{real_dom::NodeImmutable, tree::TreeRef, NodeId};
+use freya_native_core::{
+    real_dom::NodeImmutable,
+    tree::TreeRef,
+    NodeId,
+};
 
 use crate::test_node::TestNode;
 
