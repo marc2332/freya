@@ -80,13 +80,6 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
         devtools: Option<Devtools>,
         hovered_node: HoveredNode,
     ) {
-        let rt = tokio::runtime::Builder::new_multi_thread()
-            .enable_all()
-            .build()
-            .unwrap();
-
-        let _guard = rt.enter();
-
         let event_loop = EventLoop::<EventMessage>::with_user_event()
             .build()
             .expect("Failed to create event loop.");

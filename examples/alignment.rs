@@ -37,10 +37,11 @@ fn app() -> Element {
                         background: "green"
                     }
                     rect {
-                        main_align: "center",
+                        main_align: "space-evenly",
                         cross_align: "center",
                         background: "orange",
                         padding: "15",
+                        height: "70%",
                         rect {
                             width: "20",
                             height: "20",
@@ -58,7 +59,7 @@ fn app() -> Element {
                     width: "100%",
                     height: "50%",
                     rect {
-                        main_align: "start",
+                        main_align: "space-between",
                         cross_align: "center",
                         width: "50%",
                         height: "100%",
@@ -67,6 +68,29 @@ fn app() -> Element {
                         }
                         label {
                             "🦀🦀"
+                        }
+                        rect {
+                            main_align: "space-around",
+                            direction: "horizontal",
+                            cross_align: "center",
+                            background: "black",
+                            width: "fill",
+                            padding: "5",
+                            rect {
+                                width: "20",
+                                height: "20",
+                                background: "blue"
+                            }
+                            rect {
+                                width: "70",
+                                height: "40",
+                                background: "red"
+                            }
+                            rect {
+                                width: "20",
+                                height: "20",
+                                background: "white"
+                            }
                         }
                         label {
                             "Even more crabs"

@@ -998,6 +998,10 @@ impl Canvas {
         unimplemented!("This is mocked")
     }
 
+    pub fn clip_rrect(&self, _rect: RRect, _clip: ClipOp, _: bool) {
+        unimplemented!("This is mocked")
+    }
+
     pub fn draw_image_nine(
         &self,
         _image: Image,
@@ -1304,6 +1308,10 @@ impl RRect {
     }
 
     pub fn with_outset(&self, _delta: impl Into<Point>) -> Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn contains(&self, other: Rect) -> bool {
         unimplemented!("This is mocked")
     }
 }

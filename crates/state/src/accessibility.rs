@@ -17,7 +17,11 @@ use freya_native_core::{
 };
 use freya_native_core_macro::partial_derive_state;
 
-use crate::CustomAttributeValues;
+use crate::{
+    CustomAttributeValues,
+    ParseAttribute,
+    ParseError,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq, Default, Component)]
 pub struct AccessibilityNodeState {
@@ -26,6 +30,49 @@ pub struct AccessibilityNodeState {
     pub alt: Option<String>,
     pub name: Option<String>,
     pub focusable: bool,
+}
+
+impl ParseAttribute for AccessibilityNodeState {
+    fn parse_attribute(
+        &mut self,
+        attr: freya_native_core::prelude::OwnedAttributeView<CustomAttributeValues>,
+    ) -> Result<(), crate::ParseError> {
+        match attr.attribute {
+            AttributeName::FocusId => {
+                if let OwnedAttributeValue::Custom(CustomAttributeValues::AccessibilityId(id)) =
+                    attr.value
+                {
+                    self.accessibility_id = Some(*id);
+                }
+            }
+            AttributeName::Role => {
+                if let OwnedAttributeValue::Text(attr) = attr.value {
+                    self.role = Some(
+                        serde_json::from_str::<Role>(&format!("\"{attr}\""))
+                            .map_err(|_| ParseError)?,
+                    )
+                }
+            }
+            AttributeName::Alt => {
+                if let OwnedAttributeValue::Text(attr) = attr.value {
+                    self.alt = Some(attr.to_owned())
+                }
+            }
+            AttributeName::Name => {
+                if let OwnedAttributeValue::Text(attr) = attr.value {
+                    self.name = Some(attr.to_owned())
+                }
+            }
+            AttributeName::Focusable => {
+                if let OwnedAttributeValue::Text(attr) = attr.value {
+                    self.focusable = attr.parse().unwrap_or_default()
+                }
+            }
+            _ => {}
+        }
+
+        Ok(())
+    }
 }
 
 #[partial_derive_state]
@@ -57,41 +104,7 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
-                match attr.attribute {
-                    AttributeName::FocusId => {
-                        if let OwnedAttributeValue::Custom(
-                            CustomAttributeValues::AccessibilityId(id),
-                        ) = attr.value
-                        {
-                            accessibility.accessibility_id = Some(*id);
-                        }
-                    }
-                    AttributeName::Role => {
-                        if let OwnedAttributeValue::Text(attr) = attr.value {
-                            if let Ok(new_role) =
-                                serde_json::from_str::<Role>(&format!("\"{attr}\""))
-                            {
-                                accessibility.role = Some(new_role)
-                            }
-                        }
-                    }
-                    AttributeName::Alt => {
-                        if let OwnedAttributeValue::Text(attr) = attr.value {
-                            accessibility.alt = Some(attr.to_owned())
-                        }
-                    }
-                    AttributeName::Name => {
-                        if let OwnedAttributeValue::Text(attr) = attr.value {
-                            accessibility.name = Some(attr.to_owned())
-                        }
-                    }
-                    AttributeName::Focusable => {
-                        if let OwnedAttributeValue::Text(attr) = attr.value {
-                            accessibility.focusable = attr.parse().unwrap_or_default()
-                        }
-                    }
-                    _ => {}
-                }
+                accessibility.parse_safe(attr);
             }
         }
         let changed = &accessibility != self;
