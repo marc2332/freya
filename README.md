@@ -19,7 +19,7 @@
 <tr>
 <td style="border:hidden;">
 
-```rust, no_run
+```rust
 fn app() -> Element {
     let mut count = use_signal(|| 0);
 
