@@ -272,6 +272,7 @@ define_theme! {
         background: str,
         hover_background: str,
         border_fill: str,
+        shadow: str,
         width: str,
         margin: str,
         corner_radius: str,
