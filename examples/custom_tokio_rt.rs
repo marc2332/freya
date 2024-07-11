@@ -11,7 +11,11 @@ fn main() {
 }
 
 #[cfg(feature = "custom-tokio-rt")]
-#[tokio::main]
-async fn main() {
+fn main() {
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    let _guard = rt.enter();
     launch_with_title(|| rsx!(label { "Hello, World!" }), "Custom Tokio Runtime")
 }
