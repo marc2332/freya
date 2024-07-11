@@ -16,12 +16,14 @@ features = ["freya-engine/mocked-engine"]
 no-default-features = true
 
 [features]
+custom-tokio-rt = []
+skia = ["freya-engine/skia-engine"]
 hot-reload = ["freya-renderer/hot-reload", "dioxus/hot-reload"]
 log = ["dep:tracing", "dep:tracing-subscriber"]
 devtools = ["dep:freya-devtools"]
 use_camera = ["freya-hooks/use_camera"]
 mocked-engine-development = ["freya-engine/mocked-engine"] # This is just for the CI
-default = ["freya-engine/skia-engine"]
+default = ["skia"]
 
 [dependencies]
 freya-devtools = { workspace = true, optional = true }

@@ -74,7 +74,7 @@ async fn asset_cacher() {
 
     utils.push_event(PlatformEvent::Mouse {
         name: EventName::Click,
-        cursor: (5.0, 25.0).into(),
+        cursor: (15.0, 25.0).into(),
         button: Some(MouseButton::Left),
     });
 
@@ -85,7 +85,7 @@ async fn asset_cacher() {
 
     utils.push_event(PlatformEvent::Mouse {
         name: EventName::Click,
-        cursor: (5.0, 25.0).into(),
+        cursor: (15.0, 25.0).into(),
         button: Some(MouseButton::Left),
     });
 
@@ -96,7 +96,7 @@ async fn asset_cacher() {
 
     utils.push_event(PlatformEvent::Mouse {
         name: EventName::Click,
-        cursor: (5.0, 70.0).into(),
+        cursor: (15.0, 70.0).into(),
         button: Some(MouseButton::Left),
     });
 
@@ -106,7 +106,7 @@ async fn asset_cacher() {
 
     utils.push_event(PlatformEvent::Mouse {
         name: EventName::Click,
-        cursor: (5.0, 70.0).into(),
+        cursor: (15.0, 70.0).into(),
         button: Some(MouseButton::Left),
     });
 

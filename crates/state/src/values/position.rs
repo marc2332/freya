@@ -1,14 +1,12 @@
 use torin::position::Position;
 
-use crate::Parse;
-
-#[derive(Debug, PartialEq, Eq)]
-pub struct ParsePositionError;
+use crate::{
+    Parse,
+    ParseError,
+};
 
 impl Parse for Position {
-    type Err = ParsePositionError;
-
-    fn parse(value: &str) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, ParseError> {
         Ok(match value {
             "absolute" => Position::new_absolute(),
             _ => Position::Stacked,

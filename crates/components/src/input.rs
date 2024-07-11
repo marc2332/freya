@@ -181,6 +181,7 @@ pub fn Input(
         corner_radius,
         font_theme,
         placeholder_font_theme,
+        shadow,
         ..
     } = theme;
 
@@ -203,7 +204,7 @@ pub fn Input(
             color: "{color}",
             background: "{background}",
             border: "1 solid {border_fill}",
-            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
+            shadow: "{shadow}",
             corner_radius: "{corner_radius}",
             margin: "{margin}",
             cursor_reference,

@@ -223,6 +223,18 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
             (vdom, None, None)
         }
     };
+    #[cfg(not(feature = "custom-tokio-rt"))]
+    {
+        let rt = tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let _guard = rt.enter();
+
+        DesktopRenderer::launch(vdom, sdom, config, devtools, hovered_node);
+    }
+
+    #[cfg(feature = "custom-tokio-rt")]
     DesktopRenderer::launch(vdom, sdom, config, devtools, hovered_node);
 }
 

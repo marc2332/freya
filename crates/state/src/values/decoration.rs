@@ -1,14 +1,12 @@
 use freya_engine::prelude::*;
 
-use crate::Parse;
-
-#[derive(Debug, PartialEq, Eq)]
-pub struct ParseTextDecorationError;
+use crate::{
+    Parse,
+    ParseError,
+};
 
 impl Parse for TextDecoration {
-    type Err = ParseTextDecorationError;
-
-    fn parse(value: &str) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, ParseError> {
         let mut decoration = TextDecoration::default();
         let values = value.split_ascii_whitespace();
 
@@ -28,13 +26,8 @@ impl Parse for TextDecoration {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct ParseTextDecorationStyleError;
-
 impl Parse for TextDecorationStyle {
-    type Err = ParseTextDecorationStyleError;
-
-    fn parse(value: &str) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, ParseError> {
         Ok(match value {
             "solid" => TextDecorationStyle::Solid,
             "double" => TextDecorationStyle::Double,

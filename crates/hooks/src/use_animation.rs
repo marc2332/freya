@@ -179,10 +179,11 @@ impl AnimatedValue for AnimColor {
 
     fn as_string(&self) -> String {
         format!(
-            "rgb({}, {}, {})",
+            "rgb({}, {}, {}, {})",
             self.value.r(),
             self.value.g(),
-            self.value.b()
+            self.value.b(),
+            self.value.a()
         )
     }
 
@@ -202,12 +203,14 @@ impl AnimatedValue for AnimColor {
                     && self.value.r() >= self.destination.r()
                     && self.value.g() >= self.destination.g()
                     && self.value.b() >= self.destination.b()
+                    && self.value.a() >= self.destination.a()
             }
             AnimDirection::Reverse => {
                 index > self.time.as_millis() as i32
                     && self.value.r() <= self.origin.r()
                     && self.value.g() <= self.origin.g()
                     && self.value.b() <= self.origin.b()
+                    && self.value.a() >= self.origin.a()
             }
         }
     }
@@ -242,7 +245,15 @@ impl AnimatedValue for AnimColor {
                 self.ease,
                 self.function,
             );
-            self.value = Color::from_rgb(r as u8, g as u8, b as u8);
+            let a = apply_value(
+                origin.a() as f32,
+                destination.a() as f32,
+                index.min(self.time.as_millis() as i32),
+                self.time,
+                self.ease,
+                self.function,
+            );
+            self.value = Color::from_argb(a as u8, r as u8, g as u8, b as u8);
         }
     }
 }
