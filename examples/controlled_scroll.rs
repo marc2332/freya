@@ -11,7 +11,6 @@ fn main() {
 
 fn app() -> Element {
     let scroll_controller = use_scroll_controller(|| ScrollConfig {
-        direction: "vertical".to_string(),
         initial: ScrollPosition::Bottom,
     });
     rsx!(

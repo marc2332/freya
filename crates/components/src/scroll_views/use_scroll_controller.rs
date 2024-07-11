@@ -6,7 +6,6 @@ use dioxus::prelude::{
     Signal,
     Writable,
 };
-use freya_common::NodeReferenceLayout;
 
 #[derive(Default, PartialEq, Eq)]
 pub enum ScrollPosition {
@@ -17,7 +16,6 @@ pub enum ScrollPosition {
 }
 
 pub struct ScrollConfig {
-    pub direction: String,
     pub initial: ScrollPosition,
 }
 
@@ -36,23 +34,22 @@ impl From<ScrollController> for (Signal<i32>, Signal<i32>) {
 }
 
 impl ScrollController {
-    pub fn apply_container_size(&mut self, size: &NodeReferenceLayout) {
+    fn should_apply(&self, size: f32) -> bool {
         let config = self.config.peek();
-        if config.initial == ScrollPosition::Bottom
-            && !size.inner.is_empty()
-            && !*self.applied_init_scroll.peek()
-        {
-            match config.direction.as_str() {
-                "vertical" if *self.y.peek() == 0 => {
-                    *self.y.write() = -size.inner.height as i32;
-                    self.applied_init_scroll.set(true);
-                }
-                "horizontal" if *self.x.peek() == 0 => {
-                    *self.x.write() = -size.inner.width as i32;
-                    self.applied_init_scroll.set(true);
-                }
-                _ => {}
-            }
+        config.initial == ScrollPosition::Bottom && size > 0. && !*self.applied_init_scroll.peek()
+    }
+
+    pub fn apply_vertical(&mut self, size: f32) {
+        if self.should_apply(size) {
+            *self.y.write() = -size as i32;
+            self.applied_init_scroll.set(true);
+        }
+    }
+
+    pub fn apply_horizontal(&mut self, size: f32) {
+        if self.should_apply(size) {
+            *self.x.write() = -size as i32;
+            self.applied_init_scroll.set(true);
         }
     }
 }

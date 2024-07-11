@@ -88,13 +88,11 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
     let mut clicking_alt = use_signal(|| false);
     let mut scroll_controller = props.scroll_controller.unwrap_or_else(|| {
         use_scroll_controller(|| ScrollConfig {
-            direction: props.direction.clone(),
             initial: ScrollPosition::default(),
         })
     });
     let (mut scrolled_x, mut scrolled_y) = scroll_controller.into();
     let (node_ref, size) = use_node();
-    scroll_controller.apply_container_size(&size);
 
     let mut focus = use_focus();
     let theme = use_applied_theme!(&props.theme, scroll_view);
@@ -106,6 +104,11 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
     let user_direction = &props.direction;
     let show_scrollbar = props.show_scrollbar;
     let scroll_with_arrows = props.scroll_with_arrows;
+
+    match user_direction.as_str() {
+        "horizontal" => scroll_controller.apply_horizontal(size.inner.width),
+        _ => scroll_controller.apply_vertical(size.inner.height),
+    }
 
     let direction_is_vertical = user_direction == "vertical";
 
