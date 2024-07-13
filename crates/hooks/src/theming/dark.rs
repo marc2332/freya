@@ -44,6 +44,7 @@ pub const DARK_THEME: Theme = Theme {
         width: LIGHT_THEME.input.width,
         margin: LIGHT_THEME.input.margin,
         corner_radius: LIGHT_THEME.input.corner_radius,
+        shadow: LIGHT_THEME.input.shadow,
     },
     switch: SwitchTheme {
         background: cow_borrowed!("rgb(60, 60, 60)"),

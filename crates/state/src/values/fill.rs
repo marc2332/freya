@@ -6,6 +6,7 @@ use crate::{
     DisplayColor,
     LinearGradient,
     Parse,
+    ParseError,
 };
 
 #[derive(Clone, Debug, PartialEq)]
@@ -28,17 +29,12 @@ impl From<Color> for Fill {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct ParseFillError;
-
 impl Parse for Fill {
-    type Err = ParseFillError;
-
-    fn parse(value: &str) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, ParseError> {
         Ok(if value.starts_with("linear-gradient(") {
-            Self::LinearGradient(LinearGradient::parse(value).map_err(|_| ParseFillError)?)
+            Self::LinearGradient(LinearGradient::parse(value).map_err(|_| ParseError)?)
         } else {
-            Self::Color(Color::parse(value).map_err(|_| ParseFillError)?)
+            Self::Color(Color::parse(value).map_err(|_| ParseError)?)
         })
     }
 }

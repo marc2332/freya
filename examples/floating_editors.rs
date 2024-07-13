@@ -295,7 +295,7 @@ fn Editor() -> Element {
                                 let line_background = if is_line_selected {
                                     "rgb(37, 37, 37)"
                                 } else {
-                                    ""
+                                    "none"
                                 };
 
                                 let onmousedown = move |e: MouseEvent| {

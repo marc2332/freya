@@ -24,8 +24,7 @@ fn main() {
         app,
         LaunchConfig::<()>::new()
             .with_plugin(DummyPlugin)
-            .with_width(250.0)
-            .with_height(200.0),
+            .with_size(250.0, 250.),
     )
 }
 

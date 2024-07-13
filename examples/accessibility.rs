@@ -54,13 +54,13 @@ fn app() -> Element {
             padding: "25",
             width: "100%",
             height: "50%",
-            role: "staticText",
+            role: "label",
             alt: "This is a rectangle",
             onclick: move |_| {
                 focus_b.focus();
             },
             label {
-                role: "staticText",
+                role: "label",
                 focus_id: focus_d.attribute(),
                 onclick: move |e| {
                     e.stop_propagation();

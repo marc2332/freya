@@ -403,7 +403,13 @@ impl Application {
                 false
             };
             if let Some(dioxus_node) = fdom.rdom().get(*node_id) {
-                skia_renderer.render(layout_node, &dioxus_node, render_wireframe, layout);
+                skia_renderer.render(
+                    fdom.rdom(),
+                    layout_node,
+                    &dioxus_node,
+                    render_wireframe,
+                    layout,
+                );
             }
         });
     }

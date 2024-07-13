@@ -44,6 +44,7 @@ pub const LIGHT_THEME: Theme = Theme {
         width: cow_borrowed!("150"),
         margin: cow_borrowed!("4"),
         corner_radius: cow_borrowed!("10"),
+        shadow: cow_borrowed!("0 4 5 0 rgb(0, 0, 0, 0.1)"),
     },
     switch: SwitchTheme {
         background: cow_borrowed!("rgb(121, 116, 126)"),
