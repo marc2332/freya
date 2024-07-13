@@ -962,6 +962,10 @@ impl Canvas {
         unimplemented!("This is mocked")
     }
 
+    pub fn restore_to_count(&self, layer: usize) {
+        unimplemented!("This is mocked")
+    }
+
     pub fn concat(&self, _matrix: &Matrix) {
         unimplemented!("This is mocked")
     }
