@@ -148,11 +148,9 @@ pub fn VirtualScrollView<
     let mut clicking_scrollbar = use_signal::<Option<(Axis, f64)>>(|| None);
     let mut clicking_shift = use_signal(|| false);
     let mut clicking_alt = use_signal(|| false);
-    let mut scroll_controller = props.scroll_controller.unwrap_or_else(|| {
-        use_scroll_controller(|| ScrollConfig {
-            initial: ScrollPosition::default(),
-        })
-    });
+    let mut scroll_controller = props
+        .scroll_controller
+        .unwrap_or_else(|| use_scroll_controller(ScrollConfig::default));
     let (mut scrolled_x, mut scrolled_y) = scroll_controller.into();
     let (node_ref, size) = use_node();
     let mut focus = use_focus();
@@ -172,10 +170,7 @@ pub fn VirtualScrollView<
 
     let inner_size = items_size + (items_size * items_length as f32);
 
-    match user_direction.as_str() {
-        "horizontal" => scroll_controller.apply_horizontal(inner_size),
-        _ => scroll_controller.apply_vertical(inner_size),
-    }
+    scroll_controller.use_apply(inner_size, inner_size);
 
     let vertical_scrollbar_is_visible = user_direction != "horizontal"
         && is_scrollbar_visible(show_scrollbar, inner_size, size.area.height());

@@ -10,9 +10,19 @@ fn main() {
 }
 
 fn app() -> Element {
-    let scroll_controller = use_scroll_controller(|| ScrollConfig {
-        initial: ScrollPosition::Bottom,
+    let mut scroll_controller = use_scroll_controller(|| ScrollConfig {
+        default_vertical_position: ScrollPosition::End,
+        ..Default::default()
     });
+
+    let scroll_to_top = move |_| {
+        scroll_controller.scroll_to(ScrollPosition::Start, ScrollDirection::Vertical);
+    };
+
+    let scroll_to_bottom = move |_| {
+        scroll_controller.scroll_to(ScrollPosition::End, ScrollDirection::Vertical);
+    };
+
     rsx!(
         rect {
             height: "fill",
@@ -23,6 +33,12 @@ fn app() -> Element {
                 theme: theme_with!(ScrollViewTheme {
                     width: "50%".into(),
                 }),
+                Button {
+                    onclick: scroll_to_bottom,
+                    label {
+                        "Scroll to Bottom"
+                    }
+                }
                 Card {}
                 Card {}
                 Card {}
@@ -35,6 +51,12 @@ fn app() -> Element {
                 Card {}
                 Card {}
                 Card {}
+                Button {
+                    onclick: scroll_to_top,
+                    label {
+                        "Scroll to Top"
+                    }
+                }
             }
         }
     )
