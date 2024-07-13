@@ -33,7 +33,6 @@ use crate::{
     ScrollBar,
     ScrollConfig,
     ScrollController,
-    ScrollPosition,
     ScrollThumb,
     SCROLL_SPEED_MULTIPLIER,
 };

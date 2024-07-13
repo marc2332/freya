@@ -5,11 +5,7 @@ use dioxus::prelude::{
     schedule_update_any,
     use_drop,
     use_hook,
-    use_on_unmount,
-    use_signal,
-    CopyValue,
     Readable,
-    ReadableVecExt,
     ScopeId,
     Signal,
     Writable,
@@ -37,7 +33,7 @@ pub struct ScrollConfig {
     pub default_horizontal_position: ScrollPosition,
 }
 
-pub(crate) struct ScrollRequest {
+pub struct ScrollRequest {
     pub(crate) position: ScrollPosition,
     pub(crate) direction: ScrollDirection,
     pub(crate) init: bool,
@@ -70,6 +66,15 @@ impl From<ScrollController> for (Signal<i32>, Signal<i32>) {
 }
 
 impl ScrollController {
+    pub fn new(x: i32, y: i32, initial_requests: Vec<ScrollRequest>) -> Self {
+        Self {
+            x: Signal::new(x),
+            y: Signal::new(y),
+            requests_subscribers: Signal::new(HashSet::new()),
+            requests: Signal::new(initial_requests),
+        }
+    }
+
     pub fn use_apply(&mut self, width: f32, height: f32) {
         let scope_id = current_scope_id().unwrap();
 
@@ -145,12 +150,8 @@ impl ScrollController {
         scroll_position: ScrollPosition,
         scroll_direction: ScrollDirection,
     ) {
-        self.requests.push(ScrollRequest {
-            position: scroll_position,
-            direction: scroll_direction,
-            init: false,
-            applied_by: HashSet::default(),
-        });
+        self.requests
+            .push(ScrollRequest::new(scroll_position, scroll_direction));
         let schedule = schedule_update_any();
         for scope_id in self.requests_subscribers.read().iter() {
             schedule(*scope_id);
@@ -161,11 +162,10 @@ impl ScrollController {
 pub fn use_scroll_controller(init: impl FnOnce() -> ScrollConfig) -> ScrollController {
     use_hook(|| {
         let config = init();
-        ScrollController {
-            x: Signal::new(0),
-            y: Signal::new(0),
-            requests_subscribers: Signal::new(HashSet::new()),
-            requests: Signal::new(vec![
+        ScrollController::new(
+            0,
+            0,
+            vec![
                 ScrollRequest {
                     position: config.default_vertical_position,
                     direction: ScrollDirection::Vertical,
@@ -178,7 +178,7 @@ pub fn use_scroll_controller(init: impl FnOnce() -> ScrollConfig) -> ScrollContr
                     init: true,
                     applied_by: HashSet::default(),
                 },
-            ]),
-        }
+            ],
+        )
     })
 }

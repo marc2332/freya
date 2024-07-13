@@ -28,7 +28,6 @@ use crate::{
     scroll_views::use_scroll_controller::{
         use_scroll_controller,
         ScrollConfig,
-        ScrollPosition,
     },
     Axis,
     ScrollBar,
