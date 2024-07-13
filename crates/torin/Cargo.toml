@@ -1,32 +1,32 @@
 [package]
-name = "torin"
-description = "UI layout Library designed for Freya."
-version = "0.2.0"
-edition = "2021"
-license = "MIT"
-authors = ["Marc Espín <mespinsanz@gmail.com>"]
-readme = "./readme.md"
-homepage = "https://freyaui.dev/"
-repository = "https://github.com/marc2332/freya"
-keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
-categories = ["gui", "caching"]
+  name        = "torin"
+  description = "UI layout Library designed for Freya."
+  version     = "0.2.0"
+  edition     = "2021"
+  license     = "MIT"
+  authors     = ["Marc Espín <mespinsanz@gmail.com>"]
+  readme      = "./readme.md"
+  homepage    = "https://freyaui.dev/"
+  repository  = "https://github.com/marc2332/freya"
+  keywords    = ["gui", "ui", "desktop", "skia", "dioxus"]
+  categories  = ["gui", "caching"]
 
 [features]
-dioxus = ["dep:freya-native-core"]
-default = ["dioxus"]
+  dioxus  = ["dep:freya-native-core"]
+  default = ["dioxus"]
 
 [dependencies]
-tracing = { workspace = true }
-euclid = { workspace = true }
-rustc-hash = { workspace = true }
-freya-native-core = { workspace = true, optional = true }
+  tracing           = { workspace = true }
+  euclid            = { workspace = true }
+  rustc-hash        = { workspace = true }
+  freya-native-core = { workspace = true, optional = true }
 
 [dev-dependencies]
-criterion = "0.5.1"
+  criterion = "0.5.1"
 
 [lib]
-bench = false
+  bench = false
 
 [[bench]]
-name = "bench"
-harness = false 
+  name    = "bench"
+  harness = false

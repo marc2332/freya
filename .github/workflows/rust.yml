@@ -24,6 +24,10 @@ jobs:
       uses: dtolnay/rust-toolchain@nightly
       with:
         components: rustfmt
+    - name: Install latest binstall release
+      uses: cargo-bins/cargo-binstall@main
+    - name: Install latest taplo-cli release
+      run: cargo binstall taplo-cli --locked --force -y
     - name: Install latest nextest release
       uses: taiki-e/install-action@nextest
     - name: Set up cargo cache
@@ -40,6 +44,8 @@ jobs:
       run: cargo clippy --workspace -- -D warnings
     - name: Format
       run: cargo +nightly fmt --all --check -- --error-on-unformatted --unstable-features
+    - name: Cargo.toml lint
+      run: taplo fmt ./crates/**/Cargo.toml Cargo.toml --check
     - name: Run Linux tests
       if: runner.os == 'Linux'
       run: |

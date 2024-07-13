@@ -1,0 +1,6 @@
+# https://taplo.tamasfe.dev/configuration/formatter-options.html
+[formatting]
+  align_entries  = true
+  indent_tables  = true
+  indent_entries = true
+  column_width   = 120

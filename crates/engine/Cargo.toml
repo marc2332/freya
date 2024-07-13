@@ -1,30 +1,30 @@
 [package]
-name = "freya-engine"
-description = "Abstract Freya's graphics APIs"
-version = "0.2.2"
-edition = "2021"
-license = "MIT"
-authors = ["Marc Espín <mespinsanz@gmail.com>"]
-readme = "../../readme.md"
-homepage = "https://freyaui.dev/"
-repository = "https://github.com/marc2332/freya"
-keywords = ["gui", "ui", "desktop", "skia", "graphics"]
-categories = ["gui"]
+  name        = "freya-engine"
+  description = "Abstract Freya's graphics APIs"
+  version     = "0.2.2"
+  edition     = "2021"
+  license     = "MIT"
+  authors     = ["Marc Espín <mespinsanz@gmail.com>"]
+  readme      = "../../readme.md"
+  homepage    = "https://freyaui.dev/"
+  repository  = "https://github.com/marc2332/freya"
+  keywords    = ["gui", "ui", "desktop", "skia", "graphics"]
+  categories  = ["gui"]
 
-[package.metadata.docs.rs]
-features = ["mocked-engine"]
+  [package.metadata.docs.rs]
+    features = ["mocked-engine"]
 
 [features]
-mocked-engine = []
-skia-engine = ["dep:skia-safe"]
+  mocked-engine = []
+  skia-engine   = ["dep:skia-safe"]
 
 [dependencies]
-bitflags = "2.4.0"
-skia-safe = { workspace = true, optional = true }
-glutin = { workspace = true }
+  bitflags  = "2.4.0"
+  skia-safe = { workspace = true, optional = true }
+  glutin    = { workspace = true }
 
 
 [target."cfg(target_os = \"linux\")".dependencies.skia-safe]
-workspace = true
-optional = true
-features = ["gl", "textlayout", "svg", "x11", "wayland"]
+  workspace = true
+  optional  = true
+  features  = ["gl", "textlayout", "svg", "x11", "wayland"]

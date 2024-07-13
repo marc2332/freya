@@ -1,40 +1,40 @@
 [package]
-name = "freya-testing"
-description = "Headless test runner for Freya."
-version = "0.2.1"
-edition = "2021"
-license = "MIT"
-authors = ["Marc Espín <mespinsanz@gmail.com>"]
-readme = "../../readme.md"
-homepage = "https://freyaui.dev/"
-repository = "https://github.com/marc2332/freya"
-keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
-categories = ["gui", "asynchronous"]
+  name        = "freya-testing"
+  description = "Headless test runner for Freya."
+  version     = "0.2.1"
+  edition     = "2021"
+  license     = "MIT"
+  authors     = ["Marc Espín <mespinsanz@gmail.com>"]
+  readme      = "../../readme.md"
+  homepage    = "https://freyaui.dev/"
+  repository  = "https://github.com/marc2332/freya"
+  keywords    = ["gui", "ui", "desktop", "skia", "dioxus"]
+  categories  = ["gui", "asynchronous"]
 
-[package.metadata.docs.rs]
-features = ["freya-engine/mocked-engine"]
+  [package.metadata.docs.rs]
+    features = ["freya-engine/mocked-engine"]
 
 [features]
-skia-engine = ["freya-engine/skia-engine"]
+  skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
-freya-elements = { workspace = true }
-freya-common = { workspace = true }
-freya-node-state = { workspace = true }
-freya-core = { workspace = true, features = ["shared"] }
-freya-hooks = { workspace = true }
-freya-components = { workspace = true }
-freya-engine = { workspace = true }
-torin = { workspace = true }
+  freya-elements   = { workspace = true }
+  freya-common     = { workspace = true }
+  freya-node-state = { workspace = true }
+  freya-core       = { workspace = true, features = ["shared"] }
+  freya-hooks      = { workspace = true }
+  freya-components = { workspace = true }
+  freya-engine     = { workspace = true }
+  torin            = { workspace = true }
 
-freya-native-core = { workspace = true }
-dioxus-core-macro = { workspace = true }
-dioxus-core = { workspace = true }
-dioxus = { workspace = true }
+  freya-native-core = { workspace = true }
+  dioxus-core-macro = { workspace = true }
+  dioxus-core       = { workspace = true }
+  dioxus            = { workspace = true }
 
-tokio = { workspace = true }
-winit = { workspace = true }
+  tokio = { workspace = true }
+  winit = { workspace = true }
 
 [dev-dependencies]
-dioxus = { workspace = true }
-freya = { path = "../freya"}
+  dioxus = { workspace = true }
+  freya  = { path = "../freya" }

@@ -1,19 +1,19 @@
 [package]
-name = "freya-native-core-macro"
-description = "Macro helper for native-core"
-version = "0.2.0"
-edition = "2021"
-license = "MIT"
-authors = ["Jonathan Kelley", "Evan Almloff", "Marc Espín <mespinsanz@gmail.com>"]
-readme = "../native-core/README.md"
-homepage = "https://freyaui.dev/"
-repository = "https://github.com/marc2332/freya"
-keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
-categories = ["gui"]
+  name        = "freya-native-core-macro"
+  description = "Macro helper for native-core"
+  version     = "0.2.0"
+  edition     = "2021"
+  license     = "MIT"
+  authors     = ["Jonathan Kelley", "Evan Almloff", "Marc Espín <mespinsanz@gmail.com>"]
+  readme      = "../native-core/README.md"
+  homepage    = "https://freyaui.dev/"
+  repository  = "https://github.com/marc2332/freya"
+  keywords    = ["gui", "ui", "desktop", "skia", "dioxus"]
+  categories  = ["gui"]
 
 [lib]
-proc-macro = true
+  proc-macro = true
 
 [dependencies]
-syn = { version = "2.0", features = ["extra-traits", "full"] }
-quote = "1.0"
+  syn   = { version = "2.0", features = ["extra-traits", "full"] }
+  quote = "1.0"

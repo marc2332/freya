@@ -1,48 +1,48 @@
 [package]
-name = "freya-hooks"
-description = "Hooks library designed for Freya."
-version = "0.2.1"
-edition = "2021"
-license = "MIT"
-authors = ["Marc Espín <mespinsanz@gmail.com>"]
-readme = "../../readme.md"
-homepage = "https://freyaui.dev/"
-repository = "https://github.com/marc2332/freya"
-keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
-categories = ["gui", "asynchronous"]
+  name        = "freya-hooks"
+  description = "Hooks library designed for Freya."
+  version     = "0.2.1"
+  edition     = "2021"
+  license     = "MIT"
+  authors     = ["Marc Espín <mespinsanz@gmail.com>"]
+  readme      = "../../readme.md"
+  homepage    = "https://freyaui.dev/"
+  repository  = "https://github.com/marc2332/freya"
+  keywords    = ["gui", "ui", "desktop", "skia", "dioxus"]
+  categories  = ["gui", "asynchronous"]
 
-[package.metadata.docs.rs]
-features = ["freya-engine/mocked-engine"]
+  [package.metadata.docs.rs]
+    features = ["freya-engine/mocked-engine"]
 
 [features]
-use_camera = ["dep:nokhwa"]
-skia-engine = ["freya-engine/skia-engine"]
+  use_camera  = ["dep:nokhwa"]
+  skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
-freya-elements = { workspace = true }
-freya-node-state = { workspace = true }
-freya-common = { workspace = true }
-freya-core = { workspace = true }
-freya-engine = { workspace = true }
-torin = { workspace = true }
+  freya-elements   = { workspace = true }
+  freya-node-state = { workspace = true }
+  freya-common     = { workspace = true }
+  freya-core       = { workspace = true }
+  freya-engine     = { workspace = true }
+  torin            = { workspace = true }
 
-dioxus-hooks = { workspace = true }
-dioxus-signals = { workspace = true }
-dioxus-core = { workspace = true }
-dioxus-sdk = { workspace = true }
+  dioxus-hooks   = { workspace = true }
+  dioxus-signals = { workspace = true }
+  dioxus-core    = { workspace = true }
+  dioxus-sdk     = { workspace = true }
 
-tokio = { workspace = true }
-winit = { workspace = true }
+  tokio = { workspace = true }
+  winit = { workspace = true }
 
-uuid = { workspace = true }
-easer = "0.3.0"
-ropey = "1.6.0"
-nokhwa = { version = "0.10.4", features = ["input-native"], optional = true }
-paste = "1.0.14"
-bitflags = "2.4.1"
-bytes = "1.5.0"
+  uuid     = { workspace = true }
+  easer    = "0.3.0"
+  ropey    = "1.6.0"
+  nokhwa   = { version = "0.10.4", features = ["input-native"], optional = true }
+  paste    = "1.0.14"
+  bitflags = "2.4.1"
+  bytes    = "1.5.0"
 
 [dev-dependencies]
-dioxus = { workspace = true }
-freya = { path = "../freya" }
-freya-testing = { path = "../testing" }
+  dioxus        = { workspace = true }
+  freya         = { path = "../freya" }
+  freya-testing = { path = "../testing" }

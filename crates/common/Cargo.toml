@@ -1,32 +1,32 @@
 [package]
-name = "freya-common"
-description = "Internal common utilities for Freya."
-version = "0.2.1"
-edition = "2021"
-license = "MIT"
-authors = ["Marc Espín <mespinsanz@gmail.com>"]
-readme = "../../readme.md"
-homepage = "https://freyaui.dev/"
-repository = "https://github.com/marc2332/freya"
-keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
-categories = ["gui", "asynchronous"]
+  name        = "freya-common"
+  description = "Internal common utilities for Freya."
+  version     = "0.2.1"
+  edition     = "2021"
+  license     = "MIT"
+  authors     = ["Marc Espín <mespinsanz@gmail.com>"]
+  readme      = "../../readme.md"
+  homepage    = "https://freyaui.dev/"
+  repository  = "https://github.com/marc2332/freya"
+  keywords    = ["gui", "ui", "desktop", "skia", "dioxus"]
+  categories  = ["gui", "asynchronous"]
 
-[package.metadata.docs.rs]
-features = ["freya-engine/mocked-engine"]
+  [package.metadata.docs.rs]
+    features = ["freya-engine/mocked-engine"]
 
 [features]
-skia-engine = ["freya-engine/skia-engine"]
+  skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
-torin = { workspace = true }
+  torin = { workspace = true }
 
-dioxus-core = { workspace = true }
+  dioxus-core = { workspace = true }
 
-accesskit = { workspace = true }
-accesskit_winit = { workspace = true }
-winit = { workspace = true }
-freya-engine = { workspace = true }
-freya-native-core = { workspace = true }
-rustc-hash= { workspace = true }
+  accesskit         = { workspace = true }
+  accesskit_winit   = { workspace = true }
+  winit             = { workspace = true }
+  freya-engine      = { workspace = true }
+  freya-native-core = { workspace = true }
+  rustc-hash        = { workspace = true }
 
-uuid = { workspace = true }
+  uuid = { workspace = true }
