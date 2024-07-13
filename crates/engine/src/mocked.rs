@@ -982,11 +982,15 @@ pub struct PlaceholderStyle;
 pub struct Canvas;
 
 impl Canvas {
-    pub fn save(&self) {
+    pub fn save(&self) -> usize {
         unimplemented!("This is mocked")
     }
 
     pub fn restore(&self) {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn restore_to_count(&self, layer: usize) {
         unimplemented!("This is mocked")
     }
 
