@@ -3,8 +3,6 @@
     windows_subsystem = "windows"
 )]
 
-use freya::prelude::*;
-
 #[cfg(not(feature = "custom-tokio-rt"))]
 fn main() {
     panic!("Run this example without the `custom-tokio-rt` feature.");
@@ -12,6 +10,8 @@ fn main() {
 
 #[cfg(feature = "custom-tokio-rt")]
 fn main() {
+    use freya::prelude::*;
+
     let rt = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
