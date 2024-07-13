@@ -954,7 +954,7 @@ pub struct PlaceholderStyle;
 pub struct Canvas;
 
 impl Canvas {
-    pub fn save(&self) {
+    pub fn save(&self) -> usize {
         unimplemented!("This is mocked")
     }
 
