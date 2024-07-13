@@ -10,7 +10,7 @@ use freya_node_state::{
 
 #[test]
 fn parse_big_shadow() {
-    let shadow = Shadow::parse("1 2 50 25.0 red");
+    let shadow = Shadow::parse_value("1 2 50 25.0 red");
     assert_eq!(
         shadow,
         Ok(Shadow {
@@ -26,7 +26,7 @@ fn parse_big_shadow() {
 
 #[test]
 fn parse_inset_shadow() {
-    let shadow = Shadow::parse("inset 1 2 50 25.0 red");
+    let shadow = Shadow::parse_value("inset 1 2 50 25.0 red");
     assert_eq!(
         shadow,
         Ok(Shadow {
@@ -42,7 +42,7 @@ fn parse_inset_shadow() {
 
 #[test]
 fn parse_shadow_with_assumed_spread() {
-    let shadow = Shadow::parse("inset 1 2 50 red");
+    let shadow = Shadow::parse_value("inset 1 2 50 red");
     assert_eq!(
         shadow,
         Ok(Shadow {
@@ -58,7 +58,7 @@ fn parse_shadow_with_assumed_spread() {
 
 #[test]
 fn parse_gradient_shadow() {
-    let shadow = Shadow::parse("inset 1 2 50 linear-gradient(red 0%, blue 100%)");
+    let shadow = Shadow::parse_value("inset 1 2 50 linear-gradient(red 0%, blue 100%)");
     assert_eq!(
         shadow,
         Ok(Shadow {

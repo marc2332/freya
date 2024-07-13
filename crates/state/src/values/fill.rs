@@ -7,6 +7,7 @@ use crate::{
     LinearGradient,
     Parse,
     ParseError,
+    Parser,
 };
 
 #[derive(Clone, Debug, PartialEq)]
@@ -30,12 +31,10 @@ impl From<Color> for Fill {
 }
 
 impl Parse for Fill {
-    fn parse(value: &str) -> Result<Self, ParseError> {
-        Ok(if value.starts_with("linear-gradient(") {
-            Self::LinearGradient(LinearGradient::parse(value).map_err(|_| ParseError)?)
-        } else {
-            Self::Color(Color::parse(value).map_err(|_| ParseError)?)
-        })
+    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
+        LinearGradient::parse(parser)
+            .map(Self::LinearGradient)
+            .or(Color::parse(parser).map(Self::Color))
     }
 }
 

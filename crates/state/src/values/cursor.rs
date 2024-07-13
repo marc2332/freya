@@ -3,6 +3,7 @@ use std::fmt;
 use crate::{
     Parse,
     ParseError,
+    Parser,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -12,10 +13,13 @@ pub enum CursorMode {
 }
 
 impl Parse for CursorMode {
-    fn parse(value: &str) -> Result<Self, ParseError> {
-        Ok(match value {
-            "editable" => CursorMode::Editable,
-            _ => CursorMode::None,
+    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
+        parser.consume_map(|value| {
+            value.as_string().and_then(|value| match value {
+                "none" => Some(Self::None),
+                "editable" => Some(Self::Editable),
+                _ => None,
+            })
         })
     }
 }

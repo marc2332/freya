@@ -1,6 +1,7 @@
 use crate::{
     Parse,
     ParseError,
+    Parser,
 };
 
 #[derive(Default, Clone, Debug, PartialEq)]
@@ -13,10 +14,13 @@ pub enum HighlightMode {
 }
 
 impl Parse for HighlightMode {
-    fn parse(value: &str) -> Result<Self, ParseError> {
-        match value {
-            "expanded" => Ok(HighlightMode::Expanded),
-            _ => Ok(HighlightMode::Fit),
-        }
+    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
+        parser.consume_map(|value| {
+            value.as_string().and_then(|value| match value {
+                "expanded" => Some(Self::Expanded),
+                "fit" => Some(Self::Fit),
+                _ => None,
+            })
+        })
     }
 }

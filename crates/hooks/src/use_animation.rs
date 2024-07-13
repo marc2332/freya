@@ -133,13 +133,13 @@ pub struct AnimColor {
 impl AnimColor {
     pub fn new(origin: &str, destination: &str) -> Self {
         Self {
-            origin: Color::parse(origin).unwrap(),
-            destination: Color::parse(destination).unwrap(),
+            origin: Color::parse_value(origin).unwrap(),
+            destination: Color::parse_value(destination).unwrap(),
             time: Duration::default(),
             ease: Ease::default(),
             function: Function::default(),
 
-            value: Color::parse(origin).unwrap(),
+            value: Color::parse_value(origin).unwrap(),
         }
     }
 

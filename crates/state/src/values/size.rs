@@ -9,70 +9,73 @@ use torin::{
 use crate::{
     Parse,
     ParseError,
+    Parser,
+    Token,
 };
 
 impl Parse for Size {
-    fn parse(value: &str) -> Result<Self, ParseError> {
-        if value == "auto" {
-            Ok(Size::Inner)
-        } else if value == "fill" {
-            Ok(Size::Fill)
-        } else if value == "fill-min" {
-            Ok(Size::FillMinimum)
-        } else if value.contains("calc") {
-            Ok(Size::DynamicCalculations(Box::new(parse_calc(value)?)))
-        } else if value.contains('%') {
-            Ok(Size::Percentage(Length::new(
-                value
-                    .replace('%', "")
-                    .parse::<f32>()
-                    .map_err(|_| ParseError)?,
-            )))
-        } else if value.contains('v') {
-            Ok(Size::RootPercentage(Length::new(
-                value
-                    .replace('v', "")
-                    .parse::<f32>()
-                    .map_err(|_| ParseError)?,
-            )))
+    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
+        let value = parser.consume_if(|token| token.is_ident() || token.is_integer())?;
+
+        if value.is_ident() {
+            value
+                .as_string()
+                .and_then(|value| match value {
+                    "auto" => Some(Self::Inner),
+                    "fill" => Some(Self::Fill),
+                    "fill-min" => Some(Self::FillMinimum),
+                    "calc" => parse_calc(parser)
+                        .map(|value| Self::DynamicCalculations(Box::new(value)))
+                        .ok(),
+                    _ => None,
+                })
+                .ok_or(ParseError)
         } else {
-            Ok(Size::Pixels(Length::new(
-                value.parse::<f32>().map_err(|_| ParseError)?,
-            )))
+            let value = value.into_float();
+
+            Ok(if parser.try_consume(&Token::Percent) {
+                Size::Percentage(Length::new(value))
+            } else if parser.try_consume(&Token::ident("v")) {
+                Size::RootPercentage(Length::new(value))
+            } else {
+                Size::Pixels(Length::new(value))
+            })
         }
     }
 }
 
-pub fn parse_calc(mut value: &str) -> Result<Vec<DynamicCalculation>, ParseError> {
-    let mut calcs = Vec::new();
+pub fn parse_calc(parser: &mut Parser) -> Result<Vec<DynamicCalculation>, ParseError> {
+    parser.consume(&Token::ParenOpen)?;
 
-    value = value
-        .strip_prefix("calc(")
-        .ok_or(ParseError)?
-        .strip_suffix(')')
-        .ok_or(ParseError)?;
+    let mut calcs = vec![];
 
-    let values = value.split_whitespace();
+    while let Ok(value) = parser.consume_if(|token| {
+        token.is_integer()
+            || matches!(
+                token,
+                Token::Plus | Token::Minus | Token::Slash | Token::Star
+            )
+    }) {
+        if value.is_integer() {
+            let value = value.into_float();
 
-    for val in values {
-        if val.contains('%') {
-            calcs.push(DynamicCalculation::Percentage(
-                val.replace('%', "").parse().map_err(|_| ParseError)?,
-            ));
-        } else if val == "+" {
-            calcs.push(DynamicCalculation::Add);
-        } else if val == "-" {
-            calcs.push(DynamicCalculation::Sub);
-        } else if val == "/" {
-            calcs.push(DynamicCalculation::Div);
-        } else if val == "*" {
-            calcs.push(DynamicCalculation::Mul);
+            calcs.push(if parser.try_consume(&Token::Percent) {
+                DynamicCalculation::Percentage(value)
+            } else {
+                DynamicCalculation::Pixels(value)
+            });
         } else {
-            calcs.push(DynamicCalculation::Pixels(
-                val.parse::<f32>().map_err(|_| ParseError)?,
-            ));
+            match value {
+                Token::Plus => calcs.push(DynamicCalculation::Add),
+                Token::Minus => calcs.push(DynamicCalculation::Sub),
+                Token::Slash => calcs.push(DynamicCalculation::Div),
+                Token::Star => calcs.push(DynamicCalculation::Mul),
+                _ => {}
+            }
         }
     }
+
+    parser.consume(&Token::ParenClose)?;
 
     Ok(calcs)
 }

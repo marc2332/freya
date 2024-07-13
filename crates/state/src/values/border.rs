@@ -6,6 +6,8 @@ use crate::{
     Fill,
     Parse,
     ParseError,
+    Parser,
+    Token,
 };
 
 #[derive(Default, Clone, Copy, Debug, PartialEq)]
@@ -32,12 +34,14 @@ pub enum BorderAlignment {
 }
 
 impl Parse for BorderAlignment {
-    fn parse(value: &str) -> Result<Self, ParseError> {
-        Ok(match value {
-            "inner" => BorderAlignment::Inner,
-            "outer" => BorderAlignment::Outer,
-            "center" => BorderAlignment::Center,
-            _ => BorderAlignment::default(),
+    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
+        parser.consume_map(|value| {
+            value.as_string().and_then(|value| match value {
+                "inner" => Some(BorderAlignment::Inner),
+                "outer" => Some(BorderAlignment::Outer),
+                "center" => Some(BorderAlignment::Center),
+                _ => None,
+            })
         })
     }
 }
@@ -62,25 +66,21 @@ impl fmt::Display for BorderStyle {
 }
 
 impl Parse for Border {
-    fn parse(value: &str) -> Result<Self, ParseError> {
-        if value == "none" {
+    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
+        if parser.try_consume(&Token::ident("none")) {
             return Ok(Self::default());
         }
 
-        let mut border_values = value.split_ascii_whitespace();
-
         Ok(Border {
-            width: border_values
-                .next()
-                .ok_or(ParseError)?
-                .parse::<f32>()
-                .map_err(|_| ParseError)?,
-            style: match border_values.next().ok_or(ParseError)? {
-                "solid" => BorderStyle::Solid,
-                _ => BorderStyle::None,
-            },
-            fill: Fill::parse(&border_values.collect::<Vec<&str>>().join(" "))
-                .map_err(|_| ParseError)?,
+            width: parser.consume_map(Token::as_float)?,
+            style: parser.consume_map(|value| {
+                value.as_string().and_then(|value| match value {
+                    "none" => Some(BorderStyle::None),
+                    "solid" => Some(BorderStyle::Solid),
+                    _ => None,
+                })
+            })?,
+            fill: Fill::parse(parser)?,
             alignment: BorderAlignment::default(),
         })
     }

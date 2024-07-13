@@ -15,10 +15,12 @@ use freya_native_core_macro::partial_derive_state;
 
 use crate::{
     CustomAttributeValues,
+    Lexer,
     OverflowMode,
     Parse,
     ParseAttribute,
     ParseError,
+    Parser,
 };
 
 #[derive(Default, PartialEq, Clone, Debug, Component)]
@@ -32,12 +34,14 @@ impl ParseAttribute for ViewportState {
     fn parse_attribute(
         &mut self,
         attr: freya_native_core::prelude::OwnedAttributeView<CustomAttributeValues>,
-    ) -> Result<(), crate::ParseError> {
+    ) -> Result<(), ParseError> {
         #[allow(clippy::single_match)]
         match attr.attribute {
             AttributeName::Overflow => {
                 if let Some(value) = attr.value.as_text() {
-                    self.overflow = OverflowMode::parse(value).map_err(|_| ParseError)?;
+                    let mut parser = Parser::new(Lexer::parse(value));
+
+                    self.overflow = OverflowMode::parse(&mut parser)?;
                 }
             }
             _ => {}

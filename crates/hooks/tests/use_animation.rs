@@ -168,7 +168,7 @@ pub async fn animate_color() {
 
     assert_eq!(
         utils.root().get(0).style().background,
-        Fill::Color(Color::parse("rgb(50, 100, 200)").unwrap())
+        Fill::Color(Color::parse_value("rgb(50, 100, 200)").unwrap())
     );
 }
 

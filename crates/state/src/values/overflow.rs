@@ -3,6 +3,7 @@ use std::fmt;
 use crate::{
     Parse,
     ParseError,
+    Parser,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
@@ -13,10 +14,13 @@ pub enum OverflowMode {
 }
 
 impl Parse for OverflowMode {
-    fn parse(value: &str) -> Result<Self, ParseError> {
-        Ok(match value {
-            "clip" => OverflowMode::Clip,
-            _ => OverflowMode::None,
+    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
+        parser.consume_map(|value| {
+            value.as_string().and_then(|value| match value {
+                "clip" => Some(Self::Clip),
+                "none" => Some(Self::None),
+                _ => None,
+            })
         })
     }
 }
@@ -24,8 +28,8 @@ impl Parse for OverflowMode {
 impl fmt::Display for OverflowMode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(match self {
-            OverflowMode::Clip => "clip",
-            OverflowMode::None => "none",
+            Self::Clip => "clip",
+            Self::None => "none",
         })
     }
 }

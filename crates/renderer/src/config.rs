@@ -155,7 +155,7 @@ impl<'a, T: Clone> LaunchConfig<'a, T> {
 
     /// Specify the Window background color.
     pub fn with_background(mut self, background: &str) -> Self {
-        self.window_config.background = Color::parse(background).unwrap_or(Color::WHITE);
+        self.window_config.background = Color::parse_value(background).unwrap_or(Color::WHITE);
         self
     }
 

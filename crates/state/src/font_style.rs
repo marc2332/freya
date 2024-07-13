@@ -22,10 +22,13 @@ use torin::torin::Torin;
 
 use crate::{
     CustomAttributeValues,
-    ExtSplit,
+    Lexer,
     Parse,
     ParseAttribute,
+    ParseError,
+    Parser,
     TextOverflow,
+    Token,
 };
 
 #[derive(Debug, Clone, PartialEq, Component)]
@@ -105,28 +108,36 @@ impl ParseAttribute for FontStyleState {
     fn parse_attribute(
         &mut self,
         attr: freya_native_core::prelude::OwnedAttributeView<CustomAttributeValues>,
-    ) -> Result<(), crate::ParseError> {
+    ) -> Result<(), ParseError> {
         match attr.attribute {
             AttributeName::Color => {
                 if let Some(value) = attr.value.as_text() {
                     // Make an exception for the "inherit" as in this case we don't want to pass
                     //  a color at all but use the inherited one.
                     if value != "inherit" {
-                        self.color = Color::parse(value)?;
+                        let mut parser = Parser::new(Lexer::parse(value));
+
+                        self.color = Color::parse(&mut parser)?;
                     }
                 }
             }
             AttributeName::TextShadow => {
                 if let Some(value) = attr.value.as_text() {
-                    self.text_shadows = value
-                        .split_excluding_group(',', '(', ')')
-                        .map(|chunk| TextShadow::parse(chunk).unwrap_or_default())
-                        .collect();
+                    let mut parser = Parser::new(Lexer::parse(value));
+
+                    let mut shadows = vec![TextShadow::parse(&mut parser)?];
+
+                    while parser.try_consume(&Token::Comma) {
+                        shadows.push(TextShadow::parse(&mut parser)?);
+                    }
+
+                    self.text_shadows = shadows;
                 }
             }
             AttributeName::FontFamily => {
                 if let Some(value) = attr.value.as_text() {
                     let families = value.split(',');
+
                     self.font_family = families
                         .into_iter()
                         .map(|f| f.trim().to_string())
@@ -149,84 +160,75 @@ impl ParseAttribute for FontStyleState {
             }
             AttributeName::TextAlign => {
                 if let Some(value) = attr.value.as_text() {
-                    if let Ok(text_align) = TextAlign::parse(value) {
-                        self.text_align = text_align;
-                    }
+                    let mut parser = Parser::new(Lexer::parse(value));
+
+                    self.text_align = TextAlign::parse(&mut parser)?;
                 }
             }
             AttributeName::MaxLines => {
                 if let Some(value) = attr.value.as_text() {
-                    if let Ok(max_lines) = value.parse() {
-                        self.max_lines = Some(max_lines);
-                    }
+                    self.max_lines = Some(value.parse().map_err(|_| ParseError)?);
                 }
             }
             AttributeName::TextOverflow => {
-                let value = attr.value.as_text();
-                if let Some(value) = value {
-                    if let Ok(text_overflow) = TextOverflow::parse(value) {
-                        self.text_overflow = text_overflow;
-                    }
+                if let Some(value) = attr.value.as_text() {
+                    let mut parser = Parser::new(Lexer::parse(value));
+
+                    self.text_overflow = TextOverflow::parse(&mut parser)?;
                 }
             }
             AttributeName::FontStyle => {
                 if let Some(value) = attr.value.as_text() {
-                    if let Ok(font_slant) = Slant::parse(value) {
-                        self.font_slant = font_slant;
-                    }
+                    let mut parser = Parser::new(Lexer::parse(value));
+
+                    self.font_slant = Slant::parse(&mut parser)?;
                 }
             }
             AttributeName::FontWeight => {
                 if let Some(value) = attr.value.as_text() {
-                    if let Ok(font_weight) = Weight::parse(value) {
-                        self.font_weight = font_weight;
-                    }
+                    let mut parser = Parser::new(Lexer::parse(value));
+
+                    self.font_weight = Weight::parse(&mut parser)?;
                 }
             }
             AttributeName::FontWidth => {
                 if let Some(value) = attr.value.as_text() {
-                    if let Ok(font_width) = Width::parse(value) {
-                        self.font_width = font_width;
-                    }
+                    let mut parser = Parser::new(Lexer::parse(value));
+
+                    self.font_width = Width::parse(&mut parser)?;
                 }
             }
             AttributeName::Decoration => {
                 if let Some(value) = attr.value.as_text() {
-                    if let Ok(decoration) = TextDecoration::parse(value) {
-                        self.decoration.ty = decoration;
-                    }
+                    let mut parser = Parser::new(Lexer::parse(value));
+
+                    self.decoration.ty = TextDecoration::parse(&mut parser)?;
                 }
             }
             AttributeName::DecorationStyle => {
                 if let Some(value) = attr.value.as_text() {
-                    if let Ok(style) = TextDecorationStyle::parse(value) {
-                        self.decoration.style = style;
-                    }
+                    let mut parser = Parser::new(Lexer::parse(value));
+
+                    self.decoration.style = TextDecorationStyle::parse(&mut parser)?;
                 }
             }
             AttributeName::DecorationColor => {
                 if let Some(value) = attr.value.as_text() {
-                    if let Ok(new_decoration_color) = Color::parse(value) {
-                        self.decoration.color = new_decoration_color;
-                    }
+                    let mut parser = Parser::new(Lexer::parse(value));
+
+                    self.decoration.color = Color::parse(&mut parser)?;
                 } else {
                     self.decoration.color = self.color;
                 }
             }
             AttributeName::WordSpacing => {
-                let value = attr.value.as_text();
-                if let Some(value) = value {
-                    if let Ok(word_spacing) = value.parse() {
-                        self.word_spacing = word_spacing;
-                    }
+                if let Some(value) = attr.value.as_text() {
+                    self.word_spacing = value.parse().map_err(|_| ParseError)?;
                 }
             }
             AttributeName::LetterSpacing => {
-                let value = attr.value.as_text();
-                if let Some(value) = value {
-                    if let Ok(letter_spacing) = value.parse() {
-                        self.letter_spacing = letter_spacing;
-                    }
+                if let Some(value) = attr.value.as_text() {
+                    self.letter_spacing = value.parse().map_err(|_| ParseError)?;
                 }
             }
             _ => {}

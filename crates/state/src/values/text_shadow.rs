@@ -3,34 +3,21 @@ use freya_engine::prelude::*;
 use crate::{
     Parse,
     ParseError,
+    Parser,
+    Token,
 };
 
 // Same as shadow, but no inset or spread.
 impl Parse for TextShadow {
-    fn parse(value: &str) -> Result<Self, ParseError> {
-        let mut shadow_values = value.split_ascii_whitespace();
+    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
         Ok(TextShadow {
             offset: (
-                shadow_values
-                    .next()
-                    .ok_or(ParseError)?
-                    .parse::<f32>()
-                    .map_err(|_| ParseError)?,
-                shadow_values
-                    .next()
-                    .ok_or(ParseError)?
-                    .parse::<f32>()
-                    .map_err(|_| ParseError)?,
+                parser.consume_map(Token::as_float)?,
+                parser.consume_map(Token::as_float)?,
             )
                 .into(),
-            blur_sigma: shadow_values
-                .next()
-                .ok_or(ParseError)?
-                .parse::<f64>()
-                .map_err(|_| ParseError)?
-                / 2.0,
-            color: Color::parse(shadow_values.collect::<Vec<&str>>().join(" ").as_str())
-                .map_err(|_| ParseError)?,
+            blur_sigma: parser.consume_map(Token::as_float)? as f64 / 2.0,
+            color: Color::parse(parser)?,
         })
     }
 }

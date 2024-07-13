@@ -9,6 +9,8 @@ use torin::scaled::Scaled;
 use crate::{
     Parse,
     ParseError,
+    Parser,
+    Token,
 };
 
 #[derive(PartialEq, Clone, Debug, Default, Copy)]
@@ -199,64 +201,34 @@ impl CornerRadius {
 }
 
 impl Parse for CornerRadius {
-    fn parse(value: &str) -> Result<Self, ParseError> {
+    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
         let mut radius = CornerRadius::default();
-        let mut values = value.split_ascii_whitespace();
 
-        match values.clone().count() {
+        match (
+            parser.consume_map(Token::as_float)?,
+            parser.consume_map(Token::as_float).ok(),
+            parser.consume_map(Token::as_float).ok(),
+            parser.consume_map(Token::as_float).ok(),
+        ) {
             // Same in all corners
-            1 => {
-                radius.fill_all(
-                    values
-                        .next()
-                        .ok_or(ParseError)?
-                        .parse::<f32>()
-                        .map_err(|_| ParseError)?,
-                );
+            (value, None, None, None) => {
+                radius.fill_all(value);
             }
             // By Top and Bottom
-            2 => {
+            (top, Some(bottom), None, None) => {
                 // Top
-                radius.fill_top(
-                    values
-                        .next()
-                        .ok_or(ParseError)?
-                        .parse::<f32>()
-                        .map_err(|_| ParseError)?,
-                );
+                radius.fill_top(top);
 
                 // Bottom
-                radius.fill_bottom(
-                    values
-                        .next()
-                        .ok_or(ParseError)?
-                        .parse::<f32>()
-                        .map_err(|_| ParseError)?,
-                )
+                radius.fill_bottom(bottom)
             }
             // Each corner
-            4 => {
+            (top_left, Some(top_right), Some(bottom_left), Some(bottom_right)) => {
                 radius = CornerRadius {
-                    top_left: values
-                        .next()
-                        .ok_or(ParseError)?
-                        .parse::<f32>()
-                        .map_err(|_| ParseError)?,
-                    top_right: values
-                        .next()
-                        .ok_or(ParseError)?
-                        .parse::<f32>()
-                        .map_err(|_| ParseError)?,
-                    bottom_left: values
-                        .next()
-                        .ok_or(ParseError)?
-                        .parse::<f32>()
-                        .map_err(|_| ParseError)?,
-                    bottom_right: values
-                        .next()
-                        .ok_or(ParseError)?
-                        .parse::<f32>()
-                        .map_err(|_| ParseError)?,
+                    top_left,
+                    top_right,
+                    bottom_left,
+                    bottom_right,
                     ..Default::default()
                 }
             }

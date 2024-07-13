@@ -1,15 +1,126 @@
-use std::str::CharIndices;
+use std::{
+    iter::Peekable,
+    str::CharIndices,
+    vec::IntoIter,
+};
 
 use freya_native_core::prelude::OwnedAttributeView;
 
-use crate::CustomAttributeValues;
+use crate::{
+    CustomAttributeValues,
+    Lexer,
+    Token,
+};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ParseError;
 
+pub struct Parser {
+    tokens: Peekable<IntoIter<Token>>,
+}
+
+impl Parser {
+    pub fn new(tokens: Vec<Token>) -> Self {
+        Self {
+            tokens: tokens.into_iter().peekable(),
+        }
+    }
+
+    /// Consumes the current token only if it exists and is equal to `value`.
+    pub fn try_consume(&mut self, value: &Token) -> bool {
+        if self.peek().is_some_and(|v| v == value) {
+            self.next();
+
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Checks if the next token exists and it is equal to `value`.
+    pub fn check(&mut self, value: &Token) -> bool {
+        self.peek().is_some_and(|v| v == value)
+    }
+
+    /// Returns the `bool` result of `func` if the next token exists.
+    pub fn check_if<F: Fn(&Token) -> bool>(&mut self, func: F) -> bool {
+        self.peek().is_some_and(func)
+    }
+
+    /// Consumes the current token if it exists and is equal to `value`, otherwise returning `ParseError`.
+    pub fn consume(&mut self, value: &Token) -> Result<Token, ParseError> {
+        if self.check(value) {
+            Ok(self.next().unwrap())
+        } else {
+            Err(ParseError)
+        }
+    }
+
+    /// Consumes the current token if it exists and is equal to one of the values inside `values`, otherwise returning `ParseError`.
+    pub fn consume_one_of(&mut self, values: &[Token]) -> Result<Token, ParseError> {
+        if self.check_if(|value| values.contains(value)) {
+            Ok(self.next().unwrap())
+        } else {
+            Err(ParseError)
+        }
+    }
+
+    /// Consumes the current token if it exists and the result of `func` is `true`, otherwise returning `ParseError`.
+    pub fn consume_if<F: Fn(&Token) -> bool>(&mut self, func: F) -> Result<Token, ParseError> {
+        if self.check_if(func) {
+            Ok(self.next().unwrap())
+        } else {
+            Err(ParseError)
+        }
+    }
+
+    /// Consumes the current token if it exists and the result of the `func` is `Some(T)`, otherwise returning `ParseError`.
+    pub fn consume_map<T, F: Fn(&Token) -> Option<T>>(&mut self, func: F) -> Result<T, ParseError> {
+        if let Some(value) = self.peek().and_then(func) {
+            self.next();
+
+            Ok(value)
+        } else {
+            Err(ParseError)
+        }
+    }
+
+    /// Consumes the current token and returns it wrapped in `Some` if it exists, otherwise returning `None`.
+    #[allow(clippy::should_implement_trait)]
+    pub fn next(&mut self) -> Option<Token> {
+        self.tokens.next()
+    }
+
+    /// Peeks the current token and returns a reference to it wrapped in `Some` if it exists, otherwise returning `None`.
+    pub fn peek(&mut self) -> Option<&Token> {
+        self.tokens.peek()
+    }
+
+    /// Consumes the current token and returns it wrapped in `Some` if the result of the `func` function is `true`, otherwise returning `None`.
+    pub fn next_if<F: Fn(&Token) -> bool>(&mut self, func: F) -> Option<Token> {
+        if self.check_if(func) {
+            self.next()
+        } else {
+            None
+        }
+    }
+}
+
 // FromStr but we own it so we can impl it on torin and skia_safe types.
 pub trait Parse: Sized {
-    fn parse(value: &str) -> Result<Self, ParseError>;
+    fn parse(parser: &mut Parser) -> Result<Self, ParseError>;
+
+    fn parse_value(value: &str) -> Result<Self, ParseError> {
+        let mut parser = Parser::new(Lexer::parse(value));
+
+        let value = Self::parse(&mut parser);
+
+        if parser.tokens.len() > 0 {
+            Err(ParseError)
+        } else {
+            value
+        }
+    }
 }
 
 pub trait ParseAttribute: Sized {
@@ -22,10 +133,11 @@ pub trait ParseAttribute: Sized {
         #[cfg(debug_assertions)]
         {
             let error_attr = attr.clone();
+
             if self.parse_attribute(attr).is_err() {
                 panic!(
                     "Failed to parse attribute '{:?}' with value '{:?}'",
-                    error_attr.attribute, error_attr.value
+                    error_attr.attribute, error_attr.value,
                 );
             }
         }

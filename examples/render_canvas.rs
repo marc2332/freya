@@ -27,7 +27,8 @@ fn app() -> Element {
     });
 
     let canvas = use_canvas(move || {
-        let state = state.read().clone();
+        let state = state();
+
         Box::new(move |canvas, font_collection, region, _| {
             canvas.translate((region.min_x(), region.min_y()));
 

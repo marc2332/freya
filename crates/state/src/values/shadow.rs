@@ -1,10 +1,11 @@
 use torin::scaled::Scaled;
 
 use crate::{
-    ExtSplit,
     Fill,
     Parse,
     ParseError,
+    Parser,
+    Token,
 };
 
 #[derive(Default, Clone, Debug, PartialEq)]
@@ -25,51 +26,26 @@ pub struct Shadow {
 }
 
 impl Parse for Shadow {
-    fn parse(value: &str) -> Result<Self, ParseError> {
-        let mut shadow_values = value.split_ascii_whitespace_excluding_group('(', ')');
+    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
         let mut shadow = Shadow::default();
 
-        let first = shadow_values.next().ok_or(ParseError)?;
+        if parser.try_consume(&Token::ident("none")) {
+            return Ok(shadow);
+        }
 
-        if first == "inset" {
+        if parser.try_consume(&Token::ident("inset")) {
             shadow.position = ShadowPosition::Inset;
-            shadow.x = shadow_values
-                .next()
-                .ok_or(ParseError)?
-                .parse::<f32>()
-                .map_err(|_| ParseError)?;
-        } else {
-            shadow.x = first.parse::<f32>().map_err(|_| ParseError)?;
         }
 
-        shadow.y = shadow_values
-            .next()
-            .ok_or(ParseError)?
-            .parse::<f32>()
-            .map_err(|_| ParseError)?;
-        shadow.blur = shadow_values
-            .next()
-            .ok_or(ParseError)?
-            .parse::<f32>()
-            .map_err(|_| ParseError)?;
+        shadow.x = parser.consume_map(Token::as_float)?;
+        shadow.y = parser.consume_map(Token::as_float)?;
+        shadow.blur = parser.consume_map(Token::as_float)?;
 
-        let spread_or_fill = shadow_values.next().ok_or(ParseError)?;
-
-        let mut already_filled = false;
-        if let Ok(spread) = spread_or_fill.parse::<f32>() {
+        if let Ok(spread) = parser.consume_map(Token::as_float) {
             shadow.spread = spread;
-        } else {
-            already_filled = true;
-            shadow.fill = Fill::parse(spread_or_fill).map_err(|_| ParseError)?;
         }
 
-        if let Some(fill) = shadow_values.next() {
-            if !already_filled {
-                shadow.fill = Fill::parse(fill).map_err(|_| ParseError)?
-            } else {
-                return Err(ParseError);
-            }
-        }
+        shadow.fill = Fill::parse(parser)?;
 
         Ok(shadow)
     }

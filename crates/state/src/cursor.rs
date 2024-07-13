@@ -22,9 +22,11 @@ use crate::{
     CursorReference,
     CustomAttributeValues,
     HighlightMode,
+    Lexer,
     Parse,
     ParseAttribute,
     ParseError,
+    Parser,
 };
 
 #[derive(Clone, Debug, PartialEq, Component)]
@@ -69,12 +71,16 @@ impl ParseAttribute for CursorState {
             }
             AttributeName::CursorColor => {
                 if let Some(value) = attr.value.as_text() {
-                    self.color = Color::parse(value)?;
+                    let mut parser = Parser::new(Lexer::parse(value));
+
+                    self.color = Color::parse(&mut parser)?;
                 }
             }
             AttributeName::CursorMode => {
                 if let Some(value) = attr.value.as_text() {
-                    self.mode = CursorMode::parse(value)?;
+                    let mut parser = Parser::new(Lexer::parse(value));
+
+                    self.mode = CursorMode::parse(&mut parser)?;
                 }
             }
             AttributeName::CursorId => {
@@ -91,12 +97,16 @@ impl ParseAttribute for CursorState {
             }
             AttributeName::HighlightColor => {
                 if let Some(value) = attr.value.as_text() {
-                    self.highlight_color = Color::parse(value)?;
+                    let mut parser = Parser::new(Lexer::parse(value));
+
+                    self.highlight_color = Color::parse(&mut parser)?;
                 }
             }
             AttributeName::HighlightMode => {
                 if let Some(value) = attr.value.as_text() {
-                    self.highlight_mode = HighlightMode::parse(value)?;
+                    let mut parser = Parser::new(Lexer::parse(value));
+
+                    self.highlight_mode = HighlightMode::parse(&mut parser)?;
                 }
             }
             AttributeName::CursorReference => {

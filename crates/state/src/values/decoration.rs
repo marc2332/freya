@@ -3,23 +3,23 @@ use freya_engine::prelude::*;
 use crate::{
     Parse,
     ParseError,
+    Parser,
 };
 
 impl Parse for TextDecoration {
-    fn parse(value: &str) -> Result<Self, ParseError> {
-        let mut decoration = TextDecoration::default();
-        let values = value.split_ascii_whitespace();
+    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
+        let mut decoration = Self::default();
 
-        for val in values {
-            decoration.set(
-                match val {
-                    "underline" => TextDecoration::UNDERLINE,
-                    "overline" => TextDecoration::OVERLINE,
-                    "line-through" => TextDecoration::LINE_THROUGH,
-                    _ => TextDecoration::NO_DECORATION,
-                },
-                true,
-            );
+        while let Ok(value) = parser.consume_map(|token| {
+            token.as_string().and_then(|value| match value {
+                "none" => Some(Self::NO_DECORATION),
+                "underline" => Some(Self::UNDERLINE),
+                "overline" => Some(Self::OVERLINE),
+                "line-through" => Some(Self::LINE_THROUGH),
+                _ => None,
+            })
+        }) {
+            decoration.set(value, true);
         }
 
         Ok(decoration)
@@ -27,14 +27,16 @@ impl Parse for TextDecoration {
 }
 
 impl Parse for TextDecorationStyle {
-    fn parse(value: &str) -> Result<Self, ParseError> {
-        Ok(match value {
-            "solid" => TextDecorationStyle::Solid,
-            "double" => TextDecorationStyle::Double,
-            "dotted" => TextDecorationStyle::Dotted,
-            "dashed" => TextDecorationStyle::Dashed,
-            "wavy" => TextDecorationStyle::Wavy,
-            _ => TextDecorationStyle::Solid,
+    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
+        parser.consume_map(|token| {
+            token.as_string().and_then(|value| match value {
+                "solid" => Some(Self::Solid),
+                "double" => Some(Self::Double),
+                "dotted" => Some(Self::Dotted),
+                "dashed" => Some(Self::Dashed),
+                "wavy" => Some(Self::Wavy),
+                _ => None,
+            })
         })
     }
 }

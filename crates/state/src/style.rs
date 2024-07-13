@@ -14,18 +14,20 @@ use freya_native_core::{
 use freya_native_core_macro::partial_derive_state;
 
 use crate::{
-    parsing::ExtSplit,
     AttributesBytes,
     Border,
     BorderAlignment,
     CornerRadius,
     CustomAttributeValues,
     Fill,
+    Lexer,
     OverflowMode,
     Parse,
     ParseAttribute,
     ParseError,
+    Parser,
     Shadow,
+    Token,
 };
 
 #[derive(Default, Debug, Clone, PartialEq, Component)]
@@ -51,45 +53,63 @@ impl ParseAttribute for StyleState {
                     if value == "none" {
                         return Ok(());
                     }
-                    self.background = Fill::parse(value)?;
+
+                    let mut parser = Parser::new(Lexer::parse(value));
+
+                    self.background = Fill::parse(&mut parser)?;
                 }
             }
             AttributeName::Border => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut border = Border::parse(value)?;
+                    let mut parser = Parser::new(Lexer::parse(value));
+
+                    let mut border = Border::parse(&mut parser)?;
+
                     border.alignment = self.border.alignment;
+
                     self.border = border;
                 }
             }
             AttributeName::BorderAlign => {
                 if let Some(value) = attr.value.as_text() {
-                    self.border.alignment = BorderAlignment::parse(value)?;
+                    let mut parser = Parser::new(Lexer::parse(value));
+
+                    self.border.alignment = BorderAlignment::parse(&mut parser)?;
                 }
             }
             AttributeName::Shadow => {
                 if let Some(value) = attr.value.as_text() {
-                    self.shadows = value
-                        .split_excluding_group(',', '(', ')')
-                        .map(|chunk| Shadow::parse(chunk).unwrap_or_default())
-                        .collect();
+                    let mut parser = Parser::new(Lexer::parse(value));
+
+                    let mut shadows = vec![Shadow::parse(&mut parser)?];
+
+                    while parser.try_consume(&Token::Comma) {
+                        shadows.push(Shadow::parse(&mut parser)?);
+                    }
+
+                    self.shadows = shadows;
                 }
             }
             AttributeName::CornerRadius => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut radius = CornerRadius::parse(value)?;
+                    let mut parser = Parser::new(Lexer::parse(value));
+
+                    let mut radius = CornerRadius::parse(&mut parser)?;
+
                     radius.smoothing = self.corner_radius.smoothing;
+
                     self.corner_radius = radius;
                 }
             }
             AttributeName::CornerSmoothing => {
                 if let Some(value) = attr.value.as_text() {
-                    if value.ends_with('%') {
-                        let smoothing = value
-                            .replacen('%', "", 1)
-                            .parse::<f32>()
-                            .map_err(|_| ParseError)?;
-                        self.corner_radius.smoothing = (smoothing / 100.0).clamp(0.0, 1.0);
-                    }
+                    let mut parser = Parser::new(Lexer::parse(value));
+
+                    let smoothing = parser.consume_map(Token::as_float)?;
+
+                    parser.consume(&Token::Percent)?;
+
+                    self.corner_radius.smoothing = (smoothing / 100.0).clamp(0.0, 1.0);
                 }
             }
             AttributeName::ImageData => {
@@ -111,7 +131,9 @@ impl ParseAttribute for StyleState {
             }
             AttributeName::Overflow => {
                 if let Some(value) = attr.value.as_text() {
-                    self.overflow = OverflowMode::parse(value)?;
+                    let mut parser = Parser::new(Lexer::parse(value));
+
+                    self.overflow = OverflowMode::parse(&mut parser)?;
                 }
             }
             AttributeName::Opacity => {
