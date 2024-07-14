@@ -86,7 +86,7 @@ pub struct ScrollViewProps {
 /// ```no_run
 /// # use freya::prelude::*;
 /// fn app() -> Element {
-///     let mut scroll_controller = use_scroll_controller();
+///     let mut scroll_controller = use_scroll_controller(|| ScrollConfig::default());
 ///
 ///     rsx!(
 ///         ScrollView {
@@ -100,7 +100,7 @@ pub struct ScrollViewProps {
 ///                 label {
 ///                     onclick: move |_| {
 ///                          scroll_controller.scroll_to(ScrollPosition::Start, ScrollDirection::Vertical);
-///                     }
+///                     },
 ///                     label {
 ///                         "Scroll up"
 ///                     }

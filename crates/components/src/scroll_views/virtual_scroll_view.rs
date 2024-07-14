@@ -143,7 +143,7 @@ fn get_render_range(
 /// # use freya::prelude::*;
 /// # use std::rc::Rc;
 /// fn app() -> Element {
-///     let mut scroll_controller = use_scroll_controller();
+///     let mut scroll_controller = use_scroll_controller(|| ScrollConfig::default());
 ///
 ///     rsx!(VirtualScrollView {
 ///         scroll_controller,
@@ -157,7 +157,7 @@ fn get_render_range(
 ///                     height: "80",
 ///                     onclick: move |_| {
 ///                          scroll_controller.scroll_to(ScrollPosition::Start, ScrollDirection::Vertical);
-///                     }
+///                     },
 ///                     "Number {i}"
 ///                 }
 ///             }

@@ -182,3 +182,97 @@ pub fn use_scroll_controller(init: impl FnOnce() -> ScrollConfig) -> ScrollContr
         )
     })
 }
+
+#[cfg(test)]
+mod test {
+    use freya::prelude::*;
+    use freya_testing::prelude::*;
+
+    #[tokio::test]
+    pub async fn controlled_scroll_view() {
+        fn scroll_view_app() -> Element {
+            let mut scroll_controller = use_scroll_controller(|| ScrollConfig {
+                default_vertical_position: ScrollPosition::End,
+                ..Default::default()
+            });
+
+            rsx!(
+                ScrollView {
+                    scroll_controller,
+                    Button {
+                        onclick: move |_| {
+                            scroll_controller.scroll_to(ScrollPosition::End, ScrollDirection::Vertical);
+                        },
+                        label {
+                            "Scroll Down"
+                        }
+                    }
+                    rect {
+                        height: "200",
+                        width: "200",
+                    },
+                    rect {
+                        height: "200",
+                        width: "200",
+                    },
+                    rect {
+                        height: "200",
+                        width: "200",
+                    }
+                    rect {
+                        height: "200",
+                        width: "200",
+                    }
+                    Button {
+                        onclick: move |_| {
+                            scroll_controller.scroll_to(ScrollPosition::Start, ScrollDirection::Vertical);
+                        },
+                        label {
+                            "Scroll up"
+                        }
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(scroll_view_app);
+        let root = utils.root();
+        let content = root.get(0).get(0).get(0);
+        utils.wait_for_update().await;
+
+        // Only the last three items are visible
+        assert!(!content.get(1).is_visible());
+        assert!(content.get(2).is_visible());
+        assert!(content.get(3).is_visible());
+        assert!(content.get(4).is_visible());
+
+        // Click on the button to scroll up
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (15., 480.).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+
+        // Only the first three items are visible
+        assert!(content.get(1).is_visible());
+        assert!(content.get(2).is_visible());
+        assert!(content.get(3).is_visible());
+        assert!(!content.get(4).is_visible());
+
+        // Click on the button to scroll down
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (15., 15.).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        // Only the first three items are visible
+        assert!(!content.get(1).is_visible());
+        assert!(content.get(2).is_visible());
+        assert!(content.get(3).is_visible());
+        assert!(content.get(4).is_visible());
+    }
+}
