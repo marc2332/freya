@@ -207,7 +207,7 @@ fn ShaderView(editable: UseEditable) -> Element {
                     UniformValue::Float(instant.elapsed().as_secs_f32()),
                 );
 
-                let uniforms = Data::new_copy(&builder.build(&runtime_effect));
+                let uniforms = Data::new_copy(&builder.build(runtime_effect));
 
                 let shader = runtime_effect.make_shader(uniforms, &[], None).unwrap();
 
