@@ -121,7 +121,6 @@ fn get_render_range(
 /// # use std::rc::Rc;
 /// fn app() -> Element {
 ///     rsx!(VirtualScrollView {
-///         show_scrollbar: true,
 ///         length: 5,
 ///         item_size: 80.0,
 ///         direction: "vertical",
@@ -130,6 +129,35 @@ fn get_render_range(
 ///                 label {
 ///                     key: "{i}",
 ///                     height: "80",
+///                     "Number {i}"
+///                 }
+///             }
+///         }
+///     })
+/// }
+/// ```
+///
+/// # With a Scroll Controller
+///
+/// ```no_run
+/// # use freya::prelude::*;
+/// # use std::rc::Rc;
+/// fn app() -> Element {
+///     let mut scroll_controller = use_scroll_controller();
+///
+///     rsx!(VirtualScrollView {
+///         scroll_controller,
+///         length: 5,
+///         item_size: 80.0,
+///         direction: "vertical",
+///         builder: move |i, _other_args: &Option<()>| {
+///             rsx! {
+///                 label {
+///                     key: "{i}",
+///                     height: "80",
+///                     onclick: move |_| {
+///                          scroll_controller.scroll_to(ScrollPosition::Start, ScrollDirection::Vertical);
+///                     }
 ///                     "Number {i}"
 ///                 }
 ///             }

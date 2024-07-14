@@ -66,16 +66,51 @@ pub struct ScrollViewProps {
 /// fn app() -> Element {
 ///     rsx!(
 ///         ScrollView {
-///              theme: theme_with!(ScrollViewTheme {
-///                 width: "100%".into(),
-///                 height: "300".into(),
-///              }),
-///              show_scrollbar: true,
-///              rect {
+///             rect {
 ///                 background: "blue",
-///                 height: "500",
+///                 height: "400",
+///                 width: "100%"
+///             }
+///             rect {
+///                 background: "red",
+///                 height: "400",
 ///                 width: "100%"
 ///              }
+///         }
+///     )
+/// }
+/// ```
+///
+/// # With a Scroll Controller
+///
+/// ```no_run
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///     let mut scroll_controller = use_scroll_controller();
+///
+///     rsx!(
+///         ScrollView {
+///             scroll_controller,
+///             rect {
+///                 background: "blue",
+///                 height: "400",
+///                 width: "100%"
+///             }
+///             Button {
+///                 label {
+///                     onclick: move |_| {
+///                          scroll_controller.scroll_to(ScrollPosition::Start, ScrollDirection::Vertical);
+///                     }
+///                     label {
+///                         "Scroll up"
+///                     }
+///                 }
+///             }
+///             rect {
+///                 background: "red",
+///                 height: "400",
+///                 width: "100%"
+///             }
 ///         }
 ///     )
 /// }
