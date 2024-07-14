@@ -4,8 +4,8 @@ use std::sync::{
 };
 
 pub use config::{
-    WindowConfig,
     *,
+    WindowConfig,
 };
 use freya_native_core::NodeId;
 pub use renderer::DesktopRenderer;
@@ -17,5 +17,6 @@ pub mod devtools;
 mod renderer;
 mod window_state;
 mod winit_waker;
+mod platforms;
 
 pub type HoveredNode = Option<Arc<Mutex<Option<NodeId>>>>;

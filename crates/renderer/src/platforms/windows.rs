@@ -1,47 +1,47 @@
 use std::{
-    ffi::CString,
-    mem,
-    num::NonZeroU32,
+	ffi::CString,
+	mem,
+	num::NonZeroU32,
 };
 
 use dioxus_core::VirtualDom;
 use gl::{
-    *,
-    types::*,
+	*,
+	types::*,
 };
 use glutin::{
-    config::{
-        ConfigTemplateBuilder,
-        GlConfig,
-    },
-    context::{
-        ContextApi,
-        ContextAttributesBuilder,
-        GlProfile,
-        NotCurrentGlContext,
-        PossiblyCurrentContext,
-    },
-    display::{
-        GetGlDisplay,
-        GlDisplay,
-    },
-    surface::{
-        GlSurface,
-        Surface as GlutinSurface,
-        SurfaceAttributesBuilder,
-        SwapInterval,
-        WindowSurface,
-    },
+	config::{
+		ConfigTemplateBuilder,
+		GlConfig,
+	},
+	context::{
+		ContextApi,
+		ContextAttributesBuilder,
+		GlProfile,
+		NotCurrentGlContext,
+		PossiblyCurrentContext,
+	},
+	display::{
+		GetGlDisplay,
+		GlDisplay,
+	},
+	surface::{
+		GlSurface,
+		Surface as GlutinSurface,
+		SurfaceAttributesBuilder,
+		SwapInterval,
+		WindowSurface,
+	},
 };
 use glutin_winit::DisplayBuilder;
 use winit::{
-    dpi::LogicalSize,
-    event_loop::{
-        ActiveEventLoop,
-        EventLoopProxy,
-    },
-    raw_window_handle::HasWindowHandle,
-    window::Window,
+	dpi::LogicalSize,
+	event_loop::{
+		ActiveEventLoop,
+		EventLoopProxy,
+	},
+	raw_window_handle::HasWindowHandle,
+	window::Window,
 };
 
 use freya_common::EventMessage;
@@ -49,10 +49,10 @@ use freya_core::dom::SafeDOM;
 use freya_engine::prelude::*;
 
 use crate::{
-    app::Application,
-    config::WindowConfig,
-    devtools::Devtools,
-    LaunchConfig,
+	app::Application,
+	config::WindowConfig,
+	devtools::Devtools,
+	LaunchConfig,
 };
 
 pub struct NotCreatedState<'a, State: Clone + 'static> {

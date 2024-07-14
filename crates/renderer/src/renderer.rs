@@ -1,66 +1,45 @@
-use std::{
-    num::NonZeroU32,
-    path::PathBuf,
-};
-
+use std::path::PathBuf;
 use dioxus_core::VirtualDom;
+#[cfg(not(target_os = "macos"))]
+use glutin::prelude::GlSurface;
+#[cfg(not(target_os = "macos"))]
+use std::num::NonZeroU32;
+use winit::{
+    application::ApplicationHandler,
+    event::{
+        ElementState, Ime, KeyEvent, MouseButton, MouseScrollDelta, StartCause, Touch, TouchPhase,
+        WindowEvent,
+    },
+    event_loop::{EventLoop, EventLoopProxy},
+    keyboard::ModifiersState,
+};
 use freya_common::EventMessage;
 use freya_core::{
     accessibility::AccessibilityFocusDirection,
     dom::SafeDOM,
-    events::{
-        EventName,
-        PlatformEvent,
-    },
+    events::{EventName, PlatformEvent},
     prelude::NavigationMode,
 };
 use freya_elements::events::{
-    map_winit_key,
-    map_winit_modifiers,
-    map_winit_physical_key,
-    Code,
-    Key,
-};
-use glutin::prelude::{
-    GlSurface,
-    PossiblyCurrentGlContext,
+    map_winit_key, map_winit_modifiers, map_winit_physical_key, Code, Key,
 };
 use torin::geometry::CursorPoint;
-use winit::{
-    application::ApplicationHandler,
-    event::{
-        ElementState,
-        Ime,
-        KeyEvent,
-        MouseButton,
-        MouseScrollDelta,
-        StartCause,
-        Touch,
-        TouchPhase,
-        WindowEvent,
-    },
-    event_loop::{
-        EventLoop,
-        EventLoopProxy,
-    },
-    keyboard::ModifiersState,
-};
+use freya_engine::prelude::*;
 
-use crate::{
-    devtools::Devtools,
-    window_state::{
-        create_surface,
-        CreatedState,
-        NotCreatedState,
-        WindowState,
-    },
-    HoveredNode,
-    LaunchConfig,
-};
+#[cfg(target_os = "linux")]
+use crate::platforms::linux::{create_surface, CreatedState, NotCreatedState, WindowState};
+#[cfg(target_os = "macos")]
+use crate::platforms::macos::{CreatedState, NotCreatedState, WindowState};
+#[cfg(target_os = "windows")]
+use crate::platforms::windows::{create_surface, CreatedState, NotCreatedState, WindowState};
+use crate::{devtools::Devtools, HoveredNode, LaunchConfig};
+#[cfg(target_os = "macos")]
+use core_graphics_types::geometry::CGSize;
+use foreign_types_shared::ForeignTypeRef;
 
 const WHEEL_SPEED_MODIFIER: f32 = 53.0;
 
-/// Desktop renderer using Skia, Glutin and Winit
+/// Desktop renderer using Skia and Winit
 pub struct DesktopRenderer<'a, State: Clone + 'static> {
     pub(crate) event_loop_proxy: EventLoopProxy<EventMessage>,
     pub(crate) state: WindowState<'a, State>,
@@ -239,6 +218,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
         event: winit::event::WindowEvent,
     ) {
         let scale_factor = self.scale_factor();
+        #[cfg(not(target_os = "macos"))]
         let CreatedState {
             gr_context,
             surface,
@@ -253,8 +233,21 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             is_window_focused,
             ..
         } = self.state.created_state();
+        #[cfg(target_os = "macos")]
+        let CreatedState {
+            gr_context,
+            surface,
+            metal_layer,
+            command_queue,
+            window,
+            app,
+            window_config,
+            is_window_focused,
+        } = self.state.created_state();
+
         app.accessibility
             .process_accessibility_event(&event, window);
+
         match event {
             WindowEvent::ThemeChanged(theme) => {
                 app.platform_sender.send_modify(|state| {
@@ -271,24 +264,40 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 });
             }
             WindowEvent::RedrawRequested => {
-                app.platform_sender.send_if_modified(|state| {
-                    let scale_factor_is_different = state.scale_factor == scale_factor;
-                    state.scale_factor = scale_factor;
-                    scale_factor_is_different
-                });
-
-                if app.measure_layout_on_next_render {
-                    app.process_layout(window.inner_size(), scale_factor);
-                    app.process_accessibility(window);
-
-                    app.measure_layout_on_next_render = false;
-                }
+                /*
                 surface.canvas().clear(window_config.background);
                 app.render(&self.hovered_node, surface.canvas(), window);
                 app.event_loop_tick();
                 window.pre_present_notify();
                 gr_context.flush_and_submit();
                 gl_surface.swap_buffers(gl_context).unwrap();
+                */
+                if let Some(drawable) = metal_layer.next_drawable() {
+                    app.platform_sender.send_if_modified(|state| {
+                        let scale_factor_is_different = state.scale_factor == scale_factor;
+                        state.scale_factor = scale_factor;
+                        scale_factor_is_different
+                    });
+
+                    if app.measure_layout_on_next_render {
+                        app.process_layout(window.inner_size(), scale_factor);
+                        app.process_accessibility(window);
+
+                        app.measure_layout_on_next_render = false;
+                    }
+
+                    surface.canvas().clear(window_config.background);
+
+                    app.render(&self.hovered_node, surface.canvas(), window);
+                    app.event_loop_tick();
+
+                    window.pre_present_notify();
+                    gr_context.flush_and_submit();
+
+                    let command_buffer = command_queue.new_command_buffer();
+                    command_buffer.present_drawable(drawable);
+                    command_buffer.commit();
+                }
             }
             WindowEvent::MouseInput { state, button, .. } => {
                 app.set_navigation_mode(NavigationMode::NotKeyboard);
@@ -411,6 +420,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 });
             }
             WindowEvent::Resized(size) => {
+                /*
                 *surface =
                     create_surface(window, *fb_info, gr_context, *num_samples, *stencil_size);
 
@@ -419,6 +429,8 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     NonZeroU32::new(size.width.max(1)).unwrap(),
                     NonZeroU32::new(size.height.max(1)).unwrap(),
                 );
+                */
+                metal_layer.set_drawable_size(CGSize::new(size.width as f64, size.height as f64));
 
                 window.request_redraw();
 
@@ -453,6 +465,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
     }
 }
 
+#[cfg(not(target_os = "macos"))]
 impl<T: Clone> Drop for DesktopRenderer<'_, T> {
     fn drop(&mut self) {
         if let WindowState::Created(CreatedState {
