@@ -13,7 +13,7 @@
 - [Components](./learn/components.md)
 - [Hooks](./learn/hooks.md)
 - [State Management](./learn/state_management.md)
-    - [Local Signals](./learn/state_management/signals.md)
+    - [Signals](./learn/state_management/signals.md)
     - [Global Signals](./learn/state_management/global_signals.md)
     - [Dioxus Hooks](./learn/dioxus_hooks.md)
     - [Context](./learn/state_management/context.md)

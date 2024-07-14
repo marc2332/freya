@@ -9,18 +9,29 @@ Example:
 ```rs
 fn app() -> Element {
     let mut count = use_signal(|| 0); 
-    // The closure passed to `use_signal` will be called only the first time this component function runs, it will return the initial value for the Signal. This closure is to prevent having to create the initial value every time the component runs again, as it is only needed the first time.
+    // The closure passed to `use_signal` will be called only 
+    // the first time this component function runs, 
+    // it will return the initial value for the Signal. 
+    // This closure is to prevent having to create the initial value 
+    // every time the component runs again, as it is only needed the first time.
 
     let onclick = move |_| {
         count += 1; // Shorthand for count.write() += 1;
-        // The moment the signal is mutated it will notify all the components that have a read subscription to this signal (in this case, only `app`) that there has been a change. When that happens they will all run their functions again and thus producing the new UI.
+        // The moment the signal is mutated it will notify 
+        // all the components that have a read subscription 
+        // to this signal (in this case, only `app`) 
+        // that there has been a change. 
+        // When that happens they will all run 
+        // their functions again and thus producing the new UI.
     };
     
     rsx!(
         label {
             onclick,
             "{count}" 
-            // Because the signal is being read here, everytime that it gets mutated this component will rerun as it received a read subscription.
+            // Because the signal is being read here, 
+            // everytime that it gets mutated this component 
+            // will rerun as it received a read subscription.
             // It is the same as using "{count.read()}".
         }
     )
