@@ -16,6 +16,7 @@
     - [Local Signals](./learn/state_management/signals.md)
     - [Global Signals](./learn/state_management/global_signals.md)
     - [Dioxus Hooks](./learn/dioxus_hooks.md)
+    - [Context](./learn/state_management/context.md)
     - [Other Crates](./learn/state_management/other_crates.md)
 - [Async](./learn/async.md)
 - [Animation](./learn/animation.md)
