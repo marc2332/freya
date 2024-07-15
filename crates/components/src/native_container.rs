@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use freya_common::EventMessage;
+use freya_core::prelude::EventMessage;
 use freya_elements::{
     elements as dioxus_elements,
     events::KeyboardEvent,

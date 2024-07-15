@@ -4,9 +4,36 @@ use freya_engine::prelude::{
 };
 use freya_native_core::NodeId;
 use torin::torin::Torin;
-use winit::window::Window;
+use winit::{
+    event_loop::EventLoopProxy,
+    window::Window,
+};
 
-use crate::dom::FreyaDOM;
+use crate::{
+    dom::FreyaDOM,
+    prelude::{
+        EventMessage,
+        PlatformEvent,
+    },
+};
+
+#[derive(Clone)]
+pub struct PluginHandle {
+    pub proxy: EventLoopProxy<EventMessage>,
+}
+
+impl PluginHandle {
+    pub fn new(proxy: EventLoopProxy<EventMessage>) -> Self {
+        Self { proxy }
+    }
+
+    /// Emit a [PlatformEvent]. Useful to simulate certain events.
+    pub fn send_platform_event(&self, event: PlatformEvent) {
+        self.proxy
+            .send_event(EventMessage::PlatformEvent(event))
+            .ok();
+    }
+}
 
 /// Manages all loaded plugins.
 #[derive(Default)]
@@ -19,9 +46,9 @@ impl PluginsManager {
         self.plugins.push(Box::new(plugin))
     }
 
-    pub fn send(&mut self, event: PluginEvent) {
+    pub fn send(&mut self, event: PluginEvent, handle: PluginHandle) {
         for plugin in &mut self.plugins {
-            plugin.on_event(&event)
+            plugin.on_event(&event, handle.clone())
         }
     }
 }
@@ -59,5 +86,5 @@ pub enum PluginEvent<'a> {
 /// Skeleton for Freya plugins.
 pub trait FreyaPlugin {
     /// React on events emitted by Freya.
-    fn on_event(&mut self, event: &PluginEvent);
+    fn on_event(&mut self, event: &PluginEvent, handle: PluginHandle);
 }

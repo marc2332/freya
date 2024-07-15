@@ -4,9 +4,11 @@ use dioxus_core::{
     VirtualDom,
 };
 use dioxus_core_macro::rsx;
-use freya_common::EventMessage;
 use freya_components::NativeContainer;
-use freya_core::prelude::*;
+use freya_core::prelude::{
+    EventMessage,
+    *,
+};
 use freya_engine::prelude::*;
 use tokio::sync::{
     broadcast,
