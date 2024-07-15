@@ -12,6 +12,7 @@ use freya_node_state::{
     ViewportState,
 };
 use torin::prelude::{
+    Area,
     LayoutNode,
     Torin,
 };
@@ -27,6 +28,7 @@ use crate::{
 };
 
 pub struct SkiaRenderer<'a> {
+    pub canvas_area: Area,
     pub canvas: &'a Canvas,
     pub font_collection: &'a mut FontCollection,
     pub font_manager: &'a FontMgr,
@@ -53,7 +55,7 @@ impl SkiaRenderer<'_> {
                 return;
             };
 
-            self.canvas.save();
+            let initial_layer = self.canvas.save();
 
             let node_transform = &*node_ref.get::<TransformState>().unwrap();
             let node_style = &*node_ref.get::<StyleState>().unwrap();
@@ -90,7 +92,12 @@ impl SkiaRenderer<'_> {
             for (opacity, nodes) in self.opacities.iter_mut() {
                 if nodes.contains(&node_ref.id()) {
                     self.canvas.save_layer_alpha_f(
-                        Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
+                        Rect::new(
+                            self.canvas_area.min_x(),
+                            self.canvas_area.min_y(),
+                            self.canvas_area.max_x(),
+                            self.canvas_area.max_y(),
+                        ),
                         *opacity,
                     );
 
@@ -131,7 +138,7 @@ impl SkiaRenderer<'_> {
                 wireframe_renderer::render_wireframe(self.canvas, &area);
             }
 
-            self.canvas.restore();
+            self.canvas.restore_to_count(initial_layer);
         }
     }
 }
