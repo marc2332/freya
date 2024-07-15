@@ -113,7 +113,7 @@ impl ParseAttribute for FontStyleState {
                     // Make an exception for the "inherit" as in this case we don't want to pass
                     //  a color at all but use the inherited one.
                     if value != "inherit" {
-                        self.color = Color::parse(value)?
+                        self.color = Color::parse(value)?;
                     }
                 }
             }
@@ -148,7 +148,7 @@ impl ParseAttribute for FontStyleState {
             }
             AttributeName::TextAlign => {
                 if let Some(value) = attr.value.as_text() {
-                    self.text_align = TextAlign::parse(value)?
+                    self.text_align = TextAlign::parse(value)?;
                 }
             }
             AttributeName::MaxLines => {
@@ -158,37 +158,37 @@ impl ParseAttribute for FontStyleState {
             }
             AttributeName::TextOverflow => {
                 if let Some(value) = attr.value.as_text() {
-                    self.text_overflow = TextOverflow::parse(value)?
+                    self.text_overflow = TextOverflow::parse(value)?;
                 }
             }
             AttributeName::FontStyle => {
                 if let Some(value) = attr.value.as_text() {
-                    self.font_slant = Slant::parse(value)?
+                    self.font_slant = Slant::parse(value)?;
                 }
             }
             AttributeName::FontWeight => {
                 if let Some(value) = attr.value.as_text() {
-                    self.font_weight = Weight::parse(value)?
+                    self.font_weight = Weight::parse(value)?;
                 }
             }
             AttributeName::FontWidth => {
                 if let Some(value) = attr.value.as_text() {
-                    self.font_width = Width::parse(value)?
+                    self.font_width = Width::parse(value)?;
                 }
             }
             AttributeName::Decoration => {
                 if let Some(value) = attr.value.as_text() {
-                    self.decoration.ty = TextDecoration::parse(value)?
+                    self.decoration.ty = TextDecoration::parse(value)?;
                 }
             }
             AttributeName::DecorationStyle => {
                 if let Some(value) = attr.value.as_text() {
-                    self.decoration.style = TextDecorationStyle::parse(value)?
+                    self.decoration.style = TextDecorationStyle::parse(value)?;
                 }
             }
             AttributeName::DecorationColor => {
                 if let Some(value) = attr.value.as_text() {
-                    self.decoration.color = Color::parse(value)?
+                    self.decoration.color = Color::parse(value)?;
                 } else {
                     self.decoration.color = self.color;
                 }

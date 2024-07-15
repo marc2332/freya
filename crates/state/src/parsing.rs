@@ -153,7 +153,7 @@ pub trait ParseAttribute: Sized {
             if self.parse_attribute(attr).is_err() {
                 panic!(
                     "Failed to parse attribute '{:?}' with value '{:?}'",
-                    error_attr.attribute, error_attr.value,
+                    error_attr.attribute, error_attr.value
                 );
             }
         }

@@ -91,12 +91,12 @@ impl ParseAttribute for CursorState {
             }
             AttributeName::HighlightColor => {
                 if let Some(value) = attr.value.as_text() {
-                    self.highlight_color = Color::parse(value)?
+                    self.highlight_color = Color::parse(value)?;
                 }
             }
             AttributeName::HighlightMode => {
                 if let Some(value) = attr.value.as_text() {
-                    self.highlight_mode = HighlightMode::parse(value)?
+                    self.highlight_mode = HighlightMode::parse(value)?;
                 }
             }
             AttributeName::CursorReference => {
