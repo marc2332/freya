@@ -205,10 +205,10 @@ impl Parse for CornerRadius {
         let mut radius = CornerRadius::default();
 
         match (
-            parser.consume_map(Token::as_float)?,
-            parser.consume_map(Token::as_float).ok(),
-            parser.consume_map(Token::as_float).ok(),
-            parser.consume_map(Token::as_float).ok(),
+            parser.consume_map(Token::try_as_f32)?,
+            parser.consume_map(Token::try_as_f32).ok(),
+            parser.consume_map(Token::try_as_f32).ok(),
+            parser.consume_map(Token::try_as_f32).ok(),
         ) {
             // Same in all corners
             (value, None, None, None) => {

@@ -37,11 +37,11 @@ impl Parse for Shadow {
             shadow.position = ShadowPosition::Inset;
         }
 
-        shadow.x = parser.consume_map(Token::as_float)?;
-        shadow.y = parser.consume_map(Token::as_float)?;
-        shadow.blur = parser.consume_map(Token::as_float)?;
+        shadow.x = parser.consume_map(Token::try_as_f32)?;
+        shadow.y = parser.consume_map(Token::try_as_f32)?;
+        shadow.blur = parser.consume_map(Token::try_as_f32)?;
 
-        if let Ok(spread) = parser.consume_map(Token::as_float) {
+        if let Ok(spread) = parser.consume_map(Token::try_as_f32) {
             shadow.spread = spread;
         }
 

@@ -12,11 +12,11 @@ impl Parse for TextShadow {
     fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
         Ok(TextShadow {
             offset: (
-                parser.consume_map(Token::as_float)?,
-                parser.consume_map(Token::as_float)?,
+                parser.consume_map(Token::try_as_f32)?,
+                parser.consume_map(Token::try_as_f32)?,
             )
                 .into(),
-            blur_sigma: parser.consume_map(Token::as_float)? as f64 / 2.0,
+            blur_sigma: parser.consume_map(Token::try_as_f32)? as f64 / 2.0,
             color: Color::parse(parser)?,
         })
     }

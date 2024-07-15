@@ -9,7 +9,7 @@ use crate::{
 impl Parse for TextAlign {
     fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
         parser.consume_map(|token| {
-            token.as_string().and_then(|value| match value {
+            token.try_as_str().and_then(|value| match value {
                 "center" => Some(TextAlign::Center),
                 "justify" => Some(TextAlign::Justify),
                 "start" => Some(TextAlign::Start),
@@ -25,7 +25,7 @@ impl Parse for TextAlign {
 impl Parse for Slant {
     fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
         parser.consume_map(|token| {
-            token.as_string().and_then(|value| match value {
+            token.try_as_str().and_then(|value| match value {
                 "upright" => Some(Slant::Upright),
                 "italic" => Some(Slant::Italic),
                 "oblique" => Some(Slant::Oblique),
@@ -38,7 +38,7 @@ impl Parse for Slant {
 impl Parse for Width {
     fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
         parser.consume_map(|token| {
-            token.as_string().and_then(|value| match value {
+            token.try_as_str().and_then(|value| match value {
                 "ultra-condensed" => Some(Width::ULTRA_CONDENSED),
                 "extra-condensed" => Some(Width::EXTRA_CONDENSED),
                 "condensed" => Some(Width::CONDENSED),
@@ -62,8 +62,8 @@ impl Parse for Weight {
     // version. In this case it would be font_weight: "50".
     fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
         parser.consume_map(|token| {
-            if token.is_number() {
-                token.as_number().and_then(|value| match value {
+            if token.is_i64() {
+                token.try_as_i64().and_then(|value| match value {
                     50 => Some(Weight::INVISIBLE),
                     100 => Some(Weight::THIN),
                     200 => Some(Weight::EXTRA_LIGHT),
@@ -78,7 +78,7 @@ impl Parse for Weight {
                     _ => None,
                 })
             } else {
-                token.as_string().and_then(|value| match value {
+                token.try_as_str().and_then(|value| match value {
                     "invisible" => Some(Weight::INVISIBLE),
                     "thin" => Some(Weight::THIN),
                     "extra-light" => Some(Weight::EXTRA_LIGHT),
@@ -126,7 +126,7 @@ impl TextOverflow {
 impl Parse for TextOverflow {
     fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
         parser.consume_map(|token| {
-            token.as_string().map(|value| match value {
+            token.try_as_str().map(|value| match value {
                 "ellipsis" => TextOverflow::Ellipsis,
                 "clip" => TextOverflow::Clip,
                 value => TextOverflow::Custom(value.to_string()),

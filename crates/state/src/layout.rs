@@ -23,12 +23,10 @@ use torin::prelude::*;
 
 use crate::{
     CustomAttributeValues,
-    Lexer,
     NodeReference,
     Parse,
     ParseAttribute,
     ParseError,
-    Parser,
 };
 
 #[derive(Default, Clone, Debug, Component, PartialEq)]
@@ -60,58 +58,42 @@ impl ParseAttribute for LayoutState {
         match attr.attribute {
             AttributeName::Width => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    self.width = Size::parse(&mut parser)?;
+                    self.width = Size::parse_value(value)?;
                 }
             }
             AttributeName::Height => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    self.height = Size::parse(&mut parser)?;
+                    self.height = Size::parse_value(value)?;
                 }
             }
             AttributeName::MinHeight => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    self.minimum_height = Size::parse(&mut parser)?;
+                    self.minimum_height = Size::parse_value(value)?;
                 }
             }
             AttributeName::MinWidth => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    self.minimum_width = Size::parse(&mut parser)?;
+                    self.minimum_width = Size::parse_value(value)?;
                 }
             }
             AttributeName::MaxHeight => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    self.maximum_height = Size::parse(&mut parser)?;
+                    self.maximum_height = Size::parse_value(value)?;
                 }
             }
             AttributeName::MaxWidth => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    self.maximum_width = Size::parse(&mut parser)?;
+                    self.maximum_width = Size::parse_value(value)?;
                 }
             }
             AttributeName::Padding => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    self.padding = Gaps::parse(&mut parser)?;
+                    self.padding = Gaps::parse_value(value)?;
                 }
             }
             AttributeName::Margin => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    self.margin = Gaps::parse(&mut parser)?;
+                    self.margin = Gaps::parse_value(value)?;
                 }
             }
             AttributeName::Direction => {
@@ -135,24 +117,18 @@ impl ParseAttribute for LayoutState {
             }
             AttributeName::MainAlign => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    self.main_alignment = Alignment::parse(&mut parser)?;
+                    self.main_alignment = Alignment::parse_value(value)?;
                 }
             }
             AttributeName::CrossAlign => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    self.cross_alignment = Alignment::parse(&mut parser)?;
+                    self.cross_alignment = Alignment::parse_value(value)?;
                 }
             }
             AttributeName::Position => {
                 if let Some(value) = attr.value.as_text() {
                     if self.position.is_empty() {
-                        let mut parser = Parser::new(Lexer::parse(value));
-
-                        self.position = Position::parse(&mut parser)?;
+                        self.position = Position::parse_value(value)?;
                     }
                 }
             }
@@ -182,9 +158,7 @@ impl ParseAttribute for LayoutState {
             }
             AttributeName::Content => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    self.content = Content::parse(&mut parser)?;
+                    self.content = Content::parse_value(value)?;
                 }
             }
             AttributeName::Reference => {

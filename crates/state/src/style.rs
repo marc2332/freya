@@ -54,16 +54,12 @@ impl ParseAttribute for StyleState {
                         return Ok(());
                     }
 
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    self.background = Fill::parse(&mut parser)?;
+                    self.background = Fill::parse_value(value)?;
                 }
             }
             AttributeName::Border => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    let mut border = Border::parse(&mut parser)?;
+                    let mut border = Border::parse_value(value)?;
 
                     border.alignment = self.border.alignment;
 
@@ -72,29 +68,17 @@ impl ParseAttribute for StyleState {
             }
             AttributeName::BorderAlign => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    self.border.alignment = BorderAlignment::parse(&mut parser)?;
+                    self.border.alignment = BorderAlignment::parse_value(value)?;
                 }
             }
             AttributeName::Shadow => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    let mut shadows = vec![Shadow::parse(&mut parser)?];
-
-                    while parser.try_consume(&Token::Comma) {
-                        shadows.push(Shadow::parse(&mut parser)?);
-                    }
-
-                    self.shadows = shadows;
+                    self.shadows = Shadow::parse_values(value, &Token::Comma)?;
                 }
             }
             AttributeName::CornerRadius => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    let mut radius = CornerRadius::parse(&mut parser)?;
+                    let mut radius = CornerRadius::parse_value(value)?;
 
                     radius.smoothing = self.corner_radius.smoothing;
 
@@ -105,7 +89,7 @@ impl ParseAttribute for StyleState {
                 if let Some(value) = attr.value.as_text() {
                     let mut parser = Parser::new(Lexer::parse(value));
 
-                    let smoothing = parser.consume_map(Token::as_float)?;
+                    let smoothing = parser.consume_map(Token::try_as_f32)?;
 
                     parser.consume(&Token::Percent)?;
 
@@ -131,9 +115,7 @@ impl ParseAttribute for StyleState {
             }
             AttributeName::Overflow => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    self.overflow = OverflowMode::parse(&mut parser)?;
+                    self.overflow = OverflowMode::parse_value(value)?;
                 }
             }
             AttributeName::Opacity => {

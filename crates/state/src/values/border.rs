@@ -36,7 +36,7 @@ pub enum BorderAlignment {
 impl Parse for BorderAlignment {
     fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
         parser.consume_map(|value| {
-            value.as_string().and_then(|value| match value {
+            value.try_as_str().and_then(|value| match value {
                 "inner" => Some(BorderAlignment::Inner),
                 "outer" => Some(BorderAlignment::Outer),
                 "center" => Some(BorderAlignment::Center),
@@ -72,9 +72,9 @@ impl Parse for Border {
         }
 
         Ok(Border {
-            width: parser.consume_map(Token::as_float)?,
+            width: parser.consume_map(Token::try_as_f32)?,
             style: parser.consume_map(|value| {
-                value.as_string().and_then(|value| match value {
+                value.try_as_str().and_then(|value| match value {
                     "none" => Some(BorderStyle::None),
                     "solid" => Some(BorderStyle::Solid),
                     _ => None,

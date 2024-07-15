@@ -16,7 +16,7 @@ pub enum HighlightMode {
 impl Parse for HighlightMode {
     fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
         parser.consume_map(|value| {
-            value.as_string().and_then(|value| match value {
+            value.try_as_str().and_then(|value| match value {
                 "expanded" => Some(Self::Expanded),
                 "fit" => Some(Self::Fit),
                 _ => None,

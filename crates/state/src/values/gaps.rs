@@ -12,17 +12,17 @@ impl Parse for Gaps {
         let mut paddings = Gaps::default();
 
         let value =
-            parser.consume_if(|token| token == &Token::ident("none") || token.is_integer())?;
+            parser.consume_if(|token| token == &Token::ident("none") || token.is_i64_or_f32())?;
 
         if value == Token::ident("none") {
             return Ok(paddings);
         }
 
         match (
-            value.into_float(),
-            parser.consume_map(Token::as_float).ok(),
-            parser.consume_map(Token::as_float).ok(),
-            parser.consume_map(Token::as_float).ok(),
+            value.into_f32(),
+            parser.consume_map(Token::try_as_f32).ok(),
+            parser.consume_map(Token::try_as_f32).ok(),
+            parser.consume_map(Token::try_as_f32).ok(),
         ) {
             // Same in each directions
             (value, None, None, None) => {

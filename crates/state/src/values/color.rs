@@ -86,7 +86,7 @@ impl DisplayColor for Color {
 }
 
 fn parse_number_as<T: TryFrom<i64>>(token: &Token) -> Option<T> {
-    token.as_number().and_then(|value| T::try_from(value).ok())
+    token.try_as_i64().and_then(|value| T::try_from(value).ok())
 }
 
 fn parse_rgb(parser: &mut Parser) -> Result<Color, ParseError> {
@@ -103,11 +103,11 @@ fn parse_rgb(parser: &mut Parser) -> Result<Color, ParseError> {
     let blue = parser.consume_map(parse_number_as)?;
 
     let color = if parser.try_consume(&Token::Comma) {
-        let alpha = parser.consume_if(Token::is_integer).and_then(|token| {
-            if token.is_number() {
-                u8::try_from(token.into_number()).map_err(|_| ParseError)
+        let alpha = parser.consume_if(Token::is_i64_or_f32).and_then(|token| {
+            if token.is_i64() {
+                u8::try_from(token.into_i64()).map_err(|_| ParseError)
             } else {
-                Ok((token.into_float() * 255.0).round().clamp(0.0, 255.0) as u8)
+                Ok((token.into_f32() * 255.0).round().clamp(0.0, 255.0) as u8)
             }
         })?;
 
@@ -124,7 +124,7 @@ fn parse_rgb(parser: &mut Parser) -> Result<Color, ParseError> {
 fn parse_hsl(parser: &mut Parser) -> Result<Color, ParseError> {
     parser.consume(&Token::ParenOpen)?;
 
-    let h = parser.consume_map(Token::as_number).and_then(|value| {
+    let h = parser.consume_map(Token::try_as_i64).and_then(|value| {
         if (0..=360).contains(&value) {
             Ok(value as f32)
         } else {
@@ -135,7 +135,7 @@ fn parse_hsl(parser: &mut Parser) -> Result<Color, ParseError> {
     parser.consume(&Token::ident("deg"))?;
     parser.consume(&Token::Comma)?;
 
-    let mut s = parser.consume_map(Token::as_number).and_then(|value| {
+    let mut s = parser.consume_map(Token::try_as_i64).and_then(|value| {
         if (0..=100).contains(&value) {
             Ok((value as f32) / 100.0)
         } else {
@@ -146,7 +146,7 @@ fn parse_hsl(parser: &mut Parser) -> Result<Color, ParseError> {
     parser.consume(&Token::Percent)?;
     parser.consume(&Token::Comma)?;
 
-    let mut l = parser.consume_map(Token::as_number).and_then(|value| {
+    let mut l = parser.consume_map(Token::try_as_i64).and_then(|value| {
         if (0..=100).contains(&value) {
             Ok((value as f32) / 100.0)
         } else {
@@ -157,7 +157,7 @@ fn parse_hsl(parser: &mut Parser) -> Result<Color, ParseError> {
     parser.consume(&Token::Percent)?;
 
     let a = if parser.consume(&Token::Comma).is_ok() {
-        let value = parser.consume_map(Token::as_number).and_then(|value| {
+        let value = parser.consume_map(Token::try_as_i64).and_then(|value| {
             if (0..=100).contains(&value) {
                 Ok((value as f32) / 100.0)
             } else {

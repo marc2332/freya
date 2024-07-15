@@ -26,15 +26,15 @@ impl Token {
         matches!(self, Token::Ident(_))
     }
 
-    pub fn is_float(&self) -> bool {
+    pub fn is_f32(&self) -> bool {
         matches!(self, Token::Float(_))
     }
 
-    pub fn is_number(&self) -> bool {
+    pub fn is_i64(&self) -> bool {
         matches!(self, Token::Number(_))
     }
 
-    pub fn is_integer(&self) -> bool {
+    pub fn is_i64_or_f32(&self) -> bool {
         matches!(self, Token::Number(_) | Token::Float(_))
     }
 
@@ -46,7 +46,7 @@ impl Token {
         }
     }
 
-    pub fn into_float(self) -> f32 {
+    pub fn into_f32(self) -> f32 {
         if let Token::Float(value) = self {
             value
         } else if let Token::Number(value) = self {
@@ -56,7 +56,7 @@ impl Token {
         }
     }
 
-    pub fn into_number(self) -> i64 {
+    pub fn into_i64(self) -> i64 {
         if let Token::Number(value) = self {
             value
         } else {
@@ -72,7 +72,7 @@ impl Token {
         }
     }
 
-    pub fn as_string(&self) -> Option<&str> {
+    pub fn try_as_str(&self) -> Option<&str> {
         if let Token::Ident(value) = self {
             Some(value.as_str())
         } else {
@@ -80,7 +80,7 @@ impl Token {
         }
     }
 
-    pub fn as_float(&self) -> Option<f32> {
+    pub fn try_as_f32(&self) -> Option<f32> {
         if let Token::Float(value) = self {
             Some(*value)
         } else if let Token::Number(value) = self {
@@ -90,7 +90,7 @@ impl Token {
         }
     }
 
-    pub fn as_number(&self) -> Option<i64> {
+    pub fn try_as_i64(&self) -> Option<i64> {
         if let Token::Number(value) = self {
             Some(*value)
         } else {

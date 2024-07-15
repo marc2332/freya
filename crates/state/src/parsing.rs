@@ -16,7 +16,7 @@ use crate::{
 pub struct ParseError;
 
 pub struct Parser {
-    tokens: Peekable<IntoIter<Token>>,
+    pub(crate) tokens: Peekable<IntoIter<Token>>,
 }
 
 impl Parser {
@@ -119,6 +119,22 @@ pub trait Parse: Sized {
             Err(ParseError)
         } else {
             value
+        }
+    }
+
+    fn parse_values(value: &str, separator: &Token) -> Result<Vec<Self>, ParseError> {
+        let mut parser = Parser::new(Lexer::parse(value));
+
+        let mut values = vec![Self::parse(&mut parser)?];
+
+        while parser.try_consume(separator) {
+            values.push(Self::parse(&mut parser)?);
+        }
+
+        if parser.tokens.len() > 0 {
+            Err(ParseError)
+        } else {
+            Ok(values)
         }
     }
 }

@@ -23,7 +23,7 @@ pub struct GradientStop {
 impl Parse for GradientStop {
     fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
         let color = Color::parse(parser)?;
-        let offset = (parser.consume_map(Token::as_float)? / 100.0).clamp(0.0, 1.0);
+        let offset = (parser.consume_map(Token::try_as_f32)? / 100.0).clamp(0.0, 1.0);
 
         parser.consume(&Token::Percent)?;
 
@@ -79,7 +79,7 @@ impl Parse for LinearGradient {
         parser.consume(&Token::ParenOpen)?;
 
         let mut gradient = LinearGradient {
-            angle: if let Some(angle) = parser.next_if(Token::is_number).map(Token::into_float) {
+            angle: if let Some(angle) = parser.next_if(Token::is_i64).map(Token::into_f32) {
                 parser.consume(&Token::ident("deg"))?;
                 parser.consume(&Token::Comma)?;
 

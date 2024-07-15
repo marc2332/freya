@@ -11,7 +11,7 @@ impl Parse for TextDecoration {
         let mut decoration = Self::default();
 
         while let Ok(value) = parser.consume_map(|token| {
-            token.as_string().and_then(|value| match value {
+            token.try_as_str().and_then(|value| match value {
                 "none" => Some(Self::NO_DECORATION),
                 "underline" => Some(Self::UNDERLINE),
                 "overline" => Some(Self::OVERLINE),
@@ -29,7 +29,7 @@ impl Parse for TextDecoration {
 impl Parse for TextDecorationStyle {
     fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
         parser.consume_map(|token| {
-            token.as_string().and_then(|value| match value {
+            token.try_as_str().and_then(|value| match value {
                 "solid" => Some(Self::Solid),
                 "double" => Some(Self::Double),
                 "dotted" => Some(Self::Dotted),

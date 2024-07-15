@@ -15,11 +15,11 @@ use crate::{
 
 impl Parse for Size {
     fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
-        let value = parser.consume_if(|token| token.is_ident() || token.is_integer())?;
+        let value = parser.consume_if(|token| token.is_ident() || token.is_i64_or_f32())?;
 
         if value.is_ident() {
             value
-                .as_string()
+                .try_as_str()
                 .and_then(|value| match value {
                     "auto" => Some(Self::Inner),
                     "fill" => Some(Self::Fill),
@@ -31,7 +31,7 @@ impl Parse for Size {
                 })
                 .ok_or(ParseError)
         } else {
-            let value = value.into_float();
+            let value = value.into_f32();
 
             Ok(if parser.try_consume(&Token::Percent) {
                 Size::Percentage(Length::new(value))
@@ -50,14 +50,14 @@ pub fn parse_calc(parser: &mut Parser) -> Result<Vec<DynamicCalculation>, ParseE
     let mut calcs = vec![];
 
     while let Ok(value) = parser.consume_if(|token| {
-        token.is_integer()
+        token.is_i64_or_f32()
             || matches!(
                 token,
                 Token::Plus | Token::Minus | Token::Slash | Token::Star
             )
     }) {
-        if value.is_integer() {
-            let value = value.into_float();
+        if value.is_i64_or_f32() {
+            let value = value.into_f32();
 
             calcs.push(if parser.try_consume(&Token::Percent) {
                 DynamicCalculation::Percentage(value)

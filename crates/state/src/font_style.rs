@@ -22,11 +22,9 @@ use torin::torin::Torin;
 
 use crate::{
     CustomAttributeValues,
-    Lexer,
     Parse,
     ParseAttribute,
     ParseError,
-    Parser,
     TextOverflow,
     Token,
 };
@@ -115,23 +113,13 @@ impl ParseAttribute for FontStyleState {
                     // Make an exception for the "inherit" as in this case we don't want to pass
                     //  a color at all but use the inherited one.
                     if value != "inherit" {
-                        let mut parser = Parser::new(Lexer::parse(value));
-
-                        self.color = Color::parse(&mut parser)?;
+                        self.color = Color::parse_value(value)?
                     }
                 }
             }
             AttributeName::TextShadow => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    let mut shadows = vec![TextShadow::parse(&mut parser)?];
-
-                    while parser.try_consume(&Token::Comma) {
-                        shadows.push(TextShadow::parse(&mut parser)?);
-                    }
-
-                    self.text_shadows = shadows;
+                    self.text_shadows = TextShadow::parse_values(value, &Token::Comma)?;
                 }
             }
             AttributeName::FontFamily => {
@@ -160,9 +148,7 @@ impl ParseAttribute for FontStyleState {
             }
             AttributeName::TextAlign => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    self.text_align = TextAlign::parse(&mut parser)?;
+                    self.text_align = TextAlign::parse_value(value)?
                 }
             }
             AttributeName::MaxLines => {
@@ -172,51 +158,37 @@ impl ParseAttribute for FontStyleState {
             }
             AttributeName::TextOverflow => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    self.text_overflow = TextOverflow::parse(&mut parser)?;
+                    self.text_overflow = TextOverflow::parse_value(value)?
                 }
             }
             AttributeName::FontStyle => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    self.font_slant = Slant::parse(&mut parser)?;
+                    self.font_slant = Slant::parse_value(value)?
                 }
             }
             AttributeName::FontWeight => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    self.font_weight = Weight::parse(&mut parser)?;
+                    self.font_weight = Weight::parse_value(value)?
                 }
             }
             AttributeName::FontWidth => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    self.font_width = Width::parse(&mut parser)?;
+                    self.font_width = Width::parse_value(value)?
                 }
             }
             AttributeName::Decoration => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    self.decoration.ty = TextDecoration::parse(&mut parser)?;
+                    self.decoration.ty = TextDecoration::parse_value(value)?
                 }
             }
             AttributeName::DecorationStyle => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    self.decoration.style = TextDecorationStyle::parse(&mut parser)?;
+                    self.decoration.style = TextDecorationStyle::parse_value(value)?
                 }
             }
             AttributeName::DecorationColor => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut parser = Parser::new(Lexer::parse(value));
-
-                    self.decoration.color = Color::parse(&mut parser)?;
+                    self.decoration.color = Color::parse_value(value)?
                 } else {
                     self.decoration.color = self.color;
                 }
