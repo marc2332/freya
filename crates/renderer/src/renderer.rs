@@ -1,18 +1,8 @@
-use std::path::PathBuf;
+use std::{path::PathBuf};
+
 use dioxus_core::VirtualDom;
 #[cfg(not(target_os = "macos"))]
 use glutin::prelude::GlSurface;
-#[cfg(not(target_os = "macos"))]
-use std::num::NonZeroU32;
-use winit::{
-    application::ApplicationHandler,
-    event::{
-        ElementState, Ime, KeyEvent, MouseButton, MouseScrollDelta, StartCause, Touch, TouchPhase,
-        WindowEvent,
-    },
-    event_loop::{EventLoop, EventLoopProxy},
-    keyboard::ModifiersState,
-};
 use freya_common::EventMessage;
 use freya_core::{
     accessibility::AccessibilityFocusDirection,
@@ -24,23 +14,33 @@ use freya_elements::events::{
     map_winit_key, map_winit_modifiers, map_winit_physical_key, Code, Key,
 };
 use torin::geometry::CursorPoint;
-use freya_engine::prelude::*;
-
-#[cfg(target_os = "linux")]
-use crate::platforms::linux::{create_surface, CreatedState, NotCreatedState, WindowState};
+use winit::{
+    application::ApplicationHandler,
+    event::{
+        ElementState, Ime, KeyEvent, MouseButton, MouseScrollDelta, StartCause, Touch, TouchPhase,
+        WindowEvent,
+    },
+    event_loop::{EventLoop, EventLoopProxy},
+    keyboard::ModifiersState,
+};
 #[cfg(target_os = "macos")]
-use crate::platforms::macos::{CreatedState, NotCreatedState, WindowState};
-#[cfg(target_os = "windows")]
-use crate::platforms::windows::{create_surface, CreatedState, NotCreatedState, WindowState};
-use crate::{devtools::Devtools, HoveredNode, LaunchConfig};
+use freya_engine::prelude::{backend_render_targets, ColorType, mtl, scalar, SurfaceOrigin, wrap_backend_render_target};
+#[cfg(target_os = "macos")]
+use foreign_types_shared::ForeignTypeRef;
 #[cfg(target_os = "macos")]
 use core_graphics_types::geometry::CGSize;
-use foreign_types_shared::ForeignTypeRef;
+#[cfg(target_os = "macos")]
 use objc::rc::autoreleasepool;
+
+use crate::{
+    devtools::Devtools,
+    window_state::{CreatedState, NotCreatedState, WindowState},
+    HoveredNode, LaunchConfig,
+};
 
 const WHEEL_SPEED_MODIFIER: f32 = 53.0;
 
-/// Desktop renderer using Skia and Winit
+/// Desktop renderer using Skia, Glutin and Winit
 pub struct DesktopRenderer<'a, State: Clone + 'static> {
     pub(crate) event_loop_proxy: EventLoopProxy<EventMessage>,
     pub(crate) state: WindowState<'a, State>,
@@ -65,7 +65,7 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
             .expect("Failed to create event loop.");
         let proxy = event_loop.create_proxy();
 
-        // Hotreload support for Dioxus
+        // Hot Reload support for Dioxus
         #[cfg(feature = "hot-reload")]
         {
             use std::process::exit;
@@ -82,7 +82,13 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
         let mut desktop_renderer =
             DesktopRenderer::new(vdom, sdom, config, devtools, hovered_node, proxy);
 
+        #[cfg(not(target_os = "macos"))]
         event_loop.run_app(&mut desktop_renderer).unwrap();
+
+        #[cfg(target_os = "macos")]
+        autoreleasepool(|| {
+            event_loop.run_app(&mut desktop_renderer).unwrap();
+        })
     }
 
     pub fn new(
@@ -216,276 +222,261 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
         &mut self,
         event_loop: &winit::event_loop::ActiveEventLoop,
         _window_id: winit::window::WindowId,
-        event: winit::event::WindowEvent,
+        event: WindowEvent,
     ) {
-        autoreleasepool(|| {
-            let scale_factor = self.scale_factor();
-            #[cfg(not(target_os = "macos"))]
-                let CreatedState {
-                gr_context,
-                surface,
-                gl_surface,
-                gl_context,
-                window,
-                app,
-                window_config,
-                fb_info,
-                num_samples,
-                stencil_size,
-                is_window_focused,
-                ..
-            } = self.state.created_state();
+        let scale_factor = self.scale_factor();
+        let CreatedState {
+            skia_surface,
+            window,
+            app,
+            window_config,
+            is_window_focused,
+            ..
+        } = self.state.created_state();
+
+        app.accessibility
+            .process_accessibility_event(&event, window);
+
+        match event {
+            WindowEvent::ThemeChanged(theme) => {
+                app.platform_sender.send_modify(|state| {
+                    state.preferred_theme = theme.into();
+                });
+            }
+            WindowEvent::CloseRequested => event_loop.exit(),
+            WindowEvent::Ime(Ime::Commit(text)) => {
+                self.send_event(PlatformEvent::Keyboard {
+                    name: EventName::KeyDown,
+                    key: Key::Character(text),
+                    code: Code::Unidentified,
+                    modifiers: map_winit_modifiers(self.modifiers_state),
+                });
+            }
             #[cfg(target_os = "macos")]
-                let CreatedState {
-                gr_context,
-                metal_layer,
-                command_queue,
-                window,
-                app,
-                is_window_focused,
-                window_config,
-            } = self.state.created_state();
-
-            app.accessibility
-                .process_accessibility_event(&event, window);
-
-            match event {
-                WindowEvent::ThemeChanged(theme) => {
-                    app.platform_sender.send_modify(|state| {
-                        state.preferred_theme = theme.into();
+            WindowEvent::RedrawRequested => {
+                if let Some(drawable) = skia_surface.metal_layer.next_drawable() {
+                    app.platform_sender.send_if_modified(|state| {
+                        let scale_factor_is_different = state.scale_factor == scale_factor;
+                        state.scale_factor = scale_factor;
+                        scale_factor_is_different
                     });
-                }
-                WindowEvent::CloseRequested => event_loop.exit(),
-                WindowEvent::Ime(Ime::Commit(text)) => {
-                    self.send_event(PlatformEvent::Keyboard {
-                        name: EventName::KeyDown,
-                        key: Key::Character(text),
-                        code: Code::Unidentified,
-                        modifiers: map_winit_modifiers(self.modifiers_state),
-                    });
-                }
-                WindowEvent::RedrawRequested => {
-                    /*
-					surface.canvas().clear(window_config.background);
-					app.render(&self.hovered_node, surface.canvas(), window);
-					app.event_loop_tick();
-					window.pre_present_notify();
-					gr_context.flush_and_submit();
-					gl_surface.swap_buffers(gl_context).unwrap();
-					*/
-                    if let Some(drawable) = metal_layer.next_drawable() {
-                        app.platform_sender.send_if_modified(|state| {
-                            let scale_factor_is_different = state.scale_factor == scale_factor;
-                            state.scale_factor = scale_factor;
-                            scale_factor_is_different
-                        });
 
-                        if app.measure_layout_on_next_render {
-                            app.process_layout(window.inner_size(), scale_factor);
-                            app.process_accessibility(window);
+                    if app.measure_layout_on_next_render {
+                        app.process_layout(window.inner_size(), scale_factor);
+                        app.process_accessibility(window);
 
-                            app.measure_layout_on_next_render = false;
-                        }
-
-                        let (drawable_width, drawable_height) = {
-                            let size = metal_layer.drawable_size();
-                            (size.width as scalar, size.height as scalar)
-                        };
-
-                        let mut surface = unsafe {
-                            let texture_info =
-                                mtl::TextureInfo::new(drawable.texture().as_ptr() as mtl::Handle);
-
-                            let backend_render_target = backend_render_targets::make_mtl(
-                                (drawable_width as i32, drawable_height as i32),
-                                &texture_info,
-                            );
-
-                            wrap_backend_render_target(
-                                gr_context,
-                                &backend_render_target,
-                                SurfaceOrigin::TopLeft,
-                                ColorType::BGRA8888,
-                                None,
-                                None,
-                            ).unwrap()
-                        };
-
-                        surface.canvas().clear(window_config.background);
-
-                        app.render(&self.hovered_node, surface.canvas(), window);
-                        app.event_loop_tick();
-
-                        drop(surface);
-
-                        // window.pre_present_notify();
-                        gr_context.flush_and_submit();
-
-                        let command_buffer = command_queue.new_command_buffer();
-                        command_buffer.present_drawable(drawable);
-                        command_buffer.commit();
+                        app.measure_layout_on_next_render = false;
                     }
-                }
-                WindowEvent::MouseInput { state, button, .. } => {
-                    app.set_navigation_mode(NavigationMode::NotKeyboard);
 
-                    self.mouse_state = state;
-
-                    let name = match state {
-                        ElementState::Pressed => EventName::MouseDown,
-                        ElementState::Released => match button {
-                            MouseButton::Middle => EventName::MiddleClick,
-                            MouseButton::Right => EventName::RightClick,
-                            MouseButton::Left => EventName::Click,
-                            _ => EventName::PointerUp,
-                        },
+                    let (drawable_width, drawable_height) = {
+                        let size = skia_surface.metal_layer.drawable_size();
+                        (size.width as scalar, size.height as scalar)
                     };
 
-                    self.send_event(PlatformEvent::Mouse {
-                        name,
+                    let mut surface = unsafe {
+                        let texture_info =
+                            mtl::TextureInfo::new(drawable.texture().as_ptr() as mtl::Handle);
+
+                        let backend_render_target = backend_render_targets::make_mtl(
+                            (drawable_width as i32, drawable_height as i32),
+                            &texture_info,
+                        );
+
+                        wrap_backend_render_target(
+                            &mut skia_surface.gr_context,
+                            &backend_render_target,
+                            SurfaceOrigin::TopLeft,
+                            ColorType::BGRA8888,
+                            None,
+                            None,
+                        ).unwrap()
+                    };
+
+                    surface.canvas().clear(window_config.background);
+
+                    app.render(&self.hovered_node, surface.canvas(), window);
+                    app.event_loop_tick();
+
+                    drop(surface);
+
+                    skia_surface.gr_context.flush_and_submit();
+
+                    let command_buffer = skia_surface.command_queue.new_command_buffer();
+                    command_buffer.present_drawable(drawable);
+                    command_buffer.commit();
+                }
+            }
+            #[cfg(not(target_os = "macos"))]
+            WindowEvent::RedrawRequested => {
+                app.platform_sender.send_if_modified(|state| {
+                    let scale_factor_is_different = state.scale_factor == scale_factor;
+                    state.scale_factor = scale_factor;
+                    scale_factor_is_different
+                });
+
+                if app.measure_layout_on_next_render {
+                    app.process_layout(window.inner_size(), scale_factor);
+                    app.process_accessibility(window);
+
+                    app.measure_layout_on_next_render = false;
+                }
+                skia_surface.surface.canvas().clear(window_config.background);
+                app.render(&self.hovered_node, skia_surface.surface.canvas(), window);
+                app.event_loop_tick();
+                window.pre_present_notify();
+                skia_surface.gr_context.flush_and_submit();
+                skia_surface.gl_surface.swap_buffers(&skia_surface.gl_context).unwrap();
+            }
+            WindowEvent::MouseInput { state, button, .. } => {
+                app.set_navigation_mode(NavigationMode::NotKeyboard);
+
+                self.mouse_state = state;
+
+                let name = match state {
+                    ElementState::Pressed => EventName::MouseDown,
+                    ElementState::Released => match button {
+                        MouseButton::Middle => EventName::MiddleClick,
+                        MouseButton::Right => EventName::RightClick,
+                        MouseButton::Left => EventName::Click,
+                        _ => EventName::PointerUp,
+                    },
+                };
+
+                self.send_event(PlatformEvent::Mouse {
+                    name,
+                    cursor: self.cursor_pos,
+                    button: Some(button),
+                });
+            }
+            WindowEvent::MouseWheel { delta, phase, .. } => {
+                if TouchPhase::Moved == phase {
+                    let scroll_data = {
+                        match delta {
+                            MouseScrollDelta::LineDelta(x, y) => (
+                                (x * WHEEL_SPEED_MODIFIER) as f64,
+                                (y * WHEEL_SPEED_MODIFIER) as f64,
+                            ),
+                            MouseScrollDelta::PixelDelta(pos) => (pos.x, pos.y),
+                        }
+                    };
+
+                    self.send_event(PlatformEvent::Wheel {
+                        name: EventName::Wheel,
+                        scroll: CursorPoint::from(scroll_data),
                         cursor: self.cursor_pos,
-                        button: Some(button),
                     });
                 }
-                WindowEvent::MouseWheel { delta, phase, .. } => {
-                    if TouchPhase::Moved == phase {
-                        let scroll_data = {
-                            match delta {
-                                MouseScrollDelta::LineDelta(x, y) => (
-                                    (x * WHEEL_SPEED_MODIFIER) as f64,
-                                    (y * WHEEL_SPEED_MODIFIER) as f64,
-                                ),
-                                MouseScrollDelta::PixelDelta(pos) => (pos.x, pos.y),
-                            }
-                        };
-
-                        self.send_event(PlatformEvent::Wheel {
-                            name: EventName::Wheel,
-                            scroll: CursorPoint::from(scroll_data),
-                            cursor: self.cursor_pos,
-                        });
-                    }
-                }
-                WindowEvent::ModifiersChanged(modifiers) => {
-                    self.modifiers_state = modifiers.state();
-                }
-                WindowEvent::KeyboardInput {
-                    event:
+            }
+            WindowEvent::ModifiersChanged(modifiers) => {
+                self.modifiers_state = modifiers.state();
+            }
+            WindowEvent::KeyboardInput {
+                event:
                     KeyEvent {
                         physical_key,
                         logical_key,
                         state,
                         ..
                     },
-                    ..
-                } => {
-                    if !*is_window_focused {
-                        return;
-                    }
-
-                    let name = match state {
-                        ElementState::Pressed => EventName::KeyDown,
-                        ElementState::Released => EventName::KeyUp,
-                    };
-                    self.send_event(PlatformEvent::Keyboard {
-                        name,
-                        key: map_winit_key(&logical_key),
-                        code: map_winit_physical_key(&physical_key),
-                        modifiers: map_winit_modifiers(self.modifiers_state),
-                    })
+                ..
+            } => {
+                if !*is_window_focused {
+                    return;
                 }
-                WindowEvent::CursorLeft { .. } => {
-                    if self.mouse_state == ElementState::Released {
-                        self.cursor_pos = CursorPoint::new(-1.0, -1.0);
 
-                        self.send_event(PlatformEvent::Mouse {
-                            name: EventName::MouseOver,
-                            cursor: self.cursor_pos,
-                            button: None,
-                        });
-                    }
-                }
-                WindowEvent::CursorMoved { position, .. } => {
-                    self.cursor_pos = CursorPoint::from((position.x, position.y));
+                let name = match state {
+                    ElementState::Pressed => EventName::KeyDown,
+                    ElementState::Released => EventName::KeyUp,
+                };
+                self.send_event(PlatformEvent::Keyboard {
+                    name,
+                    key: map_winit_key(&logical_key),
+                    code: map_winit_physical_key(&physical_key),
+                    modifiers: map_winit_modifiers(self.modifiers_state),
+                })
+            }
+            WindowEvent::CursorLeft { .. } => {
+                if self.mouse_state == ElementState::Released {
+                    self.cursor_pos = CursorPoint::new(-1.0, -1.0);
 
                     self.send_event(PlatformEvent::Mouse {
                         name: EventName::MouseOver,
                         cursor: self.cursor_pos,
                         button: None,
                     });
-
-                    if let Some(dropped_file_path) = self.dropped_file_path.take() {
-                        self.send_event(PlatformEvent::File {
-                            name: EventName::FileDrop,
-                            file_path: Some(dropped_file_path),
-                            cursor: self.cursor_pos,
-                        });
-                    }
                 }
-                WindowEvent::Touch(Touch {
-                                       location,
-                                       phase,
-                                       id,
-                                       force,
-                                       ..
-                                   }) => {
-                    self.cursor_pos = CursorPoint::from((location.x, location.y));
-
-                    let name = match phase {
-                        TouchPhase::Cancelled => EventName::TouchCancel,
-                        TouchPhase::Ended => EventName::TouchEnd,
-                        TouchPhase::Moved => EventName::TouchMove,
-                        TouchPhase::Started => EventName::TouchStart,
-                    };
-
-                    self.send_event(PlatformEvent::Touch {
-                        name,
-                        location: self.cursor_pos,
-                        finger_id: id,
-                        phase,
-                        force,
-                    });
-                }
-                WindowEvent::Resized(size) => {
-                    /*
-					*surface =
-						create_surface(window, *fb_info, gr_context, *num_samples, *stencil_size);
-
-					gl_surface.resize(
-						gl_context,
-						NonZeroU32::new(size.width.max(1)).unwrap(),
-						NonZeroU32::new(size.height.max(1)).unwrap(),
-					);
-					*/
-                    metal_layer.set_drawable_size(CGSize::new(size.width as f64, size.height as f64));
-
-                    window.request_redraw();
-
-                    app.resize(window);
-                }
-                WindowEvent::DroppedFile(file_path) => {
-                    self.dropped_file_path = Some(file_path);
-                }
-                WindowEvent::HoveredFile(file_path) => {
-                    self.send_event(PlatformEvent::File {
-                        name: EventName::GlobalFileHover,
-                        file_path: Some(file_path),
-                        cursor: self.cursor_pos,
-                    });
-                }
-                WindowEvent::HoveredFileCancelled => {
-                    self.send_event(PlatformEvent::File {
-                        name: EventName::GlobalFileHoverCancelled,
-                        file_path: None,
-                        cursor: self.cursor_pos,
-                    });
-                }
-                WindowEvent::Focused(is_focused) => {
-                    *is_window_focused = is_focused;
-                }
-                _ => {}
             }
-        });
+            WindowEvent::CursorMoved { position, .. } => {
+                self.cursor_pos = CursorPoint::from((position.x, position.y));
+
+                self.send_event(PlatformEvent::Mouse {
+                    name: EventName::MouseOver,
+                    cursor: self.cursor_pos,
+                    button: None,
+                });
+
+                if let Some(dropped_file_path) = self.dropped_file_path.take() {
+                    self.send_event(PlatformEvent::File {
+                        name: EventName::FileDrop,
+                        file_path: Some(dropped_file_path),
+                        cursor: self.cursor_pos,
+                    });
+                }
+            }
+            WindowEvent::Touch(Touch {
+                location,
+                phase,
+                id,
+                force,
+                ..
+            }) => {
+                self.cursor_pos = CursorPoint::from((location.x, location.y));
+
+                let name = match phase {
+                    TouchPhase::Cancelled => EventName::TouchCancel,
+                    TouchPhase::Ended => EventName::TouchEnd,
+                    TouchPhase::Moved => EventName::TouchMove,
+                    TouchPhase::Started => EventName::TouchStart,
+                };
+
+                self.send_event(PlatformEvent::Touch {
+                    name,
+                    location: self.cursor_pos,
+                    finger_id: id,
+                    phase,
+                    force,
+                });
+            }
+            WindowEvent::Resized(size) => {
+                #[cfg(not(target_os = "macos"))]
+                skia_surface.resize(window, size);
+                #[cfg(target_os = "macos")]
+                skia_surface.metal_layer.set_drawable_size(CGSize::new(size.width as f64, size.height as f64));
+                window.request_redraw();
+                app.resize(window);
+            }
+            WindowEvent::DroppedFile(file_path) => {
+                self.dropped_file_path = Some(file_path);
+            }
+            WindowEvent::HoveredFile(file_path) => {
+                self.send_event(PlatformEvent::File {
+                    name: EventName::GlobalFileHover,
+                    file_path: Some(file_path),
+                    cursor: self.cursor_pos,
+                });
+            }
+            WindowEvent::HoveredFileCancelled => {
+                self.send_event(PlatformEvent::File {
+                    name: EventName::GlobalFileHoverCancelled,
+                    file_path: None,
+                    cursor: self.cursor_pos,
+                });
+            }
+            WindowEvent::Focused(is_focused) => {
+                *is_window_focused = is_focused;
+            }
+            _ => {}
+        }
     }
 
     fn exiting(&mut self, _event_loop: &winit::event_loop::ActiveEventLoop) {
@@ -496,15 +487,14 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
 #[cfg(not(target_os = "macos"))]
 impl<T: Clone> Drop for DesktopRenderer<'_, T> {
     fn drop(&mut self) {
-        if let WindowState::Created(CreatedState {
-            gl_context,
-            gl_surface,
-            gr_context,
-            ..
-        }) = &mut self.state
-        {
-            if !gl_context.is_current() && gl_context.make_current(gl_surface).is_err() {
-                gr_context.abandon();
+        if let WindowState::Created(CreatedState { skia_surface, .. }) = &mut self.state {
+            if !skia_surface.gl_context.is_current()
+                && skia_surface
+                    .gl_context
+                    .make_current(&skia_surface.gl_surface)
+                    .is_err()
+            {
+                skia_surface.gr_context.abandon();
             }
         }
     }
