@@ -33,6 +33,11 @@ impl PluginHandle {
             .send_event(EventMessage::PlatformEvent(event))
             .ok();
     }
+
+    /// Emit a [EventMessage].
+    pub fn send_event_loop_event(&self, event: EventMessage) {
+        self.proxy.send_event(event).ok();
+    }
 }
 
 /// Manages all loaded plugins.
