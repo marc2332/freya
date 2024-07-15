@@ -28,7 +28,6 @@ pub struct NotCreatedState<'a, State: Clone + 'static> {
 
 pub struct CreatedState {
     pub(crate) gr_context: DirectContext,
-    pub(crate) surface: Surface,
     pub(crate) metal_layer: MetalLayer,
     pub(crate) command_queue: CommandQueue,
     pub(crate) window: Window,
@@ -85,6 +84,7 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
             window_attributes =
                 window_attributes.with_min_inner_size(LogicalSize::<f64>::from(min_size));
         }
+        
         if let Some(max_size) = config.window_config.max_size {
             window_attributes =
                 window_attributes.with_max_inner_size(LogicalSize::<f64>::from(max_size));
@@ -147,12 +147,6 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
         let mut gr_context =
             direct_contexts::make_metal(&backend, None).expect("Could not create direct context");
 
-        let mut surface = create_surface(&metal_layer, &mut gr_context);
-	    
-        surface
-            .canvas()
-            .scale((scale_factor as f32, scale_factor as f32));
-
         let mut app = Application::new(
             sdom,
             vdom,
@@ -169,7 +163,6 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
 
         *self = WindowState::Created(CreatedState {
             gr_context,
-            surface,
             metal_layer,
             command_queue,
             window,
