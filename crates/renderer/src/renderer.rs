@@ -242,8 +242,8 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 command_queue,
                 window,
                 app,
-                window_config,
                 is_window_focused,
+                window_config,
             } = self.state.created_state();
 
             app.accessibility
@@ -308,16 +308,18 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                                 ColorType::BGRA8888,
                                 None,
                                 None,
-                            )
-                                .unwrap()
+                            ).unwrap()
                         };
+
+                        surface.canvas().clear(window_config.background);
 
                         app.render(&self.hovered_node, surface.canvas(), window);
                         app.event_loop_tick();
 
+                        drop(surface);
+
                         // window.pre_present_notify();
                         gr_context.flush_and_submit();
-                        drop(surface);
 
                         let command_buffer = command_queue.new_command_buffer();
                         command_buffer.present_drawable(drawable);
@@ -448,7 +450,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     /*
 					*surface =
 						create_surface(window, *fb_info, gr_context, *num_samples, *stencil_size);
-	
+
 					gl_surface.resize(
 						gl_context,
 						NonZeroU32::new(size.width.max(1)).unwrap(),
