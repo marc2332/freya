@@ -97,6 +97,14 @@ impl Token {
             None
         }
     }
+
+    pub fn try_as_u8(&self) -> Option<u8> {
+        if let Token::Number(value) = self {
+            u8::try_from(*value).ok()
+        } else {
+            None
+        }
+    }
 }
 
 pub struct Lexer;

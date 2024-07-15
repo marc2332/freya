@@ -37,7 +37,7 @@ impl ParseAttribute for ViewportState {
         match attr.attribute {
             AttributeName::Overflow => {
                 if let Some(value) = attr.value.as_text() {
-                    self.overflow = OverflowMode::parse_value(value)?;
+                    self.overflow = OverflowMode::parse(value)?;
                 }
             }
             _ => {}

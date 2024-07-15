@@ -31,10 +31,10 @@ impl From<Color> for Fill {
 }
 
 impl Parse for Fill {
-    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
-        LinearGradient::parse(parser)
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
+        LinearGradient::from_parser(parser)
             .map(Self::LinearGradient)
-            .or(Color::parse(parser).map(Self::Color))
+            .or(Color::from_parser(parser).map(Self::Color))
     }
 }
 

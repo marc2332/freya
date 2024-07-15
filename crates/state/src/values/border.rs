@@ -34,7 +34,7 @@ pub enum BorderAlignment {
 }
 
 impl Parse for BorderAlignment {
-    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
         parser.consume_map(|value| {
             value.try_as_str().and_then(|value| match value {
                 "inner" => Some(BorderAlignment::Inner),
@@ -66,7 +66,7 @@ impl fmt::Display for BorderStyle {
 }
 
 impl Parse for Border {
-    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
         if parser.try_consume(&Token::ident("none")) {
             return Ok(Self::default());
         }
@@ -80,7 +80,7 @@ impl Parse for Border {
                     _ => None,
                 })
             })?,
-            fill: Fill::parse(parser)?,
+            fill: Fill::from_parser(parser)?,
             alignment: BorderAlignment::default(),
         })
     }

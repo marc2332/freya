@@ -108,12 +108,12 @@ impl Parser {
 
 // FromStr but we own it so we can impl it on torin and skia_safe types.
 pub trait Parse: Sized {
-    fn parse(parser: &mut Parser) -> Result<Self, ParseError>;
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError>;
 
-    fn parse_value(value: &str) -> Result<Self, ParseError> {
+    fn parse(value: &str) -> Result<Self, ParseError> {
         let mut parser = Parser::new(Lexer::parse(value));
 
-        let value = Self::parse(&mut parser);
+        let value = Self::from_parser(&mut parser);
 
         if parser.tokens.len() > 0 {
             Err(ParseError)
@@ -122,13 +122,13 @@ pub trait Parse: Sized {
         }
     }
 
-    fn parse_values(value: &str, separator: &Token) -> Result<Vec<Self>, ParseError> {
+    fn parse_with_separator(value: &str, separator: &Token) -> Result<Vec<Self>, ParseError> {
         let mut parser = Parser::new(Lexer::parse(value));
 
-        let mut values = vec![Self::parse(&mut parser)?];
+        let mut values = vec![Self::from_parser(&mut parser)?];
 
         while parser.try_consume(separator) {
-            values.push(Self::parse(&mut parser)?);
+            values.push(Self::from_parser(&mut parser)?);
         }
 
         if parser.tokens.len() > 0 {

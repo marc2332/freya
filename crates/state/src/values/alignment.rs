@@ -7,7 +7,7 @@ use crate::{
 };
 
 impl Parse for Alignment {
-    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
         parser.consume_map(|value| {
             value.try_as_str().and_then(|value| match value {
                 "start" => Some(Self::Start),

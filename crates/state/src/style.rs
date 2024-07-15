@@ -54,12 +54,12 @@ impl ParseAttribute for StyleState {
                         return Ok(());
                     }
 
-                    self.background = Fill::parse_value(value)?;
+                    self.background = Fill::parse(value)?;
                 }
             }
             AttributeName::Border => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut border = Border::parse_value(value)?;
+                    let mut border = Border::parse(value)?;
 
                     border.alignment = self.border.alignment;
 
@@ -68,17 +68,17 @@ impl ParseAttribute for StyleState {
             }
             AttributeName::BorderAlign => {
                 if let Some(value) = attr.value.as_text() {
-                    self.border.alignment = BorderAlignment::parse_value(value)?;
+                    self.border.alignment = BorderAlignment::parse(value)?;
                 }
             }
             AttributeName::Shadow => {
                 if let Some(value) = attr.value.as_text() {
-                    self.shadows = Shadow::parse_values(value, &Token::Comma)?;
+                    self.shadows = Shadow::parse_with_separator(value, &Token::Comma)?;
                 }
             }
             AttributeName::CornerRadius => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut radius = CornerRadius::parse_value(value)?;
+                    let mut radius = CornerRadius::parse(value)?;
 
                     radius.smoothing = self.corner_radius.smoothing;
 
@@ -115,7 +115,7 @@ impl ParseAttribute for StyleState {
             }
             AttributeName::Overflow => {
                 if let Some(value) = attr.value.as_text() {
-                    self.overflow = OverflowMode::parse_value(value)?;
+                    self.overflow = OverflowMode::parse(value)?;
                 }
             }
             AttributeName::Opacity => {

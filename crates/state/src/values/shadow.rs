@@ -26,7 +26,7 @@ pub struct Shadow {
 }
 
 impl Parse for Shadow {
-    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
         let mut shadow = Shadow::default();
 
         if parser.try_consume(&Token::ident("none")) {
@@ -45,7 +45,7 @@ impl Parse for Shadow {
             shadow.spread = spread;
         }
 
-        shadow.fill = Fill::parse(parser)?;
+        shadow.fill = Fill::from_parser(parser)?;
 
         Ok(shadow)
     }

@@ -15,40 +15,29 @@ pub trait DisplayColor {
 }
 
 impl Parse for Color {
-    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
-        parser
-            .consume_one_of(&[
-                Token::Pound,
-                Token::ident("rgb"),
-                Token::ident("hsl"),
-                Token::ident("red"),
-                Token::ident("green"),
-                Token::ident("blue"),
-                Token::ident("yellow"),
-                Token::ident("black"),
-                Token::ident("gray"),
-                Token::ident("white"),
-                Token::ident("orange"),
-                Token::ident("transparent"),
-            ])
-            .and_then(|token| match token {
-                Token::Pound => parse_hex_color(parser),
-                Token::Ident(ref value) => match value.as_str() {
-                    "rgb" => parse_rgb(parser),
-                    "hsl" => parse_hsl(parser),
-                    "red" => Ok(Color::RED),
-                    "green" => Ok(Color::GREEN),
-                    "blue" => Ok(Color::BLUE),
-                    "yellow" => Ok(Color::YELLOW),
-                    "black" => Ok(Color::BLACK),
-                    "gray" => Ok(Color::GRAY),
-                    "white" => Ok(Color::WHITE),
-                    "orange" => Ok(Color::from_rgb(255, 165, 0)),
-                    "transparent" => Ok(Color::TRANSPARENT),
-                    _ => unreachable!(),
-                },
-                _ => unreachable!(),
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
+        if parser.try_consume(&Token::Pound) {
+            parse_hex_color(parser)
+        } else if parser.try_consume(&Token::ident("rgb")) {
+            parse_rgb(parser)
+        } else if parser.try_consume(&Token::ident("hsl")) {
+            parse_hsl(parser)
+        } else {
+            parser.consume_map(|token| {
+                token.try_as_str().and_then(|value| match value {
+                    "red" => Some(Color::RED),
+                    "green" => Some(Color::GREEN),
+                    "blue" => Some(Color::BLUE),
+                    "yellow" => Some(Color::YELLOW),
+                    "black" => Some(Color::BLACK),
+                    "gray" => Some(Color::GRAY),
+                    "white" => Some(Color::WHITE),
+                    "orange" => Some(Color::from_rgb(255, 165, 0)),
+                    "transparent" => Some(Color::TRANSPARENT),
+                    _ => None,
+                })
             })
+        }
     }
 }
 
@@ -85,29 +74,25 @@ impl DisplayColor for Color {
     }
 }
 
-fn parse_number_as<T: TryFrom<i64>>(token: &Token) -> Option<T> {
-    token.try_as_i64().and_then(|value| T::try_from(value).ok())
-}
-
 fn parse_rgb(parser: &mut Parser) -> Result<Color, ParseError> {
     parser.consume(&Token::ParenOpen)?;
 
-    let red = parser.consume_map(parse_number_as)?;
+    let red = parser.consume_map(Token::try_as_u8)?;
 
     parser.consume(&Token::Comma)?;
 
-    let green = parser.consume_map(parse_number_as)?;
+    let green = parser.consume_map(Token::try_as_u8)?;
 
     parser.consume(&Token::Comma)?;
 
-    let blue = parser.consume_map(parse_number_as)?;
+    let blue = parser.consume_map(Token::try_as_u8)?;
 
     let color = if parser.try_consume(&Token::Comma) {
-        let alpha = parser.consume_if(Token::is_i64_or_f32).and_then(|token| {
-            if token.is_i64() {
-                u8::try_from(token.into_i64()).map_err(|_| ParseError)
+        let alpha = parser.consume_map(|token| {
+            if let Some(value) = token.try_as_f32() {
+                Some((value * 255.0).round().clamp(0.0, 255.0) as u8)
             } else {
-                Ok((token.into_f32() * 255.0).round().clamp(0.0, 255.0) as u8)
+                token.try_as_u8()
             }
         })?;
 

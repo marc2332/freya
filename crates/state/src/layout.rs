@@ -58,42 +58,42 @@ impl ParseAttribute for LayoutState {
         match attr.attribute {
             AttributeName::Width => {
                 if let Some(value) = attr.value.as_text() {
-                    self.width = Size::parse_value(value)?;
+                    self.width = Size::parse(value)?;
                 }
             }
             AttributeName::Height => {
                 if let Some(value) = attr.value.as_text() {
-                    self.height = Size::parse_value(value)?;
+                    self.height = Size::parse(value)?;
                 }
             }
             AttributeName::MinHeight => {
                 if let Some(value) = attr.value.as_text() {
-                    self.minimum_height = Size::parse_value(value)?;
+                    self.minimum_height = Size::parse(value)?;
                 }
             }
             AttributeName::MinWidth => {
                 if let Some(value) = attr.value.as_text() {
-                    self.minimum_width = Size::parse_value(value)?;
+                    self.minimum_width = Size::parse(value)?;
                 }
             }
             AttributeName::MaxHeight => {
                 if let Some(value) = attr.value.as_text() {
-                    self.maximum_height = Size::parse_value(value)?;
+                    self.maximum_height = Size::parse(value)?;
                 }
             }
             AttributeName::MaxWidth => {
                 if let Some(value) = attr.value.as_text() {
-                    self.maximum_width = Size::parse_value(value)?;
+                    self.maximum_width = Size::parse(value)?;
                 }
             }
             AttributeName::Padding => {
                 if let Some(value) = attr.value.as_text() {
-                    self.padding = Gaps::parse_value(value)?;
+                    self.padding = Gaps::parse(value)?;
                 }
             }
             AttributeName::Margin => {
                 if let Some(value) = attr.value.as_text() {
-                    self.margin = Gaps::parse_value(value)?;
+                    self.margin = Gaps::parse(value)?;
                 }
             }
             AttributeName::Direction => {
@@ -117,18 +117,18 @@ impl ParseAttribute for LayoutState {
             }
             AttributeName::MainAlign => {
                 if let Some(value) = attr.value.as_text() {
-                    self.main_alignment = Alignment::parse_value(value)?;
+                    self.main_alignment = Alignment::parse(value)?;
                 }
             }
             AttributeName::CrossAlign => {
                 if let Some(value) = attr.value.as_text() {
-                    self.cross_alignment = Alignment::parse_value(value)?;
+                    self.cross_alignment = Alignment::parse(value)?;
                 }
             }
             AttributeName::Position => {
                 if let Some(value) = attr.value.as_text() {
                     if self.position.is_empty() {
-                        self.position = Position::parse_value(value)?;
+                        self.position = Position::parse(value)?;
                     }
                 }
             }
@@ -158,7 +158,7 @@ impl ParseAttribute for LayoutState {
             }
             AttributeName::Content => {
                 if let Some(value) = attr.value.as_text() {
-                    self.content = Content::parse_value(value)?;
+                    self.content = Content::parse(value)?;
                 }
             }
             AttributeName::Reference => {

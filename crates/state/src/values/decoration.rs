@@ -7,7 +7,7 @@ use crate::{
 };
 
 impl Parse for TextDecoration {
-    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
         let mut decoration = Self::default();
 
         while let Ok(value) = parser.consume_map(|token| {
@@ -27,7 +27,7 @@ impl Parse for TextDecoration {
 }
 
 impl Parse for TextDecorationStyle {
-    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
         parser.consume_map(|token| {
             token.try_as_str().and_then(|value| match value {
                 "solid" => Some(Self::Solid),

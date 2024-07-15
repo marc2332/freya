@@ -11,7 +11,7 @@ use freya_node_state::{
 
 #[test]
 fn parse_basic_border() {
-    let border = Border::parse_value("1 solid red");
+    let border = Border::parse("1 solid red");
 
     assert_eq!(
         border,
@@ -26,7 +26,7 @@ fn parse_basic_border() {
 
 #[test]
 fn parse_gradient_border() {
-    let shadow = Border::parse_value("1 solid linear-gradient(red 0%, blue 100%)");
+    let shadow = Border::parse("1 solid linear-gradient(red 0%, blue 100%)");
     assert_eq!(
         shadow,
         Ok(Border {
@@ -52,10 +52,10 @@ fn parse_gradient_border() {
 
 #[test]
 fn parse_border_alignments() {
-    let inner = BorderAlignment::parse_value("inner");
-    let outer = BorderAlignment::parse_value("outer");
-    let center = BorderAlignment::parse_value("center");
-    let invalid = BorderAlignment::parse_value("invalid");
+    let inner = BorderAlignment::parse("inner");
+    let outer = BorderAlignment::parse("outer");
+    let center = BorderAlignment::parse("center");
+    let invalid = BorderAlignment::parse("invalid");
 
     assert_eq!(inner, Ok(BorderAlignment::Inner));
     assert_eq!(outer, Ok(BorderAlignment::Outer));
@@ -65,9 +65,9 @@ fn parse_border_alignments() {
 
 #[test]
 fn parse_border_style() {
-    let solid = Border::parse_value("1 solid red");
-    let invalid_style = Border::parse_value("1 rust red");
-    let invalid_width = Border::parse_value("rust solid red");
+    let solid = Border::parse("1 solid red");
+    let invalid_style = Border::parse("1 rust red");
+    let invalid_width = Border::parse("rust solid red");
 
     assert_eq!(
         solid,

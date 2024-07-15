@@ -14,7 +14,7 @@ use crate::{
 };
 
 impl Parse for Size {
-    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
         let value = parser.consume_if(|token| token.is_ident() || token.is_i64_or_f32())?;
 
         if value.is_ident() {

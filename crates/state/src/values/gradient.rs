@@ -21,8 +21,8 @@ pub struct GradientStop {
 }
 
 impl Parse for GradientStop {
-    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
-        let color = Color::parse(parser)?;
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
+        let color = Color::from_parser(parser)?;
         let offset = (parser.consume_map(Token::try_as_f32)? / 100.0).clamp(0.0, 1.0);
 
         parser.consume(&Token::Percent)?;
@@ -74,7 +74,7 @@ impl LinearGradient {
 }
 
 impl Parse for LinearGradient {
-    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
         parser.consume(&Token::ident("linear-gradient"))?;
         parser.consume(&Token::ParenOpen)?;
 
@@ -95,7 +95,7 @@ impl Parse for LinearGradient {
                 parser.consume(&Token::Comma)?;
             }
 
-            gradient.stops.push(GradientStop::parse(parser)?);
+            gradient.stops.push(GradientStop::from_parser(parser)?);
         }
 
         parser.consume(&Token::ParenClose)?;

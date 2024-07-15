@@ -8,7 +8,7 @@ use crate::{
 };
 
 impl Parse for Gaps {
-    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
         let mut paddings = Gaps::default();
 
         let value =

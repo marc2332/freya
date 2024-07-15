@@ -7,7 +7,7 @@ use crate::{
 };
 
 impl Parse for TextAlign {
-    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
         parser.consume_map(|token| {
             token.try_as_str().and_then(|value| match value {
                 "center" => Some(TextAlign::Center),
@@ -23,7 +23,7 @@ impl Parse for TextAlign {
 }
 
 impl Parse for Slant {
-    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
         parser.consume_map(|token| {
             token.try_as_str().and_then(|value| match value {
                 "upright" => Some(Slant::Upright),
@@ -36,7 +36,7 @@ impl Parse for Slant {
 }
 
 impl Parse for Width {
-    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
         parser.consume_map(|token| {
             token.try_as_str().and_then(|value| match value {
                 "ultra-condensed" => Some(Width::ULTRA_CONDENSED),
@@ -60,7 +60,7 @@ impl Parse for Weight {
     // CSS has one deviation from this spec, which uses the value "950" for extra_black.
     // skia_safe also has an "invisible" weight smaller than the thin weight, which could fall under CSS's interpretation of OpenType's
     // version. In this case it would be font_weight: "50".
-    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
         parser.consume_map(|token| {
             if token.is_i64() {
                 token.try_as_i64().and_then(|value| match value {
@@ -124,7 +124,7 @@ impl TextOverflow {
 }
 
 impl Parse for TextOverflow {
-    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
         parser.consume_map(|token| {
             token.try_as_str().map(|value| match value {
                 "ellipsis" => TextOverflow::Ellipsis,

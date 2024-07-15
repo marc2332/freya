@@ -106,7 +106,7 @@ pub fn Graph(props: GraphProps) -> Element {
 
                     paint.set_anti_alias(true);
                     paint.set_style(PaintStyle::Fill);
-                    paint.set_color(Color::parse_value(&line.color).unwrap());
+                    paint.set_color(Color::parse(&line.color).unwrap());
                     paint.set_stroke_width(3.0);
 
                     let mut previous_x = None;

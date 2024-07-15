@@ -3,7 +3,7 @@ use freya_node_state::Parse;
 
 #[test]
 fn parse_text_shadow() {
-    let text_shadow = TextShadow::parse_value("1 5 12 rgb(255, 0, 0)");
+    let text_shadow = TextShadow::parse("1 5 12 rgb(255, 0, 0)");
     assert_eq!(
         text_shadow,
         Ok(TextShadow {
