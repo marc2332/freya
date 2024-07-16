@@ -31,7 +31,7 @@ use crate::{
 #[derive(Default, Debug, Clone, PartialEq, Component)]
 pub struct StyleState {
     pub background: Fill,
-    pub fill: Fill,
+    pub fill: Option<Fill>,
     pub border: Border,
     pub shadows: Vec<Shadow>,
     pub corner_radius: CornerRadius,
@@ -60,7 +60,7 @@ impl ParseAttribute for StyleState {
                     if value == "none" {
                         return Ok(());
                     }
-                    self.fill = Fill::parse(value)?;
+                    self.fill = Some(Fill::parse(value)?);
                 }
             }
             AttributeName::Border => {

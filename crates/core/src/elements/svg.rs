@@ -37,21 +37,25 @@ impl ElementUtils for SvgElement {
                     area.height() / svg_dom.inner().fContainerSize.fHeight,
                 ));
                 svg_dom.render(canvas);
-                let mut paint = Paint::default();
 
-                paint.set_anti_alias(true);
-                paint.set_blend_mode(BlendMode::SrcIn);
-
-                match &node_style.fill {
-                    Fill::Color(color) => {
-                        paint.set_color(*color);
+                if let Some(fill) = node_style.fill.as_ref() {
+                    let mut paint = Paint::default();
+    
+                    paint.set_anti_alias(true);
+                    paint.set_blend_mode(BlendMode::SrcIn);
+    
+                    match fill {
+                        Fill::Color(color) => {
+                            paint.set_color(*color);
+                        }
+                        Fill::LinearGradient(gradient) => {
+                            paint.set_shader(gradient.into_shader(area));
+                        }
                     }
-                    Fill::LinearGradient(gradient) => {
-                        paint.set_shader(gradient.into_shader(area));
-                    }
+    
+                    canvas.draw_paint(&paint);
                 }
 
-                canvas.draw_paint(&paint);
                 canvas.restore();
             }
         }
