@@ -27,6 +27,7 @@ pub trait AreaModel {
         contents_area: &Size2D,
         alignment: &Alignment,
         direction: &DirectionMode,
+        offset_y: &Length,
         alignment_direction: AlignmentDirection,
     );
 
@@ -70,6 +71,7 @@ impl AreaModel for Area {
         contents_size: &Size2D,
         alignment: &Alignment,
         direction: &DirectionMode,
+        offset_y: &Length,
         alignment_direction: AlignmentDirection,
     ) {
         let axis = get_align_axis(direction, alignment_direction);
@@ -83,7 +85,7 @@ impl AreaModel for Area {
                     self.origin.y = available_area.min_y() + new_origin_y;
                 }
                 Alignment::End => {
-                    self.origin.y = available_area.max_y() - contents_size.height;
+                    self.origin.y = available_area.max_y() - contents_size.height - offset_y.0;
                 }
                 _ => {}
             },
