@@ -16,6 +16,7 @@ use freya_hooks::{
     ScrollViewThemeWith,
 };
 
+use super::use_scroll_controller::ScrollController;
 use crate::{
     get_container_size,
     get_corrected_scroll_position,
@@ -24,6 +25,10 @@ use crate::{
     get_scrollbar_pos_and_size,
     is_scrollbar_visible,
     manage_key_event,
+    scroll_views::use_scroll_controller::{
+        use_scroll_controller,
+        ScrollConfig,
+    },
     Axis,
     ScrollBar,
     ScrollThumb,
@@ -48,6 +53,8 @@ pub struct ScrollViewProps {
     /// Enable scrolling with arrow keys.
     #[props(default = true, into)]
     pub scroll_with_arrows: bool,
+
+    pub scroll_controller: Option<ScrollController>,
 }
 
 /// Scrollable area with bidirectional support and scrollbars.
@@ -59,16 +66,51 @@ pub struct ScrollViewProps {
 /// fn app() -> Element {
 ///     rsx!(
 ///         ScrollView {
-///              theme: theme_with!(ScrollViewTheme {
-///                 width: "100%".into(),
-///                 height: "300".into(),
-///              }),
-///              show_scrollbar: true,
-///              rect {
+///             rect {
 ///                 background: "blue",
-///                 height: "500",
+///                 height: "400",
+///                 width: "100%"
+///             }
+///             rect {
+///                 background: "red",
+///                 height: "400",
 ///                 width: "100%"
 ///              }
+///         }
+///     )
+/// }
+/// ```
+///
+/// # With a Scroll Controller
+///
+/// ```no_run
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///     let mut scroll_controller = use_scroll_controller(|| ScrollConfig::default());
+///
+///     rsx!(
+///         ScrollView {
+///             scroll_controller,
+///             rect {
+///                 background: "blue",
+///                 height: "400",
+///                 width: "100%"
+///             }
+///             Button {
+///                 label {
+///                     onclick: move |_| {
+///                          scroll_controller.scroll_to(ScrollPosition::Start, ScrollDirection::Vertical);
+///                     },
+///                     label {
+///                         "Scroll up"
+///                     }
+///                 }
+///             }
+///             rect {
+///                 background: "red",
+///                 height: "400",
+///                 width: "100%"
+///             }
 ///         }
 ///     )
 /// }
@@ -78,9 +120,12 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
     let mut clicking_scrollbar = use_signal::<Option<(Axis, f64)>>(|| None);
     let mut clicking_shift = use_signal(|| false);
     let mut clicking_alt = use_signal(|| false);
-    let mut scrolled_y = use_signal(|| 0);
-    let mut scrolled_x = use_signal(|| 0);
+    let mut scroll_controller = props
+        .scroll_controller
+        .unwrap_or_else(|| use_scroll_controller(ScrollConfig::default));
+    let (mut scrolled_x, mut scrolled_y) = scroll_controller.into();
     let (node_ref, size) = use_node();
+
     let mut focus = use_focus();
     let theme = use_applied_theme!(&props.theme, scroll_view);
     let scrollbar_theme = use_applied_theme!(&props.scrollbar_theme, scroll_bar);
@@ -91,6 +136,8 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
     let user_direction = &props.direction;
     let show_scrollbar = props.show_scrollbar;
     let scroll_with_arrows = props.scroll_with_arrows;
+
+    scroll_controller.use_apply(size.inner.width, size.inner.height);
 
     let direction_is_vertical = user_direction == "vertical";
 
