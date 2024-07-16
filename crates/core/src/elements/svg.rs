@@ -29,18 +29,21 @@ impl ElementUtils for SvgElement {
         let y = area.min_y();
         if let Some(svg_data) = &node_style.svg_data {
             let svg_dom = svg::Dom::from_bytes(svg_data.as_slice(), font_manager);
-            if let Ok(svg_dom) = svg_dom {
-                if node_style.fill.is_some() {
-                    canvas.save_layer(&SaveLayerRec::default());
-                } else {
-                    canvas.save();
-                }
-
-                canvas.translate((x, y));
-                canvas.scale((
+            if let Ok(mut svg_dom) = svg_dom {
+                let (scale_x, scale_y) = (
                     area.width() / svg_dom.inner().fContainerSize.fWidth,
                     area.height() / svg_dom.inner().fContainerSize.fHeight,
-                ));
+                );
+
+                canvas.save_layer(&SaveLayerRec::default());
+                canvas.translate((x, y));
+
+                if scale_x.is_finite() && scale_y.is_finite() {
+                    canvas.scale((scale_x, scale_y));
+                } else {
+                    svg_dom.set_container_size((area.width(), area.height()));
+                }
+
                 svg_dom.render(canvas);
 
                 if let Some(fill) = node_style.fill.as_ref() {
