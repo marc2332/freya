@@ -85,7 +85,7 @@ impl AreaModel for Area {
                     self.origin.y = available_area.min_y() + new_origin_y;
                 }
                 Alignment::End => {
-                    self.origin.y = available_area.max_y() - contents_size.height - offset_y.0;
+                    self.origin.y = (available_area.max_y() - contents_size.height) - offset_y.0;
                 }
                 _ => {}
             },
