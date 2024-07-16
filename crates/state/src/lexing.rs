@@ -4,7 +4,7 @@ use std::iter;
 pub enum Token {
     Ident(String),
     Float(f32),
-    Number(i64),
+    Integer(i64),
     ParenOpen,
     ParenClose,
     Minus,
@@ -31,11 +31,11 @@ impl Token {
     }
 
     pub fn is_i64(&self) -> bool {
-        matches!(self, Token::Number(_))
+        matches!(self, Token::Integer(_))
     }
 
     pub fn is_i64_or_f32(&self) -> bool {
-        matches!(self, Token::Number(_) | Token::Float(_))
+        matches!(self, Token::Integer(_) | Token::Float(_))
     }
 
     pub fn into_string(self) -> String {
@@ -49,7 +49,7 @@ impl Token {
     pub fn into_f32(self) -> f32 {
         if let Token::Float(value) = self {
             value
-        } else if let Token::Number(value) = self {
+        } else if let Token::Integer(value) = self {
             value as f32
         } else {
             unreachable!()
@@ -57,7 +57,7 @@ impl Token {
     }
 
     pub fn into_i64(self) -> i64 {
-        if let Token::Number(value) = self {
+        if let Token::Integer(value) = self {
             value
         } else {
             unreachable!()
@@ -83,7 +83,7 @@ impl Token {
     pub fn try_as_f32(&self) -> Option<f32> {
         if let Token::Float(value) = self {
             Some(*value)
-        } else if let Token::Number(value) = self {
+        } else if let Token::Integer(value) = self {
             Some(*value as f32)
         } else {
             None
@@ -91,7 +91,7 @@ impl Token {
     }
 
     pub fn try_as_i64(&self) -> Option<i64> {
-        if let Token::Number(value) = self {
+        if let Token::Integer(value) = self {
             Some(*value)
         } else {
             None
@@ -99,7 +99,7 @@ impl Token {
     }
 
     pub fn try_as_u8(&self) -> Option<u8> {
-        if let Token::Number(value) = self {
+        if let Token::Integer(value) = self {
             u8::try_from(*value).ok()
         } else {
             None
@@ -140,7 +140,7 @@ impl Lexer {
                     if value.contains('.') {
                         tokens.push(Token::Float(value.parse().unwrap()));
                     } else {
-                        tokens.push(Token::Number(value.parse().unwrap()));
+                        tokens.push(Token::Integer(value.parse().unwrap()));
                     }
                 }
                 '(' => tokens.push(Token::ParenOpen),
@@ -157,7 +157,7 @@ impl Lexer {
                         if value.contains('.') {
                             tokens.push(Token::Float(value.parse().unwrap()));
                         } else {
-                            tokens.push(Token::Number(value.parse().unwrap()));
+                            tokens.push(Token::Integer(value.parse().unwrap()));
                         }
                     } else {
                         tokens.push(Token::Minus);

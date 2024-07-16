@@ -89,11 +89,11 @@ fn parse_rgb(parser: &mut Parser) -> Result<Color, ParseError> {
 
     let color = if parser.try_consume(&Token::Comma) {
         let alpha = parser.consume_map(|token| {
-            if let Some(value) = token.try_as_f32() {
-                Some((value * 255.0).round().clamp(0.0, 255.0) as u8)
-            } else {
-                token.try_as_u8()
-            }
+            token.try_as_u8().or_else(|| {
+                token
+                    .try_as_f32()
+                    .map(|value| (value * 255.0).round().clamp(0.0, 255.0) as u8)
+            })
         })?;
 
         Color::from_argb(alpha, red, green, blue)
