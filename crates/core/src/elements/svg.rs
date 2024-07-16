@@ -30,10 +30,13 @@ impl ElementUtils for SvgElement {
         let y = area.min_y();
         if let Some(svg_data) = &node_style.svg_data {
             let svg_dom = svg::Dom::from_bytes(svg_data.as_slice(), font_manager);
-            if let Ok(mut svg_dom) = svg_dom {
-                canvas.save();
+            if let Ok(svg_dom) = svg_dom {
+                canvas.save_layer(&SaveLayerRec::default());
                 canvas.translate((x, y));
-                svg_dom.set_container_size((area.width() as i32, area.height() as i32));
+                canvas.scale((
+                    area.width() / svg_dom.inner().fContainerSize.fWidth,
+                    area.height() / svg_dom.inner().fContainerSize.fHeight,
+                ));
                 svg_dom.render(canvas);
                 let mut paint = Paint::default();
                 paint.set_color(font_style.color);

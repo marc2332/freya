@@ -9,6 +9,9 @@ use std::ops::*;
 use bitflags::bitflags;
 use glutin::context::PossiblyCurrentContext;
 
+#[derive(Default, Debug)]
+pub struct SaveLayerRec;
+
 #[derive(Clone, Debug, PartialEq, Copy, Eq)]
 pub struct Color(u32);
 
@@ -589,6 +592,10 @@ impl Paint {
         unimplemented!("This is mocked")
     }
 
+    pub fn set_blend_mode(&mut self, _mode: BlendMode) -> &mut Self {
+        unimplemented!("This is mocked")
+    }
+
     pub fn set_style(&mut self, _style: PaintStyle) -> &mut Self {
         unimplemented!("This is mocked")
     }
@@ -1018,11 +1025,19 @@ impl Canvas {
         unimplemented!("This is mocked")
     }
 
+    pub fn draw_paint(&self, _: &Paint) -> &Self {
+        unimplemented!("This is mocked")
+    }
+
     pub fn draw_line(&self, _p1: impl Into<Point>, _p2: impl Into<Point>, _paint: &Paint) -> &Self {
         unimplemented!("This is mocked")
     }
 
     pub fn draw_circle(&self, _center: impl Into<Point>, _radius: f32, _paint: &Paint) -> &Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn save_layer(&self, layer_rec: &SaveLayerRec) -> usize {
         unimplemented!("This is mocked")
     }
 
@@ -1373,6 +1388,10 @@ pub enum BlurStyle {
     Inner = 3,
 }
 
+#[repr(C)]
+#[derive(Debug)]
+pub struct SkSVGDOM;
+
 pub mod svg {
     use super::{
         Canvas,
@@ -1392,6 +1411,10 @@ pub mod svg {
         }
 
         pub fn render(&self, _canvas: &Canvas) {
+            unimplemented!("This is mocked")
+        }
+
+        pub fn inner(&self) -> &SkSVGDOM {
             unimplemented!("This is mocked")
         }
     }
