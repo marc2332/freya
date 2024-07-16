@@ -479,6 +479,8 @@ builder_constructors! {
     /// }
     /// ```
     svg {
+        #[doc = include_str!("_docs/attributes/color.md")]
+        color: String,
         #[doc = include_str!("_docs/attributes/margin.md")]
         margin: String,
        #[doc = include_str!("_docs/attributes/width_height.md")]

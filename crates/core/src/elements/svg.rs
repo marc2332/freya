@@ -1,6 +1,9 @@
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
-use freya_node_state::StyleState;
+use freya_node_state::{
+    FontStyleState,
+    StyleState,
+};
 use torin::prelude::LayoutNode;
 
 use super::utils::ElementUtils;
@@ -21,6 +24,7 @@ impl ElementUtils for SvgElement {
     ) {
         let area = layout_node.visible_area();
         let node_style = &*node_ref.get::<StyleState>().unwrap();
+        let font_style = &*node_ref.get::<FontStyleState>().unwrap();
 
         let x = area.min_x();
         let y = area.min_y();
@@ -31,6 +35,10 @@ impl ElementUtils for SvgElement {
                 canvas.translate((x, y));
                 svg_dom.set_container_size((area.width() as i32, area.height() as i32));
                 svg_dom.render(canvas);
+                let mut paint = Paint::default();
+                paint.set_color(font_style.color);
+                paint.set_blend_mode(BlendMode::SrcIn);
+                canvas.draw_paint(&paint);
                 canvas.restore();
             }
         }

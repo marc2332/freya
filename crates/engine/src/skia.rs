@@ -55,6 +55,7 @@ pub use skia_safe::{
         TextStyle,
         TypefaceFontProvider,
     },
+    BlendMode,
     BlurStyle,
     Canvas,
     ClipOp,
