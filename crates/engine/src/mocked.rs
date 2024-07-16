@@ -1388,7 +1388,6 @@ pub enum BlurStyle {
     Inner = 3,
 }
 
-
 pub mod svg {
     use super::{
         Canvas,
@@ -1397,7 +1396,7 @@ pub mod svg {
     };
 
     pub struct Dom {
-        pub fContainerSize: SkSize
+        pub fContainerSize: SkSize,
     }
 
     pub struct SkSize {
