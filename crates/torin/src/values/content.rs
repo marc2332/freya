@@ -14,8 +14,8 @@ impl Content {
 impl Content {
     pub fn pretty(&self) -> String {
         match self {
-           Self::Normal => "normal".to_owned(),
-           Self::Fit => "fit".to_owned()
+            Self::Normal => "normal".to_owned(),
+            Self::Fit => "fit".to_owned(),
         }
     }
 }

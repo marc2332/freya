@@ -17,7 +17,10 @@ use torin::{
     alignment::Alignment,
     direction::DirectionMode,
     gaps::Gaps,
-    prelude::{Content, Position},
+    prelude::{
+        Content,
+        Position,
+    },
     size::Size,
 };
 
