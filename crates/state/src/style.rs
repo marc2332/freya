@@ -31,6 +31,7 @@ use crate::{
 #[derive(Default, Debug, Clone, PartialEq, Component)]
 pub struct StyleState {
     pub background: Fill,
+    pub fill: Fill,
     pub border: Border,
     pub shadows: Vec<Shadow>,
     pub corner_radius: CornerRadius,
@@ -52,6 +53,14 @@ impl ParseAttribute for StyleState {
                         return Ok(());
                     }
                     self.background = Fill::parse(value)?;
+                }
+            }
+            AttributeName::Fill => {
+                if let Some(value) = attr.value.as_text() {
+                    if value == "none" {
+                        return Ok(());
+                    }
+                    self.fill = Fill::parse(value)?;
                 }
             }
             AttributeName::Border => {
@@ -137,6 +146,7 @@ impl State<CustomAttributeValues> for StyleState {
     const NODE_MASK: NodeMaskBuilder<'static> =
         NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
             AttributeName::Background,
+            AttributeName::Fill,
             AttributeName::Layer,
             AttributeName::Border,
             AttributeName::BorderAlign,
