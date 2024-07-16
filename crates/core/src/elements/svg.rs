@@ -30,7 +30,12 @@ impl ElementUtils for SvgElement {
         if let Some(svg_data) = &node_style.svg_data {
             let svg_dom = svg::Dom::from_bytes(svg_data.as_slice(), font_manager);
             if let Ok(svg_dom) = svg_dom {
-                canvas.save_layer(&SaveLayerRec::default());
+                if node_style.fill.is_some() {
+                    canvas.save_layer(&SaveLayerRec::default());
+                } else {
+                    canvas.save();
+                }
+
                 canvas.translate((x, y));
                 canvas.scale((
                     area.width() / svg_dom.inner().fContainerSize.fWidth,
