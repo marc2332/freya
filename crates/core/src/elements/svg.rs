@@ -40,10 +40,10 @@ impl ElementUtils for SvgElement {
 
                 if let Some(fill) = node_style.fill.as_ref() {
                     let mut paint = Paint::default();
-    
+
                     paint.set_anti_alias(true);
                     paint.set_blend_mode(BlendMode::SrcIn);
-    
+
                     match fill {
                         Fill::Color(color) => {
                             paint.set_color(*color);
@@ -52,7 +52,7 @@ impl ElementUtils for SvgElement {
                             paint.set_shader(gradient.into_shader(area));
                         }
                     }
-    
+
                     canvas.draw_paint(&paint);
                 }
 
