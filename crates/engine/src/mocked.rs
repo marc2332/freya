@@ -1388,9 +1388,6 @@ pub enum BlurStyle {
     Inner = 3,
 }
 
-#[repr(C)]
-#[derive(Debug)]
-pub struct SkSVGDOM;
 
 pub mod svg {
     use super::{
@@ -1399,7 +1396,14 @@ pub mod svg {
         Size,
     };
 
-    pub struct Dom;
+    pub struct Dom {
+        pub fContainerSize: SkSize
+    }
+
+    pub struct SkSize {
+        pub fWidth: f32,
+        pub fHeight: f32,
+    }
 
     impl Dom {
         pub fn from_bytes(_bytes: &[u8], font_mgr: &FontMgr) -> Result<Self, ()> {
@@ -1414,7 +1418,7 @@ pub mod svg {
             unimplemented!("This is mocked")
         }
 
-        pub fn inner(&self) -> &SkSVGDOM {
+        pub fn inner(&self) -> &Self {
             unimplemented!("This is mocked")
         }
     }
