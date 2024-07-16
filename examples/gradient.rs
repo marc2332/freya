@@ -25,7 +25,7 @@ fn app() -> Element {
         }
         Button {
             onclick: move |_| background.set("conic-gradient(250deg, orange 15%, rgb(255, 0, 0) 50%, rgb(255, 192, 203) 80%)"),
-            label { "Radial Gradient" }
+            label { "Conic Gradient" }
         }
     })
 }
