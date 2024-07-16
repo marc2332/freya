@@ -128,9 +128,9 @@ impl<'a> Iterator for NodeStateIterator<'a> {
                 let background = &self.state.style.background;
                 let fill = match *background {
                     Fill::Color(_) => AttributeType::Color(background.clone()),
-                    Fill::LinearGradient(_) => AttributeType::LinearGradient(background.clone()),
-                    Fill::RadialGradient(_) => AttributeType::RadialGradient(background.clone()),
-                    Fill::ConicGradient(_) => AttributeType::ConicGradient(background.clone()),
+                    Fill::LinearGradient(_) => AttributeType::Gradient(background.clone()),
+                    Fill::RadialGradient(_) => AttributeType::Gradient(background.clone()),
+                    Fill::ConicGradient(_) => AttributeType::Gradient(background.clone()),
                 };
                 Some(("background", fill))
             }
@@ -199,9 +199,7 @@ impl<'a> Iterator for NodeStateIterator<'a> {
 
 pub enum AttributeType<'a> {
     Color(Fill),
-    LinearGradient(Fill),
-    RadialGradient(Fill),
-    ConicGradient(Fill),
+    Gradient(Fill),
     Size(&'a Size),
     Measure(f32),
     Measures(Gaps),

@@ -82,7 +82,7 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
                             }
                         }
                     }
-                    AttributeType::LinearGradient(fill) | AttributeType::RadialGradient(fill) | AttributeType::ConicGradient(fill) => {
+                    AttributeType::Gradient(fill) => {
                         rsx!{
                             GradientProperty {
                                 key: "{i}",
