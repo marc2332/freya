@@ -26,7 +26,7 @@ impl Parse for Slant {
     fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
         parser.consume_map(|token| {
             token.try_as_str().and_then(|value| match value {
-                "upright" => Some(Slant::Upright),
+                "upright" | "normal" => Some(Slant::Upright),
                 "italic" => Some(Slant::Italic),
                 "oblique" => Some(Slant::Oblique),
                 _ => None,
