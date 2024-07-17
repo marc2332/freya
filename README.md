@@ -72,7 +72,9 @@ Thanks to my sponsors for supporting this project! 😄
 
 ### Want to try it? 🤔
 
-⚠️ First, see [Setup guide](https://book.freyaui.dev/setup.html).
+👋 Make sure to check the [Setup guide](https://book.freyaui.dev/setup.html) first.
+
+> ⚠️ If you happen to be on Windows using `windows-gnu` and get compile errors, maybe go check this [issue](https://github.com/marc2332/freya/issues/794).
 
 Clone this repo and run:
 
