@@ -124,13 +124,15 @@ impl TextOverflow {
 }
 
 impl Parse for TextOverflow {
-    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
-        parser.consume_map(|token| {
-            token.try_as_str().map(|value| match value {
-                "ellipsis" => TextOverflow::Ellipsis,
-                "clip" => TextOverflow::Clip,
-                value => TextOverflow::Custom(value.to_string()),
-            })
+    fn from_parser(_: &mut Parser) -> Result<Self, ParseError> {
+        unimplemented!()
+    }
+
+    fn parse(value: &str) -> Result<Self, ParseError> {
+        Ok(match value {
+            "ellipsis" => TextOverflow::Ellipsis,
+            "clip" => TextOverflow::Clip,
+            value => TextOverflow::Custom(value.to_string()),
         })
     }
 }
