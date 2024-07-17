@@ -14,7 +14,6 @@ pub enum Token {
     Pound,
     Percent,
     Comma,
-    Unknown(char),
 }
 
 impl Token {
@@ -177,7 +176,13 @@ impl Lexer {
                 }
                 '%' => tokens.push(Token::Percent),
                 ',' => tokens.push(Token::Comma),
-                character => tokens.push(Token::Unknown(character)),
+                character => {
+                    if let Some(Token::Ident(data)) = tokens.last_mut() {
+                        data.push(character);
+                    } else {
+                        tokens.push(Token::Ident(character.to_string()));
+                    }
+                }
             }
         }
 
