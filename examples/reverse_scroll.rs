@@ -6,12 +6,12 @@
 use freya::prelude::*;
 
 fn main() {
-	launch_with_props(app, "Controlled Example", (600.0, 600.0));
+	launch_with_props(app, "Controlled Example", (600.0, 400.0));
 }
 
 fn app() -> Element {
 	let mut scroll_controller = use_scroll_controller(|| ScrollConfig {
-		default_vertical_position: ScrollPosition::End,
+		default_vertical_position: ScrollPosition::Start,
 		..Default::default()
 	});
 
@@ -40,7 +40,7 @@ fn Card() -> Element {
         rect {
             border: "15 solid rgb(43,106,208)",
             height: "220",
-			width: "600",
+			width: "500",
             background: "white",
             padding: "25",
             label {  "Scroll..." }
