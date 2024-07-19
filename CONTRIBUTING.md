@@ -19,6 +19,11 @@ Running rustfmt in all the workspace:
 cargo +nightly fmt --all -- --error-on-unformatted --unstable-features
 ```
 
+Running formatter for Cargo.toml files in all the workspace using [Taplo](https://taplo.tamasfe.dev/):
+```sh
+taplo fmt ./crates/**/Cargo.toml Cargo.toml
+```
+
 ## Architecture Overview
 
 Freya is split in various crates, each with it's own meaning and purpose, here is the list sorted by their importance:

@@ -1,25 +1,25 @@
 [package]
-name = "freya-elements"
-description = "Internal elements, attributes and events designed for Freya."
-version = "0.2.0"
-edition = "2021"
-license = "MIT"
-authors = ["Marc Espín <mespinsanz@gmail.com>"]
-readme = "../../readme.md"
-homepage = "https://freyaui.dev/"
-repository = "https://github.com/marc2332/freya"
-keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
-categories = ["gui", "asynchronous"]
+  name        = "freya-elements"
+  description = "Internal elements, attributes and events designed for Freya."
+  version     = "0.2.0"
+  edition     = "2021"
+  license     = "MIT"
+  authors     = ["Marc Espín <mespinsanz@gmail.com>"]
+  readme      = "../../readme.md"
+  homepage    = "https://freyaui.dev/"
+  repository  = "https://github.com/marc2332/freya"
+  keywords    = ["gui", "ui", "desktop", "skia", "dioxus"]
+  categories  = ["gui", "asynchronous"]
 
 [dependencies]
-torin = { workspace = true }
+  torin = { workspace = true }
 
-dioxus-rsx = { workspace = true }
-dioxus-core = { workspace = true }
+  dioxus-rsx  = { workspace = true }
+  dioxus-core = { workspace = true }
 
-winit = { workspace = true }
+  winit = { workspace = true }
 
-keyboard-types = "0.7.0"
+  keyboard-types = "0.7.0"
 
 [dev-dependencies]
-freya = { path = "../freya" }
+  freya = { path = "../freya" }

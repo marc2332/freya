@@ -1,36 +1,36 @@
 [package]
-name = "freya-node-state"
-description = "Internal Node states for Dioxus RealDOM elements used in Freya."
-version = "0.2.1"
-edition = "2021"
-license = "MIT"
-authors = ["Marc Espín <mespinsanz@gmail.com>"]
-readme = "../../readme.md"
-homepage = "https://freyaui.dev/"
-repository = "https://github.com/marc2332/freya"
-keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
-categories = ["gui", "asynchronous"]
+  name        = "freya-node-state"
+  description = "Internal Node states for Dioxus RealDOM elements used in Freya."
+  version     = "0.2.1"
+  edition     = "2021"
+  license     = "MIT"
+  authors     = ["Marc Espín <mespinsanz@gmail.com>"]
+  readme      = "../../readme.md"
+  homepage    = "https://freyaui.dev/"
+  repository  = "https://github.com/marc2332/freya"
+  keywords    = ["gui", "ui", "desktop", "skia", "dioxus"]
+  categories  = ["gui", "asynchronous"]
 
-[package.metadata.docs.rs]
-features = ["freya-engine/mocked-engine"]
+  [package.metadata.docs.rs]
+    features = ["freya-engine/mocked-engine"]
 
 [features]
-skia-engine = ["freya-engine/skia-engine"]
+  skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
-freya-common = { workspace = true }
-freya-engine = { workspace = true }
-torin = { workspace = true }
+  freya-common = { workspace = true }
+  freya-engine = { workspace = true }
+  torin        = { workspace = true }
 
-freya-native-core-macro = { workspace = true }
-freya-native-core = { workspace = true }
-dioxus-core = { workspace = true }
+  freya-native-core-macro = { workspace = true }
+  freya-native-core       = { workspace = true }
+  dioxus-core             = { workspace = true }
 
-tokio = { workspace = true }
-accesskit = { workspace = true }
-shipyard = { workspace = true }
-rustc-hash= { workspace = true }
+  tokio      = { workspace = true }
+  accesskit  = { workspace = true }
+  shipyard   = { workspace = true }
+  rustc-hash = { workspace = true }
 
-uuid = { workspace = true }
-bytes = "1.5.0"
-serde_json = "1.0.107"
+  uuid       = { workspace = true }
+  bytes      = "1.5.0"
+  serde_json = "1.0.107"

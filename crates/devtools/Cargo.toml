@@ -1,35 +1,35 @@
 [package]
-name = "freya-devtools"
-description = "Devtools panel integration for Freya."
-version = "0.2.1"
-edition = "2021"
-license = "MIT"
-authors = ["Marc Espín <mespinsanz@gmail.com>"]
-readme = "../../readme.md"
-homepage = "https://freyaui.dev/"
-repository = "https://github.com/marc2332/freya"
-keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
-categories = ["gui", "asynchronous"]
+  name        = "freya-devtools"
+  description = "Devtools panel integration for Freya."
+  version     = "0.2.1"
+  edition     = "2021"
+  license     = "MIT"
+  authors     = ["Marc Espín <mespinsanz@gmail.com>"]
+  readme      = "../../readme.md"
+  homepage    = "https://freyaui.dev/"
+  repository  = "https://github.com/marc2332/freya"
+  keywords    = ["gui", "ui", "desktop", "skia", "dioxus"]
+  categories  = ["gui", "asynchronous"]
 
-[package.metadata.docs.rs]
-features = ["freya-engine/mocked-engine"]
+  [package.metadata.docs.rs]
+    features = ["freya-engine/mocked-engine"]
 
 [features]
-skia-engine = ["freya-engine/skia-engine"]
+  skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
-freya-node-state = { workspace = true }
-freya-renderer = { workspace = true }
-freya-elements = { workspace = true }
-freya-hooks = { workspace = true }
-freya-core = { workspace = true, features = ["shared"] }
-freya-components = { workspace = true }
-freya-engine = { workspace = true }
-torin = { workspace = true }
-dioxus-radio = "0.2"
+  freya-node-state = { workspace = true }
+  freya-renderer   = { workspace = true }
+  freya-elements   = { workspace = true }
+  freya-hooks      = { workspace = true }
+  freya-core       = { workspace = true, features = ["shared"] }
+  freya-components = { workspace = true }
+  freya-engine     = { workspace = true }
+  torin            = { workspace = true }
+  dioxus-radio     = "0.2"
 
-dioxus = { workspace = true }
-freya-native-core = { workspace = true }
-dioxus-router = { workspace = true }
+  dioxus            = { workspace = true }
+  freya-native-core = { workspace = true }
+  dioxus-router     = { workspace = true }
 
-tokio = { workspace = true }
+  tokio = { workspace = true }
