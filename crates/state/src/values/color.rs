@@ -23,7 +23,7 @@ impl Parse for Color {
             "gray" => Ok(Color::GRAY),
             "white" => Ok(Color::WHITE),
             "orange" => Ok(Color::from_rgb(255, 165, 0)),
-            "transparent" => Ok(Color::TRANSPARENT),
+            "transparent" | "none" => Ok(Color::TRANSPARENT),
             _ => {
                 if value.starts_with("hsl(") {
                     parse_hsl(value)

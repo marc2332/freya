@@ -38,7 +38,7 @@ impl Devtools {
 
         rdom.traverse_depth_first(|node| {
             let height = node.height();
-            if height == 3 {
+            if height == 4 {
                 if !root_found {
                     root_found = true;
                 } else {
