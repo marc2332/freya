@@ -41,7 +41,7 @@ pub fn Property(name: String, value: String) -> Element {
 
 #[allow(non_snake_case)]
 #[component]
-pub fn LinearGradientProperty(name: String, fill: Fill) -> Element {
+pub fn GradientProperty(name: String, fill: Fill) -> Element {
     rsx!(
         rect {
             padding: "5 10",
