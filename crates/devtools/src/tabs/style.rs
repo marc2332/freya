@@ -12,7 +12,7 @@ use crate::{
     property::{
         BorderProperty,
         ColorProperty,
-        LinearGradientProperty,
+        GradientProperty,
         Property,
         ShadowProperty,
         TextShadowProperty,
@@ -82,9 +82,9 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
                             }
                         }
                     }
-                    AttributeType::LinearGradient(fill) => {
+                    AttributeType::Gradient(fill) => {
                         rsx!{
-                            LinearGradientProperty {
+                            GradientProperty {
                                 key: "{i}",
                                 name: "{name}",
                                 fill: fill.clone()

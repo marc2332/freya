@@ -200,17 +200,17 @@ impl AnimatedValue for AnimColor {
         match direction {
             AnimDirection::Forward => {
                 index > self.time.as_millis() as i32
-                    && self.value.r() >= self.destination.r()
-                    && self.value.g() >= self.destination.g()
-                    && self.value.b() >= self.destination.b()
-                    && self.value.a() >= self.destination.a()
+                    && self.value.r() == self.destination.r()
+                    && self.value.g() == self.destination.g()
+                    && self.value.b() == self.destination.b()
+                    && self.value.a() == self.destination.a()
             }
             AnimDirection::Reverse => {
                 index > self.time.as_millis() as i32
-                    && self.value.r() <= self.origin.r()
-                    && self.value.g() <= self.origin.g()
-                    && self.value.b() <= self.origin.b()
-                    && self.value.a() >= self.origin.a()
+                    && self.value.r() == self.origin.r()
+                    && self.value.g() == self.origin.g()
+                    && self.value.b() == self.origin.b()
+                    && self.value.a() == self.origin.a()
             }
         }
     }
@@ -524,6 +524,14 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
                 let is_finished = values
                     .iter()
                     .all(|value| value.peek().is_finished(index, direction));
+
+                // Advance the animations
+                for value in values.iter_mut() {
+                    value.write().advance(index, direction);
+                }
+
+                prev_frame = Instant::now();
+
                 if is_finished {
                     if OnFinish::Reverse == on_finish {
                         // Toggle direction
@@ -544,13 +552,6 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
                         }
                     }
                 }
-
-                // Advance the animations
-                for value in values.iter_mut() {
-                    value.write().advance(index, direction);
-                }
-
-                prev_frame = Instant::now();
             }
 
             is_running.set(false);
