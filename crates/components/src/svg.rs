@@ -5,7 +5,7 @@
 /// ```no_run
 /// # use freya::prelude::*;
 ///
-/// import_svg!(Ferris, "./ferris.svg", "100%", "100%");
+/// import_svg!(Ferris, "../../../examples/ferris.svg", "100%", "100%");
 ///
 /// fn app() -> Element {
 ///     rsx!(Ferris {})
