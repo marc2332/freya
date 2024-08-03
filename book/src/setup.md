@@ -22,6 +22,15 @@ Install these packages:
 sudo pacman -S base-devel openssl cmake gtk3 clang
 ```
 
+#### Fedora
+
+Install these packages:
+
+```sh
+sudo dnf install openssl-devel pkgconf cmake gtk3-devel clang-devel -y
+sudo dnf groupinstall "Development Tools" "C Development Tools and Libraries" -y
+```
+
 Don't hesitate to contribute so other distros can be added here.
 
 ### MacOS

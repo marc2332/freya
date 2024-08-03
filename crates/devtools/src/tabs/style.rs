@@ -12,7 +12,7 @@ use crate::{
     property::{
         BorderProperty,
         ColorProperty,
-        LinearGradientProperty,
+        GradientProperty,
         Property,
         ShadowProperty,
         TextShadowProperty,
@@ -35,7 +35,7 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
                     width: "100%".into(),
                 }
             ),
-            {node.state.iter().enumerate().map(|(i, (name, attr))| {
+            {node.state.attributes().into_iter().enumerate().map(|(i, (name, attr))| {
                 match attr {
                     AttributeType::Measure(measure) => {
                         rsx!{
@@ -82,9 +82,9 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
                             }
                         }
                     }
-                    AttributeType::LinearGradient(fill) => {
+                    AttributeType::Gradient(fill) => {
                         rsx!{
-                            LinearGradientProperty {
+                            GradientProperty {
                                 key: "{i}",
                                 name: "{name}",
                                 fill: fill.clone()
@@ -115,6 +115,24 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
                                 key: "{i}",
                                 name: "{name}",
                                 value: direction.pretty()
+                            }
+                        }
+                    }
+                    AttributeType::Position(position) => {
+                        rsx!{
+                            Property {
+                                key: "{i}",
+                                name: "{name}",
+                                value: position.pretty()
+                            }
+                        }
+                    }
+                    AttributeType::Content(content) => {
+                        rsx!{
+                            Property {
+                                key: "{i}",
+                                name: "{name}",
+                                value: content.pretty()
                             }
                         }
                     }
