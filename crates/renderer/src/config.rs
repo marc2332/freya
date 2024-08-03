@@ -12,7 +12,7 @@ use freya_core::{
 };
 use freya_engine::prelude::Color;
 use freya_node_state::Parse;
-use image::io::Reader;
+use image::ImageReader;
 use winit::window::{
     Icon,
     Window,
@@ -95,7 +95,7 @@ impl<'a, T: Clone> LaunchConfig<'a, T> {
 
 impl LaunchConfig<'_, ()> {
     pub fn load_icon(icon: &[u8]) -> Icon {
-        let reader = Reader::new(Cursor::new(icon))
+        let reader = ImageReader::new(Cursor::new(icon))
             .with_guessed_format()
             .expect("Cursor io never fails");
         let image = reader
