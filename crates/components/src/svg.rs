@@ -1,3 +1,23 @@
+/// Generate a Dioxus component rendering the specified SVG.
+///
+/// Example:
+///
+/// ```no_run
+/// # use freya::prelude::*;
+///
+/// import_svg!(Ferris, "./ferris.svg", "100%", "100%");
+///
+/// fn app() -> Element {
+///     rsx!(Ferris {})
+/// }
+///
+/// fn another_app() -> Element {
+///     rsx!(Ferris {
+///         width: "150",
+///         height: "40%",
+///     })
+/// }
+/// ```
 #[macro_export]
 macro_rules! import_svg {
     ($component_name:ident, $path:expr, $width: expr, $height: expr) => {
