@@ -291,6 +291,7 @@ impl TestingHandler {
         surface.canvas().clear(Color::WHITE);
 
         let mut skia_renderer = SkiaRenderer {
+            canvas_area: Area::from_size((width as f32, height as f32).into()),
             canvas: surface.canvas(),
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,

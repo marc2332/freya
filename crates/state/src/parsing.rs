@@ -31,7 +31,7 @@ pub trait ParseAttribute: Sized {
         }
 
         #[cfg(not(debug_assertions))]
-        self.parse_attribute(attr).ok()
+        self.parse_attribute(attr).ok();
     }
 }
 

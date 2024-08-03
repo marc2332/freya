@@ -270,7 +270,12 @@ impl Application {
             freya_dom: &self.sdom.get(),
         });
 
-        self.start_render(hovered_node, canvas, window.scale_factor() as f32);
+        self.start_render(
+            hovered_node,
+            canvas,
+            window.inner_size(),
+            window.scale_factor() as f32,
+        );
 
         self.accessibility
             .render_accessibility(window.title().as_str());
@@ -362,13 +367,22 @@ impl Application {
     }
 
     /// Start rendering the RealDOM to Window
-    pub fn start_render(&mut self, hovered_node: &HoveredNode, canvas: &Canvas, scale_factor: f32) {
+    pub fn start_render(
+        &mut self,
+        hovered_node: &HoveredNode,
+        canvas: &Canvas,
+        windows_size: PhysicalSize<u32>,
+        scale_factor: f32,
+    ) {
         let fdom = self.sdom.get();
 
         let matrices: Vec<(Matrix, Vec<NodeId>)> = Vec::default();
         let opacities: Vec<(f32, Vec<NodeId>)> = Vec::default();
 
         let mut skia_renderer = SkiaRenderer {
+            canvas_area: Area::from_size(
+                (windows_size.width as f32, windows_size.height as f32).into(),
+            ),
             canvas,
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,

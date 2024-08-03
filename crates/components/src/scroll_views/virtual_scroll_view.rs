@@ -28,8 +28,11 @@ use crate::{
     get_scrollbar_pos_and_size,
     is_scrollbar_visible,
     manage_key_event,
+    scroll_views::use_scroll_controller,
     Axis,
     ScrollBar,
+    ScrollConfig,
+    ScrollController,
     ScrollThumb,
     SCROLL_SPEED_MULTIPLIER,
 };
@@ -66,6 +69,8 @@ pub struct VirtualScrollViewProps<
     /// Default is `true`.
     #[props(default = true, into)]
     pub cache_elements: bool,
+
+    pub scroll_controller: Option<ScrollController>,
 }
 
 impl<
@@ -81,6 +86,7 @@ impl<
             && self.show_scrollbar == other.show_scrollbar
             && self.scroll_with_arrows == other.scroll_with_arrows
             && self.builder_args == other.builder_args
+            && self.scroll_controller == other.scroll_controller
     }
 }
 
@@ -115,7 +121,6 @@ fn get_render_range(
 /// # use std::rc::Rc;
 /// fn app() -> Element {
 ///     rsx!(VirtualScrollView {
-///         show_scrollbar: true,
 ///         length: 5,
 ///         item_size: 80.0,
 ///         direction: "vertical",
@@ -124,6 +129,35 @@ fn get_render_range(
 ///                 label {
 ///                     key: "{i}",
 ///                     height: "80",
+///                     "Number {i}"
+///                 }
+///             }
+///         }
+///     })
+/// }
+/// ```
+///
+/// # With a Scroll Controller
+///
+/// ```no_run
+/// # use freya::prelude::*;
+/// # use std::rc::Rc;
+/// fn app() -> Element {
+///     let mut scroll_controller = use_scroll_controller(|| ScrollConfig::default());
+///
+///     rsx!(VirtualScrollView {
+///         scroll_controller,
+///         length: 5,
+///         item_size: 80.0,
+///         direction: "vertical",
+///         builder: move |i, _other_args: &Option<()>| {
+///             rsx! {
+///                 label {
+///                     key: "{i}",
+///                     height: "80",
+///                     onclick: move |_| {
+///                          scroll_controller.scroll_to(ScrollPosition::Start, ScrollDirection::Vertical);
+///                     },
 ///                     "Number {i}"
 ///                 }
 ///             }
@@ -141,8 +175,10 @@ pub fn VirtualScrollView<
     let mut clicking_scrollbar = use_signal::<Option<(Axis, f64)>>(|| None);
     let mut clicking_shift = use_signal(|| false);
     let mut clicking_alt = use_signal(|| false);
-    let mut scrolled_y = use_signal(|| 0);
-    let mut scrolled_x = use_signal(|| 0);
+    let mut scroll_controller = props
+        .scroll_controller
+        .unwrap_or_else(|| use_scroll_controller(ScrollConfig::default));
+    let (mut scrolled_x, mut scrolled_y) = scroll_controller.into();
     let (node_ref, size) = use_node();
     let mut focus = use_focus();
     let theme = use_applied_theme!(&props.theme, scroll_view);
@@ -160,6 +196,8 @@ pub fn VirtualScrollView<
     let direction_is_vertical = user_direction == "vertical";
 
     let inner_size = items_size + (items_size * items_length as f32);
+
+    scroll_controller.use_apply(inner_size, inner_size);
 
     let vertical_scrollbar_is_visible = user_direction != "horizontal"
         && is_scrollbar_visible(show_scrollbar, inner_size, size.area.height());
