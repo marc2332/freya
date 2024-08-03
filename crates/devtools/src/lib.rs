@@ -75,24 +75,24 @@ fn AppWithDevtools(props: AppWithDevtoolsProps) -> Element {
 
     rsx!(
         NativeContainer {
-            rect {
-                width: "100%",
-                height: "100%",
+            ResizableContainer {
                 direction: "horizontal",
-                rect {
-                    overflow: "clip",
-                    height: "100%",
-                    width: "calc(100% - 350)",
+                ResizablePanel {
+                    initial_size: 80.,
                     Root { },
                 }
-                rect {
-                    background: "rgb(40, 40, 40)",
-                    height: "100%",
-                    width: "350",
-                    ThemeProvider {
-                        DevTools {
-                            devtools_receiver,
-                            hovered_node
+                ResizableHandle { }
+                ResizablePanel {
+                    initial_size: 20.,
+                    rect {
+                        background: "rgb(40, 40, 40)",
+                        height: "fill",
+                        width: "fill",
+                        ThemeProvider {
+                            DevTools {
+                                devtools_receiver,
+                                hovered_node
+                            }
                         }
                     }
                 }
