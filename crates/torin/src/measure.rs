@@ -410,7 +410,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
         let inner_area = *mode.inner_area();
 
         // Final measurement
-        let (child_revalidated, child_areas) = measure_node(
+        let (child_revalidated, mut child_areas) = measure_node(
             child_id,
             &child_data,
             layout,
@@ -423,6 +423,9 @@ pub fn measure_inner_nodes<Key: NodeKey>(
             invalidated_tree,
             Phase::Final,
         );
+
+        // Adjust the size of the area if needed
+        child_areas.area.adjust_size(&child_data);
 
         // Stack the child into its parent
         mode.stack_into_node(
