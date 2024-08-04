@@ -7,7 +7,7 @@ You can learn about the syntax of this attribute in [`Color Syntax`](crate::_doc
 ```rust, no_run
 # use freya::prelude::*;
 fn app() -> Element {
-    let svg_content = include_str!("./ferris.svg");
+    let svg_content = include_str!("../../../examples/settings.svg");
 
     rsx!(
         svg {
