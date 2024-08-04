@@ -151,7 +151,7 @@ impl Scaled for Position {
 impl Position {
     pub fn pretty(&self) -> String {
         match self {
-            Self::Stacked => "horizontal".to_string(),
+            Self::Stacked => "stacked".to_string(),
             Self::Absolute(positions) => format!(
                 "{}, {}, {}, {}",
                 positions.top.unwrap_or_default(),
