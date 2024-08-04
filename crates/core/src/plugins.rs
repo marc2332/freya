@@ -23,8 +23,10 @@ pub struct PluginHandle {
 }
 
 impl PluginHandle {
-    pub fn new(proxy: EventLoopProxy<EventMessage>) -> Self {
-        Self { proxy }
+    pub fn new(proxy: &EventLoopProxy<EventMessage>) -> Self {
+        Self {
+            proxy: proxy.clone(),
+        }
     }
 
     /// Emit a [PlatformEvent]. Useful to simulate certain events.

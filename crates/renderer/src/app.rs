@@ -124,7 +124,7 @@ impl Application {
 
         app.plugins.send(
             PluginEvent::WindowCreated(window),
-            PluginHandle::new(app.proxy.clone()),
+            PluginHandle::new(&app.proxy),
         );
 
         app
@@ -147,7 +147,7 @@ impl Application {
     pub fn init_doms<State: 'static>(&mut self, scale_factor: f32, app_state: Option<State>) {
         self.plugins.send(
             PluginEvent::StartedUpdatingDOM,
-            PluginHandle::new(self.proxy.clone()),
+            PluginHandle::new(&self.proxy),
         );
 
         self.provide_vdom_contexts(app_state);
@@ -155,7 +155,7 @@ impl Application {
         self.sdom.get_mut().init_dom(&mut self.vdom, scale_factor);
         self.plugins.send(
             PluginEvent::FinishedUpdatingDOM,
-            PluginHandle::new(self.proxy.clone()),
+            PluginHandle::new(&self.proxy),
         );
     }
 
@@ -163,7 +163,7 @@ impl Application {
     pub fn render_mutations(&mut self, scale_factor: f32) -> (bool, bool) {
         self.plugins.send(
             PluginEvent::StartedUpdatingDOM,
-            PluginHandle::new(self.proxy.clone()),
+            PluginHandle::new(&self.proxy),
         );
 
         let (repaint, relayout) = self
@@ -173,7 +173,7 @@ impl Application {
 
         self.plugins.send(
             PluginEvent::FinishedUpdatingDOM,
-            PluginHandle::new(self.proxy.clone()),
+            PluginHandle::new(&self.proxy),
         );
 
         if repaint {
@@ -283,7 +283,7 @@ impl Application {
                 font_collection: &self.font_collection,
                 freya_dom: &self.sdom.get(),
             },
-            PluginHandle::new(self.proxy.clone()),
+            PluginHandle::new(&self.proxy),
         );
 
         self.start_render(
@@ -302,7 +302,7 @@ impl Application {
                 font_collection: &self.font_collection,
                 freya_dom: &self.sdom.get(),
             },
-            PluginHandle::new(self.proxy.clone()),
+            PluginHandle::new(&self.proxy),
         );
     }
 
@@ -357,7 +357,7 @@ impl Application {
 
             self.plugins.send(
                 PluginEvent::StartedLayout(&fdom.layout()),
-                PluginHandle::new(self.proxy.clone()),
+                PluginHandle::new(&self.proxy),
             );
 
             process_layout(
@@ -373,7 +373,7 @@ impl Application {
 
             self.plugins.send(
                 PluginEvent::FinishedLayout(&fdom.layout()),
-                PluginHandle::new(self.proxy.clone()),
+                PluginHandle::new(&self.proxy),
             );
         }
 
