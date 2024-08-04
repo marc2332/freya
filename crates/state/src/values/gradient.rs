@@ -223,9 +223,9 @@ impl Parse for ConicGradient {
                 parser.consume(&Token::ident("deg"))?;
                 parser.consume(&Token::Comma)?;
 
-                angle
+                Some(angle)
             } else {
-                0.0
+                None
             },
             angles: if parser.try_consume(&Token::ident("from")) {
                 let start = parser.consume_map(Token::try_as_i64).and_then(|value| {
