@@ -5,6 +5,8 @@ use freya_engine::prelude::*;
 use crate::{
     Parse,
     ParseError,
+    Parser,
+    Token,
 };
 
 pub trait DisplayColor {
@@ -13,28 +15,28 @@ pub trait DisplayColor {
 }
 
 impl Parse for Color {
-    fn parse(value: &str) -> Result<Self, ParseError> {
-        match value {
-            "red" => Ok(Color::RED),
-            "green" => Ok(Color::GREEN),
-            "blue" => Ok(Color::BLUE),
-            "yellow" => Ok(Color::YELLOW),
-            "black" => Ok(Color::BLACK),
-            "gray" => Ok(Color::GRAY),
-            "white" => Ok(Color::WHITE),
-            "orange" => Ok(Color::from_rgb(255, 165, 0)),
-            "transparent" | "none" => Ok(Color::TRANSPARENT),
-            _ => {
-                if value.starts_with("hsl(") {
-                    parse_hsl(value)
-                } else if value.starts_with("rgb(") {
-                    parse_rgb(value)
-                } else if value.starts_with('#') {
-                    parse_hex_color(value)
-                } else {
-                    Err(ParseError)
-                }
-            }
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
+        if parser.try_consume(&Token::Pound) {
+            parse_hex_color(parser)
+        } else if parser.try_consume(&Token::ident("rgb")) {
+            parse_rgb(parser)
+        } else if parser.try_consume(&Token::ident("hsl")) {
+            parse_hsl(parser)
+        } else {
+            parser.consume_map(|token| {
+                token.try_as_str().and_then(|value| match value {
+                    "red" => Some(Color::RED),
+                    "green" => Some(Color::GREEN),
+                    "blue" => Some(Color::BLUE),
+                    "yellow" => Some(Color::YELLOW),
+                    "black" => Some(Color::BLACK),
+                    "gray" => Some(Color::GRAY),
+                    "white" => Some(Color::WHITE),
+                    "orange" => Some(Color::from_rgb(255, 165, 0)),
+                    "transparent" | "none" => Some(Color::TRANSPARENT),
+                    _ => None,
+                })
+            })
         }
     }
 }
@@ -72,127 +74,125 @@ impl DisplayColor for Color {
     }
 }
 
-fn parse_rgb(color: &str) -> Result<Color, ParseError> {
-    if !color.ends_with(')') {
-        return Err(ParseError);
-    }
+fn parse_rgb(parser: &mut Parser) -> Result<Color, ParseError> {
+    parser.consume(&Token::ParenOpen)?;
 
-    let color = color.replacen("rgb(", "", 1).replacen(')', "", 1);
+    let red = parser.consume_map(Token::try_as_u8)?;
 
-    let mut colors = color.split(',');
+    parser.consume(&Token::Comma)?;
 
-    let r = colors
-        .next()
-        .ok_or(ParseError)?
-        .trim()
-        .parse::<u8>()
-        .map_err(|_| ParseError)?;
-    let g = colors
-        .next()
-        .ok_or(ParseError)?
-        .trim()
-        .parse::<u8>()
-        .map_err(|_| ParseError)?;
-    let b = colors
-        .next()
-        .ok_or(ParseError)?
-        .trim()
-        .parse::<u8>()
-        .map_err(|_| ParseError)?;
-    let a: Option<&str> = colors.next();
+    let green = parser.consume_map(Token::try_as_u8)?;
 
-    // There should not be more than 4 components.
-    if colors.next().is_some() {
-        return Err(ParseError);
-    }
+    parser.consume(&Token::Comma)?;
 
-    if let Some(a) = a {
-        let alpha_trimmed = a.trim();
-        if let Ok(u8_alpha) = alpha_trimmed.parse::<u8>() {
-            Ok(Color::from_argb(u8_alpha, r, g, b))
-        } else if let Ok(f32_alpha) = alpha_trimmed.parse::<f32>() {
-            let a = (255.0 * f32_alpha).clamp(0.0, 255.0).round() as u8;
-            Ok(Color::from_argb(a, r, g, b))
+    let blue = parser.consume_map(Token::try_as_u8)?;
+
+    let color = if parser.try_consume(&Token::Comma) {
+        let alpha = parser.consume_map(|token| {
+            token.try_as_u8().or_else(|| {
+                token
+                    .try_as_f32()
+                    .map(|value| (value * 255.0).round().clamp(0.0, 255.0) as u8)
+            })
+        })?;
+
+        Color::from_argb(alpha, red, green, blue)
+    } else {
+        Color::from_rgb(red, green, blue)
+    };
+
+    parser.consume(&Token::ParenClose)?;
+
+    Ok(color)
+}
+
+fn parse_hsl(parser: &mut Parser) -> Result<Color, ParseError> {
+    parser.consume(&Token::ParenOpen)?;
+
+    let h = parser.consume_map(Token::try_as_i64).and_then(|value| {
+        if (0..=360).contains(&value) {
+            Ok(value as f32)
         } else {
             Err(ParseError)
         }
+    })?;
+
+    parser.consume(&Token::ident("deg"))?;
+    parser.consume(&Token::Comma)?;
+
+    let mut s = parser.consume_map(Token::try_as_i64).and_then(|value| {
+        if (0..=100).contains(&value) {
+            Ok((value as f32) / 100.0)
+        } else {
+            Err(ParseError)
+        }
+    })?;
+
+    parser.consume(&Token::Percent)?;
+    parser.consume(&Token::Comma)?;
+
+    let mut l = parser.consume_map(Token::try_as_i64).and_then(|value| {
+        if (0..=100).contains(&value) {
+            Ok((value as f32) / 100.0)
+        } else {
+            Err(ParseError)
+        }
+    })?;
+
+    parser.consume(&Token::Percent)?;
+
+    let a = if parser.consume(&Token::Comma).is_ok() {
+        let value = parser.consume_map(Token::try_as_i64).and_then(|value| {
+            if (0..=100).contains(&value) {
+                Ok((value as f32) / 100.0)
+            } else {
+                Err(ParseError)
+            }
+        })?;
+
+        parser.consume(&Token::Percent)?;
+
+        Some(value)
     } else {
-        Ok(Color::from_rgb(r, g, b))
-    }
-}
+        None
+    };
 
-fn parse_hsl(color: &str) -> Result<Color, ParseError> {
-    if !color.ends_with(')') {
-        return Err(ParseError);
-    }
-
-    let color = color.replacen("hsl(", "", 1).replacen(')', "", 1);
-    let mut colors = color.split(',');
-
-    // Get each color component as a string
-    let h_str = colors.next().ok_or(ParseError)?.trim();
-    let s_str = colors.next().ok_or(ParseError)?.trim();
-    let l_str = colors.next().ok_or(ParseError)?.trim();
-    let a_str: Option<&str> = colors.next();
-
-    // Ensure correct units and lengths.
-    if colors.next().is_some()
-        || !h_str.ends_with("deg")
-        || !s_str.ends_with('%')
-        || !l_str.ends_with('%')
-    {
-        return Err(ParseError);
-    }
-
-    // S, L and A can end in percentage, otherwise its 0.0 - 1.0
-    let h = h_str
-        .replacen("deg", "", 1)
-        .parse::<f32>()
-        .map_err(|_| ParseError)?;
-    let mut s = s_str
-        .replacen('%', "", 1)
-        .parse::<f32>()
-        .map_err(|_| ParseError)?
-        / 100.0;
-    let mut l = l_str
-        .replacen('%', "", 1)
-        .parse::<f32>()
-        .map_err(|_| ParseError)?
-        / 100.0;
+    parser.consume(&Token::ParenClose)?;
 
     // HSL to HSV Conversion
     l *= 2.0;
     s *= if l <= 1.0 { l } else { 2.0 - l };
+
     let v = (l + s) / 2.0;
+
     s = (2.0 * s) / (l + s);
+
     let hsv = HSV::from((h, s, v));
 
     // Handle alpha formatting and convert to ARGB
-    if let Some(a_str) = a_str {
-        if !s_str.ends_with('%') {
-            return Err(ParseError);
-        }
-
-        let a = a_str
-            .trim()
-            .replace('%', "")
-            .parse::<f32>()
-            .map_err(|_| ParseError)?
-            / 100.0;
-
-        Ok(hsv.to_color((a * 255.0).round() as u8))
-    } else {
-        Ok(hsv.to_color(255))
-    }
+    Ok(a.map(|a| hsv.to_color((a * 255.0).round() as u8))
+        .unwrap_or_else(|| hsv.to_color(255)))
 }
 
-fn parse_hex_color(color: &str) -> Result<Color, ParseError> {
-    if color.len() == 7 {
-        let r = u8::from_str_radix(&color[1..3], 16).map_err(|_| ParseError)?;
-        let g = u8::from_str_radix(&color[3..5], 16).map_err(|_| ParseError)?;
-        let b = u8::from_str_radix(&color[5..7], 16).map_err(|_| ParseError)?;
-        Ok(Color::from_rgb(r, g, b))
-    } else {
-        Err(ParseError)
+fn parse_hex_color(parser: &mut Parser) -> Result<Color, ParseError> {
+    let hex = parser.consume_if(Token::is_ident).map(Token::into_string)?;
+
+    if ![6, 8].contains(&hex.len()) {
+        return Err(ParseError);
     }
+
+    let value = i64::from_str_radix(&hex, 16).map_err(|_| ParseError)?;
+
+    let a = if hex.len() == 8 {
+        Some(u8::try_from((value >> 24) & 0xFF).map_err(|_| ParseError)?)
+    } else {
+        None
+    };
+
+    let r = u8::try_from((value >> 16) & 0xFF).map_err(|_| ParseError)?;
+    let g = u8::try_from((value >> 8) & 0xFF).map_err(|_| ParseError)?;
+    let b = u8::try_from(value & 0xFF).map_err(|_| ParseError)?;
+
+    Ok(a.map(|a| Color::from_argb(a, r, g, b))
+        .unwrap_or_else(|| Color::from_rgb(r, g, b)))
 }

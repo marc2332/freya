@@ -100,7 +100,8 @@ impl ParseAttribute for LayoutState {
                 if let Some(value) = attr.value.as_text() {
                     self.direction = match value {
                         "horizontal" => DirectionMode::Horizontal,
-                        _ => DirectionMode::Vertical,
+                        "vertical" => DirectionMode::Vertical,
+                        _ => return Err(ParseError),
                     }
                 }
             }

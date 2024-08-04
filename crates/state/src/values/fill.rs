@@ -8,7 +8,9 @@ use crate::{
     LinearGradient,
     Parse,
     ParseError,
+    Parser,
     RadialGradient,
+    Token,
 };
 
 #[derive(Clone, Debug, PartialEq)]
@@ -32,16 +34,16 @@ impl From<Color> for Fill {
 }
 
 impl Parse for Fill {
-    fn parse(value: &str) -> Result<Self, ParseError> {
-        Ok(if value.starts_with("linear-gradient(") {
-            Self::LinearGradient(LinearGradient::parse(value).map_err(|_| ParseError)?)
-        } else if value.starts_with("radial-gradient(") {
-            Self::RadialGradient(RadialGradient::parse(value).map_err(|_| ParseError)?)
-        } else if value.starts_with("conic-gradient(") {
-            Self::ConicGradient(ConicGradient::parse(value).map_err(|_| ParseError)?)
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
+        if parser.check(&Token::ident("linear-gradient")) {
+            LinearGradient::from_parser(parser).map(Self::LinearGradient)
+        } else if parser.check(&Token::ident("radial-gradient")) {
+            RadialGradient::from_parser(parser).map(Self::RadialGradient)
+        } else if parser.check(&Token::ident("gradient-gradient")) {
+            ConicGradient::from_parser(parser).map(Self::ConicGradient)
         } else {
-            Self::Color(Color::parse(value).map_err(|_| ParseError)?)
-        })
+            Color::from_parser(parser).map(Self::Color)
+        }
     }
 }
 
