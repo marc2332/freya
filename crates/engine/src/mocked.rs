@@ -143,6 +143,30 @@ impl Shader {
     ) -> Option<Self> {
         unimplemented!("This is mocked")
     }
+
+    pub fn radial_gradient<'a>(
+        _center: impl Into<Point>,
+        _radius: f32,
+        _colors: impl Into<GradientShaderColors<'a>>,
+        _pos: impl Into<Option<&'a [f32]>>,
+        _mode: TileMode,
+        _flags: impl Into<Option<GradientFlags>>,
+        _local_matrix: impl Into<Option<&'a Matrix>>,
+    ) -> Option<Self> {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn sweep_gradient<'a>(
+        _center: impl Into<Point>,
+        _colors: impl Into<GradientShaderColors<'a>>,
+        _pos: impl Into<Option<&'a [f32]>>,
+        _mode: TileMode,
+        _angles: impl Into<Option<(f32, f32)>>,
+        _flags: impl Into<Option<GradientFlags>>,
+        _local_matrix: impl Into<Option<&'a Matrix>>,
+    ) -> Option<Self> {
+        unimplemented!("This is mocked")
+    }
 }
 
 pub enum TileMode {
@@ -172,6 +196,10 @@ impl Matrix {
     }
 
     pub fn set_rotate(&mut self, _degrees: f32, _pivot: impl Into<Option<Point>>) -> &mut Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn rotate_deg_pivot(_degrees: f32, _pivot: impl Into<Point>) -> Self {
         unimplemented!("This is mocked")
     }
 }
