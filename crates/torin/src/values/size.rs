@@ -16,6 +16,7 @@ pub enum Size {
     Percentage(Length),
     Pixels(Length),
     RootPercentage(Length),
+    InnerPercentage(Length),
     DynamicCalculations(Box<Vec<DynamicCalculation>>),
 }
 
@@ -27,7 +28,14 @@ impl Default for Size {
 
 impl Size {
     pub fn inner_sized(&self) -> bool {
-        matches!(self, Self::Inner | Self::FillMinimum)
+        matches!(
+            self,
+            Self::Inner | Self::FillMinimum | Self::InnerPercentage(_)
+        )
+    }
+
+    pub fn inner_percentage_sized(&self) -> bool {
+        matches!(self, Self::InnerPercentage(_))
     }
 
     pub fn pretty(&self) -> String {
@@ -46,6 +54,7 @@ impl Size {
             Size::Fill => "fill".to_string(),
             Size::FillMinimum => "fill-min".to_string(),
             Size::RootPercentage(p) => format!("{}% of root", p.get()),
+            Size::InnerPercentage(p) => format!("{}% of auto", p.get()),
         }
     }
 
@@ -135,7 +144,7 @@ impl Size {
 
     pub fn most_fitting_size<'a>(&self, size: &'a f32, available_size: &'a f32) -> &'a f32 {
         match self {
-            Self::Inner => available_size,
+            Self::Inner | Self::InnerPercentage(_) => available_size,
             _ => size,
         }
     }

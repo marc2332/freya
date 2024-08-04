@@ -37,6 +37,8 @@ impl Parse for Size {
                 Size::Percentage(Length::new(value))
             } else if parser.try_consume(&Token::ident("v")) {
                 Size::RootPercentage(Length::new(value))
+            } else if parser.try_consume(&Token::ident("a")) {
+                Size::InnerPercentage(Length::new(value))
             } else {
                 Size::Pixels(Length::new(value))
             })
