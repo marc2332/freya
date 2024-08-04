@@ -144,7 +144,7 @@ impl RadialGradient {
 }
 
 impl Parse for RadialGradient {
-    fn parse(value: &str) -> Result<Self, ParseError> {
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
         parser.consume(&Token::ident("radial-gradient"))?;
         parser.consume(&Token::ParenOpen)?;
 
@@ -208,7 +208,7 @@ impl ConicGradient {
 }
 
 impl Parse for ConicGradient {
-    fn parse(value: &str) -> Result<Self, ParseError> {
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
         parser.consume(&Token::ident("conic-gradient"))?;
         parser.consume(&Token::ParenOpen)?;
 
@@ -237,7 +237,7 @@ impl Parse for ConicGradient {
                 })?;
 
                 parser.consume(&Token::ident("deg"))?;
-              
+
                 let end = if parser.try_consume(&Token::ident("to")) {
                     let result = parser.consume_map(Token::try_as_i64).and_then(|value| {
                         if (0..=360).contains(&value) {

@@ -38,11 +38,11 @@ impl Parse for Fill {
         if parser.check(&Token::ident("linear-gradient")) {
             LinearGradient::from_parser(parser).map(Self::LinearGradient)
         } else if parser.check(&Token::ident("radial-gradient")) {
-            RadialGradient::from_parser(parser).map(Self::RadialGradient)          
+            RadialGradient::from_parser(parser).map(Self::RadialGradient)
         } else if parser.check(&Token::ident("gradient-gradient")) {
-            ConicGradient::from_parser(parser).map(Self::ConicGradient)          
+            ConicGradient::from_parser(parser).map(Self::ConicGradient)
         } else {
-            Color::from_parser(parser).map(Self::Color)          
+            Color::from_parser(parser).map(Self::Color)
         }
     }
 }
