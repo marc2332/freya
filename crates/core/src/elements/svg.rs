@@ -59,6 +59,12 @@ impl ElementUtils for SvgElement {
                         Fill::LinearGradient(gradient) => {
                             paint.set_shader(gradient.into_shader(area));
                         }
+                        Fill::RadialGradient(gradient) => {
+                            paint.set_shader(gradient.into_shader(area));
+                        }
+                        Fill::ConicGradient(gradient) => {
+                            paint.set_shader(gradient.into_shader(area));
+                        }
                     }
 
                     canvas.draw_paint(&paint);
