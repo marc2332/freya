@@ -14,13 +14,13 @@ pub type CursorPoint = euclid::Point2D<f64, Measure>;
 pub type Length = euclid::Length<f32, Measure>;
 
 pub trait AreaModel {
-    // The area without any outer gap (e.g margin)
-    fn after_gaps(&self, margin: &Gaps) -> Area;
+    /// The area without any outer gap (e.g margin)
+    fn without_gaps(&self, gap: &Gaps) -> Area;
 
-    // Adjust the available area with the node offsets (mainly used by scrollviews)
+    /// Adjust the available area with the node offsets (mainly used by scrollviews)
     fn move_with_offsets(&mut self, offset_x: &Length, offset_y: &Length);
 
-    // Align the content of this node.
+    /// Align the content of this node.
     fn align_content(
         &mut self,
         available_area: &Area,
@@ -30,7 +30,7 @@ pub trait AreaModel {
         alignment_direction: AlignmentDirection,
     );
 
-    // Align the position of this node.
+    /// Align the position of this node.
     #[allow(clippy::too_many_arguments)]
     fn align_position(
         &mut self,
@@ -45,20 +45,18 @@ pub trait AreaModel {
 }
 
 impl AreaModel for Area {
-    /// Get the area inside after including the gaps (margins or paddings)
-    fn after_gaps(&self, margin: &Gaps) -> Area {
+    fn without_gaps(&self, gaps: &Gaps) -> Area {
         let origin = self.origin;
         let size = self.size;
         Area::new(
-            Point2D::new(origin.x + margin.left(), origin.y + margin.top()),
+            Point2D::new(origin.x + gaps.left(), origin.y + gaps.top()),
             Size2D::new(
-                size.width - margin.horizontal(),
-                size.height - margin.vertical(),
+                size.width - gaps.horizontal(),
+                size.height - gaps.vertical(),
             ),
         )
     }
 
-    /// Get the area inside after including the gaps (margins or paddings)
     fn move_with_offsets(&mut self, offset_x: &Length, offset_y: &Length) {
         self.origin.x += offset_x.get();
         self.origin.y += offset_y.get();
@@ -189,4 +187,15 @@ pub enum AlignmentDirection {
 pub enum AlignAxis {
     Height,
     Width,
+}
+
+pub trait SizeModel {
+    /// Get the size with the given gap, e.g padding.
+    fn with_gaps(&self, gap: &Gaps) -> Size2D;
+}
+
+impl SizeModel for Size2D {
+    fn with_gaps(&self, gap: &Gaps) -> Size2D {
+        Size2D::new(self.width + gap.horizontal(), self.height + gap.vertical())
+    }
 }

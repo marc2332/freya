@@ -18,6 +18,7 @@ use crate::{
         AlignmentDirection,
         AreaModel,
         LayoutMetadata,
+        SizeModel,
         Torin,
     },
 };
@@ -184,10 +185,10 @@ pub fn measure_node<Key: NodeKey>(
             .get_origin(available_parent_area, parent_area, &area_size);
         let mut area = Rect::new(area_origin, area_size);
         let mut inner_area = Rect::new(area_origin, inner_size)
-            .after_gaps(&node.padding)
-            .after_gaps(&node.margin);
+            .without_gaps(&node.padding)
+            .without_gaps(&node.margin);
 
-        let mut inner_sizes = Size2D::default();
+        let mut inner_sizes = Size2D::default().with_gaps(&node.padding);
 
         if measure_inner_children && phase_measure_inner_children {
             // Create an area containing the available space inside the inner area

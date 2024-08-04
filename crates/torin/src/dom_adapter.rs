@@ -46,7 +46,7 @@ impl PartialEq for LayoutNode {
 impl LayoutNode {
     // The area without any margin
     pub fn visible_area(&self) -> Area {
-        self.area.after_gaps(&self.margin)
+        self.area.without_gaps(&self.margin)
     }
 }
 
