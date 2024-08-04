@@ -33,7 +33,7 @@ impl Parse for Color {
                     "gray" => Some(Color::GRAY),
                     "white" => Some(Color::WHITE),
                     "orange" => Some(Color::from_rgb(255, 165, 0)),
-                    "transparent" => Some(Color::TRANSPARENT),
+                    "transparent" | "none" => Some(Color::TRANSPARENT),
                     _ => None,
                 })
             })

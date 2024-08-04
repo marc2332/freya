@@ -49,26 +49,20 @@ impl LinearGradient {
         let colors: Vec<Color> = self.stops.iter().map(|stop| stop.color).collect();
         let offsets: Vec<f32> = self.stops.iter().map(|stop| stop.offset).collect();
 
-        let (dx, dy) = (-self.angle).sin_cos();
-        let farthest_corner = Point::new(
-            if dx > 0.0 { bounds.width() } else { 0.0 },
-            if dy > 0.0 { bounds.height() } else { 0.0 },
-        );
-        let delta = farthest_corner - Point::new(bounds.width(), bounds.height()) / 2.0;
-        let u = delta.x * dy - delta.y * dx;
-        let endpoint = farthest_corner + Point::new(-u * dy, u * dx);
+        let center = bounds.center();
 
-        let origin = Point::new(bounds.min_x(), bounds.min_y());
+        let matrix = Matrix::rotate_deg_pivot(self.angle, (center.x, center.y));
+
         Shader::linear_gradient(
             (
-                Point::new(bounds.width(), bounds.height()) - endpoint + origin,
-                endpoint + origin,
+                (bounds.min_x(), bounds.min_y()),
+                (bounds.max_x(), bounds.max_y()),
             ),
             GradientShaderColors::Colors(&colors[..]),
             Some(&offsets[..]),
             TileMode::Clamp,
             None,
-            None,
+            Some(&matrix),
         )
     }
 }
@@ -79,11 +73,17 @@ impl Parse for LinearGradient {
         parser.consume(&Token::ParenOpen)?;
 
         let mut gradient = LinearGradient {
-            angle: if let Some(angle) = parser.next_if(Token::is_i64).map(Token::into_f32) {
+            angle: if let Ok(angle) = parser.consume_map(Token::try_as_i64).and_then(|value| {
+                if (0..=360).contains(&value) {
+                    Ok(value as f32)
+                } else {
+                    Err(ParseError)
+                }
+            }) {
                 parser.consume(&Token::ident("deg"))?;
                 parser.consume(&Token::Comma)?;
 
-                angle.to_radians()
+                angle
             } else {
                 0.0
             },
@@ -109,7 +109,189 @@ impl fmt::Display for LinearGradient {
         write!(
             f,
             "linear-gradient({}deg, {})",
-            self.angle.to_degrees(),
+            self.angle,
+            self.stops
+                .iter()
+                .map(|stop| stop.to_string())
+                .collect::<Vec<_>>()
+                .join(", ")
+        )
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct RadialGradient {
+    pub stops: Vec<GradientStop>,
+}
+
+impl RadialGradient {
+    pub fn into_shader(&self, bounds: Rect<f32, Measure>) -> Option<Shader> {
+        let colors: Vec<Color> = self.stops.iter().map(|stop| stop.color).collect();
+        let offsets: Vec<f32> = self.stops.iter().map(|stop| stop.offset).collect();
+
+        let center = bounds.center();
+
+        Shader::radial_gradient(
+            Point::new(center.x, center.y),
+            bounds.width().max(bounds.height()),
+            GradientShaderColors::Colors(&colors[..]),
+            Some(&offsets[..]),
+            TileMode::Clamp,
+            None,
+            None,
+        )
+    }
+}
+
+impl Parse for RadialGradient {
+    fn parse(value: &str) -> Result<Self, ParseError> {
+        parser.consume(&Token::ident("radial-gradient"))?;
+        parser.consume(&Token::ParenOpen)?;
+
+        let mut gradient = RadialGradient::default();
+
+        while !parser.check(&Token::ParenClose) {
+            if !gradient.stops.is_empty() {
+                parser.consume(&Token::Comma)?;
+            }
+
+            gradient.stops.push(GradientStop::from_parser(parser)?);
+        }
+
+        parser.consume(&Token::ParenClose)?;
+
+        Ok(gradient)
+    }
+}
+
+impl fmt::Display for RadialGradient {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "radial-gradient({})",
+            self.stops
+                .iter()
+                .map(|stop| stop.to_string())
+                .collect::<Vec<_>>()
+                .join(", ")
+        )
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ConicGradient {
+    pub stops: Vec<GradientStop>,
+    pub angles: Option<(f32, f32)>,
+    pub angle: Option<f32>,
+}
+
+impl ConicGradient {
+    pub fn into_shader(&self, bounds: Rect<f32, Measure>) -> Option<Shader> {
+        let colors: Vec<Color> = self.stops.iter().map(|stop| stop.color).collect();
+        let offsets: Vec<f32> = self.stops.iter().map(|stop| stop.offset).collect();
+
+        let center = bounds.center();
+
+        let matrix =
+            Matrix::rotate_deg_pivot(-90.0 + self.angle.unwrap_or(0.0), (center.x, center.y));
+
+        Shader::sweep_gradient(
+            (center.x, center.y),
+            GradientShaderColors::Colors(&colors[..]),
+            Some(&offsets[..]),
+            TileMode::Clamp,
+            self.angles,
+            None,
+            Some(&matrix),
+        )
+    }
+}
+
+impl Parse for ConicGradient {
+    fn parse(value: &str) -> Result<Self, ParseError> {
+        parser.consume(&Token::ident("conic-gradient"))?;
+        parser.consume(&Token::ParenOpen)?;
+
+        let mut gradient = ConicGradient {
+            angle: if let Ok(angle) = parser.consume_map(Token::try_as_i64).and_then(|value| {
+                if (0..=360).contains(&value) {
+                    Ok(value as f32)
+                } else {
+                    Err(ParseError)
+                }
+            }) {
+                parser.consume(&Token::ident("deg"))?;
+                parser.consume(&Token::Comma)?;
+
+                angle
+            } else {
+                0.0
+            },
+            angles: if parser.try_consume(&Token::ident("from")) {
+                let start = parser.consume_map(Token::try_as_i64).and_then(|value| {
+                    if (0..=360).contains(&value) {
+                        Ok(value as f32)
+                    } else {
+                        Err(ParseError)
+                    }
+                })?;
+
+                parser.consume(&Token::ident("deg"))?;
+              
+                let end = if parser.try_consume(&Token::ident("to")) {
+                    let result = parser.consume_map(Token::try_as_i64).and_then(|value| {
+                        if (0..=360).contains(&value) {
+                            Ok(value as f32)
+                        } else {
+                            Err(ParseError)
+                        }
+                    })?;
+
+                    parser.consume(&Token::ident("deg"))?;
+
+                    result
+                } else {
+                    360.0
+                };
+
+                parser.consume(&Token::Comma)?;
+
+                Some((start, end))
+            } else {
+                None
+            },
+            ..Default::default()
+        };
+
+        while !parser.check(&Token::ParenClose) {
+            if !gradient.stops.is_empty() {
+                parser.consume(&Token::Comma)?;
+            }
+
+            gradient.stops.push(GradientStop::from_parser(parser)?);
+        }
+
+        parser.consume(&Token::ParenClose)?;
+
+        Ok(gradient)
+    }
+}
+
+impl fmt::Display for ConicGradient {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "conic-gradient(")?;
+
+        if let Some(angle) = self.angle {
+            write!(f, "{angle}deg, ")?;
+        }
+
+        if let Some((start, end)) = self.angles {
+            write!(f, "from {start}deg to {end}deg, ")?;
+        }
+
+        write!(
+            f,
+            "{})",
             self.stops
                 .iter()
                 .map(|stop| stop.to_string())
