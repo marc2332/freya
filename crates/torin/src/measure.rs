@@ -343,6 +343,8 @@ pub fn measure_inner_nodes<Key: NodeKey>(
         }
 
         if parent_node.main_alignment.is_not_start() {
+            let inner_area = *initial_phase_mode.inner_area();
+
             // 2. Adjust the available and inner areas of the Main axis
             initial_phase_mode.fit_bounds_when_unspecified(
                 parent_node,
@@ -352,7 +354,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
 
             // 3. Align the Main axis
             available_area.align_content(
-                initial_phase_mode.inner_area(),
+                &inner_area,
                 &initial_phase_inner_sizes,
                 &parent_node.main_alignment,
                 &parent_node.direction,

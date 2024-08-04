@@ -15,7 +15,7 @@ pub type Length = euclid::Length<f32, Measure>;
 
 pub trait AreaModel {
     /// The area without any outer gap (e.g margin)
-    fn without_gaps(&self, gap: &Gaps) -> Area;
+    fn without_gaps(self, gap: &Gaps) -> Area;
 
     /// Adjust the available area with the node offsets (mainly used by scrollviews)
     fn move_with_offsets(&mut self, offset_x: &Length, offset_y: &Length);
@@ -45,7 +45,7 @@ pub trait AreaModel {
 }
 
 impl AreaModel for Area {
-    fn without_gaps(&self, gaps: &Gaps) -> Area {
+    fn without_gaps(self, gaps: &Gaps) -> Area {
         let origin = self.origin;
         let size = self.size;
         Area::new(
@@ -64,7 +64,7 @@ impl AreaModel for Area {
 
     fn align_content(
         &mut self,
-        available_area: &Area,
+        inner_area: &Area,
         contents_size: &Size2D,
         alignment: &Alignment,
         direction: &DirectionMode,
@@ -75,24 +75,22 @@ impl AreaModel for Area {
         match axis {
             AlignAxis::Height => match alignment {
                 Alignment::Center => {
-                    let new_origin_y =
-                        (available_area.height() / 2.0) - (contents_size.height / 2.0);
+                    let new_origin_y = (inner_area.height() / 2.0) - (contents_size.height / 2.0);
 
-                    self.origin.y = available_area.min_y() + new_origin_y;
+                    self.origin.y = inner_area.min_y() + new_origin_y;
                 }
                 Alignment::End => {
-                    self.origin.y = available_area.max_y() - contents_size.height;
+                    self.origin.y = inner_area.max_y() - contents_size.height;
                 }
                 _ => {}
             },
             AlignAxis::Width => match alignment {
                 Alignment::Center => {
-                    let new_origin_x = (available_area.width() / 2.0) - (contents_size.width / 2.0);
-
-                    self.origin.x = available_area.min_x() + new_origin_x;
+                    let new_origin_x = (inner_area.width() / 2.0) - (contents_size.width / 2.0);
+                    self.origin.x = inner_area.min_x() + new_origin_x;
                 }
                 Alignment::End => {
-                    self.origin.x = available_area.max_x() - contents_size.width;
+                    self.origin.x = inner_area.max_x() - contents_size.width;
                 }
                 _ => {}
             },
@@ -191,11 +189,11 @@ pub enum AlignAxis {
 
 pub trait SizeModel {
     /// Get the size with the given gap, e.g padding.
-    fn with_gaps(&self, gap: &Gaps) -> Size2D;
+    fn with_gaps(self, gap: &Gaps) -> Size2D;
 }
 
 impl SizeModel for Size2D {
-    fn with_gaps(&self, gap: &Gaps) -> Size2D {
+    fn with_gaps(self, gap: &Gaps) -> Size2D {
         Size2D::new(self.width + gap.horizontal(), self.height + gap.vertical())
     }
 }
