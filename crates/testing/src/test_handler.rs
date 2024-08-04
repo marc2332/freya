@@ -7,11 +7,11 @@ use std::{
 };
 
 use dioxus_core::VirtualDom;
-use freya_common::{
+use freya_core::prelude::{
     EventMessage,
     TextGroupMeasurement,
+    *,
 };
-use freya_core::prelude::*;
 use freya_engine::prelude::{
     raster_n32_premul,
     Color,

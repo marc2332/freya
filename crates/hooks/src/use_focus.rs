@@ -12,10 +12,10 @@ use dioxus_signals::{
     Signal,
     Writable,
 };
-use freya_common::EventMessage;
 use freya_core::{
     accessibility::ACCESSIBILITY_ROOT_ID,
     platform_state::NavigationMode,
+    prelude::EventMessage,
     types::AccessibilityId,
 };
 use freya_elements::events::{

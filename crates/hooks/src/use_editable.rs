@@ -11,8 +11,8 @@ use dioxus_signals::{
     Signal,
     Writable,
 };
-use freya_common::{
-    CursorLayoutResponse,
+use freya_common::CursorLayoutResponse;
+use freya_core::prelude::{
     EventMessage,
     TextGroupMeasurement,
 };

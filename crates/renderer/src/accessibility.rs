@@ -1,9 +1,9 @@
 use accesskit_winit::Adapter;
-use freya_common::EventMessage;
 use freya_core::{
     prelude::{
         AccessibilityFocusDirection,
         AccessibilityManager,
+        EventMessage,
         SharedAccessibilityManager,
         ACCESSIBILITY_ROOT_ID,
     },

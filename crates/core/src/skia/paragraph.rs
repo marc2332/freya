@@ -3,7 +3,6 @@ use std::ops::Mul;
 use freya_common::{
     CachedParagraph,
     CursorLayoutResponse,
-    TextGroupMeasurement,
 };
 use freya_native_core::prelude::NodeImmutable;
 use freya_node_state::CursorState;
@@ -15,6 +14,7 @@ use torin::prelude::{
 use crate::prelude::{
     align_main_align_paragraph,
     DioxusNode,
+    TextGroupMeasurement,
 };
 
 /// Merasure the cursor positio and text selection and notify the subscribed component of the element.

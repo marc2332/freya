@@ -4,7 +4,7 @@
 )]
 
 use freya::{
-    common::EventMessage,
+    core::prelude::EventMessage,
     prelude::*,
 };
 use skia_safe::{

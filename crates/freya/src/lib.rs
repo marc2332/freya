@@ -77,6 +77,11 @@ pub mod common {
     pub use freya_common::*;
 }
 
+/// Core APIs.
+pub mod core {
+    pub use freya_core::*;
+}
+
 /// Elements, attributes and events definitions.
 pub use freya_elements::elements;
 /// Events data.

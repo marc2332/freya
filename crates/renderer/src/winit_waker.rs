@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use freya_common::EventMessage;
+use freya_core::prelude::EventMessage;
 use futures_task::{
     waker,
     ArcWake,

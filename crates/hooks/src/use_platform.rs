@@ -9,7 +9,7 @@ use dioxus_signals::{
     Readable,
     Signal,
 };
-use freya_common::EventMessage;
+use freya_core::prelude::EventMessage;
 use tokio::sync::{
     broadcast,
     mpsc::UnboundedSender,

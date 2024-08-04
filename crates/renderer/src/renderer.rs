@@ -4,7 +4,6 @@ use std::{
 };
 
 use dioxus_core::VirtualDom;
-use freya_common::EventMessage;
 use freya_core::{
     accessibility::AccessibilityFocusDirection,
     dom::SafeDOM,
@@ -12,7 +11,10 @@ use freya_core::{
         EventName,
         PlatformEvent,
     },
-    prelude::NavigationMode,
+    prelude::{
+        EventMessage,
+        NavigationMode,
+    },
 };
 use freya_elements::events::{
     map_winit_key,
@@ -218,6 +220,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 app.queue_focus_node(node_id);
             }
             EventMessage::ExitApp => event_loop.exit(),
+            EventMessage::PlatformEvent(platform_event) => self.send_event(platform_event),
             ev => {
                 if let EventMessage::UpdateTemplate(template) = ev {
                     app.vdom_replace_template(template);
