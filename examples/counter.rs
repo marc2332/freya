@@ -18,28 +18,14 @@ fn app() -> Element {
             width: "100%",
             main_align: "center",
             cross_align: "center",
-            background: "rgb(0, 119, 182)",
-            color: "white",
-            shadow: "0 4 20 5 rgb(0, 0, 0, 80)",
-            label {
-                font_size: "75",
-                font_weight: "bold",
-                "{count}"
-            }
-        }
-        rect {
-            height: "50%",
-            width: "100%",
-            main_align: "center",
-            cross_align: "center",
             direction: "horizontal",
             Button {
                 onclick: move |_| count += 1,
-                label { "Increase" }
-            }
-            Button {
-                onclick: move |_| count -= 1,
-                label { "Decrease" }
+                rect {
+                    width: "25",
+                    height: "20",
+                    background: "red"
+                }
             }
         }
     )

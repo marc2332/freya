@@ -17,7 +17,6 @@ use crate::{
         AlignmentDirection,
         AreaModel,
         LayoutMetadata,
-        SizeModel,
         Torin,
     },
 };
@@ -48,12 +47,15 @@ pub fn measure_node<Key: NodeKey>(
     dom_adapter: &mut impl DOMAdapter<Key>,
 
     layout_metadata: &LayoutMetadata,
-
-    invalidated_tree: bool,
+    // Parent Node is dirty.
+    parent_is_dirty: bool,
 
     phase: Phase,
 ) -> (bool, LayoutNode) {
-    let must_revalidate = invalidated_tree
+    // 1. If parent is dirty
+    // 2. If this Node has been marked as dirty
+    // 3. If there is no know cached data about this Node.
+    let must_revalidate = parent_is_dirty
         || layout.dirty.contains(&node_id)
         || !layout.results.contains_key(&node_id);
     if must_revalidate {
@@ -223,12 +225,12 @@ pub fn measure_node<Key: NodeKey>(
             },
         )
     } else {
-        let mut layout_node = layout.get(node_id).unwrap().clone();
+        let layout_node = layout.get(node_id).unwrap().clone();
 
         let mut inner_sizes = layout_node.inner_sizes;
         let mut available_area = layout_node.inner_area;
-        let mut area = &mut layout_node.area;
-        let mut inner_area = &mut layout_node.inner_area;
+        let mut area = layout_node.area;
+        let mut inner_area = layout_node.inner_area;
 
         available_area.move_with_offsets(&node.offset_x, &node.offset_y);
 
@@ -281,8 +283,8 @@ pub fn measure_inner_nodes<Key: NodeKey>(
     dom_adapter: &mut impl DOMAdapter<Key>,
 
     layout_metadata: &LayoutMetadata,
-
-    invalidated_tree: bool,
+    // Parent Node is dirty.
+    parent_is_dirty: bool,
 ) {
     let children = dom_adapter.children_of(parent_node_id);
 
@@ -305,6 +307,8 @@ pub fn measure_inner_nodes<Key: NodeKey>(
                 continue;
             };
 
+            // No need to consider this Node for a two-phasing
+            // measurements as it will float on its own.
             if child_data.position.is_absolute() {
                 continue;
             }
@@ -321,7 +325,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
                 false,
                 dom_adapter,
                 layout_metadata,
-                invalidated_tree,
+                parent_is_dirty,
                 Phase::Initial,
             );
 
@@ -341,8 +345,6 @@ pub fn measure_inner_nodes<Key: NodeKey>(
         }
 
         if parent_node.main_alignment.is_not_start() {
-            let inner_area = initial_phase_inner_area;
-
             // 2. Adjust the available and inner areas of the Main axis
             available_area.fit_bounds_when_unspecified(
                 &mut initial_phase_area,
@@ -353,7 +355,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
 
             // 3. Align the Main axis
             available_area.align_content(
-                &inner_area,
+                &initial_phase_inner_area,
                 &initial_phase_inner_sizes,
                 &parent_node.main_alignment,
                 &parent_node.direction,
@@ -415,13 +417,13 @@ pub fn measure_inner_nodes<Key: NodeKey>(
             child_id,
             &child_data,
             layout,
-            &inner_area,
+            inner_area,
             &adapted_available_area,
             measurer,
             must_cache_inner_nodes,
             dom_adapter,
             layout_metadata,
-            invalidated_tree,
+            parent_is_dirty,
             Phase::Final,
         );
 

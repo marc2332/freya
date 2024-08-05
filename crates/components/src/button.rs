@@ -181,7 +181,6 @@ pub fn Button(
             padding: "{padding}",
             margin: "{margin}",
             focusable: "true",
-            overflow: "clip",
             role: "button",
             color: "{font_theme.color}",
             shadow: "{shadow}",
