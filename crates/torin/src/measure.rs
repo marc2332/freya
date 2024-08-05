@@ -12,7 +12,6 @@ use crate::{
         Area,
         Size2D,
     },
-    measure_mode::MeasureMode,
     node::Node,
     prelude::{
         AlignmentDirection,
@@ -188,18 +187,13 @@ pub fn measure_node<Key: NodeKey>(
             .without_gaps(&node.padding)
             .without_gaps(&node.margin);
 
-        let mut inner_sizes = Size2D::default().with_gaps(&node.padding);
+        let mut inner_sizes = Size2D::default();
 
         if measure_inner_children && phase_measure_inner_children {
             // Create an area containing the available space inside the inner area
             let mut available_area = inner_area;
 
             available_area.move_with_offsets(&node.offset_x, &node.offset_y);
-
-            let mut measurement_mode = MeasureMode::ParentIsNotCached {
-                area: &mut area,
-                inner_area: &mut inner_area,
-            };
 
             // Measure the layout of this Node's children
             measure_inner_nodes(
@@ -210,7 +204,8 @@ pub fn measure_node<Key: NodeKey>(
                 &mut inner_sizes,
                 measurer,
                 must_cache_inner_nodes,
-                &mut measurement_mode,
+                &mut area,
+                &mut inner_area,
                 dom_adapter,
                 layout_metadata,
                 true,
@@ -228,16 +223,14 @@ pub fn measure_node<Key: NodeKey>(
             },
         )
     } else {
-        let layout_node = layout.get(node_id).unwrap().clone();
+        let mut layout_node = layout.get(node_id).unwrap().clone();
 
         let mut inner_sizes = layout_node.inner_sizes;
         let mut available_area = layout_node.inner_area;
+        let mut area = &mut layout_node.area;
+        let mut inner_area = &mut layout_node.inner_area;
 
         available_area.move_with_offsets(&node.offset_x, &node.offset_y);
-
-        let mut measurement_mode = MeasureMode::ParentIsCached {
-            inner_area: &layout_node.inner_area,
-        };
 
         let measure_inner_children = if let Some(measurer) = measurer {
             measurer.should_measure_inner_children(node_id)
@@ -254,7 +247,8 @@ pub fn measure_node<Key: NodeKey>(
                 &mut inner_sizes,
                 measurer,
                 must_cache_inner_nodes,
-                &mut measurement_mode,
+                &mut area,
+                &mut inner_area,
                 dom_adapter,
                 layout_metadata,
                 false,
@@ -279,7 +273,10 @@ pub fn measure_inner_nodes<Key: NodeKey>(
     measurer: &mut Option<impl LayoutMeasurer<Key>>,
     // Whether to cache the measurements of this Node's children
     must_cache_inner_nodes: bool,
-    mode: &mut MeasureMode,
+
+    area: &mut Area,
+
+    inner_area: &mut Area,
     // Adapter for the provided DOM
     dom_adapter: &mut impl DOMAdapter<Key>,
 
@@ -298,8 +295,8 @@ pub fn measure_inner_nodes<Key: NodeKey>(
         || parent_node.main_alignment.is_not_start()
         || parent_node.content.is_fit()
     {
-        let mut initial_phase_mode = mode.to_owned();
-        let mut initial_phase_mode = initial_phase_mode.to_mut();
+        let mut initial_phase_area = *area;
+        let mut initial_phase_inner_area = *inner_area;
         let mut initial_phase_available_area = *available_area;
 
         // 1. Measure the children
@@ -312,7 +309,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
                 continue;
             }
 
-            let inner_area = *initial_phase_mode.inner_area();
+            let inner_area = initial_phase_inner_area;
 
             let (_, child_areas) = measure_node(
                 *child_id,
@@ -328,9 +325,10 @@ pub fn measure_inner_nodes<Key: NodeKey>(
                 Phase::Initial,
             );
 
-            initial_phase_mode.stack_into_node(
+            initial_phase_available_area.stack_into_node(
                 parent_node,
-                &mut initial_phase_available_area,
+                &mut initial_phase_area,
+                &mut initial_phase_inner_area,
                 &child_areas.area,
                 &mut initial_phase_inner_sizes,
                 &child_data,
@@ -343,13 +341,14 @@ pub fn measure_inner_nodes<Key: NodeKey>(
         }
 
         if parent_node.main_alignment.is_not_start() {
-            let inner_area = *initial_phase_mode.inner_area();
+            let inner_area = initial_phase_inner_area;
 
             // 2. Adjust the available and inner areas of the Main axis
-            initial_phase_mode.fit_bounds_when_unspecified(
+            available_area.fit_bounds_when_unspecified(
+                &mut initial_phase_area,
+                &mut initial_phase_inner_area,
                 parent_node,
                 AlignmentDirection::Main,
-                available_area,
             );
 
             // 3. Align the Main axis
@@ -364,10 +363,11 @@ pub fn measure_inner_nodes<Key: NodeKey>(
 
         if parent_node.cross_alignment.is_not_start() || parent_node.content.is_fit() {
             // 4. Adjust the available and inner areas of the Cross axis
-            initial_phase_mode.fit_bounds_when_unspecified(
+            available_area.fit_bounds_when_unspecified(
+                &mut initial_phase_area,
+                &mut initial_phase_inner_area,
                 parent_node,
                 AlignmentDirection::Cross,
-                available_area,
             );
         }
     }
@@ -410,8 +410,6 @@ pub fn measure_inner_nodes<Key: NodeKey>(
             }
         }
 
-        let inner_area = *mode.inner_area();
-
         // Final measurement
         let (child_revalidated, child_areas) = measure_node(
             child_id,
@@ -428,9 +426,10 @@ pub fn measure_inner_nodes<Key: NodeKey>(
         );
 
         // Stack the child into its parent
-        mode.stack_into_node(
+        available_area.stack_into_node(
             parent_node,
-            available_area,
+            area,
+            inner_area,
             &child_areas.area,
             inner_sizes,
             &child_data,
