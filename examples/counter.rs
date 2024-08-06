@@ -30,6 +30,8 @@ fn app() -> Element {
         rect {
             height: "50%",
             width: "100%",
+            main_align: "center",
+            cross_align: "center",
             direction: "horizontal",
             Button {
                 onclick: move |_| count += 1,
