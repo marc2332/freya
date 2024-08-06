@@ -422,7 +422,7 @@ where
             }
 
             // Final measurement
-            let (child_revalidated, child_areas) = self.measure_node(
+            let (child_revalidated, mut child_areas) = self.measure_node(
                 child_id,
                 &child_data,
                 inner_area,
@@ -431,6 +431,9 @@ where
                 parent_is_dirty,
                 Phase::Final,
             );
+
+            // Adjust the size of the area if needed
+            child_areas.area.adjust_size(&child_data);
 
             // Stack this child into the parent
             Self::stack_child(
