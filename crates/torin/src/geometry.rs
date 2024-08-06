@@ -1,6 +1,8 @@
 use crate::prelude::{
     DirectionMode,
     Gaps,
+    Node,
+    Size,
 };
 
 #[derive(PartialEq)]
@@ -18,6 +20,9 @@ pub trait AreaModel {
 
     /// Adjust the available area with the node offsets (mainly used by scrollviews)
     fn move_with_offsets(&mut self, offset_x: &Length, offset_y: &Length);
+
+    /// Adjust the size given the Node data
+    fn adjust_size(&mut self, node: &Node);
 }
 
 impl AreaModel for Area {
@@ -36,6 +41,15 @@ impl AreaModel for Area {
     fn move_with_offsets(&mut self, offset_x: &Length, offset_y: &Length) {
         self.origin.x += offset_x.get();
         self.origin.y += offset_y.get();
+    }
+
+    fn adjust_size(&mut self, node: &Node) {
+        if let Size::InnerPercentage(p) = node.width {
+            self.size.width *= p.get() / 100.;
+        }
+        if let Size::InnerPercentage(p) = node.height {
+            self.size.height *= p.get() / 100.;
+        }
     }
 }
 

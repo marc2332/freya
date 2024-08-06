@@ -280,7 +280,7 @@ impl<Key: NodeKey> Torin<Key> {
             measurer,
         };
 
-        let (root_revalidated, root_layout_node) = measure_context.measure_node(
+        let (root_revalidated, mut root_layout_node) = measure_context.measure_node(
             root_id,
             &root,
             &layout_node.inner_area,
@@ -289,6 +289,9 @@ impl<Key: NodeKey> Torin<Key> {
             false,
             Phase::Final,
         );
+
+        // Adjust the size of the area if needed
+        root_layout_node.area.adjust_size(&root);
 
         // Cache the root Node results if it was modified
         if root_revalidated {
