@@ -331,13 +331,13 @@ where
                 );
 
                 // Stack this child into the parent
-                Self::stack_node(
+                Self::stack_child(
                     &mut initial_phase_available_area,
                     parent_node,
                     &mut initial_phase_area,
                     &mut initial_phase_inner_area,
-                    &child_areas.area,
                     &mut initial_phase_inner_sizes,
+                    &child_areas.area,
                     &child_data,
                 );
 
@@ -394,12 +394,12 @@ where
             if parent_node.main_alignment.is_spaced() {
                 // Align the Main axis if necessary
                 Self::align_position(
+                    AlignmentDirection::Main,
                     &mut adapted_available_area,
                     &initial_available_area,
                     &initial_phase_inner_sizes,
                     &parent_node.main_alignment,
                     &parent_node.direction,
-                    AlignmentDirection::Main,
                     initial_phase_sizes.len(),
                     child_n,
                 );
@@ -433,17 +433,17 @@ where
             );
 
             // Stack this child into the parent
-            Self::stack_node(
+            Self::stack_child(
                 available_area,
                 parent_node,
                 area,
                 inner_area,
-                &child_areas.area,
                 inner_sizes,
+                &child_areas.area,
                 &child_data,
             );
 
-            // Cache the child layout if it was mutated and inner nodes must be cache
+            // Cache the child layout if it was mutated and children must be cached
             if child_revalidated && must_cache_children {
                 // In case of any layout listener, notify it with the new areas.
                 if child_data.has_layout_references {
@@ -497,12 +497,12 @@ where
     /// Align the position of this node.
     #[allow(clippy::too_many_arguments)]
     fn align_position(
+        alignment_direction: AlignmentDirection,
         available_area: &mut Area,
         initial_available_area: &Area,
         inner_sizes: &Size2D,
         alignment: &Alignment,
         direction: &DirectionMode,
-        alignment_direction: AlignmentDirection,
         siblings_len: usize,
         child_position: usize,
     ) {
@@ -558,34 +558,34 @@ where
         }
     }
 
-    /// Stack a Node into another Node
-    fn stack_node(
+    /// Stack a child Node into its parent
+    fn stack_child(
         available_area: &mut Area,
         parent_node: &Node,
         parent_area: &mut Area,
         inner_area: &mut Area,
-        content_area: &Area,
         inner_sizes: &mut Size2D,
-        node_data: &Node,
+        child_area: &Area,
+        child_node: &Node,
     ) {
         // No need to stack a node that is positioned absolutely
-        if node_data.position.is_absolute() {
+        if child_node.position.is_absolute() {
             return;
         }
 
         match parent_node.direction {
             DirectionMode::Horizontal => {
                 // Move the available area
-                available_area.origin.x = content_area.max_x();
-                available_area.size.width -= content_area.size.width;
+                available_area.origin.x = child_area.max_x();
+                available_area.size.width -= child_area.size.width;
 
-                inner_sizes.height = content_area.height().max(inner_sizes.height);
-                inner_sizes.width += content_area.width();
+                inner_sizes.height = child_area.height().max(inner_sizes.height);
+                inner_sizes.width += child_area.width();
 
                 // Keep the biggest height
                 if parent_node.height.inner_sized() {
                     parent_area.size.height = parent_area.size.height.max(
-                        content_area.size.height
+                        child_area.size.height
                             + parent_node.padding.vertical()
                             + parent_node.margin.vertical(),
                     );
@@ -597,21 +597,21 @@ where
 
                 // Accumulate width
                 if parent_node.width.inner_sized() {
-                    parent_area.size.width += content_area.size.width;
+                    parent_area.size.width += child_area.size.width;
                 }
             }
             DirectionMode::Vertical => {
                 // Move the available area
-                available_area.origin.y = content_area.max_y();
-                available_area.size.height -= content_area.size.height;
+                available_area.origin.y = child_area.max_y();
+                available_area.size.height -= child_area.size.height;
 
-                inner_sizes.width = content_area.width().max(inner_sizes.width);
-                inner_sizes.height += content_area.height();
+                inner_sizes.width = child_area.width().max(inner_sizes.width);
+                inner_sizes.height += child_area.height();
 
                 // Keep the biggest width
                 if parent_node.width.inner_sized() {
                     parent_area.size.width = parent_area.size.width.max(
-                        content_area.size.width
+                        child_area.size.width
                             + parent_node.padding.horizontal()
                             + parent_node.margin.horizontal(),
                     );
@@ -623,7 +623,7 @@ where
 
                 // Accumulate height
                 if parent_node.height.inner_sized() {
-                    parent_area.size.height += content_area.size.height;
+                    parent_area.size.height += child_area.size.height;
                 }
             }
         }
