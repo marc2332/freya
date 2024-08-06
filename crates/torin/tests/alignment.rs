@@ -278,7 +278,7 @@ pub fn unsized_alignment() {
 
     assert_eq!(
         layout.get(2).unwrap().visible_area(),
-        Rect::new(Point2D::new(110.0, 25.0), Size2D::new(150.0, 80.0)),
+        Rect::new(Point2D::new(115.0, 25.0), Size2D::new(150.0, 80.0)),
     );
 }
 
