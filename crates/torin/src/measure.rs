@@ -52,7 +52,6 @@ where
 {
     /// Measure a Node.
     #[allow(clippy::too_many_arguments)]
-    #[inline(always)]
     pub fn measure_node(
         &mut self,
         // ID for this Node
@@ -273,7 +272,6 @@ where
 
     /// Measure the children layouts of a Node
     #[allow(clippy::too_many_arguments)]
-    #[inline(always)]
     pub fn measure_children(
         &mut self,
         parent_node_id: &Key,
@@ -462,6 +460,7 @@ where
     }
 
     /// Align the content of this node.
+    #[inline(always)]
     fn align_content(
         available_area: &mut Area,
         inner_area: &Area,
@@ -499,6 +498,7 @@ where
 
     /// Align the position of this node.
     #[allow(clippy::too_many_arguments)]
+    #[inline(always)]
     fn align_position(
         alignment_direction: AlignmentDirection,
         available_area: &mut Area,
@@ -562,6 +562,7 @@ where
     }
 
     /// Stack a child Node into its parent
+    #[inline(always)]
     fn stack_child(
         available_area: &mut Area,
         parent_node: &Node,
@@ -637,6 +638,7 @@ where
     /// The intended usage is to call this after the first measurement and before the second,
     /// this way the second measurement will align the content relatively to the parent element instead
     /// of overflowing due to being aligned relatively to the upper parent element
+    #[inline(always)]
     fn shrink_area_to_fit_when_unbounded(
         available_area: &mut Area,
         parent_area: &Area,

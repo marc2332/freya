@@ -26,6 +26,7 @@ pub trait AreaModel {
 }
 
 impl AreaModel for Area {
+    #[inline(always)]
     fn without_gaps(self, gaps: &Gaps) -> Area {
         let origin = self.origin;
         let size = self.size;
@@ -38,11 +39,13 @@ impl AreaModel for Area {
         )
     }
 
+    #[inline(always)]
     fn move_with_offsets(&mut self, offset_x: &Length, offset_y: &Length) {
         self.origin.x += offset_x.get();
         self.origin.y += offset_y.get();
     }
 
+    #[inline(always)]
     fn adjust_size(&mut self, node: &Node) {
         if let Size::InnerPercentage(p) = node.width {
             self.size.width *= p.get() / 100.;
@@ -65,6 +68,7 @@ pub enum AlignAxis {
 }
 
 impl AlignAxis {
+    #[inline(always)]
     pub fn new(direction: &DirectionMode, alignment_direction: AlignmentDirection) -> Self {
         match direction {
             DirectionMode::Vertical => match alignment_direction {
@@ -85,6 +89,7 @@ pub trait SizeModel {
 }
 
 impl SizeModel for Size2D {
+    #[inline(always)]
     fn with_gaps(self, gap: &Gaps) -> Size2D {
         Size2D::new(self.width + gap.horizontal(), self.height + gap.vertical())
     }
