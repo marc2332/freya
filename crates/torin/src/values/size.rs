@@ -27,6 +27,7 @@ impl Default for Size {
 }
 
 impl Size {
+    #[inline(always)]
     pub fn inner_sized(&self) -> bool {
         matches!(
             self,
@@ -34,6 +35,7 @@ impl Size {
         )
     }
 
+    #[inline(always)]
     pub fn inner_percentage_sized(&self) -> bool {
         matches!(self, Self::InnerPercentage(_))
     }
@@ -58,6 +60,7 @@ impl Size {
         }
     }
 
+    #[inline(always)]
     pub fn eval(
         &self,
         parent_value: f32,
@@ -85,6 +88,7 @@ impl Size {
         }
     }
 
+    #[inline(always)]
     #[allow(clippy::too_many_arguments)]
     pub fn min_max(
         &self,
@@ -142,6 +146,7 @@ impl Size {
         final_value
     }
 
+    #[inline(always)]
     pub fn most_fitting_size<'a>(&self, size: &'a f32, available_size: &'a f32) -> &'a f32 {
         match self {
             Self::Inner | Self::InnerPercentage(_) => available_size,
@@ -151,6 +156,7 @@ impl Size {
 }
 
 impl Scaled for Size {
+    #[inline(always)]
     fn scale(&mut self, scale_factor: f32) {
         match self {
             Size::Pixels(s) => *s *= scale_factor,
