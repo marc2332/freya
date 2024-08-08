@@ -1,61 +1,41 @@
-use std::{
-    num::NonZeroU32,
-    path::PathBuf,
-};
+use std::{path::PathBuf};
 
 use dioxus_core::VirtualDom;
+#[cfg(not(target_os = "macos"))]
+use glutin::prelude::GlSurface;
 use freya_common::EventMessage;
 use freya_core::{
     accessibility::AccessibilityFocusDirection,
     dom::SafeDOM,
-    events::{
-        EventName,
-        PlatformEvent,
-    },
+    events::{EventName, PlatformEvent},
     prelude::NavigationMode,
 };
 use freya_elements::events::{
-    map_winit_key,
-    map_winit_modifiers,
-    map_winit_physical_key,
-    Code,
-    Key,
-};
-use glutin::prelude::{
-    GlSurface,
-    PossiblyCurrentGlContext,
+    map_winit_key, map_winit_modifiers, map_winit_physical_key, Code, Key,
 };
 use torin::geometry::CursorPoint;
 use winit::{
     application::ApplicationHandler,
     event::{
-        ElementState,
-        Ime,
-        KeyEvent,
-        MouseButton,
-        MouseScrollDelta,
-        StartCause,
-        Touch,
-        TouchPhase,
+        ElementState, Ime, KeyEvent, MouseButton, MouseScrollDelta, StartCause, Touch, TouchPhase,
         WindowEvent,
     },
-    event_loop::{
-        EventLoop,
-        EventLoopProxy,
-    },
+    event_loop::{EventLoop, EventLoopProxy},
     keyboard::ModifiersState,
 };
+#[cfg(target_os = "macos")]
+use freya_engine::prelude::{backend_render_targets, ColorType, mtl, scalar, SurfaceOrigin, wrap_backend_render_target};
+#[cfg(target_os = "macos")]
+use foreign_types_shared::ForeignTypeRef;
+#[cfg(target_os = "macos")]
+use core_graphics_types::geometry::CGSize;
+#[cfg(target_os = "macos")]
+use objc::rc::autoreleasepool;
 
 use crate::{
     devtools::Devtools,
-    window_state::{
-        create_surface,
-        CreatedState,
-        NotCreatedState,
-        WindowState,
-    },
-    HoveredNode,
-    LaunchConfig,
+    window_state::{CreatedState, NotCreatedState, WindowState},
+    HoveredNode, LaunchConfig,
 };
 
 const WHEEL_SPEED_MODIFIER: f32 = 53.0;
@@ -85,7 +65,7 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
             .expect("Failed to create event loop.");
         let proxy = event_loop.create_proxy();
 
-        // Hotreload support for Dioxus
+        // Hot Reload support for Dioxus
         #[cfg(feature = "hot-reload")]
         {
             use std::process::exit;
@@ -102,7 +82,13 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
         let mut desktop_renderer =
             DesktopRenderer::new(vdom, sdom, config, devtools, hovered_node, proxy);
 
+        #[cfg(not(target_os = "macos"))]
         event_loop.run_app(&mut desktop_renderer).unwrap();
+
+        #[cfg(target_os = "macos")]
+        autoreleasepool(|| {
+            event_loop.run_app(&mut desktop_renderer).unwrap();
+        })
     }
 
     pub fn new(
@@ -236,25 +222,21 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
         &mut self,
         event_loop: &winit::event_loop::ActiveEventLoop,
         _window_id: winit::window::WindowId,
-        event: winit::event::WindowEvent,
+        event: WindowEvent,
     ) {
         let scale_factor = self.scale_factor();
         let CreatedState {
-            gr_context,
-            surface,
-            gl_surface,
-            gl_context,
+            skia_surface,
             window,
             app,
             window_config,
-            fb_info,
-            num_samples,
-            stencil_size,
             is_window_focused,
             ..
         } = self.state.created_state();
+
         app.accessibility
             .process_accessibility_event(&event, window);
+
         match event {
             WindowEvent::ThemeChanged(theme) => {
                 app.platform_sender.send_modify(|state| {
@@ -270,6 +252,61 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     modifiers: map_winit_modifiers(self.modifiers_state),
                 });
             }
+            #[cfg(target_os = "macos")]
+            WindowEvent::RedrawRequested => {
+                if let Some(drawable) = skia_surface.metal_layer.next_drawable() {
+                    app.platform_sender.send_if_modified(|state| {
+                        let scale_factor_is_different = state.scale_factor == scale_factor;
+                        state.scale_factor = scale_factor;
+                        scale_factor_is_different
+                    });
+
+                    if app.measure_layout_on_next_render {
+                        app.process_layout(window.inner_size(), scale_factor);
+                        app.process_accessibility(window);
+
+                        app.measure_layout_on_next_render = false;
+                    }
+
+                    let (drawable_width, drawable_height) = {
+                        let size = skia_surface.metal_layer.drawable_size();
+                        (size.width as scalar, size.height as scalar)
+                    };
+
+                    let mut surface = unsafe {
+                        let texture_info =
+                            mtl::TextureInfo::new(drawable.texture().as_ptr() as mtl::Handle);
+
+                        let backend_render_target = backend_render_targets::make_mtl(
+                            (drawable_width as i32, drawable_height as i32),
+                            &texture_info,
+                        );
+
+                        wrap_backend_render_target(
+                            &mut skia_surface.gr_context,
+                            &backend_render_target,
+                            SurfaceOrigin::TopLeft,
+                            ColorType::BGRA8888,
+                            None,
+                            None,
+                        ).unwrap()
+                    };
+
+                    surface.canvas().clear(window_config.background);
+
+                    app.render(&self.hovered_node, surface.canvas(), window);
+                    app.event_loop_tick();
+
+                    drop(surface);
+
+                    skia_surface.gr_context.flush_and_submit();
+
+                    let command_buffer = skia_surface.command_queue.new_command_buffer();
+                    command_buffer.present_drawable(drawable);
+                    command_buffer.commit();
+                }
+            }
+            #[cfg(not(target_os = "macos"))]
             WindowEvent::RedrawRequested => {
                 app.platform_sender.send_if_modified(|state| {
                     let scale_factor_is_different = state.scale_factor == scale_factor;
@@ -283,12 +320,12 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
 
                     app.measure_layout_on_next_render = false;
                 }
-                surface.canvas().clear(window_config.background);
-                app.render(&self.hovered_node, surface.canvas(), window);
+                skia_surface.surface.canvas().clear(window_config.background);
+                app.render(&self.hovered_node, skia_surface.surface.canvas(), window);
                 app.event_loop_tick();
                 window.pre_present_notify();
-                gr_context.flush_and_submit();
-                gl_surface.swap_buffers(gl_context).unwrap();
+                skia_surface.gr_context.flush_and_submit();
+                skia_surface.gl_surface.swap_buffers(&skia_surface.gl_context).unwrap();
             }
             WindowEvent::MouseInput { state, button, .. } => {
                 app.set_navigation_mode(NavigationMode::NotKeyboard);
@@ -411,17 +448,11 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 });
             }
             WindowEvent::Resized(size) => {
-                *surface =
-                    create_surface(window, *fb_info, gr_context, *num_samples, *stencil_size);
-
-                gl_surface.resize(
-                    gl_context,
-                    NonZeroU32::new(size.width.max(1)).unwrap(),
-                    NonZeroU32::new(size.height.max(1)).unwrap(),
-                );
-
+                #[cfg(not(target_os = "macos"))]
+                skia_surface.resize(window, size);
+                #[cfg(target_os = "macos")]
+                skia_surface.metal_layer.set_drawable_size(CGSize::new(size.width as f64, size.height as f64));
                 window.request_redraw();
-
                 app.resize(window);
             }
             WindowEvent::DroppedFile(file_path) => {
@@ -453,17 +484,17 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
     }
 }
 
+#[cfg(not(target_os = "macos"))]
 impl<T: Clone> Drop for DesktopRenderer<'_, T> {
     fn drop(&mut self) {
-        if let WindowState::Created(CreatedState {
-            gl_context,
-            gl_surface,
-            gr_context,
-            ..
-        }) = &mut self.state
-        {
-            if !gl_context.is_current() && gl_context.make_current(gl_surface).is_err() {
-                gr_context.abandon();
+        if let WindowState::Created(CreatedState { skia_surface, .. }) = &mut self.state {
+            if !skia_surface.gl_context.is_current()
+                && skia_surface
+                    .gl_context
+                    .make_current(&skia_surface.gl_surface)
+                    .is_err()
+            {
+                skia_surface.gr_context.abandon();
             }
         }
     }
