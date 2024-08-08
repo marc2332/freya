@@ -18,7 +18,7 @@ fn app() -> Element {
             width: "100%",
             main_align: "center",
             cross_align: "center",
-            background: "rgb(0, 119, 182)",
+            background: "rgb({count}, 119, 182)",
             color: "white",
             shadow: "0 4 20 5 rgb(0, 0, 0, 80)",
             label {
@@ -36,10 +36,6 @@ fn app() -> Element {
             Button {
                 onclick: move |_| count += 1,
                 label { "Increase" }
-            }
-            Button {
-                onclick: move |_| count -= 1,
-                label { "Decrease" }
             }
         }
     )

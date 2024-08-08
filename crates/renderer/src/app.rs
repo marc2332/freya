@@ -63,6 +63,7 @@ pub struct Application {
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) plugins: PluginsManager,
     pub(crate) measure_layout_on_next_render: bool,
+    pub(crate) full_render: bool,
     pub(crate) default_fonts: Vec<String>,
     pub(crate) queued_focus_node: Option<AccessibilityId>,
 }
@@ -124,6 +125,7 @@ impl Application {
             ticker_sender: broadcast::channel(5).0,
             plugins,
             measure_layout_on_next_render: false,
+            full_render: false,
             default_fonts,
             queued_focus_node: None,
         }
@@ -290,6 +292,7 @@ impl Application {
     /// Resize the Window
     pub fn resize(&mut self, window: &Window) {
         self.measure_layout_on_next_render = true;
+        self.full_render = true;
         self.sdom.get().layout().reset();
         self.platform_sender.send_modify(|state| {
             state.information = PlatformInformation::from_winit(window);
@@ -392,7 +395,11 @@ impl Application {
             scale_factor,
         };
 
-        process_render(&fdom, |fdom, node_id, layout_node, layout| {
+        if self.full_render {
+            skia_renderer.canvas.clear(Color::WHITE);
+        }
+
+        process_render(&fdom, self.full_render, |fdom, node_id, layout_node, layout| {
             let render_wireframe = if let Some(hovered_node) = &hovered_node {
                 hovered_node
                     .lock()
@@ -412,5 +419,7 @@ impl Application {
                 );
             }
         });
+
+        self.full_render = false
     }
 }

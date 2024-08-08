@@ -3,6 +3,7 @@ use std::sync::{
     Mutex,
 };
 
+use freya_common::MultiLayerRenderer;
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
@@ -214,6 +215,7 @@ impl State<CustomAttributeValues> for LayoutState {
         context: &SendAnyMap,
     ) -> bool {
         let torin_layout = context.get::<Arc<Mutex<Torin<NodeId>>>>().unwrap();
+        let multi_layer_renderer = context.get::<MultiLayerRenderer>().unwrap();
 
         let mut layout = LayoutState {
             node_id: node_view.node_id(),
@@ -230,6 +232,7 @@ impl State<CustomAttributeValues> for LayoutState {
 
         if changed {
             torin_layout.lock().unwrap().invalidate(node_view.node_id());
+            multi_layer_renderer.invalidate(node_view.node_id())
         }
 
         *self = layout;

@@ -302,7 +302,7 @@ impl TestingHandler {
         };
 
         // Render to the canvas
-        process_render(&fdom, |fdom, node_id, layout_node, layout| {
+        process_render(&fdom, false, |fdom, node_id, layout_node, layout| {
             if let Some(dioxus_node) = fdom.rdom().get(*node_id) {
                 skia_renderer.render(fdom.rdom(), layout_node, &dioxus_node, false, layout);
             }

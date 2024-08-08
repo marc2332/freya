@@ -16,6 +16,9 @@ impl Layers {
     pub fn insert_node_in_layer(&self, node_id: NodeId, layer_n: i16) {
         let mut layers = self.layers.lock().unwrap();
         let layer = layers.entry(layer_n).or_default();
+        if layer.contains(&node_id) {
+            return;
+        }
         layer.push(node_id);
     }
 

@@ -6,9 +6,7 @@ use std::sync::{
 
 use dioxus_core::VirtualDom;
 use freya_common::{
-    Layers,
-    ParagraphElements,
-    TextGroupMeasurement,
+    Layers, MultiLayerRenderer, ParagraphElements, TextGroupMeasurement
 };
 use freya_native_core::{
     prelude::{
@@ -119,6 +117,7 @@ pub struct FreyaDOM {
     torin: Arc<Mutex<Torin<NodeId>>>,
     paragraphs: ParagraphElements,
     layers: Layers,
+    multi_layer_renderer: MultiLayerRenderer
 }
 
 impl Default for FreyaDOM {
@@ -141,6 +140,7 @@ impl Default for FreyaDOM {
             torin: Arc::new(Mutex::new(Torin::new())),
             paragraphs: ParagraphElements::default(),
             layers: Layers::default(),
+            multi_layer_renderer: MultiLayerRenderer::default()
         }
     }
 }
@@ -156,6 +156,10 @@ impl FreyaDOM {
 
     pub fn paragraphs(&self) -> &ParagraphElements {
         &self.paragraphs
+    }
+
+    pub fn multi_layer_renderer(&self) -> &MultiLayerRenderer {
+        &self.multi_layer_renderer
     }
 
     /// Create the initial DOM from the given Mutations
@@ -175,6 +179,7 @@ impl FreyaDOM {
         ctx.insert(self.torin.clone());
         ctx.insert(self.layers.clone());
         ctx.insert(self.paragraphs.clone());
+        ctx.insert(self.multi_layer_renderer.clone());
 
         self.rdom.update_state(ctx);
     }
@@ -197,6 +202,7 @@ impl FreyaDOM {
         ctx.insert(self.torin.clone());
         ctx.insert(self.layers.clone());
         ctx.insert(self.paragraphs.clone());
+        ctx.insert(self.multi_layer_renderer.clone());
 
         // Update the Node's states
         let (_, diff) = self.rdom.update_state(ctx);
