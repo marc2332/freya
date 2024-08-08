@@ -60,7 +60,7 @@ winit = "0.30.0"
 tokio = { version = "1.33.0", features = ["sync", "rt-multi-thread", "time", "macros"] }
 accesskit = { version = "0.16.0", features = ["serde"]}
 accesskit_winit = "0.22.0"
-shipyard = { version = "0.6.2", features = ["proc", "std", "parallel"], default-features = false }
+shipyard = { version = "0.7.0", features = ["proc", "std", "parallel"], default-features = false }
 smallvec = "1.13.1"
 
 euclid = "0.22.9"
