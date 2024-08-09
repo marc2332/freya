@@ -35,7 +35,7 @@ macro_rules! import_svg {
             rsx!(svg {
                 width,
                 height,
-                svg_content
+                svg_content,
             })
         }
     };

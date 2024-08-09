@@ -9,7 +9,7 @@ use freya::{
 };
 
 fn main() {
-    dioxus_hot_reload::hot_reload_init!(Config::<FreyaCtx>::default());
+    //dioxus_hot_reload::hot_reload_init!(Config::<FreyaCtx>::default());
 
     launch(app);
 }

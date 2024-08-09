@@ -36,10 +36,10 @@ fn app() -> Element {
         rect {
             width: "100%",
             height: "100%",
-            Child {},
-            Child {},
-            Child {},
-            Child {},
+            Child {}
+            Child {}
+            Child {}
+            Child {}
             Child {}
         }
     )

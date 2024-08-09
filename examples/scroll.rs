@@ -27,8 +27,8 @@ fn app() -> Element {
                 theme: theme_with!(ScrollViewTheme {
                     height: "50%".into(),
                 }),
-                Card {},
-                Card {},
+                Card {}
+                Card {}
                 Card {}
             }
         }

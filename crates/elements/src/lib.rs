@@ -6,7 +6,11 @@
 pub mod _docs;
 
 mod definitions;
+pub mod events;
+
 pub mod elements {
     pub use crate::definitions::*;
+    pub use crate::events::*;
 }
-pub mod events;
+
+pub use crate::definitions::*;

@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_engine::prelude::*;
 use freya_node_state::{
     Border,
@@ -60,7 +60,7 @@ pub fn GradientProperty(name: String, fill: Fill) -> Element {
                 text {
                     font_size: "15",
                     color: "rgb(252,181,172)",
-                    "{fill}",
+                    "{fill}"
                 }
             }
         }
@@ -109,7 +109,7 @@ pub fn ColorProperty(name: String, fill: Fill) -> Element {
             label {
                 font_size: "15",
                 color: "rgb(252,181,172)",
-                "{fill}",
+                "{fill}"
             }
         }
     )

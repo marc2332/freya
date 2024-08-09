@@ -64,7 +64,7 @@ fn app() -> Element {
     // Flat the items
     let flat_items = {
         let tree = tree.read();
-        let tree = tree.as_ref()?;
+        let tree = tree.as_ref().unwrap_or_default();
         tree.iter()
             .flat_map(|tree| tree.flat(0, tree.id()))
             .collect::<Vec<FlatFileItem>>()

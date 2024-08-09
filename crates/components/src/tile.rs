@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_applied_theme,
     use_focus,
@@ -75,11 +75,6 @@ pub fn Tile(
             onmouseleave,
             focus_id,
             direction: "horizontal",
-            onclick: move |_| {
-                if let Some(onclick) = &onclick {
-                    onclick.call(());
-                }
-            },
             padding: "{padding}",
             cross_align: "center",
             if let Some(leading) = leading {

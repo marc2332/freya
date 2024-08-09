@@ -13,6 +13,7 @@ use tokio::sync::{
     mpsc::unbounded_channel,
     watch,
 };
+use dioxus_signals::GlobalSignal;
 use winit::window::CursorIcon;
 
 use crate::{

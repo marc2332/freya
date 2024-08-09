@@ -110,7 +110,7 @@ fn App(props: AppProps) -> Element {
             rect {
                 width: "100%",
                 height: "100%",
-                {props.navbar},
+                {props.navbar}
                 {props.body}
             }
         }

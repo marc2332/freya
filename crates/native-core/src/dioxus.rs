@@ -294,9 +294,9 @@ fn create_template_node<V: FromAnyValue + Send + Sync>(
         }
         TemplateNode::Text { text } => rdom.create_node(NodeType::Text(text.to_string())).id(),
         TemplateNode::Dynamic { .. } => rdom.create_node(NodeType::Placeholder).id(),
-        TemplateNode::DynamicText { .. } => {
-            rdom.create_node(NodeType::Text(String::default())).id()
-        }
+        // TemplateNode::DynamicText { .. } => {
+        //     rdom.create_node(NodeType::Text(String::default())).id()
+        // }
     }
 }
 

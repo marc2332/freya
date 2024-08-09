@@ -102,7 +102,7 @@ fn Scaffold(props: ScaffoldProps) -> Element {
 
                 }
             }
-            {props.navbar},
+            {props.navbar}
             ScrollView {
                 theme: theme_with!(ScrollViewTheme {
                     height: height.into(),

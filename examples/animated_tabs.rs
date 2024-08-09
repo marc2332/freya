@@ -145,15 +145,15 @@ fn AppSidebar() -> Element {
                         route: Route::Home,
                         exact: true,
                         "Go to Hey ! 👋"
-                    },
+                    }
                     BottomTab {
                         route: Route::Wow,
                         "Go to Wow! 👈"
-                    },
+                    }
                     BottomTab {
                         route: Route::Crab,
                         "Go to Crab! 🦀"
-                    },
+                    }
                 }
 
             }

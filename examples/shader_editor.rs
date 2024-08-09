@@ -58,7 +58,7 @@ fn app() -> Element {
                 direction: "horizontal",
                 ShaderEditor {
                     editable
-                },
+                }
                 ShaderView {
                     editable
                 }
