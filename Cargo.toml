@@ -86,6 +86,7 @@ dioxus-router = { workspace = true }
 itertools = "0.13.0"
 home = "0.5.9"
 dioxus-query = "0.5.1"
+gl = { workspace = true }
 
 [profile.release]
 lto = true
