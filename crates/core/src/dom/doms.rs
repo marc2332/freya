@@ -6,7 +6,10 @@ use std::sync::{
 
 use dioxus_core::VirtualDom;
 use freya_common::{
-    Layers, MultiLayerRenderer, ParagraphElements, TextGroupMeasurement
+    Layers,
+    MultiLayerRenderer,
+    ParagraphElements,
+    TextGroupMeasurement,
 };
 use freya_native_core::{
     prelude::{
@@ -117,7 +120,7 @@ pub struct FreyaDOM {
     torin: Arc<Mutex<Torin<NodeId>>>,
     paragraphs: ParagraphElements,
     layers: Layers,
-    multi_layer_renderer: MultiLayerRenderer
+    multi_layer_renderer: MultiLayerRenderer,
 }
 
 impl Default for FreyaDOM {
@@ -140,7 +143,7 @@ impl Default for FreyaDOM {
             torin: Arc::new(Mutex::new(Torin::new())),
             paragraphs: ParagraphElements::default(),
             layers: Layers::default(),
-            multi_layer_renderer: MultiLayerRenderer::default()
+            multi_layer_renderer: MultiLayerRenderer::default(),
         }
     }
 }

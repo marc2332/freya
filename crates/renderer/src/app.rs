@@ -399,26 +399,30 @@ impl Application {
             skia_renderer.canvas.clear(Color::WHITE);
         }
 
-        process_render(&fdom, self.full_render, |fdom, node_id, layout_node, layout| {
-            let render_wireframe = if let Some(hovered_node) = &hovered_node {
-                hovered_node
-                    .lock()
-                    .unwrap()
-                    .map(|id| id == *node_id)
-                    .unwrap_or_default()
-            } else {
-                false
-            };
-            if let Some(dioxus_node) = fdom.rdom().get(*node_id) {
-                skia_renderer.render(
-                    fdom.rdom(),
-                    layout_node,
-                    &dioxus_node,
-                    render_wireframe,
-                    layout,
-                );
-            }
-        });
+        process_render(
+            &fdom,
+            self.full_render,
+            |fdom, node_id, layout_node, layout| {
+                let render_wireframe = if let Some(hovered_node) = &hovered_node {
+                    hovered_node
+                        .lock()
+                        .unwrap()
+                        .map(|id| id == *node_id)
+                        .unwrap_or_default()
+                } else {
+                    false
+                };
+                if let Some(dioxus_node) = fdom.rdom().get(*node_id) {
+                    skia_renderer.render(
+                        fdom.rdom(),
+                        layout_node,
+                        &dioxus_node,
+                        render_wireframe,
+                        layout,
+                    );
+                }
+            },
+        );
 
         self.full_render = false
     }

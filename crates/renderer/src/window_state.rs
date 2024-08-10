@@ -253,8 +253,7 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
         surface
             .canvas()
             .scale((scale_factor as f32, scale_factor as f32));
-        surface
-            .canvas().clear(Color::WHITE);
+        surface.canvas().clear(Color::WHITE);
 
         let mut app = Application::new(
             sdom,
