@@ -1,4 +1,3 @@
-use dioxus::prelude::*;
 use freya::prelude::*;
 use freya_testing::prelude::*;
 
