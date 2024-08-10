@@ -58,7 +58,14 @@ impl Display for NodeReference {
     }
 }
 
-pub type CanvasRunner = dyn Fn(&Canvas, &mut FontCollection, Area, f32) + Sync + Send + 'static;
+pub struct CanvasRunnerContext<'a> {
+    pub canvas: &'a Canvas,
+    pub font_collection: &'a mut FontCollection,
+    pub area: Area,
+    pub scale_factor: f32,
+}
+
+pub type CanvasRunner = dyn Fn(&mut CanvasRunnerContext) + Sync + Send + 'static;
 
 /// Canvas Reference
 #[derive(Clone)]
