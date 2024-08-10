@@ -291,7 +291,7 @@ struct TriangleRenderer {
     vbo: gl::types::GLuint,
     width: i32,
     height: i32,
-    color_location: gl::types::GLint
+    color_location: gl::types::GLint,
 }
 
 impl Drop for TriangleRenderer {
@@ -309,7 +309,7 @@ impl Drop for TriangleRenderer {
 
 impl TriangleRenderer {
     fn new() -> TriangleRenderer {
-        return TriangleRenderer {
+        TriangleRenderer {
             fbo: 0,
             program: 0,
             texture: 0,
@@ -318,23 +318,17 @@ impl TriangleRenderer {
             vbo: 0,
             width: 0,
             height: 0,
-            color_location: 0
+            color_location: 0,
         }
     }
-
-    fn render(&mut self, color: (f64, f64, f64), ctx: &mut CanvasRunnerContext) {
+    fn allocate_texture(&mut self, ctx: &mut CanvasRunnerContext) {
         let current_width = ctx.area.width().round() as i32;
         let current_height = ctx.area.height().round() as i32;
-
+        let mut create_image = false;
         unsafe {
-            if self.fbo == 0 {
-                // create framebuffer and texture
-                let mut framebuffer: gl::types::GLuint = 0;
-                let mut texture: gl::types::GLuint = 0;
-                gl::GenFramebuffers(1, &mut framebuffer);
-                gl::BindFramebuffer(gl::FRAMEBUFFER, framebuffer);
-                gl::GenTextures(1, &mut texture);
-                gl::BindTexture(gl::TEXTURE_2D, texture);
+            if self.texture == 0 {
+                gl::GenTextures(1, &mut self.texture);
+                gl::BindTexture(gl::TEXTURE_2D, self.texture);
                 gl::TexImage2D(
                     gl::TEXTURE_2D,
                     0,
@@ -348,31 +342,45 @@ impl TriangleRenderer {
                 );
                 gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as gl::types::GLint);
                 gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as gl::types::GLint);
-                gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0, gl::TEXTURE_2D, texture, 0);
-        
-                if gl::CheckFramebufferStatus(gl::FRAMEBUFFER) != gl::FRAMEBUFFER_COMPLETE {
-                    panic!("Framebuffer is not complete!");
+                self.width = current_width;
+                self.height = current_height;
+                create_image = true;
+            } else {
+                // resize texture before rendering if required
+                if self.width != current_width || self.height != current_height {
+                    gl::BindTexture(gl::TEXTURE_2D, self.texture);
+                    gl::TexImage2D(
+                        gl::TEXTURE_2D,
+                        0,
+                        gl::RGB as gl::types::GLint,
+                        current_width,
+                        current_height,
+                        0,
+                        gl::RGB,
+                        gl::UNSIGNED_BYTE,
+                        ptr::null(),
+                    );
+                    self.width = current_width;
+                    self.height = current_height;
+                    create_image = true;
                 }
-        
-                gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
+            }
 
-                self.fbo = framebuffer;
-                self.texture = texture;
-
+            if create_image {
                 let backend_texture = skia_safe::gpu::BackendTexture::new_gl(
-                    (ctx.area.width().round() as i32, ctx.area.height().round() as i32),
+                    (self.width, self.height),
                     skia_safe::gpu::Mipmapped::No,
                     skia_safe::gpu::gl::TextureInfo {
                         target: gl::TEXTURE_2D,
                         format: gl::RGBA8,
                         protected: skia_safe::gpu::Protected::No,
-                        id: texture
+                        id: self.texture,
                     },
                 );
 
                 let mut direct_context = ctx.canvas.direct_context().unwrap();
 
-                self.texture_image  = Image::from_texture(
+                self.texture_image = Image::from_texture(
                     &mut direct_context,
                     &backend_texture,
                     skia_safe::gpu::SurfaceOrigin::TopLeft,
@@ -380,12 +388,32 @@ impl TriangleRenderer {
                     skia_safe::AlphaType::Premul,
                     None,
                 );
+            }
+        }
+    }
+    fn render(&mut self, color: (f64, f64, f64), ctx: &mut CanvasRunnerContext) {
+        unsafe {
+            if self.fbo == 0 {
+                // create framebuffer and texture
+                let mut framebuffer: gl::types::GLuint = 0;
+                gl::GenFramebuffers(1, &mut framebuffer);
+                gl::BindFramebuffer(gl::FRAMEBUFFER, framebuffer);
+                self.allocate_texture(ctx);
+                gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0, gl::TEXTURE_2D, self.texture, 0);
+
+                if gl::CheckFramebufferStatus(gl::FRAMEBUFFER) != gl::FRAMEBUFFER_COMPLETE {
+                    panic!("Framebuffer is not complete!");
+                }
+
+                gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
+
+                self.fbo = framebuffer;
 
                 // create shader program
                 let vertex_shader = compile_shader(VERTEX_SHADER_SOURCE, gl::VERTEX_SHADER);
                 let fragment_shader = compile_shader(FRAGMENT_SHADER_SOURCE, gl::FRAGMENT_SHADER);
                 let program = link_program(vertex_shader, fragment_shader);
-            
+
                 gl::DeleteShader(vertex_shader);
                 gl::DeleteShader(fragment_shader);
                 let color_loc_name = CString::new("u_color").unwrap();
@@ -398,15 +426,15 @@ impl TriangleRenderer {
                     0.5, -0.5, 0.0,  // Bottom-right
                     0.0, 0.5, 0.0   // Top
                 ];
-            
+
                 let mut vao: gl::types::GLuint = 0;
                 let mut vbo: gl::types::GLuint = 0;
-            
+
                 gl::GenVertexArrays(1, &mut vao);
                 gl::GenBuffers(1, &mut vbo);
-        
+
                 gl::BindVertexArray(vao);
-        
+
                 gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
                 gl::BufferData(
                     gl::ARRAY_BUFFER,
@@ -414,21 +442,24 @@ impl TriangleRenderer {
                     vertices.as_ptr() as *const _,
                     gl::STATIC_DRAW,
                 );
-        
+
                 gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 3 * std::mem::size_of::<gl::types::GLfloat>() as gl::types::GLsizei, ptr::null());
                 gl::EnableVertexAttribArray(0);
-        
+
                 gl::BindBuffer(gl::ARRAY_BUFFER, 0);
                 gl::BindVertexArray(0);
-            
+
                 self.vao = vao;
                 self.vbo = vbo;
             }
+
+            self.allocate_texture(ctx);
+
             gl::BindFramebuffer(gl::FRAMEBUFFER, self.fbo);
-            gl::Viewport(0, 0, current_height, current_width);
+            gl::Viewport(0, 0, self.width, self.height);
             gl::ClearColor(0.0, 0.0, 0.0, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
-    
+
             gl::UseProgram(self.program);
             gl::Uniform4f(self.color_location, (color.0 / 100.0) as gl::types::GLfloat, (color.1 / 100.0) as gl::types::GLfloat, (color.2 / 100.0) as gl::types::GLfloat, 1.0 as gl::types::GLfloat);
             gl::BindVertexArray(self.vao);
@@ -442,16 +473,17 @@ fn app() -> Element {
     let mut g: Signal<f64> = use_signal(|| 0.0);
     let mut b = use_signal(|| 0.0);
 
+    let triangle_renderer = use_hook(|| Arc::new(Mutex::new(TriangleRenderer::new())));
+
     let canvas = use_canvas(move || {
-        let triangle_renderer = Arc::new(Mutex::new(TriangleRenderer::new()));
         let color = (*r.read(), *g.read(), *b.read());
+        let triangle_renderer = triangle_renderer.clone();
 
         Box::new(move |ctx| unsafe {
             ctx.canvas.translate((ctx.area.min_x(), ctx.area.min_y()));
             let saved_gl_state = save_gl_state();
             let mut renderer_guard = triangle_renderer.lock().unwrap();
             renderer_guard.render(color, ctx);
-
             ctx.canvas.draw_image(renderer_guard.texture_image.clone().unwrap(), (ctx.area.min_x(), ctx.area.min_y()), None);
             restore_gl_state(&saved_gl_state);
             ctx.canvas.restore();
@@ -459,28 +491,25 @@ fn app() -> Element {
     });
 
     rsx!(
-        Canvas {
-            canvas,
-            theme: theme_with!(CanvasTheme {
-                background: "black".into(),
-                width: "300".into(),
-                height: "300".into(),
-            })
-        }
-        Slider {
-            width: "300",
-            value: *r.read(),
-            onmoved: move |value: f64| { r.set(value) }
-        }
-        Slider {
-            width: "300",
-            value: *g.read(),
-            onmoved: move |value: f64| { g.set(value) }
-        }
-        Slider {
-            width: "300",
-            value: *b.read(),
-            onmoved: move |value: f64| { b.set(value) }
+        rect {
+            canvas_reference: canvas.attribute(),
+            width: "100%",
+            height: "100%",
+            Slider {
+                width: "300",
+                value: *r.read(),
+                onmoved: move |value: f64| { r.set(value) }
+            }
+            Slider {
+                width: "300",
+                value: *g.read(),
+                onmoved: move |value: f64| { g.set(value) }
+            }
+            Slider {
+                width: "300",
+                value: *b.read(),
+                onmoved: move |value: f64| { b.set(value) }
+            }
         }
     )
 }
