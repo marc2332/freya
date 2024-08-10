@@ -359,6 +359,28 @@ impl TriangleRenderer {
                 self.fbo = framebuffer;
                 self.texture = texture;
 
+                let backend_texture = skia_safe::gpu::BackendTexture::new_gl(
+                    (ctx.area.width().round() as i32, ctx.area.height().round() as i32),
+                    skia_safe::gpu::Mipmapped::No,
+                    skia_safe::gpu::gl::TextureInfo {
+                        target: gl::TEXTURE_2D,
+                        format: gl::RGBA8,
+                        protected: skia_safe::gpu::Protected::No,
+                        id: texture
+                    },
+                );
+
+                let mut direct_context = ctx.canvas.direct_context().unwrap();
+
+                self.texture_image  = Image::from_texture(
+                    &mut direct_context,
+                    &backend_texture,
+                    skia_safe::gpu::SurfaceOrigin::TopLeft,
+                    skia_safe::ColorType::RGBA8888,
+                    skia_safe::AlphaType::Premul,
+                    None,
+                );
+
                 // create shader program
                 let vertex_shader = compile_shader(VERTEX_SHADER_SOURCE, gl::VERTEX_SHADER);
                 let fragment_shader = compile_shader(FRAGMENT_SHADER_SOURCE, gl::FRAGMENT_SHADER);
@@ -430,30 +452,7 @@ fn app() -> Element {
             let mut renderer_guard = triangle_renderer.lock().unwrap();
             renderer_guard.render(color, ctx);
 
-            // we can't cache Image, since it will increment reference to DirectContext and
-            // and introduce deadlock on app closing.
-
-            let backend_texture = skia_safe::gpu::BackendTexture::new_gl(
-                (ctx.area.width().round() as i32, ctx.area.height().round() as i32),
-                skia_safe::gpu::Mipmapped::No,
-                skia_safe::gpu::gl::TextureInfo {
-                    target: gl::TEXTURE_2D,
-                    format: gl::RGBA8,
-                    protected: skia_safe::gpu::Protected::No,
-                    id: renderer_guard.texture
-                },
-            );
-
-            let mut direct_context = ctx.canvas.direct_context().unwrap();
-            let img = Image::from_texture(
-                &mut direct_context,
-                &backend_texture,
-                skia_safe::gpu::SurfaceOrigin::TopLeft,
-                skia_safe::ColorType::RGBA8888,
-                skia_safe::AlphaType::Premul,
-                None,
-            ).unwrap();
-            ctx.canvas.draw_image(img, (ctx.area.min_x(), ctx.area.min_y()), None);
+            ctx.canvas.draw_image(renderer_guard.texture_image.clone().unwrap(), (ctx.area.min_x(), ctx.area.min_y()), None);
             restore_gl_state(&saved_gl_state);
             ctx.canvas.restore();
         })
