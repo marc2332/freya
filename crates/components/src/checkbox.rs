@@ -131,7 +131,7 @@ mod test {
                         Checkbox {
                             selected: selected.read().contains(&Choice::First),
                         }
-                    )
+                    ),
                     label { "First choice" }
                 }
                 Tile {
@@ -146,7 +146,7 @@ mod test {
                         Checkbox {
                             selected: selected.read().contains(&Choice::Second),
                         }
-                    )
+                    ),
                     label { "Second choice" }
                 }
                 Tile {
@@ -161,7 +161,7 @@ mod test {
                         Checkbox {
                             selected: selected.read().contains(&Choice::Third),
                         }
-                    )
+                    ),
                     label { "Third choice" }
                 }
             )

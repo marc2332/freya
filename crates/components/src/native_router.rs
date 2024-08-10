@@ -104,7 +104,7 @@ mod test {
                         label {
                             "Got to B"
                         }
-                    },
+                    }
                     Outlet::<Route> {  }
                 }
             )

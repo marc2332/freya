@@ -22,7 +22,7 @@ pub fn NodeElement(
 ) -> Element {
     let mut status = use_signal(ButtonStatus::default);
     let Some(node) = use_node_info(node_id) else {
-        return Ok(VNode::placeholder())
+        return Ok(VNode::placeholder());
     };
 
     let onmousedown = move |_| onselected.call(());

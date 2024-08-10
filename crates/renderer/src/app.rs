@@ -1,9 +1,6 @@
 use std::sync::Arc;
 
-use dioxus_core::{
-    Template,
-    VirtualDom,
-};
+use dioxus_core::VirtualDom;
 use freya_common::{
     EventMessage,
     TextGroupMeasurement,

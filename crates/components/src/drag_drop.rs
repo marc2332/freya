@@ -159,7 +159,7 @@ mod test {
                                 "Move"
                             }
                         }
-                    },
+                    }
                     DropZone {
                         ondrop: move |data: bool| {
                             state.set(data);

@@ -17,7 +17,7 @@ use crate::{
 pub fn NodeInspectorLayout(node_id: String) -> Element {
     let node_id = NodeId::deserialize(&node_id);
     let Some(node) = use_node_info(node_id) else {
-        return Ok(VNode::placeholder())
+        return Ok(VNode::placeholder());
     };
 
     let inner_area = format!(

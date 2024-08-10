@@ -9,8 +9,10 @@ mod definitions;
 pub mod events;
 
 pub mod elements {
-    pub use crate::definitions::*;
-    pub use crate::events::*;
+    pub use crate::{
+        definitions::*,
+        events::*,
+    };
 }
 
 pub use crate::definitions::*;

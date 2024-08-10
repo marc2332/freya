@@ -45,7 +45,6 @@ pub fn ScrollThumb(
         ScrollThumbState::Hovering => theme.hover_thumb_background,
     };
 
-    
     rsx!(
         rect {
             onmouseenter: move |_: MouseEvent| { state.set(ScrollThumbState::Hovering) },

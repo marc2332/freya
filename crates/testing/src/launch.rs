@@ -4,6 +4,7 @@ use dioxus_core::{
     VirtualDom,
 };
 use dioxus_core_macro::rsx;
+use dioxus_signals::GlobalSignal;
 use freya_common::EventMessage;
 use freya_components::NativeContainer;
 use freya_core::prelude::*;
@@ -13,7 +14,6 @@ use tokio::sync::{
     mpsc::unbounded_channel,
     watch,
 };
-use dioxus_signals::GlobalSignal;
 use winit::window::CursorIcon;
 
 use crate::{

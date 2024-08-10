@@ -188,7 +188,7 @@ fn BottomTab<R: Routable + PartialEq>(
                         main_align: "center",
                         {children}
                     }
-                },
+                }
             }
         }
     )

@@ -251,7 +251,7 @@ mod test {
                 onchange: move |new_value| {
                     value.set(new_value);
                 }
-            },)
+            })
         }
 
         let mut utils = launch_test(input_app);
