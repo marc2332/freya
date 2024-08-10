@@ -90,8 +90,7 @@ impl AssetCacher {
         }
 
         // Insert the asset into the cache
-        let value = ScopeId::ROOT.in_runtime(|| asset_bytes);
-        let asset_bytes = Signal::new_in_scope(value, ScopeId::ROOT);
+        let asset_bytes = Signal::new_in_scope(asset_bytes, ScopeId::ROOT);
 
         self.registry.write().insert(
             asset_config.clone(),

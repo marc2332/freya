@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use freya::prelude::use_platform_information;
+use freya::prelude::*;
 use freya_testing::prelude::*;
 
 #[tokio::test]

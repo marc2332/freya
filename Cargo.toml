@@ -22,6 +22,9 @@ dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus", rev = "0bb81aba
 dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "0bb81aba6eeb36df96b3e6943288fa3a2cc25cdd" }
 dioxus-hot-reload = { git = "https://github.com/DioxusLabs/dioxus", rev = "0bb81aba6eeb36df96b3e6943288fa3a2cc25cdd" }
 dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev = "0bb81aba6eeb36df96b3e6943288fa3a2cc25cdd" }
+dioxus-lib = { git = "https://github.com/DioxusLabs/dioxus", rev = "0bb81aba6eeb36df96b3e6943288fa3a2cc25cdd" }
+generational-box = { git = "https://github.com/DioxusLabs/dioxus", rev = "0bb81aba6eeb36df96b3e6943288fa3a2cc25cdd" }
+dioxus-sdk = { git = "https://github.com/DioxusLabs/sdk", branch = "feat/dioxus-0.6" }
 
 [workspace.dependencies]
 freya = { path = "crates/freya", version = "0.2" }
@@ -40,15 +43,15 @@ torin = { path = "crates/torin", version = "0.2" }
 freya-native-core-macro = { path = "crates/native-core-macro", version = "0.2" }
 freya-native-core = { path = "crates/native-core", version = "0.2" }
 
-dioxus = { version = "0.6.0-alpha.2" }
+dioxus = { version = "0.6.0-alpha.2" , default-features = false, features = ["macro", "signals", "hooks"] }
 dioxus-rsx =  { version = "0.6.0-alpha.2" }
 dioxus-core-macro =  { version = "0.6.0-alpha.2" }
 dioxus-hooks = { version = "0.6.0-alpha.2" }
 dioxus-signals =  { version = "0.6.0-alpha.2" }
 dioxus-core =  { version = "0.6.0-alpha.2" }
 dioxus-hot-reload =  { version = "0.6.0-alpha.2" }
-dioxus-router =  { version = "0.6.0-alpha.2" }
-dioxus-sdk = { version = "0.5", features = ["clipboard"]}
+dioxus-router =  { version = "0.6.0-alpha.2", default-features = false }
+dioxus-sdk = { git = "https://github.com/DioxusLabs/sdk", branch = "feat/dioxus-0.6", features = ["clipboard"]}
 
 skia-safe = { version = "0.75.0", features = ["gl", "textlayout", "svg"] }
 
@@ -80,7 +83,7 @@ freya-core = { workspace = true }
 freya-testing = { workspace = true }
 reqwest = { version = "0.12.0", features = ["json"] }
 serde = "1.0.189"
-dioxus-sdk = { version = "0.5", features = ["i18n"] }
+dioxus-sdk = { git = "https://github.com/DioxusLabs/sdk", branch = "feat/dioxus-0.6",  features = ["i18n"] }
 rand = "0.8.5"
 dioxus-router = { workspace = true }
 itertools = "0.13.0"
