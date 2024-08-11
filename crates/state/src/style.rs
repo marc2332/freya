@@ -1,4 +1,4 @@
-use freya_common::MultiLayerRenderer;
+use freya_common::CompositorDirtyNodes;
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
@@ -159,7 +159,7 @@ impl State<CustomAttributeValues> for StyleState {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         context: &SendAnyMap,
     ) -> bool {
-        let multi_layer_renderer = context.get::<MultiLayerRenderer>().unwrap();
+        let compositor_dirty_nodes = context.get::<CompositorDirtyNodes>().unwrap();
         let mut style = StyleState::default();
 
         if let Some(attributes) = node_view.attributes() {
@@ -171,7 +171,7 @@ impl State<CustomAttributeValues> for StyleState {
         let changed = &style != self;
 
         if changed {
-            multi_layer_renderer.invalidate(node_view.node_id())
+            compositor_dirty_nodes.invalidate(node_view.node_id())
         }
 
         *self = style;

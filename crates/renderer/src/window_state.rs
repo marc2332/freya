@@ -62,6 +62,7 @@ pub struct NotCreatedState<'a, State: Clone + 'static> {
 }
 
 pub struct CreatedState {
+    pub(crate) app: Application,
     pub(crate) gr_context: DirectContext,
     pub(crate) surface: Surface,
     pub(crate) gl_surface: GlutinSurface<WindowSurface>,
@@ -71,7 +72,6 @@ pub struct CreatedState {
     pub(crate) fb_info: FramebufferInfo,
     pub(crate) num_samples: usize,
     pub(crate) stencil_size: usize,
-    pub(crate) app: Application,
     pub(crate) is_window_focused: bool,
 }
 

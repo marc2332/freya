@@ -3,6 +3,8 @@ use dioxus_core::{
     WriteMutations,
 };
 use freya_common::{
+    Compositor,
+    CompositorDirtyNodes,
     Layers,
     ParagraphElements,
 };
@@ -29,6 +31,8 @@ pub struct MutationsWriter<'a> {
     pub layers: &'a Layers,
     pub paragraphs: &'a ParagraphElements,
     pub scale_factor: f32,
+    pub compositor_dirty_nodes: &'a CompositorDirtyNodes,
+    pub compositor: &'a mut Compositor,
 }
 
 impl<'a> MutationsWriter<'a> {
@@ -70,13 +74,18 @@ impl<'a> MutationsWriter<'a> {
                 }
 
                 // Remove from layers
-                self.layers
+                let layer_was_removed = self
+                    .layers
                     .remove_node_from_layer(node_id, layer_state.layer);
 
                 // Remove from paragraph elements
                 if let Some(cursor_ref) = cursor_state.cursor_ref.as_ref() {
                     self.paragraphs
                         .remove_paragraph(node_id, &cursor_ref.text_id);
+                }
+
+                if layer_was_removed {
+                    self.compositor.remove_layer(layer_state.layer);
                 }
             }
         }
@@ -143,6 +152,8 @@ impl<'a> WriteMutations for MutationsWriter<'a> {
     }
 
     fn set_node_text(&mut self, value: &str, id: dioxus_core::ElementId) {
+        self.compositor_dirty_nodes
+            .invalidate(self.native_writer.state.element_to_node_id(id));
         self.layout
             .invalidate(self.native_writer.state.element_to_node_id(id));
         self.native_writer.set_node_text(value, id);

@@ -29,7 +29,6 @@ use crate::{
 
 pub struct SkiaRenderer<'a> {
     pub canvas_area: Area,
-    pub canvas: &'a Canvas,
     pub font_collection: &'a mut FontCollection,
     pub font_manager: &'a FontMgr,
     pub matrices: Vec<(Matrix, Vec<NodeId>)>,
@@ -47,6 +46,7 @@ impl SkiaRenderer<'_> {
         node_ref: &DioxusNode,
         render_wireframe: bool,
         layout: &Torin<NodeId>,
+        canvas: &Canvas,
     ) {
         let area = layout_node.visible_area();
         let node_type = &*node_ref.node_type();
@@ -55,7 +55,7 @@ impl SkiaRenderer<'_> {
                 return;
             };
 
-            let initial_layer = self.canvas.save();
+            let initial_layer = canvas.save();
 
             let node_transform = &*node_ref.get::<TransformState>().unwrap();
             let node_style = &*node_ref.get::<StyleState>().unwrap();
@@ -82,7 +82,7 @@ impl SkiaRenderer<'_> {
             // Apply inherited matrices
             for (matrix, nodes) in self.matrices.iter_mut() {
                 if nodes.contains(&node_ref.id()) {
-                    self.canvas.concat(matrix);
+                    canvas.concat(matrix);
 
                     nodes.extend(node_ref.child_ids());
                 }
@@ -91,7 +91,7 @@ impl SkiaRenderer<'_> {
             // Apply inherited opacity effects
             for (opacity, nodes) in self.opacities.iter_mut() {
                 if nodes.contains(&node_ref.id()) {
-                    self.canvas.save_layer_alpha_f(
+                    canvas.save_layer_alpha_f(
                         Rect::new(
                             self.canvas_area.min_x(),
                             self.canvas_area.min_y(),
@@ -111,7 +111,7 @@ impl SkiaRenderer<'_> {
             // it will render the inner text spans on it's own, so if these spans overflow the paragraph,
             // It is the paragraph job to make sure they are clipped
             if !node_viewports.viewports.is_empty() && *tag == TagName::Paragraph {
-                element_utils.clip(layout_node, node_ref, self.canvas, self.scale_factor);
+                element_utils.clip(layout_node, node_ref, canvas, self.scale_factor);
             }
 
             for node_id in &node_viewports.viewports {
@@ -121,13 +121,13 @@ impl SkiaRenderer<'_> {
                     continue;
                 };
                 let layout_node = layout.get(*node_id).unwrap();
-                element_utils.clip(layout_node, &node_ref, self.canvas, self.scale_factor);
+                element_utils.clip(layout_node, &node_ref, canvas, self.scale_factor);
             }
 
             element_utils.render(
                 layout_node,
                 node_ref,
-                self.canvas,
+                canvas,
                 self.font_collection,
                 self.font_manager,
                 self.default_fonts,
@@ -135,10 +135,10 @@ impl SkiaRenderer<'_> {
             );
 
             if render_wireframe {
-                wireframe_renderer::render_wireframe(self.canvas, &area);
+                wireframe_renderer::render_wireframe(canvas, &area);
             }
 
-            self.canvas.restore_to_count(initial_layer);
+            canvas.restore_to_count(initial_layer);
         }
     }
 }

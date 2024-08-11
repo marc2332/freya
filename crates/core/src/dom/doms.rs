@@ -6,8 +6,9 @@ use std::sync::{
 
 use dioxus_core::VirtualDom;
 use freya_common::{
+    Compositor,
+    CompositorDirtyNodes,
     Layers,
-    MultiLayerRenderer,
     ParagraphElements,
     TextGroupMeasurement,
 };
@@ -120,7 +121,7 @@ pub struct FreyaDOM {
     torin: Arc<Mutex<Torin<NodeId>>>,
     paragraphs: ParagraphElements,
     layers: Layers,
-    multi_layer_renderer: MultiLayerRenderer,
+    compositor_dirty_nodes: CompositorDirtyNodes,
 }
 
 impl Default for FreyaDOM {
@@ -143,7 +144,7 @@ impl Default for FreyaDOM {
             torin: Arc::new(Mutex::new(Torin::new())),
             paragraphs: ParagraphElements::default(),
             layers: Layers::default(),
-            multi_layer_renderer: MultiLayerRenderer::default(),
+            compositor_dirty_nodes: CompositorDirtyNodes::default(),
         }
     }
 }
@@ -161,12 +162,17 @@ impl FreyaDOM {
         &self.paragraphs
     }
 
-    pub fn multi_layer_renderer(&self) -> &MultiLayerRenderer {
-        &self.multi_layer_renderer
+    pub fn compositor_dirty_nodes(&self) -> &CompositorDirtyNodes {
+        &self.compositor_dirty_nodes
     }
 
     /// Create the initial DOM from the given Mutations
-    pub fn init_dom(&mut self, vdom: &mut VirtualDom, scale_factor: f32) {
+    pub fn init_dom(
+        &mut self,
+        vdom: &mut VirtualDom,
+        scale_factor: f32,
+        compositor: &mut Compositor,
+    ) {
         // Build the RealDOM
         vdom.rebuild(&mut MutationsWriter {
             native_writer: self
@@ -176,19 +182,26 @@ impl FreyaDOM {
             layers: &self.layers,
             paragraphs: &self.paragraphs,
             scale_factor,
+            compositor_dirty_nodes: &self.compositor_dirty_nodes,
+            compositor,
         });
 
         let mut ctx = SendAnyMap::new();
         ctx.insert(self.torin.clone());
         ctx.insert(self.layers.clone());
         ctx.insert(self.paragraphs.clone());
-        ctx.insert(self.multi_layer_renderer.clone());
+        ctx.insert(self.compositor_dirty_nodes.clone());
 
         self.rdom.update_state(ctx);
     }
 
     /// Process the given mutations from the [`VirtualDOM`](dioxus_core::VirtualDom).
-    pub fn render_mutations(&mut self, vdom: &mut VirtualDom, scale_factor: f32) -> (bool, bool) {
+    pub fn render_mutations(
+        &mut self,
+        vdom: &mut VirtualDom,
+        scale_factor: f32,
+        compositor: &mut Compositor,
+    ) -> (bool, bool) {
         // Update the RealDOM
         vdom.render_immediate(&mut MutationsWriter {
             native_writer: self
@@ -198,6 +211,8 @@ impl FreyaDOM {
             layers: &self.layers,
             paragraphs: &self.paragraphs,
             scale_factor,
+            compositor_dirty_nodes: &self.compositor_dirty_nodes,
+            compositor,
         });
 
         // Update the Nodes states
@@ -205,7 +220,7 @@ impl FreyaDOM {
         ctx.insert(self.torin.clone());
         ctx.insert(self.layers.clone());
         ctx.insert(self.paragraphs.clone());
-        ctx.insert(self.multi_layer_renderer.clone());
+        ctx.insert(self.compositor_dirty_nodes.clone());
 
         // Update the Node's states
         let (_, diff) = self.rdom.update_state(ctx);

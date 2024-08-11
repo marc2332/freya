@@ -5,6 +5,7 @@ use dioxus_core::{
     VirtualDom,
 };
 use freya_common::{
+    Compositor,
     EventMessage,
     TextGroupMeasurement,
 };
@@ -48,6 +49,7 @@ use crate::{
 pub struct Application {
     pub(crate) sdom: SafeDOM,
     pub(crate) vdom: VirtualDom,
+    pub(crate) compositor: Compositor,
     pub(crate) events: EventsQueue,
     pub(crate) vdom_waker: Waker,
     pub(crate) proxy: EventLoopProxy<EventMessage>,
@@ -63,7 +65,6 @@ pub struct Application {
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) plugins: PluginsManager,
     pub(crate) measure_layout_on_next_render: bool,
-    pub(crate) full_render: bool,
     pub(crate) default_fonts: Vec<String>,
     pub(crate) queued_focus_node: Option<AccessibilityId>,
 }
@@ -125,9 +126,9 @@ impl Application {
             ticker_sender: broadcast::channel(5).0,
             plugins,
             measure_layout_on_next_render: false,
-            full_render: false,
             default_fonts,
             queued_focus_node: None,
+            compositor: Compositor::default(),
         }
     }
 
@@ -150,7 +151,9 @@ impl Application {
 
         self.provide_vdom_contexts(app_state);
 
-        self.sdom.get_mut().init_dom(&mut self.vdom, scale_factor);
+        self.sdom
+            .get_mut()
+            .init_dom(&mut self.vdom, scale_factor, &mut self.compositor);
         self.plugins.send(PluginEvent::FinishedUpdatingDOM);
     }
 
@@ -158,10 +161,11 @@ impl Application {
     pub fn render_mutations(&mut self, scale_factor: f32) -> (bool, bool) {
         self.plugins.send(PluginEvent::StartedUpdatingDOM);
 
-        let (repaint, relayout) = self
-            .sdom
-            .get_mut()
-            .render_mutations(&mut self.vdom, scale_factor);
+        let (repaint, relayout) = self.sdom.get_mut().render_mutations(
+            &mut self.vdom,
+            scale_factor,
+            &mut self.compositor,
+        );
 
         self.plugins.send(PluginEvent::FinishedUpdatingDOM);
 
@@ -292,7 +296,7 @@ impl Application {
     /// Resize the Window
     pub fn resize(&mut self, window: &Window) {
         self.measure_layout_on_next_render = true;
-        self.full_render = true;
+        self.compositor.reset();
         self.sdom.get().layout().reset();
         self.platform_sender.send_modify(|state| {
             state.information = PlatformInformation::from_winit(window);
@@ -386,7 +390,6 @@ impl Application {
             canvas_area: Area::from_size(
                 (windows_size.width as f32, windows_size.height as f32).into(),
             ),
-            canvas,
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,
             matrices,
@@ -395,14 +398,11 @@ impl Application {
             scale_factor,
         };
 
-        if self.full_render {
-            skia_renderer.canvas.clear(Color::WHITE);
-        }
-
         process_render(
             &fdom,
-            self.full_render,
-            |fdom, node_id, layout_node, layout| {
+            canvas,
+            &self.compositor,
+            |fdom, node_id, layout_node, layout, canvas| {
                 let render_wireframe = if let Some(hovered_node) = &hovered_node {
                     hovered_node
                         .lock()
@@ -419,11 +419,10 @@ impl Application {
                         &dioxus_node,
                         render_wireframe,
                         layout,
+                        canvas,
                     );
                 }
             },
         );
-
-        self.full_render = false
     }
 }

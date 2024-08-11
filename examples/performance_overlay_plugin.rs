@@ -42,6 +42,7 @@ fn app() -> Element {
             width: "100%",
             height: "100%",
             main_align: "center",
+            background: "white",
             for i in 0..32 {
                 rect {
                     offset_x: "{progress - i as f32 * 10.0}",

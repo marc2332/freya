@@ -1,3 +1,13 @@
+use freya_common::{
+    Compositor,
+    LayerState,
+};
+use freya_engine::prelude::{
+    Canvas,
+    Color,
+    IPoint,
+    SamplingOptions,
+};
 use freya_native_core::{
     real_dom::NodeImmutable,
     NodeId,
@@ -13,83 +23,86 @@ use crate::dom::FreyaDOM;
 
 pub fn process_render(
     fdom: &FreyaDOM,
-    full_render: bool,
-    mut render_fn: impl FnMut(&FreyaDOM, &NodeId, &LayoutNode, &Torin<NodeId>),
+    canvas: &Canvas,
+    compositor: &Compositor,
+    mut render_fn: impl FnMut(&FreyaDOM, &NodeId, &LayoutNode, &Torin<NodeId>, &Canvas),
 ) {
     let layout = fdom.layout();
     let rdom = fdom.rdom();
     let layers = fdom.layers();
-    let multi_layer_renderer = fdom.multi_layer_renderer();
+    let compositor_dirty_nodes = fdom.compositor_dirty_nodes();
 
-    let rendering_layers = if full_render {
-        layers
-    } else {
-        &multi_layer_renderer.run(
-            |node| {
-                let node = rdom.get(node).unwrap();
-
+    compositor.run(
+        compositor_dirty_nodes,
+        canvas,
+        |node, try_traverse_children| {
+            let node = rdom.get(node);
+            if let Some(node) = node {
                 let traverse_children = node
                     .node_type()
                     .tag()
                     .map(|tag| !tag.contains_text())
                     .unwrap_or_default();
-                if traverse_children {
+                let mut affected = if traverse_children && try_traverse_children {
                     node.child_ids()
                 } else {
                     Vec::new()
-                }
-            },
-            layers,
-            |node| layout.get(node).map(|node| node.area),
-        )
-    };
+                };
 
-    let mut total = 0;
-    for (_, layer) in sorted(layers.layers().iter()) {
-        'elements: for node_id in layer {
-            let node = rdom.get(*node_id).unwrap();
-            let node_viewports = node.get::<ViewportState>().unwrap();
-
-            let layout_node = layout.get(*node_id);
-
-            if let Some(layout_node) = layout_node {
-                // Skip elements that are completely out of any their parent's viewport
-                for viewport_id in &node_viewports.viewports {
-                    let viewport = layout.get(*viewport_id).unwrap().visible_area();
-                    if !viewport.intersects(&layout_node.area) {
-                        continue 'elements;
+                if !node.node_type().is_visible_element() {
+                    if let Some(parent_id) = node.parent_id() {
+                        affected.push(parent_id);
                     }
                 }
-
-                total += 1;
+                affected
+            } else {
+                Vec::new()
             }
-        }
-    }
+        },
+        layers,
+    );
+
+    canvas.clear(Color::WHITE);
+
+    let mut rendering_layers = compositor.rendering_layers.borrow_mut();
+
+    let layers = layers.layers();
 
     // Render all the layers from the bottom to the top
-    let mut painted = 0;
-    for (_, layer) in sorted(rendering_layers.layers().iter()) {
-        'elements: for node_id in layer {
-            let node = rdom.get(*node_id).unwrap();
-            let node_viewports = node.get::<ViewportState>().unwrap();
+    for layer in sorted(rendering_layers.keys().copied().collect::<Vec<i16>>()) {
+        let (ref mut layer_surface, state) = rendering_layers.get_mut(&layer).unwrap();
+        let layer_canvas = layer_surface.canvas();
 
-            let layout_node = layout.get(*node_id);
+        if *state == LayerState::NeedsRender {
+            // Clear the this layer canvas
+            layer_canvas.clear(Color::TRANSPARENT);
 
-            if let Some(layout_node) = layout_node {
-                // Skip elements that are completely out of any their parent's viewport
-                for viewport_id in &node_viewports.viewports {
-                    let viewport = layout.get(*viewport_id).unwrap().visible_area();
-                    if !viewport.intersects(&layout_node.area) {
-                        continue 'elements;
+            let nodes = layers.get(&layer).unwrap();
+
+            'elements: for node_id in nodes {
+                let node = rdom.get(*node_id).unwrap();
+                let node_viewports = node.get::<ViewportState>().unwrap();
+
+                let layout_node = layout.get(*node_id);
+
+                if let Some(layout_node) = layout_node {
+                    // Skip elements that are completely out of any their parent's viewport
+                    for viewport_id in &node_viewports.viewports {
+                        let viewport = layout.get(*viewport_id).unwrap().visible_area();
+                        if !viewport.intersects(&layout_node.area) {
+                            continue 'elements;
+                        }
                     }
-                }
 
-                // Render the element
-                render_fn(fdom, node_id, layout_node, &layout);
-                painted += 1;
+                    // Render the element
+                    render_fn(fdom, node_id, layout_node, &layout, layer_canvas);
+                }
             }
         }
+
+        layer_surface.draw(canvas, IPoint::new(0, 0), SamplingOptions::default(), None);
     }
 
-    println!("PAINTED -> {painted}/{}", total)
+    drop(rendering_layers);
+    compositor.reset_invalidated_layers();
 }

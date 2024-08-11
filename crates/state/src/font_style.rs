@@ -3,6 +3,7 @@ use std::sync::{
     Mutex,
 };
 
+use freya_common::CompositorDirtyNodes;
 use freya_engine::prelude::*;
 use freya_native_core::{
     attributes::AttributeName,
@@ -273,6 +274,7 @@ impl State<CustomAttributeValues> for FontStyleState {
         context: &SendAnyMap,
     ) -> bool {
         let torin_layout = context.get::<Arc<Mutex<Torin<NodeId>>>>().unwrap();
+        let compositor_dirty_nodes = context.get::<CompositorDirtyNodes>().unwrap();
 
         let mut font_style = parent.map(|(v,)| v.clone()).unwrap_or_default();
 
@@ -282,13 +284,13 @@ impl State<CustomAttributeValues> for FontStyleState {
             }
         }
 
-        let changed_size = font_style != *self;
+        let changed = &font_style != self;
 
-        if changed_size {
+        if changed {
             torin_layout.lock().unwrap().invalidate(node_view.node_id());
+            compositor_dirty_nodes.invalidate(node_view.node_id());
         }
 
-        let changed = &font_style != self;
         *self = font_style;
         changed
     }

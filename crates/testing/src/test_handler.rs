@@ -8,6 +8,7 @@ use std::{
 
 use dioxus_core::VirtualDom;
 use freya_common::{
+    Compositor,
     EventMessage,
     TextGroupMeasurement,
 };
@@ -72,7 +73,11 @@ impl TestingHandler {
         self.provide_vdom_contexts();
         let sdom = self.utils.sdom();
         let mut fdom = sdom.get();
-        fdom.init_dom(&mut self.vdom, SCALE_FACTOR as f32);
+        fdom.init_dom(
+            &mut self.vdom,
+            SCALE_FACTOR as f32,
+            &mut Compositor::default(),
+        );
     }
 
     /// Get a mutable reference to the current [`TestingConfig`].
@@ -184,11 +189,11 @@ impl TestingHandler {
             .await
             .ok();
 
-        let (must_repaint, must_relayout) = self
-            .utils
-            .sdom()
-            .get_mut()
-            .render_mutations(&mut self.vdom, SCALE_FACTOR as f32);
+        let (must_repaint, must_relayout) = self.utils.sdom().get_mut().render_mutations(
+            &mut self.vdom,
+            SCALE_FACTOR as f32,
+            &mut Compositor::default(),
+        );
 
         self.wait_for_work(self.config.size());
 
@@ -290,9 +295,10 @@ impl TestingHandler {
             raster_n32_premul((width, height)).expect("Failed to create the surface.");
         surface.canvas().clear(Color::WHITE);
 
+        let compositor = Compositor::default();
+
         let mut skia_renderer = SkiaRenderer {
             canvas_area: Area::from_size((width as f32, height as f32).into()),
-            canvas: surface.canvas(),
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,
             matrices: Vec::default(),
@@ -302,11 +308,23 @@ impl TestingHandler {
         };
 
         // Render to the canvas
-        process_render(&fdom, false, |fdom, node_id, layout_node, layout| {
-            if let Some(dioxus_node) = fdom.rdom().get(*node_id) {
-                skia_renderer.render(fdom.rdom(), layout_node, &dioxus_node, false, layout);
-            }
-        });
+        process_render(
+            &fdom,
+            surface.canvas(),
+            &compositor,
+            |fdom, node_id, layout_node, layout, canvas| {
+                if let Some(dioxus_node) = fdom.rdom().get(*node_id) {
+                    skia_renderer.render(
+                        fdom.rdom(),
+                        layout_node,
+                        &dioxus_node,
+                        false,
+                        layout,
+                        canvas,
+                    );
+                }
+            },
+        );
 
         // Capture snapshot
         let image = surface.image_snapshot();
