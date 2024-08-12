@@ -17,11 +17,11 @@ use freya_engine::prelude::{
     Surface,
 };
 use freya_native_core::NodeId;
-use itertools::{
-    sorted,
-    Itertools,
+use itertools::sorted;
+use rustc_hash::{
+    FxHashMap,
+    FxHashSet,
 };
-use rustc_hash::FxHashMap;
 
 use crate::Layers;
 
@@ -71,27 +71,25 @@ impl Compositor {
         layers: &Layers,
     ) {
         let mut dirty_nodes = dirty_nodes.get();
-        let dirty_nodes = dirty_nodes.drain().collect::<Vec<(NodeId, DirtyTarget)>>();
-        let mut invalidated_nodes = Vec::new();
-
-        let mut invalidated_nodes_buffer = dirty_nodes.clone();
+        let (mut invalidated_nodes, mut dirty_nodes) = {
+            (
+                FxHashSet::from_iter(dirty_nodes.keys().copied()),
+                dirty_nodes.drain().collect::<Vec<(NodeId, DirtyTarget)>>(),
+            )
+        };
 
         // Mark children
-        while let Some((node_id, target)) = invalidated_nodes_buffer.pop() {
+        while let Some((node_id, target)) = dirty_nodes.pop() {
+            // Mark this node as invalidated
+            invalidated_nodes.insert(node_id);
+
             let traverse_children = target == DirtyTarget::ItselfAndNested;
             let affected = get_affected(node_id, traverse_children)
                 .into_iter()
-                .filter(|id| !invalidated_nodes.contains(id))
-                .collect_vec();
-
-            // Save this node
-            invalidated_nodes.push(node_id);
-
-            // Save the affected nodes
-            invalidated_nodes.extend(affected.clone());
+                .filter(|id| !invalidated_nodes.contains(id));
 
             // Continue searching in the affected nodes
-            invalidated_nodes_buffer.extend(
+            dirty_nodes.extend(
                 affected
                     .into_iter()
                     .map(|id| (id, DirtyTarget::ItselfAndNested)),
@@ -126,7 +124,7 @@ impl Compositor {
             }
         }
 
-        self.full_render.store(false, Ordering::Relaxed)
+        self.full_render.store(false, Ordering::Relaxed);
     }
 
     pub fn reset_invalidated_layers(&self) {

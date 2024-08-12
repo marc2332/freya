@@ -78,7 +78,6 @@ pub fn process_render(
             layer_canvas.clear(Color::TRANSPARENT);
 
             let nodes = layers.get(&layer).unwrap();
-
             'elements: for node_id in nodes {
                 let node = rdom.get(*node_id).unwrap();
                 let node_viewports = node.get::<ViewportState>().unwrap();
@@ -93,13 +92,11 @@ pub fn process_render(
                             continue 'elements;
                         }
                     }
-
                     // Render the element
                     render_fn(fdom, node_id, layout_node, &layout, layer_canvas);
                 }
             }
         }
-
         layer_surface.draw(canvas, IPoint::new(0, 0), SamplingOptions::default(), None);
     }
 

@@ -1,4 +1,7 @@
-use freya_common::ParagraphElements;
+use freya_common::{
+    CompositorDirtyNodes,
+    ParagraphElements,
+};
 use freya_engine::prelude::*;
 use freya_native_core::{
     attributes::AttributeName,
@@ -144,6 +147,7 @@ impl State<CustomAttributeValues> for CursorState {
         context: &SendAnyMap,
     ) -> bool {
         let paragraphs = context.get::<ParagraphElements>().unwrap();
+        let compositor_dirty_nodes = context.get::<CompositorDirtyNodes>().unwrap();
         let mut cursor = parent.map(|(p,)| p.clone()).unwrap_or_default();
 
         if let Some(attributes) = node_view.attributes() {
@@ -159,6 +163,7 @@ impl State<CustomAttributeValues> for CursorState {
                     paragraphs.insert_paragraph(node_view.node_id(), cursor_ref.text_id)
                 }
             }
+            compositor_dirty_nodes.invalidate(node_view.node_id());
         }
 
         *self = cursor;

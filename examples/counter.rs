@@ -6,7 +6,13 @@
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Counter", (400.0, 350.0));
+    launch_cfg(
+        app,
+        LaunchConfig::<()>::new()
+            .with_title("Performance Overlay Plugin")
+            .with_size(700., 500.)
+            .with_plugin(PerformanceOverlayPlugin::default()),
+    )
 }
 
 fn app() -> Element {
@@ -33,9 +39,506 @@ fn app() -> Element {
             main_align: "center",
             cross_align: "center",
             direction: "horizontal",
-            Button {
-                onclick: move |_| count += 1,
-                label { "Increase" }
+            rect {
+                height: "50%",
+                width: "100%",
+                main_align: "center",
+                cross_align: "center",
+                direction: "horizontal",
+                rect {
+                    height: "50%",
+                    width: "100%",
+                    main_align: "center",
+                    cross_align: "center",
+                    direction: "horizontal",
+                    rect {
+                        height: "50%",
+                        width: "100%",
+                        main_align: "center",
+                        cross_align: "center",
+                        direction: "horizontal",
+                        rect {
+                            height: "50%",
+                            width: "100%",
+                            main_align: "center",
+                            cross_align: "center",
+                            direction: "horizontal",
+                            rect {
+                                height: "50%",
+                                width: "100%",
+                                main_align: "center",
+                                cross_align: "center",
+                                direction: "horizontal",
+                                rect {
+                                    height: "50%",
+                                    width: "100%",
+                                    main_align: "center",
+                                    cross_align: "center",
+                                    direction: "horizontal",
+                                    rect {
+                                        height: "50%",
+                                        width: "100%",
+                                        main_align: "center",
+                                        cross_align: "center",
+                                        direction: "horizontal",
+                                        rect {
+                                            height: "50%",
+                                            width: "100%",
+                                            main_align: "center",
+                                            cross_align: "center",
+                                            direction: "horizontal",
+                                            rect {
+                                                height: "50%",
+                                                width: "100%",
+                                                main_align: "center",
+                                                cross_align: "center",
+                                                direction: "horizontal",
+                                                rect {
+                                                    height: "50%",
+                                                    width: "100%",
+                                                    main_align: "center",
+                                                    cross_align: "center",
+                                                    direction: "horizontal",
+                                                    rect {
+                                                        height: "50%",
+                                                        width: "100%",
+                                                        main_align: "center",
+                                                        cross_align: "center",
+                                                        direction: "horizontal",
+                                                        rect {
+                                                            height: "50%",
+                                                            width: "100%",
+                                                            main_align: "center",
+                                                            cross_align: "center",
+                                                            direction: "horizontal",
+                                                            rect {
+                                                                height: "50%",
+                                                                width: "100%",
+                                                                main_align: "center",
+                                                                cross_align: "center",
+                                                                direction: "horizontal",
+                                                                rect {
+                                                                    height: "50%",
+                                                                    width: "100%",
+                                                                    main_align: "center",
+                                                                    cross_align: "center",
+                                                                    direction: "horizontal",
+                                                                    rect {
+                                                                        height: "50%",
+                                                                        width: "100%",
+                                                                        main_align: "center",
+                                                                        cross_align: "center",
+                                                                        direction: "horizontal",
+                                                                        rect {
+                                                                            height: "50%",
+                                                                            width: "100%",
+                                                                            main_align: "center",
+                                                                            cross_align: "center",
+                                                                            direction: "horizontal",
+                                                                            rect {
+                                                                                height: "50%",
+                                                                                width: "100%",
+                                                                                main_align: "center",
+                                                                                cross_align: "center",
+                                                                                direction: "horizontal",
+                                                                                rect {
+                                                                                    height: "50%",
+                                                                                    width: "100%",
+                                                                                    main_align: "center",
+                                                                                    cross_align: "center",
+                                                                                    direction: "horizontal",
+                                                                                    rect {
+                                                                                        height: "50%",
+                                                                                        width: "100%",
+                                                                                        main_align: "center",
+                                                                                        cross_align: "center",
+                                                                                        direction: "horizontal",
+                                                                                        rect {
+                                                                                            height: "50%",
+                                                                                            width: "100%",
+                                                                                            main_align: "center",
+                                                                                            cross_align: "center",
+                                                                                            direction: "horizontal",
+                                                                                            rect {
+                                                                                                height: "50%",
+                                                                                                width: "100%",
+                                                                                                main_align: "center",
+                                                                                                cross_align: "center",
+                                                                                                direction: "horizontal",
+                                                                                                rect {
+                                                                                                    height: "50%",
+                                                                                                    width: "100%",
+                                                                                                    main_align: "center",
+                                                                                                    cross_align: "center",
+                                                                                                    direction: "horizontal",
+                                                                                                    rect {
+                                                                                                        height: "50%",
+                                                                                                        width: "100%",
+                                                                                                        main_align: "center",
+                                                                                                        cross_align: "center",
+                                                                                                        direction: "horizontal",
+                                                                                                        rect {
+                                                                                                            height: "50%",
+                                                                                                            width: "100%",
+                                                                                                            main_align: "center",
+                                                                                                            cross_align: "center",
+                                                                                                            direction: "horizontal",
+                                                                                                            rect {
+                                                                                                                height: "50%",
+                                                                                                                width: "100%",
+                                                                                                                main_align: "center",
+                                                                                                                cross_align: "center",
+                                                                                                                direction: "horizontal",
+                                                                                                                rect {
+                                                                                                                    height: "50%",
+                                                                                                                    width: "100%",
+                                                                                                                    main_align: "center",
+                                                                                                                    cross_align: "center",
+                                                                                                                    direction: "horizontal",
+                                                                                                                    rect {
+                                                                                                                        height: "50%",
+                                                                                                                        width: "100%",
+                                                                                                                        main_align: "center",
+                                                                                                                        cross_align: "center",
+                                                                                                                        direction: "horizontal",
+                                                                                                                        rect {
+                                                                                                                            height: "50%",
+                                                                                                                            width: "100%",
+                                                                                                                            main_align: "center",
+                                                                                                                            cross_align: "center",
+                                                                                                                            direction: "horizontal",
+                                                                                                                            rect {
+                                                                                                                                height: "50%",
+                                                                                                                                width: "100%",
+                                                                                                                                main_align: "center",
+                                                                                                                                cross_align: "center",
+                                                                                                                                direction: "horizontal",
+                                                                                                                                rect {
+                                                                                                                                    height: "50%",
+                                                                                                                                    width: "100%",
+                                                                                                                                    main_align: "center",
+                                                                                                                                    cross_align: "center",
+                                                                                                                                    direction: "horizontal",
+                                                                                                                                    rect {
+                                                                                                                                        height: "50%",
+                                                                                                                                        width: "100%",
+                                                                                                                                        main_align: "center",
+                                                                                                                                        cross_align: "center",
+                                                                                                                                        direction: "horizontal",
+                                                                                                                                        rect {
+                                                                                                                                            height: "50%",
+                                                                                                                                            width: "100%",
+                                                                                                                                            main_align: "center",
+                                                                                                                                            cross_align: "center",
+                                                                                                                                            direction: "horizontal",
+                                                                                                                                            rect {
+                                                                                                                                                height: "50%",
+                                                                                                                                                width: "100%",
+                                                                                                                                                main_align: "center",
+                                                                                                                                                cross_align: "center",
+                                                                                                                                                direction: "horizontal",
+                                                                                                                                                rect {
+                                                                                                                                                    height: "50%",
+                                                                                                                                                    width: "100%",
+                                                                                                                                                    main_align: "center",
+                                                                                                                                                    cross_align: "center",
+                                                                                                                                                    direction: "horizontal",
+                                                                                                                                                    rect {
+                                                                                                                                                        height: "50%",
+                                                                                                                                                        width: "100%",
+                                                                                                                                                        main_align: "center",
+                                                                                                                                                        cross_align: "center",
+                                                                                                                                                        direction: "horizontal",
+                                                                                                                                                        rect {
+                                                                                                                                                            height: "50%",
+                                                                                                                                                            width: "100%",
+                                                                                                                                                            main_align: "center",
+                                                                                                                                                            cross_align: "center",
+                                                                                                                                                            direction: "horizontal",
+                                                                                                                                                            rect {
+                                                                                                                                                                height: "50%",
+                                                                                                                                                                width: "100%",
+                                                                                                                                                                main_align: "center",
+                                                                                                                                                                cross_align: "center",
+                                                                                                                                                                direction: "horizontal",
+                                                                                                                                                                rect {
+                                                                                                                                                                    height: "50%",
+                                                                                                                                                                    width: "100%",
+                                                                                                                                                                    main_align: "center",
+                                                                                                                                                                    cross_align: "center",
+                                                                                                                                                                    direction: "horizontal",
+                                                                                                                                                                    rect {
+                                                                                                                                                                        height: "50%",
+                                                                                                                                                                        width: "100%",
+                                                                                                                                                                        main_align: "center",
+                                                                                                                                                                        cross_align: "center",
+                                                                                                                                                                        direction: "horizontal",
+                                                                                                                                                                        rect {
+                                                                                                                                                                            height: "50%",
+                                                                                                                                                                            width: "100%",
+                                                                                                                                                                            main_align: "center",
+                                                                                                                                                                            cross_align: "center",
+                                                                                                                                                                            direction: "horizontal",
+                                                                                                                                                                            rect {
+                                                                                                                                                                                height: "50%",
+                                                                                                                                                                                width: "100%",
+                                                                                                                                                                                main_align: "center",
+                                                                                                                                                                                cross_align: "center",
+                                                                                                                                                                                direction: "horizontal",
+                                                                                                                                                                                rect {
+                                                                                                                                                                                    height: "50%",
+                                                                                                                                                                                    width: "100%",
+                                                                                                                                                                                    main_align: "center",
+                                                                                                                                                                                    cross_align: "center",
+                                                                                                                                                                                    direction: "horizontal",
+                                                                                                                                                                                    rect {
+                                                                                                                                                                                        height: "50%",
+                                                                                                                                                                                        width: "100%",
+                                                                                                                                                                                        main_align: "center",
+                                                                                                                                                                                        cross_align: "center",
+                                                                                                                                                                                        direction: "horizontal",
+                                                                                                                                                                                        rect {
+                                                                                                                                                                                            height: "50%",
+                                                                                                                                                                                            width: "100%",
+                                                                                                                                                                                            main_align: "center",
+                                                                                                                                                                                            cross_align: "center",
+                                                                                                                                                                                            direction: "horizontal",
+                                                                                                                                                                                            rect {
+                                                                                                                                                                                                height: "50%",
+                                                                                                                                                                                                width: "100%",
+                                                                                                                                                                                                main_align: "center",
+                                                                                                                                                                                                cross_align: "center",
+                                                                                                                                                                                                direction: "horizontal",
+                                                                                                                                                                                                rect {
+                                                                                                                                                                                                    height: "50%",
+                                                                                                                                                                                                    width: "100%",
+                                                                                                                                                                                                    main_align: "center",
+                                                                                                                                                                                                    cross_align: "center",
+                                                                                                                                                                                                    direction: "horizontal",
+                                                                                                                                                                                                    rect {
+                                                                                                                                                                                                        height: "50%",
+                                                                                                                                                                                                        width: "100%",
+                                                                                                                                                                                                        main_align: "center",
+                                                                                                                                                                                                        cross_align: "center",
+                                                                                                                                                                                                        direction: "horizontal",
+                                                                                                                                                                                                        rect {
+                                                                                                                                                                                                            height: "50%",
+                                                                                                                                                                                                            width: "100%",
+                                                                                                                                                                                                            main_align: "center",
+                                                                                                                                                                                                            cross_align: "center",
+                                                                                                                                                                                                            direction: "horizontal",
+                                                                                                                                                                                                            rect {
+                                                                                                                                                                                                                height: "50%",
+                                                                                                                                                                                                                width: "100%",
+                                                                                                                                                                                                                main_align: "center",
+                                                                                                                                                                                                                cross_align: "center",
+                                                                                                                                                                                                                direction: "horizontal",
+                                                                                                                                                                                                                rect {
+                                                                                                                                                                                                                    height: "50%",
+                                                                                                                                                                                                                    width: "100%",
+                                                                                                                                                                                                                    main_align: "center",
+                                                                                                                                                                                                                    cross_align: "center",
+                                                                                                                                                                                                                    direction: "horizontal",
+                                                                                                                                                                                                                    rect {
+                                                                                                                                                                                                                        height: "50%",
+                                                                                                                                                                                                                        width: "100%",
+                                                                                                                                                                                                                        main_align: "center",
+                                                                                                                                                                                                                        cross_align: "center",
+                                                                                                                                                                                                                        direction: "horizontal",
+                                                                                                                                                                                                                        rect {
+                                                                                                                                                                                                                            height: "50%",
+                                                                                                                                                                                                                            width: "100%",
+                                                                                                                                                                                                                            main_align: "center",
+                                                                                                                                                                                                                            cross_align: "center",
+                                                                                                                                                                                                                            direction: "horizontal",
+                                                                                                                                                                                                                            rect {
+                                                                                                                                                                                                                                height: "50%",
+                                                                                                                                                                                                                                width: "100%",
+                                                                                                                                                                                                                                main_align: "center",
+                                                                                                                                                                                                                                cross_align: "center",
+                                                                                                                                                                                                                                direction: "horizontal",
+                                                                                                                                                                                                                                rect {
+                                                                                                                                                                                                                                    height: "50%",
+                                                                                                                                                                                                                                    width: "100%",
+                                                                                                                                                                                                                                    main_align: "center",
+                                                                                                                                                                                                                                    cross_align: "center",
+                                                                                                                                                                                                                                    direction: "horizontal",
+                                                                                                                                                                                                                                    rect {
+                                                                                                                                                                                                                                        height: "50%",
+                                                                                                                                                                                                                                        width: "100%",
+                                                                                                                                                                                                                                        main_align: "center",
+                                                                                                                                                                                                                                        cross_align: "center",
+                                                                                                                                                                                                                                        direction: "horizontal",
+                                                                                                                                                                                                                                        rect {
+                                                                                                                                                                                                                                            height: "50%",
+                                                                                                                                                                                                                                            width: "100%",
+                                                                                                                                                                                                                                            main_align: "center",
+                                                                                                                                                                                                                                            cross_align: "center",
+                                                                                                                                                                                                                                            direction: "horizontal",
+                                                                                                                                                                                                                                            rect {
+                                                                                                                                                                                                                                                height: "50%",
+                                                                                                                                                                                                                                                width: "100%",
+                                                                                                                                                                                                                                                main_align: "center",
+                                                                                                                                                                                                                                                cross_align: "center",
+                                                                                                                                                                                                                                                direction: "horizontal",
+                                                                                                                                                                                                                                                rect {
+                                                                                                                                                                                                                                                    height: "50%",
+                                                                                                                                                                                                                                                    width: "100%",
+                                                                                                                                                                                                                                                    main_align: "center",
+                                                                                                                                                                                                                                                    cross_align: "center",
+                                                                                                                                                                                                                                                    direction: "horizontal",
+                                                                                                                                                                                                                                                    rect {
+                                                                                                                                                                                                                                                        height: "50%",
+                                                                                                                                                                                                                                                        width: "100%",
+                                                                                                                                                                                                                                                        main_align: "center",
+                                                                                                                                                                                                                                                        cross_align: "center",
+                                                                                                                                                                                                                                                        direction: "horizontal",
+                                                                                                                                                                                                                                                        rect {
+                                                                                                                                                                                                                                                            height: "50%",
+                                                                                                                                                                                                                                                            width: "100%",
+                                                                                                                                                                                                                                                            main_align: "center",
+                                                                                                                                                                                                                                                            cross_align: "center",
+                                                                                                                                                                                                                                                            direction: "horizontal",
+                                                                                                                                                                                                                                                            rect {
+                                                                                                                                                                                                                                                                height: "50%",
+                                                                                                                                                                                                                                                                width: "100%",
+                                                                                                                                                                                                                                                                main_align: "center",
+                                                                                                                                                                                                                                                                cross_align: "center",
+                                                                                                                                                                                                                                                                direction: "horizontal",
+                                                                                                                                                                                                                                                                rect {
+                                                                                                                                                                                                                                                                    height: "50%",
+                                                                                                                                                                                                                                                                    width: "100%",
+                                                                                                                                                                                                                                                                    main_align: "center",
+                                                                                                                                                                                                                                                                    cross_align: "center",
+                                                                                                                                                                                                                                                                    direction: "horizontal",
+                                                                                                                                                                                                                                                                    rect {
+                                                                                                                                                                                                                                                                        height: "50%",
+                                                                                                                                                                                                                                                                        width: "100%",
+                                                                                                                                                                                                                                                                        main_align: "center",
+                                                                                                                                                                                                                                                                        cross_align: "center",
+                                                                                                                                                                                                                                                                        direction: "horizontal",
+                                                                                                                                                                                                                                                                        rect {
+                                                                                                                                                                                                                                                                            height: "50%",
+                                                                                                                                                                                                                                                                            width: "100%",
+                                                                                                                                                                                                                                                                            main_align: "center",
+                                                                                                                                                                                                                                                                            cross_align: "center",
+                                                                                                                                                                                                                                                                            direction: "horizontal",
+                                                                                                                                                                                                                                                                            rect {
+                                                                                                                                                                                                                                                                                height: "50%",
+                                                                                                                                                                                                                                                                                width: "100%",
+                                                                                                                                                                                                                                                                                main_align: "center",
+                                                                                                                                                                                                                                                                                cross_align: "center",
+                                                                                                                                                                                                                                                                                direction: "horizontal",
+                                                                                                                                                                                                                                                                                rect {
+                                                                                                                                                                                                                                                                                    height: "50%",
+                                                                                                                                                                                                                                                                                    width: "100%",
+                                                                                                                                                                                                                                                                                    main_align: "center",
+                                                                                                                                                                                                                                                                                    cross_align: "center",
+                                                                                                                                                                                                                                                                                    direction: "horizontal",
+                                                                                                                                                                                                                                                                                    rect {
+                                                                                                                                                                                                                                                                                        height: "50%",
+                                                                                                                                                                                                                                                                                        width: "100%",
+                                                                                                                                                                                                                                                                                        main_align: "center",
+                                                                                                                                                                                                                                                                                        cross_align: "center",
+                                                                                                                                                                                                                                                                                        direction: "horizontal",
+                                                                                                                                                                                                                                                                                        rect {
+                                                                                                                                                                                                                                                                                            height: "50%",
+                                                                                                                                                                                                                                                                                            width: "100%",
+                                                                                                                                                                                                                                                                                            main_align: "center",
+                                                                                                                                                                                                                                                                                            cross_align: "center",
+                                                                                                                                                                                                                                                                                            direction: "horizontal",
+                                                                                                                                                                                                                                                                                            rect {
+                                                                                                                                                                                                                                                                                                height: "50%",
+                                                                                                                                                                                                                                                                                                width: "100%",
+                                                                                                                                                                                                                                                                                                main_align: "center",
+                                                                                                                                                                                                                                                                                                cross_align: "center",
+                                                                                                                                                                                                                                                                                                direction: "horizontal",
+                                                                                                                                                                                                                                                                                                rect {
+                                                                                                                                                                                                                                                                                                    height: "50%",
+                                                                                                                                                                                                                                                                                                    width: "100%",
+                                                                                                                                                                                                                                                                                                    main_align: "center",
+                                                                                                                                                                                                                                                                                                    cross_align: "center",
+                                                                                                                                                                                                                                                                                                    direction: "horizontal",
+                                                                                                                                                                                                                                                                                                    rect {
+                                                                                                                                                                                                                                                                                                        height: "50%",
+                                                                                                                                                                                                                                                                                                        width: "100%",
+                                                                                                                                                                                                                                                                                                        main_align: "center",
+                                                                                                                                                                                                                                                                                                        cross_align: "center",
+                                                                                                                                                                                                                                                                                                        direction: "horizontal",
+                                                                                                                                                                                                                                                                                                        Button {
+                                                                                                                                                                                                                                                                                                            onclick: move |_| count += 1,
+                                                                                                                                                                                                                                                                                                            label { "Increase2" }
+                                                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                }
+                                                                                                                                                                                                            }
+                                                                                                                                                                                                        }
+                                                                                                                                                                                                    }
+                                                                                                                                                                                                }
+                                                                                                                                                                                            }
+                                                                                                                                                                                        }
+                                                                                                                                                                                    }
+                                                                                                                                                                                }
+                                                                                                                                                                            }
+                                                                                                                                                                        }
+                                                                                                                                                                    }
+                                                                                                                                                                }
+                                                                                                                                                            }
+                                                                                                                                                        }
+                                                                                                                                                    }
+                                                                                                                                                }
+                                                                                                                                            }
+                                                                                                                                        }
+                                                                                                                                    }
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    }
+                                                                                                                }
+                                                                                                            }
+                                                                                                        }
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     )
