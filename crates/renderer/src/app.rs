@@ -151,9 +151,7 @@ impl Application {
 
         self.provide_vdom_contexts(app_state);
 
-        self.sdom
-            .get_mut()
-            .init_dom(&mut self.vdom, scale_factor, &mut self.compositor);
+        self.sdom.get_mut().init_dom(&mut self.vdom, scale_factor);
         self.plugins.send(PluginEvent::FinishedUpdatingDOM);
     }
 
@@ -161,11 +159,10 @@ impl Application {
     pub fn render_mutations(&mut self, scale_factor: f32) -> (bool, bool) {
         self.plugins.send(PluginEvent::StartedUpdatingDOM);
 
-        let (repaint, relayout) = self.sdom.get_mut().render_mutations(
-            &mut self.vdom,
-            scale_factor,
-            &mut self.compositor,
-        );
+        let (repaint, relayout) = self
+            .sdom
+            .get_mut()
+            .render_mutations(&mut self.vdom, scale_factor);
 
         self.plugins.send(PluginEvent::FinishedUpdatingDOM);
 

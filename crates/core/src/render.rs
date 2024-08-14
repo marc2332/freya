@@ -3,7 +3,6 @@ use freya_engine::prelude::{
     Canvas,
     ClipOp,
     Color,
-    IPoint,
     Rect,
     SamplingOptions,
     Surface,
@@ -36,7 +35,6 @@ pub fn process_render(
 
     let (dirty_layers, dirty_area) = compositor.run(
         compositor_dirty_nodes,
-        dirty_canvas,
         |node, try_traverse_children| {
             let node = rdom.get(node);
             if let Some(node) = node {
@@ -65,28 +63,27 @@ pub fn process_render(
         layers,
     );
 
-    let layers = layers.layers();
     let dirty_layers = dirty_layers.layers();
 
     dirty_canvas.save();
-
-    dirty_canvas.clip_rect(
-        Rect::new(
-            dirty_area.min_x(),
-            dirty_area.min_y(),
-            dirty_area.max_x(),
-            dirty_area.max_y(),
-        ),
-        Some(ClipOp::Intersect),
-        false,
-    );
-    dirty_canvas.clear(Color::TRANSPARENT);
+    if let Some(dirty_area) = dirty_area {
+        dirty_canvas.clip_rect(
+            Rect::new(
+                dirty_area.min_x(),
+                dirty_area.min_y(),
+                dirty_area.max_x(),
+                dirty_area.max_y(),
+            ),
+            Some(ClipOp::Intersect),
+            false,
+        );
+        dirty_canvas.clear(Color::WHITE);
+    }
 
     let mut painted = Vec::new();
 
     // Render the dirty nodes
-    for layer in sorted(dirty_layers.keys().copied().collect::<Vec<i16>>()) {
-        let nodes = layers.get(&layer).unwrap();
+    for (_, nodes) in sorted(dirty_layers.iter()) {
         'elements: for node_id in nodes {
             let node = rdom.get(*node_id).unwrap();
             let node_viewports = node.get::<ViewportState>().unwrap();
@@ -108,9 +105,6 @@ pub fn process_render(
         }
     }
 
-    println!("{painted:?}");
-
     dirty_canvas.restore();
-    canvas.clear(Color::TRANSPARENT);
     dirty_surface.draw(canvas, (0, 0), SamplingOptions::default(), None);
 }

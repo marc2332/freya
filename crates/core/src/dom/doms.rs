@@ -6,7 +6,6 @@ use std::sync::{
 
 use dioxus_core::VirtualDom;
 use freya_common::{
-    Compositor,
     CompositorDirtyNodes,
     Layers,
     ParagraphElements,
@@ -167,12 +166,7 @@ impl FreyaDOM {
     }
 
     /// Create the initial DOM from the given Mutations
-    pub fn init_dom(
-        &mut self,
-        vdom: &mut VirtualDom,
-        scale_factor: f32,
-        compositor: &mut Compositor,
-    ) {
+    pub fn init_dom(&mut self, vdom: &mut VirtualDom, scale_factor: f32) {
         // Build the RealDOM
         vdom.rebuild(&mut MutationsWriter {
             native_writer: self
@@ -183,7 +177,6 @@ impl FreyaDOM {
             paragraphs: &self.paragraphs,
             scale_factor,
             compositor_dirty_nodes: &self.compositor_dirty_nodes,
-            compositor,
         });
 
         let mut ctx = SendAnyMap::new();
@@ -196,12 +189,7 @@ impl FreyaDOM {
     }
 
     /// Process the given mutations from the [`VirtualDOM`](dioxus_core::VirtualDom).
-    pub fn render_mutations(
-        &mut self,
-        vdom: &mut VirtualDom,
-        scale_factor: f32,
-        compositor: &mut Compositor,
-    ) -> (bool, bool) {
+    pub fn render_mutations(&mut self, vdom: &mut VirtualDom, scale_factor: f32) -> (bool, bool) {
         // Update the RealDOM
         vdom.render_immediate(&mut MutationsWriter {
             native_writer: self
@@ -212,7 +200,6 @@ impl FreyaDOM {
             paragraphs: &self.paragraphs,
             scale_factor,
             compositor_dirty_nodes: &self.compositor_dirty_nodes,
-            compositor,
         });
 
         // Update the Nodes states

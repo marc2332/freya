@@ -416,10 +416,12 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 *surface =
                     create_surface(window, *fb_info, gr_context, *num_samples, *stencil_size);
 
-                *dirty_surface = surface.new_surface_with_dimensions((
-                    size.width.try_into().expect("Could not convert width"),
-                    size.height.try_into().expect("Could not convert height"),
-                )).unwrap();
+                *dirty_surface = surface
+                    .new_surface_with_dimensions((
+                        size.width.try_into().expect("Could not convert width"),
+                        size.height.try_into().expect("Could not convert height"),
+                    ))
+                    .unwrap();
 
                 gl_surface.resize(
                     gl_context,

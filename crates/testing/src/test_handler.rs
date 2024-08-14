@@ -73,11 +73,7 @@ impl TestingHandler {
         self.provide_vdom_contexts();
         let sdom = self.utils.sdom();
         let mut fdom = sdom.get();
-        fdom.init_dom(
-            &mut self.vdom,
-            SCALE_FACTOR as f32,
-            &mut Compositor::default(),
-        );
+        fdom.init_dom(&mut self.vdom, SCALE_FACTOR as f32);
     }
 
     /// Get a mutable reference to the current [`TestingConfig`].
@@ -189,11 +185,11 @@ impl TestingHandler {
             .await
             .ok();
 
-        let (must_repaint, must_relayout) = self.utils.sdom().get_mut().render_mutations(
-            &mut self.vdom,
-            SCALE_FACTOR as f32,
-            &mut Compositor::default(),
-        );
+        let (must_repaint, must_relayout) = self
+            .utils
+            .sdom()
+            .get_mut()
+            .render_mutations(&mut self.vdom, SCALE_FACTOR as f32);
 
         self.wait_for_work(self.config.size());
 

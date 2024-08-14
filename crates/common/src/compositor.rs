@@ -8,18 +8,13 @@ use std::sync::{
     MutexGuard,
 };
 
-use freya_engine::prelude::Canvas;
 use freya_native_core::NodeId;
 use itertools::sorted;
 use rustc_hash::{
     FxHashMap,
     FxHashSet,
 };
-use torin::prelude::{
-    Area,
-    AreaModel,
-    Size2D,
-};
+use torin::prelude::Area;
 
 use crate::Layers;
 
@@ -55,11 +50,10 @@ impl Compositor {
     pub fn run(
         &self,
         dirty_nodes: &CompositorDirtyNodes,
-        canvas: &Canvas,
         get_affected: impl Fn(NodeId, bool) -> Vec<NodeId>,
         get_area: impl Fn(NodeId) -> Option<Area>,
         layers: &Layers,
-    ) -> (Layers, Area) {
+    ) -> (Layers, Option<Area>) {
         let mut dirty_nodes = dirty_nodes.get();
         let (mut invalidated_nodes, mut dirty_nodes) = {
             (
@@ -87,26 +81,29 @@ impl Compositor {
         }
 
         let rendering_layers = Layers::default();
-        let dirty_area = Area::from_size(Size2D::new(999., 999.));
+        let mut dirty_area: Option<Area> = None;
 
         let full_render = self.full_render.load(Ordering::Relaxed);
 
-        let run_check = |layer: i16, nodes: &[NodeId]| {
+        let mut run_check = |layer: i16, nodes: &[NodeId]| {
             for node_id in nodes {
                 let Some(area) = get_area(*node_id) else {
                     continue;
                 };
                 let is_invalidated = full_render || invalidated_nodes.contains(node_id);
-                let is_area_invalidated = is_invalidated
-                    || invalidated_nodes.iter().any(|invalid_node| {
-                        let Some(invalid_node_area) = get_area(*invalid_node) else {
-                            return false;
-                        };
-                        invalid_node_area.area_intersects(&area)
-                    });
+                let is_area_invalidated = dirty_area
+                    .map(|dirty_area| dirty_area.intersects(&area))
+                    .unwrap_or_default();
 
-                if is_area_invalidated {
+                if is_invalidated || is_area_invalidated {
                     rendering_layers.insert_node_in_layer(*node_id, layer);
+                    if is_invalidated {
+                        if let Some(dirty_area) = &mut dirty_area {
+                            *dirty_area = dirty_area.union(&area);
+                        } else {
+                            dirty_area = Some(area)
+                        }
+                    }
                 }
             }
         };
@@ -122,6 +119,7 @@ impl Compositor {
         }
 
         self.full_render.store(false, Ordering::Relaxed);
+
         (rendering_layers, dirty_area)
     }
 
