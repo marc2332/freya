@@ -1,37 +1,27 @@
-use std::{
-    cell::RefCell,
-    collections::HashMap,
-    sync::{
-        atomic::{
-            AtomicBool,
-            Ordering,
-        },
-        Arc,
-        Mutex,
-        MutexGuard,
+use std::sync::{
+    atomic::{
+        AtomicBool,
+        Ordering,
     },
+    Arc,
+    Mutex,
+    MutexGuard,
 };
 
-use freya_engine::prelude::{
-    Canvas,
-    Surface,
-};
+use freya_engine::prelude::Canvas;
 use freya_native_core::NodeId;
 use itertools::sorted;
 use rustc_hash::{
     FxHashMap,
     FxHashSet,
 };
+use torin::prelude::{
+    Area,
+    AreaModel,
+    Size2D,
+};
 
 use crate::Layers;
-
-#[derive(PartialEq)]
-pub enum LayerState {
-    NeedsRender,
-    Ignore,
-}
-
-pub type RenderingLayers = HashMap<i16, (Surface, LayerState)>;
 
 #[derive(Clone, Default)]
 pub struct CompositorDirtyNodes(Arc<Mutex<FxHashMap<NodeId, DirtyTarget>>>);
@@ -52,7 +42,6 @@ impl CompositorDirtyNodes {
 
 #[derive(Default)]
 pub struct Compositor {
-    pub rendering_layers: RefCell<RenderingLayers>,
     full_render: Arc<AtomicBool>,
 }
 
@@ -68,8 +57,9 @@ impl Compositor {
         dirty_nodes: &CompositorDirtyNodes,
         canvas: &Canvas,
         get_affected: impl Fn(NodeId, bool) -> Vec<NodeId>,
+        get_area: impl Fn(NodeId) -> Option<Area>,
         layers: &Layers,
-    ) {
+    ) -> (Layers, Area) {
         let mut dirty_nodes = dirty_nodes.get();
         let (mut invalidated_nodes, mut dirty_nodes) = {
             (
@@ -96,51 +86,46 @@ impl Compositor {
             );
         }
 
-        let mut rendering_layers = self.rendering_layers.borrow_mut();
+        let rendering_layers = Layers::default();
+        let dirty_area = Area::from_size(Size2D::new(999., 999.));
+
+        let full_render = self.full_render.load(Ordering::Relaxed);
+
+        let run_check = |layer: i16, nodes: &[NodeId]| {
+            for node_id in nodes {
+                let Some(area) = get_area(*node_id) else {
+                    continue;
+                };
+                let is_invalidated = full_render || invalidated_nodes.contains(node_id);
+                let is_area_invalidated = is_invalidated
+                    || invalidated_nodes.iter().any(|invalid_node| {
+                        let Some(invalid_node_area) = get_area(*invalid_node) else {
+                            return false;
+                        };
+                        invalid_node_area.area_intersects(&area)
+                    });
+
+                if is_area_invalidated {
+                    rendering_layers.insert_node_in_layer(*node_id, layer);
+                }
+            }
+        };
 
         // From bottom to top
         for (layer, nodes) in sorted(layers.layers().iter()) {
-            let rendering_layer = rendering_layers.entry(*layer).or_insert_with(|| {
-                // Create an individual surface for every layer
-                let mut surface = unsafe { canvas.surface().unwrap() };
-                let new_surface = surface
-                    .new_surface_with_dimensions(canvas.base_layer_size())
-                    .unwrap();
+            run_check(*layer, nodes);
+        }
 
-                (new_surface, LayerState::Ignore)
-            });
-
-            // Reset the state
-            rendering_layer.1 = LayerState::Ignore;
-
-            let dirty_layer = self.full_render.load(Ordering::Relaxed)
-                || nodes
-                    .iter()
-                    .any(|node_id| invalidated_nodes.contains(node_id));
-
-            if dirty_layer {
-                // Mark this layer as NeedsRender if any of its nodes has been affected
-                rendering_layer.1 = LayerState::NeedsRender;
-            }
+        // From top to bottom
+        for (layer, nodes) in sorted(layers.layers().iter()).rev() {
+            run_check(*layer, nodes);
         }
 
         self.full_render.store(false, Ordering::Relaxed);
-    }
-
-    pub fn reset_invalidated_layers(&self) {
-        self.rendering_layers
-            .borrow_mut()
-            .values_mut()
-            .for_each(|(_, state)| *state = LayerState::Ignore);
+        (rendering_layers, dirty_area)
     }
 
     pub fn reset(&self) {
-        self.rendering_layers.borrow_mut().clear();
         self.full_render.store(true, Ordering::Relaxed)
-    }
-
-    pub fn remove_layer(&self, layer_n: i16) {
-        let mut layers = self.rendering_layers.borrow_mut();
-        layers.remove(&layer_n);
     }
 }

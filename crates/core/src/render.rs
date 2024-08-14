@@ -1,12 +1,12 @@
-use freya_common::{
-    Compositor,
-    LayerState,
-};
+use freya_common::Compositor;
 use freya_engine::prelude::{
     Canvas,
+    ClipOp,
     Color,
     IPoint,
+    Rect,
     SamplingOptions,
+    Surface,
 };
 use freya_native_core::{
     real_dom::NodeImmutable,
@@ -24,17 +24,19 @@ use crate::dom::FreyaDOM;
 pub fn process_render(
     fdom: &FreyaDOM,
     canvas: &Canvas,
+    dirty_surface: &mut Surface,
     compositor: &Compositor,
     mut render_fn: impl FnMut(&FreyaDOM, &NodeId, &LayoutNode, &Torin<NodeId>, &Canvas),
 ) {
+    let dirty_canvas = dirty_surface.canvas();
     let layout = fdom.layout();
     let rdom = fdom.rdom();
     let layers = fdom.layers();
     let compositor_dirty_nodes = fdom.compositor_dirty_nodes();
 
-    compositor.run(
+    let (dirty_layers, dirty_area) = compositor.run(
         compositor_dirty_nodes,
-        canvas,
+        dirty_canvas,
         |node, try_traverse_children| {
             let node = rdom.get(node);
             if let Some(node) = node {
@@ -59,47 +61,56 @@ pub fn process_render(
                 Vec::new()
             }
         },
+        |node| layout.get(node).map(|node| node.area),
         layers,
     );
 
-    canvas.clear(Color::WHITE);
-
-    let mut rendering_layers = compositor.rendering_layers.borrow_mut();
-
     let layers = layers.layers();
+    let dirty_layers = dirty_layers.layers();
 
-    // Render all the layers from the bottom to the top
-    for layer in sorted(rendering_layers.keys().copied().collect::<Vec<i16>>()) {
-        let (ref mut layer_surface, state) = rendering_layers.get_mut(&layer).unwrap();
-        let layer_canvas = layer_surface.canvas();
+    dirty_canvas.save();
 
-        if *state == LayerState::NeedsRender {
-            // Clear the this layer canvas
-            layer_canvas.clear(Color::TRANSPARENT);
+    dirty_canvas.clip_rect(
+        Rect::new(
+            dirty_area.min_x(),
+            dirty_area.min_y(),
+            dirty_area.max_x(),
+            dirty_area.max_y(),
+        ),
+        Some(ClipOp::Intersect),
+        false,
+    );
+    dirty_canvas.clear(Color::TRANSPARENT);
 
-            let nodes = layers.get(&layer).unwrap();
-            'elements: for node_id in nodes {
-                let node = rdom.get(*node_id).unwrap();
-                let node_viewports = node.get::<ViewportState>().unwrap();
+    let mut painted = Vec::new();
 
-                let layout_node = layout.get(*node_id);
+    // Render the dirty nodes
+    for layer in sorted(dirty_layers.keys().copied().collect::<Vec<i16>>()) {
+        let nodes = layers.get(&layer).unwrap();
+        'elements: for node_id in nodes {
+            let node = rdom.get(*node_id).unwrap();
+            let node_viewports = node.get::<ViewportState>().unwrap();
 
-                if let Some(layout_node) = layout_node {
-                    // Skip elements that are completely out of any their parent's viewport
-                    for viewport_id in &node_viewports.viewports {
-                        let viewport = layout.get(*viewport_id).unwrap().visible_area();
-                        if !viewport.intersects(&layout_node.area) {
-                            continue 'elements;
-                        }
+            let layout_node = layout.get(*node_id);
+
+            if let Some(layout_node) = layout_node {
+                // Skip elements that are completely out of any their parent's viewport
+                for viewport_id in &node_viewports.viewports {
+                    let viewport = layout.get(*viewport_id).unwrap().visible_area();
+                    if !viewport.intersects(&layout_node.area) {
+                        continue 'elements;
                     }
-                    // Render the element
-                    render_fn(fdom, node_id, layout_node, &layout, layer_canvas);
                 }
+                // Render the element
+                render_fn(fdom, node_id, layout_node, &layout, dirty_canvas);
+                painted.push(node_id);
             }
         }
-        layer_surface.draw(canvas, IPoint::new(0, 0), SamplingOptions::default(), None);
     }
 
-    drop(rendering_layers);
-    compositor.reset_invalidated_layers();
+    println!("{painted:?}");
+
+    dirty_canvas.restore();
+    canvas.clear(Color::TRANSPARENT);
+    dirty_surface.draw(canvas, (0, 0), SamplingOptions::default(), None);
 }

@@ -65,6 +65,7 @@ pub struct CreatedState {
     pub(crate) app: Application,
     pub(crate) gr_context: DirectContext,
     pub(crate) surface: Surface,
+    pub(crate) dirty_surface: Surface,
     pub(crate) gl_surface: GlutinSurface<WindowSurface>,
     pub(crate) gl_context: PossiblyCurrentContext,
     pub(crate) window: Window,
@@ -249,11 +250,27 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
             stencil_size,
         );
 
+        let mut dirty_surface = surface
+            .new_surface_with_dimensions({
+                let size = window.inner_size();
+                (
+                    size.width.try_into().expect("Could not convert width"),
+                    size.height.try_into().expect("Could not convert height"),
+                )
+            })
+            .unwrap(); // TODO: CLEAN UP CODE
+
         let scale_factor = window.scale_factor();
+
         surface
             .canvas()
             .scale((scale_factor as f32, scale_factor as f32));
         surface.canvas().clear(Color::WHITE);
+
+        dirty_surface
+            .canvas()
+            .scale((scale_factor as f32, scale_factor as f32));
+        dirty_surface.canvas().clear(Color::WHITE);
 
         let mut app = Application::new(
             sdom,
@@ -272,6 +289,7 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
         *self = WindowState::Created(CreatedState {
             gr_context,
             surface,
+            dirty_surface,
             gl_surface,
             gl_context,
             window,

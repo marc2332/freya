@@ -85,7 +85,7 @@ impl<'a> MutationsWriter<'a> {
                 }
 
                 if layer_was_removed {
-                    self.compositor.remove_layer(layer_state.layer);
+                    //self.compositor.remove_layer(layer_state.layer);
                 }
             }
         }

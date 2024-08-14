@@ -295,6 +295,11 @@ impl TestingHandler {
             raster_n32_premul((width, height)).expect("Failed to create the surface.");
         surface.canvas().clear(Color::WHITE);
 
+        let mut dirty_surface = surface
+            .new_surface_with_dimensions((width, height))
+            .expect("Failed to create the dirty surface.");
+        dirty_surface.canvas().clear(Color::WHITE);
+
         let compositor = Compositor::default();
 
         let mut skia_renderer = SkiaRenderer {
@@ -311,6 +316,7 @@ impl TestingHandler {
         process_render(
             &fdom,
             surface.canvas(),
+            &mut dirty_surface,
             &compositor,
             |fdom, node_id, layout_node, layout, canvas| {
                 if let Some(dioxus_node) = fdom.rdom().get(*node_id) {

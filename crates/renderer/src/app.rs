@@ -269,7 +269,13 @@ impl Application {
     }
 
     /// Render the App into the Window Canvas
-    pub fn render(&mut self, hovered_node: &HoveredNode, canvas: &Canvas, window: &Window) {
+    pub fn render(
+        &mut self,
+        hovered_node: &HoveredNode,
+        canvas: &Canvas,
+        dirty_surface: &mut Surface,
+        window: &Window,
+    ) {
         self.plugins.send(PluginEvent::BeforeRender {
             canvas,
             font_collection: &self.font_collection,
@@ -279,6 +285,7 @@ impl Application {
         self.start_render(
             hovered_node,
             canvas,
+            dirty_surface,
             window.inner_size(),
             window.scale_factor() as f32,
         );
@@ -378,6 +385,7 @@ impl Application {
         &mut self,
         hovered_node: &HoveredNode,
         canvas: &Canvas,
+        dirty_surface: &mut Surface,
         windows_size: PhysicalSize<u32>,
         scale_factor: f32,
     ) {
@@ -401,6 +409,7 @@ impl Application {
         process_render(
             &fdom,
             canvas,
+            dirty_surface,
             &self.compositor,
             |fdom, node_id, layout_node, layout, canvas| {
                 let render_wireframe = if let Some(hovered_node) = &hovered_node {

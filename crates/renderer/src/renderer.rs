@@ -242,6 +242,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
         let CreatedState {
             gr_context,
             surface,
+            dirty_surface,
             gl_surface,
             gl_context,
             window,
@@ -284,10 +285,10 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 }
                 //surface.canvas().clear(window_config.background);
                 gl_context.make_current(gl_surface).unwrap();
-                app.render(&self.hovered_node, surface.canvas(), window);
+                app.render(&self.hovered_node, surface.canvas(), dirty_surface, window);
 
                 app.event_loop_tick();
-                // window.pre_present_notify();
+                window.pre_present_notify();
                 gr_context.flush_and_submit();
                 gl_surface.swap_buffers(gl_context).unwrap();
             }
@@ -413,6 +414,9 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             }
             WindowEvent::Resized(size) => {
                 *surface =
+                    create_surface(window, *fb_info, gr_context, *num_samples, *stencil_size);
+
+                *dirty_surface =
                     create_surface(window, *fb_info, gr_context, *num_samples, *stencil_size);
 
                 gl_surface.resize(
