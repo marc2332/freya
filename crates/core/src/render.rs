@@ -96,7 +96,7 @@ pub fn process_render(
     let mut painted = Vec::new();
 
     // Render the layers
-    for nodes in sorted(rendering_layers.values()) {
+    for (_, nodes) in sorted(rendering_layers.iter()) {
         'elements: for node_id in nodes {
             let node = rdom.get(*node_id).unwrap();
             let node_viewports = node.get::<ViewportState>().unwrap();
