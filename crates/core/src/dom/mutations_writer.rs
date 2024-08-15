@@ -20,7 +20,10 @@ use freya_node_state::{
     CustomAttributeValues,
     LayerState,
 };
-use torin::torin::Torin;
+use torin::{
+    prelude::Area,
+    torin::Torin,
+};
 
 use crate::prelude::DioxusDOMAdapter;
 
@@ -31,15 +34,13 @@ pub struct MutationsWriter<'a> {
     pub paragraphs: &'a ParagraphElements,
     pub scale_factor: f32,
     pub compositor_dirty_nodes: &'a CompositorDirtyNodes,
+    pub dirty_rect: &'a mut Option<Area>,
 }
 
 impl<'a> MutationsWriter<'a> {
     pub fn remove(&mut self, id: ElementId) {
         let node_id = self.native_writer.state.element_to_node_id(id);
         let mut dom_adapter = DioxusDOMAdapter::new(self.native_writer.rdom, self.scale_factor);
-
-        // Remove from layout
-        self.layout.remove(node_id, &mut dom_adapter, true);
 
         // Remove from layers and paragraph elements
         let mut stack = vec![node_id];
@@ -80,8 +81,19 @@ impl<'a> MutationsWriter<'a> {
                     self.paragraphs
                         .remove_paragraph(node_id, &cursor_ref.text_id);
                 }
+
+                // Generate the dirty rect based on the removed nodes
+                let area = self.layout.get(node_id).unwrap().visible_area();
+                if let Some(dirty_rect) = self.dirty_rect {
+                    *dirty_rect = dirty_rect.union(&area);
+                } else {
+                    *self.dirty_rect = Some(area);
+                }
             }
         }
+
+        // Remove from layout
+        self.layout.remove(node_id, &mut dom_adapter, true);
     }
 }
 

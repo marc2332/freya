@@ -121,6 +121,7 @@ pub struct FreyaDOM {
     paragraphs: ParagraphElements,
     layers: Layers,
     compositor_dirty_nodes: CompositorDirtyNodes,
+    dirty_rect: Arc<Mutex<Option<Area>>>,
 }
 
 impl Default for FreyaDOM {
@@ -144,6 +145,7 @@ impl Default for FreyaDOM {
             paragraphs: ParagraphElements::default(),
             layers: Layers::default(),
             compositor_dirty_nodes: CompositorDirtyNodes::default(),
+            dirty_rect: Arc::default(),
         }
     }
 }
@@ -165,6 +167,10 @@ impl FreyaDOM {
         &self.compositor_dirty_nodes
     }
 
+    pub fn dirty_rect(&self) -> MutexGuard<Option<Area>> {
+        self.dirty_rect.lock().unwrap()
+    }
+
     /// Create the initial DOM from the given Mutations
     pub fn init_dom(&mut self, vdom: &mut VirtualDom, scale_factor: f32) {
         // Build the RealDOM
@@ -177,6 +183,7 @@ impl FreyaDOM {
             paragraphs: &self.paragraphs,
             scale_factor,
             compositor_dirty_nodes: &self.compositor_dirty_nodes,
+            dirty_rect: &mut self.dirty_rect.lock().unwrap(),
         });
 
         let mut ctx = SendAnyMap::new();
@@ -200,6 +207,7 @@ impl FreyaDOM {
             paragraphs: &self.paragraphs,
             scale_factor,
             compositor_dirty_nodes: &self.compositor_dirty_nodes,
+            dirty_rect: &mut self.dirty_rect.lock().unwrap(),
         });
 
         // Update the Nodes states

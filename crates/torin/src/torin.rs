@@ -190,7 +190,7 @@ impl<Key: NodeKey> Torin<Key> {
                     let multiple_children = parent_children.len() > 1;
 
                     let mut found_node = false;
-                    for child_id in dom_adapter.children_of(&parent_id) {
+                    for child_id in parent_children {
                         if found_node {
                             self.safe_invalidate(child_id, dom_adapter);
                         }

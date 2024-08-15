@@ -50,6 +50,7 @@ impl Compositor {
     pub fn run(
         &self,
         dirty_nodes: &CompositorDirtyNodes,
+        initial_dirty_rect: Option<Area>,
         get_affected: impl Fn(NodeId, bool) -> Vec<NodeId>,
         get_area: impl Fn(NodeId) -> Option<Area>,
         layers: &Layers,
@@ -81,7 +82,7 @@ impl Compositor {
         }
 
         let rendering_layers = Layers::default();
-        let mut dirty_area: Option<Area> = None;
+        let mut dirty_area: Option<Area> = initial_dirty_rect.map(|area| area.round_out());
 
         let full_render = self.full_render.load(Ordering::Relaxed);
 
@@ -96,7 +97,10 @@ impl Compositor {
                     .unwrap_or_default();
 
                 if is_invalidated || is_area_invalidated {
+                    // Save this node to the layer it corresponds for rendering later
                     rendering_layers.insert_node_in_layer(*node_id, layer);
+
+                    // Expand the dirty area with only nodes who have actually changed
                     if is_invalidated {
                         if let Some(dirty_area) = &mut dirty_area {
                             *dirty_area = dirty_area.union(&area);

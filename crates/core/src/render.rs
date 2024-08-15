@@ -27,6 +27,7 @@ pub fn process_render(
     compositor: &Compositor,
     mut render_fn: impl FnMut(&FreyaDOM, &NodeId, &LayoutNode, &Torin<NodeId>, &Canvas),
 ) {
+    let initial_dirty_rect = fdom.dirty_rect().take();
     let dirty_canvas = dirty_surface.canvas();
     let layout = fdom.layout();
     let rdom = fdom.rdom();
@@ -35,6 +36,7 @@ pub fn process_render(
 
     let (dirty_layers, dirty_area) = compositor.run(
         compositor_dirty_nodes,
+        initial_dirty_rect,
         |node, try_traverse_children| {
             let node = rdom.get(node);
             if let Some(node) = node {

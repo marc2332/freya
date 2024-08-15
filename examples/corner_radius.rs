@@ -20,16 +20,15 @@ fn app() -> Element {
     rsx!(
         rect {
             height: "50%",
-            width: "100%",
+            width: "auto",
             main_align: "center",
             cross_align: "center",
-            background: "rgb({count}, 119, 182)",
+            background: "rgb(0, 119, 182)",
             color: "white",
             shadow: "0 4 20 5 rgb(0, 0, 0, 80)",
-            label {
-                font_size: "75",
-                font_weight: "bold",
-                "{count}"
+            rect {
+                height: "100%",
+                width: "calc(70% + {count})",
             }
         }
         rect {
@@ -38,10 +37,7 @@ fn app() -> Element {
             main_align: "center",
             cross_align: "center",
             direction: "horizontal",
-            Button {
-                onclick: move |_| count += 1,
-                label { "Increase" }
-            }
+            onclick: move |_| count -= 5,
         }
     )
 }
