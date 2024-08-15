@@ -402,6 +402,10 @@ impl Application {
             scale_factor,
         };
 
+        let hovered_node = hovered_node
+            .as_ref()
+            .and_then(|hovered_node| *hovered_node.lock().unwrap());
+
         process_render(
             &fdom,
             background,
@@ -409,15 +413,7 @@ impl Application {
             dirty_surface,
             &mut self.compositor,
             |fdom, node_id, layout_node, layout, canvas| {
-                let render_wireframe = if let Some(hovered_node) = &hovered_node {
-                    hovered_node
-                        .lock()
-                        .unwrap()
-                        .map(|id| id == *node_id)
-                        .unwrap_or_default()
-                } else {
-                    false
-                };
+                let render_wireframe = hovered_node.as_ref() == Some(node_id);
                 if let Some(dioxus_node) = fdom.rdom().get(*node_id) {
                     skia_renderer.render(
                         fdom.rdom(),
