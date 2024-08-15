@@ -218,7 +218,7 @@ impl State<CustomAttributeValues> for LayoutState {
         context: &SendAnyMap,
     ) -> bool {
         let torin_layout = context.get::<Arc<Mutex<Torin<NodeId>>>>().unwrap();
-        let compositor_dirty_nodes = context.get::<CompositorDirtyNodes>().unwrap();
+        let compositor_dirty_nodes = context.get::<Arc<Mutex<CompositorDirtyNodes>>>().unwrap();
 
         let mut layout = LayoutState {
             node_id: node_view.node_id(),
@@ -236,6 +236,8 @@ impl State<CustomAttributeValues> for LayoutState {
         if changed {
             torin_layout.lock().unwrap().invalidate(node_view.node_id());
             compositor_dirty_nodes
+                .lock()
+                .unwrap()
                 .invalidate_with_target(node_view.node_id(), DirtyTarget::ItselfAndNested);
         }
 

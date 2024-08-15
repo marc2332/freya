@@ -1,11 +1,6 @@
-use std::sync::{
-    atomic::{
-        AtomicBool,
-        Ordering,
-    },
-    Arc,
-    Mutex,
-    MutexGuard,
+use std::ops::{
+    Deref,
+    DerefMut,
 };
 
 use freya_native_core::NodeId;
@@ -19,25 +14,77 @@ use torin::prelude::Area;
 use crate::Layers;
 
 #[derive(Clone, Default)]
-pub struct CompositorDirtyNodes(Arc<Mutex<FxHashMap<NodeId, DirtyTarget>>>);
+pub struct CompositorDirtyNodes(FxHashMap<NodeId, DirtyTarget>);
+
+impl Deref for CompositorDirtyNodes {
+    type Target = FxHashMap<NodeId, DirtyTarget>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for CompositorDirtyNodes {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
 
 impl CompositorDirtyNodes {
-    pub fn invalidate(&self, node_id: NodeId) {
-        self.0.lock().unwrap().insert(node_id, DirtyTarget::Itself);
+    /// Mark a certain node as invalidated. Uses [DirtyTarget::Itself] by default.
+    pub fn invalidate(&mut self, node_id: NodeId) {
+        self.0.insert(node_id, DirtyTarget::Itself);
     }
 
-    pub fn invalidate_with_target(&self, node_id: NodeId, target: DirtyTarget) {
-        self.0.lock().unwrap().insert(node_id, target);
+    /// Mark a certain node as invalidated with the given [DirtyTarget].
+    pub fn invalidate_with_target(&mut self, node_id: NodeId, target: DirtyTarget) {
+        self.0.insert(node_id, target);
+    }
+}
+
+#[derive(Clone, Default)]
+pub struct CompositorDirtyArea(Option<Area>);
+
+impl CompositorDirtyArea {
+    /// Take the area, leaving nothing behind.
+    pub fn take(&mut self) -> Option<Area> {
+        self.0.take()
     }
 
-    pub fn get(&self) -> MutexGuard<FxHashMap<NodeId, DirtyTarget>> {
-        self.0.lock().unwrap()
+    /// Unite the area or insert it if none is yet present.
+    pub fn unite_or_insert(&mut self, other: &Area) {
+        if let Some(dirty_area) = &mut self.0 {
+            *dirty_area = dirty_area.union(other);
+        } else {
+            self.0 = Some(*other);
+        }
+    }
+
+    /// Round the dirty area to the out bounds to prevent float pixel issues.
+    pub fn round_out(&mut self) {
+        if let Some(dirty_area) = &mut self.0 {
+            *dirty_area = dirty_area.round_out();
+        }
+    }
+
+    pub fn intersects(&self, other: &Area) -> bool {
+        self.0
+            .map(|dirty_area| dirty_area.intersects(other))
+            .unwrap_or_default()
+    }
+}
+
+impl Deref for CompositorDirtyArea {
+    type Target = Option<Area>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
 #[derive(Default)]
 pub struct Compositor {
-    full_render: Arc<AtomicBool>,
+    full_render: bool,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -47,15 +94,22 @@ pub enum DirtyTarget {
 }
 
 impl Compositor {
-    pub fn run(
-        &self,
-        dirty_nodes: &CompositorDirtyNodes,
-        initial_dirty_rect: Option<Area>,
+    /// Run the compositor to obtain the rendering layers and the dirty area.
+    pub fn run<'a>(
+        &mut self,
+        dirty_nodes: &mut CompositorDirtyNodes,
+        dirty_area: &mut CompositorDirtyArea,
         get_affected: impl Fn(NodeId, bool) -> Vec<NodeId>,
         get_area: impl Fn(NodeId) -> Option<Area>,
-        layers: &Layers,
-    ) -> (Layers, Option<Area>) {
-        let mut dirty_nodes = dirty_nodes.get();
+        layers: &'a Layers,
+        rendering_layers: &'a mut Layers,
+    ) -> &'a Layers {
+        if self.full_render {
+            dirty_nodes.clear();
+            dirty_area.take();
+            return layers;
+        }
+
         let (mut invalidated_nodes, mut dirty_nodes) = {
             (
                 FxHashSet::from_iter(dirty_nodes.keys().copied()),
@@ -81,20 +135,13 @@ impl Compositor {
             );
         }
 
-        let rendering_layers = Layers::default();
-        let mut dirty_area: Option<Area> = initial_dirty_rect.map(|area| area.round_out());
-
-        let full_render = self.full_render.load(Ordering::Relaxed);
-
         let mut run_check = |layer: i16, nodes: &[NodeId]| {
             for node_id in nodes {
                 let Some(area) = get_area(*node_id) else {
                     continue;
                 };
-                let is_invalidated = full_render || invalidated_nodes.contains(node_id);
-                let is_area_invalidated = dirty_area
-                    .map(|dirty_area| dirty_area.intersects(&area))
-                    .unwrap_or_default();
+                let is_invalidated = invalidated_nodes.contains(node_id);
+                let is_area_invalidated = dirty_area.intersects(&area);
 
                 if is_invalidated || is_area_invalidated {
                     // Save this node to the layer it corresponds for rendering later
@@ -102,32 +149,28 @@ impl Compositor {
 
                     // Expand the dirty area with only nodes who have actually changed
                     if is_invalidated {
-                        if let Some(dirty_area) = &mut dirty_area {
-                            *dirty_area = dirty_area.union(&area);
-                        } else {
-                            dirty_area = Some(area)
-                        }
+                        dirty_area.unite_or_insert(&area);
                     }
                 }
             }
         };
 
         // From bottom to top
-        for (layer, nodes) in sorted(layers.layers().iter()) {
+        for (layer, nodes) in sorted(layers.iter()) {
             run_check(*layer, nodes);
         }
 
         // From top to bottom
-        for (layer, nodes) in sorted(layers.layers().iter()).rev() {
+        for (layer, nodes) in sorted(layers.iter()).rev() {
             run_check(*layer, nodes);
         }
 
-        self.full_render.store(false, Ordering::Relaxed);
+        self.full_render = false;
 
-        (rendering_layers, dirty_area)
+        rendering_layers
     }
 
-    pub fn reset(&self) {
-        self.full_render.store(true, Ordering::Relaxed)
+    pub fn reset(&mut self) {
+        self.full_render = true;
     }
 }

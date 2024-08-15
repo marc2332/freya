@@ -372,7 +372,7 @@ impl Application {
         let fdom = self.sdom.get();
         info!(
             "Processed {} layers and {} group of paragraph elements",
-            fdom.layers().len_layers(),
+            fdom.layers().len(),
             fdom.paragraphs().len_paragraphs()
         );
     }
@@ -407,7 +407,7 @@ impl Application {
             &fdom,
             canvas,
             dirty_surface,
-            &self.compositor,
+            &mut self.compositor,
             |fdom, node_id, layout_node, layout, canvas| {
                 let render_wireframe = if let Some(hovered_node) = &hovered_node {
                     hovered_node

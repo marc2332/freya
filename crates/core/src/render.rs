@@ -1,4 +1,7 @@
-use freya_common::Compositor;
+use freya_common::{
+    Compositor,
+    Layers,
+};
 use freya_engine::prelude::{
     Canvas,
     ClipOp,
@@ -14,6 +17,7 @@ use freya_native_core::{
 use freya_node_state::ViewportState;
 use itertools::sorted;
 use torin::prelude::{
+    Area,
     LayoutNode,
     Torin,
 };
@@ -24,19 +28,20 @@ pub fn process_render(
     fdom: &FreyaDOM,
     canvas: &Canvas,
     dirty_surface: &mut Surface,
-    compositor: &Compositor,
+    compositor: &mut Compositor,
     mut render_fn: impl FnMut(&FreyaDOM, &NodeId, &LayoutNode, &Torin<NodeId>, &Canvas),
 ) {
-    let initial_dirty_rect = fdom.dirty_rect().take();
     let dirty_canvas = dirty_surface.canvas();
     let layout = fdom.layout();
     let rdom = fdom.rdom();
     let layers = fdom.layers();
-    let compositor_dirty_nodes = fdom.compositor_dirty_nodes();
+    let mut compositor_dirty_area = fdom.compositor_dirty_area();
+    let mut compositor_dirty_nodes = fdom.compositor_dirty_nodes();
+    let mut rendering_layers = Layers::default();
 
-    let (dirty_layers, dirty_area) = compositor.run(
-        compositor_dirty_nodes,
-        initial_dirty_rect,
+    let dirty_layers = compositor.run(
+        &mut compositor_dirty_nodes,
+        &mut compositor_dirty_area,
         |node, try_traverse_children| {
             let node = rdom.get(node);
             if let Some(node) = node {
@@ -62,13 +67,13 @@ pub fn process_render(
             }
         },
         |node| layout.get(node).map(|node| node.area),
-        layers,
+        &layers,
+        &mut rendering_layers,
     );
 
-    let dirty_layers = dirty_layers.layers();
-
     dirty_canvas.save();
-    if let Some(dirty_area) = dirty_area {
+    let compositor_dirty_area: &Option<Area> = &compositor_dirty_area;
+    if let Some(dirty_area) = compositor_dirty_area {
         dirty_canvas.clip_rect(
             Rect::new(
                 dirty_area.min_x(),

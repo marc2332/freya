@@ -274,7 +274,7 @@ impl State<CustomAttributeValues> for FontStyleState {
         context: &SendAnyMap,
     ) -> bool {
         let torin_layout = context.get::<Arc<Mutex<Torin<NodeId>>>>().unwrap();
-        let compositor_dirty_nodes = context.get::<CompositorDirtyNodes>().unwrap();
+        let compositor_dirty_nodes = context.get::<Arc<Mutex<CompositorDirtyNodes>>>().unwrap();
 
         let mut font_style = parent.map(|(v,)| v.clone()).unwrap_or_default();
 
@@ -288,7 +288,10 @@ impl State<CustomAttributeValues> for FontStyleState {
 
         if changed {
             torin_layout.lock().unwrap().invalidate(node_view.node_id());
-            compositor_dirty_nodes.invalidate(node_view.node_id());
+            compositor_dirty_nodes
+                .lock()
+                .unwrap()
+                .invalidate(node_view.node_id());
         }
 
         *self = font_style;

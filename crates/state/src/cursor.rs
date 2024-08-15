@@ -1,3 +1,8 @@
+use std::sync::{
+    Arc,
+    Mutex,
+};
+
 use freya_common::{
     CompositorDirtyNodes,
     ParagraphElements,
@@ -147,7 +152,7 @@ impl State<CustomAttributeValues> for CursorState {
         context: &SendAnyMap,
     ) -> bool {
         let paragraphs = context.get::<ParagraphElements>().unwrap();
-        let compositor_dirty_nodes = context.get::<CompositorDirtyNodes>().unwrap();
+        let compositor_dirty_nodes = context.get::<Arc<Mutex<CompositorDirtyNodes>>>().unwrap();
         let mut cursor = parent.map(|(p,)| p.clone()).unwrap_or_default();
 
         if let Some(attributes) = node_view.attributes() {
@@ -163,7 +168,10 @@ impl State<CustomAttributeValues> for CursorState {
                     paragraphs.insert_paragraph(node_view.node_id(), cursor_ref.text_id)
                 }
             }
-            compositor_dirty_nodes.invalidate(node_view.node_id());
+            compositor_dirty_nodes
+                .lock()
+                .unwrap()
+                .invalidate(node_view.node_id());
         }
 
         *self = cursor;

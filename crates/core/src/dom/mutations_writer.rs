@@ -3,6 +3,7 @@ use dioxus_core::{
     WriteMutations,
 };
 use freya_common::{
+    CompositorDirtyArea,
     CompositorDirtyNodes,
     Layers,
     ParagraphElements,
@@ -20,21 +21,18 @@ use freya_node_state::{
     CustomAttributeValues,
     LayerState,
 };
-use torin::{
-    prelude::Area,
-    torin::Torin,
-};
+use torin::torin::Torin;
 
 use crate::prelude::DioxusDOMAdapter;
 
 pub struct MutationsWriter<'a> {
     pub native_writer: DioxusNativeCoreMutationWriter<'a, CustomAttributeValues>,
     pub layout: &'a mut Torin<NodeId>,
-    pub layers: &'a Layers,
+    pub layers: &'a mut Layers,
     pub paragraphs: &'a ParagraphElements,
     pub scale_factor: f32,
-    pub compositor_dirty_nodes: &'a CompositorDirtyNodes,
-    pub dirty_rect: &'a mut Option<Area>,
+    pub compositor_dirty_nodes: &'a mut CompositorDirtyNodes,
+    pub compositor_dirty_area: &'a mut CompositorDirtyArea,
 }
 
 impl<'a> MutationsWriter<'a> {
@@ -42,7 +40,7 @@ impl<'a> MutationsWriter<'a> {
         let node_id = self.native_writer.state.element_to_node_id(id);
         let mut dom_adapter = DioxusDOMAdapter::new(self.native_writer.rdom, self.scale_factor);
 
-        // Remove from layers and paragraph elements
+        // Remove from layers , paragraph elements and unite the removed areas with the compositor dirty area
         let mut stack = vec![node_id];
         let tree = self.native_writer.rdom.tree_ref();
         while let Some(node_id) = stack.pop() {
@@ -82,13 +80,9 @@ impl<'a> MutationsWriter<'a> {
                         .remove_paragraph(node_id, &cursor_ref.text_id);
                 }
 
-                // Generate the dirty rect based on the removed nodes
+                // Unite the removed area with the dirty area
                 let area = self.layout.get(node_id).unwrap().visible_area();
-                if let Some(dirty_rect) = self.dirty_rect {
-                    *dirty_rect = dirty_rect.union(&area);
-                } else {
-                    *self.dirty_rect = Some(area);
-                }
+                self.compositor_dirty_area.unite_or_insert(&area);
             }
         }
 

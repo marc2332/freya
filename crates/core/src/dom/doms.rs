@@ -6,6 +6,7 @@ use std::sync::{
 
 use dioxus_core::VirtualDom;
 use freya_common::{
+    CompositorDirtyArea,
     CompositorDirtyNodes,
     Layers,
     ParagraphElements,
@@ -119,9 +120,9 @@ pub struct FreyaDOM {
     dioxus_integration_state: DioxusState,
     torin: Arc<Mutex<Torin<NodeId>>>,
     paragraphs: ParagraphElements,
-    layers: Layers,
-    compositor_dirty_nodes: CompositorDirtyNodes,
-    dirty_rect: Arc<Mutex<Option<Area>>>,
+    layers: Arc<Mutex<Layers>>,
+    compositor_dirty_nodes: Arc<Mutex<CompositorDirtyNodes>>,
+    compositor_dirty_area: Arc<Mutex<CompositorDirtyArea>>,
 }
 
 impl Default for FreyaDOM {
@@ -143,9 +144,9 @@ impl Default for FreyaDOM {
             dioxus_integration_state,
             torin: Arc::new(Mutex::new(Torin::new())),
             paragraphs: ParagraphElements::default(),
-            layers: Layers::default(),
-            compositor_dirty_nodes: CompositorDirtyNodes::default(),
-            dirty_rect: Arc::default(),
+            layers: Arc::default(),
+            compositor_dirty_nodes: Arc::default(),
+            compositor_dirty_area: Arc::default(),
         }
     }
 }
@@ -155,20 +156,20 @@ impl FreyaDOM {
         self.torin.lock().unwrap()
     }
 
-    pub fn layers(&self) -> &Layers {
-        &self.layers
+    pub fn layers(&self) -> MutexGuard<Layers> {
+        self.layers.lock().unwrap()
     }
 
     pub fn paragraphs(&self) -> &ParagraphElements {
         &self.paragraphs
     }
 
-    pub fn compositor_dirty_nodes(&self) -> &CompositorDirtyNodes {
-        &self.compositor_dirty_nodes
+    pub fn compositor_dirty_nodes(&self) -> MutexGuard<CompositorDirtyNodes> {
+        self.compositor_dirty_nodes.lock().unwrap()
     }
 
-    pub fn dirty_rect(&self) -> MutexGuard<Option<Area>> {
-        self.dirty_rect.lock().unwrap()
+    pub fn compositor_dirty_area(&self) -> MutexGuard<CompositorDirtyArea> {
+        self.compositor_dirty_area.lock().unwrap()
     }
 
     /// Create the initial DOM from the given Mutations
@@ -179,11 +180,11 @@ impl FreyaDOM {
                 .dioxus_integration_state
                 .create_mutation_writer(&mut self.rdom),
             layout: &mut self.torin.lock().unwrap(),
-            layers: &self.layers,
+            layers: &mut self.layers.lock().unwrap(),
             paragraphs: &self.paragraphs,
             scale_factor,
-            compositor_dirty_nodes: &self.compositor_dirty_nodes,
-            dirty_rect: &mut self.dirty_rect.lock().unwrap(),
+            compositor_dirty_nodes: &mut self.compositor_dirty_nodes.lock().unwrap(),
+            compositor_dirty_area: &mut self.compositor_dirty_area.lock().unwrap(),
         });
 
         let mut ctx = SendAnyMap::new();
@@ -203,11 +204,11 @@ impl FreyaDOM {
                 .dioxus_integration_state
                 .create_mutation_writer(&mut self.rdom),
             layout: &mut self.torin.lock().unwrap(),
-            layers: &self.layers,
+            layers: &mut self.layers.lock().unwrap(),
             paragraphs: &self.paragraphs,
             scale_factor,
-            compositor_dirty_nodes: &self.compositor_dirty_nodes,
-            dirty_rect: &mut self.dirty_rect.lock().unwrap(),
+            compositor_dirty_nodes: &mut self.compositor_dirty_nodes.lock().unwrap(),
+            compositor_dirty_area: &mut self.compositor_dirty_area.lock().unwrap(),
         });
 
         // Update the Nodes states
