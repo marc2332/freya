@@ -51,6 +51,7 @@ use crate::{
     app::Application,
     config::WindowConfig,
     devtools::Devtools,
+    size::WinitSize,
     LaunchConfig,
 };
 
@@ -312,12 +313,8 @@ pub fn create_surface(
     stencil_size: usize,
 ) -> Surface {
     let size = window.inner_size();
-    let size = (
-        size.width.try_into().expect("Could not convert width"),
-        size.height.try_into().expect("Could not convert height"),
-    );
     let backend_render_target =
-        backend_render_targets::make_gl(size, num_samples, stencil_size, fb_info);
+        backend_render_targets::make_gl(size.to_skia(), num_samples, stencil_size, fb_info);
     wrap_backend_render_target(
         gr_context,
         &backend_render_target,

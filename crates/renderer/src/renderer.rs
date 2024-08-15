@@ -1,7 +1,4 @@
-use std::{
-    num::NonZeroU32,
-    path::PathBuf,
-};
+use std::path::PathBuf;
 
 use dioxus_core::VirtualDom;
 use freya_common::EventMessage;
@@ -48,6 +45,7 @@ use winit::{
 
 use crate::{
     devtools::Devtools,
+    size::WinitSize,
     window_state::{
         create_surface,
         CreatedState,
@@ -416,18 +414,9 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 *surface =
                     create_surface(window, *fb_info, gr_context, *num_samples, *stencil_size);
 
-                *dirty_surface = surface
-                    .new_surface_with_dimensions((
-                        size.width.try_into().expect("Could not convert width"),
-                        size.height.try_into().expect("Could not convert height"),
-                    ))
-                    .unwrap();
+                *dirty_surface = surface.new_surface_with_dimensions(size.to_skia()).unwrap();
 
-                gl_surface.resize(
-                    gl_context,
-                    NonZeroU32::new(size.width.max(1)).unwrap(),
-                    NonZeroU32::new(size.height.max(1)).unwrap(),
-                );
+                gl_surface.resize(gl_context, size.as_gl_width(), size.as_gl_height());
 
                 window.request_redraw();
 

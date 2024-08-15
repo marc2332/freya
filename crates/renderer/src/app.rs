@@ -26,10 +26,7 @@ use tokio::{
         watch,
     },
 };
-use torin::geometry::{
-    Area,
-    Size2D,
-};
+use torin::geometry::Area;
 use tracing::info;
 use winit::{
     dpi::PhysicalSize,
@@ -40,6 +37,7 @@ use winit::{
 use crate::{
     accessibility::AccessKitManager,
     devtools::Devtools,
+    size::WinitSize,
     winit_waker::winit_waker,
     EmbeddedFonts,
     HoveredNode,
@@ -341,7 +339,7 @@ impl Application {
     }
 
     /// Measure the layout
-    pub fn process_layout(&mut self, inner_size: PhysicalSize<u32>, scale_factor: f64) {
+    pub fn process_layout(&mut self, window_size: PhysicalSize<u32>, scale_factor: f64) {
         self.accessibility.clear_accessibility();
 
         {
@@ -352,10 +350,7 @@ impl Application {
 
             process_layout(
                 &fdom,
-                Area::from_size(Size2D::from((
-                    inner_size.width as f32,
-                    inner_size.height as f32,
-                ))),
+                Area::from_size(window_size.to_torin()),
                 &mut self.font_collection,
                 scale_factor,
                 &self.default_fonts,
@@ -383,7 +378,7 @@ impl Application {
         hovered_node: &HoveredNode,
         canvas: &Canvas,
         dirty_surface: &mut Surface,
-        windows_size: PhysicalSize<u32>,
+        window_size: PhysicalSize<u32>,
         scale_factor: f32,
     ) {
         let fdom = self.sdom.get();
@@ -392,9 +387,7 @@ impl Application {
         let opacities: Vec<(f32, Vec<NodeId>)> = Vec::default();
 
         let mut skia_renderer = SkiaRenderer {
-            canvas_area: Area::from_size(
-                (windows_size.width as f32, windows_size.height as f32).into(),
-            ),
+            canvas_area: Area::from_size(window_size.to_torin()),
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,
             matrices,
