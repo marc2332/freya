@@ -1432,7 +1432,7 @@ impl Surface {
         unimplemented!("This is mocked")
     }
 
-    fn draw(
+    pub fn draw(
         &self,
         canvas: &Canvas,
         offset: impl Into<Point>,
