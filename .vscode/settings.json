@@ -1,7 +1,7 @@
 {
     "rust-analyzer.cargo.features": [
         "devtools",
-        "tracing",
+        "tracing-subscriber",
         "use_camera"
     ]
 }
