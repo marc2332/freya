@@ -6,38 +6,34 @@
 use freya::prelude::*;
 
 fn main() {
-    launch_cfg(
-        app,
-        LaunchConfig::<()>::new()
-            .with_title("Performance Overlay Plugin")
-            .with_size(700., 500.)
-            .with_plugin(PerformanceOverlayPlugin::default()),
-    )
+    launch(app);
 }
+
 fn app() -> Element {
-    let mut count = use_signal(|| 0);
+    let mut radius = use_signal(|| 30f32);
+
+    let onwheel = move |e: WheelEvent| {
+        let y = e.get_delta_y() as f32;
+        radius.with_mut(|radius| *radius = (*radius + y).clamp(0.0, 300.0));
+    };
 
     rsx!(
         rect {
-            height: "50%",
-            width: "auto",
-            main_align: "center",
-            cross_align: "center",
-            background: "rgb(0, 119, 182)",
-            color: "white",
-            shadow: "0 4 20 5 rgb(0, 0, 0, 80)",
-            rect {
-                height: "100%",
-                width: "calc(70% + {count})",
-            }
-        }
-        rect {
-            height: "50%",
+            overflow: "clip",
+            height: "100%",
             width: "100%",
-            main_align: "center",
-            cross_align: "center",
-            direction: "horizontal",
-            onclick: move |_| count -= 5,
+            padding: "60",
+            onwheel: onwheel,
+            rect {
+                shadow: "0 0 25 0 rgb(0, 0, 0, 170)",
+                corner_radius: "{radius} {radius * 0.7} {radius * 0.4} {radius * 0.2}",
+                corner_smoothing: "100%",
+                height: "100%",
+                width: "100%",
+                background: "red",
+                border: "7 solid white",
+                border_align: "outer"
+            }
         }
     )
 }
