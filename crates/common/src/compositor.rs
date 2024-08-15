@@ -245,7 +245,6 @@ mod test {
             for node_id in nodes {
                 if layout.get(*node_id).is_some() {
                     painted_nodes += 1;
-                    println!("{:?}", layout.get(*node_id).unwrap().visible_area());
                 }
             }
         }
