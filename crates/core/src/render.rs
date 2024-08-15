@@ -17,7 +17,6 @@ use freya_native_core::{
 use freya_node_state::ViewportState;
 use itertools::sorted;
 use torin::prelude::{
-    Area,
     LayoutNode,
     Torin,
 };
@@ -43,42 +42,21 @@ pub fn process_render(
 
     let mut dirty_layers = Layers::default();
 
+    // Process what nodes need to be rendered
     let rendering_layers = compositor.run(
         &mut compositor_dirty_nodes,
         &mut compositor_dirty_area,
         &layers,
         &mut dirty_layers,
-        |node| layout.get(node).map(|node| node.area),
-        |node, try_traverse_children| {
-            let node = rdom.get(node);
-            if let Some(node) = node {
-                let traverse_children = node
-                    .node_type()
-                    .tag()
-                    .map(|tag| !tag.contains_text())
-                    .unwrap_or_default();
-                let mut affected = if traverse_children && try_traverse_children {
-                    node.child_ids()
-                } else {
-                    Vec::new()
-                };
-
-                if !node.node_type().is_visible_element() {
-                    if let Some(parent_id) = node.parent_id() {
-                        affected.push(parent_id);
-                    }
-                }
-                affected
-            } else {
-                Vec::new()
-            }
-        },
+        &layout,
     );
 
     dirty_canvas.save();
-    let compositor_dirty_area: &Option<Area> = &compositor_dirty_area;
-    if let Some(dirty_area) = compositor_dirty_area {
-        // Clear using the configured window background only the dirty
+
+    compositor_dirty_area.round_out();
+
+    if let Some(dirty_area) = compositor_dirty_area.take() {
+        // Clear using the the background only, but only the dirty
         // area in which it will render the intersected nodes again
         dirty_canvas.clip_rect(
             Rect::new(
@@ -92,8 +70,6 @@ pub fn process_render(
         );
         dirty_canvas.clear(background);
     }
-
-    let mut painted = Vec::new();
 
     // Render the layers
     for (_, nodes) in sorted(rendering_layers.iter()) {
@@ -114,7 +90,6 @@ pub fn process_render(
 
                 // Render the element
                 render_fn(fdom, node_id, layout_node, &layout, dirty_canvas);
-                painted.push(node_id);
             }
         }
     }

@@ -3,10 +3,7 @@ use std::sync::{
     Mutex,
 };
 
-use freya_common::{
-    CompositorDirtyNodes,
-    DirtyTarget,
-};
+use freya_common::CompositorDirtyNodes;
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
@@ -238,7 +235,7 @@ impl State<CustomAttributeValues> for LayoutState {
             compositor_dirty_nodes
                 .lock()
                 .unwrap()
-                .invalidate_with_target(node_view.node_id(), DirtyTarget::ItselfAndNested);
+                .invalidate(node_view.node_id());
         }
 
         *self = layout;

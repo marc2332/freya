@@ -5,19 +5,19 @@ use std::ops::{
 
 use freya_native_core::NodeId;
 use itertools::sorted;
-use rustc_hash::{
-    FxHashMap,
-    FxHashSet,
+use rustc_hash::FxHashSet;
+use torin::prelude::{
+    Area,
+    Torin,
 };
-use torin::prelude::Area;
 
 use crate::Layers;
 
 #[derive(Clone, Default)]
-pub struct CompositorDirtyNodes(FxHashMap<NodeId, DirtyTarget>);
+pub struct CompositorDirtyNodes(FxHashSet<NodeId>);
 
 impl Deref for CompositorDirtyNodes {
-    type Target = FxHashMap<NodeId, DirtyTarget>;
+    type Target = FxHashSet<NodeId>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -31,14 +31,9 @@ impl DerefMut for CompositorDirtyNodes {
 }
 
 impl CompositorDirtyNodes {
-    /// Mark a certain node as invalidated. Uses [DirtyTarget::Itself] by default.
+    /// Mark a certain node as invalidated.
     pub fn invalidate(&mut self, node_id: NodeId) {
-        self.0.insert(node_id, DirtyTarget::Itself);
-    }
-
-    /// Mark a certain node as invalidated with the given [DirtyTarget].
-    pub fn invalidate_with_target(&mut self, node_id: NodeId, target: DirtyTarget) {
-        self.0.insert(node_id, target);
+        self.0.insert(node_id);
     }
 }
 
@@ -87,12 +82,6 @@ pub struct Compositor {
     full_render: bool,
 }
 
-#[derive(Clone, Copy, PartialEq)]
-pub enum DirtyTarget {
-    Itself,
-    ItselfAndNested,
-}
-
 impl Compositor {
     /// Run the compositor to obtain the rendering layers and the dirty area.
     pub fn run<'a>(
@@ -101,8 +90,7 @@ impl Compositor {
         dirty_area: &mut CompositorDirtyArea,
         layers: &'a Layers,
         dirty_layers: &'a mut Layers,
-        get_area: impl Fn(NodeId) -> Option<Area>,
-        get_affected: impl Fn(NodeId, bool) -> Vec<NodeId>,
+        layout: &Torin<NodeId>,
     ) -> &'a Layers {
         if self.full_render {
             dirty_nodes.clear();
@@ -111,37 +99,15 @@ impl Compositor {
             return layers;
         }
 
-        let (mut invalidated_nodes, mut dirty_nodes) = {
-            (
-                FxHashSet::from_iter(dirty_nodes.keys().copied()),
-                dirty_nodes.drain().collect::<Vec<(NodeId, DirtyTarget)>>(),
-            )
-        };
-
-        // Mark children
-        while let Some((node_id, target)) = dirty_nodes.pop() {
-            // Mark this node as invalidated
-            invalidated_nodes.insert(node_id);
-
-            let traverse_children = target == DirtyTarget::ItselfAndNested;
-            let affected = get_affected(node_id, traverse_children)
-                .into_iter()
-                .filter(|id| !invalidated_nodes.contains(id));
-
-            // Continue searching in the affected nodes
-            dirty_nodes.extend(
-                affected
-                    .into_iter()
-                    .map(|id| (id, DirtyTarget::ItselfAndNested)),
-            );
-        }
-
         let mut run_check = |layer: i16, nodes: &[NodeId]| {
             for node_id in nodes {
-                let Some(area) = get_area(*node_id) else {
+                let Some(area) = layout
+                    .get(*node_id)
+                    .map(|layout_node| layout_node.visible_area())
+                else {
                     continue;
                 };
-                let is_invalidated = invalidated_nodes.contains(node_id);
+                let is_invalidated = dirty_nodes.contains(node_id);
                 let is_area_invalidated = dirty_area.intersects(&area);
 
                 if is_invalidated || is_area_invalidated {
@@ -165,6 +131,8 @@ impl Compositor {
         for (layer, nodes) in sorted(layers.iter()).rev() {
             run_check(*layer, nodes);
         }
+
+        dirty_nodes.drain();
 
         dirty_layers
     }
