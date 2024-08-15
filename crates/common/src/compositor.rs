@@ -13,7 +13,7 @@ use torin::prelude::{
 
 use crate::Layers;
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct CompositorDirtyNodes(FxHashSet<NodeId>);
 
 impl Deref for CompositorDirtyNodes {
@@ -37,7 +37,7 @@ impl CompositorDirtyNodes {
     }
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct CompositorDirtyArea(Option<Area>);
 
 impl CompositorDirtyArea {
@@ -77,9 +77,15 @@ impl Deref for CompositorDirtyArea {
     }
 }
 
-#[derive(Default)]
+#[derive(Debug)]
 pub struct Compositor {
     full_render: bool,
+}
+
+impl Default for Compositor {
+    fn default() -> Self {
+        Self { full_render: true }
+    }
 }
 
 impl Compositor {
@@ -140,5 +146,121 @@ impl Compositor {
 
     pub fn reset(&mut self) {
         self.full_render = true;
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use freya::{
+        common::*,
+        prelude::*,
+    };
+    use freya_testing::prelude::*;
+    use itertools::sorted;
+
+    #[tokio::test]
+    pub async fn compositor() {
+        fn compositor_app() -> Element {
+            let mut count = use_signal(|| 0);
+
+            rsx!(
+                rect {
+                    height: "50%",
+                    width: "100%",
+                    main_align: "center",
+                    cross_align: "center",
+                    background: "rgb(0, 119, 182)",
+                    color: "white",
+                    shadow: "0 4 20 5 rgb(0, 0, 0, 80)",
+                    label {
+                        font_size: "75",
+                        font_weight: "bold",
+                        "{count}"
+                    }
+                }
+                rect {
+                    height: "50%",
+                    width: "100%",
+                    main_align: "center",
+                    cross_align: "center",
+                    direction: "horizontal",
+                    Button {
+                        onclick: move |_| count += 1,
+                        label { "Increase" }
+                    }
+                }
+            )
+        }
+
+        let mut compositor = Compositor::default();
+        let mut utils = launch_test(compositor_app);
+        let root = utils.root();
+        let label = root.get(0).get(0);
+        utils.wait_for_update().await;
+
+        assert_eq!(label.get(0).text(), Some("0"));
+
+        fn run_compositor(utils: &TestingHandler, compositor: &mut Compositor) -> (Layers, Layers) {
+            let sdom = utils.sdom();
+            let fdom = sdom.get();
+            let layout = fdom.layout();
+            let layers = fdom.layers();
+            let mut compositor_dirty_area = fdom.compositor_dirty_area();
+            let mut compositor_dirty_nodes = fdom.compositor_dirty_nodes();
+
+            let mut dirty_layers = Layers::default();
+
+            // Process what nodes need to be rendered
+            let rendering_layers = compositor.run(
+                &mut *compositor_dirty_nodes,
+                &mut *compositor_dirty_area,
+                &*layers,
+                &mut dirty_layers,
+                &layout,
+            );
+
+            compositor_dirty_area.take();
+
+            (layers.clone(), rendering_layers.clone())
+        }
+
+        let (layers, rendering_layers) = run_compositor(&utils, &mut compositor);
+        // First render is always a full render
+        assert_eq!(layers, rendering_layers);
+
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseOver,
+            cursor: (275.0, 375.0).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        let (_, rendering_layers) = run_compositor(&utils, &mut compositor);
+        let mut painted_nodes = 0;
+        for (_, nodes) in sorted(rendering_layers.iter()) {
+            let sdom = utils.sdom();
+            let fdom = sdom.get();
+            let layout = fdom.layout();
+            for node_id in nodes {
+                if layout.get(*node_id).is_some() {
+                    painted_nodes += 1;
+                    println!("{:?}", layout.get(*node_id).unwrap().visible_area());
+                }
+            }
+        }
+
+        // Root + Second rect + Button's internal rect + Button's label
+        assert_eq!(painted_nodes, 4);
+
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (275.0, 375.0).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        assert_eq!(label.get(0).text(), Some("1"));
     }
 }

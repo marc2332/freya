@@ -9,7 +9,7 @@ use std::{
 use freya_native_core::NodeId;
 use rustc_hash::FxHashMap;
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug, PartialEq)]
 pub struct Layers(FxHashMap<i16, Vec<NodeId>>);
 
 impl Layers {
