@@ -76,7 +76,7 @@ pub fn process_render(
                 dirty_area.max_x(),
                 dirty_area.max_y(),
             ),
-            Some(ClipOp::Intersect),
+            ClipOp::Intersect,
             false,
         );
         dirty_canvas.clear(Color::WHITE);

@@ -1059,6 +1059,9 @@ impl Canvas {
     }
 }
 
+#[derive(Default)]
+pub struct SamplingOptions;
+
 #[repr(i32)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Default)]
 pub enum RectHeightStyle {
@@ -1426,6 +1429,16 @@ impl Surface {
         _color_space: impl Into<Option<ColorSpace>>,
         _surface_props: Option<&SurfaceProps>,
     ) -> Option<Self> {
+        unimplemented!("This is mocked")
+    }
+
+    fn draw(
+        &self,
+        canvas: &Canvas,
+        offset: impl Into<Point>,
+        sampling: impl Into<SamplingOptions>,
+        paint: Option<&Paint>,
+    ) {
         unimplemented!("This is mocked")
     }
 }
