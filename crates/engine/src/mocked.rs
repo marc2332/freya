@@ -1447,6 +1447,8 @@ impl Surface {
     }
 }
 
+struct ISize;
+
 pub struct ColorSpace;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
