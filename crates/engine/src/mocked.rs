@@ -1449,6 +1449,12 @@ impl Surface {
 
 struct ISize;
 
+impl From<(i32, i32)> for Size {
+    fn from(source: (i32, i32)) -> Self {
+        (source.0 as scalar, source.1 as scalar).into()
+    }
+}
+
 pub struct ColorSpace;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]

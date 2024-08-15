@@ -252,14 +252,8 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
         );
 
         let mut dirty_surface = surface
-            .new_surface_with_dimensions({
-                let size = window.inner_size();
-                (
-                    size.width.try_into().expect("Could not convert width"),
-                    size.height.try_into().expect("Could not convert height"),
-                )
-            })
-            .unwrap(); // TODO: CLEAN UP CODE
+            .new_surface_with_dimensions(window.inner_size().to_skia())
+            .unwrap();
 
         let scale_factor = window.scale_factor();
 
