@@ -1447,7 +1447,7 @@ impl Surface {
     }
 }
 
-struct ISize;
+pub struct ISize;
 
 impl From<(i32, i32)> for ISize {
     fn from(source: (i32, i32)) -> Self {
