@@ -99,10 +99,10 @@ impl Compositor {
         &mut self,
         dirty_nodes: &mut CompositorDirtyNodes,
         dirty_area: &mut CompositorDirtyArea,
-        get_affected: impl Fn(NodeId, bool) -> Vec<NodeId>,
-        get_area: impl Fn(NodeId) -> Option<Area>,
         layers: &'a Layers,
-        rendering_layers: &'a mut Layers,
+        dirty_layers: &'a mut Layers,
+        get_area: impl Fn(NodeId) -> Option<Area>,
+        get_affected: impl Fn(NodeId, bool) -> Vec<NodeId>,
     ) -> &'a Layers {
         if self.full_render {
             dirty_nodes.clear();
@@ -146,7 +146,7 @@ impl Compositor {
 
                 if is_invalidated || is_area_invalidated {
                     // Save this node to the layer it corresponds for rendering later
-                    rendering_layers.insert_node_in_layer(*node_id, layer);
+                    dirty_layers.insert_node_in_layer(*node_id, layer);
 
                     // Expand the dirty area with only nodes who have actually changed
                     if is_invalidated {
@@ -166,7 +166,7 @@ impl Compositor {
             run_check(*layer, nodes);
         }
 
-        rendering_layers
+        dirty_layers
     }
 
     pub fn reset(&mut self) {

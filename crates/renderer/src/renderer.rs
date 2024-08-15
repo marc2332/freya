@@ -281,9 +281,8 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
 
                     app.measure_layout_on_next_render = false;
                 }
-                //surface.canvas().clear(window_config.background);
                 gl_context.make_current(gl_surface).unwrap();
-                app.render(&self.hovered_node, surface.canvas(), dirty_surface, window);
+                app.render(&self.hovered_node, surface, dirty_surface, window);
 
                 app.event_loop_tick();
                 window.pre_present_notify();

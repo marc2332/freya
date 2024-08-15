@@ -26,22 +26,28 @@ use crate::dom::FreyaDOM;
 
 pub fn process_render(
     fdom: &FreyaDOM,
-    canvas: &Canvas,
+    surface: &mut Surface,
     dirty_surface: &mut Surface,
     compositor: &mut Compositor,
     mut render_fn: impl FnMut(&FreyaDOM, &NodeId, &LayoutNode, &Torin<NodeId>, &Canvas),
 ) {
+    let canvas = surface.canvas();
     let dirty_canvas = dirty_surface.canvas();
+
     let layout = fdom.layout();
     let rdom = fdom.rdom();
     let layers = fdom.layers();
     let mut compositor_dirty_area = fdom.compositor_dirty_area();
     let mut compositor_dirty_nodes = fdom.compositor_dirty_nodes();
-    let mut rendering_layers = Layers::default();
+
+    let mut dirty_layers = Layers::default();
 
     let rendering_layers = compositor.run(
         &mut compositor_dirty_nodes,
         &mut compositor_dirty_area,
+        &layers,
+        &mut dirty_layers,
+        |node| layout.get(node).map(|node| node.area),
         |node, try_traverse_children| {
             let node = rdom.get(node);
             if let Some(node) = node {
@@ -66,9 +72,6 @@ pub fn process_render(
                 Vec::new()
             }
         },
-        |node| layout.get(node).map(|node| node.area),
-        &layers,
-        &mut rendering_layers,
     );
 
     dirty_canvas.save();

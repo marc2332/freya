@@ -286,11 +286,12 @@ impl TestingHandler {
         let fdom = self.utils.sdom.get();
         let (width, height) = self.config.size.to_i32().to_tuple();
 
-        // Create the canvas
+        // Create the main surface
         let mut surface =
             raster_n32_premul((width, height)).expect("Failed to create the surface.");
         surface.canvas().clear(Color::WHITE);
 
+        // Create the dirty surface
         let mut dirty_surface = surface
             .new_surface_with_dimensions((width, height))
             .expect("Failed to create the dirty surface.");
@@ -311,7 +312,7 @@ impl TestingHandler {
         // Render to the canvas
         process_render(
             &fdom,
-            surface.canvas(),
+            &mut surface,
             &mut dirty_surface,
             &mut compositor,
             |fdom, node_id, layout_node, layout, canvas| {

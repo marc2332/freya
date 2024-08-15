@@ -267,19 +267,19 @@ impl Application {
     pub fn render(
         &mut self,
         hovered_node: &HoveredNode,
-        canvas: &Canvas,
+        surface: &mut Surface,
         dirty_surface: &mut Surface,
         window: &Window,
     ) {
         self.plugins.send(PluginEvent::BeforeRender {
-            canvas,
+            canvas: surface.canvas(),
             font_collection: &self.font_collection,
             freya_dom: &self.sdom.get(),
         });
 
         self.start_render(
             hovered_node,
-            canvas,
+            surface,
             dirty_surface,
             window.inner_size(),
             window.scale_factor() as f32,
@@ -289,7 +289,7 @@ impl Application {
             .render_accessibility(window.title().as_str());
 
         self.plugins.send(PluginEvent::AfterRender {
-            canvas,
+            canvas: surface.canvas(),
             font_collection: &self.font_collection,
             freya_dom: &self.sdom.get(),
         });
@@ -376,7 +376,7 @@ impl Application {
     pub fn start_render(
         &mut self,
         hovered_node: &HoveredNode,
-        canvas: &Canvas,
+        surface: &mut Surface,
         dirty_surface: &mut Surface,
         window_size: PhysicalSize<u32>,
         scale_factor: f32,
@@ -398,7 +398,7 @@ impl Application {
 
         process_render(
             &fdom,
-            canvas,
+            surface,
             dirty_surface,
             &mut self.compositor,
             |fdom, node_id, layout_node, layout, canvas| {
