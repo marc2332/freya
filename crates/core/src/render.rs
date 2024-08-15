@@ -39,7 +39,7 @@ pub fn process_render(
     let mut compositor_dirty_nodes = fdom.compositor_dirty_nodes();
     let mut rendering_layers = Layers::default();
 
-    let dirty_layers = compositor.run(
+    let rendering_layers = compositor.run(
         &mut compositor_dirty_nodes,
         &mut compositor_dirty_area,
         |node, try_traverse_children| {
@@ -74,6 +74,8 @@ pub fn process_render(
     dirty_canvas.save();
     let compositor_dirty_area: &Option<Area> = &compositor_dirty_area;
     if let Some(dirty_area) = compositor_dirty_area {
+        // Clear using the configured window background only the dirty
+        // area in which it will render the intersected nodes again
         dirty_canvas.clip_rect(
             Rect::new(
                 dirty_area.min_x(),
@@ -89,8 +91,8 @@ pub fn process_render(
 
     let mut painted = Vec::new();
 
-    // Render the dirty nodes
-    for (_, nodes) in sorted(dirty_layers.iter()) {
+    // Render the layers
+    for nodes in sorted(rendering_layers.values()) {
         'elements: for node_id in nodes {
             let node = rdom.get(*node_id).unwrap();
             let node_viewports = node.get::<ViewportState>().unwrap();
@@ -105,6 +107,7 @@ pub fn process_render(
                         continue 'elements;
                     }
                 }
+
                 // Render the element
                 render_fn(fdom, node_id, layout_node, &layout, dirty_canvas);
                 painted.push(node_id);

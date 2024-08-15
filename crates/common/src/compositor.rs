@@ -107,6 +107,7 @@ impl Compositor {
         if self.full_render {
             dirty_nodes.clear();
             dirty_area.take();
+            self.full_render = false;
             return layers;
         }
 
@@ -164,8 +165,6 @@ impl Compositor {
         for (layer, nodes) in sorted(layers.iter()).rev() {
             run_check(*layer, nodes);
         }
-
-        self.full_render = false;
 
         rendering_layers
     }
