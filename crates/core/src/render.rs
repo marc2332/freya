@@ -113,5 +113,6 @@ pub fn process_render(
     }
 
     dirty_canvas.restore();
+    canvas.clear(Color::WHITE);
     dirty_surface.draw(canvas, (0, 0), SamplingOptions::default(), None);
 }
