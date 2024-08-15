@@ -83,7 +83,7 @@ pub struct Compositor {
 }
 
 impl Compositor {
-    /// Run the compositor to obtain the rendering layers 
+    /// Run the compositor to obtain the rendering layers
     /// and finish measuring the dirty area given based on the intersected layers.
     pub fn run<'a>(
         &mut self,
