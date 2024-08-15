@@ -312,6 +312,7 @@ impl TestingHandler {
         // Render to the canvas
         process_render(
             &fdom,
+            Color::WHITE,
             &mut surface,
             &mut dirty_surface,
             &mut compositor,

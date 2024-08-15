@@ -244,6 +244,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             gl_surface,
             gl_context,
             window,
+            window_config,
             app,
             fb_info,
             num_samples,
@@ -282,7 +283,13 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     app.measure_layout_on_next_render = false;
                 }
                 gl_context.make_current(gl_surface).unwrap();
-                app.render(&self.hovered_node, surface, dirty_surface, window);
+                app.render(
+                    &self.hovered_node,
+                    window_config.background,
+                    surface,
+                    dirty_surface,
+                    window,
+                );
 
                 app.event_loop_tick();
                 window.pre_present_notify();

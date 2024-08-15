@@ -267,6 +267,7 @@ impl Application {
     pub fn render(
         &mut self,
         hovered_node: &HoveredNode,
+        background: Color,
         surface: &mut Surface,
         dirty_surface: &mut Surface,
         window: &Window,
@@ -279,6 +280,7 @@ impl Application {
 
         self.start_render(
             hovered_node,
+            background,
             surface,
             dirty_surface,
             window.inner_size(),
@@ -376,6 +378,7 @@ impl Application {
     pub fn start_render(
         &mut self,
         hovered_node: &HoveredNode,
+        background: Color,
         surface: &mut Surface,
         dirty_surface: &mut Surface,
         window_size: PhysicalSize<u32>,
@@ -398,6 +401,7 @@ impl Application {
 
         process_render(
             &fdom,
+            background,
             surface,
             dirty_surface,
             &mut self.compositor,

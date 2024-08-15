@@ -26,6 +26,7 @@ use crate::dom::FreyaDOM;
 
 pub fn process_render(
     fdom: &FreyaDOM,
+    background: Color,
     surface: &mut Surface,
     dirty_surface: &mut Surface,
     compositor: &mut Compositor,
@@ -89,7 +90,7 @@ pub fn process_render(
             ClipOp::Intersect,
             false,
         );
-        dirty_canvas.clear(Color::WHITE);
+        dirty_canvas.clear(background);
     }
 
     let mut painted = Vec::new();
@@ -119,6 +120,6 @@ pub fn process_render(
     }
 
     dirty_canvas.restore();
-    canvas.clear(Color::WHITE);
+    canvas.clear(background);
     dirty_surface.draw(canvas, (0, 0), SamplingOptions::default(), None);
 }
