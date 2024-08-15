@@ -1441,6 +1441,10 @@ impl Surface {
     ) {
         unimplemented!("This is mocked")
     }
+
+    pub fn new_surface_with_dimensions(&mut self, dim: impl Into<ISize>) -> Option<Self> {
+        unimplemented!("This is mocked")
+    }
 }
 
 pub struct ColorSpace;
