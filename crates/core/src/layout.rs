@@ -28,10 +28,10 @@ pub fn process_layout(
         layout.find_best_root(&mut dom_adapter);
 
         // Unite the areas of the invalidated nodes with the dirty area
+        let mut compositor_dirty_area = fdom.compositor_dirty_area();
         let mut buffer = layout.dirty.iter().copied().collect_vec();
         while let Some(node_id) = buffer.pop() {
             if let Some(layout_node) = layout.get(node_id) {
-                let mut compositor_dirty_area = fdom.compositor_dirty_area();
                 let area = layout_node.visible_area();
 
                 // Unite the invalidated area with the dirty area
