@@ -370,7 +370,7 @@ impl Application {
         info!(
             "Processed {} layers and {} group of paragraph elements",
             fdom.layers().len(),
-            fdom.paragraphs().len_paragraphs()
+            fdom.paragraphs().len()
         );
     }
 

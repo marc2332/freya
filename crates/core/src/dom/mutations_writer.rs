@@ -29,7 +29,7 @@ pub struct MutationsWriter<'a> {
     pub native_writer: DioxusNativeCoreMutationWriter<'a, CustomAttributeValues>,
     pub layout: &'a mut Torin<NodeId>,
     pub layers: &'a mut Layers,
-    pub paragraphs: &'a ParagraphElements,
+    pub paragraphs: &'a mut ParagraphElements,
     pub scale_factor: f32,
     pub compositor_dirty_nodes: &'a mut CompositorDirtyNodes,
     pub compositor_dirty_area: &'a mut CompositorDirtyArea,

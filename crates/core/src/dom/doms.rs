@@ -119,7 +119,7 @@ pub struct FreyaDOM {
     rdom: DioxusDOM,
     dioxus_integration_state: DioxusState,
     torin: Arc<Mutex<Torin<NodeId>>>,
-    paragraphs: ParagraphElements,
+    paragraphs: Arc<Mutex<ParagraphElements>>,
     layers: Arc<Mutex<Layers>>,
     compositor_dirty_nodes: Arc<Mutex<CompositorDirtyNodes>>,
     compositor_dirty_area: Arc<Mutex<CompositorDirtyArea>>,
@@ -143,7 +143,7 @@ impl Default for FreyaDOM {
             rdom,
             dioxus_integration_state,
             torin: Arc::new(Mutex::new(Torin::new())),
-            paragraphs: ParagraphElements::default(),
+            paragraphs: Arc::default(),
             layers: Arc::default(),
             compositor_dirty_nodes: Arc::default(),
             compositor_dirty_area: Arc::default(),
@@ -160,8 +160,8 @@ impl FreyaDOM {
         self.layers.lock().unwrap()
     }
 
-    pub fn paragraphs(&self) -> &ParagraphElements {
-        &self.paragraphs
+    pub fn paragraphs(&self) -> MutexGuard<ParagraphElements> {
+        self.paragraphs.lock().unwrap()
     }
 
     pub fn compositor_dirty_nodes(&self) -> MutexGuard<CompositorDirtyNodes> {
@@ -181,7 +181,7 @@ impl FreyaDOM {
                 .create_mutation_writer(&mut self.rdom),
             layout: &mut self.torin.lock().unwrap(),
             layers: &mut self.layers.lock().unwrap(),
-            paragraphs: &self.paragraphs,
+            paragraphs: &mut self.paragraphs.lock().unwrap(),
             scale_factor,
             compositor_dirty_nodes: &mut self.compositor_dirty_nodes.lock().unwrap(),
             compositor_dirty_area: &mut self.compositor_dirty_area.lock().unwrap(),
@@ -205,7 +205,7 @@ impl FreyaDOM {
                 .create_mutation_writer(&mut self.rdom),
             layout: &mut self.torin.lock().unwrap(),
             layers: &mut self.layers.lock().unwrap(),
-            paragraphs: &self.paragraphs,
+            paragraphs: &mut self.paragraphs.lock().unwrap(),
             scale_factor,
             compositor_dirty_nodes: &mut self.compositor_dirty_nodes.lock().unwrap(),
             compositor_dirty_area: &mut self.compositor_dirty_area.lock().unwrap(),
@@ -250,7 +250,7 @@ impl FreyaDOM {
 
     /// Measure all the paragraphs registered under the given TextId
     pub fn measure_paragraphs(&self, text_measurement: TextGroupMeasurement, scale_factor: f64) {
-        let paragraphs = self.paragraphs.paragraphs();
+        let paragraphs = self.paragraphs.lock().unwrap();
         let group = paragraphs.get(&text_measurement.text_id);
         let layout = self.layout();
         if let Some(group) = group {
