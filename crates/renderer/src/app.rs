@@ -366,12 +366,15 @@ impl Application {
             devtools.update(&self.sdom.get())
         }
 
-        let fdom = self.sdom.get();
-        info!(
-            "Processed {} layers and {} group of paragraph elements",
-            fdom.layers().len(),
-            fdom.paragraphs().len()
-        );
+        #[cfg(debug_assertions)]
+        {
+            let fdom = self.sdom.get();
+            info!(
+                "Processed {} layers and {} group of paragraph elements",
+                fdom.layers().len(),
+                fdom.paragraphs().len()
+            );
+        }
     }
 
     /// Start rendering the RealDOM to Window

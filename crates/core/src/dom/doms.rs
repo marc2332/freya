@@ -224,6 +224,7 @@ impl FreyaDOM {
         let must_repaint = !diff.is_empty();
         let must_relayout = !self.layout().get_dirty_nodes().is_empty();
 
+        #[cfg(debug_assertions)]
         if !diff.is_empty() {
             info!(
                 "Updated DOM, now with {} nodes",

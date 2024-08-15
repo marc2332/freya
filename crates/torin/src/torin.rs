@@ -256,14 +256,17 @@ impl<Key: NodeKey> Torin<Key> {
                 data: None,
             });
         let root = dom_adapter.get_node(&root_id).unwrap();
-        let root_height = dom_adapter.height(&root_id).unwrap();
 
-        info!(
-            "Processing {} dirty nodes and {} cached nodes from a height of {}",
-            self.dirty.len(),
-            self.results.len(),
-            root_height
-        );
+        #[cfg(debug_assertions)]
+        {
+            let root_height = dom_adapter.height(&root_id).unwrap();
+            info!(
+                "Processing {} dirty nodes and {} cached nodes from a height of {}",
+                self.dirty.len(),
+                self.results.len(),
+                root_height
+            );
+        }
 
         let metadata = LayoutMetadata { root_area };
 
