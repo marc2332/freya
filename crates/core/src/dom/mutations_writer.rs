@@ -81,8 +81,10 @@ impl<'a> MutationsWriter<'a> {
                 }
 
                 // Unite the removed area with the dirty area
-                let area = self.layout.get(node_id).unwrap().visible_area();
-                self.compositor_dirty_area.unite_or_insert(&area);
+                if let Some(layout_node) = self.layout.get(node_id) {
+                    self.compositor_dirty_area
+                        .unite_or_insert(&layout_node.visible_area());
+                }
             }
         }
 
