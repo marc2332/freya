@@ -83,7 +83,7 @@ impl Compositor {
         let node = rdom.get(node_id)?;
         let utils = node.node_type().tag()?.utils()?;
 
-        Some(utils.drawing_area(layout_node.visible_area(), &node, scale_factor))
+        Some(utils.drawing_area(layout_node, &node, scale_factor))
     }
 
     /// Run the compositor to obtain the rendering layers

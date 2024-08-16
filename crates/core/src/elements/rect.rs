@@ -271,11 +271,12 @@ impl ElementUtils for RectElement {
 
     fn drawing_area(
         &self,
-        mut area: torin::prelude::Area,
+        layout_node: &LayoutNode,
         node_ref: &DioxusNode,
         scale_factor: f32,
     ) -> torin::prelude::Area {
         let node_style = &*node_ref.get::<StyleState>().unwrap();
+        let mut area = layout_node.visible_area();
 
         let mut path = Path::new();
 

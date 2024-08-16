@@ -45,9 +45,13 @@ pub trait ElementUtils {
         scale_factor: f32,
     );
 
-    // TODO: change area to layout node
-    fn drawing_area(&self, area: Area, _node_ref: &DioxusNode, _scale_factor: f32) -> Area {
-        area
+    fn drawing_area(
+        &self,
+        layout_node: &LayoutNode,
+        _node_ref: &DioxusNode,
+        _scale_factor: f32,
+    ) -> Area {
+        layout_node.visible_area()
     }
 }
 
@@ -170,13 +174,18 @@ impl ElementUtils for ElementWithUtils {
         }
     }
 
-    fn drawing_area(&self, area: Area, node_ref: &DioxusNode, scale_factor: f32) -> Area {
+    fn drawing_area(
+        &self,
+        layout_node: &LayoutNode,
+        node_ref: &DioxusNode,
+        scale_factor: f32,
+    ) -> Area {
         match self {
-            Self::Rect(el) => el.drawing_area(area, node_ref, scale_factor),
-            Self::Svg(el) => el.drawing_area(area, node_ref, scale_factor),
-            Self::Paragraph(el) => el.drawing_area(area, node_ref, scale_factor),
-            Self::Image(el) => el.drawing_area(area, node_ref, scale_factor),
-            Self::Label(el) => el.drawing_area(area, node_ref, scale_factor),
+            Self::Rect(el) => el.drawing_area(layout_node, node_ref, scale_factor),
+            Self::Svg(el) => el.drawing_area(layout_node, node_ref, scale_factor),
+            Self::Paragraph(el) => el.drawing_area(layout_node, node_ref, scale_factor),
+            Self::Image(el) => el.drawing_area(layout_node, node_ref, scale_factor),
+            Self::Label(el) => el.drawing_area(layout_node, node_ref, scale_factor),
         }
     }
 }
