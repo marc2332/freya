@@ -1,4 +1,5 @@
 pub mod accessibility;
+pub mod compositor;
 pub mod dom;
 pub mod elements;
 pub mod events;
@@ -14,6 +15,7 @@ pub mod types;
 pub mod prelude {
     pub use crate::{
         accessibility::*,
+        compositor::*,
         dom::*,
         elements::*,
         events::*,

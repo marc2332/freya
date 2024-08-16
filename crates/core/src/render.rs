@@ -1,7 +1,4 @@
-use freya_common::{
-    Compositor,
-    Layers,
-};
+use freya_common::Layers;
 use freya_engine::prelude::{
     Canvas,
     ClipOp,
@@ -24,10 +21,7 @@ use tracing::info;
 
 use crate::{
     dom::FreyaDOM,
-    prelude::{
-        ElementUtils,
-        ElementUtilsResolver,
-    },
+    prelude::Compositor,
 };
 
 pub fn process_render(
@@ -36,6 +30,7 @@ pub fn process_render(
     surface: &mut Surface,
     dirty_surface: &mut Surface,
     compositor: &mut Compositor,
+    scale_factor: f32,
     mut render_fn: impl FnMut(&FreyaDOM, &NodeId, &LayoutNode, &Torin<NodeId>, &Canvas),
 ) {
     let canvas = surface.canvas();
@@ -55,13 +50,9 @@ pub fn process_render(
         &mut compositor_dirty_area,
         &layers,
         &mut dirty_layers,
-        |node_id| {
-            let layout_node = layout.get(*node_id)?;
-            let node = rdom.get(*node_id)?;
-            let utils = node.node_type().tag()?.utils()?;
-
-            Some(utils.drawing_area(layout_node.visible_area(), &node, 1.0f32))
-        },
+        &layout,
+        rdom,
+        scale_factor,
     );
 
     dirty_canvas.save();

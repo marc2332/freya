@@ -6,7 +6,6 @@ use std::sync::{
 
 use dioxus_core::VirtualDom;
 use freya_common::{
-    CompositorDirtyArea,
     CompositorDirtyNodes,
     Layers,
     ParagraphElements,
@@ -40,7 +39,10 @@ use torin::prelude::*;
 use tracing::info;
 
 use super::mutations_writer::MutationsWriter;
-use crate::prelude::measure_paragraph;
+use crate::prelude::{
+    measure_paragraph,
+    CompositorDirtyArea,
+};
 
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
 pub type DioxusNode<'a> = NodeRef<'a, CustomAttributeValues>;

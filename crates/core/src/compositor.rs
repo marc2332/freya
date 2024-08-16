@@ -1,38 +1,24 @@
-use std::ops::{
-    Deref,
-    DerefMut,
+use std::ops::Deref;
+
+use freya_common::{
+    CompositorDirtyNodes,
+    Layers,
+};
+use freya_native_core::{
+    prelude::NodeImmutable,
+    NodeId,
+};
+use itertools::sorted;
+use torin::prelude::{
+    Area,
+    Torin,
 };
 
-use freya_native_core::NodeId;
-use itertools::sorted;
-use rustc_hash::FxHashSet;
-use torin::prelude::Area;
-
-use crate::Layers;
-
-#[derive(Clone, Default, Debug)]
-pub struct CompositorDirtyNodes(FxHashSet<NodeId>);
-
-impl Deref for CompositorDirtyNodes {
-    type Target = FxHashSet<NodeId>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for CompositorDirtyNodes {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-impl CompositorDirtyNodes {
-    /// Mark a certain node as invalidated.
-    pub fn invalidate(&mut self, node_id: NodeId) {
-        self.0.insert(node_id);
-    }
-}
+use crate::prelude::{
+    DioxusDOM,
+    ElementUtils,
+    ElementUtilsResolver,
+};
 
 #[derive(Clone, Default, Debug)]
 pub struct CompositorDirtyArea(Option<Area>);
@@ -59,6 +45,7 @@ impl CompositorDirtyArea {
         }
     }
 
+    /// Checks if the area (in case of being any) interesects with another area.
     pub fn intersects(&self, other: &Area) -> bool {
         self.0
             .map(|dirty_area| dirty_area.intersects(other))
@@ -86,15 +73,31 @@ impl Default for Compositor {
 }
 
 impl Compositor {
+    pub fn get_drawing_area(
+        node_id: NodeId,
+        layout: &Torin<NodeId>,
+        rdom: &DioxusDOM,
+        scale_factor: f32,
+    ) -> Option<Area> {
+        let layout_node = layout.get(node_id)?;
+        let node = rdom.get(node_id)?;
+        let utils = node.node_type().tag()?.utils()?;
+
+        Some(utils.drawing_area(layout_node.visible_area(), &node, scale_factor))
+    }
+
     /// Run the compositor to obtain the rendering layers
     /// and finish measuring the dirty area given based on the intersected layers.
+    #[allow(clippy::too_many_arguments)]
     pub fn run<'a>(
         &mut self,
         dirty_nodes: &mut CompositorDirtyNodes,
         dirty_area: &mut CompositorDirtyArea,
         layers: &'a Layers,
         dirty_layers: &'a mut Layers,
-        get_drawing_area: impl Fn(&NodeId) -> Option<Area>,
+        layout: &Torin<NodeId>,
+        rdom: &DioxusDOM,
+        scale_factor: f32,
     ) -> &'a Layers {
         if self.full_render {
             dirty_nodes.clear();
@@ -105,7 +108,8 @@ impl Compositor {
 
         let mut run_check = |layer: i16, nodes: &[NodeId]| {
             for node_id in nodes {
-                let Some(area) = get_drawing_area(node_id) else {
+                let Some(area) = Self::get_drawing_area(*node_id, layout, rdom, scale_factor)
+                else {
                     continue;
                 };
                 let is_invalidated = dirty_nodes.contains(node_id);
@@ -199,6 +203,7 @@ mod test {
             let fdom = sdom.get();
             let layout = fdom.layout();
             let layers = fdom.layers();
+            let rdom = fdom.rdom();
             let mut compositor_dirty_area = fdom.compositor_dirty_area();
             let mut compositor_dirty_nodes = fdom.compositor_dirty_nodes();
 
@@ -210,11 +215,9 @@ mod test {
                 &mut *compositor_dirty_area,
                 &*layers,
                 &mut dirty_layers,
-                |node_id| {
-                    layout
-                        .get(*node_id)
-                        .map(|layout_node| layout_node.visible_area()) // TODO: actuall consider drawing area
-                },
+                &layout,
+                rdom,
+                1.0f32,
             );
 
             compositor_dirty_area.take();

@@ -8,7 +8,6 @@ use std::{
 
 use dioxus_core::VirtualDom;
 use freya_common::{
-    Compositor,
     EventMessage,
     TextGroupMeasurement,
 };
@@ -211,7 +210,7 @@ impl TestingHandler {
                 size,
             },
             &mut self.font_collection,
-            SCALE_FACTOR,
+            SCALE_FACTOR as f32,
             &default_fonts(),
         );
 
@@ -316,6 +315,7 @@ impl TestingHandler {
             &mut surface,
             &mut dirty_surface,
             &mut compositor,
+            1.0f32,
             |fdom, node_id, layout_node, layout, canvas| {
                 if let Some(dioxus_node) = fdom.rdom().get(*node_id) {
                     skia_renderer.render(

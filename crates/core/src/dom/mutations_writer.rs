@@ -3,7 +3,6 @@ use dioxus_core::{
     WriteMutations,
 };
 use freya_common::{
-    CompositorDirtyArea,
     CompositorDirtyNodes,
     Layers,
     ParagraphElements,
@@ -21,15 +20,12 @@ use freya_node_state::{
     CustomAttributeValues,
     LayerState,
 };
-use torin::{
-    prelude::Area,
-    torin::Torin,
-};
+use torin::torin::Torin;
 
 use crate::prelude::{
+    Compositor,
+    CompositorDirtyArea,
     DioxusDOMAdapter,
-    ElementUtils,
-    ElementUtilsResolver,
 };
 
 pub struct MutationsWriter<'a> {
@@ -46,15 +42,6 @@ impl<'a> MutationsWriter<'a> {
     pub fn remove(&mut self, id: ElementId) {
         let node_id = self.native_writer.state.element_to_node_id(id);
         let mut dom_adapter = DioxusDOMAdapter::new(self.native_writer.rdom, self.scale_factor);
-
-        let get_drawing_area = |node_id: &NodeId| -> Option<Area> {
-            let layout_node = self.layout.get(*node_id)?;
-            let node = self.native_writer.rdom.get(*node_id)?;
-            let utils = node.node_type().tag()?.utils()?;
-
-            Some(utils.drawing_area(layout_node.visible_area(), &node, self.scale_factor))
-        };
-
         // Remove from layers , paragraph elements and unite the removed areas with the compositor dirty area
         let mut stack = vec![node_id];
         let tree = self.native_writer.rdom.tree_ref();
@@ -96,7 +83,12 @@ impl<'a> MutationsWriter<'a> {
                 }
 
                 // Unite the removed area with the dirty area
-                if let Some(area) = get_drawing_area(&node_id) {
+                if let Some(area) = Compositor::get_drawing_area(
+                    node_id,
+                    self.layout,
+                    self.native_writer.rdom,
+                    self.scale_factor,
+                ) {
                     self.compositor_dirty_area.unite_or_insert(&area);
                 }
             }

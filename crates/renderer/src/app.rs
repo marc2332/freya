@@ -5,7 +5,6 @@ use dioxus_core::{
     VirtualDom,
 };
 use freya_common::{
-    Compositor,
     EventMessage,
     TextGroupMeasurement,
 };
@@ -354,7 +353,7 @@ impl Application {
                 &fdom,
                 Area::from_size(window_size.to_torin()),
                 &mut self.font_collection,
-                scale_factor,
+                scale_factor as f32,
                 &self.default_fonts,
             );
 
@@ -412,6 +411,7 @@ impl Application {
             surface,
             dirty_surface,
             &mut self.compositor,
+            scale_factor,
             |fdom, node_id, layout_node, layout, canvas| {
                 let render_wireframe = hovered_node.as_ref() == Some(node_id);
                 if let Some(dioxus_node) = fdom.rdom().get(*node_id) {
