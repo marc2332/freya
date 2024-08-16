@@ -1226,6 +1226,10 @@ impl Path {
         unimplemented!("This is mocked")
     }
 
+    pub fn bounds(&self) -> &Rect {
+        unimplemented!("This is mocked")
+    }
+
     pub fn add_path(
         &mut self,
         _src: &Path,
