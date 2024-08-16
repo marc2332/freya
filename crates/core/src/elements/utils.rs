@@ -60,6 +60,7 @@ pub trait ElementUtilsResolver {
 }
 
 impl ElementUtilsResolver for TagName {
+    #[inline]
     fn utils(&self) -> Option<ElementWithUtils> {
         match self {
             TagName::Rect => Some(ElementWithUtils::Rect(RectElement)),
