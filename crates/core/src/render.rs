@@ -22,7 +22,13 @@ use torin::prelude::{
 };
 use tracing::info;
 
-use crate::dom::FreyaDOM;
+use crate::{
+    dom::FreyaDOM,
+    prelude::{
+        ElementUtils,
+        ElementUtilsResolver,
+    },
+};
 
 pub fn process_render(
     fdom: &FreyaDOM,
@@ -49,7 +55,13 @@ pub fn process_render(
         &mut compositor_dirty_area,
         &layers,
         &mut dirty_layers,
-        &layout,
+        |node_id| {
+            let layout_node = layout.get(*node_id)?;
+            let node = rdom.get(*node_id)?;
+            let utils = node.node_type().tag()?.utils()?;
+
+            Some(utils.drawing_area(layout_node.visible_area(), &node, 1.0f32))
+        },
     );
 
     dirty_canvas.save();

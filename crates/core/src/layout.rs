@@ -1,10 +1,17 @@
 use freya_engine::prelude::*;
-use freya_native_core::prelude::NodeImmutable;
+use freya_native_core::{
+    prelude::NodeImmutable,
+    NodeId,
+};
 use itertools::Itertools;
 use torin::geometry::Area;
 
 use crate::{
     dom::*,
+    prelude::{
+        ElementUtils,
+        ElementUtilsResolver,
+    },
     skia::SkiaMeasurer,
 };
 
@@ -27,13 +34,19 @@ pub fn process_layout(
         // Finds the best Node from where to start measuring
         layout.find_best_root(&mut dom_adapter);
 
+        let get_drawing_area = |node_id: &NodeId| -> Option<Area> {
+            let layout_node = layout.get(*node_id)?;
+            let node = rdom.get(*node_id)?;
+            let utils = node.node_type().tag()?.utils()?;
+
+            Some(utils.drawing_area(layout_node.visible_area(), &node, 1.0f32)) // TODO scale factor
+        };
+
         // Unite the areas of the invalidated nodes with the dirty area
         let mut compositor_dirty_area = fdom.compositor_dirty_area();
         let mut buffer = layout.dirty.iter().copied().collect_vec();
         while let Some(node_id) = buffer.pop() {
-            if let Some(layout_node) = layout.get(node_id) {
-                let area = layout_node.visible_area();
-
+            if let Some(area) = get_drawing_area(&node_id) {
                 // Unite the invalidated area with the dirty area
                 compositor_dirty_area.unite_or_insert(&area);
 

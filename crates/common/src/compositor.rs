@@ -6,10 +6,7 @@ use std::ops::{
 use freya_native_core::NodeId;
 use itertools::sorted;
 use rustc_hash::FxHashSet;
-use torin::prelude::{
-    Area,
-    Torin,
-};
+use torin::prelude::Area;
 
 use crate::Layers;
 
@@ -97,7 +94,7 @@ impl Compositor {
         dirty_area: &mut CompositorDirtyArea,
         layers: &'a Layers,
         dirty_layers: &'a mut Layers,
-        layout: &Torin<NodeId>,
+        get_drawing_area: impl Fn(&NodeId) -> Option<Area>,
     ) -> &'a Layers {
         if self.full_render {
             dirty_nodes.clear();
@@ -108,10 +105,7 @@ impl Compositor {
 
         let mut run_check = |layer: i16, nodes: &[NodeId]| {
             for node_id in nodes {
-                let Some(area) = layout
-                    .get(*node_id)
-                    .map(|layout_node| layout_node.visible_area())
-                else {
+                let Some(area) = get_drawing_area(node_id) else {
                     continue;
                 };
                 let is_invalidated = dirty_nodes.contains(node_id);
@@ -216,7 +210,11 @@ mod test {
                 &mut *compositor_dirty_area,
                 &*layers,
                 &mut dirty_layers,
-                &layout,
+                |node_id| {
+                    layout
+                        .get(*node_id)
+                        .map(|layout_node| layout_node.visible_area()) // TODO: actuall consider drawing area
+                },
             );
 
             compositor_dirty_area.take();

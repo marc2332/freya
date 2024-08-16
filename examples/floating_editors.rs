@@ -99,7 +99,7 @@ fn app() -> Element {
                                         height: "400",
                                         corner_radius: "15",
                                         padding: "10",
-                                        //shadow: "0 0 30 0 rgb(0, 0, 0, 150)",
+                                        shadow: "0 0 30 0 rgb(0, 0, 0, 150)",
                                         onmousedown:  move |e: MouseEvent| {
                                             e.stop_propagation();
                                             clicking_drag.set(Some((id, e.get_element_coordinates().to_tuple())));
