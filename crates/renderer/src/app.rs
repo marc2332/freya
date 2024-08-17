@@ -26,7 +26,6 @@ use tokio::{
     },
 };
 use torin::geometry::Area;
-use tracing::info;
 use winit::{
     dpi::PhysicalSize,
     event_loop::EventLoopProxy,
@@ -368,7 +367,7 @@ impl Application {
         #[cfg(debug_assertions)]
         {
             let fdom = self.sdom.get();
-            info!(
+            tracing::info!(
                 "Processed {} layers and {} group of paragraph elements",
                 fdom.layers().len(),
                 fdom.paragraphs().len()

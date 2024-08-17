@@ -8,7 +8,6 @@ use rustc_hash::{
     FxHashMap,
     FxHashSet,
 };
-use tracing::info;
 
 use crate::{
     custom_measurer::LayoutMeasurer,
@@ -260,7 +259,7 @@ impl<Key: NodeKey> Torin<Key> {
         #[cfg(debug_assertions)]
         {
             let root_height = dom_adapter.height(&root_id).unwrap();
-            info!(
+            tracing::info!(
                 "Processing {} dirty nodes and {} cached nodes from a height of {}",
                 self.dirty.len(),
                 self.results.len(),

@@ -36,7 +36,6 @@ use freya_node_state::{
     ViewportState,
 };
 use torin::prelude::*;
-use tracing::info;
 
 use super::mutations_writer::MutationsWriter;
 use crate::prelude::{
@@ -228,8 +227,9 @@ impl FreyaDOM {
 
         #[cfg(debug_assertions)]
         if !diff.is_empty() {
-            info!(
-                "Updated DOM, now with {} nodes",
+            tracing::info!(
+                "Updated {} nodes in RealDOM, now of size {}",
+                diff.len(),
                 self.rdom().tree_ref().len()
             );
         }

@@ -17,7 +17,6 @@ use torin::prelude::{
     LayoutNode,
     Torin,
 };
-use tracing::info;
 
 use crate::{
     dom::FreyaDOM,
@@ -61,7 +60,7 @@ pub fn process_render(
 
     if let Some(dirty_area) = compositor_dirty_area.take() {
         #[cfg(debug_assertions)]
-        info!("Marked {dirty_area:?} as dirty area");
+        tracing::info!("Marked {dirty_area:?} as dirty area");
 
         // Clear using the the background only, but only the dirty
         // area in which it will render the intersected nodes again
@@ -110,7 +109,11 @@ pub fn process_render(
     }
 
     #[cfg(debug_assertions)]
-    info!("Painted {painted} nodes");
+    {
+        if painted > 0 {
+            tracing::info!("Painted {painted} nodes");
+        }
+    }
 
     dirty_canvas.restore();
     canvas.clear(background);
