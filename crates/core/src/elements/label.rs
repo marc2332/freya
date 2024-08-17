@@ -60,20 +60,19 @@ impl ElementUtils for LabelElement {
         let area = layout_node.visible_area();
         let font_style = node_ref.get::<FontStyleState>().unwrap();
 
-        let mut text_area = area;
+        let mut text_shadow_area = area;
 
         for text_shadow in &font_style.text_shadows {
-            text_area.move_with_offsets(
+            text_shadow_area.move_with_offsets(
                 &Length::new(text_shadow.offset.x),
                 &Length::new(text_shadow.offset.y),
             );
 
-            text_area.expand(&Size2D::new(
-                text_shadow.blur_sigma as f32 * scale_factor + 1.,
-                text_shadow.blur_sigma as f32 * scale_factor,
-            ));
+            let expanded_size = text_shadow.blur_sigma.ceil() as f32 * scale_factor;
+
+            text_shadow_area.expand(&Size2D::new(expanded_size, expanded_size))
         }
 
-        area.union(&text_area)
+        area.union(&text_shadow_area)
     }
 }

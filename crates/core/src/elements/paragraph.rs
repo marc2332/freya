@@ -133,10 +133,9 @@ impl ElementUtils for ParagraphElement {
                             &Length::new(text_shadow.offset.y),
                         );
 
-                        text_shadow_area.expand(&Size2D::new(
-                            text_shadow.blur_sigma.ceil() as f32 * scale_factor + 1.,
-                            text_shadow.blur_sigma.ceil() as f32 * scale_factor,
-                        ))
+                        let expanded_size = text_shadow.blur_sigma.ceil() as f32 * scale_factor;
+
+                        text_shadow_area.expand(&Size2D::new(expanded_size, expanded_size))
                     }
                 }
 
