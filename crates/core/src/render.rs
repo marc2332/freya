@@ -40,6 +40,7 @@ pub fn process_render(
     let layers = fdom.layers();
     let mut compositor_dirty_area = fdom.compositor_dirty_area();
     let mut compositor_dirty_nodes = fdom.compositor_dirty_nodes();
+    let mut compositor_cache = fdom.compositor_cache();
 
     let mut dirty_layers = Layers::default();
 
@@ -47,6 +48,7 @@ pub fn process_render(
     let rendering_layers = compositor.run(
         &mut compositor_dirty_nodes,
         &mut compositor_dirty_area,
+        &mut compositor_cache,
         &layers,
         &mut dirty_layers,
         &layout,

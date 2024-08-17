@@ -48,6 +48,8 @@ pub trait AreaModel {
     );
 
     fn adjust_size(&mut self, node: &Node);
+
+    fn expand(&mut self, size: &Size2D);
 }
 
 impl AreaModel for Area {
@@ -176,6 +178,13 @@ impl AreaModel for Area {
         if let Size::InnerPercentage(p) = node.height {
             self.size.height *= p.get() / 100.;
         }
+    }
+
+    fn expand(&mut self, size: &Size2D) {
+        self.origin.x -= size.width;
+        self.origin.y -= size.height;
+        self.size.width += size.width * 2.;
+        self.size.height += size.height * 2.;
     }
 }
 

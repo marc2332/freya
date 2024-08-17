@@ -1,8 +1,26 @@
 use freya_common::CachedParagraph;
 use freya_engine::prelude::*;
-use freya_native_core::real_dom::NodeImmutable;
-use freya_node_state::CursorState;
-use torin::geometry::Area;
+use freya_native_core::{
+    prelude::{
+        ElementNode,
+        NodeType,
+    },
+    real_dom::NodeImmutable,
+    tags::TagName,
+};
+use freya_node_state::{
+    CursorState,
+    FontStyleState,
+};
+use torin::{
+    geometry::Area,
+    prelude::{
+        AreaModel,
+        LayoutNode,
+        Length,
+        Size2D,
+    },
+};
 
 use super::utils::ElementUtils;
 use crate::{
@@ -63,6 +81,70 @@ impl ElementUtils for ParagraphElement {
                 .0;
             paint(paragraph);
         };
+    }
+
+    fn needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
+        for text_span in node_ref.children() {
+            if let NodeType::Element(ElementNode {
+                tag: TagName::Text, ..
+            }) = &*text_span.node_type()
+            {
+                let font_style = text_span.get::<FontStyleState>().unwrap();
+
+                if !font_style.text_shadows.is_empty() {
+                    return true;
+                }
+            }
+        }
+
+        false
+    }
+
+    fn drawing_area(
+        &self,
+        layout_node: &LayoutNode,
+        node_ref: &DioxusNode,
+        scale_factor: f32,
+    ) -> Area {
+        let mut area = layout_node.visible_area();
+
+        // Iterate over all the text spans inside this paragraph and if any of them
+        // has a shadow at all, apply this shadow to the general paragraph.
+        // Is this fully correct? Not really.
+        // Best thing would be to know if any of these text spans withs shadow actually increase
+        // the paragraph area, but I honestly don't know how to properly know the layout of X
+        // text span with shadow.
+        // Therefore I simply assume that the shadow of any text span is referring to the paragraph.
+        // Better to have a big dirty area rather than smaller than what is supposed to be rendered again.
+
+        for text_span in node_ref.children() {
+            if let NodeType::Element(ElementNode {
+                tag: TagName::Text, ..
+            }) = &*text_span.node_type()
+            {
+                let font_style = text_span.get::<FontStyleState>().unwrap();
+
+                let mut text_shadow_area = area;
+
+                for text_shadow in &font_style.text_shadows {
+                    if text_shadow.color != Color::TRANSPARENT {
+                        text_shadow_area.move_with_offsets(
+                            &Length::new(text_shadow.offset.x),
+                            &Length::new(text_shadow.offset.y),
+                        );
+
+                        text_shadow_area.expand(&Size2D::new(
+                            text_shadow.blur_sigma.ceil() as f32 * scale_factor + 1.,
+                            text_shadow.blur_sigma.ceil() as f32 * scale_factor,
+                        ))
+                    }
+                }
+
+                area = area.union(&text_shadow_area);
+            }
+        }
+
+        area
     }
 }
 

@@ -45,13 +45,25 @@ pub trait ElementUtils {
         scale_factor: f32,
     );
 
+    /// Measure the area for this element considering other
+    /// factors like shadows or borders, which are not part of the layout.
     fn drawing_area(
         &self,
         layout_node: &LayoutNode,
         _node_ref: &DioxusNode,
         _scale_factor: f32,
     ) -> Area {
+        // Images neither SVG elements have support for shadows or borders, so its fine so simply return the visible area.
         layout_node.visible_area()
+    }
+
+    /// Check if this element requires any kind of special caching.
+    /// Mainly used for text-like elements with shadows.
+    /// See [crate::compositor::CompositorCache].
+    /// Default to `false`.
+    #[inline]
+    fn needs_cached_area(&self, _node_ref: &DioxusNode) -> bool {
+        false
     }
 }
 
@@ -187,6 +199,16 @@ impl ElementUtils for ElementWithUtils {
             Self::Paragraph(el) => el.drawing_area(layout_node, node_ref, scale_factor),
             Self::Image(el) => el.drawing_area(layout_node, node_ref, scale_factor),
             Self::Label(el) => el.drawing_area(layout_node, node_ref, scale_factor),
+        }
+    }
+
+    fn needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
+        match self {
+            Self::Rect(el) => el.needs_cached_area(node_ref),
+            Self::Svg(el) => el.needs_cached_area(node_ref),
+            Self::Paragraph(el) => el.needs_cached_area(node_ref),
+            Self::Image(el) => el.needs_cached_area(node_ref),
+            Self::Label(el) => el.needs_cached_area(node_ref),
         }
     }
 }

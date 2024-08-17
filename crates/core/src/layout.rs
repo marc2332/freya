@@ -28,6 +28,7 @@ pub fn process_layout(
         layout.find_best_root(&mut dom_adapter);
 
         // Unite the areas of the invalidated nodes with the dirty area
+        let mut compositor_dirty_nodes = fdom.compositor_dirty_nodes();
         let mut compositor_dirty_area = fdom.compositor_dirty_area();
         let mut buffer = layout.dirty.iter().copied().collect_vec();
         while let Some(node_id) = buffer.pop() {
@@ -35,6 +36,10 @@ pub fn process_layout(
                 // Unite the invalidated area with the dirty area
                 compositor_dirty_area.unite_or_insert(&area);
 
+                // Mark these elements as dirty for the compositor
+                compositor_dirty_nodes.insert(node_id);
+
+                // Continue iterating in the children of this node
                 if let Some(node) = rdom.get(node_id) {
                     buffer.extend(node.child_ids());
                 }

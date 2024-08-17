@@ -199,9 +199,6 @@ impl TestingHandler {
 
     /// Wait for layout and events to be processed
     pub fn wait_for_work(&mut self, size: Size2D) {
-        // Clear cached results
-        self.utils.sdom().get_mut().layout().reset();
-
         // Measure layout
         process_layout(
             &self.utils.sdom().get(),
@@ -267,7 +264,8 @@ impl TestingHandler {
         self.config.size = size;
         self.platform_sender.send_modify(|state| {
             state.information.viewport_size = size;
-        })
+        });
+        self.utils.sdom().get_mut().layout().reset();
     }
 
     /// Get the current [CursorIcon].

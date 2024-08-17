@@ -24,6 +24,7 @@ use torin::torin::Torin;
 
 use crate::prelude::{
     Compositor,
+    CompositorCache,
     CompositorDirtyArea,
     DioxusDOMAdapter,
 };
@@ -36,12 +37,14 @@ pub struct MutationsWriter<'a> {
     pub scale_factor: f32,
     pub compositor_dirty_nodes: &'a mut CompositorDirtyNodes,
     pub compositor_dirty_area: &'a mut CompositorDirtyArea,
+    pub compositor_cache: &'a mut CompositorCache,
 }
 
 impl<'a> MutationsWriter<'a> {
     pub fn remove(&mut self, id: ElementId) {
         let node_id = self.native_writer.state.element_to_node_id(id);
         let mut dom_adapter = DioxusDOMAdapter::new(self.native_writer.rdom, self.scale_factor);
+
         // Remove from layers , paragraph elements and unite the removed areas with the compositor dirty area
         let mut stack = vec![node_id];
         let tree = self.native_writer.rdom.tree_ref();
@@ -91,6 +94,9 @@ impl<'a> MutationsWriter<'a> {
                 ) {
                     self.compositor_dirty_area.unite_or_insert(&area);
                 }
+
+                // Remove the node from the compositor cache
+                self.compositor_cache.remove(&node_id);
             }
         }
 

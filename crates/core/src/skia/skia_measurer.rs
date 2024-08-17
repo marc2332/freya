@@ -229,20 +229,20 @@ pub fn create_paragraph(
     paragraph_builder.push_style(&text_style);
 
     for text_span in node.children() {
-        match &*text_span.node_type() {
-            NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Text => {
-                let text_nodes = text_span.children();
-                let text_node = *text_nodes.first().unwrap();
-                let text_node_type = &*text_node.node_type();
-                let font_style = text_span.get::<FontStyleState>().unwrap();
-                let text_style = font_style.text_style(default_font_family, scale_factor);
-                paragraph_builder.push_style(&text_style);
+        if let NodeType::Element(ElementNode {
+            tag: TagName::Text, ..
+        }) = &*text_span.node_type()
+        {
+            let text_nodes = text_span.children();
+            let text_node = *text_nodes.first().unwrap();
+            let text_node_type = &*text_node.node_type();
+            let font_style = text_span.get::<FontStyleState>().unwrap();
+            let text_style = font_style.text_style(default_font_family, scale_factor);
+            paragraph_builder.push_style(&text_style);
 
-                if let NodeType::Text(text) = text_node_type {
-                    paragraph_builder.add_text(text);
-                }
+            if let NodeType::Text(text) = text_node_type {
+                paragraph_builder.add_text(text);
             }
-            _ => {}
         }
     }
 

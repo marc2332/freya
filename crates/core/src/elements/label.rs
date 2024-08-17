@@ -1,5 +1,14 @@
 use freya_common::CachedParagraph;
 use freya_engine::prelude::*;
+use freya_native_core::prelude::NodeImmutable;
+use freya_node_state::FontStyleState;
+use torin::prelude::{
+    Area,
+    AreaModel,
+    LayoutNode,
+    Length,
+    Size2D,
+};
 
 use super::utils::ElementUtils;
 use crate::prelude::{
@@ -33,5 +42,38 @@ impl ElementUtils for LabelElement {
         let y = area.min_y() + align_main_align_paragraph(node_ref, &area, paragraph);
 
         paragraph.paint(canvas, (x, y));
+    }
+
+    #[inline]
+    fn needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
+        let font_style = node_ref.get::<FontStyleState>().unwrap();
+
+        !font_style.text_shadows.is_empty()
+    }
+
+    fn drawing_area(
+        &self,
+        layout_node: &LayoutNode,
+        node_ref: &DioxusNode,
+        scale_factor: f32,
+    ) -> Area {
+        let area = layout_node.visible_area();
+        let font_style = node_ref.get::<FontStyleState>().unwrap();
+
+        let mut text_area = area;
+
+        for text_shadow in &font_style.text_shadows {
+            text_area.move_with_offsets(
+                &Length::new(text_shadow.offset.x),
+                &Length::new(text_shadow.offset.y),
+            );
+
+            text_area.expand(&Size2D::new(
+                text_shadow.blur_sigma as f32 * scale_factor + 1.,
+                text_shadow.blur_sigma as f32 * scale_factor,
+            ));
+        }
+
+        area.union(&text_area)
     }
 }

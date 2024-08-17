@@ -40,6 +40,7 @@ use torin::prelude::*;
 use super::mutations_writer::MutationsWriter;
 use crate::prelude::{
     measure_paragraph,
+    CompositorCache,
     CompositorDirtyArea,
 };
 
@@ -124,6 +125,7 @@ pub struct FreyaDOM {
     layers: Arc<Mutex<Layers>>,
     compositor_dirty_nodes: Arc<Mutex<CompositorDirtyNodes>>,
     compositor_dirty_area: Arc<Mutex<CompositorDirtyArea>>,
+    compositor_cache: Arc<Mutex<CompositorCache>>,
 }
 
 impl Default for FreyaDOM {
@@ -148,6 +150,7 @@ impl Default for FreyaDOM {
             layers: Arc::default(),
             compositor_dirty_nodes: Arc::default(),
             compositor_dirty_area: Arc::default(),
+            compositor_cache: Arc::default(),
         }
     }
 }
@@ -173,6 +176,10 @@ impl FreyaDOM {
         self.compositor_dirty_area.lock().unwrap()
     }
 
+    pub fn compositor_cache(&self) -> MutexGuard<CompositorCache> {
+        self.compositor_cache.lock().unwrap()
+    }
+
     /// Create the initial DOM from the given Mutations
     pub fn init_dom(&mut self, vdom: &mut VirtualDom, scale_factor: f32) {
         // Build the RealDOM
@@ -186,6 +193,7 @@ impl FreyaDOM {
             scale_factor,
             compositor_dirty_nodes: &mut self.compositor_dirty_nodes.lock().unwrap(),
             compositor_dirty_area: &mut self.compositor_dirty_area.lock().unwrap(),
+            compositor_cache: &mut self.compositor_cache.lock().unwrap(),
         });
 
         let mut ctx = SendAnyMap::new();
@@ -210,6 +218,7 @@ impl FreyaDOM {
             scale_factor,
             compositor_dirty_nodes: &mut self.compositor_dirty_nodes.lock().unwrap(),
             compositor_dirty_area: &mut self.compositor_dirty_area.lock().unwrap(),
+            compositor_cache: &mut self.compositor_cache.lock().unwrap(),
         });
 
         // Update the Nodes states
