@@ -1167,6 +1167,22 @@ impl Rect {
     pub fn new(_left: f32, _top: f32, _right: f32, _bottom: f32) -> Self {
         unimplemented!("This is mocked")
     }
+
+    pub fn x(&self) -> f32 {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn y(&self) -> f32 {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn width(&self) -> f32 {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn height(&self) -> f32 {
+        unimplemented!("This is mocked")
+    }
 }
 
 pub struct Image;
