@@ -9,6 +9,7 @@ use freya_native_core::{
     NodeId,
 };
 use itertools::sorted;
+use rustc_hash::FxHashMap;
 use torin::prelude::{
     Area,
     Torin,
@@ -73,6 +74,7 @@ impl Default for Compositor {
 }
 
 impl Compositor {
+    #[inline]
     pub fn get_drawing_area(
         node_id: NodeId,
         layout: &Torin<NodeId>,
@@ -86,8 +88,13 @@ impl Compositor {
         Some(utils.drawing_area(layout_node, &node, scale_factor))
     }
 
-    /// Run the compositor to obtain the rendering layers
-    /// and finish measuring the dirty area given based on the intersected layers.
+    /// The compositor runs from the bottom layers to the top and viceversa to check what Nodes might be affected by the
+    /// dirty area. How a Node is checked is by calculating its drawing area which consists of its layout area plus any possible
+    /// outer effect such as shadows and borders.
+    /// Calculating the drawing area might get expensive so we cache them in the `cached_areas` map to make the second layers run faster
+    /// (top to bottom).
+    /// In addition to that, nodes that have already been united to the dirty area are removed from the `running_layers` to avoid being checked again
+    /// at the second layers (top to bottom).
     #[allow(clippy::too_many_arguments)]
     pub fn run<'a>(
         &mut self,
@@ -106,35 +113,40 @@ impl Compositor {
             return layers;
         }
 
-        let mut run_check = |layer: i16, nodes: &[NodeId]| {
-            for node_id in nodes {
-                let Some(area) = Self::get_drawing_area(*node_id, layout, rdom, scale_factor)
-                else {
-                    continue;
-                };
-                let is_invalidated = dirty_nodes.contains(node_id);
-                let is_area_invalidated = dirty_area.intersects(&area);
+        let mut running_layers = layers.clone();
+        let mut cached_areas = FxHashMap::default();
 
-                if is_invalidated || is_area_invalidated {
-                    // Save this node to the layer it corresponds for rendering later
-                    dirty_layers.insert_node_in_layer(*node_id, layer);
+        let mut run_check = |layer: i16, node_id: &NodeId| -> bool {
+            let Some(area) = cached_areas
+                .entry(*node_id)
+                .or_insert_with(|| Self::get_drawing_area(*node_id, layout, rdom, scale_factor))
+            else {
+                return false;
+            };
+            let is_dirty = dirty_nodes.contains(node_id);
+            let is_invalidated = is_dirty || dirty_area.intersects(area);
 
-                    // Expand the dirty area with only nodes who have actually changed
-                    if is_invalidated {
-                        dirty_area.unite_or_insert(&area);
-                    }
+            if is_invalidated {
+                // Save this node to the layer it corresponds for rendering later
+                dirty_layers.insert_node_in_layer(*node_id, layer);
+
+                // Expand the dirty area with only nodes who have actually changed
+                if is_dirty {
+                    dirty_area.unite_or_insert(area);
                 }
             }
+
+            !is_invalidated
         };
 
         // From bottom to top
-        for (layer, nodes) in sorted(layers.iter()) {
-            run_check(*layer, nodes);
+        for (layer, nodes) in sorted(running_layers.iter_mut()) {
+            nodes.retain(|node_id| run_check(*layer, node_id))
         }
 
         // From top to bottom
-        for (layer, nodes) in sorted(layers.iter()).rev() {
-            run_check(*layer, nodes);
+        for (layer, nodes) in sorted(running_layers.iter_mut()).rev() {
+            nodes.retain(|node_id| run_check(*layer, node_id))
         }
 
         dirty_nodes.drain();

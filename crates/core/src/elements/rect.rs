@@ -1,7 +1,6 @@
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::{
-    Border,
     BorderAlignment,
     BorderStyle,
     Fill,
@@ -279,7 +278,7 @@ impl ElementUtils for RectElement {
         let node_style = &*node_ref.get::<StyleState>().unwrap();
         let mut area = layout_node.visible_area();
 
-        if node_style.border == Border::default() && node_style.shadows.is_empty() {
+        if !node_style.border.is_visible() && node_style.shadows.is_empty() {
             return area;
         }
 
