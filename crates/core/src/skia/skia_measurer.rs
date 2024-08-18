@@ -28,7 +28,6 @@ use torin::prelude::{
     LayoutMeasurer,
     LayoutNode,
     Node,
-    Point2D,
     Size2D,
 };
 
@@ -165,26 +164,28 @@ pub fn align_highlights_and_cursor_paragraph(
     paragraph: &Paragraph,
     cursor_rect: &TextBox,
     width: Option<f32>,
-) -> (Point2D, Point2D) {
+) -> Rect {
     let cursor_state = node.get::<CursorState>().unwrap();
 
-    let x = area.min_x() + cursor_rect.rect.left;
-    let x2 = x + width.unwrap_or(cursor_rect.rect.right - cursor_rect.rect.left);
+    let left = area.min_x() + cursor_rect.rect.left;
+    let right = left + width.unwrap_or(cursor_rect.rect.right - cursor_rect.rect.left);
 
     match cursor_state.highlight_mode {
         HighlightMode::Fit => {
-            let y = area.min_y()
+            let top = (area.min_y()
                 + align_main_align_paragraph(node, area, paragraph)
-                + cursor_rect.rect.top;
-            let y2 = y + (cursor_rect.rect.bottom - cursor_rect.rect.top);
+                + cursor_rect.rect.top)
+                .clamp(area.min_y(), area.max_y());
+            let bottom = (top + (cursor_rect.rect.bottom - cursor_rect.rect.top))
+                .clamp(area.min_y(), area.max_y());
 
-            (Point2D::new(x, y), Point2D::new(x2, y2))
+            Rect::new(left, top, right, bottom)
         }
         HighlightMode::Expanded => {
-            let y = area.min_y();
-            let y2 = area.max_y();
+            let top = area.min_y();
+            let bottom = area.max_y();
 
-            (Point2D::new(x, y), Point2D::new(x2, y2))
+            Rect::new(left, top, right, bottom)
         }
     }
 }

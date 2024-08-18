@@ -172,7 +172,7 @@ fn draw_cursor_highlights(
             RectWidthStyle::Tight,
         );
         for cursor_rect in cursor_rects {
-            let (start, end) = align_highlights_and_cursor_paragraph(
+            let rect = align_highlights_and_cursor_paragraph(
                 node_ref,
                 area,
                 paragraph,
@@ -185,7 +185,7 @@ fn draw_cursor_highlights(
             paint.set_style(PaintStyle::Fill);
             paint.set_color(highlight_color);
 
-            canvas.draw_rect(Rect::new(start.x, start.y, end.x, end.y), &paint);
+            canvas.draw_rect(rect, &paint);
         }
     }
 
@@ -211,7 +211,7 @@ fn draw_cursor(
     );
     let cursor_rect = cursor_rects.first()?;
 
-    let (start, end) =
+    let rect =
         align_highlights_and_cursor_paragraph(node_ref, area, paragraph, cursor_rect, Some(1.0));
 
     let mut paint = Paint::default();
@@ -219,7 +219,7 @@ fn draw_cursor(
     paint.set_style(PaintStyle::Fill);
     paint.set_color(cursor_color);
 
-    canvas.draw_rect(Rect::new(start.x, start.y, end.x, end.y), &paint);
+    canvas.draw_rect(rect, &paint);
 
     Some(())
 }
