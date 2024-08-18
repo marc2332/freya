@@ -71,11 +71,13 @@ impl SkiaRenderer<'_> {
                     }),
                 );
 
+                // TODO: NEEDS REWORK
                 self.matrices.push((matrix, vec![node_ref.id()]));
             }
 
             // Pass opacity effect to children
             if let Some(opacity) = node_style.opacity {
+                // TODO: NEEDS REWORK
                 self.opacities.push((opacity, vec![node_ref.id()]));
             }
 

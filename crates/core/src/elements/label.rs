@@ -45,13 +45,13 @@ impl ElementUtils for LabelElement {
     }
 
     #[inline]
-    fn needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
+    fn element_needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
         let font_style = node_ref.get::<FontStyleState>().unwrap();
 
         !font_style.text_shadows.is_empty()
     }
 
-    fn drawing_area(
+    fn element_drawing_area(
         &self,
         layout_node: &LayoutNode,
         node_ref: &DioxusNode,

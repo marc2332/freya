@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use crate::{
     node::Node,
     prelude::{
@@ -50,6 +52,8 @@ pub trait AreaModel {
     fn adjust_size(&mut self, node: &Node);
 
     fn expand(&mut self, size: &Size2D);
+
+    fn max_area_when_rotated(&self) -> Area;
 }
 
 impl AreaModel for Area {
@@ -186,6 +190,18 @@ impl AreaModel for Area {
         self.size.width += size.width * 2.;
         self.size.height += size.height * 2.;
     }
+
+    fn max_area_when_rotated(&self) -> Area {
+        let (top_left_extreme, bottom_right_extreme) = calculate_extreme_corners(self);
+
+        Area::new(
+            Point2D::new(top_left_extreme.x, top_left_extreme.y),
+            Size2D::new(
+                bottom_right_extreme.x - top_left_extreme.x,
+                bottom_right_extreme.y - top_left_extreme.y,
+            ),
+        )
+    }
 }
 
 pub fn get_align_axis(
@@ -213,4 +229,54 @@ pub enum AlignmentDirection {
 pub enum AlignAxis {
     Height,
     Width,
+}
+
+fn rotate_point_around_center(point: Point2D, center: Point2D, angle_radians: f32) -> Point2D {
+    let sin_theta = angle_radians.sin();
+    let cos_theta = angle_radians.cos();
+
+    let x_shifted = point.x - center.x;
+    let y_shifted = point.y - center.y;
+
+    let x_rotated = x_shifted * cos_theta - y_shifted * sin_theta;
+    let y_rotated = x_shifted * sin_theta + y_shifted * cos_theta;
+
+    Point2D::new(x_rotated + center.x, y_rotated + center.y)
+}
+
+fn calculate_extreme_corners(area: &Area) -> (Point2D, Point2D) {
+    let center = area.center();
+
+    let corners = [
+        area.min(),
+        Point2D::new(area.max_x(), area.min_y()),
+        Point2D::new(area.min_x(), area.max_y()),
+        area.max(),
+    ];
+
+    let angle_45_radians = 45.0 * PI / 180.0;
+
+    let rotated_corners: Vec<Point2D> = corners
+        .iter()
+        .map(|&corner| rotate_point_around_center(corner, center, angle_45_radians))
+        .collect();
+
+    let min_x = rotated_corners
+        .iter()
+        .map(|p| p.x)
+        .fold(f32::INFINITY, |a, b| a.min(b));
+    let min_y = rotated_corners
+        .iter()
+        .map(|p| p.y)
+        .fold(f32::INFINITY, |a, b| a.min(b));
+    let max_x = rotated_corners
+        .iter()
+        .map(|p| p.x)
+        .fold(f32::NEG_INFINITY, |a, b| a.max(b));
+    let max_y = rotated_corners
+        .iter()
+        .map(|p| p.y)
+        .fold(f32::NEG_INFINITY, |a, b| a.max(b));
+
+    (Point2D::new(min_x, min_y), Point2D::new(max_x, max_y))
 }

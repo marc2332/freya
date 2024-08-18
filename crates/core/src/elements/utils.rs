@@ -3,9 +3,14 @@ use freya_engine::prelude::{
     FontCollection,
     FontMgr,
 };
-use freya_native_core::tags::TagName;
+use freya_native_core::{
+    prelude::NodeImmutable,
+    tags::TagName,
+};
+use freya_node_state::TransformState;
 use torin::prelude::{
     Area,
+    AreaModel,
     CursorPoint,
     LayoutNode,
 };
@@ -45,9 +50,7 @@ pub trait ElementUtils {
         scale_factor: f32,
     );
 
-    /// Measure the area for this element considering other
-    /// factors like shadows or borders, which are not part of the layout.
-    fn drawing_area(
+    fn element_drawing_area(
         &self,
         layout_node: &LayoutNode,
         _node_ref: &DioxusNode,
@@ -57,13 +60,41 @@ pub trait ElementUtils {
         layout_node.visible_area()
     }
 
+    /// Measure the area for this element considering other
+    /// factors like shadows or borders, which are not part of the layout.
+    fn drawing_area(
+        &self,
+        layout_node: &LayoutNode,
+        node_ref: &DioxusNode,
+        scale_factor: f32,
+    ) -> Area {
+        let area = self.element_drawing_area(layout_node, node_ref, scale_factor);
+        let transform = node_ref.get::<TransformState>().unwrap();
+
+        if transform.rotate_degs.map(|r| r != 0.).unwrap_or_default() {
+            area.max_area_when_rotated()
+        } else {
+            area
+        }
+    }
+
     /// Check if this element requires any kind of special caching.
     /// Mainly used for text-like elements with shadows.
     /// See [crate::compositor::CompositorCache].
     /// Default to `false`.
     #[inline]
-    fn needs_cached_area(&self, _node_ref: &DioxusNode) -> bool {
+    fn element_needs_cached_area(&self, _node_ref: &DioxusNode) -> bool {
         false
+    }
+
+    #[inline]
+    fn needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
+        let element_check = self.element_needs_cached_area(node_ref);
+
+        let transform = node_ref.get::<TransformState>().unwrap();
+        let rotate_effect = transform.rotate_degs.map(|r| r != 0.).unwrap_or_default();
+
+        element_check || rotate_effect
     }
 }
 

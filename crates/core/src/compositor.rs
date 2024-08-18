@@ -214,13 +214,10 @@ impl Compositor {
             .unwrap_or_default()
         };
 
-        // From bottom to top
         for (layer, nodes) in sorted(run_layers.iter_mut()) {
             nodes.retain(|node_id| run_check(*layer, node_id))
         }
-
-        // From top to bottom
-        for (layer, nodes) in sorted(run_layers.iter_mut()).rev() {
+        for (layer, nodes) in sorted(run_layers.iter_mut()) {
             nodes.retain(|node_id| run_check(*layer, node_id))
         }
 

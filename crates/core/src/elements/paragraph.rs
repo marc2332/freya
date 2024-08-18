@@ -83,7 +83,7 @@ impl ElementUtils for ParagraphElement {
         };
     }
 
-    fn needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
+    fn element_needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
         for text_span in node_ref.children() {
             if let NodeType::Element(ElementNode {
                 tag: TagName::Text, ..

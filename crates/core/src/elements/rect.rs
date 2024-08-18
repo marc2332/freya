@@ -269,7 +269,7 @@ impl ElementUtils for RectElement {
         }
     }
 
-    fn drawing_area(
+    fn element_drawing_area(
         &self,
         layout_node: &LayoutNode,
         node_ref: &DioxusNode,
