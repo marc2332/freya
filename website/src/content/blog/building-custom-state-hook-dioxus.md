@@ -13,7 +13,7 @@ how are hooks made.
 ### 👋 Preface 
 
 **Dioxus** already comes with a few state management solutions, primarily in the form of hooks and powered by **Signals**.
-I am not gonna five into what hooks or signals are, so if you don't know what they are you may check the official docs first.
+I am not gonna dive into what hooks or signals are, so if you don't know what they are you may check the official docs first.
 
 You may be asking yourself why do we even need to build custom hooks if Dioxus already give us different tools for different use cases.
 And it actually just depends on your needs, for the majority of the cases the official tools will work just fine. 
@@ -63,19 +63,17 @@ fn app() {
 
 #### `use_hook`
 
-All hooks in Dioxus are built on top of a low level core hook called `use_hook`.
-This one let us store a value that tied to life of  the **Scope** it was created in,
-which means that when the **Component** is dropped, our stored value will be dropped as well.
+`use_hook` is the foundational core hook in which all hooks are built on top of.
+It let us store value that is tied to life of the **Scope** it was created in,
+which means that when the **Component** is dropped, the  stored value will be dropped as well.
 
-Every time the component where the store value is created is re-run it will give is access to the value we store, 
-but for this there is a catch, the stored value must be `Clone` so we can get a hold of it
-on every render of the component.
+It takes a closure to initialize our value, this be called when the component runs for the first time, this way the value is only created when it truly needs to be created. It also returns the value it created or a cloned value of it, which is why it's value requires to be `Clone`.
 
 But if the value is cloned it means that any change that we make to the cloned value will not be 
-persisted for the next change? Worry no more, we got smart pointers.
+persisted for the next change? Correct, but this is why we are going to be using smart pointers.
 
 Here there is an example, even though our component will run as many times as it needs it will always hold the same value 
-it was created with, the `Default` of `T`. Because when the component runs what is cloned is the `Rc` and not `T`.
+it was created with, the `Default` of `T`. Because when the component runs, what gets is not the `T` but the `Rc`.
 ```rs
 fn use_value<T: Default>() -> Rc<RefCell<T>> {
     use_hook(|| {

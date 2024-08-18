@@ -44,13 +44,21 @@ const formattedDate = (new Date(frontmatter.date)).toLocaleString().split(',')[0
     main * :not(span, pre, code) {
         color: #d2d2d2;
         font-family: "Inter", system-ui, sans-serif;
-        line-height: 1.7;
+        line-height: 1.8;
     }
 
     main *:is(h1, h2, h3, h4, h5, h6) {
         color: white;
         font-family: "Inter", system-ui, sans-serif;
-        line-height: 1.7;
+        line-height: 1.8;
+    }
+
+    main strong {
+        background: rgb(163, 163, 163);
+        border-radius: 6px;
+        padding: 2px 4px;
+        color: rgb(35, 35, 35);
+        font-weight: normal;
     }
 
     ul {
@@ -62,9 +70,10 @@ const formattedDate = (new Date(frontmatter.date)).toLocaleString().split(',')[0
     }
 
     *:not(pre) > code {
-        background: rgb(65, 65, 65);
+        background: rgb(109, 176, 239);
         border-radius: 6px;
         padding: 2px 4px;
+        color: rgb(24, 72, 117);
     }
 
     p {
