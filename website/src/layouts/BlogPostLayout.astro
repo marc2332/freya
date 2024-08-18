@@ -42,7 +42,13 @@ const formattedDate = (new Date(frontmatter.date)).toLocaleString().split(',')[0
     }
 
     main * :not(span, pre, code) {
-        color: rgb(235, 235, 235);
+        color: #d2d2d2;
+        font-family: "Inter", system-ui, sans-serif;
+        line-height: 1.7;
+    }
+
+    main *:is(h1, h2, h3, h4, h5, h6) {
+        color: white;
         font-family: "Inter", system-ui, sans-serif;
         line-height: 1.7;
     }
