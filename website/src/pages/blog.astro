@@ -1,6 +1,8 @@
 ---
 const posts = await Astro.glob('../content/blog/*.md');
 import Layout from '../layouts/Layout.astro';
+
+posts.sort((a, b) =>  new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime())
 ---
 
 <Layout title="Freya - GUI Library for Rust">
