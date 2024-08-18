@@ -3,7 +3,7 @@
 //! The attributes that have colors as values can use the following syntax:
 //!
 //! #### Static colors
-//! - `rect`
+//! - `red`
 //! - `blue`
 //! - `green`
 //! - `yellow`

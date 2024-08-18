@@ -96,6 +96,12 @@ impl ElementUtils for RectElement {
             Fill::LinearGradient(gradient) => {
                 paint.set_shader(gradient.into_shader(area));
             }
+            Fill::RadialGradient(gradient) => {
+                paint.set_shader(gradient.into_shader(area));
+            }
+            Fill::ConicGradient(gradient) => {
+                paint.set_shader(gradient.into_shader(area));
+            }
         }
 
         let mut radius = node_style.corner_radius;
@@ -135,6 +141,12 @@ impl ElementUtils for RectElement {
                         shadow_paint.set_color(*color);
                     }
                     Fill::LinearGradient(gradient) => {
+                        shadow_paint.set_shader(gradient.into_shader(area));
+                    }
+                    Fill::RadialGradient(gradient) => {
+                        shadow_paint.set_shader(gradient.into_shader(area));
+                    }
+                    Fill::ConicGradient(gradient) => {
                         shadow_paint.set_shader(gradient.into_shader(area));
                     }
                 }
@@ -211,6 +223,12 @@ impl ElementUtils for RectElement {
                     border_paint.set_color(*color);
                 }
                 Fill::LinearGradient(gradient) => {
+                    border_paint.set_shader(gradient.into_shader(area));
+                }
+                Fill::RadialGradient(gradient) => {
+                    border_paint.set_shader(gradient.into_shader(area));
+                }
+                Fill::ConicGradient(gradient) => {
                     border_paint.set_shader(gradient.into_shader(area));
                 }
             }

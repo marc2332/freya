@@ -35,6 +35,13 @@ impl Parse for Size {
                     .parse::<f32>()
                     .map_err(|_| ParseError)?,
             )))
+        } else if value.contains('a') {
+            Ok(Size::InnerPercentage(Length::new(
+                value
+                    .replace('a', "")
+                    .parse::<f32>()
+                    .map_err(|_| ParseError)?,
+            )))
         } else {
             Ok(Size::Pixels(Length::new(
                 value.parse::<f32>().map_err(|_| ParseError)?,

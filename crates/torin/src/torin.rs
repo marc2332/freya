@@ -273,7 +273,7 @@ impl<Key: NodeKey> Torin<Key> {
             available_area.move_with_offsets(&root_parent.offset_x, &root_parent.offset_y);
         }
 
-        let (root_revalidated, root_layout_node) = measure_node(
+        let (root_revalidated, mut root_layout_node) = measure_node(
             root_id,
             &root,
             self,
@@ -286,6 +286,9 @@ impl<Key: NodeKey> Torin<Key> {
             false,
             Phase::Final,
         );
+
+        // Adjust the size of the area if needed
+        root_layout_node.area.adjust_size(&root);
 
         // Cache the root Node results if it was modified
         if root_revalidated {
