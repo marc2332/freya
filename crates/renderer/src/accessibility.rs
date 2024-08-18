@@ -41,6 +41,7 @@ impl AccessKitManager {
         }
     }
 
+    #[allow(dead_code)]
     pub fn accessibility_manager(&self) -> &SharedAccessibilityManager {
         &self.accessibility_manager
     }

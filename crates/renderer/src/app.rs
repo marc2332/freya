@@ -233,6 +233,7 @@ impl Application {
     /// Create the Accessibility tree
     /// This will iterater the DOM ordered by layers (top to bottom)
     /// and add every element with an accessibility ID to the Accessibility Tree
+    #[allow(dead_code)]
     pub fn process_accessibility(&mut self, window: &Window) {
         {
             let fdom = &self.sdom.get();

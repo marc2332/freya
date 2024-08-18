@@ -279,6 +279,8 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
 
                 if app.measure_layout_on_next_render {
                     app.process_layout(window.inner_size(), scale_factor);
+
+                    #[cfg(feature = "accessibility")]
                     app.process_accessibility(window);
 
                     app.measure_layout_on_next_render = false;
