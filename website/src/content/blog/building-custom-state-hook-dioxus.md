@@ -1,29 +1,37 @@
 ---
-title: 'Custom State management'
-date: 2024-08-08
+title: 'Building a custom state Hook for Dioxus'
+date: 2024-08-18
 description: 'Building a custom state management solution for Dioxus.'
 author: 'marc2332'
 layout: ../../layouts/BlogPostLayout.astro
-slug: "custom-state-management"
+slug: "building-custom-state-hook-dioxus"
 ---
 
-In this post I will teach you how hooks work and how to make make
-a reactive state lib from scratch.
+As nobody has done this before, I think it would be interesting to people interested in Dioxus, to learn
+how are hooks made.
 
-### Why?
+### 👋 Preface 
 
-You may ask yourself why do we even need third-party libraries for state management
-and the truth is that you might not need them. Dioxus comes with a Signals
-a very basic and simple to use state management solution that while
-it works great, it might not scale for more complex apps.
+**Dioxus** already comes with a few state management solutions, primarily in the form of hooks and powered by **Signals**.
+I am not gonna deep into what hooks or signals are, so if you don't know what they are you may check the official docs first.
 
-### What?
+You may be asking yourself why do we even need to build custom hooks if Dioxus already give us different tools for different use cases.
+And it actually just depends on your needs, for the majority of the cases the official tools will work just fine. 
 
-So a bit of spoiler here, our library will consist of a hook that let use subscribe 
-and write to a key-value store. We will call it `use_value`.
+Now, there are certain cases where it's just not a good fit and you might see yourself wanting a certain reactive behavior or just a different API. 
+
+For those who happen to be in this situation, as I was myself when building [Valin](https://github.com/marc2332/valin/), worry no more, I got you.
+
+### 🤝 Introduction 
+
+So, a bit of introduction. We will build a custom hook that give us a reactive `key-value` store, 
+where we can subscribe to the value of specific keys across multiple components. The hook will be called `use_value`
+
+This is how it will look like:
 
 ```rs
 fn CoolComponent() {
+    // Subscribe to any changes to the value identified by the key `counter`.
     let mut count = use_value("counter");
 
     rsx!(
@@ -39,6 +47,7 @@ fn CoolComponent() {
 }
 
 fn app() {
+    // Just like above, subscribe to any changes to the value identified by the key `counter`.
     let same_count = use_value("counter");
 
     rsx!(
@@ -50,7 +59,7 @@ fn app() {
 
 ```
 
-### The basics
+### 🧵 The basics 
 
 #### `use_hook`
 
