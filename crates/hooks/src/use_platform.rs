@@ -14,6 +14,7 @@ use tokio::sync::{
     broadcast,
     mpsc::UnboundedSender,
 };
+use torin::prelude::Area;
 use winit::{
     event_loop::EventLoopProxy,
     window::{
@@ -119,6 +120,10 @@ impl UsePlatform {
                 window.set_fullscreen(None)
             }
         });
+    }
+
+    pub fn invalidate_drawing_area(&self, area: Area) {
+        self.send(EventMessage::InvalidateArea(area)).ok();
     }
 
     pub fn request_animation_frame(&self) {

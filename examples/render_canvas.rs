@@ -20,13 +20,12 @@ fn main() {
 
 fn app() -> Element {
     let platform = use_platform();
+    let (reference, size) = use_node_signal();
     let mut state = use_signal(|| 0);
 
-    use_effect(move || {
-        platform.send(EventMessage::RequestRerender).unwrap();
-    });
-
     let canvas = use_canvas(move || {
+        platform.invalidate_drawing_area(size.peek().area);
+        platform.request_animation_frame();
         let state = *state.read();
         Box::new(move |canvas, font_collection, region, _| {
             canvas.translate((region.min_x(), region.min_y()));
@@ -54,19 +53,14 @@ fn app() -> Element {
         })
     });
 
-    rsx!(
-        rect {
-            onclick: move |_| {
-                state += 1;
-            },
-            Canvas {
-                canvas,
-                theme: theme_with!(CanvasTheme {
-                    background: "black".into(),
-                    width: "100%".into(),
-                    height: "100%".into(),
-                })
-            }
-        }
-    )
+    rsx!(rect {
+        onclick: move |_| {
+            state += 1;
+        },
+        canvas_reference: canvas.attribute(),
+        reference,
+        background: "black",
+        width: "100%",
+        height: "100%",
+    })
 }

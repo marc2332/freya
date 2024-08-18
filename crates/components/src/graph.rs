@@ -4,6 +4,7 @@ use freya_engine::prelude::*;
 use freya_hooks::{
     use_applied_theme,
     use_canvas_with_deps,
+    use_node_signal,
     use_platform,
     GraphTheme,
     GraphThemeWith,
@@ -45,13 +46,12 @@ pub struct GraphProps {
 #[allow(non_snake_case)]
 pub fn Graph(props: GraphProps) -> Element {
     let platform = use_platform();
+    let (reference, size) = use_node_signal();
     let GraphTheme { width, height } = use_applied_theme!(&props.theme, graph);
 
-    use_effect(use_reactive(&props, move |_| {
+    let canvas = use_canvas_with_deps(&props, move |props| {
+        platform.invalidate_drawing_area(size.peek().area);
         platform.request_animation_frame();
-    }));
-
-    let canvas = use_canvas_with_deps(&props, |props| {
         Box::new(
             move |canvas: &Canvas, font_collection: &mut FontCollection, region: Area, _: f32| {
                 canvas.translate((region.min_x(), region.min_y()));
@@ -167,6 +167,7 @@ pub fn Graph(props: GraphProps) -> Element {
             background: "white",
             rect {
                 canvas_reference: canvas.attribute(),
+                reference,
                 width: "100%",
                 height: "100%",
             }

@@ -191,6 +191,11 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             EventMessage::RequestRerender => {
                 window.request_redraw();
             }
+            EventMessage::InvalidateArea(area) => {
+                let fdom = app.sdom.get();
+                let mut compositor_dirty_area = fdom.compositor_dirty_area();
+                compositor_dirty_area.unite_or_insert(&area)
+            }
             EventMessage::RemeasureTextGroup(text_id) => {
                 app.measure_text_group(text_id, scale_factor);
             }
