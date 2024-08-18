@@ -13,7 +13,7 @@ how are hooks made.
 ### 👋 Preface 
 
 **Dioxus** already comes with a few state management solutions, primarily in the form of hooks and powered by **Signals**.
-I am not gonna deep into what hooks or signals are, so if you don't know what they are you may check the official docs first.
+I am not gonna five into what hooks or signals are, so if you don't know what they are you may check the official docs first.
 
 You may be asking yourself why do we even need to build custom hooks if Dioxus already give us different tools for different use cases.
 And it actually just depends on your needs, for the majority of the cases the official tools will work just fine. 
