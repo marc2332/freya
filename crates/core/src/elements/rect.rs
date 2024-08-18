@@ -385,7 +385,7 @@ impl ElementUtils for RectElement {
                 Point2D::new(border_bounds.x(), border_bounds.y()),
                 Size2D::new(border_bounds.width(), border_bounds.height()),
             );
-            area = area.union(&border_area);
+            area = area.union(&border_area.round_out());
         }
 
         area

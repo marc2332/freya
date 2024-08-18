@@ -27,7 +27,7 @@ pub struct Border {
 impl Border {
     #[inline]
     pub fn is_visible(&self) -> bool {
-        self.width >= 0. && self.fill != Fill::Color(Color::TRANSPARENT)
+        self.width > 0. && self.fill != Fill::Color(Color::TRANSPARENT)
     }
 }
 

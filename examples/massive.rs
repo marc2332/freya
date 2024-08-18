@@ -3,7 +3,9 @@ use freya::prelude::*;
 fn main() {
     launch_cfg(
         app,
-        LaunchConfig::<()>::default().with_plugin(PerformanceOverlayPlugin::default()),
+        LaunchConfig::<()>::default()
+            .with_plugin(PerformanceOverlayPlugin::default())
+            .with_size(1500., 900.),
     );
 }
 
