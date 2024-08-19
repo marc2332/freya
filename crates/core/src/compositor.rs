@@ -170,55 +170,59 @@ impl Compositor {
             self.full_render = false;
             return layers;
         }
+        let mut running_layers = layers.clone();
 
-        let mut run_layers = layers.clone();
+        loop {
+            let mut any_marked = false;
 
-        let mut run_check = |layer: i16, node_id: &NodeId| -> bool {
-            Self::with_utils(*node_id, layout, rdom, |node_ref, utils, layout_node| {
-                // Use the cached area to invalidate the previous frame area if necessary
-                let cached_area = cache.get(node_id);
-                let needs_cached_area = utils.needs_cached_area(&node_ref);
+            for (layer_n, layer) in sorted(running_layers.iter_mut()).rev() {
+                layer.retain(|node_id| {
+                    Self::with_utils(*node_id, layout, rdom, |node_ref, utils, layout_node| {
+                        // Use the cached area to invalidate the previous frame area if necessary
+                        let cached_area = cache.get(node_id);
+                        let needs_cached_area = utils.needs_cached_area(&node_ref);
 
-                let area = utils.drawing_area(layout_node, &node_ref, scale_factor);
+                        let area = utils.drawing_area(layout_node, &node_ref, scale_factor);
 
-                let is_dirty = dirty_nodes.remove(node_id);
-                let cached_area_is_invalidated = cached_area
-                    .map(|cached_area| dirty_area.intersects(cached_area))
-                    .unwrap_or_default();
+                        let is_dirty = dirty_nodes.remove(node_id);
+                        let cached_area_is_invalidated = cached_area
+                            .map(|cached_area| dirty_area.intersects(cached_area))
+                            .unwrap_or_default();
 
-                let is_invalidated =
-                    is_dirty || cached_area_is_invalidated || dirty_area.intersects(&area);
+                        let is_invalidated =
+                            is_dirty || cached_area_is_invalidated || dirty_area.intersects(&area);
 
-                if is_invalidated {
-                    // Save this node to the layer it corresponds for rendering
-                    dirty_layers.insert_node_in_layer(*node_id, layer);
+                        if is_invalidated {
+                            // Save this node to the layer it corresponds for rendering
+                            dirty_layers.insert_node_in_layer(*node_id, *layer_n);
 
-                    // Expand the dirty area with the cached area so it gets cleaned up
-                    if cached_area_is_invalidated {
-                        dirty_area.unite_or_insert(cached_area.unwrap());
-                    }
+                            // Expand the dirty area with the cached area so it gets cleaned up
+                            if cached_area_is_invalidated {
+                                dirty_area.unite_or_insert(cached_area.unwrap());
+                                any_marked = true;
+                            }
 
-                    // Cache the drawing area so it can be invalidated in the next frame
-                    if needs_cached_area {
-                        cache.insert(*node_id, area);
-                    }
+                            // Cache the drawing area so it can be invalidated in the next frame
+                            if needs_cached_area {
+                                cache.insert(*node_id, area);
+                            }
 
-                    // Expand the dirty area with only nodes who have actually changed
-                    if is_dirty {
-                        dirty_area.unite_or_insert(&area);
-                    }
-                }
+                            // Expand the dirty area with only nodes who have actually changed
+                            if is_dirty {
+                                dirty_area.unite_or_insert(&area);
+                                any_marked = true;
+                            }
+                        }
 
-                !is_invalidated
-            })
-            .unwrap_or_default()
-        };
+                        !is_invalidated
+                    })
+                    .unwrap_or_default()
+                })
+            }
 
-        for (layer, nodes) in sorted(run_layers.iter_mut()) {
-            nodes.retain(|node_id| run_check(*layer, node_id))
-        }
-        for (layer, nodes) in sorted(run_layers.iter_mut()) {
-            nodes.retain(|node_id| run_check(*layer, node_id))
+            if !any_marked {
+                break;
+            }
         }
 
         dirty_nodes.drain();
