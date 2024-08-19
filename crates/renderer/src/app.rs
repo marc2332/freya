@@ -10,10 +10,7 @@ use freya_common::{
 };
 use freya_core::prelude::*;
 use freya_engine::prelude::*;
-use freya_native_core::{
-    prelude::NodeImmutableDioxusExt,
-    NodeId,
-};
+use freya_native_core::prelude::NodeImmutableDioxusExt;
 use futures_task::Waker;
 use futures_util::Future;
 use pin_utils::pin_mut;
@@ -387,15 +384,12 @@ impl Application {
     ) {
         let fdom = self.sdom.get();
 
-        let matrices: Vec<(Matrix, Vec<NodeId>)> = Vec::default();
-        let opacities: Vec<(f32, Vec<NodeId>)> = Vec::default();
-
         let mut skia_renderer = SkiaRenderer {
             canvas_area: Area::from_size(window_size.to_torin()),
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,
-            matrices,
-            opacities,
+            matrices: Vec::default(),
+            opacities: Vec::default(),
             default_fonts: &self.default_fonts,
             scale_factor,
         };

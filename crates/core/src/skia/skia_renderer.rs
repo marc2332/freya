@@ -11,6 +11,7 @@ use freya_node_state::{
     TransformState,
     ViewportState,
 };
+use rustc_hash::FxHashSet;
 use torin::prelude::{
     Area,
     LayoutNode,
@@ -31,8 +32,8 @@ pub struct SkiaRenderer<'a> {
     pub canvas_area: Area,
     pub font_collection: &'a mut FontCollection,
     pub font_manager: &'a FontMgr,
-    pub matrices: Vec<(Matrix, Vec<NodeId>)>,
-    pub opacities: Vec<(f32, Vec<NodeId>)>,
+    pub matrices: Vec<(Matrix, FxHashSet<NodeId>)>,
+    pub opacities: Vec<(f32, FxHashSet<NodeId>)>,
     pub default_fonts: &'a [String],
     pub scale_factor: f32,
 }
@@ -72,20 +73,21 @@ impl SkiaRenderer<'_> {
                 );
 
                 // TODO: NEEDS REWORK
-                self.matrices.push((matrix, vec![node_ref.id()]));
+                self.matrices
+                    .push((matrix, FxHashSet::from_iter([node_ref.id()])));
             }
 
             // Pass opacity effect to children
             if let Some(opacity) = node_style.opacity {
                 // TODO: NEEDS REWORK
-                self.opacities.push((opacity, vec![node_ref.id()]));
+                self.opacities
+                    .push((opacity, FxHashSet::from_iter([node_ref.id()])));
             }
 
             // Apply inherited matrices
             for (matrix, nodes) in self.matrices.iter_mut() {
                 if nodes.contains(&node_ref.id()) {
                     canvas.concat(matrix);
-
                     nodes.extend(node_ref.child_ids());
                 }
             }
