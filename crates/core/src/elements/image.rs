@@ -26,7 +26,7 @@ impl ElementUtils for ImageElement {
         let node_references = node_ref.get::<ReferencesState>().unwrap();
 
         let draw_img = |bytes: &[u8]| {
-            let pic = Image::from_encoded(Data::new_copy(bytes));
+            let pic = Image::from_encoded(unsafe { Data::new_bytes(bytes) });
             if let Some(pic) = pic {
                 let mut paint = Paint::default();
                 paint.set_anti_alias(true);
