@@ -296,35 +296,21 @@ impl TestingHandler {
 
         let mut compositor = Compositor::default();
 
-        let mut skia_renderer = SkiaRenderer {
+        // Render to the canvas
+        let mut render_pipeline = RenderPipeline {
             canvas_area: Area::from_size((width as f32, height as f32).into()),
+            fdom: &fdom,
+            background: Color::WHITE,
+            surface: &mut surface,
+            dirty_surface: &mut dirty_surface,
+            compositor: &mut compositor,
+            scale_factor: SCALE_FACTOR as f32,
+            selected_node: None,
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,
             default_fonts: &["Fira Sans".to_string()],
-            scale_factor: SCALE_FACTOR as f32,
         };
-
-        // Render to the canvas
-        process_render(
-            &fdom,
-            Color::WHITE,
-            &mut surface,
-            &mut dirty_surface,
-            &mut compositor,
-            SCALE_FACTOR as f32,
-            |fdom, node_id, layout_node, layout, canvas| {
-                if let Some(dioxus_node) = fdom.rdom().get(*node_id) {
-                    skia_renderer.render(
-                        fdom.rdom(),
-                        layout_node,
-                        &dioxus_node,
-                        false,
-                        layout,
-                        canvas,
-                    );
-                }
-            },
-        );
+        render_pipeline.run();
 
         // Capture snapshot
         let image = surface.image_snapshot();

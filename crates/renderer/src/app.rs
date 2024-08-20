@@ -383,39 +383,23 @@ impl Application {
         scale_factor: f32,
     ) {
         let fdom = self.sdom.get();
-
-        let mut skia_renderer = SkiaRenderer {
-            canvas_area: Area::from_size(window_size.to_torin()),
-            font_collection: &mut self.font_collection,
-            font_manager: &self.font_mgr,
-            default_fonts: &self.default_fonts,
-            scale_factor,
-        };
-
         let hovered_node = hovered_node
             .as_ref()
             .and_then(|hovered_node| *hovered_node.lock().unwrap());
 
-        process_render(
-            &fdom,
+        let mut render_pipeline = RenderPipeline {
+            canvas_area: Area::from_size(window_size.to_torin()),
+            fdom: &fdom,
             background,
             surface,
             dirty_surface,
-            &mut self.compositor,
+            compositor: &mut self.compositor,
             scale_factor,
-            |fdom, node_id, layout_node, layout, canvas| {
-                let render_wireframe = hovered_node.as_ref() == Some(node_id);
-                if let Some(dioxus_node) = fdom.rdom().get(*node_id) {
-                    skia_renderer.render(
-                        fdom.rdom(),
-                        layout_node,
-                        &dioxus_node,
-                        render_wireframe,
-                        layout,
-                        canvas,
-                    );
-                }
-            },
-        );
+            selected_node: hovered_node,
+            font_collection: &mut self.font_collection,
+            font_manager: &self.font_mgr,
+            default_fonts: &self.default_fonts,
+        };
+        render_pipeline.run();
     }
 }

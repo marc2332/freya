@@ -39,9 +39,9 @@ use torin::prelude::*;
 
 use super::mutations_writer::MutationsWriter;
 use crate::prelude::{
-    measure_paragraph,
     CompositorCache,
     CompositorDirtyArea,
+    ParagraphElement,
 };
 
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
@@ -271,7 +271,12 @@ impl FreyaDOM {
                 let layout_node = layout.get(*node_id);
 
                 if let Some((node, layout_node)) = node.zip(layout_node) {
-                    measure_paragraph(&node, layout_node, &text_measurement, scale_factor);
+                    ParagraphElement::measure_paragraph(
+                        &node,
+                        layout_node,
+                        &text_measurement,
+                        scale_factor,
+                    );
                 }
             }
         }

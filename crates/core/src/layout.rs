@@ -6,7 +6,7 @@ use torin::geometry::Area;
 use crate::{
     dom::*,
     prelude::Compositor,
-    skia::SkiaMeasurer,
+    render::SkiaMeasurer,
 };
 
 /// Process the layout of the DOM
