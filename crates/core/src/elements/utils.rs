@@ -71,7 +71,7 @@ pub trait ElementUtils {
         let area = self.element_drawing_area(layout_node, node_ref, scale_factor);
         let transform = node_ref.get::<TransformState>().unwrap();
 
-        if transform.rotate_degs.map(|r| r != 0.).unwrap_or_default() {
+        if !transform.rotations.is_empty() {
             area.max_area_when_rotated()
         } else {
             area
@@ -92,7 +92,7 @@ pub trait ElementUtils {
         let element_check = self.element_needs_cached_area(node_ref);
 
         let transform = node_ref.get::<TransformState>().unwrap();
-        let rotate_effect = transform.rotate_degs.map(|r| r != 0.).unwrap_or_default();
+        let rotate_effect = !transform.rotations.is_empty();
 
         element_check || rotate_effect
     }

@@ -388,8 +388,6 @@ impl Application {
             canvas_area: Area::from_size(window_size.to_torin()),
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,
-            matrices: Vec::default(),
-            opacities: Vec::default(),
             default_fonts: &self.default_fonts,
             scale_factor,
         };

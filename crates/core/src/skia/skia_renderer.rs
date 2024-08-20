@@ -7,11 +7,9 @@ use freya_native_core::{
     NodeId,
 };
 use freya_node_state::{
-    StyleState,
     TransformState,
     ViewportState,
 };
-use rustc_hash::FxHashSet;
 use torin::prelude::{
     Area,
     LayoutNode,
@@ -32,8 +30,6 @@ pub struct SkiaRenderer<'a> {
     pub canvas_area: Area,
     pub font_collection: &'a mut FontCollection,
     pub font_manager: &'a FontMgr,
-    pub matrices: Vec<(Matrix, FxHashSet<NodeId>)>,
-    pub opacities: Vec<(f32, FxHashSet<NodeId>)>,
     pub default_fonts: &'a [String],
     pub scale_factor: f32,
 }
@@ -59,54 +55,34 @@ impl SkiaRenderer<'_> {
             let initial_layer = canvas.save();
 
             let node_transform = &*node_ref.get::<TransformState>().unwrap();
-            let node_style = &*node_ref.get::<StyleState>().unwrap();
+            // let node_style = &*node_ref.get::<StyleState>().unwrap();
 
             // Pass rotate effect to children
-            if let Some(rotate_degs) = node_transform.rotate_degs {
+            for (id, rotate_degs) in &node_transform.rotations {
+                let layout_node = layout.get(*id).unwrap();
+                let area = layout_node.visible_area();
                 let mut matrix = Matrix::new_identity();
                 matrix.set_rotate(
-                    rotate_degs,
+                    *rotate_degs,
                     Some(Point {
                         x: area.min_x() + area.width() / 2.0,
                         y: area.min_y() + area.height() / 2.0,
                     }),
                 );
-
-                // TODO: NEEDS REWORK
-                self.matrices
-                    .push((matrix, FxHashSet::from_iter([node_ref.id()])));
-            }
-
-            // Pass opacity effect to children
-            if let Some(opacity) = node_style.opacity {
-                // TODO: NEEDS REWORK
-                self.opacities
-                    .push((opacity, FxHashSet::from_iter([node_ref.id()])));
-            }
-
-            // Apply inherited matrices
-            for (matrix, nodes) in self.matrices.iter_mut() {
-                if nodes.contains(&node_ref.id()) {
-                    canvas.concat(matrix);
-                    nodes.extend(node_ref.child_ids());
-                }
+                canvas.concat(&matrix);
             }
 
             // Apply inherited opacity effects
-            for (opacity, nodes) in self.opacities.iter_mut() {
-                if nodes.contains(&node_ref.id()) {
-                    canvas.save_layer_alpha_f(
-                        Rect::new(
-                            self.canvas_area.min_x(),
-                            self.canvas_area.min_y(),
-                            self.canvas_area.max_x(),
-                            self.canvas_area.max_y(),
-                        ),
-                        *opacity,
-                    );
-
-                    nodes.extend(node_ref.child_ids());
-                }
+            for opacity in &node_transform.opacities {
+                canvas.save_layer_alpha_f(
+                    Rect::new(
+                        self.canvas_area.min_x(),
+                        self.canvas_area.min_y(),
+                        self.canvas_area.max_x(),
+                        self.canvas_area.max_y(),
+                    ),
+                    *opacity,
+                );
             }
 
             // Clip all elements with their corresponding viewports

@@ -300,8 +300,6 @@ impl TestingHandler {
             canvas_area: Area::from_size((width as f32, height as f32).into()),
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,
-            matrices: Vec::default(),
-            opacities: Vec::default(),
             default_fonts: &["Fira Sans".to_string()],
             scale_factor: SCALE_FACTOR as f32,
         };
@@ -313,7 +311,7 @@ impl TestingHandler {
             &mut surface,
             &mut dirty_surface,
             &mut compositor,
-            1.0f32,
+            SCALE_FACTOR as f32,
             |fdom, node_id, layout_node, layout, canvas| {
                 if let Some(dioxus_node) = fdom.rdom().get(*node_id) {
                     skia_renderer.render(

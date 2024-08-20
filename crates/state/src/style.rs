@@ -43,7 +43,6 @@ pub struct StyleState {
     pub image_data: Option<AttributesBytes>,
     pub svg_data: Option<AttributesBytes>,
     pub overflow: OverflowMode,
-    pub opacity: Option<f32>,
 }
 
 impl ParseAttribute for StyleState {
@@ -120,11 +119,6 @@ impl ParseAttribute for StyleState {
                     self.overflow = OverflowMode::parse(value)?;
                 }
             }
-            AttributeName::Opacity => {
-                if let Some(value) = attr.value.as_text() {
-                    self.opacity = Some(value.parse::<f32>().map_err(|_| ParseError)?);
-                }
-            }
             _ => {}
         }
 
@@ -134,7 +128,7 @@ impl ParseAttribute for StyleState {
 
 #[partial_derive_state]
 impl State<CustomAttributeValues> for StyleState {
-    type ParentDependencies = (Self,);
+    type ParentDependencies = ();
 
     type ChildDependencies = ();
 
@@ -153,7 +147,6 @@ impl State<CustomAttributeValues> for StyleState {
             AttributeName::SvgData,
             AttributeName::SvgContent,
             AttributeName::Overflow,
-            AttributeName::Opacity,
         ]));
 
     fn update<'a>(
