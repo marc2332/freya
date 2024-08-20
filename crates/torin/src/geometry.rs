@@ -1,7 +1,11 @@
-use crate::prelude::{
-    Alignment,
-    DirectionMode,
-    Gaps,
+use crate::{
+    node::Node,
+    prelude::{
+        Alignment,
+        DirectionMode,
+        Gaps,
+        Size,
+    },
 };
 
 #[derive(PartialEq)]
@@ -42,6 +46,8 @@ pub trait AreaModel {
         siblings_len: usize,
         child_position: usize,
     );
+
+    fn adjust_size(&mut self, node: &Node);
 }
 
 impl AreaModel for Area {
@@ -160,6 +166,15 @@ impl AreaModel for Area {
                 }
                 _ => {}
             },
+        }
+    }
+
+    fn adjust_size(&mut self, node: &Node) {
+        if let Size::InnerPercentage(p) = node.width {
+            self.size.width *= p.get() / 100.;
+        }
+        if let Size::InnerPercentage(p) = node.height {
+            self.size.height *= p.get() / 100.;
         }
     }
 }

@@ -17,6 +17,10 @@ use torin::{
     alignment::Alignment,
     direction::DirectionMode,
     gaps::Gaps,
+    prelude::{
+        Content,
+        Position,
+    },
     size::Size,
 };
 
@@ -75,134 +79,92 @@ pub fn get_node_state(node: &DioxusNode) -> NodeState {
 }
 
 impl NodeState {
-    pub fn iter(&self) -> NodeStateIterator {
-        NodeStateIterator {
-            state: self,
-            curr: 0,
-        }
-    }
-}
-
-pub struct NodeStateIterator<'a> {
-    state: &'a NodeState,
-    curr: usize,
-}
-
-impl<'a> Iterator for NodeStateIterator<'a> {
-    type Item = (&'a str, AttributeType<'a>);
-
-    fn nth(&mut self, n: usize) -> Option<Self::Item> {
-        match n {
-            0 => Some(("width", AttributeType::Size(&self.state.size.width))),
-            1 => Some(("height", AttributeType::Size(&self.state.size.height))),
-            2 => Some((
-                "min_width",
-                AttributeType::Size(&self.state.size.minimum_width),
-            )),
-            3 => Some((
-                "min_height",
-                AttributeType::Size(&self.state.size.minimum_height),
-            )),
-            4 => Some((
-                "max_width",
-                AttributeType::Size(&self.state.size.maximum_width),
-            )),
-            5 => Some((
-                "max_height",
-                AttributeType::Size(&self.state.size.maximum_height),
-            )),
-            6 => Some((
-                "direction",
-                AttributeType::Direction(&self.state.size.direction),
-            )),
-            7 => Some(("padding", AttributeType::Measures(self.state.size.padding))),
-            8 => Some((
+    pub fn attributes(&self) -> Vec<(&str, AttributeType)> {
+        let mut attributes = vec![
+            ("width", AttributeType::Size(&self.size.width)),
+            ("height", AttributeType::Size(&self.size.height)),
+            ("min_width", AttributeType::Size(&self.size.minimum_width)),
+            ("min_height", AttributeType::Size(&self.size.minimum_height)),
+            ("max_width", AttributeType::Size(&self.size.maximum_width)),
+            ("max_height", AttributeType::Size(&self.size.maximum_height)),
+            ("direction", AttributeType::Direction(&self.size.direction)),
+            ("padding", AttributeType::Measures(self.size.padding)),
+            ("margin", AttributeType::Measures(self.size.margin)),
+            ("position", AttributeType::Position(&self.size.position)),
+            (
                 "main_alignment",
-                AttributeType::Alignment(&self.state.size.main_alignment),
-            )),
-            9 => Some((
+                AttributeType::Alignment(&self.size.main_alignment),
+            ),
+            (
                 "cross_alignment",
-                AttributeType::Alignment(&self.state.size.cross_alignment),
-            )),
-            10 => {
-                let background = &self.state.style.background;
+                AttributeType::Alignment(&self.size.cross_alignment),
+            ),
+            {
+                let background = &self.style.background;
                 let fill = match *background {
                     Fill::Color(_) => AttributeType::Color(background.clone()),
-                    Fill::LinearGradient(_) => AttributeType::LinearGradient(background.clone()),
+                    Fill::LinearGradient(_) => AttributeType::Gradient(background.clone()),
+                    Fill::RadialGradient(_) => AttributeType::Gradient(background.clone()),
+                    Fill::ConicGradient(_) => AttributeType::Gradient(background.clone()),
                 };
-                Some(("background", fill))
-            }
-            11 => Some(("border", AttributeType::Border(&self.state.style.border))),
-            12 => Some((
+                ("background", fill)
+            },
+            ("border", AttributeType::Border(&self.style.border)),
+            (
                 "corner_radius",
-                AttributeType::CornerRadius(self.state.style.corner_radius),
-            )),
-            13 => Some((
-                "color",
-                AttributeType::Color(self.state.font_style.color.into()),
-            )),
-            14 => Some((
+                AttributeType::CornerRadius(self.style.corner_radius),
+            ),
+            ("color", AttributeType::Color(self.font_style.color.into())),
+            (
                 "font_family",
-                AttributeType::Text(self.state.font_style.font_family.join(",")),
-            )),
-            15 => Some((
+                AttributeType::Text(self.font_style.font_family.join(",")),
+            ),
+            (
                 "font_size",
-                AttributeType::Measure(self.state.font_style.font_size),
-            )),
-            16 => Some((
+                AttributeType::Measure(self.font_style.font_size),
+            ),
+            (
                 "line_height",
-                AttributeType::Measure(self.state.font_style.line_height),
-            )),
-            17 => Some((
+                AttributeType::Measure(self.font_style.line_height),
+            ),
+            (
                 "text_align",
-                AttributeType::TextAlignment(&self.state.font_style.text_align),
-            )),
-            18 => Some((
+                AttributeType::TextAlignment(&self.font_style.text_align),
+            ),
+            (
                 "text_overflow",
-                AttributeType::TextOverflow(&self.state.font_style.text_overflow),
-            )),
-            19 => Some((
-                "offset_x",
-                AttributeType::Measure(self.state.size.offset_x.get()),
-            )),
-            20 => Some((
-                "offset_y",
-                AttributeType::Measure(self.state.size.offset_y.get()),
-            )),
-            n => {
-                let shadows = &self.state.style.shadows;
-                let shadow = shadows
-                    .get(n - 21)
-                    .map(|shadow| ("shadow", AttributeType::Shadow(shadow)));
+                AttributeType::TextOverflow(&self.font_style.text_overflow),
+            ),
+            ("offset_x", AttributeType::Measure(self.size.offset_x.get())),
+            ("offset_y", AttributeType::Measure(self.size.offset_y.get())),
+            ("content", AttributeType::Content(&self.size.content)),
+        ];
 
-                if shadow.is_some() {
-                    shadow
-                } else {
-                    let text_shadows = &self.state.font_style.text_shadows;
-                    text_shadows
-                        .get(n - 21 + shadows.len())
-                        .map(|text_shadow| ("text_shadow", AttributeType::TextShadow(text_shadow)))
-                }
-            }
+        let shadows = &self.style.shadows;
+        for shadow in shadows {
+            attributes.push(("shadow", AttributeType::Shadow(shadow)));
         }
-    }
 
-    fn next(&mut self) -> Option<Self::Item> {
-        let current = self.curr;
-        self.curr += 1;
+        let text_shadows = &self.font_style.text_shadows;
 
-        self.nth(current)
+        for text_shadow in text_shadows {
+            attributes.push(("text_shadow", AttributeType::TextShadow(text_shadow)));
+        }
+
+        attributes
     }
 }
 
 pub enum AttributeType<'a> {
     Color(Fill),
-    LinearGradient(Fill),
+    Gradient(Fill),
     Size(&'a Size),
     Measure(f32),
     Measures(Gaps),
     CornerRadius(CornerRadius),
     Direction(&'a DirectionMode),
+    Position(&'a Position),
+    Content(&'a Content),
     Alignment(&'a Alignment),
     Shadow(&'a Shadow),
     TextShadow(&'a TextShadow),

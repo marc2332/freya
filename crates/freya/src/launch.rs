@@ -178,6 +178,9 @@ pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height)
 /// }
 /// ```
 pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>) {
+    #[cfg(feature = "performance-overlay")]
+    let config = config.with_plugin(crate::plugins::PerformanceOverlayPlugin::default());
+
     use freya_core::prelude::{
         FreyaDOM,
         SafeDOM,

@@ -4,13 +4,14 @@ use freya_elements::{
     events::MouseEvent,
 };
 use freya_hooks::{
-    use_animation_with_dependencies,
+    use_animation,
     use_applied_theme,
-    use_node,
     use_platform,
     AccordionTheme,
     AccordionThemeWith,
     AnimNum,
+    Ease,
+    Function,
 };
 use winit::window::CursorIcon;
 
@@ -43,10 +44,13 @@ pub struct AccordionProps {
 pub fn Accordion(props: AccordionProps) -> Element {
     let theme = use_applied_theme!(&props.theme, accordion);
     let mut open = use_signal(|| false);
-    let (node_ref, size) = use_node();
-
-    let animation = use_animation_with_dependencies(&size.area.height(), move |ctx, height| {
-        ctx.with(AnimNum::new(0., height).time(200))
+    let animation = use_animation(move |ctx| {
+        ctx.with(
+            AnimNum::new(0., 100.)
+                .time(300)
+                .function(Function::Expo)
+                .ease(Ease::Out),
+        )
     });
     let mut status = use_signal(AccordionStatus::default);
     let platform = use_platform();
@@ -101,13 +105,8 @@ pub fn Accordion(props: AccordionProps) -> Element {
             rect {
                 overflow: "clip",
                 width: "100%",
-                height: "{animation_value}",
-                rect {
-                    reference: node_ref,
-                    height: "auto",
-                    width: "100%",
-                    {&props.children}
-                }
+                height: "{animation_value}a",
+                {&props.children}
             }
         }
     )
