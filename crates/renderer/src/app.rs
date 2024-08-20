@@ -389,7 +389,12 @@ impl Application {
 
         let mut render_pipeline = RenderPipeline {
             canvas_area: Area::from_size(window_size.to_torin()),
-            fdom: &fdom,
+            rdom: fdom.rdom(),
+            compositor_dirty_area: &mut fdom.compositor_dirty_area(),
+            compositor_dirty_nodes: &mut fdom.compositor_dirty_nodes(),
+            compositor_cache: &mut fdom.compositor_cache(),
+            layers: &mut fdom.layers(),
+            layout: &mut fdom.layout(),
             background,
             surface,
             dirty_surface,

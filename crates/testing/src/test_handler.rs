@@ -299,7 +299,12 @@ impl TestingHandler {
         // Render to the canvas
         let mut render_pipeline = RenderPipeline {
             canvas_area: Area::from_size((width as f32, height as f32).into()),
-            fdom: &fdom,
+            rdom: fdom.rdom(),
+            compositor_dirty_area: &mut fdom.compositor_dirty_area(),
+            compositor_dirty_nodes: &mut fdom.compositor_dirty_nodes(),
+            compositor_cache: &mut fdom.compositor_cache(),
+            layers: &mut fdom.layers(),
+            layout: &mut fdom.layout(),
             background: Color::WHITE,
             surface: &mut surface,
             dirty_surface: &mut dirty_surface,
