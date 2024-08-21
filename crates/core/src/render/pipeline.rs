@@ -164,7 +164,7 @@ impl RenderPipeline<'_> {
         layout_node: &LayoutNode,
         render_wireframe: bool,
     ) {
-        let canvas = self.surface.canvas();
+        let dirty_canvas = self.dirty_surface.canvas();
         let area = layout_node.visible_area();
         let node_type = &*node_ref.node_type();
         if let NodeType::Element(ElementNode { tag, .. }) = node_type {
@@ -172,7 +172,7 @@ impl RenderPipeline<'_> {
                 return;
             };
 
-            let initial_layer = canvas.save();
+            let initial_layer = dirty_canvas.save();
             let node_transform = &*node_ref.get::<TransformState>().unwrap();
 
             // Pass rotate effect to children
@@ -187,12 +187,12 @@ impl RenderPipeline<'_> {
                         y: area.min_y() + area.height() / 2.0,
                     }),
                 );
-                canvas.concat(&matrix);
+                dirty_canvas.concat(&matrix);
             }
 
             // Apply inherited opacity effects
             for opacity in &node_transform.opacities {
-                canvas.save_layer_alpha_f(
+                dirty_canvas.save_layer_alpha_f(
                     Rect::new(
                         self.canvas_area.min_x(),
                         self.canvas_area.min_y(),
@@ -209,7 +209,7 @@ impl RenderPipeline<'_> {
             // it will render the inner text spans on it's own, so if these spans overflow the paragraph,
             // It is the paragraph job to make sure they are clipped
             if !node_viewports.viewports.is_empty() && *tag == TagName::Paragraph {
-                element_utils.clip(layout_node, &node_ref, canvas, self.scale_factor);
+                element_utils.clip(layout_node, &node_ref, dirty_canvas, self.scale_factor);
             }
 
             for node_id in &node_viewports.viewports {
@@ -219,13 +219,14 @@ impl RenderPipeline<'_> {
                     continue;
                 };
                 let layout_node = self.layout.get(*node_id).unwrap();
-                element_utils.clip(layout_node, &node_ref, canvas, self.scale_factor);
+                element_utils.clip(layout_node, &node_ref, dirty_canvas, self.scale_factor);
             }
 
+            println!("-");
             element_utils.render(
                 layout_node,
                 &node_ref,
-                canvas,
+                dirty_canvas,
                 self.font_collection,
                 self.font_manager,
                 self.default_fonts,
@@ -233,10 +234,10 @@ impl RenderPipeline<'_> {
             );
 
             if render_wireframe {
-                wireframe_renderer::render_wireframe(canvas, &area);
+                wireframe_renderer::render_wireframe(dirty_canvas, &area);
             }
 
-            canvas.restore_to_count(initial_layer);
+            dirty_canvas.restore_to_count(initial_layer);
         }
     }
 }
