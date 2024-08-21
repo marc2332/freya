@@ -245,6 +245,35 @@ mod test {
     use freya_testing::prelude::*;
     use itertools::sorted;
 
+    fn run_compositor(utils: &TestingHandler, compositor: &mut Compositor) -> (Layers, Layers) {
+        let sdom = utils.sdom();
+        let fdom = sdom.get();
+        let layout = fdom.layout();
+        let layers = fdom.layers();
+        let rdom = fdom.rdom();
+        let mut compositor_dirty_area = fdom.compositor_dirty_area();
+        let mut compositor_dirty_nodes = fdom.compositor_dirty_nodes();
+        let mut compositor_cache = fdom.compositor_cache();
+
+        let mut dirty_layers = Layers::default();
+
+        // Process what nodes need to be rendered
+        let rendering_layers = compositor.run(
+            &mut *compositor_dirty_nodes,
+            &mut *compositor_dirty_area,
+            &mut compositor_cache,
+            &*layers,
+            &mut dirty_layers,
+            &layout,
+            rdom,
+            1.0f32,
+        );
+
+        compositor_dirty_area.take();
+
+        (layers.clone(), rendering_layers.clone())
+    }
+
     #[tokio::test]
     pub async fn button_drawing() {
         fn compositor_app() -> Element {
@@ -287,35 +316,6 @@ mod test {
 
         assert_eq!(label.get(0).text(), Some("0"));
 
-        fn run_compositor(utils: &TestingHandler, compositor: &mut Compositor) -> (Layers, Layers) {
-            let sdom = utils.sdom();
-            let fdom = sdom.get();
-            let layout = fdom.layout();
-            let layers = fdom.layers();
-            let rdom = fdom.rdom();
-            let mut compositor_dirty_area = fdom.compositor_dirty_area();
-            let mut compositor_dirty_nodes = fdom.compositor_dirty_nodes();
-            let mut compositor_cache = fdom.compositor_cache();
-
-            let mut dirty_layers = Layers::default();
-
-            // Process what nodes need to be rendered
-            let rendering_layers = compositor.run(
-                &mut *compositor_dirty_nodes,
-                &mut *compositor_dirty_area,
-                &mut compositor_cache,
-                &*layers,
-                &mut dirty_layers,
-                &layout,
-                rdom,
-                1.0f32,
-            );
-
-            compositor_dirty_area.take();
-
-            (layers.clone(), rendering_layers.clone())
-        }
-
         let (layers, rendering_layers) = run_compositor(&utils, &mut compositor);
         // First render is always a full render
         assert_eq!(layers, rendering_layers);
@@ -353,6 +353,136 @@ mod test {
         utils.wait_for_update().await;
 
         assert_eq!(label.get(0).text(), Some("1"));
+    }
+
+    #[tokio::test]
+    pub async fn after_shadow_drawing() {
+        fn compositor_app() -> Element {
+            let mut height = use_signal(|| 200);
+            let mut shadow = use_signal(|| 20);
+
+            rsx!(
+                rect {
+                    height: "100",
+                    width: "200",
+                    background: "red",
+                    onclick: move |_| height += 10,
+                }
+                rect {
+                    height: "{height}",
+                    width: "200",
+                    background: "green",
+                    shadow: "0 {shadow} 8 0 rgb(0, 0, 0, 0.5)",
+                    onclick: move |_| height -= 10,
+                }
+                rect {
+                    height: "100",
+                    width: "200",
+                    background: "blue",
+                    onclick: move |_| shadow.set(-20),
+                }
+            )
+        }
+
+        let mut compositor = Compositor::default();
+        let mut utils = launch_test(compositor_app);
+        utils.wait_for_update().await;
+
+        let (layers, rendering_layers) = run_compositor(&utils, &mut compositor);
+        // First render is always a full render
+        assert_eq!(layers, rendering_layers);
+
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (5.0, 5.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+
+        let (_, rendering_layers) = run_compositor(&utils, &mut compositor);
+        let mut painted_nodes = 0;
+        for (_, nodes) in sorted(rendering_layers.iter()) {
+            let sdom = utils.sdom();
+            let fdom = sdom.get();
+            let layout = fdom.layout();
+            for node_id in nodes {
+                if layout.get(*node_id).is_some() {
+                    painted_nodes += 1;
+                }
+            }
+        }
+
+        // Root + Second rect + Third rect
+        assert_eq!(painted_nodes, 3);
+
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (5.0, 150.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+
+        let (_, rendering_layers) = run_compositor(&utils, &mut compositor);
+        let mut painted_nodes = 0;
+        for (_, nodes) in sorted(rendering_layers.iter()) {
+            let sdom = utils.sdom();
+            let fdom = sdom.get();
+            let layout = fdom.layout();
+            for node_id in nodes {
+                if layout.get(*node_id).is_some() {
+                    painted_nodes += 1;
+                }
+            }
+        }
+
+        // Root + Second rect + Third rect
+        assert_eq!(painted_nodes, 3);
+
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (5.0, 350.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+
+        let (_, rendering_layers) = run_compositor(&utils, &mut compositor);
+        let mut painted_nodes = 0;
+        for (_, nodes) in sorted(rendering_layers.iter()) {
+            let sdom = utils.sdom();
+            let fdom = sdom.get();
+            let layout = fdom.layout();
+            for node_id in nodes {
+                if layout.get(*node_id).is_some() {
+                    painted_nodes += 1;
+                }
+            }
+        }
+
+        // Root + First rect + Second rect
+        assert_eq!(painted_nodes, 3);
+
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (5.0, 150.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+
+        let (_, rendering_layers) = run_compositor(&utils, &mut compositor);
+        let mut painted_nodes = 0;
+        for (_, nodes) in sorted(rendering_layers.iter()) {
+            let sdom = utils.sdom();
+            let fdom = sdom.get();
+            let layout = fdom.layout();
+            for node_id in nodes {
+                if layout.get(*node_id).is_some() {
+                    painted_nodes += 1;
+                }
+            }
+        }
+
+        // Root + First + Second rect + Third rect
+        assert_eq!(painted_nodes, 4);
     }
 
     #[tokio::test]
@@ -398,35 +528,6 @@ mod test {
         utils.wait_for_update().await;
 
         assert_eq!(root.get(0).get(1).get(0).get(0).text(), Some("12"));
-
-        fn run_compositor(utils: &TestingHandler, compositor: &mut Compositor) -> (Layers, Layers) {
-            let sdom = utils.sdom();
-            let fdom = sdom.get();
-            let layout = fdom.layout();
-            let layers = fdom.layers();
-            let rdom = fdom.rdom();
-            let mut compositor_dirty_area = fdom.compositor_dirty_area();
-            let mut compositor_dirty_nodes = fdom.compositor_dirty_nodes();
-            let mut compositor_cache = fdom.compositor_cache();
-
-            let mut dirty_layers = Layers::default();
-
-            // Process what nodes need to be rendered
-            let rendering_layers = compositor.run(
-                &mut *compositor_dirty_nodes,
-                &mut *compositor_dirty_area,
-                &mut compositor_cache,
-                &*layers,
-                &mut dirty_layers,
-                &layout,
-                rdom,
-                1.0f32,
-            );
-
-            compositor_dirty_area.take();
-
-            (layers.clone(), rendering_layers.clone())
-        }
 
         let (layers, rendering_layers) = run_compositor(&utils, &mut compositor);
         // First render is always a full render
