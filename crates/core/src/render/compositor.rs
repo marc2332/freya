@@ -245,7 +245,10 @@ mod test {
     use freya_testing::prelude::*;
     use itertools::sorted;
 
-    fn run_compositor(utils: &TestingHandler, compositor: &mut Compositor) -> (Layers, Layers) {
+    fn run_compositor(
+        utils: &TestingHandler,
+        compositor: &mut Compositor,
+    ) -> (Layers, Layers, usize) {
         let sdom = utils.sdom();
         let fdom = sdom.get();
         let layout = fdom.layout();
@@ -271,7 +274,16 @@ mod test {
 
         compositor_dirty_area.take();
 
-        (layers.clone(), rendering_layers.clone())
+        let mut painted_nodes = 0;
+        for (_, nodes) in sorted(rendering_layers.iter()) {
+            for node_id in nodes {
+                if layout.get(*node_id).is_some() {
+                    painted_nodes += 1;
+                }
+            }
+        }
+
+        (layers.clone(), rendering_layers.clone(), painted_nodes)
     }
 
     #[tokio::test]
@@ -316,7 +328,7 @@ mod test {
 
         assert_eq!(label.get(0).text(), Some("0"));
 
-        let (layers, rendering_layers) = run_compositor(&utils, &mut compositor);
+        let (layers, rendering_layers, _) = run_compositor(&utils, &mut compositor);
         // First render is always a full render
         assert_eq!(layers, rendering_layers);
 
@@ -328,18 +340,7 @@ mod test {
 
         utils.wait_for_update().await;
 
-        let (_, rendering_layers) = run_compositor(&utils, &mut compositor);
-        let mut painted_nodes = 0;
-        for (_, nodes) in sorted(rendering_layers.iter()) {
-            let sdom = utils.sdom();
-            let fdom = sdom.get();
-            let layout = fdom.layout();
-            for node_id in nodes {
-                if layout.get(*node_id).is_some() {
-                    painted_nodes += 1;
-                }
-            }
-        }
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
         // Root + Second rect + Button's internal rect + Button's label
         assert_eq!(painted_nodes, 4);
@@ -388,7 +389,7 @@ mod test {
         let mut utils = launch_test(compositor_app);
         utils.wait_for_update().await;
 
-        let (layers, rendering_layers) = run_compositor(&utils, &mut compositor);
+        let (layers, rendering_layers, _) = run_compositor(&utils, &mut compositor);
         // First render is always a full render
         assert_eq!(layers, rendering_layers);
 
@@ -399,18 +400,7 @@ mod test {
         });
         utils.wait_for_update().await;
 
-        let (_, rendering_layers) = run_compositor(&utils, &mut compositor);
-        let mut painted_nodes = 0;
-        for (_, nodes) in sorted(rendering_layers.iter()) {
-            let sdom = utils.sdom();
-            let fdom = sdom.get();
-            let layout = fdom.layout();
-            for node_id in nodes {
-                if layout.get(*node_id).is_some() {
-                    painted_nodes += 1;
-                }
-            }
-        }
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
         // Root + Second rect + Third rect
         assert_eq!(painted_nodes, 3);
@@ -422,18 +412,7 @@ mod test {
         });
         utils.wait_for_update().await;
 
-        let (_, rendering_layers) = run_compositor(&utils, &mut compositor);
-        let mut painted_nodes = 0;
-        for (_, nodes) in sorted(rendering_layers.iter()) {
-            let sdom = utils.sdom();
-            let fdom = sdom.get();
-            let layout = fdom.layout();
-            for node_id in nodes {
-                if layout.get(*node_id).is_some() {
-                    painted_nodes += 1;
-                }
-            }
-        }
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
         // Root + Second rect + Third rect
         assert_eq!(painted_nodes, 3);
@@ -445,18 +424,7 @@ mod test {
         });
         utils.wait_for_update().await;
 
-        let (_, rendering_layers) = run_compositor(&utils, &mut compositor);
-        let mut painted_nodes = 0;
-        for (_, nodes) in sorted(rendering_layers.iter()) {
-            let sdom = utils.sdom();
-            let fdom = sdom.get();
-            let layout = fdom.layout();
-            for node_id in nodes {
-                if layout.get(*node_id).is_some() {
-                    painted_nodes += 1;
-                }
-            }
-        }
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
         // Root + First rect + Second rect
         assert_eq!(painted_nodes, 3);
@@ -468,18 +436,7 @@ mod test {
         });
         utils.wait_for_update().await;
 
-        let (_, rendering_layers) = run_compositor(&utils, &mut compositor);
-        let mut painted_nodes = 0;
-        for (_, nodes) in sorted(rendering_layers.iter()) {
-            let sdom = utils.sdom();
-            let fdom = sdom.get();
-            let layout = fdom.layout();
-            for node_id in nodes {
-                if layout.get(*node_id).is_some() {
-                    painted_nodes += 1;
-                }
-            }
-        }
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
         // Root + First + Second rect + Third rect
         assert_eq!(painted_nodes, 4);
@@ -529,7 +486,7 @@ mod test {
 
         assert_eq!(root.get(0).get(1).get(0).get(0).text(), Some("12"));
 
-        let (layers, rendering_layers) = run_compositor(&utils, &mut compositor);
+        let (layers, rendering_layers, _) = run_compositor(&utils, &mut compositor);
         // First render is always a full render
         assert_eq!(layers, rendering_layers);
 
@@ -540,18 +497,7 @@ mod test {
         });
         utils.wait_for_update().await;
 
-        let (_, rendering_layers) = run_compositor(&utils, &mut compositor);
-        let mut painted_nodes = 0;
-        for (_, nodes) in sorted(rendering_layers.iter()) {
-            let sdom = utils.sdom();
-            let fdom = sdom.get();
-            let layout = fdom.layout();
-            for node_id in nodes {
-                if layout.get(*node_id).is_some() {
-                    painted_nodes += 1;
-                }
-            }
-        }
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
         // Root + First rect + Paragraph + Second rect
         assert_eq!(painted_nodes, 4);
@@ -563,18 +509,7 @@ mod test {
         });
         utils.wait_for_update().await;
 
-        let (_, rendering_layers) = run_compositor(&utils, &mut compositor);
-        let mut painted_nodes = 0;
-        for (_, nodes) in sorted(rendering_layers.iter()) {
-            let sdom = utils.sdom();
-            let fdom = sdom.get();
-            let layout = fdom.layout();
-            for node_id in nodes {
-                if layout.get(*node_id).is_some() {
-                    painted_nodes += 1;
-                }
-            }
-        }
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
         // Root + First rect + Paragraph + Second rect
         assert_eq!(painted_nodes, 4);
@@ -586,18 +521,7 @@ mod test {
         });
         utils.wait_for_update().await;
 
-        let (_, rendering_layers) = run_compositor(&utils, &mut compositor);
-        let mut painted_nodes = 0;
-        for (_, nodes) in sorted(rendering_layers.iter()) {
-            let sdom = utils.sdom();
-            let fdom = sdom.get();
-            let layout = fdom.layout();
-            for node_id in nodes {
-                if layout.get(*node_id).is_some() {
-                    painted_nodes += 1;
-                }
-            }
-        }
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
         // Root + First rect + Paragraph
         assert_eq!(painted_nodes, 2);
