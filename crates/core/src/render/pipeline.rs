@@ -222,7 +222,6 @@ impl RenderPipeline<'_> {
                 element_utils.clip(layout_node, &node_ref, dirty_canvas, self.scale_factor);
             }
 
-            println!("-");
             element_utils.render(
                 layout_node,
                 &node_ref,
