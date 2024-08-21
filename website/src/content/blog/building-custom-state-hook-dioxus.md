@@ -12,7 +12,7 @@ how are hooks made.
 
 ### 👋 Preface 
 
-**Dioxus** already comes with a few state management solutions, primarily in the form of hooks and powered by **Signals**.
+**Dioxus** has built-in support for reactive state management in the form of hooks and **Signals**.
 I am not gonna dive into what hooks or signals are, so if you don't know what they are you may check the official docs first.
 
 You may be asking yourself why do we even need to build custom hooks if Dioxus already give us different tools for different use cases.
@@ -24,8 +24,8 @@ For those who happen to be in this situation, as I was myself when building [Val
 
 ### 🤝 Introduction 
 
-So, a bit of introduction. We will build a custom hook that give us a reactive `key-value` store, 
-where we can subscribe to the value of specific keys across multiple components. The hook will be called `use_value`
+So, a bit of introduction. We will build a custom hook that let us have cross-component reactive `key-value` store. 
+The idea is that components subscribe to specific keys, so every time anyone modifies the value of that specific key, the component will rerun. We will call this hook  `use_value`
 
 This is how it will look like:
 
@@ -67,7 +67,7 @@ fn app() {
 It let us store value that is tied to life of the **Scope** it was created in,
 which means that when the **Component** is dropped, the  stored value will be dropped as well.
 
-It takes a closure to initialize our value, this be called when the component runs for the first time, this way the value is only created when it truly needs to be created. It also returns the value it created or a cloned value of it, which is why it's value requires to be `Clone`.
+It takes a closure to initialize our value, this be called when the component runs for the first time, this way the value is only created when it truly needs to be created. It also returns the value it created or a cloned value of it if this isn't the first run anymore, is why it's value requires to be `Clone`.
 
 But if the value is cloned it means that any change that we make to the cloned value will not be 
 persisted for the next change? Correct, but this is why we are going to be using smart pointers.
@@ -84,11 +84,13 @@ fn use_value<T: Default>() -> Rc<RefCell<T>> {
 
 ### The not so basic
 Alright we got a dummy hook that all it does is store a value, but how do we share this value with an assigned key?
-We just need to build a registry.
-
+We just need to build a registry where all subscribers self-register and self-unregister.
 
 
 ```rs
+/// For every key we have in the registry 
+/// there will be a `RegistryEntry` where the value and 
+/// subscribers are stored.
 struct RegistryEntry<T> {
     value: Signal<T>,
     subscribers: HashSet<ScopeId>
@@ -99,11 +101,11 @@ struct Registry<T> {
 }
 
 impl<T: Default> Registry<T> {
-    /// Subscribe the given [Scope] in this registry to `key`.
+    /// Subscribe the given [ScopeId] in this registry to `key`.
     /// Will initialize the value to `T::default` if there wasn't one before.
     pub fn subscribe(&mut self, key: String, scope_id: ScopeId) -> {
         self.map.insert_or_get(key, || RegistryEntry {
-            value: Signal::new(T::default()),
+            value: Signal::new_in_scope(T::default(), ScopeId::ROOT),
             subscribers: HashSet::from([scope_id])
         })
         .subscribers.insert(scope_id)
@@ -120,12 +122,13 @@ impl<T: Default> Registry<T> {
         }
     }
 
-    /// Get the [Signal] assigned to the given `key`.
+    /// Get the [Signal] of the value assigned to the given `key`.
     pub fn get(&self, key: &str) -> Signal<T> {
         self.map.get(key).copied().unwrap()
     }
 }
 
+/// Access the value assigned to the given key.
 fn use_value<T>(key: &str) -> Signal<T> {
     use_hook(|| {
         // Access the registry and if it doesn't exist create it in the root scope
@@ -136,9 +139,9 @@ fn use_value<T>(key: &str) -> Signal<T> {
         });
         
         // Subscribe this component
-        registry.subscribe(current_scope_id().unwrap());
+        registry.subscribe(key, current_scope_id().unwrap());
 
-        // Return the Signal assigned to the given key
+        // Return value of the given key
         registry.get(key)
     })
 }
