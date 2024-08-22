@@ -68,13 +68,14 @@ pub trait ElementUtils {
         node_ref: &DioxusNode,
         scale_factor: f32,
     ) -> Area {
-        let area = self.element_drawing_area(layout_node, node_ref, scale_factor);
+        let drawing_area = self.element_drawing_area(layout_node, node_ref, scale_factor);
         let transform = node_ref.get::<TransformState>().unwrap();
 
         if !transform.rotations.is_empty() {
-            area.max_area_when_rotated()
+            let area = layout_node.visible_area();
+            drawing_area.max_area_when_rotated(area.center())
         } else {
-            area
+            drawing_area
         }
     }
 
