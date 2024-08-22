@@ -25,6 +25,7 @@ use_camera = ["freya-hooks/use_camera"]
 mocked-engine-development = ["freya-engine/mocked-engine"] # This is just for the CI
 default = ["skia"]
 performance-overlay = []
+fade-cached-incremental-areas = ["freya-core/fade-cached-incremental-areas"]
 
 [dependencies]
 freya-devtools = { workspace = true, optional = true }

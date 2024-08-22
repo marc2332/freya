@@ -17,6 +17,7 @@ features = ["freya-engine/mocked-engine"]
 [features]
 shared = []
 skia-engine = ["freya-engine/skia-engine"]
+fade-cached-incremental-areas = []
 
 [dependencies]
 freya-node-state = { workspace = true }

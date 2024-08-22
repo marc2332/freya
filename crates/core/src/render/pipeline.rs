@@ -85,6 +85,27 @@ impl RenderPipeline<'_> {
             self.scale_factor,
         );
 
+        #[cfg(feature = "fade-cached-incremental-areas")]
+        {
+            if self.compositor_dirty_area.is_some() {
+                use freya_engine::prelude::{
+                    Paint,
+                    PaintStyle,
+                };
+                let rect = Rect::new(
+                    self.canvas_area.min_x(),
+                    self.canvas_area.min_y(),
+                    self.canvas_area.max_x(),
+                    self.canvas_area.max_y(),
+                );
+                let mut paint = Paint::default();
+                paint.set_color(Color::from_argb(15, 255, 255, 255));
+                paint.set_anti_alias(true);
+                paint.set_style(PaintStyle::Fill);
+                self.dirty_surface.canvas().draw_rect(rect, &paint);
+            }
+        }
+
         self.dirty_surface.canvas().save();
 
         self.compositor_dirty_area.round_out();
