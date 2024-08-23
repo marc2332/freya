@@ -6,13 +6,20 @@ use freya_engine::prelude::{
 use freya_native_core::{
     prelude::NodeImmutable,
     tags::TagName,
+    NodeId,
 };
-use freya_node_state::TransformState;
-use torin::prelude::{
-    Area,
-    AreaModel,
-    CursorPoint,
-    LayoutNode,
+use freya_node_state::{
+    TransformState,
+    ViewportState,
+};
+use torin::{
+    prelude::{
+        Area,
+        AreaModel,
+        CursorPoint,
+        LayoutNode,
+    },
+    torin::Torin,
 };
 
 use super::*;
@@ -58,6 +65,27 @@ pub trait ElementUtils {
     ) -> Area {
         // Images neither SVG elements have support for shadows or borders, so its fine so simply return the visible area.
         layout_node.visible_area()
+    }
+
+    fn drawing_area_with_viewports(
+        &self,
+        layout_node: &LayoutNode,
+        node_ref: &DioxusNode,
+        layout: &Torin<NodeId>,
+        scale_factor: f32,
+    ) -> Option<Area> {
+        let mut drawing_area = self.drawing_area(layout_node, node_ref, scale_factor);
+        let node_viewports = node_ref.get::<ViewportState>().unwrap();
+
+        for viewport_id in &node_viewports.viewports {
+            let viewport = layout.get(*viewport_id).unwrap().visible_area();
+            drawing_area.clip(&viewport);
+            if !viewport.intersects(&drawing_area) {
+                return None;
+            }
+        }
+
+        Some(drawing_area)
     }
 
     /// Measure the area for this element considering other

@@ -54,6 +54,8 @@ pub trait AreaModel {
     fn expand(&mut self, size: &Size2D);
 
     fn max_area_when_rotated(&self, center: Point2D) -> Area;
+
+    fn clip(&mut self, other: &Self);
 }
 
 impl AreaModel for Area {
@@ -201,6 +203,13 @@ impl AreaModel for Area {
                 bottom_right_extreme.y - top_left_extreme.y,
             ),
         )
+    }
+
+    fn clip(&mut self, other: &Self) {
+        self.origin.x = self.origin.x.max(other.origin.x);
+        self.origin.y = self.origin.y.max(other.origin.y);
+        self.size.width = self.size.width.min(other.size.width);
+        self.size.height = self.size.height.min(other.size.height);
     }
 }
 

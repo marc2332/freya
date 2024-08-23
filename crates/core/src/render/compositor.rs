@@ -117,7 +117,7 @@ impl Compositor {
         let node = rdom.get(node_id)?;
         let utils = node.node_type().tag()?.utils()?;
 
-        Some(utils.drawing_area(layout_node, &node, scale_factor))
+        utils.drawing_area_with_viewports(layout_node, &node, layout, scale_factor)
     }
 
     #[inline]
@@ -182,7 +182,14 @@ impl Compositor {
                         let cached_area = cache.get(node_id);
                         let needs_cached_area = utils.needs_cached_area(&node_ref);
 
-                        let area = utils.drawing_area(layout_node, &node_ref, scale_factor);
+                        let Some(area) = utils.drawing_area_with_viewports(
+                            layout_node,
+                            &node_ref,
+                            layout,
+                            scale_factor,
+                        ) else {
+                            return false;
+                        };
 
                         let is_dirty = dirty_nodes.remove(node_id);
                         let cached_area_is_invalidated = cached_area
