@@ -50,6 +50,7 @@ use crate::{
     },
 };
 
+/// Runs the full rendering cycle.
 pub struct RenderPipeline<'a> {
     pub rdom: &'a DioxusDOM,
     pub layers: &'a Layers,
@@ -87,6 +88,7 @@ impl RenderPipeline<'_> {
 
         #[cfg(feature = "fade-cached-incremental-areas")]
         {
+            /// Slowly fade into white non-rerendered areas
             if self.compositor_dirty_area.is_some() {
                 use freya_engine::prelude::{
                     Paint,
@@ -108,6 +110,7 @@ impl RenderPipeline<'_> {
 
         self.dirty_surface.canvas().save();
 
+        // Round the area out to prevent float pixels issues
         self.compositor_dirty_area.round_out();
 
         // Clear using the the background only, but only the dirty
@@ -130,9 +133,10 @@ impl RenderPipeline<'_> {
         }
 
         #[cfg(debug_assertions)]
+        // Counter of painted nodes for debugging purposes
         let mut painted = 0;
 
-        // Render the layers
+        // Render the dirty nodes
         for (_, nodes) in sorted(rendering_layers.iter()) {
             'elements: for node_id in nodes {
                 let node_ref = self.rdom.get(*node_id).unwrap();
