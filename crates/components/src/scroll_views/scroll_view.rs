@@ -53,6 +53,9 @@ pub struct ScrollViewProps {
     /// Enable scrolling with arrow keys.
     #[props(default = true, into)]
     pub scroll_with_arrows: bool,
+    /// If true, items are aligned to the end of the list. Only work with vertical direction.
+    #[props(default = false, into)]
+    pub reverse: bool,
 
     pub scroll_controller: Option<ScrollController>,
 }
@@ -136,10 +139,16 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
     let user_direction = &props.direction;
     let show_scrollbar = props.show_scrollbar;
     let scroll_with_arrows = props.scroll_with_arrows;
+    let reverse = props.reverse;
 
     scroll_controller.use_apply(size.inner.width, size.inner.height);
 
     let direction_is_vertical = user_direction == "vertical";
+
+    let align = match reverse && direction_is_vertical {
+        true => "end",
+        false => "start",
+    };
 
     let vertical_scrollbar_is_visible =
         is_scrollbar_visible(show_scrollbar, size.inner.height, size.area.height());
@@ -363,6 +372,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
                     height: "100%",
                     width: "100%",
                     direction: "{user_direction}",
+                    main_align: "{align}",
                     offset_y: "{corrected_scrolled_y}",
                     offset_x: "{corrected_scrolled_x}",
                     reference: node_ref,

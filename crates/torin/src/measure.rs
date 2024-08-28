@@ -355,6 +355,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
                 &initial_phase_inner_sizes,
                 &parent_node.main_alignment,
                 &parent_node.direction,
+                &parent_node.offset_y,
                 AlignmentDirection::Main,
             );
         }
@@ -402,6 +403,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
                     initial_phase_size,
                     &parent_node.cross_alignment,
                     &parent_node.direction,
+                    &parent_node.offset_y,
                     AlignmentDirection::Cross,
                 );
             }
