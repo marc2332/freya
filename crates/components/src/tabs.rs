@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_activable_route,
     use_applied_theme,
@@ -141,7 +141,7 @@ pub fn Tab(children: Element, theme: Option<TabThemeWith>) -> Element {
                 padding: "{padding}",
                 main_align: "center",
                 cross_align: "center",
-                {children},
+                {children}
             }
             rect {
                 height: "2",
@@ -253,7 +253,7 @@ pub fn BottomTab(children: Element, theme: Option<BottomTabThemeWith>) -> Elemen
             cross_align: "center",
             corner_radius: "99",
             margin: "2 4",
-            {children},
+            {children}
         }
     )
 }

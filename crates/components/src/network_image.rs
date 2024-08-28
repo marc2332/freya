@@ -1,6 +1,6 @@
 use bytes::Bytes;
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_applied_theme,
     use_asset_cacher,
@@ -124,7 +124,7 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
             focus_id,
             image_data,
             role: "image",
-            alt
+            alt,
         })
     } else if *status.read() == ImageState::Loading {
         if let Some(loading_element) = &props.loading {

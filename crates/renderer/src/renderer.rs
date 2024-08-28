@@ -219,9 +219,9 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             }
             EventMessage::ExitApp => event_loop.exit(),
             ev => {
-                if let EventMessage::UpdateTemplate(template) = ev {
-                    app.vdom_replace_template(template);
-                }
+                // if let EventMessage::UpdateTemplate(template) = ev {
+                //     app.vdom_replace_template(template);
+                // }
 
                 if matches!(ev, EventMessage::PollVDOM)
                     || matches!(ev, EventMessage::UpdateTemplate(_))

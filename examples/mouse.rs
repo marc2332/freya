@@ -55,8 +55,8 @@ fn Area() -> Element {
             onmouseover: cursor_moved,
             onclick: cursor_clicked,
             label {
-                "Mouse is at [x: {cursor_pos_over.read().0}, y: {cursor_pos_over.read().1}] ",
-            },
+                "Mouse is at [x: {cursor_pos_over.read().0}, y: {cursor_pos_over.read().1}] "
+            }
             label {
                 "Mouse clicked at [x: {cursor_pos_click.read().0}, y: {cursor_pos_click.read().1}]"
             }

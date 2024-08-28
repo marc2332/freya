@@ -9,7 +9,7 @@ use dioxus_router::prelude::{
     Router,
 };
 use freya_components::*;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_init_theme,
     use_platform,
@@ -83,7 +83,7 @@ fn AppWithDevtools(props: AppWithDevtoolsProps) -> Element {
                     overflow: "clip",
                     height: "100%",
                     width: "calc(100% - 350)",
-                    Root { },
+                    Root { }
                 }
                 rect {
                     background: "rgb(40, 40, 40)",
@@ -285,7 +285,7 @@ fn LayoutForDOMInspector() -> Element {
 #[allow(non_snake_case)]
 #[component]
 fn DOMInspector() -> Element {
-    None
+    Ok(VNode::placeholder())
 }
 
 pub trait NodeIdSerializer {

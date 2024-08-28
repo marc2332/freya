@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_applied_theme,
     CheckboxTheme,
@@ -38,8 +38,8 @@ use crate::TickIcon;
 ///             leading: rsx!(
 ///                 Checkbox {
 ///                     selected: selected.read().contains(&Choice::First),
-///                 },
-///             ),
+///                 }
+///             )
 ///             label { "First choice" }
 ///         }
 ///         Tile {
@@ -53,7 +53,7 @@ use crate::TickIcon;
 ///             leading: rsx!(
 ///                 Checkbox {
 ///                     selected: selected.read().contains(&Choice::Second),
-///                 },
+///                 }
 ///             ),
 ///             label { "Second choice" }
 ///         }
@@ -130,7 +130,7 @@ mod test {
                     leading: rsx!(
                         Checkbox {
                             selected: selected.read().contains(&Choice::First),
-                        },
+                        }
                     ),
                     label { "First choice" }
                 }
@@ -145,7 +145,7 @@ mod test {
                     leading: rsx!(
                         Checkbox {
                             selected: selected.read().contains(&Choice::Second),
-                        },
+                        }
                     ),
                     label { "Second choice" }
                 }
@@ -160,7 +160,7 @@ mod test {
                     leading: rsx!(
                         Checkbox {
                             selected: selected.read().contains(&Choice::Third),
-                        },
+                        }
                     ),
                     label { "Third choice" }
                 }

@@ -27,7 +27,7 @@ fn app() -> Element {
                 onchange: move |txt| {
                     values.write().0 = txt;
                 }
-            },
+            }
             label {
                 color: "black",
                 "Your age:"
@@ -37,7 +37,7 @@ fn app() -> Element {
                 onchange: move |txt| {
                     values.write().1 = txt;
                 }
-            },
+            }
             label {
                 color: "black",
                 "You are {values.read().0} and you are {values.read().1} years old."

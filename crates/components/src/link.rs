@@ -6,7 +6,7 @@ use dioxus_router::prelude::{
     IntoRoutable,
 };
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::MouseEvent,
 };
 use freya_hooks::{
@@ -46,7 +46,7 @@ pub enum LinkTooltip {
 /// ```rust
 /// # use dioxus::prelude::*;
 /// # use dioxus_router::prelude::*;
-/// # use freya_elements::elements as dioxus_elements;
+/// # use freya_elements as dioxus_elements;
 /// # use freya_components::Link;
 /// # #[derive(Routable, Clone)]
 /// # #[rustfmt::skip]
@@ -74,7 +74,7 @@ pub enum LinkTooltip {
 ///
 /// ```rust
 /// # use dioxus::prelude::*;
-/// # use freya_elements::elements as dioxus_elements;
+/// # use freya_elements as dioxus_elements;
 /// # use freya_components::Link;
 /// # fn link_example_good() -> Element {
 /// rsx! {

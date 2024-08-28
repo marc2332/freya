@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_router::prelude::use_navigator;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::{
         MouseButton,
         PointerEvent,
@@ -104,7 +104,7 @@ mod test {
                         label {
                             "Got to B"
                         }
-                    },
+                    }
                     Outlet::<Route> {  }
                 }
             )

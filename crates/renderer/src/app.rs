@@ -1,9 +1,6 @@
 use std::sync::Arc;
 
-use dioxus_core::{
-    Template,
-    VirtualDom,
-};
+use dioxus_core::VirtualDom;
 use freya_common::{
     EventMessage,
     TextGroupMeasurement,
@@ -258,9 +255,9 @@ impl Application {
     }
 
     /// Replace a VirtualDOM Template
-    pub fn vdom_replace_template(&mut self, template: Template) {
-        self.vdom.replace_template(template);
-    }
+    // pub fn vdom_replace_template(&mut self, template: Template) {
+    //     self.vdom.replace_template(template);
+    // }
 
     /// Render the App into the Window Canvas
     pub fn render(&mut self, hovered_node: &HoveredNode, canvas: &Canvas, window: &Window) {

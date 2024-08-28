@@ -1,4 +1,5 @@
 use dioxus_core::Element;
+use dioxus_signals::GlobalSignal;
 use freya_renderer::{
     DesktopRenderer,
     LaunchConfig,

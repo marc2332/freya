@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::{
         keyboard::Key,
         KeyboardData,
@@ -251,7 +251,7 @@ mod test {
                 onchange: move |new_value| {
                     value.set(new_value);
                 }
-            },)
+            })
         }
 
         let mut utils = launch_test(input_app);

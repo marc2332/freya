@@ -29,7 +29,7 @@ pub async fn track_focus() {
             rect {
                 width: "100%",
                 height: "100%",
-                OtherChild {},
+                OtherChild {}
                 OtherChild {}
             }
         )
@@ -121,7 +121,7 @@ pub async fn block_focus() {
             rect {
                 width: "100%",
                 height: "100%",
-                Child {},
+                Child {}
                 BlockingChild {}
             }
         )
