@@ -48,7 +48,12 @@ pub struct FontStyleState {
 }
 
 impl FontStyleState {
-    pub fn text_style(&self, default_font_family: &[String], scale_factor: f32) -> TextStyle {
+    pub fn text_style(
+        &self,
+        default_font_family: &[String],
+        scale_factor: f32,
+        height_override: bool,
+    ) -> TextStyle {
         let mut text_style = TextStyle::new();
         let mut font_family = self.font_family.clone();
 
@@ -65,7 +70,7 @@ impl FontStyleState {
             .set_font_families(&font_family)
             .set_word_spacing(self.word_spacing)
             .set_letter_spacing(self.letter_spacing)
-            .set_height_override(true)
+            .set_height_override(height_override)
             .set_height(self.line_height);
 
         for text_shadow in self.text_shadows.iter() {
@@ -143,8 +148,8 @@ impl ParseAttribute for FontStyleState {
             }
             AttributeName::LineHeight => {
                 if let Some(value) = attr.value.as_text() {
-                    if let Ok(line_height) = value.parse() {
-                        self.line_height = line_height;
+                    if let Ok(line_height) = value.parse::<f32>() {
+                        self.line_height = line_height.max(1.0);
                     }
                 }
             }
