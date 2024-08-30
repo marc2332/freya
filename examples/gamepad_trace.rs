@@ -8,10 +8,7 @@ use std::{
         self,
         sleep,
     },
-    time::{
-        Duration,
-        UNIX_EPOCH,
-    },
+    time::Duration,
 };
 
 use freya::prelude::*;
