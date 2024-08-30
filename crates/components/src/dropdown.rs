@@ -259,48 +259,51 @@ where
 
     rsx!(
         rect {
-            onmouseenter,
-            onmouseleave,
-            onclick,
-            onkeydown,
-            margin: "4",
-            focus_id,
-            background: "{button_background}",
-            color: "{font_theme.color}",
-            corner_radius: "8",
-            padding: "8 16",
-            border: "1 solid {border_fill}",
-            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
-            direction: "horizontal",
-            main_align: "center",
-            cross_align: "center",
-            label {
-                "{selected}"
-            }
-            ArrowIcon {
-                rotate: "0",
-                fill: "{arrow_fill}",
-                theme: theme_with!(IconTheme {
-                    margin : "0 0 0 8".into(),
-                })
-            }
-        }
-        if *opened.read() {
+            direction: "vertical",
             rect {
-                height: "0",
+                onmouseenter,
+                onmouseleave,
+                onclick,
+                onkeydown,
+                margin: "4",
+                focus_id,
+                background: "{button_background}",
+                color: "{font_theme.color}",
+                corner_radius: "8",
+                padding: "8 16",
+                border: "1 solid {border_fill}",
+                shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
+                direction: "horizontal",
+                main_align: "center",
+                cross_align: "center",
+                label {
+                    "{selected}"
+                }
+                ArrowIcon {
+                    rotate: "0",
+                    fill: "{arrow_fill}",
+                    theme: theme_with!(IconTheme {
+                        margin : "0 0 0 8".into(),
+                    })
+                }
+            }
+            if *opened.read() {
                 rect {
-                    onglobalclick,
-                    onkeydown,
-                    layer: "-99",
-                    margin: "4",
-                    border: "1 solid {border_fill}",
-                    overflow: "clip",
-                    corner_radius: "8",
-                    background: "{dropdown_background}",
-                    shadow: "0 4 5 0 rgb(0, 0, 0, 0.3)",
-                    padding: "6",
-                    content: "fit",
-                    {props.children}
+                    height: "0",
+                    rect {
+                        onglobalclick,
+                        onkeydown,
+                        layer: "-99",
+                        margin: "4",
+                        border: "1 solid {border_fill}",
+                        overflow: "clip",
+                        corner_radius: "8",
+                        background: "{dropdown_background}",
+                        shadow: "0 4 5 0 rgb(0, 0, 0, 0.3)",
+                        padding: "6",
+                        content: "fit",
+                        {props.children}
+                    }
                 }
             }
         }
@@ -344,7 +347,7 @@ mod test {
 
         let mut utils = launch_test(dropdown_app);
         let root = utils.root();
-        let label = root.get(0).get(0);
+        let label = root.get(0).get(0).get(0);
         utils.wait_for_update().await;
 
         // Currently closed
