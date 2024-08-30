@@ -115,21 +115,26 @@ impl<'a> WriteMutations for MutationsWriter<'a> {
     fn replace_node_with(&mut self, id: dioxus_core::ElementId, m: usize) {
         if m > 0 {
             self.remove(id);
+            self.native_writer.replace_node_with(id, m);
         }
-
-        self.native_writer.replace_node_with(id, m);
     }
 
     fn replace_placeholder_with_nodes(&mut self, path: &'static [u8], m: usize) {
-        self.native_writer.replace_placeholder_with_nodes(path, m);
+        if m > 0 {
+            self.native_writer.replace_placeholder_with_nodes(path, m);
+        }
     }
 
     fn insert_nodes_after(&mut self, id: dioxus_core::ElementId, m: usize) {
-        self.native_writer.insert_nodes_after(id, m);
+        if m > 0 {
+            self.native_writer.insert_nodes_after(id, m);
+        }
     }
 
     fn insert_nodes_before(&mut self, id: dioxus_core::ElementId, m: usize) {
-        self.native_writer.insert_nodes_before(id, m);
+        if m > 0 {
+            self.native_writer.insert_nodes_before(id, m);
+        }
     }
 
     fn set_attribute(

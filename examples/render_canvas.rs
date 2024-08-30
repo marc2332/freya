@@ -28,14 +28,15 @@ fn app() -> Element {
 
     let canvas = use_canvas(move || {
         let state = *state.read();
-        Box::new(move |canvas, font_collection, region, _| {
-            canvas.translate((region.min_x(), region.min_y()));
+        Box::new(move |ctx| {
+            ctx.canvas.translate((ctx.area.min_x(), ctx.area.min_y()));
 
             let mut text_paint = Paint::default();
             text_paint.set_anti_alias(true);
             text_paint.set_color(Color::WHITE);
-            let typefaces =
-                font_collection.find_typefaces(&["Times New Roman"], FontStyle::default());
+            let typefaces = ctx
+                .font_collection
+                .find_typefaces(&["Times New Roman"], FontStyle::default());
             let font = Font::new(
                 typefaces
                     .first()
@@ -43,14 +44,14 @@ fn app() -> Element {
                 50.0,
             );
 
-            canvas.draw_str(
+            ctx.canvas.draw_str(
                 format!("value is {}", state),
-                ((region.max_x() / 2.0 - 120.0), region.max_y() / 2.0),
+                ((ctx.area.max_x() / 2.0 - 120.0), ctx.area.max_y() / 2.0),
                 &font,
                 &text_paint,
             );
 
-            canvas.restore();
+            ctx.canvas.restore();
         })
     });
 
