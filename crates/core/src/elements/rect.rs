@@ -3,6 +3,7 @@ use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::{
     BorderAlignment,
     BorderStyle,
+    CanvasRunnerContext,
     Fill,
     ReferencesState,
     ShadowPosition,
@@ -262,7 +263,13 @@ impl ElementUtils for RectElement {
         let references = node_ref.get::<ReferencesState>().unwrap();
 
         if let Some(canvas_ref) = &references.canvas_ref {
-            (canvas_ref.runner)(canvas, font_collection, area, scale_factor);
+            let mut ctx = CanvasRunnerContext {
+                canvas,
+                font_collection,
+                area,
+                scale_factor,
+            };
+            (canvas_ref.runner)(&mut ctx);
         }
     }
 }

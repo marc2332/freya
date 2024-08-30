@@ -1,11 +1,8 @@
-use crate::{
-    node::Node,
-    prelude::{
-        Alignment,
-        DirectionMode,
-        Gaps,
-        Size,
-    },
+use crate::prelude::{
+    DirectionMode,
+    Gaps,
+    Node,
+    Size,
 };
 
 #[derive(PartialEq)]
@@ -18,155 +15,32 @@ pub type CursorPoint = euclid::Point2D<f64, Measure>;
 pub type Length = euclid::Length<f32, Measure>;
 
 pub trait AreaModel {
-    // The area without any outer gap (e.g margin)
-    fn after_gaps(&self, margin: &Gaps) -> Area;
+    /// The area without any outer gap (e.g margin)
+    fn without_gaps(self, gap: &Gaps) -> Area;
 
-    // Adjust the available area with the node offsets (mainly used by scrollviews)
+    /// Adjust the available area with the node offsets (mainly used by scrollviews)
     fn move_with_offsets(&mut self, offset_x: &Length, offset_y: &Length);
 
-    // Align the content of this node.
-    fn align_content(
-        &mut self,
-        available_area: &Area,
-        contents_area: &Size2D,
-        alignment: &Alignment,
-        direction: &DirectionMode,
-        alignment_direction: AlignmentDirection,
-    );
-
-    // Align the position of this node.
-    #[allow(clippy::too_many_arguments)]
-    fn align_position(
-        &mut self,
-        initial_available_area: &Area,
-        inner_sizes: &Size2D,
-        alignment: &Alignment,
-        direction: &DirectionMode,
-        alignment_direction: AlignmentDirection,
-        siblings_len: usize,
-        child_position: usize,
-    );
-
+    /// Adjust the size given the Node data
     fn adjust_size(&mut self, node: &Node);
 }
 
 impl AreaModel for Area {
-    /// Get the area inside after including the gaps (margins or paddings)
-    fn after_gaps(&self, margin: &Gaps) -> Area {
+    fn without_gaps(self, gaps: &Gaps) -> Area {
         let origin = self.origin;
         let size = self.size;
         Area::new(
-            Point2D::new(origin.x + margin.left(), origin.y + margin.top()),
+            Point2D::new(origin.x + gaps.left(), origin.y + gaps.top()),
             Size2D::new(
-                size.width - margin.horizontal(),
-                size.height - margin.vertical(),
+                size.width - gaps.horizontal(),
+                size.height - gaps.vertical(),
             ),
         )
     }
 
-    /// Get the area inside after including the gaps (margins or paddings)
     fn move_with_offsets(&mut self, offset_x: &Length, offset_y: &Length) {
         self.origin.x += offset_x.get();
         self.origin.y += offset_y.get();
-    }
-
-    fn align_content(
-        &mut self,
-        available_area: &Area,
-        contents_size: &Size2D,
-        alignment: &Alignment,
-        direction: &DirectionMode,
-        alignment_direction: AlignmentDirection,
-    ) {
-        let axis = get_align_axis(direction, alignment_direction);
-
-        match axis {
-            AlignAxis::Height => match alignment {
-                Alignment::Center => {
-                    let new_origin_y =
-                        (available_area.height() / 2.0) - (contents_size.height / 2.0);
-
-                    self.origin.y = available_area.min_y() + new_origin_y;
-                }
-                Alignment::End => {
-                    self.origin.y = available_area.max_y() - contents_size.height;
-                }
-                _ => {}
-            },
-            AlignAxis::Width => match alignment {
-                Alignment::Center => {
-                    let new_origin_x = (available_area.width() / 2.0) - (contents_size.width / 2.0);
-
-                    self.origin.x = available_area.min_x() + new_origin_x;
-                }
-                Alignment::End => {
-                    self.origin.x = available_area.max_x() - contents_size.width;
-                }
-                _ => {}
-            },
-        }
-    }
-
-    fn align_position(
-        &mut self,
-        initial_available_area: &Area,
-        inner_sizes: &Size2D,
-        alignment: &Alignment,
-        direction: &DirectionMode,
-        alignment_direction: AlignmentDirection,
-        siblings_len: usize,
-        child_position: usize,
-    ) {
-        let axis = get_align_axis(direction, alignment_direction);
-
-        match axis {
-            AlignAxis::Height => match alignment {
-                Alignment::SpaceBetween if child_position > 0 => {
-                    let all_gaps_sizes = initial_available_area.height() - inner_sizes.height;
-                    let gap_size = all_gaps_sizes / (siblings_len - 1) as f32;
-                    self.origin.y += gap_size;
-                }
-                Alignment::SpaceEvenly => {
-                    let all_gaps_sizes = initial_available_area.height() - inner_sizes.height;
-                    let gap_size = all_gaps_sizes / (siblings_len + 1) as f32;
-                    self.origin.y += gap_size;
-                }
-                Alignment::SpaceAround => {
-                    let all_gaps_sizes = initial_available_area.height() - inner_sizes.height;
-                    let one_gap_size = all_gaps_sizes / siblings_len as f32;
-                    let gap_size = if child_position == 0 || child_position == siblings_len {
-                        one_gap_size / 2.
-                    } else {
-                        one_gap_size
-                    };
-                    self.origin.y += gap_size;
-                }
-                _ => {}
-            },
-            AlignAxis::Width => match alignment {
-                Alignment::SpaceBetween if child_position > 0 => {
-                    let all_gaps_sizes = initial_available_area.width() - inner_sizes.width;
-                    let gap_size = all_gaps_sizes / (siblings_len - 1) as f32;
-                    self.origin.x += gap_size;
-                }
-                Alignment::SpaceEvenly => {
-                    let all_gaps_sizes = initial_available_area.width() - inner_sizes.width;
-                    let gap_size = all_gaps_sizes / (siblings_len + 1) as f32;
-                    self.origin.x += gap_size;
-                }
-                Alignment::SpaceAround => {
-                    let all_gaps_sizes = initial_available_area.width() - inner_sizes.width;
-                    let one_gap_size = all_gaps_sizes / siblings_len as f32;
-                    let gap_size = if child_position == 0 || child_position == siblings_len {
-                        one_gap_size / 2.
-                    } else {
-                        one_gap_size
-                    };
-                    self.origin.x += gap_size;
-                }
-                _ => {}
-            },
-        }
     }
 
     fn adjust_size(&mut self, node: &Node) {
@@ -179,22 +53,6 @@ impl AreaModel for Area {
     }
 }
 
-pub fn get_align_axis(
-    direction: &DirectionMode,
-    alignment_direction: AlignmentDirection,
-) -> AlignAxis {
-    match direction {
-        DirectionMode::Vertical => match alignment_direction {
-            AlignmentDirection::Main => AlignAxis::Height,
-            AlignmentDirection::Cross => AlignAxis::Width,
-        },
-        DirectionMode::Horizontal => match alignment_direction {
-            AlignmentDirection::Main => AlignAxis::Width,
-            AlignmentDirection::Cross => AlignAxis::Height,
-        },
-    }
-}
-
 pub enum AlignmentDirection {
     Main,
     Cross,
@@ -204,4 +62,30 @@ pub enum AlignmentDirection {
 pub enum AlignAxis {
     Height,
     Width,
+}
+
+impl AlignAxis {
+    pub fn new(direction: &DirectionMode, alignment_direction: AlignmentDirection) -> Self {
+        match direction {
+            DirectionMode::Vertical => match alignment_direction {
+                AlignmentDirection::Main => AlignAxis::Height,
+                AlignmentDirection::Cross => AlignAxis::Width,
+            },
+            DirectionMode::Horizontal => match alignment_direction {
+                AlignmentDirection::Main => AlignAxis::Width,
+                AlignmentDirection::Cross => AlignAxis::Height,
+            },
+        }
+    }
+}
+
+pub trait SizeModel {
+    /// Get the size with the given gap, e.g padding.
+    fn with_gaps(self, gap: &Gaps) -> Size2D;
+}
+
+impl SizeModel for Size2D {
+    fn with_gaps(self, gap: &Gaps) -> Size2D {
+        Size2D::new(self.width + gap.horizontal(), self.height + gap.vertical())
+    }
 }
