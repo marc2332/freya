@@ -8,7 +8,6 @@ use dioxus_core::VirtualDom;
 use freya_common::{
     Layers,
     ParagraphElements,
-    TextGroupMeasurement,
 };
 use freya_native_core::{
     prelude::{
@@ -38,7 +37,10 @@ use torin::prelude::*;
 use tracing::info;
 
 use super::mutations_writer::MutationsWriter;
-use crate::prelude::measure_paragraph;
+use crate::prelude::{
+    measure_paragraph,
+    TextGroupMeasurement,
+};
 
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
 pub type DioxusNode<'a> = NodeRef<'a, CustomAttributeValues>;

@@ -31,6 +31,7 @@ dioxus-core = { workspace = true }
 tokio = { workspace = true }
 winit = { workspace = true }
 accesskit = { workspace = true }
+accesskit_winit = { workspace = true }
 
 rustc-hash = { workspace = true }
 tracing = { workspace = true }
