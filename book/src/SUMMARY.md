@@ -19,6 +19,8 @@
     - [Context](./learn/state_management/context.md)
     - [Other Crates](./learn/state_management/other_crates.md)
 - [Async](./learn/async.md)
+- [Themes](./learn/themes.md)
+- [i18n](./learn/i18n.md)
 - [Animation](./learn/animation.md)
 - [Router](./learn/router.md)
     - [Native Router](./learn/router/native_router.md)
