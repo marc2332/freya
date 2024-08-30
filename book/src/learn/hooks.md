@@ -57,14 +57,24 @@ fn MyComponent() -> Element {
 ```rs
 #[component]
 fn MyComponent() -> Element {
-    let state = use_signal(|| false);
+    let mut state = use_signal(|| false);
 
-    rsx!(...)
+    let onclick = move |_| {
+         state.set(true);
+    };
+
+    rsx!(
+        label {
+            onclick,
+            "Hello, World!"
+        }
+    )
 }
 ```
 
 ## 3. They cannot be called in loops
 
+Hooks cannot be called in loops as the numbers of iterations might change between renders.
 
 ❌:
 ```rs

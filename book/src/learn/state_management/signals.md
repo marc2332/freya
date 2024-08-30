@@ -10,7 +10,7 @@ Example:
 fn app() -> Element {
     let mut count = use_signal(|| 0); 
     // The closure passed to `use_signal` will be called only 
-    // the first time this component function runs, 
+    // the first time this component renders, 
     // it will return the initial value for the Signal. 
     // This closure is to prevent having to create the initial value 
     // every time the component runs again, as it is only needed the first time.
@@ -21,8 +21,8 @@ fn app() -> Element {
         // all the components that have a read subscription 
         // to this signal (in this case, only `app`) 
         // that there has been a change. 
-        // When that happens they will all run 
-        // their functions again and thus producing the new UI.
+        // When that happens they will renders again 
+        // and thus producing the new UI.
     };
     
     rsx!(
@@ -30,9 +30,9 @@ fn app() -> Element {
             onclick,
             "{count}" 
             // Because the signal is being read here, 
-            // everytime that it gets mutated this component 
-            // will rerun as it received a read subscription.
-            // It is the same as using "{count.read()}".
+            // everytime that it gets mutated, this component 
+            // will rerender as it has a read subscription.
+            // "{count}" is the same as using "{count.read()}".
         }
     )
 }

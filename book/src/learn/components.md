@@ -16,13 +16,14 @@ fn app() -> Element {
 ```
 
 This is obviously fine, but the moment our app grows in size and complexity we might want to split
-things out in order to maintain a certain level of modularity and even reusability. We can do this with components.
+things out in order to maintain a certain level of modularity and reusability. We can do this with components.
 
 For example:
 
 This is how a simple root component looks like:
 
 ```rs
+// Root component that gets passed to the `launch` function
 fn app() -> Element {
     rsx!(
         TextLabel {
@@ -37,6 +38,7 @@ fn app() -> Element {
     )
 }
 
+// Reusable component
 #[component]
 fn TextLabel(text: String) -> Element {
     rsx!(
@@ -49,7 +51,7 @@ fn TextLabel(text: String) -> Element {
 
 Notice how we anotate our `TextLabel` component with the macro `#[component]`, this will transform every argument of the function (just `text: String` in this case) to a component prop, so we can later use the component in a declarative way in the RSX.
 
-For more complex components you might want to leave the props to an external props intead of using the `#[components]` macro:
+For more complex components you might want to put the props in an external struct intead of using the `#[components]` macro:
 
 ```rs
 #[derive(Props, PartialEq, Clone)]
@@ -61,6 +63,27 @@ fn TextLabel(TextLabelProps { text }: TextLabelProps) -> Element {
     rsx!(
         label {
             "{text}"
+        }
+    )
+}
+```
+
+## Renders
+
+Components renders are just when a component function runs, which might be because it is subscribed to a signal and that signal got mutated. Consider this simple component:
+
+```rs
+#[component]
+fn CoolComp() -> Element {
+    let mut count = use_signal(|| 0);
+
+    // 1 run of this function = 1 render of this component
+    // So, everytime the `count` signal is mutated, the component rerenders.
+
+    rsx!(
+        label {
+            onclick: move |_| count += 1,
+            "Increase {count}"
         }
     )
 }
