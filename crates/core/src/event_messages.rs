@@ -41,7 +41,7 @@ pub enum EventMessage {
     ExitApp,
     /// Callback to access the Window.
     WithWindow(Box<dyn FnOnce(&Window) + Send + Sync>),
-
+    /// Raw platform event, this are low level events.
     PlatformEvent(PlatformEvent),
 }
 
