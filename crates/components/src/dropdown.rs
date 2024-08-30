@@ -242,6 +242,7 @@ where
     };
 
     let DropdownTheme {
+        width,
         font_theme,
         dropdown_background,
         background_button,
@@ -261,6 +262,7 @@ where
         rect {
             direction: "vertical",
             rect {
+                width: "{width}",
                 onmouseenter,
                 onmouseleave,
                 onclick,
@@ -290,19 +292,23 @@ where
             if *opened.read() {
                 rect {
                     height: "0",
+                    width: "0",
                     rect {
-                        onglobalclick,
-                        onkeydown,
-                        layer: "-99",
-                        margin: "4",
-                        border: "1 solid {border_fill}",
-                        overflow: "clip",
-                        corner_radius: "8",
-                        background: "{dropdown_background}",
-                        shadow: "0 4 5 0 rgb(0, 0, 0, 0.3)",
-                        padding: "6",
-                        content: "fit",
-                        {props.children}
+                        width: "100v",
+                        rect {
+                            onglobalclick,
+                            onkeydown,
+                            layer: "-99",
+                            margin: "4",
+                            border: "1 solid {border_fill}",
+                            overflow: "clip",
+                            corner_radius: "8",
+                            background: "{dropdown_background}",
+                            shadow: "0 4 5 0 rgb(0, 0, 0, 0.3)",
+                            padding: "6",
+                            content: "fit",
+                            {props.children}
+                        }
                     }
                 }
             }

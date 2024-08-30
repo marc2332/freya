@@ -224,6 +224,7 @@ define_theme! {
     %[component]
     pub Dropdown {
         %[cows]
+        width: str,
         dropdown_background: str,
         background_button: str,
         hover_background: str,

@@ -20,16 +20,36 @@ fn app() -> Element {
     let mut selected_dropdown = use_signal(|| "First Option".to_string());
 
     rsx!(
-        Dropdown {
-            value: selected_dropdown.read().clone(),
-            for ch in values {
-                DropdownItem {
-                    value: ch.clone(),
-                    onclick: {
-                        to_owned![ch];
-                        move |_| selected_dropdown.set(ch.clone())
-                    },
-                    label { "{ch}" }
+        rect {
+            direction: "horizontal",
+            Dropdown {
+                theme: theme_with!(DropdownTheme {
+                    width: "200".into(),
+                    arrow_fill: "rgb(0, 119, 182)".into()
+                }),
+                value: selected_dropdown.read().clone(),
+                for ch in values.iter() {
+                    DropdownItem {
+                        value: ch.clone(),
+                        onclick: {
+                            to_owned![ch];
+                            move |_| selected_dropdown.set(ch.clone())
+                        },
+                        label { "Custom {ch}" }
+                    }
+                }
+            }
+            Dropdown {
+                value: selected_dropdown.read().clone(),
+                for ch in values {
+                    DropdownItem {
+                        value: ch.clone(),
+                        onclick: {
+                            to_owned![ch];
+                            move |_| selected_dropdown.set(ch.clone())
+                        },
+                        label { "{ch}" }
+                    }
                 }
             }
         }
