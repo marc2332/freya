@@ -243,6 +243,7 @@ where
 
     let DropdownTheme {
         width,
+        margin,
         font_theme,
         dropdown_background,
         background_button,
@@ -267,7 +268,7 @@ where
                 onmouseleave,
                 onclick,
                 onkeydown,
-                margin: "4",
+                margin: "{margin}",
                 focus_id,
                 background: "{button_background}",
                 color: "{font_theme.color}",

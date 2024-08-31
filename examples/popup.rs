@@ -30,21 +30,24 @@ fn app() -> Element {
                         }
                     }
                     PopupContent {
-                        label {
-                            "Change the input value:"
-                        }
-                        Input {
-                            value,
-                            onchange: move |text| {
-                                value.set(text);
-                            }
-                        }
-                        Button {
-                            onclick: move |_| {
-                                show_popup.set(false)
-                            },
+                        rect {
+                            spacing: "10",
                             label {
-                                "Submit"
+                                "Change the input value:"
+                            }
+                            Input {
+                                value,
+                                onchange: move |text| {
+                                    value.set(text);
+                                }
+                            }
+                            Button {
+                                onclick: move |_| {
+                                    show_popup.set(false)
+                                },
+                                label {
+                                    "Submit"
+                                }
                             }
                         }
                     }

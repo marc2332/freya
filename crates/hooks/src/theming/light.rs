@@ -26,7 +26,7 @@ pub const LIGHT_THEME: Theme = Theme {
         focus_border_fill: cow_borrowed!("rgb(180, 180, 180)"),
         shadow: cow_borrowed!("0 4 5 0 rgb(0, 0, 0, 0.1)"),
         padding: cow_borrowed!("8 12"),
-        margin: cow_borrowed!("4"),
+        margin: cow_borrowed!("0"),
         corner_radius: cow_borrowed!("8"),
         width: cow_borrowed!("auto"),
         height: cow_borrowed!("auto"),
@@ -42,11 +42,12 @@ pub const LIGHT_THEME: Theme = Theme {
         },
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
         width: cow_borrowed!("150"),
-        margin: cow_borrowed!("4"),
+        margin: cow_borrowed!("0"),
         corner_radius: cow_borrowed!("10"),
         shadow: cow_borrowed!("0 4 5 0 rgb(0, 0, 0, 0.1)"),
     },
     switch: SwitchTheme {
+        margin: cow_borrowed!("2"),
         background: cow_borrowed!("rgb(121, 116, 126)"),
         thumb_background: cow_borrowed!("rgb(231, 224, 236)"),
         enabled_background: cow_borrowed!("rgb(103, 80, 164)"),
@@ -73,6 +74,7 @@ pub const LIGHT_THEME: Theme = Theme {
     },
     dropdown: DropdownTheme {
         width: cow_borrowed!("auto"),
+        margin: cow_borrowed!("0"),
         dropdown_background: cow_borrowed!("white"),
         background_button: cow_borrowed!("rgb(245, 245, 245)"),
         hover_background: cow_borrowed!("rgb(235, 235, 235)"),
@@ -137,7 +139,7 @@ pub const LIGHT_THEME: Theme = Theme {
     icon: IconTheme {
         width: cow_borrowed!("10"),
         height: cow_borrowed!("10"),
-        margin: cow_borrowed!("none"),
+        margin: cow_borrowed!("0"),
     },
     sidebar: SidebarTheme {
         background: cow_borrowed!("rgb(245, 245, 245)"),

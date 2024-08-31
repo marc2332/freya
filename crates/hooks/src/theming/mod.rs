@@ -225,6 +225,7 @@ define_theme! {
     pub Dropdown {
         %[cows]
         width: str,
+        margin: str,
         dropdown_background: str,
         background_button: str,
         hover_background: str,
@@ -295,6 +296,7 @@ define_theme! {
     %[component]
     pub Switch {
         %[cows]
+        margin: str,
         background: str,
         thumb_background: str,
         enabled_background: str,
