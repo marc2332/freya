@@ -47,7 +47,7 @@ pub const LIGHT_THEME: Theme = Theme {
         shadow: cow_borrowed!("0 4 5 0 rgb(0, 0, 0, 0.1)"),
     },
     switch: SwitchTheme {
-        margin: cow_borrowed!("2"),
+        margin: cow_borrowed!("0"),
         background: cow_borrowed!("rgb(121, 116, 126)"),
         thumb_background: cow_borrowed!("rgb(231, 224, 236)"),
         enabled_background: cow_borrowed!("rgb(103, 80, 164)"),
@@ -66,6 +66,7 @@ pub const LIGHT_THEME: Theme = Theme {
         height: cow_borrowed!("fill"),
         width: cow_borrowed!("fill"),
         padding: cow_borrowed!("0"),
+        spacing: cow_borrowed!("0"),
     },
     tooltip: TooltipTheme {
         background: cow_borrowed!("rgb(245, 245, 245)"),
@@ -142,12 +143,14 @@ pub const LIGHT_THEME: Theme = Theme {
         margin: cow_borrowed!("0"),
     },
     sidebar: SidebarTheme {
+        spacing: cow_borrowed!("4"),
         background: cow_borrowed!("rgb(245, 245, 245)"),
         font_theme: FontTheme {
             color: cow_borrowed!("rgb(10, 10, 10)"),
         },
     },
     sidebar_item: SidebarItemTheme {
+        margin: cow_borrowed!("0"),
         background: cow_borrowed!("transparent"),
         hover_background: cow_borrowed!("rgb(230, 230, 230)"),
         font_theme: FontTheme {

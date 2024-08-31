@@ -130,6 +130,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
     let theme = use_applied_theme!(&props.theme, scroll_view);
     let scrollbar_theme = use_applied_theme!(&props.scrollbar_theme, scroll_bar);
 
+    let spacing = &theme.spacing;
     let padding = &theme.padding;
     let user_container_width = &theme.width;
     let user_container_height = &theme.height;
@@ -359,6 +360,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
                 height: "{container_height}",
                 rect {
                     overflow: "clip",
+                    spacing: "{spacing}",
                     padding: "{padding}",
                     height: "100%",
                     width: "100%",
