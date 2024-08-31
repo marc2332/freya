@@ -1,7 +1,7 @@
 # Components
 
 Freya apps will usually be composed of different components.
-Components are defined in teh form functions that might receive some input as **Props** and return the UI as **Element**.
+Components are defined in the form functions that might receive some input as **Props** and return the UI as **Element**.
 
 This is how a simple root component looks like:
 
