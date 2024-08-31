@@ -2,11 +2,7 @@ use std::fmt;
 
 use torin::scaled::Scaled;
 
-use crate::{
-    Fill,
-    Parse,
-    ParseError,
-};
+use crate::{Fill, Parse, ParseError};
 
 #[derive(Default, Clone, Copy, Debug, PartialEq)]
 pub enum BorderStyle {
@@ -19,8 +15,31 @@ pub enum BorderStyle {
 pub struct Border {
     pub fill: Fill,
     pub style: BorderStyle,
-    pub width: f32,
+    pub width: BorderWidth,
     pub alignment: BorderAlignment,
+}
+
+#[derive(Default, Clone, Copy, Debug, PartialEq)]
+pub struct BorderWidth {
+    pub top: f32,
+    pub left: f32,
+    pub bottom: f32,
+    pub right: f32,
+}
+
+impl BorderWidth {
+    pub fn is_all_zero(&self) -> bool {
+        (self.top + self.left + self.bottom + self.right) == 0.0
+    }
+}
+
+impl Scaled for BorderWidth {
+    fn scale(&mut self, scale_factor: f32) {
+        self.top *= scale_factor;
+        self.left *= scale_factor;
+        self.bottom *= scale_factor;
+        self.right *= scale_factor;
+    }
 }
 
 #[derive(Default, Clone, Copy, Debug, PartialEq)]
@@ -70,11 +89,28 @@ impl Parse for Border {
         let mut border_values = value.split_ascii_whitespace();
 
         Ok(Border {
-            width: border_values
-                .next()
-                .ok_or(ParseError)?
-                .parse::<f32>()
-                .map_err(|_| ParseError)?,
+            width: BorderWidth {
+                top: border_values
+                    .next()
+                    .ok_or(ParseError)?
+                    .parse::<f32>()
+                    .map_err(|_| ParseError)?,
+                left: border_values
+                    .next()
+                    .ok_or(ParseError)?
+                    .parse::<f32>()
+                    .map_err(|_| ParseError)?,
+                bottom: border_values
+                    .next()
+                    .ok_or(ParseError)?
+                    .parse::<f32>()
+                    .map_err(|_| ParseError)?,
+                right: border_values
+                    .next()
+                    .ok_or(ParseError)?
+                    .parse::<f32>()
+                    .map_err(|_| ParseError)?,
+            },
             style: match border_values.next().ok_or(ParseError)? {
                 "solid" => BorderStyle::Solid,
                 _ => BorderStyle::None,
@@ -88,6 +124,6 @@ impl Parse for Border {
 
 impl Scaled for Border {
     fn scale(&mut self, scale_factor: f32) {
-        self.width *= scale_factor;
+        self.width.scale(scale_factor);
     }
 }
