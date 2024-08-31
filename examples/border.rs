@@ -19,13 +19,13 @@ fn app() -> Element {
             color: "rgb(240, 240, 240)",
             direction: "horizontal",
             padding: "14",
-            border: "3 solid rgb(242, 76, 61)",
+            border: "3 0 0 0 solid rgb(242, 76, 61)",
             rect {
                 width: "80",
                 height: "80",
                 corner_radius: "20",
                 background: "rgb(0, 0, 0)",
-                border: "1 solid rgb(242, 151, 39)",
+                border: "1 1 1 1 solid rgb(242, 151, 39)",
                 border_align: "inner",
             }
             rect {
@@ -33,7 +33,7 @@ fn app() -> Element {
                 height: "80",
                 corner_radius: "2",
                 background: "rgb(0, 0, 0)",
-                border: "8 solid green",
+                border: "8 8 8 8 solid green",
                 border_align: "outer",
                 margin: "8"
             }
@@ -42,7 +42,7 @@ fn app() -> Element {
                 height: "80",
                 corner_radius: "2",
                 background: "rgb(0, 0, 0)",
-                border: "8 solid rgb(34, 166, 153)",
+                border: "8 8 8 8 solid rgb(34, 166, 153)",
                 border_align: "center",
                 margin: "8"
             }
