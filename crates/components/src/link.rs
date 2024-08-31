@@ -279,7 +279,7 @@ mod test {
         // Go to the "Somewhere" route
         utils.push_event(PlatformEvent::Mouse {
             name: EventName::Click,
-            cursor: (5., 70.).into(),
+            cursor: (5., 60.).into(),
             button: Some(MouseButton::Left),
         });
 
