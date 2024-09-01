@@ -29,7 +29,7 @@ pub struct BorderWidth {
 
 impl BorderWidth {
     pub fn is_all_zero(&self) -> bool {
-        self.top == 0.0 && self.left = 0.0 && self.bottom == 0.0 && self.right == 0.0
+        self.top == 0.0 && self.left == 0.0 && self.bottom == 0.0 && self.right == 0.0
     }
 }
 
