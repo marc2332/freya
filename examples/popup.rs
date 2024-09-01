@@ -11,10 +11,14 @@ fn main() {
 
 fn app() -> Element {
     use_init_theme(|| DARK_THEME);
+    let mut value = use_signal(|| "Default text".to_string());
     let mut show_popup = use_signal(|| false);
 
     rsx!(
         Body {
+            label {
+                "Value is: {value}"
+            }
             if *show_popup.read() {
                 Popup {
                     oncloserequest: move |_| {
@@ -27,7 +31,21 @@ fn app() -> Element {
                     }
                     PopupContent {
                         label {
-                            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+                            "Change the input value:"
+                        }
+                        Input {
+                            value,
+                            onchange: move |text| {
+                                value.set(text);
+                            }
+                        }
+                        Button {
+                            onclick: move |_| {
+                                show_popup.set(false)
+                            },
+                            label {
+                                "Submit"
+                            }
                         }
                     }
                 }

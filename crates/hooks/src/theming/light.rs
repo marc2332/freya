@@ -72,6 +72,7 @@ pub const LIGHT_THEME: Theme = Theme {
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
     },
     dropdown: DropdownTheme {
+        width: cow_borrowed!("auto"),
         dropdown_background: cow_borrowed!("white"),
         background_button: cow_borrowed!("rgb(245, 245, 245)"),
         hover_background: cow_borrowed!("rgb(235, 235, 235)"),

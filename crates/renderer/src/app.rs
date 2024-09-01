@@ -4,10 +4,6 @@ use dioxus_core::{
     Template,
     VirtualDom,
 };
-use freya_common::{
-    EventMessage,
-    TextGroupMeasurement,
-};
 use freya_core::prelude::*;
 use freya_engine::prelude::*;
 use freya_native_core::prelude::NodeImmutableDioxusExt;
@@ -71,7 +67,7 @@ impl Application {
         devtools: Option<Devtools>,
         window: &Window,
         fonts_config: EmbeddedFonts,
-        mut plugins: PluginsManager,
+        plugins: PluginsManager,
         default_fonts: Vec<String>,
     ) -> Self {
         let accessibility = AccessKitManager::new(window, proxy.clone());
@@ -99,9 +95,7 @@ impl Application {
             scale_factor: window.scale_factor(),
         });
 
-        plugins.send(PluginEvent::WindowCreated(window));
-
-        Self {
+        let mut app = Self {
             sdom,
             vdom,
             events: EventsQueue::new(),
@@ -122,7 +116,14 @@ impl Application {
             default_fonts,
             queued_focus_node: None,
             compositor: Compositor::default(),
-        }
+        };
+
+        app.plugins.send(
+            PluginEvent::WindowCreated(window),
+            PluginHandle::new(&app.proxy),
+        );
+
+        app
     }
 
     /// Provide the launch state and few other utilities like the EventLoopProxy
@@ -140,24 +141,36 @@ impl Application {
 
     /// Make the first build of the VirtualDOM and sync it with the RealDOM.
     pub fn init_doms<State: 'static>(&mut self, scale_factor: f32, app_state: Option<State>) {
-        self.plugins.send(PluginEvent::StartedUpdatingDOM);
+        self.plugins.send(
+            PluginEvent::StartedUpdatingDOM,
+            PluginHandle::new(&self.proxy),
+        );
 
         self.provide_vdom_contexts(app_state);
 
         self.sdom.get_mut().init_dom(&mut self.vdom, scale_factor);
-        self.plugins.send(PluginEvent::FinishedUpdatingDOM);
+        self.plugins.send(
+            PluginEvent::FinishedUpdatingDOM,
+            PluginHandle::new(&self.proxy),
+        );
     }
 
     /// Update the RealDOM, layout and others with the latest changes from the VirtualDOM
     pub fn render_mutations(&mut self, scale_factor: f32) -> (bool, bool) {
-        self.plugins.send(PluginEvent::StartedUpdatingDOM);
+        self.plugins.send(
+            PluginEvent::StartedUpdatingDOM,
+            PluginHandle::new(&self.proxy),
+        );
 
         let (repaint, relayout) = self
             .sdom
             .get_mut()
             .render_mutations(&mut self.vdom, scale_factor);
 
-        self.plugins.send(PluginEvent::FinishedUpdatingDOM);
+        self.plugins.send(
+            PluginEvent::FinishedUpdatingDOM,
+            PluginHandle::new(&self.proxy),
+        );
 
         if repaint {
             if let Some(devtools) = &self.devtools {
@@ -267,11 +280,14 @@ impl Application {
         dirty_surface: &mut Surface,
         window: &Window,
     ) {
-        self.plugins.send(PluginEvent::BeforeRender {
-            canvas: surface.canvas(),
-            font_collection: &self.font_collection,
-            freya_dom: &self.sdom.get(),
-        });
+        self.plugins.send(
+            PluginEvent::BeforeRender {
+                canvas: surface.canvas(),
+                font_collection: &self.font_collection,
+                freya_dom: &self.sdom.get(),
+            },
+            PluginHandle::new(&self.proxy),
+        );
 
         self.start_render(
             hovered_node,
@@ -285,11 +301,14 @@ impl Application {
         self.accessibility
             .render_accessibility(window.title().as_str());
 
-        self.plugins.send(PluginEvent::AfterRender {
-            canvas: surface.canvas(),
-            font_collection: &self.font_collection,
-            freya_dom: &self.sdom.get(),
-        });
+        self.plugins.send(
+            PluginEvent::AfterRender {
+                canvas: surface.canvas(),
+                font_collection: &self.font_collection,
+                freya_dom: &self.sdom.get(),
+            },
+            PluginHandle::new(&self.proxy),
+        );
     }
 
     /// Resize the Window
@@ -342,8 +361,10 @@ impl Application {
         {
             let fdom = self.sdom.get();
 
-            self.plugins
-                .send(PluginEvent::StartedLayout(&fdom.layout()));
+            self.plugins.send(
+                PluginEvent::StartedLayout(&fdom.layout()),
+                PluginHandle::new(&self.proxy),
+            );
 
             process_layout(
                 &fdom,
@@ -353,8 +374,10 @@ impl Application {
                 &self.default_fonts,
             );
 
-            self.plugins
-                .send(PluginEvent::FinishedLayout(&fdom.layout()));
+            self.plugins.send(
+                PluginEvent::FinishedLayout(&fdom.layout()),
+                PluginHandle::new(&self.proxy),
+            );
         }
 
         if let Some(devtools) = &self.devtools {

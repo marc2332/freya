@@ -21,7 +21,7 @@ use crate::{
         Size2D,
     },
     measure::{
-        measure_node,
+        MeasureContext,
         Phase,
     },
     prelude::{
@@ -267,7 +267,7 @@ impl<Key: NodeKey> Torin<Key> {
             );
         }
 
-        let metadata = LayoutMetadata { root_area };
+        let layout_metadata = LayoutMetadata { root_area };
 
         let mut available_area = layout_node.inner_area;
         if let Some(root_parent_id) = root_parent_id {
@@ -275,16 +275,19 @@ impl<Key: NodeKey> Torin<Key> {
             available_area.move_with_offsets(&root_parent.offset_x, &root_parent.offset_y);
         }
 
-        let (root_revalidated, mut root_layout_node) = measure_node(
+        let mut measure_context = MeasureContext {
+            layout: self,
+            layout_metadata,
+            dom_adapter,
+            measurer,
+        };
+
+        let (root_revalidated, mut root_layout_node) = measure_context.measure_node(
             root_id,
             &root,
-            self,
             &layout_node.inner_area,
             &available_area,
-            measurer,
             true,
-            dom_adapter,
-            &metadata,
             false,
             Phase::Final,
         );

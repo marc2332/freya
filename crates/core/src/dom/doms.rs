@@ -9,7 +9,6 @@ use freya_common::{
     CompositorDirtyNodes,
     Layers,
     ParagraphElements,
-    TextGroupMeasurement,
 };
 use freya_native_core::{
     prelude::{
@@ -42,6 +41,7 @@ use crate::prelude::{
     CompositorCache,
     CompositorDirtyArea,
     ParagraphElement,
+    TextGroupMeasurement,
 };
 
 pub type DioxusDOM = RealDom<CustomAttributeValues>;

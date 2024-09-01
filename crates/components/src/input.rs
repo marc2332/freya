@@ -106,7 +106,9 @@ pub fn Input(
     );
     let theme = use_applied_theme!(&theme, input);
     let mut focus = use_focus();
-    let display_placeholder = value.is_empty() && placeholder.is_some() && !focus.is_focused();
+
+    let is_focused = focus.is_focused();
+    let display_placeholder = value.is_empty() && placeholder.is_some() && !is_focused;
 
     if &value != editable.editor().read().rope() {
         editable.editor_mut().write().set(&value);
@@ -119,14 +121,14 @@ pub fn Input(
     });
 
     let onkeydown = move |e: Event<KeyboardData>| {
-        if focus.is_focused() && e.data.key != Key::Enter {
+        if is_focused && e.data.key != Key::Enter {
             editable.process_event(&EditableEvent::KeyDown(e.data));
             onchange.call(editable.editor().peek().to_string());
         }
     };
 
     let onkeyup = move |e: Event<KeyboardData>| {
-        if focus.is_focused() {
+        if is_focused {
             editable.process_event(&EditableEvent::KeyUp(e.data));
         }
     };
@@ -155,6 +157,7 @@ pub fn Input(
     let onglobalclick = move |_| match *status.read() {
         InputStatus::Idle if focus.is_focused() => {
             focus.unfocus();
+            editable.process_event(&EditableEvent::Click);
         }
         InputStatus::Hovering => {
             editable.process_event(&EditableEvent::Click);

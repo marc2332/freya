@@ -9,6 +9,8 @@ use winit::window::{
     Window,
 };
 
+use crate::prelude::PlatformEvent;
+
 pub struct TextGroupMeasurement {
     pub text_id: Uuid,
     pub cursor_id: usize,
@@ -44,6 +46,8 @@ pub enum EventMessage {
     ExitApp,
     /// Callback to access the Window.
     WithWindow(Box<dyn FnOnce(&Window) + Send + Sync>),
+    /// Raw platform event, this are low level events.
+    PlatformEvent(PlatformEvent),
 }
 
 impl From<accesskit_winit::Event> for EventMessage {

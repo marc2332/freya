@@ -3,7 +3,6 @@ use std::ops::Mul;
 use freya_common::{
     CachedParagraph,
     CursorLayoutResponse,
-    TextGroupMeasurement,
 };
 use freya_engine::prelude::*;
 use freya_native_core::{
@@ -35,6 +34,7 @@ use crate::{
     prelude::{
         align_highlights_and_cursor_paragraph,
         align_main_align_paragraph,
+        TextGroupMeasurement,
     },
     render::create_paragraph,
 };
