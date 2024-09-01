@@ -595,8 +595,6 @@ impl TextStyle {
 
 pub struct Typeface;
 
-pub struct FontMetrics;
-
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum TextBaseline {
     Alphabetic = 0,
@@ -1106,7 +1104,14 @@ impl LineMetrics {
     }
 }
 
-pub struct StyleMetrics;
+pub struct StyleMetrics {
+    pub font_metrics: FontMetrics,
+}
+
+pub struct FontMetrics {
+    pub ascent: f32,
+    pub descent: f32,
+}
 
 pub struct GlyphClusterInfo;
 
