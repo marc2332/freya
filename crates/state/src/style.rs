@@ -38,6 +38,7 @@ pub struct StyleState {
     pub svg_data: Option<AttributesBytes>,
     pub overflow: OverflowMode,
     pub opacity: Option<f32>,
+    pub subpixel_rounding: bool,
 }
 
 impl ParseAttribute for StyleState {
@@ -117,6 +118,15 @@ impl ParseAttribute for StyleState {
             AttributeName::Opacity => {
                 if let Some(value) = attr.value.as_text() {
                     self.opacity = Some(value.parse::<f32>().map_err(|_| ParseError)?);
+                }
+            }
+            AttributeName::SubpixelRounding => {
+                if let Some(value) = attr.value.as_text() {
+                    match value {
+                        "round" => self.subpixel_rounding = true,
+                        "none" => self.subpixel_rounding = false,
+                        _ => {}
+                    }
                 }
             }
             _ => {}

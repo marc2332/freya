@@ -138,6 +138,7 @@ impl NodeState {
             ("offset_x", AttributeType::Measure(self.size.offset_x.get())),
             ("offset_y", AttributeType::Measure(self.size.offset_y.get())),
             ("content", AttributeType::Content(&self.size.content)),
+            ("subpixel_rounding", AttributeType::SubpixelRounding(self.style.subpixel_rounding))
         ];
 
         let shadows = &self.style.shadows;
@@ -169,6 +170,7 @@ pub enum AttributeType<'a> {
     Shadow(&'a Shadow),
     TextShadow(&'a TextShadow),
     Text(String),
+    SubpixelRounding(bool),
     Border(&'a Border),
     TextAlignment(&'a TextAlign),
     TextOverflow(&'a TextOverflow),
