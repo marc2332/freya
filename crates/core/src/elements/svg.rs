@@ -1,6 +1,9 @@
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
-use freya_node_state::StyleState;
+use freya_node_state::{
+    Fill,
+    StyleState,
+};
 use torin::prelude::LayoutNode;
 
 use super::utils::ElementUtils;
@@ -27,10 +30,46 @@ impl ElementUtils for SvgElement {
         if let Some(svg_data) = &node_style.svg_data {
             let svg_dom = svg::Dom::from_bytes(svg_data.as_slice(), font_manager);
             if let Ok(mut svg_dom) = svg_dom {
-                canvas.save();
+                let (scale_x, scale_y) = (
+                    area.width() / svg_dom.inner().fContainerSize.fWidth,
+                    area.height() / svg_dom.inner().fContainerSize.fHeight,
+                );
+
+                canvas.save_layer(&SaveLayerRec::default());
                 canvas.translate((x, y));
-                svg_dom.set_container_size((area.width() as i32, area.height() as i32));
+
+                if scale_x.is_finite() && scale_y.is_finite() {
+                    canvas.scale((scale_x, scale_y));
+                } else {
+                    svg_dom.set_container_size((area.width(), area.height()));
+                }
+
                 svg_dom.render(canvas);
+
+                if let Some(fill) = node_style.fill.as_ref() {
+                    let mut paint = Paint::default();
+
+                    paint.set_anti_alias(true);
+                    paint.set_blend_mode(BlendMode::SrcIn);
+
+                    match fill {
+                        Fill::Color(color) => {
+                            paint.set_color(*color);
+                        }
+                        Fill::LinearGradient(gradient) => {
+                            paint.set_shader(gradient.into_shader(area));
+                        }
+                        Fill::RadialGradient(gradient) => {
+                            paint.set_shader(gradient.into_shader(area));
+                        }
+                        Fill::ConicGradient(gradient) => {
+                            paint.set_shader(gradient.into_shader(area));
+                        }
+                    }
+
+                    canvas.draw_paint(&paint);
+                }
+
                 canvas.restore();
             }
         }
