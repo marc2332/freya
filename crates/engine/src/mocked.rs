@@ -1100,6 +1100,14 @@ pub enum RectWidthStyle {
 
 pub struct LineMetrics;
 
+impl LineMetrics {
+    pub fn get_style_metrics(&'a self, range: Range<usize>) -> Vec<(usize, &'a StyleMetrics)> {
+        unimplemented!("This is mocked")
+    }
+}
+
+pub struct StyleMetrics;
+
 pub struct GlyphClusterInfo;
 
 pub struct TextBox {
