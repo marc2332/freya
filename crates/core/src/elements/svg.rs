@@ -19,8 +19,13 @@ impl ElementUtils for SvgElement {
         _default_fonts: &[String],
         _scale_factor: f32,
     ) {
-        let area = layout_node.visible_area().round();
         let node_style = &*node_ref.get::<StyleState>().unwrap();
+
+        let mut area = layout_node.visible_area().round();
+        
+        if node_style.subpixel_rounding {
+            area = area.round();
+        }
 
         let x = area.min_x();
         let y = area.min_y();

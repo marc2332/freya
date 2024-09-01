@@ -85,7 +85,11 @@ impl ElementUtils for RectElement {
 
         let mut paint = Paint::default();
         let mut path = Path::new();
-        let area = layout_node.visible_area().to_f32().round();
+        let mut area = layout_node.visible_area().to_f32();
+
+        if node_style.subpixel_rounding {
+            area = area.round();
+        }
 
         paint.set_anti_alias(true);
         paint.set_style(PaintStyle::Fill);

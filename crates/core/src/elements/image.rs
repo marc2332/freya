@@ -21,9 +21,12 @@ impl ElementUtils for ImageElement {
         _default_fonts: &[String],
         _scale_factor: f32,
     ) {
-        let area = layout_node.visible_area().round();
         let node_style = node_ref.get::<StyleState>().unwrap();
         let node_references = node_ref.get::<ReferencesState>().unwrap();
+        let mut area = layout_node.visible_area().round();
+        if node_style.subpixel_rounding {
+            area = area.round();
+        }
 
         let draw_img = |bytes: &[u8]| {
             let pic = Image::from_encoded(unsafe { Data::new_bytes(bytes) });

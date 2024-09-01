@@ -230,6 +230,8 @@ builder_constructors! {
         content: String,
         #[doc = include_str!("_docs/attributes/line_height.md")]
         line_height: String,
+        #[doc = include_str!("_docs/attributes/subpixel_rounding.md")]
+        subpixel_rounding: String,
 
         name: String,
         focusable: String,
@@ -449,6 +451,8 @@ builder_constructors! {
         rotate: String,
         #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
+        #[doc = include_str!("_docs/attributes/subpixel_rounding.md")]
+        subpixel_rounding: String,
 
         image_data: String,
         image_reference: String,
@@ -488,6 +492,8 @@ builder_constructors! {
         rotate: String,
         #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
+        #[doc = include_str!("_docs/attributes/subpixel_rounding.md")]
+        subpixel_rounding: String,
 
         svg_data: String,
         svg_content: String,

@@ -28,7 +28,7 @@ use crate::{
     Shadow,
 };
 
-#[derive(Default, Debug, Clone, PartialEq, Component)]
+#[derive(Debug, Clone, PartialEq, Component)]
 pub struct StyleState {
     pub background: Fill,
     pub border: Border,
@@ -39,6 +39,22 @@ pub struct StyleState {
     pub overflow: OverflowMode,
     pub opacity: Option<f32>,
     pub subpixel_rounding: bool,
+}
+
+impl Default for StyleState {
+    fn default() -> Self {
+        Self {
+            background: Default::default(),
+            border: Default::default(),
+            shadows: Default::default(),
+            corner_radius: Default::default(),
+            image_data: Default::default(),
+            svg_data: Default::default(),
+            overflow: Default::default(),
+            opacity: Default::default(),
+            subpixel_rounding: true,
+        }
+    }
 }
 
 impl ParseAttribute for StyleState {
@@ -125,7 +141,7 @@ impl ParseAttribute for StyleState {
                     match value {
                         "round" => self.subpixel_rounding = true,
                         "none" => self.subpixel_rounding = false,
-                        _ => {}
+                        _ => return Err(ParseError)
                     }
                 }
             }
@@ -158,6 +174,7 @@ impl State<CustomAttributeValues> for StyleState {
             AttributeName::SvgContent,
             AttributeName::Overflow,
             AttributeName::Opacity,
+            AttributeName::SubpixelRounding,
         ]));
 
     fn update<'a>(
