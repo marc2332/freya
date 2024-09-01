@@ -63,10 +63,11 @@ impl AreaModel for Area {
     }
 
     fn expand(&mut self, size: &Size2D) {
+        let origin = self.origin;
         self.origin.x -= size.width;
         self.origin.y -= size.height;
-        self.size.width += size.width * 2.;
-        self.size.height += size.height * 2.;
+        self.size.width += origin.x + size.width * 2.;
+        self.size.height += origin.y + size.height * 2.;
     }
 
     fn max_area_when_rotated(&self, center: Point2D) -> Area {
