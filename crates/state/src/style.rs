@@ -141,7 +141,7 @@ impl ParseAttribute for StyleState {
                     match value {
                         "round" => self.subpixel_rounding = true,
                         "none" => self.subpixel_rounding = false,
-                        _ => return Err(ParseError)
+                        _ => return Err(ParseError),
                     }
                 }
             }

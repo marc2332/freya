@@ -138,7 +138,10 @@ impl NodeState {
             ("offset_x", AttributeType::Measure(self.size.offset_x.get())),
             ("offset_y", AttributeType::Measure(self.size.offset_y.get())),
             ("content", AttributeType::Content(&self.size.content)),
-            ("subpixel_rounding", AttributeType::SubpixelRounding(self.style.subpixel_rounding))
+            (
+                "subpixel_rounding",
+                AttributeType::SubpixelRounding(self.style.subpixel_rounding),
+            ),
         ];
 
         let shadows = &self.style.shadows;

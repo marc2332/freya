@@ -22,7 +22,7 @@ impl ElementUtils for SvgElement {
         let node_style = &*node_ref.get::<StyleState>().unwrap();
 
         let mut area = layout_node.visible_area().round();
-        
+
         if node_style.subpixel_rounding {
             area = area.round();
         }
