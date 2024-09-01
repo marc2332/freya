@@ -27,7 +27,7 @@ impl ElementUtils for LabelElement {
             .get::<CachedParagraph>()
             .unwrap()
             .0;
-        let area = layout_node.visible_area();
+        let area = layout_node.visible_area().round();
 
         let x = area.min_x();
         let y = area.min_y() + align_main_align_paragraph(node_ref, &area, paragraph);

@@ -27,7 +27,7 @@ impl ElementUtils for ParagraphElement {
         default_fonts: &[String],
         scale_factor: f32,
     ) {
-        let area = layout_node.visible_area();
+        let area = layout_node.visible_area().round();
         let node_cursor_state = &*node_ref.get::<CursorState>().unwrap();
 
         let paint = |paragraph: &Paragraph| {

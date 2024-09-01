@@ -21,7 +21,7 @@ impl ElementUtils for ImageElement {
         _default_fonts: &[String],
         _scale_factor: f32,
     ) {
-        let area = layout_node.visible_area();
+        let area = layout_node.visible_area().round();
         let node_style = node_ref.get::<StyleState>().unwrap();
         let node_references = node_ref.get::<ReferencesState>().unwrap();
 

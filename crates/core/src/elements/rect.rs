@@ -29,7 +29,7 @@ impl RectElement {
         node_ref: &DioxusNode,
         scale_factor: f32,
     ) -> RRect {
-        let area = layout_node.visible_area().to_f32();
+        let area = layout_node.visible_area().to_f32().round();
         let node_style = &*node_ref.get::<StyleState>().unwrap();
         let mut radius = node_style.corner_radius;
         radius.scale(scale_factor);
@@ -85,7 +85,7 @@ impl ElementUtils for RectElement {
 
         let mut paint = Paint::default();
         let mut path = Path::new();
-        let area = layout_node.visible_area().to_f32();
+        let area = layout_node.visible_area().to_f32().round();
 
         paint.set_anti_alias(true);
         paint.set_style(PaintStyle::Fill);
