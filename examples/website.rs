@@ -53,9 +53,22 @@ fn Home() -> Element {
                 BigFreyaLogo {  }
                 rect {
                     spacing: "16",
-                    label {
+                    paragraph {
                         width: "500",
-                        "Build native & cross-platform GUI applications using 🦀 Rust. Powered by 🧬 Dioxus and 🎨 Skia."
+                        text {
+                            "Build native & cross-platform GUI applications using 🦀 Rust. Powered by 🧬 "
+                        }
+                        text {
+                            decoration: "underline",
+                            "Dioxus "
+                        }
+                        text {
+                            "and 🎨 "
+                        }
+                        text {
+                            decoration: "underline",
+                            "Skia."
+                        }
                     }
                     rect {
                         direction: "horizontal",
