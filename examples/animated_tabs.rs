@@ -8,7 +8,10 @@ use dioxus_router::prelude::{
     Routable,
     Router,
 };
-use freya::prelude::*;
+use freya::{
+    common::NodeReferenceLayout,
+    prelude::*,
+};
 
 fn main() {
     launch_with_props(app, "Animated Tabs Router", (650.0, 500.0));
@@ -34,9 +37,12 @@ pub enum Route {
 }
 
 #[component]
-fn FromRouteToCurrent(from: Element, left_to_right: bool) -> Element {
+fn FromRouteToCurrent(
+    from: Element,
+    left_to_right: bool,
+    node_size: ReadOnlySignal<NodeReferenceLayout>,
+) -> Element {
     let mut animated_router = use_animated_router::<Route>();
-    let (reference, node_size) = use_node();
     let animations = use_animation_with_dependencies(&left_to_right, move |ctx, left_to_right| {
         let (start, end) = if left_to_right { (1., 0.) } else { (0., 1.) };
         ctx.with(
@@ -60,7 +66,7 @@ fn FromRouteToCurrent(from: Element, left_to_right: bool) -> Element {
     }));
 
     let offset = animations.get().read().as_f32();
-    let width = node_size.area.width();
+    let width = node_size.read().area.width();
 
     let offset = width - (offset * width);
     let to = rsx!(Outlet::<Route> {});
@@ -72,7 +78,6 @@ fn FromRouteToCurrent(from: Element, left_to_right: bool) -> Element {
 
     rsx!(
         rect {
-            reference,
             height: "fill",
             width: "fill",
             offset_x: "-{offset}",
@@ -98,6 +103,7 @@ fn Expand(children: Element) -> Element {
 
 #[component]
 fn AnimatedOutlet(children: Element) -> Element {
+    let (reference, node_size) = use_node_signal();
     let animated_router = use_context::<Signal<AnimatedRouterContext<Route>>>();
 
     let from_route = match animated_router() {
@@ -110,18 +116,22 @@ fn AnimatedOutlet(children: Element) -> Element {
         _ => None,
     };
 
-    if let Some((from, left_to_right)) = from_route {
-        rsx!(FromRouteToCurrent {
-            left_to_right,
-            from
-        })
-    } else {
-        rsx!(
-            Expand {
-                Outlet::<Route> {}
+    rsx!(
+        rect {
+            reference,
+            if let Some((from, left_to_right)) = from_route {
+                FromRouteToCurrent {
+                    left_to_right,
+                    from,
+                    node_size
+                }
+            } else {
+                Expand {
+                    Outlet::<Route> {}
+                }
             }
-        )
-    }
+        }
+    )
 }
 
 #[allow(non_snake_case)]
