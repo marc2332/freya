@@ -22,16 +22,7 @@ use freya_native_core::{
     SendAnyMap,
 };
 use freya_node_state::{
-    AccessibilityNodeState,
-    CursorState,
-    CustomAttributeValues,
-    FontStyleState,
-    LayerState,
-    LayoutState,
-    ReferencesState,
-    StyleState,
-    TransformState,
-    ViewportState,
+    AccessibilityState, CursorState, CustomAttributeValues, FontStyleState, LayerState, LayoutState, ReferencesState, StyleState, TransformState, ViewportState
 };
 use torin::prelude::*;
 use tracing::info;
@@ -132,7 +123,7 @@ impl Default for FreyaDOM {
             LayoutState::to_type_erased(),
             StyleState::to_type_erased(),
             TransformState::to_type_erased(),
-            AccessibilityNodeState::to_type_erased(),
+            Option::<AccessibilityState>::to_type_erased(),
             ViewportState::to_type_erased(),
             LayerState::to_type_erased(),
         ]);

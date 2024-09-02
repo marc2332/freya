@@ -18,65 +18,17 @@ use freya_native_core::{
 use freya_native_core_macro::partial_derive_state;
 
 use crate::{
-    CustomAttributeValues,
-    ParseAttribute,
-    ParseError,
+    AccessibilityOptions, CustomAttributeValues,
 };
 
-#[derive(Clone, Debug, PartialEq, Eq, Default, Component)]
-pub struct AccessibilityNodeState {
-    pub accessibility_id: Option<AccessibilityId>,
-    pub role: Option<Role>,
-    pub alt: Option<String>,
-    pub name: Option<String>,
-    pub focusable: bool,
-}
-
-impl ParseAttribute for AccessibilityNodeState {
-    fn parse_attribute(
-        &mut self,
-        attr: freya_native_core::prelude::OwnedAttributeView<CustomAttributeValues>,
-    ) -> Result<(), crate::ParseError> {
-        match attr.attribute {
-            AttributeName::FocusId => {
-                if let OwnedAttributeValue::Custom(CustomAttributeValues::AccessibilityId(id)) =
-                    attr.value
-                {
-                    self.accessibility_id = Some(*id);
-                }
-            }
-            AttributeName::Role => {
-                if let OwnedAttributeValue::Text(attr) = attr.value {
-                    self.role = Some(
-                        serde_json::from_str::<Role>(&format!("\"{attr}\""))
-                            .map_err(|_| ParseError)?,
-                    )
-                }
-            }
-            AttributeName::Alt => {
-                if let OwnedAttributeValue::Text(attr) = attr.value {
-                    self.alt = Some(attr.to_owned())
-                }
-            }
-            AttributeName::Name => {
-                if let OwnedAttributeValue::Text(attr) = attr.value {
-                    self.name = Some(attr.to_owned())
-                }
-            }
-            AttributeName::Focusable => {
-                if let OwnedAttributeValue::Text(attr) = attr.value {
-                    self.focusable = attr.parse().unwrap_or_default()
-                }
-            }
-            _ => {}
-        }
-
-        Ok(())
-    }
+#[derive(Clone, Debug, PartialEq, Component)]
+pub struct AccessibilityState {
+    pub id: AccessibilityId,
+    pub options: AccessibilityOptions,
 }
 
 #[partial_derive_state]
-impl State<CustomAttributeValues> for AccessibilityNodeState {
+impl State<CustomAttributeValues> for Option<AccessibilityState> {
     type ParentDependencies = ();
 
     type ChildDependencies = ();
@@ -85,11 +37,7 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
 
     const NODE_MASK: NodeMaskBuilder<'static> =
         NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
-            AttributeName::FocusId,
-            AttributeName::Role,
-            AttributeName::Alt,
-            AttributeName::Name,
-            AttributeName::Focusable,
+            AttributeName::Accessibility,
         ]));
 
     fn update<'a>(
@@ -100,16 +48,35 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         _context: &SendAnyMap,
     ) -> bool {
-        let mut accessibility = AccessibilityNodeState::default();
-
+        
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
-                accessibility.parse_safe(attr);
+                match attr.attribute {
+                    AttributeName::ImageReference => {
+                        if let OwnedAttributeValue::Custom(CustomAttributeValues::Accessibility(
+                            id,
+                            options
+                        )) = attr.value
+                        {
+                            let accessibility = Some(AccessibilityState {
+                                id: *id,
+                                options: options.clone(),
+                            });
+
+                            let changed = &accessibility != self;
+                            *self = accessibility;
+                    
+                            return changed;
+                        }
+                    }
+                    _ => {}
+                }
             }
         }
-        let changed = &accessibility != self;
 
-        *self = accessibility;
+        let changed = &None != self;
+        *self = None;
+
         changed
     }
 }

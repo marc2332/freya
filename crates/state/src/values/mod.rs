@@ -15,6 +15,7 @@ mod position;
 mod shadow;
 mod size;
 mod text_shadow;
+mod accessibility;
 
 pub use border::*;
 pub use color::*;
@@ -27,3 +28,4 @@ pub use highlight::*;
 pub use overflow::*;
 pub use shadow::*;
 pub use size::*;
+pub use accessibility::*;

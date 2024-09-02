@@ -6,7 +6,7 @@ use freya_native_core::{
     tags::TagName,
     NodeId,
 };
-use freya_node_state::AccessibilityNodeState;
+use freya_node_state::AccessibilityState;
 use torin::torin::Torin;
 
 use crate::{
@@ -52,8 +52,11 @@ impl NodeAccessibility for DioxusNode<'_> {
             .iter()
             .filter_map(|child| {
                 if child.node_type().is_visible_element() {
-                    let node_accessibility = &*child.get::<AccessibilityNodeState>().unwrap();
-                    node_accessibility.accessibility_id
+                    if let Some(accessibility_state) = &*child.get::<Option<AccessibilityState>>().unwrap() {
+                        Some(accessibility_state.id)
+                    } else {
+                        None
+                    }
                 } else {
                     None
                 }
@@ -73,13 +76,11 @@ pub fn process_accessibility(
         }
 
         let layout_node = layout.get(node.id()).unwrap();
-        let node_accessibility = &*node.get::<AccessibilityNodeState>().unwrap();
-        if let Some(accessibility_id) = node_accessibility.accessibility_id {
+        if let Some(accessibility_state) = &*node.get::<Option<AccessibilityState>>().unwrap() {
             accessibility_manager.add_node(
                 &node,
                 layout_node,
-                accessibility_id,
-                node_accessibility,
+                accessibility_state
             );
         }
 
