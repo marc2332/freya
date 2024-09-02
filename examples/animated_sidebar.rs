@@ -73,7 +73,7 @@ fn FromRouteToCurrent(from: Element, upwards: bool) -> Element {
                 width: "fill",
                 Expand { {from} }
             }
-        )
+        );
     }
 
     let offset = height - (offset * height);
