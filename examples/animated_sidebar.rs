@@ -62,6 +62,20 @@ fn FromRouteToCurrent(from: Element, upwards: bool) -> Element {
     let offset = animations.get().read().as_f32();
     let height = node_size.area.height();
 
+    // The node height is at the begging of the animation a few frames 0.
+    // This leads to flickering when moving up because the offset is 0 and not the page height
+    // An easy fix would be
+    if height == 0.0 {
+        return rsx!(
+            rect {
+                reference,
+                height: "fill",
+                width: "fill",
+                Expand { {from} }
+            }
+        )
+    }
+
     let offset = height - (offset * height);
     let to = rsx!(Outlet::<Route> {});
     let (top, bottom) = if upwards { (from, to) } else { (to, from) };
