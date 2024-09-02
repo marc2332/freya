@@ -1,7 +1,4 @@
-use accesskit::{
-    NodeId as AccessibilityId,
-    Role,
-};
+use accesskit::NodeId as AccessibilityId;
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,

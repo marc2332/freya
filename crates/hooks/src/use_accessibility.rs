@@ -63,6 +63,20 @@ impl UseAccessibility {
         }
     }
 
+    /// Focus the next node on the accessibility tree.
+    pub fn focus_next(&mut self) {
+        self.platform
+            .send(EventMessage::FocusNextAccessibilityNode)
+            .ok();
+    }
+
+    /// Focus the next node on the accessibility tree.
+    pub fn focus_previous(&mut self) {
+        self.platform
+            .send(EventMessage::FocusPrevAccessibilityNode)
+            .ok();
+    }
+
     /// Queue a focus to this node
     pub fn queue_focus(&mut self) {
         if !*self.is_focused.peek() {
