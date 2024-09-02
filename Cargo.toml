@@ -89,6 +89,8 @@ home = "0.5.9"
 dioxus-query = "0.5.1"
 gilrs = "0.10.8"
 gl = { workspace = true }
+tree-sitter-highlight = "0.23.0"
+tree-sitter-rust = "0.23.0"
 
 [profile.release]
 lto = true

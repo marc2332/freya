@@ -4,6 +4,10 @@
 )]
 
 use freya::prelude::*;
+use tree_sitter_highlight::{
+    HighlightEvent,
+    Highlighter,
+};
 
 fn main() {
     launch_with_props(app, "like freyaui.dev but in freya", (1500.0, 900.0));
@@ -118,13 +122,15 @@ fn Home() -> Element {
                     border: "1 solid rgb(41, 37, 36)",
                     corner_radius: "16",
                     width: "960",
-                    height: "600",
+                    height: "612",
                     spacing: "20",
-                    padding: "20",
+                    padding: "32 24",
                     direction: "horizontal",
                     rect {
                         width: "calc(50% - 20)",
-                        height: "fill"
+                        height: "fill",
+                        cross_align: "center",
+                        Code { }
                     }
                     rect {
                         width: "calc(50% - 20)",
@@ -249,3 +255,218 @@ fn Counter() -> Element {
         }
     )
 }
+
+const CODE: &str = r#"fn app() -> Element {
+    let mut count = use_signal(|| 0);
+
+    render!(
+        rect {
+            height: "50%",
+            width: "100%",
+            main_align: "center",
+            cross_align: "center",
+            background: "rgb(0, 119, 182)",
+            color: "white",
+            shadow: "0 4 20 5 rgb(0, 0, 0, 80)",
+            label {
+                font_size: "75",
+                font_weight: "bold",
+                "{count}"
+            }
+        }
+        rect {
+            height: "50%",
+            width: "100%",
+            main_align: "center",
+            cross_align: "center",
+            direction: "horizontal",
+            Button {
+                onclick: move |_| count += 1,
+                label { "Increase" }
+            }
+            Button {
+                onclick: move |_| count -= 1,
+                label { "Decrease" }
+            }
+        }
+    )
+}"#;
+
+const HIGHLIGH_TAGS: [&str; 23] = [
+    "constructor",
+    "attribute",
+    "constant",
+    "constant.builtin",
+    "function.builtin",
+    "function",
+    "function.method",
+    "keyword",
+    "operator",
+    "property",
+    "punctuation",
+    "punctuation.bracket",
+    "punctuation.delimiter",
+    "string",
+    "string.special",
+    "tag",
+    "type",
+    "type.builtin",
+    "variable",
+    "variable.builtin",
+    "variable.parameter",
+    "number",
+    "comment",
+];
+
+#[component]
+fn Code() -> Element {
+    let code = use_hook(move || {
+        use tree_sitter_highlight::HighlightConfiguration;
+
+        let mut rust_config = HighlightConfiguration::new(
+            tree_sitter_rust::LANGUAGE.into(),
+            "rust",
+            tree_sitter_rust::HIGHLIGHTS_QUERY,
+            tree_sitter_rust::INJECTIONS_QUERY,
+            tree_sitter_rust::TAGS_QUERY,
+        )
+        .unwrap();
+
+        rust_config.configure(&HIGHLIGH_TAGS);
+
+        let mut highlighter = Highlighter::new();
+
+        let highlights = highlighter
+            .highlight(&rust_config, CODE.as_bytes(), None, |_| None)
+            .unwrap();
+
+        let rope = Rope::from_str(&CODE);
+
+        let mut syntax_blocks = SyntaxBlocks::default();
+
+        let mut prepared_block: (SyntaxType, Vec<(usize, String)>) =
+            (SyntaxType::Unknown, Vec::new());
+
+        for event in highlights {
+            match event.unwrap() {
+                HighlightEvent::Source { start, end } => {
+                    // Prepare the whole block even if it's splitted across multiple lines.
+                    let data_begining = rope.byte_slice(start..end);
+                    let starting_line = rope.char_to_line(start);
+
+                    let mut back = String::new();
+                    let mut line = starting_line;
+
+                    for (i, d) in data_begining.chars().enumerate() {
+                        if d != '\n' {
+                            back.push(d);
+                        }
+
+                        if start + i == end - 1 || d == '\n' {
+                            prepared_block.1.push((line, back.clone()));
+                            line += 1;
+                            back.clear();
+                        }
+                    }
+                }
+                HighlightEvent::HighlightStart(s) => {
+                    // Specify the type of the block
+                    prepared_block.0 = SyntaxType::from(HIGHLIGH_TAGS[s.0]);
+                }
+                HighlightEvent::HighlightEnd => {
+                    // Push all the block chunks to their specified line
+                    for (i, d) in prepared_block.1 {
+                        if syntax_blocks.get(i).is_none() {
+                            syntax_blocks.push(Vec::new());
+                        }
+                        let line = syntax_blocks.last_mut().unwrap();
+                        line.push((prepared_block.0.clone(), d));
+                    }
+                    // Clear the prepared block
+                    prepared_block = (SyntaxType::Unknown, Vec::new());
+                }
+            }
+        }
+
+        // Mark all the remaining text as not readable
+        if !prepared_block.1.is_empty() {
+            for (i, d) in prepared_block.1 {
+                if syntax_blocks.get(i).is_none() {
+                    syntax_blocks.push(Vec::new());
+                }
+                let line = syntax_blocks.last_mut().unwrap();
+                line.push((SyntaxType::Unknown, d));
+            }
+        }
+
+        syntax_blocks
+    });
+
+    rsx!(
+        rect {
+            for (line_n, line) in code.iter().enumerate() {
+                paragraph {
+                    key: "{line_n}",
+                    font_size: "12",
+                    font_family: "Jetbrains Mono",
+                    line_height: "1.3",
+                    for (node_n, (syntax_type, text)) in line.iter().enumerate() {
+                        text {
+                            key: "{node_n}",
+                            color: "{syntax_type.color()}",
+                            "{text}"
+                        }
+                    }
+                }
+            }
+        }
+    )
+}
+
+#[derive(Clone, Debug)]
+pub enum SyntaxType {
+    Number,
+    String,
+    Keyword,
+    Operator,
+    Variable,
+    Function,
+    Comment,
+    Punctuation,
+    Unknown,
+}
+
+impl SyntaxType {
+    pub fn color(&self) -> &str {
+        match self {
+            SyntaxType::Number => "#9ECBFF",
+            SyntaxType::String => "#9ECBFF",
+            SyntaxType::Keyword => "#F97583",
+            SyntaxType::Operator => "#F97583",
+            SyntaxType::Variable => "white",
+            SyntaxType::Function => "#B392F0",
+            SyntaxType::Comment => "green",
+            SyntaxType::Punctuation => "white",
+            SyntaxType::Unknown => "white",
+        }
+    }
+}
+
+impl From<&str> for SyntaxType {
+    fn from(s: &str) -> Self {
+        match s {
+            "keyword" => SyntaxType::Keyword,
+            "variable" => SyntaxType::Variable,
+            "operator" => SyntaxType::Operator,
+            "string" => SyntaxType::String,
+            "number" => SyntaxType::Number,
+            "function" => SyntaxType::Function,
+            "constructor" => SyntaxType::Function,
+            "comment" => SyntaxType::Comment,
+            "punctuation.bracket" => SyntaxType::Punctuation,
+            _ => SyntaxType::Unknown,
+        }
+    }
+}
+
+pub type SyntaxBlocks = Vec<Vec<(SyntaxType, String)>>;
