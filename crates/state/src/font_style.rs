@@ -71,7 +71,9 @@ impl FontStyleState {
             text_style.add_shadow(*text_shadow);
         }
 
-        text_style.set_decoration(&self.decoration);
+        text_style.set_decoration_style(self.decoration.style);
+        text_style.set_decoration_type(self.decoration.ty);
+        text_style.set_decoration_color(self.decoration.color);
 
         text_style
     }
