@@ -242,13 +242,13 @@ fn Home() -> Element {
 
 #[component]
 fn DocumentView(path: ReadOnlySignal<String>) -> Element {
-    let content = use_resource(move || async move { fs::read(&*path.read()) });
+    let content = use_resource(move || async move { fs::read_to_string(&*path.read()) });
     let content = content.read();
 
-    if let Some(Ok(bytes)) = &*content {
+    if let Some(Ok(text)) = &*content {
         rsx!(
             label {
-                "{str::from_utf8(bytes).unwrap()}"
+                "{text}"
             }
         )
     } else if content.is_none() {
@@ -273,12 +273,9 @@ fn DocumentEdit(path: String) -> Element {
     let documents: Signal<Vec<Document>> = use_context();
     let editable = use_editable(
         || {
-            if let Ok(file) = fs::read(&path) {
-                let file_content = str::from_utf8(&file).unwrap().to_string();
-                EditableConfig::new(file_content)
-            } else {
-                EditableConfig::new(LOREM_IPSUM.to_string())
-            }
+            EditableConfig::new(
+                fs::read_to_string(&path).unwrap_or_else(|_| LOREM_IPSUM.to_string()),
+            )
             .with_allow_tabs(false)
         },
         EditableMode::MultipleLinesSingleEditor,
