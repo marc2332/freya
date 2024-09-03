@@ -174,15 +174,18 @@ pub fn Link(
     };
 
     rsx! {
-        {main_rect}
         rect {
-            height: "0",
-            layer: "-999",
+            {main_rect}
             rect {
-                width: "100v",
-                if *is_hovering.read() {
-                    Tooltip {
-                        url: tooltip
+                height: "0",
+                width: "0",
+                layer: "-999",
+                rect {
+                    width: "100v",
+                    if *is_hovering.read() {
+                        Tooltip {
+                            url: tooltip
+                        }
                     }
                 }
             }
