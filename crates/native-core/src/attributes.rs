@@ -60,6 +60,7 @@ pub enum AttributeName {
     HighlightMode,
     ImageReference,
     ImageData,
+    Alt,
     SvgData,
     SvgContent,
 }
@@ -128,6 +129,7 @@ impl FromStr for AttributeName {
             "image_data" => Ok(AttributeName::ImageData),
             "svg_data" => Ok(AttributeName::SvgData),
             "svg_content" => Ok(AttributeName::SvgContent),
+            "alt" => Ok(AttributeName::Alt),
             _ => Err(format!("{attr} not supported.")),
         }
     }

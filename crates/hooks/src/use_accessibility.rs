@@ -7,9 +7,7 @@ use freya_core::{
 };
 use freya_engine::prelude::Color;
 use freya_node_state::{
-    AccessibilityOptions, AutoComplete, CellIndex, Current, CustomAction, CustomAttributeValues,
-    DefaultActionVerb, HasPopup, Invalid, ListStyle, Live, NumericValue, Orientation, Role,
-    ScrollValue, SortDirection, TextSelection, Toggled, VerticalOffset,
+    AccessibilityOptions, AccessibilityState, AutoComplete, CellIndex, Current, CustomAction, CustomAttributeValues, DefaultActionVerb, HasPopup, Invalid, ListStyle, Live, NumericValue, Orientation, Role, ScrollValue, SortDirection, TextSelection, Toggled, VerticalOffset
 };
 
 use crate::{use_platform, AccessibilityIdCounter, NavigationMark, UsePlatform};
@@ -93,10 +91,10 @@ impl UseAccessibility {
 
     /// Create a node focus ID attribute
     pub fn attribute(&self) -> AttributeValue {
-        AttributeValue::any_value(CustomAttributeValues::Accessibility(
-            self.id,
-            self.options.read().clone(),
-        ))
+        AttributeValue::any_value(CustomAttributeValues::Accessibility(AccessibilityState {
+            id: self.id,
+            options: self.options.read().clone(),
+        }))
     }
 
     /// Check if this node is currently focused
@@ -104,6 +102,7 @@ impl UseAccessibility {
         *self.is_focused.read()
     }
 
+    /// Check if this node is focusable
     pub fn is_focusable(&self) -> bool {
         self.options.read().is_focusable
     }

@@ -231,17 +231,14 @@ builder_constructors! {
         #[doc = include_str!("_docs/attributes/line_height.md")]
         line_height: String,
 
-        name: String,
-        focusable: String,
-        role: String,
-        focus_id: AccessibilityId,
-        alt: String,
         canvas_reference: String,
         layer: String,
         offset_y: String,
         offset_x: String,
         reference: Reference,
         cursor_reference: CursorReference,
+
+        accessibility: AccessibilityState,
     };
     /// `label` simply let's you display some text.
     ///
@@ -304,10 +301,8 @@ builder_constructors! {
         opacity: String,
 
         layer: String,
-        role: String,
-        alt: String,
-        focus_id: AccessibilityId,
-        name: String,
+
+        accessibility: AccessibilityState,
     };
     /// `paragraph` element let's you build texts with different styles.
     ///
@@ -382,13 +377,11 @@ builder_constructors! {
         cursor_color: String,
         cursor_mode: String,
         cursor_id: String,
-        alt: String,
-        name: String,
-        role: String,
-        focus_id: AccessibilityId,
         highlights: String,
         highlight_color: String,
         highlight_mode: String,
+
+        accessibility: AccessibilityState,
     };
     /// `text` element is simply a text span used for the `paragraph` element.
     text {
@@ -421,6 +414,10 @@ builder_constructors! {
         decoration_style: String,
         #[doc = include_str!("_docs/attributes/decoration_color.md")]
         decoration_color: String,
+
+        // Inline text is not supported yet due to not having a good way
+        // to measure text spans in AccessibilityManager.
+        // accessibility: AccessibilityState,
     };
     /// `image` element let's you show an image.
     ///
@@ -452,11 +449,9 @@ builder_constructors! {
 
         image_data: String,
         image_reference: String,
-        role: String,
-        focus_id: AccessibilityId,
+
+        accessibility: AccessibilityState,
         alt: String,
-        name: String,
-        focusable: String,
     };
     /// `svg` element let's you display SVG code.
     ///
@@ -491,11 +486,9 @@ builder_constructors! {
 
         svg_data: String,
         svg_content: String,
-        role: String,
-        focus_id: AccessibilityId,
+
+        accessibility: AccessibilityState,
         alt: String,
-        name: String,
-        focusable: String,
     };
 }
 

@@ -1,22 +1,16 @@
-use accesskit::NodeId as AccessibilityId;
+use accesskit::{NodeId as AccessibilityId, Role};
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
     node::OwnedAttributeValue,
     node_ref::NodeView,
-    prelude::{
-        AttributeMaskBuilder,
-        Dependancy,
-        NodeMaskBuilder,
-        State,
-    },
+    prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
+    tags::TagName,
     SendAnyMap,
 };
 use freya_native_core_macro::partial_derive_state;
 
-use crate::{
-    AccessibilityOptions, CustomAttributeValues,
-};
+use crate::{AccessibilityOptions, CustomAttributeValues};
 
 #[derive(Clone, Debug, PartialEq, Component)]
 pub struct AccessibilityState {
@@ -32,10 +26,8 @@ impl State<CustomAttributeValues> for Option<AccessibilityState> {
 
     type NodeDependencies = ();
 
-    const NODE_MASK: NodeMaskBuilder<'static> =
-        NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
-            AttributeName::Accessibility,
-        ]));
+    const NODE_MASK: NodeMaskBuilder<'static> = NodeMaskBuilder::new()
+        .with_attrs(AttributeMaskBuilder::Some(&[AttributeName::Accessibility]));
 
     fn update<'a>(
         &mut self,
@@ -45,25 +37,63 @@ impl State<CustomAttributeValues> for Option<AccessibilityState> {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         _context: &SendAnyMap,
     ) -> bool {
-        
+        let mut accessibility_state: Option<AccessibilityState> = None;
+        let mut image_alt: Option<String> = None;
+
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
                 match attr.attribute {
-                    AttributeName::ImageReference => {
+                    AttributeName::Accessibility => {
                         if let OwnedAttributeValue::Custom(CustomAttributeValues::Accessibility(
-                            id,
-                            options
+                            state,
                         )) = attr.value
                         {
-                            let accessibility = Some(AccessibilityState {
-                                id: *id,
-                                options: options.clone(),
-                            });
-
-                            let changed = &accessibility != self;
-                            *self = accessibility;
-                    
-                            return changed;
+                            accessibility_state = Some(state.clone());
+                        } else if let Some(tag) = node_view.tag() {
+                            match tag {
+                                TagName::Image => {
+                                    accessibility_state = Some(AccessibilityState {
+                                        options: AccessibilityOptions {
+                                            role: Role::Image,
+                                            ..Default::default()
+                                        },
+                                        id: AccessibilityId(0),
+                                    });
+                                }
+                                TagName::Paragraph => {
+                                    accessibility_state = Some(AccessibilityState {
+                                        options: AccessibilityOptions {
+                                            role: Role::Paragraph,
+                                            ..Default::default()
+                                        },
+                                        id: AccessibilityId(0),
+                                    });
+                                }
+                                TagName::Rect => {
+                                    accessibility_state = Some(AccessibilityState {
+                                        options: AccessibilityOptions {
+                                            role: Role::GenericContainer,
+                                            ..Default::default()
+                                        },
+                                        id: AccessibilityId(0),
+                                    });
+                                }
+                                TagName::Svg => {
+                                    accessibility_state = Some(AccessibilityState {
+                                        options: AccessibilityOptions {
+                                            role: Role::GraphicsObject,
+                                            ..Default::default()
+                                        },
+                                        id: AccessibilityId(0),
+                                    });
+                                }
+                                _ => {}
+                            }
+                        }
+                    }
+                    AttributeName::Alt => {
+                        if let Some(alt) = attr.value.as_text() {
+                            image_alt = Some(alt.to_string());
                         }
                     }
                     _ => {}
@@ -71,8 +101,16 @@ impl State<CustomAttributeValues> for Option<AccessibilityState> {
             }
         }
 
-        let changed = &None != self;
-        *self = None;
+        if let Some(alt) = image_alt {
+            if let Some(ref mut state) = accessibility_state {
+                if state.options.name.is_none() {
+                    state.options.name = Some(alt);
+                }
+            }
+        }
+
+        let changed = &accessibility_state != self;
+        *self = accessibility_state;
 
         changed
     }
