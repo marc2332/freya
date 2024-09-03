@@ -460,6 +460,22 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
+    pub fn set_decoration_type(&mut self, decoration: TextDecoration) {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn set_decoration_mode(&mut self, mode: TextDecorationMode) {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn set_decoration_style(&mut self, style: TextDecorationStyle) {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn set_decoration_color(&mut self, color: impl Into<Color>) {
+        unimplemented!("This is mocked")
+    }
+
     pub fn font_style(&self) -> FontStyle {
         unimplemented!("This is mocked")
     }
