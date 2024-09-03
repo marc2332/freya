@@ -451,7 +451,6 @@ builder_constructors! {
         image_reference: String,
 
         accessibility: AccessibilityState,
-        alt: String,
     };
     /// `svg` element let's you display SVG code.
     ///
@@ -488,7 +487,6 @@ builder_constructors! {
         svg_content: String,
 
         accessibility: AccessibilityState,
-        alt: String,
     };
 }
 
