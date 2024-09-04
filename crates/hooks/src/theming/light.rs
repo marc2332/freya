@@ -48,8 +48,8 @@ pub const LIGHT_THEME: Theme = Theme {
     },
     switch: SwitchTheme {
         margin: cow_borrowed!("0"),
-        background: cow_borrowed!("rgb(121, 116, 126)"),
-        thumb_background: cow_borrowed!("rgb(231, 224, 236)"),
+        background: cow_borrowed!("rgb(231, 224, 236)"),
+        thumb_background: cow_borrowed!("rgb(121, 116, 126)"),
         enabled_background: cow_borrowed!("rgb(103, 80, 164)"),
         enabled_thumb_background: cow_borrowed!("rgb(234, 221, 255)"),
         focus_border_fill: cow_borrowed!("rgb(180, 180, 180)"),

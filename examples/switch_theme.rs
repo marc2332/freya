@@ -35,19 +35,23 @@ fn app() -> Element {
 
     rsx!(
         Body {
-            theme: theme_with!(BodyTheme {
-                padding: "20".into(),
-            }),
-            Switch {
-                enabled: *enabled.read(),
-                ontoggled: move |_| {
-                    enabled.toggle();
+            rect {
+                width: "fill",
+                height: "fill",
+                main_align: "center",
+                cross_align: "center",
+                spacing: "20",
+                Switch {
+                    enabled: *enabled.read(),
+                    ontoggled: move |_| {
+                        enabled.toggle();
+                    }
                 }
+                label {
+                    "Is enabled? {is_enabled}"
+                }
+                TheOtherSwitch { }
             }
-            label {
-                "Is enabled? {is_enabled}"
-            }
-            TheOtherSwitch { }
         }
     )
 }
