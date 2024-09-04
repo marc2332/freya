@@ -40,10 +40,13 @@ winit = { workspace = true }
 accesskit = { workspace = true }
 accesskit_winit = { workspace = true }
 tracing = { workspace = true }
-futures-task ={ workspace = true }
+futures-task = { workspace = true }
 futures-util = { workspace = true }
 
 itertools = "0.13.0"
 uuid = { workspace = true }
 image = "0.25.0"
 pin-utils = "0.1.0"
+
+ash = { version = "^0.37.2" }
+vulkano = { version = "^0.34.0" }
