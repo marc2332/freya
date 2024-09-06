@@ -51,7 +51,7 @@ dioxus-hot-reload = { version = "0.5", features = ["file_watcher"], default-feat
 dioxus-router = { version = "0.5", default-features = false }
 dioxus-sdk = { version = "0.5", features = ["clipboard"]}
 
-skia-safe = { version = "0.75.0", features = ["gl", "textlayout", "svg"] }
+skia-safe = { path = "C:/Users/mespi/rust-skia/skia-safe", features = ["gl", "textlayout", "svg"] }
 
 gl = "0.14.0"
 glutin = "0.32.0"

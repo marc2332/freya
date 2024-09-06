@@ -30,6 +30,9 @@ impl ElementUtils for SvgElement {
                 canvas.save();
                 canvas.translate((x, y));
                 svg_dom.set_container_size((area.width() as i32, area.height() as i32));
+                let mut root = svg_dom.root();
+                root.set_width(svg::DomSVGLength::new(100.0, svg::SvgUnit::Percentage));
+                root.set_height(svg::DomSVGLength::new(100.0, svg::SvgUnit::Percentage));
                 svg_dom.render(canvas);
                 canvas.restore();
             }
