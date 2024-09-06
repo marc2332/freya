@@ -43,11 +43,13 @@ impl VulkanDriver {
     pub fn new<State: Clone + 'static>(
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
-        _config: &LaunchConfig<State>,
+        config: &LaunchConfig<State>,
     ) -> (Self, Window, SkiaSurface) {
         let window = event_loop
             .create_window(window_attributes)
             .expect("Could not create window with Vulkan context");
+
+        let window_size = window.inner_size();
 
         let library = VulkanLibrary::new().expect("Could not create Vulkan library");
         let required_extensions = InstanceExtensions {
@@ -65,7 +67,7 @@ impl VulkanDriver {
         .intersection(library.supported_extensions());
 
         let instance = Instance::new(
-            library.clone(),
+            library,
             InstanceCreateInfo {
                 flags: InstanceCreateFlags::ENUMERATE_PORTABILITY,
                 enabled_extensions: required_extensions,
@@ -125,7 +127,6 @@ impl VulkanDriver {
         )
         .unwrap();
 
-        let size = window.inner_size();
         let queue = queues.next().unwrap();
 
         let (swapchain, swapchain_images) = {
@@ -141,7 +142,7 @@ impl VulkanDriver {
                 SwapchainCreateInfo {
                     min_image_count: surface_capabilities.min_image_count,
                     image_format,
-                    image_extent: [size.width, size.height],
+                    image_extent: [window_size.width, window_size.height],
                     image_usage: ImageUsage::COLOR_ATTACHMENT,
                     composite_alpha: surface_capabilities
                         .supported_composite_alpha
@@ -157,21 +158,28 @@ impl VulkanDriver {
         let mut swapchain_image_views = Vec::with_capacity(swapchain_images.len());
 
         for image in &swapchain_images {
-            swapchain_image_views.push(ImageView::new_default(image.clone()).unwrap());
+            swapchain_image_views.push(
+                ImageView::new_default(image.clone())
+                    .expect("Error creating image view for swap chain image"),
+            );
         }
 
-        let instance = physical_device.instance();
-        let library = instance.library();
+        let device_instance = physical_device.instance();
+        let device_library = device_instance.library();
 
         let get_proc = |of| unsafe {
             let result = match of {
-                GetProcOf::Instance(instance, name) => {
-                    library.get_instance_proc_addr(ash::vk::Instance::from_raw(instance as _), name)
+                GetProcOf::Instance(device_instance, name) => device_library
+                    .get_instance_proc_addr(
+                        ash::vk::Instance::from_raw(device_instance as _),
+                        name,
+                    ),
+                GetProcOf::Device(device, name) => {
+                    (device_instance.fns().v1_0.get_device_proc_addr)(
+                        ash::vk::Device::from_raw(device as _),
+                        name,
+                    )
                 }
-                GetProcOf::Device(device, name) => (instance.fns().v1_0.get_device_proc_addr)(
-                    ash::vk::Device::from_raw(device as _),
-                    name,
-                ),
             };
 
             match result {
@@ -185,7 +193,7 @@ impl VulkanDriver {
 
         let backend_context = unsafe {
             BackendContext::new(
-                instance.handle().as_raw() as _,
+                device_instance.handle().as_raw() as _,
                 physical_device.handle().as_raw() as _,
                 device.handle().as_raw() as _,
                 (queue.handle().as_raw() as _, queue.id_within_family() as _),
@@ -193,22 +201,57 @@ impl VulkanDriver {
             )
         };
 
-        let previous_frame_end = RefCell::new(Some(sync::now(device.clone()).boxed()));
-        let image_info = VkImageInfo::default();
-        let render_target = backend_render_targets::make_vk(size.to_skia(), &image_info);
-
         let mut gr_context = direct_contexts::make_vulkan(&backend_context, None)
-            .expect("Could not create direct context");
+            .expect("Could not create Skia Vulkan context");
 
-        let skia_surface = wrap_backend_render_target(
+        let previous_frame_end = RefCell::new(Some(sync::now(device.clone()).boxed()));
+
+        let (image_index, ..) =
+            match vulkano::swapchain::acquire_next_image(swapchain.clone(), None)
+                .map_err(Validated::unwrap)
+            {
+                Ok(r) => r,
+                Err(_) => panic!("Vulkan: failed to acquire next image"),
+            };
+
+        let image_view = swapchain_image_views[image_index as usize].clone();
+        let image_object = image_view.image();
+
+        let width = swapchain.image_extent()[0];
+        let width: i32 = width.try_into().unwrap();
+        let height = swapchain.image_extent()[1];
+        let height: i32 = height.try_into().unwrap();
+
+        let image_info = &unsafe {
+            VkImageInfo::new(
+                image_object.handle().as_raw() as _,
+                Alloc::default(),
+                ImageTiling::OPTIMAL,
+                ImageLayout::COLOR_ATTACHMENT_OPTIMAL,
+                VkFormat::B8G8R8A8_UNORM,
+                1,
+                None,
+                None,
+                None,
+                None,
+            )
+        };
+
+        let render_target = backend_render_targets::make_vk((width, height), image_info);
+
+        let mut skia_surface = wrap_backend_render_target(
             &mut gr_context,
             &render_target,
-            SurfaceOrigin::TopLeft,
+            SurfaceOrigin::BottomLeft,
             ColorType::BGRA8888,
             None,
             None,
         )
-        .expect("Could not create skia surface");
+        .expect("Could not create Skia surface");
+
+        skia_surface.canvas().clear(config.window_config.background);
+
+        gr_context.flush_and_submit();
 
         let driver = VulkanDriver {
             gr_context,
@@ -225,8 +268,6 @@ impl VulkanDriver {
     }
 
     pub fn resize(&mut self, size: PhysicalSize<u32>) -> (SkiaSurface, SkiaSurface) {
-        let gr_context = &mut self.gr_context;
-
         let device = self.device.clone();
 
         self.previous_frame_end
@@ -273,7 +314,7 @@ impl VulkanDriver {
         let render_target = &backend_render_targets::make_vk((width, height), image_info);
 
         let mut surface = wrap_backend_render_target(
-            gr_context,
+            &mut self.gr_context,
             render_target,
             SurfaceOrigin::TopLeft,
             color_type,
@@ -284,7 +325,7 @@ impl VulkanDriver {
 
         let dirty_surface = surface.new_surface_with_dimensions(size.to_skia()).unwrap();
 
-        gr_context.submit(None);
+        self.gr_context.flush_and_submit();
 
         let future = self
             .previous_frame_end
