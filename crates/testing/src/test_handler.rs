@@ -218,7 +218,7 @@ impl TestingHandler {
         {
             let rdom = fdom.rdom();
             let layout = fdom.layout();
-            let mut dirty_accessibility_tree = fdom.dirty_accessibility_tree();
+            let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
             self.accessibility_tree.lock().unwrap().process_updates(
                 rdom,
                 &layout,

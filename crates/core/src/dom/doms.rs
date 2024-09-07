@@ -6,8 +6,8 @@ use std::sync::{
 
 use dioxus_core::VirtualDom;
 use freya_common::{
+    AccessibilityDirtyNodes,
     CompositorDirtyNodes,
-    DirtyAccessibilityTree,
     Layers,
     ParagraphElements,
 };
@@ -127,7 +127,7 @@ pub struct FreyaDOM {
     compositor_dirty_nodes: Arc<Mutex<CompositorDirtyNodes>>,
     compositor_dirty_area: Arc<Mutex<CompositorDirtyArea>>,
     compositor_cache: Arc<Mutex<CompositorCache>>,
-    dirty_accessibility_tree: Arc<Mutex<DirtyAccessibilityTree>>,
+    accessibility_dirty_nodes: Arc<Mutex<AccessibilityDirtyNodes>>,
 }
 
 impl Default for FreyaDOM {
@@ -153,7 +153,7 @@ impl Default for FreyaDOM {
             compositor_dirty_nodes: Arc::default(),
             compositor_dirty_area: Arc::default(),
             compositor_cache: Arc::default(),
-            dirty_accessibility_tree: Arc::default(),
+            accessibility_dirty_nodes: Arc::default(),
         }
     }
 }
@@ -183,8 +183,8 @@ impl FreyaDOM {
         self.compositor_cache.lock().unwrap()
     }
 
-    pub fn dirty_accessibility_tree(&self) -> MutexGuard<DirtyAccessibilityTree> {
-        self.dirty_accessibility_tree.lock().unwrap()
+    pub fn accessibility_dirty_nodes(&self) -> MutexGuard<AccessibilityDirtyNodes> {
+        self.accessibility_dirty_nodes.lock().unwrap()
     }
 
     /// Create the initial DOM from the given Mutations
@@ -201,7 +201,7 @@ impl FreyaDOM {
             compositor_dirty_nodes: &mut self.compositor_dirty_nodes.lock().unwrap(),
             compositor_dirty_area: &mut self.compositor_dirty_area.lock().unwrap(),
             compositor_cache: &mut self.compositor_cache.lock().unwrap(),
-            dirty_accessibility_tree: &mut self.dirty_accessibility_tree.lock().unwrap(),
+            accessibility_dirty_nodes: &mut self.accessibility_dirty_nodes.lock().unwrap(),
         });
 
         let mut ctx = SendAnyMap::new();
@@ -209,7 +209,7 @@ impl FreyaDOM {
         ctx.insert(self.layers.clone());
         ctx.insert(self.paragraphs.clone());
         ctx.insert(self.compositor_dirty_nodes.clone());
-        ctx.insert(self.dirty_accessibility_tree.clone());
+        ctx.insert(self.accessibility_dirty_nodes.clone());
         ctx.insert(self.rdom.root_id());
 
         self.rdom.update_state(ctx);
@@ -229,7 +229,7 @@ impl FreyaDOM {
             compositor_dirty_nodes: &mut self.compositor_dirty_nodes.lock().unwrap(),
             compositor_dirty_area: &mut self.compositor_dirty_area.lock().unwrap(),
             compositor_cache: &mut self.compositor_cache.lock().unwrap(),
-            dirty_accessibility_tree: &mut self.dirty_accessibility_tree.lock().unwrap(),
+            accessibility_dirty_nodes: &mut self.accessibility_dirty_nodes.lock().unwrap(),
         });
 
         // Update the Nodes states
@@ -238,7 +238,7 @@ impl FreyaDOM {
         ctx.insert(self.layers.clone());
         ctx.insert(self.paragraphs.clone());
         ctx.insert(self.compositor_dirty_nodes.clone());
-        ctx.insert(self.dirty_accessibility_tree.clone());
+        ctx.insert(self.accessibility_dirty_nodes.clone());
         ctx.insert(self.rdom.root_id());
 
         // Update the Node's states

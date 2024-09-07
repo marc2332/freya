@@ -4,7 +4,7 @@ use std::sync::{
 };
 
 use accesskit_winit::Adapter;
-use freya_common::DirtyAccessibilityTree;
+use freya_common::AccessibilityDirtyNodes;
 use freya_core::{
     dom::DioxusDOM,
     prelude::{
@@ -60,13 +60,13 @@ impl AccessKitManager {
         &mut self,
         rdom: &DioxusDOM,
         layout: &Torin<NodeId>,
-        dirty: &mut DirtyAccessibilityTree,
+        dirty_nodes: &mut AccessibilityDirtyNodes,
     ) {
         let tree = self
             .accessibility_tree
             .lock()
             .unwrap()
-            .init(rdom, layout, dirty);
+            .init(rdom, layout, dirty_nodes);
         self.accessibility_adapter.update_if_active(|| {
             self.adapter_initialized = true;
             tree
@@ -78,13 +78,13 @@ impl AccessKitManager {
         &mut self,
         rdom: &DioxusDOM,
         layout: &Torin<NodeId>,
-        dirty: &mut DirtyAccessibilityTree,
+        dirty_nodes: &mut AccessibilityDirtyNodes,
     ) {
-        let tree = self
-            .accessibility_tree
-            .lock()
-            .unwrap()
-            .process_updates(rdom, layout, dirty);
+        let tree =
+            self.accessibility_tree
+                .lock()
+                .unwrap()
+                .process_updates(rdom, layout, dirty_nodes);
 
         if self.adapter_initialized {
             self.accessibility_adapter.update_if_active(|| tree);

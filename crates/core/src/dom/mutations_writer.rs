@@ -3,8 +3,8 @@ use dioxus_core::{
     WriteMutations,
 };
 use freya_common::{
+    AccessibilityDirtyNodes,
     CompositorDirtyNodes,
-    DirtyAccessibilityTree,
     Layers,
     ParagraphElements,
 };
@@ -41,7 +41,7 @@ pub struct MutationsWriter<'a> {
     pub compositor_dirty_nodes: &'a mut CompositorDirtyNodes,
     pub compositor_dirty_area: &'a mut CompositorDirtyArea,
     pub compositor_cache: &'a mut CompositorCache,
-    pub dirty_accessibility_tree: &'a mut DirtyAccessibilityTree,
+    pub accessibility_dirty_nodes: &'a mut AccessibilityDirtyNodes,
 }
 
 impl<'a> MutationsWriter<'a> {
@@ -95,7 +95,7 @@ impl<'a> MutationsWriter<'a> {
                     let closed_accessibility_node_id = node_accessibility_state
                         .closest_accessibility_node_id
                         .unwrap_or(self.native_writer.rdom.root_id());
-                    self.dirty_accessibility_tree
+                    self.accessibility_dirty_nodes
                         .remove(node.id(), closed_accessibility_node_id);
                 }
 

@@ -14,7 +14,7 @@ use accesskit::{
     Tree,
     TreeUpdate,
 };
-use freya_common::DirtyAccessibilityTree;
+use freya_common::AccessibilityDirtyNodes;
 use freya_native_core::{
     prelude::NodeImmutable,
     tags::TagName,
@@ -62,9 +62,9 @@ impl AccessibilityTree {
         &self,
         rdom: &DioxusDOM,
         layout: &Torin<NodeId>,
-        dirty: &mut DirtyAccessibilityTree,
+        dirty_nodes: &mut AccessibilityDirtyNodes,
     ) -> TreeUpdate {
-        dirty.clear();
+        dirty_nodes.clear();
 
         let mut nodes = vec![];
 
@@ -105,10 +105,13 @@ impl AccessibilityTree {
         &mut self,
         rdom: &DioxusDOM,
         layout: &Torin<NodeId>,
-        dirty: &mut DirtyAccessibilityTree,
+        dirty_nodes: &mut AccessibilityDirtyNodes,
     ) -> TreeUpdate {
-        let removed_ids = dirty.removed.drain().collect::<FxHashMap<_, _>>();
-        let mut added_or_updated_ids = dirty.added_or_updated.drain().collect::<FxHashSet<_>>();
+        let removed_ids = dirty_nodes.removed.drain().collect::<FxHashMap<_, _>>();
+        let mut added_or_updated_ids = dirty_nodes
+            .added_or_updated
+            .drain()
+            .collect::<FxHashSet<_>>();
 
         // Mark the ancestors as modified
         for node_id in added_or_updated_ids.clone() {

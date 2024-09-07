@@ -30,7 +30,7 @@ pub fn process_layout(
         // Finds the best Node from where to start measuring
         layout.find_best_root(&mut dom_adapter);
 
-        let mut dirty_accessibility_tree = fdom.dirty_accessibility_tree();
+        let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
         let mut compositor_dirty_nodes = fdom.compositor_dirty_nodes();
         let mut compositor_dirty_area = fdom.compositor_dirty_area();
         let mut buffer = layout.dirty.iter().copied().collect_vec();

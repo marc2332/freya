@@ -7,7 +7,7 @@ use accesskit::{
     NodeId as AccessibilityId,
     Role,
 };
-use freya_common::DirtyAccessibilityTree;
+use freya_common::AccessibilityDirtyNodes;
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
@@ -111,7 +111,9 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
         context: &SendAnyMap,
     ) -> bool {
         let root_id = context.get::<NodeId>().unwrap();
-        let dirty_accessibility_tree = context.get::<Arc<Mutex<DirtyAccessibilityTree>>>().unwrap();
+        let accessibility_dirty_nodes = context
+            .get::<Arc<Mutex<AccessibilityDirtyNodes>>>()
+            .unwrap();
         let mut accessibility = AccessibilityNodeState {
             node_id: node_view.node_id(),
             ..Default::default()
@@ -150,7 +152,7 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
         if changed {
             // Add or update this node if it is the Root or if it has an accessibility ID
             if accessibility.accessibility_id.is_some() || node_view.node_id() == *root_id {
-                dirty_accessibility_tree
+                accessibility_dirty_nodes
                     .lock()
                     .unwrap()
                     .add_or_update(node_view.node_id())

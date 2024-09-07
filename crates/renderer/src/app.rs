@@ -246,7 +246,7 @@ impl Application {
             let fdom = self.sdom.get();
             let rdom = fdom.rdom();
             let layout = fdom.layout();
-            let mut dirty_accessibility_tree = fdom.dirty_accessibility_tree();
+            let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
             self.accessibility
                 .init_accessibility(rdom, &layout, &mut dirty_accessibility_tree);
         }
@@ -261,7 +261,7 @@ impl Application {
             let fdom = self.sdom.get();
             let rdom = fdom.rdom();
             let layout = fdom.layout();
-            let mut dirty_accessibility_tree = fdom.dirty_accessibility_tree();
+            let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
             self.accessibility
                 .process_updates(rdom, &layout, &mut dirty_accessibility_tree);
         }
