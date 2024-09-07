@@ -316,6 +316,7 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
     }
 
     /// Borrow a component from the world without updating the dirty nodes.
+    #[inline(always)]
     fn borrow_raw<'a, B: IntoBorrow>(&'a self) -> Result<B, GetStorage>
     where
         B::Borrow: shipyard::Borrow<'a, View = B>,
@@ -458,7 +459,7 @@ pub trait NodeImmutable<V: FromAnyValue + Send + Sync = ()>: Sized {
     }
 
     /// Get a component from the current node
-    #[inline]
+    #[inline(always)]
     fn get<'a, T: Component + Sync + Send>(&'a self) -> Option<ViewEntry<'a, T>> {
         // self.real_dom().tree.get(self.id())
         let view: View<'a, T> = self.real_dom().borrow_raw().ok()?;

@@ -40,6 +40,7 @@ const SHADER: &str = "
 
 fn app() -> Element {
     let platform = use_platform();
+    let (reference, size) = use_node_signal();
 
     use_hook(|| {
         let mut ticker = platform.new_ticker();
@@ -47,6 +48,7 @@ fn app() -> Element {
         spawn(async move {
             loop {
                 ticker.tick().await;
+                platform.invalidate_drawing_area(size.peek().area);
                 platform.request_animation_frame();
             }
         });
@@ -89,18 +91,13 @@ fn app() -> Element {
         })
     });
 
-    rsx!(
-        rect {
-            Canvas {
-                canvas,
-                theme: theme_with!(CanvasTheme {
-                    background: "black".into(),
-                    width: "100%".into(),
-                    height: "100%".into(),
-                })
-            }
-        }
-    )
+    rsx!(rect {
+        canvas_reference: canvas.attribute(),
+        reference,
+        background: "black",
+        width: "100%",
+        height: "100%",
+    })
 }
 
 struct ShaderWrapper(RuntimeEffect);

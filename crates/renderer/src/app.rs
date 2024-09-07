@@ -6,10 +6,7 @@ use dioxus_core::{
 };
 use freya_core::prelude::*;
 use freya_engine::prelude::*;
-use freya_native_core::{
-    prelude::NodeImmutableDioxusExt,
-    NodeId,
-};
+use freya_native_core::prelude::NodeImmutableDioxusExt;
 use futures_task::Waker;
 use futures_util::Future;
 use pin_utils::pin_mut;
@@ -21,11 +18,7 @@ use tokio::{
         watch,
     },
 };
-use torin::geometry::{
-    Area,
-    Size2D,
-};
-use tracing::info;
+use torin::geometry::Area;
 use winit::{
     dpi::PhysicalSize,
     event_loop::EventLoopProxy,
@@ -35,6 +28,7 @@ use winit::{
 use crate::{
     accessibility::AccessKitManager,
     devtools::Devtools,
+    size::WinitSize,
     winit_waker::winit_waker,
     EmbeddedFonts,
     HoveredNode,
@@ -44,6 +38,7 @@ use crate::{
 pub struct Application {
     pub(crate) sdom: SafeDOM,
     pub(crate) vdom: VirtualDom,
+    pub(crate) compositor: Compositor,
     pub(crate) events: EventsQueue,
     pub(crate) vdom_waker: Waker,
     pub(crate) proxy: EventLoopProxy<EventMessage>,
@@ -120,6 +115,7 @@ impl Application {
             measure_layout_on_next_render: false,
             default_fonts,
             queued_focus_node: None,
+            compositor: Compositor::default(),
         };
 
         app.plugins.send(
@@ -276,10 +272,17 @@ impl Application {
     }
 
     /// Render the App into the Window Canvas
-    pub fn render(&mut self, hovered_node: &HoveredNode, canvas: &Canvas, window: &Window) {
+    pub fn render(
+        &mut self,
+        hovered_node: &HoveredNode,
+        background: Color,
+        surface: &mut Surface,
+        dirty_surface: &mut Surface,
+        window: &Window,
+    ) {
         self.plugins.send(
             PluginEvent::BeforeRender {
-                canvas,
+                canvas: surface.canvas(),
                 font_collection: &self.font_collection,
                 freya_dom: &self.sdom.get(),
             },
@@ -288,7 +291,9 @@ impl Application {
 
         self.start_render(
             hovered_node,
-            canvas,
+            background,
+            surface,
+            dirty_surface,
             window.inner_size(),
             window.scale_factor() as f32,
         );
@@ -298,7 +303,7 @@ impl Application {
 
         self.plugins.send(
             PluginEvent::AfterRender {
-                canvas,
+                canvas: surface.canvas(),
                 font_collection: &self.font_collection,
                 freya_dom: &self.sdom.get(),
             },
@@ -309,6 +314,7 @@ impl Application {
     /// Resize the Window
     pub fn resize(&mut self, window: &Window) {
         self.measure_layout_on_next_render = true;
+        self.compositor.reset();
         self.sdom.get().layout().reset();
         self.platform_sender.send_modify(|state| {
             state.information = PlatformInformation::from_winit(window);
@@ -349,7 +355,7 @@ impl Application {
     }
 
     /// Measure the layout
-    pub fn process_layout(&mut self, inner_size: PhysicalSize<u32>, scale_factor: f64) {
+    pub fn process_layout(&mut self, window_size: PhysicalSize<u32>, scale_factor: f64) {
         self.accessibility.clear_accessibility();
 
         {
@@ -362,12 +368,9 @@ impl Application {
 
             process_layout(
                 &fdom,
-                Area::from_size(Size2D::from((
-                    inner_size.width as f32,
-                    inner_size.height as f32,
-                ))),
+                Area::from_size(window_size.to_torin()),
                 &mut self.font_collection,
-                scale_factor,
+                scale_factor as f32,
                 &self.default_fonts,
             );
 
@@ -381,59 +384,50 @@ impl Application {
             devtools.update(&self.sdom.get())
         }
 
-        let fdom = self.sdom.get();
-        info!(
-            "Processed {} layers and {} group of paragraph elements",
-            fdom.layers().len_layers(),
-            fdom.paragraphs().len_paragraphs()
-        );
+        #[cfg(debug_assertions)]
+        {
+            let fdom = self.sdom.get();
+            tracing::info!(
+                "Processed {} layers and {} group of paragraph elements",
+                fdom.layers().len(),
+                fdom.paragraphs().len()
+            );
+        }
     }
 
     /// Start rendering the RealDOM to Window
     pub fn start_render(
         &mut self,
         hovered_node: &HoveredNode,
-        canvas: &Canvas,
-        windows_size: PhysicalSize<u32>,
+        background: Color,
+        surface: &mut Surface,
+        dirty_surface: &mut Surface,
+        window_size: PhysicalSize<u32>,
         scale_factor: f32,
     ) {
         let fdom = self.sdom.get();
+        let hovered_node = hovered_node
+            .as_ref()
+            .and_then(|hovered_node| *hovered_node.lock().unwrap());
 
-        let matrices: Vec<(Matrix, Vec<NodeId>)> = Vec::default();
-        let opacities: Vec<(f32, Vec<NodeId>)> = Vec::default();
-
-        let mut skia_renderer = SkiaRenderer {
-            canvas_area: Area::from_size(
-                (windows_size.width as f32, windows_size.height as f32).into(),
-            ),
-            canvas,
+        let mut render_pipeline = RenderPipeline {
+            canvas_area: Area::from_size(window_size.to_torin()),
+            rdom: fdom.rdom(),
+            compositor_dirty_area: &mut fdom.compositor_dirty_area(),
+            compositor_dirty_nodes: &mut fdom.compositor_dirty_nodes(),
+            compositor_cache: &mut fdom.compositor_cache(),
+            layers: &mut fdom.layers(),
+            layout: &mut fdom.layout(),
+            background,
+            surface,
+            dirty_surface,
+            compositor: &mut self.compositor,
+            scale_factor,
+            selected_node: hovered_node,
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,
-            matrices,
-            opacities,
             default_fonts: &self.default_fonts,
-            scale_factor,
         };
-
-        process_render(&fdom, |fdom, node_id, layout_node, layout| {
-            let render_wireframe = if let Some(hovered_node) = &hovered_node {
-                hovered_node
-                    .lock()
-                    .unwrap()
-                    .map(|id| id == *node_id)
-                    .unwrap_or_default()
-            } else {
-                false
-            };
-            if let Some(dioxus_node) = fdom.rdom().get(*node_id) {
-                skia_renderer.render(
-                    fdom.rdom(),
-                    layout_node,
-                    &dioxus_node,
-                    render_wireframe,
-                    layout,
-                );
-            }
-        });
+        render_pipeline.run();
     }
 }
