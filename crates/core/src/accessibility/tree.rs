@@ -93,6 +93,12 @@ impl AccessibilityTree {
             true
         });
 
+        #[cfg(debug_assertions)]
+        tracing::info!(
+            "Initialized the Accessibility Tree with {} nodes.",
+            nodes.len()
+        );
+
         TreeUpdate {
             nodes,
             tree: Some(Tree::new(ACCESSIBILITY_ROOT_ID)),
@@ -112,6 +118,15 @@ impl AccessibilityTree {
             .added_or_updated
             .drain()
             .collect::<FxHashSet<_>>();
+
+        #[cfg(debug_assertions)]
+        if !removed_ids.is_empty() || !added_or_updated_ids.is_empty() {
+            tracing::info!(
+                "Updating the Accessibility Tree with {} removals and {} additions/modifications",
+                removed_ids.len(),
+                added_or_updated_ids.len()
+            );
+        }
 
         // Mark the ancestors as modified
         for node_id in added_or_updated_ids.clone() {
@@ -166,6 +181,9 @@ impl AccessibilityTree {
 
         // Only focus the element if it exists
         if let Some(node_id) = self.map.get(&new_focus_id).copied() {
+            #[cfg(debug_assertions)]
+            tracing::info!("Focused {new_focus_id:?} node.");
+
             Some((
                 TreeUpdate {
                     nodes: Vec::new(),
@@ -242,6 +260,9 @@ impl AccessibilityTree {
             .unwrap_or((ACCESSIBILITY_ROOT_ID, rdom.root_id()));
 
         self.focused_id = accessibility_id;
+
+        #[cfg(debug_assertions)]
+        tracing::info!("Focused {accessibility_id:?} node.");
 
         (
             TreeUpdate {
