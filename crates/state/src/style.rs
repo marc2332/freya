@@ -1,3 +1,9 @@
+use std::sync::{
+    Arc,
+    Mutex,
+};
+
+use freya_common::CompositorDirtyNodes;
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
@@ -154,7 +160,7 @@ impl ParseAttribute for StyleState {
 
 #[partial_derive_state]
 impl State<CustomAttributeValues> for StyleState {
-    type ParentDependencies = (Self,);
+    type ParentDependencies = ();
 
     type ChildDependencies = ();
 
@@ -183,8 +189,9 @@ impl State<CustomAttributeValues> for StyleState {
         _node: <Self::NodeDependencies as Dependancy>::ElementBorrowed<'a>,
         _parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
-        _context: &SendAnyMap,
+        context: &SendAnyMap,
     ) -> bool {
+        let compositor_dirty_nodes = context.get::<Arc<Mutex<CompositorDirtyNodes>>>().unwrap();
         let mut style = StyleState::default();
 
         if let Some(attributes) = node_view.attributes() {
@@ -194,6 +201,13 @@ impl State<CustomAttributeValues> for StyleState {
         }
 
         let changed = &style != self;
+
+        if changed {
+            compositor_dirty_nodes
+                .lock()
+                .unwrap()
+                .invalidate(node_view.node_id())
+        }
 
         *self = style;
         changed

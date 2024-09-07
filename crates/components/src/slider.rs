@@ -13,7 +13,6 @@ use freya_hooks::{
     use_platform,
     SliderThemeWith,
 };
-use tracing::info;
 use winit::window::CursorIcon;
 
 /// Properties for the [`Slider`] component.
@@ -33,10 +32,12 @@ pub struct SliderProps {
 #[inline]
 fn ensure_correct_slider_range(value: f64) -> f64 {
     if value < 0.0 {
-        info!("Slider value is less than 0.0, setting to 0.0");
+        #[cfg(debug_assertions)]
+        tracing::info!("Slider value is less than 0.0, setting to 0.0");
         0.0
     } else if value > 100.0 {
-        info!("Slider value is greater than 100.0, setting to 100.0");
+        #[cfg(debug_assertions)]
+        tracing::info!("Slider value is greater than 100.0, setting to 100.0");
         100.0
     } else {
         value

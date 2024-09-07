@@ -232,6 +232,8 @@ builder_constructors! {
         line_height: String,
         #[doc = include_str!("_docs/attributes/subpixel_rounding.md")]
         subpixel_rounding: String,
+        #[doc = include_str!("_docs/attributes/spacing.md")]
+        spacing: String,
 
         name: String,
         focusable: String,
