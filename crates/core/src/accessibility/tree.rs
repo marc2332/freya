@@ -158,24 +158,22 @@ impl AccessibilityTree {
     pub fn set_focus_with_update(
         &mut self,
         new_focus_id: AccessibilityId,
-    ) -> (Option<TreeUpdate>, NodeId) {
+    ) -> Option<(TreeUpdate, NodeId)> {
         self.focused_id = new_focus_id;
 
-        let node_id = *self.map.get(&new_focus_id).unwrap();
-
         // Only focus the element if it exists
-        let node_focused_exists = self.map.contains_key(&new_focus_id);
-        let tree = if node_focused_exists {
-            Some(TreeUpdate {
-                nodes: Vec::new(),
-                tree: Some(Tree::new(ACCESSIBILITY_ROOT_ID)),
-                focus: self.focused_id,
-            })
+        if let Some(node_id) = self.map.get(&new_focus_id).copied() {
+            Some((
+                TreeUpdate {
+                    nodes: Vec::new(),
+                    tree: Some(Tree::new(ACCESSIBILITY_ROOT_ID)),
+                    focus: self.focused_id,
+                },
+                node_id,
+            ))
         } else {
             None
-        };
-
-        (tree, node_id)
+        }
     }
 
     /// Focus a Node given the strategy.

@@ -128,13 +128,13 @@ impl AccessKitManager {
         window: &Window,
         layout: &Torin<NodeId>,
     ) {
-        let (tree, node_id) = self
+        let res = self
             .accessibility_tree
             .lock()
             .unwrap()
             .set_focus_with_update(id);
 
-        if let Some(tree) = tree {
+        if let Some((tree, node_id)) = res {
             // Notify the components
             platform_sender.send_modify(|state| {
                 state.focused_id = tree.focus;
@@ -142,8 +142,6 @@ impl AccessKitManager {
 
             // Update the IME Cursor area
             self.update_ime_position(node_id, window, layout);
-
-            println!("{:?}", self.adapter_initialized);
 
             if self.adapter_initialized {
                 // Update the Adapter

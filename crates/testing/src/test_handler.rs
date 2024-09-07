@@ -121,12 +121,12 @@ impl TestingHandler {
                         }
                     }
                     EventMessage::FocusAccessibilityNode(node_id) => {
-                        let (tree, _) = self
+                        let res = self
                             .accessibility_tree
                             .lock()
                             .unwrap()
                             .set_focus_with_update(node_id);
-                        if let Some(tree) = tree {
+                        if let Some((tree, _)) = res {
                             self.platform_sender.send_modify(|state| {
                                 state.focused_id = tree.focus;
                             });
