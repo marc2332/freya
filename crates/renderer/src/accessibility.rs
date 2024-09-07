@@ -85,7 +85,10 @@ impl AccessKitManager {
             .lock()
             .unwrap()
             .process_updates(rdom, layout, dirty);
-        self.accessibility_adapter.update_if_active(|| tree);
+
+        if self.adapter_initialized {
+            self.accessibility_adapter.update_if_active(|| tree);
+        }
     }
 
     /// Focus the next accessibility node
@@ -140,7 +143,8 @@ impl AccessKitManager {
             // Update the IME Cursor area
             self.update_ime_position(node_id, window, layout);
 
-            // Update the adapter
+            println!("{:?}", self.adapter_initialized);
+
             if self.adapter_initialized {
                 // Update the Adapter
                 self.accessibility_adapter.update_if_active(|| tree);

@@ -35,7 +35,7 @@ impl NodeAccessibility for DioxusNode<'_> {
         if self.id() == self.real_dom().root_id() {
             Some(ACCESSIBILITY_ROOT_ID)
         } else {
-            let node_accessibility = &*self.get::<AccessibilityNodeState>().unwrap();
+            let node_accessibility = &*self.get::<AccessibilityNodeState>()?;
             node_accessibility.accessibility_id
         }
     }
