@@ -49,6 +49,7 @@ pub struct LayoutState {
     pub content: Content,
     pub node_ref: Option<NodeReference>,
     pub node_id: NodeId,
+    pub spacing: Length,
 }
 
 impl ParseAttribute for LayoutState {
@@ -168,6 +169,11 @@ impl ParseAttribute for LayoutState {
                     self.node_ref = Some(reference.clone());
                 }
             }
+            AttributeName::Spacing => {
+                if let Some(value) = attr.value.as_text() {
+                    self.spacing = Length::new(value.parse::<f32>().map_err(|_| ParseError)?);
+                }
+            }
             _ => {}
         }
         Ok(())
@@ -204,6 +210,7 @@ impl State<CustomAttributeValues> for LayoutState {
             AttributeName::PositionBottom,
             AttributeName::PositionLeft,
             AttributeName::Content,
+            AttributeName::Spacing,
         ]));
 
     fn update<'a>(

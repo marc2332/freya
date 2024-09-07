@@ -307,7 +307,7 @@ where
             let mut initial_phase_available_area = *available_area;
 
             //  Measure the children
-            for child_id in &children {
+            for (child_n, child_id) in children.iter().enumerate() {
                 let Some(child_data) = self.dom_adapter.get_node(child_id) else {
                     continue;
                 };
@@ -339,6 +339,8 @@ where
                     &mut initial_phase_inner_sizes,
                     &child_areas.area,
                     &child_data,
+                    children.len(),
+                    child_n,
                 );
 
                 if parent_node.cross_alignment.is_not_start()
@@ -382,6 +384,7 @@ where
         }
 
         let initial_available_area = *available_area;
+        let children_len = children.len();
 
         // Final phase: measure the children with all the axis and sizes adjusted
         for (child_n, child_id) in children.into_iter().enumerate() {
@@ -444,6 +447,8 @@ where
                 inner_sizes,
                 &child_areas.area,
                 &child_data,
+                children_len,
+                child_n,
             );
 
             // Cache the child layout if it was mutated and children must be cached
@@ -476,7 +481,6 @@ where
             AlignAxis::Height => match alignment {
                 Alignment::Center => {
                     let new_origin_y = (inner_area.height() / 2.0) - (contents_size.height / 2.0);
-
                     available_area.origin.y = inner_area.min_y() + new_origin_y;
                 }
                 Alignment::End => {
@@ -562,6 +566,7 @@ where
     }
 
     /// Stack a child Node into its parent
+    #[allow(clippy::too_many_arguments)]
     fn stack_child(
         available_area: &mut Area,
         parent_node: &Node,
@@ -570,20 +575,27 @@ where
         inner_sizes: &mut Size2D,
         child_area: &Area,
         child_node: &Node,
+        siblings_len: usize,
+        child_position: usize,
     ) {
         // No need to stack a node that is positioned absolutely
         if child_node.position.is_absolute() {
             return;
         }
 
+        // Only apply the spacing to elements after `i > 0` and `i < len - 1`
+        let spacing = (child_position < siblings_len - 1)
+            .then_some(parent_node.spacing)
+            .unwrap_or_default();
+
         match parent_node.direction {
             DirectionMode::Horizontal => {
                 // Move the available area
-                available_area.origin.x = child_area.max_x();
-                available_area.size.width -= child_area.size.width;
+                available_area.origin.x = child_area.max_x() + spacing.get();
+                available_area.size.width -= child_area.size.width + spacing.get();
 
                 inner_sizes.height = child_area.height().max(inner_sizes.height);
-                inner_sizes.width += child_area.width();
+                inner_sizes.width += child_area.width() + spacing.get();
 
                 // Keep the biggest height
                 if parent_node.height.inner_sized() {
@@ -600,16 +612,16 @@ where
 
                 // Accumulate width
                 if parent_node.width.inner_sized() {
-                    parent_area.size.width += child_area.size.width;
+                    parent_area.size.width += child_area.size.width + spacing.get();
                 }
             }
             DirectionMode::Vertical => {
                 // Move the available area
-                available_area.origin.y = child_area.max_y();
-                available_area.size.height -= child_area.size.height;
+                available_area.origin.y = child_area.max_y() + spacing.get();
+                available_area.size.height -= child_area.size.height + spacing.get();
 
                 inner_sizes.width = child_area.width().max(inner_sizes.width);
-                inner_sizes.height += child_area.height();
+                inner_sizes.height += child_area.height() + spacing.get();
 
                 // Keep the biggest width
                 if parent_node.width.inner_sized() {
@@ -626,7 +638,7 @@ where
 
                 // Accumulate height
                 if parent_node.height.inner_sized() {
-                    parent_area.size.height += child_area.size.height;
+                    parent_area.size.height += child_area.size.height + spacing.get();
                 }
             }
         }

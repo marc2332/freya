@@ -28,20 +28,21 @@ fn app() -> Element {
                     "{count}"
                 }
             }
-            rect {
-                height: "50%",
-                width: "100%",
-                main_align: "center",
-                cross_align: "center",
-                direction: "horizontal",
-                Button {
-                    onclick: move |_| count += 1,
-                    label { "Increase" }
-                }
-                Button {
-                    onclick: move |_| count -= 1,
-                    label { "Decrease" }
-                }
+        }
+        rect {
+            height: "50%",
+            width: "100%",
+            main_align: "center",
+            cross_align: "center",
+            direction: "horizontal",
+            spacing: "8",
+            Button {
+                onclick: move |_| count += 1,
+                label { "Increase" }
+            }
+            Button {
+                onclick: move |_| count -= 1,
+                label { "Decrease" }
             }
         }
     )

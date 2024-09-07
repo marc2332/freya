@@ -174,15 +174,18 @@ pub fn Link(
     };
 
     rsx! {
-        {main_rect}
         rect {
-            height: "0",
-            layer: "-999",
+            {main_rect}
             rect {
-                width: "100v",
-                if *is_hovering.read() {
-                    Tooltip {
-                        url: tooltip
+                height: "0",
+                width: "0",
+                layer: "-999",
+                rect {
+                    width: "100v",
+                    if *is_hovering.read() {
+                        Tooltip {
+                            url: tooltip
+                        }
                     }
                 }
             }
@@ -279,7 +282,7 @@ mod test {
         // Go to the "Somewhere" route
         utils.push_event(PlatformEvent::Mouse {
             name: EventName::Click,
-            cursor: (5., 70.).into(),
+            cursor: (5., 60.).into(),
             button: Some(MouseButton::Left),
         });
 

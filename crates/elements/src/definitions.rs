@@ -230,6 +230,8 @@ builder_constructors! {
         content: String,
         #[doc = include_str!("_docs/attributes/line_height.md")]
         line_height: String,
+        #[doc = include_str!("_docs/attributes/spacing.md")]
+        spacing: String,
 
         name: String,
         focusable: String,

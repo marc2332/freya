@@ -47,6 +47,7 @@ pub const DARK_THEME: Theme = Theme {
         shadow: LIGHT_THEME.input.shadow,
     },
     switch: SwitchTheme {
+        margin: LIGHT_THEME.input.margin,
         background: cow_borrowed!("rgb(60, 60, 60)"),
         thumb_background: cow_borrowed!("rgb(200, 200, 200)"),
         enabled_background: cow_borrowed!("rgb(255, 95, 0)"),
@@ -65,6 +66,7 @@ pub const DARK_THEME: Theme = Theme {
         height: LIGHT_THEME.scroll_view.height,
         width: LIGHT_THEME.scroll_view.width,
         padding: LIGHT_THEME.scroll_view.padding,
+        spacing: LIGHT_THEME.scroll_view.spacing,
     },
     tooltip: TooltipTheme {
         background: cow_borrowed!("rgb(35,35,35)"),
@@ -73,6 +75,7 @@ pub const DARK_THEME: Theme = Theme {
     },
     dropdown: DropdownTheme {
         width: LIGHT_THEME.dropdown.width,
+        margin: LIGHT_THEME.dropdown.margin,
         dropdown_background: cow_borrowed!("rgb(25, 25, 25)"),
         background_button: cow_borrowed!("rgb(35, 35, 35)"),
         hover_background: cow_borrowed!("rgb(45, 45, 45)"),
@@ -140,12 +143,14 @@ pub const DARK_THEME: Theme = Theme {
         margin: LIGHT_THEME.icon.margin,
     },
     sidebar: SidebarTheme {
+        spacing: LIGHT_THEME.sidebar.spacing,
         background: cow_borrowed!("rgb(20, 20, 20)"),
         font_theme: FontTheme {
             color: cow_borrowed!("white"),
         },
     },
     sidebar_item: SidebarItemTheme {
+        margin: LIGHT_THEME.sidebar_item.margin,
         background: cow_borrowed!("transparent"),
         hover_background: cow_borrowed!("rgb(45, 45, 45)"),
         font_theme: FontTheme {

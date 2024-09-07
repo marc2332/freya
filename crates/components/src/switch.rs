@@ -148,7 +148,7 @@ pub fn Switch(props: SwitchProps) -> Element {
 
     rsx!(
         rect {
-            margin: "1.5",
+            margin: "{theme.margin}",
             width: "50",
             height: "25",
             padding: "1",
