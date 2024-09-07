@@ -60,7 +60,7 @@ pub struct TestingHandler {
     pub(crate) platform_receiver: NativePlatformReceiver,
     pub(crate) font_collection: FontCollection,
     pub(crate) font_mgr: FontMgr,
-    pub(crate) accessibility_manager: SharedAccessibilityManager,
+    pub(crate) accessibility_tree: SharedAccessibilityTree,
     pub(crate) config: TestingConfig,
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) cursor_icon: CursorIcon,
@@ -121,34 +121,37 @@ impl TestingHandler {
                         }
                     }
                     EventMessage::FocusAccessibilityNode(node_id) => {
-                        let tree = self
-                            .accessibility_manager
+                        let res = self
+                            .accessibility_tree
                             .lock()
                             .unwrap()
                             .set_focus_with_update(node_id);
-
-                        if let Some(tree) = tree {
+                        if let Some((tree, _)) = res {
                             self.platform_sender.send_modify(|state| {
                                 state.focused_id = tree.focus;
                             });
                         }
                     }
                     EventMessage::FocusNextAccessibilityNode => {
-                        let tree = self
-                            .accessibility_manager
+                        let fdom = self.utils.sdom.get();
+                        let rdom = fdom.rdom();
+                        let (tree, _) = self
+                            .accessibility_tree
                             .lock()
                             .unwrap()
-                            .set_focus_on_next_node(AccessibilityFocusDirection::Forward);
+                            .set_focus_on_next_node(AccessibilityFocusStrategy::Forward, rdom);
                         self.platform_sender.send_modify(|state| {
                             state.focused_id = tree.focus;
                         });
                     }
                     EventMessage::FocusPrevAccessibilityNode => {
-                        let tree = self
-                            .accessibility_manager
+                        let fdom = self.utils.sdom.get();
+                        let rdom = fdom.rdom();
+                        let (tree, _) = self
+                            .accessibility_tree
                             .lock()
                             .unwrap()
-                            .set_focus_on_next_node(AccessibilityFocusDirection::Backward);
+                            .set_focus_on_next_node(AccessibilityFocusStrategy::Backward, rdom);
                         self.platform_sender.send_modify(|state| {
                             state.focused_id = tree.focus;
                         });
@@ -212,12 +215,16 @@ impl TestingHandler {
         );
 
         let fdom = &self.utils.sdom().get_mut();
-
-        process_accessibility(
-            &fdom.layout(),
-            fdom.rdom(),
-            &mut self.accessibility_manager.lock().unwrap(),
-        );
+        {
+            let rdom = fdom.rdom();
+            let layout = fdom.layout();
+            let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
+            self.accessibility_tree.lock().unwrap().process_updates(
+                rdom,
+                &layout,
+                &mut dirty_accessibility_tree,
+            );
+        }
 
         process_events(
             fdom,
@@ -256,7 +263,7 @@ impl TestingHandler {
 
     /// Get the current [AccessibilityId].
     pub fn focus_id(&self) -> AccessibilityId {
-        self.accessibility_manager.lock().unwrap().focused_id
+        self.accessibility_tree.lock().unwrap().focused_id
     }
 
     /// Resize the simulated canvas.
