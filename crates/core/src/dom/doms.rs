@@ -6,6 +6,7 @@ use std::sync::{
 
 use dioxus_core::VirtualDom;
 use freya_common::{
+    CompositorDirtyNodes,
     DirtyAccessibilityTree,
     Layers,
     ParagraphElements,
@@ -35,11 +36,12 @@ use freya_node_state::{
     ViewportState,
 };
 use torin::prelude::*;
-use tracing::info;
 
 use super::mutations_writer::MutationsWriter;
 use crate::prelude::{
-    measure_paragraph,
+    CompositorCache,
+    CompositorDirtyArea,
+    ParagraphElement,
     TextGroupMeasurement,
 };
 
@@ -120,8 +122,11 @@ pub struct FreyaDOM {
     rdom: DioxusDOM,
     dioxus_integration_state: DioxusState,
     torin: Arc<Mutex<Torin<NodeId>>>,
-    paragraphs: ParagraphElements,
-    layers: Layers,
+    paragraphs: Arc<Mutex<ParagraphElements>>,
+    layers: Arc<Mutex<Layers>>,
+    compositor_dirty_nodes: Arc<Mutex<CompositorDirtyNodes>>,
+    compositor_dirty_area: Arc<Mutex<CompositorDirtyArea>>,
+    compositor_cache: Arc<Mutex<CompositorCache>>,
     dirty_accessibility_tree: Arc<Mutex<DirtyAccessibilityTree>>,
 }
 
@@ -143,8 +148,11 @@ impl Default for FreyaDOM {
             rdom,
             dioxus_integration_state,
             torin: Arc::new(Mutex::new(Torin::new())),
-            paragraphs: ParagraphElements::default(),
-            layers: Layers::default(),
+            paragraphs: Arc::default(),
+            layers: Arc::default(),
+            compositor_dirty_nodes: Arc::default(),
+            compositor_dirty_area: Arc::default(),
+            compositor_cache: Arc::default(),
             dirty_accessibility_tree: Arc::default(),
         }
     }
@@ -155,12 +163,24 @@ impl FreyaDOM {
         self.torin.lock().unwrap()
     }
 
-    pub fn layers(&self) -> &Layers {
-        &self.layers
+    pub fn layers(&self) -> MutexGuard<Layers> {
+        self.layers.lock().unwrap()
     }
 
-    pub fn paragraphs(&self) -> &ParagraphElements {
-        &self.paragraphs
+    pub fn paragraphs(&self) -> MutexGuard<ParagraphElements> {
+        self.paragraphs.lock().unwrap()
+    }
+
+    pub fn compositor_dirty_nodes(&self) -> MutexGuard<CompositorDirtyNodes> {
+        self.compositor_dirty_nodes.lock().unwrap()
+    }
+
+    pub fn compositor_dirty_area(&self) -> MutexGuard<CompositorDirtyArea> {
+        self.compositor_dirty_area.lock().unwrap()
+    }
+
+    pub fn compositor_cache(&self) -> MutexGuard<CompositorCache> {
+        self.compositor_cache.lock().unwrap()
     }
 
     pub fn dirty_accessibility_tree(&self) -> MutexGuard<DirtyAccessibilityTree> {
@@ -175,9 +195,12 @@ impl FreyaDOM {
                 .dioxus_integration_state
                 .create_mutation_writer(&mut self.rdom),
             layout: &mut self.torin.lock().unwrap(),
-            layers: &self.layers,
-            paragraphs: &self.paragraphs,
+            layers: &mut self.layers.lock().unwrap(),
+            paragraphs: &mut self.paragraphs.lock().unwrap(),
             scale_factor,
+            compositor_dirty_nodes: &mut self.compositor_dirty_nodes.lock().unwrap(),
+            compositor_dirty_area: &mut self.compositor_dirty_area.lock().unwrap(),
+            compositor_cache: &mut self.compositor_cache.lock().unwrap(),
             dirty_accessibility_tree: &mut self.dirty_accessibility_tree.lock().unwrap(),
         });
 
@@ -185,6 +208,7 @@ impl FreyaDOM {
         ctx.insert(self.torin.clone());
         ctx.insert(self.layers.clone());
         ctx.insert(self.paragraphs.clone());
+        ctx.insert(self.compositor_dirty_nodes.clone());
         ctx.insert(self.dirty_accessibility_tree.clone());
         ctx.insert(self.rdom.root_id());
 
@@ -199,9 +223,12 @@ impl FreyaDOM {
                 .dioxus_integration_state
                 .create_mutation_writer(&mut self.rdom),
             layout: &mut self.torin.lock().unwrap(),
-            layers: &self.layers,
-            paragraphs: &self.paragraphs,
+            layers: &mut self.layers.lock().unwrap(),
+            paragraphs: &mut self.paragraphs.lock().unwrap(),
             scale_factor,
+            compositor_dirty_nodes: &mut self.compositor_dirty_nodes.lock().unwrap(),
+            compositor_dirty_area: &mut self.compositor_dirty_area.lock().unwrap(),
+            compositor_cache: &mut self.compositor_cache.lock().unwrap(),
             dirty_accessibility_tree: &mut self.dirty_accessibility_tree.lock().unwrap(),
         });
 
@@ -210,6 +237,7 @@ impl FreyaDOM {
         ctx.insert(self.torin.clone());
         ctx.insert(self.layers.clone());
         ctx.insert(self.paragraphs.clone());
+        ctx.insert(self.compositor_dirty_nodes.clone());
         ctx.insert(self.dirty_accessibility_tree.clone());
         ctx.insert(self.rdom.root_id());
 
@@ -219,9 +247,11 @@ impl FreyaDOM {
         let must_repaint = !diff.is_empty();
         let must_relayout = !self.layout().get_dirty_nodes().is_empty();
 
+        #[cfg(debug_assertions)]
         if !diff.is_empty() {
-            info!(
-                "Updated DOM, now with {} nodes",
+            tracing::info!(
+                "Updated {} nodes in RealDOM, now of size {}",
+                diff.len(),
                 self.rdom().tree_ref().len()
             );
         }
@@ -245,7 +275,7 @@ impl FreyaDOM {
 
     /// Measure all the paragraphs registered under the given TextId
     pub fn measure_paragraphs(&self, text_measurement: TextGroupMeasurement, scale_factor: f64) {
-        let paragraphs = self.paragraphs.paragraphs();
+        let paragraphs = self.paragraphs.lock().unwrap();
         let group = paragraphs.get(&text_measurement.text_id);
         let layout = self.layout();
         if let Some(group) = group {
@@ -254,7 +284,12 @@ impl FreyaDOM {
                 let layout_node = layout.get(*node_id);
 
                 if let Some((node, layout_node)) = node.zip(layout_node) {
-                    measure_paragraph(&node, layout_node, &text_measurement, scale_factor);
+                    ParagraphElement::measure_paragraph(
+                        &node,
+                        layout_node,
+                        &text_measurement,
+                        scale_factor,
+                    );
                 }
             }
         }

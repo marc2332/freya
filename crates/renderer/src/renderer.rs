@@ -1,7 +1,4 @@
-use std::{
-    num::NonZeroU32,
-    path::PathBuf,
-};
+use std::path::PathBuf;
 
 use dioxus_core::VirtualDom;
 use freya_core::{
@@ -50,6 +47,7 @@ use winit::{
 
 use crate::{
     devtools::Devtools,
+    size::WinitSize,
     window_state::{
         create_surface,
         CreatedState,
@@ -195,6 +193,11 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             EventMessage::RequestRerender => {
                 window.request_redraw();
             }
+            EventMessage::InvalidateArea(area) => {
+                let fdom = app.sdom.get();
+                let mut compositor_dirty_area = fdom.compositor_dirty_area();
+                compositor_dirty_area.unite_or_insert(&area)
+            }
             EventMessage::RemeasureTextGroup(text_id) => {
                 app.measure_text_group(text_id, scale_factor);
             }
@@ -245,11 +248,12 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
         let CreatedState {
             gr_context,
             surface,
+            dirty_surface,
             gl_surface,
             gl_context,
             window,
-            app,
             window_config,
+            app,
             fb_info,
             num_samples,
             stencil_size,
@@ -292,8 +296,15 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     app.init_accessibility_on_next_render = false;
                 }
 
-                surface.canvas().clear(window_config.background);
-                app.render(&self.hovered_node, surface.canvas(), window);
+                gl_context.make_current(gl_surface).unwrap();
+                app.render(
+                    &self.hovered_node,
+                    window_config.background,
+                    surface,
+                    dirty_surface,
+                    window,
+                );
+
                 app.event_loop_tick();
                 window.pre_present_notify();
                 gr_context.flush_and_submit();
@@ -423,11 +434,9 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 *surface =
                     create_surface(window, *fb_info, gr_context, *num_samples, *stencil_size);
 
-                gl_surface.resize(
-                    gl_context,
-                    NonZeroU32::new(size.width.max(1)).unwrap(),
-                    NonZeroU32::new(size.height.max(1)).unwrap(),
-                );
+                *dirty_surface = surface.new_surface_with_dimensions(size.to_skia()).unwrap();
+
+                gl_surface.resize(gl_context, size.as_gl_width(), size.as_gl_height());
 
                 window.request_redraw();
 

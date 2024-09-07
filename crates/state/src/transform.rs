@@ -1,3 +1,9 @@
+use std::sync::{
+    Arc,
+    Mutex,
+};
+
+use freya_common::CompositorDirtyNodes;
 use freya_native_core::{
     exports::shipyard::Component,
     node_ref::NodeView,
@@ -8,6 +14,7 @@ use freya_native_core::{
         NodeMaskBuilder,
         State,
     },
+    NodeId,
     SendAnyMap,
 };
 use freya_native_core_macro::partial_derive_state;
@@ -20,7 +27,9 @@ use crate::{
 
 #[derive(Default, Clone, Debug, Component, PartialEq)]
 pub struct TransformState {
-    pub rotate_degs: Option<f32>,
+    pub node_id: NodeId,
+    pub opacities: Vec<f32>,
+    pub rotations: Vec<(NodeId, f32)>,
 }
 
 impl ParseAttribute for TransformState {
@@ -33,13 +42,18 @@ impl ParseAttribute for TransformState {
             AttributeName::Rotate => {
                 if let Some(value) = attr.value.as_text() {
                     if value.ends_with("deg") {
-                        self.rotate_degs = Some(
-                            value
-                                .replacen("deg", "", 1)
-                                .parse::<f32>()
-                                .map_err(|_| ParseError)?,
-                        )
+                        let rotation = value
+                            .replacen("deg", "", 1)
+                            .parse::<f32>()
+                            .map_err(|_| ParseError)?;
+                        self.rotations.push((self.node_id, rotation));
                     }
+                }
+            }
+            AttributeName::Opacity => {
+                if let Some(value) = attr.value.as_text() {
+                    let opacity = value.parse::<f32>().map_err(|_| ParseError)?;
+                    self.opacities.push(opacity)
                 }
             }
             _ => {}
@@ -51,24 +65,33 @@ impl ParseAttribute for TransformState {
 
 #[partial_derive_state]
 impl State<CustomAttributeValues> for TransformState {
-    type ParentDependencies = ();
+    type ParentDependencies = (Self,);
 
     type ChildDependencies = ();
 
     type NodeDependencies = ();
 
     const NODE_MASK: NodeMaskBuilder<'static> =
-        NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[AttributeName::Rotate]));
+        NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
+            AttributeName::Rotate,
+            AttributeName::Opacity,
+        ]));
 
     fn update<'a>(
         &mut self,
         node_view: NodeView<CustomAttributeValues>,
         _node: <Self::NodeDependencies as Dependancy>::ElementBorrowed<'a>,
-        _parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
+        parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
-        _context: &SendAnyMap,
+        context: &SendAnyMap,
     ) -> bool {
-        let mut transform_state = TransformState::default();
+        let compositor_dirty_nodes = context.get::<Arc<Mutex<CompositorDirtyNodes>>>().unwrap();
+        let inherited_transform = parent.map(|(p,)| p.clone()).unwrap_or_default();
+
+        let mut transform_state = TransformState {
+            node_id: node_view.node_id(),
+            ..inherited_transform
+        };
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
@@ -77,6 +100,14 @@ impl State<CustomAttributeValues> for TransformState {
         }
 
         let changed = transform_state != *self;
+
+        if changed {
+            compositor_dirty_nodes
+                .lock()
+                .unwrap()
+                .invalidate(node_view.node_id());
+        }
+
         *self = transform_state;
         changed
     }
