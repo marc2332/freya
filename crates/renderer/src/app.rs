@@ -59,6 +59,7 @@ pub struct Application {
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) plugins: PluginsManager,
     pub(crate) measure_layout_on_next_render: bool,
+    pub(crate) init_accessibility_on_next_render: bool,
     pub(crate) default_fonts: Vec<String>,
     pub(crate) queued_focus_node: Option<AccessibilityId>,
 }
@@ -118,6 +119,7 @@ impl Application {
             ticker_sender: broadcast::channel(5).0,
             plugins,
             measure_layout_on_next_render: false,
+            init_accessibility_on_next_render: false,
             default_fonts,
             queued_focus_node: None,
         };
@@ -243,20 +245,29 @@ impl Application {
         )
     }
 
-    /// Create the Accessibility tree
-    /// This will iterater the DOM ordered by layers (top to bottom)
-    /// and add every element with an accessibility ID to the Accessibility Tree
+    pub fn init_accessibility(&mut self, window: &Window) {
+        {
+            let fdom = self.sdom.get();
+            let rdom = fdom.rdom();
+            let layout = fdom.layout();
+            let mut dirty_accessibility_tree = fdom.dirty_accessibility_tree();
+            self.accessibility
+                .init_accessibility(rdom, &layout, &mut dirty_accessibility_tree);
+        }
+
+        if let Some(node_id) = self.queued_focus_node.take() {
+            self.focus_node(node_id, window)
+        }
+    }
+
     pub fn process_accessibility(&mut self, window: &Window) {
         {
-            let fdom = &self.sdom.get();
-            let layout = fdom.layout();
+            let fdom = self.sdom.get();
             let rdom = fdom.rdom();
-
-            process_accessibility(
-                &layout,
-                rdom,
-                &mut self.accessibility.accessibility_manager().lock().unwrap(),
-            );
+            let layout = fdom.layout();
+            let mut dirty_accessibility_tree = fdom.dirty_accessibility_tree();
+            self.accessibility
+                .process_updates(rdom, &layout, &mut dirty_accessibility_tree);
         }
 
         if let Some(node_id) = self.queued_focus_node.take() {
@@ -293,9 +304,6 @@ impl Application {
             window.scale_factor() as f32,
         );
 
-        self.accessibility
-            .render_accessibility(window.title().as_str());
-
         self.plugins.send(
             PluginEvent::AfterRender {
                 canvas,
@@ -309,6 +317,7 @@ impl Application {
     /// Resize the Window
     pub fn resize(&mut self, window: &Window) {
         self.measure_layout_on_next_render = true;
+        self.init_accessibility_on_next_render = true;
         self.sdom.get().layout().reset();
         self.platform_sender.send_modify(|state| {
             state.information = PlatformInformation::from_winit(window);
@@ -323,17 +332,22 @@ impl Application {
     }
 
     pub fn focus_node(&mut self, node_id: AccessibilityId, window: &Window) {
+        let fdom = self.sdom.get();
+        let layout = fdom.layout();
         self.accessibility
-            .focus_node(node_id, &self.platform_sender, window)
+            .focus_node(node_id, &self.platform_sender, window, &layout)
     }
 
     pub fn queue_focus_node(&mut self, node_id: AccessibilityId) {
         self.queued_focus_node = Some(node_id);
     }
 
-    pub fn focus_next_node(&mut self, direction: AccessibilityFocusDirection, window: &Window) {
+    pub fn focus_next_node(&mut self, direction: AccessibilityFocusStrategy, window: &Window) {
+        let fdom = self.sdom.get();
+        let rdom = fdom.rdom();
+        let layout = fdom.layout();
         self.accessibility
-            .focus_next_node(direction, &self.platform_sender, window)
+            .focus_next_node(rdom, direction, &self.platform_sender, window, &layout);
     }
 
     /// Notify components subscribed to event loop ticks.
@@ -350,8 +364,6 @@ impl Application {
 
     /// Measure the layout
     pub fn process_layout(&mut self, inner_size: PhysicalSize<u32>, scale_factor: f64) {
-        self.accessibility.clear_accessibility();
-
         {
             let fdom = self.sdom.get();
 

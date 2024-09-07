@@ -6,6 +6,7 @@ use std::sync::{
 
 use dioxus_core::VirtualDom;
 use freya_common::{
+    DirtyAccessibilityTree,
     Layers,
     ParagraphElements,
 };
@@ -121,6 +122,7 @@ pub struct FreyaDOM {
     torin: Arc<Mutex<Torin<NodeId>>>,
     paragraphs: ParagraphElements,
     layers: Layers,
+    dirty_accessibility_tree: Arc<Mutex<DirtyAccessibilityTree>>,
 }
 
 impl Default for FreyaDOM {
@@ -143,6 +145,7 @@ impl Default for FreyaDOM {
             torin: Arc::new(Mutex::new(Torin::new())),
             paragraphs: ParagraphElements::default(),
             layers: Layers::default(),
+            dirty_accessibility_tree: Arc::default(),
         }
     }
 }
@@ -160,6 +163,10 @@ impl FreyaDOM {
         &self.paragraphs
     }
 
+    pub fn dirty_accessibility_tree(&self) -> MutexGuard<DirtyAccessibilityTree> {
+        self.dirty_accessibility_tree.lock().unwrap()
+    }
+
     /// Create the initial DOM from the given Mutations
     pub fn init_dom(&mut self, vdom: &mut VirtualDom, scale_factor: f32) {
         // Build the RealDOM
@@ -171,12 +178,15 @@ impl FreyaDOM {
             layers: &self.layers,
             paragraphs: &self.paragraphs,
             scale_factor,
+            dirty_accessibility_tree: &mut self.dirty_accessibility_tree.lock().unwrap(),
         });
 
         let mut ctx = SendAnyMap::new();
         ctx.insert(self.torin.clone());
         ctx.insert(self.layers.clone());
         ctx.insert(self.paragraphs.clone());
+        ctx.insert(self.dirty_accessibility_tree.clone());
+        ctx.insert(self.rdom.root_id());
 
         self.rdom.update_state(ctx);
     }
@@ -192,6 +202,7 @@ impl FreyaDOM {
             layers: &self.layers,
             paragraphs: &self.paragraphs,
             scale_factor,
+            dirty_accessibility_tree: &mut self.dirty_accessibility_tree.lock().unwrap(),
         });
 
         // Update the Nodes states
@@ -199,6 +210,8 @@ impl FreyaDOM {
         ctx.insert(self.torin.clone());
         ctx.insert(self.layers.clone());
         ctx.insert(self.paragraphs.clone());
+        ctx.insert(self.dirty_accessibility_tree.clone());
+        ctx.insert(self.rdom.root_id());
 
         // Update the Node's states
         let (_, diff) = self.rdom.update_state(ctx);

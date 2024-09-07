@@ -3,6 +3,7 @@ use dioxus_core::{
     WriteMutations,
 };
 use freya_common::{
+    DirtyAccessibilityTree,
     Layers,
     ParagraphElements,
 };
@@ -15,13 +16,17 @@ use freya_native_core::{
     NodeId,
 };
 use freya_node_state::{
+    AccessibilityNodeState,
     CursorState,
     CustomAttributeValues,
     LayerState,
 };
 use torin::torin::Torin;
 
-use crate::prelude::DioxusDOMAdapter;
+use crate::prelude::{
+    DioxusDOMAdapter,
+    NodeAccessibility,
+};
 
 pub struct MutationsWriter<'a> {
     pub native_writer: DioxusNativeCoreMutationWriter<'a, CustomAttributeValues>,
@@ -29,6 +34,7 @@ pub struct MutationsWriter<'a> {
     pub layers: &'a Layers,
     pub paragraphs: &'a ParagraphElements,
     pub scale_factor: f32,
+    pub dirty_accessibility_tree: &'a mut DirtyAccessibilityTree,
 }
 
 impl<'a> MutationsWriter<'a> {
@@ -77,6 +83,16 @@ impl<'a> MutationsWriter<'a> {
                 if let Some(cursor_ref) = cursor_state.cursor_ref.as_ref() {
                     self.paragraphs
                         .remove_paragraph(node_id, &cursor_ref.text_id);
+                }
+
+                // Remove from the accessibility tree
+                if node.get_accessibility_id().is_some() {
+                    let node_accessibility_state = node.get::<AccessibilityNodeState>().unwrap();
+                    let closed_accessibility_node_id = node_accessibility_state
+                        .closest_accessibility_node_id
+                        .unwrap_or(self.native_writer.rdom.root_id());
+                    self.dirty_accessibility_tree
+                        .remove(node.id(), closed_accessibility_node_id);
                 }
             }
         }
