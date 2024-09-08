@@ -4,16 +4,38 @@ use std::sync::{
 };
 
 use accesskit::{
-    Action, Affine, Node, NodeBuilder, NodeId as AccessibilityId, Rect, Role, TextDirection, Tree, TreeUpdate
+    Action,
+    Affine,
+    Node,
+    NodeBuilder,
+    NodeId as AccessibilityId,
+    Rect,
+    Role,
+    TextDirection,
+    Tree,
+    TreeUpdate,
 };
 use freya_common::AccessibilityDirtyNodes;
+use freya_engine::prelude::{
+    Color,
+    TextAlign,
+    TextDecoration,
+    TextDecorationStyle,
+};
 use freya_native_core::{
-    node::NodeType, prelude::NodeImmutable, tags::TagName, NodeId
+    node::NodeType,
+    prelude::NodeImmutable,
+    tags::TagName,
+    NodeId,
 };
 use freya_node_state::{
-    AccessibilityNodeState, Fill, FontStyleState, OverflowMode, StyleState, TransformState
+    AccessibilityNodeState,
+    Fill,
+    FontStyleState,
+    OverflowMode,
+    StyleState,
+    TransformState,
 };
-use freya_engine::prelude::{Color, TextAlign, TextDecoration, TextDecorationStyle};
 use rustc_hash::{
     FxHashMap,
     FxHashSet,
@@ -279,11 +301,11 @@ impl AccessibilityTree {
         let node_type = node_ref.node_type();
 
         let mut builder = NodeBuilder::new(Role::default());
-        
+
         // Set children
         let children = node_ref.get_accessibility_children();
         builder.set_children(children);
-        
+
         // Set the area
         let area = layout_node.area.to_f64();
         builder.set_bounds(Rect {
@@ -292,7 +314,7 @@ impl AccessibilityTree {
             y0: area.min_y(),
             y1: area.max_y(),
         });
-        
+
         // Set focusable action
         // This will cause assistive technology to offer the user an option
         // to focus the current element if it supports it.
@@ -301,7 +323,11 @@ impl AccessibilityTree {
         }
 
         // Rotation transform
-        if let Some((_, rotation)) = transform_state.rotations.iter().find(|(id, _)| id == &node_ref.id()) {
+        if let Some((_, rotation)) = transform_state
+            .rotations
+            .iter()
+            .find(|(id, _)| id == &node_ref.id())
+        {
             builder.set_transform(Affine::rotate(rotation.to_radians() as _));
         }
 
@@ -435,5 +461,5 @@ fn skia_decoration_style_to_accesskit(style: TextDecorationStyle) -> accesskit::
 fn skia_color_to_rgba_u32(color: Color) -> u32 {
     ((color.a() as u32) << 24)
         | ((color.b() as u32) << 16)
-        | ((color.g() as u32) << 8) + (color.r() as u32)
+        | (((color.g() as u32) << 8) + (color.r() as u32))
 }
