@@ -18,10 +18,10 @@ use accesskit::{
 use freya_common::AccessibilityDirtyNodes;
 use freya_engine::prelude::{
     Color,
+    Slant,
     TextAlign,
     TextDecoration,
     TextDecorationStyle,
-    Slant,
 };
 use freya_native_core::{
     node::NodeType,
