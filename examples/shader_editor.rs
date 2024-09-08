@@ -173,6 +173,7 @@ fn ShaderEditor(editable: UseEditable) -> Element {
 #[component]
 fn ShaderView(editable: UseEditable) -> Element {
     let platform = use_platform();
+    let (reference, size) = use_node_signal();
 
     use_hook(|| {
         let mut ticker = platform.new_ticker();
@@ -180,6 +181,7 @@ fn ShaderView(editable: UseEditable) -> Element {
         spawn(async move {
             loop {
                 ticker.tick().await;
+                platform.invalidate_drawing_area(size.peek().area);
                 platform.request_animation_frame();
             }
         });
@@ -243,10 +245,11 @@ fn ShaderView(editable: UseEditable) -> Element {
     });
 
     rsx!(rect {
+        canvas_reference: canvas.attribute(),
+        reference,
+        background: "black",
         width: "fill",
         height: "fill",
-        background: "black",
-        canvas_reference: canvas.attribute()
     })
 }
 

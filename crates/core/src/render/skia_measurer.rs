@@ -28,7 +28,6 @@ use torin::prelude::{
     LayoutMeasurer,
     LayoutNode,
     Node,
-    Point2D,
     Size2D,
 };
 
@@ -70,20 +69,21 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
 
         match &*node_type {
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Label => {
-                let label = create_label(
+                let (label, paragraph_font_height) = create_label(
                     &node,
                     area_size,
                     self.font_collection,
                     self.default_fonts,
                     self.scale_factor,
                 );
+
                 let res = Size2D::new(label.longest_line(), label.height());
                 let mut map = SendAnyMap::new();
-                map.insert(CachedParagraph(label));
+                map.insert(CachedParagraph(label, paragraph_font_height));
                 Some((res, Arc::new(map)))
             }
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Paragraph => {
-                let paragraph = create_paragraph(
+                let (paragraph, paragraph_font_height) = create_paragraph(
                     &node,
                     area_size,
                     self.font_collection,
@@ -93,7 +93,7 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                 );
                 let res = Size2D::new(paragraph.longest_line(), paragraph.height());
                 let mut map = SendAnyMap::new();
-                map.insert(CachedParagraph(paragraph));
+                map.insert(CachedParagraph(paragraph, paragraph_font_height));
                 Some((res, Arc::new(map)))
             }
             _ => None,
@@ -131,19 +131,20 @@ pub fn create_label(
     font_collection: &FontCollection,
     default_font_family: &[String],
     scale_factor: f32,
-) -> Paragraph {
+) -> (Paragraph, f32) {
     let font_style = &*node.get::<FontStyleState>().unwrap();
 
     let mut paragraph_style = ParagraphStyle::default();
     paragraph_style.set_text_align(font_style.text_align);
     paragraph_style.set_max_lines(font_style.max_lines);
     paragraph_style.set_replace_tab_characters(true);
-    let text_style = font_style.text_style(default_font_family, scale_factor);
-    paragraph_style.set_text_style(&text_style);
 
     if let Some(ellipsis) = font_style.text_overflow.get_ellipsis() {
         paragraph_style.set_ellipsis(ellipsis);
     }
+
+    let text_style = font_style.text_style(default_font_family, scale_factor, true);
+    paragraph_style.set_text_style(&text_style);
 
     let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
 
@@ -155,7 +156,17 @@ pub fn create_label(
 
     let mut paragraph = paragraph_builder.build();
     paragraph.layout(area_size.width + 1.0);
-    paragraph
+
+    // Measure the actual text height, ignoring the line height
+    let mut height = paragraph.height();
+    for line in paragraph.get_line_metrics() {
+        for (_, text) in line.get_style_metrics(0..1) {
+            let text_height = -(text.font_metrics.ascent - text.font_metrics.descent);
+            height = height.max(text_height);
+        }
+    }
+
+    (paragraph, height)
 }
 
 /// Align the Y axis of the highlights and cursor of a paragraph
@@ -165,26 +176,28 @@ pub fn align_highlights_and_cursor_paragraph(
     paragraph: &Paragraph,
     cursor_rect: &TextBox,
     width: Option<f32>,
-) -> (Point2D, Point2D) {
+) -> Rect {
     let cursor_state = node.get::<CursorState>().unwrap();
 
-    let x = area.min_x() + cursor_rect.rect.left;
-    let x2 = x + width.unwrap_or(cursor_rect.rect.right - cursor_rect.rect.left);
+    let left = area.min_x() + cursor_rect.rect.left;
+    let right = left + width.unwrap_or(cursor_rect.rect.right - cursor_rect.rect.left);
 
     match cursor_state.highlight_mode {
         HighlightMode::Fit => {
-            let y = area.min_y()
+            let top = (area.min_y()
                 + align_main_align_paragraph(node, area, paragraph)
-                + cursor_rect.rect.top;
-            let y2 = y + (cursor_rect.rect.bottom - cursor_rect.rect.top);
+                + cursor_rect.rect.top)
+                .clamp(area.min_y(), area.max_y());
+            let bottom = (top + (cursor_rect.rect.bottom - cursor_rect.rect.top))
+                .clamp(area.min_y(), area.max_y());
 
-            (Point2D::new(x, y), Point2D::new(x2, y2))
+            Rect::new(left, top, right, bottom)
         }
         HighlightMode::Expanded => {
-            let y = area.min_y();
-            let y2 = area.max_y();
+            let top = area.min_y();
+            let bottom = area.max_y();
 
-            (Point2D::new(x, y), Point2D::new(x2, y2))
+            Rect::new(left, top, right, bottom)
         }
     }
 }
@@ -211,7 +224,7 @@ pub fn create_paragraph(
     is_rendering: bool,
     default_font_family: &[String],
     scale_factor: f32,
-) -> Paragraph {
+) -> (Paragraph, f32) {
     let font_style = &*node.get::<FontStyleState>().unwrap();
 
     let mut paragraph_style = ParagraphStyle::default();
@@ -225,24 +238,27 @@ pub fn create_paragraph(
 
     let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
 
-    let text_style = font_style.text_style(default_font_family, scale_factor);
+    let text_style = font_style.text_style(default_font_family, scale_factor, true);
     paragraph_builder.push_style(&text_style);
 
-    for text_span in node.children() {
-        match &*text_span.node_type() {
-            NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Text => {
-                let text_nodes = text_span.children();
-                let text_node = *text_nodes.first().unwrap();
-                let text_node_type = &*text_node.node_type();
-                let font_style = text_span.get::<FontStyleState>().unwrap();
-                let text_style = font_style.text_style(default_font_family, scale_factor);
-                paragraph_builder.push_style(&text_style);
+    let node_children = node.children();
+    let node_children_len = node_children.len();
 
-                if let NodeType::Text(text) = text_node_type {
-                    paragraph_builder.add_text(text);
-                }
+    for text_span in node_children {
+        if let NodeType::Element(ElementNode {
+            tag: TagName::Text, ..
+        }) = &*text_span.node_type()
+        {
+            let text_nodes = text_span.children();
+            let text_node = *text_nodes.first().unwrap();
+            let text_node_type = &*text_node.node_type();
+            let font_style = text_span.get::<FontStyleState>().unwrap();
+            let text_style = font_style.text_style(default_font_family, scale_factor, true);
+            paragraph_builder.push_style(&text_style);
+
+            if let NodeType::Text(text) = text_node_type {
+                paragraph_builder.add_text(text);
             }
-            _ => {}
         }
     }
 
@@ -253,5 +269,15 @@ pub fn create_paragraph(
 
     let mut paragraph = paragraph_builder.build();
     paragraph.layout(area_size.width + 1.0);
-    paragraph
+
+    // Measure the actual text height, ignoring the line height
+    let mut height = paragraph.height();
+    for line in paragraph.get_line_metrics() {
+        for (_, text) in line.get_style_metrics(0..node_children_len) {
+            let text_height = -(text.font_metrics.ascent - text.font_metrics.descent);
+            height = height.max(text_height);
+        }
+    }
+
+    (paragraph, height)
 }

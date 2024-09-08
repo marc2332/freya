@@ -60,7 +60,7 @@ pub struct TestingHandler {
     pub(crate) platform_receiver: NativePlatformReceiver,
     pub(crate) font_collection: FontCollection,
     pub(crate) font_mgr: FontMgr,
-    pub(crate) accessibility_manager: SharedAccessibilityManager,
+    pub(crate) accessibility_tree: SharedAccessibilityTree,
     pub(crate) config: TestingConfig,
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) cursor_icon: CursorIcon,
@@ -121,34 +121,37 @@ impl TestingHandler {
                         }
                     }
                     EventMessage::FocusAccessibilityNode(node_id) => {
-                        let tree = self
-                            .accessibility_manager
+                        let res = self
+                            .accessibility_tree
                             .lock()
                             .unwrap()
                             .set_focus_with_update(node_id);
-
-                        if let Some(tree) = tree {
+                        if let Some((tree, _)) = res {
                             self.platform_sender.send_modify(|state| {
                                 state.focused_id = tree.focus;
                             });
                         }
                     }
                     EventMessage::FocusNextAccessibilityNode => {
-                        let tree = self
-                            .accessibility_manager
+                        let fdom = self.utils.sdom.get();
+                        let rdom = fdom.rdom();
+                        let (tree, _) = self
+                            .accessibility_tree
                             .lock()
                             .unwrap()
-                            .set_focus_on_next_node(AccessibilityFocusDirection::Forward);
+                            .set_focus_on_next_node(AccessibilityFocusStrategy::Forward, rdom);
                         self.platform_sender.send_modify(|state| {
                             state.focused_id = tree.focus;
                         });
                     }
                     EventMessage::FocusPrevAccessibilityNode => {
-                        let tree = self
-                            .accessibility_manager
+                        let fdom = self.utils.sdom.get();
+                        let rdom = fdom.rdom();
+                        let (tree, _) = self
+                            .accessibility_tree
                             .lock()
                             .unwrap()
-                            .set_focus_on_next_node(AccessibilityFocusDirection::Backward);
+                            .set_focus_on_next_node(AccessibilityFocusStrategy::Backward, rdom);
                         self.platform_sender.send_modify(|state| {
                             state.focused_id = tree.focus;
                         });
@@ -199,9 +202,6 @@ impl TestingHandler {
 
     /// Wait for layout and events to be processed
     pub fn wait_for_work(&mut self, size: Size2D) {
-        // Clear cached results
-        self.utils.sdom().get_mut().layout().reset();
-
         // Measure layout
         process_layout(
             &self.utils.sdom().get(),
@@ -210,17 +210,21 @@ impl TestingHandler {
                 size,
             },
             &mut self.font_collection,
-            SCALE_FACTOR,
+            SCALE_FACTOR as f32,
             &default_fonts(),
         );
 
         let fdom = &self.utils.sdom().get_mut();
-
-        process_accessibility(
-            &fdom.layout(),
-            fdom.rdom(),
-            &mut self.accessibility_manager.lock().unwrap(),
-        );
+        {
+            let rdom = fdom.rdom();
+            let layout = fdom.layout();
+            let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
+            self.accessibility_tree.lock().unwrap().process_updates(
+                rdom,
+                &layout,
+                &mut dirty_accessibility_tree,
+            );
+        }
 
         process_events(
             fdom,
@@ -259,7 +263,7 @@ impl TestingHandler {
 
     /// Get the current [AccessibilityId].
     pub fn focus_id(&self) -> AccessibilityId {
-        self.accessibility_manager.lock().unwrap().focused_id
+        self.accessibility_tree.lock().unwrap().focused_id
     }
 
     /// Resize the simulated canvas.
@@ -267,7 +271,8 @@ impl TestingHandler {
         self.config.size = size;
         self.platform_sender.send_modify(|state| {
             state.information.viewport_size = size;
-        })
+        });
+        self.utils.sdom().get_mut().layout().reset();
     }
 
     /// Get the current [CursorIcon].
@@ -285,28 +290,39 @@ impl TestingHandler {
         let fdom = self.utils.sdom.get();
         let (width, height) = self.config.size.to_i32().to_tuple();
 
-        // Create the canvas
+        // Create the main surface
         let mut surface =
             raster_n32_premul((width, height)).expect("Failed to create the surface.");
         surface.canvas().clear(Color::WHITE);
 
-        let mut skia_renderer = SkiaRenderer {
-            canvas_area: Area::from_size((width as f32, height as f32).into()),
-            canvas: surface.canvas(),
-            font_collection: &mut self.font_collection,
-            font_manager: &self.font_mgr,
-            matrices: Vec::default(),
-            opacities: Vec::default(),
-            default_fonts: &["Fira Sans".to_string()],
-            scale_factor: SCALE_FACTOR as f32,
-        };
+        // Create the dirty surface
+        let mut dirty_surface = surface
+            .new_surface_with_dimensions((width, height))
+            .expect("Failed to create the dirty surface.");
+        dirty_surface.canvas().clear(Color::WHITE);
+
+        let mut compositor = Compositor::default();
 
         // Render to the canvas
-        process_render(&fdom, |fdom, node_id, layout_node, layout| {
-            if let Some(dioxus_node) = fdom.rdom().get(*node_id) {
-                skia_renderer.render(fdom.rdom(), layout_node, &dioxus_node, false, layout);
-            }
-        });
+        let mut render_pipeline = RenderPipeline {
+            canvas_area: Area::from_size((width as f32, height as f32).into()),
+            rdom: fdom.rdom(),
+            compositor_dirty_area: &mut fdom.compositor_dirty_area(),
+            compositor_dirty_nodes: &mut fdom.compositor_dirty_nodes(),
+            compositor_cache: &mut fdom.compositor_cache(),
+            layers: &mut fdom.layers(),
+            layout: &mut fdom.layout(),
+            background: Color::WHITE,
+            surface: &mut surface,
+            dirty_surface: &mut dirty_surface,
+            compositor: &mut compositor,
+            scale_factor: SCALE_FACTOR as f32,
+            selected_node: None,
+            font_collection: &mut self.font_collection,
+            font_manager: &self.font_mgr,
+            default_fonts: &["Fira Sans".to_string()],
+        };
+        render_pipeline.run();
 
         // Capture snapshot
         let image = surface.image_snapshot();
