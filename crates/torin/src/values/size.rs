@@ -196,6 +196,7 @@ impl std::fmt::Display for DynamicCalculation {
     }
 }
 
+/// [Operator-precedence parser](https://en.wikipedia.org/wiki/Operator-precedence_parser#Precedence_climbing_method)
 struct DynamicCalculationEvaluator<'a> {
     calcs: Iter<'a, DynamicCalculation>,
     parent_value: f32,
@@ -212,39 +213,63 @@ impl<'a> DynamicCalculationEvaluator<'a> {
     }
 
     pub fn evaluate(&mut self) -> Option<f32> {
-        self.current = self.calcs.next();
-        self.expr(0)
+        // Parse and evaluate the expression
+        let value = self.parse_expression(0);
+
+        // Return the result if there are no more tokens
+        match self.current {
+            Some(_) => None,
+            None => value,
+        }
     }
 
-    pub fn expr(&mut self, precedence: usize) -> Option<f32> {
-        let mut lhs = self.term()?;
+    /// Parse and evaluate the expression with operator precedence and following grammar:
+    /// ```ebnf
+    ///     expression = value, { operator, value } ;
+    ///     operator   = "+" | "-" | "*" | "/" ;
+    /// ```
+    fn parse_expression(&mut self, min_precedence: usize) -> Option<f32> {
+        // Parse left-hand side value
+        self.current = self.calcs.next();
+        let mut lhs = self.parse_value()?;
 
-        while let Some(p) = self.operator_precedence() {
-            if p < precedence {
+        while let Some(operator_precedence) = self.operator_precedence() {
+            // Return if minimal precedence is reached.
+            if operator_precedence < min_precedence {
                 return Some(lhs);
             }
 
-            let op = self.current?;
-            self.current = self.calcs.next();
-            let rhs = self.expr(p + 1)?;
+            // Save operator to apply after parsing right-hand side value.
+            let operator = self.current?;
 
-            match op {
+            // Parse right-hand side value.
+            //
+            // Next precedence is the current precedence + 1
+            // because all operators are left associative.
+            let rhs = self.parse_expression(operator_precedence + 1)?;
+
+            // Apply operator
+            match operator {
                 DynamicCalculation::Add => lhs += rhs,
                 DynamicCalculation::Sub => lhs -= rhs,
                 DynamicCalculation::Mul => lhs *= rhs,
                 DynamicCalculation::Div => lhs /= rhs,
-                _ => return None,
+                // Precedence will return None for other tokens
+                // and loop will break if it's not an operator
+                _ => unreachable!(),
             }
-        }
-
-        if self.current.is_some() {
-            return None;
         }
 
         Some(lhs)
     }
 
-    pub fn term(&mut self) -> Option<f32> {
+    /// Parse and evaluate the value with the following grammar:
+    /// ```ebnf
+    ///     value      = percentage | pixels ;
+    ///     percentage = number, "%" ;
+    ///     pixels     = number ;
+    /// ```
+    fn parse_value(&mut self) -> Option<f32> {
         match self.current? {
             DynamicCalculation::Percentage(value) => {
                 self.current = self.calcs.next();
@@ -258,7 +283,8 @@ impl<'a> DynamicCalculationEvaluator<'a> {
         }
     }
 
-    pub fn operator_precedence(&self) -> Option<usize> {
+    /// Get the precedence of the operator if current token is an operator or None otherwise.
+    fn operator_precedence(&self) -> Option<usize> {
         match self.current? {
             DynamicCalculation::Add | DynamicCalculation::Sub => Some(1),
             DynamicCalculation::Mul | DynamicCalculation::Div => Some(2),
