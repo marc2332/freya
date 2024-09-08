@@ -300,8 +300,6 @@ impl VulkanDriver {
         )
         .expect("Could not create Skia surface");
 
-        skia_surface.canvas().clear(config.window_config.background);
-
         gr_context.flush_and_submit();
 
         let driver = VulkanDriver {
