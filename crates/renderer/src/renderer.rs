@@ -280,8 +280,13 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     app.measure_layout_on_next_render = false;
                 }
 
+                if app.init_accessibility_on_next_render {
+                    app.init_accessibility(window);
+                    app.init_accessibility_on_next_render = false;
+                }
+
                 graphics_driver.make_current();
-                
+
                 app.render(
                     &self.hovered_node,
                     window_config.background,

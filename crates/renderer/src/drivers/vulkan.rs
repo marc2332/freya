@@ -1,31 +1,82 @@
-use freya_engine::prelude::{
-    backend_render_targets, direct_contexts, wrap_backend_render_target, Alloc, BackendContext,
-    Canvas, ColorType, DirectContext, GetProcOf, ImageLayout, ImageTiling, Surface as SkiaSurface,
-    SurfaceOrigin, VkFormat, VkImageInfo,
-};
-use raw_window_handle::{HasDisplayHandle, HasWindowHandle};
 use std::{
-    cell::{Cell, RefCell},
+    cell::{
+        Cell,
+        RefCell,
+    },
     sync::Arc,
+};
+
+use freya_engine::prelude::{
+    backend_render_targets,
+    direct_contexts,
+    wrap_backend_render_target,
+    Alloc,
+    BackendContext,
+    Canvas,
+    ColorType,
+    DirectContext,
+    GetProcOf,
+    ImageLayout,
+    ImageTiling,
+    Surface as SkiaSurface,
+    SurfaceOrigin,
+    VkFormat,
+    VkImageInfo,
+};
+use raw_window_handle::{
+    HasDisplayHandle,
+    HasWindowHandle,
 };
 use vulkano::{
     device::{
-        physical::PhysicalDeviceType, Device, DeviceCreateInfo, DeviceExtensions, Queue,
-        QueueCreateInfo, QueueFlags,
+        physical::PhysicalDeviceType,
+        Device,
+        DeviceCreateInfo,
+        DeviceExtensions,
+        Queue,
+        QueueCreateInfo,
+        QueueFlags,
     },
-    image::{view::ImageView, Image, ImageUsage},
-    instance::{Instance, InstanceCreateFlags, InstanceCreateInfo, InstanceExtensions},
-    swapchain::{Surface, Swapchain, SwapchainCreateInfo, SwapchainPresentInfo},
-    sync::{self, GpuFuture},
-    Handle, Validated, VulkanError, VulkanLibrary, VulkanObject,
+    image::{
+        view::ImageView,
+        Image,
+        ImageUsage,
+    },
+    instance::{
+        Instance,
+        InstanceCreateFlags,
+        InstanceCreateInfo,
+        InstanceExtensions,
+    },
+    swapchain::{
+        Surface,
+        Swapchain,
+        SwapchainCreateInfo,
+        SwapchainPresentInfo,
+    },
+    sync::{
+        self,
+        GpuFuture,
+    },
+    Handle,
+    Validated,
+    VulkanError,
+    VulkanLibrary,
+    VulkanObject,
 };
 use winit::{
     dpi::PhysicalSize,
     event_loop::ActiveEventLoop,
-    window::{Window, WindowAttributes},
+    window::{
+        Window,
+        WindowAttributes,
+    },
 };
 
-use crate::{size::WinitSize, LaunchConfig};
+use crate::{
+    size::WinitSize,
+    LaunchConfig,
+};
 
 /// Graphics driver using Vulkan.
 pub struct VulkanDriver {
@@ -370,7 +421,10 @@ fn create_surface(
             }),
             _,
         ) => unsafe {
-            use cocoa::{appkit::NSView, base::id as cocoa_id};
+            use cocoa::{
+                appkit::NSView,
+                base::id as cocoa_id,
+            };
             use objc::runtime::YES;
 
             let layer = metal::MetalLayer::new();

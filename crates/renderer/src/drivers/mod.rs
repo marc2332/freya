@@ -1,15 +1,17 @@
 mod gl;
 mod vulkan;
 
-pub use gl::*;
-
 use freya_engine::prelude::Surface as SkiaSurface;
+pub use gl::*;
 use glutin::surface::GlSurface;
 use vulkan::VulkanDriver;
 use winit::{
     dpi::PhysicalSize,
     event_loop::ActiveEventLoop,
-    window::{Window, WindowAttributes},
+    window::{
+        Window,
+        WindowAttributes,
+    },
 };
 
 use crate::LaunchConfig;
