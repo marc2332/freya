@@ -29,6 +29,7 @@ pub fn Sidebar(
     sidebar: Element,
 ) -> Element {
     let SidebarTheme {
+        spacing,
         font_theme,
         background,
     } = use_applied_theme!(&theme, sidebar);
@@ -48,6 +49,7 @@ pub fn Sidebar(
                 ScrollView {
                     theme: theme_with!(ScrollViewTheme {
                         padding: "8".into(),
+                        spacing: spacing,
                     }),
                     {sidebar}
                 }
@@ -74,6 +76,7 @@ pub fn SidebarItem(
     onclick: Option<EventHandler<()>>,
 ) -> Element {
     let SidebarItemTheme {
+        margin,
         hover_background,
         background,
         font_theme,
@@ -113,7 +116,7 @@ pub fn SidebarItem(
     rsx!(
         rect {
             overflow: "clip",
-            margin: "4 0",
+            margin: "{margin}",
             onclick,
             onmouseenter,
             onmouseleave,

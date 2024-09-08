@@ -63,6 +63,7 @@ impl<V: FromAnyValue> NodeType<V> {
         matches!(self, Self::Placeholder)
     }
 
+    #[inline]
     pub fn tag(&self) -> Option<&TagName> {
         match self {
             Self::Element(ElementNode { tag, .. }) => Some(tag),

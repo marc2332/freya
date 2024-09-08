@@ -15,6 +15,7 @@ mod app;
 mod config;
 pub mod devtools;
 mod renderer;
+mod size;
 mod window_state;
 mod winit_waker;
 

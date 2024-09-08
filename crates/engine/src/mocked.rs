@@ -460,6 +460,22 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
+    pub fn set_decoration_type(&mut self, decoration: TextDecoration) {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn set_decoration_mode(&mut self, mode: TextDecorationMode) {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn set_decoration_style(&mut self, style: TextDecorationStyle) {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn set_decoration_color(&mut self, color: impl Into<Color>) {
+        unimplemented!("This is mocked")
+    }
+
     pub fn font_style(&self) -> FontStyle {
         unimplemented!("This is mocked")
     }
@@ -594,8 +610,6 @@ impl TextStyle {
 }
 
 pub struct Typeface;
-
-pub struct FontMetrics;
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum TextBaseline {
@@ -1059,6 +1073,9 @@ impl Canvas {
     }
 }
 
+#[derive(Default)]
+pub struct SamplingOptions;
+
 #[repr(i32)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Default)]
 pub enum RectHeightStyle {
@@ -1096,6 +1113,21 @@ pub enum RectWidthStyle {
 }
 
 pub struct LineMetrics;
+
+impl LineMetrics {
+    pub fn get_style_metrics(&self, range: Range<usize>) -> Vec<(usize, &StyleMetrics)> {
+        unimplemented!("This is mocked")
+    }
+}
+
+pub struct StyleMetrics {
+    pub font_metrics: FontMetrics,
+}
+
+pub struct FontMetrics {
+    pub ascent: f32,
+    pub descent: f32,
+}
 
 pub struct GlyphClusterInfo;
 
@@ -1164,6 +1196,22 @@ impl Rect {
     pub fn new(_left: f32, _top: f32, _right: f32, _bottom: f32) -> Self {
         unimplemented!("This is mocked")
     }
+
+    pub fn x(&self) -> f32 {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn y(&self) -> f32 {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn width(&self) -> f32 {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn height(&self) -> f32 {
+        unimplemented!("This is mocked")
+    }
 }
 
 pub struct Image;
@@ -1220,6 +1268,10 @@ pub struct Path;
 
 impl Path {
     pub fn new() -> Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn bounds(&self) -> &Rect {
         unimplemented!("This is mocked")
     }
 
@@ -1426,6 +1478,28 @@ impl Surface {
         _color_space: impl Into<Option<ColorSpace>>,
         _surface_props: Option<&SurfaceProps>,
     ) -> Option<Self> {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn draw(
+        &self,
+        canvas: &Canvas,
+        offset: impl Into<Point>,
+        sampling: impl Into<SamplingOptions>,
+        paint: Option<&Paint>,
+    ) {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn new_surface_with_dimensions(&mut self, dim: impl Into<ISize>) -> Option<Self> {
+        unimplemented!("This is mocked")
+    }
+}
+
+pub struct ISize;
+
+impl From<(i32, i32)> for ISize {
+    fn from(source: (i32, i32)) -> Self {
         unimplemented!("This is mocked")
     }
 }

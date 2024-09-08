@@ -87,6 +87,8 @@ fn app() -> Element {
                             rect {
                                 key: "{id}",
                                 direction: "horizontal",
+                                width: "0",
+                                height: "0",
                                 rect {
                                     offset_x: "{node.0}",
                                     offset_y: "{node.1}",
@@ -336,7 +338,7 @@ fn Editor() -> Element {
                                         }
                                         paragraph {
                                             height: "100%",
-                                            width: "100%",
+                                            width: "fill",
                                             main_align: "center",
                                             cursor_index: "{character_index}",
                                             cursor_color: "white",

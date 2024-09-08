@@ -110,7 +110,7 @@ pub fn measure_potential_event_listeners(
     let layers = fdom.layers();
 
     // Propagate events from the top to the bottom
-    for (layer, layer_nodes) in sorted(layers.layers().iter()) {
+    for (layer, layer_nodes) in sorted(layers.iter()) {
         for node_id in layer_nodes {
             let layout_node = layout.get(*node_id);
             if let Some(layout_node) = layout_node {
