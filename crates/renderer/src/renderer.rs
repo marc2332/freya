@@ -286,7 +286,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 }
 
                 graphics_driver.make_current();
-                
+
                 app.render(
                     &self.hovered_node,
                     window_config.background,
