@@ -21,6 +21,7 @@ use freya_engine::prelude::{
     TextAlign,
     TextDecoration,
     TextDecorationStyle,
+    Slant,
 };
 use freya_native_core::{
     node::NodeType,
@@ -387,9 +388,8 @@ impl AccessibilityTree {
         builder.set_text_direction(TextDirection::LeftToRight);
 
         // Set italic property for italic/oblique font slants
-        match font_style_state.font_slant as u32 {
-            // Italic | Oblique
-            1 | 2 => builder.set_italic(),
+        match font_style_state.font_slant {
+            Slant::Italic | Slant::Oblique => builder.set_italic(),
             _ => {}
         }
 
