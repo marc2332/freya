@@ -14,6 +14,7 @@ mod accessibility;
 mod app;
 mod config;
 pub mod devtools;
+mod drivers;
 mod renderer;
 mod size;
 mod window_state;
