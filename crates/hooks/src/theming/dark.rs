@@ -12,9 +12,9 @@ pub const DARK_THEME: Theme = Theme {
     },
     slider: SliderTheme {
         background: cow_borrowed!("rgb(60, 60, 60)"),
-        thumb_background: cow_borrowed!("rgb(60, 60, 60)"),
-        thumb_inner_background: cow_borrowed!("rgb(255, 95, 0)"),
-        border_fill: cow_borrowed!("rgb(110, 110, 110)"),
+        thumb_background: cow_borrowed!("rgb(103, 80, 164)"),
+        thumb_inner_background: cow_borrowed!("rgb(202, 193, 227)"),
+        border_fill: cow_borrowed!("rgb(103, 80, 164)"),
     },
     button: ButtonTheme {
         background: cow_borrowed!("rgb(35, 35, 35)"),
@@ -50,8 +50,8 @@ pub const DARK_THEME: Theme = Theme {
         margin: LIGHT_THEME.input.margin,
         background: cow_borrowed!("rgb(60, 60, 60)"),
         thumb_background: cow_borrowed!("rgb(200, 200, 200)"),
-        enabled_background: cow_borrowed!("rgb(255, 95, 0)"),
-        enabled_thumb_background: cow_borrowed!("rgb(234, 221, 255)"),
+        enabled_background: cow_borrowed!("rgb(202, 193, 227)"),
+        enabled_thumb_background: cow_borrowed!("rgb(103, 80, 164)"),
         focus_border_fill: cow_borrowed!("rgb(110, 110, 110)"),
         enabled_focus_border_fill: cow_borrowed!("rgb(170, 170, 170)"),
     },
@@ -105,9 +105,9 @@ pub const DARK_THEME: Theme = Theme {
         highlight_color: cow_borrowed!("rgb(43,106,208)"),
     },
     progress_bar: ProgressBarTheme {
-        color: cow_borrowed!("white"),
+        color: cow_borrowed!("black"),
         background: cow_borrowed!("rgb(60, 60, 60)"),
-        progress_background: cow_borrowed!("rgb(255, 95, 0)"),
+        progress_background: cow_borrowed!("rgb(202, 193, 227)"),
         width: LIGHT_THEME.progress_bar.width,
         height: LIGHT_THEME.progress_bar.height,
     },
@@ -162,12 +162,12 @@ pub const DARK_THEME: Theme = Theme {
     },
     radio: RadioTheme {
         unselected_fill: cow_borrowed!("rgb(245, 245, 245)"),
-        selected_fill: cow_borrowed!("rgbrgb(103, 80, 164)"),
+        selected_fill: cow_borrowed!("rgb(202, 193, 227)"),
     },
     checkbox: CheckboxTheme {
         unselected_fill: cow_borrowed!("rgb(245, 245, 245)"),
-        selected_fill: cow_borrowed!("rgb(103, 80, 164)"),
-        selected_icon_fill: cow_borrowed!("white"),
+        selected_fill: cow_borrowed!("rgb(202, 193, 227)"),
+        selected_icon_fill: cow_borrowed!("rgb(103, 80, 164)"),
     },
     menu_item: MenuItemTheme {
         hover_background: cow_borrowed!("rgb(45, 45, 45)"),
