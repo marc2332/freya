@@ -533,4 +533,121 @@ mod test {
         // Root + First rect + Paragraph
         assert_eq!(painted_nodes, 2);
     }
+
+    #[tokio::test]
+    pub async fn rotated_drawing() {
+        fn compositor_app() -> Element {
+            let mut rotate = use_signal(|| 0);
+
+            rsx!(
+                rect {
+                    height: "50%",
+                    width: "100%",
+                    main_align: "center",
+                    cross_align: "center",
+                    background: "rgb(0, 119, 182)",
+                    color: "white",
+                    shadow: "0 4 20 5 rgb(0, 0, 0, 80)",
+                    label {
+                        rotate: "{rotate}deg",
+                        "Hello"
+                    }
+                    label {
+                        "World"
+                    }
+                }
+                rect {
+                    height: "50%",
+                    width: "100%",
+                    main_align: "center",
+                    cross_align: "center",
+                    direction: "horizontal",
+                    Button {
+                        onclick: move |_| rotate += 1,
+                        label { "Rotate" }
+                    }
+                }
+            )
+        }
+
+        let mut compositor = Compositor::default();
+        let mut utils = launch_test(compositor_app);
+        utils.wait_for_update().await;
+
+        let (layers, rendering_layers, _) = run_compositor(&utils, &mut compositor);
+        // First render is always a full render
+        assert_eq!(layers, rendering_layers);
+
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (275.0, 375.0).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+
+        // Root + First rect + First Label + Second Label
+        assert_eq!(painted_nodes, 4);
+    }
+
+    #[tokio::test]
+    pub async fn rotated_shadow_drawing() {
+        fn compositor_app() -> Element {
+            let mut rotate = use_signal(|| 0);
+
+            rsx!(
+                rect {
+                    height: "50%",
+                    width: "100%",
+                    main_align: "center",
+                    cross_align: "center",
+                    background: "rgb(0, 119, 182)",
+                    color: "white",
+                    shadow: "0 4 20 5 rgb(0, 0, 0, 80)",
+                    label {
+                        rotate: "{rotate}deg",
+                        text_shadow: "0 180 12 rgb(0, 0, 0, 240)",
+                        "Hello"
+                    }
+                    label {
+                        "World"
+                    }
+                }
+                rect {
+                    height: "50%",
+                    width: "100%",
+                    main_align: "center",
+                    cross_align: "center",
+                    direction: "horizontal",
+                    Button {
+                        onclick: move |_| rotate += 1,
+                        label { "Rotate" }
+                    }
+                }
+            )
+        }
+
+        let mut compositor = Compositor::default();
+        let mut utils = launch_test(compositor_app);
+        utils.wait_for_update().await;
+
+        let (layers, rendering_layers, _) = run_compositor(&utils, &mut compositor);
+        // First render is always a full render
+        assert_eq!(layers, rendering_layers);
+
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (275.0, 375.0).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+
+        // Everything
+        assert_eq!(painted_nodes, 7);
+    }
 }

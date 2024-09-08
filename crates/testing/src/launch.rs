@@ -1,12 +1,19 @@
+use std::sync::{
+    Arc,
+    Mutex,
+};
+
 use dioxus_core::{
     fc_to_builder,
     Element,
     VirtualDom,
 };
 use dioxus_core_macro::rsx;
-use freya_common::EventMessage;
 use freya_components::NativeContainer;
-use freya_core::prelude::*;
+use freya_core::prelude::{
+    EventMessage,
+    *,
+};
 use freya_engine::prelude::*;
 use tokio::sync::{
     broadcast,
@@ -61,7 +68,7 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
         config,
         platform_event_emitter,
         platform_event_receiver,
-        accessibility_manager: AccessibilityManager::new(ACCESSIBILITY_ROOT_ID).wrap(),
+        accessibility_tree: Arc::new(Mutex::new(AccessibilityTree::new(ACCESSIBILITY_ROOT_ID))),
         ticker_sender: broadcast::channel(5).0,
         cursor_icon: CursorIcon::default(),
         platform_sender,

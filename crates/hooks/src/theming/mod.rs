@@ -224,6 +224,8 @@ define_theme! {
     %[component]
     pub Dropdown {
         %[cows]
+        width: str,
+        margin: str,
         dropdown_background: str,
         background_button: str,
         hover_background: str,
@@ -294,6 +296,7 @@ define_theme! {
     %[component]
     pub Switch {
         %[cows]
+        margin: str,
         background: str,
         thumb_background: str,
         enabled_background: str,
@@ -322,6 +325,7 @@ define_theme! {
         %[cows]
         height: str,
         width: str,
+        spacing: str,
         padding: str,
     }
 }
@@ -454,6 +458,7 @@ define_theme! {
     %[component]
     pub Sidebar {
         %[cows]
+        spacing: str,
         background: str,
         %[subthemes]
         font_theme: FontTheme,
@@ -464,6 +469,7 @@ define_theme! {
     %[component]
     pub SidebarItem {
         %[cows]
+        margin: str,
         background: str,
         hover_background: str,
         %[subthemes]

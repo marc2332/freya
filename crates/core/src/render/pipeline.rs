@@ -88,7 +88,7 @@ impl RenderPipeline<'_> {
 
         #[cfg(feature = "fade-cached-incremental-areas")]
         {
-            /// Slowly fade into white non-rerendered areas
+            // Slowly fade into white non-rerendered areas
             if self.compositor_dirty_area.is_some() {
                 use freya_engine::prelude::{
                     Paint,

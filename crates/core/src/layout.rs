@@ -5,7 +5,10 @@ use torin::geometry::Area;
 
 use crate::{
     dom::*,
-    prelude::Compositor,
+    prelude::{
+        Compositor,
+        NodeAccessibility,
+    },
     render::SkiaMeasurer,
 };
 
@@ -27,7 +30,7 @@ pub fn process_layout(
         // Finds the best Node from where to start measuring
         layout.find_best_root(&mut dom_adapter);
 
-        // Unite the areas of the invalidated nodes with the dirty area
+        let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
         let mut compositor_dirty_nodes = fdom.compositor_dirty_nodes();
         let mut compositor_dirty_area = fdom.compositor_dirty_area();
         let mut buffer = layout.dirty.iter().copied().collect_vec();
@@ -41,6 +44,11 @@ pub fn process_layout(
 
                 // Continue iterating in the children of this node
                 if let Some(node) = rdom.get(node_id) {
+                    // Mark as invalidated this node as its layout has changed
+                    if node.get_accessibility_id().is_some() {
+                        dirty_accessibility_tree.add_or_update(node_id);
+                    }
+
                     buffer.extend(node.child_ids());
                 }
             }

@@ -57,7 +57,16 @@ impl ElementUtils for LabelElement {
         node_ref: &DioxusNode,
         scale_factor: f32,
     ) -> Area {
-        let area = layout_node.visible_area();
+        let paragraph_font_height = &layout_node
+            .data
+            .as_ref()
+            .unwrap()
+            .get::<CachedParagraph>()
+            .unwrap()
+            .1;
+        let mut area = layout_node.visible_area();
+        area.size.height = area.size.height.max(*paragraph_font_height);
+
         let font_style = node_ref.get::<FontStyleState>().unwrap();
 
         let mut text_shadow_area = area;

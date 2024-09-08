@@ -3,7 +3,6 @@ use std::ops::Mul;
 use freya_common::{
     CachedParagraph,
     CursorLayoutResponse,
-    TextGroupMeasurement,
 };
 use freya_engine::prelude::*;
 use freya_native_core::{
@@ -35,6 +34,7 @@ use crate::{
     prelude::{
         align_highlights_and_cursor_paragraph,
         align_main_align_paragraph,
+        TextGroupMeasurement,
     },
     render::create_paragraph,
 };
@@ -138,7 +138,7 @@ impl ElementUtils for ParagraphElement {
         };
 
         if node_cursor_state.position.is_some() {
-            let paragraph = create_paragraph(
+            let (paragraph, _) = create_paragraph(
                 node_ref,
                 &area.size,
                 font_collection,
@@ -182,7 +182,15 @@ impl ElementUtils for ParagraphElement {
         node_ref: &DioxusNode,
         scale_factor: f32,
     ) -> Area {
+        let paragraph_font_height = &layout_node
+            .data
+            .as_ref()
+            .unwrap()
+            .get::<CachedParagraph>()
+            .unwrap()
+            .1;
         let mut area = layout_node.visible_area();
+        area.size.height = area.size.height.max(*paragraph_font_height);
 
         // Iterate over all the text spans inside this paragraph and if any of them
         // has a shadow at all, apply this shadow to the general paragraph.

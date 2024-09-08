@@ -4,10 +4,6 @@ use dioxus_core::{
     Template,
     VirtualDom,
 };
-use freya_common::{
-    EventMessage,
-    TextGroupMeasurement,
-};
 use freya_core::prelude::*;
 use freya_engine::prelude::*;
 use freya_native_core::prelude::NodeImmutableDioxusExt;
@@ -58,6 +54,7 @@ pub struct Application {
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) plugins: PluginsManager,
     pub(crate) measure_layout_on_next_render: bool,
+    pub(crate) init_accessibility_on_next_render: bool,
     pub(crate) default_fonts: Vec<String>,
     pub(crate) queued_focus_node: Option<AccessibilityId>,
 }
@@ -71,7 +68,7 @@ impl Application {
         devtools: Option<Devtools>,
         window: &Window,
         fonts_config: EmbeddedFonts,
-        mut plugins: PluginsManager,
+        plugins: PluginsManager,
         default_fonts: Vec<String>,
     ) -> Self {
         let accessibility = AccessKitManager::new(window, proxy.clone());
@@ -99,9 +96,7 @@ impl Application {
             scale_factor: window.scale_factor(),
         });
 
-        plugins.send(PluginEvent::WindowCreated(window));
-
-        Self {
+        let mut app = Self {
             sdom,
             vdom,
             events: EventsQueue::new(),
@@ -119,10 +114,18 @@ impl Application {
             ticker_sender: broadcast::channel(5).0,
             plugins,
             measure_layout_on_next_render: false,
+            init_accessibility_on_next_render: false,
             default_fonts,
             queued_focus_node: None,
             compositor: Compositor::default(),
-        }
+        };
+
+        app.plugins.send(
+            PluginEvent::WindowCreated(window),
+            PluginHandle::new(&app.proxy),
+        );
+
+        app
     }
 
     /// Provide the launch state and few other utilities like the EventLoopProxy
@@ -140,24 +143,36 @@ impl Application {
 
     /// Make the first build of the VirtualDOM and sync it with the RealDOM.
     pub fn init_doms<State: 'static>(&mut self, scale_factor: f32, app_state: Option<State>) {
-        self.plugins.send(PluginEvent::StartedUpdatingDOM);
+        self.plugins.send(
+            PluginEvent::StartedUpdatingDOM,
+            PluginHandle::new(&self.proxy),
+        );
 
         self.provide_vdom_contexts(app_state);
 
         self.sdom.get_mut().init_dom(&mut self.vdom, scale_factor);
-        self.plugins.send(PluginEvent::FinishedUpdatingDOM);
+        self.plugins.send(
+            PluginEvent::FinishedUpdatingDOM,
+            PluginHandle::new(&self.proxy),
+        );
     }
 
     /// Update the RealDOM, layout and others with the latest changes from the VirtualDOM
     pub fn render_mutations(&mut self, scale_factor: f32) -> (bool, bool) {
-        self.plugins.send(PluginEvent::StartedUpdatingDOM);
+        self.plugins.send(
+            PluginEvent::StartedUpdatingDOM,
+            PluginHandle::new(&self.proxy),
+        );
 
         let (repaint, relayout) = self
             .sdom
             .get_mut()
             .render_mutations(&mut self.vdom, scale_factor);
 
-        self.plugins.send(PluginEvent::FinishedUpdatingDOM);
+        self.plugins.send(
+            PluginEvent::FinishedUpdatingDOM,
+            PluginHandle::new(&self.proxy),
+        );
 
         if repaint {
             if let Some(devtools) = &self.devtools {
@@ -226,20 +241,29 @@ impl Application {
         )
     }
 
-    /// Create the Accessibility tree
-    /// This will iterater the DOM ordered by layers (top to bottom)
-    /// and add every element with an accessibility ID to the Accessibility Tree
+    pub fn init_accessibility(&mut self, window: &Window) {
+        {
+            let fdom = self.sdom.get();
+            let rdom = fdom.rdom();
+            let layout = fdom.layout();
+            let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
+            self.accessibility
+                .init_accessibility(rdom, &layout, &mut dirty_accessibility_tree);
+        }
+
+        if let Some(node_id) = self.queued_focus_node.take() {
+            self.focus_node(node_id, window)
+        }
+    }
+
     pub fn process_accessibility(&mut self, window: &Window) {
         {
-            let fdom = &self.sdom.get();
-            let layout = fdom.layout();
+            let fdom = self.sdom.get();
             let rdom = fdom.rdom();
-
-            process_accessibility(
-                &layout,
-                rdom,
-                &mut self.accessibility.accessibility_manager().lock().unwrap(),
-            );
+            let layout = fdom.layout();
+            let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
+            self.accessibility
+                .process_updates(rdom, &layout, &mut dirty_accessibility_tree);
         }
 
         if let Some(node_id) = self.queued_focus_node.take() {
@@ -267,11 +291,14 @@ impl Application {
         dirty_surface: &mut Surface,
         window: &Window,
     ) {
-        self.plugins.send(PluginEvent::BeforeRender {
-            canvas: surface.canvas(),
-            font_collection: &self.font_collection,
-            freya_dom: &self.sdom.get(),
-        });
+        self.plugins.send(
+            PluginEvent::BeforeRender {
+                canvas: surface.canvas(),
+                font_collection: &self.font_collection,
+                freya_dom: &self.sdom.get(),
+            },
+            PluginHandle::new(&self.proxy),
+        );
 
         self.start_render(
             hovered_node,
@@ -282,19 +309,20 @@ impl Application {
             window.scale_factor() as f32,
         );
 
-        self.accessibility
-            .render_accessibility(window.title().as_str());
-
-        self.plugins.send(PluginEvent::AfterRender {
-            canvas: surface.canvas(),
-            font_collection: &self.font_collection,
-            freya_dom: &self.sdom.get(),
-        });
+        self.plugins.send(
+            PluginEvent::AfterRender {
+                canvas: surface.canvas(),
+                font_collection: &self.font_collection,
+                freya_dom: &self.sdom.get(),
+            },
+            PluginHandle::new(&self.proxy),
+        );
     }
 
     /// Resize the Window
     pub fn resize(&mut self, window: &Window) {
         self.measure_layout_on_next_render = true;
+        self.init_accessibility_on_next_render = true;
         self.compositor.reset();
         self.sdom.get().layout().reset();
         self.platform_sender.send_modify(|state| {
@@ -310,17 +338,22 @@ impl Application {
     }
 
     pub fn focus_node(&mut self, node_id: AccessibilityId, window: &Window) {
+        let fdom = self.sdom.get();
+        let layout = fdom.layout();
         self.accessibility
-            .focus_node(node_id, &self.platform_sender, window)
+            .focus_node(node_id, &self.platform_sender, window, &layout)
     }
 
     pub fn queue_focus_node(&mut self, node_id: AccessibilityId) {
         self.queued_focus_node = Some(node_id);
     }
 
-    pub fn focus_next_node(&mut self, direction: AccessibilityFocusDirection, window: &Window) {
+    pub fn focus_next_node(&mut self, direction: AccessibilityFocusStrategy, window: &Window) {
+        let fdom = self.sdom.get();
+        let rdom = fdom.rdom();
+        let layout = fdom.layout();
         self.accessibility
-            .focus_next_node(direction, &self.platform_sender, window)
+            .focus_next_node(rdom, direction, &self.platform_sender, window, &layout);
     }
 
     /// Notify components subscribed to event loop ticks.
@@ -337,13 +370,13 @@ impl Application {
 
     /// Measure the layout
     pub fn process_layout(&mut self, window_size: PhysicalSize<u32>, scale_factor: f64) {
-        self.accessibility.clear_accessibility();
-
         {
             let fdom = self.sdom.get();
 
-            self.plugins
-                .send(PluginEvent::StartedLayout(&fdom.layout()));
+            self.plugins.send(
+                PluginEvent::StartedLayout(&fdom.layout()),
+                PluginHandle::new(&self.proxy),
+            );
 
             process_layout(
                 &fdom,
@@ -353,8 +386,10 @@ impl Application {
                 &self.default_fonts,
             );
 
-            self.plugins
-                .send(PluginEvent::FinishedLayout(&fdom.layout()));
+            self.plugins.send(
+                PluginEvent::FinishedLayout(&fdom.layout()),
+                PluginHandle::new(&self.proxy),
+            );
         }
 
         if let Some(devtools) = &self.devtools {

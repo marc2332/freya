@@ -10,55 +10,33 @@ fn main() {
 }
 
 fn app() -> Element {
+    let mut cursor_pos_over = use_signal(|| CursorPoint::default());
+    let mut cursor_pos_click = use_signal(|| CursorPoint::default());
+
+    let onmouseover = move |e: MouseEvent| {
+        let cursor_pos = e.get_screen_coordinates();
+        cursor_pos_over.set(cursor_pos);
+    };
+
+    let onclick = move |e: MouseEvent| {
+        let cursor_pos = e.get_screen_coordinates();
+        cursor_pos_click.set(cursor_pos);
+    };
+
     rsx!(
         rect {
+            height: "fill",
+            width: "fill",
+            background: "rgb(0, 119, 182)",
             color: "white",
-            height: "100%",
-            width: "100%",
-            Area {
-
-            }
-            Area {
-
-            }
-        }
-    )
-}
-
-#[allow(non_snake_case)]
-fn Area() -> Element {
-    let mut cursor_pos_over = use_signal(|| (0f64, 0f64));
-    let mut cursor_pos_click = use_signal(|| (0f64, 0f64));
-
-    let cursor_moved = move |e: MouseEvent| {
-        let pos = e.get_screen_coordinates();
-        cursor_pos_over.with_mut(|cursor_pos| {
-            cursor_pos.0 = pos.x;
-            cursor_pos.1 = pos.y;
-        })
-    };
-
-    let cursor_clicked = move |e: MouseEvent| {
-        let pos = e.get_screen_coordinates();
-        cursor_pos_click.with_mut(|cursor_pos| {
-            cursor_pos.0 = pos.x;
-            cursor_pos.1 = pos.y;
-        })
-    };
-
-    rsx!(
-        rect {
-            height: "50%",
-            width: "100%",
-            background: "blue",
-            padding: "5",
-            onmouseover: cursor_moved,
-            onclick: cursor_clicked,
+            padding: "15",
+            onmouseover,
+            onclick,
             label {
-                "Mouse is at [x: {cursor_pos_over.read().0}, y: {cursor_pos_over.read().1}] ",
+                "Mouse is at [x: {cursor_pos_over.read().x}, y: {cursor_pos_over.read().y}] ",
             },
             label {
-                "Mouse clicked at [x: {cursor_pos_click.read().0}, y: {cursor_pos_click.read().1}]"
+                "Mouse clicked at [x: {cursor_pos_click.read().x}, y: {cursor_pos_click.read().y}]"
             }
         }
     )

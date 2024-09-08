@@ -1,15 +1,17 @@
 use std::path::PathBuf;
 
 use dioxus_core::VirtualDom;
-use freya_common::EventMessage;
 use freya_core::{
-    accessibility::AccessibilityFocusDirection,
+    accessibility::AccessibilityFocusStrategy,
     dom::SafeDOM,
     events::{
         EventName,
         PlatformEvent,
     },
-    prelude::NavigationMode,
+    prelude::{
+        EventMessage,
+        NavigationMode,
+    },
 };
 use freya_elements::events::{
     map_winit_key,
@@ -199,22 +201,23 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 }
             }
             EventMessage::Accessibility(accesskit_winit::WindowEvent::InitialTreeRequested) => {
-                app.accessibility.process_initial_tree();
+                app.init_accessibility_on_next_render = true;
             }
             EventMessage::SetCursorIcon(icon) => window.set_cursor(icon),
             EventMessage::FocusPrevAccessibilityNode => {
                 app.set_navigation_mode(NavigationMode::Keyboard);
-                app.focus_next_node(AccessibilityFocusDirection::Backward, window);
+                app.focus_next_node(AccessibilityFocusStrategy::Backward, window);
             }
             EventMessage::FocusNextAccessibilityNode => {
                 app.set_navigation_mode(NavigationMode::Keyboard);
-                app.focus_next_node(AccessibilityFocusDirection::Forward, window);
+                app.focus_next_node(AccessibilityFocusStrategy::Forward, window);
             }
             EventMessage::WithWindow(use_window) => (use_window)(window),
             EventMessage::QueueFocusAccessibilityNode(node_id) => {
                 app.queue_focus_node(node_id);
             }
             EventMessage::ExitApp => event_loop.exit(),
+            EventMessage::PlatformEvent(platform_event) => self.send_event(platform_event),
             ev => {
                 if let EventMessage::UpdateTemplate(template) = ev {
                     app.vdom_replace_template(template);
@@ -276,7 +279,14 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
 
                     app.measure_layout_on_next_render = false;
                 }
+
+                if app.init_accessibility_on_next_render {
+                    app.init_accessibility(window);
+                    app.init_accessibility_on_next_render = false;
+                }
+
                 graphics_driver.make_current();
+                
                 app.render(
                     &self.hovered_node,
                     window_config.background,

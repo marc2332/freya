@@ -1,8 +1,10 @@
 use std::mem;
 
 use dioxus_core::VirtualDom;
-use freya_common::EventMessage;
-use freya_core::dom::SafeDOM;
+use freya_core::{
+    dom::SafeDOM,
+    prelude::EventMessage,
+};
 use freya_engine::prelude::*;
 use winit::{
     dpi::LogicalSize,
