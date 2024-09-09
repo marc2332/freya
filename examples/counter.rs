@@ -14,22 +14,33 @@ fn app() -> Element {
 
     rsx!(
         rect {
-            height: "200",
-            width: "200",
-            direction: "horizontal",
-            rect {
-                onclick: move |_| count -= 1,
-                height: "200",
-                width: "200",
-                background: "red"
+            height: "50%",
+            width: "100%",
+            main_align: "center",
+            cross_align: "center",
+            background: "rgb(0, 119, 182)",
+            color: "white",
+            shadow: "0 4 20 5 rgb(0, 0, 0, 80)",
+            label {
+                font_size: "75",
+                font_weight: "bold",
+                "{count}"
             }
-            paragraph {
+        }
+        rect {
+            height: "50%",
+            width: "100%",
+            main_align: "center",
+            cross_align: "center",
+            direction: "horizontal",
+            spacing: "8",
+            Button {
                 onclick: move |_| count += 1,
-                text {
-                    font_size: "75",
-                    font_weight: "bold",
-                    "{count}"
-                }
+                label { "Increase" }
+            }
+            Button {
+                onclick: move |_| count -= 1,
+                label { "Decrease" }
             }
         }
     )
