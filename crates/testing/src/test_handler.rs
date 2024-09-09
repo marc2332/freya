@@ -231,6 +231,7 @@ impl TestingHandler {
             &mut self.events_queue,
             &self.event_emitter,
             &mut self.nodes_state,
+            true,
             SCALE_FACTOR,
         );
     }

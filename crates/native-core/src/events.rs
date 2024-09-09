@@ -213,16 +213,34 @@ impl EventName {
         )
     }
 
-    // Only let events that do not move the mouse, go through solid nodes
+    /// Only let events that do not move the mouse, go through solid nodes
     pub fn does_go_through_solid(&self) -> bool {
         matches!(self, Self::KeyDown | Self::KeyUp)
     }
 
-    // Check if this event can change the hover state of a Node.
+    /// Check if this event can change the hover state of a Node.
     pub fn can_change_hover_state(&self) -> bool {
         matches!(
             self,
             Self::MouseOver | Self::MouseEnter | Self::PointerOver | Self::PointerEnter
         )
+    }
+
+    /// Check if this event can change the press state of a Node.
+    pub fn can_change_press_state(&self) -> bool {
+        matches!(self, Self::MouseDown | Self::PointerDown)
+    }
+
+    /// Check if the event means the cursor started or released a click
+    pub fn was_cursor_pressed_or_released(&self) -> bool {
+        matches!(
+            &self,
+            Self::MouseDown | Self::PointerDown | Self::Click | Self::PointerUp
+        )
+    }
+
+    /// Check if the event means the cursor was released
+    pub fn is_up(&self) -> bool {
+        matches!(&self, Self::Click | Self::PointerUp)
     }
 }
