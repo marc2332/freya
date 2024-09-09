@@ -57,9 +57,7 @@ fn Body() -> Element {
             onglobalclick: onclick,
             background: "{theme.body.background}",
             VirtualScrollView {
-                theme: theme_with!(ScrollViewTheme {
-                    width: "50%".into(),
-                }),
+                width: "50%",
                 length: editor.len_lines(),
                 item_size: 35.0,
                 scroll_with_arrows: false,
@@ -133,9 +131,7 @@ fn Body() -> Element {
                 }
             }
             VirtualScrollView {
-                theme: theme_with!(ScrollViewTheme {
-                    width: "50%".into(),
-                }),
+                width: "50%",
                 length: editor.len_lines(),
                 item_size: 60.0,
                 scroll_with_arrows: false,
