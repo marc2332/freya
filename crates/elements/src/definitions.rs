@@ -585,7 +585,7 @@ pub mod events {
         onmiddleclick
         #[doc = include_str!("_docs/events/onrightclick.md")]
         onrightclick
-        #[doc = include_str!("_docs/events/onmouseup.md")]
+        #[doc = include_str!("_docs/events/mouseup.md")]
         onmouseup
         #[doc = include_str!("_docs/events/mousedown.md")]
         onmousedown
