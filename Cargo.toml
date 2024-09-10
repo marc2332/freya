@@ -82,7 +82,7 @@ freya-core = { workspace = true }
 freya-testing = { workspace = true }
 reqwest = { version = "0.12.0", features = ["json"] }
 serde = "1.0.189"
-dioxus-i18n = "0.2.2"
+dioxus-i18n = "0.2"
 rand = "0.8.5"
 dioxus-router = { workspace = true }
 itertools = "0.13.0"

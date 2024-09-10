@@ -5,7 +5,7 @@
 
 use dioxus_i18n::{
     prelude::*,
-    translate,
+    t,
     unic_langid::langid,
 };
 use freya::prelude::*;
@@ -16,15 +16,21 @@ fn main() {
 
 #[allow(non_snake_case)]
 fn Body() -> Element {
-    let mut i18n = use_i18n();
+    let mut i18n = i18n();
 
     let change_to_english = move |_| i18n.set_language(langid!("en-US"));
     let change_to_spanish = move |_| i18n.set_language(langid!("es-ES"));
 
     rsx!(
         rect {
+            main_align: "center",
+            cross_align: "center",
+            spacing: "10",
+            width: "fill",
+            height: "fill",
             rect {
                 direction: "horizontal",
+                spacing: "10",
                 Button {
                     onclick: change_to_english,
                     label {
@@ -39,7 +45,7 @@ fn Body() -> Element {
                 }
             }
 
-            label { {translate!(i18n, "hello", name: "Dioxus")} }
+            label { {t!("hello", name: "Dioxus")} }
         }
     )
 }
