@@ -8,6 +8,7 @@ pub enum EventName {
     MiddleClick,
     RightClick,
 
+    MouseUp,
     MouseDown,
     MouseOver,
     MouseEnter,
@@ -47,6 +48,7 @@ impl FromStr for EventName {
             "click" => Ok(EventName::Click),
             "rightclick" => Ok(EventName::RightClick),
             "middleclick" => Ok(EventName::MiddleClick),
+            "mouseup" => Ok(EventName::MouseUp),
             "mousedown" => Ok(EventName::MouseDown),
             "mouseover" => Ok(EventName::MouseOver),
             "mouseenter" => Ok(EventName::MouseEnter),
@@ -81,6 +83,7 @@ impl From<EventName> for &str {
             EventName::Click => "click",
             EventName::MiddleClick => "middleclick",
             EventName::RightClick => "rightclick",
+            EventName::MouseUp => "mouseup",
             EventName::MouseDown => "mousedown",
             EventName::MouseOver => "mouseover",
             EventName::MouseEnter => "mouseenter",
@@ -136,7 +139,7 @@ impl EventName {
     /// Get the equivalent to a global event
     pub fn get_global_event(&self) -> Option<Self> {
         match self {
-            Self::Click => Some(Self::GlobalClick),
+            Self::MouseUp => Some(Self::GlobalClick),
             Self::PointerUp => Some(Self::GlobalPointerUp),
             Self::MouseDown => Some(Self::GlobalMouseDown),
             Self::MouseOver => Some(Self::GlobalMouseOver),
@@ -159,8 +162,8 @@ impl EventName {
                 events.extend([Self::MouseEnter, Self::PointerEnter, Self::PointerOver])
             }
             Self::MouseDown | Self::TouchStart => events.push(Self::PointerDown),
-            Self::Click | Self::MiddleClick | Self::RightClick | Self::TouchEnd => {
-                events.push(Self::PointerUp)
+            Self::MouseUp | Self::MiddleClick | Self::RightClick | Self::TouchEnd => {
+                events.extend([Self::Click, Self::PointerUp])
             }
             Self::MouseLeave => events.push(Self::PointerLeave),
             Self::GlobalFileHover | Self::GlobalFileHoverCancelled => events.clear(),
@@ -235,12 +238,12 @@ impl EventName {
     pub fn was_cursor_pressed_or_released(&self) -> bool {
         matches!(
             &self,
-            Self::MouseDown | Self::PointerDown | Self::Click | Self::PointerUp
+            Self::MouseDown | Self::PointerDown | Self::MouseUp | Self::Click | Self::PointerUp
         )
     }
 
-    /// Check if the event means the cursor was released
-    pub fn is_up(&self) -> bool {
-        matches!(&self, Self::Click | Self::PointerUp)
+    /// Check if the event was a click
+    pub fn is_click(&self) -> bool {
+        matches!(&self, Self::Click)
     }
 }
