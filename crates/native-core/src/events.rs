@@ -162,8 +162,8 @@ impl EventName {
                 events.extend([Self::MouseEnter, Self::PointerEnter, Self::PointerOver])
             }
             Self::MouseDown | Self::TouchStart => events.push(Self::PointerDown),
-            Self::MouseUp | Self::MiddleClick | Self::RightClick | Self::TouchEnd => {
-                events.extend([Self::Click, Self::PointerUp])
+            Self::Click | Self::MiddleClick | Self::RightClick | Self::TouchEnd => {
+                events.extend([Self::MouseUp, Self::PointerUp])
             }
             Self::MouseLeave => events.push(Self::PointerLeave),
             Self::GlobalFileHover | Self::GlobalFileHoverCancelled => events.clear(),
