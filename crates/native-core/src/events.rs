@@ -8,6 +8,7 @@ pub enum EventName {
     MiddleClick,
     RightClick,
 
+    MouseUp,
     MouseDown,
     MouseOver,
     MouseEnter,
@@ -47,6 +48,7 @@ impl FromStr for EventName {
             "click" => Ok(EventName::Click),
             "rightclick" => Ok(EventName::RightClick),
             "middleclick" => Ok(EventName::MiddleClick),
+            "mouseup" => Ok(EventName::MouseUp),
             "mousedown" => Ok(EventName::MouseDown),
             "mouseover" => Ok(EventName::MouseOver),
             "mouseenter" => Ok(EventName::MouseEnter),
@@ -81,6 +83,7 @@ impl From<EventName> for &str {
             EventName::Click => "click",
             EventName::MiddleClick => "middleclick",
             EventName::RightClick => "rightclick",
+            EventName::MouseUp => "mouseup",
             EventName::MouseDown => "mousedown",
             EventName::MouseOver => "mouseover",
             EventName::MouseEnter => "mouseenter",
@@ -136,7 +139,7 @@ impl EventName {
     /// Get the equivalent to a global event
     pub fn get_global_event(&self) -> Option<Self> {
         match self {
-            Self::Click => Some(Self::GlobalClick),
+            Self::Click | Self::MouseUp => Some(Self::GlobalClick),
             Self::PointerUp => Some(Self::GlobalPointerUp),
             Self::MouseDown => Some(Self::GlobalMouseDown),
             Self::MouseOver => Some(Self::GlobalMouseOver),
@@ -160,7 +163,7 @@ impl EventName {
             }
             Self::MouseDown | Self::TouchStart => events.push(Self::PointerDown),
             Self::Click | Self::MiddleClick | Self::RightClick | Self::TouchEnd => {
-                events.push(Self::PointerUp)
+                events.extend([Self::MouseUp, Self::PointerUp])
             }
             Self::MouseLeave => events.push(Self::PointerLeave),
             Self::GlobalFileHover | Self::GlobalFileHoverCancelled => events.clear(),
@@ -213,16 +216,34 @@ impl EventName {
         )
     }
 
-    // Only let events that do not move the mouse, go through solid nodes
+    /// Only let events that do not move the mouse, go through solid nodes
     pub fn does_go_through_solid(&self) -> bool {
         matches!(self, Self::KeyDown | Self::KeyUp)
     }
 
-    // Check if this event can change the hover state of a Node.
+    /// Check if this event can change the hover state of a Node.
     pub fn can_change_hover_state(&self) -> bool {
         matches!(
             self,
             Self::MouseOver | Self::MouseEnter | Self::PointerOver | Self::PointerEnter
         )
+    }
+
+    /// Check if this event can change the press state of a Node.
+    pub fn can_change_press_state(&self) -> bool {
+        matches!(self, Self::MouseDown | Self::PointerDown)
+    }
+
+    /// Check if the event means the cursor started or released a click
+    pub fn was_cursor_pressed_or_released(&self) -> bool {
+        matches!(
+            &self,
+            Self::MouseDown | Self::PointerDown | Self::MouseUp | Self::Click | Self::PointerUp
+        )
+    }
+
+    /// Check if the event was a click
+    pub fn is_click(&self) -> bool {
+        matches!(&self, Self::Click)
     }
 }
