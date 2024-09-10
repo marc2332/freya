@@ -581,7 +581,7 @@ pub mod events {
         onclick
         #[doc = include_str!("_docs/events/globalclick.md")]
         onglobalclick
-        #[doc = include_str!("_docs/events/onmiddleclick.md")]
+        #[doc = include_str!("_docs/events/onmiddleclick.md")] // REMOVE "on"
         onmiddleclick
         #[doc = include_str!("_docs/events/onrightclick.md")]
         onrightclick

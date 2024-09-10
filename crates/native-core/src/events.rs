@@ -139,7 +139,7 @@ impl EventName {
     /// Get the equivalent to a global event
     pub fn get_global_event(&self) -> Option<Self> {
         match self {
-            Self::MouseUp => Some(Self::GlobalClick),
+            Self::Click | Self::MouseUp => Some(Self::GlobalClick),
             Self::PointerUp => Some(Self::GlobalPointerUp),
             Self::MouseDown => Some(Self::GlobalMouseDown),
             Self::MouseOver => Some(Self::GlobalMouseOver),

@@ -207,7 +207,7 @@ mod test {
         assert_eq!(root.get(0).get(0).get(0).get(0).text(), Some("Moving"));
 
         utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
+            name: EventName::MouseUp,
             cursor: (5.0, 300.0).into(),
             button: Some(MouseButton::Left),
         });
