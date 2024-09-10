@@ -581,9 +581,9 @@ pub mod events {
         onclick
         #[doc = include_str!("_docs/events/globalclick.md")]
         onglobalclick
-        #[doc = include_str!("_docs/events/onmiddleclick.md")] // REMOVE "on"
+        #[doc = include_str!("_docs/events/middleclick.md")]
         onmiddleclick
-        #[doc = include_str!("_docs/events/onrightclick.md")]
+        #[doc = include_str!("_docs/events/rightclick.md")]
         onrightclick
         #[doc = include_str!("_docs/events/mouseup.md")]
         onmouseup
@@ -637,7 +637,7 @@ pub mod events {
         onpointerdown
         #[doc = include_str!("_docs/events/pointerup.md")]
         onpointerup
-        #[doc = include_str!("_docs/events/onglobalpointerup.md")]
+        #[doc = include_str!("_docs/events/globalpointerup.md")]
         onglobalpointerup
         #[doc = include_str!("_docs/events/pointerover.md")]
         onpointerover
@@ -650,11 +650,11 @@ pub mod events {
     impl_event! [
         FileData;
 
-        #[doc = include_str!("_docs/events/onfiledrop.md")]
+        #[doc = include_str!("_docs/events/filedrop.md")]
         onfiledrop
-        #[doc = include_str!("_docs/events/onglobalfilehover.md")]
+        #[doc = include_str!("_docs/events/globalfilehover.md")]
         onglobalfilehover
-        #[doc = include_str!("_docs/events/onglobalfilehovercancelled.md")]
+        #[doc = include_str!("_docs/events/globalfilehovercancelled.md")]
         onglobalfilehovercancelled
     ];
 }
