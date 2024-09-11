@@ -187,6 +187,9 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             EventMessage::RequestRerender => {
                 window.request_redraw();
             }
+            EventMessage::RequestFullRerender => {
+                app.resize(window);
+            }
             EventMessage::InvalidateArea(area) => {
                 let fdom = app.sdom.get();
                 let mut compositor_dirty_area = fdom.compositor_dirty_area();
