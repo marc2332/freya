@@ -56,7 +56,7 @@ pub fn ScrollBar(
     rsx!(
         rect {
             overflow: "clip",
-            role: "scrollBar",
+            a11y_role:"scrollBar",
             width: "{width}",
             height: "{height}",
             offset_x: "{offset_x}",

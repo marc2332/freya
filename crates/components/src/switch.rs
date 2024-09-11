@@ -98,7 +98,7 @@ pub fn Switch(props: SwitchProps) -> Element {
     let mut status = use_signal(SwitchStatus::default);
     let mut focus = use_focus();
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
 
     use_drop(move || {
         if *status.read() == SwitchStatus::Hovering {
@@ -171,7 +171,7 @@ pub fn Switch(props: SwitchProps) -> Element {
             onmouseleave,
             onkeydown,
             onclick,
-            focus_id,
+            a11y_id,
             offset_x: "{offset_x}",
             main_align: "center",
             rect {

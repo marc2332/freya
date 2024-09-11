@@ -325,7 +325,7 @@ impl AccessibilityTree {
         // Set focusable action
         // This will cause assistive technology to offer the user an option
         // to focus the current element if it supports it.
-        if node_accessibility.focusable {
+        if node_accessibility.a11y_focusable {
             builder.add_action(Action::Focus);
         }
 
@@ -429,7 +429,7 @@ impl AccessibilityTree {
         }
 
         // Set text value
-        if let Some(alt) = &node_accessibility.alt {
+        if let Some(alt) = &node_accessibility.a11y_alt {
             builder.set_value(alt.to_owned());
         } else if let Some(value) = node_ref.get_inner_texts() {
             builder.set_value(value);
@@ -437,12 +437,12 @@ impl AccessibilityTree {
         }
 
         // Set name
-        if let Some(name) = &node_accessibility.name {
+        if let Some(name) = &node_accessibility.a11y_name {
             builder.set_name(name.to_owned());
         }
 
         // Set role
-        if let Some(role) = node_accessibility.role {
+        if let Some(role) = node_accessibility.a11y_role {
             builder.set_role(role);
         }
         // Set root role

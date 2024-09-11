@@ -192,12 +192,12 @@ fn Editor() -> Element {
         }
     };
 
-    let focus_id = focus_manager.attribute();
+    let a11y_id = focus_manager.attribute();
 
     rsx!(
         rect {
             onclick,
-            focus_id,
+            a11y_id,
             width: "fill",
             height: "fill",
             padding: "10",

@@ -36,13 +36,13 @@ use crate::{
 #[derive(Clone, Debug, PartialEq, Eq, Default, Component)]
 pub struct AccessibilityNodeState {
     pub closest_accessibility_node_id: Option<NodeId>,
-    pub node_id: NodeId,
-    pub accessibility_id: Option<AccessibilityId>,
     pub descencent_accessibility_ids: Vec<AccessibilityId>,
-    pub role: Option<Role>,
-    pub alt: Option<String>,
-    pub name: Option<String>,
-    pub focusable: bool,
+    pub node_id: NodeId,
+    pub a11y_id: Option<AccessibilityId>,
+    pub a11y_role: Option<Role>,
+    pub a11y_alt: Option<String>,
+    pub a11y_name: Option<String>,
+    pub a11y_focusable: bool,
 }
 
 impl ParseAttribute for AccessibilityNodeState {
@@ -51,34 +51,34 @@ impl ParseAttribute for AccessibilityNodeState {
         attr: freya_native_core::prelude::OwnedAttributeView<CustomAttributeValues>,
     ) -> Result<(), crate::ParseError> {
         match attr.attribute {
-            AttributeName::FocusId => {
+            AttributeName::A11YId => {
                 if let OwnedAttributeValue::Custom(CustomAttributeValues::AccessibilityId(id)) =
                     attr.value
                 {
-                    self.accessibility_id = Some(*id);
+                    self.a11y_id = Some(*id);
                 }
             }
-            AttributeName::Role => {
+            AttributeName::A11YRole => {
                 if let OwnedAttributeValue::Text(attr) = attr.value {
-                    self.role = Some(
+                    self.a11y_role = Some(
                         serde_json::from_str::<Role>(&format!("\"{attr}\""))
                             .map_err(|_| ParseError)?,
                     )
                 }
             }
-            AttributeName::Alt => {
+            AttributeName::A11YAlt => {
                 if let OwnedAttributeValue::Text(attr) = attr.value {
-                    self.alt = Some(attr.to_owned())
+                    self.a11y_alt = Some(attr.to_owned())
                 }
             }
-            AttributeName::Name => {
+            AttributeName::A11YName => {
                 if let OwnedAttributeValue::Text(attr) = attr.value {
-                    self.name = Some(attr.to_owned())
+                    self.a11y_name = Some(attr.to_owned())
                 }
             }
-            AttributeName::Focusable => {
+            AttributeName::A11YFocusable => {
                 if let OwnedAttributeValue::Text(attr) = attr.value {
-                    self.focusable = attr.parse().unwrap_or_default()
+                    self.a11y_focusable = attr.parse().unwrap_or_default()
                 }
             }
             _ => {}
@@ -98,11 +98,11 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
 
     const NODE_MASK: NodeMaskBuilder<'static> =
         NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
-            AttributeName::FocusId,
-            AttributeName::Role,
-            AttributeName::Alt,
-            AttributeName::Name,
-            AttributeName::Focusable,
+            AttributeName::A11YId,
+            AttributeName::A11YRole,
+            AttributeName::A11YAlt,
+            AttributeName::A11YName,
+            AttributeName::A11YFocusable,
         ]));
 
     fn update<'a>(
@@ -130,7 +130,7 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
         }
 
         for (child,) in children {
-            if let Some(child_id) = child.accessibility_id {
+            if let Some(child_id) = child.a11y_id {
                 // Mark this child as descendent if it has an ID
                 accessibility.descencent_accessibility_ids.push(child_id)
             } else {
@@ -146,7 +146,7 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
             // fallback to its closest ID.
             accessibility.closest_accessibility_node_id = parent
                 .0
-                .accessibility_id
+                .a11y_id
                 .map(|_| parent.0.node_id)
                 .or(parent.0.closest_accessibility_node_id);
         }
@@ -157,16 +157,16 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
 
         if changed {
             // Assign an accessibility ID if none was passed but the node has a role
-            if self.accessibility_id.is_none() && self.role.is_some() {
+            if self.a11y_id.is_none() && self.a11y_role.is_some() {
                 let id = AccessibilityId(accessibility_generator.new_id());
                 #[cfg(debug_assertions)]
                 tracing::info!("Assigned {id:?} to {:?}", node_view.node_id());
 
-                self.accessibility_id = Some(id)
+                self.a11y_id = Some(id)
             }
 
             // Add or update this node if it is the Root or if it has an accessibility ID
-            if self.accessibility_id.is_some() || node_view.node_id() == *root_id {
+            if self.a11y_id.is_some() || node_view.node_id() == *root_id {
                 accessibility_dirty_nodes
                     .lock()
                     .unwrap()

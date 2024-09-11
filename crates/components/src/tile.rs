@@ -43,7 +43,7 @@ pub fn Tile(
     let platform = use_platform();
     let TileTheme { padding } = use_applied_theme!(&theme, tile);
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
 
     use_drop(move || {
         if *status.read() == TileStatus::Hovering {
@@ -73,7 +73,7 @@ pub fn Tile(
             onclick,
             onmouseenter,
             onmouseleave,
-            focus_id,
+            a11y_id,
             direction: "horizontal",
             onclick: move |_| {
                 if let Some(onclick) = &onclick {

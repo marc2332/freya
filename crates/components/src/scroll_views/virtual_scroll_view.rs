@@ -437,11 +437,11 @@ pub fn VirtualScrollView<
     let offset_y_min = (-corrected_scrolled_y / item_size).floor() * item_size;
     let offset_y = -corrected_scrolled_y - offset_y_min;
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
 
     rsx!(
         rect {
-            role: "scrollView",
+            a11y_role:"scrollView",
             overflow: "clip",
             direction: "horizontal",
             width: "{width}",
@@ -450,7 +450,7 @@ pub fn VirtualScrollView<
             onglobalmousemove: onmousemove,
             onkeydown,
             onkeyup,
-            focus_id,
+            a11y_id,
             rect {
                 direction: "vertical",
                 width: "{container_width}",

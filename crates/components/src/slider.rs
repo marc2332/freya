@@ -99,7 +99,7 @@ pub fn Slider(
     let (node_reference, size) = use_node();
 
     let value = ensure_correct_slider_range(value);
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
 
     use_drop(move || {
         if *status.peek() == SliderStatus::Hovering {
@@ -176,7 +176,7 @@ pub fn Slider(
             height: "20",
             onmousedown,
             onglobalclick: onclick,
-            focus_id,
+            a11y_id,
             onmouseenter,
             onglobalmousemove: onmousemove,
             onmouseleave,
