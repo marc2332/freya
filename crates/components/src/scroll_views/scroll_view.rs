@@ -367,7 +367,7 @@ pub fn ScrollView(
 
     rsx!(
         rect {
-            role: "scrollView",
+            a11y_role:"scrollView",
             overflow: "clip",
             direction: "horizontal",
             width,

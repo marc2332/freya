@@ -212,8 +212,8 @@ pub fn Input(
             margin: "{margin}",
             cursor_reference,
             focus_id,
-            focusable: "true",
-            role: "textInput",
+            a11_focusable: "true",
+            a11y_role:"textInput",
             main_align: "center",
             paragraph {
                 margin: "8 12",

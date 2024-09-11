@@ -153,7 +153,7 @@ mod test {
         #[allow(non_snake_case)]
         fn OtherChild() -> Element {
             rsx!(rect {
-                role: "genericContainer",
+                a11y_role: "genericContainer",
                 width: "100%",
                 height: "50%",
             })

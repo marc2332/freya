@@ -123,7 +123,7 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
             width: "{width}",
             focus_id,
             image_data,
-            role: "image",
+            a11y_role: "image",
             alt
         })
     } else if *status.read() == ImageState::Loading {

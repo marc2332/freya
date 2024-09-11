@@ -234,8 +234,8 @@ builder_constructors! {
         spacing: String,
 
         name: String,
-        focusable: String,
-        role: String,
+        a11_focusable: String,
+        a11y_role:String,
         focus_id: AccessibilityId,
         alt: String,
         canvas_reference: String,
@@ -299,14 +299,14 @@ builder_constructors! {
         decoration_color: String,
         #[doc = include_str!("_docs/attributes/text_overflow.md")]
         text_overflow: String,
-        focusable: String,
+        a11_focusable: String,
         #[doc = include_str!("_docs/attributes/margin.md")]
         margin: String,
         #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
 
         layer: String,
-        role: String,
+        a11y_role:String,
         alt: String,
         focus_id: AccessibilityId,
         name: String,
@@ -372,7 +372,7 @@ builder_constructors! {
         text_overflow: String,
         #[doc = include_str!("_docs/attributes/overflow.md")]
         overflow: String,
-        focusable: String,
+        a11_focusable: String,
         #[doc = include_str!("_docs/attributes/margin.md")]
         margin: String,
         #[doc = include_str!("_docs/attributes/opacity.md")]
@@ -386,7 +386,7 @@ builder_constructors! {
         cursor_id: String,
         alt: String,
         name: String,
-        role: String,
+        a11y_role:String,
         focus_id: AccessibilityId,
         highlights: String,
         highlight_color: String,
@@ -454,11 +454,11 @@ builder_constructors! {
 
         image_data: String,
         image_reference: String,
-        role: String,
+        a11y_role:String,
         focus_id: AccessibilityId,
         alt: String,
         name: String,
-        focusable: String,
+        a11_focusable: String,
     };
     /// `svg` element let's you display SVG code.
     ///
@@ -493,11 +493,11 @@ builder_constructors! {
 
         svg_data: String,
         svg_content: String,
-        role: String,
+        a11y_role:String,
         focus_id: AccessibilityId,
         alt: String,
         name: String,
-        focusable: String,
+        a11_focusable: String,
     };
 }
 

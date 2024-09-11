@@ -36,7 +36,7 @@ impl NodeAccessibility for DioxusNode<'_> {
             Some(ACCESSIBILITY_ROOT_ID)
         } else {
             let node_accessibility = &*self.get::<AccessibilityNodeState>()?;
-            node_accessibility.accessibility_id
+            node_accessibility.a11y_id
         }
     }
 

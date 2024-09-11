@@ -116,7 +116,7 @@ where
             width: "fill-min",
             color: "{color}",
             focus_id,
-            role: "button",
+            a11y_role:"button",
             background: "{background}",
             padding: "6 22 6 16",
             corner_radius: "6",
