@@ -54,10 +54,8 @@ fn app() -> Element {
             height: "100%",
             cursor_reference,
             ScrollView {
-                theme: theme_with!(ScrollViewTheme {
-                    width: "100%".into(),
-                    height: "calc(100% - 30)".into(),
-                }),
+                width: "100%",
+                height: "calc(100% - 30)",
                 scroll_with_arrows: false,
                 paragraph {
                     width: "100%",
