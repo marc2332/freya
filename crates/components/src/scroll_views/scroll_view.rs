@@ -376,7 +376,7 @@ pub fn ScrollView(
             onglobalmousemove: onmousemove,
             onkeydown,
             onkeyup,
-            focus_id,
+            a11y_id,
             rect {
                 direction: "vertical",
                 width: "{container_width}",

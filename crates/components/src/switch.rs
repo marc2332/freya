@@ -171,7 +171,7 @@ pub fn Switch(props: SwitchProps) -> Element {
             onmouseleave,
             onkeydown,
             onclick,
-            focus_id,
+            a11y_id,
             offset_x: "{offset_x}",
             main_align: "center",
             rect {

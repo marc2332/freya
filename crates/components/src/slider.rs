@@ -176,7 +176,7 @@ pub fn Slider(
             height: "20",
             onmousedown,
             onglobalclick: onclick,
-            focus_id,
+            a11y_id,
             onmouseenter,
             onglobalmousemove: onmousemove,
             onmouseleave,

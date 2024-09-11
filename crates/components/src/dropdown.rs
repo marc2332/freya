@@ -115,7 +115,7 @@ where
         rect {
             width: "fill-min",
             color: "{color}",
-            focus_id,
+            a11y_id,
             a11y_role:"button",
             background: "{background}",
             padding: "6 22 6 16",
@@ -269,7 +269,7 @@ where
                 onclick,
                 onkeydown,
                 margin: "{margin}",
-                focus_id,
+                a11y_id,
                 background: "{button_background}",
                 color: "{font_theme.color}",
                 corner_radius: "8",

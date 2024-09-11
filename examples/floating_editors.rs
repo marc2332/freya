@@ -197,7 +197,7 @@ fn Editor() -> Element {
     rsx!(
         rect {
             onclick,
-            focus_id,
+            a11y_id,
             width: "fill",
             height: "fill",
             padding: "10",

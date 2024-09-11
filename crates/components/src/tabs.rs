@@ -127,7 +127,7 @@ pub fn Tab(children: Element, theme: Option<TabThemeWith>) -> Element {
         rect {
             onmouseenter,
             onmouseleave,
-            focus_id,
+            a11y_id,
             width: "{width}",
             height: "{height}",
             a11_focusable: "true",
@@ -239,7 +239,7 @@ pub fn BottomTab(children: Element, theme: Option<BottomTabThemeWith>) -> Elemen
         rect {
             onmouseenter,
             onmouseleave,
-            focus_id,
+            a11y_id,
             width: "{width}",
             height: "{height}",
             a11_focusable: "true",

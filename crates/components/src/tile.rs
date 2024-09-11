@@ -73,7 +73,7 @@ pub fn Tile(
             onclick,
             onmouseenter,
             onmouseleave,
-            focus_id,
+            a11y_id,
             direction: "horizontal",
             onclick: move |_| {
                 if let Some(onclick) = &onclick {

@@ -197,7 +197,7 @@ pub fn MenuItem(
             onclick,
             onmouseenter,
             onmouseleave,
-            focus_id,
+            a11y_id,
             width: "fill-min",
             padding: "6",
             margin: "2",

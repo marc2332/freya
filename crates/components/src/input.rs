@@ -211,7 +211,7 @@ pub fn Input(
             corner_radius: "{corner_radius}",
             margin: "{margin}",
             cursor_reference,
-            focus_id,
+            a11y_id,
             a11_focusable: "true",
             a11y_role:"textInput",
             main_align: "center",

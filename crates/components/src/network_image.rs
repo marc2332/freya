@@ -121,7 +121,7 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
         rsx!(image {
             height: "{height}",
             width: "{width}",
-            focus_id,
+            a11y_id,
             image_data,
             a11y_role: "image",
             alt
