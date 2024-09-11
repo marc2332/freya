@@ -296,7 +296,7 @@ where
         let mut initial_phase_sizes = FxHashMap::default();
         let mut initial_phase_inner_sizes = *inner_sizes;
 
-        // Used to calculate the spacing
+        // Used to calculate the spacing and some alignments
         let non_absolute_children = if parent_node.spacing.get() > 0. {
             children
                 .clone()
