@@ -1,3 +1,8 @@
+use std::sync::atomic::{
+    AtomicU64,
+    Ordering,
+};
+
 use freya_native_core::NodeId;
 use rustc_hash::{
     FxHashMap,
@@ -22,5 +27,23 @@ impl AccessibilityDirtyNodes {
     pub fn clear(&mut self) {
         self.added_or_updated.clear();
         self.removed.clear();
+    }
+}
+
+pub struct AccessibilityGenerator {
+    counter: AtomicU64,
+}
+
+impl Default for AccessibilityGenerator {
+    fn default() -> Self {
+        Self {
+            counter: AtomicU64::new(1), // Must start at 1 because 0 is reserved for the Root
+        }
+    }
+}
+
+impl AccessibilityGenerator {
+    pub fn new_id(&self) -> u64 {
+        self.counter.fetch_add(1, Ordering::Relaxed)
     }
 }

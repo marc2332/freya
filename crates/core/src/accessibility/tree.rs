@@ -167,16 +167,22 @@ impl AccessibilityTree {
         let mut nodes = Vec::new();
         for node_id in added_or_updated_ids {
             let node_ref = rdom.get(node_id).unwrap();
-            let layout_node = layout.get(node_id).unwrap();
-            let node_accessibility_state = node_ref.get::<AccessibilityNodeState>().unwrap();
-            let accessibility_node =
-                Self::create_node(&node_ref, layout_node, &node_accessibility_state);
+            let node_accessibility_state = node_ref.get::<AccessibilityNodeState>();
+            let layout_node = layout.get(node_id);
 
-            let accessibility_id = node_ref.get_accessibility_id().unwrap();
+            if let Some((node_accessibility_state, layout_node)) =
+                node_accessibility_state.as_ref().zip(layout_node)
+            {
+                let accessibility_node =
+                    Self::create_node(&node_ref, layout_node, node_accessibility_state);
 
-            nodes.push((accessibility_id, accessibility_node));
+                let accessibility_id = node_ref.get_accessibility_id().unwrap();
+
+                nodes.push((accessibility_id, accessibility_node));
+            }
         }
 
+        // Fallback the focused id to the root if the focused node no longer exists
         if !self.map.contains_key(&self.focused_id) {
             self.focused_id = ACCESSIBILITY_ROOT_ID;
         }

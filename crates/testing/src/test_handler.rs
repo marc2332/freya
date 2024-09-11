@@ -94,6 +94,13 @@ impl TestingHandler {
             .insert_any_root_context(Box::new(self.platform_receiver.clone()));
         self.vdom
             .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
+        let accessibility_generator = {
+            let sdom = self.sdom();
+            let fdom = sdom.get();
+            fdom.accessibility_generator().clone()
+        };
+        self.vdom
+            .insert_any_root_context(Box::new(accessibility_generator));
     }
 
     /// Wait and apply new changes
