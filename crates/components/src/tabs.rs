@@ -84,7 +84,7 @@ pub fn Tab(children: Element, theme: Option<TabThemeWith>) -> Element {
     let platform = use_platform();
     let is_active = use_activable_route();
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
 
     let TabTheme {
         background,
@@ -203,7 +203,7 @@ pub fn BottomTab(children: Element, theme: Option<BottomTabThemeWith>) -> Elemen
     let platform = use_platform();
     let is_active = use_activable_route();
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
 
     let BottomTabTheme {
         background,

@@ -66,7 +66,7 @@ where
     let mut status = use_signal(DropdownItemStatus::default);
     let platform = use_platform();
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
     let is_focused = focus.is_focused();
     let is_selected = *selected.read() == value;
 
@@ -194,7 +194,7 @@ where
 
     let is_opened = *opened.read();
     let is_focused = focus.is_focused();
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
 
     // Update the provided value if the passed value changes
     use_effect(use_reactive(&props.value, move |value| {

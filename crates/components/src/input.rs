@@ -165,7 +165,7 @@ pub fn Input(
         _ => {}
     };
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
     let cursor_reference = editable.cursor_attr();
     let highlights = editable.highlights_attr(0);
 

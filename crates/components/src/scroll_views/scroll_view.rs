@@ -363,7 +363,7 @@ pub fn ScrollView(
         .map(|f| f.0 == Axis::Y)
         .unwrap_or_default();
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
 
     rsx!(
         rect {

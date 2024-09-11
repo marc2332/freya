@@ -437,7 +437,7 @@ pub fn VirtualScrollView<
     let offset_y_min = (-corrected_scrolled_y / item_size).floor() * item_size;
     let offset_y = -corrected_scrolled_y - offset_y_min;
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
 
     rsx!(
         rect {

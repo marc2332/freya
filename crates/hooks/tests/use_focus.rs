@@ -9,7 +9,7 @@ pub async fn track_focus() {
     fn OtherChild() -> Element {
         let mut focus_manager = use_focus();
 
-        let focus_id = focus_manager.attribute();
+        let a11y_id = focus_manager.attribute();
 
         rsx!(
             rect {

@@ -92,7 +92,7 @@ pub fn Button(
     let mut status = use_signal(ButtonStatus::default);
     let platform = use_platform();
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
 
     let ButtonTheme {
         background,

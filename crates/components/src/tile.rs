@@ -43,7 +43,7 @@ pub fn Tile(
     let platform = use_platform();
     let TileTheme { padding } = use_applied_theme!(&theme, tile);
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
 
     use_drop(move || {
         if *status.read() == TileStatus::Hovering {

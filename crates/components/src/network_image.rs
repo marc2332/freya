@@ -70,7 +70,7 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
     let mut cached_assets = use_signal::<Vec<AssetConfiguration>>(Vec::new);
     let mut assets_tasks = use_signal::<Vec<Task>>(Vec::new);
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
     let NetworkImageTheme { width, height } = use_applied_theme!(&props.theme, network_image);
     let alt = props.alt.as_deref();
 

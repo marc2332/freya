@@ -192,7 +192,7 @@ fn Editor() -> Element {
         }
     };
 
-    let focus_id = focus_manager.attribute();
+    let a11y_id = focus_manager.attribute();
 
     rsx!(
         rect {
