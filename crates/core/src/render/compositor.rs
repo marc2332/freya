@@ -339,26 +339,14 @@ mod test {
         // First render is always a full render
         assert_eq!(layers, rendering_layers);
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
-            cursor: (275.0, 375.0).into(),
-            button: Some(MouseButton::Left),
-        });
-
-        utils.wait_for_update().await;
+        utils.move_cursor((275., 375.)).await;
 
         let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
         // Root + Second rect + Button's internal rect + Button's label
         assert_eq!(painted_nodes, 4);
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (275.0, 375.0).into(),
-            button: Some(MouseButton::Left),
-        });
-
-        utils.wait_for_update().await;
+        utils.click_cursor((275., 375.)).await;
 
         assert_eq!(label.get(0).text(), Some("1"));
     }
@@ -400,48 +388,28 @@ mod test {
         // First render is always a full render
         assert_eq!(layers, rendering_layers);
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (5.0, 5.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((5., 5.)).await;
 
         let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
         // Root + Second rect + Third rect
         assert_eq!(painted_nodes, 3);
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (5.0, 150.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((5., 150.)).await;
 
         let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
         // Root + Second rect + Third rect
         assert_eq!(painted_nodes, 3);
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (5.0, 350.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((5., 350.)).await;
 
         let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
         // Root + First rect + Second rect
         assert_eq!(painted_nodes, 3);
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (5.0, 150.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((5., 150.)).await;
 
         let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
@@ -497,36 +465,21 @@ mod test {
         // First render is always a full render
         assert_eq!(layers, rendering_layers);
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (5.0, 5.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((5., 5.)).await;
 
         let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
         // Root + First rect + Paragraph + Second rect
         assert_eq!(painted_nodes, 4);
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (205.0, 5.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((205., 5.)).await;
 
         let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
         // Root + First rect + Paragraph + Second rect
         assert_eq!(painted_nodes, 4);
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (5.0, 5.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((5., 5.)).await;
 
         let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
@@ -578,13 +531,7 @@ mod test {
         // First render is always a full render
         assert_eq!(layers, rendering_layers);
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (275.0, 375.0).into(),
-            button: Some(MouseButton::Left),
-        });
-
-        utils.wait_for_update().await;
+        utils.click_cursor((275., 375.)).await;
 
         let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
@@ -637,13 +584,7 @@ mod test {
         // First render is always a full render
         assert_eq!(layers, rendering_layers);
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (275.0, 375.0).into(),
-            button: Some(MouseButton::Left),
-        });
-
-        utils.wait_for_update().await;
+        utils.click_cursor((275., 375.)).await;
 
         let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 

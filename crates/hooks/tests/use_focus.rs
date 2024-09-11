@@ -50,26 +50,16 @@ pub async fn track_focus() {
     assert_eq!(root.get(1).get(0).get(0).text(), Some("false"));
 
     // Click on the first rect
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
-        cursor: (5.0, 5.0).into(),
-        button: Some(MouseButton::Left),
-    });
+    utils.click_cursor((5., 5.)).await;
 
     // First rect is now focused
-    utils.wait_for_update().await;
     assert_eq!(root.get(0).get(0).get(0).text(), Some("true"));
     assert_eq!(root.get(1).get(0).get(0).text(), Some("false"));
 
     // Click on the second rect
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
-        cursor: (5.0, 75.0).into(),
-        button: Some(MouseButton::Left),
-    });
+    utils.click_cursor((5., 75.)).await;
 
     // Second rect is now focused
-    utils.wait_for_update().await;
     utils.wait_for_update().await;
     assert_eq!(root.get(0).get(0).get(0).text(), Some("false"));
     assert_eq!(root.get(1).get(0).get(0).text(), Some("true"));
@@ -136,20 +126,14 @@ pub async fn block_focus() {
     );
 
     // Initial state
-    utils.wait_for_update().await;
     let root = utils.root().get(0);
     assert_eq!(root.get(0).get(0).get(0).text(), Some("false"));
     assert_eq!(root.get(1).get(0).get(0).text(), Some("false"));
 
     // Click on the first rect
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
-        cursor: (5.0, 5.0).into(),
-        button: Some(MouseButton::Left),
-    });
+    utils.click_cursor((5., 5.)).await;
 
     // First rect is now focused
-    utils.wait_for_update().await;
     assert_eq!(root.get(0).get(0).get(0).text(), Some("true"));
     assert_eq!(root.get(1).get(0).get(0).text(), Some("false"));
 

@@ -216,24 +216,12 @@ mod test {
         // Default is false
         assert_eq!(label.get(0).text(), Some("false"));
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (15.0, 15.0).into(),
-            button: Some(MouseButton::Left),
-        });
-
-        utils.wait_for_update().await;
+        utils.click_cursor((15., 15.)).await;
 
         // Check if after clicking it is now enabled
         assert_eq!(label.get(0).text(), Some("true"));
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (15.0, 15.0).into(),
-            button: Some(MouseButton::Left),
-        });
-
-        utils.wait_for_update().await;
+        utils.click_cursor((15., 15.)).await;
 
         // Check if after clicking again it is now disabled
         assert_eq!(label.get(0).text(), Some("false"));

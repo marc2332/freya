@@ -608,7 +608,7 @@ mod test {
             button: Some(MouseButton::Left),
         });
         utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
+            name: EventName::MouseUp,
             cursor: (490., 320.).into(),
             button: Some(MouseButton::Left),
         });

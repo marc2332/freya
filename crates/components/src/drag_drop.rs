@@ -188,21 +188,9 @@ mod test {
 
         utils.wait_for_update().await;
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
-            cursor: (5.0, 5.0).into(),
-            button: Some(MouseButton::Left),
-        });
+        utils.move_cursor((5., 5.)).await;
 
-        utils.wait_for_update().await;
-
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
-            cursor: (5.0, 300.0).into(),
-            button: Some(MouseButton::Left),
-        });
-
-        utils.wait_for_update().await;
+        utils.move_cursor((5., 300.)).await;
 
         assert_eq!(root.get(0).get(0).get(0).get(0).text(), Some("Moving"));
 

@@ -309,7 +309,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     ElementState::Released => match button {
                         MouseButton::Middle => EventName::MiddleClick,
                         MouseButton::Right => EventName::RightClick,
-                        MouseButton::Left => EventName::Click,
+                        MouseButton::Left => EventName::MouseUp,
                         _ => EventName::PointerUp,
                     },
                 };

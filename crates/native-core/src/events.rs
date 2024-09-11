@@ -139,7 +139,7 @@ impl EventName {
     /// Get the equivalent to a global event
     pub fn get_global_event(&self) -> Option<Self> {
         match self {
-            Self::Click | Self::MouseUp => Some(Self::GlobalClick),
+            Self::MouseUp => Some(Self::GlobalClick),
             Self::PointerUp => Some(Self::GlobalPointerUp),
             Self::MouseDown => Some(Self::GlobalMouseDown),
             Self::MouseOver => Some(Self::GlobalMouseOver),
@@ -162,8 +162,8 @@ impl EventName {
                 events.extend([Self::MouseEnter, Self::PointerEnter, Self::PointerOver])
             }
             Self::MouseDown | Self::TouchStart => events.push(Self::PointerDown),
-            Self::Click | Self::MiddleClick | Self::RightClick | Self::TouchEnd => {
-                events.extend([Self::MouseUp, Self::PointerUp])
+            Self::MouseUp | Self::MiddleClick | Self::RightClick | Self::TouchEnd => {
+                events.extend([Self::Click, Self::PointerUp])
             }
             Self::MouseLeave => events.push(Self::PointerLeave),
             Self::GlobalFileHover | Self::GlobalFileHoverCancelled => events.clear(),

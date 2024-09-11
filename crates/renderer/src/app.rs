@@ -237,7 +237,6 @@ impl Application {
             &mut self.events,
             &self.event_emitter,
             &mut self.nodes_state,
-            false,
             scale_factor,
         )
     }

@@ -72,45 +72,22 @@ async fn asset_cacher() {
 
     assert_eq!(utils.root().get(0).get(0).text(), Some("size 1"));
 
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
-        cursor: (15.0, 25.0).into(),
-        button: Some(MouseButton::Left),
-    });
-
-    utils.wait_for_update().await;
+    utils.click_cursor((15., 25.)).await;
 
     assert_eq!(utils.root().get(0).get(0).text(), Some("size 1"));
     assert_eq!(utils.root().get(3).get(0).text(), Some("7"));
 
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
-        cursor: (15.0, 25.0).into(),
-        button: Some(MouseButton::Left),
-    });
-
-    utils.wait_for_update().await;
+    utils.click_cursor((15., 25.)).await;
 
     assert_eq!(utils.root().get(0).get(0).text(), Some("size 1"));
     assert_eq!(utils.root().get(4).get(0).text(), Some("7"));
 
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
-        cursor: (15.0, 70.0).into(),
-        button: Some(MouseButton::Left),
-    });
-
-    utils.wait_for_update().await;
+    utils.click_cursor((15., 70.)).await;
 
     assert_eq!(utils.root().get(0).get(0).text(), Some("size 1"));
 
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
-        cursor: (15.0, 70.0).into(),
-        button: Some(MouseButton::Left),
-    });
+    utils.click_cursor((15., 70.)).await;
 
-    utils.wait_for_update().await;
     sleep(Duration::from_millis(5)).await;
     utils.wait_for_update().await;
     utils.wait_for_update().await;
