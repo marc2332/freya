@@ -9,6 +9,7 @@ use dioxus_router::prelude::{
     Router,
 };
 use freya_components::*;
+use freya_core::prelude::EventMessage;
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::{
     use_init_theme,
@@ -274,7 +275,7 @@ fn LayoutForDOMInspector() -> Element {
             onselected: move |node_id: NodeId| {
                 if let Some(hovered_node) = &radio.read().hovered_node.as_ref() {
                     hovered_node.lock().unwrap().replace(node_id);
-                    platform.request_animation_frame();
+                    platform.send(EventMessage::RequestFullRerender).ok();
                 }
             }
         }

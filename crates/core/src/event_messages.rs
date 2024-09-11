@@ -26,6 +26,8 @@ pub enum EventMessage {
     PollVDOM,
     /// Request a rerender
     RequestRerender,
+    /// Request a full rerender
+    RequestFullRerender,
     /// Invalidate a certain drawing area
     InvalidateArea(Area),
     /// Remeasure a text elements group
