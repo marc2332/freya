@@ -1,8 +1,3 @@
-use std::{
-    cell::RefCell,
-    rc::Rc,
-};
-
 use dioxus_core::{
     prelude::{
         consume_context,
@@ -20,7 +15,6 @@ use dioxus_signals::{
 use freya_core::prelude::NativePlatformReceiver;
 
 use crate::use_init_asset_cacher;
-pub type AccessibilityIdCounter = Rc<RefCell<u64>>;
 
 #[derive(Clone)]
 pub struct NavigationMark(bool);
@@ -44,9 +38,6 @@ pub struct UsePlatformEvents {
 pub fn use_init_native_platform() -> UsePlatformEvents {
     // Inithe global asset cacher
     use_init_asset_cacher();
-
-    // Init the Accessibility Node ID generator
-    use_context_provider(|| Rc::new(RefCell::new(0u64)));
 
     // Init the NavigationMark signal
     let navigation_mark = use_context_provider(|| Signal::new(NavigationMark(true)));

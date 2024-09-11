@@ -7,7 +7,10 @@ use accesskit::{
     NodeId as AccessibilityId,
     Role,
 };
-use freya_common::AccessibilityDirtyNodes;
+use freya_common::{
+    AccessibilityDirtyNodes,
+    AccessibilityGenerator,
+};
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
@@ -114,6 +117,7 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
         let accessibility_dirty_nodes = context
             .get::<Arc<Mutex<AccessibilityDirtyNodes>>>()
             .unwrap();
+        let accessibility_generator = context.get::<Arc<AccessibilityGenerator>>().unwrap();
         let mut accessibility = AccessibilityNodeState {
             node_id: node_view.node_id(),
             ..Default::default()
@@ -149,9 +153,20 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
 
         let changed = &accessibility != self;
 
+        *self = accessibility;
+
         if changed {
+            // Assign an accessibility ID if none was passed but the node has a role
+            if self.accessibility_id.is_none() && self.role.is_some() {
+                let id = AccessibilityId(accessibility_generator.new_id());
+                #[cfg(debug_assertions)]
+                tracing::info!("Assigned {id:?} to {:?}", node_view.node_id());
+
+                self.accessibility_id = Some(id)
+            }
+
             // Add or update this node if it is the Root or if it has an accessibility ID
-            if accessibility.accessibility_id.is_some() || node_view.node_id() == *root_id {
+            if self.accessibility_id.is_some() || node_view.node_id() == *root_id {
                 accessibility_dirty_nodes
                     .lock()
                     .unwrap()
@@ -159,7 +174,6 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
             }
         }
 
-        *self = accessibility;
         changed
     }
 }

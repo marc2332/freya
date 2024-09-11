@@ -7,6 +7,7 @@ use std::sync::{
 use dioxus_core::VirtualDom;
 use freya_common::{
     AccessibilityDirtyNodes,
+    AccessibilityGenerator,
     CompositorDirtyNodes,
     Layers,
     ParagraphElements,
@@ -128,6 +129,7 @@ pub struct FreyaDOM {
     compositor_dirty_area: Arc<Mutex<CompositorDirtyArea>>,
     compositor_cache: Arc<Mutex<CompositorCache>>,
     accessibility_dirty_nodes: Arc<Mutex<AccessibilityDirtyNodes>>,
+    accessibility_generator: Arc<AccessibilityGenerator>,
 }
 
 impl Default for FreyaDOM {
@@ -154,6 +156,7 @@ impl Default for FreyaDOM {
             compositor_dirty_area: Arc::default(),
             compositor_cache: Arc::default(),
             accessibility_dirty_nodes: Arc::default(),
+            accessibility_generator: Arc::default(),
         }
     }
 }
@@ -187,6 +190,10 @@ impl FreyaDOM {
         self.accessibility_dirty_nodes.lock().unwrap()
     }
 
+    pub fn accessibility_generator(&self) -> &Arc<AccessibilityGenerator> {
+        &self.accessibility_generator
+    }
+
     /// Create the initial DOM from the given Mutations
     pub fn init_dom(&mut self, vdom: &mut VirtualDom, scale_factor: f32) {
         // Build the RealDOM
@@ -211,6 +218,7 @@ impl FreyaDOM {
         ctx.insert(self.compositor_dirty_nodes.clone());
         ctx.insert(self.accessibility_dirty_nodes.clone());
         ctx.insert(self.rdom.root_id());
+        ctx.insert(self.accessibility_generator.clone());
 
         self.rdom.update_state(ctx);
     }
@@ -240,6 +248,7 @@ impl FreyaDOM {
         ctx.insert(self.compositor_dirty_nodes.clone());
         ctx.insert(self.accessibility_dirty_nodes.clone());
         ctx.insert(self.rdom.root_id());
+        ctx.insert(self.accessibility_generator.clone());
 
         // Update the Node's states
         let (_, diff) = self.rdom.update_state(ctx);

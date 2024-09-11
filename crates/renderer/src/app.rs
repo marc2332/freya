@@ -139,6 +139,8 @@ impl Application {
             .insert_any_root_context(Box::new(self.platform_receiver.clone()));
         self.vdom
             .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
+        self.vdom
+            .insert_any_root_context(Box::new(self.sdom.get().accessibility_generator().clone()));
     }
 
     /// Make the first build of the VirtualDOM and sync it with the RealDOM.
