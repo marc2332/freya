@@ -296,6 +296,22 @@ where
         let mut initial_phase_sizes = FxHashMap::default();
         let mut initial_phase_inner_sizes = *inner_sizes;
 
+        // Used to calculate the spacing
+        let non_absolute_children = if parent_node.spacing.get() > 0. {
+            children
+                .clone()
+                .into_iter()
+                .filter(|child_id| {
+                    let Some(child_data) = self.dom_adapter.get_node(child_id) else {
+                        return false;
+                    };
+                    !child_data.position.is_absolute()
+                })
+                .collect::<Vec<_>>()
+        } else {
+            children.clone()
+        };
+
         // Initial phase: Measure the size and position of the children if the parent has a
         // non-start cross alignment, non-start main aligment of a fit-content.
         if parent_node.cross_alignment.is_not_start()
@@ -307,7 +323,7 @@ where
             let mut initial_phase_available_area = *available_area;
 
             //  Measure the children
-            for (child_n, child_id) in children.iter().enumerate() {
+            for child_id in children.iter() {
                 let Some(child_data) = self.dom_adapter.get_node(child_id) else {
                     continue;
                 };
@@ -317,6 +333,20 @@ where
                 if child_data.position.is_absolute() {
                     continue;
                 }
+
+                let child_n = non_absolute_children
+                    .iter()
+                    .enumerate()
+                    .find_map(
+                        |(i, node_id)| {
+                            if node_id == child_id {
+                                Some(i)
+                            } else {
+                                None
+                            }
+                        },
+                    )
+                    .unwrap();
 
                 let inner_area = initial_phase_inner_area;
 
@@ -339,7 +369,7 @@ where
                     &mut initial_phase_inner_sizes,
                     &child_areas.area,
                     &child_data,
-                    children.len(),
+                    non_absolute_children.len(),
                     child_n,
                 );
 
@@ -384,13 +414,26 @@ where
         }
 
         let initial_available_area = *available_area;
-        let children_len = children.len();
 
         // Final phase: measure the children with all the axis and sizes adjusted
-        for (child_n, child_id) in children.into_iter().enumerate() {
+        for child_id in children {
             let Some(child_data) = self.dom_adapter.get_node(&child_id) else {
                 continue;
             };
+
+            let child_n = non_absolute_children
+                .iter()
+                .enumerate()
+                .find_map(
+                    |(i, node_id)| {
+                        if node_id == &child_id {
+                            Some(i)
+                        } else {
+                            None
+                        }
+                    },
+                )
+                .unwrap();
 
             let mut adapted_available_area = *available_area;
 
@@ -403,7 +446,7 @@ where
                     &initial_phase_inner_sizes,
                     &parent_node.main_alignment,
                     &parent_node.direction,
-                    initial_phase_sizes.len(),
+                    non_absolute_children.len(),
                     child_n,
                 );
             }
@@ -447,7 +490,7 @@ where
                 inner_sizes,
                 &child_areas.area,
                 &child_data,
-                children_len,
+                non_absolute_children.len(),
                 child_n,
             );
 
