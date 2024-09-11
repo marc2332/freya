@@ -199,8 +199,11 @@ mod test {
 
         utils.move_cursor((5., 300.)).await;
 
-        assert_eq!(root.get(0).get(0).get(0).get(0).text(), Some("Moving"));
-        assert_eq!(root.get(0).get(1).get(0).get(0).text(), Some("Move"));
+        assert_eq!(
+            root.get(0).get(0).get(0).get(0).get(0).text(),
+            Some("Moving")
+        );
+        assert_eq!(root.get(0).get(0).get(1).get(0).text(), Some("Move"));
 
         utils.push_event(PlatformEvent::Mouse {
             name: EventName::MouseUp,
@@ -272,8 +275,11 @@ mod test {
 
         utils.move_cursor((5., 300.)).await;
 
-        assert_eq!(root.get(0).get(0).get(0).get(0).text(), Some("Moving"));
-        assert!(!root.get(0).get(1).get(0).is_visible());
+        assert_eq!(
+            root.get(0).get(0).get(0).get(0).get(0).text(),
+            Some("Moving")
+        );
+        assert!(!root.get(0).get(0).get(1).is_visible());
 
         utils.push_event(PlatformEvent::Mouse {
             name: EventName::MouseUp,
