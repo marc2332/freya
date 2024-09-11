@@ -100,7 +100,7 @@ pub fn DragZone<T: 'static + Clone + PartialEq>(
             onglobalclick,
             onglobalmousemove: onglobalmousemove,
             onmousedown,
-            if !hide_while_dragging || (hide_while_dragging && !dragging()) {
+            if !hide_while_dragging || !dragging() {
                 {children}
             }
         }
