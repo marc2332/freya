@@ -174,7 +174,7 @@ impl AccessibilityTree {
                 node_accessibility_state.as_ref().zip(layout_node)
             {
                 let accessibility_node =
-                    Self::create_node(&node_ref, layout_node, &node_accessibility_state);
+                    Self::create_node(&node_ref, layout_node, node_accessibility_state);
 
                 let accessibility_id = node_ref.get_accessibility_id().unwrap();
 
@@ -182,6 +182,7 @@ impl AccessibilityTree {
             }
         }
 
+        // Fallback the focused id to the root if the focused node no longer exists
         if !self.map.contains_key(&self.focused_id) {
             self.focused_id = ACCESSIBILITY_ROOT_ID;
         }

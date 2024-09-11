@@ -150,4 +150,69 @@ mod test {
         assert_ne!(first_focus_id, second_focus_id);
         assert_ne!(second_focus_id, ACCESSIBILITY_ROOT_ID);
     }
+
+    #[tokio::test]
+    pub async fn uncontrolled_focus_accessibility() {
+        #[allow(non_snake_case)]
+        fn OtherChild() -> Element {
+            rsx!(rect {
+                role: "genericContainer",
+                width: "100%",
+                height: "50%",
+            })
+        }
+
+        fn use_focus_app() -> Element {
+            rsx!(
+                rect {
+                    width: "100%",
+                    height: "100%",
+                    OtherChild {},
+                    OtherChild {}
+                }
+            )
+        }
+
+        let mut utils = launch_test_with_config(
+            use_focus_app,
+            TestingConfig {
+                size: (100.0, 100.0).into(),
+                ..TestingConfig::default()
+            },
+        );
+
+        // Initial state
+        utils.wait_for_update().await;
+        assert_eq!(utils.focus_id(), ACCESSIBILITY_ROOT_ID);
+
+        // Navigate to the first rect
+        utils.push_event(PlatformEvent::Keyboard {
+            name: EventName::KeyDown,
+            key: Key::Tab,
+            code: Code::Tab,
+            modifiers: Modifiers::default(),
+        });
+        utils.wait_for_update().await;
+
+        // First rect is now focused
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+        let first_focus_id = utils.focus_id();
+        assert_ne!(first_focus_id, ACCESSIBILITY_ROOT_ID);
+
+        // Navigate to the second rect
+        utils.push_event(PlatformEvent::Keyboard {
+            name: EventName::KeyDown,
+            key: Key::Tab,
+            code: Code::Tab,
+            modifiers: Modifiers::default(),
+        });
+        utils.wait_for_update().await;
+
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+        let second_focus_id = utils.focus_id();
+        assert_ne!(first_focus_id, second_focus_id);
+        assert_ne!(second_focus_id, ACCESSIBILITY_ROOT_ID);
+    }
 }
