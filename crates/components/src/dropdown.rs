@@ -321,7 +321,6 @@ where
 mod test {
     use freya::prelude::*;
     use freya_testing::prelude::*;
-    use winit::event::MouseButton;
 
     #[tokio::test]
     pub async fn dropdown() {

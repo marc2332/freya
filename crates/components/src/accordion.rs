@@ -149,7 +149,6 @@ mod test {
     use freya::prelude::*;
     use freya_testing::prelude::*;
     use tokio::time::sleep;
-    use winit::event::MouseButton;
 
     #[tokio::test]
     pub async fn accordion() {
