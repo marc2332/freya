@@ -5,22 +5,38 @@ use std::sync::{
 
 use accesskit::{
     Action,
-    DefaultActionVerb,
+    Affine,
     Node,
     NodeBuilder,
     NodeId as AccessibilityId,
     Rect,
     Role,
+    TextDirection,
     Tree,
     TreeUpdate,
 };
 use freya_common::AccessibilityDirtyNodes;
+use freya_engine::prelude::{
+    Color,
+    Slant,
+    TextAlign,
+    TextDecoration,
+    TextDecorationStyle,
+};
 use freya_native_core::{
+    node::NodeType,
     prelude::NodeImmutable,
     tags::TagName,
     NodeId,
 };
-use freya_node_state::AccessibilityNodeState;
+use freya_node_state::{
+    AccessibilityNodeState,
+    Fill,
+    FontStyleState,
+    OverflowMode,
+    StyleState,
+    TransformState,
+};
 use rustc_hash::{
     FxHashMap,
     FxHashSet,
@@ -280,11 +296,131 @@ impl AccessibilityTree {
         layout_node: &LayoutNode,
         node_accessibility: &AccessibilityNodeState,
     ) -> Node {
-        let mut builder = NodeBuilder::new(Role::Unknown);
+        let font_style_state = &*node_ref.get::<FontStyleState>().unwrap();
+        let style_state = &*node_ref.get::<StyleState>().unwrap();
+        let transform_state = &*node_ref.get::<TransformState>().unwrap();
+        let node_type = node_ref.node_type();
+
+        let mut builder = NodeBuilder::new(Role::default());
 
         // Set children
         let children = node_ref.get_accessibility_children();
         builder.set_children(children);
+
+        // Set the area
+        let area = layout_node.area.to_f64();
+        builder.set_bounds(Rect {
+            x0: area.min_x(),
+            x1: area.max_x(),
+            y0: area.min_y(),
+            y1: area.max_y(),
+        });
+
+        // Set focusable action
+        // This will cause assistive technology to offer the user an option
+        // to focus the current element if it supports it.
+        if node_accessibility.focusable {
+            builder.add_action(Action::Focus);
+        }
+
+        // Rotation transform
+        if let Some((_, rotation)) = transform_state
+            .rotations
+            .iter()
+            .find(|(id, _)| id == &node_ref.id())
+        {
+            builder.set_transform(Affine::rotate(rotation.to_radians() as _));
+        }
+
+        // Clipping overflow
+        if style_state.overflow == OverflowMode::Clip {
+            builder.set_clips_children();
+        }
+
+        // Foreground/Background color
+        builder.set_foreground_color(skia_color_to_rgba_u32(font_style_state.color));
+        if let Fill::Color(color) = style_state.background {
+            builder.set_background_color(skia_color_to_rgba_u32(color));
+        }
+
+        // If the node is a block-level element in the layout, indicate that it will cause a linebreak.
+        if !node_type.is_text() {
+            if let NodeType::Element(node) = &*node_type {
+                // This should be impossible currently but i'm checking for it just in case.
+                // In the future, inline text spans should have their own own accessibility node,
+                // but that's not a concern yet.
+                if node.tag != TagName::Text {
+                    builder.set_is_line_breaking_object();
+                }
+            }
+        }
+
+        // Font size
+        builder.set_font_size(font_style_state.font_size as _);
+
+        // If the font family has changed since the parent node, then we inform accesskit of this change.
+        if let Some(parent_node) = node_ref.parent() {
+            if parent_node.get::<FontStyleState>().unwrap().font_family
+                != font_style_state.font_family
+            {
+                builder.set_font_family(font_style_state.font_family.join(", "));
+            }
+        } else {
+            // Element has no parent elements, so we set the initial font style.
+            builder.set_font_family(font_style_state.font_family.join(", "));
+        }
+
+        // Set bold flag for weights above 700
+        if font_style_state.font_weight > 700.into() {
+            builder.set_bold();
+        }
+
+        // Text alignment
+        builder.set_text_align(match font_style_state.text_align {
+            TextAlign::Center => accesskit::TextAlign::Center,
+            TextAlign::Justify => accesskit::TextAlign::Justify,
+            // TODO: change representation of `Start` and `End` once RTL text/writing modes are supported.
+            TextAlign::Left | TextAlign::Start => accesskit::TextAlign::Left,
+            TextAlign::Right | TextAlign::End => accesskit::TextAlign::Right,
+        });
+
+        // TODO: Adjust this once text direction support other than RTL is properly added
+        builder.set_text_direction(TextDirection::LeftToRight);
+
+        // Set italic property for italic/oblique font slants
+        match font_style_state.font_slant {
+            Slant::Italic | Slant::Oblique => builder.set_italic(),
+            _ => {}
+        }
+
+        // Text decoration
+        if font_style_state
+            .decoration
+            .ty
+            .contains(TextDecoration::LINE_THROUGH)
+        {
+            builder.set_strikethrough(skia_decoration_style_to_accesskit(
+                font_style_state.decoration.style,
+            ));
+        }
+        if font_style_state
+            .decoration
+            .ty
+            .contains(TextDecoration::UNDERLINE)
+        {
+            builder.set_underline(skia_decoration_style_to_accesskit(
+                font_style_state.decoration.style,
+            ));
+        }
+        if font_style_state
+            .decoration
+            .ty
+            .contains(TextDecoration::OVERLINE)
+        {
+            builder.set_overline(skia_decoration_style_to_accesskit(
+                font_style_state.decoration.style,
+            ));
+        }
 
         // Set text value
         if let Some(alt) = &node_accessibility.alt {
@@ -308,23 +444,22 @@ impl AccessibilityTree {
             builder.set_role(Role::Window);
         }
 
-        // Set the area
-        let area = layout_node.area.to_f64();
-        builder.set_bounds(Rect {
-            x0: area.min_x(),
-            x1: area.max_x(),
-            y0: area.min_y(),
-            y1: area.max_y(),
-        });
-
-        // Set focusable action
-        if node_accessibility.focusable {
-            builder.add_action(Action::Focus);
-        } else {
-            builder.add_action(Action::Default);
-            builder.set_default_action_verb(DefaultActionVerb::Focus);
-        }
-
         builder.build()
     }
+}
+
+fn skia_decoration_style_to_accesskit(style: TextDecorationStyle) -> accesskit::TextDecoration {
+    match style {
+        TextDecorationStyle::Solid => accesskit::TextDecoration::Solid,
+        TextDecorationStyle::Dotted => accesskit::TextDecoration::Dotted,
+        TextDecorationStyle::Dashed => accesskit::TextDecoration::Dashed,
+        TextDecorationStyle::Double => accesskit::TextDecoration::Double,
+        TextDecorationStyle::Wavy => accesskit::TextDecoration::Wavy,
+    }
+}
+
+fn skia_color_to_rgba_u32(color: Color) -> u32 {
+    ((color.a() as u32) << 24)
+        | ((color.b() as u32) << 16)
+        | (((color.g() as u32) << 8) + (color.r() as u32))
 }
