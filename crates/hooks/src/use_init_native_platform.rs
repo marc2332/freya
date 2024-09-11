@@ -97,10 +97,7 @@ pub fn use_init_native_platform() -> UsePlatformEvents {
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
-    use freya_core::{
-        accessibility::ACCESSIBILITY_ROOT_ID,
-        events::EventName,
-    };
+    use freya_core::accessibility::ACCESSIBILITY_ROOT_ID;
     use freya_testing::prelude::*;
 
     #[tokio::test]
