@@ -360,17 +360,18 @@ where
                 );
 
                 // Stack this child into the parent
-                Self::stack_child(
-                    &mut initial_phase_available_area,
-                    parent_node,
-                    &mut initial_phase_area,
-                    &mut initial_phase_inner_area,
-                    &mut initial_phase_inner_sizes,
-                    &child_areas.area,
-                    &child_data,
-                    non_absolute_children.len(),
-                    child_n,
-                );
+                if let Some(child_n) = child_n {
+                    Self::stack_child(
+                        &mut initial_phase_available_area,
+                        parent_node,
+                        &mut initial_phase_area,
+                        &mut initial_phase_inner_area,
+                        &mut initial_phase_inner_sizes,
+                        &child_areas.area,
+                        non_absolute_children.len(),
+                        child_n,
+                    );
+                }
 
                 if parent_node.cross_alignment.is_not_start()
                     || parent_node.main_alignment.is_spaced()
@@ -435,19 +436,21 @@ where
 
             let mut adapted_available_area = *available_area;
 
-            if parent_node.main_alignment.is_spaced() {
-                // Align the Main axis if necessary
-                Self::align_position(
-                    AlignmentDirection::Main,
-                    &mut adapted_available_area,
-                    &initial_available_area,
-                    &initial_phase_inner_sizes,
-                    &parent_node.main_alignment,
-                    &parent_node.direction,
-                    &child_data,
-                    non_absolute_children.len(),
-                    child_n,
-                );
+            // Only the stacked children will be aligned
+            if let Some(child_n) = child_n {
+                if parent_node.main_alignment.is_spaced() {
+                    // Align the Main axis if necessary
+                    Self::align_position(
+                        AlignmentDirection::Main,
+                        &mut adapted_available_area,
+                        &initial_available_area,
+                        &initial_phase_inner_sizes,
+                        &parent_node.main_alignment,
+                        &parent_node.direction,
+                        non_absolute_children.len(),
+                        child_n,
+                    );
+                }
             }
 
             if parent_node.cross_alignment.is_not_start() {
@@ -480,18 +483,19 @@ where
             // Adjust the size of the area if needed
             child_areas.area.adjust_size(&child_data);
 
-            // Stack this child into the parent
-            Self::stack_child(
-                available_area,
-                parent_node,
-                area,
-                inner_area,
-                inner_sizes,
-                &child_areas.area,
-                &child_data,
-                non_absolute_children.len(),
-                child_n,
-            );
+            // Stack this s child into the parent
+            if let Some(child_n) = child_n {
+                Self::stack_child(
+                    available_area,
+                    parent_node,
+                    area,
+                    inner_area,
+                    inner_sizes,
+                    &child_areas.area,
+                    non_absolute_children.len(),
+                    child_n,
+                );
+            }
 
             // Cache the child layout if it was mutated and children must be cached
             if child_revalidated && must_cache_children {
@@ -552,17 +556,9 @@ where
         inner_sizes: &Size2D,
         alignment: &Alignment,
         direction: &DirectionMode,
-        child_node: &Node,
         siblings_len: usize,
-        child_position: Option<usize>,
+        child_position: usize,
     ) {
-        // No need to align a node that is positioned absolutely
-        if child_node.position.is_absolute() {
-            return;
-        }
-
-        let child_position = child_position.unwrap();
-
         let axis = AlignAxis::new(direction, alignment_direction);
 
         match axis {
@@ -624,17 +620,9 @@ where
         inner_area: &mut Area,
         inner_sizes: &mut Size2D,
         child_area: &Area,
-        child_node: &Node,
         siblings_len: usize,
-        child_position: Option<usize>,
+        child_position: usize,
     ) {
-        // No need to stack a node that is positioned absolutely
-        if child_node.position.is_absolute() {
-            return;
-        }
-
-        let child_position = child_position.unwrap();
-
         // Only apply the spacing to elements after `i > 0` and `i < len - 1`
         let spacing = (child_position < siblings_len - 1)
             .then_some(parent_node.spacing)
