@@ -29,6 +29,9 @@ pub struct DragZoneProps<T: Clone + 'static + PartialEq> {
     children: Element,
     /// Data that will be handled to the destination [`DropZone`].
     data: T,
+    /// Hide the [`DragZone`] children when dragging.
+    #[props(default = false)]
+    hide_while_dragging: bool,
 }
 
 /// Make the inner children draggable to other [`DropZone`].
@@ -38,6 +41,7 @@ pub fn DragZone<T: 'static + Clone + PartialEq>(
         data,
         children,
         drag_element,
+        hide_while_dragging,
     }: DragZoneProps<T>,
 ) -> Element {
     let mut drags = use_context::<Signal<Option<T>>>();
@@ -96,7 +100,9 @@ pub fn DragZone<T: 'static + Clone + PartialEq>(
             onglobalclick,
             onglobalmousemove: onglobalmousemove,
             onmousedown,
-            {children}
+            if !hide_while_dragging || !dragging() {
+                {children}
+            }
         }
     )
 }
@@ -193,6 +199,80 @@ mod test {
         utils.move_cursor((5., 300.)).await;
 
         assert_eq!(root.get(0).get(0).get(0).get(0).text(), Some("Moving"));
+        assert_eq!(root.get(0).get(1).get(0).get(0).text(), Some("Move"));
+
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseUp,
+            cursor: (5.0, 300.0).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        assert_eq!(
+            root.get(1).get(0).get(0).get(0).text(),
+            Some("Enabled: true")
+        );
+    }
+
+    #[tokio::test]
+    pub async fn drag_drop_hide_while_dragging() {
+        fn drop_app() -> Element {
+            let mut state = use_signal::<bool>(|| false);
+
+            rsx!(
+                DragProvider::<bool> {
+                    rect {
+                        height: "50%",
+                        width: "100%",
+                        DragZone {
+                            data: true,
+                            hide_while_dragging: true,
+                            drag_element: rsx!(
+                                label {
+                                    width: "200",
+                                    "Moving"
+                                }
+                            ),
+                            label {
+                                "Move"
+                            }
+                        }
+                    },
+                    DropZone {
+                        ondrop: move |data: bool| {
+                            state.set(data);
+                        },
+                        rect {
+                            height: "50%",
+                            width: "100%",
+                            label {
+                                "Enabled: {state.read()}"
+                            }
+                        }
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(drop_app);
+        let root = utils.root();
+        utils.wait_for_update().await;
+
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseDown,
+            cursor: (5.0, 5.0).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        utils.move_cursor((5., 5.)).await;
+
+        utils.move_cursor((5., 300.)).await;
+
+        assert_eq!(root.get(0).get(0).get(0).get(0).text(), Some("Moving"));
+        assert!(!root.get(0).get(1).get(0).is_visible());
 
         utils.push_event(PlatformEvent::Mouse {
             name: EventName::MouseUp,

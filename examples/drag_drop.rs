@@ -87,6 +87,7 @@ fn Column(
                     color: color,
                     for el in column {
                         DragZone {
+                            hide_while_dragging: true,
                             data: el.to_string(),
                             drag_element: rsx!(
                                 label {
