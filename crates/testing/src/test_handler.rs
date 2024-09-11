@@ -349,7 +349,7 @@ impl TestingHandler {
     /// Shorthand to simulate a cursor move to the given location.
     pub async fn move_cursor(&mut self, cursor: impl Into<CursorPoint>) {
         self.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
+            name: EventName::MouseMove,
             cursor: cursor.into(),
             button: Some(MouseButton::Left),
         });

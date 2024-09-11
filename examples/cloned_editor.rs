@@ -86,8 +86,8 @@ fn Body() -> Element {
                         editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
                     };
 
-                    let onmouseover = move |e: MouseEvent| {
-                        editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
+                    let onmousemove = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseMove(e.data, line_index));
                     };
 
                     let highlights = editable.highlights_attr(line_index);
@@ -118,7 +118,7 @@ fn Body() -> Element {
                                 cursor_mode: "editable",
                                 cursor_id: "{line_index}",
                                 onmousedown,
-                                onmouseover,
+                                onmousemove,
                                 highlights,
                                 text {
                                     color: "rgb(240, 240, 240)",
@@ -160,8 +160,8 @@ fn Body() -> Element {
                         editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
                     };
 
-                    let onmouseover = move |e: MouseEvent| {
-                        editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
+                    let onmousemove = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseMove(e.data, line_index));
                     };
 
                     let highlights = editable.highlights_attr(line_index);
@@ -192,7 +192,7 @@ fn Body() -> Element {
                                 cursor_mode: "editable",
                                 cursor_id: "{line_index}",
                                 onmousedown,
-                                onmouseover,
+                                onmousemove,
                                 highlights,
                                 highlight_mode: "expanded",
                                 text {

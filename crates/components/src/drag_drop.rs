@@ -45,7 +45,7 @@ pub fn DragZone<T: 'static + Clone + PartialEq>(
     let mut pos = use_signal(CursorPoint::default);
     let (node_reference, size) = use_node_signal();
 
-    let onglobalmouseover = move |e: MouseEvent| {
+    let onglobalmousemove = move |e: MouseEvent| {
         if *dragging.read() {
             let size = size.read();
             let coord = e.get_screen_coordinates();
@@ -94,7 +94,7 @@ pub fn DragZone<T: 'static + Clone + PartialEq>(
         rect {
             reference: node_reference,
             onglobalclick,
-            onglobalmouseover: onglobalmouseover,
+            onglobalmousemove: onglobalmousemove,
             onmousedown,
             {children}
         }

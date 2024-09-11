@@ -140,8 +140,8 @@ pub fn Input(
         focus.focus();
     };
 
-    let onmouseover = move |e: MouseEvent| {
-        editable.process_event(&EditableEvent::MouseOver(e.data, 0));
+    let onmousemove = move |e: MouseEvent| {
+        editable.process_event(&EditableEvent::MouseMove(e.data, 0));
     };
 
     let onmouseenter = move |_| {
@@ -223,7 +223,7 @@ pub fn Input(
                 onmouseenter,
                 onmouseleave,
                 onmousedown,
-                onmouseover,
+                onmousemove,
                 width: "100%",
                 cursor_id: "0",
                 cursor_index: "{cursor_char}",

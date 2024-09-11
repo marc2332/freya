@@ -38,7 +38,7 @@ pub fn process_events(
     // 3. Get what events can be actually emitted based on what elements are listening
     let mut dom_events = measure_dom_events(&potential_events, dom, nodes_state, scale_factor);
 
-    // 4. Get potential collateral events, e.g. mouseover -> mouseenter
+    // 4. Get potential collateral events, e.g. mousemove -> mouseenter
     let potential_collateral_events =
         nodes_state.process_collateral(&potential_events, &dom_events, events);
 

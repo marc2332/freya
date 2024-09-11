@@ -591,10 +591,10 @@ pub mod events {
         onmousedown
         #[doc = include_str!("_docs/events/globalmousedown.md")]
         onglobalmousedown
-        #[doc = include_str!("_docs/events/mouseover.md")]
-        onmouseover
-        #[doc = include_str!("_docs/events/globalmouseover.md")]
-        onglobalmouseover
+        #[doc = include_str!("_docs/events/mousemove.md")]
+        onmousemove
+        #[doc = include_str!("_docs/events/globalmousemove.md")]
+        onglobalmousemove
         #[doc = include_str!("_docs/events/mouseleave.md")]
         onmouseleave
         #[doc = include_str!("_docs/events/mouseenter.md")]

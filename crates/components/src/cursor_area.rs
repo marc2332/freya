@@ -37,7 +37,7 @@ pub fn CursorArea(CursorAreaProps { children, icon }: CursorAreaProps) -> Elemen
     let platform = use_platform();
     let mut is_hovering = use_signal(|| false);
 
-    let onmouseover = move |_| {
+    let onmousemove = move |_| {
         *is_hovering.write() = true;
         platform.set_cursor(icon);
     };
@@ -55,7 +55,7 @@ pub fn CursorArea(CursorAreaProps { children, icon }: CursorAreaProps) -> Elemen
 
     rsx!(
         rect {
-            onmouseover,
+            onmousemove,
             onmouseleave,
             {children}
         }

@@ -26,7 +26,7 @@ fn app() -> Element {
         }
     };
 
-    let onmouseover = move |e: MouseEvent| {
+    let onmousemove = move |e: MouseEvent| {
         hovering.set(true);
         if let Some(clicking_cords) = *clicking.peek() {
             let coordinates = e.get_screen_coordinates();
@@ -71,7 +71,7 @@ fn app() -> Element {
             offset_y: "{canvas_pos.read().1}",
             onmousedown,
             onclick,
-            onmouseover,
+            onmousemove,
             onmouseleave,
             rect {
                 height: "0",
@@ -288,8 +288,8 @@ fn Editor() -> Element {
                                 editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
                             };
 
-                            let onmouseover = move |e: MouseEvent| {
-                                editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
+                            let onmousemove = move |e: MouseEvent| {
+                                editable.process_event(&EditableEvent::MouseMove(e.data, line_index));
                             };
 
                             let onglobalclick = move |_: MouseEvent| {
@@ -329,7 +329,7 @@ fn Editor() -> Element {
                                         cursor_mode: "editable",
                                         cursor_id: "{cursor_id}",
                                         onmousedown,
-                                        onmouseover,
+                                        onmousemove,
                                         onglobalclick,
                                         highlights: highlights,
                                         text {
