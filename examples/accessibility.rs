@@ -55,7 +55,7 @@ fn app() -> Element {
             width: "100%",
             height: "50%",
             a11y_role:"label",
-            alt: "This is a rectangle",
+            a11y_alt: "This is a rectangle",
             onclick: move |_| {
                 focus_b.focus();
             },
