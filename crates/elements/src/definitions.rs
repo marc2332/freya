@@ -233,11 +233,11 @@ builder_constructors! {
         #[doc = include_str!("_docs/attributes/spacing.md")]
         spacing: String,
 
-        name: String,
-        a11_focusable: String,
+        a11y_name: String,
+        a11y_focusable: String,
         a11y_role:String,
-        focus_id: AccessibilityId,
-        alt: String,
+        a11y_id: AccessibilityId,
+        a11y_alt: String,
         canvas_reference: String,
         layer: String,
         offset_y: String,
@@ -299,7 +299,7 @@ builder_constructors! {
         decoration_color: String,
         #[doc = include_str!("_docs/attributes/text_overflow.md")]
         text_overflow: String,
-        a11_focusable: String,
+        a11y_focusable: String,
         #[doc = include_str!("_docs/attributes/margin.md")]
         margin: String,
         #[doc = include_str!("_docs/attributes/opacity.md")]
@@ -372,7 +372,7 @@ builder_constructors! {
         text_overflow: String,
         #[doc = include_str!("_docs/attributes/overflow.md")]
         overflow: String,
-        a11_focusable: String,
+        a11y_focusable: String,
         #[doc = include_str!("_docs/attributes/margin.md")]
         margin: String,
         #[doc = include_str!("_docs/attributes/opacity.md")]
@@ -458,7 +458,7 @@ builder_constructors! {
         focus_id: AccessibilityId,
         alt: String,
         name: String,
-        a11_focusable: String,
+        a11y_focusable: String,
     };
     /// `svg` element let's you display SVG code.
     ///
@@ -497,7 +497,7 @@ builder_constructors! {
         focus_id: AccessibilityId,
         alt: String,
         name: String,
-        a11_focusable: String,
+        a11y_focusable: String,
     };
 }
 

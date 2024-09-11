@@ -325,7 +325,7 @@ impl AccessibilityTree {
         // Set focusable action
         // This will cause assistive technology to offer the user an option
         // to focus the current element if it supports it.
-        if node_accessibility.a11_focusable {
+        if node_accessibility.a11y_focusable {
             builder.add_action(Action::Focus);
         }
 

@@ -42,7 +42,7 @@ pub struct AccessibilityNodeState {
     pub a11y_role: Option<Role>,
     pub a11y_alt: Option<String>,
     pub a11y_name: Option<String>,
-    pub a11_focusable: bool,
+    pub a11y_focusable: bool,
 }
 
 impl ParseAttribute for AccessibilityNodeState {
@@ -78,7 +78,7 @@ impl ParseAttribute for AccessibilityNodeState {
             }
             AttributeName::A11YFocusable => {
                 if let OwnedAttributeValue::Text(attr) = attr.value {
-                    self.a11_focusable = attr.parse().unwrap_or_default()
+                    self.a11y_focusable = attr.parse().unwrap_or_default()
                 }
             }
             _ => {}
