@@ -36,13 +36,7 @@ pub async fn captured_event() {
 
     assert_eq!(label.get(0).text(), Some(""));
 
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
-        cursor: CursorPoint::new(50.0, 50.0),
-        button: Some(MouseButton::Left),
-    });
-
-    utils.wait_for_update().await;
+    utils.click_cursor((50., 50.)).await;
 
     assert_eq!(label.get(0).text(), Some("2"));
 }
@@ -81,13 +75,7 @@ pub async fn not_captured_event() {
 
     assert_eq!(label.get(0).text(), Some(""));
 
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
-        cursor: CursorPoint::new(50.0, 50.0),
-        button: Some(MouseButton::Left),
-    });
-
-    utils.wait_for_update().await;
+    utils.click_cursor((50., 50.)).await;
 
     assert_eq!(label.get(0).text(), Some("1"));
 }
@@ -129,13 +117,7 @@ pub async fn event_gets_captured_at_wall() {
 
     assert_eq!(label.get(0).text(), Some(""));
 
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
-        cursor: CursorPoint::new(50.0, 50.0),
-        button: Some(MouseButton::Left),
-    });
-
-    utils.wait_for_update().await;
+    utils.click_cursor((50., 50.)).await;
 
     assert_eq!(label.get(0).text(), Some("2"));
 }
@@ -174,13 +156,7 @@ pub async fn event_cant_pass_through_wall() {
 
     assert_eq!(label.get(0).text(), Some(""));
 
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
-        cursor: CursorPoint::new(50.0, 50.0),
-        button: Some(MouseButton::Left),
-    });
-
-    utils.wait_for_update().await;
+    utils.click_cursor((50., 50.)).await;
 
     assert_eq!(label.get(0).text(), Some(""));
 }

@@ -62,6 +62,7 @@ impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
             position: layout.position,
             content: layout.content,
             contains_text,
+            spacing: layout.spacing,
         };
 
         node.scale(self.scale_factor);

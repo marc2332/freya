@@ -1,6 +1,6 @@
 Specify a color as the background of an element.
 
-You can learn about the syntax of this attribute [here](#color-syntax).
+You can learn about the syntax of this attribute in [`Color Syntax`](crate::_docs::color_syntax).
 
 ### Example
 

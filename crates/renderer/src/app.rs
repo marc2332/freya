@@ -4,16 +4,9 @@ use dioxus_core::{
     Template,
     VirtualDom,
 };
-use freya_common::{
-    EventMessage,
-    TextGroupMeasurement,
-};
 use freya_core::prelude::*;
 use freya_engine::prelude::*;
-use freya_native_core::{
-    prelude::NodeImmutableDioxusExt,
-    NodeId,
-};
+use freya_native_core::prelude::NodeImmutableDioxusExt;
 use futures_task::Waker;
 use futures_util::Future;
 use pin_utils::pin_mut;
@@ -25,11 +18,7 @@ use tokio::{
         watch,
     },
 };
-use torin::geometry::{
-    Area,
-    Size2D,
-};
-use tracing::info;
+use torin::geometry::Area;
 use winit::{
     dpi::PhysicalSize,
     event_loop::EventLoopProxy,
@@ -39,6 +28,7 @@ use winit::{
 use crate::{
     accessibility::AccessKitManager,
     devtools::Devtools,
+    size::WinitSize,
     winit_waker::winit_waker,
     EmbeddedFonts,
     HoveredNode,
@@ -48,6 +38,7 @@ use crate::{
 pub struct Application {
     pub(crate) sdom: SafeDOM,
     pub(crate) vdom: VirtualDom,
+    pub(crate) compositor: Compositor,
     pub(crate) events: EventsQueue,
     pub(crate) vdom_waker: Waker,
     pub(crate) proxy: EventLoopProxy<EventMessage>,
@@ -63,6 +54,7 @@ pub struct Application {
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) plugins: PluginsManager,
     pub(crate) measure_layout_on_next_render: bool,
+    pub(crate) init_accessibility_on_next_render: bool,
     pub(crate) default_fonts: Vec<String>,
     pub(crate) queued_focus_node: Option<AccessibilityId>,
 }
@@ -76,7 +68,7 @@ impl Application {
         devtools: Option<Devtools>,
         window: &Window,
         fonts_config: EmbeddedFonts,
-        mut plugins: PluginsManager,
+        plugins: PluginsManager,
         default_fonts: Vec<String>,
     ) -> Self {
         let accessibility = AccessKitManager::new(window, proxy.clone());
@@ -104,9 +96,7 @@ impl Application {
             scale_factor: window.scale_factor(),
         });
 
-        plugins.send(PluginEvent::WindowCreated(window));
-
-        Self {
+        let mut app = Self {
             sdom,
             vdom,
             events: EventsQueue::new(),
@@ -124,9 +114,18 @@ impl Application {
             ticker_sender: broadcast::channel(5).0,
             plugins,
             measure_layout_on_next_render: false,
+            init_accessibility_on_next_render: false,
             default_fonts,
             queued_focus_node: None,
-        }
+            compositor: Compositor::default(),
+        };
+
+        app.plugins.send(
+            PluginEvent::WindowCreated(window),
+            PluginHandle::new(&app.proxy),
+        );
+
+        app
     }
 
     /// Provide the launch state and few other utilities like the EventLoopProxy
@@ -144,24 +143,36 @@ impl Application {
 
     /// Make the first build of the VirtualDOM and sync it with the RealDOM.
     pub fn init_doms<State: 'static>(&mut self, scale_factor: f32, app_state: Option<State>) {
-        self.plugins.send(PluginEvent::StartedUpdatingDOM);
+        self.plugins.send(
+            PluginEvent::StartedUpdatingDOM,
+            PluginHandle::new(&self.proxy),
+        );
 
         self.provide_vdom_contexts(app_state);
 
         self.sdom.get_mut().init_dom(&mut self.vdom, scale_factor);
-        self.plugins.send(PluginEvent::FinishedUpdatingDOM);
+        self.plugins.send(
+            PluginEvent::FinishedUpdatingDOM,
+            PluginHandle::new(&self.proxy),
+        );
     }
 
     /// Update the RealDOM, layout and others with the latest changes from the VirtualDOM
     pub fn render_mutations(&mut self, scale_factor: f32) -> (bool, bool) {
-        self.plugins.send(PluginEvent::StartedUpdatingDOM);
+        self.plugins.send(
+            PluginEvent::StartedUpdatingDOM,
+            PluginHandle::new(&self.proxy),
+        );
 
         let (repaint, relayout) = self
             .sdom
             .get_mut()
             .render_mutations(&mut self.vdom, scale_factor);
 
-        self.plugins.send(PluginEvent::FinishedUpdatingDOM);
+        self.plugins.send(
+            PluginEvent::FinishedUpdatingDOM,
+            PluginHandle::new(&self.proxy),
+        );
 
         if repaint {
             if let Some(devtools) = &self.devtools {
@@ -230,20 +241,29 @@ impl Application {
         )
     }
 
-    /// Create the Accessibility tree
-    /// This will iterater the DOM ordered by layers (top to bottom)
-    /// and add every element with an accessibility ID to the Accessibility Tree
+    pub fn init_accessibility(&mut self, window: &Window) {
+        {
+            let fdom = self.sdom.get();
+            let rdom = fdom.rdom();
+            let layout = fdom.layout();
+            let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
+            self.accessibility
+                .init_accessibility(rdom, &layout, &mut dirty_accessibility_tree);
+        }
+
+        if let Some(node_id) = self.queued_focus_node.take() {
+            self.focus_node(node_id, window)
+        }
+    }
+
     pub fn process_accessibility(&mut self, window: &Window) {
         {
-            let fdom = &self.sdom.get();
-            let layout = fdom.layout();
+            let fdom = self.sdom.get();
             let rdom = fdom.rdom();
-
-            process_accessibility(
-                &layout,
-                rdom,
-                &mut self.accessibility.accessibility_manager().lock().unwrap(),
-            );
+            let layout = fdom.layout();
+            let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
+            self.accessibility
+                .process_updates(rdom, &layout, &mut dirty_accessibility_tree);
         }
 
         if let Some(node_id) = self.queued_focus_node.take() {
@@ -263,28 +283,47 @@ impl Application {
     }
 
     /// Render the App into the Window Canvas
-    pub fn render(&mut self, hovered_node: &HoveredNode, canvas: &Canvas, window: &Window) {
-        self.plugins.send(PluginEvent::BeforeRender {
-            canvas,
-            font_collection: &self.font_collection,
-            freya_dom: &self.sdom.get(),
-        });
+    pub fn render(
+        &mut self,
+        hovered_node: &HoveredNode,
+        background: Color,
+        surface: &mut Surface,
+        dirty_surface: &mut Surface,
+        window: &Window,
+    ) {
+        self.plugins.send(
+            PluginEvent::BeforeRender {
+                canvas: surface.canvas(),
+                font_collection: &self.font_collection,
+                freya_dom: &self.sdom.get(),
+            },
+            PluginHandle::new(&self.proxy),
+        );
 
-        self.start_render(hovered_node, canvas, window.scale_factor() as f32);
+        self.start_render(
+            hovered_node,
+            background,
+            surface,
+            dirty_surface,
+            window.inner_size(),
+            window.scale_factor() as f32,
+        );
 
-        self.accessibility
-            .render_accessibility(window.title().as_str());
-
-        self.plugins.send(PluginEvent::AfterRender {
-            canvas,
-            font_collection: &self.font_collection,
-            freya_dom: &self.sdom.get(),
-        });
+        self.plugins.send(
+            PluginEvent::AfterRender {
+                canvas: surface.canvas(),
+                font_collection: &self.font_collection,
+                freya_dom: &self.sdom.get(),
+            },
+            PluginHandle::new(&self.proxy),
+        );
     }
 
     /// Resize the Window
     pub fn resize(&mut self, window: &Window) {
         self.measure_layout_on_next_render = true;
+        self.init_accessibility_on_next_render = true;
+        self.compositor.reset();
         self.sdom.get().layout().reset();
         self.platform_sender.send_modify(|state| {
             state.information = PlatformInformation::from_winit(window);
@@ -299,17 +338,22 @@ impl Application {
     }
 
     pub fn focus_node(&mut self, node_id: AccessibilityId, window: &Window) {
+        let fdom = self.sdom.get();
+        let layout = fdom.layout();
         self.accessibility
-            .focus_node(node_id, &self.platform_sender, window)
+            .focus_node(node_id, &self.platform_sender, window, &layout)
     }
 
     pub fn queue_focus_node(&mut self, node_id: AccessibilityId) {
         self.queued_focus_node = Some(node_id);
     }
 
-    pub fn focus_next_node(&mut self, direction: AccessibilityFocusDirection, window: &Window) {
+    pub fn focus_next_node(&mut self, direction: AccessibilityFocusStrategy, window: &Window) {
+        let fdom = self.sdom.get();
+        let rdom = fdom.rdom();
+        let layout = fdom.layout();
         self.accessibility
-            .focus_next_node(direction, &self.platform_sender, window)
+            .focus_next_node(rdom, direction, &self.platform_sender, window, &layout);
     }
 
     /// Notify components subscribed to event loop ticks.
@@ -325,78 +369,77 @@ impl Application {
     }
 
     /// Measure the layout
-    pub fn process_layout(&mut self, inner_size: PhysicalSize<u32>, scale_factor: f64) {
-        self.accessibility.clear_accessibility();
-
+    pub fn process_layout(&mut self, window_size: PhysicalSize<u32>, scale_factor: f64) {
         {
             let fdom = self.sdom.get();
 
-            self.plugins
-                .send(PluginEvent::StartedLayout(&fdom.layout()));
+            self.plugins.send(
+                PluginEvent::StartedLayout(&fdom.layout()),
+                PluginHandle::new(&self.proxy),
+            );
 
             process_layout(
                 &fdom,
-                Area::from_size(Size2D::from((
-                    inner_size.width as f32,
-                    inner_size.height as f32,
-                ))),
+                Area::from_size(window_size.to_torin()),
                 &mut self.font_collection,
-                scale_factor,
+                scale_factor as f32,
                 &self.default_fonts,
             );
 
-            self.plugins
-                .send(PluginEvent::FinishedLayout(&fdom.layout()));
+            self.plugins.send(
+                PluginEvent::FinishedLayout(&fdom.layout()),
+                PluginHandle::new(&self.proxy),
+            );
         }
 
         if let Some(devtools) = &self.devtools {
             devtools.update(&self.sdom.get())
         }
 
-        let fdom = self.sdom.get();
-        info!(
-            "Processed {} layers and {} group of paragraph elements",
-            fdom.layers().len_layers(),
-            fdom.paragraphs().len_paragraphs()
-        );
+        #[cfg(debug_assertions)]
+        {
+            let fdom = self.sdom.get();
+            tracing::info!(
+                "Processed {} layers and {} group of paragraph elements",
+                fdom.layers().len(),
+                fdom.paragraphs().len()
+            );
+        }
     }
 
     /// Start rendering the RealDOM to Window
-    pub fn start_render(&mut self, hovered_node: &HoveredNode, canvas: &Canvas, scale_factor: f32) {
+    pub fn start_render(
+        &mut self,
+        hovered_node: &HoveredNode,
+        background: Color,
+        surface: &mut Surface,
+        dirty_surface: &mut Surface,
+        window_size: PhysicalSize<u32>,
+        scale_factor: f32,
+    ) {
         let fdom = self.sdom.get();
+        let hovered_node = hovered_node
+            .as_ref()
+            .and_then(|hovered_node| *hovered_node.lock().unwrap());
 
-        let matrices: Vec<(Matrix, Vec<NodeId>)> = Vec::default();
-        let opacities: Vec<(f32, Vec<NodeId>)> = Vec::default();
-
-        let mut skia_renderer = SkiaRenderer {
-            canvas,
+        let mut render_pipeline = RenderPipeline {
+            canvas_area: Area::from_size(window_size.to_torin()),
+            rdom: fdom.rdom(),
+            compositor_dirty_area: &mut fdom.compositor_dirty_area(),
+            compositor_dirty_nodes: &mut fdom.compositor_dirty_nodes(),
+            compositor_cache: &mut fdom.compositor_cache(),
+            layers: &mut fdom.layers(),
+            layout: &mut fdom.layout(),
+            background,
+            surface,
+            dirty_surface,
+            compositor: &mut self.compositor,
+            scale_factor,
+            selected_node: hovered_node,
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,
-            matrices,
-            opacities,
             default_fonts: &self.default_fonts,
-            scale_factor,
         };
-
-        process_render(&fdom, |fdom, node_id, layout_node, layout| {
-            let render_wireframe = if let Some(hovered_node) = &hovered_node {
-                hovered_node
-                    .lock()
-                    .unwrap()
-                    .map(|id| id == *node_id)
-                    .unwrap_or_default()
-            } else {
-                false
-            };
-            if let Some(dioxus_node) = fdom.rdom().get(*node_id) {
-                skia_renderer.render(
-                    fdom.rdom(),
-                    layout_node,
-                    &dioxus_node,
-                    render_wireframe,
-                    layout,
-                );
-            }
-        });
+        render_pipeline.run();
     }
 }

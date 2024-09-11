@@ -37,7 +37,7 @@ pub fn CursorArea(CursorAreaProps { children, icon }: CursorAreaProps) -> Elemen
     let platform = use_platform();
     let mut is_hovering = use_signal(|| false);
 
-    let onmouseover = move |_| {
+    let onmousemove = move |_| {
         *is_hovering.write() = true;
         platform.set_cursor(icon);
     };
@@ -55,7 +55,7 @@ pub fn CursorArea(CursorAreaProps { children, icon }: CursorAreaProps) -> Elemen
 
     rsx!(
         rect {
-            onmouseover,
+            onmousemove,
             onmouseleave,
             {children}
         }
@@ -97,35 +97,17 @@ mod test {
         // Initial cursor
         assert_eq!(utils.cursor_icon(), CursorIcon::default());
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
-            cursor: (100., 100.).into(),
-            button: Some(MouseButton::Left),
-        });
-
-        utils.wait_for_update().await;
+        utils.move_cursor((100., 100.)).await;
 
         // Cursor after hovering the first half
         assert_eq!(utils.cursor_icon(), CursorIcon::Progress);
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
-            cursor: (100., 300.).into(),
-            button: Some(MouseButton::Left),
-        });
-
-        utils.wait_for_update().await;
+        utils.move_cursor((100., 300.)).await;
 
         // Cursor after hovering the second half
         assert_eq!(utils.cursor_icon(), CursorIcon::Pointer);
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
-            cursor: (-1., -1.).into(),
-            button: Some(MouseButton::Left),
-        });
-
-        utils.wait_for_update().await;
+        utils.move_cursor((-1., -1.)).await;
 
         // Cursor after leaving the window
         assert_eq!(utils.cursor_icon(), CursorIcon::default());

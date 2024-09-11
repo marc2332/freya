@@ -718,3 +718,151 @@ pub fn content_fit_fill_min() {
         Rect::new(Point2D::new(0.0, 600.0), Size2D::new(100.0, 300.0)),
     );
 }
+
+#[test]
+pub fn inner_percentage() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_dom = TestingDOM::default();
+    mocked_dom.add(
+        0,
+        None,
+        vec![1, 2],
+        Node::from_size_and_direction(
+            Size::Inner,
+            Size::InnerPercentage(Length::new(50.0)),
+            DirectionMode::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        1,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Inner,
+            Size::Percentage(Length::new(30.0)),
+            DirectionMode::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        2,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(100.0)),
+            Size::Pixels(Length::new(100.0)),
+            DirectionMode::Vertical,
+        ),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        &mut measurer,
+        &mut mocked_dom,
+    );
+
+    assert_eq!(
+        layout.get(0).unwrap().visible_area(),
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 200.0)),
+    );
+
+    assert_eq!(
+        layout.get(1).unwrap().visible_area(),
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(0.0, 300.0)),
+    );
+
+    assert_eq!(
+        layout.get(2).unwrap().visible_area(),
+        Rect::new(Point2D::new(0.0, 300.0), Size2D::new(100.0, 100.0)),
+    );
+}
+
+#[test]
+pub fn test_calc() {
+    const PARENT_VALUE: f32 = 500.0;
+
+    assert_eq!(
+        run_calculations(&vec![DynamicCalculation::Pixels(10.0)], PARENT_VALUE),
+        Some(10.0)
+    );
+
+    assert_eq!(
+        run_calculations(&vec![DynamicCalculation::Percentage(87.5)], PARENT_VALUE),
+        Some((87.5 / 100.0 * PARENT_VALUE).round())
+    );
+
+    assert_eq!(
+        run_calculations(
+            &vec![
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::Add,
+                DynamicCalculation::Pixels(20.0),
+                DynamicCalculation::Mul,
+                DynamicCalculation::Percentage(50.0),
+            ],
+            PARENT_VALUE
+        ),
+        Some(10.0 + 20.0 * (50.0 / 100.0 * PARENT_VALUE).round())
+    );
+
+    assert_eq!(
+        run_calculations(
+            &vec![
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::Add,
+                DynamicCalculation::Percentage(10.0),
+                DynamicCalculation::Add,
+                DynamicCalculation::Pixels(30.0),
+                DynamicCalculation::Mul,
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::Add,
+                DynamicCalculation::Pixels(75.0),
+                DynamicCalculation::Mul,
+                DynamicCalculation::Pixels(2.0),
+            ],
+            PARENT_VALUE
+        ),
+        Some(10.0 + (10.0 / 100.0 * PARENT_VALUE).round() + 30.0 * 10.0 + 75.0 * 2.0)
+    );
+
+    assert_eq!(
+        run_calculations(
+            &vec![
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::Pixels(20.0),
+            ],
+            PARENT_VALUE
+        ),
+        None
+    );
+
+    assert_eq!(
+        run_calculations(
+            &vec![DynamicCalculation::Pixels(10.0), DynamicCalculation::Add],
+            PARENT_VALUE
+        ),
+        None
+    );
+
+    assert_eq!(
+        run_calculations(
+            &vec![DynamicCalculation::Add, DynamicCalculation::Pixels(10.0)],
+            PARENT_VALUE
+        ),
+        None
+    );
+
+    assert_eq!(
+        run_calculations(
+            &vec![
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::Add,
+                DynamicCalculation::Add,
+                DynamicCalculation::Pixels(10.0)
+            ],
+            PARENT_VALUE
+        ),
+        None
+    );
+}

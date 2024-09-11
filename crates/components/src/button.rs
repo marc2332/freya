@@ -224,13 +224,7 @@ mod test {
 
         assert_eq!(label.get(0).text(), Some("false"));
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (15.0, 15.0).into(),
-            button: Some(MouseButton::Left),
-        });
-
-        utils.wait_for_update().await;
+        utils.click_cursor((15.0, 15.0)).await;
 
         assert_eq!(label.get(0).text(), Some("true"));
 

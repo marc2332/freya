@@ -1,3 +1,8 @@
+use std::sync::{
+    Arc,
+    Mutex,
+};
+
 use freya_common::Layers;
 use freya_native_core::{
     attributes::AttributeName,
@@ -70,7 +75,7 @@ impl State<CustomAttributeValues> for LayerState {
             return false;
         }
 
-        let layers = context.get::<Layers>().unwrap();
+        let layers = context.get::<Arc<Mutex<Layers>>>().unwrap();
         let inherited_layer = parent.map(|(p,)| p.layer_for_children).unwrap_or(0i16);
 
         let mut layer_state = LayerState {
@@ -87,7 +92,10 @@ impl State<CustomAttributeValues> for LayerState {
         let changed = &layer_state != self;
 
         if changed {
-            layers.insert_node_in_layer(node_view.node_id(), layer_state.layer);
+            layers
+                .lock()
+                .unwrap()
+                .insert_node_in_layer(node_view.node_id(), layer_state.layer);
         }
 
         *self = layer_state;

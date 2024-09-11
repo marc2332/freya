@@ -13,7 +13,6 @@ use freya_hooks::{
     use_platform,
     SliderThemeWith,
 };
-use tracing::info;
 use winit::window::CursorIcon;
 
 /// Properties for the [`Slider`] component.
@@ -33,10 +32,12 @@ pub struct SliderProps {
 #[inline]
 fn ensure_correct_slider_range(value: f64) -> f64 {
     if value < 0.0 {
-        info!("Slider value is less than 0.0, setting to 0.0");
+        #[cfg(debug_assertions)]
+        tracing::info!("Slider value is less than 0.0, setting to 0.0");
         0.0
     } else if value > 100.0 {
-        info!("Slider value is greater than 100.0, setting to 100.0");
+        #[cfg(debug_assertions)]
+        tracing::info!("Slider value is greater than 100.0, setting to 100.0");
         100.0
     } else {
         value
@@ -118,7 +119,7 @@ pub fn Slider(
         platform.set_cursor(CursorIcon::Pointer);
     };
 
-    let onmouseover = {
+    let onmousemove = {
         to_owned![onmoved];
         move |e: MouseEvent| {
             e.stop_propagation();
@@ -177,7 +178,7 @@ pub fn Slider(
             onglobalclick: onclick,
             focus_id,
             onmouseenter,
-            onglobalmouseover: onmouseover,
+            onglobalmousemove: onmousemove,
             onmouseleave,
             onwheel: onwheel,
             main_align: "center",
@@ -252,7 +253,7 @@ mod test {
         assert_eq!(label.get(0).text(), Some("50"));
 
         utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
+            name: EventName::MouseMove,
             cursor: (250.0, 7.0).into(),
             button: Some(MouseButton::Left),
         });
@@ -262,16 +263,10 @@ mod test {
             button: Some(MouseButton::Left),
         });
         utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
+            name: EventName::MouseMove,
             cursor: (500.0, 7.0).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (500.0, 7.0).into(),
-            button: Some(MouseButton::Left),
-        });
-
         utils.wait_for_update().await;
 
         assert_eq!(label.get(0).text(), Some("100"));

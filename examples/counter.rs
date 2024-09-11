@@ -33,6 +33,7 @@ fn app() -> Element {
             main_align: "center",
             cross_align: "center",
             direction: "horizontal",
+            spacing: "8",
             Button {
                 onclick: move |_| count += 1,
                 label { "Increase" }

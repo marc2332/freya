@@ -45,7 +45,7 @@ pub fn DragZone<T: 'static + Clone + PartialEq>(
     let mut pos = use_signal(CursorPoint::default);
     let (node_reference, size) = use_node_signal();
 
-    let onglobalmouseover = move |e: MouseEvent| {
+    let onglobalmousemove = move |e: MouseEvent| {
         if *dragging.read() {
             let size = size.read();
             let coord = e.get_screen_coordinates();
@@ -94,7 +94,7 @@ pub fn DragZone<T: 'static + Clone + PartialEq>(
         rect {
             reference: node_reference,
             onglobalclick,
-            onglobalmouseover: onglobalmouseover,
+            onglobalmousemove: onglobalmousemove,
             onmousedown,
             {children}
         }
@@ -115,7 +115,7 @@ pub struct DropZoneProps<T: 'static + PartialEq + Clone> {
 pub fn DropZone<T: 'static + Clone + PartialEq>(props: DropZoneProps<T>) -> Element {
     let mut drags = use_context::<Signal<Option<T>>>();
 
-    let onclick = move |_: MouseEvent| {
+    let onmouseup = move |_: MouseEvent| {
         if let Some(current_drags) = &*drags.read() {
             props.ondrop.call(current_drags.clone());
         }
@@ -126,7 +126,7 @@ pub fn DropZone<T: 'static + Clone + PartialEq>(props: DropZoneProps<T>) -> Elem
 
     rsx!(
         rect {
-            onclick,
+            onmouseup,
             {props.children}
         }
     )
@@ -188,26 +188,14 @@ mod test {
 
         utils.wait_for_update().await;
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
-            cursor: (5.0, 5.0).into(),
-            button: Some(MouseButton::Left),
-        });
+        utils.move_cursor((5., 5.)).await;
 
-        utils.wait_for_update().await;
-
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
-            cursor: (5.0, 300.0).into(),
-            button: Some(MouseButton::Left),
-        });
-
-        utils.wait_for_update().await;
+        utils.move_cursor((5., 300.)).await;
 
         assert_eq!(root.get(0).get(0).get(0).get(0).text(), Some("Moving"));
 
         utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
+            name: EventName::MouseUp,
             cursor: (5.0, 300.0).into(),
             button: Some(MouseButton::Left),
         });

@@ -200,17 +200,17 @@ impl AnimatedValue for AnimColor {
         match direction {
             AnimDirection::Forward => {
                 index > self.time.as_millis() as i32
-                    && self.value.r() >= self.destination.r()
-                    && self.value.g() >= self.destination.g()
-                    && self.value.b() >= self.destination.b()
-                    && self.value.a() >= self.destination.a()
+                    && self.value.r() == self.destination.r()
+                    && self.value.g() == self.destination.g()
+                    && self.value.b() == self.destination.b()
+                    && self.value.a() == self.destination.a()
             }
             AnimDirection::Reverse => {
                 index > self.time.as_millis() as i32
-                    && self.value.r() <= self.origin.r()
-                    && self.value.g() <= self.origin.g()
-                    && self.value.b() <= self.origin.b()
-                    && self.value.a() >= self.origin.a()
+                    && self.value.r() == self.origin.r()
+                    && self.value.g() == self.origin.g()
+                    && self.value.b() == self.origin.b()
+                    && self.value.a() == self.origin.a()
             }
         }
     }
@@ -433,6 +433,7 @@ pub struct UseAnimator<Animated: PartialEq + Clone + 'static> {
     pub(crate) is_running: Signal<bool>,
     pub(crate) has_run_yet: Signal<bool>,
     pub(crate) task: Signal<Option<Task>>,
+    pub(crate) last_direction: Signal<AnimDirection>,
 }
 
 impl<T: PartialEq + Clone + 'static> Copy for UseAnimator<T> {}
@@ -454,6 +455,21 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
         for value in &self.value_and_ctx.read().1.animated_values {
             let mut value = *value;
             value.write().prepare(AnimDirection::Forward);
+        }
+    }
+
+    /// Update the animation.
+    pub fn run_update(&self) {
+        let mut task = self.task;
+
+        if let Some(task) = task.write().take() {
+            task.cancel();
+        }
+
+        for value in &self.value_and_ctx.read().1.animated_values {
+            let mut value = *value;
+            let time = value.peek().time().as_millis() as i32;
+            value.write().advance(time, *self.last_direction.peek());
         }
     }
 
@@ -492,6 +508,9 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
         let mut has_run_yet = self.has_run_yet;
         let on_finish = ctx.on_finish;
         let mut task = self.task;
+        let mut last_direction = self.last_direction;
+
+        last_direction.set(direction);
 
         // Cancel previous animations
         if let Some(task) = task.write().take() {
@@ -524,6 +543,14 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
                 let is_finished = values
                     .iter()
                     .all(|value| value.peek().is_finished(index, direction));
+
+                // Advance the animations
+                for value in values.iter_mut() {
+                    value.write().advance(index, direction);
+                }
+
+                prev_frame = Instant::now();
+
                 if is_finished {
                     if OnFinish::Reverse == on_finish {
                         // Toggle direction
@@ -544,13 +571,6 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
                         }
                     }
                 }
-
-                // Advance the animations
-                for value in values.iter_mut() {
-                    value.write().advance(index, direction);
-                }
-
-                prev_frame = Instant::now();
             }
 
             is_running.set(false);
@@ -648,6 +668,7 @@ pub fn use_animation<Animated: PartialEq + Clone + 'static>(
     let is_running = use_signal(|| false);
     let has_run_yet = use_signal(|| false);
     let task = use_signal(|| None);
+    let last_direction = use_signal(|| AnimDirection::Reverse);
 
     let value_and_ctx = use_memo(move || {
         let mut ctx = Context::default();
@@ -660,6 +681,7 @@ pub fn use_animation<Animated: PartialEq + Clone + 'static>(
         is_running,
         has_run_yet,
         task,
+        last_direction,
     };
 
     use_hook(move || {
@@ -682,6 +704,7 @@ where
     let is_running = use_signal(|| false);
     let has_run_yet = use_signal(|| false);
     let task = use_signal(|| None);
+    let last_direction = use_signal(|| AnimDirection::Reverse);
 
     let value_and_ctx = use_memo(use_reactive(deps, move |vals| {
         let mut ctx = Context::default();
@@ -694,7 +717,15 @@ where
         is_running,
         has_run_yet,
         task,
+        last_direction,
     };
+
+    use_memo(move || {
+        let _ = value_and_ctx.read();
+        if *has_run_yet.peek() {
+            animator.run_update()
+        }
+    });
 
     use_hook(move || {
         if animator.value_and_ctx.read().1.auto_start {

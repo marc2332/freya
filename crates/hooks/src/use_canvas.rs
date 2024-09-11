@@ -50,7 +50,7 @@ impl UseCanvas {
 ///
 ///     let canvas = use_canvas(move || {
 ///         let curr = value();
-///         Box::new(move |canvas, font_collection, area, scale_factor| {
+///         Box::new(move |ctx| {
 ///             // Draw using the canvas !
 ///             // use `curr`
 ///         })
@@ -75,7 +75,7 @@ pub fn use_canvas(renderer_cb: impl Fn() -> Box<CanvasRunner> + 'static) -> UseC
 ///     let value = use_signal(|| 0);
 ///
 ///     let canvas = use_canvas_with_deps(&value(), |curr| {
-///         Box::new(move |canvas, font_collection, area, scale_factor| {
+///         Box::new(move |ctx| {
 ///             // Draw using the canvas !
 ///             // use `curr`
 ///         })

@@ -178,6 +178,9 @@ pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height)
 /// }
 /// ```
 pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>) {
+    #[cfg(feature = "performance-overlay")]
+    let config = config.with_plugin(crate::plugins::PerformanceOverlayPlugin::default());
+
     use freya_core::prelude::{
         FreyaDOM,
         SafeDOM,
@@ -186,17 +189,19 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
     let fdom = FreyaDOM::default();
     let sdom = SafeDOM::new(fdom);
 
-    #[cfg(feature = "log")]
+    #[cfg(feature = "tracing-subscriber")]
     {
-        use tracing::Level;
-        use tracing_subscriber::FmtSubscriber;
+        use tracing_subscriber::{
+            fmt,
+            prelude::__tracing_subscriber_SubscriberExt,
+            util::SubscriberInitExt,
+            EnvFilter,
+        };
 
-        let subscriber = FmtSubscriber::builder()
-            .with_max_level(Level::TRACE)
-            .finish();
-
-        tracing::subscriber::set_global_default(subscriber)
-            .expect("Setting default subscriber failed");
+        tracing_subscriber::registry()
+            .with(fmt::layer())
+            .with(EnvFilter::from_default_env())
+            .init();
     }
 
     let (vdom, devtools, hovered_node) = {

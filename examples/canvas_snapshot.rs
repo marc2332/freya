@@ -36,12 +36,7 @@ async fn main() {
     utils.save_snapshot("./snapshot_before.png");
 
     // Emit click event
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
-        cursor: (100., 100.).into(),
-        button: Some(MouseButton::Left),
-    });
-    utils.wait_for_update().await;
+    utils.click_cursor((100., 100.)).await;
 
     // Render after click
     utils.save_snapshot("./snapshot_after.png");

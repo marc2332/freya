@@ -230,6 +230,8 @@ builder_constructors! {
         content: String,
         #[doc = include_str!("_docs/attributes/line_height.md")]
         line_height: String,
+        #[doc = include_str!("_docs/attributes/spacing.md")]
+        spacing: String,
 
         name: String,
         focusable: String,
@@ -579,18 +581,20 @@ pub mod events {
         onclick
         #[doc = include_str!("_docs/events/globalclick.md")]
         onglobalclick
-        #[doc = include_str!("_docs/events/onmiddleclick.md")]
+        #[doc = include_str!("_docs/events/middleclick.md")]
         onmiddleclick
-        #[doc = include_str!("_docs/events/onrightclick.md")]
+        #[doc = include_str!("_docs/events/rightclick.md")]
         onrightclick
+        #[doc = include_str!("_docs/events/mouseup.md")]
+        onmouseup
         #[doc = include_str!("_docs/events/mousedown.md")]
         onmousedown
         #[doc = include_str!("_docs/events/globalmousedown.md")]
         onglobalmousedown
-        #[doc = include_str!("_docs/events/mouseover.md")]
-        onmouseover
-        #[doc = include_str!("_docs/events/globalmouseover.md")]
-        onglobalmouseover
+        #[doc = include_str!("_docs/events/mousemove.md")]
+        onmousemove
+        #[doc = include_str!("_docs/events/globalmousemove.md")]
+        onglobalmousemove
         #[doc = include_str!("_docs/events/mouseleave.md")]
         onmouseleave
         #[doc = include_str!("_docs/events/mouseenter.md")]
@@ -633,7 +637,7 @@ pub mod events {
         onpointerdown
         #[doc = include_str!("_docs/events/pointerup.md")]
         onpointerup
-        #[doc = include_str!("_docs/events/onglobalpointerup.md")]
+        #[doc = include_str!("_docs/events/globalpointerup.md")]
         onglobalpointerup
         #[doc = include_str!("_docs/events/pointerover.md")]
         onpointerover
@@ -646,11 +650,11 @@ pub mod events {
     impl_event! [
         FileData;
 
-        #[doc = include_str!("_docs/events/onfiledrop.md")]
+        #[doc = include_str!("_docs/events/filedrop.md")]
         onfiledrop
-        #[doc = include_str!("_docs/events/onglobalfilehover.md")]
+        #[doc = include_str!("_docs/events/globalfilehover.md")]
         onglobalfilehover
-        #[doc = include_str!("_docs/events/onglobalfilehovercancelled.md")]
+        #[doc = include_str!("_docs/events/globalfilehovercancelled.md")]
         onglobalfilehovercancelled
     ];
 }

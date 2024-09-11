@@ -30,6 +30,7 @@ mod scroll_views;
 mod sidebar;
 mod slider;
 mod snackbar;
+mod svg;
 mod switch;
 mod table;
 mod tabs;
