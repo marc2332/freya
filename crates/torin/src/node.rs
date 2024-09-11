@@ -135,6 +135,26 @@ impl Node {
         }
     }
 
+    /// Construct a new Node given a size, alignments, direction and spacing
+    pub fn from_size_and_alignments_and_direction_and_spacing(
+        width: Size,
+        height: Size,
+        main_alignment: Alignment,
+        cross_alignment: Alignment,
+        direction: DirectionMode,
+        spacing: Length,
+    ) -> Self {
+        Self {
+            width,
+            height,
+            main_alignment,
+            cross_alignment,
+            direction,
+            spacing,
+            ..Default::default()
+        }
+    }
+
     /// Construct a new Node given a size and a direction
     pub fn from_size_and_margin(width: Size, height: Size, margin: Gaps) -> Self {
         Self {

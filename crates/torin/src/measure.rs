@@ -345,8 +345,7 @@ where
                                 None
                             }
                         },
-                    )
-                    .unwrap();
+                    );
 
                 let inner_area = initial_phase_inner_area;
 
@@ -432,8 +431,7 @@ where
                             None
                         }
                     },
-                )
-                .unwrap();
+                );
 
             let mut adapted_available_area = *available_area;
 
@@ -446,6 +444,7 @@ where
                     &initial_phase_inner_sizes,
                     &parent_node.main_alignment,
                     &parent_node.direction,
+                    &child_data,
                     non_absolute_children.len(),
                     child_n,
                 );
@@ -553,9 +552,17 @@ where
         inner_sizes: &Size2D,
         alignment: &Alignment,
         direction: &DirectionMode,
+        child_node: &Node,
         siblings_len: usize,
-        child_position: usize,
+        child_position: Option<usize>,
     ) {
+        // No need to align a node that is positioned absolutely
+        if child_node.position.is_absolute() {
+            return;
+        }
+
+        let child_position = child_position.unwrap();
+
         let axis = AlignAxis::new(direction, alignment_direction);
 
         match axis {
@@ -619,12 +626,14 @@ where
         child_area: &Area,
         child_node: &Node,
         siblings_len: usize,
-        child_position: usize,
+        child_position: Option<usize>,
     ) {
         // No need to stack a node that is positioned absolutely
         if child_node.position.is_absolute() {
             return;
         }
+
+        let child_position = child_position.unwrap();
 
         // Only apply the spacing to elements after `i > 0` and `i < len - 1`
         let spacing = (child_position < siblings_len - 1)
