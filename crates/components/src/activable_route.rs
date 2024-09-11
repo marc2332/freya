@@ -18,7 +18,8 @@ pub fn ActivableRoute<T: Clone + PartialEq + Routable + 'static>(
 
     let is_descendent_route_active = current_route.is_child_of(&route);
     let is_descendent_routes_active = routes.iter().any(|route| current_route.is_child_of(route));
-    let is_descendent_active = !exact && is_descendent_route_active && is_descendent_routes_active;
+    let is_descendent_active =
+        !exact && (is_descendent_route_active || is_descendent_routes_active);
 
     let is_exact_active = current_route == route || routes.contains(&current_route);
 
