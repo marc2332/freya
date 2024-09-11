@@ -48,7 +48,7 @@ pub async fn pointer_events_from_mouse() {
 
     assert_eq!(label.get(0).text(), Some("[]"));
 
-    // Moving the mouse for the first time will cause `mouseenter` and `mouseover` events
+    // Moving the mouse for the first time will cause `mouseenter` and `mousemove` events
     utils.move_cursor((100., 100.)).await;
     assert_eq!(
         label.get(0).text(),

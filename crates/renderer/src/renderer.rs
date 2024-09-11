@@ -372,7 +372,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     self.cursor_pos = CursorPoint::new(-1.0, -1.0);
 
                     self.send_event(PlatformEvent::Mouse {
-                        name: EventName::MouseOver,
+                        name: EventName::MouseMove,
                         cursor: self.cursor_pos,
                         button: None,
                     });
@@ -382,7 +382,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 self.cursor_pos = CursorPoint::from((position.x, position.y));
 
                 self.send_event(PlatformEvent::Mouse {
-                    name: EventName::MouseOver,
+                    name: EventName::MouseMove,
                     cursor: self.cursor_pos,
                     button: None,
                 });

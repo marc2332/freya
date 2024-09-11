@@ -302,8 +302,8 @@ pub async fn highlight_multiple_lines_single_editor() {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         };
 
-        let onmouseover = move |e: MouseEvent| {
-            editable.process_event(&EditableEvent::MouseOver(e.data, 0));
+        let onmousemove = move |e: MouseEvent| {
+            editable.process_event(&EditableEvent::MouseMove(e.data, 0));
         };
 
         let onkeydown = move |e: Event<KeyboardData>| {
@@ -326,7 +326,7 @@ pub async fn highlight_multiple_lines_single_editor() {
                     highlights,
                     onkeydown,
                     onmousedown,
-                    onmouseover,
+                    onmousemove,
                     text {
                         color: "black",
                         "{editor}"
@@ -402,8 +402,8 @@ pub async fn highlights_single_line_multiple_editors() {
                         "none".to_string()
                     };
 
-                    let onmouseover = move |e: MouseEvent| {
-                        editable.process_event(&EditableEvent::MouseOver(e.data, i));
+                    let onmousemove = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseMove(e.data, i));
                     };
 
                     let onmousedown = move |e: MouseEvent| {
@@ -419,7 +419,7 @@ pub async fn highlights_single_line_multiple_editors() {
                             cursor_index: "{character_index}",
                             cursor_color: "black",
                             cursor_mode: "editable",
-                            onmouseover,
+                            onmousemove,
                             onmousedown,
                             highlights,
                             text {
@@ -788,8 +788,8 @@ pub async fn highlight_shift_click_multiple_lines_single_editor() {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         };
 
-        let onmouseover = move |e: MouseEvent| {
-            editable.process_event(&EditableEvent::MouseOver(e.data, 0));
+        let onmousemove = move |e: MouseEvent| {
+            editable.process_event(&EditableEvent::MouseMove(e.data, 0));
         };
 
         let onkeydown = move |e: Event<KeyboardData>| {
@@ -817,7 +817,7 @@ pub async fn highlight_shift_click_multiple_lines_single_editor() {
                     onkeydown,
                     onclick,
                     onmousedown,
-                    onmouseover,
+                    onmousemove,
                     text {
                         color: "black",
                         "{editor}"
@@ -896,8 +896,8 @@ pub async fn highlights_shift_click_single_line_multiple_editors() {
                         "none".to_string()
                     };
 
-                    let onmouseover = move |e: MouseEvent| {
-                        editable.process_event(&EditableEvent::MouseOver(e.data, i));
+                    let onmousemove = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseMove(e.data, i));
                     };
 
                     let onmousedown = move |e: MouseEvent| {
@@ -918,7 +918,7 @@ pub async fn highlights_shift_click_single_line_multiple_editors() {
                             cursor_color: "black",
                             cursor_mode: "editable",
                             onclick,
-                            onmouseover,
+                            onmousemove,
                             onmousedown,
                             highlights,
                             text {
@@ -987,8 +987,8 @@ pub async fn highlight_all_text() {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         };
 
-        let onmouseover = move |e: MouseEvent| {
-            editable.process_event(&EditableEvent::MouseOver(e.data, 0));
+        let onmousemove = move |e: MouseEvent| {
+            editable.process_event(&EditableEvent::MouseMove(e.data, 0));
         };
 
         let onkeydown = move |e: Event<KeyboardData>| {
@@ -1016,7 +1016,7 @@ pub async fn highlight_all_text() {
                     onkeydown,
                     onclick,
                     onmousedown,
-                    onmouseover,
+                    onmousemove,
                     text {
                         color: "black",
                         "{editor}"

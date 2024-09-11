@@ -13,7 +13,7 @@ fn app() -> Element {
     let mut cursor_pos_over = use_signal(|| CursorPoint::default());
     let mut cursor_pos_click = use_signal(|| CursorPoint::default());
 
-    let onmouseover = move |e: MouseEvent| {
+    let onmousemove = move |e: MouseEvent| {
         let cursor_pos = e.get_screen_coordinates();
         cursor_pos_over.set(cursor_pos);
     };
@@ -30,7 +30,7 @@ fn app() -> Element {
             background: "rgb(0, 119, 182)",
             color: "white",
             padding: "15",
-            onmouseover,
+            onmousemove,
             onclick,
             label {
                 "Mouse is at [x: {cursor_pos_over.read().x}, y: {cursor_pos_over.read().y}] ",

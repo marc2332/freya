@@ -345,8 +345,8 @@ fn DocumentEditor(path: String, mut editable: UseEditable) -> Element {
         editable.process_event(&EditableEvent::MouseDown(e.data, 0));
     };
 
-    let onmouseover = move |e: MouseEvent| {
-        editable.process_event(&EditableEvent::MouseOver(e.data, 0));
+    let onmousemove = move |e: MouseEvent| {
+        editable.process_event(&EditableEvent::MouseMove(e.data, 0));
     };
 
     let onclick = move |_: MouseEvent| {
@@ -376,7 +376,7 @@ fn DocumentEditor(path: String, mut editable: UseEditable) -> Element {
                     cursor_color: "black",
                     highlights,
                     onclick,
-                    onmouseover,
+                    onmousemove,
                     onmousedown,
                     onkeydown,
                     onkeyup,
