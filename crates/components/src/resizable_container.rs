@@ -368,16 +368,16 @@ mod test {
         let panel_3 = panel_1.get(0).get(2);
         let panel_4 = panel_1.get(0).get(4);
 
-        assert_eq!(panel_0.layout().unwrap().area.height().round(), 250.0);
+        assert_eq!(panel_0.layout().unwrap().area.height().round(), 246.0);
         assert_eq!(panel_1.layout().unwrap().area.height().round(), 250.0);
-        assert_eq!(panel_2.layout().unwrap().area.width().round(), 167.0);
-        assert_eq!(panel_3.layout().unwrap().area.width().round(), 167.0);
+        assert_eq!(panel_2.layout().unwrap().area.width().round(), 163.0);
+        assert_eq!(panel_3.layout().unwrap().area.width().round(), 163.0);
         assert_eq!(panel_4.layout().unwrap().area.width().round(), 167.0);
 
         // Vertical
         utils.push_event(PlatformEvent::Mouse {
             name: EventName::MouseDown,
-            cursor: (100.0, 250.0).into(),
+            cursor: (100.0, 246.0).into(),
             button: Some(MouseButton::Left),
         });
         utils.push_event(PlatformEvent::Mouse {
@@ -392,13 +392,13 @@ mod test {
         });
         utils.wait_for_update().await;
 
-        assert_eq!(panel_0.layout().unwrap().area.height().round(), 200.0); // 250 - 50
+        assert_eq!(panel_0.layout().unwrap().area.height().round(), 196.0); // 246 - 50
         assert_eq!(panel_1.layout().unwrap().area.height().round(), 300.0);
 
         // Horizontal
         utils.push_event(PlatformEvent::Mouse {
             name: EventName::MouseDown,
-            cursor: (167.0, 300.0).into(),
+            cursor: (163.0, 300.0).into(),
             button: Some(MouseButton::Left),
         });
         utils.push_event(PlatformEvent::Mouse {
@@ -416,6 +416,6 @@ mod test {
         utils.wait_for_update().await;
 
         assert_eq!(panel_2.layout().unwrap().area.width().round(), 185.0); // 165 + 20
-        assert_eq!(panel_3.layout().unwrap().area.width().round(), 148.0);
+        assert_eq!(panel_3.layout().unwrap().area.width().round(), 141.0);
     }
 }
