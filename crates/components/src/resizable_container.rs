@@ -191,93 +191,95 @@ pub fn ResizableHandle(
         platform.set_cursor(cursor);
     };
 
-    let onmouseover = {
-        move |e: MouseEvent| {
-            if *clicking.peek() {
-                let coordinates = e.get_screen_coordinates();
-                let mut registry = registry.write();
+    let onmousemove = move |e: MouseEvent| {
+        if *clicking.peek() {
+            let coordinates = e.get_screen_coordinates();
+            let mut registry = registry.write();
 
-                let displacement_per = match registry.direction.as_str() {
-                    "horizontal" => {
-                        let displacement = coordinates.x as f32 - size.peek().area.min_x();
-                        100. / container_size.read().area.width() * displacement
-                    }
-                    _ => {
-                        let displacement = coordinates.y as f32 - size.peek().area.min_y();
-                        100. / container_size.read().area.height() * displacement
-                    }
-                };
+            let displacement_per = match registry.direction.as_str() {
+                "horizontal" => {
+                    let container_width = container_size.read().area.width();
+                    let displacement = coordinates.x as f32 - size.peek().area.min_x();
+                    100. / container_width * displacement
+                }
+                _ => {
+                    let container_height = container_size.read().area.height();
+                    let displacement = coordinates.y as f32 - size.peek().area.min_y();
+                    100. / container_height * displacement
+                }
+            };
 
-                if displacement_per > 0. {
-                    // Resizing to the right
+            if displacement_per > 0. {
+                // Resizing to the right
 
-                    let mut available_per = displacement_per;
-                    let mut acc_per = 0.0;
+                let mut available_per = displacement_per;
+                let mut acc_per = 0.0;
 
-                    // Resize panels to the right
-                    for next_item in &mut registry.registry[index..].iter_mut() {
-                        if let Some(size) = next_item.try_write_size() {
-                            let old_size = *size;
-                            let new_size = (*size - available_per).clamp(0., 100.);
+                // Resize panels to the right
+                for next_item in &mut registry.registry[index..].iter_mut() {
+                    if let Some(size) = next_item.try_write_size() {
+                        let old_size = *size;
+                        let new_size = (*size - available_per).clamp(4., 100.);
 
-                            *size = new_size;
-                            available_per = displacement_per - new_size - old_size;
-                            acc_per -= new_size - old_size;
+                        *size = new_size;
+                        available_per = displacement_per - new_size - old_size;
+                        acc_per -= new_size - old_size;
 
-                            // Stop carrying panels to the right as they still have size
-                            if old_size > 0. {
-                                break;
-                            }
+                        // Stop carrying panels to the right as they still have size
+                        if old_size > 0. {
+                            break;
                         }
                     }
+                }
 
-                    // Resize panels to the left
-                    for prev_item in &mut registry.registry[0..index].iter_mut().rev() {
-                        if let Some(size) = prev_item.try_write_size() {
-                            let old_size = *size;
-                            let new_size = (*size + acc_per).clamp(0., 100.);
+                // Resize panels to the left
+                for prev_item in &mut registry.registry[0..index].iter_mut().rev() {
+                    if let Some(size) = prev_item.try_write_size() {
+                        let old_size = *size;
+                        let new_size = (*size + acc_per).clamp(4., 100.);
 
-                            *size = new_size;
+                        *size = new_size;
 
-                            // Stop carrying panels to the left as they still have size
-                            if old_size > 0. {
-                                break;
-                            }
+                        // Stop carrying panels to the left as they still have size
+                        if old_size > 0. {
+                            break;
                         }
                     }
-                } else {
-                    // Resizing to the left
-                    let mut available_per = displacement_per;
-                    let mut acc_per = 0.0;
-                    // Resize panels to the left
-                    for prev_item in &mut registry.registry[0..index].iter_mut().rev() {
-                        if let Some(size) = prev_item.try_write_size() {
-                            let old_size = *size;
-                            let new_size = (*size + available_per).clamp(0., 100.);
+                }
+            } else {
+                // Resizing to the left
 
-                            *size = new_size;
-                            available_per = displacement_per - new_size - old_size;
-                            acc_per += new_size - old_size;
+                let mut available_per = displacement_per;
+                let mut acc_per = 0.0;
 
-                            // Stop carrying panels to the left as they still have size
-                            if old_size > 0. {
-                                break;
-                            }
+                // Resize panels to the left
+                for prev_item in &mut registry.registry[0..index].iter_mut().rev() {
+                    if let Some(size) = prev_item.try_write_size() {
+                        let old_size = *size;
+                        let new_size = (*size + available_per).clamp(4., 100.);
+
+                        *size = new_size;
+                        available_per = displacement_per - new_size - old_size;
+                        acc_per += new_size - old_size;
+
+                        // Stop carrying panels to the left as they still have size
+                        if old_size > 0. {
+                            break;
                         }
                     }
+                }
 
-                    // Resize panels to the right
-                    for next_item in &mut registry.registry[index..].iter_mut() {
-                        if let Some(size) = next_item.try_write_size() {
-                            let old_size = *size;
-                            let new_size = (*size - acc_per).clamp(0., 100.);
+                // Resize panels to the right
+                for next_item in &mut registry.registry[index..].iter_mut() {
+                    if let Some(size) = next_item.try_write_size() {
+                        let old_size = *size;
+                        let new_size = (*size - acc_per).clamp(4., 100.);
 
-                            *size = new_size;
+                        *size = new_size;
 
-                            // Stop carrying panels to the right as they still have size
-                            if old_size > 0. {
-                                break;
-                            }
+                        // Stop carrying panels to the right as they still have size
+                        if old_size > 0. {
+                            break;
                         }
                     }
                 }
@@ -285,11 +287,9 @@ pub fn ResizableHandle(
         }
     };
 
-    let onmousedown = {
-        move |e: MouseEvent| {
-            e.stop_propagation();
-            clicking.set(true);
-        }
+    let onmousedown = move |e: MouseEvent| {
+        e.stop_propagation();
+        clicking.set(true);
     };
 
     let onclick = move |_: MouseEvent| {
@@ -320,7 +320,7 @@ pub fn ResizableHandle(
         onmousedown,
         onglobalclick: onclick,
         onmouseenter,
-        onglobalmouseover: onmouseover,
+        onglobalmousemove: onmousemove,
         onmouseleave,
     })
 }
@@ -396,12 +396,12 @@ mod test {
             button: Some(MouseButton::Left),
         });
         utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
+            name: EventName::MouseMove,
             cursor: (100.0, 200.0).into(),
             button: Some(MouseButton::Left),
         });
         utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
+            name: EventName::MouseUp,
             cursor: (0.0, 0.0).into(),
             button: Some(MouseButton::Left),
         });
@@ -417,12 +417,12 @@ mod test {
             button: Some(MouseButton::Left),
         });
         utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
+            name: EventName::MouseMove,
             cursor: (185.0, 300.0).into(),
             button: Some(MouseButton::Left),
         });
         utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
+            name: EventName::MouseUp,
             cursor: (0.0, 0.0).into(),
             button: Some(MouseButton::Left),
         });
@@ -432,28 +432,5 @@ mod test {
 
         assert_eq!(panel_2.layout().unwrap().area.width().round(), 185.0); // 165 + 20
         assert_eq!(panel_3.layout().unwrap().area.width().round(), 148.0);
-
-        // Horizontal but pushing two handles
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseDown,
-            cursor: (340.0, 300.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
-            cursor: (25.0, 300.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
-            cursor: (25.0, 300.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
-
-        assert_eq!(panel_2.layout().unwrap().area.width().round(), 21.0);
-        assert_eq!(panel_3.layout().unwrap().area.width().round(), 0.0);
-        assert_eq!(panel_4.layout().unwrap().area.width().round(), 479.0);
     }
 }

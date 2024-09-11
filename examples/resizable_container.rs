@@ -24,7 +24,7 @@ fn app() -> Element {
                 ResizableContainer {
                     direction: "horizontal",
                     ResizablePanel {
-                        initial_size: 33.33,
+                        initial_size: 20.,
                         rect {
                             width: "fill",
                             height: "fill",
@@ -37,7 +37,7 @@ fn app() -> Element {
                     }
                     ResizableHandle { }
                     ResizablePanel {
-                        initial_size: 33.33,
+                        initial_size: 20.,
                         rect {
                             width: "fill",
                             height: "fill",
@@ -50,7 +50,7 @@ fn app() -> Element {
                     }
                     ResizableHandle { }
                     ResizablePanel {
-                        initial_size: 33.33,
+                        initial_size: 20.,
                         rect {
                             width: "fill",
                             height: "fill",
@@ -58,6 +58,32 @@ fn app() -> Element {
                             "linear-gradient(250deg, orange 15%, rgb(255, 0, 0) 50%, rgb(255, 192, 203) 80%)",
                             label {
                                 "Panel 3"
+                            }
+                        }
+                    }
+                    ResizableHandle { }
+                    ResizablePanel {
+                        initial_size: 20.,
+                        rect {
+                            width: "fill",
+                            height: "fill",
+                            background:
+                            "linear-gradient(250deg, orange 15%, rgb(255, 0, 0) 50%, rgb(255, 192, 203) 80%)",
+                            label {
+                                "Panel 4"
+                            }
+                        }
+                    }
+                    ResizableHandle { }
+                    ResizablePanel {
+                        initial_size: 20.,
+                        rect {
+                            width: "fill",
+                            height: "fill",
+                            background:
+                            "linear-gradient(250deg, orange 15%, rgb(255, 0, 0) 50%, rgb(255, 192, 203) 80%)",
+                            label {
+                                "Panel 5"
                             }
                         }
                     }
