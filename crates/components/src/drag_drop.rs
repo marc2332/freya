@@ -86,20 +86,21 @@ pub fn DragZone<T: 'static + Clone + PartialEq>(
     };
 
     rsx!(
-        if *dragging.read() {
-            rect {
-                width: "0",
-                height: "0",
-                offset_x: "{pos.read().x}",
-                offset_y: "{pos.read().y}",
-                {drag_element}
-            }
-        }
         rect {
             reference: node_reference,
             onglobalclick,
-            onglobalmousemove: onglobalmousemove,
+            onglobalmousemove,
             onmousedown,
+            if *dragging.read() {
+                rect {
+                    position: "absolute",
+                    width: "0",
+                    height: "0",
+                    offset_x: "{pos.read().x}",
+                    offset_y: "{pos.read().y}",
+                    {drag_element}
+                }
+            }
             if !hide_while_dragging || !dragging() {
                 {children}
             }
