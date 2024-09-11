@@ -29,6 +29,9 @@ pub struct DragZoneProps<T: Clone + 'static + PartialEq> {
     children: Element,
     /// Data that will be handled to the destination [`DropZone`].
     data: T,
+    /// Hide the [`DragZone`] children when dragging.
+    #[props(default = false)]
+    hide_while_dragging: bool,
 }
 
 /// Make the inner children draggable to other [`DropZone`].
@@ -38,6 +41,7 @@ pub fn DragZone<T: 'static + Clone + PartialEq>(
         data,
         children,
         drag_element,
+        hide_while_dragging,
     }: DragZoneProps<T>,
 ) -> Element {
     let mut drags = use_context::<Signal<Option<T>>>();
@@ -96,7 +100,9 @@ pub fn DragZone<T: 'static + Clone + PartialEq>(
             onglobalclick,
             onglobalmousemove: onglobalmousemove,
             onmousedown,
-            {children}
+            if !hide_while_dragging || (hide_while_dragging && !dragging()) {
+                {children}
+            }
         }
     )
 }
