@@ -27,7 +27,6 @@ pub fn process_events(
     events: &mut EventsQueue,
     event_emitter: &EventEmitter,
     nodes_state: &mut NodesState,
-    always_allow_events: bool,
     scale_factor: f64,
 ) {
     // 1. Get global events created from the incoming events
@@ -37,26 +36,15 @@ pub fn process_events(
     let potential_events = measure_potential_event_listeners(events, dom, scale_factor);
 
     // 3. Get what events can be actually emitted based on what elements are listening
-    let mut dom_events = measure_dom_events(
-        &potential_events,
-        dom,
-        nodes_state,
-        always_allow_events,
-        scale_factor,
-    );
+    let mut dom_events = measure_dom_events(&potential_events, dom, nodes_state, scale_factor);
 
     // 4. Get potential collateral events, e.g. mouseover -> mouseenter
     let potential_collateral_events =
         nodes_state.process_collateral(&potential_events, &dom_events, events);
 
     // 5. Get what collateral events can actually be emitted
-    let to_emit_dom_collateral_events = measure_dom_events(
-        &potential_collateral_events,
-        dom,
-        nodes_state,
-        always_allow_events,
-        scale_factor,
-    );
+    let to_emit_dom_collateral_events =
+        measure_dom_events(&potential_collateral_events, dom, nodes_state, scale_factor);
 
     let colateral_global_events = measure_colateral_global_events(&to_emit_dom_collateral_events);
 
@@ -226,7 +214,6 @@ fn measure_dom_events(
     potential_events: &PotentialEvents,
     fdom: &FreyaDOM,
     nodes_state: &NodesState,
-    always_allow_events: bool,
     scale_factor: f64,
 ) -> Vec<DomEvent> {
     let mut new_events = Vec::new();
@@ -260,8 +247,7 @@ fn measure_dom_events(
                         true
                     };
 
-                    let allowed_event =
-                        always_allow_events || nodes_state.is_event_allowed(event, node_id);
+                    let allowed_event = nodes_state.is_event_allowed(event, node_id);
 
                     if valid_node && allowed_event {
                         let mut valid_event = event.clone();

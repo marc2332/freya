@@ -267,12 +267,6 @@ mod test {
             cursor: (500.0, 7.0).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (500.0, 7.0).into(),
-            button: Some(MouseButton::Left),
-        });
-
         utils.wait_for_update().await;
 
         assert_eq!(label.get(0).text(), Some("100"));

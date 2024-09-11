@@ -49,12 +49,7 @@ pub async fn pointer_events_from_mouse() {
     assert_eq!(label.get(0).text(), Some("[]"));
 
     // Moving the mouse for the first time will cause `mouseenter` and `mouseover` events
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::MouseOver,
-        cursor: CursorPoint::new(100.0, 100.0),
-        button: Some(MouseButton::Left),
-    });
-    utils.wait_for_update().await;
+    utils.move_cursor((100., 100.)).await;
     assert_eq!(
         label.get(0).text(),
         Some(format!("{:?}", vec!["enter", "over"]).as_str())
@@ -72,7 +67,7 @@ pub async fn pointer_events_from_mouse() {
     );
 
     utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
+        name: EventName::MouseUp,
         cursor: CursorPoint::new(100.0, 100.0),
         button: Some(MouseButton::Left),
     });
@@ -82,12 +77,7 @@ pub async fn pointer_events_from_mouse() {
         Some(format!("{:?}", vec!["enter", "over", "down", "up"]).as_str())
     );
 
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::MouseOver,
-        cursor: CursorPoint::new(0.0, 0.0),
-        button: Some(MouseButton::Left),
-    });
-    utils.wait_for_update().await;
+    utils.move_cursor((0., 0.)).await;
     assert_eq!(
         label.get(0).text(),
         Some(format!("{:?}", vec!["enter", "over", "down", "up", "leave"]).as_str())

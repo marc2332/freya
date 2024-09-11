@@ -33,11 +33,17 @@ use tokio::{
         timeout,
     },
 };
-use torin::geometry::{
-    Area,
-    Size2D,
+use torin::{
+    geometry::{
+        Area,
+        Size2D,
+    },
+    prelude::CursorPoint,
 };
-use winit::window::CursorIcon;
+use winit::{
+    event::MouseButton,
+    window::CursorIcon,
+};
 
 use crate::{
     config::TestingConfig,
@@ -231,7 +237,6 @@ impl TestingHandler {
             &mut self.events_queue,
             &self.event_emitter,
             &mut self.nodes_state,
-            true,
             SCALE_FACTOR,
         );
     }
@@ -339,5 +344,31 @@ impl TestingHandler {
         snapshot_file
             .write_all(snapshot_bytes)
             .expect("Failed to save the snapshot file.");
+    }
+
+    /// Shorthand to simulate a cursor move to the given location.
+    pub async fn move_cursor(&mut self, cursor: impl Into<CursorPoint>) {
+        self.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseOver,
+            cursor: cursor.into(),
+            button: Some(MouseButton::Left),
+        });
+        self.wait_for_update().await;
+    }
+
+    /// Shorthand to simulate a click with cursor in the given location.
+    pub async fn click_cursor(&mut self, cursor: impl Into<CursorPoint> + Clone) {
+        self.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseDown,
+            cursor: cursor.clone().into(),
+            button: Some(MouseButton::Left),
+        });
+        self.wait_for_update().await;
+        self.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseUp,
+            cursor: cursor.into(),
+            button: Some(MouseButton::Left),
+        });
+        self.wait_for_update().await;
     }
 }

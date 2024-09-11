@@ -355,13 +355,8 @@ pub async fn highlight_multiple_lines_single_editor() {
     utils.wait_for_update().await;
 
     // Move cursor
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::MouseOver,
-        cursor: (80.0, 20.0).into(),
-        button: Some(MouseButton::Left),
-    });
+    utils.move_cursor((80., 20.)).await;
 
-    utils.wait_for_update().await;
     utils.wait_for_update().await;
 
     let highlights = root.child(0).unwrap().state().cursor.highlights.clone();
@@ -457,23 +452,13 @@ pub async fn highlights_single_line_multiple_editors() {
     utils.wait_for_update().await;
 
     // Move cursor
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::MouseOver,
-        cursor: (35.0, 3.0).into(),
-        button: Some(MouseButton::Left),
-    });
+    utils.move_cursor((35., 3.)).await;
 
-    utils.wait_for_update().await;
     utils.wait_for_update().await;
 
     // Move cursor
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::MouseOver,
-        cursor: (80.0, 35.0).into(),
-        button: Some(MouseButton::Left),
-    });
+    utils.move_cursor((80., 35.)).await;
 
-    utils.wait_for_update().await;
     utils.wait_for_update().await;
 
     let highlights_1 = root.child(0).unwrap().state().cursor.highlights.clone();
@@ -852,18 +837,7 @@ pub async fn highlight_shift_click_multiple_lines_single_editor() {
     let root = utils.root().get(0);
 
     // Click cursor
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::MouseDown,
-        cursor: (35.0, 3.0).into(),
-        button: Some(MouseButton::Left),
-    });
-    utils.wait_for_update().await;
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
-        cursor: (35.0, 3.0).into(),
-        button: Some(MouseButton::Left),
-    });
-    utils.wait_for_update().await;
+    utils.click_cursor((35., 3.)).await;
 
     // Press shift
     utils.push_event(PlatformEvent::Keyboard {
@@ -874,21 +848,9 @@ pub async fn highlight_shift_click_multiple_lines_single_editor() {
     });
     utils.wait_for_update().await;
 
-    // Move cursor
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::MouseDown,
-        cursor: (80.0, 20.0).into(),
-        button: Some(MouseButton::Left),
-    });
-    utils.wait_for_update().await;
+    // Move and click cursor
+    utils.click_cursor((80., 20.)).await;
 
-    // Click cursor
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
-        cursor: (80.0, 20.0).into(),
-        button: Some(MouseButton::Left),
-    });
-    utils.wait_for_update().await;
     utils.wait_for_update().await;
 
     let highlights = root.child(0).unwrap().state().cursor.highlights.clone();
@@ -980,18 +942,7 @@ pub async fn highlights_shift_click_single_line_multiple_editors() {
     let root = utils.root().get(0);
 
     // Click cursor
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::MouseDown,
-        cursor: (35.0, 3.0).into(),
-        button: Some(MouseButton::Left),
-    });
-    utils.wait_for_update().await;
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
-        cursor: (35.0, 3.0).into(),
-        button: Some(MouseButton::Left),
-    });
-    utils.wait_for_update().await;
+    utils.click_cursor((35., 3.)).await;
 
     // Press shift
     utils.push_event(PlatformEvent::Keyboard {
@@ -1003,18 +954,7 @@ pub async fn highlights_shift_click_single_line_multiple_editors() {
     utils.wait_for_update().await;
 
     // Click cursor
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::MouseDown,
-        cursor: (80.0, 35.0).into(),
-        button: Some(MouseButton::Left),
-    });
-    utils.wait_for_update().await;
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
-        cursor: (80.0, 35.0).into(),
-        button: Some(MouseButton::Left),
-    });
-    utils.wait_for_update().await;
+    utils.click_cursor((80., 35.)).await;
 
     utils.wait_for_update().await;
 
@@ -1199,18 +1139,7 @@ pub async fn replace_text() {
     assert_eq!(cursor.text(), Some("0:5"));
 
     // Click cursor
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::MouseDown,
-        cursor: (35.0, 3.0).into(),
-        button: Some(MouseButton::Left),
-    });
-    utils.wait_for_update().await;
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
-        cursor: (35.0, 3.0).into(),
-        button: Some(MouseButton::Left),
-    });
-    utils.wait_for_update().await;
+    utils.click_cursor((35., 3.)).await;
 
     // Press shift
     utils.push_event(PlatformEvent::Keyboard {
@@ -1221,19 +1150,8 @@ pub async fn replace_text() {
     });
     utils.wait_for_update().await;
 
-    // Move cursor
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::MouseDown,
-        cursor: (80.0, 3.0).into(),
-        button: Some(MouseButton::Left),
-    });
-    utils.wait_for_update().await;
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
-        cursor: (80.0, 3.0).into(),
-        button: Some(MouseButton::Left),
-    });
-    utils.wait_for_update().await;
+    // Move and click cursor
+    utils.click_cursor((80., 3.)).await;
 
     // Insert text
     utils.push_event(PlatformEvent::Keyboard {

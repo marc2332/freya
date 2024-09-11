@@ -216,33 +216,18 @@ mod test {
         assert_eq!(utils.sdom().get().layout().size(), 4);
 
         // Open the popup
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (15.0, 15.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((15., 15.)).await;
 
         // Check the popup is opened
         assert_eq!(utils.sdom().get().layout().size(), 10);
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (395.0, 180.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((395., 180.)).await;
 
         // Check the popup is closed
         assert_eq!(utils.sdom().get().layout().size(), 4);
 
         // Open the popup
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (15.0, 15.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((15., 15.)).await;
 
         // Send a random keydown event
         utils.push_event(PlatformEvent::Keyboard {

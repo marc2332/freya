@@ -381,12 +381,7 @@ mod test {
         assert_eq!(utils.sdom().get().layout().size(), 5);
 
         // Open the Menu
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (15.0, 15.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((15., 15.)).await;
 
         // Check the `Open` button exists
         assert_eq!(
@@ -405,34 +400,18 @@ mod test {
         assert!(utils.sdom().get().layout().size() > start_size);
 
         // Close the Menu
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (15.0, 60.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((15., 60.)).await;
 
         assert_eq!(utils.sdom().get().layout().size(), start_size);
 
         // Open the Menu again
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (15.0, 15.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
-        utils.wait_for_update().await;
+        utils.click_cursor((15., 15.)).await;
 
         let one_submenu_opened = utils.sdom().get().layout().size();
         assert!(one_submenu_opened > start_size);
 
         // Open the SubMenu
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
-            cursor: (15.0, 130.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.move_cursor((15., 130.)).await;
 
         // Check the `Option 1` button exists
         assert_eq!(
@@ -455,22 +434,12 @@ mod test {
         assert!(utils.sdom().get().layout().size() > one_submenu_opened);
 
         // Stop showing the submenu
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
-            cursor: (15.0, 90.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.move_cursor((15., 90.)).await;
 
         assert_eq!(utils.sdom().get().layout().size(), one_submenu_opened);
 
         // Click somewhere also so all the menus hide
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (333.0, 333.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((333., 333.)).await;
 
         assert_eq!(utils.sdom().get().layout().size(), start_size);
     }

@@ -364,42 +364,23 @@ mod test {
         assert_eq!(label.get(0).text(), Some("Value A"));
 
         // Open the dropdown
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (15.0, 15.0).into(),
-            button: Some(MouseButton::Left),
-        });
+        utils.click_cursor((15., 15.)).await;
         utils.wait_for_update().await;
 
         // Now that the dropwdown is opened, there are more nodes in the layout
         assert!(utils.sdom().get().layout().size() > start_size);
 
         // Close the dropdown by clicking outside of it
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (200.0, 200.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((200., 200.)).await;
 
         // Now the layout size is like in the begining
         assert_eq!(utils.sdom().get().layout().size(), start_size);
 
         // Open the dropdown again
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (15.0, 15.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((15., 15.)).await;
 
         // Click on the second option
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (45.0, 100.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((45., 100.)).await;
         utils.wait_for_update().await;
         utils.wait_for_update().await;
 

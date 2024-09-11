@@ -141,28 +141,18 @@ mod test {
         assert_eq!(utils.focus_id(), ACCESSIBILITY_ROOT_ID);
 
         // Click on the first rect
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (5.0, 5.0).into(),
-            button: Some(MouseButton::Left),
-        });
+        utils.click_cursor((5., 5.)).await;
 
         // First rect is now focused
-        utils.wait_for_update().await;
         utils.wait_for_update().await;
         utils.wait_for_update().await;
         let first_focus_id = utils.focus_id();
         assert_ne!(first_focus_id, ACCESSIBILITY_ROOT_ID);
 
         // Click on the second rect
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (5.0, 75.0).into(),
-            button: Some(MouseButton::Left),
-        });
+        utils.click_cursor((5., 75.)).await;
 
         // Second rect is now focused
-        utils.wait_for_update().await;
         utils.wait_for_update().await;
         utils.wait_for_update().await;
         let second_focus_id = utils.focus_id();
