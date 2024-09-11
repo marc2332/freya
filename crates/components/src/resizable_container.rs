@@ -119,10 +119,13 @@ pub fn ResizablePanel(
 
     let registry = registry.read();
 
+    let is_last = registry.registry.len() - 1 == index;
     let size = registry.registry[index].size();
+
+    let extra_gap = if is_last { 0 } else { 4 };
     let (width, height) = match registry.direction.as_str() {
-        "horizontal" => (format!("{size}%"), "fill".to_owned()),
-        _ => ("fill".to_owned(), format!("{size}%")),
+        "horizontal" => (format!("calc({size}% - {})", extra_gap), "fill".to_owned()),
+        _ => ("fill".to_owned(), format!("calc({size}% - {})", extra_gap)),
     };
 
     rsx!(
@@ -212,75 +215,57 @@ pub fn ResizableHandle(
             if displacement_per > 0. {
                 // Resizing to the right
 
-                let mut available_per = displacement_per;
                 let mut acc_per = 0.0;
 
                 // Resize panels to the right
                 for next_item in &mut registry.registry[index..].iter_mut() {
                     if let Some(size) = next_item.try_write_size() {
                         let old_size = *size;
-                        let new_size = (*size - available_per).clamp(4., 100.);
+                        let new_size = (*size - displacement_per).clamp(4., 100.);
 
                         *size = new_size;
-                        available_per = displacement_per - new_size - old_size;
                         acc_per -= new_size - old_size;
 
-                        // Stop carrying panels to the right as they still have size
-                        if old_size > 0. {
-                            break;
-                        }
+                        break;
                     }
                 }
 
                 // Resize panels to the left
                 for prev_item in &mut registry.registry[0..index].iter_mut().rev() {
                     if let Some(size) = prev_item.try_write_size() {
-                        let old_size = *size;
                         let new_size = (*size + acc_per).clamp(4., 100.);
 
                         *size = new_size;
 
-                        // Stop carrying panels to the left as they still have size
-                        if old_size > 0. {
-                            break;
-                        }
+                        break;
                     }
                 }
             } else {
                 // Resizing to the left
 
-                let mut available_per = displacement_per;
                 let mut acc_per = 0.0;
 
                 // Resize panels to the left
                 for prev_item in &mut registry.registry[0..index].iter_mut().rev() {
                     if let Some(size) = prev_item.try_write_size() {
                         let old_size = *size;
-                        let new_size = (*size + available_per).clamp(4., 100.);
+                        let new_size = (*size + displacement_per).clamp(4., 100.);
 
                         *size = new_size;
-                        available_per = displacement_per - new_size - old_size;
                         acc_per += new_size - old_size;
 
-                        // Stop carrying panels to the left as they still have size
-                        if old_size > 0. {
-                            break;
-                        }
+                        break;
                     }
                 }
 
                 // Resize panels to the right
                 for next_item in &mut registry.registry[index..].iter_mut() {
                     if let Some(size) = next_item.try_write_size() {
-                        let old_size = *size;
                         let new_size = (*size - acc_per).clamp(4., 100.);
 
                         *size = new_size;
 
-                        // Stop carrying panels to the right as they still have size
-                        if old_size > 0. {
-                            break;
-                        }
+                        break;
                     }
                 }
             }

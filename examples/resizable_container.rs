@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Resizable Container", (700.0, 450.0));
+    launch_with_props(app, "Resizable Container", (1000.0, 550.0));
 }
 
 fn app() -> Element {
@@ -14,8 +14,14 @@ fn app() -> Element {
         ResizableContainer {
             ResizablePanel {
                 initial_size: 50.,
-                label {
-                    "Panel 0"
+                rect {
+                    width: "fill",
+                    height: "fill",
+                    main_align: "center",
+                    cross_align: "center",
+                    label {
+                        "Panel 1"
+                    }
                 }
             }
             ResizableHandle { }
@@ -24,10 +30,14 @@ fn app() -> Element {
                 ResizableContainer {
                     direction: "horizontal",
                     ResizablePanel {
-                        initial_size: 20.,
+                        initial_size: 35.,
                         rect {
                             width: "fill",
                             height: "fill",
+                            main_align: "center",
+                            cross_align: "center",
+                            corner_radius: "6",
+                            color: "white",
                             background:
                             "linear-gradient(250deg, orange 15%, rgb(255, 0, 0) 50%, rgb(255, 192, 203) 80%)",
                             label {
@@ -41,6 +51,10 @@ fn app() -> Element {
                         rect {
                             width: "fill",
                             height: "fill",
+                            main_align: "center",
+                            cross_align: "center",
+                            corner_radius: "6",
+                            color: "white",
                             background:
                             "linear-gradient(250deg, orange 15%, rgb(255, 0, 0) 50%, rgb(255, 192, 203) 80%)",
                             label {
@@ -54,6 +68,10 @@ fn app() -> Element {
                         rect {
                             width: "fill",
                             height: "fill",
+                            main_align: "center",
+                            cross_align: "center",
+                            corner_radius: "6",
+                            color: "white",
                             background:
                             "linear-gradient(250deg, orange 15%, rgb(255, 0, 0) 50%, rgb(255, 192, 203) 80%)",
                             label {
@@ -63,10 +81,14 @@ fn app() -> Element {
                     }
                     ResizableHandle { }
                     ResizablePanel {
-                        initial_size: 20.,
+                        initial_size: 15.,
                         rect {
                             width: "fill",
                             height: "fill",
+                            main_align: "center",
+                            cross_align: "center",
+                            corner_radius: "6",
+                            color: "white",
                             background:
                             "linear-gradient(250deg, orange 15%, rgb(255, 0, 0) 50%, rgb(255, 192, 203) 80%)",
                             label {
@@ -76,10 +98,14 @@ fn app() -> Element {
                     }
                     ResizableHandle { }
                     ResizablePanel {
-                        initial_size: 20.,
+                        initial_size: 10.,
                         rect {
                             width: "fill",
                             height: "fill",
+                            main_align: "center",
+                            cross_align: "center",
+                            corner_radius: "6",
+                            color: "white",
                             background:
                             "linear-gradient(250deg, orange 15%, rgb(255, 0, 0) 50%, rgb(255, 192, 203) 80%)",
                             label {

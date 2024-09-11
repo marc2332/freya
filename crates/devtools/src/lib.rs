@@ -78,12 +78,12 @@ fn AppWithDevtools(props: AppWithDevtoolsProps) -> Element {
             ResizableContainer {
                 direction: "horizontal",
                 ResizablePanel {
-                    initial_size: 80.,
+                    initial_size: 70.,
                     Root { },
                 }
                 ResizableHandle { }
                 ResizablePanel {
-                    initial_size: 20.,
+                    initial_size: 30.,
                     rect {
                         background: "rgb(40, 40, 40)",
                         height: "fill",

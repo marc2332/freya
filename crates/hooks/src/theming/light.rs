@@ -209,7 +209,7 @@ pub const LIGHT_THEME: Theme = Theme {
         height: cow_borrowed!("auto"),
     },
     resizable_handle: ResizableHandleTheme {
-        background: cow_borrowed!("rgb(200, 200, 200)"),
-        hover_background: cow_borrowed!("rgb(170, 170, 170)"),
+        background: cow_borrowed!("rgb(245, 245, 245)"),
+        hover_background: cow_borrowed!("rgb(210, 210, 210)"),
     },
 };
