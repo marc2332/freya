@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 pub use euclid::Rect;
 use rustc_hash::FxHashMap;
 
@@ -296,21 +298,42 @@ where
         let mut initial_phase_sizes = FxHashMap::default();
         let mut initial_phase_inner_sizes = *inner_sizes;
 
+        let i = Instant::now();
+
         // Used to calculate the spacing and some alignments
-        let non_absolute_children = if parent_node.spacing.get() > 0. {
-            children
-                .clone()
-                .into_iter()
+        let (non_absolute_children_len, first_child, last_child) = if parent_node.spacing.get() > 0.
+        {
+            let mut last_child = None;
+            let mut first_child = None;
+            let len = children
+                .iter()
                 .filter(|child_id| {
                     let Some(child_data) = self.dom_adapter.get_node(child_id) else {
                         return false;
                     };
-                    !child_data.position.is_absolute()
+                    let is_stacked = !child_data.position.is_absolute();
+                    if is_stacked {
+                        last_child = Some(**child_id);
+
+                        if first_child.is_none() {
+                            first_child = Some(**child_id)
+                        }
+                    }
+                    is_stacked
                 })
-                .collect::<Vec<_>>()
+                .count();
+            (len, first_child, last_child)
         } else {
-            children.clone()
+            (
+                children.len(),
+                children.first().cloned(),
+                children.last().cloned(),
+            )
         };
+
+        if i.elapsed().as_millis() > 0 {
+            println!("{}", i.elapsed().as_millis());
+        }
 
         // Initial phase: Measure the size and position of the children if the parent has a
         // non-start cross alignment, non-start main aligment of a fit-content.
@@ -334,18 +357,7 @@ where
                     continue;
                 }
 
-                let child_n = non_absolute_children
-                    .iter()
-                    .enumerate()
-                    .find_map(
-                        |(i, node_id)| {
-                            if node_id == child_id {
-                                Some(i)
-                            } else {
-                                None
-                            }
-                        },
-                    );
+                let is_last_child = last_child == Some(*child_id);
 
                 let inner_area = initial_phase_inner_area;
 
@@ -360,18 +372,15 @@ where
                 );
 
                 // Stack this child into the parent
-                if let Some(child_n) = child_n {
-                    Self::stack_child(
-                        &mut initial_phase_available_area,
-                        parent_node,
-                        &mut initial_phase_area,
-                        &mut initial_phase_inner_area,
-                        &mut initial_phase_inner_sizes,
-                        &child_areas.area,
-                        non_absolute_children.len(),
-                        child_n,
-                    );
-                }
+                Self::stack_child(
+                    &mut initial_phase_available_area,
+                    parent_node,
+                    &mut initial_phase_area,
+                    &mut initial_phase_inner_area,
+                    &mut initial_phase_inner_sizes,
+                    &child_areas.area,
+                    is_last_child,
+                );
 
                 if parent_node.cross_alignment.is_not_start()
                     || parent_node.main_alignment.is_spaced()
@@ -421,36 +430,24 @@ where
                 continue;
             };
 
-            let child_n = non_absolute_children
-                .iter()
-                .enumerate()
-                .find_map(
-                    |(i, node_id)| {
-                        if node_id == &child_id {
-                            Some(i)
-                        } else {
-                            None
-                        }
-                    },
-                );
+            let is_first_child = first_child == Some(child_id);
+            let is_last_child = last_child == Some(child_id);
 
             let mut adapted_available_area = *available_area;
 
             // Only the stacked children will be aligned
-            if let Some(child_n) = child_n {
-                if parent_node.main_alignment.is_spaced() {
-                    // Align the Main axis if necessary
-                    Self::align_position(
-                        AlignmentDirection::Main,
-                        &mut adapted_available_area,
-                        &initial_available_area,
-                        &initial_phase_inner_sizes,
-                        &parent_node.main_alignment,
-                        &parent_node.direction,
-                        non_absolute_children.len(),
-                        child_n,
-                    );
-                }
+            if parent_node.main_alignment.is_spaced() && !child_data.position.is_absolute() {
+                // Align the Main axis if necessary
+                Self::align_position(
+                    AlignmentDirection::Main,
+                    &mut adapted_available_area,
+                    &initial_available_area,
+                    &initial_phase_inner_sizes,
+                    &parent_node.main_alignment,
+                    &parent_node.direction,
+                    non_absolute_children_len,
+                    is_first_child,
+                );
             }
 
             if parent_node.cross_alignment.is_not_start() {
@@ -484,7 +481,7 @@ where
             child_areas.area.adjust_size(&child_data);
 
             // Stack this s child into the parent
-            if let Some(child_n) = child_n {
+            if !child_data.position.is_absolute() {
                 Self::stack_child(
                     available_area,
                     parent_node,
@@ -492,8 +489,7 @@ where
                     inner_area,
                     inner_sizes,
                     &child_areas.area,
-                    non_absolute_children.len(),
-                    child_n,
+                    is_last_child,
                 );
             }
 
@@ -557,13 +553,13 @@ where
         alignment: &Alignment,
         direction: &DirectionMode,
         siblings_len: usize,
-        child_position: usize,
+        is_first_sibling: bool,
     ) {
         let axis = AlignAxis::new(direction, alignment_direction);
 
         match axis {
             AlignAxis::Height => match alignment {
-                Alignment::SpaceBetween if child_position > 0 => {
+                Alignment::SpaceBetween if !is_first_sibling => {
                     let all_gaps_sizes = initial_available_area.height() - inner_sizes.height;
                     let gap_size = all_gaps_sizes / (siblings_len - 1) as f32;
                     available_area.origin.y += gap_size;
@@ -576,7 +572,7 @@ where
                 Alignment::SpaceAround => {
                     let all_gaps_sizes = initial_available_area.height() - inner_sizes.height;
                     let one_gap_size = all_gaps_sizes / siblings_len as f32;
-                    let gap_size = if child_position == 0 || child_position == siblings_len {
+                    let gap_size = if is_first_sibling {
                         one_gap_size / 2.
                     } else {
                         one_gap_size
@@ -586,7 +582,7 @@ where
                 _ => {}
             },
             AlignAxis::Width => match alignment {
-                Alignment::SpaceBetween if child_position > 0 => {
+                Alignment::SpaceBetween if !is_first_sibling => {
                     let all_gaps_sizes = initial_available_area.width() - inner_sizes.width;
                     let gap_size = all_gaps_sizes / (siblings_len - 1) as f32;
                     available_area.origin.x += gap_size;
@@ -599,7 +595,7 @@ where
                 Alignment::SpaceAround => {
                     let all_gaps_sizes = initial_available_area.width() - inner_sizes.width;
                     let one_gap_size = all_gaps_sizes / siblings_len as f32;
-                    let gap_size = if child_position == 0 || child_position == siblings_len {
+                    let gap_size = if is_first_sibling {
                         one_gap_size / 2.
                     } else {
                         one_gap_size
@@ -620,11 +616,10 @@ where
         inner_area: &mut Area,
         inner_sizes: &mut Size2D,
         child_area: &Area,
-        siblings_len: usize,
-        child_position: usize,
+        is_last_sibiling: bool,
     ) {
         // Only apply the spacing to elements after `i > 0` and `i < len - 1`
-        let spacing = (child_position < siblings_len - 1)
+        let spacing = (!is_last_sibiling)
             .then_some(parent_node.spacing)
             .unwrap_or_default();
 
