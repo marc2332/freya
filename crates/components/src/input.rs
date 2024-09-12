@@ -125,16 +125,16 @@ pub fn Input(
     });
 
     let onkeydown = move |e: Event<KeyboardData>| {
-        if is_focused && e.data.key != Key::Enter {
+        if e.data.key != Key::Enter && e.data.key != Key::Tab {
+            e.stop_propagation();
             editable.process_event(&EditableEvent::KeyDown(e.data));
             onchange.call(editable.editor().peek().to_string());
         }
     };
 
     let onkeyup = move |e: Event<KeyboardData>| {
-        if is_focused {
-            editable.process_event(&EditableEvent::KeyUp(e.data));
-        }
+        e.stop_propagation();
+        editable.process_event(&EditableEvent::KeyUp(e.data));
     };
 
     let onmousedown = move |e: MouseEvent| {
@@ -218,12 +218,12 @@ pub fn Input(
             cursor_reference,
             a11y_id,
             a11y_focusable: "true",
-            a11y_role:"textInput",
+            a11y_role: "textInput",
             a11y_auto_focus: "{auto_focus}",
+            onkeydown,
+            onkeyup,
             paragraph {
                 margin: "8 12",
-                onkeydown,
-                onkeyup,
                 onglobalclick,
                 onmouseenter,
                 onmouseleave,

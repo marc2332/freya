@@ -28,12 +28,14 @@ pub fn process_events(
     event_emitter: &EventEmitter,
     nodes_state: &mut NodesState,
     scale_factor: f64,
+
+    focus_id: Option<NodeId>,
 ) {
     // 1. Get global events created from the incoming events
     let global_events = measure_global_events(events);
 
     // 2. Get potential events that could be emitted based on the elements layout and viewports
-    let potential_events = measure_potential_event_listeners(events, dom, scale_factor);
+    let potential_events = measure_potential_event_listeners(events, dom, scale_factor, focus_id);
 
     // 3. Get what events can be actually emitted based on what elements are listening
     let mut dom_events = measure_dom_events(&potential_events, dom, nodes_state, scale_factor);
@@ -102,6 +104,7 @@ pub fn measure_potential_event_listeners(
     events: &EventsQueue,
     fdom: &FreyaDOM,
     scale_factor: f64,
+    focus_id: Option<NodeId>,
 ) -> PotentialEvents {
     let mut potential_events = PotentialEvents::default();
 
@@ -116,12 +119,14 @@ pub fn measure_potential_event_listeners(
             if let Some(layout_node) = layout_node {
                 'events: for event in events.iter() {
                     if let PlatformEvent::Keyboard { name, .. } = event {
-                        let event_data = PotentialEvent {
-                            node_id: *node_id,
-                            layer: Some(*layer),
-                            event: event.clone(),
-                        };
-                        potential_events.entry(*name).or_default().push(event_data);
+                        if focus_id == Some(*node_id) {
+                            let event_data = PotentialEvent {
+                                node_id: *node_id,
+                                layer: Some(*layer),
+                                event: event.clone(),
+                            };
+                            potential_events.entry(*name).or_default().push(event_data);
+                        }
                     } else {
                         let data = match event {
                             PlatformEvent::Mouse { name, cursor, .. } => Some((name, cursor)),

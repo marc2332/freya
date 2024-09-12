@@ -15,8 +15,9 @@ pub fn NativeContainer(children: Element) -> Element {
     let mut native_platform = use_init_native_platform();
     let platform = use_platform();
 
-    let onkeydown = move |e: KeyboardEvent| {
+    let onglobalkeydown = move |e: KeyboardEvent| {
         let allowed_to_navigate = native_platform.navigation_mark.peek().allowed();
+        println!(">> {allowed_to_navigate}");
         if e.key == Key::Tab && allowed_to_navigate {
             if e.modifiers.contains(Modifiers::SHIFT) {
                 platform
@@ -35,7 +36,7 @@ pub fn NativeContainer(children: Element) -> Element {
     rsx!(rect {
         width: "100%",
         height: "100%",
-        onkeydown,
+        onglobalkeydown,
         {children}
     })
 }

@@ -73,6 +73,10 @@ impl AccessibilityTree {
         }
     }
 
+    pub fn focused_node_id(&self) -> Option<NodeId> {
+        self.map.get(&self.focused_id).cloned()
+    }
+
     /// Initialize the Accessibility Tree
     pub fn init(
         &self,

@@ -94,9 +94,7 @@ pub async fn block_focus() {
                 width: "100%",
                 height: "50%",
                 onkeydown: move |_| {
-                    if focus_manager.is_focused() {
-                        focus_manager.prevent_navigation();
-                    }
+                    focus_manager.prevent_navigation();
                 },
                 onclick: move |_| focus_manager.focus(),
                 label {

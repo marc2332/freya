@@ -37,6 +37,8 @@ pub fn Tile(
     onselect: Option<EventHandler<()>>,
     /// Theme override.
     theme: Option<TileThemeWith>,
+
+    a11y_name: Option<String>,
 ) -> Element {
     let mut focus = use_focus();
     let mut status = use_signal(TileStatus::default);
@@ -70,6 +72,7 @@ pub fn Tile(
 
     rsx!(
         rect {
+            a11y_name,
             onclick,
             onmouseenter,
             onmouseleave,
