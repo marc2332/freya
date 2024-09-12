@@ -22,7 +22,7 @@ pub async fn multiple_lines_single_editor() {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         };
 
-        let onkeydown = move |e: Event<KeyboardData>| {
+        let onglobalkeydown = move |e: Event<KeyboardData>| {
             editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
@@ -40,7 +40,7 @@ pub async fn multiple_lines_single_editor() {
                     cursor_index: "{cursor_pos}",
                     cursor_color: "black",
                     cursor_mode: "editable",
-                    onkeydown,
+                    onglobalkeydown,
                     text {
                         color: "black",
                         "{editor}"
@@ -81,7 +81,7 @@ pub async fn multiple_lines_single_editor() {
 
     // Insert text
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         key: Key::Character("!".to_string()),
         code: Code::Unidentified,
         modifiers: Modifiers::empty(),
@@ -108,7 +108,7 @@ pub async fn multiple_lines_single_editor() {
 
     // Move cursor with arrow down
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         code: Code::ArrowDown,
         key: Key::ArrowDown,
         modifiers: Modifiers::default(),
@@ -119,7 +119,7 @@ pub async fn multiple_lines_single_editor() {
 
     // Move cursor with arrow right
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         code: Code::ArrowRight,
         key: Key::ArrowRight,
         modifiers: Modifiers::default(),
@@ -130,7 +130,7 @@ pub async fn multiple_lines_single_editor() {
 
     // Move cursor with arrow up
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         code: Code::ArrowUp,
         key: Key::ArrowUp,
         modifiers: Modifiers::default(),
@@ -141,7 +141,7 @@ pub async fn multiple_lines_single_editor() {
 
     // Move cursor with arrow left
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         code: Code::ArrowLeft,
         key: Key::ArrowLeft,
         modifiers: Modifiers::default(),
@@ -152,13 +152,13 @@ pub async fn multiple_lines_single_editor() {
 
     // Move cursor with arrow down, twice
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         code: Code::ArrowDown,
         key: Key::ArrowDown,
         modifiers: Modifiers::default(),
     });
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         code: Code::ArrowDown,
         key: Key::ArrowDown,
         modifiers: Modifiers::default(),
@@ -170,13 +170,13 @@ pub async fn multiple_lines_single_editor() {
 
     // Move cursor with arrow up, twice
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         code: Code::ArrowUp,
         key: Key::ArrowUp,
         modifiers: Modifiers::default(),
     });
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         code: Code::ArrowUp,
         key: Key::ArrowUp,
         modifiers: Modifiers::default(),
@@ -197,7 +197,7 @@ pub async fn single_line_multiple_editors() {
         let cursor_attr = editable.cursor_attr();
         let editor = editable.editor().read();
 
-        let onkeydown = move |e: Event<KeyboardData>| {
+        let onglobalkeydown = move |e: Event<KeyboardData>| {
             editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
@@ -207,7 +207,7 @@ pub async fn single_line_multiple_editors() {
                 height: "100%",
                 background: "white",
                 cursor_reference: cursor_attr,
-                onkeydown,
+                onglobalkeydown,
                 {editor.lines().enumerate().map(move |(i, line)| {
 
                     let onmousedown = move |e: MouseEvent| {
@@ -266,7 +266,7 @@ pub async fn single_line_multiple_editors() {
 
     // Insert text
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         key: Key::Character("!".to_string()),
         code: Code::Unidentified,
         modifiers: Modifiers::empty(),
@@ -306,7 +306,7 @@ pub async fn highlight_multiple_lines_single_editor() {
             editable.process_event(&EditableEvent::MouseMove(e.data, 0));
         };
 
-        let onkeydown = move |e: Event<KeyboardData>| {
+        let onglobalkeydown = move |e: Event<KeyboardData>| {
             editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
@@ -324,7 +324,7 @@ pub async fn highlight_multiple_lines_single_editor() {
                     cursor_color: "black",
                     cursor_mode: "editable",
                     highlights,
-                    onkeydown,
+                    onglobalkeydown,
                     onmousedown,
                     onmousemove,
                     text {
@@ -377,7 +377,7 @@ pub async fn highlights_single_line_multiple_editors() {
         let cursor_attr = editable.cursor_attr();
         let editor = editable.editor().read();
 
-        let onkeydown = move |e: Event<KeyboardData>| {
+        let onglobalkeydown = move |e: Event<KeyboardData>| {
             editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
@@ -387,7 +387,7 @@ pub async fn highlights_single_line_multiple_editors() {
                 height: "100%",
                 background: "white",
                 cursor_reference: cursor_attr,
-                onkeydown,
+                onglobalkeydown,
                 direction: "vertical",
                 {editor.lines().enumerate().map(move |(i, line)| {
 
@@ -487,7 +487,7 @@ pub async fn special_text_editing() {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         };
 
-        let onkeydown = move |e: Event<KeyboardData>| {
+        let onglobalkeydown = move |e: Event<KeyboardData>| {
             editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
@@ -505,7 +505,7 @@ pub async fn special_text_editing() {
                     cursor_index: "{cursor_pos}",
                     cursor_color: "black",
                     cursor_mode: "editable",
-                    onkeydown,
+                    onglobalkeydown,
                     text {
                         color: "black",
                         "{editor}"
@@ -550,7 +550,7 @@ pub async fn special_text_editing() {
 
     // Insert text
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         key: Key::Character("🦀".to_string()),
         code: Code::Unidentified,
         modifiers: Modifiers::empty(),
@@ -586,7 +586,7 @@ pub async fn special_text_editing() {
 
     // Move cursor with arrow down
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         code: Code::ArrowDown,
         key: Key::ArrowDown,
         modifiers: Modifiers::default(),
@@ -597,7 +597,7 @@ pub async fn special_text_editing() {
 
     // Move cursor with arrow right
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         code: Code::ArrowRight,
         key: Key::ArrowRight,
         modifiers: Modifiers::default(),
@@ -608,7 +608,7 @@ pub async fn special_text_editing() {
 
     // Move cursor with arrow up
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         code: Code::ArrowUp,
         key: Key::ArrowUp,
         modifiers: Modifiers::default(),
@@ -619,7 +619,7 @@ pub async fn special_text_editing() {
 
     // Move cursor with arrow left
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         code: Code::ArrowLeft,
         key: Key::ArrowLeft,
         modifiers: Modifiers::default(),
@@ -630,13 +630,13 @@ pub async fn special_text_editing() {
 
     // Move cursor with arrow down, twice
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         code: Code::ArrowDown,
         key: Key::ArrowDown,
         modifiers: Modifiers::default(),
     });
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         code: Code::ArrowDown,
         key: Key::ArrowDown,
         modifiers: Modifiers::default(),
@@ -648,13 +648,13 @@ pub async fn special_text_editing() {
 
     // Move cursor with arrow up, twice
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         code: Code::ArrowUp,
         key: Key::ArrowUp,
         modifiers: Modifiers::default(),
     });
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         code: Code::ArrowUp,
         key: Key::ArrowUp,
         modifiers: Modifiers::default(),
@@ -680,7 +680,7 @@ pub async fn backspace_remove() {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         };
 
-        let onkeydown = move |e: Event<KeyboardData>| {
+        let onglobalkeydown = move |e: Event<KeyboardData>| {
             editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
@@ -698,7 +698,7 @@ pub async fn backspace_remove() {
                     cursor_index: "{cursor_pos}",
                     cursor_color: "black",
                     cursor_mode: "editable",
-                    onkeydown,
+                    onglobalkeydown,
                     text {
                         color: "black",
                         "{editor}"
@@ -739,7 +739,7 @@ pub async fn backspace_remove() {
 
     // Insert text
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         key: Key::Character("🦀".to_string()),
         code: Code::Unidentified,
         modifiers: Modifiers::empty(),
@@ -756,7 +756,7 @@ pub async fn backspace_remove() {
 
     // Remove text
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         key: Key::Backspace,
         code: Code::Unidentified,
         modifiers: Modifiers::empty(),
@@ -792,7 +792,7 @@ pub async fn highlight_shift_click_multiple_lines_single_editor() {
             editable.process_event(&EditableEvent::MouseMove(e.data, 0));
         };
 
-        let onkeydown = move |e: Event<KeyboardData>| {
+        let onglobalkeydown = move |e: Event<KeyboardData>| {
             editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
@@ -814,7 +814,7 @@ pub async fn highlight_shift_click_multiple_lines_single_editor() {
                     cursor_color: "black",
                     cursor_mode: "editable",
                     highlights,
-                    onkeydown,
+                    onglobalkeydown,
                     onclick,
                     onmousedown,
                     onmousemove,
@@ -841,7 +841,7 @@ pub async fn highlight_shift_click_multiple_lines_single_editor() {
 
     // Press shift
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         key: Key::Shift,
         code: Code::ShiftLeft,
         modifiers: Modifiers::default(),
@@ -871,7 +871,7 @@ pub async fn highlights_shift_click_single_line_multiple_editors() {
         let cursor_attr = editable.cursor_attr();
         let editor = editable.editor().read();
 
-        let onkeydown = move |e: Event<KeyboardData>| {
+        let onglobalkeydown = move |e: Event<KeyboardData>| {
             editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
@@ -881,7 +881,7 @@ pub async fn highlights_shift_click_single_line_multiple_editors() {
                 height: "100%",
                 background: "white",
                 cursor_reference: cursor_attr,
-                onkeydown,
+                onglobalkeydown,
                 direction: "vertical",
                 {editor.lines().enumerate().map(move |(i, line)| {
 
@@ -946,7 +946,7 @@ pub async fn highlights_shift_click_single_line_multiple_editors() {
 
     // Press shift
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         key: Key::Shift,
         code: Code::ShiftLeft,
         modifiers: Modifiers::default(),
@@ -991,7 +991,7 @@ pub async fn highlight_all_text() {
             editable.process_event(&EditableEvent::MouseMove(e.data, 0));
         };
 
-        let onkeydown = move |e: Event<KeyboardData>| {
+        let onglobalkeydown = move |e: Event<KeyboardData>| {
             editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
@@ -1013,7 +1013,7 @@ pub async fn highlight_all_text() {
                     cursor_color: "black",
                     cursor_mode: "editable",
                     highlights,
-                    onkeydown,
+                    onglobalkeydown,
                     onclick,
                     onmousedown,
                     onmousemove,
@@ -1043,7 +1043,7 @@ pub async fn highlight_all_text() {
 
     // Select all text
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         key: Key::Character("a".to_string()),
         code: Code::KeyA,
         modifiers,
@@ -1075,7 +1075,7 @@ pub async fn replace_text() {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         };
 
-        let onkeydown = move |e: Event<KeyboardData>| {
+        let onglobalkeydown = move |e: Event<KeyboardData>| {
             editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
@@ -1098,7 +1098,7 @@ pub async fn replace_text() {
                     cursor_index: "{cursor_pos}",
                     cursor_color: "black",
                     cursor_mode: "editable",
-                    onkeydown,
+                    onglobalkeydown,
                     highlights,
                     text {
                         color: "black",
@@ -1143,7 +1143,7 @@ pub async fn replace_text() {
 
     // Press shift
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         key: Key::Shift,
         code: Code::ShiftLeft,
         modifiers: Modifiers::default(),
@@ -1155,7 +1155,7 @@ pub async fn replace_text() {
 
     // Insert text
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         key: Key::Character("🦀".to_string()),
         code: Code::Unidentified,
         modifiers: Modifiers::empty(),

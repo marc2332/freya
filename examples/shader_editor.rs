@@ -76,7 +76,7 @@ fn ShaderEditor(editable: UseEditable) -> Element {
         editable.process_event(&EditableEvent::Click);
     };
 
-    let onkeydown = move |e: KeyboardEvent| {
+    let onglobalkeydown = move |e: KeyboardEvent| {
         editable.process_event(&EditableEvent::KeyDown(e.data));
     };
 
@@ -86,7 +86,7 @@ fn ShaderEditor(editable: UseEditable) -> Element {
 
     rsx!(
         rect {
-            onkeydown,
+            onglobalkeydown,
             onkeyup,
             onglobalclick,
             cursor_reference,

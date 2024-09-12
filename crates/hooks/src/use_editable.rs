@@ -44,7 +44,7 @@ pub enum EditableEvent {
     Click,
     MouseMove(Rc<MouseData>, usize),
     MouseDown(Rc<MouseData>, usize),
-    KeyDown(Rc<KeyboardData>),
+    GlobalKeyDown(Rc<KeyboardData>),
     KeyUp(Rc<KeyboardData>),
 }
 

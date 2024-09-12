@@ -128,8 +128,8 @@ pub fn Switch(props: SwitchProps) -> Element {
         props.ontoggled.call(());
     };
 
-    let onkeydown = move |e: KeyboardEvent| {
-        if focus.validate_keydown(&e) {
+    let onglobalkeydown = move |e: KeyboardEvent| {
+        if focus.validate_globalkeydown(&e) {
             props.ontoggled.call(());
         }
     };
@@ -169,7 +169,7 @@ pub fn Switch(props: SwitchProps) -> Element {
             onmousedown,
             onmouseenter,
             onmouseleave,
-            onkeydown,
+            onglobalkeydown,
             onclick,
             a11y_id,
             offset_x: "{offset_x}",

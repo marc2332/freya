@@ -120,7 +120,7 @@ pub fn Input(
         }
     });
 
-    let onkeydown = move |e: Event<KeyboardData>| {
+    let onglobalkeydown = move |e: Event<KeyboardData>| {
         if is_focused && e.data.key != Key::Enter {
             editable.process_event(&EditableEvent::KeyDown(e.data));
             onchange.call(editable.editor().peek().to_string());
@@ -217,7 +217,7 @@ pub fn Input(
             main_align: "center",
             paragraph {
                 margin: "8 12",
-                onkeydown,
+                onglobalkeydown,
                 onkeyup,
                 onglobalclick,
                 onmouseenter,
@@ -281,7 +281,7 @@ mod test {
 
         // Write "d"
         utils.push_event(PlatformEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: EventName::GlobalKeyDown,
             key: Key::Character("d".to_string()),
             code: Code::KeyD,
             modifiers: Modifiers::default(),

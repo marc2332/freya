@@ -263,7 +263,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             WindowEvent::CloseRequested => event_loop.exit(),
             WindowEvent::Ime(Ime::Commit(text)) => {
                 self.send_event(PlatformEvent::Keyboard {
-                    name: EventName::KeyDown,
+                    name: EventName::GlobalKeyDown,
                     key: Key::Character(text),
                     code: Code::Unidentified,
                     modifiers: map_winit_modifiers(self.modifiers_state),
@@ -360,7 +360,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 }
 
                 let name = match state {
-                    ElementState::Pressed => EventName::KeyDown,
+                    ElementState::Pressed => EventName::GlobalKeyDown,
                     ElementState::Released => EventName::KeyUp,
                 };
                 self.send_event(PlatformEvent::Keyboard {

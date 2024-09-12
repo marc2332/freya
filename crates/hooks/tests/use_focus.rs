@@ -93,7 +93,7 @@ pub async fn block_focus() {
                 a11y_id: focus_manager.attribute(),
                 width: "100%",
                 height: "50%",
-                onkeydown: move |_| {
+                onglobalkeydown: move |_| {
                     if focus_manager.is_focused() {
                         focus_manager.prevent_navigation();
                     }
@@ -139,7 +139,7 @@ pub async fn block_focus() {
 
     // Navigate to the second rect
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         key: Key::Tab,
         code: Code::Tab,
         modifiers: Modifiers::default(),
@@ -153,7 +153,7 @@ pub async fn block_focus() {
 
     // Try to navigate to the first rect again
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: EventName::GlobalKeyDown,
         key: Key::Tab,
         code: Code::Tab,
         modifiers: Modifiers::default(),

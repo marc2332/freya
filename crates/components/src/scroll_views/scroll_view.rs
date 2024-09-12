@@ -276,7 +276,7 @@ pub fn ScrollView(
         }
     };
 
-    let onkeydown = move |e: KeyboardEvent| {
+    let onglobalkeydown = move |e: KeyboardEvent| {
         match &e.key {
             Key::Shift => {
                 clicking_shift.set(true);
@@ -379,7 +379,7 @@ pub fn ScrollView(
             height,
             onglobalclick: onclick,
             onglobalmousemove: onmousemove,
-            onkeydown,
+            onglobalkeydown,
             onkeyup,
             a11y_id,
             rect {
@@ -561,7 +561,7 @@ mod test {
         // Scroll up with arrows
         for _ in 0..5 {
             utils.push_event(PlatformEvent::Keyboard {
-                name: EventName::KeyDown,
+                name: EventName::GlobalKeyDown,
                 key: Key::ArrowUp,
                 code: Code::ArrowUp,
                 modifiers: Modifiers::default(),
@@ -576,7 +576,7 @@ mod test {
 
         // Scroll to the bottom with arrows
         utils.push_event(PlatformEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: EventName::GlobalKeyDown,
             key: Key::End,
             code: Code::End,
             modifiers: Modifiers::default(),

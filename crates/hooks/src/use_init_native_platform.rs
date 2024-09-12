@@ -184,7 +184,7 @@ mod test {
 
         // Navigate to the first rect
         utils.push_event(PlatformEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: EventName::GlobalKeyDown,
             key: Key::Tab,
             code: Code::Tab,
             modifiers: Modifiers::default(),
@@ -199,7 +199,7 @@ mod test {
 
         // Navigate to the second rect
         utils.push_event(PlatformEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: EventName::GlobalKeyDown,
             key: Key::Tab,
             code: Code::Tab,
             modifiers: Modifiers::default(),
