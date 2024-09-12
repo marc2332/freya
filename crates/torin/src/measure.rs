@@ -1,5 +1,3 @@
-use std::time::Instant;
-
 pub use euclid::Rect;
 use rustc_hash::FxHashMap;
 
@@ -298,8 +296,6 @@ where
         let mut initial_phase_sizes = FxHashMap::default();
         let mut initial_phase_inner_sizes = *inner_sizes;
 
-        let i = Instant::now();
-
         // Used to calculate the spacing and some alignments
         let (non_absolute_children_len, first_child, last_child) = if parent_node.spacing.get() > 0.
         {
@@ -330,10 +326,6 @@ where
                 children.last().cloned(),
             )
         };
-
-        if i.elapsed().as_millis() > 0 {
-            println!("{}", i.elapsed().as_millis());
-        }
 
         // Initial phase: Measure the size and position of the children if the parent has a
         // non-start cross alignment, non-start main aligment of a fit-content.
