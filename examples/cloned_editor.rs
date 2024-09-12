@@ -37,11 +37,11 @@ fn Body() -> Element {
         editable.process_event(&EditableEvent::Click);
     };
 
-    let onkeydown = move |e: KeyboardEvent| {
+    let onglobalkeydown = move |e: KeyboardEvent| {
         editable.process_event(&EditableEvent::KeyDown(e.data));
     };
 
-    let onkeyup = move |e: KeyboardEvent| {
+    let onglobalkeyup = move |e: KeyboardEvent| {
         editable.process_event(&EditableEvent::KeyUp(e.data));
     };
 
@@ -50,8 +50,8 @@ fn Body() -> Element {
             width: "100%",
             height: "100%",
             padding: "10",
-            onkeydown,
-            onkeyup,
+            onglobalkeydown,
+            onglobalkeyup,
             cursor_reference,
             direction: "horizontal",
             onglobalclick: onclick,

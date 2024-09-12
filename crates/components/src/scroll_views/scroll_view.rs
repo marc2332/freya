@@ -276,7 +276,7 @@ pub fn ScrollView(
         }
     };
 
-    let onkeydown = move |e: KeyboardEvent| {
+    let onglobalkeydown = move |e: KeyboardEvent| {
         match &e.key {
             Key::Shift => {
                 clicking_shift.set(true);
@@ -319,7 +319,7 @@ pub fn ScrollView(
         };
     };
 
-    let onkeyup = move |e: KeyboardEvent| {
+    let onglobalkeyup = move |e: KeyboardEvent| {
         if e.key == Key::Shift {
             clicking_shift.set(false);
         } else if e.key == Key::Alt {
@@ -379,8 +379,8 @@ pub fn ScrollView(
             height,
             onglobalclick: onclick,
             onglobalmousemove: onmousemove,
-            onkeydown,
-            onkeyup,
+            onglobalkeydown,
+            onglobalkeyup,
             a11y_id,
             rect {
                 direction: "vertical",

@@ -234,12 +234,14 @@ impl Application {
 
     /// Process the events queue
     pub fn process_events(&mut self, scale_factor: f64) {
+        let focus_id = self.accessibility.focused_node_id();
         process_events(
             &self.sdom.get(),
             &mut self.events,
             &self.event_emitter,
             &mut self.nodes_state,
             scale_factor,
+            focus_id,
         )
     }
 

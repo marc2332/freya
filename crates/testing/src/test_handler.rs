@@ -245,6 +245,7 @@ impl TestingHandler {
             &self.event_emitter,
             &mut self.nodes_state,
             SCALE_FACTOR,
+            self.accessibility_tree.lock().unwrap().focused_node_id(),
         );
     }
 

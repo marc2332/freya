@@ -22,7 +22,7 @@ pub async fn multiple_lines_single_editor() {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         };
 
-        let onkeydown = move |e: Event<KeyboardData>| {
+        let onglobalkeydown = move |e: Event<KeyboardData>| {
             editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
@@ -40,7 +40,7 @@ pub async fn multiple_lines_single_editor() {
                     cursor_index: "{cursor_pos}",
                     cursor_color: "black",
                     cursor_mode: "editable",
-                    onkeydown,
+                    onglobalkeydown,
                     text {
                         color: "black",
                         "{editor}"
@@ -197,7 +197,7 @@ pub async fn single_line_multiple_editors() {
         let cursor_attr = editable.cursor_attr();
         let editor = editable.editor().read();
 
-        let onkeydown = move |e: Event<KeyboardData>| {
+        let onglobalkeydown = move |e: Event<KeyboardData>| {
             editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
@@ -207,7 +207,7 @@ pub async fn single_line_multiple_editors() {
                 height: "100%",
                 background: "white",
                 cursor_reference: cursor_attr,
-                onkeydown,
+                onglobalkeydown,
                 {editor.lines().enumerate().map(move |(i, line)| {
 
                     let onmousedown = move |e: MouseEvent| {
@@ -306,7 +306,7 @@ pub async fn highlight_multiple_lines_single_editor() {
             editable.process_event(&EditableEvent::MouseMove(e.data, 0));
         };
 
-        let onkeydown = move |e: Event<KeyboardData>| {
+        let onglobalkeydown = move |e: Event<KeyboardData>| {
             editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
@@ -324,7 +324,7 @@ pub async fn highlight_multiple_lines_single_editor() {
                     cursor_color: "black",
                     cursor_mode: "editable",
                     highlights,
-                    onkeydown,
+                    onglobalkeydown,
                     onmousedown,
                     onmousemove,
                     text {
@@ -377,7 +377,7 @@ pub async fn highlights_single_line_multiple_editors() {
         let cursor_attr = editable.cursor_attr();
         let editor = editable.editor().read();
 
-        let onkeydown = move |e: Event<KeyboardData>| {
+        let onglobalkeydown = move |e: Event<KeyboardData>| {
             editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
@@ -387,7 +387,7 @@ pub async fn highlights_single_line_multiple_editors() {
                 height: "100%",
                 background: "white",
                 cursor_reference: cursor_attr,
-                onkeydown,
+                onglobalkeydown,
                 direction: "vertical",
                 {editor.lines().enumerate().map(move |(i, line)| {
 
@@ -487,7 +487,7 @@ pub async fn special_text_editing() {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         };
 
-        let onkeydown = move |e: Event<KeyboardData>| {
+        let onglobalkeydown = move |e: Event<KeyboardData>| {
             editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
@@ -505,7 +505,7 @@ pub async fn special_text_editing() {
                     cursor_index: "{cursor_pos}",
                     cursor_color: "black",
                     cursor_mode: "editable",
-                    onkeydown,
+                    onglobalkeydown,
                     text {
                         color: "black",
                         "{editor}"
@@ -680,7 +680,7 @@ pub async fn backspace_remove() {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         };
 
-        let onkeydown = move |e: Event<KeyboardData>| {
+        let onglobalkeydown = move |e: Event<KeyboardData>| {
             editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
@@ -698,7 +698,7 @@ pub async fn backspace_remove() {
                     cursor_index: "{cursor_pos}",
                     cursor_color: "black",
                     cursor_mode: "editable",
-                    onkeydown,
+                    onglobalkeydown,
                     text {
                         color: "black",
                         "{editor}"
@@ -792,7 +792,7 @@ pub async fn highlight_shift_click_multiple_lines_single_editor() {
             editable.process_event(&EditableEvent::MouseMove(e.data, 0));
         };
 
-        let onkeydown = move |e: Event<KeyboardData>| {
+        let onglobalkeydown = move |e: Event<KeyboardData>| {
             editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
@@ -814,7 +814,7 @@ pub async fn highlight_shift_click_multiple_lines_single_editor() {
                     cursor_color: "black",
                     cursor_mode: "editable",
                     highlights,
-                    onkeydown,
+                    onglobalkeydown,
                     onclick,
                     onmousedown,
                     onmousemove,
@@ -871,7 +871,7 @@ pub async fn highlights_shift_click_single_line_multiple_editors() {
         let cursor_attr = editable.cursor_attr();
         let editor = editable.editor().read();
 
-        let onkeydown = move |e: Event<KeyboardData>| {
+        let onglobalkeydown = move |e: Event<KeyboardData>| {
             editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
@@ -881,7 +881,7 @@ pub async fn highlights_shift_click_single_line_multiple_editors() {
                 height: "100%",
                 background: "white",
                 cursor_reference: cursor_attr,
-                onkeydown,
+                onglobalkeydown,
                 direction: "vertical",
                 {editor.lines().enumerate().map(move |(i, line)| {
 
@@ -991,7 +991,7 @@ pub async fn highlight_all_text() {
             editable.process_event(&EditableEvent::MouseMove(e.data, 0));
         };
 
-        let onkeydown = move |e: Event<KeyboardData>| {
+        let onglobalkeydown = move |e: Event<KeyboardData>| {
             editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
@@ -1013,7 +1013,7 @@ pub async fn highlight_all_text() {
                     cursor_color: "black",
                     cursor_mode: "editable",
                     highlights,
-                    onkeydown,
+                    onglobalkeydown,
                     onclick,
                     onmousedown,
                     onmousemove,
@@ -1075,7 +1075,7 @@ pub async fn replace_text() {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         };
 
-        let onkeydown = move |e: Event<KeyboardData>| {
+        let onglobalkeydown = move |e: Event<KeyboardData>| {
             editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
@@ -1098,7 +1098,7 @@ pub async fn replace_text() {
                     cursor_index: "{cursor_pos}",
                     cursor_color: "black",
                     cursor_mode: "editable",
-                    onkeydown,
+                    onglobalkeydown,
                     highlights,
                     text {
                         color: "black",

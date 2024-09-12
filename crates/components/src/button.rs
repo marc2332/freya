@@ -151,8 +151,8 @@ pub fn Button(
         status.set(ButtonStatus::default());
     };
 
-    let onkeydown = move |ev: KeyboardEvent| {
-        if focus.validate_keydown(&ev) {
+    let onglobalkeydown = move |ev: KeyboardEvent| {
+        if focus.validate_globalkeydown(&ev) {
             if let Some(onpress) = &onpress {
                 onpress.call(PressEvent::Key(ev))
             }
@@ -174,7 +174,7 @@ pub fn Button(
             onpointerup,
             onmouseenter,
             onmouseleave,
-            onkeydown,
+            onglobalkeydown,
             a11y_id,
             width: "{width}",
             height: "{height}",

@@ -50,6 +50,10 @@ impl AccessKitManager {
         }
     }
 
+    pub fn focused_node_id(&self) -> Option<NodeId> {
+        self.accessibility_tree.lock().unwrap().focused_node_id()
+    }
+
     /// Process an accessibility window event
     pub fn process_accessibility_event(&mut self, event: &WindowEvent, window: &Window) {
         self.accessibility_adapter.process_event(window, event)
