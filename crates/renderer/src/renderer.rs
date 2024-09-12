@@ -216,9 +216,6 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 app.focus_next_node(AccessibilityFocusStrategy::Forward, window);
             }
             EventMessage::WithWindow(use_window) => (use_window)(window),
-            EventMessage::QueueFocusAccessibilityNode(node_id) => {
-                app.queue_focus_node(node_id);
-            }
             EventMessage::ExitApp => event_loop.exit(),
             EventMessage::PlatformEvent(platform_event) => self.send_event(platform_event),
             ev => {
@@ -278,13 +275,13 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
 
                 if app.measure_layout_on_next_render {
                     app.process_layout(window.inner_size(), scale_factor);
-                    app.process_accessibility(window);
+                    app.process_accessibility(&window);
 
                     app.measure_layout_on_next_render = false;
                 }
 
                 if app.init_accessibility_on_next_render {
-                    app.init_accessibility(window);
+                    app.init_accessibility();
                     app.init_accessibility_on_next_render = false;
                 }
 

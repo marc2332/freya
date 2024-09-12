@@ -56,7 +56,6 @@ pub struct Application {
     pub(crate) measure_layout_on_next_render: bool,
     pub(crate) init_accessibility_on_next_render: bool,
     pub(crate) default_fonts: Vec<String>,
-    pub(crate) queued_focus_node: Option<AccessibilityId>,
 }
 
 impl Application {
@@ -116,7 +115,6 @@ impl Application {
             measure_layout_on_next_render: false,
             init_accessibility_on_next_render: false,
             default_fonts,
-            queued_focus_node: None,
             compositor: Compositor::default(),
         };
 
@@ -243,7 +241,7 @@ impl Application {
         )
     }
 
-    pub fn init_accessibility(&mut self, window: &Window) {
+    pub fn init_accessibility(&mut self) {
         {
             let fdom = self.sdom.get();
             let rdom = fdom.rdom();
@@ -251,10 +249,6 @@ impl Application {
             let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
             self.accessibility
                 .init_accessibility(rdom, &layout, &mut dirty_accessibility_tree);
-        }
-
-        if let Some(node_id) = self.queued_focus_node.take() {
-            self.focus_node(node_id, window)
         }
     }
 
@@ -264,12 +258,13 @@ impl Application {
             let rdom = fdom.rdom();
             let layout = fdom.layout();
             let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
-            self.accessibility
-                .process_updates(rdom, &layout, &mut dirty_accessibility_tree);
-        }
-
-        if let Some(node_id) = self.queued_focus_node.take() {
-            self.focus_node(node_id, window)
+            self.accessibility.process_updates(
+                rdom,
+                &layout,
+                &self.platform_sender,
+                window,
+                &mut dirty_accessibility_tree,
+            );
         }
     }
 
@@ -344,10 +339,6 @@ impl Application {
         let layout = fdom.layout();
         self.accessibility
             .focus_node(node_id, &self.platform_sender, window, &layout)
-    }
-
-    pub fn queue_focus_node(&mut self, node_id: AccessibilityId) {
-        self.queued_focus_node = Some(node_id);
     }
 
     pub fn focus_next_node(&mut self, direction: AccessibilityFocusStrategy, window: &Window) {

@@ -54,15 +54,6 @@ impl UseFocus {
         }
     }
 
-    /// Queue a focus to this node
-    pub fn queue_focus(&mut self) {
-        if !*self.is_focused.peek() {
-            self.platform
-                .send(EventMessage::QueueFocusAccessibilityNode(self.id))
-                .ok();
-        }
-    }
-
     /// Get the node focus ID
     pub fn id(&self) -> AccessibilityId {
         self.id
@@ -75,6 +66,7 @@ impl UseFocus {
 
     /// Check if this node is currently focused
     pub fn is_focused(&self) -> bool {
+        println!("am I focused? {:?}", self.is_focused.read());
         *self.is_focused.read()
     }
 

@@ -38,8 +38,6 @@ pub enum EventMessage {
     Accessibility(accesskit_winit::WindowEvent),
     /// Focus the given accessibility NodeID
     FocusAccessibilityNode(accesskit::NodeId),
-    /// Queue a focus the given accessibility NodeID
-    QueueFocusAccessibilityNode(accesskit::NodeId),
     /// Focus the next accessibility Node
     FocusNextAccessibilityNode,
     /// Focus the previous accessibility Node
