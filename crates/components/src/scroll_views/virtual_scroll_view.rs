@@ -654,7 +654,7 @@ mod test {
         // Scroll up with arrows
         for _ in 0..11 {
             utils.push_event(PlatformEvent::Keyboard {
-                name: EventName::GlobalKeyDown,
+                name: EventName::KeyDown,
                 key: Key::ArrowUp,
                 code: Code::ArrowUp,
                 modifiers: Modifiers::default(),
@@ -675,7 +675,7 @@ mod test {
 
         // Scroll to the bottom with arrows
         utils.push_event(PlatformEvent::Keyboard {
-            name: EventName::GlobalKeyDown,
+            name: EventName::KeyDown,
             key: Key::End,
             code: Code::End,
             modifiers: Modifiers::default(),

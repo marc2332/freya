@@ -54,7 +54,7 @@ impl GamePadPlugin {
                                 }
                                 13 => {
                                     handle.send_platform_event(PlatformEvent::Keyboard {
-                                        name: EventName::GlobalKeyDown,
+                                        name: EventName::KeyDown,
                                         key: Key::Enter,
                                         code: Code::Enter,
                                         modifiers: Modifiers::default(),

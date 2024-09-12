@@ -281,7 +281,7 @@ mod test {
 
         // Write "d"
         utils.push_event(PlatformEvent::Keyboard {
-            name: EventName::GlobalKeyDown,
+            name: EventName::KeyDown,
             key: Key::Character("d".to_string()),
             code: Code::KeyD,
             modifiers: Modifiers::default(),

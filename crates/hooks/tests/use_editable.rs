@@ -81,7 +81,7 @@ pub async fn multiple_lines_single_editor() {
 
     // Insert text
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         key: Key::Character("!".to_string()),
         code: Code::Unidentified,
         modifiers: Modifiers::empty(),
@@ -108,7 +108,7 @@ pub async fn multiple_lines_single_editor() {
 
     // Move cursor with arrow down
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         code: Code::ArrowDown,
         key: Key::ArrowDown,
         modifiers: Modifiers::default(),
@@ -119,7 +119,7 @@ pub async fn multiple_lines_single_editor() {
 
     // Move cursor with arrow right
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         code: Code::ArrowRight,
         key: Key::ArrowRight,
         modifiers: Modifiers::default(),
@@ -130,7 +130,7 @@ pub async fn multiple_lines_single_editor() {
 
     // Move cursor with arrow up
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         code: Code::ArrowUp,
         key: Key::ArrowUp,
         modifiers: Modifiers::default(),
@@ -141,7 +141,7 @@ pub async fn multiple_lines_single_editor() {
 
     // Move cursor with arrow left
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         code: Code::ArrowLeft,
         key: Key::ArrowLeft,
         modifiers: Modifiers::default(),
@@ -152,13 +152,13 @@ pub async fn multiple_lines_single_editor() {
 
     // Move cursor with arrow down, twice
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         code: Code::ArrowDown,
         key: Key::ArrowDown,
         modifiers: Modifiers::default(),
     });
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         code: Code::ArrowDown,
         key: Key::ArrowDown,
         modifiers: Modifiers::default(),
@@ -170,13 +170,13 @@ pub async fn multiple_lines_single_editor() {
 
     // Move cursor with arrow up, twice
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         code: Code::ArrowUp,
         key: Key::ArrowUp,
         modifiers: Modifiers::default(),
     });
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         code: Code::ArrowUp,
         key: Key::ArrowUp,
         modifiers: Modifiers::default(),
@@ -266,7 +266,7 @@ pub async fn single_line_multiple_editors() {
 
     // Insert text
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         key: Key::Character("!".to_string()),
         code: Code::Unidentified,
         modifiers: Modifiers::empty(),
@@ -550,7 +550,7 @@ pub async fn special_text_editing() {
 
     // Insert text
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         key: Key::Character("🦀".to_string()),
         code: Code::Unidentified,
         modifiers: Modifiers::empty(),
@@ -586,7 +586,7 @@ pub async fn special_text_editing() {
 
     // Move cursor with arrow down
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         code: Code::ArrowDown,
         key: Key::ArrowDown,
         modifiers: Modifiers::default(),
@@ -597,7 +597,7 @@ pub async fn special_text_editing() {
 
     // Move cursor with arrow right
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         code: Code::ArrowRight,
         key: Key::ArrowRight,
         modifiers: Modifiers::default(),
@@ -608,7 +608,7 @@ pub async fn special_text_editing() {
 
     // Move cursor with arrow up
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         code: Code::ArrowUp,
         key: Key::ArrowUp,
         modifiers: Modifiers::default(),
@@ -619,7 +619,7 @@ pub async fn special_text_editing() {
 
     // Move cursor with arrow left
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         code: Code::ArrowLeft,
         key: Key::ArrowLeft,
         modifiers: Modifiers::default(),
@@ -630,13 +630,13 @@ pub async fn special_text_editing() {
 
     // Move cursor with arrow down, twice
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         code: Code::ArrowDown,
         key: Key::ArrowDown,
         modifiers: Modifiers::default(),
     });
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         code: Code::ArrowDown,
         key: Key::ArrowDown,
         modifiers: Modifiers::default(),
@@ -648,13 +648,13 @@ pub async fn special_text_editing() {
 
     // Move cursor with arrow up, twice
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         code: Code::ArrowUp,
         key: Key::ArrowUp,
         modifiers: Modifiers::default(),
     });
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         code: Code::ArrowUp,
         key: Key::ArrowUp,
         modifiers: Modifiers::default(),
@@ -739,7 +739,7 @@ pub async fn backspace_remove() {
 
     // Insert text
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         key: Key::Character("🦀".to_string()),
         code: Code::Unidentified,
         modifiers: Modifiers::empty(),
@@ -756,7 +756,7 @@ pub async fn backspace_remove() {
 
     // Remove text
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         key: Key::Backspace,
         code: Code::Unidentified,
         modifiers: Modifiers::empty(),
@@ -841,7 +841,7 @@ pub async fn highlight_shift_click_multiple_lines_single_editor() {
 
     // Press shift
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         key: Key::Shift,
         code: Code::ShiftLeft,
         modifiers: Modifiers::default(),
@@ -946,7 +946,7 @@ pub async fn highlights_shift_click_single_line_multiple_editors() {
 
     // Press shift
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         key: Key::Shift,
         code: Code::ShiftLeft,
         modifiers: Modifiers::default(),
@@ -1043,7 +1043,7 @@ pub async fn highlight_all_text() {
 
     // Select all text
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         key: Key::Character("a".to_string()),
         code: Code::KeyA,
         modifiers,
@@ -1143,7 +1143,7 @@ pub async fn replace_text() {
 
     // Press shift
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         key: Key::Shift,
         code: Code::ShiftLeft,
         modifiers: Modifiers::default(),
@@ -1155,7 +1155,7 @@ pub async fn replace_text() {
 
     // Insert text
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::GlobalKeyDown,
+        name: EventName::KeyDown,
         key: Key::Character("🦀".to_string()),
         code: Code::Unidentified,
         modifiers: Modifiers::empty(),
