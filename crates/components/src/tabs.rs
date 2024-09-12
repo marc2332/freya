@@ -78,7 +78,12 @@ pub enum TabStatus {
 /// ```
 #[allow(non_snake_case)]
 #[component]
-pub fn Tab(children: Element, theme: Option<TabThemeWith>) -> Element {
+pub fn Tab(
+    children: Element,
+    theme: Option<TabThemeWith>,
+    /// Optionally handle the `onclick` event in the SidebarItem.
+    onclick: Option<EventHandler<()>>,
+) -> Element {
     let focus = use_focus();
     let mut status = use_signal(TabStatus::default);
     let platform = use_platform();
@@ -103,6 +108,12 @@ pub fn Tab(children: Element, theme: Option<TabThemeWith>) -> Element {
         }
     });
 
+    let onclick = move |_| {
+        if let Some(onclick) = &onclick {
+            onclick.call(());
+        }
+    };
+
     let onmouseenter = move |_| {
         platform.set_cursor(CursorIcon::Pointer);
         status.set(TabStatus::Hovering);
@@ -125,6 +136,7 @@ pub fn Tab(children: Element, theme: Option<TabThemeWith>) -> Element {
 
     rsx!(
         rect {
+            onclick,
             onmouseenter,
             onmouseleave,
             a11y_id,
