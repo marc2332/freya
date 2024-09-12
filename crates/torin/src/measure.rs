@@ -472,7 +472,7 @@ where
             // Adjust the size of the area if needed
             child_areas.area.adjust_size(&child_data);
 
-            // Stack this s child into the parent
+            // Stack this child into the parent
             if !child_data.position.is_absolute() {
                 Self::stack_child(
                     available_area,
