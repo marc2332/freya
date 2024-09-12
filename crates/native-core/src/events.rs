@@ -22,6 +22,8 @@ pub enum EventName {
     PointerLeave,
     PointerUp,
 
+    KeyDown,
+    KeyUp,
     GlobalKeyDown,
     GlobalKeyUp,
 
@@ -59,6 +61,8 @@ impl FromStr for EventName {
             "pointerenter" => Ok(EventName::PointerEnter),
             "pointerleave" => Ok(EventName::PointerLeave),
             "pointerup" => Ok(EventName::PointerUp),
+            "keydown" => Ok(EventName::KeyDown),
+            "keyup" => Ok(EventName::KeyUp),
             "globalkeydown" => Ok(EventName::GlobalKeyDown),
             "globalkeyup" => Ok(EventName::GlobalKeyUp),
             "touchcancel" => Ok(EventName::TouchCancel),
@@ -94,6 +98,8 @@ impl From<EventName> for &str {
             EventName::PointerEnter => "pointerenter",
             EventName::PointerLeave => "pointerleave",
             EventName::PointerUp => "pointerup",
+            EventName::KeyUp => "keyup",
+            EventName::KeyDown => "keydown",
             EventName::GlobalKeyDown => "globalkeydown",
             EventName::GlobalKeyUp => "globalkeyup",
             EventName::TouchCancel => "touchcancel",
@@ -145,6 +151,8 @@ impl EventName {
             Self::MouseMove => Some(Self::GlobalMouseMove),
             Self::GlobalFileHover => Some(Self::GlobalFileHover),
             Self::GlobalFileHoverCancelled => Some(Self::GlobalFileHoverCancelled),
+            Self::KeyDown => Some(EventName::GlobalKeyDown),
+            Self::KeyUp => Some(EventName::GlobalKeyUp),
             _ => None,
         }
     }
@@ -200,7 +208,7 @@ impl EventName {
     }
 
     // Bubble all events except:
-    // - Keyboard events
+    // - Global Keyboard events
     // - Mouse movements events
     pub fn does_bubble(&self) -> bool {
         !matches!(

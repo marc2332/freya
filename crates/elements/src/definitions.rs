@@ -611,6 +611,10 @@ pub mod events {
     impl_event! [
         KeyboardData;
 
+        onkeydown
+
+        onkeyup
+
         #[doc = include_str!("_docs/events/globalkeydown.md")]
         onglobalkeydown
         #[doc = include_str!("_docs/events/globalkeyup.md")]

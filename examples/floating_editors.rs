@@ -180,16 +180,14 @@ fn Editor() -> Element {
         }
     };
 
-    let onglobalkeydown = move |e: KeyboardEvent| {
-        if focus_manager.is_focused() {
-            editable.process_event(&EditableEvent::KeyDown(e.data));
-        }
+    let onkeydown = move |e: KeyboardEvent| {
+        e.stop_propagation();
+        editable.process_event(&EditableEvent::KeyDown(e.data));
     };
 
-    let onglobalkeyup = move |e: KeyboardEvent| {
-        if focus_manager.is_focused() {
-            editable.process_event(&EditableEvent::KeyUp(e.data));
-        }
+    let onkeyup = move |e: KeyboardEvent| {
+        e.stop_propagation();
+        editable.process_event(&EditableEvent::KeyUp(e.data));
     };
 
     let a11y_id = focus_manager.attribute();
@@ -198,6 +196,8 @@ fn Editor() -> Element {
         rect {
             onclick,
             a11y_id,
+            onkeydown,
+            onkeyup,
             width: "fill",
             height: "fill",
             padding: "10",
@@ -261,8 +261,6 @@ fn Editor() -> Element {
             rect {
                 width: "fill",
                 height: "fill",
-                onglobalkeydown,
-                onglobalkeyup,
                 cursor_reference,
                 ScrollView {
                     scroll_with_arrows: false,
