@@ -77,6 +77,10 @@ pub struct VirtualScrollViewProps<
     pub cache_elements: bool,
     /// Custom Scroll Controller for the Virtual ScrollView.
     pub scroll_controller: Option<ScrollController>,
+    /// If `false` (default), wheel scroll with no shift will scroll vertically no matter the direction.
+    /// If `true`, wheel scroll with no shift will scroll horizontally.
+    #[props(default = false)]
+    pub invert_scroll_wheel: bool,
 }
 
 impl<
@@ -95,6 +99,7 @@ impl<
             && self.scroll_with_arrows == other.scroll_with_arrows
             && self.builder_args == other.builder_args
             && self.scroll_controller == other.scroll_controller
+            && self.invert_scroll_wheel == other.invert_scroll_wheel
     }
 }
 
@@ -192,6 +197,7 @@ pub fn VirtualScrollView<
         scroll_with_arrows,
         cache_elements,
         scroll_controller,
+        invert_scroll_wheel,
     }: VirtualScrollViewProps<Builder, BuilderArgs>,
 ) -> Element {
     let mut clicking_scrollbar = use_signal::<Option<(Axis, f64)>>(|| None);
@@ -250,8 +256,8 @@ pub fn VirtualScrollView<
 
         let wheel_movement = e.get_delta_y() as f32 * speed_multiplier;
 
-        let scroll_vertically_or_not = (direction_is_vertical && !*clicking_shift.peek())
-            || !direction_is_vertical && *clicking_shift.peek();
+        let scroll_vertically_or_not =
+            (invert_scroll_wheel && clicking_shift()) || !invert_scroll_wheel && !clicking_shift();
 
         if scroll_vertically_or_not {
             let scroll_position_y = get_scroll_position_from_wheel(
