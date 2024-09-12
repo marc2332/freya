@@ -253,19 +253,17 @@ impl Application {
     }
 
     pub fn process_accessibility(&mut self, window: &Window) {
-        {
-            let fdom = self.sdom.get();
-            let rdom = fdom.rdom();
-            let layout = fdom.layout();
-            let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
-            self.accessibility.process_updates(
-                rdom,
-                &layout,
-                &self.platform_sender,
-                window,
-                &mut dirty_accessibility_tree,
-            );
-        }
+        let fdom = self.sdom.get();
+        let rdom = fdom.rdom();
+        let layout = fdom.layout();
+        let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
+        self.accessibility.process_updates(
+            rdom,
+            &layout,
+            &self.platform_sender,
+            window,
+            &mut dirty_accessibility_tree,
+        );
     }
 
     /// Send an event

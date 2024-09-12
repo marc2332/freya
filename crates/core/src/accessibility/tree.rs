@@ -189,8 +189,7 @@ impl AccessibilityTree {
             let node_accessibility_state = node_ref.get::<AccessibilityNodeState>();
             if let Some(focused_id) = node_accessibility_state
                 .as_ref()
-                .map(|state| state.a11y_id)
-                .flatten()
+                .and_then(|state| state.a11y_id)
             {
                 self.focused_id = focused_id;
             }
