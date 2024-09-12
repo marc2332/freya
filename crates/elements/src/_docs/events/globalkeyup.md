@@ -1,4 +1,4 @@
-The `keyup` event fires when the user releases any key being pressed.
+The `globalkeyup` event fires when the user releases any key being pressed.
 
 Event Data: [`KeyboardData`](crate::events::KeyboardData)
 
@@ -9,7 +9,7 @@ Event Data: [`KeyboardData`](crate::events::KeyboardData)
 fn app() -> Element {
     rsx!(
         rect {
-            onkeyup: |e| println!("Event: {e:?}")
+            onglobalkeyup: |e| println!("Event: {e:?}")
         }
     )
 }

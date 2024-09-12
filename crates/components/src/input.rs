@@ -127,7 +127,7 @@ pub fn Input(
         }
     };
 
-    let onkeyup = move |e: Event<KeyboardData>| {
+    let onglobalkeyup = move |e: Event<KeyboardData>| {
         if is_focused {
             editable.process_event(&EditableEvent::KeyUp(e.data));
         }
@@ -218,7 +218,7 @@ pub fn Input(
             paragraph {
                 margin: "8 12",
                 onglobalkeydown,
-                onkeyup,
+                onglobalkeyup,
                 onglobalclick,
                 onmouseenter,
                 onmouseleave,

@@ -44,7 +44,7 @@ fn app() -> Element {
         editable.process_event(&EditableEvent::KeyDown(e.data));
     };
 
-    let onkeyup = move |e: KeyboardEvent| {
+    let onglobalkeyup = move |e: KeyboardEvent| {
         editable.process_event(&EditableEvent::KeyUp(e.data));
     };
 
@@ -70,7 +70,7 @@ fn app() -> Element {
                     onmousemove,
                     onmousedown,
                     onglobalkeydown,
-                    onkeyup,
+                    onglobalkeyup,
                     text {
                         "{editable.editor()}"
                     }

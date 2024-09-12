@@ -23,7 +23,7 @@ pub enum EventName {
     PointerUp,
 
     GlobalKeyDown,
-    KeyUp,
+    GlobalKeyUp,
 
     TouchCancel,
     TouchStart,
@@ -60,7 +60,7 @@ impl FromStr for EventName {
             "pointerleave" => Ok(EventName::PointerLeave),
             "pointerup" => Ok(EventName::PointerUp),
             "globalkeydown" => Ok(EventName::GlobalKeyDown),
-            "keyup" => Ok(EventName::KeyUp),
+            "globalkeyup" => Ok(EventName::GlobalKeyUp),
             "touchcancel" => Ok(EventName::TouchCancel),
             "touchstart" => Ok(EventName::TouchStart),
             "touchmove" => Ok(EventName::TouchMove),
@@ -95,7 +95,7 @@ impl From<EventName> for &str {
             EventName::PointerLeave => "pointerleave",
             EventName::PointerUp => "pointerup",
             EventName::GlobalKeyDown => "globalkeydown",
-            EventName::KeyUp => "keyup",
+            EventName::GlobalKeyUp => "globalkeyup",
             EventName::TouchCancel => "touchcancel",
             EventName::TouchStart => "touchstart",
             EventName::TouchMove => "touchmove",
@@ -206,7 +206,7 @@ impl EventName {
         !matches!(
             self,
             Self::GlobalKeyDown
-                | Self::KeyUp
+                | Self::GlobalKeyUp
                 | Self::MouseLeave
                 | Self::PointerLeave
                 | Self::MouseEnter
@@ -218,7 +218,7 @@ impl EventName {
 
     /// Only let events that do not move the mouse, go through solid nodes
     pub fn does_go_through_solid(&self) -> bool {
-        matches!(self, Self::GlobalKeyDown | Self::KeyUp)
+        matches!(self, Self::GlobalKeyDown | Self::GlobalKeyUp)
     }
 
     /// Check if this event can change the hover state of a Node.

@@ -357,7 +357,7 @@ fn DocumentEditor(path: String, mut editable: UseEditable) -> Element {
         editable.process_event(&EditableEvent::KeyDown(e.data));
     };
 
-    let onkeyup = move |e: KeyboardEvent| {
+    let onglobalkeyup = move |e: KeyboardEvent| {
         editable.process_event(&EditableEvent::KeyUp(e.data));
     };
 
@@ -379,7 +379,7 @@ fn DocumentEditor(path: String, mut editable: UseEditable) -> Element {
                     onmousemove,
                     onmousedown,
                     onglobalkeydown,
-                    onkeyup,
+                    onglobalkeyup,
                     text {
                         "{editable.editor()}"
                     }

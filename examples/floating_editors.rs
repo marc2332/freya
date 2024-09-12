@@ -186,7 +186,7 @@ fn Editor() -> Element {
         }
     };
 
-    let onkeyup = move |e: KeyboardEvent| {
+    let onglobalkeyup = move |e: KeyboardEvent| {
         if focus_manager.is_focused() {
             editable.process_event(&EditableEvent::KeyUp(e.data));
         }
@@ -262,7 +262,7 @@ fn Editor() -> Element {
                 width: "fill",
                 height: "fill",
                 onglobalkeydown,
-                onkeyup,
+                onglobalkeyup,
                 cursor_reference,
                 ScrollView {
                     scroll_with_arrows: false,

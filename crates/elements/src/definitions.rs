@@ -613,8 +613,8 @@ pub mod events {
 
         #[doc = include_str!("_docs/events/globalkeydown.md")]
         onglobalkeydown
-        #[doc = include_str!("_docs/events/keyup.md")]
-        onkeyup
+        #[doc = include_str!("_docs/events/globalkeyup.md")]
+        onglobalkeyup
     ];
 
     impl_event! [

@@ -361,7 +361,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
 
                 let name = match state {
                     ElementState::Pressed => EventName::GlobalKeyDown,
-                    ElementState::Released => EventName::KeyUp,
+                    ElementState::Released => EventName::GlobalKeyUp,
                 };
                 self.send_event(PlatformEvent::Keyboard {
                     name,
