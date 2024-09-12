@@ -127,6 +127,7 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
         let accessibility_generator = context.get::<Arc<AccessibilityGenerator>>().unwrap();
         let mut accessibility = AccessibilityNodeState {
             node_id: node_view.node_id(),
+            a11y_id: self.a11y_id,
             ..Default::default()
         };
 
@@ -186,8 +187,6 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
             if was_just_created && self.a11y_auto_focus {
                 #[cfg(debug_assertions)]
                 tracing::info!("Requested auto focus for {:?}", self.a11y_id.unwrap());
-
-                println!("{:?}", self.a11y_id.unwrap());
 
                 accessibility_dirty_nodes
                     .lock()
