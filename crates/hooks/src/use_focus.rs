@@ -66,7 +66,6 @@ impl UseFocus {
 
     /// Check if this node is currently focused
     pub fn is_focused(&self) -> bool {
-        println!("am I focused? {:?}", self.is_focused.read());
         *self.is_focused.read()
     }
 
