@@ -401,10 +401,10 @@ impl ElementUtils for RectElement {
             }
 
             let border_path =
-                Self::border_path(rounded_rect.rect().clone(), corner_radius, &border);
+                Self::border_path(*rounded_rect.rect(), corner_radius, &border);
 
             let border_clip_path =
-                Self::border_clip_path(rounded_rect.rect().clone(), corner_radius, &border);
+                Self::border_clip_path(*rounded_rect.rect(), corner_radius, &border);
 
             canvas.save();
             canvas.clip_path(&border_clip_path, ClipOp::Difference, true);
@@ -512,7 +512,7 @@ impl ElementUtils for RectElement {
             border.scale(scale_factor);
 
             let border_path = Self::border_path(
-                rounded_rect.rect().clone(),
+                *rounded_rect.rect(),
                 node_style.corner_radius,
                 &border,
             );
