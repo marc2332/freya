@@ -328,6 +328,13 @@ impl Application {
         self.measure_layout_on_next_render = true;
         self.init_accessibility_on_next_render = true;
         self.compositor.reset();
+        self.sdom
+            .get()
+            .compositor_dirty_area()
+            .unite_or_insert(&Area::new(
+                (0.0, 0.0).into(),
+                window.inner_size().to_torin(),
+            ));
         self.sdom.get().layout().reset();
         self.platform_sender.send_modify(|state| {
             state.information = PlatformInformation::from_winit(window);

@@ -165,8 +165,6 @@ impl Compositor {
                     });
                 }
             }
-            dirty_nodes.clear();
-            dirty_area.take();
             self.full_render = false;
             return layers;
         }
