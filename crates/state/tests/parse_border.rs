@@ -41,10 +41,10 @@ fn parse_border_widths() {
         one_width,
         Ok(Border {
             width: BorderWidth {
-                top: 1.0,
-                right: 1.0,
-                bottom: 1.0,
-                left: 1.0,
+                top: 2.0,
+                right: 2.0,
+                bottom: 2.0,
+                left: 2.0,
             },
             fill: Fill::Color(Color::RED),
             style: BorderStyle::Solid,
@@ -57,9 +57,9 @@ fn parse_border_widths() {
         Ok(Border {
             width: BorderWidth {
                 top: 1.0,
-                right: 1.0,
+                right: 2.0,
                 bottom: 1.0,
-                left: 1.0,
+                left: 2.0,
             },
             fill: Fill::Color(Color::RED),
             style: BorderStyle::Solid,
