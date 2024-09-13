@@ -170,10 +170,6 @@ fn Editor() -> Element {
     };
     let font_weight = if *is_bold.read() { "bold" } else { "normal" };
 
-    use_hook(|| {
-        focus_manager.queue_focus();
-    });
-
     let onclick = move |_: MouseEvent| {
         if !focus_manager.is_focused() {
             focus_manager.focus();
@@ -196,6 +192,7 @@ fn Editor() -> Element {
         rect {
             onclick,
             a11y_id,
+            a11y_auto_focus: "true",
             onkeydown,
             onkeyup,
             width: "fill",

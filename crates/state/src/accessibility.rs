@@ -43,6 +43,7 @@ pub struct AccessibilityNodeState {
     pub a11y_alt: Option<String>,
     pub a11y_name: Option<String>,
     pub a11y_focusable: bool,
+    pub a11y_auto_focus: bool,
 }
 
 impl ParseAttribute for AccessibilityNodeState {
@@ -81,6 +82,11 @@ impl ParseAttribute for AccessibilityNodeState {
                     self.a11y_focusable = attr.parse().unwrap_or_default()
                 }
             }
+            AttributeName::A11YAutoFocus => {
+                if let OwnedAttributeValue::Text(attr) = attr.value {
+                    self.a11y_auto_focus = attr.parse().unwrap_or_default()
+                }
+            }
             _ => {}
         }
 
@@ -103,6 +109,7 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
             AttributeName::A11YAlt,
             AttributeName::A11YName,
             AttributeName::A11YFocusable,
+            AttributeName::A11YAutoFocus,
         ]));
 
     fn update<'a>(
@@ -120,6 +127,7 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
         let accessibility_generator = context.get::<Arc<AccessibilityGenerator>>().unwrap();
         let mut accessibility = AccessibilityNodeState {
             node_id: node_view.node_id(),
+            a11y_id: self.a11y_id,
             ..Default::default()
         };
 
@@ -152,6 +160,7 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
         }
 
         let changed = &accessibility != self;
+        let had_id = self.a11y_id.is_some();
 
         *self = accessibility;
 
@@ -165,12 +174,24 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
                 self.a11y_id = Some(id)
             }
 
+            let was_just_created = !had_id && self.a11y_id.is_some();
+
             // Add or update this node if it is the Root or if it has an accessibility ID
             if self.a11y_id.is_some() || node_view.node_id() == *root_id {
                 accessibility_dirty_nodes
                     .lock()
                     .unwrap()
                     .add_or_update(node_view.node_id())
+            }
+
+            if was_just_created && self.a11y_auto_focus {
+                #[cfg(debug_assertions)]
+                tracing::info!("Requested auto focus for {:?}", self.a11y_id.unwrap());
+
+                accessibility_dirty_nodes
+                    .lock()
+                    .unwrap()
+                    .request_focus(node_view.node_id())
             }
         }
 
