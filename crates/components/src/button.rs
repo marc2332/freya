@@ -92,7 +92,7 @@ pub fn Button(
     let mut status = use_signal(ButtonStatus::default);
     let platform = use_platform();
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
 
     let ButtonTheme {
         background,
@@ -175,14 +175,14 @@ pub fn Button(
             onmouseenter,
             onmouseleave,
             onkeydown,
-            focus_id,
+            a11y_id,
             width: "{width}",
             height: "{height}",
             padding: "{padding}",
             margin: "{margin}",
-            focusable: "true",
+            a11y_focusable: "true",
             overflow: "clip",
-            role: "button",
+            a11y_role:"button",
             color: "{font_theme.color}",
             shadow: "{shadow}",
             border: "{border}",
@@ -224,13 +224,7 @@ mod test {
 
         assert_eq!(label.get(0).text(), Some("false"));
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (15.0, 15.0).into(),
-            button: Some(MouseButton::Left),
-        });
-
-        utils.wait_for_update().await;
+        utils.click_cursor((15.0, 15.0)).await;
 
         assert_eq!(label.get(0).text(), Some("true"));
 

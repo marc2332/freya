@@ -114,13 +114,7 @@ mod test {
 
         assert_eq!(utils.root().get(0).get(1).get(0).text(), Some("A"));
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (5.0, 5.0).into(),
-            button: Some(MouseButton::Left),
-        });
-
-        utils.wait_for_update().await;
+        utils.click_cursor((5., 5.)).await;
 
         assert_eq!(utils.root().get(0).get(1).get(0).text(), Some("B"));
 
@@ -129,7 +123,6 @@ mod test {
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Back),
         });
-
         utils.wait_for_update().await;
 
         assert_eq!(utils.root().get(0).get(1).get(0).text(), Some("A"));
@@ -139,7 +132,6 @@ mod test {
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Forward),
         });
-
         utils.wait_for_update().await;
 
         assert_eq!(utils.root().get(0).get(1).get(0).text(), Some("B"));

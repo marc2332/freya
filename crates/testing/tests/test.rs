@@ -94,14 +94,7 @@ async fn simulate_events() {
 
     assert_eq!(text.text(), Some("Is enabled? false"));
 
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
-        cursor: (5.0, 5.0).into(),
-        button: Some(MouseButton::Left),
-    });
-
-    // Render new layout after having it clicked
-    utils.wait_for_update().await;
+    utils.click_cursor((5., 5.)).await;
 
     let text = label.get(0);
 

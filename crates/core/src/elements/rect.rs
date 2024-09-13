@@ -1,11 +1,17 @@
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::{
-    Border, BorderAlignment, BorderStyle, CanvasRunnerContext, CornerRadius, Fill,
+    Border, BorderAlignment, CanvasRunnerContext, CornerRadius, Fill,
     ReferencesState, ShadowPosition, StyleState,
 };
 use torin::{
-    prelude::{CursorPoint, LayoutNode},
+    prelude::{
+        Area,
+        CursorPoint,
+        LayoutNode,
+        Point2D,
+        Size2D,
+    },
     scaled::Scaled,
 };
 
@@ -362,7 +368,7 @@ impl ElementUtils for RectElement {
         }
 
         // Borders
-        if !node_style.border.width.is_all_zero() && node_style.border.style != BorderStyle::None {
+        if node_style.border.is_visible() {
             let mut border = node_style.border.clone();
             border.scale(scale_factor);
 
@@ -414,5 +420,108 @@ impl ElementUtils for RectElement {
             };
             (canvas_ref.runner)(&mut ctx);
         }
+    }
+
+    fn element_drawing_area(
+        &self,
+        layout_node: &LayoutNode,
+        node_ref: &DioxusNode,
+        scale_factor: f32,
+    ) -> Area {
+        let node_style = &*node_ref.get::<StyleState>().unwrap();
+        let mut area = layout_node.visible_area();
+
+        if !node_style.border.is_visible() && node_style.shadows.is_empty() {
+            return area;
+        }
+
+        let mut path = Path::new();
+
+        let mut radius = node_style.corner_radius;
+        radius.scale(scale_factor);
+
+        let rounded_rect = RRect::new_rect_radii(
+            Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
+            &[
+                (radius.top_left, radius.top_left).into(),
+                (radius.top_right, radius.top_right).into(),
+                (radius.bottom_right, radius.bottom_right).into(),
+                (radius.bottom_left, radius.bottom_left).into(),
+            ],
+        );
+
+        if radius.smoothing > 0.0 {
+            path.add_path(
+                &radius.smoothed_path(rounded_rect),
+                (area.min_x(), area.min_y()),
+                None,
+            );
+        } else {
+            path.add_rrect(rounded_rect, None);
+        }
+
+        // Shadows
+        for mut shadow in node_style.shadows.clone().into_iter() {
+            if shadow.fill != Fill::Color(Color::TRANSPARENT) {
+                shadow.scale(scale_factor);
+
+                let mut shadow_path = Path::new();
+
+                let outset: Option<Point> = match shadow.position {
+                    ShadowPosition::Normal => Some(
+                        (
+                            shadow.spread.max(shadow.blur),
+                            shadow.spread.max(shadow.blur),
+                        )
+                            .into(),
+                    ),
+                    ShadowPosition::Inset => None, // No need to consider inset shadows for the drawing area as they will always be smaller.
+                };
+
+                if let Some(outset) = outset {
+                    // Add either the RRect or smoothed path based on whether smoothing is used.
+                    if radius.smoothing > 0.0 {
+                        shadow_path.add_path(
+                            &node_style
+                                .corner_radius
+                                .smoothed_path(rounded_rect.with_outset(outset)),
+                            Point::new(area.min_x(), area.min_y()) - outset,
+                            None,
+                        );
+                    } else {
+                        shadow_path.add_rrect(rounded_rect.with_outset(outset), None);
+                    }
+                }
+
+                shadow_path.offset((shadow.x, shadow.y));
+
+                let shadow_bounds = shadow_path.bounds();
+                let shadow_area = Area::new(
+                    Point2D::new(shadow_bounds.x(), shadow_bounds.y()),
+                    Size2D::new(shadow_bounds.width(), shadow_bounds.height()),
+                );
+                area = area.union(&shadow_area);
+            }
+        }
+
+        if node_style.border.is_visible() {
+            let mut border = node_style.border.clone();
+            border.scale(scale_factor)
+
+            let border_path = Self::border_path(
+                rounded_rect.rect().clone(),
+                node_style.corner_radius,
+                &border,
+            );
+
+            let border_bounds = border_path.bounds();
+            let border_area = Area::new(
+                Point2D::new(border_bounds.x(), border_bounds.y()),
+                Size2D::new(border_bounds.width(), border_bounds.height()),
+            );
+            area = area.union(&border_area.round_out());
+        }
+
+        area
     }
 }

@@ -30,9 +30,7 @@ fn app() -> Element {
             direction: "horizontal",
             ScrollView {
                 scroll_controller,
-                theme: theme_with!(ScrollViewTheme {
-                    width: "50%".into(),
-                }),
+                width: "50%",
                 Button {
                     onclick: scroll_to_bottom,
                     label {
@@ -45,9 +43,7 @@ fn app() -> Element {
             }
             ScrollView {
                 scroll_controller,
-                theme: theme_with!(ScrollViewTheme {
-                    width: "50%".into(),
-                }),
+                width: "50%",
                 Card {}
                 Card {}
                 Card {}

@@ -23,9 +23,7 @@ fn app() -> Element {
                 height: "100%",
                 ScrollView {
                     show_scrollbar: true,
-                    theme: theme_with!(ScrollViewTheme {
-                        height: "75%".into(),
-                    }),
+                    height: "75%",
                     paragraph {
                         width: "100%",
                         text_align: "right",
@@ -41,9 +39,7 @@ fn app() -> Element {
                 }
                 ScrollView {
                     show_scrollbar: true,
-                    theme: theme_with!(ScrollViewTheme {
-                        height: "25%".into(),
-                    }),
+                    height: "25%",
                     label {
                         font_size: "100",
                         font_family: "Inter",

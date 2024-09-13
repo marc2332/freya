@@ -9,45 +9,96 @@ fn main() {
     launch(app);
 }
 
-#[allow(non_snake_case)]
-fn TheOtherSwitch() -> Element {
+#[component]
+fn ThemeChanger() -> Element {
     let mut theme = use_theme();
 
-    let is_enabled = theme.read().name == "dark";
-
-    rsx!(Switch {
-        enabled: is_enabled,
-        ontoggled: move |_| {
-            if is_enabled {
-                *theme.write() = LIGHT_THEME
-            } else {
-                *theme.write() = DARK_THEME
-            }
+    rsx!(
+        Tile {
+            onselect: move |_| theme.set(DARK_THEME),
+            leading: rsx!(
+                Radio {
+                    selected: theme.read().name == "dark",
+                },
+            ),
+            label { "Dark" }
         }
-    })
+        Tile {
+            onselect: move |_| theme.set(LIGHT_THEME),
+            leading: rsx!(
+                Radio {
+                    selected: theme.read().name == "light",
+                },
+            ),
+            label { "Light" }
+        }
+    )
 }
 
 fn app() -> Element {
     use_init_default_theme();
-    let mut enabled = use_signal(|| true);
-
-    let is_enabled = if *enabled.read() { "Yes" } else { "No" };
+    let mut value = use_signal::<f64>(|| 50.);
 
     rsx!(
         Body {
-            theme: theme_with!(BodyTheme {
-                padding: "20".into(),
-            }),
-            Switch {
-                enabled: *enabled.read(),
-                ontoggled: move |_| {
-                    enabled.toggle();
+            rect {
+                width: "fill",
+                height: "fill",
+                main_align: "center",
+                cross_align: "center",
+                spacing: "20",
+                padding: "40",
+                Switch {
+                    enabled: value() >= 50.,
+                    ontoggled: move |_| {
+                        if value() >= 50. {
+                            value.set(25.0);
+                        } else {
+                            value.set(75.0);
+                        }
+                    }
                 }
+                Slider {
+                    width: "fill",
+                    value: value(),
+                    onmoved: move |e| value.set(e),
+                }
+                ProgressBar {
+                    show_progress: true,
+                    progress: value() as f32
+                }
+                Tile {
+                    onselect: move |_| {
+                        if value() >= 50. {
+                            value.set(25.0);
+                        } else {
+                            value.set(75.0);
+                        }
+                    },
+                    leading: rsx!(
+                        Checkbox {
+                            selected: value() >= 50.,
+                        },
+                    ),
+                    label { "First choice" }
+                }
+                Tile {
+                    onselect: move |_| {
+                        if value() < 50. {
+                            value.set(75.0);
+                        } else {
+                            value.set(25.0);
+                        }
+                    },
+                    leading: rsx!(
+                        Checkbox {
+                            selected: value() < 50.,
+                        },
+                    ),
+                    label { "Second choice" }
+                }
+                ThemeChanger { }
             }
-            label {
-                "Is enabled? {is_enabled}"
-            }
-            TheOtherSwitch { }
         }
     )
 }

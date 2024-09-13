@@ -140,8 +140,8 @@ pub fn Input(
         focus.focus();
     };
 
-    let onmouseover = move |e: MouseEvent| {
-        editable.process_event(&EditableEvent::MouseOver(e.data, 0));
+    let onmousemove = move |e: MouseEvent| {
+        editable.process_event(&EditableEvent::MouseMove(e.data, 0));
     };
 
     let onmouseenter = move |_| {
@@ -165,7 +165,7 @@ pub fn Input(
         _ => {}
     };
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
     let cursor_reference = editable.cursor_attr();
     let highlights = editable.highlights_attr(0);
 
@@ -211,9 +211,9 @@ pub fn Input(
             corner_radius: "{corner_radius}",
             margin: "{margin}",
             cursor_reference,
-            focus_id,
-            focusable: "true",
-            role: "textInput",
+            a11y_id,
+            a11y_focusable: "true",
+            a11y_role:"textInput",
             main_align: "center",
             paragraph {
                 margin: "8 12",
@@ -223,7 +223,7 @@ pub fn Input(
                 onmouseenter,
                 onmouseleave,
                 onmousedown,
-                onmouseover,
+                onmousemove,
                 width: "100%",
                 cursor_id: "0",
                 cursor_index: "{cursor_char}",

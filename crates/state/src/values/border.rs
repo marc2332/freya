@@ -1,5 +1,6 @@
 use std::fmt;
 
+use freya_engine::prelude::Color;
 use torin::scaled::Scaled;
 
 use crate::{Fill, Parse, ParseError};
@@ -17,6 +18,13 @@ pub struct Border {
     pub style: BorderStyle,
     pub width: BorderWidth,
     pub alignment: BorderAlignment,
+}
+
+impl Border {
+    #[inline]
+    pub fn is_visible(&self) -> bool {
+        self.width > 0. && self.fill != Fill::Color(Color::TRANSPARENT)
+    }
 }
 
 #[derive(Default, Clone, Copy, Debug, PartialEq)]

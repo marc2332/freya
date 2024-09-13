@@ -32,8 +32,8 @@ fn app() -> Element {
         editable.process_event(&EditableEvent::MouseDown(e.data, 0));
     };
 
-    let onmouseover = move |e: MouseEvent| {
-        editable.process_event(&EditableEvent::MouseOver(e.data, 0));
+    let onmousemove = move |e: MouseEvent| {
+        editable.process_event(&EditableEvent::MouseMove(e.data, 0));
     };
 
     let onclick = move |_: MouseEvent| {
@@ -54,10 +54,8 @@ fn app() -> Element {
             height: "100%",
             cursor_reference,
             ScrollView {
-                theme: theme_with!(ScrollViewTheme {
-                    width: "100%".into(),
-                    height: "calc(100% - 30)".into(),
-                }),
+                width: "100%",
+                height: "calc(100% - 30)",
                 scroll_with_arrows: false,
                 paragraph {
                     width: "100%",
@@ -69,7 +67,7 @@ fn app() -> Element {
                     cursor_color: "black",
                     highlights,
                     onclick,
-                    onmouseover,
+                    onmousemove,
                     onmousedown,
                     onkeydown,
                     onkeyup,

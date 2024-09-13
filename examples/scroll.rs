@@ -15,18 +15,14 @@ fn app() -> Element {
             height: "fill",
             width: "fill",
             ScrollView {
-                theme: theme_with!(ScrollViewTheme {
-                    height: "50%".into(),
-                }),
+                height: "50%",
                 Card {}
                 Card {}
                 Card {}
             }
             ScrollView {
                 direction: "horizontal",
-                theme: theme_with!(ScrollViewTheme {
-                    height: "50%".into(),
-                }),
+                height: "50%",
                 Card {},
                 Card {},
                 Card {}

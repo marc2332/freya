@@ -247,12 +247,7 @@ mod test {
         assert!(content.get(4).is_visible());
 
         // Click on the button to scroll up
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (15., 480.).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((15., 480.)).await;
 
         // Only the first three items are visible
         assert!(content.get(1).is_visible());
@@ -261,13 +256,7 @@ mod test {
         assert!(!content.get(4).is_visible());
 
         // Click on the button to scroll down
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (15., 15.).into(),
-            button: Some(MouseButton::Left),
-        });
-
-        utils.wait_for_update().await;
+        utils.click_cursor((15., 15.)).await;
 
         // Only the first three items are visible
         assert!(!content.get(1).is_visible());
