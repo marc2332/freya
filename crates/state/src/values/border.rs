@@ -59,10 +59,7 @@ impl fmt::Display for BorderWidth {
         write!(
             f,
             "{} {} {} {}",
-            self.top,
-            self.right,
-            self.bottom,
-            self.left,
+            self.top, self.right, self.bottom, self.left,
         )
     }
 }
@@ -241,13 +238,7 @@ impl Parse for Border {
 
 impl fmt::Display for Border {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{} {} {}",
-            self.width,
-            self.style,
-            self.fill,
-        )
+        write!(f, "{} {} {}", self.width, self.style, self.fill,)
     }
 }
 
