@@ -78,13 +78,18 @@ pub enum TabStatus {
 /// ```
 #[allow(non_snake_case)]
 #[component]
-pub fn Tab(children: Element, theme: Option<TabThemeWith>) -> Element {
+pub fn Tab(
+    children: Element,
+    theme: Option<TabThemeWith>,
+    /// Optionally handle the `onclick` event in the SidebarItem.
+    onclick: Option<EventHandler<()>>,
+) -> Element {
     let focus = use_focus();
     let mut status = use_signal(TabStatus::default);
     let platform = use_platform();
     let is_active = use_activable_route();
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
 
     let TabTheme {
         background,
@@ -102,6 +107,12 @@ pub fn Tab(children: Element, theme: Option<TabThemeWith>) -> Element {
             platform.set_cursor(CursorIcon::default());
         }
     });
+
+    let onclick = move |_| {
+        if let Some(onclick) = &onclick {
+            onclick.call(());
+        }
+    };
 
     let onmouseenter = move |_| {
         platform.set_cursor(CursorIcon::Pointer);
@@ -125,14 +136,15 @@ pub fn Tab(children: Element, theme: Option<TabThemeWith>) -> Element {
 
     rsx!(
         rect {
+            onclick,
             onmouseenter,
             onmouseleave,
-            focus_id,
+            a11y_id,
             width: "{width}",
             height: "{height}",
-            focusable: "true",
+            a11y_focusable: "true",
             overflow: "clip",
-            role: "tab",
+            a11y_role:"tab",
             color: "{font_theme.color}",
             background: "{background}",
             text_align: "center",
@@ -203,7 +215,7 @@ pub fn BottomTab(children: Element, theme: Option<BottomTabThemeWith>) -> Elemen
     let platform = use_platform();
     let is_active = use_activable_route();
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
 
     let BottomTabTheme {
         background,
@@ -239,12 +251,12 @@ pub fn BottomTab(children: Element, theme: Option<BottomTabThemeWith>) -> Elemen
         rect {
             onmouseenter,
             onmouseleave,
-            focus_id,
+            a11y_id,
             width: "{width}",
             height: "{height}",
-            focusable: "true",
+            a11y_focusable: "true",
             overflow: "clip",
-            role: "tab",
+            a11y_role:"tab",
             color: "{font_theme.color}",
             background: "{background}",
             text_align: "center",

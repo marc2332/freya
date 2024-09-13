@@ -142,34 +142,19 @@ mod test {
         assert!(root.get(1).get(0).get(0).get(0).is_placeholder());
         assert!(root.get(2).get(0).get(0).get(0).is_placeholder());
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (20.0, 50.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((20., 50.)).await;
 
         assert!(root.get(0).get(0).get(0).get(0).is_placeholder());
         assert!(root.get(1).get(0).get(0).get(0).is_element());
         assert!(root.get(2).get(0).get(0).get(0).is_placeholder());
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (10.0, 90.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((10., 90.)).await;
 
         assert!(root.get(0).get(0).get(0).get(0).is_placeholder());
         assert!(root.get(1).get(0).get(0).get(0).is_placeholder());
         assert!(root.get(2).get(0).get(0).get(0).is_element());
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (10.0, 10.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((10., 10.)).await;
 
         assert!(root.get(0).get(0).get(0).get(0).is_element());
         assert!(root.get(1).get(0).get(0).get(0).is_placeholder());

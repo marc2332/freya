@@ -319,18 +319,6 @@ define_theme! {
 }
 
 define_theme! {
-    /// Also used by `VirtualScrollView`.
-    %[component]
-    pub ScrollView {
-        %[cows]
-        height: str,
-        width: str,
-        spacing: str,
-        padding: str,
-    }
-}
-
-define_theme! {
     %[component]
     pub Body {
         %[cows]
@@ -583,7 +571,6 @@ pub struct Theme {
     pub button: ButtonTheme,
     pub switch: SwitchTheme,
     pub scroll_bar: ScrollBarTheme,
-    pub scroll_view: ScrollViewTheme,
     pub slider: SliderTheme,
     pub tooltip: TooltipTheme,
     pub dropdown: DropdownTheme,

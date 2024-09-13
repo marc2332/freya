@@ -37,13 +37,15 @@ pub fn Tile(
     onselect: Option<EventHandler<()>>,
     /// Theme override.
     theme: Option<TileThemeWith>,
+
+    a11y_name: Option<String>,
 ) -> Element {
     let mut focus = use_focus();
     let mut status = use_signal(TileStatus::default);
     let platform = use_platform();
     let TileTheme { padding } = use_applied_theme!(&theme, tile);
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
 
     use_drop(move || {
         if *status.read() == TileStatus::Hovering {
@@ -70,10 +72,11 @@ pub fn Tile(
 
     rsx!(
         rect {
+            a11y_name,
             onclick,
             onmouseenter,
             onmouseleave,
-            focus_id,
+            a11y_id,
             direction: "horizontal",
             onclick: move |_| {
                 if let Some(onclick) = &onclick {

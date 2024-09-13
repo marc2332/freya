@@ -12,6 +12,7 @@ use freya_node_state::{
 use torin::{
     prelude::{
         Area,
+        AreaModel,
         CursorPoint,
         LayoutNode,
         Point2D,
@@ -216,8 +217,8 @@ impl ElementUtils for RectElement {
 
         // Borders
         if node_style.border.width > 0.0 && node_style.border.style != BorderStyle::None {
-            let mut border_with = node_style.border.width;
-            border_with *= scale_factor;
+            let mut border_width = node_style.border.width;
+            border_width *= scale_factor;
 
             // Create a new paint and path
             let mut border_paint = paint.clone();
@@ -240,11 +241,11 @@ impl ElementUtils for RectElement {
                     border_paint.set_shader(gradient.into_shader(area));
                 }
             }
-            border_paint.set_stroke_width(border_with);
+            border_paint.set_stroke_width(border_width);
 
             // Skia draws strokes centered on the edge of the path. This means that half of the stroke is inside the path, and half outside.
             // For Inner and Outer borders, we need to grow or shrink the stroke path by half the border width.
-            let outset = Point::new(border_with / 2.0, border_with / 2.0)
+            let outset = Point::new(border_width / 2.0, border_width / 2.0)
                 * match node_style.border.alignment {
                     BorderAlignment::Center => 0.0,
                     BorderAlignment::Inner => -1.0,
@@ -280,6 +281,14 @@ impl ElementUtils for RectElement {
         }
     }
 
+    #[inline]
+    fn element_needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
+        let node_style = &*node_ref.get::<StyleState>().unwrap();
+
+        node_style.border.is_visible() && node_style.border.alignment != BorderAlignment::Inner
+            || !node_style.shadows.is_empty()
+    }
+
     fn element_drawing_area(
         &self,
         layout_node: &LayoutNode,
@@ -289,7 +298,10 @@ impl ElementUtils for RectElement {
         let node_style = &*node_ref.get::<StyleState>().unwrap();
         let mut area = layout_node.visible_area();
 
-        if !node_style.border.is_visible() && node_style.shadows.is_empty() {
+        if !node_style.border.is_visible()
+            && node_style.border.alignment != BorderAlignment::Inner
+            && node_style.shadows.is_empty()
+        {
             return area;
         }
 
@@ -363,15 +375,15 @@ impl ElementUtils for RectElement {
         }
 
         if node_style.border.width > 0.0 && node_style.border.style != BorderStyle::None {
-            let mut border_with = node_style.border.width;
-            border_with *= scale_factor;
+            let mut border_width = node_style.border.width;
+            border_width *= scale_factor;
 
             // Create a new paint and path
             let mut border_path = Path::new();
 
             // Skia draws strokes centered on the edge of the path. This means that half of the stroke is inside the path, and half outside.
             // For Inner and Outer borders, we need to grow or shrink the stroke path by half the border width.
-            let outset = Point::new(border_with / 2.0, border_with / 2.0)
+            let outset = Point::new(border_width / 2.0, border_width / 2.0)
                 * match node_style.border.alignment {
                     BorderAlignment::Center => 0.0,
                     BorderAlignment::Inner => -1.0,
@@ -397,6 +409,15 @@ impl ElementUtils for RectElement {
                 Size2D::new(border_bounds.width(), border_bounds.height()),
             );
             area = area.union(&border_area.round_out());
+
+            match node_style.border.alignment {
+                BorderAlignment::Outer => area.expand(&Size2D::new(
+                    node_style.border.width,
+                    node_style.border.width,
+                )),
+                BorderAlignment::Center => area.expand(&Size2D::new(border_width, border_width)),
+                _ => {}
+            }
         }
 
         area

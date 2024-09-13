@@ -28,41 +28,43 @@ pub fn process_events(
     event_emitter: &EventEmitter,
     nodes_state: &mut NodesState,
     scale_factor: f64,
+
+    focus_id: Option<NodeId>,
 ) {
     // 1. Get global events created from the incoming events
     let global_events = measure_global_events(events);
 
     // 2. Get potential events that could be emitted based on the elements layout and viewports
-    let potential_events = measure_potential_event_listeners(events, dom, scale_factor);
+    let potential_events = measure_potential_event_listeners(events, dom, scale_factor, focus_id);
 
     // 3. Get what events can be actually emitted based on what elements are listening
-    let dom_events = measure_dom_events(potential_events, dom, scale_factor);
+    let mut dom_events = measure_dom_events(&potential_events, dom, nodes_state, scale_factor);
 
-    // 4. Filter the dom events and get potential collateral events, e.g. mouseover -> mouseenter
-    let (potential_collateral_events, mut to_emit_dom_events) =
-        nodes_state.process_events(&dom_events, events);
+    // 4. Get potential collateral events, e.g. mousemove -> mouseenter
+    let potential_collateral_events =
+        nodes_state.process_collateral(&potential_events, &dom_events, events);
 
     // 5. Get what collateral events can actually be emitted
     let to_emit_dom_collateral_events =
-        measure_dom_events(potential_collateral_events, dom, scale_factor);
+        measure_dom_events(&potential_collateral_events, dom, nodes_state, scale_factor);
 
     let colateral_global_events = measure_colateral_global_events(&to_emit_dom_collateral_events);
 
     // 6. Join both the dom and colateral dom events and sort them
-    to_emit_dom_events.extend(to_emit_dom_collateral_events);
-    to_emit_dom_events.sort_unstable();
+    dom_events.extend(to_emit_dom_collateral_events);
+    dom_events.sort_unstable();
 
     // 7. Emit the global events
     measure_global_events_listeners(
         global_events,
         colateral_global_events,
         dom,
-        &mut to_emit_dom_events,
+        &mut dom_events,
         scale_factor,
     );
 
     // 8. Emit all the vents
-    event_emitter.send(to_emit_dom_events).unwrap();
+    event_emitter.send(dom_events).unwrap();
 
     // 9. Clear the events queue
     events.clear();
@@ -102,6 +104,7 @@ pub fn measure_potential_event_listeners(
     events: &EventsQueue,
     fdom: &FreyaDOM,
     scale_factor: f64,
+    focus_id: Option<NodeId>,
 ) -> PotentialEvents {
     let mut potential_events = PotentialEvents::default();
 
@@ -116,12 +119,14 @@ pub fn measure_potential_event_listeners(
             if let Some(layout_node) = layout_node {
                 'events: for event in events.iter() {
                     if let PlatformEvent::Keyboard { name, .. } = event {
-                        let event_data = PotentialEvent {
-                            node_id: *node_id,
-                            layer: Some(*layer),
-                            event: event.clone(),
-                        };
-                        potential_events.entry(*name).or_default().push(event_data);
+                        if focus_id == Some(*node_id) {
+                            let event_data = PotentialEvent {
+                                node_id: *node_id,
+                                layer: Some(*layer),
+                                event: event.clone(),
+                            };
+                            potential_events.entry(*name).or_default().push(event_data);
+                        }
                     } else {
                         let data = match event {
                             PlatformEvent::Mouse { name, cursor, .. } => Some((name, cursor)),
@@ -211,8 +216,9 @@ fn is_node_parent_of(rdom: &DioxusDOM, node: NodeId, parent_node: NodeId) -> boo
 
 /// Measure what DOM events could be emitted
 fn measure_dom_events(
-    potential_events: PotentialEvents,
+    potential_events: &PotentialEvents,
     fdom: &FreyaDOM,
+    nodes_state: &NodesState,
     scale_factor: f64,
 ) -> Vec<DomEvent> {
     let mut new_events = Vec::new();
@@ -246,7 +252,9 @@ fn measure_dom_events(
                         true
                     };
 
-                    if valid_node {
+                    let allowed_event = nodes_state.is_event_allowed(event, node_id);
+
+                    if valid_node && allowed_event {
                         let mut valid_event = event.clone();
                         valid_event.set_name(collateral_event);
                         valid_events.push(PotentialEvent {

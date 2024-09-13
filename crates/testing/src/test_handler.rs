@@ -33,11 +33,17 @@ use tokio::{
         timeout,
     },
 };
-use torin::geometry::{
-    Area,
-    Size2D,
+use torin::{
+    geometry::{
+        Area,
+        Size2D,
+    },
+    prelude::CursorPoint,
 };
-use winit::window::CursorIcon;
+use winit::{
+    event::MouseButton,
+    window::CursorIcon,
+};
 
 use crate::{
     config::TestingConfig,
@@ -88,6 +94,13 @@ impl TestingHandler {
             .insert_any_root_context(Box::new(self.platform_receiver.clone()));
         self.vdom
             .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
+        let accessibility_generator = {
+            let sdom = self.sdom();
+            let fdom = sdom.get();
+            fdom.accessibility_generator().clone()
+        };
+        self.vdom
+            .insert_any_root_context(Box::new(accessibility_generator));
     }
 
     /// Wait and apply new changes
@@ -232,6 +245,7 @@ impl TestingHandler {
             &self.event_emitter,
             &mut self.nodes_state,
             SCALE_FACTOR,
+            self.accessibility_tree.lock().unwrap().focused_node_id(),
         );
     }
 
@@ -338,5 +352,31 @@ impl TestingHandler {
         snapshot_file
             .write_all(snapshot_bytes)
             .expect("Failed to save the snapshot file.");
+    }
+
+    /// Shorthand to simulate a cursor move to the given location.
+    pub async fn move_cursor(&mut self, cursor: impl Into<CursorPoint>) {
+        self.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseMove,
+            cursor: cursor.into(),
+            button: Some(MouseButton::Left),
+        });
+        self.wait_for_update().await;
+    }
+
+    /// Shorthand to simulate a click with cursor in the given location.
+    pub async fn click_cursor(&mut self, cursor: impl Into<CursorPoint> + Clone) {
+        self.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseDown,
+            cursor: cursor.clone().into(),
+            button: Some(MouseButton::Left),
+        });
+        self.wait_for_update().await;
+        self.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseUp,
+            cursor: cursor.into(),
+            button: Some(MouseButton::Left),
+        });
+        self.wait_for_update().await;
     }
 }

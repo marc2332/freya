@@ -20,10 +20,6 @@ use freya_elements::events::{
     Code,
     Key,
 };
-use glutin::prelude::{
-    GlSurface,
-    PossiblyCurrentGlContext,
-};
 use torin::geometry::CursorPoint;
 use winit::{
     application::ApplicationHandler,
@@ -47,9 +43,7 @@ use winit::{
 
 use crate::{
     devtools::Devtools,
-    size::WinitSize,
     window_state::{
-        create_surface,
         CreatedState,
         NotCreatedState,
         WindowState,
@@ -193,6 +187,10 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             EventMessage::RequestRerender => {
                 window.request_redraw();
             }
+            EventMessage::RequestFullRerender => {
+                app.resize(window);
+                window.request_redraw();
+            }
             EventMessage::InvalidateArea(area) => {
                 let fdom = app.sdom.get();
                 let mut compositor_dirty_area = fdom.compositor_dirty_area();
@@ -219,9 +217,6 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 app.focus_next_node(AccessibilityFocusStrategy::Forward, window);
             }
             EventMessage::WithWindow(use_window) => (use_window)(window),
-            EventMessage::QueueFocusAccessibilityNode(node_id) => {
-                app.queue_focus_node(node_id);
-            }
             EventMessage::ExitApp => event_loop.exit(),
             EventMessage::PlatformEvent(platform_event) => self.send_event(platform_event),
             ev => {
@@ -246,18 +241,13 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
     ) {
         let scale_factor = self.scale_factor();
         let CreatedState {
-            gr_context,
             surface,
             dirty_surface,
-            gl_surface,
-            gl_context,
             window,
             window_config,
             app,
-            fb_info,
-            num_samples,
-            stencil_size,
             is_window_focused,
+            graphics_driver,
             ..
         } = self.state.created_state();
         app.accessibility
@@ -292,11 +282,12 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 }
 
                 if app.init_accessibility_on_next_render {
-                    app.init_accessibility(window);
+                    app.init_accessibility();
                     app.init_accessibility_on_next_render = false;
                 }
 
-                gl_context.make_current(gl_surface).unwrap();
+                graphics_driver.make_current();
+
                 app.render(
                     &self.hovered_node,
                     window_config.background,
@@ -307,8 +298,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
 
                 app.event_loop_tick();
                 window.pre_present_notify();
-                gr_context.flush_and_submit();
-                gl_surface.swap_buffers(gl_context).unwrap();
+                graphics_driver.flush_and_submit();
             }
             WindowEvent::MouseInput { state, button, .. } => {
                 app.set_navigation_mode(NavigationMode::NotKeyboard);
@@ -320,7 +310,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     ElementState::Released => match button {
                         MouseButton::Middle => EventName::MiddleClick,
                         MouseButton::Right => EventName::RightClick,
-                        MouseButton::Left => EventName::Click,
+                        MouseButton::Left => EventName::MouseUp,
                         _ => EventName::PointerUp,
                     },
                 };
@@ -383,7 +373,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     self.cursor_pos = CursorPoint::new(-1.0, -1.0);
 
                     self.send_event(PlatformEvent::Mouse {
-                        name: EventName::MouseOver,
+                        name: EventName::MouseMove,
                         cursor: self.cursor_pos,
                         button: None,
                     });
@@ -393,7 +383,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 self.cursor_pos = CursorPoint::from((position.x, position.y));
 
                 self.send_event(PlatformEvent::Mouse {
-                    name: EventName::MouseOver,
+                    name: EventName::MouseMove,
                     cursor: self.cursor_pos,
                     button: None,
                 });
@@ -431,12 +421,10 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 });
             }
             WindowEvent::Resized(size) => {
-                *surface =
-                    create_surface(window, *fb_info, gr_context, *num_samples, *stencil_size);
+                let (new_surface, new_dirty_surface) = graphics_driver.resize(size);
 
-                *dirty_surface = surface.new_surface_with_dimensions(size.to_skia()).unwrap();
-
-                gl_surface.resize(gl_context, size.as_gl_width(), size.as_gl_height());
+                *surface = new_surface;
+                *dirty_surface = new_dirty_surface;
 
                 window.request_redraw();
 
@@ -468,21 +456,5 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
 
     fn exiting(&mut self, _event_loop: &winit::event_loop::ActiveEventLoop) {
         self.run_on_exit();
-    }
-}
-
-impl<T: Clone> Drop for DesktopRenderer<'_, T> {
-    fn drop(&mut self) {
-        if let WindowState::Created(CreatedState {
-            gl_context,
-            gl_surface,
-            gr_context,
-            ..
-        }) = &mut self.state
-        {
-            if !gl_context.is_current() && gl_context.make_current(gl_surface).is_err() {
-                gr_context.abandon();
-            }
-        }
     }
 }

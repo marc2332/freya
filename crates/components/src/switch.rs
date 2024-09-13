@@ -7,10 +7,11 @@ use freya_elements::{
     },
 };
 use freya_hooks::{
-    use_animation,
+    use_animation_with_dependencies,
     use_applied_theme,
     use_focus,
     use_platform,
+    AnimColor,
     AnimNum,
     Ease,
     Function,
@@ -64,20 +65,40 @@ pub enum SwitchStatus {
 /// ```
 #[allow(non_snake_case)]
 pub fn Switch(props: SwitchProps) -> Element {
-    let animation = use_animation(|ctx| {
-        ctx.with(
-            AnimNum::new(0., 25.)
-                .time(300)
-                .function(Function::Expo)
-                .ease(Ease::Out),
+    let theme = use_applied_theme!(&props.theme, switch);
+    let animation = use_animation_with_dependencies(&theme, |ctx, theme| {
+        (
+            ctx.with(
+                AnimNum::new(2., 22.)
+                    .time(300)
+                    .function(Function::Expo)
+                    .ease(Ease::Out),
+            ),
+            ctx.with(
+                AnimNum::new(14., 18.)
+                    .time(300)
+                    .function(Function::Expo)
+                    .ease(Ease::Out),
+            ),
+            ctx.with(
+                AnimColor::new(&theme.background, &theme.enabled_background)
+                    .time(300)
+                    .function(Function::Expo)
+                    .ease(Ease::Out),
+            ),
+            ctx.with(
+                AnimColor::new(&theme.thumb_background, &theme.enabled_thumb_background)
+                    .time(300)
+                    .function(Function::Expo)
+                    .ease(Ease::Out),
+            ),
         )
     });
-    let theme = use_applied_theme!(&props.theme, switch);
     let platform = use_platform();
     let mut status = use_signal(SwitchStatus::default);
     let mut focus = use_focus();
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
 
     use_drop(move || {
         if *status.read() == SwitchStatus::Hovering {
@@ -107,27 +128,17 @@ pub fn Switch(props: SwitchProps) -> Element {
         props.ontoggled.call(());
     };
 
-    let onkeydown = move |e: KeyboardEvent| {
-        if focus.validate_keydown(&e) {
+    let onglobalkeydown = move |e: KeyboardEvent| {
+        if focus.validate_globalkeydown(&e) {
             props.ontoggled.call(());
         }
     };
 
-    let (offset_x, background, circle) = {
-        if props.enabled {
-            (
-                animation.get().read().as_f32(),
-                theme.enabled_background,
-                theme.enabled_thumb_background,
-            )
-        } else {
-            (
-                animation.get().read().as_f32(),
-                theme.background,
-                theme.thumb_background,
-            )
-        }
-    };
+    let offset_x = animation.get().0.read().as_f32();
+    let size = animation.get().1.read().as_f32();
+    let background = animation.get().2.read().as_string();
+    let circle = animation.get().3.read().as_string();
+
     let border = if focus.is_selected() {
         if props.enabled {
             format!("2 solid {}", theme.enabled_focus_border_fill)
@@ -149,30 +160,25 @@ pub fn Switch(props: SwitchProps) -> Element {
     rsx!(
         rect {
             margin: "{theme.margin}",
-            width: "50",
+            width: "48",
             height: "25",
-            padding: "1",
+            padding: "4",
             corner_radius: "50",
             background: "{background}",
             border: "{border}",
             onmousedown,
             onmouseenter,
             onmouseleave,
-            onkeydown,
+            onglobalkeydown,
             onclick,
-            focus_id,
+            a11y_id,
+            offset_x: "{offset_x}",
+            main_align: "center",
             rect {
-                width: "100%",
-                height: "100%",
-                offset_x: "{offset_x}",
-                padding: "2.5",
+                background: "{circle}",
+                width: "{size}",
+                height: "{size}",
                 corner_radius: "50",
-                rect {
-                    background: "{circle}",
-                    width: "18",
-                    height: "18",
-                    corner_radius: "50",
-                }
             }
         }
     )
@@ -210,24 +216,12 @@ mod test {
         // Default is false
         assert_eq!(label.get(0).text(), Some("false"));
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (15.0, 15.0).into(),
-            button: Some(MouseButton::Left),
-        });
-
-        utils.wait_for_update().await;
+        utils.click_cursor((15., 15.)).await;
 
         // Check if after clicking it is now enabled
         assert_eq!(label.get(0).text(), Some("true"));
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (15.0, 15.0).into(),
-            button: Some(MouseButton::Left),
-        });
-
-        utils.wait_for_update().await;
+        utils.click_cursor((15., 15.)).await;
 
         // Check if after clicking again it is now disabled
         assert_eq!(label.get(0).text(), Some("false"));

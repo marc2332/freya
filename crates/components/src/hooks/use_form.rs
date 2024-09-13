@@ -40,6 +40,7 @@ impl<Id: Clone + Hash + Eq + Display> UseForm<Id> {
             mode: InputMode::default(),
             value,
             placeholder: Some(placeholder),
+            auto_focus: false,
         }
     }
 

@@ -1,10 +1,7 @@
 use std::time::Duration;
 
 use dioxus_core::use_hook;
-use freya::{
-    events::pointer::MouseButton,
-    prelude::*,
-};
+use freya::prelude::*;
 use freya_engine::prelude::Color;
 use freya_node_state::{
     Fill,
@@ -98,12 +95,7 @@ pub async fn reverse_progress() {
     assert!(width > 10.0);
 
     // Trigger the click event to restart the animation
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
-        cursor: (5.0, 5.0).into(),
-        button: Some(MouseButton::Left),
-    });
-    utils.wait_for_update().await;
+    utils.click_cursor((5., 5.)).await;
 
     // Enable event loop ticker
     utils.config().event_loop_ticker = true;

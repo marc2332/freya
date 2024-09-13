@@ -26,6 +26,8 @@ pub enum EventMessage {
     PollVDOM,
     /// Request a rerender
     RequestRerender,
+    /// Request a full rerender
+    RequestFullRerender,
     /// Invalidate a certain drawing area
     InvalidateArea(Area),
     /// Remeasure a text elements group
@@ -36,8 +38,6 @@ pub enum EventMessage {
     Accessibility(accesskit_winit::WindowEvent),
     /// Focus the given accessibility NodeID
     FocusAccessibilityNode(accesskit::NodeId),
-    /// Queue a focus the given accessibility NodeID
-    QueueFocusAccessibilityNode(accesskit::NodeId),
     /// Focus the next accessibility Node
     FocusNextAccessibilityNode,
     /// Focus the previous accessibility Node

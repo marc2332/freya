@@ -7,10 +7,6 @@ use dioxus_router::prelude::{
     use_navigator,
 };
 use freya_components::*;
-use freya_hooks::{
-    theme_with,
-    ScrollViewThemeWith,
-};
 use freya_native_core::NodeId;
 
 use crate::{
@@ -68,10 +64,8 @@ pub fn NodesTree(
         show_scrollbar: true,
         length: items.len(),
         item_size: 27.0,
-        theme: theme_with!(ScrollViewTheme {
-            height: height.to_string().into(),
-            padding: "15".into(),
-        }),
+        height,
+        padding: "15",
         builder_args: (selected_node_id, items),
         builder: move |i, options: &Option<(Option<NodeId>, Vec<NodeTreeItem>)>| {
             let (selected_node_id, items) = options.as_ref().unwrap();

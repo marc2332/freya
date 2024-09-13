@@ -101,7 +101,7 @@ impl RenderPipeline<'_> {
                     self.canvas_area.max_y(),
                 );
                 let mut paint = Paint::default();
-                paint.set_color(Color::from_argb(15, 255, 255, 255));
+                paint.set_color(Color::from_argb(10, 245, 245, 245));
                 paint.set_anti_alias(true);
                 paint.set_style(PaintStyle::Fill);
                 self.dirty_surface.canvas().draw_rect(rect, &paint);
@@ -181,6 +181,8 @@ impl RenderPipeline<'_> {
             SamplingOptions::default(),
             None,
         );
+
+        self.compositor_dirty_nodes.clear();
     }
 
     pub fn render(

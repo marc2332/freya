@@ -3,10 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use freya::{
-    core::prelude::EventMessage,
-    prelude::*,
-};
+use freya::prelude::*;
 use skia_safe::{
     Color,
     Font,

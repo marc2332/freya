@@ -76,18 +76,18 @@ fn ShaderEditor(editable: UseEditable) -> Element {
         editable.process_event(&EditableEvent::Click);
     };
 
-    let onkeydown = move |e: KeyboardEvent| {
+    let onglobalkeydown = move |e: KeyboardEvent| {
         editable.process_event(&EditableEvent::KeyDown(e.data));
     };
 
-    let onkeyup = move |e: KeyboardEvent| {
+    let onglobalkeyup = move |e: KeyboardEvent| {
         editable.process_event(&EditableEvent::KeyUp(e.data));
     };
 
     rsx!(
         rect {
-            onkeydown,
-            onkeyup,
+            onglobalkeydown,
+            onglobalkeyup,
             onglobalclick,
             cursor_reference,
             width: "50%",
@@ -121,8 +121,8 @@ fn ShaderEditor(editable: UseEditable) -> Element {
                         editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
                     };
 
-                    let onmouseover = move |e: MouseEvent| {
-                        editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
+                    let onmousemove = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseMove(e.data, line_index));
                     };
 
                     let highlights = editable.highlights_attr(line_index);
@@ -153,7 +153,7 @@ fn ShaderEditor(editable: UseEditable) -> Element {
                                 cursor_mode: "editable",
                                 cursor_id: "{line_index}",
                                 onmousedown,
-                                onmouseover,
+                                onmousemove,
                                 highlights,
                                 highlight_mode: "expanded",
                                 text {

@@ -12,7 +12,7 @@ pub const LIGHT_THEME: Theme = Theme {
     },
     slider: SliderTheme {
         background: cow_borrowed!("rgb(210, 210, 210)"),
-        thumb_background: cow_borrowed!("rgb(210, 210, 210)"),
+        thumb_background: cow_borrowed!("rgb(202, 193, 227)"),
         thumb_inner_background: cow_borrowed!("rgb(103, 80, 164)"),
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
     },
@@ -48,10 +48,10 @@ pub const LIGHT_THEME: Theme = Theme {
     },
     switch: SwitchTheme {
         margin: cow_borrowed!("0"),
-        background: cow_borrowed!("rgb(121, 116, 126)"),
-        thumb_background: cow_borrowed!("rgb(231, 224, 236)"),
-        enabled_background: cow_borrowed!("rgb(103, 80, 164)"),
-        enabled_thumb_background: cow_borrowed!("rgb(234, 221, 255)"),
+        background: cow_borrowed!("rgb(225, 225, 225)"),
+        thumb_background: cow_borrowed!("rgb(125, 125, 125)"),
+        enabled_background: cow_borrowed!("rgb(202, 193, 227)"),
+        enabled_thumb_background: cow_borrowed!("rgb(103, 80, 164)"),
         focus_border_fill: cow_borrowed!("rgb(180, 180, 180)"),
         enabled_focus_border_fill: cow_borrowed!("rgb(180, 180, 180)"),
     },
@@ -61,12 +61,6 @@ pub const LIGHT_THEME: Theme = Theme {
         hover_thumb_background: cow_borrowed!("rgb(115, 115, 115)"),
         active_thumb_background: cow_borrowed!("rgb(95, 95, 95)"),
         size: cow_borrowed!("15"),
-    },
-    scroll_view: ScrollViewTheme {
-        height: cow_borrowed!("fill"),
-        width: cow_borrowed!("fill"),
-        padding: cow_borrowed!("0"),
-        spacing: cow_borrowed!("0"),
     },
     tooltip: TooltipTheme {
         background: cow_borrowed!("rgb(245, 245, 245)"),
@@ -167,7 +161,7 @@ pub const LIGHT_THEME: Theme = Theme {
     checkbox: CheckboxTheme {
         unselected_fill: cow_borrowed!("rgb(80, 80, 80)"),
         selected_fill: cow_borrowed!("rgb(103, 80, 164)"),
-        selected_icon_fill: cow_borrowed!("white"),
+        selected_icon_fill: cow_borrowed!("rgb(202, 193, 227)"),
     },
     menu_item: MenuItemTheme {
         hover_background: cow_borrowed!("rgb(235, 235, 235)"),

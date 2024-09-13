@@ -63,7 +63,7 @@ impl GamePadPlugin {
                         if diff_x != 0.0 {
                             x += diff_x as f64 * 10.;
                             handle.send_platform_event(PlatformEvent::Mouse {
-                                name: EventName::MouseOver,
+                                name: EventName::MouseMove,
                                 cursor: (x, y).into(),
                                 button: None,
                             });
@@ -72,7 +72,7 @@ impl GamePadPlugin {
                         if diff_x != 0.0 {
                             y -= diff_y as f64 * 10.;
                             handle.send_platform_event(PlatformEvent::Mouse {
-                                name: EventName::MouseOver,
+                                name: EventName::MouseMove,
                                 cursor: (x, y).into(),
                                 button: None,
                             });
@@ -138,7 +138,7 @@ fn Box() -> Element {
 fn app() -> Element {
     let mut positions = use_signal::<Vec<CursorPoint>>(Vec::new);
 
-    let onmouseover = move |e: MouseEvent| {
+    let onmousemove = move |e: MouseEvent| {
         let coordinates = e.get_screen_coordinates();
         positions.with_mut(|positions| {
             if let Some(pos) = positions.first() {
@@ -157,7 +157,7 @@ fn app() -> Element {
 
     rsx!(
         rect {
-            onmouseover,
+            onmousemove,
             width: "100%",
             height: "100%",
             {positions.read().iter().map(|pos| rsx!(

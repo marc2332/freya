@@ -63,11 +63,10 @@ impl AreaModel for Area {
     }
 
     fn expand(&mut self, size: &Size2D) {
-        let origin = self.origin;
         self.origin.x -= size.width;
         self.origin.y -= size.height;
-        self.size.width += origin.x + size.width * 2.;
-        self.size.height += origin.y + size.height * 2.;
+        self.size.width += size.width * 2.;
+        self.size.height += size.height * 2.;
     }
 
     fn max_area_when_rotated(&self, center: Point2D) -> Area {
@@ -115,26 +114,13 @@ fn rotate_point_around_center(point: Point2D, center: Point2D, angle_radians: f3
 }
 
 fn calculate_extreme_corners(area: &Area, center: Point2D) -> (Point2D, Point2D) {
-    let biggest_side_width = (center.x - area.min_x()).max(area.max_x() - center.x);
-    let biggest_side_height = (center.y - area.min_y()).max(area.max_y() - center.y);
+    let biggest_size = area.width().max(area.height());
 
     let corners = [
-        Point2D::new(
-            center.x - biggest_side_width,
-            center.y - biggest_side_height,
-        ),
-        Point2D::new(
-            center.x - biggest_side_width,
-            center.y + biggest_side_height,
-        ),
-        Point2D::new(
-            center.x + biggest_side_width,
-            center.y - biggest_side_height,
-        ),
-        Point2D::new(
-            center.x + biggest_side_width,
-            center.y + biggest_side_height,
-        ),
+        Point2D::new(center.x - biggest_size, center.y - biggest_size),
+        Point2D::new(center.x - biggest_size, center.y + biggest_size),
+        Point2D::new(center.x + biggest_size, center.y - biggest_size),
+        Point2D::new(center.x + biggest_size, center.y + biggest_size),
     ];
 
     let angle_45_radians = 45.0 * PI / 180.0;

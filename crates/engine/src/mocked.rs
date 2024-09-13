@@ -298,6 +298,12 @@ impl From<(i32, i32)> for Point {
 #[repr(transparent)]
 pub struct Weight(i32);
 
+impl From<i32> for Weight {
+    fn from(weight: i32) -> Self {
+        Self(weight)
+    }
+}
+
 #[allow(non_upper_case_globals)]
 impl Weight {
     pub const INVISIBLE: Self = Self(0);
