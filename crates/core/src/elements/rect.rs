@@ -400,8 +400,7 @@ impl ElementUtils for RectElement {
                 }
             }
 
-            let border_path =
-                Self::border_path(*rounded_rect.rect(), corner_radius, &border);
+            let border_path = Self::border_path(*rounded_rect.rect(), corner_radius, &border);
 
             let border_clip_path =
                 Self::border_clip_path(*rounded_rect.rect(), corner_radius, &border);
@@ -511,11 +510,8 @@ impl ElementUtils for RectElement {
             let mut border = node_style.border.clone();
             border.scale(scale_factor);
 
-            let border_path = Self::border_path(
-                *rounded_rect.rect(),
-                node_style.corner_radius,
-                &border,
-            );
+            let border_path =
+                Self::border_path(*rounded_rect.rect(), node_style.corner_radius, &border);
 
             let border_bounds = border_path.bounds();
             let border_area = Area::new(
