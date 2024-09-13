@@ -17,7 +17,6 @@ pub fn NativeContainer(children: Element) -> Element {
 
     let onglobalkeydown = move |e: KeyboardEvent| {
         let allowed_to_navigate = native_platform.navigation_mark.peek().allowed();
-        println!(">> {allowed_to_navigate}");
         if e.key == Key::Tab && allowed_to_navigate {
             if e.modifiers.contains(Modifiers::SHIFT) {
                 platform
