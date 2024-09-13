@@ -189,6 +189,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             }
             EventMessage::RequestFullRerender => {
                 app.resize(window);
+                window.request_redraw();
             }
             EventMessage::InvalidateArea(area) => {
                 let fdom = app.sdom.get();
