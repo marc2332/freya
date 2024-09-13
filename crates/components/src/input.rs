@@ -61,6 +61,9 @@ pub struct InputProps {
     /// Display mode for Input. By default, input text is shown as it is provided.
     #[props(default = InputMode::Shown, into)]
     pub mode: InputMode,
+    /// Automatically focus this Input upon creation. Default `false`.
+    #[props(default = false)]
+    pub auto_focus: bool,
 }
 
 /// Small box to edit text.
@@ -96,6 +99,7 @@ pub fn Input(
         onchange,
         mode,
         placeholder,
+        auto_focus,
     }: InputProps,
 ) -> Element {
     let platform = use_platform();
@@ -210,11 +214,12 @@ pub fn Input(
             shadow: "{shadow}",
             corner_radius: "{corner_radius}",
             margin: "{margin}",
+            main_align: "center",
             cursor_reference,
             a11y_id,
             a11y_focusable: "true",
-            a11y_role:"textInput",
-            main_align: "center",
+            a11y_role: "textInput",
+            a11y_auto_focus: "{auto_focus}",
             onkeydown,
             onkeyup,
             paragraph {

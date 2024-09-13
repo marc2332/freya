@@ -11,11 +11,16 @@ use rustc_hash::{
 
 #[derive(Default)]
 pub struct AccessibilityDirtyNodes {
+    pub requested_focus: Option<NodeId>,
     pub added_or_updated: FxHashSet<NodeId>,
     pub removed: FxHashMap<NodeId, NodeId>,
 }
 
 impl AccessibilityDirtyNodes {
+    pub fn request_focus(&mut self, node_id: NodeId) {
+        self.requested_focus = Some(node_id);
+    }
+
     pub fn add_or_update(&mut self, node_id: NodeId) {
         self.added_or_updated.insert(node_id);
     }
@@ -25,6 +30,7 @@ impl AccessibilityDirtyNodes {
     }
 
     pub fn clear(&mut self) {
+        self.requested_focus.take();
         self.added_or_updated.clear();
         self.removed.clear();
     }

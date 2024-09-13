@@ -82,15 +82,26 @@ impl AccessKitManager {
         &mut self,
         rdom: &DioxusDOM,
         layout: &Torin<NodeId>,
+        platform_sender: &NativePlatformSender,
+        window: &Window,
         dirty_nodes: &mut AccessibilityDirtyNodes,
     ) {
-        let tree =
+        let (tree, node_id) =
             self.accessibility_tree
                 .lock()
                 .unwrap()
                 .process_updates(rdom, layout, dirty_nodes);
 
+        // Notify the components
+        platform_sender.send_modify(|state| {
+            state.focused_id = tree.focus;
+        });
+
+        // Update the IME Cursor area
+        self.update_ime_position(node_id, window, layout);
+
         if self.adapter_initialized {
+            // Update the Adapter
             self.accessibility_adapter.update_if_active(|| tree);
         }
     }

@@ -233,6 +233,7 @@ builder_constructors! {
         #[doc = include_str!("_docs/attributes/spacing.md")]
         spacing: String,
 
+        a11y_auto_focus: String,
         a11y_name: String,
         a11y_focusable: String,
         a11y_role:String,
@@ -305,6 +306,7 @@ builder_constructors! {
         opacity: String,
 
         layer: String,
+        a11y_auto_focus: String,
         a11y_name: String,
         a11y_focusable: String,
         a11y_role:String,
@@ -383,6 +385,7 @@ builder_constructors! {
         cursor_color: String,
         cursor_mode: String,
         cursor_id: String,
+        a11y_auto_focus: String,
         a11y_name: String,
         a11y_focusable: String,
         a11y_role:String,
@@ -454,6 +457,7 @@ builder_constructors! {
 
         image_data: String,
         image_reference: String,
+        a11y_auto_focus: String,
         a11y_name: String,
         a11y_focusable: String,
         a11y_role:String,
@@ -493,6 +497,7 @@ builder_constructors! {
 
         svg_data: String,
         svg_content: String,
+        a11y_auto_focus: String,
         a11y_name: String,
         a11y_focusable: String,
         a11y_role:String,
