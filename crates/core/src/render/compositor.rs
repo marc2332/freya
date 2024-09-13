@@ -284,6 +284,7 @@ mod test {
         );
 
         compositor_dirty_area.take();
+        compositor_dirty_nodes.clear();
 
         let mut painted_nodes = 0;
         for (_, nodes) in sorted(rendering_layers.iter()) {
