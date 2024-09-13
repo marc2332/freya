@@ -412,8 +412,8 @@ mod test {
 
         let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
-        // Root + First rect + Second rect
-        assert_eq!(painted_nodes, 3);
+        // Root + First rect + Second rect + Third Rect
+        assert_eq!(painted_nodes, 4);
 
         utils.click_cursor((5., 150.)).await;
 
