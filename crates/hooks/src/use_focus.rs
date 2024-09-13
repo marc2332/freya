@@ -54,15 +54,6 @@ impl UseFocus {
         }
     }
 
-    /// Queue a focus to this node
-    pub fn queue_focus(&mut self) {
-        if !*self.is_focused.peek() {
-            self.platform
-                .send(EventMessage::QueueFocusAccessibilityNode(self.id))
-                .ok();
-        }
-    }
-
     /// Get the node focus ID
     pub fn id(&self) -> AccessibilityId {
         self.id
@@ -90,13 +81,13 @@ impl UseFocus {
             .ok();
     }
 
-    /// Validate keydown event
-    pub fn validate_keydown(&self, e: &KeyboardEvent) -> bool {
+    /// Validate globalkeydown event
+    pub fn validate_globalkeydown(&self, e: &KeyboardEvent) -> bool {
         e.data.code == Code::Enter && self.is_selected()
     }
 
     /// Prevent navigating the accessible nodes with the keyboard.
-    /// You must use this this inside of a `onkeydown` event handler.
+    /// You must use this this inside of a `onglobalkeydown` event handler.
     pub fn prevent_navigation(&mut self) {
         self.navigation_mark.write().set_allowed(false);
     }

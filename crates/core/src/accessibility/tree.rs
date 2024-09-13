@@ -73,6 +73,10 @@ impl AccessibilityTree {
         }
     }
 
+    pub fn focused_node_id(&self) -> Option<NodeId> {
+        self.map.get(&self.focused_id).cloned()
+    }
+
     /// Initialize the Accessibility Tree
     pub fn init(
         &self,
@@ -128,7 +132,8 @@ impl AccessibilityTree {
         rdom: &DioxusDOM,
         layout: &Torin<NodeId>,
         dirty_nodes: &mut AccessibilityDirtyNodes,
-    ) -> TreeUpdate {
+    ) -> (TreeUpdate, NodeId) {
+        let requested_focus_id = dirty_nodes.requested_focus.take();
         let removed_ids = dirty_nodes.removed.drain().collect::<FxHashMap<_, _>>();
         let mut added_or_updated_ids = dirty_nodes
             .added_or_updated
@@ -182,16 +187,33 @@ impl AccessibilityTree {
             }
         }
 
+        // Try to focus the requested node id
+        if let Some(node_id) = requested_focus_id {
+            let node_ref = rdom.get(node_id).unwrap();
+            let node_accessibility_state = node_ref.get::<AccessibilityNodeState>();
+            if let Some(focused_id) = node_accessibility_state
+                .as_ref()
+                .and_then(|state| state.a11y_id)
+            {
+                self.focused_id = focused_id;
+            }
+        }
+
         // Fallback the focused id to the root if the focused node no longer exists
         if !self.map.contains_key(&self.focused_id) {
             self.focused_id = ACCESSIBILITY_ROOT_ID;
         }
 
-        TreeUpdate {
-            nodes,
-            tree: Some(Tree::new(ACCESSIBILITY_ROOT_ID)),
-            focus: self.focused_id,
-        }
+        let node_id = self.map.get(&self.focused_id).cloned().unwrap();
+
+        (
+            TreeUpdate {
+                nodes,
+                tree: Some(Tree::new(ACCESSIBILITY_ROOT_ID)),
+                focus: self.focused_id,
+            },
+            node_id,
+        )
     }
 
     /// Update the focused Node ID and generate a TreeUpdate if necessary.

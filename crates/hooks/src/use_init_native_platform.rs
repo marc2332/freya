@@ -212,4 +212,31 @@ mod test {
         assert_ne!(first_focus_id, second_focus_id);
         assert_ne!(second_focus_id, ACCESSIBILITY_ROOT_ID);
     }
+
+    #[tokio::test]
+    pub async fn auto_focus_accessibility() {
+        fn use_focus_app() -> Element {
+            rsx!(
+                rect {
+                    a11y_role: "genericContainer",
+                    a11y_auto_focus: "true",
+                }
+                rect {
+                    a11y_role: "genericContainer",
+                    a11y_auto_focus: "true",
+                }
+            )
+        }
+
+        let mut utils = launch_test_with_config(
+            use_focus_app,
+            TestingConfig {
+                size: (100.0, 100.0).into(),
+                ..TestingConfig::default()
+            },
+        );
+
+        utils.wait_for_update().await;
+        assert_ne!(utils.focus_id(), ACCESSIBILITY_ROOT_ID); // Will focus the second rect
+    }
 }

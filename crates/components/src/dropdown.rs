@@ -94,7 +94,7 @@ where
         status.set(DropdownItemStatus::default());
     };
 
-    let onkeydown = {
+    let onglobalkeydown = {
         to_owned![onclick];
         move |ev: KeyboardEvent| {
             if ev.key == Key::Enter && is_focused {
@@ -124,7 +124,7 @@ where
             onmouseenter,
             onmouseleave,
             onclick,
-            onkeydown,
+            onglobalkeydown,
             {children}
         }
     )
@@ -217,7 +217,7 @@ where
         opened.set(true)
     };
 
-    let onkeydown = move |e: KeyboardEvent| {
+    let onglobalkeydown = move |e: KeyboardEvent| {
         match e.key {
             // Close when `Escape` key is pressed
             Key::Escape => {
@@ -267,7 +267,7 @@ where
                 onmouseenter,
                 onmouseleave,
                 onclick,
-                onkeydown,
+                onglobalkeydown,
                 margin: "{margin}",
                 a11y_id,
                 background: "{button_background}",
@@ -298,7 +298,7 @@ where
                         width: "100v",
                         rect {
                             onglobalclick,
-                            onkeydown,
+                            onglobalkeydown,
                             layer: "-99",
                             margin: "{margin}",
                             border: "1 solid {border_fill}",

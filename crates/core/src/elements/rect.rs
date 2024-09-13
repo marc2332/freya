@@ -424,6 +424,14 @@ impl ElementUtils for RectElement {
         }
     }
 
+    #[inline]
+    fn element_needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
+        let node_style = &*node_ref.get::<StyleState>().unwrap();
+
+        node_style.border.is_visible() && node_style.border.alignment != BorderAlignment::Inner
+            || !node_style.shadows.is_empty()
+    }
+
     fn element_drawing_area(
         &self,
         layout_node: &LayoutNode,
@@ -433,7 +441,10 @@ impl ElementUtils for RectElement {
         let node_style = &*node_ref.get::<StyleState>().unwrap();
         let mut area = layout_node.visible_area();
 
-        if !node_style.border.is_visible() && node_style.shadows.is_empty() {
+        if !node_style.border.is_visible()
+            && node_style.border.alignment != BorderAlignment::Inner
+            && node_style.shadows.is_empty()
+        {
             return area;
         }
 
