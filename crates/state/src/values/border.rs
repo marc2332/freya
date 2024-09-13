@@ -55,6 +55,19 @@ impl Scaled for BorderWidth {
     }
 }
 
+impl fmt::Display for BorderWidth {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{} {} {} {}",
+            self.top,
+            self.right,
+            self.bottom,
+            self.left,
+        )
+    }
+}
+
 #[derive(Default, Clone, Copy, Debug, PartialEq)]
 pub enum BorderAlignment {
     #[default]
@@ -224,6 +237,18 @@ impl Parse for Border {
             },
             _ => return Err(ParseError),
         })
+    }
+}
+
+impl fmt::Display for Border {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{} {} {}",
+            self.width,
+            self.style,
+            self.fill,
+        )
     }
 }
 
