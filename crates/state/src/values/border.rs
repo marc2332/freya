@@ -4,7 +4,6 @@ use freya_engine::prelude::Color;
 use torin::scaled::Scaled;
 
 use crate::{
-    values::border,
     ExtSplit,
     Fill,
     Parse,
