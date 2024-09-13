@@ -191,7 +191,13 @@ impl Compositor {
 
                         let is_dirty = dirty_nodes.remove(node_id);
                         let cached_area_is_invalidated = cached_area
-                            .map(|cached_area| dirty_area.intersects(cached_area))
+                            .map(|cached_area| {
+                                if is_dirty {
+                                    true
+                                } else {
+                                    dirty_area.intersects(cached_area)
+                                }
+                            })
                             .unwrap_or_default();
 
                         let is_invalidated =
@@ -202,7 +208,7 @@ impl Compositor {
                             dirty_layers.insert_node_in_layer(*node_id, *layer_n);
 
                             // Expand the dirty area with the cached area so it gets cleaned up
-                            if cached_area_is_invalidated {
+                            if is_dirty && cached_area_is_invalidated {
                                 dirty_area.unite_or_insert(cached_area.unwrap());
                                 any_marked = true;
                             }
@@ -278,6 +284,7 @@ mod test {
         );
 
         compositor_dirty_area.take();
+        compositor_dirty_nodes.clear();
 
         let mut painted_nodes = 0;
         for (_, nodes) in sorted(rendering_layers.iter()) {
@@ -404,8 +411,8 @@ mod test {
 
         let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
-        // Root + First rect + Second rect
-        assert_eq!(painted_nodes, 3);
+        // Root + First rect + Second rect + Third Rect
+        assert_eq!(painted_nodes, 4);
 
         utils.click_cursor((5., 150.)).await;
 
