@@ -158,7 +158,7 @@ fn parse_border_style() {
                 left: 1.0,
             },
             fill: Fill::Color(Color::RED),
-            style: BorderStyle::None,
+            style: BorderStyle::Solid,
             alignment: BorderAlignment::default()
         })
     );
