@@ -509,6 +509,7 @@ define_theme! {
         %[cows]
         unselected_fill: str,
         selected_fill: str,
+        border_fill: str,
     }
 }
 

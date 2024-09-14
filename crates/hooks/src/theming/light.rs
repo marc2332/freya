@@ -157,6 +157,7 @@ pub const LIGHT_THEME: Theme = Theme {
     radio: RadioTheme {
         unselected_fill: cow_borrowed!("rgb(35, 35, 35)"),
         selected_fill: cow_borrowed!("rgb(103, 80, 164)"),
+        border_fill: cow_borrowed!("rgb(210, 210, 210)"),
     },
     checkbox: CheckboxTheme {
         unselected_fill: cow_borrowed!("rgb(80, 80, 80)"),
