@@ -173,6 +173,8 @@ pub fn Switch(props: SwitchProps) -> Element {
             onclick,
             a11y_id,
             offset_x: "{offset_x}",
+            main_align: "center",
+            subpixel_rounding: "none",
             rect {
                 background: "{circle}",
                 width: "{size}",
