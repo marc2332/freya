@@ -145,7 +145,7 @@ fn parse_border_alignments() {
 #[test]
 fn parse_border_style() {
     let solid = Border::parse("1 solid red");
-    let none = Border::parse("1 rust red");
+    let none = Border::parse("1 none red");
     let invalid = Border::parse("rust solid red");
 
     assert_eq!(
@@ -158,7 +158,7 @@ fn parse_border_style() {
                 left: 1.0,
             },
             fill: Fill::Color(Color::RED),
-            style: BorderStyle::Solid,
+            style: BorderStyle::None,
             alignment: BorderAlignment::default()
         })
     );
