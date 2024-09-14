@@ -1357,6 +1357,10 @@ impl RRect {
         unimplemented!("This is mocked")
     }
 
+    pub fn rect(&self) -> &Rect {
+        unimplemented!("This is mocked")
+    }
+
     pub fn width(&self) -> f32 {
         unimplemented!("This is mocked")
     }
