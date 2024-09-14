@@ -152,7 +152,9 @@ mod test {
     pub async fn uncontrolled_focus_accessibility() {
         #[allow(non_snake_case)]
         fn OtherChild() -> Element {
+            let mut focus = use_focus();
             rsx!(rect {
+                a11y_id: focus.attribute(),
                 a11y_role: "genericContainer",
                 width: "100%",
                 height: "50%",
