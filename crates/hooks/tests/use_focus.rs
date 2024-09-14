@@ -13,7 +13,7 @@ pub async fn track_focus() {
             rect {
                 width: "100%",
                 height: "50%",
-                focus: focus_manager.attribute(),
+                a11y_id: focus.attribute(),
                 onclick: move |_| focus_manager.focus(),
                 label {
                     "{focus_manager.is_focused()}"
