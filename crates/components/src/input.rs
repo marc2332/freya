@@ -217,7 +217,6 @@ pub fn Input(
             main_align: "center",
             cursor_reference,
             a11y_id,
-            a11y_focusable: "true",
             a11y_role: "textInput",
             a11y_auto_focus: "{auto_focus}",
             onkeydown,

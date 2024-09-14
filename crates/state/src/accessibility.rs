@@ -42,8 +42,8 @@ pub struct AccessibilityNodeState {
     pub a11y_role: Option<Role>,
     pub a11y_alt: Option<String>,
     pub a11y_name: Option<String>,
-    pub a11y_focusable: bool,
     pub a11y_auto_focus: bool,
+    pub is_focusable: bool,
 }
 
 impl ParseAttribute for AccessibilityNodeState {
@@ -77,11 +77,6 @@ impl ParseAttribute for AccessibilityNodeState {
                     self.a11y_name = Some(attr.to_owned())
                 }
             }
-            AttributeName::A11YFocusable => {
-                if let OwnedAttributeValue::Text(attr) = attr.value {
-                    self.a11y_focusable = attr.parse().unwrap_or_default()
-                }
-            }
             AttributeName::A11YAutoFocus => {
                 if let OwnedAttributeValue::Text(attr) = attr.value {
                     self.a11y_auto_focus = attr.parse().unwrap_or_default()
@@ -108,7 +103,6 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
             AttributeName::A11YRole,
             AttributeName::A11YAlt,
             AttributeName::A11YName,
-            AttributeName::A11YFocusable,
             AttributeName::A11YAutoFocus,
         ]));
 
@@ -128,6 +122,7 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
         let mut accessibility = AccessibilityNodeState {
             node_id: node_view.node_id(),
             a11y_id: self.a11y_id,
+            is_focusable: self.is_focusable,
             ..Default::default()
         };
 
@@ -165,13 +160,17 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
         *self = accessibility;
 
         if changed {
+            if !had_id && self.a11y_id.is_some() {
+                self.is_focusable = true;
+            }
+
             // Assign an accessibility ID if none was passed but the node has a role
             if self.a11y_id.is_none() && self.a11y_role.is_some() {
                 let id = AccessibilityId(accessibility_generator.new_id());
                 #[cfg(debug_assertions)]
                 tracing::info!("Assigned {id:?} to {:?}", node_view.node_id());
 
-                self.a11y_id = Some(id)
+                self.a11y_id = Some(id);
             }
 
             let was_just_created = !had_id && self.a11y_id.is_some();

@@ -119,7 +119,6 @@ impl FromStr for AttributeName {
             "content" => Ok(AttributeName::Content),
             "a11y_auto_focus" => Ok(AttributeName::A11YAutoFocus),
             "a11y_name" => Ok(AttributeName::A11YName),
-            "a11y_focusable" => Ok(AttributeName::A11YFocusable),
             "a11y_role" => Ok(AttributeName::A11YRole),
             "a11y_id" => Ok(AttributeName::A11YId),
             "a11y_alt" => Ok(AttributeName::A11YAlt),
