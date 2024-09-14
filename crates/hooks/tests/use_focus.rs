@@ -13,7 +13,7 @@ pub async fn track_focus() {
             rect {
                 width: "100%",
                 height: "50%",
-                focus: focus.attribute(),
+                focus: focus_manager.attribute(),
                 onclick: move |_| focus_manager.focus(),
                 label {
                     "{focus_manager.is_focused()}"
@@ -71,7 +71,7 @@ pub async fn block_focus() {
 
         rsx!(
             rect {
-                a11y_id: focus_manager.attribute(),
+                focus: focus_manager.attribute(),
                 width: "100%",
                 height: "50%",
                 onclick: move |_| focus_manager.focus(),

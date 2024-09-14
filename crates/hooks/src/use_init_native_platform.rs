@@ -219,11 +219,11 @@ mod test {
             rsx!(
                 rect {
                     a11y_role: "genericContainer",
-                    a11y_auto_focus: "true",
+                    auto_focus: "true",
                 }
                 rect {
                     a11y_role: "genericContainer",
-                    a11y_auto_focus: "true",
+                    auto_focus: "true",
                 }
             )
         }
