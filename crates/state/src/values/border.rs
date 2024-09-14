@@ -17,6 +17,16 @@ pub enum BorderStyle {
     Solid,
 }
 
+impl Parse for BorderStyle {
+    fn parse(value: &str) -> Result<Self, ParseError> {
+        Ok(match value {
+            "solid" => Self::Solid,
+            "none" => Self::None,
+            _ => return Err(ParseError),
+        })
+    }
+}
+
 #[derive(Default, Clone, Debug, PartialEq)]
 pub struct Border {
     pub fill: Fill,
@@ -156,10 +166,7 @@ impl Parse for Border {
                         bottom: vertical_width,
                         right: horizontal_width,
                     },
-                    style: match border_values.next().ok_or(ParseError)? {
-                        "solid" => BorderStyle::Solid,
-                        _ => BorderStyle::None,
-                    },
+                    style: BorderStyle::parse(border_values.next().ok_or(ParseError)?)?,
                     fill: Fill::parse(&border_values.collect::<Vec<&str>>().join(" "))
                         .map_err(|_| ParseError)?,
                     alignment: BorderAlignment::default(),
@@ -190,10 +197,7 @@ impl Parse for Border {
                         bottom: bottom_width,
                         right: horizontal_width,
                     },
-                    style: match border_values.next().ok_or(ParseError)? {
-                        "solid" => BorderStyle::Solid,
-                        _ => BorderStyle::None,
-                    },
+                    style: BorderStyle::parse(border_values.next().ok_or(ParseError)?)?,
                     fill: Fill::parse(&border_values.collect::<Vec<&str>>().join(" "))
                         .map_err(|_| ParseError)?,
                     alignment: BorderAlignment::default(),
@@ -223,10 +227,7 @@ impl Parse for Border {
                         .parse::<f32>()
                         .map_err(|_| ParseError)?,
                 },
-                style: match border_values.next().ok_or(ParseError)? {
-                    "solid" => BorderStyle::Solid,
-                    _ => BorderStyle::None,
-                },
+                style: BorderStyle::parse(border_values.next().ok_or(ParseError)?)?,
                 fill: Fill::parse(&border_values.collect::<Vec<&str>>().join(" "))
                     .map_err(|_| ParseError)?,
                 alignment: BorderAlignment::default(),
