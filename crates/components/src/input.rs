@@ -169,7 +169,6 @@ pub fn Input(
         _ => {}
     };
 
-    let a11y_id = focus.attribute();
     let cursor_reference = editable.cursor_attr();
     let highlights = editable.highlights_attr(0);
 
@@ -216,10 +215,9 @@ pub fn Input(
             margin: "{margin}",
             main_align: "center",
             cursor_reference,
-            a11y_id,
-            a11y_focusable: "true",
+            focus: focus.attribute(),
+            auto_focus: "{auto_focus}",
             a11y_role: "textInput",
-            a11y_auto_focus: "{auto_focus}",
             onkeydown,
             onkeyup,
             paragraph {

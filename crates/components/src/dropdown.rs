@@ -66,7 +66,6 @@ where
     let mut status = use_signal(DropdownItemStatus::default);
     let platform = use_platform();
 
-    let a11y_id = focus.attribute();
     let is_focused = focus.is_focused();
     let is_selected = *selected.read() == value;
 
@@ -115,8 +114,8 @@ where
         rect {
             width: "fill-min",
             color: "{color}",
-            a11y_id,
-            a11y_role:"button",
+            focus: focus.attribute(),
+            a11y_role: "button",
             background: "{background}",
             padding: "6 22 6 16",
             corner_radius: "6",
@@ -194,7 +193,6 @@ where
 
     let is_opened = *opened.read();
     let is_focused = focus.is_focused();
-    let a11y_id = focus.attribute();
 
     // Update the provided value if the passed value changes
     use_effect(use_reactive(&props.value, move |value| {
@@ -269,7 +267,7 @@ where
                 onclick,
                 onglobalkeydown,
                 margin: "{margin}",
-                a11y_id,
+                focus: focus.attribute(),
                 background: "{button_background}",
                 color: "{font_theme.color}",
                 corner_radius: "8",

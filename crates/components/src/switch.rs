@@ -98,8 +98,6 @@ pub fn Switch(props: SwitchProps) -> Element {
     let mut status = use_signal(SwitchStatus::default);
     let mut focus = use_focus();
 
-    let a11y_id = focus.attribute();
-
     use_drop(move || {
         if *status.read() == SwitchStatus::Hovering {
             platform.set_cursor(CursorIcon::default());
@@ -171,7 +169,7 @@ pub fn Switch(props: SwitchProps) -> Element {
             onmouseleave,
             onglobalkeydown,
             onclick,
-            a11y_id,
+            focus: focus.attribute(),
             offset_x: "{offset_x}",
             main_align: "center",
             rect {

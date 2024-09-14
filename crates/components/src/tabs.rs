@@ -89,8 +89,6 @@ pub fn Tab(
     let platform = use_platform();
     let is_active = use_activable_route();
 
-    let a11y_id = focus.attribute();
-
     let TabTheme {
         background,
         hover_background,
@@ -139,10 +137,9 @@ pub fn Tab(
             onclick,
             onmouseenter,
             onmouseleave,
-            a11y_id,
+            focus: focus.attribute(),
             width: "{width}",
             height: "{height}",
-            a11y_focusable: "true",
             overflow: "clip",
             a11y_role:"tab",
             color: "{font_theme.color}",
@@ -215,8 +212,6 @@ pub fn BottomTab(children: Element, theme: Option<BottomTabThemeWith>) -> Elemen
     let platform = use_platform();
     let is_active = use_activable_route();
 
-    let a11y_id = focus.attribute();
-
     let BottomTabTheme {
         background,
         hover_background,
@@ -251,10 +246,9 @@ pub fn BottomTab(children: Element, theme: Option<BottomTabThemeWith>) -> Elemen
         rect {
             onmouseenter,
             onmouseleave,
-            a11y_id,
+            focus: focus.attribute(),
             width: "{width}",
             height: "{height}",
-            a11y_focusable: "true",
             overflow: "clip",
             a11y_role:"tab",
             color: "{font_theme.color}",

@@ -4,7 +4,6 @@ use freya_elements::elements as dioxus_elements;
 use freya_hooks::{
     use_applied_theme,
     use_asset_cacher,
-    use_focus,
     AssetAge,
     AssetConfiguration,
     NetworkImageTheme,
@@ -65,12 +64,10 @@ pub enum ImageState {
 #[allow(non_snake_case)]
 pub fn NetworkImage(props: NetworkImageProps) -> Element {
     let mut asset_cacher = use_asset_cacher();
-    let focus = use_focus();
     let mut status = use_signal(|| ImageState::Loading);
     let mut cached_assets = use_signal::<Vec<AssetConfiguration>>(Vec::new);
     let mut assets_tasks = use_signal::<Vec<Task>>(Vec::new);
 
-    let a11y_id = focus.attribute();
     let NetworkImageTheme { width, height } = use_applied_theme!(&props.theme, network_image);
     let alt = props.alt.as_deref();
 
@@ -121,10 +118,9 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
         rsx!(image {
             height: "{height}",
             width: "{width}",
-            a11y_id,
             image_data,
             a11y_role: "image",
-            a11y_alt: alt
+            a11y_name: alt
         })
     } else if *status.read() == ImageState::Loading {
         if let Some(loading_element) = &props.loading {

@@ -92,8 +92,6 @@ pub fn Button(
     let mut status = use_signal(ButtonStatus::default);
     let platform = use_platform();
 
-    let a11y_id = focus.attribute();
-
     let ButtonTheme {
         background,
         hover_background,
@@ -175,12 +173,11 @@ pub fn Button(
             onmouseenter,
             onmouseleave,
             onglobalkeydown,
-            a11y_id,
+            focus: focus.attribute(),
             width: "{width}",
             height: "{height}",
             padding: "{padding}",
             margin: "{margin}",
-            a11y_focusable: "true",
             overflow: "clip",
             a11y_role:"button",
             color: "{font_theme.color}",
