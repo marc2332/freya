@@ -240,8 +240,8 @@ builder_constructors! {
         reference: Reference,
         cursor_reference: CursorReference,
 
-        focus: String,
-        auto_focus: String,
+        a11y_id: String,
+        a11y_auto_focus: String,
         a11y_name: String,
         a11y_description: String,
         a11y_value: String,
@@ -369,8 +369,8 @@ builder_constructors! {
 
         layer: String,
 
-        focus: String,
-        auto_focus: String,
+        a11y_id: String,
+        a11y_auto_focus: String,
         a11y_name: String,
         a11y_description: String,
         a11y_value: String,
@@ -513,8 +513,8 @@ builder_constructors! {
         highlight_color: String,
         highlight_mode: String,
 
-        focus: String,
-        auto_focus: String,
+        a11y_id: String,
+        a11y_auto_focus: String,
         a11y_name: String,
         a11y_description: String,
         a11y_value: String,
@@ -644,8 +644,8 @@ builder_constructors! {
         image_data: String,
         image_reference: String,
 
-        focus: String,
-        auto_focus: String,
+        a11y_id: String,
+        a11y_auto_focus: String,
         a11y_name: String,
         a11y_description: String,
         a11y_value: String,
@@ -746,8 +746,8 @@ builder_constructors! {
         svg_data: String,
         svg_content: String,
 
-        focus: String,
-        auto_focus: String,
+        a11y_id: String,
+        a11y_auto_focus: String,
         a11y_name: String,
         a11y_description: String,
         a11y_value: String,

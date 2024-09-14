@@ -148,6 +148,7 @@ pub fn MenuItem(
     let mut status = use_signal(MenuItemStatus::default);
     let platform = use_platform();
 
+    let a11y_id = focus.attribute();
     let click = &onclick;
 
     let MenuItemTheme {
@@ -196,11 +197,11 @@ pub fn MenuItem(
             onclick,
             onmouseenter,
             onmouseleave,
-            focus: focus.attribute(),
+            a11y_id,
             width: "fill-min",
             padding: "6",
             margin: "2",
-            a11y_role: "button",
+            a11y_role:"button",
             color: "{font_theme.color}",
             corner_radius: "{corner_radius}",
             background: "{background}",
