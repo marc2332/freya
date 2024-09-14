@@ -7,10 +7,8 @@ use accesskit::{
     Action,
     Affine,
     Node,
-    NodeBuilder,
     NodeId as AccessibilityId,
     Rect,
-    Role,
     TextDirection,
     Tree,
     TreeUpdate,
@@ -329,7 +327,8 @@ impl AccessibilityTree {
         let transform_state = &*node_ref.get::<TransformState>().unwrap();
         let node_type = node_ref.node_type();
 
-        let mut builder = NodeBuilder::new(Role::default());
+        // Safe to unwrap since we know that `node_accessibility.id.is_some()`.
+        let mut builder = node_accessibility.builder.clone().unwrap();
 
         // Set children
         let children = node_ref.get_accessibility_children();
@@ -347,7 +346,7 @@ impl AccessibilityTree {
         // Set focusable action
         // This will cause assistive technology to offer the user an option
         // to focus the current element if it supports it.
-        if node_accessibility.a11y_focusable {
+        if node_accessibility.focusable {
             builder.add_action(Action::Focus);
         }
 
@@ -448,28 +447,6 @@ impl AccessibilityTree {
             builder.set_overline(skia_decoration_style_to_accesskit(
                 font_style_state.decoration.style,
             ));
-        }
-
-        // Set text value
-        if let Some(alt) = &node_accessibility.a11y_alt {
-            builder.set_value(alt.to_owned());
-        } else if let Some(value) = node_ref.get_inner_texts() {
-            builder.set_value(value);
-            builder.set_role(Role::Label);
-        }
-
-        // Set name
-        if let Some(name) = &node_accessibility.a11y_name {
-            builder.set_name(name.to_owned());
-        }
-
-        // Set role
-        if let Some(role) = node_accessibility.a11y_role {
-            builder.set_role(role);
-        }
-        // Set root role
-        if node_ref.id() == node_ref.real_dom().root_id() {
-            builder.set_role(Role::Window);
         }
 
         builder.build()
