@@ -509,6 +509,7 @@ builder_constructors! {
         cursor_color: String,
         cursor_mode: String,
         cursor_id: String,
+
         highlights: String,
         highlight_color: String,
         highlight_mode: String,
