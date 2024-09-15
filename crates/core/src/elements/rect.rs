@@ -27,7 +27,7 @@ use crate::dom::DioxusNode;
 pub struct RectElement;
 
 impl RectElement {
-    fn rrect(&self, layout_node: &LayoutNode, node_ref: &DioxusNode, scale_factor: f32) -> RRect {
+    fn get_rounded_rect(&self, layout_node: &LayoutNode, node_ref: &DioxusNode, scale_factor: f32) -> RRect {
         let area = layout_node.visible_area().to_f32();
         let node_style = &*node_ref.get::<StyleState>().unwrap();
         let mut radius = node_style.corner_radius;
@@ -250,7 +250,7 @@ impl ElementUtils for RectElement {
         layout_node: &LayoutNode,
         scale_factor: f32,
     ) -> bool {
-        let rounded_rect = self.rrect(layout_node, node_ref, scale_factor);
+        let rounded_rect = self.get_rounded_rect(layout_node, node_ref, scale_factor);
         let point = point.to_f32();
         rounded_rect.contains(Rect::new(point.x, point.y, point.x + 1., point.y + 1.))
     }
@@ -262,7 +262,7 @@ impl ElementUtils for RectElement {
         canvas: &Canvas,
         scale_factor: f32,
     ) {
-        let rounded_rect = self.rrect(layout_node, node_ref, scale_factor);
+        let rounded_rect = self.get_rounded_rect(layout_node, node_ref, scale_factor);
 
         canvas.clip_rrect(rounded_rect, ClipOp::Intersect, true);
     }
