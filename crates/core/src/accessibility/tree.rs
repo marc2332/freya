@@ -1,50 +1,20 @@
-use std::sync::{
-    Arc,
-    Mutex,
-};
+use std::sync::{Arc, Mutex};
 
 use accesskit::{
-    Action, Affine, Node, NodeBuilder, NodeId as AccessibilityId, Rect, Role, TextDirection, Tree, TreeUpdate
+    Action, Affine, Node, NodeBuilder, NodeId as AccessibilityId, Rect, Role, TextDirection, Tree,
+    TreeUpdate,
 };
 use freya_common::AccessibilityDirtyNodes;
-use freya_engine::prelude::{
-    Color,
-    Slant,
-    TextAlign,
-    TextDecoration,
-    TextDecorationStyle,
-};
-use freya_native_core::{
-    node::NodeType,
-    prelude::NodeImmutable,
-    tags::TagName,
-    NodeId,
-};
+use freya_engine::prelude::{Color, Slant, TextAlign, TextDecoration, TextDecorationStyle};
+use freya_native_core::{node::NodeType, prelude::NodeImmutable, tags::TagName, NodeId};
 use freya_node_state::{
-    AccessibilityNodeState,
-    Fill,
-    FontStyleState,
-    OverflowMode,
-    StyleState,
-    TransformState,
+    AccessibilityNodeState, Fill, FontStyleState, OverflowMode, StyleState, TransformState,
 };
-use rustc_hash::{
-    FxHashMap,
-    FxHashSet,
-};
-use torin::{
-    prelude::LayoutNode,
-    torin::Torin,
-};
+use rustc_hash::{FxHashMap, FxHashSet};
+use torin::{prelude::LayoutNode, torin::Torin};
 
-use super::{
-    AccessibilityFocusStrategy,
-    NodeAccessibility,
-};
-use crate::dom::{
-    DioxusDOM,
-    DioxusNode,
-};
+use super::{AccessibilityFocusStrategy, NodeAccessibility};
+use crate::dom::{DioxusDOM, DioxusNode};
 
 pub const ACCESSIBILITY_ROOT_ID: AccessibilityId = AccessibilityId(0);
 
@@ -347,6 +317,14 @@ impl AccessibilityTree {
             y0: area.min_y(),
             y1: area.max_y(),
         });
+
+        if let NodeType::Element(node) = &*node_type {
+            if matches!(node.tag, TagName::Label | TagName::Paragraph) && builder.name().is_none() {
+                if let Some(inner_text) = node_ref.get_inner_texts() {
+                    builder.set_name(inner_text);
+                }
+            }
+        }
 
         // Set focusable action
         // This will cause assistive technology to offer the user an option
