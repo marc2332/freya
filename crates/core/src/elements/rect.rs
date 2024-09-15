@@ -24,6 +24,11 @@ use torin::{
 use super::utils::ElementUtils;
 use crate::dom::DioxusNode;
 
+enum BorderShape {
+    DRRect(RRect, RRect),
+    Path(Path),
+}
+
 pub struct RectElement;
 
 impl RectElement {
@@ -102,17 +107,18 @@ impl RectElement {
     /// Returns a `Path` that will draw a [`Border`] around a base rectangle.
     ///
     /// We don't use Skia's stroking API here, since we might need different widths for each side.
-    fn border_path(base_rect: Rect, base_corner_radius: CornerRadius, border: &Border) -> Path {
+    fn border_shape(
+        base_rect: Rect,
+        base_corner_radius: CornerRadius,
+        border: &Border,
+    ) -> BorderShape {
         let border_alignment = border.alignment;
         let border_width = border.width;
-
-        let mut path = Path::new();
-        path.set_fill_type(PathFillType::EvenOdd);
 
         // First we create a path that is outset from the rect by a certain amount on each side.
         //
         // Let's call this the outer border path.
-        {
+        let (outer_rrect, outer_corner_radius) = {
             // Calculuate the outer corner radius for the border.
             let corner_radius = CornerRadius {
                 top_left: Self::outer_border_path_corner_radius(
@@ -166,19 +172,11 @@ impl RectElement {
                 ],
             );
 
-            if corner_radius.smoothing > 0.0 {
-                path.add_path(
-                    &corner_radius.smoothed_path(rrect),
-                    Point::new(rrect.rect().x(), rrect.rect().y()),
-                    None,
-                );
-            } else {
-                path.add_rrect(rrect, None);
-            }
-        }
+            (rrect, corner_radius)
+        };
 
         // After the outer path, we will then move to the inner bounds of the border.
-        {
+        let (inner_rrect, inner_corner_radius) = {
             // Calculuate the inner corner radius for the border.
             let corner_radius = CornerRadius {
                 top_left: Self::inner_border_path_corner_radius(
@@ -232,18 +230,29 @@ impl RectElement {
                 ],
             );
 
-            if corner_radius.smoothing > 0.0 {
-                path.add_path(
-                    &corner_radius.smoothed_path(rrect),
-                    Point::new(rrect.rect().x(), rrect.rect().y()),
-                    None,
-                );
-            } else {
-                path.add_rrect(rrect, None);
-            }
+            (rrect, corner_radius)
         };
 
-        path
+        if base_corner_radius.smoothing > 0.0 {
+            let mut path = Path::new();
+            path.set_fill_type(PathFillType::EvenOdd);
+
+            path.add_path(
+                &outer_corner_radius.smoothed_path(outer_rrect),
+                Point::new(outer_rrect.rect().x(), outer_rrect.rect().y()),
+                None,
+            );
+
+            path.add_path(
+                &inner_corner_radius.smoothed_path(inner_rrect),
+                Point::new(inner_rrect.rect().x(), inner_rrect.rect().y()),
+                None,
+            );
+
+            BorderShape::Path(path)
+        } else {
+            BorderShape::DRRect(outer_rrect, inner_rrect)
+        }
     }
 }
 
@@ -409,33 +418,36 @@ impl ElementUtils for RectElement {
         }
 
         // Borders
-        for mut border in node_style.borders.clone().into_iter() {
-            if border.is_visible() {
-                border.scale(scale_factor);
+        if node_style.border.is_visible() {
+            let mut border = node_style.border.clone();
+            border.scale(scale_factor);
 
-                // Create a new paint
-                let mut border_paint = paint.clone();
-                border_paint.set_anti_alias(true);
-                border_paint.set_style(PaintStyle::Fill);
-                match &border.fill {
-                    Fill::Color(color) => {
-                        border_paint.set_color(*color);
-                    }
-                    Fill::LinearGradient(gradient) => {
-                        border_paint.set_shader(gradient.into_shader(area));
-                    }
-                    Fill::RadialGradient(gradient) => {
-                        border_paint.set_shader(gradient.into_shader(area));
-                    }
-                    Fill::ConicGradient(gradient) => {
-                        border_paint.set_shader(gradient.into_shader(area));
-                    }
+            // Create a new paint
+            let mut border_paint = paint.clone();
+            border_paint.set_anti_alias(true);
+            border_paint.set_style(PaintStyle::Fill);
+            match &node_style.border.fill {
+                Fill::Color(color) => {
+                    border_paint.set_color(*color);
                 }
+                Fill::LinearGradient(gradient) => {
+                    border_paint.set_shader(gradient.into_shader(area));
+                }
+                Fill::RadialGradient(gradient) => {
+                    border_paint.set_shader(gradient.into_shader(area));
+                }
+                Fill::ConicGradient(gradient) => {
+                    border_paint.set_shader(gradient.into_shader(area));
+                }
+            }
 
-                canvas.draw_path(
-                    &Self::border_path(*rounded_rect.rect(), corner_radius, &border),
-                    &border_paint,
-                );
+            match Self::border_shape(*rounded_rect.rect(), corner_radius, &border) {
+                BorderShape::DRRect(outer, inner) => {
+                    canvas.draw_drrect(&outer, &inner, &border_paint);
+                }
+                BorderShape::Path(path) => {
+                    canvas.draw_path(&path, &border_paint);
+                }
             }
         }
 
@@ -456,7 +468,8 @@ impl ElementUtils for RectElement {
     fn element_needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
         let node_style = &*node_ref.get::<StyleState>().unwrap();
 
-        !node_style.borders.is_empty() || !node_style.shadows.is_empty()
+        node_style.border.is_visible() && node_style.border.alignment != BorderAlignment::Inner
+            || !node_style.shadows.is_empty()
     }
 
     fn element_drawing_area(
@@ -468,7 +481,10 @@ impl ElementUtils for RectElement {
         let node_style = &*node_ref.get::<StyleState>().unwrap();
         let mut area = layout_node.visible_area();
 
-        if node_style.borders.is_empty() && node_style.shadows.is_empty() {
+        if !node_style.border.is_visible()
+            && node_style.border.alignment != BorderAlignment::Inner
+            && node_style.shadows.is_empty()
+        {
             return area;
         }
 
@@ -541,21 +557,22 @@ impl ElementUtils for RectElement {
             }
         }
 
-        for mut border in node_style.borders.clone().into_iter() {
-            if border.is_visible() {
-                border.scale(scale_factor);
+        if node_style.border.is_visible() {
+            let mut border = node_style.border.clone();
+            border.scale(scale_factor);
 
-                let border_path =
-                    Self::border_path(*rounded_rect.rect(), node_style.corner_radius, &border);
+            let border_shape =
+                Self::border_shape(*rounded_rect.rect(), node_style.corner_radius, &border);
+            let border_bounds = match border_shape {
+                BorderShape::DRRect(ref outer, _) => outer.bounds(),
+                BorderShape::Path(ref path) => path.bounds(),
+            };
+            let border_area = Area::new(
+                Point2D::new(border_bounds.x(), border_bounds.y()),
+                Size2D::new(border_bounds.width(), border_bounds.height()),
+            );
 
-                let border_bounds = border_path.bounds();
-                let border_area = Area::new(
-                    Point2D::new(border_bounds.x(), border_bounds.y()),
-                    Size2D::new(border_bounds.width(), border_bounds.height()),
-                );
-
-                area = area.union(&border_area.round_out());
-            }
+            area = area.union(&border_area.round_out());
         }
 
         area
