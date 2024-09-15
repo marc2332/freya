@@ -27,7 +27,12 @@ use crate::dom::DioxusNode;
 pub struct RectElement;
 
 impl RectElement {
-    fn get_rounded_rect(&self, layout_node: &LayoutNode, node_ref: &DioxusNode, scale_factor: f32) -> RRect {
+    fn get_rounded_rect(
+        &self,
+        layout_node: &LayoutNode,
+        node_ref: &DioxusNode,
+        scale_factor: f32,
+    ) -> RRect {
         let area = layout_node.visible_area().to_f32();
         let node_style = &*node_ref.get::<StyleState>().unwrap();
         let mut radius = node_style.corner_radius;
