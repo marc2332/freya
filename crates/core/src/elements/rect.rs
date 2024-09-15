@@ -1,23 +1,11 @@
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::{
-    Border,
-    BorderAlignment,
-    CanvasRunnerContext,
-    CornerRadius,
-    Fill,
-    ReferencesState,
-    ShadowPosition,
-    StyleState,
+    Border, BorderAlignment, CanvasRunnerContext, CornerRadius, Fill, ReferencesState,
+    ShadowPosition, StyleState,
 };
 use torin::{
-    prelude::{
-        Area,
-        CursorPoint,
-        LayoutNode,
-        Point2D,
-        Size2D,
-    },
+    prelude::{Area, CursorPoint, LayoutNode, Point2D, Size2D},
     scaled::Scaled,
 };
 
@@ -44,9 +32,14 @@ impl RectElement {
         )
     }
 
-    fn border_path_corner_radius_offset(alignment: BorderAlignment, width_1: f32, width_2: f32) -> f32 {
-        if alignment == BorderAlignment::Inner {
-            return 0.0;
+    fn outer_border_path_corner_radius(
+        alignment: BorderAlignment,
+        corner_radius: f32,
+        width_1: f32,
+        width_2: f32,
+    ) -> f32 {
+        if alignment == BorderAlignment::Inner || corner_radius == 0.0 {
+            return corner_radius;
         }
 
         let mut offset = if width_1 == 0.0 {
@@ -61,12 +54,17 @@ impl RectElement {
             offset *= 0.5;
         }
 
-        offset
+        corner_radius + offset
     }
 
-    fn border_clip_path_corner_radius_offset(alignment: BorderAlignment, width_1: f32, width_2: f32) -> f32 {
-        if alignment == BorderAlignment::Outer {
-            return 0.0;
+    fn inner_border_path_corner_radius(
+        alignment: BorderAlignment,
+        corner_radius: f32,
+        width_1: f32,
+        width_2: f32,
+    ) -> f32 {
+        if alignment == BorderAlignment::Outer || corner_radius == 0.0 {
+            return corner_radius;
         }
 
         let mut offset = if width_1 == 0.0 {
@@ -81,151 +79,152 @@ impl RectElement {
             offset *= 0.5;
         }
 
-        -offset
+        corner_radius - offset
     }
 
-    /// Returns the outer path to draw to create a border.
+    /// Returns a `Path` that will draw a [`Border`] around a base rectangle.
+    ///
+    /// We don't use Skia's stroking API here, since we might need different widths for each side.
     fn border_path(base_rect: Rect, base_corner_radius: CornerRadius, border: &Border) -> Path {
         let border_alignment = border.alignment;
         let border_width = border.width;
-        let border_radius = CornerRadius {
-            top_left: base_corner_radius.top_left
-                + Self::border_path_corner_radius_offset(
-                    border_alignment,
-                    border_width.top,
-                    border_width.left,
-                ),
-            top_right: base_corner_radius.top_right
-                + Self::border_path_corner_radius_offset(
-                    border_alignment,
-                    border_width.top,
-                    border_width.right,
-                ),
-            bottom_left: base_corner_radius.bottom_left
-                + Self::border_path_corner_radius_offset(
-                    border_alignment,
-                    border_width.bottom,
-                    border_width.left,
-                ),
-            bottom_right: base_corner_radius.bottom_right
-                + Self::border_path_corner_radius_offset(
-                    border_alignment,
-                    border_width.bottom,
-                    border_width.right,
-                ),
-            smoothing: base_corner_radius.smoothing,
-        };
-
-        let alignment_scale = match border_alignment {
-            BorderAlignment::Outer => 1.0,
-            BorderAlignment::Center => 0.5,
-            BorderAlignment::Inner => 0.0,
-        };
 
         let mut path = Path::new();
-        let rrect = RRect::new_rect_radii(
-            {
-                let mut rect = base_rect;
+        path.set_fill_type(PathFillType::EvenOdd);
 
-                rect.left -= border_width.left * alignment_scale;
-                rect.top -= border_width.top * alignment_scale;
-                rect.right += border_width.right * alignment_scale;
-                rect.bottom += border_width.bottom * alignment_scale;
-
-                rect
-            },
-            &[
-                (border_radius.top_left, border_radius.top_left).into(),
-                (border_radius.top_right, border_radius.top_right).into(),
-                (border_radius.bottom_right, border_radius.bottom_right).into(),
-                (border_radius.bottom_left, border_radius.bottom_left).into(),
-            ],
-        );
-
-        if border_radius.smoothing > 0.0 {
-            path.add_path(
-                &border_radius.smoothed_path(rrect),
-                Point::new(rrect.rect().x(), rrect.rect().y()),
-                None,
-            );
-        } else {
-            path.add_rrect(rrect, None);
-        }
-
-        path
-    }
-
-    /// Returns the inner path to clip from the outer path to create a border.
-    fn border_clip_path(
-        base_rect: Rect,
-        base_corner_radius: CornerRadius,
-        border: &Border,
-    ) -> Path {
-        let border_alignment = border.alignment;
-        let border_width = border.width;
-        let border_radius = CornerRadius {
-            top_left: base_corner_radius.top_left
-                + Self::border_clip_path_corner_radius_offset(
+        // First we create a path that is outset from the rect by a certain amount on each side.
+        //
+        // Let's call this the outer border path.
+        {
+            // Calculuate the outer corner radius for the border.
+            let corner_radius = CornerRadius {
+                top_left: Self::outer_border_path_corner_radius(
                     border_alignment,
+                    base_corner_radius.top_left,
                     border_width.top,
                     border_width.left,
                 ),
-            top_right: base_corner_radius.top_right
-                + Self::border_clip_path_corner_radius_offset(
+                top_right: Self::outer_border_path_corner_radius(
                     border_alignment,
+                    base_corner_radius.top_right,
                     border_width.top,
                     border_width.right,
                 ),
-            bottom_left: base_corner_radius.bottom_left
-                + Self::border_clip_path_corner_radius_offset(
+                bottom_left: Self::outer_border_path_corner_radius(
                     border_alignment,
+                    base_corner_radius.bottom_left,
                     border_width.bottom,
                     border_width.left,
                 ),
-            bottom_right: base_corner_radius.bottom_right
-                + Self::border_clip_path_corner_radius_offset(
+                bottom_right: Self::outer_border_path_corner_radius(
                     border_alignment,
+                    base_corner_radius.bottom_right,
                     border_width.bottom,
                     border_width.right,
                 ),
-            smoothing: base_corner_radius.smoothing,
-        };
+                smoothing: base_corner_radius.smoothing,
+            };
 
-        let alignment_scale = match border_alignment {
-            BorderAlignment::Outer => 0.0,
-            BorderAlignment::Center => 0.5,
-            BorderAlignment::Inner => 1.0,
-        };
+            let rrect = RRect::new_rect_radii(
+                {
+                    let mut rect = base_rect;
+                    let alignment_scale = match border_alignment {
+                        BorderAlignment::Outer => 1.0,
+                        BorderAlignment::Center => 0.5,
+                        BorderAlignment::Inner => 0.0,
+                    };
 
-        let mut path = Path::new();
-        let rrect = RRect::new_rect_radii(
-            {
-                let mut rect = base_rect;
+                    rect.left -= border_width.left * alignment_scale;
+                    rect.top -= border_width.top * alignment_scale;
+                    rect.right += border_width.right * alignment_scale;
+                    rect.bottom += border_width.bottom * alignment_scale;
 
-                rect.left += border_width.left * alignment_scale;
-                rect.top += border_width.top * alignment_scale;
-                rect.right -= border_width.right * alignment_scale;
-                rect.bottom -= border_width.bottom * alignment_scale;
-
-                rect
-            },
-            &[
-                (border_radius.top_left, border_radius.top_left).into(),
-                (border_radius.top_right, border_radius.top_right).into(),
-                (border_radius.bottom_right, border_radius.bottom_right).into(),
-                (border_radius.bottom_left, border_radius.bottom_left).into(),
-            ],
-        );
-
-        if border_radius.smoothing > 0.0 {
-            path.add_path(
-                &border_radius.smoothed_path(rrect),
-                Point::new(rrect.rect().x(), rrect.rect().y()),
-                None,
+                    rect
+                },
+                &[
+                    (corner_radius.top_left, corner_radius.top_left).into(),
+                    (corner_radius.top_right, corner_radius.top_right).into(),
+                    (corner_radius.bottom_right, corner_radius.bottom_right).into(),
+                    (corner_radius.bottom_left, corner_radius.bottom_left).into(),
+                ],
             );
-        } else {
-            path.add_rrect(rrect, None);
+
+            if corner_radius.smoothing > 0.0 {
+                path.add_path(
+                    &corner_radius.smoothed_path(rrect),
+                    Point::new(rrect.rect().x(), rrect.rect().y()),
+                    None,
+                );
+            } else {
+                path.add_rrect(rrect, None);
+            }
         }
+
+        // After the outer path, we will then move to the inner bounds of the border.
+        {
+            // Calculuate the inner corner radius for the border.
+            let corner_radius = CornerRadius {
+                top_left: Self::inner_border_path_corner_radius(
+                    border_alignment,
+                    base_corner_radius.top_left,
+                    border_width.top,
+                    border_width.left,
+                ),
+                top_right: Self::inner_border_path_corner_radius(
+                    border_alignment,
+                    base_corner_radius.top_right,
+                    border_width.top,
+                    border_width.right,
+                ),
+                bottom_left: Self::inner_border_path_corner_radius(
+                    border_alignment,
+                    base_corner_radius.bottom_left,
+                    border_width.bottom,
+                    border_width.left,
+                ),
+                bottom_right: Self::inner_border_path_corner_radius(
+                    border_alignment,
+                    base_corner_radius.bottom_right,
+                    border_width.bottom,
+                    border_width.right,
+                ),
+                smoothing: base_corner_radius.smoothing,
+            };
+
+            let rrect = RRect::new_rect_radii(
+                {
+                    let mut rect = base_rect;
+                    let alignment_scale = match border_alignment {
+                        BorderAlignment::Outer => 0.0,
+                        BorderAlignment::Center => 0.5,
+                        BorderAlignment::Inner => 1.0,
+                    };
+
+                    rect.left += border_width.left * alignment_scale;
+                    rect.top += border_width.top * alignment_scale;
+                    rect.right -= border_width.right * alignment_scale;
+                    rect.bottom -= border_width.bottom * alignment_scale;
+
+                    rect
+                },
+                &[
+                    (corner_radius.top_left, corner_radius.top_left).into(),
+                    (corner_radius.top_right, corner_radius.top_right).into(),
+                    (corner_radius.bottom_right, corner_radius.bottom_right).into(),
+                    (corner_radius.bottom_left, corner_radius.bottom_left).into(),
+                ],
+            );
+
+            if corner_radius.smoothing > 0.0 {
+                path.add_path(
+                    &corner_radius.smoothed_path(rrect),
+                    Point::new(rrect.rect().x(), rrect.rect().y()),
+                    None,
+                );
+            } else {
+                path.add_rrect(rrect, None);
+            }
+        };
 
         path
     }
@@ -416,15 +415,10 @@ impl ElementUtils for RectElement {
                 }
             }
 
-            let border_path = Self::border_path(*rounded_rect.rect(), corner_radius, &border);
-
-            let border_clip_path =
-                Self::border_clip_path(*rounded_rect.rect(), corner_radius, &border);
-
-            canvas.save();
-            canvas.clip_path(&border_clip_path, ClipOp::Difference, true);
-            canvas.draw_path(&border_path, &border_paint);
-            canvas.restore();
+            canvas.draw_path(
+                &Self::border_path(*rounded_rect.rect(), corner_radius, &border),
+                &border_paint,
+            );
         }
 
         let references = node_ref.get::<ReferencesState>().unwrap();
