@@ -418,35 +418,36 @@ impl ElementUtils for RectElement {
         }
 
         // Borders
-        if node_style.border.is_visible() {
-            let mut border = node_style.border.clone();
-            border.scale(scale_factor);
+        for mut border in node_style.borders.clone().into_iter() {
+            if border.is_visible() {
+                border.scale(scale_factor);
 
-            // Create a new paint
-            let mut border_paint = paint.clone();
-            border_paint.set_anti_alias(true);
-            border_paint.set_style(PaintStyle::Fill);
-            match &node_style.border.fill {
-                Fill::Color(color) => {
-                    border_paint.set_color(*color);
+                // Create a new paint
+                let mut border_paint = paint.clone();
+                border_paint.set_anti_alias(true);
+                border_paint.set_style(PaintStyle::Fill);
+                match &border.fill {
+                    Fill::Color(color) => {
+                        border_paint.set_color(*color);
+                    }
+                    Fill::LinearGradient(gradient) => {
+                        border_paint.set_shader(gradient.into_shader(area));
+                    }
+                    Fill::RadialGradient(gradient) => {
+                        border_paint.set_shader(gradient.into_shader(area));
+                    }
+                    Fill::ConicGradient(gradient) => {
+                        border_paint.set_shader(gradient.into_shader(area));
+                    }
                 }
-                Fill::LinearGradient(gradient) => {
-                    border_paint.set_shader(gradient.into_shader(area));
-                }
-                Fill::RadialGradient(gradient) => {
-                    border_paint.set_shader(gradient.into_shader(area));
-                }
-                Fill::ConicGradient(gradient) => {
-                    border_paint.set_shader(gradient.into_shader(area));
-                }
-            }
 
-            match Self::border_shape(*rounded_rect.rect(), corner_radius, &border) {
-                BorderShape::DRRect(outer, inner) => {
-                    canvas.draw_drrect(outer, inner, &border_paint);
-                }
-                BorderShape::Path(path) => {
-                    canvas.draw_path(&path, &border_paint);
+                match Self::border_shape(*rounded_rect.rect(), corner_radius, &border) {
+                    BorderShape::DRRect(outer, inner) => {
+                        canvas.draw_drrect(outer, inner, &border_paint);
+                    }
+                    BorderShape::Path(path) => {
+                        canvas.draw_path(&path, &border_paint);
+                    }
                 }
             }
         }
@@ -468,8 +469,7 @@ impl ElementUtils for RectElement {
     fn element_needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
         let node_style = &*node_ref.get::<StyleState>().unwrap();
 
-        node_style.border.is_visible() && node_style.border.alignment != BorderAlignment::Inner
-            || !node_style.shadows.is_empty()
+        !node_style.borders.is_empty() || !node_style.shadows.is_empty()
     }
 
     fn element_drawing_area(
@@ -481,10 +481,7 @@ impl ElementUtils for RectElement {
         let node_style = &*node_ref.get::<StyleState>().unwrap();
         let mut area = layout_node.visible_area();
 
-        if !node_style.border.is_visible()
-            && node_style.border.alignment != BorderAlignment::Inner
-            && node_style.shadows.is_empty()
-        {
+        if node_style.borders.is_empty() && node_style.shadows.is_empty() {
             return area;
         }
 
@@ -557,22 +554,23 @@ impl ElementUtils for RectElement {
             }
         }
 
-        if node_style.border.is_visible() {
-            let mut border = node_style.border.clone();
-            border.scale(scale_factor);
+        for mut border in node_style.borders.clone().into_iter() {
+            if border.is_visible() {
+                border.scale(scale_factor);
 
-            let border_shape =
-                Self::border_shape(*rounded_rect.rect(), node_style.corner_radius, &border);
-            let border_bounds = match border_shape {
-                BorderShape::DRRect(ref outer, _) => outer.bounds(),
-                BorderShape::Path(ref path) => path.bounds(),
-            };
-            let border_area = Area::new(
-                Point2D::new(border_bounds.x(), border_bounds.y()),
-                Size2D::new(border_bounds.width(), border_bounds.height()),
-            );
+                let border_shape =
+                    Self::border_shape(*rounded_rect.rect(), node_style.corner_radius, &border);
+                let border_bounds = match border_shape {
+                    BorderShape::DRRect(ref outer, _) => outer.bounds(),
+                    BorderShape::Path(ref path) => path.bounds(),
+                };
+                let border_area = Area::new(
+                    Point2D::new(border_bounds.x(), border_bounds.y()),
+                    Size2D::new(border_bounds.width(), border_bounds.height()),
+                );
 
-            area = area.union(&border_area.round_out());
+                area = area.union(&border_area.round_out());
+            }
         }
 
         area
