@@ -412,7 +412,7 @@ impl ElementUtils for RectElement {
         for mut border in node_style.borders.clone().into_iter() {
             if border.is_visible() {
                 border.scale(scale_factor);
-    
+
                 // Create a new paint
                 let mut border_paint = paint.clone();
                 border_paint.set_anti_alias(true);
@@ -431,7 +431,7 @@ impl ElementUtils for RectElement {
                         border_paint.set_shader(gradient.into_shader(area));
                     }
                 }
-    
+
                 canvas.draw_path(
                     &Self::border_path(*rounded_rect.rect(), corner_radius, &border),
                     &border_paint,
@@ -544,16 +544,16 @@ impl ElementUtils for RectElement {
         for mut border in node_style.borders.clone().into_iter() {
             if border.is_visible() {
                 border.scale(scale_factor);
-    
+
                 let border_path =
                     Self::border_path(*rounded_rect.rect(), node_style.corner_radius, &border);
-    
+
                 let border_bounds = border_path.bounds();
                 let border_area = Area::new(
                     Point2D::new(border_bounds.x(), border_bounds.y()),
                     Size2D::new(border_bounds.width(), border_bounds.height()),
                 );
-    
+
                 area = area.union(&border_area.round_out());
             }
         }
