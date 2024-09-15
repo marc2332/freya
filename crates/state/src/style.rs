@@ -23,7 +23,6 @@ use crate::{
     parsing::ExtSplit,
     AttributesBytes,
     Border,
-    BorderAlignment,
     CornerRadius,
     CustomAttributeValues,
     Fill,
@@ -37,7 +36,7 @@ use crate::{
 #[derive(Default, Debug, Clone, PartialEq, Component)]
 pub struct StyleState {
     pub background: Fill,
-    pub border: Border,
+    pub borders: Vec<Border>,
     pub shadows: Vec<Shadow>,
     pub corner_radius: CornerRadius,
     pub image_data: Option<AttributesBytes>,
@@ -61,9 +60,10 @@ impl ParseAttribute for StyleState {
             }
             AttributeName::Border => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut border = Border::parse(value)?;
-                    border.alignment = self.border.alignment;
-                    self.border = border;
+                    self.borders = value
+                        .split_excluding_group(',', '(', ')')
+                        .map(|chunk| Border::parse(chunk).unwrap_or_default())
+                        .collect();
                 }
             }
             AttributeName::Shadow => {

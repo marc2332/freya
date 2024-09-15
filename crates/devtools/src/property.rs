@@ -195,7 +195,7 @@ pub fn BorderProperty(name: String, border: Border) -> Element {
                 text {
                     font_size: "15",
                     color: "rgb(252,181,172)",
-                    "{border.width} {border.style:?} {border.alignment:?}"
+                    "{border.width} {border.alignment:?}"
                 }
             }
             rect {
