@@ -4,14 +4,7 @@ use std::sync::{
 };
 
 use accesskit::{
-    Action,
-    Affine,
-    Node,
-    NodeId as AccessibilityId,
-    Rect,
-    TextDirection,
-    Tree,
-    TreeUpdate,
+    Action, Affine, Node, NodeBuilder, NodeId as AccessibilityId, Rect, Role, TextDirection, Tree, TreeUpdate
 };
 use freya_common::AccessibilityDirtyNodes;
 use freya_engine::prelude::{
@@ -176,10 +169,10 @@ impl AccessibilityTree {
             if let Some((node_accessibility_state, layout_node)) =
                 node_accessibility_state.as_ref().zip(layout_node)
             {
+                let accessibility_id = node_ref.get_accessibility_id().unwrap();
+                println!("{:?}", node_ref.node_type().tag());
                 let accessibility_node =
                     Self::create_node(&node_ref, layout_node, node_accessibility_state);
-
-                let accessibility_id = node_ref.get_accessibility_id().unwrap();
 
                 nodes.push((accessibility_id, accessibility_node));
             }
@@ -327,8 +320,18 @@ impl AccessibilityTree {
         let transform_state = &*node_ref.get::<TransformState>().unwrap();
         let node_type = node_ref.node_type();
 
-        // Safe to unwrap since we know that `node_accessibility.id.is_some()`.
-        let mut builder = node_accessibility.builder.clone().unwrap();
+        let mut builder = match node_type.tag() {
+            // Make the root accessibility node.
+            Some(&TagName::Root) => NodeBuilder::new(Role::Window),
+
+            // All other node types will either don't have a builder (but don't support
+            // accessibility attributes like with `text`) or have their builder made for
+            // them already.
+            Some(_) => node_accessibility.builder.clone().unwrap(),
+
+            // Tag-less nodes can't have accessibility state
+            None => unreachable!(),
+        };
 
         // Set children
         let children = node_ref.get_accessibility_children();
