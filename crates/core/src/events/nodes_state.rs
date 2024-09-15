@@ -116,9 +116,9 @@ impl NodesState {
                 layer,
             } in events
             {
-                match event {
+                match event.get_name() {
                     // Update hovered nodes state
-                    PlatformEvent::Mouse { name, .. } if name.can_change_hover_state() => {
+                    name if name.can_change_hover_state() => {
                         let is_hovered = hovered_nodes.contains_key(node_id);
 
                         // Mark the Node as hovered if it wasn't already
@@ -139,7 +139,7 @@ impl NodesState {
                     }
 
                     // Update pressed nodes state
-                    PlatformEvent::Mouse { name, .. } if name.can_change_press_state() => {
+                    name if name.can_change_press_state() => {
                         let is_pressed = pressed_nodes.contains_key(node_id);
 
                         // Mark the Node as pressed if it wasn't already
