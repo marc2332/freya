@@ -132,7 +132,7 @@ fn Home() -> Element {
                 cross_align: "center",
                 rect {
                     background: "rgb(19, 19, 21)",
-                    border: "1 solid rgb(41, 37, 36)",
+                    border: "1 inner rgb(41, 37, 36)",
                     corner_radius: "16",
                     width: "960",
                     height: "612",

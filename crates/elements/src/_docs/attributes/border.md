@@ -19,7 +19,7 @@ A solid, black border with a width of 2 pixels on every side. Border is aligned 
 fn app() -> Element {
     rsx!(
         rect {
-            border: "2 solid black",
+            border: "2 inner black",
             border_align: "inner"
         }
     )

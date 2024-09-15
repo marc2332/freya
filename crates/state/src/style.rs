@@ -66,11 +66,6 @@ impl ParseAttribute for StyleState {
                     self.border = border;
                 }
             }
-            AttributeName::BorderAlign => {
-                if let Some(value) = attr.value.as_text() {
-                    self.border.alignment = BorderAlignment::parse(value)?;
-                }
-            }
             AttributeName::Shadow => {
                 if let Some(value) = attr.value.as_text() {
                     self.shadows = value
@@ -139,7 +134,6 @@ impl State<CustomAttributeValues> for StyleState {
             AttributeName::Background,
             AttributeName::Layer,
             AttributeName::Border,
-            AttributeName::BorderAlign,
             AttributeName::Shadow,
             AttributeName::CornerRadius,
             AttributeName::CornerSmoothing,

@@ -85,7 +85,7 @@ pub fn Checkbox(
         ("transparent", unselected_fill.as_ref())
     };
     let border = if focus.is_selected() {
-        format!("4 solid {}", border_fill)
+        format!("4 outer {}", border_fill)
     } else {
         "none".to_string()
     };
@@ -95,7 +95,6 @@ pub fn Checkbox(
     rsx!(
         rect {
             border,
-            border_align: "outer",
             corner_radius: "4",
             rect {
                 a11y_id: focus.attribute(),
@@ -105,7 +104,7 @@ pub fn Checkbox(
                 main_align: "center",
                 cross_align: "center",
                 corner_radius: "4",
-                border: "2 solid {outer_fill}",
+                border: "2 inner {outer_fill}",
                 background: "{inner_fill}",
                 onkeydown,
                 if selected {

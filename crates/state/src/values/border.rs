@@ -10,27 +10,9 @@ use crate::{
     ParseError,
 };
 
-#[derive(Default, Clone, Copy, Debug, PartialEq)]
-pub enum BorderStyle {
-    #[default]
-    None,
-    Solid,
-}
-
-impl Parse for BorderStyle {
-    fn parse(value: &str) -> Result<Self, ParseError> {
-        Ok(match value {
-            "solid" => Self::Solid,
-            "none" => Self::None,
-            _ => return Err(ParseError),
-        })
-    }
-}
-
 #[derive(Default, Clone, Debug, PartialEq)]
 pub struct Border {
     pub fill: Fill,
-    pub style: BorderStyle,
     pub width: BorderWidth,
     pub alignment: BorderAlignment,
 }
@@ -43,7 +25,6 @@ impl Border {
             && self.width.bottom == 0.0
             && self.width.right == 0.0)
             && self.fill != Fill::Color(Color::TRANSPARENT)
-            && self.style != BorderStyle::None
     }
 }
 
@@ -103,15 +84,6 @@ impl fmt::Display for BorderAlignment {
     }
 }
 
-impl fmt::Display for BorderStyle {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(match self {
-            BorderStyle::Solid => "solid",
-            BorderStyle::None => "none",
-        })
-    }
-}
-
 impl Parse for Border {
     fn parse(value: &str) -> Result<Self, ParseError> {
         if value == "none" {
@@ -136,13 +108,9 @@ impl Parse for Border {
                         bottom: width,
                         right: width,
                     },
-                    style: match border_values.next().ok_or(ParseError)? {
-                        "solid" => BorderStyle::Solid,
-                        _ => BorderStyle::None,
-                    },
+                    alignment: BorderAlignment::parse(border_values.next().ok_or(ParseError)?)?,
                     fill: Fill::parse(&border_values.collect::<Vec<&str>>().join(" "))
                         .map_err(|_| ParseError)?,
-                    alignment: BorderAlignment::default(),
                 }
             }
 
@@ -166,10 +134,9 @@ impl Parse for Border {
                         bottom: vertical_width,
                         right: horizontal_width,
                     },
-                    style: BorderStyle::parse(border_values.next().ok_or(ParseError)?)?,
+                    alignment: BorderAlignment::parse(border_values.next().ok_or(ParseError)?)?,
                     fill: Fill::parse(&border_values.collect::<Vec<&str>>().join(" "))
                         .map_err(|_| ParseError)?,
-                    alignment: BorderAlignment::default(),
                 }
             }
             // <top> <horizontal> <bottom> <style> <fill>
@@ -197,10 +164,9 @@ impl Parse for Border {
                         bottom: bottom_width,
                         right: horizontal_width,
                     },
-                    style: BorderStyle::parse(border_values.next().ok_or(ParseError)?)?,
+                    alignment: BorderAlignment::parse(border_values.next().ok_or(ParseError)?)?,
                     fill: Fill::parse(&border_values.collect::<Vec<&str>>().join(" "))
                         .map_err(|_| ParseError)?,
-                    alignment: BorderAlignment::default(),
                 }
             }
             // <top> <right> <bottom> <left> <style> <fill>
@@ -227,10 +193,9 @@ impl Parse for Border {
                         .parse::<f32>()
                         .map_err(|_| ParseError)?,
                 },
-                style: BorderStyle::parse(border_values.next().ok_or(ParseError)?)?,
+                alignment: BorderAlignment::parse(border_values.next().ok_or(ParseError)?)?,
                 fill: Fill::parse(&border_values.collect::<Vec<&str>>().join(" "))
                     .map_err(|_| ParseError)?,
-                alignment: BorderAlignment::default(),
             },
             _ => return Err(ParseError),
         })
@@ -239,7 +204,7 @@ impl Parse for Border {
 
 impl fmt::Display for Border {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} {} {}", self.width, self.style, self.fill,)
+        write!(f, "{} {} {}", self.width, self.alignment, self.fill,)
     }
 }
 
