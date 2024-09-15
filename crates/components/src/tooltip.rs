@@ -32,7 +32,7 @@ pub fn Tooltip(TooltipProps { url, theme }: TooltipProps) -> Element {
         rect {
             padding: "4 10",
             shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
-            border: "1 solid {border_fill}",
+            border: "1 inner {border_fill}",
             corner_radius: "10",
             background: "{background}",
             main_align: "center",

@@ -10,7 +10,7 @@ You can add a border to an element using the `border` and `border_align` attribu
 fn app() -> Element {
     rsx!(
         rect {
-            border: "2 solid black",
+            border: "2 inner black",
             border_align: "inner"
         }
     )

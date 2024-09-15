@@ -164,9 +164,9 @@ pub fn Button(
         ButtonStatus::Idle => background,
     };
     let border = if focus.is_selected() {
-        format!("2 solid {focus_border_fill}")
+        format!("2 inner {focus_border_fill}")
     } else {
-        format!("1 solid {border_fill}")
+        format!("1 inner {border_fill}")
     };
 
     rsx!(

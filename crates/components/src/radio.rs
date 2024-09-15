@@ -67,7 +67,7 @@ pub fn Radio(
         rect {
             width: "18",
             height: "18",
-            border: "2 solid {fill}",
+            border: "2 inner {fill}",
             padding: "4",
             main_align: "center",
             cross_align: "center",

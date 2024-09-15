@@ -87,7 +87,7 @@ pub fn Checkbox(
             main_align: "center",
             cross_align: "center",
             corner_radius: "4",
-            border: "2 solid {border}",
+            border: "2 inner {border}",
             background: "{fill}",
             if selected {
                 TickIcon {

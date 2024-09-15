@@ -164,7 +164,7 @@ pub fn Slider(
 
     let inner_width = (size.area.width() - 15.0) * (value / 100.0) as f32;
     let border = if focus.is_selected() {
-        format!("2 solid {}", theme.border_fill)
+        format!("2 inner {}", theme.border_fill)
     } else {
         "none".to_string()
     };

@@ -59,8 +59,7 @@ pub fn ProgressBar(
                 background: "{background}",
                 font_size: "13",
                 direction: "horizontal",
-                border: "1 solid {background}",
-                border_align: "outer",
+                border: "1 outer {background}",
                 rect {
                     corner_radius: "999",
                     width: "{progress}%",
