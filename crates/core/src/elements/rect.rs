@@ -450,7 +450,6 @@ impl ElementUtils for RectElement {
                     }
                 }
             }
-
         }
 
         let references = node_ref.get::<ReferencesState>().unwrap();
@@ -559,16 +558,16 @@ impl ElementUtils for RectElement {
             if border.is_visible() {
                 border.scale(scale_factor);
 
-            let border_shape =
-                Self::border_shape(*rounded_rect.rect(), node_style.corner_radius, &border);
-            let border_bounds = match border_shape {
-                BorderShape::DRRect(ref outer, _) => outer.bounds(),
-                BorderShape::Path(ref path) => path.bounds(),
-            };
-            let border_area = Area::new(
-                Point2D::new(border_bounds.x(), border_bounds.y()),
-                Size2D::new(border_bounds.width(), border_bounds.height()),
-            );
+                let border_shape =
+                    Self::border_shape(*rounded_rect.rect(), node_style.corner_radius, &border);
+                let border_bounds = match border_shape {
+                    BorderShape::DRRect(ref outer, _) => outer.bounds(),
+                    BorderShape::Path(ref path) => path.bounds(),
+                };
+                let border_area = Area::new(
+                    Point2D::new(border_bounds.x(), border_bounds.y()),
+                    Size2D::new(border_bounds.width(), border_bounds.height()),
+                );
 
                 area = area.union(&border_area.round_out());
             }
