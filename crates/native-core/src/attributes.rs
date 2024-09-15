@@ -62,8 +62,10 @@ pub enum AttributeName {
     SvgData,
     SvgContent,
     Spacing,
-    Focus,
-    AutoFocus,
+
+    // Focus
+    A11yId,
+    A11yAutoFocus,
 
     // Some internal notes about these accessibility attributes:
     //
@@ -280,8 +282,8 @@ impl FromStr for AttributeName {
             "svg_data" => Ok(AttributeName::SvgData),
             "svg_content" => Ok(AttributeName::SvgContent),
             "spacing" => Ok(AttributeName::Spacing),
-            "a11y_id" => Ok(AttributeName::Focus),
-            "a11y_auto_focus" => Ok(AttributeName::AutoFocus),
+            "a11y_id" => Ok(AttributeName::A11yId),
+            "a11y_auto_focus" => Ok(AttributeName::A11yAutoFocus),
             "a11y_name" => Ok(AttributeName::A11yName),
             "a11y_description" => Ok(AttributeName::A11yDescription),
             "a11y_value" => Ok(AttributeName::A11yValue),

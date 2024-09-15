@@ -224,12 +224,12 @@ mod test {
                 rect {
                     a11y_id: focus_1.attribute(),
                     a11y_role: "genericContainer",
-                    auto_focus: "true",
+                    a11y_auto_focus: "true",
                 }
                 rect {
                     a11y_id: focus_2.attribute(),
                     a11y_role: "genericContainer",
-                    auto_focus: "true",
+                    a11y_auto_focus: "true",
                 }
             )
         }

@@ -36,7 +36,7 @@ impl ParseAttribute for AccessibilityNodeState {
         attr: freya_native_core::prelude::OwnedAttributeView<CustomAttributeValues>,
     ) -> Result<(), crate::ParseError> {
         match attr.attribute {
-            AttributeName::Focus => {
+            AttributeName::A11yId => {
                 if let OwnedAttributeValue::Custom(CustomAttributeValues::AccessibilityId(id)) =
                     attr.value
                 {
@@ -46,7 +46,7 @@ impl ParseAttribute for AccessibilityNodeState {
                     }
                 }
             }
-            AttributeName::AutoFocus => {
+            AttributeName::A11yAutoFocus => {
                 if let OwnedAttributeValue::Text(attr) = attr.value {
                     self.auto_focus = attr.parse().unwrap_or_default()
                 }
@@ -287,10 +287,10 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
 
     type NodeDependencies = ();
 
-    const NODE_MASK: NodeMaskBuilder<'static> =
-        NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
-            AttributeName::Focus,
-            AttributeName::AutoFocus,
+    const NODE_MASK: NodeMaskBuilder<'static> = NodeMaskBuilder::new()
+        .with_attrs(AttributeMaskBuilder::Some(&[
+            AttributeName::A11yId,
+            AttributeName::A11yAutoFocus,
             AttributeName::A11yName,
             AttributeName::A11yDescription,
             AttributeName::A11yValue,
@@ -356,7 +356,8 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
             AttributeName::A11yHasPopup,
             AttributeName::A11yListStyle,
             AttributeName::A11yVerticalOffset,
-        ]));
+        ]))
+        .with_tag();
 
     fn update<'a>(
         &mut self,
