@@ -252,7 +252,7 @@ fn measure_dom_events(
                         true
                     };
 
-                    let allowed_event = nodes_state.is_event_allowed(event, node_id);
+                    let allowed_event = nodes_state.is_event_allowed(collateral_event, node_id);
 
                     if valid_node && allowed_event {
                         let mut valid_event = event.clone();
