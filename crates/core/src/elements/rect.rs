@@ -44,28 +44,44 @@ impl RectElement {
         )
     }
 
-    /// Given a base corner radius and two border widths intersecting
-    /// at a given corner, calculate the offset from the base corner
-    /// radius required to reach the border rect's corner radius.
-    fn border_corner_radius_offset(alignment: BorderAlignment, width_1: f32, width_2: f32) -> f32 {
-        match alignment {
-            BorderAlignment::Inner => 0.0,
-            BorderAlignment::Center | BorderAlignment::Outer => {
-                let mut offset = if width_1 == 0.0 {
-                    width_2
-                } else if width_2 == 0.0 {
-                    width_1
-                } else {
-                    width_1.min(width_2)
-                };
-
-                if alignment == BorderAlignment::Center {
-                    offset *= 0.5;
-                }
-
-                offset
-            }
+    fn border_path_corner_radius_offset(alignment: BorderAlignment, width_1: f32, width_2: f32) -> f32 {
+        if alignment == BorderAlignment::Inner {
+            return 0.0;
         }
+
+        let mut offset = if width_1 == 0.0 {
+            width_2
+        } else if width_2 == 0.0 {
+            width_1
+        } else {
+            width_1.min(width_2)
+        };
+
+        if alignment == BorderAlignment::Center {
+            offset *= 0.5;
+        }
+
+        offset
+    }
+
+    fn border_clip_path_corner_radius_offset(alignment: BorderAlignment, width_1: f32, width_2: f32) -> f32 {
+        if alignment == BorderAlignment::Outer {
+            return 0.0;
+        }
+
+        let mut offset = if width_1 == 0.0 {
+            width_2
+        } else if width_2 == 0.0 {
+            width_1
+        } else {
+            width_1.min(width_2)
+        };
+
+        if alignment == BorderAlignment::Center {
+            offset *= 0.5;
+        }
+
+        -offset
     }
 
     /// Returns the outer path to draw to create a border.
@@ -74,25 +90,25 @@ impl RectElement {
         let border_width = border.width;
         let border_radius = CornerRadius {
             top_left: base_corner_radius.top_left
-                + Self::border_corner_radius_offset(
+                + Self::border_path_corner_radius_offset(
                     border_alignment,
                     border_width.top,
                     border_width.left,
                 ),
             top_right: base_corner_radius.top_right
-                + Self::border_corner_radius_offset(
+                + Self::border_path_corner_radius_offset(
                     border_alignment,
                     border_width.top,
                     border_width.right,
                 ),
             bottom_left: base_corner_radius.bottom_left
-                + Self::border_corner_radius_offset(
+                + Self::border_path_corner_radius_offset(
                     border_alignment,
                     border_width.bottom,
                     border_width.left,
                 ),
             bottom_right: base_corner_radius.bottom_right
-                + Self::border_corner_radius_offset(
+                + Self::border_path_corner_radius_offset(
                     border_alignment,
                     border_width.bottom,
                     border_width.right,
@@ -149,25 +165,25 @@ impl RectElement {
         let border_width = border.width;
         let border_radius = CornerRadius {
             top_left: base_corner_radius.top_left
-                - Self::border_corner_radius_offset(
+                + Self::border_clip_path_corner_radius_offset(
                     border_alignment,
                     border_width.top,
                     border_width.left,
                 ),
             top_right: base_corner_radius.top_right
-                - Self::border_corner_radius_offset(
+                + Self::border_clip_path_corner_radius_offset(
                     border_alignment,
                     border_width.top,
                     border_width.right,
                 ),
             bottom_left: base_corner_radius.bottom_left
-                - Self::border_corner_radius_offset(
+                + Self::border_clip_path_corner_radius_offset(
                     border_alignment,
                     border_width.bottom,
                     border_width.left,
                 ),
             bottom_right: base_corner_radius.bottom_right
-                - Self::border_corner_radius_offset(
+                + Self::border_clip_path_corner_radius_offset(
                     border_alignment,
                     border_width.bottom,
                     border_width.right,
