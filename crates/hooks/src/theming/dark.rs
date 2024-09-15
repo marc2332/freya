@@ -157,6 +157,7 @@ pub const DARK_THEME: Theme = Theme {
     radio: RadioTheme {
         unselected_fill: cow_borrowed!("rgb(245, 245, 245)"),
         selected_fill: cow_borrowed!("rgb(202, 193, 227)"),
+        border_fill: cow_borrowed!("rgb(103, 80, 164)"),
     },
     checkbox: CheckboxTheme {
         unselected_fill: cow_borrowed!("rgb(245, 245, 245)"),
