@@ -1333,6 +1333,10 @@ impl Path {
     pub fn offset(&mut self, _d: impl Into<Point>) -> &mut Self {
         unimplemented!("This is mocked")
     }
+
+    pub fn set_fill_type(&mut self, _ft: PathFillType) -> &mut Self {
+        unimplemented!("This is mocked")
+    }
 }
 
 #[repr(i32)]
