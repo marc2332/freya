@@ -77,7 +77,6 @@ pub use skia_safe::{
     Paint,
     PaintStyle,
     Path,
-    PathFillType,
     PathDirection,
     PathFillType,
     Point,
