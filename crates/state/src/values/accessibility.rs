@@ -1,7 +1,21 @@
+use accesskit::{
+    AriaCurrent,
+    AutoComplete,
+    DefaultActionVerb,
+    HasPopup,
+    Invalid,
+    ListStyle,
+    Live,
+    Orientation,
+    SortDirection,
+    Toggled,
+    VerticalOffset,
+};
 
-use accesskit::{AriaCurrent, AutoComplete, DefaultActionVerb, HasPopup, Invalid, ListStyle, Live, Orientation, SortDirection, Toggled, VerticalOffset};
-
-use crate::{Parse, ParseError};
+use crate::{
+    Parse,
+    ParseError,
+};
 
 impl Parse for Invalid {
     fn parse(value: &str) -> Result<Self, ParseError> {
@@ -129,7 +143,6 @@ impl Parse for ListStyle {
     }
 }
 
-
 impl Parse for VerticalOffset {
     fn parse(value: &str) -> Result<Self, ParseError> {
         Ok(match value {
@@ -139,4 +152,3 @@ impl Parse for VerticalOffset {
         })
     }
 }
-

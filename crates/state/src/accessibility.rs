@@ -1,23 +1,52 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{
+    Arc,
+    Mutex,
+};
 
 use accesskit::{
-    AriaCurrent, AutoComplete, DefaultActionVerb, HasPopup, Invalid, ListStyle, Live, NodeBuilder,
-    NodeId as AccessibilityId, Orientation, Role, SortDirection, Toggled, VerticalOffset,
+    AriaCurrent,
+    AutoComplete,
+    DefaultActionVerb,
+    HasPopup,
+    Invalid,
+    ListStyle,
+    Live,
+    NodeBuilder,
+    NodeId as AccessibilityId,
+    Orientation,
+    Role,
+    SortDirection,
+    Toggled,
+    VerticalOffset,
 };
-use freya_common::{AccessibilityDirtyNodes, AccessibilityGenerator};
+use freya_common::{
+    AccessibilityDirtyNodes,
+    AccessibilityGenerator,
+};
 use freya_engine::prelude::Color;
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
     node::OwnedAttributeValue,
     node_ref::NodeView,
-    prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
+    prelude::{
+        AttributeMaskBuilder,
+        Dependancy,
+        NodeMaskBuilder,
+        State,
+    },
     tags::TagName,
-    NodeId, SendAnyMap,
+    NodeId,
+    SendAnyMap,
 };
 use freya_native_core_macro::partial_derive_state;
 
-use crate::{CustomAttributeValues, Parse, ParseAttribute, ParseError};
+use crate::{
+    CustomAttributeValues,
+    Parse,
+    ParseAttribute,
+    ParseError,
+};
 
 #[derive(Clone, Debug, PartialEq, Default, Component)]
 pub struct AccessibilityNodeState {
@@ -138,7 +167,7 @@ impl ParseAttribute for AccessibilityNodeState {
                                 builder.set_position_in_set(attr.parse().map_err(|_| ParseError)?)
                             }
                             AttributeName::A11yColorValue => {
-                                let color = Color::parse(&attr)?;
+                                let color = Color::parse(attr)?;
                                 builder.set_color_value(
                                     ((color.a() as u32) << 24)
                                         | ((color.b() as u32) << 16)
