@@ -1041,6 +1041,15 @@ impl Canvas {
         unimplemented!("This is mocked")
     }
 
+    pub fn draw_drrect(
+        &self,
+        outer: impl AsRef<RRect>,
+        inner: impl AsRef<RRect>,
+        paint: &Paint,
+    ) -> &Self {
+        unimplemented!("This is mocked")
+    }
+
     pub fn draw_path(&self, _path: &Path, _paint: &Paint) -> &Self {
         unimplemented!("This is mocked")
     }
@@ -1362,6 +1371,10 @@ impl RRect {
     }
 
     pub fn rect(&self) -> &Rect {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn bounds(&self) -> &Rect {
         unimplemented!("This is mocked")
     }
 
