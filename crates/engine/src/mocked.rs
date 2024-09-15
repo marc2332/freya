@@ -1400,6 +1400,15 @@ pub enum Corner {
 
 #[repr(i32)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum PathFillType {
+    Winding = 0,
+    EvenOdd = 1,
+    InverseWinding = 2,
+    InverseEvenOdd = 3,
+}
+
+#[repr(i32)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum PathDirection {
     CW = 0,
     CCW = 1,
