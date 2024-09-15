@@ -20,27 +20,14 @@ fn app() -> Element {
             direction: "horizontal",
             padding: "14",
             border: "3 inner rgb(242, 76, 61)",
-            rect {
-                width: "80",
-                height: "80",
-                corner_radius: "20",
-                background: "rgb(0, 0, 0)",
-                border: "1 inner rgb(242, 151, 39)",
-            }
+            main_align: "center",
+            cross_align: "center",
             rect {
                 width: "80",
                 height: "80",
                 corner_radius: "2",
                 background: "rgb(0, 0, 0)",
-                border: "2 outer green",
-                margin: "8"
-            }
-            rect {
-                width: "80",
-                height: "80",
-                corner_radius: "2",
-                background: "rgb(0, 0, 0)",
-                border: "8 center rgb(34, 166, 153)",
+                border: "6 outer red, 5 outer orange, 4 outer yellow, 3 outer green, 2 outer blue, 1 outer purple",
                 margin: "8"
             }
         }
