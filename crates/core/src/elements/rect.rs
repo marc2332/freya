@@ -443,7 +443,7 @@ impl ElementUtils for RectElement {
 
             match Self::border_shape(*rounded_rect.rect(), corner_radius, &border) {
                 BorderShape::DRRect(outer, inner) => {
-                    canvas.draw_drrect(&outer, &inner, &border_paint);
+                    canvas.draw_drrect(outer, inner, &border_paint);
                 }
                 BorderShape::Path(path) => {
                     canvas.draw_path(&path, &border_paint);
