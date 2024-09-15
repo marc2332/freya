@@ -39,3 +39,17 @@ fn app() -> Element {
     )
 }
 ```
+
+Same as above, but with different border widths on each side.
+
+```rust, no_run
+# use freya::prelude::*;
+fn app() -> Element {
+    rsx!(
+        rect {
+            border: "1 2 3 4 solid black",
+            border_align: "inner"
+        }
+    )
+}
+```
