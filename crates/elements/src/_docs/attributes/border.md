@@ -3,13 +3,13 @@
 You can add borders to an element using the `border` attribute.
 - `border` syntax: `[width] [width?] [width?] [width?] <inner | outer | center> [fill]`.
 
-1-4 width values can be provided with the `border` attribute. Widths will be applied to different sides of a `rect` depending on the number of values:
-- One value: `[all]`
-- Two values: `[vertical]` `[horizontal]`
-- Three values: `[top]` `[horizontal]` `[bottom]`
-- Four values: `[top]` `[right]` `[bottom]` `[left]`
+1-4 width values should be provided with the `border` attribute. Widths will be applied to different sides of a `rect` depending on the number of values provided:
+- One value: `all`
+- Two values: `vertical`, `horizontal`
+- Three values: `top` `horizontal` `bottom`
+- Four values: `top` `right` `bottom` `left`
 
-*Border alignment* determines how the border is positioned on the element's edge. Alignment can be `inner`, `outer`, or `center`.
+*Border alignment* determines how the border is positioned relative to the element's edge. Alignment can be `inner`, `outer`, or `center`.
 
 ### Examples
 
@@ -26,7 +26,7 @@ fn app() -> Element {
 }
 ```
 
-A solid, red border with a width of 2 pixels on every side. Border is aligned to the center of the rect's edge.
+A solid, red border with different widths on each side. Border is aligned to the center of the rect's edge.
 
 ```rust, no_run
 # use freya::prelude::*;
