@@ -24,7 +24,7 @@ pub struct AccessibilityNodeState {
     pub closest_accessibility_node_id: Option<NodeId>,
     pub descencent_accessibility_ids: Vec<AccessibilityId>,
     pub node_id: NodeId,
-    pub focusable: bool,
+    pub is_focusable: bool,
     pub auto_focus: bool,
     pub a11y_id: Option<AccessibilityId>,
     pub builder: Option<NodeBuilder>,
@@ -41,7 +41,7 @@ impl ParseAttribute for AccessibilityNodeState {
                     attr.value
                 {
                     if self.builder.is_some() {
-                        self.focusable = true;
+                        self.is_focusable = true;
                         self.a11y_id = Some(*id);
                     }
                 }

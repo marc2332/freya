@@ -87,7 +87,6 @@ pub fn Tile(
             onclick,
             onmouseenter,
             onmouseleave,
-            focus: focus.attribute(),
             direction: "horizontal",
             padding: "{padding}",
             cross_align: "center",

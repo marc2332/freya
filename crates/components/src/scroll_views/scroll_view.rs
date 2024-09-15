@@ -368,6 +368,8 @@ pub fn ScrollView(
         .map(|f| f.0 == Axis::Y)
         .unwrap_or_default();
 
+    let a11y_id = focus.attribute();
+
     rsx!(
         rect {
             a11y_role:"scrollView",
@@ -379,7 +381,7 @@ pub fn ScrollView(
             onglobalmousemove: onmousemove,
             onglobalkeydown,
             onglobalkeyup,
-            focus: focus.attribute(),
+            a11y_id,
             rect {
                 direction: "vertical",
                 width: "{container_width}",
