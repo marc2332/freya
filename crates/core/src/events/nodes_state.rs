@@ -15,7 +15,7 @@ use crate::{
     },
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct NodeMetadata {
     layer: Option<i16>,
 }
@@ -31,7 +31,7 @@ impl NodesState {
     /// Given the current state, event, and NodeID check if it is allowed to be emitted
     /// For example, it will not make sense to emit a Click event on an element that was not pressed before.
     pub fn is_event_allowed(&self, event: &PlatformEvent, node_id: &NodeId) -> bool {
-        if event.get_name().is_click() {
+        if event.get_name().is_pressed() {
             self.pressed_nodes.contains_key(node_id)
         } else {
             true

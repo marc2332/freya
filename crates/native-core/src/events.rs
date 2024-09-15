@@ -250,8 +250,8 @@ impl EventName {
         )
     }
 
-    /// Check if the event was a click
-    pub fn is_click(&self) -> bool {
-        matches!(&self, Self::Click)
+    /// Check if the event was pressed
+    pub fn is_pressed(&self) -> bool {
+        matches!(&self, Self::Click | Self::PointerUp | Self::MouseUp)
     }
 }
