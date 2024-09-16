@@ -166,9 +166,10 @@ impl EventName {
         events.push(*self);
 
         match self {
-            Self::MouseMove | Self::TouchMove => {
+            Self::MouseMove => {
                 events.extend([Self::MouseEnter, Self::PointerEnter, Self::PointerOver])
             }
+            Self::TouchMove => events.extend([Self::PointerEnter, Self::PointerOver]),
             Self::MouseDown | Self::TouchStart => events.push(Self::PointerDown),
             Self::MouseUp | Self::MiddleClick | Self::RightClick | Self::TouchEnd => {
                 events.extend([Self::Click, Self::PointerUp])
@@ -239,19 +240,25 @@ impl EventName {
 
     /// Check if this event can change the press state of a Node.
     pub fn can_change_press_state(&self) -> bool {
-        matches!(self, Self::MouseDown | Self::PointerDown)
+        matches!(self, Self::MouseDown | Self::TouchStart | Self::PointerDown)
     }
 
     /// Check if the event means the cursor started or released a click
     pub fn was_cursor_pressed_or_released(&self) -> bool {
         matches!(
             &self,
-            Self::MouseDown | Self::PointerDown | Self::MouseUp | Self::Click | Self::PointerUp
+            Self::MouseDown
+                | Self::PointerDown
+                | Self::MouseUp
+                | Self::Click
+                | Self::PointerUp
+                | Self::TouchStart
+                | Self::TouchEnd
         )
     }
 
-    /// Check if the event was a click
-    pub fn is_click(&self) -> bool {
+    /// Check if the event was pressed
+    pub fn is_pressed(&self) -> bool {
         matches!(&self, Self::Click)
     }
 }

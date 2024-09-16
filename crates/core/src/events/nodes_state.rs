@@ -15,7 +15,7 @@ use crate::{
     },
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct NodeMetadata {
     layer: Option<i16>,
 }
@@ -30,8 +30,8 @@ pub struct NodesState {
 impl NodesState {
     /// Given the current state, event, and NodeID check if it is allowed to be emitted
     /// For example, it will not make sense to emit a Click event on an element that was not pressed before.
-    pub fn is_event_allowed(&self, event: &PlatformEvent, node_id: &NodeId) -> bool {
-        if event.get_name().is_click() {
+    pub fn is_event_allowed(&self, event_name: EventName, node_id: &NodeId) -> bool {
+        if event_name.is_pressed() {
             self.pressed_nodes.contains_key(node_id)
         } else {
             true
@@ -116,9 +116,9 @@ impl NodesState {
                 layer,
             } in events
             {
-                match event {
+                match event.get_name() {
                     // Update hovered nodes state
-                    PlatformEvent::Mouse { name, .. } if name.can_change_hover_state() => {
+                    name if name.can_change_hover_state() => {
                         let is_hovered = hovered_nodes.contains_key(node_id);
 
                         // Mark the Node as hovered if it wasn't already
@@ -139,7 +139,7 @@ impl NodesState {
                     }
 
                     // Update pressed nodes state
-                    PlatformEvent::Mouse { name, .. } if name.can_change_press_state() => {
+                    name if name.can_change_press_state() => {
                         let is_pressed = pressed_nodes.contains_key(node_id);
 
                         // Mark the Node as pressed if it wasn't already
