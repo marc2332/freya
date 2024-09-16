@@ -166,9 +166,10 @@ impl EventName {
         events.push(*self);
 
         match self {
-            Self::MouseMove | Self::TouchMove => {
+            Self::MouseMove => {
                 events.extend([Self::MouseEnter, Self::PointerEnter, Self::PointerOver])
             }
+            Self::TouchMove => events.extend([Self::PointerEnter, Self::PointerOver]),
             Self::MouseDown | Self::TouchStart => events.push(Self::PointerDown),
             Self::MouseUp | Self::MiddleClick | Self::RightClick | Self::TouchEnd => {
                 events.extend([Self::Click, Self::PointerUp])
