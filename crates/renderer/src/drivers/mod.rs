@@ -6,7 +6,6 @@ pub use metal::*;
 
 use freya_engine::prelude::Surface as SkiaSurface;
 use glutin::surface::GlSurface;
-use metal::MetalDriver;
 use winit::{
     dpi::PhysicalSize,
     event_loop::ActiveEventLoop,
@@ -26,8 +25,14 @@ impl GraphicsDriver {
         window_attributes: WindowAttributes,
         config: &LaunchConfig<State>,
     ) -> (Self, Window, SkiaSurface) {
-        let (driver, window, surface) = OpenGLDriver::new(event_loop, window_attributes, config);
-        (Self::OpenGl(driver), window, surface)
+        if cfg!(not(target_os = "macos")) {
+            let (driver, window, surface) =
+                OpenGLDriver::new(event_loop, window_attributes, config);
+            (Self::OpenGl(driver), window, surface)
+        } else {
+            let (driver, window, surface) = MetalDriver::new(event_loop, window_attributes, config);
+            (Self::Metal(driver), window, surface)
+        }
     }
 
     pub fn make_current(&mut self) {

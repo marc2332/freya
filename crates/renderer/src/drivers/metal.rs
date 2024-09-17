@@ -21,7 +21,6 @@ pub struct MetalDriver {
     pub(crate) gr_context: DirectContext,
     pub(crate) metal_layer: MetalLayer,
     pub(crate) command_queue: CommandQueue,
-    pub(crate) scale_factor: f64,
 }
 
 impl MetalDriver {
@@ -101,7 +100,6 @@ impl MetalDriver {
             gr_context,
             metal_layer,
             command_queue,
-            scale_factor,
         };
 
         (driver, window, skia_surface)
