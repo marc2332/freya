@@ -4,52 +4,28 @@ use dioxus_core::VirtualDom;
 use freya_core::{
     accessibility::AccessibilityFocusStrategy,
     dom::SafeDOM,
-    events::{
-        EventName,
-        PlatformEvent,
-    },
-    prelude::{
-        EventMessage,
-        NavigationMode,
-    },
+    events::{EventName, PlatformEvent},
+    prelude::{EventMessage, NavigationMode},
 };
 use freya_elements::events::{
-    map_winit_key,
-    map_winit_modifiers,
-    map_winit_physical_key,
-    Code,
-    Key,
+    map_winit_key, map_winit_modifiers, map_winit_physical_key, Code, Key,
 };
+use objc::rc::autoreleasepool;
 use torin::geometry::CursorPoint;
 use winit::{
     application::ApplicationHandler,
     event::{
-        ElementState,
-        Ime,
-        KeyEvent,
-        MouseButton,
-        MouseScrollDelta,
-        StartCause,
-        Touch,
-        TouchPhase,
+        ElementState, Ime, KeyEvent, MouseButton, MouseScrollDelta, StartCause, Touch, TouchPhase,
         WindowEvent,
     },
-    event_loop::{
-        EventLoop,
-        EventLoopProxy,
-    },
+    event_loop::{EventLoop, EventLoopProxy},
     keyboard::ModifiersState,
 };
 
 use crate::{
     devtools::Devtools,
-    window_state::{
-        CreatedState,
-        NotCreatedState,
-        WindowState,
-    },
-    HoveredNode,
-    LaunchConfig,
+    window_state::{CreatedState, NotCreatedState, WindowState},
+    HoveredNode, LaunchConfig,
 };
 
 const WHEEL_SPEED_MODIFIER: f32 = 53.0;
@@ -96,7 +72,13 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
         let mut desktop_renderer =
             DesktopRenderer::new(vdom, sdom, config, devtools, hovered_node, proxy);
 
+        #[cfg(not(target_os = "macos"))]
         event_loop.run_app(&mut desktop_renderer).unwrap();
+
+        #[cfg(target_os = "macos")]
+        autoreleasepool(|| {
+            event_loop.run_app(&mut desktop_renderer).unwrap();
+        });
     }
 
     pub fn new(
