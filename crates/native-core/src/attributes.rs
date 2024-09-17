@@ -122,6 +122,7 @@ impl FromStr for AttributeName {
             "a11y_role" => Ok(AttributeName::A11YRole),
             "a11y_id" => Ok(AttributeName::A11YId),
             "a11y_alt" => Ok(AttributeName::A11YAlt),
+            "a11y_focusable" => Ok(AttributeName::A11YFocusable),
             "canvas_reference" => Ok(AttributeName::CanvasReference),
             "layer" => Ok(AttributeName::Layer),
             "offset_y" => Ok(AttributeName::OffsetY),

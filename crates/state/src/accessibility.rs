@@ -29,6 +29,8 @@ use freya_native_core_macro::partial_derive_state;
 
 use crate::{
     CustomAttributeValues,
+    Focusable,
+    Parse,
     ParseAttribute,
     ParseError,
 };
@@ -43,7 +45,7 @@ pub struct AccessibilityNodeState {
     pub a11y_alt: Option<String>,
     pub a11y_name: Option<String>,
     pub a11y_auto_focus: bool,
-    pub is_focusable: bool,
+    pub a11y_focusable: Focusable,
 }
 
 impl ParseAttribute for AccessibilityNodeState {
@@ -57,6 +59,11 @@ impl ParseAttribute for AccessibilityNodeState {
                     attr.value
                 {
                     self.a11y_id = Some(*id);
+
+                    // Enable focus on nodes that pass a custom a11y id
+                    if self.a11y_focusable.is_unknown() {
+                        self.a11y_focusable = Focusable::Enabled;
+                    }
                 }
             }
             AttributeName::A11YRole => {
@@ -80,6 +87,11 @@ impl ParseAttribute for AccessibilityNodeState {
             AttributeName::A11YAutoFocus => {
                 if let OwnedAttributeValue::Text(attr) = attr.value {
                     self.a11y_auto_focus = attr.parse().unwrap_or_default()
+                }
+            }
+            AttributeName::A11YFocusable => {
+                if let OwnedAttributeValue::Text(attr) = attr.value {
+                    self.a11y_focusable = Focusable::parse(attr)?;
                 }
             }
             _ => {}
@@ -122,7 +134,6 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
         let mut accessibility = AccessibilityNodeState {
             node_id: node_view.node_id(),
             a11y_id: self.a11y_id,
-            is_focusable: self.is_focusable,
             ..Default::default()
         };
 
@@ -160,10 +171,6 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
         *self = accessibility;
 
         if changed {
-            if !had_id && self.a11y_id.is_some() {
-                self.is_focusable = true;
-            }
-
             // Assign an accessibility ID if none was passed but the node has a role
             if self.a11y_id.is_none() && self.a11y_role.is_some() {
                 let id = AccessibilityId(accessibility_generator.new_id());
