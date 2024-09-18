@@ -228,6 +228,9 @@ where
                 );
             }
 
+            inner_sizes.width += node.padding.horizontal();
+            inner_sizes.height += node.padding.vertical();
+
             (
                 must_cache_children,
                 LayoutNode {
