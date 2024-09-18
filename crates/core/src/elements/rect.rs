@@ -293,10 +293,9 @@ impl ElementUtils for RectElement {
     ) {
         let node_style = &*node_ref.get::<StyleState>().unwrap();
 
-        let mut paint = Paint::default();
-        let mut path = Path::new();
         let area = layout_node.visible_area().to_f32();
-
+        let mut path = Path::new();
+        let mut paint = Paint::default();
         paint.set_anti_alias(true);
         paint.set_style(PaintStyle::Fill);
 
@@ -344,8 +343,10 @@ impl ElementUtils for RectElement {
         for mut shadow in node_style.shadows.clone().into_iter() {
             if shadow.fill != Fill::Color(Color::TRANSPARENT) {
                 shadow.scale(scale_factor);
-                let mut shadow_paint = paint.clone();
+
                 let mut shadow_path = Path::new();
+                let mut shadow_paint = Paint::default();
+                shadow_paint.set_anti_alias(true);
 
                 match &shadow.fill {
                     Fill::Color(color) => {
@@ -423,9 +424,10 @@ impl ElementUtils for RectElement {
                 border.scale(scale_factor);
 
                 // Create a new paint
-                let mut border_paint = paint.clone();
-                border_paint.set_anti_alias(true);
+                let mut border_paint = Paint::default();
                 border_paint.set_style(PaintStyle::Fill);
+                border_paint.set_anti_alias(true);
+
                 match &border.fill {
                     Fill::Color(color) => {
                         border_paint.set_color(*color);
