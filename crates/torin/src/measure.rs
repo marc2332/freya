@@ -624,7 +624,8 @@ where
                 available_area.origin.x = child_area.max_x() + spacing.get();
                 available_area.size.width -= child_area.size.width + spacing.get();
 
-                inner_sizes.height = (child_area.height() + parent_node.padding.vertical()).max(inner_sizes.height);
+                inner_sizes.height =
+                    (child_area.height() + parent_node.padding.vertical()).max(inner_sizes.height);
                 inner_sizes.width += child_area.width() + spacing.get();
 
                 // Keep the biggest height
@@ -650,7 +651,8 @@ where
                 available_area.origin.y = child_area.max_y() + spacing.get();
                 available_area.size.height -= child_area.size.height + spacing.get();
 
-                inner_sizes.width = (child_area.width() + parent_node.padding.horizontal()).max(inner_sizes.width);
+                inner_sizes.width =
+                    (child_area.width() + parent_node.padding.horizontal()).max(inner_sizes.width);
                 inner_sizes.height += child_area.height() + spacing.get();
 
                 // Keep the biggest width
