@@ -9,11 +9,13 @@ pub async fn track_focus() {
     fn OtherChild() -> Element {
         let mut focus_manager = use_focus();
 
+        let a11y_id = focus_manager.attribute();
+
         rsx!(
             rect {
                 width: "100%",
                 height: "50%",
-                a11y_id: focus_manager.attribute(),
+                a11y_id,
                 onclick: move |_| focus_manager.focus(),
                 label {
                     "{focus_manager.is_focused()}"
@@ -68,8 +70,6 @@ pub async fn block_focus() {
     #[allow(non_snake_case)]
     fn Child() -> Element {
         let mut focus_manager = use_focus();
-
-        let a11y_id = focus_manager.attribute();
 
         rsx!(
             rect {
