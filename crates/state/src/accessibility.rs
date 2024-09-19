@@ -267,10 +267,9 @@ impl ParseAttribute for AccessibilityNodeState {
                                     builder.set_is_suggestion();
                                 }
                             }
-                            AttributeName::A11yRole => builder.set_role(
-                                serde_json::from_str::<Role>(&format!("\"{attr}\""))
-                                    .map_err(|_| ParseError)?,
-                            ),
+                            AttributeName::A11yRole => {
+                                builder.set_role(Role::parse(attr)?);
+                            }
                             AttributeName::A11yInvalid => {
                                 builder.set_invalid(Invalid::parse(attr)?);
                             }
