@@ -38,15 +38,15 @@ pub fn process_events(
     let potential_events = measure_potential_event_listeners(events, dom, scale_factor, focus_id);
 
     // 3. Get what events can be actually emitted based on what elements are listening
-    let mut dom_events = measure_dom_events(&potential_events, dom, nodes_state, scale_factor);
+    let mut dom_events = measure_dom_events(&potential_events, dom, scale_factor);
 
     // 4. Get potential collateral events, e.g. mousemove -> mouseenter
     let potential_collateral_events =
-        nodes_state.process_collateral(&potential_events, &dom_events, events);
+        nodes_state.process_collateral(&potential_events, &mut dom_events, events);
 
     // 5. Get what collateral events can actually be emitted
     let to_emit_dom_collateral_events =
-        measure_dom_events(&potential_collateral_events, dom, nodes_state, scale_factor);
+        measure_dom_events(&potential_collateral_events, dom, scale_factor);
 
     let colateral_global_events = measure_colateral_global_events(&to_emit_dom_collateral_events);
 
@@ -218,7 +218,6 @@ fn is_node_parent_of(rdom: &DioxusDOM, node: NodeId, parent_node: NodeId) -> boo
 fn measure_dom_events(
     potential_events: &PotentialEvents,
     fdom: &FreyaDOM,
-    nodes_state: &NodesState,
     scale_factor: f64,
 ) -> Vec<DomEvent> {
     let mut new_events = Vec::new();
@@ -252,9 +251,7 @@ fn measure_dom_events(
                         true
                     };
 
-                    let allowed_event = nodes_state.is_event_allowed(collateral_event, node_id);
-
-                    if valid_node && allowed_event {
+                    if valid_node {
                         let mut valid_event = event.clone();
                         valid_event.set_name(collateral_event);
                         valid_events.push(PotentialEvent {

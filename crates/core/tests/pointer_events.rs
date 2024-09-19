@@ -55,6 +55,12 @@ pub async fn pointer_events_from_mouse() {
         Some(format!("{:?}", vec!["enter", "over"]).as_str())
     );
 
+    utils.move_cursor((101., 100.)).await;
+    assert_eq!(
+        label.get(0).text(),
+        Some(format!("{:?}", vec!["enter", "over", "over"]).as_str())
+    );
+
     utils.push_event(PlatformEvent::Mouse {
         name: EventName::MouseDown,
         cursor: CursorPoint::new(100.0, 100.0),
@@ -63,7 +69,7 @@ pub async fn pointer_events_from_mouse() {
     utils.wait_for_update().await;
     assert_eq!(
         label.get(0).text(),
-        Some(format!("{:?}", vec!["enter", "over", "down"]).as_str())
+        Some(format!("{:?}", vec!["enter", "over", "over", "down"]).as_str())
     );
 
     utils.push_event(PlatformEvent::Mouse {
@@ -74,13 +80,13 @@ pub async fn pointer_events_from_mouse() {
     utils.wait_for_update().await;
     assert_eq!(
         label.get(0).text(),
-        Some(format!("{:?}", vec!["enter", "over", "down", "up"]).as_str())
+        Some(format!("{:?}", vec!["enter", "over", "over", "down", "up"]).as_str())
     );
 
     utils.move_cursor((0., 0.)).await;
     assert_eq!(
         label.get(0).text(),
-        Some(format!("{:?}", vec!["enter", "over", "down", "up", "leave"]).as_str())
+        Some(format!("{:?}", vec!["enter", "over", "over", "down", "up", "leave"]).as_str())
     );
 
     utils.push_event(PlatformEvent::Mouse {
@@ -94,7 +100,7 @@ pub async fn pointer_events_from_mouse() {
         Some(
             format!(
                 "{:?}",
-                vec!["enter", "over", "down", "up", "leave", "globalup"]
+                vec!["enter", "over", "over", "down", "up", "leave", "globalup"]
             )
             .as_str()
         )
