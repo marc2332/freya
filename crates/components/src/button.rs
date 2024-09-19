@@ -228,13 +228,21 @@ mod test {
         assert_eq!(label.get(0).text(), Some("true"));
 
         utils.push_event(PlatformEvent::Touch {
+            name: EventName::TouchStart,
+            location: (15.0, 15.0).into(),
+            finger_id: 1,
+            phase: TouchPhase::Started,
+            force: None,
+        });
+        utils.wait_for_update().await;
+
+        utils.push_event(PlatformEvent::Touch {
             name: EventName::TouchEnd,
             location: (15.0, 15.0).into(),
             finger_id: 1,
             phase: TouchPhase::Ended,
             force: None,
         });
-
         utils.wait_for_update().await;
 
         assert_eq!(label.get(0).text(), Some("false"));

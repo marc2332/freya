@@ -43,6 +43,7 @@ use freya_native_core_macro::partial_derive_state;
 
 use crate::{
     CustomAttributeValues,
+    Focusable,
     Parse,
     ParseAttribute,
     ParseError,
@@ -56,6 +57,8 @@ pub struct AccessibilityNodeState {
     pub is_focusable: bool,
     pub auto_focus: bool,
     pub a11y_id: Option<AccessibilityId>,
+    pub a11y_auto_focus: bool,
+    pub a11y_focusable: Focusable,
     pub builder: Option<NodeBuilder>,
 }
 
@@ -69,10 +72,16 @@ impl ParseAttribute for AccessibilityNodeState {
                 if let OwnedAttributeValue::Custom(CustomAttributeValues::AccessibilityId(id)) =
                     attr.value
                 {
-                    if self.builder.is_some() {
-                        self.is_focusable = true;
-                        self.a11y_id = Some(*id);
+                    self.a11y_id = Some(*id);
+                    // Enable focus on nodes that pass a custom a11y id
+                    if self.a11y_focusable.is_unknown() {
+                        self.a11y_focusable = Focusable::Enabled;
                     }
+                }
+            }
+            AttributeName::A11yFocusable => {
+                if let OwnedAttributeValue::Text(attr) = attr.value {
+                    self.a11y_focusable = Focusable::parse(attr)?;
                 }
             }
             AttributeName::A11yAutoFocus => {
@@ -319,6 +328,7 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
     const NODE_MASK: NodeMaskBuilder<'static> = NodeMaskBuilder::new()
         .with_attrs(AttributeMaskBuilder::Some(&[
             AttributeName::A11yId,
+            AttributeName::A11yFocusable,
             AttributeName::A11yAutoFocus,
             AttributeName::A11yName,
             AttributeName::A11yDescription,
@@ -462,7 +472,7 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
                 #[cfg(debug_assertions)]
                 tracing::info!("Assigned {id:?} to {:?}", node_view.node_id());
 
-                self.a11y_id = Some(id)
+                self.a11y_id = Some(id);
             }
 
             let was_just_created = !had_id && self.a11y_id.is_some();

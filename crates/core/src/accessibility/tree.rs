@@ -257,7 +257,8 @@ impl AccessibilityTree {
 
             if let Some(accessibility_id) = accessibility_id {
                 let accessibility_state = node_ref.get::<AccessibilityNodeState>().unwrap();
-                if accessibility_state.is_focusable {
+
+                if accessibility_state.a11y_focusable.is_enabled() {
                     nodes.push((accessibility_id, node_ref.id()))
                 }
             }
@@ -368,7 +369,7 @@ impl AccessibilityTree {
         // Set focusable action
         // This will cause assistive technology to offer the user an option
         // to focus the current element if it supports it.
-        if node_accessibility.is_focusable {
+        if node_accessibility.a11y_focusable.is_enabled() {
             builder.add_action(Action::Focus);
         }
 

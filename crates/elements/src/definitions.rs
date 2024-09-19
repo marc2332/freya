@@ -241,6 +241,7 @@ builder_constructors! {
         cursor_reference: CursorReference,
 
         a11y_id: String,
+        a11y_focusable: String,
         a11y_auto_focus: String,
         a11y_name: String,
         a11y_description: String,
@@ -371,6 +372,7 @@ builder_constructors! {
 
         a11y_id: String,
         a11y_auto_focus: String,
+        a11y_focusable: String,
         a11y_name: String,
         a11y_description: String,
         a11y_value: String,
@@ -515,6 +517,7 @@ builder_constructors! {
         highlight_mode: String,
 
         a11y_id: String,
+        a11y_focusable: String,
         a11y_auto_focus: String,
         a11y_name: String,
         a11y_description: String,
@@ -647,6 +650,7 @@ builder_constructors! {
 
         a11y_id: String,
         a11y_auto_focus: String,
+        a11y_focusable: String,
         a11y_name: String,
         a11y_description: String,
         a11y_value: String,
@@ -748,6 +752,7 @@ builder_constructors! {
         svg_content: String,
 
         a11y_id: String,
+        a11y_focusable: String,
         a11y_auto_focus: String,
         a11y_name: String,
         a11y_description: String,
@@ -959,8 +964,8 @@ pub mod events {
         onpointerup
         #[doc = include_str!("_docs/events/globalpointerup.md")]
         onglobalpointerup
-        #[doc = include_str!("_docs/events/pointerover.md")]
-        onpointerover
+        #[doc = include_str!("_docs/events/pointermove.md")]
+        onpointermove
         #[doc = include_str!("_docs/events/pointerenter.md")]
         onpointerenter
         #[doc = include_str!("_docs/events/pointerleave.md")]
