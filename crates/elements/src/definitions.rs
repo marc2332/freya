@@ -647,8 +647,8 @@ pub mod events {
         onpointerup
         #[doc = include_str!("_docs/events/globalpointerup.md")]
         onglobalpointerup
-        #[doc = include_str!("_docs/events/pointerover.md")]
-        onpointerover
+        #[doc = include_str!("_docs/events/pointermove.md")]
+        onpointermove
         #[doc = include_str!("_docs/events/pointerenter.md")]
         onpointerenter
         #[doc = include_str!("_docs/events/pointerleave.md")]
