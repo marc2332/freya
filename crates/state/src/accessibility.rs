@@ -54,8 +54,6 @@ pub struct AccessibilityNodeState {
     pub closest_accessibility_node_id: Option<NodeId>,
     pub descencent_accessibility_ids: Vec<AccessibilityId>,
     pub node_id: NodeId,
-    pub is_focusable: bool,
-    pub auto_focus: bool,
     pub a11y_id: Option<AccessibilityId>,
     pub a11y_auto_focus: bool,
     pub a11y_focusable: Focusable,
@@ -86,7 +84,7 @@ impl ParseAttribute for AccessibilityNodeState {
             }
             AttributeName::A11yAutoFocus => {
                 if let OwnedAttributeValue::Text(attr) = attr.value {
-                    self.auto_focus = attr.parse().unwrap_or_default()
+                    self.a11y_auto_focus = attr.parse().unwrap_or_default()
                 }
             }
             a11y_attr => {
@@ -485,7 +483,7 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
                     .add_or_update(node_view.node_id())
             }
 
-            if was_just_created && self.auto_focus {
+            if was_just_created && self.a11y_auto_focus {
                 #[cfg(debug_assertions)]
                 tracing::info!("Requested auto focus for {:?}", self.a11y_id.unwrap());
 
