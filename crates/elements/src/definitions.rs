@@ -235,10 +235,10 @@ builder_constructors! {
 
         a11y_auto_focus: String,
         a11y_name: String,
-        a11y_focusable: String,
         a11y_role:String,
         a11y_id: AccessibilityId,
         a11y_alt: String,
+        a11y_focusable: String,
         canvas_reference: String,
         layer: String,
         offset_y: String,
@@ -308,10 +308,10 @@ builder_constructors! {
         layer: String,
         a11y_auto_focus: String,
         a11y_name: String,
-        a11y_focusable: String,
         a11y_role:String,
         a11y_id: AccessibilityId,
         a11y_alt: String,
+        a11y_focusable: String,
     };
     /// `paragraph` element let's you build texts with different styles.
     ///
@@ -387,10 +387,10 @@ builder_constructors! {
         cursor_id: String,
         a11y_auto_focus: String,
         a11y_name: String,
-        a11y_focusable: String,
         a11y_role:String,
         a11y_id: AccessibilityId,
         a11y_alt: String,
+        a11y_focusable: String,
         highlights: String,
         highlight_color: String,
         highlight_mode: String,
@@ -459,7 +459,6 @@ builder_constructors! {
         image_reference: String,
         a11y_auto_focus: String,
         a11y_name: String,
-        a11y_focusable: String,
         a11y_role:String,
         a11y_id: AccessibilityId,
         a11y_alt: String,
@@ -499,10 +498,10 @@ builder_constructors! {
         svg_content: String,
         a11y_auto_focus: String,
         a11y_name: String,
-        a11y_focusable: String,
         a11y_role:String,
         a11y_id: AccessibilityId,
         a11y_alt: String,
+        a11y_focusable: String,
     };
 }
 

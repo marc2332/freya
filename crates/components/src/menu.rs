@@ -201,7 +201,6 @@ pub fn MenuItem(
             width: "fill-min",
             padding: "6",
             margin: "2",
-            a11y_focusable: "true",
             a11y_role:"button",
             color: "{font_theme.color}",
             corner_radius: "{corner_radius}",

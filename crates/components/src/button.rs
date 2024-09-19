@@ -180,7 +180,6 @@ pub fn Button(
             height: "{height}",
             padding: "{padding}",
             margin: "{margin}",
-            a11y_focusable: "true",
             overflow: "clip",
             a11y_role:"button",
             color: "{font_theme.color}",
