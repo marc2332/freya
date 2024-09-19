@@ -1,9 +1,22 @@
 use accesskit::{
-    AriaCurrent, AutoComplete, DefaultActionVerb, HasPopup, Invalid, ListStyle, Live, Orientation,
-    Role, SortDirection, Toggled, VerticalOffset,
+    AriaCurrent,
+    AutoComplete,
+    DefaultActionVerb,
+    HasPopup,
+    Invalid,
+    ListStyle,
+    Live,
+    Orientation,
+    Role,
+    SortDirection,
+    Toggled,
+    VerticalOffset,
 };
 
-use crate::{Parse, ParseError};
+use crate::{
+    Parse,
+    ParseError,
+};
 
 impl Parse for Role {
     fn parse(value: &str) -> Result<Self, ParseError> {
