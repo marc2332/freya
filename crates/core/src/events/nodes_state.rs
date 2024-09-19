@@ -28,21 +28,11 @@ pub struct NodesState {
 }
 
 impl NodesState {
-    /// Given the current state, event, and NodeID check if it is allowed to be emitted
-    /// For example, it will not make sense to emit a Click event on an element that was not pressed before.
-    pub fn is_event_allowed(&self, event_name: EventName, node_id: &NodeId) -> bool {
-        if event_name.is_pressed() {
-            self.pressed_nodes.contains_key(node_id)
-        } else {
-            true
-        }
-    }
-
     /// Update the node states given the new events and suggest potential collateral new events
     pub fn process_collateral(
         &mut self,
         pontential_events: &PotentialEvents,
-        events_to_emit: &[DomEvent],
+        dom_events: &mut Vec<DomEvent>,
         events: &[PlatformEvent],
     ) -> PotentialEvents {
         let mut potential_events = PotentialEvents::default();
@@ -71,7 +61,7 @@ impl NodesState {
         self.hovered_nodes.retain(|node_id, metadata| {
             // Check if a DOM event that moves the cursor in this Node will get emitted
             let no_recently_hovered =
-                filter_dom_events_by(events_to_emit, node_id, |e| e.was_cursor_moved());
+                filter_dom_events_by(dom_events, node_id, |e| e.was_cursor_moved());
 
             if no_recently_hovered {
                 // If there has been a mouse movement but a DOM event was not emitted to this node, then we safely assume
@@ -155,6 +145,18 @@ impl NodesState {
                 }
             }
         }
+
+        dom_events.retain(|ev| {
+            match ev.name {
+                // Filter out enter events for nodes that were already hovered
+                _ if ev.name.is_enter() => !hovered_nodes.contains_key(&ev.node_id),
+
+                // Filter out press events for nodes that were already pressed
+                _ if ev.name.is_pressed() => !pressed_nodes.contains_key(&ev.node_id),
+
+                _ => true,
+            }
+        });
 
         // Order the events by their Nodes layer
         for events in potential_events.values_mut() {
