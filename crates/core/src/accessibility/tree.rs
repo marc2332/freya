@@ -178,10 +178,10 @@ impl AccessibilityTree {
             if let Some((node_accessibility_state, layout_node)) =
                 node_accessibility_state.as_ref().zip(layout_node)
             {
-                let accessibility_id = node_ref.get_accessibility_id().unwrap();
                 let accessibility_node =
-                    Self::create_node(&node_ref, layout_node, node_accessibility_state);
-
+                Self::create_node(&node_ref, layout_node, node_accessibility_state);
+                let accessibility_id = node_ref.get_accessibility_id().unwrap();
+                
                 nodes.push((accessibility_id, accessibility_node));
             }
         }
@@ -257,7 +257,6 @@ impl AccessibilityTree {
 
             if let Some(accessibility_id) = accessibility_id {
                 let accessibility_state = node_ref.get::<AccessibilityNodeState>().unwrap();
-
                 if accessibility_state.a11y_focusable.is_enabled() {
                     nodes.push((accessibility_id, node_ref.id()))
                 }

@@ -69,6 +69,8 @@ pub async fn block_focus() {
     fn Child() -> Element {
         let mut focus_manager = use_focus();
 
+        let a11y_id = focus_manager.attribute();
+
         rsx!(
             rect {
                 a11y_id: focus_manager.attribute(),

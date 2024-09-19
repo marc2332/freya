@@ -218,8 +218,8 @@ mod test {
     #[tokio::test]
     pub async fn auto_focus_accessibility() {
         fn use_focus_app() -> Element {
-            let focus_1 = use_focus();
-            let focus_2 = use_focus();
+            let mut focus_1 = use_focus();
+            let mut focus_2 = use_focus();
             rsx!(
                 rect {
                     a11y_id: focus_1.attribute(),
