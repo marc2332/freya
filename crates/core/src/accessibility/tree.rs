@@ -179,9 +179,9 @@ impl AccessibilityTree {
                 node_accessibility_state.as_ref().zip(layout_node)
             {
                 let accessibility_node =
-                Self::create_node(&node_ref, layout_node, node_accessibility_state);
+                    Self::create_node(&node_ref, layout_node, node_accessibility_state);
                 let accessibility_id = node_ref.get_accessibility_id().unwrap();
-                
+
                 nodes.push((accessibility_id, accessibility_node));
             }
         }
