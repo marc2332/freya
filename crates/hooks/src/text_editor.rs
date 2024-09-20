@@ -42,15 +42,13 @@ impl TextCursor {
 #[derive(Clone)]
 pub struct Line<'a> {
     pub text: Cow<'a, str>,
+    pub utf16_len: usize,
 }
 
 impl Line<'_> {
     /// Get the length of the line
-    pub fn len_chars(&self) -> usize {
-        self.text
-            .chars()
-            .filter(|c| c != &'\r' && c != &'\n')
-            .count()
+    pub fn utf16_len(&self) -> usize {
+        self.utf16_len
     }
 }
 
@@ -112,6 +110,9 @@ pub trait TextEditor {
     /// Total of chars
     fn len_chars(&self) -> usize;
 
+    /// Total of utf16 code units
+    fn len_utf16_cu(&self) -> usize;
+
     /// Get a readable cursor
     fn cursor(&self) -> &TextCursor;
 
@@ -120,26 +121,24 @@ pub trait TextEditor {
 
     /// Get the cursor row
     fn cursor_row(&self) -> usize {
-        let pos = self.cursor_pos();
+        let pos_utf16 = self.cursor_pos();
+        let pos = self.utf16_cu_to_char(pos_utf16);
         self.char_to_line(pos)
     }
 
     /// Get the cursor column
     fn cursor_col(&self) -> usize {
-        let pos = self.cursor_pos();
+        let pos_utf16 = self.cursor_pos();
+        let pos = self.utf16_cu_to_char(pos_utf16);
         let line = self.char_to_line(pos);
         let line_char = self.line_to_char(line);
-        pos - line_char
+        let line_char_utf16 = self.char_to_utf16_cu(line_char);
+        pos_utf16 - line_char_utf16
     }
 
     /// Get the cursor row and col
     fn cursor_row_and_col(&self) -> (usize, usize) {
         (self.cursor_row(), self.cursor_col())
-    }
-
-    /// Get the visible cursor position
-    fn visible_cursor_col(&self) -> usize {
-        self.char_to_utf16_cu(self.cursor_col())
     }
 
     /// Move the cursor 1 line down
@@ -151,15 +150,15 @@ pub trait TextEditor {
             Ordering::Less => {
                 // One line below
                 let new_row = old_row + 1;
-                let new_row_char = self.line_to_char(new_row);
-                let new_row_len = self.line(new_row).unwrap().len_chars();
+                let new_row_char = self.char_to_utf16_cu(self.line_to_char(new_row));
+                let new_row_len = self.line(new_row).unwrap().utf16_len();
                 let new_col = old_col.min(new_row_len);
                 self.cursor_mut().set(new_row_char + new_col);
 
                 true
             }
             Ordering::Equal => {
-                let end = self.len_chars();
+                let end = self.len_utf16_cu();
                 // Reached max
                 self.cursor_mut().set(end);
 
@@ -186,7 +185,7 @@ pub trait TextEditor {
             } else {
                 let new_row = old_row - 1;
                 let new_row_char = self.line_to_char(new_row);
-                let new_row_len = self.line(new_row).unwrap().len_chars();
+                let new_row_len = self.line(new_row).unwrap().utf16_len();
                 let new_col = old_col.min(new_row_len);
                 self.cursor_mut().set(new_row_char + new_col);
             }
@@ -199,7 +198,7 @@ pub trait TextEditor {
 
     /// Move the cursor 1 char to the right
     fn cursor_right(&mut self) -> bool {
-        if self.cursor_pos() < self.len_chars() {
+        if self.cursor_pos() < self.len_utf16_cu() {
             *self.cursor_mut().write() += 1;
 
             true
@@ -222,11 +221,6 @@ pub trait TextEditor {
     /// Get the cursor position
     fn cursor_pos(&self) -> usize {
         self.cursor().pos()
-    }
-
-    /// Get the cursor position
-    fn visible_cursor_pos(&self) -> usize {
-        self.char_to_utf16_cu(self.cursor_pos())
     }
 
     /// Set the cursor position
@@ -338,31 +332,31 @@ pub trait TextEditor {
                 }
             }
             Key::Backspace => {
-                let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
+                let cursor_pos = self.cursor_pos();
                 let selection = self.get_selection_range();
 
                 if let Some((start, end)) = selection {
                     self.remove(start..end);
                     self.set_cursor_pos(start);
                     event.insert(TextEvent::TEXT_CHANGED);
-                } else if char_idx > 0 {
+                } else if cursor_pos > 0 {
                     // Remove the character to the left if there is any
-                    self.remove(char_idx - 1..char_idx);
-                    self.set_cursor_pos(char_idx - 1);
+                    self.remove(cursor_pos - 1..cursor_pos);
+                    self.set_cursor_pos(cursor_pos - 1);
                     event.insert(TextEvent::TEXT_CHANGED);
                 }
             }
             Key::Delete => {
-                let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
+                let cursor_pos = self.cursor_pos();
                 let selection = self.get_selection_range();
 
                 if let Some((start, end)) = selection {
                     self.remove(start..end);
                     self.set_cursor_pos(start);
                     event.insert(TextEvent::TEXT_CHANGED);
-                } else if char_idx < self.len_chars() {
+                } else if cursor_pos < self.len_utf16_cu() {
                     // Remove the character to the right if there is any
-                    self.remove(char_idx..char_idx + 1);
+                    self.remove(cursor_pos..cursor_pos + 1);
                     event.insert(TextEvent::TEXT_CHANGED);
                 }
             }
@@ -403,7 +397,7 @@ pub trait TextEditor {
 
                     // Select all text
                     Code::KeyA if meta_or_ctrl => {
-                        let len = self.len_chars();
+                        let len = self.len_utf16_cu();
                         self.set_selection((0, len));
                         event.remove(TextEvent::SELECTION_CHANGED);
                     }
@@ -433,9 +427,9 @@ pub trait TextEditor {
                     Code::KeyV if meta_or_ctrl => {
                         let copied_text = self.get_clipboard().get();
                         if let Ok(copied_text) = copied_text {
-                            let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
-                            self.insert(&copied_text, char_idx);
-                            let last_idx = copied_text.len() + char_idx;
+                            let cursor_pos = self.cursor_pos();
+                            self.insert(&copied_text, cursor_pos);
+                            let last_idx = copied_text.encode_utf16().count() + cursor_pos;
                             self.set_cursor_pos(last_idx);
                             event.insert(TextEvent::TEXT_CHANGED);
                         }
@@ -474,14 +468,14 @@ pub trait TextEditor {
                             // Inserts a character
                             let cursor_pos = self.cursor_pos();
                             self.insert_char(ch, cursor_pos);
-                            self.cursor_right();
+                            self.set_cursor_pos(cursor_pos + ch.len_utf16());
 
                             event.insert(TextEvent::TEXT_CHANGED);
                         } else {
                             // Inserts a text
                             let cursor_pos = self.cursor_pos();
                             self.insert(character, cursor_pos);
-                            self.set_cursor_pos(cursor_pos + character.chars().count());
+                            self.set_cursor_pos(cursor_pos + character.encode_utf16().count());
 
                             event.insert(TextEvent::TEXT_CHANGED);
                         }
