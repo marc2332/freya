@@ -11,6 +11,7 @@
 - [Setup](./learn/setup.md)
 - [UI](./learn/ui.md)
 - [Components](./learn/components.md)
+- [Elements](./learn/elements.md)
 - [Hooks](./learn/hooks.md)
 - [State Management](./learn/state_management.md)
     - [Signals](./learn/state_management/signals.md)
