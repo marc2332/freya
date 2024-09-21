@@ -29,17 +29,28 @@ This macro is not a standalone-language or anything like that. It is simply a ma
 The structure for RSX looks like this:
 
 ```rs
-rect { // Element
-    background: "red", // Attribute for the element `rect`
-    width: "100%",// Attribute for the element `rect`
-    onclick: |_| println!("Clicked!"), // Event handler for the element `rect`, its just a Rust closure
-    label { // Element children of `rect`
-        "Hello, World!" // Text Element for the element `label`
+// Element, always in lower case
+rect { 
+    // Attribute for the element `rect`
+    background: "red", 
+    // Attribute for the element `rect`
+    width: "100%",
+    // Event handler for the element `rect`, can be a function or a closure
+    onclick: |_| println!("Clicked!"), 
+    // Element child of `rect`
+    label {
+        // Text Element for the element `label`
+        "Hello, World!"
+    }
+    // Component child of `rect`, always in PascalCase
+    CoolComp {
+        // Prop for the component `CoolComp`
+        prop: 123
     }
 }
 ```
 
-You can reference variables from outside the RSX inside of it:
+You can reference variables inside the RSX as well:
 
 ```rs
 let onclick = |_| {
@@ -47,6 +58,7 @@ let onclick = |_| {
 };
 
 let width = "100%";
+let name = "World";
 
 rsx!(
     rect {
@@ -54,7 +66,10 @@ rsx!(
         width,
         onclick,
         label {
-            "Hello, World!"
+            "Hello, {name}!"
+        }
+        label {
+            "{1 + 1} is 2"
         }
     }
 )
@@ -63,17 +78,21 @@ rsx!(
 Or just use if, for-loops, etc.. Inside of the RSX:
 
 ```rs
-let my_value = false;
+let show_text = false;
 
 rsx!(
     rect {
         for i in 0..5 {
             label {
+                // Looped elements must have an unique ID specified through 
+                // the `key` attribute so Dioxus is able to identify them
                 key: "{i}",
                 "Value -> {i}"
             }
         }
-        if my_value {
+        // When this condition is not met the inner element will
+        // simply not be rendered
+        if show_text {
             label {
                 "Hello, World!"
             }

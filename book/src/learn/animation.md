@@ -13,6 +13,7 @@ fn app() -> Element {
         ctx.with(AnimNum::new(0., 100.).time(200)) 
     });
 
+    // Retrive the animation you returned in `use_animation`
     let width = animation.get().read().as_f32();
 
     rsx!(rect {
@@ -21,6 +22,7 @@ fn app() -> Element {
         background: "blue"
     })
 }
+```
 
 Advanced Example:
 
@@ -46,6 +48,7 @@ fn app() -> Element {
         )
     });
 
+    // Retrieve the animations you returned inside `use_animation`
     let (width, color) = animation.get();
 
     rsx!(rect {

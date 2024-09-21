@@ -15,7 +15,7 @@
 - [State Management](./learn/state_management.md)
     - [Signals](./learn/state_management/signals.md)
     - [Global Signals](./learn/state_management/global_signals.md)
-    - [Dioxus Hooks](./learn/dioxus_hooks.md)
+    - [Lifecycle](./learn/lifecycle.md)
     - [Context](./learn/state_management/context.md)
     - [Third Party](./learn/state_management/third_party.md)
 - [Async](./learn/async.md)

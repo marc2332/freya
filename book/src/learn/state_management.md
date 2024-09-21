@@ -1,6 +1,6 @@
 # State Management
 
-Dioxus and thus Freya apps, don't have a single type of state management. 
+Dioxus and Freya apps, have multiple ways of state management.
 
 See the different options:
 

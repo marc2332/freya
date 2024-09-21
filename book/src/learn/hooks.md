@@ -1,18 +1,21 @@
 # Hooks
 
-Hooks are special functions to be used inside of Components. They are usually prefixed with `use`, e.g `use_signal`, `use_effect`
+Hooks are special functions to be used inside of Components that lets you handle different things like the state or lifecycle of your component. They are usually prefixed with `use`, e.g `use_signal`, `use_effect`, `use_memo`, etc.
 
 # Rules of Hooks
 
+Even though hooks appear to be normal functions they are in fact special so you cannot just call them however you want.
+
 ## 1. They cannot be called conditionally
 
-You cannot do the following because hooks need to maintain their order.
+You cannot do the following because hooks need to maintain their order. So, if one component is calling 3 different hooks in one render, and then in another render if just calls 2, it would be breaking this rule.
 
 ❌:
 ```rs
 #[component]
 fn MyComponent(value: bool) -> Element {
     let is_enabled = if value {
+        // This should be moved out of the conditional
         use_signal(|| value)
     } else {
         true
