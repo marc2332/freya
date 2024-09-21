@@ -34,6 +34,9 @@
 - [Publishing](./learn/publishing.md)
 - [Performance](./learn/performance.md)
 
+# Guides
+- [Building a Text Input](./guides/text_input.md)
+
 # Other
 - [FAQ](./faq.md)
 - [Contact](./contact.md)
