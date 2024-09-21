@@ -5,14 +5,15 @@ Freya supports the official [Dioxus Router](https://docs.rs/dioxus-router/latest
 Example:
 ```rs
 fn app() -> Element {
+    /// We place the router renderer in the root component
     rsx!(Router::<Route> {})
 }
 
-/// Declare your Routes tree in an enum
-/// Every route must have a component with the same name
-/// So for example, `Home` needs to have a `fn Home(...` component
-/// the `Routable` macro will pick it up automatically 
-/// so it must be in the scope.
+// Declare your Routes tree as an enum
+// Every route must have a component with the same name
+// So for example, `Home` needs to have a `fn Home(...` component
+// the `Routable` macro will pick it up automatically 
+// so it must be in the scope.
 #[derive(Routable, Clone, PartialEq)]
 #[rustfmt::skip]
 pub enum Route {
@@ -26,7 +27,9 @@ pub enum Route {
     PageNotFound { }, // Handle 404 routes.
 }
 
-#[allow(non_snake_case)]
+// This component is used as container for the router (as it was marked with `#[layout(AppSidebar)]`), which means
+// That we can render something here that will be rendered no matter what route you are in
+// Useful for navigation bars.
 fn AppSidebar() -> Element {
     rsx!(
         Body {
@@ -55,7 +58,6 @@ fn AppSidebar() -> Element {
     )
 }
 
-#[allow(non_snake_case)]
 #[component]
 fn Home() -> Element {
     rsx!(
@@ -65,7 +67,6 @@ fn Home() -> Element {
     )
 }
 
-#[allow(non_snake_case)]
 #[component]
 fn Other() -> Element {
     rsx!(
@@ -75,7 +76,6 @@ fn Other() -> Element {
     )
 }
 
-#[allow(non_snake_case)]
 #[component]
 fn PageNotFound() -> Element {
     rsx!(

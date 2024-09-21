@@ -1,8 +1,8 @@
 # Built-in Components
 
-Freya comes with a set of styled and functional components you may use to develop faster. Some examples as `Button`, `Switch`, `Scrollview`, etc.
+Freya comes with a set of styled and functional components you may use to develop faster. Some examples are `Button`, `Switch`, `Scrollview`, etc.
 
-You can find more about them in [their docs](https://docs.rs/freya-components). 
+You can find more about them in the [API Reference](https://docs.rs/freya-components). 
 
 Example:
 ```rs

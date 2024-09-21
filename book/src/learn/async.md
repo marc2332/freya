@@ -2,11 +2,10 @@
 
 You may run asynchronous code through the different APIs Dioxus provide. You can use other libraries such as tokio to spawn tasks but it's not always the recommended approach as these will not work with the lifecycling of the components.
 
-You can use these different APIs:
 
 ### `spawn`
 
-Simple function to spawn an async task, this is primarily targeted for custom hooks or when you wanted to run some async code dinamically from an event listener.
+Simple function to spawn an **async task**, this is primarily targeted for custom hooks or when you wanted to run some async code dinamically from an event listener.
 
 Important to know: Tasks spawned with `spawn` will be cancelled when the component their were created is dropped. If you want to have an async tasks not attached to the component you may use `spawn_forever`.
 

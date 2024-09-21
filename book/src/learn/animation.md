@@ -58,3 +58,7 @@ fn app() -> Element {
     })
 }
 ```
+
+### Other examples
+
+- [animation.rs](https://github.com/marc2332/freya/blob/main/examples/animation.rs)
