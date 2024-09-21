@@ -83,13 +83,13 @@ pub trait TextEditor {
     fn lines(&self) -> Self::LinesIterator<'_>;
 
     /// Insert a character in the text in the given position.
-    fn insert_char(&mut self, char: char, char_idx: usize);
+    fn insert_char(&mut self, char: char, char_idx: usize) -> usize;
 
     /// Insert a string in the text in the given position.
-    fn insert(&mut self, text: &str, char_idx: usize);
+    fn insert(&mut self, text: &str, char_idx: usize) -> usize;
 
     /// Remove a part of the text.
-    fn remove(&mut self, range: Range<usize>);
+    fn remove(&mut self, range: Range<usize>) -> usize;
 
     /// Get line from the given char
     fn char_to_line(&self, char_idx: usize) -> usize;
@@ -121,19 +121,19 @@ pub trait TextEditor {
 
     /// Get the cursor row
     fn cursor_row(&self) -> usize {
-        let pos_utf16 = self.cursor_pos();
-        let pos = self.utf16_cu_to_char(pos_utf16);
-        self.char_to_line(pos)
+        let pos = self.cursor_pos();
+        let pos_utf8 = self.utf16_cu_to_char(pos);
+        self.char_to_line(pos_utf8)
     }
 
     /// Get the cursor column
     fn cursor_col(&self) -> usize {
-        let pos_utf16 = self.cursor_pos();
-        let pos = self.utf16_cu_to_char(pos_utf16);
-        let line = self.char_to_line(pos);
-        let line_char = self.line_to_char(line);
-        let line_char_utf16 = self.char_to_utf16_cu(line_char);
-        pos_utf16 - line_char_utf16
+        let pos = self.cursor_pos();
+        let pos_utf8 = self.utf16_cu_to_char(pos);
+        let line = self.char_to_line(pos_utf8);
+        let line_char_utf8 = self.line_to_char(line);
+        let line_char = self.char_to_utf16_cu(line_char_utf8);
+        pos - line_char
     }
 
     /// Get the cursor row and col
@@ -341,8 +341,8 @@ pub trait TextEditor {
                     event.insert(TextEvent::TEXT_CHANGED);
                 } else if cursor_pos > 0 {
                     // Remove the character to the left if there is any
-                    self.remove(cursor_pos - 1..cursor_pos);
-                    self.set_cursor_pos(cursor_pos - 1);
+                    let removed_text_len = self.remove(cursor_pos - 1..cursor_pos);
+                    self.set_cursor_pos(cursor_pos - removed_text_len);
                     event.insert(TextEvent::TEXT_CHANGED);
                 }
             }
@@ -447,9 +447,9 @@ pub trait TextEditor {
 
                     // Redo last change
                     Code::KeyY if meta_or_ctrl => {
-                        let undo_result = self.redo();
+                        let redo_result = self.redo();
 
-                        if let Some(idx) = undo_result {
+                        if let Some(idx) = redo_result {
                             self.set_cursor_pos(idx);
                             event.insert(TextEvent::TEXT_CHANGED);
                         }
@@ -459,23 +459,24 @@ pub trait TextEditor {
                         // Remove selected text
                         let selection = self.get_selection_range();
                         if let Some((start, end)) = selection {
-                            self.remove(start..end);
-                            self.set_cursor_pos(start);
+                            let cursor_pos = self.cursor_pos();
+                            let removed_text_len = self.remove(start..end);
+                            self.set_cursor_pos(cursor_pos - removed_text_len);
                             event.insert(TextEvent::TEXT_CHANGED);
                         }
 
                         if let Ok(ch) = character.parse::<char>() {
                             // Inserts a character
                             let cursor_pos = self.cursor_pos();
-                            self.insert_char(ch, cursor_pos);
-                            self.set_cursor_pos(cursor_pos + ch.len_utf16());
+                            let inserted_text_len = self.insert_char(ch, cursor_pos);
+                            self.set_cursor_pos(cursor_pos + inserted_text_len);
 
                             event.insert(TextEvent::TEXT_CHANGED);
                         } else {
                             // Inserts a text
                             let cursor_pos = self.cursor_pos();
-                            self.insert(character, cursor_pos);
-                            self.set_cursor_pos(cursor_pos + character.encode_utf16().count());
+                            let inserted_text_len = self.insert(character, cursor_pos);
+                            self.set_cursor_pos(cursor_pos + inserted_text_len);
 
                             event.insert(TextEvent::TEXT_CHANGED);
                         }

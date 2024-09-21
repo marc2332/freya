@@ -66,35 +66,43 @@ impl TextEditor for RopeEditor {
         LinesIterator { lines }
     }
 
-    fn insert_char(&mut self, ch: char, idx_utf16: usize) {
-        let idx = self.utf16_cu_to_char(idx_utf16);
+    fn insert_char(&mut self, ch: char, idx: usize) -> usize {
+        let idx_utf8 = self.utf16_cu_to_char(idx);
 
         let len_before_insert = self.rope.len_utf16_cu();
-        self.rope.insert_char(idx, ch);
+        self.rope.insert_char(idx_utf8, ch);
         let len_after_insert = self.rope.len_utf16_cu();
+
+        let inserted_text_len = len_after_insert - len_before_insert;
 
         self.history.push_change(HistoryChange::InsertChar {
-            idx: idx_utf16,
+            idx,
             ch,
-            len: len_after_insert - len_before_insert,
+            len: inserted_text_len,
         });
+
+        inserted_text_len
     }
 
-    fn insert(&mut self, text: &str, idx_utf16: usize) {
-        let idx = self.utf16_cu_to_char(idx_utf16);
+    fn insert(&mut self, text: &str, idx: usize) -> usize {
+        let idx_utf8 = self.utf16_cu_to_char(idx);
 
         let len_before_insert = self.rope.len_utf16_cu();
-        self.rope.insert(idx, text);
+        self.rope.insert(idx_utf8, text);
         let len_after_insert = self.rope.len_utf16_cu();
 
+        let inserted_text_len = len_after_insert - len_before_insert;
+
         self.history.push_change(HistoryChange::InsertText {
-            idx: idx_utf16,
+            idx,
             text: text.to_owned(),
-            len: len_after_insert - len_before_insert,
+            len: inserted_text_len,
         });
+
+        inserted_text_len
     }
 
-    fn remove(&mut self, range_utf16: Range<usize>) {
+    fn remove(&mut self, range_utf16: Range<usize>) -> usize {
         let range =
             self.utf16_cu_to_char(range_utf16.start)..self.utf16_cu_to_char(range_utf16.end);
         let text = self.rope.slice(range.clone()).to_string();
@@ -103,11 +111,15 @@ impl TextEditor for RopeEditor {
         self.rope.remove(range);
         let len_after_remove = self.rope.len_utf16_cu();
 
+        let removed_text_len = len_before_remove - len_after_remove;
+
         self.history.push_change(HistoryChange::Remove {
-            idx: range_utf16.start,
+            idx: range_utf16.end - removed_text_len,
             text,
-            len: len_before_remove - len_after_remove,
+            len: removed_text_len,
         });
+
+        removed_text_len
     }
 
     fn char_to_line(&self, char_idx: usize) -> usize {

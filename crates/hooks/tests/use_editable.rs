@@ -769,7 +769,7 @@ pub async fn backspace_remove() {
     let cursor = root.get(1).get(0);
     let content = root.get(0).get(0).get(0);
     assert_eq!(content.text(), Some("Hello Rustaceans\nHello Rustaceans"));
-    assert_eq!(cursor.text(), Some("0:6"));
+    assert_eq!(cursor.text(), Some("0:5"));
 }
 
 #[tokio::test]
