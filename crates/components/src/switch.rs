@@ -13,9 +13,11 @@ use freya_hooks::{
     use_platform,
     AnimColor,
     AnimNum,
+    AnimatedValue,
     Ease,
     Function,
     SwitchThemeWith,
+    UseFocus,
 };
 use winit::window::CursorIcon;
 
@@ -25,9 +27,11 @@ pub struct SwitchProps {
     /// Theme override.
     pub theme: Option<SwitchThemeWith>,
     /// Whether the `Switch` is enabled or not.
-    pub enabled: bool,
+    pub enabled: ReadOnlySignal<bool>,
     /// Handler for the `ontoggled` event.
     pub ontoggled: EventHandler<()>,
+
+    pub children: Element,
 }
 
 /// Describes the current status of the Switch.
@@ -64,36 +68,7 @@ pub enum SwitchStatus {
 /// }
 /// ```
 #[allow(non_snake_case)]
-pub fn Switch(props: SwitchProps) -> Element {
-    let theme = use_applied_theme!(&props.theme, switch);
-    let animation = use_animation_with_dependencies(&theme, |ctx, theme| {
-        (
-            ctx.with(
-                AnimNum::new(2., 22.)
-                    .time(300)
-                    .function(Function::Expo)
-                    .ease(Ease::Out),
-            ),
-            ctx.with(
-                AnimNum::new(14., 18.)
-                    .time(300)
-                    .function(Function::Expo)
-                    .ease(Ease::Out),
-            ),
-            ctx.with(
-                AnimColor::new(&theme.background, &theme.enabled_background)
-                    .time(300)
-                    .function(Function::Expo)
-                    .ease(Ease::Out),
-            ),
-            ctx.with(
-                AnimColor::new(&theme.thumb_background, &theme.enabled_thumb_background)
-                    .time(300)
-                    .function(Function::Expo)
-                    .ease(Ease::Out),
-            ),
-        )
-    });
+pub fn SwitchContainer(props: SwitchProps) -> Element {
     let platform = use_platform();
     let mut status = use_signal(SwitchStatus::default);
     let mut focus = use_focus();
@@ -134,13 +109,87 @@ pub fn Switch(props: SwitchProps) -> Element {
         }
     };
 
+    provide_context(SwitchContainerInfo(focus, props.enabled));
+
+    rsx!(
+        rect {
+            onmousedown,
+            onmouseenter,
+            onmouseleave,
+            onglobalkeydown,
+            onclick,
+            a11y_id,
+            {props.children}
+        }
+    )
+}
+
+#[derive(Clone)]
+pub struct SwitchContainerInfo(pub UseFocus, pub ReadOnlySignal<bool>);
+
+#[component]
+pub fn SwitchBall() -> Element {
+    let SwitchInfo(circle, size) = consume_context();
+    let circle = circle.read().as_string();
+    let size = size.read().as_f32();
+
+    rsx!(rect {
+        background: "{circle}",
+        width: "{size}",
+        height: "{size}",
+        corner_radius: "50",
+    })
+}
+
+#[derive(Clone)]
+struct SwitchInfo(
+    pub ReadOnlySignal<Box<dyn AnimatedValue>>,
+    pub ReadOnlySignal<Box<dyn AnimatedValue>>,
+);
+
+#[component]
+pub fn SwitchBar(theme: Option<SwitchThemeWith>, children: Element) -> Element {
+    let theme = use_applied_theme!(&theme, switch);
+    let animation = use_animation_with_dependencies(&theme, |ctx, theme| {
+        (
+            ctx.with(
+                AnimNum::new(2., 22.)
+                    .time(300)
+                    .function(Function::Expo)
+                    .ease(Ease::Out),
+            ),
+            ctx.with(
+                AnimNum::new(14., 18.)
+                    .time(300)
+                    .function(Function::Expo)
+                    .ease(Ease::Out),
+            ),
+            ctx.with(
+                AnimColor::new(&theme.background, &theme.enabled_background)
+                    .time(300)
+                    .function(Function::Expo)
+                    .ease(Ease::Out),
+            ),
+            ctx.with(
+                AnimColor::new(&theme.thumb_background, &theme.enabled_thumb_background)
+                    .time(300)
+                    .function(Function::Expo)
+                    .ease(Ease::Out),
+            ),
+        )
+    });
+
     let offset_x = animation.get().0.read().as_f32();
-    let size = animation.get().1.read().as_f32();
+    let size = animation.get().1;
     let background = animation.get().2.read().as_string();
-    let circle = animation.get().3.read().as_string();
+    let circle = animation.get().3;
+
+    provide_context(SwitchInfo(circle, size));
+
+    let SwitchContainerInfo(focus, enabled) = consume_context();
 
     let border = if focus.is_selected() {
-        if props.enabled {
+        if enabled() {
             format!("2 solid {}", theme.enabled_focus_border_fill)
         } else {
             format!("2 solid {}", theme.focus_border_fill)
@@ -149,13 +198,13 @@ pub fn Switch(props: SwitchProps) -> Element {
         "none".to_string()
     };
 
-    use_memo(use_reactive(&props.enabled, move |enabled| {
-        if enabled {
+    use_memo(move || {
+        if enabled() {
             animation.start();
         } else if animation.peek_has_run_yet() {
             animation.reverse();
         }
-    }));
+    });
 
     rsx!(
         rect {
@@ -166,20 +215,9 @@ pub fn Switch(props: SwitchProps) -> Element {
             corner_radius: "50",
             background: "{background}",
             border: "{border}",
-            onmousedown,
-            onmouseenter,
-            onmouseleave,
-            onglobalkeydown,
-            onclick,
-            a11y_id,
             offset_x: "{offset_x}",
             main_align: "center",
-            rect {
-                background: "{circle}",
-                width: "{size}",
-                height: "{size}",
-                corner_radius: "50",
-            }
+            {children}
         }
     )
 }

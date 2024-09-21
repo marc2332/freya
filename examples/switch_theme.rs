@@ -48,7 +48,7 @@ fn app() -> Element {
                 cross_align: "center",
                 spacing: "20",
                 padding: "40",
-                Switch {
+                SwitchContainer {
                     enabled: value() >= 50.,
                     ontoggled: move |_| {
                         if value() >= 50. {
@@ -56,7 +56,21 @@ fn app() -> Element {
                         } else {
                             value.set(75.0);
                         }
+                    },
+                    SwitchBar {
+                        SwitchBall {}
                     }
+                }
+                SwitchContainer {
+                    enabled: value() >= 50.,
+                    ontoggled: move |_| {
+                        if value() >= 50. {
+                            value.set(25.0);
+                        } else {
+                            value.set(75.0);
+                        }
+                    },
+                    CoolStuff::SwitchButNotReally { }
                 }
                 Slider {
                     width: "fill",
@@ -101,4 +115,20 @@ fn app() -> Element {
             }
         }
     )
+}
+
+#[allow(non_snake_case)]
+mod CoolStuff {
+    use freya::prelude::*;
+
+    #[component]
+    pub fn SwitchButNotReally() -> Element {
+        let SwitchContainerInfo(_focus, enabled) = consume_context();
+
+        rsx!(
+            label {
+                "is toggled? {enabled()}"
+            }
+        )
+    }
 }
