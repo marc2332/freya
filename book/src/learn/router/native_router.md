@@ -1,8 +1,9 @@
 # Native Router
 
-Even though Freya supports Dioxus Router, it might due to Freya being it's own platform it misses certain integrations that users might expect from routing in an app, like support for back and forward buttons from mouses.
+Even though Freya supports Dioxus Router, there are certain integrations that it does not provide, such as as back and forward navigation with the mouse buttons.
+For things like this exists `NativeRouter`, a thin wrapper component that adds these missing integrations.
 
-In order to use the native router you simply need to wrap your `Router` content inside the `NativeRouter` component.
+You simply need to wrap your `Router` content inside the `NativeRouter` component.
 
 Example (based on the example from [router](../router.md)):
 ```rs
