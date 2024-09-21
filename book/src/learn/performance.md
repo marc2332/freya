@@ -24,7 +24,7 @@ fn app() -> Element {
 }
 ```
 
-This is bad because we are storing a derived value (double_state) in a reactive wrapper (signala). 
+This is bad because we are storing a derived value (double_state) in an unnecessary reactive wrapper (signal). 
 The flow would have been:
 ```
                              (initial) -> state: 0 , double_state: 0 
