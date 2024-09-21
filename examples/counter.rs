@@ -12,10 +12,6 @@ fn main() {
 fn app() -> Element {
     let mut count = use_signal(|| 0);
 
-    use_effect(use_reactive(&count, |count| {
-
-    }));
-
     rsx!(
         rect {
             height: "50%",
