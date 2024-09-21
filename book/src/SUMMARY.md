@@ -17,6 +17,7 @@
     - [Global Signals](./learn/state_management/global_signals.md)
     - [Lifecycle](./learn/lifecycle.md)
     - [Context](./learn/state_management/context.md)
+    - [Memoization](./learn/state_management/memoization.md)
     - [Third Party](./learn/state_management/third_party.md)
 - [Async](./learn/async.md)
 - [Themes](./learn/themes.md)
@@ -30,6 +31,7 @@
 - [Built-in Hooks](./learn/built_in_hooks.md)
 - [Devtools](./learn/devtools.md)
 - [Publishing](./learn/publishing.md)
+- [Performance](./learn/performance.md)
 
 # Other
 - [FAQ](./faq.md)

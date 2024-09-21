@@ -40,7 +40,8 @@ fn app() -> Element {
     let mut signal = use_signal(|| 1);
 
     use_effect(move || {
-        // Because we are reading this signal now the effect is subscribed to any change
+        // Because we are reading this signal 
+        // now the effect is subscribed to any change
         let value = signal();
         println!("Value of signal is {value}");
     });
