@@ -61,6 +61,9 @@ pub struct InputProps {
     /// Display mode for Input. By default, input text is shown as it is provided.
     #[props(default = InputMode::Shown, into)]
     pub mode: InputMode,
+    /// Automatically focus this Input upon creation. Default `false`.
+    #[props(default = false)]
+    pub auto_focus: bool,
 }
 
 /// Small box to edit text.
@@ -96,6 +99,7 @@ pub fn Input(
         onchange,
         mode,
         placeholder,
+        auto_focus,
     }: InputProps,
 ) -> Element {
     let platform = use_platform();
@@ -106,7 +110,9 @@ pub fn Input(
     );
     let theme = use_applied_theme!(&theme, input);
     let mut focus = use_focus();
-    let display_placeholder = value.is_empty() && placeholder.is_some() && !focus.is_focused();
+
+    let is_focused = focus.is_focused();
+    let display_placeholder = value.is_empty() && placeholder.is_some() && !is_focused;
 
     if &value != editable.editor().read().rope() {
         editable.editor_mut().write().set(&value);
@@ -119,16 +125,16 @@ pub fn Input(
     });
 
     let onkeydown = move |e: Event<KeyboardData>| {
-        if focus.is_focused() && e.data.key != Key::Enter {
+        if e.data.key != Key::Enter && e.data.key != Key::Tab {
+            e.stop_propagation();
             editable.process_event(&EditableEvent::KeyDown(e.data));
             onchange.call(editable.editor().peek().to_string());
         }
     };
 
     let onkeyup = move |e: Event<KeyboardData>| {
-        if focus.is_focused() {
-            editable.process_event(&EditableEvent::KeyUp(e.data));
-        }
+        e.stop_propagation();
+        editable.process_event(&EditableEvent::KeyUp(e.data));
     };
 
     let onmousedown = move |e: MouseEvent| {
@@ -138,8 +144,8 @@ pub fn Input(
         focus.focus();
     };
 
-    let onmouseover = move |e: MouseEvent| {
-        editable.process_event(&EditableEvent::MouseOver(e.data, 0));
+    let onmousemove = move |e: MouseEvent| {
+        editable.process_event(&EditableEvent::MouseMove(e.data, 0));
     };
 
     let onmouseenter = move |_| {
@@ -155,6 +161,7 @@ pub fn Input(
     let onglobalclick = move |_| match *status.read() {
         InputStatus::Idle if focus.is_focused() => {
             focus.unfocus();
+            editable.process_event(&EditableEvent::Click);
         }
         InputStatus::Hovering => {
             editable.process_event(&EditableEvent::Click);
@@ -162,7 +169,7 @@ pub fn Input(
         _ => {}
     };
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
     let cursor_reference = editable.cursor_attr();
     let highlights = editable.highlights_attr(0);
 
@@ -207,20 +214,20 @@ pub fn Input(
             shadow: "{shadow}",
             corner_radius: "{corner_radius}",
             margin: "{margin}",
-            cursor_reference,
-            focus_id,
-            focusable: "true",
-            role: "textInput",
             main_align: "center",
+            cursor_reference,
+            a11y_id,
+            a11y_role: "textInput",
+            a11y_auto_focus: "{auto_focus}",
+            onkeydown,
+            onkeyup,
             paragraph {
                 margin: "8 12",
-                onkeydown,
-                onkeyup,
                 onglobalclick,
                 onmouseenter,
                 onmouseleave,
                 onmousedown,
-                onmouseover,
+                onmousemove,
                 width: "100%",
                 cursor_id: "0",
                 cursor_index: "{cursor_char}",

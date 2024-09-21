@@ -11,10 +11,20 @@ use freya_hooks::ActivableRouteContext;
 pub fn ActivableRoute<T: Clone + PartialEq + Routable + 'static>(
     children: Element,
     route: T,
+    #[props(default = Vec::new())] routes: Vec<T>,
     #[props(default = false)] exact: bool,
 ) -> Element {
     let current_route = use_route::<T>();
-    let is_active = (!exact && current_route.is_child_of(&route)) || current_route == route;
+
+    let is_descendent_route_active = current_route.is_child_of(&route);
+    let is_descendent_routes_active = routes.iter().any(|route| current_route.is_child_of(route));
+    let is_descendent_active =
+        !exact && (is_descendent_route_active || is_descendent_routes_active);
+
+    let is_exact_active = current_route == route || routes.contains(&current_route);
+
+    let is_active = is_descendent_active || is_exact_active;
+
     let mut ctx = use_context_provider::<ActivableRouteContext>(|| {
         ActivableRouteContext(Signal::new(is_active))
     });

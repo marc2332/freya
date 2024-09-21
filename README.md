@@ -68,7 +68,7 @@ fn app() -> Element {
 
 Thanks to my sponsors for supporting this project! 😄
 
-<!-- sponsors --><a href="https://github.com/piny4man"><img src="https://github.com/piny4man.png" width="60px" alt="" /></a><a href="https://github.com/albinekb"><img src="https://github.com/albinekb.png" width="60px" alt="Albin Ekblom" /></a><!-- sponsors -->
+<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;avatars.githubusercontent.com&#x2F;u&#x2F;8446285?u&#x3D;fd37db4dd9b4ba94dabe0bccc3a95ef2a35376ab&amp;v&#x3D;4" width="60px" alt="" /></a><!-- sponsors -->
 
 ### Want to try it? 🤔
 

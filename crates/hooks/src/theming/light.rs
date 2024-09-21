@@ -12,7 +12,7 @@ pub const LIGHT_THEME: Theme = Theme {
     },
     slider: SliderTheme {
         background: cow_borrowed!("rgb(210, 210, 210)"),
-        thumb_background: cow_borrowed!("rgb(210, 210, 210)"),
+        thumb_background: cow_borrowed!("rgb(202, 193, 227)"),
         thumb_inner_background: cow_borrowed!("rgb(103, 80, 164)"),
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
     },
@@ -26,7 +26,7 @@ pub const LIGHT_THEME: Theme = Theme {
         focus_border_fill: cow_borrowed!("rgb(180, 180, 180)"),
         shadow: cow_borrowed!("0 4 5 0 rgb(0, 0, 0, 0.1)"),
         padding: cow_borrowed!("8 12"),
-        margin: cow_borrowed!("4"),
+        margin: cow_borrowed!("0"),
         corner_radius: cow_borrowed!("8"),
         width: cow_borrowed!("auto"),
         height: cow_borrowed!("auto"),
@@ -42,15 +42,16 @@ pub const LIGHT_THEME: Theme = Theme {
         },
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
         width: cow_borrowed!("150"),
-        margin: cow_borrowed!("4"),
+        margin: cow_borrowed!("0"),
         corner_radius: cow_borrowed!("10"),
         shadow: cow_borrowed!("0 4 5 0 rgb(0, 0, 0, 0.1)"),
     },
     switch: SwitchTheme {
-        background: cow_borrowed!("rgb(121, 116, 126)"),
-        thumb_background: cow_borrowed!("rgb(231, 224, 236)"),
-        enabled_background: cow_borrowed!("rgb(103, 80, 164)"),
-        enabled_thumb_background: cow_borrowed!("rgb(234, 221, 255)"),
+        margin: cow_borrowed!("0"),
+        background: cow_borrowed!("rgb(225, 225, 225)"),
+        thumb_background: cow_borrowed!("rgb(125, 125, 125)"),
+        enabled_background: cow_borrowed!("rgb(202, 193, 227)"),
+        enabled_thumb_background: cow_borrowed!("rgb(103, 80, 164)"),
         focus_border_fill: cow_borrowed!("rgb(180, 180, 180)"),
         enabled_focus_border_fill: cow_borrowed!("rgb(180, 180, 180)"),
     },
@@ -61,17 +62,14 @@ pub const LIGHT_THEME: Theme = Theme {
         active_thumb_background: cow_borrowed!("rgb(95, 95, 95)"),
         size: cow_borrowed!("15"),
     },
-    scroll_view: ScrollViewTheme {
-        height: cow_borrowed!("fill"),
-        width: cow_borrowed!("fill"),
-        padding: cow_borrowed!("0"),
-    },
     tooltip: TooltipTheme {
         background: cow_borrowed!("rgb(245, 245, 245)"),
         color: cow_borrowed!("rgb(25,25,25)"),
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
     },
     dropdown: DropdownTheme {
+        width: cow_borrowed!("auto"),
+        margin: cow_borrowed!("0"),
         dropdown_background: cow_borrowed!("white"),
         background_button: cow_borrowed!("rgb(245, 245, 245)"),
         hover_background: cow_borrowed!("rgb(235, 235, 235)"),
@@ -136,15 +134,17 @@ pub const LIGHT_THEME: Theme = Theme {
     icon: IconTheme {
         width: cow_borrowed!("10"),
         height: cow_borrowed!("10"),
-        margin: cow_borrowed!("none"),
+        margin: cow_borrowed!("0"),
     },
     sidebar: SidebarTheme {
+        spacing: cow_borrowed!("4"),
         background: cow_borrowed!("rgb(245, 245, 245)"),
         font_theme: FontTheme {
             color: cow_borrowed!("rgb(10, 10, 10)"),
         },
     },
     sidebar_item: SidebarItemTheme {
+        margin: cow_borrowed!("0"),
         background: cow_borrowed!("transparent"),
         hover_background: cow_borrowed!("rgb(230, 230, 230)"),
         font_theme: FontTheme {
@@ -157,11 +157,12 @@ pub const LIGHT_THEME: Theme = Theme {
     radio: RadioTheme {
         unselected_fill: cow_borrowed!("rgb(35, 35, 35)"),
         selected_fill: cow_borrowed!("rgb(103, 80, 164)"),
+        border_fill: cow_borrowed!("rgb(210, 210, 210)"),
     },
     checkbox: CheckboxTheme {
         unselected_fill: cow_borrowed!("rgb(80, 80, 80)"),
         selected_fill: cow_borrowed!("rgb(103, 80, 164)"),
-        selected_icon_fill: cow_borrowed!("white"),
+        selected_icon_fill: cow_borrowed!("rgb(202, 193, 227)"),
     },
     menu_item: MenuItemTheme {
         hover_background: cow_borrowed!("rgb(235, 235, 235)"),

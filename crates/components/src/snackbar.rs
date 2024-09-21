@@ -146,14 +146,9 @@ mod test {
         assert!(!snackbar_box.is_visible());
 
         // Open the snackbar by clicking at the button
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (15.0, 15.0).into(),
-            button: Some(MouseButton::Left),
-        });
+        utils.click_cursor((15., 15.)).await;
 
         // Wait a bit for the snackbar to show up
-        utils.wait_for_update().await;
         utils.wait_for_update().await;
         sleep(Duration::from_millis(15)).await;
         utils.wait_for_update().await;

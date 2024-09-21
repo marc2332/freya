@@ -8,7 +8,6 @@ use rustc_hash::{
     FxHashMap,
     FxHashSet,
 };
-use tracing::info;
 
 use crate::{
     custom_measurer::LayoutMeasurer,
@@ -22,7 +21,7 @@ use crate::{
         Size2D,
     },
     measure::{
-        measure_node,
+        MeasureContext,
         Phase,
     },
     prelude::{
@@ -190,7 +189,7 @@ impl<Key: NodeKey> Torin<Key> {
                     let multiple_children = parent_children.len() > 1;
 
                     let mut found_node = false;
-                    for child_id in dom_adapter.children_of(&parent_id) {
+                    for child_id in parent_children {
                         if found_node {
                             self.safe_invalidate(child_id, dom_adapter);
                         }
@@ -256,16 +255,19 @@ impl<Key: NodeKey> Torin<Key> {
                 data: None,
             });
         let root = dom_adapter.get_node(&root_id).unwrap();
-        let root_height = dom_adapter.height(&root_id).unwrap();
 
-        info!(
-            "Processing {} dirty nodes and {} cached nodes from a height of {}",
-            self.dirty.len(),
-            self.results.len(),
-            root_height
-        );
+        #[cfg(debug_assertions)]
+        {
+            let root_height = dom_adapter.height(&root_id).unwrap();
+            tracing::info!(
+                "Processing {} dirty nodes and {} cached nodes from a height of {}",
+                self.dirty.len(),
+                self.results.len(),
+                root_height
+            );
+        }
 
-        let metadata = LayoutMetadata { root_area };
+        let layout_metadata = LayoutMetadata { root_area };
 
         let mut available_area = layout_node.inner_area;
         if let Some(root_parent_id) = root_parent_id {
@@ -273,16 +275,19 @@ impl<Key: NodeKey> Torin<Key> {
             available_area.move_with_offsets(&root_parent.offset_x, &root_parent.offset_y);
         }
 
-        let (root_revalidated, mut root_layout_node) = measure_node(
+        let mut measure_context = MeasureContext {
+            layout: self,
+            layout_metadata,
+            dom_adapter,
+            measurer,
+        };
+
+        let (root_revalidated, mut root_layout_node) = measure_context.measure_node(
             root_id,
             &root,
-            self,
             &layout_node.inner_area,
             &available_area,
-            measurer,
             true,
-            dom_adapter,
-            &metadata,
             false,
             Phase::Final,
         );

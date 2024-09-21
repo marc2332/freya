@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use dioxus_core::{
     use_hook,
     AttributeValue,
@@ -12,10 +14,11 @@ use dioxus_signals::{
     Signal,
     Writable,
 };
-use freya_common::EventMessage;
+use freya_common::AccessibilityGenerator;
 use freya_core::{
     accessibility::ACCESSIBILITY_ROOT_ID,
     platform_state::NavigationMode,
+    prelude::EventMessage,
     types::AccessibilityId,
 };
 use freya_elements::events::{
@@ -26,7 +29,6 @@ use freya_node_state::CustomAttributeValues;
 
 use crate::{
     use_platform,
-    AccessibilityIdCounter,
     NavigationMark,
     UsePlatform,
 };
@@ -48,15 +50,6 @@ impl UseFocus {
         if !*self.is_focused.peek() {
             self.platform
                 .send(EventMessage::FocusAccessibilityNode(self.id))
-                .ok();
-        }
-    }
-
-    /// Queue a focus to this node
-    pub fn queue_focus(&mut self) {
-        if !*self.is_focused.peek() {
-            self.platform
-                .send(EventMessage::QueueFocusAccessibilityNode(self.id))
                 .ok();
         }
     }
@@ -88,13 +81,13 @@ impl UseFocus {
             .ok();
     }
 
-    /// Validate keydown event
-    pub fn validate_keydown(&self, e: &KeyboardEvent) -> bool {
+    /// Validate globalkeydown event
+    pub fn validate_globalkeydown(&self, e: &KeyboardEvent) -> bool {
         e.data.code == Code::Enter && self.is_selected()
     }
 
     /// Prevent navigating the accessible nodes with the keyboard.
-    /// You must use this this inside of a `onkeydown` event handler.
+    /// You must use this this inside of a `onglobalkeydown` event handler.
     pub fn prevent_navigation(&mut self) {
         self.navigation_mark.write().set_allowed(false);
     }
@@ -102,17 +95,13 @@ impl UseFocus {
 
 /// Create a focus manager for a node.
 pub fn use_focus() -> UseFocus {
-    let accessibility_id_counter = use_context::<AccessibilityIdCounter>();
+    let accessibility_generator = use_context::<Arc<AccessibilityGenerator>>();
     let focused_id = use_context::<Signal<AccessibilityId>>();
     let navigation_mode = use_context::<Signal<NavigationMode>>();
     let navigation_mark = use_context::<Signal<NavigationMark>>();
     let platform = use_platform();
 
-    let id = use_hook(|| {
-        let mut counter = accessibility_id_counter.borrow_mut();
-        *counter += 1;
-        AccessibilityId(*counter)
-    });
+    let id = use_hook(|| AccessibilityId(accessibility_generator.new_id()));
 
     let is_focused = use_memo(move || id == *focused_id.read());
 

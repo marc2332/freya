@@ -3,9 +3,12 @@ use std::time::{
     Instant,
 };
 
-use freya_core::plugins::{
-    FreyaPlugin,
-    PluginEvent,
+use freya_core::{
+    plugins::{
+        FreyaPlugin,
+        PluginEvent,
+    },
+    prelude::PluginHandle,
 };
 use freya_engine::prelude::{
     Color,
@@ -35,7 +38,7 @@ pub struct PerformanceOverlayPlugin {
 }
 
 impl FreyaPlugin for PerformanceOverlayPlugin {
-    fn on_event(&mut self, event: &PluginEvent) {
+    fn on_event(&mut self, event: &PluginEvent, _handle: PluginHandle) {
         match event {
             PluginEvent::StartedLayout(_) => self.started_layout = Some(Instant::now()),
             PluginEvent::FinishedLayout(_) => {

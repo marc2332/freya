@@ -224,6 +224,8 @@ define_theme! {
     %[component]
     pub Dropdown {
         %[cows]
+        width: str,
+        margin: str,
         dropdown_background: str,
         background_button: str,
         hover_background: str,
@@ -294,6 +296,7 @@ define_theme! {
     %[component]
     pub Switch {
         %[cows]
+        margin: str,
         background: str,
         thumb_background: str,
         enabled_background: str,
@@ -312,17 +315,6 @@ define_theme! {
         hover_thumb_background: str,
         active_thumb_background: str,
         size: str,
-    }
-}
-
-define_theme! {
-    /// Also used by `VirtualScrollView`.
-    %[component]
-    pub ScrollView {
-        %[cows]
-        height: str,
-        width: str,
-        padding: str,
     }
 }
 
@@ -454,6 +446,7 @@ define_theme! {
     %[component]
     pub Sidebar {
         %[cows]
+        spacing: str,
         background: str,
         %[subthemes]
         font_theme: FontTheme,
@@ -464,6 +457,7 @@ define_theme! {
     %[component]
     pub SidebarItem {
         %[cows]
+        margin: str,
         background: str,
         hover_background: str,
         %[subthemes]
@@ -515,6 +509,7 @@ define_theme! {
         %[cows]
         unselected_fill: str,
         selected_fill: str,
+        border_fill: str,
     }
 }
 
@@ -577,7 +572,6 @@ pub struct Theme {
     pub button: ButtonTheme,
     pub switch: SwitchTheme,
     pub scroll_bar: ScrollBarTheme,
-    pub scroll_view: ScrollViewTheme,
     pub slider: SliderTheme,
     pub tooltip: TooltipTheme,
     pub dropdown: DropdownTheme,

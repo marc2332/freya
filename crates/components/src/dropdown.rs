@@ -66,7 +66,7 @@ where
     let mut status = use_signal(DropdownItemStatus::default);
     let platform = use_platform();
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
     let is_focused = focus.is_focused();
     let is_selected = *selected.read() == value;
 
@@ -94,7 +94,7 @@ where
         status.set(DropdownItemStatus::default());
     };
 
-    let onkeydown = {
+    let onglobalkeydown = {
         to_owned![onclick];
         move |ev: KeyboardEvent| {
             if ev.key == Key::Enter && is_focused {
@@ -115,8 +115,8 @@ where
         rect {
             width: "fill-min",
             color: "{color}",
-            focus_id,
-            role: "button",
+            a11y_id,
+            a11y_role:"button",
             background: "{background}",
             padding: "6 22 6 16",
             corner_radius: "6",
@@ -124,7 +124,7 @@ where
             onmouseenter,
             onmouseleave,
             onclick,
-            onkeydown,
+            onglobalkeydown,
             {children}
         }
     )
@@ -194,7 +194,7 @@ where
 
     let is_opened = *opened.read();
     let is_focused = focus.is_focused();
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
 
     // Update the provided value if the passed value changes
     use_effect(use_reactive(&props.value, move |value| {
@@ -217,7 +217,7 @@ where
         opened.set(true)
     };
 
-    let onkeydown = move |e: KeyboardEvent| {
+    let onglobalkeydown = move |e: KeyboardEvent| {
         match e.key {
             // Close when `Escape` key is pressed
             Key::Escape => {
@@ -242,6 +242,8 @@ where
     };
 
     let DropdownTheme {
+        width,
+        margin,
         font_theme,
         dropdown_background,
         background_button,
@@ -259,48 +261,56 @@ where
 
     rsx!(
         rect {
-            onmouseenter,
-            onmouseleave,
-            onclick,
-            onkeydown,
-            margin: "4",
-            focus_id,
-            background: "{button_background}",
-            color: "{font_theme.color}",
-            corner_radius: "8",
-            padding: "8 16",
-            border: "1 solid {border_fill}",
-            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
-            direction: "horizontal",
-            main_align: "center",
-            cross_align: "center",
-            label {
-                "{selected}"
-            }
-            ArrowIcon {
-                rotate: "0",
-                fill: "{arrow_fill}",
-                theme: theme_with!(IconTheme {
-                    margin : "0 0 0 8".into(),
-                })
-            }
-        }
-        if *opened.read() {
+            direction: "vertical",
             rect {
-                height: "0",
+                width: "{width}",
+                onmouseenter,
+                onmouseleave,
+                onclick,
+                onglobalkeydown,
+                margin: "{margin}",
+                a11y_id,
+                background: "{button_background}",
+                color: "{font_theme.color}",
+                corner_radius: "8",
+                padding: "8 16",
+                border: "1 solid {border_fill}",
+                shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
+                direction: "horizontal",
+                main_align: "center",
+                cross_align: "center",
+                label {
+                    "{selected}"
+                }
+                ArrowIcon {
+                    rotate: "0",
+                    fill: "{arrow_fill}",
+                    theme: theme_with!(IconTheme {
+                        margin : "0 0 0 8".into(),
+                    })
+                }
+            }
+            if *opened.read() {
                 rect {
-                    onglobalclick,
-                    onkeydown,
-                    layer: "-99",
-                    margin: "4",
-                    border: "1 solid {border_fill}",
-                    overflow: "clip",
-                    corner_radius: "8",
-                    background: "{dropdown_background}",
-                    shadow: "0 4 5 0 rgb(0, 0, 0, 0.3)",
-                    padding: "6",
-                    content: "fit",
-                    {props.children}
+                    height: "0",
+                    width: "0",
+                    rect {
+                        width: "100v",
+                        rect {
+                            onglobalclick,
+                            onglobalkeydown,
+                            layer: "-99",
+                            margin: "{margin}",
+                            border: "1 solid {border_fill}",
+                            overflow: "clip",
+                            corner_radius: "8",
+                            background: "{dropdown_background}",
+                            shadow: "0 4 5 0 rgb(0, 0, 0, 0.3)",
+                            padding: "6",
+                            content: "fit",
+                            {props.children}
+                        }
+                    }
                 }
             }
         }
@@ -311,7 +321,6 @@ where
 mod test {
     use freya::prelude::*;
     use freya_testing::prelude::*;
-    use winit::event::MouseButton;
 
     #[tokio::test]
     pub async fn dropdown() {
@@ -344,7 +353,7 @@ mod test {
 
         let mut utils = launch_test(dropdown_app);
         let root = utils.root();
-        let label = root.get(0).get(0);
+        let label = root.get(0).get(0).get(0);
         utils.wait_for_update().await;
 
         // Currently closed
@@ -354,42 +363,23 @@ mod test {
         assert_eq!(label.get(0).text(), Some("Value A"));
 
         // Open the dropdown
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (15.0, 15.0).into(),
-            button: Some(MouseButton::Left),
-        });
+        utils.click_cursor((15., 15.)).await;
         utils.wait_for_update().await;
 
         // Now that the dropwdown is opened, there are more nodes in the layout
         assert!(utils.sdom().get().layout().size() > start_size);
 
         // Close the dropdown by clicking outside of it
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (200.0, 200.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((200., 200.)).await;
 
         // Now the layout size is like in the begining
         assert_eq!(utils.sdom().get().layout().size(), start_size);
 
         // Open the dropdown again
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (15.0, 15.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((15., 15.)).await;
 
         // Click on the second option
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (45.0, 100.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((45., 100.)).await;
         utils.wait_for_update().await;
         utils.wait_for_update().await;
 

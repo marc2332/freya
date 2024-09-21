@@ -40,6 +40,7 @@ const SHADER: &str = "
 
 fn app() -> Element {
     let platform = use_platform();
+    let (reference, size) = use_node_signal();
 
     use_hook(|| {
         let mut ticker = platform.new_ticker();
@@ -47,6 +48,7 @@ fn app() -> Element {
         spawn(async move {
             loop {
                 ticker.tick().await;
+                platform.invalidate_drawing_area(size.peek().area);
                 platform.request_animation_frame();
             }
         });
@@ -57,11 +59,11 @@ fn app() -> Element {
         let shader_wrapper = Arc::new(ShaderWrapper(shader));
         let instant = Instant::now();
 
-        Box::new(move |canvas, _, region, _| {
+        Box::new(move |ctx| {
             let mut builder = UniformsBuilder::default();
             builder.set(
                 "u_resolution",
-                UniformValue::FloatVec(vec![region.width(), region.height()]),
+                UniformValue::FloatVec(vec![ctx.area.width(), ctx.area.height()]),
             );
             builder.set(
                 "u_time",
@@ -77,30 +79,25 @@ fn app() -> Element {
             paint.set_color(Color::WHITE);
             paint.set_shader(shader);
 
-            canvas.draw_rect(
+            ctx.canvas.draw_rect(
                 Rect::new(
-                    region.min_x(),
-                    region.min_y(),
-                    region.max_x(),
-                    region.max_y(),
+                    ctx.area.min_x(),
+                    ctx.area.min_y(),
+                    ctx.area.max_x(),
+                    ctx.area.max_y(),
                 ),
                 &paint,
             );
         })
     });
 
-    rsx!(
-        rect {
-            Canvas {
-                canvas,
-                theme: theme_with!(CanvasTheme {
-                    background: "black".into(),
-                    width: "100%".into(),
-                    height: "100%".into(),
-                })
-            }
-        }
-    )
+    rsx!(rect {
+        canvas_reference: canvas.attribute(),
+        reference,
+        background: "black",
+        width: "100%",
+        height: "100%",
+    })
 }
 
 struct ShaderWrapper(RuntimeEffect);
