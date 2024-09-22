@@ -24,7 +24,7 @@ jobs:
 
       - name: cargo doc
         run: 
-          cargo doc -p freya-components-docs
+          cargo doc -p freya-components-docs \
           cargo doc --no-deps --workspace
 
       - name: Upload to Deno Deploy

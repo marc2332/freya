@@ -2,8 +2,7 @@ use freya::prelude::*;
 use freya_testing::prelude::*;
 
 #[tokio::main]
-async fn main(){
-    
+async fn main() {
     println!("cargo::rerun-if-changed=../components/src/*");
 
     let mut utils = launch_test(|| {

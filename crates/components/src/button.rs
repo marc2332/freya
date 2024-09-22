@@ -60,7 +60,7 @@ pub enum ButtonStatus {
 }
 
 /// Clickable button.
-/// 
+///
 /// ![Button Demo][Button]
 ///
 /// # Styling
