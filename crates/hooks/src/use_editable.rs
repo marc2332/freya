@@ -11,8 +11,8 @@ use dioxus_signals::{
     Signal,
     Writable,
 };
-use freya_common::{
-    CursorLayoutResponse,
+use freya_common::CursorLayoutResponse;
+use freya_core::prelude::{
     EventMessage,
     TextGroupMeasurement,
 };
@@ -42,7 +42,7 @@ use crate::{
 /// Events emitted to the [`UseEditable`].
 pub enum EditableEvent {
     Click,
-    MouseOver(Rc<MouseData>, usize),
+    MouseMove(Rc<MouseData>, usize),
     MouseDown(Rc<MouseData>, usize),
     KeyDown(Rc<KeyboardData>),
     KeyUp(Rc<KeyboardData>),
@@ -166,7 +166,7 @@ impl UseEditable {
 
                 Some((*id, Some(coords), None))
             }
-            EditableEvent::MouseOver(e, id) => {
+            EditableEvent::MouseMove(e, id) => {
                 if let Some(src) = self.dragging.peek().get_cursor_coords() {
                     let new_dist = e.get_element_coordinates();
 

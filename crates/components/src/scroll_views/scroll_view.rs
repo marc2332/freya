@@ -13,9 +13,9 @@ use freya_hooks::{
     use_focus,
     use_node,
     ScrollBarThemeWith,
-    ScrollViewThemeWith,
 };
 
+use super::use_scroll_controller::ScrollController;
 use crate::{
     get_container_size,
     get_corrected_scroll_position,
@@ -24,6 +24,10 @@ use crate::{
     get_scrollbar_pos_and_size,
     is_scrollbar_visible,
     manage_key_event,
+    scroll_views::use_scroll_controller::{
+        use_scroll_controller,
+        ScrollConfig,
+    },
     Axis,
     ScrollBar,
     ScrollThumb,
@@ -33,8 +37,18 @@ use crate::{
 /// Properties for the [`ScrollView`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct ScrollViewProps {
-    /// Theme override.
-    pub theme: Option<ScrollViewThemeWith>,
+    /// Width of the ScrollView container. Default to `fill`.
+    #[props(default = "fill".into())]
+    pub width: String,
+    /// Height of the ScrollView container. Default to `fill`.
+    #[props(default = "fill".into())]
+    pub height: String,
+    /// Padding of the ScrollView container.
+    #[props(default = "0".to_string())]
+    pub padding: String,
+    /// Spacing for the ScrollView container.
+    #[props(default = "0".to_string())]
+    pub spacing: String,
     /// Theme override for the scrollbars.
     pub scrollbar_theme: Option<ScrollBarThemeWith>,
     /// Inner children for the ScrollView.
@@ -48,6 +62,12 @@ pub struct ScrollViewProps {
     /// Enable scrolling with arrow keys.
     #[props(default = true, into)]
     pub scroll_with_arrows: bool,
+    /// Custom Scroll Controller for the ScrollView.
+    pub scroll_controller: Option<ScrollController>,
+    /// If `false` (default), wheel scroll with no shift will scroll vertically no matter the direction.
+    /// If `true`, wheel scroll with no shift will scroll horizontally.
+    #[props(default = false)]
+    pub invert_scroll_wheel: bool,
 }
 
 /// Scrollable area with bidirectional support and scrollbars.
@@ -59,47 +79,105 @@ pub struct ScrollViewProps {
 /// fn app() -> Element {
 ///     rsx!(
 ///         ScrollView {
-///              theme: theme_with!(ScrollViewTheme {
-///                 width: "100%".into(),
-///                 height: "300".into(),
-///              }),
-///              show_scrollbar: true,
-///              rect {
+///             rect {
 ///                 background: "blue",
-///                 height: "500",
+///                 height: "400",
+///                 width: "100%"
+///             }
+///             rect {
+///                 background: "red",
+///                 height: "400",
 ///                 width: "100%"
 ///              }
 ///         }
 ///     )
 /// }
 /// ```
+///
+/// # With a Scroll Controller
+///
+/// ```no_run
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///     let mut scroll_controller = use_scroll_controller(|| ScrollConfig::default());
+///
+///     rsx!(
+///         ScrollView {
+///             scroll_controller,
+///             rect {
+///                 background: "blue",
+///                 height: "400",
+///                 width: "100%"
+///             }
+///             Button {
+///                 label {
+///                     onclick: move |_| {
+///                          scroll_controller.scroll_to(ScrollPosition::Start, ScrollDirection::Vertical);
+///                     },
+///                     label {
+///                         "Scroll up"
+///                     }
+///                 }
+///             }
+///             rect {
+///                 background: "red",
+///                 height: "400",
+///                 width: "100%"
+///             }
+///         }
+///     )
+/// }
+/// ```
 #[allow(non_snake_case)]
-pub fn ScrollView(props: ScrollViewProps) -> Element {
+pub fn ScrollView(
+    ScrollViewProps {
+        width,
+        height,
+        padding,
+        spacing,
+        scrollbar_theme,
+        children,
+        direction,
+        show_scrollbar,
+        scroll_with_arrows,
+        scroll_controller,
+        invert_scroll_wheel,
+    }: ScrollViewProps,
+) -> Element {
     let mut clicking_scrollbar = use_signal::<Option<(Axis, f64)>>(|| None);
     let mut clicking_shift = use_signal(|| false);
     let mut clicking_alt = use_signal(|| false);
-    let mut scrolled_y = use_signal(|| 0);
-    let mut scrolled_x = use_signal(|| 0);
+    let mut scroll_controller =
+        scroll_controller.unwrap_or_else(|| use_scroll_controller(ScrollConfig::default));
+    let (mut scrolled_x, mut scrolled_y) = scroll_controller.into();
     let (node_ref, size) = use_node();
-    let mut focus = use_focus();
-    let theme = use_applied_theme!(&props.theme, scroll_view);
-    let scrollbar_theme = use_applied_theme!(&props.scrollbar_theme, scroll_bar);
 
-    let padding = &theme.padding;
-    let user_container_width = &theme.width;
-    let user_container_height = &theme.height;
-    let user_direction = &props.direction;
-    let show_scrollbar = props.show_scrollbar;
-    let scroll_with_arrows = props.scroll_with_arrows;
+    let mut focus = use_focus();
+    let applied_scrollbar_theme = use_applied_theme!(&scrollbar_theme, scroll_bar);
+
+    scroll_controller.use_apply(size.inner.width, size.inner.height);
+
+    let direction_is_vertical = direction == "vertical";
 
     let vertical_scrollbar_is_visible =
         is_scrollbar_visible(show_scrollbar, size.inner.height, size.area.height());
     let horizontal_scrollbar_is_visible =
         is_scrollbar_visible(show_scrollbar, size.inner.width, size.area.width());
 
-    let container_width = get_container_size(vertical_scrollbar_is_visible, &scrollbar_theme.size);
-    let container_height =
-        get_container_size(horizontal_scrollbar_is_visible, &scrollbar_theme.size);
+    let (container_width, content_width) = get_container_size(
+        &width,
+        direction_is_vertical,
+        Axis::X,
+        vertical_scrollbar_is_visible,
+        &applied_scrollbar_theme.size,
+    );
+    let (container_height, content_height) = get_container_size(
+        &height,
+        direction_is_vertical,
+        Axis::Y,
+        horizontal_scrollbar_is_visible,
+        &applied_scrollbar_theme.size,
+    );
 
     let corrected_scrolled_y = get_corrected_scroll_position(
         size.inner.height,
@@ -127,22 +205,10 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
 
         let wheel_movement = e.get_delta_y() as f32 * speed_multiplier;
 
-        if *clicking_shift.peek() {
-            let scroll_position_x = get_scroll_position_from_wheel(
-                wheel_movement,
-                size.inner.width,
-                size.area.width(),
-                corrected_scrolled_x,
-            );
+        let scroll_vertically_or_not =
+            (invert_scroll_wheel && clicking_shift()) || !invert_scroll_wheel && !clicking_shift();
 
-            // Only scroll when there is still area to scroll
-            if *scrolled_x.peek() != scroll_position_x {
-                e.stop_propagation();
-                *scrolled_x.write() = scroll_position_x;
-            } else {
-                return;
-            }
-        } else {
+        if scroll_vertically_or_not {
             let scroll_position_y = get_scroll_position_from_wheel(
                 wheel_movement,
                 size.inner.height,
@@ -157,13 +223,28 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
             } else {
                 return;
             }
+        } else {
+            let scroll_position_x = get_scroll_position_from_wheel(
+                wheel_movement,
+                size.inner.width,
+                size.area.width(),
+                corrected_scrolled_x,
+            );
+
+            // Only scroll when there is still area to scroll
+            if *scrolled_x.peek() != scroll_position_x {
+                e.stop_propagation();
+                *scrolled_x.write() = scroll_position_x;
+            } else {
+                return;
+            }
         }
 
         focus.focus();
     };
 
     // Drag the scrollbars
-    let onmouseover = move |e: MouseEvent| {
+    let onmousemove = move |e: MouseEvent| {
         let clicking_scrollbar = clicking_scrollbar.peek();
 
         if let Some((Axis::Y, y)) = *clicking_scrollbar {
@@ -195,7 +276,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
         }
     };
 
-    let onkeydown = move |e: KeyboardEvent| {
+    let onglobalkeydown = move |e: KeyboardEvent| {
         match &e.key {
             Key::Shift => {
                 clicking_shift.set(true);
@@ -238,7 +319,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
         };
     };
 
-    let onkeyup = move |e: KeyboardEvent| {
+    let onglobalkeyup = move |e: KeyboardEvent| {
         if e.key == Key::Shift {
             clicking_shift.set(false);
         } else if e.key == Key::Alt {
@@ -266,12 +347,12 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
     };
 
     let horizontal_scrollbar_size = if horizontal_scrollbar_is_visible {
-        &scrollbar_theme.size
+        &applied_scrollbar_theme.size
     } else {
         "0"
     };
     let vertical_scrollbar_size = if vertical_scrollbar_is_visible {
-        &scrollbar_theme.size
+        &applied_scrollbar_theme.size
     } else {
         "0"
     };
@@ -287,48 +368,49 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
         .map(|f| f.0 == Axis::Y)
         .unwrap_or_default();
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
 
     rsx!(
         rect {
-            role: "scrollView",
+            a11y_role:"scrollView",
             overflow: "clip",
             direction: "horizontal",
-            width: "{user_container_width}",
-            height: "{user_container_height}",
+            width,
+            height,
             onglobalclick: onclick,
-            onglobalmouseover: onmouseover,
-            onkeydown,
-            onkeyup,
-            focus_id,
+            onglobalmousemove: onmousemove,
+            onglobalkeydown,
+            onglobalkeyup,
+            a11y_id,
             rect {
                 direction: "vertical",
                 width: "{container_width}",
                 height: "{container_height}",
                 rect {
                     overflow: "clip",
+                    spacing: "{spacing}",
                     padding: "{padding}",
-                    height: "100%",
-                    width: "100%",
-                    direction: "{user_direction}",
+                    height: "{content_height}",
+                    width: "{content_width}",
+                    direction: "{direction}",
                     offset_y: "{corrected_scrolled_y}",
                     offset_x: "{corrected_scrolled_x}",
                     reference: node_ref,
                     onwheel: onwheel,
-                    {props.children}
+                    {children}
                 }
                 ScrollBar {
                     width: "100%",
                     height: "{horizontal_scrollbar_size}",
                     offset_x: "{scrollbar_x}",
                     clicking_scrollbar: is_scrolling_x,
-                    theme: props.scrollbar_theme.clone(),
+                    theme: scrollbar_theme.clone(),
                     ScrollThumb {
                         clicking_scrollbar: is_scrolling_x,
                         onmousedown: onmousedown_x,
                         width: "{scrollbar_width}",
                         height: "100%",
-                        theme: props.scrollbar_theme.clone().clone()
+                        theme: scrollbar_theme.clone()
                     }
                 }
             }
@@ -337,13 +419,13 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
                 height: "100%",
                 offset_y: "{scrollbar_y}",
                 clicking_scrollbar: is_scrolling_y,
-                theme: props.scrollbar_theme.clone(),
+                theme: scrollbar_theme.clone(),
                 ScrollThumb {
                     clicking_scrollbar: is_scrolling_y,
                     onmousedown: onmousedown_y,
                     width: "100%",
                     height: "{scrollbar_height}",
-                    theme: props.scrollbar_theme
+                    theme: scrollbar_theme
                 }
             }
         }
@@ -447,7 +529,7 @@ mod test {
 
         // Simulate the user dragging the scrollbar
         utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
+            name: EventName::MouseMove,
             cursor: (490., 20.).into(),
             button: Some(MouseButton::Left),
         });
@@ -457,12 +539,12 @@ mod test {
             button: Some(MouseButton::Left),
         });
         utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
+            name: EventName::MouseMove,
             cursor: (490., 320.).into(),
             button: Some(MouseButton::Left),
         });
         utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
+            name: EventName::MouseUp,
             cursor: (490., 320.).into(),
             button: Some(MouseButton::Left),
         });

@@ -4,15 +4,18 @@
 )]
 
 use freya::prelude::*;
-use freya_core::plugins::{
-    FreyaPlugin,
-    PluginEvent,
+use freya_core::{
+    plugins::{
+        FreyaPlugin,
+        PluginEvent,
+    },
+    prelude::PluginHandle,
 };
 
 struct DummyPlugin;
 
 impl FreyaPlugin for DummyPlugin {
-    fn on_event(&mut self, event: &PluginEvent) {
+    fn on_event(&mut self, event: &PluginEvent, _handle: PluginHandle) {
         if let PluginEvent::AfterRender { .. } = event {
             println!("The app just got rendered to the canvas.");
         }
@@ -24,8 +27,7 @@ fn main() {
         app,
         LaunchConfig::<()>::new()
             .with_plugin(DummyPlugin)
-            .with_width(250.0)
-            .with_height(200.0),
+            .with_size(250.0, 250.),
     )
 }
 

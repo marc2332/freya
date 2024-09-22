@@ -6,7 +6,10 @@ use std::{
 use freya_engine::prelude::*;
 use torin::scaled::Scaled;
 
-use crate::Parse;
+use crate::{
+    Parse,
+    ParseError,
+};
 
 #[derive(PartialEq, Clone, Debug, Default, Copy)]
 pub struct CornerRadius {
@@ -195,13 +198,8 @@ impl CornerRadius {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct ParseCornerRadiusError;
-
 impl Parse for CornerRadius {
-    type Err = ParseCornerRadiusError;
-
-    fn parse(value: &str) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, ParseError> {
         let mut radius = CornerRadius::default();
         let mut values = value.split_ascii_whitespace();
 
@@ -211,9 +209,9 @@ impl Parse for CornerRadius {
                 radius.fill_all(
                     values
                         .next()
-                        .ok_or(ParseCornerRadiusError)?
+                        .ok_or(ParseError)?
                         .parse::<f32>()
-                        .map_err(|_| ParseCornerRadiusError)?,
+                        .map_err(|_| ParseError)?,
                 );
             }
             // By Top and Bottom
@@ -222,18 +220,18 @@ impl Parse for CornerRadius {
                 radius.fill_top(
                     values
                         .next()
-                        .ok_or(ParseCornerRadiusError)?
+                        .ok_or(ParseError)?
                         .parse::<f32>()
-                        .map_err(|_| ParseCornerRadiusError)?,
+                        .map_err(|_| ParseError)?,
                 );
 
                 // Bottom
                 radius.fill_bottom(
                     values
                         .next()
-                        .ok_or(ParseCornerRadiusError)?
+                        .ok_or(ParseError)?
                         .parse::<f32>()
-                        .map_err(|_| ParseCornerRadiusError)?,
+                        .map_err(|_| ParseError)?,
                 )
             }
             // Each corner
@@ -241,28 +239,28 @@ impl Parse for CornerRadius {
                 radius = CornerRadius {
                     top_left: values
                         .next()
-                        .ok_or(ParseCornerRadiusError)?
+                        .ok_or(ParseError)?
                         .parse::<f32>()
-                        .map_err(|_| ParseCornerRadiusError)?,
+                        .map_err(|_| ParseError)?,
                     top_right: values
                         .next()
-                        .ok_or(ParseCornerRadiusError)?
+                        .ok_or(ParseError)?
                         .parse::<f32>()
-                        .map_err(|_| ParseCornerRadiusError)?,
+                        .map_err(|_| ParseError)?,
                     bottom_left: values
                         .next()
-                        .ok_or(ParseCornerRadiusError)?
+                        .ok_or(ParseError)?
                         .parse::<f32>()
-                        .map_err(|_| ParseCornerRadiusError)?,
+                        .map_err(|_| ParseError)?,
                     bottom_right: values
                         .next()
-                        .ok_or(ParseCornerRadiusError)?
+                        .ok_or(ParseError)?
                         .parse::<f32>()
-                        .map_err(|_| ParseCornerRadiusError)?,
+                        .map_err(|_| ParseError)?,
                     ..Default::default()
                 }
             }
-            _ => return Err(ParseCornerRadiusError),
+            _ => return Err(ParseError),
         }
 
         Ok(radius)

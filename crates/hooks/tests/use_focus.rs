@@ -9,13 +9,13 @@ pub async fn track_focus() {
     fn OtherChild() -> Element {
         let mut focus_manager = use_focus();
 
-        let focus_id = focus_manager.attribute();
+        let a11y_id = focus_manager.attribute();
 
         rsx!(
             rect {
                 width: "100%",
                 height: "50%",
-                focus_id,
+                a11y_id,
                 onclick: move |_| focus_manager.focus(),
                 label {
                     "{focus_manager.is_focused()}"
@@ -50,26 +50,16 @@ pub async fn track_focus() {
     assert_eq!(root.get(1).get(0).get(0).text(), Some("false"));
 
     // Click on the first rect
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
-        cursor: (5.0, 5.0).into(),
-        button: Some(MouseButton::Left),
-    });
+    utils.click_cursor((5., 5.)).await;
 
     // First rect is now focused
-    utils.wait_for_update().await;
     assert_eq!(root.get(0).get(0).get(0).text(), Some("true"));
     assert_eq!(root.get(1).get(0).get(0).text(), Some("false"));
 
     // Click on the second rect
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
-        cursor: (5.0, 75.0).into(),
-        button: Some(MouseButton::Left),
-    });
+    utils.click_cursor((5., 75.)).await;
 
     // Second rect is now focused
-    utils.wait_for_update().await;
     utils.wait_for_update().await;
     assert_eq!(root.get(0).get(0).get(0).text(), Some("false"));
     assert_eq!(root.get(1).get(0).get(0).text(), Some("true"));
@@ -83,7 +73,7 @@ pub async fn block_focus() {
 
         rsx!(
             rect {
-                focus_id: focus_manager.attribute(),
+                a11y_id: focus_manager.attribute(),
                 width: "100%",
                 height: "50%",
                 onclick: move |_| focus_manager.focus(),
@@ -100,13 +90,11 @@ pub async fn block_focus() {
 
         rsx!(
             rect {
-                focus_id: focus_manager.attribute(),
+                a11y_id: focus_manager.attribute(),
                 width: "100%",
                 height: "50%",
                 onkeydown: move |_| {
-                    if focus_manager.is_focused() {
-                        focus_manager.prevent_navigation();
-                    }
+                    focus_manager.prevent_navigation();
                 },
                 onclick: move |_| focus_manager.focus(),
                 label {
@@ -136,20 +124,14 @@ pub async fn block_focus() {
     );
 
     // Initial state
-    utils.wait_for_update().await;
     let root = utils.root().get(0);
     assert_eq!(root.get(0).get(0).get(0).text(), Some("false"));
     assert_eq!(root.get(1).get(0).get(0).text(), Some("false"));
 
     // Click on the first rect
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::Click,
-        cursor: (5.0, 5.0).into(),
-        button: Some(MouseButton::Left),
-    });
+    utils.click_cursor((5., 5.)).await;
 
     // First rect is now focused
-    utils.wait_for_update().await;
     assert_eq!(root.get(0).get(0).get(0).text(), Some("true"));
     assert_eq!(root.get(1).get(0).get(0).text(), Some("false"));
 

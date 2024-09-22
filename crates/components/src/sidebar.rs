@@ -1,11 +1,9 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::{
-    theme_with,
     use_activable_route,
     use_applied_theme,
     use_platform,
-    ScrollViewThemeWith,
     SidebarItemTheme,
     SidebarItemThemeWith,
     SidebarTheme,
@@ -29,6 +27,7 @@ pub fn Sidebar(
     sidebar: Element,
 ) -> Element {
     let SidebarTheme {
+        spacing,
         font_theme,
         background,
     } = use_applied_theme!(&theme, sidebar);
@@ -40,15 +39,14 @@ pub fn Sidebar(
             direction: "horizontal",
             rect {
                 overflow: "clip",
-                width: "170",
+                width: "180",
                 height: "100%",
                 background: "{background}",
                 color: "{font_theme.color}",
                 shadow: "2 0 5 0 rgb(0, 0, 0, 30)",
                 ScrollView {
-                    theme: theme_with!(ScrollViewTheme {
-                        padding: "8".into(),
-                    }),
+                    padding: "8",
+                    spacing,
                     {sidebar}
                 }
             }
@@ -74,6 +72,7 @@ pub fn SidebarItem(
     onclick: Option<EventHandler<()>>,
 ) -> Element {
     let SidebarItemTheme {
+        margin,
         hover_background,
         background,
         font_theme,
@@ -113,7 +112,7 @@ pub fn SidebarItem(
     rsx!(
         rect {
             overflow: "clip",
-            margin: "4 0",
+            margin: "{margin}",
             onclick,
             onmouseenter,
             onmouseleave,

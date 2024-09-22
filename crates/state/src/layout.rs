@@ -3,6 +3,7 @@ use std::sync::{
     Mutex,
 };
 
+use freya_common::CompositorDirtyNodes;
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
@@ -12,6 +13,7 @@ use freya_native_core::{
         AttributeMaskBuilder,
         Dependancy,
         NodeMaskBuilder,
+        OwnedAttributeView,
         State,
     },
     NodeId,
@@ -24,6 +26,8 @@ use crate::{
     CustomAttributeValues,
     NodeReference,
     Parse,
+    ParseAttribute,
+    ParseError,
 };
 
 #[derive(Default, Clone, Debug, Component, PartialEq)]
@@ -45,6 +49,135 @@ pub struct LayoutState {
     pub content: Content,
     pub node_ref: Option<NodeReference>,
     pub node_id: NodeId,
+    pub spacing: Length,
+}
+
+impl ParseAttribute for LayoutState {
+    fn parse_attribute(
+        &mut self,
+        attr: OwnedAttributeView<CustomAttributeValues>,
+    ) -> Result<(), ParseError> {
+        match attr.attribute {
+            AttributeName::Width => {
+                if let Some(value) = attr.value.as_text() {
+                    self.width = Size::parse(value)?;
+                }
+            }
+            AttributeName::Height => {
+                if let Some(value) = attr.value.as_text() {
+                    self.height = Size::parse(value)?;
+                }
+            }
+            AttributeName::MinHeight => {
+                if let Some(value) = attr.value.as_text() {
+                    self.minimum_height = Size::parse(value)?;
+                }
+            }
+            AttributeName::MinWidth => {
+                if let Some(value) = attr.value.as_text() {
+                    self.minimum_width = Size::parse(value)?;
+                }
+            }
+            AttributeName::MaxHeight => {
+                if let Some(value) = attr.value.as_text() {
+                    self.maximum_height = Size::parse(value)?;
+                }
+            }
+            AttributeName::MaxWidth => {
+                if let Some(value) = attr.value.as_text() {
+                    self.maximum_width = Size::parse(value)?;
+                }
+            }
+            AttributeName::Padding => {
+                if let Some(value) = attr.value.as_text() {
+                    self.padding = Gaps::parse(value)?;
+                }
+            }
+            AttributeName::Margin => {
+                if let Some(value) = attr.value.as_text() {
+                    self.margin = Gaps::parse(value)?;
+                }
+            }
+            AttributeName::Direction => {
+                if let Some(value) = attr.value.as_text() {
+                    self.direction = match value {
+                        "horizontal" => DirectionMode::Horizontal,
+                        _ => DirectionMode::Vertical,
+                    }
+                }
+            }
+            AttributeName::OffsetY => {
+                if let Some(value) = attr.value.as_text() {
+                    self.offset_y = Length::new(value.parse::<f32>().map_err(|_| ParseError)?);
+                }
+            }
+            AttributeName::OffsetX => {
+                if let Some(value) = attr.value.as_text() {
+                    self.offset_x = Length::new(value.parse::<f32>().map_err(|_| ParseError)?);
+                }
+            }
+            AttributeName::MainAlign => {
+                if let Some(value) = attr.value.as_text() {
+                    self.main_alignment = Alignment::parse(value)?;
+                }
+            }
+            AttributeName::CrossAlign => {
+                if let Some(value) = attr.value.as_text() {
+                    self.cross_alignment = Alignment::parse(value)?;
+                }
+            }
+            AttributeName::Position => {
+                if let Some(value) = attr.value.as_text() {
+                    if self.position.is_empty() {
+                        self.position = Position::parse(value)?;
+                    }
+                }
+            }
+            AttributeName::PositionTop => {
+                if let Some(value) = attr.value.as_text() {
+                    self.position
+                        .set_top(value.parse::<f32>().map_err(|_| ParseError)?);
+                }
+            }
+            AttributeName::PositionRight => {
+                if let Some(value) = attr.value.as_text() {
+                    self.position
+                        .set_right(value.parse::<f32>().map_err(|_| ParseError)?);
+                }
+            }
+            AttributeName::PositionBottom => {
+                if let Some(value) = attr.value.as_text() {
+                    self.position
+                        .set_bottom(value.parse::<f32>().map_err(|_| ParseError)?);
+                }
+            }
+            AttributeName::PositionLeft => {
+                if let Some(value) = attr.value.as_text() {
+                    self.position
+                        .set_left(value.parse::<f32>().map_err(|_| ParseError)?);
+                }
+            }
+            AttributeName::Content => {
+                if let Some(value) = attr.value.as_text() {
+                    self.content = Content::parse(value)?;
+                }
+            }
+            AttributeName::Reference => {
+                if let OwnedAttributeValue::Custom(CustomAttributeValues::Reference(reference)) =
+                    attr.value
+                {
+                    self.node_ref = Some(reference.clone());
+                }
+            }
+            AttributeName::Spacing => {
+                if let Some(value) = attr.value.as_text() {
+                    self.spacing = Length::new(value.parse::<f32>().map_err(|_| ParseError)?);
+                }
+            }
+            _ => {}
+        }
+        Ok(())
+    }
 }
 
 #[partial_derive_state]
@@ -77,6 +210,7 @@ impl State<CustomAttributeValues> for LayoutState {
             AttributeName::PositionBottom,
             AttributeName::PositionLeft,
             AttributeName::Content,
+            AttributeName::Spacing,
         ]));
 
     fn update<'a>(
@@ -88,6 +222,7 @@ impl State<CustomAttributeValues> for LayoutState {
         context: &SendAnyMap,
     ) -> bool {
         let torin_layout = context.get::<Arc<Mutex<Torin<NodeId>>>>().unwrap();
+        let compositor_dirty_nodes = context.get::<Arc<Mutex<CompositorDirtyNodes>>>().unwrap();
 
         let mut layout = LayoutState {
             node_id: node_view.node_id(),
@@ -96,153 +231,7 @@ impl State<CustomAttributeValues> for LayoutState {
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
-                match attr.attribute {
-                    AttributeName::Width => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(width) = Size::parse(value) {
-                                layout.width = width;
-                            }
-                        }
-                    }
-                    AttributeName::Height => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(height) = Size::parse(value) {
-                                layout.height = height;
-                            }
-                        }
-                    }
-                    AttributeName::MinHeight => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(min_height) = Size::parse(value) {
-                                layout.minimum_height = min_height;
-                            }
-                        }
-                    }
-                    AttributeName::MinWidth => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(min_width) = Size::parse(value) {
-                                layout.minimum_width = min_width;
-                            }
-                        }
-                    }
-                    AttributeName::MaxHeight => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(max_height) = Size::parse(value) {
-                                layout.maximum_height = max_height;
-                            }
-                        }
-                    }
-                    AttributeName::MaxWidth => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(max_width) = Size::parse(value) {
-                                layout.maximum_width = max_width;
-                            }
-                        }
-                    }
-                    AttributeName::Padding => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(padding) = Gaps::parse(value) {
-                                layout.padding = padding;
-                            }
-                        }
-                    }
-                    AttributeName::Margin => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(margin) = Gaps::parse(value) {
-                                layout.margin = margin;
-                            }
-                        }
-                    }
-                    AttributeName::Direction => {
-                        if let Some(value) = attr.value.as_text() {
-                            layout.direction = match value {
-                                "horizontal" => DirectionMode::Horizontal,
-                                _ => DirectionMode::Vertical,
-                            }
-                        }
-                    }
-                    AttributeName::OffsetY => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(scroll) = value.parse::<f32>() {
-                                layout.offset_y = Length::new(scroll);
-                            }
-                        }
-                    }
-                    AttributeName::OffsetX => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(scroll) = value.parse::<f32>() {
-                                layout.offset_x = Length::new(scroll);
-                            }
-                        }
-                    }
-                    AttributeName::MainAlign => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(alignment) = Alignment::parse(value) {
-                                layout.main_alignment = alignment;
-                            }
-                        }
-                    }
-                    AttributeName::CrossAlign => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(alignment) = Alignment::parse(value) {
-                                layout.cross_alignment = alignment;
-                            }
-                        }
-                    }
-                    AttributeName::Position => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(position) = Position::parse(value) {
-                                if layout.position.is_empty() {
-                                    layout.position = position;
-                                }
-                            }
-                        }
-                    }
-                    AttributeName::PositionTop => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(top) = value.parse::<f32>() {
-                                layout.position.set_top(top);
-                            }
-                        }
-                    }
-                    AttributeName::PositionRight => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(right) = value.parse::<f32>() {
-                                layout.position.set_right(right);
-                            }
-                        }
-                    }
-                    AttributeName::PositionBottom => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(bottom) = value.parse::<f32>() {
-                                layout.position.set_bottom(bottom);
-                            }
-                        }
-                    }
-                    AttributeName::PositionLeft => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(left) = value.parse::<f32>() {
-                                layout.position.set_left(left);
-                            }
-                        }
-                    }
-                    AttributeName::Content => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(content) = Content::parse(value) {
-                                layout.content = content;
-                            }
-                        }
-                    }
-                    AttributeName::Reference => {
-                        if let OwnedAttributeValue::Custom(CustomAttributeValues::Reference(
-                            reference,
-                        )) = attr.value
-                        {
-                            layout.node_ref = Some(reference.clone());
-                        }
-                    }
-                    _ => {}
-                }
+                layout.parse_safe(attr);
             }
         }
 
@@ -250,6 +239,10 @@ impl State<CustomAttributeValues> for LayoutState {
 
         if changed {
             torin_layout.lock().unwrap().invalidate(node_view.node_id());
+            compositor_dirty_nodes
+                .lock()
+                .unwrap()
+                .invalidate(node_view.node_id());
         }
 
         *self = layout;

@@ -10,6 +10,8 @@
 
 **Freya** is a cross-paltform GUI library for Rust powered by 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/). 
 
+**It does not use any web tech**, check the [Differences with Dioxus](https://book.freyaui.dev/differences_with_dioxus.html). 
+
 ⚠️ It's currently work in progress, but you can already play with it! You can join the [Discord](https://discord.gg/sYejxCdewG) server if you have any question or issue. 
 
 <br/>
@@ -19,7 +21,7 @@
 <tr>
 <td style="border:hidden;">
 
-```rust, no_run
+```rust
 fn app() -> Element {
     let mut count = use_signal(|| 0);
 
@@ -68,11 +70,13 @@ fn app() -> Element {
 
 Thanks to my sponsors for supporting this project! 😄
 
-<!-- sponsors --><a href="https://github.com/piny4man"><img src="https://github.com/piny4man.png" width="60px" alt="Alberto" /></a><!-- sponsors -->
+<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;avatars.githubusercontent.com&#x2F;u&#x2F;8446285?u&#x3D;fd37db4dd9b4ba94dabe0bccc3a95ef2a35376ab&amp;v&#x3D;4" width="60px" alt="" /></a><!-- sponsors -->
 
 ### Want to try it? 🤔
 
-⚠️ First, see [Setup guide](https://book.freyaui.dev/setup.html).
+👋 Make sure to check the [Setup guide](https://book.freyaui.dev/setup.html) first.
+
+> ⚠️ If you happen to be on Windows using `windows-gnu` and get compile errors, maybe go check this [issue](https://github.com/marc2332/freya/issues/794).
 
 Clone this repo and run:
 

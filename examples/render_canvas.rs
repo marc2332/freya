@@ -3,10 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use freya::{
-    common::EventMessage,
-    prelude::*,
-};
+use freya::prelude::*;
 use skia_safe::{
     Color,
     Font,
@@ -20,22 +17,22 @@ fn main() {
 
 fn app() -> Element {
     let platform = use_platform();
+    let (reference, size) = use_node_signal();
     let mut state = use_signal(|| 0);
 
-    use_effect(move || {
-        platform.send(EventMessage::RequestRerender).unwrap();
-    });
-
     let canvas = use_canvas(move || {
-        let state = state.read().clone();
-        Box::new(move |canvas, font_collection, region, _| {
-            canvas.translate((region.min_x(), region.min_y()));
+        platform.invalidate_drawing_area(size.peek().area);
+        platform.request_animation_frame();
+        let state = *state.read();
+        Box::new(move |ctx| {
+            ctx.canvas.translate((ctx.area.min_x(), ctx.area.min_y()));
 
             let mut text_paint = Paint::default();
             text_paint.set_anti_alias(true);
             text_paint.set_color(Color::WHITE);
-            let typefaces =
-                font_collection.find_typefaces(&["Times New Roman"], FontStyle::default());
+            let typefaces = ctx
+                .font_collection
+                .find_typefaces(&["Times New Roman"], FontStyle::default());
             let font = Font::new(
                 typefaces
                     .first()
@@ -43,30 +40,25 @@ fn app() -> Element {
                 50.0,
             );
 
-            canvas.draw_str(
+            ctx.canvas.draw_str(
                 format!("value is {}", state),
-                ((region.max_x() / 2.0 - 120.0), region.max_y() / 2.0),
+                ((ctx.area.max_x() / 2.0 - 120.0), ctx.area.max_y() / 2.0),
                 &font,
                 &text_paint,
             );
 
-            canvas.restore();
+            ctx.canvas.restore();
         })
     });
 
-    rsx!(
-        rect {
-            onclick: move |_| {
-                state += 1;
-            },
-            Canvas {
-                canvas,
-                theme: theme_with!(CanvasTheme {
-                    background: "black".into(),
-                    width: "100%".into(),
-                    height: "100%".into(),
-                })
-            }
-        }
-    )
+    rsx!(rect {
+        onclick: move |_| {
+            state += 1;
+        },
+        canvas_reference: canvas.attribute(),
+        reference,
+        background: "black",
+        width: "100%",
+        height: "100%",
+    })
 }

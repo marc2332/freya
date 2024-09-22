@@ -9,8 +9,7 @@ fn main() {
     launch_cfg(
         app,
         LaunchConfig::<()>::new()
-            .with_height(60.0)
-            .with_width(250.0)
+            .with_size(250.0, 60.0)
             .on_setup(|window| {
                 window.set_title("Hello World");
             })

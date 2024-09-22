@@ -1,10 +1,6 @@
 use dioxus::prelude::*;
 use freya_components::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{
-    theme_with,
-    ScrollViewThemeWith,
-};
 use freya_native_core::NodeId;
 
 use crate::{
@@ -33,9 +29,7 @@ pub fn NodeInspectorLayout(node_id: String) -> Element {
     rsx!(
         ScrollView {
             show_scrollbar: true,
-            theme: theme_with!(ScrollViewTheme {
-                height : "calc(100% - 35)".into(),
-            }),
+            height: "calc(100% - 35)",
             rect {
                 width: "100%",
                 height: "200",

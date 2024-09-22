@@ -27,7 +27,7 @@ pub enum CursorLayoutResponse {
     TextSelection { from: usize, to: usize, id: usize },
 }
 
-pub struct CachedParagraph(pub Paragraph);
+pub struct CachedParagraph(pub Paragraph, pub f32);
 
 /// # Safety
 /// Skia `Paragraph` are neither Sync or Send, but in order to store them in the Associated

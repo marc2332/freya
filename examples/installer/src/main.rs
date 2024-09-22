@@ -12,8 +12,7 @@ fn main() {
         app,
         LaunchConfig::<()>::new()
             .with_title("Freya & cargo-packager")
-            .with_width(400.)
-            .with_height(300.)
+            .with_size(400., 300.)
             .with_icon(LaunchConfig::load_icon(ICON)),
     )
 }

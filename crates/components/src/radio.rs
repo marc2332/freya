@@ -1,7 +1,11 @@
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_elements::{
+    elements as dioxus_elements,
+    events::KeyboardEvent,
+};
 use freya_hooks::{
     use_applied_theme,
+    use_focus,
     RadioTheme,
     RadioThemeWith,
 };
@@ -53,31 +57,47 @@ pub fn Radio(
     /// Theme override.
     theme: Option<RadioThemeWith>,
 ) -> Element {
+    let focus = use_focus();
     let RadioTheme {
         unselected_fill,
         selected_fill,
+        border_fill,
     } = use_applied_theme!(&theme, radio);
     let fill = if selected {
         selected_fill
     } else {
         unselected_fill
     };
+    let border = if focus.is_selected() {
+        format!("4 solid {}", border_fill)
+    } else {
+        "none".to_string()
+    };
+
+    let onkeydown = move |_: KeyboardEvent| {};
 
     rsx!(
         rect {
-            width: "18",
-            height: "18",
-            border: "2 solid {fill}",
-            padding: "4",
-            main_align: "center",
-            cross_align: "center",
+            border,
+            border_align: "outer",
             corner_radius: "99",
-            if selected {
-                rect {
-                    width: "10",
-                    height: "10",
-                    background: "{fill}",
-                    corner_radius: "99",
+            rect {
+                a11y_id: focus.attribute(),
+                width: "18",
+                height: "18",
+                border: "2 solid {fill}",
+                padding: "4",
+                main_align: "center",
+                cross_align: "center",
+                corner_radius: "99",
+                onkeydown,
+                if selected {
+                    rect {
+                        width: "10",
+                        height: "10",
+                        background: "{fill}",
+                        corner_radius: "99",
+                    }
                 }
             }
         }
@@ -138,41 +158,26 @@ mod test {
         utils.wait_for_update().await;
 
         // If the inner circle exists it means that the Radio is activated, otherwise it isn't
-        assert!(root.get(0).get(0).get(0).get(0).is_element());
-        assert!(root.get(1).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(2).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(0).get(0).get(0).get(0).get(0).is_element());
+        assert!(root.get(1).get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(2).get(0).get(0).get(0).get(0).is_placeholder());
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (20.0, 50.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((20., 50.)).await;
 
-        assert!(root.get(0).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(1).get(0).get(0).get(0).is_element());
-        assert!(root.get(2).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(0).get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(1).get(0).get(0).get(0).get(0).is_element());
+        assert!(root.get(2).get(0).get(0).get(0).get(0).is_placeholder());
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (10.0, 90.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((10., 90.)).await;
 
-        assert!(root.get(0).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(1).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(2).get(0).get(0).get(0).is_element());
+        assert!(root.get(0).get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(1).get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(2).get(0).get(0).get(0).get(0).is_element());
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (10.0, 10.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((10., 10.)).await;
 
-        assert!(root.get(0).get(0).get(0).get(0).is_element());
-        assert!(root.get(1).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(2).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(0).get(0).get(0).get(0).get(0).is_element());
+        assert!(root.get(1).get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(2).get(0).get(0).get(0).get(0).is_placeholder());
     }
 }

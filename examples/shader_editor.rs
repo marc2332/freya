@@ -40,8 +40,7 @@ fn main() {
     launch_cfg(
         app,
         LaunchConfig::<()>::new()
-            .with_width(900.0)
-            .with_height(500.0)
+            .with_size(900.0, 500.0)
             .with_title("Shader Editor"),
     );
 }
@@ -77,18 +76,18 @@ fn ShaderEditor(editable: UseEditable) -> Element {
         editable.process_event(&EditableEvent::Click);
     };
 
-    let onkeydown = move |e: KeyboardEvent| {
+    let onglobalkeydown = move |e: KeyboardEvent| {
         editable.process_event(&EditableEvent::KeyDown(e.data));
     };
 
-    let onkeyup = move |e: KeyboardEvent| {
+    let onglobalkeyup = move |e: KeyboardEvent| {
         editable.process_event(&EditableEvent::KeyUp(e.data));
     };
 
     rsx!(
         rect {
-            onkeydown,
-            onkeyup,
+            onglobalkeydown,
+            onglobalkeyup,
             onglobalclick,
             cursor_reference,
             width: "50%",
@@ -115,15 +114,15 @@ fn ShaderEditor(editable: UseEditable) -> Element {
                     let line_background = if is_line_selected {
                         "rgb(37, 37, 37)"
                     } else {
-                        ""
+                        "none"
                     };
 
                     let onmousedown = move |e: MouseEvent| {
                         editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
                     };
 
-                    let onmouseover = move |e: MouseEvent| {
-                        editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
+                    let onmousemove = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseMove(e.data, line_index));
                     };
 
                     let highlights = editable.highlights_attr(line_index);
@@ -154,7 +153,7 @@ fn ShaderEditor(editable: UseEditable) -> Element {
                                 cursor_mode: "editable",
                                 cursor_id: "{line_index}",
                                 onmousedown,
-                                onmouseover,
+                                onmousemove,
                                 highlights,
                                 highlight_mode: "expanded",
                                 text {
@@ -174,6 +173,7 @@ fn ShaderEditor(editable: UseEditable) -> Element {
 #[component]
 fn ShaderView(editable: UseEditable) -> Element {
     let platform = use_platform();
+    let (reference, size) = use_node_signal();
 
     use_hook(|| {
         let mut ticker = platform.new_ticker();
@@ -181,6 +181,7 @@ fn ShaderView(editable: UseEditable) -> Element {
         spawn(async move {
             loop {
                 ticker.tick().await;
+                platform.invalidate_drawing_area(size.peek().area);
                 platform.request_animation_frame();
             }
         });
@@ -192,8 +193,8 @@ fn ShaderView(editable: UseEditable) -> Element {
         let shared_runtime_effect = Arc::new(RuntimeEffectWrapper(runtime_effect));
         let instant = Instant::now();
 
-        Box::new(move |canvas, font_collection, region, _| {
-            canvas.save();
+        Box::new(move |ctx| {
+            ctx.canvas.save();
 
             let runtime_effect = &shared_runtime_effect.0;
 
@@ -201,14 +202,14 @@ fn ShaderView(editable: UseEditable) -> Element {
                 let mut builder = UniformsBuilder::default();
                 builder.set(
                     "u_resolution",
-                    UniformValue::FloatVec(vec![region.width(), region.height()]),
+                    UniformValue::FloatVec(vec![ctx.area.width(), ctx.area.height()]),
                 );
                 builder.set(
                     "u_time",
                     UniformValue::Float(instant.elapsed().as_secs_f32()),
                 );
 
-                let uniforms = Data::new_copy(&builder.build(&runtime_effect));
+                let uniforms = Data::new_copy(&builder.build(runtime_effect));
 
                 let shader = runtime_effect.make_shader(uniforms, &[], None).unwrap();
 
@@ -217,12 +218,12 @@ fn ShaderView(editable: UseEditable) -> Element {
                 paint.set_color(Color::WHITE);
                 paint.set_shader(shader);
 
-                canvas.draw_rect(
+                ctx.canvas.draw_rect(
                     Rect::new(
-                        region.min_x(),
-                        region.min_y(),
-                        region.max_x(),
-                        region.max_y(),
+                        ctx.area.min_x(),
+                        ctx.area.min_y(),
+                        ctx.area.max_x(),
+                        ctx.area.max_y(),
                     ),
                     &paint,
                 );
@@ -231,23 +232,24 @@ fn ShaderView(editable: UseEditable) -> Element {
                 text_paint.set_anti_alias(true);
                 text_paint.set_color(Color::WHITE);
                 let mut paragraph_builder =
-                    ParagraphBuilder::new(&ParagraphStyle::default(), font_collection.clone());
+                    ParagraphBuilder::new(&ParagraphStyle::default(), ctx.font_collection.clone());
                 paragraph_builder.add_text(err);
                 let mut paragraph = paragraph_builder.build();
-                paragraph.layout(region.width());
+                paragraph.layout(ctx.area.width());
 
-                paragraph.paint(canvas, (region.min_x(), region.min_y()));
+                paragraph.paint(ctx.canvas, (ctx.area.min_x(), ctx.area.min_y()));
             }
 
-            canvas.restore();
+            ctx.canvas.restore();
         })
     });
 
     rsx!(rect {
+        canvas_reference: canvas.attribute(),
+        reference,
+        background: "black",
         width: "fill",
         height: "fill",
-        background: "black",
-        canvas_reference: canvas.attribute()
     })
 }
 

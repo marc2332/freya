@@ -3,6 +3,8 @@ use dioxus_core::{
     WriteMutations,
 };
 use freya_common::{
+    AccessibilityDirtyNodes,
+    CompositorDirtyNodes,
     Layers,
     ParagraphElements,
 };
@@ -15,20 +17,31 @@ use freya_native_core::{
     NodeId,
 };
 use freya_node_state::{
+    AccessibilityNodeState,
     CursorState,
     CustomAttributeValues,
     LayerState,
 };
 use torin::torin::Torin;
 
-use crate::prelude::DioxusDOMAdapter;
+use crate::prelude::{
+    Compositor,
+    CompositorCache,
+    CompositorDirtyArea,
+    DioxusDOMAdapter,
+    NodeAccessibility,
+};
 
 pub struct MutationsWriter<'a> {
     pub native_writer: DioxusNativeCoreMutationWriter<'a, CustomAttributeValues>,
     pub layout: &'a mut Torin<NodeId>,
-    pub layers: &'a Layers,
-    pub paragraphs: &'a ParagraphElements,
+    pub layers: &'a mut Layers,
+    pub paragraphs: &'a mut ParagraphElements,
     pub scale_factor: f32,
+    pub compositor_dirty_nodes: &'a mut CompositorDirtyNodes,
+    pub compositor_dirty_area: &'a mut CompositorDirtyArea,
+    pub compositor_cache: &'a mut CompositorCache,
+    pub accessibility_dirty_nodes: &'a mut AccessibilityDirtyNodes,
 }
 
 impl<'a> MutationsWriter<'a> {
@@ -36,10 +49,7 @@ impl<'a> MutationsWriter<'a> {
         let node_id = self.native_writer.state.element_to_node_id(id);
         let mut dom_adapter = DioxusDOMAdapter::new(self.native_writer.rdom, self.scale_factor);
 
-        // Remove from layout
-        self.layout.remove(node_id, &mut dom_adapter, true);
-
-        // Remove from layers and paragraph elements
+        // Remove from layers , paragraph elements and unite the removed areas with the compositor dirty area
         let mut stack = vec![node_id];
         let tree = self.native_writer.rdom.tree_ref();
         while let Some(node_id) = stack.pop() {
@@ -78,8 +88,34 @@ impl<'a> MutationsWriter<'a> {
                     self.paragraphs
                         .remove_paragraph(node_id, &cursor_ref.text_id);
                 }
+
+                // Remove from the accessibility tree
+                if node.get_accessibility_id().is_some() {
+                    let node_accessibility_state = node.get::<AccessibilityNodeState>().unwrap();
+                    let closed_accessibility_node_id = node_accessibility_state
+                        .closest_accessibility_node_id
+                        .unwrap_or(self.native_writer.rdom.root_id());
+                    self.accessibility_dirty_nodes
+                        .remove(node.id(), closed_accessibility_node_id);
+                }
+
+                // Unite the removed area with the dirty area
+                if let Some(area) = Compositor::get_drawing_area(
+                    node_id,
+                    self.layout,
+                    self.native_writer.rdom,
+                    self.scale_factor,
+                ) {
+                    self.compositor_dirty_area.unite_or_insert(&area);
+                }
+
+                // Remove the node from the compositor cache
+                self.compositor_cache.remove(&node_id);
             }
         }
+
+        // Remove from layout
+        self.layout.remove(node_id, &mut dom_adapter, true);
     }
 }
 
@@ -115,21 +151,26 @@ impl<'a> WriteMutations for MutationsWriter<'a> {
     fn replace_node_with(&mut self, id: dioxus_core::ElementId, m: usize) {
         if m > 0 {
             self.remove(id);
+            self.native_writer.replace_node_with(id, m);
         }
-
-        self.native_writer.replace_node_with(id, m);
     }
 
     fn replace_placeholder_with_nodes(&mut self, path: &'static [u8], m: usize) {
-        self.native_writer.replace_placeholder_with_nodes(path, m);
+        if m > 0 {
+            self.native_writer.replace_placeholder_with_nodes(path, m);
+        }
     }
 
     fn insert_nodes_after(&mut self, id: dioxus_core::ElementId, m: usize) {
-        self.native_writer.insert_nodes_after(id, m);
+        if m > 0 {
+            self.native_writer.insert_nodes_after(id, m);
+        }
     }
 
     fn insert_nodes_before(&mut self, id: dioxus_core::ElementId, m: usize) {
-        self.native_writer.insert_nodes_before(id, m);
+        if m > 0 {
+            self.native_writer.insert_nodes_before(id, m);
+        }
     }
 
     fn set_attribute(
@@ -143,6 +184,8 @@ impl<'a> WriteMutations for MutationsWriter<'a> {
     }
 
     fn set_node_text(&mut self, value: &str, id: dioxus_core::ElementId) {
+        self.compositor_dirty_nodes
+            .invalidate(self.native_writer.state.element_to_node_id(id));
         self.layout
             .invalidate(self.native_writer.state.element_to_node_id(id));
         self.native_writer.set_node_text(value, id);

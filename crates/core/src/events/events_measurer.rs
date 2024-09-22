@@ -16,7 +16,10 @@ pub use crate::events::{
     NodesState,
     PlatformEvent,
 };
-use crate::prelude::*;
+use crate::{
+    elements::ElementUtilsResolver,
+    prelude::*,
+};
 
 /// Process the events and emit them to the VirtualDOM
 pub fn process_events(
@@ -25,41 +28,43 @@ pub fn process_events(
     event_emitter: &EventEmitter,
     nodes_state: &mut NodesState,
     scale_factor: f64,
+
+    focus_id: Option<NodeId>,
 ) {
     // 1. Get global events created from the incoming events
     let global_events = measure_global_events(events);
 
     // 2. Get potential events that could be emitted based on the elements layout and viewports
-    let potential_events = measure_potential_event_listeners(events, dom);
+    let potential_events = measure_potential_event_listeners(events, dom, scale_factor, focus_id);
 
     // 3. Get what events can be actually emitted based on what elements are listening
-    let dom_events = measure_dom_events(potential_events, dom, scale_factor);
+    let mut dom_events = measure_dom_events(&potential_events, dom, scale_factor);
 
-    // 4. Filter the dom events and get potential collateral events, e.g. mouseover -> mouseenter
-    let (potential_collateral_events, mut to_emit_dom_events) =
-        nodes_state.process_events(&dom_events, events);
+    // 4. Get potential collateral events, e.g. mousemove -> mouseenter
+    let potential_collateral_events =
+        nodes_state.process_collateral(&potential_events, &mut dom_events, events);
 
     // 5. Get what collateral events can actually be emitted
     let to_emit_dom_collateral_events =
-        measure_dom_events(potential_collateral_events, dom, scale_factor);
+        measure_dom_events(&potential_collateral_events, dom, scale_factor);
 
     let colateral_global_events = measure_colateral_global_events(&to_emit_dom_collateral_events);
 
     // 6. Join both the dom and colateral dom events and sort them
-    to_emit_dom_events.extend(to_emit_dom_collateral_events);
-    to_emit_dom_events.sort_unstable();
+    dom_events.extend(to_emit_dom_collateral_events);
+    dom_events.sort_unstable();
 
     // 7. Emit the global events
     measure_global_events_listeners(
         global_events,
         colateral_global_events,
         dom,
-        &mut to_emit_dom_events,
+        &mut dom_events,
         scale_factor,
     );
 
     // 8. Emit all the vents
-    event_emitter.send(to_emit_dom_events).unwrap();
+    event_emitter.send(dom_events).unwrap();
 
     // 9. Clear the events queue
     events.clear();
@@ -95,7 +100,12 @@ pub fn measure_global_events(events: &EventsQueue) -> Vec<PlatformEvent> {
 }
 
 /// Measure what potential event listeners could be triggered
-pub fn measure_potential_event_listeners(events: &EventsQueue, fdom: &FreyaDOM) -> PotentialEvents {
+pub fn measure_potential_event_listeners(
+    events: &EventsQueue,
+    fdom: &FreyaDOM,
+    scale_factor: f64,
+    focus_id: Option<NodeId>,
+) -> PotentialEvents {
     let mut potential_events = PotentialEvents::default();
 
     let layout = fdom.layout();
@@ -103,18 +113,20 @@ pub fn measure_potential_event_listeners(events: &EventsQueue, fdom: &FreyaDOM) 
     let layers = fdom.layers();
 
     // Propagate events from the top to the bottom
-    for (layer, layer_nodes) in sorted(layers.layers().iter()) {
+    for (layer, layer_nodes) in sorted(layers.iter()) {
         for node_id in layer_nodes {
             let layout_node = layout.get(*node_id);
             if let Some(layout_node) = layout_node {
                 'events: for event in events.iter() {
                     if let PlatformEvent::Keyboard { name, .. } = event {
-                        let event_data = PotentialEvent {
-                            node_id: *node_id,
-                            layer: Some(*layer),
-                            event: event.clone(),
-                        };
-                        potential_events.entry(*name).or_default().push(event_data);
+                        if focus_id == Some(*node_id) {
+                            let event_data = PotentialEvent {
+                                node_id: *node_id,
+                                layer: Some(*layer),
+                                event: event.clone(),
+                            };
+                            potential_events.entry(*name).or_default().push(event_data);
+                        }
                     } else {
                         let data = match event {
                             PlatformEvent::Mouse { name, cursor, .. } => Some((name, cursor)),
@@ -124,7 +136,18 @@ pub fn measure_potential_event_listeners(events: &EventsQueue, fdom: &FreyaDOM) 
                             _ => None,
                         };
                         if let Some((name, cursor)) = data {
-                            let cursor_is_inside = layout_node.area.contains(cursor.to_f32());
+                            let node = rdom.get(*node_id).unwrap();
+                            let node_type = node.node_type();
+                            let Some(element_utils) = node_type.tag().and_then(|tag| tag.utils())
+                            else {
+                                continue;
+                            };
+                            let cursor_is_inside = element_utils.is_point_inside_area(
+                                cursor,
+                                &node,
+                                layout_node,
+                                scale_factor as f32,
+                            );
 
                             // Make sure the cursor is inside the node area
                             if cursor_is_inside {
@@ -132,9 +155,21 @@ pub fn measure_potential_event_listeners(events: &EventsQueue, fdom: &FreyaDOM) 
                                 let node_viewports = node.get::<ViewportState>().unwrap();
 
                                 // Make sure the cursor is inside all the applicable viewports from the element
-                                for viewport_id in &node_viewports.viewports {
-                                    let viewport = layout.get(*viewport_id).unwrap().visible_area();
-                                    if !viewport.contains(cursor.to_f32()) {
+                                for node_id in &node_viewports.viewports {
+                                    let node_ref = rdom.get(*node_id).unwrap();
+                                    let node_type = node_ref.node_type();
+                                    let Some(element_utils) =
+                                        node_type.tag().and_then(|tag| tag.utils())
+                                    else {
+                                        continue;
+                                    };
+                                    let layout_node = layout.get(*node_id).unwrap();
+                                    if !element_utils.is_point_inside_area(
+                                        cursor,
+                                        &node_ref,
+                                        layout_node,
+                                        scale_factor as f32,
+                                    ) {
                                         continue 'events;
                                     }
                                 }
@@ -181,7 +216,7 @@ fn is_node_parent_of(rdom: &DioxusDOM, node: NodeId, parent_node: NodeId) -> boo
 
 /// Measure what DOM events could be emitted
 fn measure_dom_events(
-    potential_events: PotentialEvents,
+    potential_events: &PotentialEvents,
     fdom: &FreyaDOM,
     scale_factor: f64,
 ) -> Vec<DomEvent> {

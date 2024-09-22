@@ -40,8 +40,7 @@ pub fn launch(app: AppComponent) {
         app,
         LaunchConfig::<()> {
             window_config: WindowConfig {
-                width: 600.0,
-                height: 600.0,
+                size: (600.0, 600.0),
                 decorations: true,
                 transparent: false,
                 title: "Freya",
@@ -86,8 +85,7 @@ pub fn launch_with_title(app: AppComponent, title: &'static str) {
         app,
         LaunchConfig::<()> {
             window_config: WindowConfig {
-                width: 400.0,
-                height: 300.0,
+                size: (400.0, 300.0),
                 decorations: true,
                 transparent: false,
                 title,
@@ -130,8 +128,7 @@ pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height)
         app,
         LaunchConfig::<()> {
             window_config: WindowConfig {
-                width,
-                height,
+                size: (width, height),
                 decorations: true,
                 transparent: false,
                 title,
@@ -160,8 +157,7 @@ pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height)
 ///     launch_cfg(
 ///         app,
 ///         LaunchConfig::<()>::new()
-///             .with_width(500.0)
-///             .with_height(400.0)
+///             .with_size(500.0, 400.0)
 ///             .with_decorations(true)
 ///             .with_transparency(false)
 ///             .with_title("Freya App")
@@ -182,6 +178,9 @@ pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height)
 /// }
 /// ```
 pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>) {
+    #[cfg(feature = "performance-overlay")]
+    let config = config.with_plugin(crate::plugins::PerformanceOverlayPlugin::default());
+
     use freya_core::prelude::{
         FreyaDOM,
         SafeDOM,
@@ -190,17 +189,19 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
     let fdom = FreyaDOM::default();
     let sdom = SafeDOM::new(fdom);
 
-    #[cfg(feature = "log")]
+    #[cfg(feature = "tracing-subscriber")]
     {
-        use tracing::Level;
-        use tracing_subscriber::FmtSubscriber;
+        use tracing_subscriber::{
+            fmt,
+            prelude::__tracing_subscriber_SubscriberExt,
+            util::SubscriberInitExt,
+            EnvFilter,
+        };
 
-        let subscriber = FmtSubscriber::builder()
-            .with_max_level(Level::TRACE)
-            .finish();
-
-        tracing::subscriber::set_global_default(subscriber)
-            .expect("Setting default subscriber failed");
+        tracing_subscriber::registry()
+            .with(fmt::layer())
+            .with(EnvFilter::from_default_env())
+            .init();
     }
 
     let (vdom, devtools, hovered_node) = {
@@ -227,6 +228,18 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
             (vdom, None, None)
         }
     };
+    #[cfg(not(feature = "custom-tokio-rt"))]
+    {
+        let rt = tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let _guard = rt.enter();
+
+        DesktopRenderer::launch(vdom, sdom, config, devtools, hovered_node);
+    }
+
+    #[cfg(feature = "custom-tokio-rt")]
     DesktopRenderer::launch(vdom, sdom, config, devtools, hovered_node);
 }
 
