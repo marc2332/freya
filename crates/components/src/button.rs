@@ -61,8 +61,6 @@ pub enum ButtonStatus {
 
 /// Clickable button.
 ///
-/// ![Button Demo][Button]
-///
 /// # Styling
 /// Inherits the [`ButtonTheme`](freya_hooks::ButtonTheme) theme.
 ///
@@ -81,6 +79,27 @@ pub enum ButtonStatus {
 ///     )
 /// }
 /// ```
+///
+/// # Preview
+/// <!--- PREVIEW button (200.,150.)
+/// use freya::prelude::*;
+/// fn app() -> Element {
+///     rsx!(
+///         rect {
+///             main_align: "center",
+///             cross_align: "center",
+///             width: "fill",
+///             height: "fill",
+///             Button {
+///                 label {
+///                     "Click this"
+///                 }
+///             }
+///         }
+///     )
+/// }
+/// -->
+/// ![Button Demo][button]
 #[embed_doc_image::embed_doc_image("Button", "images/button.png")]
 #[allow(non_snake_case)]
 pub fn Button(
