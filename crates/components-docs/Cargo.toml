@@ -1,5 +1,5 @@
 [package]
-name = "components-docs"
+name = "freya-components-docs"
 version = "0.1.0"
 edition = "2021"
 

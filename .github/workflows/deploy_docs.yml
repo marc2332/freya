@@ -23,7 +23,9 @@ jobs:
           prefix-key: "3"   
 
       - name: cargo doc
-        run: cargo doc --no-deps --workspace
+        run: 
+          cargo doc -p freya-components-docs
+          cargo doc --no-deps --workspace
 
       - name: Upload to Deno Deploy
         uses: denoland/deployctl@v1
