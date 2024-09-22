@@ -1,0 +1,13 @@
+[package]
+name = "components-docs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+
+
+[build-dependencies]
+freya = { workspace = true }
+freya-testing = {workspace = true }
+tokio = { workspace = true }

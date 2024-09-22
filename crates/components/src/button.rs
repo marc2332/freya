@@ -60,6 +60,8 @@ pub enum ButtonStatus {
 }
 
 /// Clickable button.
+/// 
+/// ![Button Demo][Button]
 ///
 /// # Styling
 /// Inherits the [`ButtonTheme`](freya_hooks::ButtonTheme) theme.
@@ -79,6 +81,7 @@ pub enum ButtonStatus {
 ///     )
 /// }
 /// ```
+#[embed_doc_image::embed_doc_image("Button", "images/button.png")]
 #[allow(non_snake_case)]
 pub fn Button(
     ButtonProps {
