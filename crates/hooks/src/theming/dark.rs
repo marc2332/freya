@@ -5,6 +5,11 @@ use crate::{
 
 pub const DARK_THEME: Theme = Theme {
     name: "dark",
+    colors: ColorsSheet {
+        primary: cow_borrowed!("white"),
+        secondary: cow_borrowed!("white"),
+        tertiary: cow_borrowed!("white"),
+    },
     body: BodyTheme {
         background: cow_borrowed!("rgb(25, 25, 25)"),
         color: cow_borrowed!("white"),

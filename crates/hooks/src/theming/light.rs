@@ -5,6 +5,11 @@ use crate::{
 
 pub const LIGHT_THEME: Theme = Theme {
     name: "light",
+    colors: ColorsSheet {
+        primary: cow_borrowed!("rgb(103, 80, 164)"),
+        secondary: cow_borrowed!("white"),
+        tertiary: cow_borrowed!("white"),
+    },
     body: BodyTheme {
         background: cow_borrowed!("white"),
         color: cow_borrowed!("black"),
@@ -13,7 +18,7 @@ pub const LIGHT_THEME: Theme = Theme {
     slider: SliderTheme {
         background: cow_borrowed!("rgb(210, 210, 210)"),
         thumb_background: cow_borrowed!("rgb(202, 193, 227)"),
-        thumb_inner_background: cow_borrowed!("rgb(103, 80, 164)"),
+        thumb_inner_background: cow_borrowed!("key(primary)"),
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
     },
     button: ButtonTheme {
@@ -51,7 +56,7 @@ pub const LIGHT_THEME: Theme = Theme {
         background: cow_borrowed!("rgb(225, 225, 225)"),
         thumb_background: cow_borrowed!("rgb(125, 125, 125)"),
         enabled_background: cow_borrowed!("rgb(202, 193, 227)"),
-        enabled_thumb_background: cow_borrowed!("rgb(103, 80, 164)"),
+        enabled_thumb_background: cow_borrowed!("key(primary)"),
         focus_border_fill: cow_borrowed!("rgb(180, 180, 180)"),
         enabled_focus_border_fill: cow_borrowed!("rgb(180, 180, 180)"),
     },
@@ -101,7 +106,7 @@ pub const LIGHT_THEME: Theme = Theme {
     progress_bar: ProgressBarTheme {
         color: cow_borrowed!("white"),
         background: cow_borrowed!("rgb(210, 210, 210)"),
-        progress_background: cow_borrowed!("rgb(103, 80, 164)"),
+        progress_background: cow_borrowed!("key(primary)"),
         width: cow_borrowed!("fill"),
         height: cow_borrowed!("20"),
     },
@@ -156,12 +161,12 @@ pub const LIGHT_THEME: Theme = Theme {
     },
     radio: RadioTheme {
         unselected_fill: cow_borrowed!("rgb(35, 35, 35)"),
-        selected_fill: cow_borrowed!("rgb(103, 80, 164)"),
+        selected_fill: cow_borrowed!("key(primary)"),
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
     },
     checkbox: CheckboxTheme {
         unselected_fill: cow_borrowed!("rgb(80, 80, 80)"),
-        selected_fill: cow_borrowed!("rgb(103, 80, 164)"),
+        selected_fill: cow_borrowed!("key(primary)"),
         selected_icon_fill: cow_borrowed!("rgb(202, 193, 227)"),
     },
     menu_item: MenuItemTheme {
@@ -178,7 +183,7 @@ pub const LIGHT_THEME: Theme = Theme {
     },
     snackbar: SnackBarTheme {
         background: cow_borrowed!("rgb(235, 235, 235)"),
-        color: cow_borrowed!("rgb(103, 80, 164)"),
+        color: cow_borrowed!("key(primary)"),
     },
     popup: PopupTheme {
         background: cow_borrowed!("white"),

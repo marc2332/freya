@@ -131,6 +131,25 @@ macro_rules! define_theme {
             }
 
             impl $(<$lifetime>)? [<$name Theme>] $(<$lifetime>)? {
+
+                pub fn apply_colors(&mut self, colors: &ColorsSheet) {
+                    $($(
+                        self.$borrowed_field_name = colors.resolve(self.$borrowed_field_name);
+                    )*)?
+
+                    $($(
+                        self.$owned_field_name = colors.resolve(self.$owned_field_name);
+                    )*)?
+
+                    $($(
+                        self.$subtheme_field_name.apply_colors(colors);
+                    )*)?
+
+                    $($(
+                        self.$cow_field_name = colors.resolve(self.$cow_field_name.clone());
+                    )*)?
+                }
+
                 #[doc = "Checks each field in `optional` and if it's `Some`, it overwrites the corresponding `self` field."]
                 pub fn apply_optional(&mut self, optional: & $($lifetime)? [<$name ThemeWith>]) {
                     $($(
@@ -565,9 +584,38 @@ define_theme! {
     }
 }
 
+pub struct StyleSheet {
+    colors: ColorsSheet,
+    // text: TextSizeSheet
+}
+
+// pub struct TextSizeSheet {
+
+// }
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ColorsSheet {
+    pub primary: Cow<'static, str>,
+    pub secondary: Cow<'static, str>,
+    pub tertiary: Cow<'static, str>,
+}
+
+impl ColorsSheet {
+    fn resolve(&self, val: Cow<'static, str>) -> Cow<'static, str> {
+        if val.starts_with("key") {
+            match val {
+                _ => self.primary.clone()
+            }
+        } else {
+            val
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
     pub name: &'static str,
+    pub colors: ColorsSheet,
     pub body: BodyTheme,
     pub button: ButtonTheme,
     pub switch: SwitchTheme,
