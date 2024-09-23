@@ -1,3 +1,5 @@
+use std::default;
+
 use dioxus::prelude::*;
 use freya_elements::{
     elements as dioxus_elements,
@@ -22,11 +24,13 @@ pub struct SliderProps {
     pub theme: Option<SliderThemeWith>,
     /// Handler for the `onmoved` event.
     pub onmoved: EventHandler<f64>,
-    /// Width of the Slider.
+    /// Size of the Slider.
     #[props(into, default = "100%".to_string())]
-    pub width: String,
+    pub size: String,
     /// Height of the Slider.
     pub value: f64,
+    #[props(default = "horizontal".to_string())]
+    pub direction: String
 }
 
 #[inline]
@@ -88,7 +92,8 @@ pub fn Slider(
         value,
         onmoved,
         theme,
-        width,
+        size,
+        direction
     }: SliderProps,
 ) -> Element {
     let theme = use_applied_theme!(&theme, slider);
@@ -96,8 +101,9 @@ pub fn Slider(
     let mut status = use_signal(SliderStatus::default);
     let mut clicking = use_signal(|| false);
     let platform = use_platform();
-    let (node_reference, size) = use_node();
+    let (node_reference, node_size) = use_node();
 
+    let direction_is_vertical = direction == "vertical";
     let value = ensure_correct_slider_range(value);
     let a11y_id = focus.attribute();
 
@@ -125,8 +131,13 @@ pub fn Slider(
             e.stop_propagation();
             if *clicking.peek() {
                 let coordinates = e.get_element_coordinates();
-                let x = coordinates.x - size.area.min_x() as f64 - 6.0;
-                let percentage = x / (size.area.width() as f64 - 15.0) * 100.0;
+                let percentage = if direction_is_vertical {
+                    let y = coordinates.y - node_size.area.min_y() as f64 - 6.0;
+                    y / (node_size.area.height() as f64 - 15.0) * 100.0
+                } else {
+                    let x = coordinates.x - node_size.area.min_x() as f64 - 6.0;
+                        x / (node_size.area.width() as f64 - 15.0) * 100.0
+                };
                 let percentage = percentage.clamp(0.0, 100.0);
 
                 onmoved.call(percentage);
@@ -141,8 +152,13 @@ pub fn Slider(
             focus.focus();
             clicking.set(true);
             let coordinates = e.get_element_coordinates();
-            let x = coordinates.x - 6.0;
-            let percentage = x / (size.area.width() as f64 - 15.0) * 100.0;
+            let percentage = if direction_is_vertical {
+                let y = coordinates.y - 6.0;
+                y / (node_size.area.height() as f64 - 15.0) * 100.0
+            } else {
+                let x = coordinates.x - 6.0;
+                x / (node_size.area.width() as f64 - 15.0) * 100.0
+            };
             let percentage = percentage.clamp(0.0, 100.0);
 
             onmoved.call(percentage);
@@ -162,18 +178,26 @@ pub fn Slider(
         onmoved.call(percentage);
     };
 
-    let inner_width = (size.area.width() - 15.0) * (value / 100.0) as f32;
+    
     let border = if focus.is_selected() {
         format!("2 solid {}", theme.border_fill)
     } else {
         "none".to_string()
     };
 
+    let (width, height, inner_width, inner_height) = if direction_is_vertical {
+        let inner_height = (node_size.area.height() - 15.0) * (value / 100.0) as f32;
+        ("20", size.as_str(), "100%".to_string(), inner_height.to_string())
+    } else {
+        let inner_width = (node_size.area.width() - 15.0) * (value / 100.0) as f32;
+        (size.as_str(), "20", inner_width.to_string(), "100%".to_string(), )
+    };
+
     rsx!(
         rect {
             reference: node_reference,
             width: "{width}",
-            height: "20",
+            height: "{height}",
             onmousedown,
             onglobalclick: onclick,
             a11y_id,
@@ -189,12 +213,12 @@ pub fn Slider(
                 background: "{theme.background}",
                 width: "100%",
                 height: "6",
-                direction: "horizontal",
+                direction: "{direction}",
                 corner_radius: "50",
                 rect {
                     background: "{theme.thumb_inner_background}",
                     width: "{inner_width}",
-                    height: "100%",
+                    height: "{inner_height}",
                     corner_radius: "50"
                 }
                 rect {
