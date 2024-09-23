@@ -173,6 +173,19 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
                             }
                         }
                     }
+                    AttributeType::SubpixelRounding(enabled) => {
+                        rsx!{
+                            Property {
+                                key: "{i}",
+                                name: "{name}",
+                                value: if enabled {
+                                    "round"
+                                } else {
+                                    "none"
+                                }
+                            }
+                        }
+                    }
                 }
             })}
         }

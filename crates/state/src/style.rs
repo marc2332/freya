@@ -34,7 +34,7 @@ use crate::{
     Shadow,
 };
 
-#[derive(Default, Debug, Clone, PartialEq, Component)]
+#[derive(Debug, Clone, PartialEq, Component)]
 pub struct StyleState {
     pub background: Fill,
     pub border: Border,
@@ -43,6 +43,24 @@ pub struct StyleState {
     pub image_data: Option<AttributesBytes>,
     pub svg_data: Option<AttributesBytes>,
     pub overflow: OverflowMode,
+    pub opacity: Option<f32>,
+    pub subpixel_rounding: bool,
+}
+
+impl Default for StyleState {
+    fn default() -> Self {
+        Self {
+            background: Default::default(),
+            border: Default::default(),
+            shadows: Default::default(),
+            corner_radius: Default::default(),
+            image_data: Default::default(),
+            svg_data: Default::default(),
+            overflow: Default::default(),
+            opacity: Default::default(),
+            subpixel_rounding: true,
+        }
+    }
 }
 
 impl ParseAttribute for StyleState {
@@ -119,6 +137,20 @@ impl ParseAttribute for StyleState {
                     self.overflow = OverflowMode::parse(value)?;
                 }
             }
+            AttributeName::Opacity => {
+                if let Some(value) = attr.value.as_text() {
+                    self.opacity = Some(value.parse::<f32>().map_err(|_| ParseError)?);
+                }
+            }
+            AttributeName::SubpixelRounding => {
+                if let Some(value) = attr.value.as_text() {
+                    match value {
+                        "round" => self.subpixel_rounding = true,
+                        "none" => self.subpixel_rounding = false,
+                        _ => return Err(ParseError),
+                    }
+                }
+            }
             _ => {}
         }
 
@@ -147,6 +179,8 @@ impl State<CustomAttributeValues> for StyleState {
             AttributeName::SvgData,
             AttributeName::SvgContent,
             AttributeName::Overflow,
+            AttributeName::Opacity,
+            AttributeName::SubpixelRounding,
         ]));
 
     fn update<'a>(
