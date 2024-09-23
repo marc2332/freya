@@ -1,5 +1,3 @@
-use std::default;
-
 use dioxus::prelude::*;
 use freya_elements::{
     elements as dioxus_elements,
@@ -30,7 +28,7 @@ pub struct SliderProps {
     /// Height of the Slider.
     pub value: f64,
     #[props(default = "horizontal".to_string())]
-    pub direction: String
+    pub direction: String,
 }
 
 #[inline]
@@ -93,7 +91,7 @@ pub fn Slider(
         onmoved,
         theme,
         size,
-        direction
+        direction,
     }: SliderProps,
 ) -> Element {
     let theme = use_applied_theme!(&theme, slider);
@@ -136,7 +134,7 @@ pub fn Slider(
                     y / (node_size.area.height() as f64 - 15.0) * 100.0
                 } else {
                     let x = coordinates.x - node_size.area.min_x() as f64 - 6.0;
-                        x / (node_size.area.width() as f64 - 15.0) * 100.0
+                    x / (node_size.area.width() as f64 - 15.0) * 100.0
                 };
                 let percentage = percentage.clamp(0.0, 100.0);
 
@@ -178,19 +176,45 @@ pub fn Slider(
         onmoved.call(percentage);
     };
 
-    
     let border = if focus.is_selected() {
         format!("2 solid {}", theme.border_fill)
     } else {
         "none".to_string()
     };
 
-    let (width, height, inner_width, inner_height) = if direction_is_vertical {
+    let (
+        width,
+        height,
+        container_width,
+        container_height,
+        inner_width,
+        inner_height,
+        offset_x,
+        offset_y,
+    ) = if direction_is_vertical {
         let inner_height = (node_size.area.height() - 15.0) * (value / 100.0) as f32;
-        ("20", size.as_str(), "100%".to_string(), inner_height.to_string())
+        (
+            "20",
+            size.as_str(),
+            "6",
+            "100%",
+            "100%".to_string(),
+            inner_height.to_string(),
+            -6,
+            -3,
+        )
     } else {
         let inner_width = (node_size.area.width() - 15.0) * (value / 100.0) as f32;
-        (size.as_str(), "20", inner_width.to_string(), "100%".to_string(), )
+        (
+            size.as_str(),
+            "20",
+            "100%",
+            "6",
+            inner_width.to_string(),
+            "100%".to_string(),
+            -3,
+            -6,
+        )
     };
 
     rsx!(
@@ -211,8 +235,8 @@ pub fn Slider(
             corner_radius: "8",
             rect {
                 background: "{theme.background}",
-                width: "100%",
-                height: "6",
+                width: "{container_width}",
+                height: "{container_height}",
                 direction: "{direction}",
                 corner_radius: "50",
                 rect {
@@ -224,8 +248,8 @@ pub fn Slider(
                 rect {
                     width: "fill",
                     height: "100%",
-                    offset_y: "-6",
-                    offset_x: "-3",
+                    offset_x: "{offset_x}",
+                    offset_y: "{offset_y}",
                     rect {
                         background: "{theme.thumb_background}",
                         width: "18",
