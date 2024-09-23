@@ -191,8 +191,10 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 app.resize(window);
                 window.request_redraw();
             }
-            EventMessage::InvalidateArea(area) => {
+            EventMessage::InvalidateArea(mut area) => {
                 let fdom = app.sdom.get();
+                let sf = window.scale_factor() as f32;
+                area.size *= sf;
                 let mut compositor_dirty_area = fdom.compositor_dirty_area();
                 compositor_dirty_area.unite_or_insert(&area)
             }
