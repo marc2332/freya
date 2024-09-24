@@ -6,9 +6,14 @@ use crate::{
 pub const DARK_THEME: Theme = Theme {
     name: "dark",
     colors: ColorsSheet {
-        primary: cow_borrowed!("white"),
-        secondary: cow_borrowed!("white"),
+        primary: cow_borrowed!("rgb(103, 80, 164)"),
+        secondary: cow_borrowed!("rgb(202, 193, 227)"),
         tertiary: cow_borrowed!("white"),
+        surface: cow_borrowed!("rgb(210, 210, 210)"),
+        secondary_surface: cow_borrowed!("rgb(225, 225, 225)"),
+        neutral_surface: cow_borrowed!("rgb(245, 245, 245)"),
+        focused_surface: cow_borrowed!("rgb(235, 235, 235)"),
+        background: cow_borrowed!("rgb(250, 250, 250)"),
     },
     body: BodyTheme {
         background: cow_borrowed!("rgb(25, 25, 25)"),
@@ -17,9 +22,9 @@ pub const DARK_THEME: Theme = Theme {
     },
     slider: SliderTheme {
         background: cow_borrowed!("rgb(60, 60, 60)"),
-        thumb_background: cow_borrowed!("rgb(103, 80, 164)"),
-        thumb_inner_background: cow_borrowed!("rgb(202, 193, 227)"),
-        border_fill: cow_borrowed!("rgb(103, 80, 164)"),
+        thumb_background: cow_borrowed!("key(primary)"),
+        thumb_inner_background: cow_borrowed!("key(secondary)"),
+        border_fill: cow_borrowed!("key(primary)"),
     },
     button: ButtonTheme {
         background: cow_borrowed!("rgb(35, 35, 35)"),
@@ -55,8 +60,8 @@ pub const DARK_THEME: Theme = Theme {
         margin: LIGHT_THEME.input.margin,
         background: cow_borrowed!("rgb(60, 60, 60)"),
         thumb_background: cow_borrowed!("rgb(200, 200, 200)"),
-        enabled_background: cow_borrowed!("rgb(202, 193, 227)"),
-        enabled_thumb_background: cow_borrowed!("rgb(103, 80, 164)"),
+        enabled_background: cow_borrowed!("key(secondary)"),
+        enabled_thumb_background: cow_borrowed!("key(primary)"),
         focus_border_fill: cow_borrowed!("rgb(110, 110, 110)"),
         enabled_focus_border_fill: cow_borrowed!("rgb(170, 170, 170)"),
     },
@@ -106,7 +111,7 @@ pub const DARK_THEME: Theme = Theme {
     progress_bar: ProgressBarTheme {
         color: cow_borrowed!("black"),
         background: cow_borrowed!("rgb(60, 60, 60)"),
-        progress_background: cow_borrowed!("rgb(202, 193, 227)"),
+        progress_background: cow_borrowed!("key(secondary)"),
         width: LIGHT_THEME.progress_bar.width,
         height: LIGHT_THEME.progress_bar.height,
     },
@@ -161,13 +166,13 @@ pub const DARK_THEME: Theme = Theme {
     },
     radio: RadioTheme {
         unselected_fill: cow_borrowed!("rgb(245, 245, 245)"),
-        selected_fill: cow_borrowed!("rgb(202, 193, 227)"),
-        border_fill: cow_borrowed!("rgb(103, 80, 164)"),
+        selected_fill: cow_borrowed!("key(secondary)"),
+        border_fill: cow_borrowed!("key(primary)"),
     },
     checkbox: CheckboxTheme {
         unselected_fill: cow_borrowed!("rgb(245, 245, 245)"),
-        selected_fill: cow_borrowed!("rgb(202, 193, 227)"),
-        selected_icon_fill: cow_borrowed!("rgb(103, 80, 164)"),
+        selected_fill: cow_borrowed!("key(secondary)"),
+        selected_icon_fill: cow_borrowed!("key(primary)"),
     },
     menu_item: MenuItemTheme {
         hover_background: cow_borrowed!("rgb(45, 45, 45)"),

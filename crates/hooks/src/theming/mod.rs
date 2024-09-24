@@ -584,27 +584,32 @@ define_theme! {
     }
 }
 
-pub struct StyleSheet {
-    colors: ColorsSheet,
-    // text: TextSizeSheet
-}
-
-// pub struct TextSizeSheet {
-
-// }
-
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ColorsSheet {
     pub primary: Cow<'static, str>,
     pub secondary: Cow<'static, str>,
     pub tertiary: Cow<'static, str>,
+    pub surface: Cow<'static, str>,
+    pub secondary_surface: Cow<'static, str>,
+    pub neutral_surface: Cow<'static, str>,
+    pub focused_surface: Cow<'static, str>,
+    pub background: Cow<'static, str>,
 }
 
 impl ColorsSheet {
     fn resolve(&self, val: Cow<'static, str>) -> Cow<'static, str> {
         if val.starts_with("key") {
-            match val {
-                _ => self.primary.clone()
+            let key_val = val.replace("key(", "").replace(")", "");
+            match key_val.as_str() {
+                "primary" => self.primary.clone(),
+                "secondary" => self.secondary.clone(),
+                "tertiary" => self.tertiary.clone(),
+                "surface" => self.surface.clone(),
+                "secondary_surface" => self.secondary_surface.clone(),
+                "neutral_surface" => self.neutral_surface.clone(),
+                "focused_surface" => self.focused_surface.clone(),
+                "background" => self.background.clone(),
+                _ => self.primary.clone(),
             }
         } else {
             val
