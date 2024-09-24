@@ -125,12 +125,12 @@ pub fn Slider(
         }
         Key::ArrowUp if direction_is_vertical => {
             e.stop_propagation();
-            let percentage = (value - 4.).clamp(0.0, 100.0);
+            let percentage = (value + 4.).clamp(0.0, 100.0);
             onmoved.call(percentage);
         }
         Key::ArrowDown if direction_is_vertical => {
             e.stop_propagation();
-            let percentage = (value + 4.).clamp(0.0, 100.0);
+            let percentage = (value - 4.).clamp(0.0, 100.0);
             onmoved.call(percentage);
         }
         _ => {}
