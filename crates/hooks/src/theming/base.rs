@@ -3,21 +3,28 @@ use crate::{
     theming::*,
 };
 
-pub const LIGHT_THEME: Theme = Theme {
-    name: "light",
+pub(crate) const BASE_THEME: Theme = Theme {
+    name: "base",
     colors: ColorsSheet {
-        primary: cow_borrowed!("rgb(103, 80, 164)"),
-        secondary: cow_borrowed!("rgb(202, 193, 227)"),
-        tertiary: cow_borrowed!("white"),
-        surface: cow_borrowed!("rgb(210, 210, 210)"),
-        secondary_surface: cow_borrowed!("rgb(225, 225, 225)"),
-        neutral_surface: cow_borrowed!("rgb(245, 245, 245)"),
-        focused_surface: cow_borrowed!("rgb(235, 235, 235)"),
-        background: cow_borrowed!("rgb(250, 250, 250)"),
+        primary: cow_borrowed!(""),
+        secondary: cow_borrowed!(""),
+        tertiary: cow_borrowed!(""),
+        surface: cow_borrowed!(""),
+        secondary_surface: cow_borrowed!(""),
+        neutral_surface: cow_borrowed!(""),
+        focused_surface: cow_borrowed!(""),
+        opposite_surface: cow_borrowed!(""),
+        secondary_opposite_surface: cow_borrowed!(""),
+        tertiary_opposite_surface: cow_borrowed!(""),
+        background: cow_borrowed!(""),
+        focused_border: cow_borrowed!(""),
+        solid: cow_borrowed!(""),
+        color: cow_borrowed!(""),
+        placeholder_color: cow_borrowed!(""),
     },
     body: BodyTheme {
         background: cow_borrowed!("key(background)"),
-        color: cow_borrowed!("black"),
+        color: cow_borrowed!("key(color)"),
         padding: cow_borrowed!("none"),
     },
     slider: SliderTheme {
@@ -30,10 +37,10 @@ pub const LIGHT_THEME: Theme = Theme {
         background: cow_borrowed!("key(neutral_surface)"),
         hover_background: cow_borrowed!("key(focused_surface)"),
         font_theme: FontTheme {
-            color: cow_borrowed!("rgb(10, 10, 10)"),
+            color: cow_borrowed!("key(color)"),
         },
         border_fill: cow_borrowed!("key(surface)"),
-        focus_border_fill: cow_borrowed!("rgb(180, 180, 180)"),
+        focus_border_fill: cow_borrowed!("key(focused_border)"),
         shadow: cow_borrowed!("0 4 5 0 rgb(0, 0, 0, 0.1)"),
         padding: cow_borrowed!("8 12"),
         margin: cow_borrowed!("0"),
@@ -45,7 +52,7 @@ pub const LIGHT_THEME: Theme = Theme {
         background: cow_borrowed!("key(neutral_surface)"),
         hover_background: cow_borrowed!("key(focused_surface)"),
         font_theme: FontTheme {
-            color: cow_borrowed!("rgb(10, 10, 10)"),
+            color: cow_borrowed!("key(color)"),
         },
         placeholder_font_theme: FontTheme {
             color: cow_borrowed!("rgb(100, 100, 100)"),
@@ -59,22 +66,22 @@ pub const LIGHT_THEME: Theme = Theme {
     switch: SwitchTheme {
         margin: cow_borrowed!("0"),
         background: cow_borrowed!("key(secondary_surface)"),
-        thumb_background: cow_borrowed!("rgb(125, 125, 125)"),
+        thumb_background: cow_borrowed!("key(opposite_surface)"),
         enabled_background: cow_borrowed!("key(secondary)"),
         enabled_thumb_background: cow_borrowed!("key(primary)"),
-        focus_border_fill: cow_borrowed!("rgb(180, 180, 180)"),
-        enabled_focus_border_fill: cow_borrowed!("rgb(180, 180, 180)"),
+        focus_border_fill: cow_borrowed!("key(focused_border)"),
+        enabled_focus_border_fill: cow_borrowed!("key(focused_border)"),
     },
     scroll_bar: ScrollBarTheme {
         background: cow_borrowed!("key(secondary_surface)"),
-        thumb_background: cow_borrowed!("rgb(135, 135, 135)"),
-        hover_thumb_background: cow_borrowed!("rgb(115, 115, 115)"),
-        active_thumb_background: cow_borrowed!("rgb(95, 95, 95)"),
+        thumb_background: cow_borrowed!("key(opposite_surface)"),
+        hover_thumb_background: cow_borrowed!("key(secondary_opposite_surface)"),
+        active_thumb_background: cow_borrowed!("key(tertiary_opposite_surface)"),
         size: cow_borrowed!("15"),
     },
     tooltip: TooltipTheme {
         background: cow_borrowed!("key(neutral_surface)"),
-        color: cow_borrowed!("rgb(25,25,25)"),
+        color: cow_borrowed!("key(color)"),
         border_fill: cow_borrowed!("key(surface)"),
     },
     dropdown: DropdownTheme {
@@ -84,17 +91,17 @@ pub const LIGHT_THEME: Theme = Theme {
         background_button: cow_borrowed!("key(neutral_surface)"),
         hover_background: cow_borrowed!("key(focused_surface)"),
         font_theme: FontTheme {
-            color: cow_borrowed!("rgb(10, 10, 10)"),
+            color: cow_borrowed!("key(color)"),
         },
         border_fill: cow_borrowed!("key(surface)"),
         arrow_fill: cow_borrowed!("rgb(40, 40, 40)"),
     },
     dropdown_item: DropdownItemTheme {
         background: cow_borrowed!("key(background)"),
-        select_background: cow_borrowed!("rgb(240, 240, 240)"),
-        hover_background: cow_borrowed!("rgb(220, 220, 220)"),
+        select_background: cow_borrowed!("key(neutral_surface)"),
+        hover_background: cow_borrowed!("key(focused_surface)"),
         font_theme: FontTheme {
-            color: cow_borrowed!("rgb(10, 10, 10)"),
+            color: cow_borrowed!("key(color)"),
         },
     },
     accordion: AccordionTheme {
@@ -103,7 +110,7 @@ pub const LIGHT_THEME: Theme = Theme {
         border_fill: cow_borrowed!("key(surface)"),
     },
     loader: LoaderTheme {
-        primary_color: cow_borrowed!("rgb(50, 50, 50)"),
+        primary_color: cow_borrowed!("key(tertiary_opposite_surface)"),
     },
     link: LinkTheme {
         highlight_color: cow_borrowed!("rgb(43,106,208)"),
@@ -122,8 +129,8 @@ pub const LIGHT_THEME: Theme = Theme {
         background: cow_borrowed!("key(background)"),
         arrow_fill: cow_borrowed!("rgb(40, 40, 40)"),
         row_background: cow_borrowed!("transparent"),
-        alternate_row_background: cow_borrowed!("rgb(240, 240, 240)"),
-        divider_fill: cow_borrowed!("rgb(200, 200, 200)"),
+        alternate_row_background: cow_borrowed!("key(neutral_surface)"),
+        divider_fill: cow_borrowed!("key(secondary_surface)"),
         height: cow_borrowed!("auto"),
         corner_radius: cow_borrowed!("6"),
         shadow: cow_borrowed!("0 2 15 5 rgb(35, 35, 35, 70)"),
@@ -150,27 +157,27 @@ pub const LIGHT_THEME: Theme = Theme {
         spacing: cow_borrowed!("4"),
         background: cow_borrowed!("key(neutral_surface)"),
         font_theme: FontTheme {
-            color: cow_borrowed!("rgb(10, 10, 10)"),
+            color: cow_borrowed!("key(color)"),
         },
     },
     sidebar_item: SidebarItemTheme {
         margin: cow_borrowed!("0"),
         background: cow_borrowed!("transparent"),
-        hover_background: cow_borrowed!("rgb(230, 230, 230)"),
+        hover_background: cow_borrowed!("key(focused_surface)"),
         font_theme: FontTheme {
-            color: cow_borrowed!("rgb(10, 10, 10)"),
+            color: cow_borrowed!("key(color)"),
         },
     },
     tile: TileTheme {
         padding: cow_borrowed!("4 6"),
     },
     radio: RadioTheme {
-        unselected_fill: cow_borrowed!("rgb(35, 35, 35)"),
+        unselected_fill: cow_borrowed!("key(solid)"),
         selected_fill: cow_borrowed!("key(primary)"),
         border_fill: cow_borrowed!("key(surface)"),
     },
     checkbox: CheckboxTheme {
-        unselected_fill: cow_borrowed!("rgb(80, 80, 80)"),
+        unselected_fill: cow_borrowed!("key(solid)"),
         selected_fill: cow_borrowed!("key(primary)"),
         selected_icon_fill: cow_borrowed!("key(secondary)"),
     },
@@ -178,7 +185,7 @@ pub const LIGHT_THEME: Theme = Theme {
         hover_background: cow_borrowed!("key(focused_surface)"),
         corner_radius: cow_borrowed!("8"),
         font_theme: FontTheme {
-            color: cow_borrowed!("rgb(10, 10, 10)"),
+            color: cow_borrowed!("key(color)"),
         },
     },
     menu_container: MenuContainerTheme {
@@ -188,12 +195,12 @@ pub const LIGHT_THEME: Theme = Theme {
     },
     snackbar: SnackBarTheme {
         background: cow_borrowed!("key(focused_surface)"),
-        color: cow_borrowed!("key(primary)"),
+        color: cow_borrowed!("key(color)"),
     },
     popup: PopupTheme {
         background: cow_borrowed!("key(background)"),
         color: cow_borrowed!("black"),
-        cross_fill: cow_borrowed!("rgb(40, 40, 40)"),
+        cross_fill: cow_borrowed!("key(solid)"),
         width: cow_borrowed!("350"),
         height: cow_borrowed!("200"),
     },
@@ -201,19 +208,19 @@ pub const LIGHT_THEME: Theme = Theme {
         background: cow_borrowed!("key(neutral_surface)"),
         hover_background: cow_borrowed!("key(focused_surface)"),
         font_theme: FontTheme {
-            color: cow_borrowed!("rgb(10, 10, 10)"),
+            color: cow_borrowed!("key(color)"),
         },
         border_fill: cow_borrowed!("none"),
-        focus_border_fill: cow_borrowed!("rgb(180, 180, 180)"),
+        focus_border_fill: cow_borrowed!("key(focused_border)"),
         padding: cow_borrowed!("8 16"),
         width: cow_borrowed!("auto"),
         height: cow_borrowed!("auto"),
     },
     bottom_tab: BottomTabTheme {
         background: cow_borrowed!("transparent"),
-        hover_background: cow_borrowed!("rgb(230, 230, 230)"),
+        hover_background: cow_borrowed!("key(secondary_surface)"),
         font_theme: FontTheme {
-            color: cow_borrowed!("rgb(10, 10, 10)"),
+            color: cow_borrowed!("key(color)"),
         },
         padding: cow_borrowed!("8 10"),
         width: cow_borrowed!("auto"),

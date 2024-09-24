@@ -1,5 +1,5 @@
-mod dark;
-mod light;
+mod base;
+mod themes;
 
 #[doc(hidden)]
 pub use ::core::default::Default;
@@ -7,8 +7,7 @@ pub use ::core::default::Default;
 pub use ::paste::paste;
 #[doc(hidden)]
 pub use ::std::borrow::Cow;
-pub use dark::*;
-pub use light::*;
+pub use themes::*;
 
 /// Alias for `Cow::Borrowed`, because that's used a million times so shortening it is nice.
 /// Makes the code more readable.
@@ -593,7 +592,14 @@ pub struct ColorsSheet {
     pub secondary_surface: Cow<'static, str>,
     pub neutral_surface: Cow<'static, str>,
     pub focused_surface: Cow<'static, str>,
+    pub opposite_surface: Cow<'static, str>,
+    pub secondary_opposite_surface: Cow<'static, str>,
+    pub tertiary_opposite_surface: Cow<'static, str>,
     pub background: Cow<'static, str>,
+    pub focused_border: Cow<'static, str>,
+    pub solid: Cow<'static, str>,
+    pub color: Cow<'static, str>,
+    pub placeholder_color: Cow<'static, str>,
 }
 
 impl ColorsSheet {
@@ -608,7 +614,14 @@ impl ColorsSheet {
                 "secondary_surface" => self.secondary_surface.clone(),
                 "neutral_surface" => self.neutral_surface.clone(),
                 "focused_surface" => self.focused_surface.clone(),
+                "opposite_surface" => self.opposite_surface.clone(),
+                "secondary_opposite_surface" => self.secondary_opposite_surface.clone(),
+                "tertiary_opposite_surface" => self.tertiary_opposite_surface.clone(),
                 "background" => self.background.clone(),
+                "focused_border" => self.focused_border.clone(),
+                "solid" => self.solid.clone(),
+                "color" => self.color.clone(),
+                "placeholder_color" => self.placeholder_color.clone(),
                 _ => self.primary.clone(),
             }
         } else {

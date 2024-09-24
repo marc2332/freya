@@ -221,6 +221,7 @@ pub fn Input(
             a11y_auto_focus: "{auto_focus}",
             onkeydown,
             onkeyup,
+            overflow: "clip",
             paragraph {
                 margin: "8 12",
                 onglobalclick,

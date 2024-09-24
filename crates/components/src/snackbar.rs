@@ -46,7 +46,7 @@ pub fn SnackBar(
     /// Inner children of the SnackBar.
     children: Element,
     /// Signal to show the snackbar or not.
-    show: Signal<bool>,
+    show: ReadOnlySignal<bool>,
     /// Theme override.
     theme: Option<SnackBarThemeWith>,
 ) -> Element {
