@@ -131,7 +131,7 @@ pub fn Slider(
                 let coordinates = e.get_element_coordinates();
                 let percentage = if direction_is_vertical {
                     let y = coordinates.y - node_size.area.min_y() as f64 - 6.0;
-                    y / (node_size.area.height() as f64 - 15.0) * 100.0
+                    100. - (y / (node_size.area.height() as f64 - 15.0) * 100.0)
                 } else {
                     let x = coordinates.x - node_size.area.min_x() as f64 - 6.0;
                     x / (node_size.area.width() as f64 - 15.0) * 100.0
@@ -152,7 +152,7 @@ pub fn Slider(
             let coordinates = e.get_element_coordinates();
             let percentage = if direction_is_vertical {
                 let y = coordinates.y - 6.0;
-                y / (node_size.area.height() as f64 - 15.0) * 100.0
+                100. - (y / (node_size.area.height() as f64 - 15.0) * 100.0)
             } else {
                 let x = coordinates.x - 6.0;
                 x / (node_size.area.width() as f64 - 15.0) * 100.0
@@ -189,6 +189,7 @@ pub fn Slider(
         container_height,
         inner_width,
         inner_height,
+        main_align,
         offset_x,
         offset_y,
     ) = if direction_is_vertical {
@@ -200,8 +201,9 @@ pub fn Slider(
             "100%",
             "100%".to_string(),
             inner_height.to_string(),
+            "end",
             -6,
-            -3,
+            3,
         )
     } else {
         let inner_width = (node_size.area.width() - 15.0) * (value / 100.0) as f32;
@@ -212,10 +214,39 @@ pub fn Slider(
             "6",
             inner_width.to_string(),
             "100%".to_string(),
+            "start",
             -3,
             -6,
         )
     };
+
+    let inner_fill = rsx!(rect {
+        background: "{theme.thumb_inner_background}",
+        width: "{inner_width}",
+        height: "{inner_height}",
+        corner_radius: "50"
+    });
+
+    let thumb = rsx!(
+        rect {
+            width: "fill",
+            offset_x: "{offset_x}",
+            offset_y: "{offset_y}",
+            rect {
+                background: "{theme.thumb_background}",
+                width: "18",
+                height: "18",
+                corner_radius: "50",
+                padding: "4",
+                rect {
+                    height: "100%",
+                    width: "100%",
+                    background: "{theme.thumb_inner_background}",
+                    corner_radius: "50"
+                }
+            }
+        }
+    );
 
     rsx!(
         rect {
@@ -237,32 +268,15 @@ pub fn Slider(
                 background: "{theme.background}",
                 width: "{container_width}",
                 height: "{container_height}",
+                main_align: "{main_align}",
                 direction: "{direction}",
                 corner_radius: "50",
-                rect {
-                    background: "{theme.thumb_inner_background}",
-                    width: "{inner_width}",
-                    height: "{inner_height}",
-                    corner_radius: "50"
-                }
-                rect {
-                    width: "fill",
-                    height: "100%",
-                    offset_x: "{offset_x}",
-                    offset_y: "{offset_y}",
-                    rect {
-                        background: "{theme.thumb_background}",
-                        width: "18",
-                        height: "18",
-                        corner_radius: "50",
-                        padding: "4",
-                        rect {
-                            height: "100%",
-                            width: "100%",
-                            background: "{theme.thumb_inner_background}",
-                            corner_radius: "50"
-                        }
-                    }
+                if direction_is_vertical {
+                    {thumb}
+                    {inner_fill}
+                } else {
+                    {inner_fill}
+                    {thumb}
                 }
             }
         }
