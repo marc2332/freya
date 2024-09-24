@@ -2,6 +2,7 @@ use dioxus::prelude::*;
 use freya_elements::{
     elements as dioxus_elements,
     events::{
+        KeyboardEvent,
         MouseEvent,
         WheelEvent,
     },
@@ -110,6 +111,30 @@ pub fn Slider(
             platform.set_cursor(CursorIcon::default());
         }
     });
+
+    let onkeydown = move |e: KeyboardEvent| match e.key {
+        Key::ArrowLeft if !direction_is_vertical => {
+            e.stop_propagation();
+            let percentage = (value - 4.).clamp(0.0, 100.0);
+            onmoved.call(percentage);
+        }
+        Key::ArrowRight if !direction_is_vertical => {
+            e.stop_propagation();
+            let percentage = (value + 4.).clamp(0.0, 100.0);
+            onmoved.call(percentage);
+        }
+        Key::ArrowUp if direction_is_vertical => {
+            e.stop_propagation();
+            let percentage = (value - 4.).clamp(0.0, 100.0);
+            onmoved.call(percentage);
+        }
+        Key::ArrowDown if direction_is_vertical => {
+            e.stop_propagation();
+            let percentage = (value + 4.).clamp(0.0, 100.0);
+            onmoved.call(percentage);
+        }
+        _ => {}
+    };
 
     let onmouseleave = move |e: MouseEvent| {
         e.stop_propagation();
@@ -229,6 +254,7 @@ pub fn Slider(
             onglobalmousemove: onmousemove,
             onmouseleave,
             onwheel: onwheel,
+            onkeydown,
             main_align: "center",
             cross_align: "center",
             border: "{border}",
