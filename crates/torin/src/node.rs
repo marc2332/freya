@@ -242,8 +242,11 @@ impl Node {
         self.width.inner_sized()
             || self.height.inner_sized()
             || self.has_layout_references
-            || self.cross_alignment.is_not_start()
-            || self.main_alignment.is_not_start()
             || self.contains_text
+    }
+
+    /// Has properties that make its children dependant on it?
+    pub fn do_inner_depend_on_parent(&self) -> bool {
+        self.cross_alignment.is_not_start() || self.main_alignment.is_not_start()
     }
 }
