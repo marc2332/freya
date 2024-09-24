@@ -75,7 +75,7 @@ pub enum SliderStatus {
 ///             "Value: {percentage}"
 ///         }
 ///         Slider {
-///             width: "50%",
+///             size: "50%",
 ///             value: *percentage.read(),
 ///             onmoved: move |p| {
 ///                 percentage.set(p);
