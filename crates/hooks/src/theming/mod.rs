@@ -30,13 +30,9 @@ macro_rules! cow_borrowed {
 /// # struct Foo;
 /// define_theme! {
 ///     %[component]
-///     pub Test<'a> {
+///     pub Test {
 ///         %[cows]
 ///         cow_string: str,
-///         %[borrowed]
-///         borrowed_data: &'a Foo,
-///         %[owned]
-///         owned_data: Bar,
 ///         %[subthemes]
 ///         font_theme: FontTheme,
 ///     }
@@ -58,20 +54,6 @@ macro_rules! define_theme {
                 )*
             )?
             $(
-                %[borrowed$($borrowed_attr_control:tt)?]
-                $(
-                    $(#[$borrowed_field_attrs:meta])*
-                    $borrowed_field_name:ident: $borrowed_field_ty:ty,
-                )*
-            )?
-            $(
-                %[owned$($owned_attr_control:tt)?]
-                $(
-                    $(#[$owned_field_attrs:meta])*
-                    $owned_field_name:ident: $owned_field_ty:ty,
-                )*
-            )?
-            $(
                 %[subthemes$($subthemes_attr_control:tt)?]
                 $(
                     $(#[$subtheme_field_attrs:meta])*
@@ -81,22 +63,12 @@ macro_rules! define_theme {
     }) => {
         $crate::define_theme!(NOTHING=$($($component_attr_control)?)?);
         $crate::define_theme!(NOTHING=$($($cows_attr_control)?)?);
-        $crate::define_theme!(NOTHING=$($($borrowed_attr_control)?)?);
-        $crate::define_theme!(NOTHING=$($($owned_attr_control)?)?);
         $crate::define_theme!(NOTHING=$($($subthemes_attr_control)?)?);
         $crate::paste! {
             #[derive(Default, Clone, Debug, PartialEq, Eq)]
             #[doc = "You can use this to change a theme for only one component, with the `theme` property."]
             $(#[$attrs])*
             $vis struct [<$name ThemeWith>] $(<$lifetime>)? {
-                $($(
-                    $(#[$borrowed_field_attrs])*
-                    pub $borrowed_field_name: Option<$borrowed_field_ty>,
-                )*)?
-                $($(
-                    $(#[$owned_field_attrs])*
-                    pub $owned_field_name: Option<$owned_field_ty>,
-                )*)?
                 $($(
                     $(#[$subtheme_field_attrs])*
                     pub $subtheme_field_name: Option< [<$subtheme_field_ty_name With>] $(<$subtheme_field_ty_lifetime>)? >,
@@ -112,14 +84,6 @@ macro_rules! define_theme {
             $(#[$attrs])*
             $vis struct [<$name Theme>] $(<$lifetime>)? {
                 $($(
-                    $(#[$borrowed_field_attrs])*
-                    pub $borrowed_field_name: $borrowed_field_ty,
-                )*)?
-                $($(
-                    $(#[$owned_field_attrs])*
-                    pub $owned_field_name: $owned_field_ty,
-                )*)?
-                $($(
                     $(#[$subtheme_field_attrs])*
                     pub $subtheme_field_name: $subtheme_field_ty_name $(<$subtheme_field_ty_lifetime>)?,
                 )*)?
@@ -131,15 +95,7 @@ macro_rules! define_theme {
 
             impl $(<$lifetime>)? [<$name Theme>] $(<$lifetime>)? {
 
-                pub fn apply_colors(&mut self, colors: &ColorsSheet) {
-                    $($(
-                        self.$borrowed_field_name = colors.resolve(self.$borrowed_field_name);
-                    )*)?
-
-                    $($(
-                        self.$owned_field_name = colors.resolve(self.$owned_field_name);
-                    )*)?
-
+                pub fn apply_colors(&mut self, colors: &$crate::ColorsSheet) {
                     $($(
                         self.$subtheme_field_name.apply_colors(colors);
                     )*)?
@@ -151,18 +107,6 @@ macro_rules! define_theme {
 
                 #[doc = "Checks each field in `optional` and if it's `Some`, it overwrites the corresponding `self` field."]
                 pub fn apply_optional(&mut self, optional: & $($lifetime)? [<$name ThemeWith>]) {
-                    $($(
-                        if let Some($borrowed_field_name) = optional.$borrowed_field_name {
-                            self.$borrowed_field_name = $borrowed_field_name;
-                        }
-                    )*)?
-
-                    $($(
-                        if let Some($owned_field_name) = &optional.$owned_field_name {
-                            self.$owned_field_name = $owned_field_name.clone();
-                        }
-                    )*)?
-
                     $($(
                         if let Some($subtheme_field_name) = &optional.$subtheme_field_name {
                             self.$subtheme_field_name.apply_optional($subtheme_field_name);
@@ -603,7 +547,7 @@ pub struct ColorsSheet {
 }
 
 impl ColorsSheet {
-    fn resolve(&self, val: Cow<'static, str>) -> Cow<'static, str> {
+    pub fn resolve(&self, val: Cow<'static, str>) -> Cow<'static, str> {
         if val.starts_with("key") {
             let key_val = val.replace("key(", "").replace(")", "");
             match key_val.as_str() {
