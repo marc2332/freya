@@ -239,14 +239,14 @@ impl Node {
 
     /// Has properties that depend on the inner Nodes?
     pub fn does_depend_on_inner(&self) -> bool {
-        self.width.inner_sized()
-            || self.height.inner_sized()
-            || self.has_layout_references
-            || self.contains_text
+        self.width.inner_sized() || self.height.inner_sized()
     }
 
     /// Has properties that make its children dependant on it?
     pub fn do_inner_depend_on_parent(&self) -> bool {
-        self.cross_alignment.is_not_start() || self.main_alignment.is_not_start()
+        self.cross_alignment.is_not_start()
+            || self.main_alignment.is_not_start()
+            || self.has_layout_references
+            || self.contains_text
     }
 }
