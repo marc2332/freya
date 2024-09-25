@@ -10,6 +10,7 @@ Accepted values for both attributes are:
 - `space-between`(only for `main_align`): Distributed among the available space
 - `space-around` (only for `main_align`): Distributed among the available space with small margins in the sides
 - `space-evenly` (only for `main_align`): Distributed among the available space with the same size of margins in the sides and in between the elements.
+- `flex`: TODO
 
 When using the `vertical` direction, `main_align` will be the Y axis and `cross_align` will be the X axis. But when using the `horizontal` direction, the
 `main_align` will be the X axis and the `cross_align` will be the Y axis.

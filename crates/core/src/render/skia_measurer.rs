@@ -213,6 +213,7 @@ pub fn align_main_align_paragraph(node: &DioxusNode, area: &Area, paragraph: &Pa
         Alignment::SpaceBetween => 0.,
         Alignment::SpaceEvenly => 0.,
         Alignment::SpaceAround => 0.,
+        Alignment::Flex => 0.,
     }
 }
 

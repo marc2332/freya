@@ -13,6 +13,7 @@ impl Parse for Alignment {
             "space-between" => Alignment::SpaceBetween,
             "space-evenly" => Alignment::SpaceEvenly,
             "space-around" => Alignment::SpaceAround,
+            "flex" => Alignment::Flex,
             _ => Alignment::Start,
         })
     }
