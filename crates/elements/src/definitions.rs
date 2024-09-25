@@ -428,7 +428,9 @@ builder_constructors! {
         decoration_color: String,
     };
     /// `image` element let's you show an image.
-    ///
+    /// 
+    /// For dynamic Images you may use `dynamic_bytes`.
+    /// 
     /// ### Example
     ///
     /// ```rust, ignore, no_run
@@ -440,8 +442,8 @@ builder_constructors! {
     ///     rsx!(
     ///         image {
     ///             image_data: image_data,
-    ///             width: "{size}",
-    ///             height: "{size}",
+    ///             width: "100%", // You must specify size otherwhise it will default to 0
+    ///             height: "100%",
     ///         }
     ///     )
     /// }
@@ -464,9 +466,8 @@ builder_constructors! {
         a11y_alt: String,
     };
     /// `svg` element let's you display SVG code.
-    ///
-    /// You will need to use the [`dynamic_bytes`](https://docs.freyaui.dev/freya/prelude/fn.dynamic_bytes.html)
-    /// to transform the bytes into data the element can recognize.
+    /// 
+    /// For dynamic SVGs you may use `dynamic_bytes`.
     ///
     /// ### Example
     ///
@@ -475,10 +476,12 @@ builder_constructors! {
     /// static FERRIS: &[u8] = include_bytes!("./ferris.svg");
     ///
     /// fn app() -> Element {
-    ///     let ferris = dynamic_bytes(FERRIS);
+    ///     let ferris = static_bytes(FERRIS);
     ///     rsx!(
     ///         svg {
     ///             svg_data: ferris,
+    ///             width: "100%", // You must specify size otherwhise it will default to 0
+    ///             height: "100%",
     ///         }
     ///     )
     /// }
@@ -486,7 +489,7 @@ builder_constructors! {
     svg {
         #[doc = include_str!("_docs/attributes/margin.md")]
         margin: String,
-       #[doc = include_str!("_docs/attributes/width_height.md")]
+        #[doc = include_str!("_docs/attributes/width_height.md")]
         height: String,
         width: String,
         #[doc = include_str!("_docs/attributes/rotate.md")]
