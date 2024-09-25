@@ -15,7 +15,7 @@ fn app() -> Element {
             height: "100%",
             width: "100%",
             direction: "horizontal",
-            main_align: "flex",
+            content: "flex",
             spacing: "4",
             padding: "4",
             rect {

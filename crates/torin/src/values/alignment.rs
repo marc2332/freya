@@ -7,7 +7,6 @@ pub enum Alignment {
     SpaceBetween,
     SpaceEvenly,
     SpaceAround,
-    Flex,
 }
 
 impl Alignment {
@@ -22,10 +21,6 @@ impl Alignment {
         )
     }
 
-    pub fn is_flex(&self) -> bool {
-        matches!(self, Self::Flex)
-    }
-
     pub fn pretty(&self) -> String {
         match self {
             Alignment::Start => "start".to_string(),
@@ -34,7 +29,6 @@ impl Alignment {
             Alignment::SpaceBetween => "space-between".to_string(),
             Alignment::SpaceEvenly => "space-evenly".to_string(),
             Alignment::SpaceAround => "space-around".to_string(),
-            Alignment::Flex => "flex".to_string(),
         }
     }
 }

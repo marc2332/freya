@@ -31,7 +31,7 @@ impl Default for Size {
 }
 
 impl Size {
-    pub fn flex_factor(&self) -> Option<Length> {
+    pub fn flex_grow(&self) -> Option<Length> {
         match self {
             Self::Flex(f) => Some(*f),
             _ => None,
