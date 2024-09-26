@@ -40,11 +40,11 @@ fn app() -> Element {
         editable.process_event(&EditableEvent::Click);
     };
 
-    let onkeydown = move |e: KeyboardEvent| {
+    let onglobalkeydown = move |e: KeyboardEvent| {
         editable.process_event(&EditableEvent::KeyDown(e.data));
     };
 
-    let onkeyup = move |e: KeyboardEvent| {
+    let onglobalkeyup = move |e: KeyboardEvent| {
         editable.process_event(&EditableEvent::KeyUp(e.data));
     };
 
@@ -69,8 +69,8 @@ fn app() -> Element {
                     onclick,
                     onmousemove,
                     onmousedown,
-                    onkeydown,
-                    onkeyup,
+                    onglobalkeydown,
+                    onglobalkeyup,
                     text {
                         "{editable.editor()}"
                     }

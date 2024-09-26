@@ -100,7 +100,7 @@ pub fn Popup(
         }
     };
 
-    let onkeydown = move |event: KeyboardEvent| {
+    let onglobalkeydown = move |event: KeyboardEvent| {
         if close_on_escape_key && event.key == Key::Escape {
             request_to_close()
         }
@@ -118,7 +118,7 @@ pub fn Popup(
                 shadow: "0 4 5 0 rgb(0, 0, 0, 30)",
                 width: "{width}",
                 height: "{height}",
-                onkeydown,
+                onglobalkeydown,
                 if show_close_button {
                     rect {
                         height: "0",
@@ -229,7 +229,7 @@ mod test {
         // Open the popup
         utils.click_cursor((15., 15.)).await;
 
-        // Send a random keydown event
+        // Send a random globalkeydown event
         utils.push_event(PlatformEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::ArrowDown,
@@ -240,7 +240,7 @@ mod test {
         // Check the popup is still open
         assert_eq!(utils.sdom().get().layout().size(), 10);
 
-        // Send a ESC keydown event
+        // Send a ESC globalkeydown event
         utils.push_event(PlatformEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::Escape,

@@ -20,6 +20,7 @@ use crate::{
         AreaModel,
         DirectionMode,
         LayoutMetadata,
+        Length,
         Torin,
     },
 };
@@ -228,6 +229,9 @@ where
                 );
             }
 
+            inner_sizes.width += node.padding.horizontal();
+            inner_sizes.height += node.padding.vertical();
+
             (
                 must_cache_children,
                 LayoutNode {
@@ -293,21 +297,55 @@ where
     ) {
         let children = self.dom_adapter.children_of(parent_node_id);
 
+        let mut initial_phase_flex_grows = FxHashMap::default();
         let mut initial_phase_sizes = FxHashMap::default();
-        let mut initial_phase_inner_sizes = *inner_sizes;
+        let mut initial_phase_inner_sizes = Size2D::default();
+
+        // Used to calculate the spacing and some alignments
+        let (non_absolute_children_len, first_child, last_child) = if parent_node.spacing.get() > 0.
+        {
+            let mut last_child = None;
+            let mut first_child = None;
+            let len = children
+                .iter()
+                .filter(|child_id| {
+                    let Some(child_data) = self.dom_adapter.get_node(child_id) else {
+                        return false;
+                    };
+                    let is_stacked = !child_data.position.is_absolute();
+                    if is_stacked {
+                        last_child = Some(**child_id);
+
+                        if first_child.is_none() {
+                            first_child = Some(**child_id)
+                        }
+                    }
+                    is_stacked
+                })
+                .count();
+            (len, first_child, last_child)
+        } else {
+            (
+                children.len(),
+                children.first().cloned(),
+                children.last().cloned(),
+            )
+        };
+
+        let needs_initial_phase = parent_node.cross_alignment.is_not_start()
+            || parent_node.main_alignment.is_not_start()
+            || parent_node.content.is_fit()
+            || parent_node.content.is_flex();
+
+        let mut initial_phase_area = *area;
+        let mut initial_phase_inner_area = *inner_area;
+        let mut initial_phase_available_area = *available_area;
 
         // Initial phase: Measure the size and position of the children if the parent has a
         // non-start cross alignment, non-start main aligment of a fit-content.
-        if parent_node.cross_alignment.is_not_start()
-            || parent_node.main_alignment.is_not_start()
-            || parent_node.content.is_fit()
-        {
-            let mut initial_phase_area = *area;
-            let mut initial_phase_inner_area = *inner_area;
-            let mut initial_phase_available_area = *available_area;
-
+        if needs_initial_phase {
             //  Measure the children
-            for (child_n, child_id) in children.iter().enumerate() {
+            for child_id in children.iter() {
                 let Some(child_data) = self.dom_adapter.get_node(child_id) else {
                     continue;
                 };
@@ -317,6 +355,8 @@ where
                 if child_data.position.is_absolute() {
                     continue;
                 }
+
+                let is_last_child = last_child == Some(*child_id);
 
                 let inner_area = initial_phase_inner_area;
 
@@ -334,13 +374,13 @@ where
                 Self::stack_child(
                     &mut initial_phase_available_area,
                     parent_node,
+                    &child_data,
                     &mut initial_phase_area,
                     &mut initial_phase_inner_area,
                     &mut initial_phase_inner_sizes,
                     &child_areas.area,
-                    &child_data,
-                    children.len(),
-                    child_n,
+                    is_last_child,
+                    Phase::Initial,
                 );
 
                 if parent_node.cross_alignment.is_not_start()
@@ -348,8 +388,60 @@ where
                 {
                     initial_phase_sizes.insert(*child_id, child_areas.area.size);
                 }
-            }
 
+                if parent_node.content.is_flex() {
+                    match parent_node.direction {
+                        DirectionMode::Vertical => {
+                            if let Some(ff) = child_data.height.flex_grow() {
+                                initial_phase_flex_grows.insert(*child_id, ff);
+                            }
+                        }
+                        DirectionMode::Horizontal => {
+                            if let Some(ff) = child_data.width.flex_grow() {
+                                initial_phase_flex_grows.insert(*child_id, ff);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        let initial_available_area = *available_area;
+
+        let flex_grows = initial_phase_flex_grows
+            .values()
+            .cloned()
+            .reduce(|acc, v| acc + v)
+            .unwrap_or_default()
+            .max(Length::new(1.0));
+
+        let flex_axis = AlignAxis::new(&parent_node.direction, AlignmentDirection::Main);
+
+        let flex_available_width = initial_available_area.width() - initial_phase_inner_sizes.width;
+        let flex_available_height =
+            initial_available_area.height() - initial_phase_inner_sizes.height;
+
+        let initial_phase_inner_sizes_with_flex =
+            initial_phase_flex_grows
+                .values()
+                .fold(initial_phase_inner_sizes, |mut acc, f| {
+                    let flex_grow_per = f.get() / flex_grows.get() * 100.;
+
+                    match flex_axis {
+                        AlignAxis::Height => {
+                            let size = flex_available_height / 100. * flex_grow_per;
+                            acc.height += size;
+                        }
+                        AlignAxis::Width => {
+                            let size = flex_available_width / 100. * flex_grow_per;
+                            acc.width += size;
+                        }
+                    }
+
+                    acc
+                });
+
+        if needs_initial_phase {
             if parent_node.main_alignment.is_not_start() {
                 // Adjust the available and inner areas of the Main axis
                 Self::shrink_area_to_fit_when_unbounded(
@@ -364,7 +456,7 @@ where
                 Self::align_content(
                     available_area,
                     &initial_phase_inner_area,
-                    &initial_phase_inner_sizes,
+                    &initial_phase_inner_sizes_with_flex,
                     &parent_node.main_alignment,
                     &parent_node.direction,
                     AlignmentDirection::Main,
@@ -384,27 +476,49 @@ where
         }
 
         let initial_available_area = *available_area;
-        let children_len = children.len();
 
         // Final phase: measure the children with all the axis and sizes adjusted
-        for (child_n, child_id) in children.into_iter().enumerate() {
+        for child_id in children {
             let Some(child_data) = self.dom_adapter.get_node(&child_id) else {
                 continue;
             };
 
+            let is_first_child = first_child == Some(child_id);
+            let is_last_child = last_child == Some(child_id);
+
             let mut adapted_available_area = *available_area;
 
-            if parent_node.main_alignment.is_spaced() {
+            if parent_node.content.is_flex() {
+                let flex_grow = initial_phase_flex_grows.get(&child_id);
+
+                if let Some(flex_grow) = flex_grow {
+                    let flex_grow_per = flex_grow.get() / flex_grows.get() * 100.;
+
+                    match flex_axis {
+                        AlignAxis::Height => {
+                            let size = flex_available_height / 100. * flex_grow_per;
+                            adapted_available_area.size.height = size;
+                        }
+                        AlignAxis::Width => {
+                            let size = flex_available_width / 100. * flex_grow_per;
+                            adapted_available_area.size.width = size;
+                        }
+                    }
+                }
+            }
+
+            // Only the stacked children will be aligned
+            if parent_node.main_alignment.is_spaced() && !child_data.position.is_absolute() {
                 // Align the Main axis if necessary
                 Self::align_position(
                     AlignmentDirection::Main,
                     &mut adapted_available_area,
                     &initial_available_area,
-                    &initial_phase_inner_sizes,
+                    &initial_phase_inner_sizes_with_flex,
                     &parent_node.main_alignment,
                     &parent_node.direction,
-                    initial_phase_sizes.len(),
-                    child_n,
+                    non_absolute_children_len,
+                    is_first_child,
                 );
             }
 
@@ -439,17 +553,19 @@ where
             child_areas.area.adjust_size(&child_data);
 
             // Stack this child into the parent
-            Self::stack_child(
-                available_area,
-                parent_node,
-                area,
-                inner_area,
-                inner_sizes,
-                &child_areas.area,
-                &child_data,
-                children_len,
-                child_n,
-            );
+            if !child_data.position.is_absolute() {
+                Self::stack_child(
+                    available_area,
+                    parent_node,
+                    &child_data,
+                    area,
+                    inner_area,
+                    inner_sizes,
+                    &child_areas.area,
+                    is_last_child,
+                    Phase::Final,
+                );
+            }
 
             // Cache the child layout if it was mutated and children must be cached
             if child_revalidated && must_cache_children {
@@ -511,13 +627,13 @@ where
         alignment: &Alignment,
         direction: &DirectionMode,
         siblings_len: usize,
-        child_position: usize,
+        is_first_sibling: bool,
     ) {
         let axis = AlignAxis::new(direction, alignment_direction);
 
         match axis {
             AlignAxis::Height => match alignment {
-                Alignment::SpaceBetween if child_position > 0 => {
+                Alignment::SpaceBetween if !is_first_sibling => {
                     let all_gaps_sizes = initial_available_area.height() - inner_sizes.height;
                     let gap_size = all_gaps_sizes / (siblings_len - 1) as f32;
                     available_area.origin.y += gap_size;
@@ -530,7 +646,7 @@ where
                 Alignment::SpaceAround => {
                     let all_gaps_sizes = initial_available_area.height() - inner_sizes.height;
                     let one_gap_size = all_gaps_sizes / siblings_len as f32;
-                    let gap_size = if child_position == 0 || child_position == siblings_len {
+                    let gap_size = if is_first_sibling {
                         one_gap_size / 2.
                     } else {
                         one_gap_size
@@ -540,7 +656,7 @@ where
                 _ => {}
             },
             AlignAxis::Width => match alignment {
-                Alignment::SpaceBetween if child_position > 0 => {
+                Alignment::SpaceBetween if !is_first_sibling => {
                     let all_gaps_sizes = initial_available_area.width() - inner_sizes.width;
                     let gap_size = all_gaps_sizes / (siblings_len - 1) as f32;
                     available_area.origin.x += gap_size;
@@ -553,7 +669,7 @@ where
                 Alignment::SpaceAround => {
                     let all_gaps_sizes = initial_available_area.width() - inner_sizes.width;
                     let one_gap_size = all_gaps_sizes / siblings_len as f32;
-                    let gap_size = if child_position == 0 || child_position == siblings_len {
+                    let gap_size = if is_first_sibling {
                         one_gap_size / 2.
                     } else {
                         one_gap_size
@@ -570,21 +686,16 @@ where
     fn stack_child(
         available_area: &mut Area,
         parent_node: &Node,
+        child_node: &Node,
         parent_area: &mut Area,
         inner_area: &mut Area,
         inner_sizes: &mut Size2D,
         child_area: &Area,
-        child_node: &Node,
-        siblings_len: usize,
-        child_position: usize,
+        is_last_sibiling: bool,
+        phase: Phase,
     ) {
-        // No need to stack a node that is positioned absolutely
-        if child_node.position.is_absolute() {
-            return;
-        }
-
         // Only apply the spacing to elements after `i > 0` and `i < len - 1`
-        let spacing = (child_position < siblings_len - 1)
+        let spacing = (!is_last_sibiling)
             .then_some(parent_node.spacing)
             .unwrap_or_default();
 
@@ -595,7 +706,10 @@ where
                 available_area.size.width -= child_area.size.width + spacing.get();
 
                 inner_sizes.height = child_area.height().max(inner_sizes.height);
-                inner_sizes.width += child_area.width() + spacing.get();
+                inner_sizes.width += spacing.get();
+                if !child_node.width.is_flex() || phase == Phase::Final {
+                    inner_sizes.width += child_area.width();
+                }
 
                 // Keep the biggest height
                 if parent_node.height.inner_sized() {
@@ -621,7 +735,10 @@ where
                 available_area.size.height -= child_area.size.height + spacing.get();
 
                 inner_sizes.width = child_area.width().max(inner_sizes.width);
-                inner_sizes.height += child_area.height() + spacing.get();
+                inner_sizes.height += spacing.get();
+                if !child_node.height.is_flex() || phase == Phase::Final {
+                    inner_sizes.height += child_area.height();
+                }
 
                 // Keep the biggest width
                 if parent_node.width.inner_sized() {

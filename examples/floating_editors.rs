@@ -170,10 +170,6 @@ fn Editor() -> Element {
     };
     let font_weight = if *is_bold.read() { "bold" } else { "normal" };
 
-    use_hook(|| {
-        focus_manager.queue_focus();
-    });
-
     let onclick = move |_: MouseEvent| {
         if !focus_manager.is_focused() {
             focus_manager.focus();
@@ -181,23 +177,24 @@ fn Editor() -> Element {
     };
 
     let onkeydown = move |e: KeyboardEvent| {
-        if focus_manager.is_focused() {
-            editable.process_event(&EditableEvent::KeyDown(e.data));
-        }
+        e.stop_propagation();
+        editable.process_event(&EditableEvent::KeyDown(e.data));
     };
 
     let onkeyup = move |e: KeyboardEvent| {
-        if focus_manager.is_focused() {
-            editable.process_event(&EditableEvent::KeyUp(e.data));
-        }
+        e.stop_propagation();
+        editable.process_event(&EditableEvent::KeyUp(e.data));
     };
 
-    let focus_id = focus_manager.attribute();
+    let a11y_id = focus_manager.attribute();
 
     rsx!(
         rect {
             onclick,
-            focus_id,
+            a11y_id,
+            a11y_auto_focus: "true",
+            onkeydown,
+            onkeyup,
             width: "fill",
             height: "fill",
             padding: "10",
@@ -261,8 +258,6 @@ fn Editor() -> Element {
             rect {
                 width: "fill",
                 height: "fill",
-                onkeydown,
-                onkeyup,
                 cursor_reference,
                 ScrollView {
                     scroll_with_arrows: false,

@@ -189,9 +189,12 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             }
             EventMessage::RequestFullRerender => {
                 app.resize(window);
+                window.request_redraw();
             }
-            EventMessage::InvalidateArea(area) => {
+            EventMessage::InvalidateArea(mut area) => {
                 let fdom = app.sdom.get();
+                let sf = window.scale_factor() as f32;
+                area.size *= sf;
                 let mut compositor_dirty_area = fdom.compositor_dirty_area();
                 compositor_dirty_area.unite_or_insert(&area)
             }
@@ -216,9 +219,6 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 app.focus_next_node(AccessibilityFocusStrategy::Forward, window);
             }
             EventMessage::WithWindow(use_window) => (use_window)(window),
-            EventMessage::QueueFocusAccessibilityNode(node_id) => {
-                app.queue_focus_node(node_id);
-            }
             EventMessage::ExitApp => event_loop.exit(),
             EventMessage::PlatformEvent(platform_event) => self.send_event(platform_event),
             ev => {
@@ -284,7 +284,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 }
 
                 if app.init_accessibility_on_next_render {
-                    app.init_accessibility(window);
+                    app.init_accessibility();
                     app.init_accessibility_on_next_render = false;
                 }
 

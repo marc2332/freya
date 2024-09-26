@@ -181,6 +181,8 @@ impl RenderPipeline<'_> {
             SamplingOptions::default(),
             None,
         );
+
+        self.compositor_dirty_nodes.clear();
     }
 
     pub fn render(

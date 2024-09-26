@@ -73,6 +73,10 @@ impl AccessibilityTree {
         }
     }
 
+    pub fn focused_node_id(&self) -> Option<NodeId> {
+        self.map.get(&self.focused_id).cloned()
+    }
+
     /// Initialize the Accessibility Tree
     pub fn init(
         &self,
@@ -128,7 +132,8 @@ impl AccessibilityTree {
         rdom: &DioxusDOM,
         layout: &Torin<NodeId>,
         dirty_nodes: &mut AccessibilityDirtyNodes,
-    ) -> TreeUpdate {
+    ) -> (TreeUpdate, NodeId) {
+        let requested_focus_id = dirty_nodes.requested_focus.take();
         let removed_ids = dirty_nodes.removed.drain().collect::<FxHashMap<_, _>>();
         let mut added_or_updated_ids = dirty_nodes
             .added_or_updated
@@ -167,25 +172,48 @@ impl AccessibilityTree {
         let mut nodes = Vec::new();
         for node_id in added_or_updated_ids {
             let node_ref = rdom.get(node_id).unwrap();
-            let layout_node = layout.get(node_id).unwrap();
-            let node_accessibility_state = node_ref.get::<AccessibilityNodeState>().unwrap();
-            let accessibility_node =
-                Self::create_node(&node_ref, layout_node, &node_accessibility_state);
+            let node_accessibility_state = node_ref.get::<AccessibilityNodeState>();
+            let layout_node = layout.get(node_id);
 
-            let accessibility_id = node_ref.get_accessibility_id().unwrap();
+            if let Some((node_accessibility_state, layout_node)) =
+                node_accessibility_state.as_ref().zip(layout_node)
+            {
+                let accessibility_node =
+                    Self::create_node(&node_ref, layout_node, node_accessibility_state);
 
-            nodes.push((accessibility_id, accessibility_node));
+                let accessibility_id = node_ref.get_accessibility_id().unwrap();
+
+                nodes.push((accessibility_id, accessibility_node));
+            }
         }
 
+        // Try to focus the requested node id
+        if let Some(node_id) = requested_focus_id {
+            let node_ref = rdom.get(node_id).unwrap();
+            let node_accessibility_state = node_ref.get::<AccessibilityNodeState>();
+            if let Some(focused_id) = node_accessibility_state
+                .as_ref()
+                .and_then(|state| state.a11y_id)
+            {
+                self.focused_id = focused_id;
+            }
+        }
+
+        // Fallback the focused id to the root if the focused node no longer exists
         if !self.map.contains_key(&self.focused_id) {
             self.focused_id = ACCESSIBILITY_ROOT_ID;
         }
 
-        TreeUpdate {
-            nodes,
-            tree: Some(Tree::new(ACCESSIBILITY_ROOT_ID)),
-            focus: self.focused_id,
-        }
+        let node_id = self.map.get(&self.focused_id).cloned().unwrap();
+
+        (
+            TreeUpdate {
+                nodes,
+                tree: Some(Tree::new(ACCESSIBILITY_ROOT_ID)),
+                focus: self.focused_id,
+            },
+            node_id,
+        )
     }
 
     /// Update the focused Node ID and generate a TreeUpdate if necessary.
@@ -229,7 +257,10 @@ impl AccessibilityTree {
             let accessibility_id = node_ref.get_accessibility_id();
 
             if let Some(accessibility_id) = accessibility_id {
-                nodes.push((accessibility_id, node_ref.id()))
+                let accessibility_state = node_ref.get::<AccessibilityNodeState>().unwrap();
+                if accessibility_state.a11y_focusable.is_enabled() {
+                    nodes.push((accessibility_id, node_ref.id()))
+                }
             }
 
             if let Some(tag) = node_ref.node_type().tag() {
@@ -319,7 +350,7 @@ impl AccessibilityTree {
         // Set focusable action
         // This will cause assistive technology to offer the user an option
         // to focus the current element if it supports it.
-        if node_accessibility.focusable {
+        if node_accessibility.a11y_focusable.is_enabled() {
             builder.add_action(Action::Focus);
         }
 
@@ -423,7 +454,7 @@ impl AccessibilityTree {
         }
 
         // Set text value
-        if let Some(alt) = &node_accessibility.alt {
+        if let Some(alt) = &node_accessibility.a11y_alt {
             builder.set_value(alt.to_owned());
         } else if let Some(value) = node_ref.get_inner_texts() {
             builder.set_value(value);
@@ -431,12 +462,12 @@ impl AccessibilityTree {
         }
 
         // Set name
-        if let Some(name) = &node_accessibility.name {
+        if let Some(name) = &node_accessibility.a11y_name {
             builder.set_name(name.to_owned());
         }
 
         // Set role
-        if let Some(role) = node_accessibility.role {
+        if let Some(role) = node_accessibility.a11y_role {
             builder.set_role(role);
         }
         // Set root role

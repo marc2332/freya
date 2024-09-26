@@ -15,6 +15,16 @@ impl Parse for Size {
     fn parse(value: &str) -> Result<Self, ParseError> {
         if value == "auto" {
             Ok(Size::Inner)
+        } else if value == "flex" {
+            Ok(Size::Flex(Length::new(1.0)))
+        } else if value.contains("flex") {
+            Ok(Size::Flex(Length::new(
+                value
+                    .replace("flex(", "")
+                    .replace(')', "")
+                    .parse::<f32>()
+                    .map_err(|_| ParseError)?,
+            )))
         } else if value == "fill" {
             Ok(Size::Fill)
         } else if value == "fill-min" {

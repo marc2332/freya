@@ -66,7 +66,7 @@ where
     let mut status = use_signal(DropdownItemStatus::default);
     let platform = use_platform();
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
     let is_focused = focus.is_focused();
     let is_selected = *selected.read() == value;
 
@@ -94,7 +94,7 @@ where
         status.set(DropdownItemStatus::default());
     };
 
-    let onkeydown = {
+    let onglobalkeydown = {
         to_owned![onclick];
         move |ev: KeyboardEvent| {
             if ev.key == Key::Enter && is_focused {
@@ -115,8 +115,8 @@ where
         rect {
             width: "fill-min",
             color: "{color}",
-            focus_id,
-            role: "button",
+            a11y_id,
+            a11y_role:"button",
             background: "{background}",
             padding: "6 22 6 16",
             corner_radius: "6",
@@ -124,7 +124,7 @@ where
             onmouseenter,
             onmouseleave,
             onclick,
-            onkeydown,
+            onglobalkeydown,
             {children}
         }
     )
@@ -194,7 +194,7 @@ where
 
     let is_opened = *opened.read();
     let is_focused = focus.is_focused();
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
 
     // Update the provided value if the passed value changes
     use_effect(use_reactive(&props.value, move |value| {
@@ -217,7 +217,7 @@ where
         opened.set(true)
     };
 
-    let onkeydown = move |e: KeyboardEvent| {
+    let onglobalkeydown = move |e: KeyboardEvent| {
         match e.key {
             // Close when `Escape` key is pressed
             Key::Escape => {
@@ -267,9 +267,9 @@ where
                 onmouseenter,
                 onmouseleave,
                 onclick,
-                onkeydown,
+                onglobalkeydown,
                 margin: "{margin}",
-                focus_id,
+                a11y_id,
                 background: "{button_background}",
                 color: "{font_theme.color}",
                 corner_radius: "8",
@@ -298,7 +298,7 @@ where
                         width: "100v",
                         rect {
                             onglobalclick,
-                            onkeydown,
+                            onglobalkeydown,
                             layer: "-99",
                             margin: "{margin}",
                             border: "1 solid {border_fill}",
@@ -321,7 +321,6 @@ where
 mod test {
     use freya::prelude::*;
     use freya_testing::prelude::*;
-    use winit::event::MouseButton;
 
     #[tokio::test]
     pub async fn dropdown() {

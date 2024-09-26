@@ -233,11 +233,12 @@ builder_constructors! {
         #[doc = include_str!("_docs/attributes/spacing.md")]
         spacing: String,
 
-        name: String,
-        focusable: String,
-        role: String,
-        focus_id: AccessibilityId,
-        alt: String,
+        a11y_auto_focus: String,
+        a11y_name: String,
+        a11y_role:String,
+        a11y_id: AccessibilityId,
+        a11y_alt: String,
+        a11y_focusable: String,
         canvas_reference: String,
         layer: String,
         offset_y: String,
@@ -299,17 +300,18 @@ builder_constructors! {
         decoration_color: String,
         #[doc = include_str!("_docs/attributes/text_overflow.md")]
         text_overflow: String,
-        focusable: String,
         #[doc = include_str!("_docs/attributes/margin.md")]
         margin: String,
         #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
 
         layer: String,
-        role: String,
-        alt: String,
-        focus_id: AccessibilityId,
-        name: String,
+        a11y_auto_focus: String,
+        a11y_name: String,
+        a11y_role:String,
+        a11y_id: AccessibilityId,
+        a11y_alt: String,
+        a11y_focusable: String,
     };
     /// `paragraph` element let's you build texts with different styles.
     ///
@@ -372,7 +374,6 @@ builder_constructors! {
         text_overflow: String,
         #[doc = include_str!("_docs/attributes/overflow.md")]
         overflow: String,
-        focusable: String,
         #[doc = include_str!("_docs/attributes/margin.md")]
         margin: String,
         #[doc = include_str!("_docs/attributes/opacity.md")]
@@ -384,10 +385,12 @@ builder_constructors! {
         cursor_color: String,
         cursor_mode: String,
         cursor_id: String,
-        alt: String,
-        name: String,
-        role: String,
-        focus_id: AccessibilityId,
+        a11y_auto_focus: String,
+        a11y_name: String,
+        a11y_role:String,
+        a11y_id: AccessibilityId,
+        a11y_alt: String,
+        a11y_focusable: String,
         highlights: String,
         highlight_color: String,
         highlight_mode: String,
@@ -454,11 +457,11 @@ builder_constructors! {
 
         image_data: String,
         image_reference: String,
-        role: String,
-        focus_id: AccessibilityId,
-        alt: String,
-        name: String,
-        focusable: String,
+        a11y_auto_focus: String,
+        a11y_name: String,
+        a11y_role:String,
+        a11y_id: AccessibilityId,
+        a11y_alt: String,
     };
     /// `svg` element let's you display SVG code.
     ///
@@ -493,11 +496,12 @@ builder_constructors! {
 
         svg_data: String,
         svg_content: String,
-        role: String,
-        focus_id: AccessibilityId,
-        alt: String,
-        name: String,
-        focusable: String,
+        a11y_auto_focus: String,
+        a11y_name: String,
+        a11y_role:String,
+        a11y_id: AccessibilityId,
+        a11y_alt: String,
+        a11y_focusable: String,
     };
 }
 
@@ -611,10 +615,14 @@ pub mod events {
     impl_event! [
         KeyboardData;
 
-        #[doc = include_str!("_docs/events/keydown.md")]
         onkeydown
-        #[doc = include_str!("_docs/events/keyup.md")]
+
         onkeyup
+
+        #[doc = include_str!("_docs/events/globalkeydown.md")]
+        onglobalkeydown
+        #[doc = include_str!("_docs/events/globalkeyup.md")]
+        onglobalkeyup
     ];
 
     impl_event! [
@@ -639,8 +647,8 @@ pub mod events {
         onpointerup
         #[doc = include_str!("_docs/events/globalpointerup.md")]
         onglobalpointerup
-        #[doc = include_str!("_docs/events/pointerover.md")]
-        onpointerover
+        #[doc = include_str!("_docs/events/pointermove.md")]
+        onpointermove
         #[doc = include_str!("_docs/events/pointerenter.md")]
         onpointerenter
         #[doc = include_str!("_docs/events/pointerleave.md")]

@@ -24,6 +24,8 @@ pub enum EventName {
 
     KeyDown,
     KeyUp,
+    GlobalKeyDown,
+    GlobalKeyUp,
 
     TouchCancel,
     TouchStart,
@@ -54,13 +56,15 @@ impl FromStr for EventName {
             "mouseenter" => Ok(EventName::MouseEnter),
             "mouseleave" => Ok(EventName::MouseLeave),
             "wheel" => Ok(EventName::Wheel),
-            "pointerover" => Ok(EventName::PointerOver),
+            "pointermove" => Ok(EventName::PointerOver),
             "pointerdown" => Ok(EventName::PointerDown),
             "pointerenter" => Ok(EventName::PointerEnter),
             "pointerleave" => Ok(EventName::PointerLeave),
             "pointerup" => Ok(EventName::PointerUp),
             "keydown" => Ok(EventName::KeyDown),
             "keyup" => Ok(EventName::KeyUp),
+            "globalkeydown" => Ok(EventName::GlobalKeyDown),
+            "globalkeyup" => Ok(EventName::GlobalKeyUp),
             "touchcancel" => Ok(EventName::TouchCancel),
             "touchstart" => Ok(EventName::TouchStart),
             "touchmove" => Ok(EventName::TouchMove),
@@ -89,13 +93,15 @@ impl From<EventName> for &str {
             EventName::MouseEnter => "mouseenter",
             EventName::MouseLeave => "mouseleave",
             EventName::Wheel => "wheel",
-            EventName::PointerOver => "pointerover",
+            EventName::PointerOver => "pointermove",
             EventName::PointerDown => "pointerdown",
             EventName::PointerEnter => "pointerenter",
             EventName::PointerLeave => "pointerleave",
             EventName::PointerUp => "pointerup",
-            EventName::KeyDown => "keydown",
             EventName::KeyUp => "keyup",
+            EventName::KeyDown => "keydown",
+            EventName::GlobalKeyDown => "globalkeydown",
+            EventName::GlobalKeyUp => "globalkeyup",
             EventName::TouchCancel => "touchcancel",
             EventName::TouchStart => "touchstart",
             EventName::TouchMove => "touchmove",
@@ -145,6 +151,8 @@ impl EventName {
             Self::MouseMove => Some(Self::GlobalMouseMove),
             Self::GlobalFileHover => Some(Self::GlobalFileHover),
             Self::GlobalFileHoverCancelled => Some(Self::GlobalFileHoverCancelled),
+            Self::KeyDown => Some(EventName::GlobalKeyDown),
+            Self::KeyUp => Some(EventName::GlobalKeyUp),
             _ => None,
         }
     }
@@ -158,9 +166,10 @@ impl EventName {
         events.push(*self);
 
         match self {
-            Self::MouseMove | Self::TouchMove => {
+            Self::MouseMove => {
                 events.extend([Self::MouseEnter, Self::PointerEnter, Self::PointerOver])
             }
+            Self::TouchMove => events.extend([Self::PointerEnter, Self::PointerOver]),
             Self::MouseDown | Self::TouchStart => events.push(Self::PointerDown),
             Self::MouseUp | Self::MiddleClick | Self::RightClick | Self::TouchEnd => {
                 events.extend([Self::Click, Self::PointerUp])
@@ -200,13 +209,13 @@ impl EventName {
     }
 
     // Bubble all events except:
-    // - Keyboard events
+    // - Global Keyboard events
     // - Mouse movements events
     pub fn does_bubble(&self) -> bool {
         !matches!(
             self,
-            Self::KeyDown
-                | Self::KeyUp
+            Self::GlobalKeyDown
+                | Self::GlobalKeyUp
                 | Self::MouseLeave
                 | Self::PointerLeave
                 | Self::MouseEnter
@@ -218,7 +227,7 @@ impl EventName {
 
     /// Only let events that do not move the mouse, go through solid nodes
     pub fn does_go_through_solid(&self) -> bool {
-        matches!(self, Self::KeyDown | Self::KeyUp)
+        matches!(self, Self::GlobalKeyDown | Self::GlobalKeyUp)
     }
 
     /// Check if this event can change the hover state of a Node.
@@ -231,19 +240,25 @@ impl EventName {
 
     /// Check if this event can change the press state of a Node.
     pub fn can_change_press_state(&self) -> bool {
-        matches!(self, Self::MouseDown | Self::PointerDown)
+        matches!(self, Self::MouseDown | Self::TouchStart | Self::PointerDown)
     }
 
     /// Check if the event means the cursor started or released a click
     pub fn was_cursor_pressed_or_released(&self) -> bool {
         matches!(
             &self,
-            Self::MouseDown | Self::PointerDown | Self::MouseUp | Self::Click | Self::PointerUp
+            Self::MouseDown
+                | Self::PointerDown
+                | Self::MouseUp
+                | Self::Click
+                | Self::PointerUp
+                | Self::TouchStart
+                | Self::TouchEnd
         )
     }
 
-    /// Check if the event was a click
-    pub fn is_click(&self) -> bool {
+    /// Check if the event was pressed
+    pub fn is_pressed(&self) -> bool {
         matches!(&self, Self::Click)
     }
 }

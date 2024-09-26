@@ -98,7 +98,7 @@ pub fn Switch(props: SwitchProps) -> Element {
     let mut status = use_signal(SwitchStatus::default);
     let mut focus = use_focus();
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
 
     use_drop(move || {
         if *status.read() == SwitchStatus::Hovering {
@@ -128,8 +128,8 @@ pub fn Switch(props: SwitchProps) -> Element {
         props.ontoggled.call(());
     };
 
-    let onkeydown = move |e: KeyboardEvent| {
-        if focus.validate_keydown(&e) {
+    let onglobalkeydown = move |e: KeyboardEvent| {
+        if focus.validate_globalkeydown(&e) {
             props.ontoggled.call(());
         }
     };
@@ -169,9 +169,9 @@ pub fn Switch(props: SwitchProps) -> Element {
             onmousedown,
             onmouseenter,
             onmouseleave,
-            onkeydown,
+            onglobalkeydown,
             onclick,
-            focus_id,
+            a11y_id,
             offset_x: "{offset_x}",
             main_align: "center",
             rect {
