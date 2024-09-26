@@ -1,4 +1,8 @@
 pub use skia_safe::{
+    canvas::{
+        SaveLayerFlags,
+        SaveLayerRec,
+    },
     font_style::{
         Slant,
         Weight,
@@ -23,6 +27,7 @@ pub use skia_safe::{
         set_resource_cache_single_allocation_byte_limit,
         set_resource_cache_total_bytes_limit,
     },
+    image_filters::blur,
     path::ArcSize,
     rrect::Corner,
     runtime_effect::Uniform,
@@ -56,6 +61,7 @@ pub use skia_safe::{
         TypefaceFontProvider,
     },
     Bitmap,
+    BlendMode,
     BlurStyle,
     Canvas,
     ClipOp,
@@ -71,6 +77,7 @@ pub use skia_safe::{
     IPoint,
     IRect,
     Image,
+    ImageFilter,
     ImageInfo,
     MaskFilter,
     Matrix,

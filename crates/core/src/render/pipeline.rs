@@ -8,9 +8,12 @@ use freya_engine::prelude::{
     FontCollection,
     FontMgr,
     Matrix,
+    Paint,
     Point,
     Rect,
     SamplingOptions,
+    SaveLayerFlags,
+    SaveLayerRec,
     Surface,
 };
 use freya_native_core::{
@@ -23,6 +26,7 @@ use freya_native_core::{
     NodeId,
 };
 use freya_node_state::{
+    StyleState,
     TransformState,
     ViewportState,
 };
@@ -193,6 +197,7 @@ impl RenderPipeline<'_> {
     ) {
         let dirty_canvas = self.dirty_surface.canvas();
         let area = layout_node.visible_area();
+        let rect = Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
         let node_type = &*node_ref.node_type();
         if let NodeType::Element(ElementNode { tag, .. }) = node_type {
             let Some(element_utils) = tag.utils() else {
@@ -201,6 +206,7 @@ impl RenderPipeline<'_> {
 
             let initial_layer = dirty_canvas.save();
             let node_transform = &*node_ref.get::<TransformState>().unwrap();
+            let node_style = &*node_ref.get::<StyleState>().unwrap();
 
             // Pass rotate effect to children
             for (id, rotate_degs) in &node_transform.rotations {
@@ -217,17 +223,18 @@ impl RenderPipeline<'_> {
                 dirty_canvas.concat(&matrix);
             }
 
+            // Apply blend mode
+            if let Some(blend) = node_style.blend_mode {
+                let mut paint = Paint::default();
+                paint.set_blend_mode(blend);
+
+                let layer_rec = SaveLayerRec::default().bounds(&rect).paint(&paint);
+                dirty_canvas.save_layer(&layer_rec);
+            }
+
             // Apply inherited opacity effects
             for opacity in &node_transform.opacities {
-                dirty_canvas.save_layer_alpha_f(
-                    Rect::new(
-                        self.canvas_area.min_x(),
-                        self.canvas_area.min_y(),
-                        self.canvas_area.max_x(),
-                        self.canvas_area.max_y(),
-                    ),
-                    *opacity,
-                );
+                dirty_canvas.save_layer_alpha_f(rect, *opacity);
             }
 
             // Clip all elements with their corresponding viewports
