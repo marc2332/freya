@@ -93,6 +93,7 @@ pub fn ResizableContainer(
             direction: "{direction}",
             width: "fill",
             height: "fill",
+            content: "flex",
             {children}
         }
     )
@@ -119,13 +120,11 @@ pub fn ResizablePanel(
 
     let registry = registry.read();
 
-    let is_last = registry.registry.len() - 1 == index;
     let size = registry.registry[index].size();
 
-    let extra_gap = if is_last { 0 } else { 4 };
     let (width, height) = match registry.direction.as_str() {
-        "horizontal" => (format!("calc({size}% - {})", extra_gap), "fill".to_owned()),
-        _ => ("fill".to_owned(), format!("calc({size}% - {})", extra_gap)),
+        "horizontal" => (format!("flex({size})"), "fill".to_owned()),
+        _ => ("fill".to_owned(), format!("flex({size}")),
     };
 
     rsx!(
@@ -183,7 +182,7 @@ pub fn ResizableHandle(
 
     let onmouseleave = move |_: MouseEvent| {
         *status.write() = HandleStatus::Idle;
-        if !*clicking.peek() {
+        if !clicking() {
             platform.set_cursor(CursorIcon::default());
         }
     };
@@ -195,19 +194,19 @@ pub fn ResizableHandle(
     };
 
     let onmousemove = move |e: MouseEvent| {
-        if *clicking.peek() {
+        if clicking() {
             let coordinates = e.get_screen_coordinates();
             let mut registry = registry.write();
 
-            let displacement_per = match registry.direction.as_str() {
+            let displacement_per: f32 = match registry.direction.as_str() {
                 "horizontal" => {
                     let container_width = container_size.read().area.width();
-                    let displacement = coordinates.x as f32 - size.peek().area.min_x();
+                    let displacement = coordinates.x as f32 - size.read().area.min_x();
                     100. / container_width * displacement
                 }
                 _ => {
                     let container_height = container_size.read().area.height();
-                    let displacement = coordinates.y as f32 - size.peek().area.min_y();
+                    let displacement = coordinates.y as f32 - size.read().area.min_y();
                     100. / container_height * displacement
                 }
             };
@@ -226,18 +225,23 @@ pub fn ResizableHandle(
                         *size = new_size;
                         acc_per -= new_size - old_size;
 
-                        break;
+                        if old_size > 4. {
+                            break;
+                        }
                     }
                 }
 
                 // Resize panels to the left
                 for prev_item in &mut registry.registry[0..index].iter_mut().rev() {
                     if let Some(size) = prev_item.try_write_size() {
+                        let old_size = *size;
                         let new_size = (*size + acc_per).clamp(4., 100.);
 
                         *size = new_size;
 
-                        break;
+                        if old_size > 4. {
+                            break;
+                        }
                     }
                 }
             } else {
@@ -254,18 +258,23 @@ pub fn ResizableHandle(
                         *size = new_size;
                         acc_per += new_size - old_size;
 
-                        break;
+                        if old_size > 4. {
+                            break;
+                        }
                     }
                 }
 
                 // Resize panels to the right
                 for next_item in &mut registry.registry[index..].iter_mut() {
                     if let Some(size) = next_item.try_write_size() {
+                        let old_size = *size;
                         let new_size = (*size - acc_per).clamp(4., 100.);
 
                         *size = new_size;
 
-                        break;
+                        if old_size > 4. {
+                            break;
+                        }
                     }
                 }
             }
@@ -278,7 +287,7 @@ pub fn ResizableHandle(
     };
 
     let onclick = move |_: MouseEvent| {
-        if *clicking.peek() {
+        if clicking() {
             if *status.peek() != HandleStatus::Hovering {
                 platform.set_cursor(CursorIcon::default());
             }
