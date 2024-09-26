@@ -1,4 +1,5 @@
 mod alignment;
+mod blend_mode;
 mod border;
 mod color;
 mod content;
