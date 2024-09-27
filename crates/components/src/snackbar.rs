@@ -20,7 +20,7 @@ use freya_hooks::{
 /// ```no_run
 /// # use freya::prelude::*;
 /// fn app() -> Element {
-///     let mut show = use_signal(|| false);
+///     let mut open = use_signal(|| false);
 ///
 ///     rsx!(
 ///         rect {
@@ -31,7 +31,7 @@ use freya_hooks::{
 ///                 label { "Open" }
 ///             }
 ///             SnackBar {
-///                 show,
+///                 open,
 ///                 label {
 ///                     "Hello, World!"
 ///                 }
@@ -45,8 +45,8 @@ use freya_hooks::{
 pub fn SnackBar(
     /// Inner children of the SnackBar.
     children: Element,
-    /// Signal to show the snackbar or not.
-    show: Signal<bool>,
+    /// Open or not the SnackBar. You can pass a [ReadOnlySignal] as well.
+    open: ReadOnlySignal<bool>,
     /// Theme override.
     theme: Option<SnackBarThemeWith>,
 ) -> Element {
@@ -60,7 +60,7 @@ pub fn SnackBar(
     });
 
     use_effect(move || {
-        if *show.read() {
+        if open() {
             animation.start();
         } else if animation.peek_has_run_yet() {
             animation.reverse();
