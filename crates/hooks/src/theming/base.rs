@@ -180,6 +180,7 @@ pub(crate) const BASE_THEME: Theme = Theme {
         unselected_fill: cow_borrowed!("key(solid)"),
         selected_fill: cow_borrowed!("key(primary)"),
         selected_icon_fill: cow_borrowed!("key(secondary)"),
+        border_fill: cow_borrowed!("key(surface)"),
     },
     menu_item: MenuItemTheme {
         hover_background: cow_borrowed!("key(focused_surface)"),
