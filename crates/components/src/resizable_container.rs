@@ -13,24 +13,29 @@ use freya_hooks::{
 };
 use winit::window::CursorIcon;
 
+struct Panel {
+    pub size: f32,
+    pub min_size: f32,
+}
+
 enum ResizableItem {
-    Panel(f32),
+    Panel(Panel),
     Handle,
 }
 
 impl ResizableItem {
-    /// Get the size of the [ResizableItem::Panel]. Will panic if called in a [ResizableItem::Handle].
-    fn size(&self) -> f32 {
+    /// Get the [Panel] of the [ResizableItem]. Will panic if called in a [ResizableItem::Handle].
+    fn panel(&self) -> &Panel {
         match self {
-            Self::Panel(size) => *size,
+            Self::Panel(panel) => panel,
             Self::Handle => panic!("Not a Panel"),
         }
     }
 
-    /// Try to write a size of a [ResizableItem::Panel]. Will return [None] if called in a [ResizableItem::Handle].
-    fn try_write_size(&mut self) -> Option<&mut f32> {
+    /// Try to get the mutable [Panel] of the [ResizableItem]. Will return [None] if called in a [ResizableItem::Handle].
+    fn try_panel_mut(&mut self) -> Option<&mut Panel> {
         match self {
-            Self::Panel(old_size) => Some(old_size),
+            Self::Panel(panel) => Some(panel),
             Self::Handle => None,
         }
     }
@@ -102,25 +107,28 @@ pub fn ResizableContainer(
 /// Resizable panel to be used in combination with [ResizableContainer] and [ResizableHandle].
 #[component]
 pub fn ResizablePanel(
-    /// Initial size of the Panel. Value should be between `0..100`. Default to `10`.
+    /// Initial size in % for this panel. Default to `10`.
     #[props(default = 10.)]
     initial_size: f32, // TODO: Automatically assign the remaining space in the last element with unspecified size?
+    /// Minimum size in % for this panel. Default to `4`.
+    #[props(default = 4.)]
+    min_size: f32,
     /// Inner children for the [ResizablePanel].
     children: Element,
 ) -> Element {
     let mut registry = use_context::<Signal<ResizableContext>>();
 
     let index = use_hook(move || {
-        registry
-            .write()
-            .registry
-            .push(ResizableItem::Panel(initial_size));
+        registry.write().registry.push(ResizableItem::Panel(Panel {
+            size: initial_size,
+            min_size,
+        }));
         registry.peek().registry.len() - 1
     });
 
     let registry = registry.read();
 
-    let size = registry.registry[index].size();
+    let Panel { size, .. } = registry.registry[index].panel();
 
     let (width, height) = match registry.direction.as_str() {
         "horizontal" => (format!("flex({size})"), "fill".to_owned()),
@@ -218,14 +226,14 @@ pub fn ResizableHandle(
 
                 // Resize panels to the right
                 for next_item in &mut registry.registry[index..].iter_mut() {
-                    if let Some(size) = next_item.try_write_size() {
-                        let old_size = *size;
-                        let new_size = (*size - displacement_per).clamp(4., 100.);
+                    if let Some(panel) = next_item.try_panel_mut() {
+                        let old_size = panel.size;
+                        let new_size = (panel.size - displacement_per).clamp(panel.min_size, 100.);
 
-                        *size = new_size;
+                        panel.size = new_size;
                         acc_per -= new_size - old_size;
 
-                        if old_size > 4. {
+                        if old_size > panel.min_size {
                             break;
                         }
                     }
@@ -233,13 +241,13 @@ pub fn ResizableHandle(
 
                 // Resize panels to the left
                 for prev_item in &mut registry.registry[0..index].iter_mut().rev() {
-                    if let Some(size) = prev_item.try_write_size() {
-                        let old_size = *size;
-                        let new_size = (*size + acc_per).clamp(4., 100.);
+                    if let Some(panel) = prev_item.try_panel_mut() {
+                        let old_size = panel.size;
+                        let new_size = (panel.size + acc_per).clamp(panel.min_size, 100.);
 
-                        *size = new_size;
+                        panel.size = new_size;
 
-                        if old_size > 4. {
+                        if old_size > panel.min_size {
                             break;
                         }
                     }
@@ -251,14 +259,14 @@ pub fn ResizableHandle(
 
                 // Resize panels to the left
                 for prev_item in &mut registry.registry[0..index].iter_mut().rev() {
-                    if let Some(size) = prev_item.try_write_size() {
-                        let old_size = *size;
-                        let new_size = (*size + displacement_per).clamp(4., 100.);
+                    if let Some(panel) = prev_item.try_panel_mut() {
+                        let old_size = panel.size;
+                        let new_size = (panel.size + displacement_per).clamp(panel.min_size, 100.);
 
-                        *size = new_size;
+                        panel.size = new_size;
                         acc_per += new_size - old_size;
 
-                        if old_size > 4. {
+                        if old_size > panel.min_size {
                             break;
                         }
                     }
@@ -266,13 +274,13 @@ pub fn ResizableHandle(
 
                 // Resize panels to the right
                 for next_item in &mut registry.registry[index..].iter_mut() {
-                    if let Some(size) = next_item.try_write_size() {
-                        let old_size = *size;
-                        let new_size = (*size - acc_per).clamp(4., 100.);
+                    if let Some(panel) = next_item.try_panel_mut() {
+                        let old_size = panel.size;
+                        let new_size = (panel.size - acc_per).clamp(panel.min_size, 100.);
 
-                        *size = new_size;
+                        panel.size = new_size;
 
-                        if old_size > 4. {
+                        if old_size > panel.min_size {
                             break;
                         }
                     }

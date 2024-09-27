@@ -48,6 +48,7 @@ fn app() -> Element {
                     ResizableHandle { }
                     ResizablePanel {
                         initial_size: 20.,
+                        min_size: 20.,
                         rect {
                             width: "fill",
                             height: "fill",
@@ -82,6 +83,7 @@ fn app() -> Element {
                     ResizableHandle { }
                     ResizablePanel {
                         initial_size: 15.,
+                        min_size: 10.,
                         rect {
                             width: "fill",
                             height: "fill",

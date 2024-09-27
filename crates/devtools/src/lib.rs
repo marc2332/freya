@@ -84,7 +84,8 @@ fn AppWithDevtools(props: AppWithDevtoolsProps) -> Element {
                 }
                 ResizableHandle { }
                 ResizablePanel {
-                    initial_size: 30.,
+                    initial_size: 25.,
+                    min_size: 10.,
                     rect {
                         background: "rgb(40, 40, 40)",
                         height: "fill",
