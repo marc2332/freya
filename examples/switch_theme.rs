@@ -122,7 +122,7 @@ fn app() -> Element {
                 }
             }
             SnackBar {
-                show: value() >= 50.,
+                open: value() >= 50.,
                 label {
                     "Hello!"
                 }
