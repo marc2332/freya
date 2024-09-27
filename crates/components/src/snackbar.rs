@@ -100,6 +100,7 @@ pub fn SnackBarBox(children: Element, theme: Option<SnackBarThemeWith>) -> Eleme
             padding: "10",
             color: "{color}",
             direction: "horizontal",
+            layer: "-1000",
             {children}
         }
     )
