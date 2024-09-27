@@ -287,6 +287,7 @@ impl Application {
         surface: &mut Surface,
         dirty_surface: &mut Surface,
         window: &Window,
+        scale_factor: f64,
     ) {
         self.plugins.send(
             PluginEvent::BeforeRender {
@@ -303,7 +304,7 @@ impl Application {
             surface,
             dirty_surface,
             window.inner_size(),
-            window.scale_factor() as f32,
+            scale_factor as f32,
         );
 
         self.plugins.send(
