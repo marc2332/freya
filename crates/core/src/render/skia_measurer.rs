@@ -69,7 +69,7 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
 
         match &*node_type {
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Label => {
-                let (label, paragraph_font_height) = create_label(
+                let (label, label_font_height) = create_label(
                     &node,
                     area_size,
                     self.font_collection,
@@ -77,9 +77,9 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                     self.scale_factor,
                 );
 
-                let res = Size2D::new(label.longest_line(), paragraph_font_height);
+                let res = Size2D::new(label.longest_line(), label_font_height);
                 let mut map = SendAnyMap::new();
-                map.insert(CachedParagraph(label, paragraph_font_height));
+                map.insert(CachedParagraph(label, label_font_height));
                 Some((res, Arc::new(map)))
             }
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Paragraph => {
