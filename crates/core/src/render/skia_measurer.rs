@@ -77,7 +77,7 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                     self.scale_factor,
                 );
 
-                let res = Size2D::new(label.longest_line(), label.height());
+                let res = Size2D::new(label.longest_line(), paragraph_font_height);
                 let mut map = SendAnyMap::new();
                 map.insert(CachedParagraph(label, paragraph_font_height));
                 Some((res, Arc::new(map)))
@@ -91,7 +91,7 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                     self.default_fonts,
                     self.scale_factor,
                 );
-                let res = Size2D::new(paragraph.longest_line(), paragraph.height());
+                let res = Size2D::new(paragraph.longest_line(), paragraph_font_height);
                 let mut map = SendAnyMap::new();
                 map.insert(CachedParagraph(paragraph, paragraph_font_height));
                 Some((res, Arc::new(map)))
@@ -165,6 +165,8 @@ pub fn create_label(
             height = height.max(text_height);
         }
     }
+
+    println!("{height:?} vs {:?}", paragraph.height());
 
     (paragraph, height)
 }
