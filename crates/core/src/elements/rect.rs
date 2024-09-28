@@ -368,17 +368,17 @@ impl ElementUtils for RectElement {
             // - Node has a single solid color background.
             // - The background has 100% opacity.
             // - The node has no parents with the `opacity` attribute applied.
-            let has_visible_backdrop = if let Fill::Color(color) = node_style.background {
+            let is_possibly_translucent = if let Fill::Color(color) = node_style.background {
                 let node_transform = &*node_ref.get::<TransformState>().unwrap();
                 
                 color.a() != u8::MAX
-                    || !node_style.blend_mode.is_none()
+                    || node_style.blend_mode.is_some()
                     || !node_transform.opacities.is_empty()
             } else {
                 true
             };
 
-            if has_visible_backdrop {
+            if is_possibly_translucent {
                 let layer_rec = SaveLayerRec::default()
                     .bounds(rounded_rect.rect())
                     .backdrop(&blur_filter);
