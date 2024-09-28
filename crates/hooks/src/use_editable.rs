@@ -130,6 +130,7 @@ pub struct UseEditable {
 }
 
 impl UseEditable {
+    /// Manually create an editable content instead of using [use_editable].
     pub fn new_in_hook(
         clipboard: UseClipboard,
         platform: UsePlatform,
