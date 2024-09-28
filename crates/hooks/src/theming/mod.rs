@@ -482,6 +482,7 @@ define_theme! {
         unselected_fill: str,
         selected_fill: str,
         selected_icon_fill: str,
+        border_fill: str,
     }
 }
 

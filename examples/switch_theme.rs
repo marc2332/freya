@@ -130,7 +130,7 @@ fn app() -> Element {
                         }
                     }
                     Button {
-                        onclick: move |_| value.set(35.),
+                        onpress: move |_| value.set(35.),
                         label {
                             "Set to 35%"
                         }
