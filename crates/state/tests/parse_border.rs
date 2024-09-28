@@ -3,6 +3,7 @@ use freya_node_state::{
     Border,
     BorderAlignment,
     BorderStyle,
+    BorderWidth,
     Fill,
     GradientStop,
     LinearGradient,
@@ -16,7 +17,80 @@ fn parse_basic_border() {
     assert_eq!(
         border,
         Ok(Border {
-            width: 1.0,
+            width: BorderWidth {
+                top: 1.0,
+                right: 1.0,
+                bottom: 1.0,
+                left: 1.0,
+            },
+            fill: Fill::Color(Color::RED),
+            style: BorderStyle::Solid,
+            alignment: BorderAlignment::Inner
+        })
+    );
+}
+
+#[test]
+fn parse_border_widths() {
+    let one_width = Border::parse("2 solid red");
+    let two_widths = Border::parse("1 2 solid red");
+    let three_widths = Border::parse("1 2 3 solid red");
+    let four_widths = Border::parse("1 2 3 4 solid red");
+
+    assert_eq!(
+        one_width,
+        Ok(Border {
+            width: BorderWidth {
+                top: 2.0,
+                right: 2.0,
+                bottom: 2.0,
+                left: 2.0,
+            },
+            fill: Fill::Color(Color::RED),
+            style: BorderStyle::Solid,
+            alignment: BorderAlignment::Inner
+        })
+    );
+
+    assert_eq!(
+        two_widths,
+        Ok(Border {
+            width: BorderWidth {
+                top: 1.0,
+                right: 2.0,
+                bottom: 1.0,
+                left: 2.0,
+            },
+            fill: Fill::Color(Color::RED),
+            style: BorderStyle::Solid,
+            alignment: BorderAlignment::Inner
+        })
+    );
+
+    assert_eq!(
+        three_widths,
+        Ok(Border {
+            width: BorderWidth {
+                top: 1.0,
+                right: 2.0,
+                bottom: 3.0,
+                left: 2.0,
+            },
+            fill: Fill::Color(Color::RED),
+            style: BorderStyle::Solid,
+            alignment: BorderAlignment::Inner
+        })
+    );
+
+    assert_eq!(
+        four_widths,
+        Ok(Border {
+            width: BorderWidth {
+                top: 1.0,
+                right: 2.0,
+                bottom: 3.0,
+                left: 4.0,
+            },
             fill: Fill::Color(Color::RED),
             style: BorderStyle::Solid,
             alignment: BorderAlignment::Inner
@@ -30,7 +104,12 @@ fn parse_gradient_border() {
     assert_eq!(
         shadow,
         Ok(Border {
-            width: 1.0,
+            width: BorderWidth {
+                top: 1.0,
+                right: 1.0,
+                bottom: 1.0,
+                left: 1.0,
+            },
             fill: Fill::LinearGradient(LinearGradient {
                 angle: 0.0,
                 stops: vec![
@@ -66,13 +145,18 @@ fn parse_border_alignments() {
 #[test]
 fn parse_border_style() {
     let solid = Border::parse("1 solid red");
-    let none = Border::parse("1 rust red");
+    let none = Border::parse("1 none red");
     let invalid = Border::parse("rust solid red");
 
     assert_eq!(
         solid,
         Ok(Border {
-            width: 1.0,
+            width: BorderWidth {
+                top: 1.0,
+                right: 1.0,
+                bottom: 1.0,
+                left: 1.0,
+            },
             fill: Fill::Color(Color::RED),
             style: BorderStyle::Solid,
             alignment: BorderAlignment::default()
@@ -81,7 +165,12 @@ fn parse_border_style() {
     assert_eq!(
         none,
         Ok(Border {
-            width: 1.0,
+            width: BorderWidth {
+                top: 1.0,
+                right: 1.0,
+                bottom: 1.0,
+                left: 1.0,
+            },
             fill: Fill::Color(Color::RED),
             style: BorderStyle::None,
             alignment: BorderAlignment::default()

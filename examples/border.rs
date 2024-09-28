@@ -44,7 +44,7 @@ fn app() -> Element {
                 background: "rgb(0, 0, 0)",
                 border: "8 solid rgb(34, 166, 153)",
                 border_align: "center",
-                margin: "4"
+                margin: "8"
             }
         }
     )
