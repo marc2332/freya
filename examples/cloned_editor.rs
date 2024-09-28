@@ -70,7 +70,7 @@ fn Body() -> Element {
 
                     // Only show the cursor in the active line
                     let character_index = if is_line_selected {
-                        editor.visible_cursor_col().to_string()
+                        editor.cursor_col().to_string()
                     } else {
                         "none".to_string()
                     };
@@ -144,7 +144,7 @@ fn Body() -> Element {
 
                     // Only show the cursor in the active line
                     let character_index = if is_line_selected {
-                        editor.visible_cursor_col().to_string()
+                        editor.cursor_col().to_string()
                     } else {
                         "none".to_string()
                     };
