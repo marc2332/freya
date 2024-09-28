@@ -16,10 +16,7 @@ use crate::{
         LayoutNode,
         NodeKey,
     },
-    geometry::{
-        Area,
-        Size2D,
-    },
+    geometry::Area,
     measure::{
         MeasureContext,
         Phase,
@@ -250,7 +247,6 @@ impl<Key: NodeKey> Torin<Key> {
             .unwrap_or(LayoutNode {
                 area: root_area,
                 inner_area: root_area,
-                inner_sizes: Size2D::default(),
                 margin: Gaps::default(),
                 data: None,
             });
@@ -292,16 +288,11 @@ impl<Key: NodeKey> Torin<Key> {
             Phase::Final,
         );
 
-        // Adjust the size of the area if needed
-        root_layout_node.area.adjust_size(&root);
-
         // Cache the root Node results if it was modified
         if root_revalidated {
-            if let Some(measurer) = measurer {
-                if root.has_layout_references {
-                    measurer.notify_layout_references(root_id, &root_layout_node);
-                }
-            }
+            // Adjust the size of the area if needed
+            root_layout_node.area.adjust_size(&root);
+
             self.cache_node(root_id, root_layout_node);
         }
 
