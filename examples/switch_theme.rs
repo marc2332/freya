@@ -76,8 +76,14 @@ fn app() -> Element {
                     }
                 }
                 Slider {
-                    width: "fill",
+                    size: "fill",
                     value: value(),
+                    onmoved: move |e| value.set(e),
+                }
+                Slider {
+                    size: "200",
+                    value: value(),
+                    direction: "vertical",
                     onmoved: move |e| value.set(e),
                 }
                 ProgressBar {
