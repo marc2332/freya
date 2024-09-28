@@ -370,7 +370,7 @@ impl ElementUtils for RectElement {
             // - The node has no parents with the `opacity` attribute applied.
             let is_possibly_translucent = if let Fill::Color(color) = node_style.background {
                 let node_transform = &*node_ref.get::<TransformState>().unwrap();
-                
+
                 color.a() != u8::MAX
                     || node_style.blend_mode.is_some()
                     || !node_transform.opacities.is_empty()
