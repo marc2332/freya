@@ -35,7 +35,7 @@ fn app() -> Element {
 fn Card() -> Element {
     rsx!(
         rect {
-            border: "15 solid rgb(43,106,208)",
+            border: "15 inner rgb(43,106,208)",
             height: "220",
             width: "420",
             background: "white",

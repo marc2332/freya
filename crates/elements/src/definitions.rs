@@ -187,7 +187,6 @@ builder_constructors! {
         background: String,
         #[doc = include_str!("_docs/attributes/border.md")]
         border: String,
-        border_align: String,
         #[doc = include_str!("_docs/attributes/direction.md")]
         direction: String,
         #[doc = include_str!("_docs/attributes/shadow.md")]

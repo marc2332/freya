@@ -36,7 +36,7 @@ pub fn Tooltip(TooltipProps { text, theme }: TooltipProps) -> Element {
         rect {
             padding: "4 10",
             shadow: "0 0 4 1 rgb(0, 0, 0, 0.1)",
-            border: "1 solid {border_fill}",
+            border: "1 inner {border_fill}",
             corner_radius: "8",
             background: "{background}",
             label { max_lines: "1", font_size: "14", color: "{color}", "{text}" }
