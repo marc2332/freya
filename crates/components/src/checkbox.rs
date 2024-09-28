@@ -192,29 +192,29 @@ mod test {
         utils.wait_for_update().await;
 
         // If the inner square exists it means that the Checkbox is selected, otherwise it isn't
-        assert!(root.get(0).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(1).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(2).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(0).get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(1).get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(2).get(0).get(0).get(0).get(0).is_placeholder());
 
         utils.click_cursor((20., 50.)).await;
 
-        assert!(root.get(0).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(1).get(0).get(0).get(0).is_element());
-        assert!(root.get(2).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(0).get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(1).get(0).get(0).get(0).get(0).is_element());
+        assert!(root.get(2).get(0).get(0).get(0).get(0).is_placeholder());
 
         utils.click_cursor((10., 90.)).await;
         utils.wait_for_update().await;
 
-        assert!(root.get(0).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(1).get(0).get(0).get(0).is_element());
-        assert!(root.get(2).get(0).get(0).get(0).is_element());
+        assert!(root.get(0).get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(1).get(0).get(0).get(0).get(0).is_element());
+        assert!(root.get(2).get(0).get(0).get(0).get(0).is_element());
 
         utils.click_cursor((10., 10.)).await;
         utils.click_cursor((10., 50.)).await;
         utils.wait_for_update().await;
 
-        assert!(root.get(0).get(0).get(0).get(0).is_element());
-        assert!(root.get(1).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(2).get(0).get(0).get(0).is_element());
+        assert!(root.get(0).get(0).get(0).get(0).get(0).is_element());
+        assert!(root.get(1).get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(2).get(0).get(0).get(0).get(0).is_element());
     }
 }
