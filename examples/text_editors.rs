@@ -19,36 +19,31 @@ fn app() -> Element {
             UseEditable::new_in_hook(
                 clipboard,
                 platform,
-                EditableConfig::new("Editor 1 -------------\n".repeat(4).trim().to_string())
-                    .with_allow_tabs(true),
+                EditableConfig::new("Editor 1 -------------\n".repeat(4).trim().to_string()),
                 EditableMode::MultipleLinesSingleEditor,
             ),
             UseEditable::new_in_hook(
                 clipboard,
                 platform,
-                EditableConfig::new("Editor 2 -------------\n".repeat(4).trim().to_string())
-                    .with_allow_tabs(true),
+                EditableConfig::new("Editor 2 -------------\n".repeat(4).trim().to_string()),
                 EditableMode::MultipleLinesSingleEditor,
             ),
             UseEditable::new_in_hook(
                 clipboard,
                 platform,
-                EditableConfig::new("Editor 3 -------------\n".repeat(4).trim().to_string())
-                    .with_allow_tabs(true),
+                EditableConfig::new("Editor 3 -------------\n".repeat(4).trim().to_string()),
                 EditableMode::MultipleLinesSingleEditor,
             ),
             UseEditable::new_in_hook(
                 clipboard,
                 platform,
-                EditableConfig::new("Editor 4 -------------\n".repeat(4).trim().to_string())
-                    .with_allow_tabs(true),
+                EditableConfig::new("Editor 4 -------------\n".repeat(4).trim().to_string()),
                 EditableMode::MultipleLinesSingleEditor,
             ),
             UseEditable::new_in_hook(
                 clipboard,
                 platform,
-                EditableConfig::new("Editor 5 -------------\n".repeat(4).trim().to_string())
-                    .with_allow_tabs(true),
+                EditableConfig::new("Editor 5 -------------\n".repeat(4).trim().to_string()),
                 EditableMode::MultipleLinesSingleEditor,
             ),
         ]
@@ -73,7 +68,7 @@ fn TextEditor(mut editable: UseEditable) -> Element {
     let cursor_reference = editable.cursor_attr();
     let highlights = editable.highlights_attr(0);
     let editor = editable.editor().read();
-    let cursor_char = editor.visible_cursor_pos();
+    let cursor_char = editor.cursor_pos();
 
     let onmousedown = move |e: MouseEvent| {
         focus.focus();
