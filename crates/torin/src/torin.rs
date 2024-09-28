@@ -199,7 +199,7 @@ impl<Key: NodeKey> Torin<Key> {
                     }
 
                     // Try using the node's parent as root candidate if it has multiple children
-                    if multiple_children {
+                    if multiple_children || parent.do_inner_depend_on_parent() {
                         self.root_node_candidate
                             .propose_new_candidate(&parent_id, dom_adapter);
                     }

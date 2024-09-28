@@ -244,7 +244,7 @@ where
         } else {
             let layout_node = self.layout.get(node_id).unwrap().clone();
 
-            let mut inner_sizes = layout_node.inner_sizes;
+            let mut inner_sizes = Size2D::default();
             let mut available_area = layout_node.inner_area;
             let mut area = layout_node.area;
             let mut inner_area = layout_node.inner_area;
