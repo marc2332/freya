@@ -138,7 +138,7 @@ impl RenderPipeline<'_> {
 
         // Render the dirty nodes
         for (_, nodes) in sorted(rendering_layers.iter()) {
-            'elements: for node_id in nodes {
+            'elements: for node_id in sorted(nodes) {
                 let node_ref = self.rdom.get(*node_id).unwrap();
                 let node_viewports = node_ref.get::<ViewportState>().unwrap();
                 let layout_node = self.layout.get(*node_id);

@@ -159,8 +159,7 @@ impl UseEditable {
                     // Update the cursor position calculated by the layout
                     CursorLayoutResponse::CursorPosition { position, id } => {
                         let mut text_editor = editor.write();
-                        let new_cursor = text_editor
-                            .measure_new_cursor(text_editor.utf16_cu_to_char(position), id);
+                        let new_cursor = text_editor.measure_new_cursor(position, id);
 
                         // Only update and clear the selection if the cursor has changed
                         if *text_editor.cursor() != new_cursor {
@@ -180,10 +179,6 @@ impl UseEditable {
                         let current_cursor = editor.peek().cursor().clone();
                         let current_selection = editor.peek().get_selection();
 
-                        let (from, to) = (
-                            editor.peek().utf16_cu_to_char(from),
-                            editor.peek().utf16_cu_to_char(to),
-                        );
                         let maybe_new_cursor = editor.peek().measure_new_cursor(to, id);
                         let maybe_new_selection = editor.peek().measure_new_selection(from, to, id);
 
