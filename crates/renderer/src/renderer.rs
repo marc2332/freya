@@ -363,21 +363,34 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     return;
                 }
 
-                if self.modifiers_state.control_key() && state == ElementState::Pressed {
-                    let ch = logical_key.to_text();
-                    let render_with_new_scale_factor = if ch == Some("+") {
-                        self.custom_scale_factor += 0.25;
-                        true
-                    } else if ch == Some("-") {
-                        self.custom_scale_factor -= 0.25;
-                        true
-                    } else {
-                        false
+                #[cfg(not(feature = "disable-zoom-shortcuts"))]
+                {
+                    let is_control_pressed = {
+                        if cfg!(target_os = "macos") {
+                            self.modifiers_state.super_key()
+                        } else {
+                            self.modifiers_state.control_key()
+                        }
                     };
 
-                    if render_with_new_scale_factor {
-                        app.resize(window);
-                        window.request_redraw();
+                    if is_control_pressed && state == ElementState::Pressed {
+                        let ch = logical_key.to_text();
+                        let render_with_new_scale_factor = if ch == Some("+") {
+                            self.custom_scale_factor =
+                                (self.custom_scale_factor + 0.10).clamp(-1.0, 5.0);
+                            true
+                        } else if ch == Some("-") {
+                            self.custom_scale_factor =
+                                (self.custom_scale_factor - 0.10).clamp(-1.0, 5.0);
+                            true
+                        } else {
+                            false
+                        };
+
+                        if render_with_new_scale_factor {
+                            app.resize(window);
+                            window.request_redraw();
+                        }
                     }
                 }
 
