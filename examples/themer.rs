@@ -35,17 +35,17 @@ fn app() -> Element {
                 ontoggled: |_| {}
             }
             Slider {
-                width: "fill",
+                size: "fill",
                 value: r(),
                 onmoved: move |e| r.set(e),
             }
             Slider {
-                width: "fill",
+                size: "fill",
                 value: g(),
                 onmoved: move |e| g.set(e),
             }
             Slider {
-                width: "fill",
+                size: "fill",
                 value: b(),
                 onmoved: move |e| b.set(e),
             }

@@ -26,7 +26,6 @@ use torin::prelude::{
     Alignment,
     Area,
     LayoutMeasurer,
-    LayoutNode,
     Node,
     Size2D,
 };
@@ -69,21 +68,21 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
 
         match &*node_type {
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Label => {
-                let (label, paragraph_font_height) = create_label(
+                let label = create_label(
                     &node,
                     area_size,
                     self.font_collection,
                     self.default_fonts,
                     self.scale_factor,
                 );
-
-                let res = Size2D::new(label.longest_line(), label.height());
+                let height = label.height();
+                let res = Size2D::new(label.longest_line(), height);
                 let mut map = SendAnyMap::new();
-                map.insert(CachedParagraph(label, paragraph_font_height));
+                map.insert(CachedParagraph(label, height));
                 Some((res, Arc::new(map)))
             }
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Paragraph => {
-                let (paragraph, paragraph_font_height) = create_paragraph(
+                let paragraph = create_paragraph(
                     &node,
                     area_size,
                     self.font_collection,
@@ -91,9 +90,10 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                     self.default_fonts,
                     self.scale_factor,
                 );
-                let res = Size2D::new(paragraph.longest_line(), paragraph.height());
+                let height = paragraph.height();
+                let res = Size2D::new(paragraph.longest_line(), height);
                 let mut map = SendAnyMap::new();
-                map.insert(CachedParagraph(paragraph, paragraph_font_height));
+                map.insert(CachedParagraph(paragraph, height));
                 Some((res, Arc::new(map)))
             }
             _ => None,
@@ -110,14 +110,14 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
             .unwrap_or_default()
     }
 
-    fn notify_layout_references(&self, node_id: NodeId, layout_node: &LayoutNode) {
+    fn notify_layout_references(&self, node_id: NodeId, area: Area, inner_sizes: Size2D) {
         let node = self.rdom.get(node_id).unwrap();
         let size_state = &*node.get::<LayoutState>().unwrap();
 
         if let Some(reference) = &size_state.node_ref {
             let mut node_layout = NodeReferenceLayout {
-                area: layout_node.area,
-                inner: layout_node.inner_sizes,
+                area,
+                inner: inner_sizes,
             };
             node_layout.div(self.scale_factor);
             reference.0.send(node_layout).ok();
@@ -131,7 +131,7 @@ pub fn create_label(
     font_collection: &FontCollection,
     default_font_family: &[String],
     scale_factor: f32,
-) -> (Paragraph, f32) {
+) -> Paragraph {
     let font_style = &*node.get::<FontStyleState>().unwrap();
 
     let mut paragraph_style = ParagraphStyle::default();
@@ -143,7 +143,7 @@ pub fn create_label(
         paragraph_style.set_ellipsis(ellipsis);
     }
 
-    let text_style = font_style.text_style(default_font_family, scale_factor, true);
+    let text_style = font_style.text_style(default_font_family, scale_factor);
     paragraph_style.set_text_style(&text_style);
 
     let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
@@ -155,18 +155,13 @@ pub fn create_label(
     }
 
     let mut paragraph = paragraph_builder.build();
-    paragraph.layout(area_size.width + 1.0);
+    paragraph.layout(if font_style.max_lines == Some(1) {
+        f32::MAX
+    } else {
+        area_size.width + 1.0
+    });
 
-    // Measure the actual text height, ignoring the line height
-    let mut height = paragraph.height();
-    for line in paragraph.get_line_metrics() {
-        for (_, text) in line.get_style_metrics(0..1) {
-            let text_height = -(text.font_metrics.ascent - text.font_metrics.descent);
-            height = height.max(text_height);
-        }
-    }
-
-    (paragraph, height)
+    paragraph
 }
 
 /// Align the Y axis of the highlights and cursor of a paragraph
@@ -224,7 +219,7 @@ pub fn create_paragraph(
     is_rendering: bool,
     default_font_family: &[String],
     scale_factor: f32,
-) -> (Paragraph, f32) {
+) -> Paragraph {
     let font_style = &*node.get::<FontStyleState>().unwrap();
 
     let mut paragraph_style = ParagraphStyle::default();
@@ -238,13 +233,10 @@ pub fn create_paragraph(
 
     let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
 
-    let text_style = font_style.text_style(default_font_family, scale_factor, true);
+    let text_style = font_style.text_style(default_font_family, scale_factor);
     paragraph_builder.push_style(&text_style);
 
-    let node_children = node.children();
-    let node_children_len = node_children.len();
-
-    for text_span in node_children {
+    for text_span in node.children() {
         if let NodeType::Element(ElementNode {
             tag: TagName::Text, ..
         }) = &*text_span.node_type()
@@ -253,7 +245,7 @@ pub fn create_paragraph(
             let text_node = *text_nodes.first().unwrap();
             let text_node_type = &*text_node.node_type();
             let font_style = text_span.get::<FontStyleState>().unwrap();
-            let text_style = font_style.text_style(default_font_family, scale_factor, true);
+            let text_style = font_style.text_style(default_font_family, scale_factor);
             paragraph_builder.push_style(&text_style);
 
             if let NodeType::Text(text) = text_node_type {
@@ -268,16 +260,11 @@ pub fn create_paragraph(
     }
 
     let mut paragraph = paragraph_builder.build();
-    paragraph.layout(area_size.width + 1.0);
+    paragraph.layout(if font_style.max_lines == Some(1) {
+        f32::MAX
+    } else {
+        area_size.width + 1.0
+    });
 
-    // Measure the actual text height, ignoring the line height
-    let mut height = paragraph.height();
-    for line in paragraph.get_line_metrics() {
-        for (_, text) in line.get_style_metrics(0..node_children_len) {
-            let text_height = -(text.font_metrics.ascent - text.font_metrics.descent);
-            height = height.max(text_height);
-        }
-    }
-
-    (paragraph, height)
+    paragraph
 }
