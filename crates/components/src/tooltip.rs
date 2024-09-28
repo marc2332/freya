@@ -88,7 +88,7 @@ pub fn TooltipContainer(
                 rect {
                     height: "0",
                     width: "0",
-                    layer: "-999",
+                    layer: "-1500",
                     match position {
                         TooltipPosition::Below => rsx!(
                             rect {
