@@ -38,10 +38,10 @@ pub struct Border {
 impl Border {
     #[inline]
     pub fn is_visible(&self) -> bool {
-        !(self.width.top == 0.0
-            && self.width.left == 0.0
-            && self.width.bottom == 0.0
-            && self.width.right == 0.0)
+        (self.width.top != 0.0
+            || self.width.left != 0.0
+            || self.width.bottom != 0.0
+            || self.width.right != 0.0)
             && self.fill != Fill::Color(Color::TRANSPARENT)
             && self.style != BorderStyle::None
     }
