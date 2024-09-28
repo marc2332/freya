@@ -61,7 +61,6 @@ impl EditorHistory {
 
     pub fn undo(&mut self, rope: &mut Rope) -> Option<usize> {
         if !self.can_undo() {
-            println!("cant undo");
             return None;
         }
 
@@ -96,7 +95,6 @@ impl EditorHistory {
 
     pub fn redo(&mut self, rope: &mut Rope) -> Option<usize> {
         if !self.can_redo() {
-            println!("cant redo");
             return None;
         }
 
