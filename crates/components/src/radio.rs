@@ -79,7 +79,6 @@ pub fn Radio(
     rsx!(
         rect {
             border,
-            border_align: "outer",
             corner_radius: "99",
             rect {
                 a11y_id: focus.attribute(),
