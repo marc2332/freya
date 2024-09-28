@@ -30,7 +30,7 @@ fn app() -> Element {
                 }
             }
             Slider {
-                width: "200",
+                size: "200",
                 value: *percentage.read(),
                 onmoved: move |p| {
                     percentage.set(p);
