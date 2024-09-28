@@ -3,7 +3,6 @@ use std::fmt;
 use freya_engine::prelude::{
     Color,
     Paint,
-    Shader,
 };
 use torin::prelude::Area;
 
