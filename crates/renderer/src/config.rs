@@ -162,7 +162,7 @@ impl<'a, T: Clone> LaunchConfig<'a, T> {
         self
     }
 
-    /// Specify the Window visibility at lunch.
+    /// Specify the Window visibility at launch.
     pub fn with_visible(mut self, visible: bool) -> Self {
         self.window_config.visible = visible;
         self
