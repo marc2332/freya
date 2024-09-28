@@ -389,10 +389,10 @@ impl ElementUtils for RectElement {
 
                 // Depending on if the rect is rounded or not, we might need to clip the blur
                 // layer to the shape of the rounded rect.
-                if radius.bottom_left == 0.0
-                    && radius.bottom_right == 0.0
-                    && radius.top_left == 0.0
-                    && radius.top_right == 0.0
+                if corner_radius.bottom_left == 0.0
+                    && corner_radius.bottom_right == 0.0
+                    && corner_radius.top_left == 0.0
+                    && corner_radius.top_right == 0.0
                 {
                     canvas.save_layer(&layer_rec);
                     canvas.restore();
