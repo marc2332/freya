@@ -2,9 +2,21 @@ use ropey::Rope;
 
 #[derive(Clone)]
 pub enum HistoryChange {
-    InsertChar { idx: usize, char: char },
-    InsertText { idx: usize, text: String },
-    Remove { idx: usize, text: String },
+    InsertChar {
+        idx: usize,
+        len: usize,
+        ch: char,
+    },
+    InsertText {
+        idx: usize,
+        len: usize,
+        text: String,
+    },
+    Remove {
+        idx: usize,
+        len: usize,
+        text: String,
+    },
 }
 
 #[derive(Default, Clone)]
@@ -49,22 +61,28 @@ impl EditorHistory {
 
     pub fn undo(&mut self, rope: &mut Rope) -> Option<usize> {
         if !self.can_undo() {
+            println!("cant undo");
             return None;
         }
 
         let last_change = self.changes.get(self.current_change - 1);
         if let Some(last_change) = last_change {
             let idx_end = match last_change {
-                HistoryChange::Remove { idx, text } => {
-                    rope.insert(*idx, text);
-                    idx + text.chars().count()
+                HistoryChange::Remove { idx, text, len } => {
+                    let start = rope.utf16_cu_to_char(*idx);
+                    rope.insert(start, text);
+                    *idx + len
                 }
-                HistoryChange::InsertChar { idx, char: ch } => {
-                    rope.remove(*idx..*idx + ch.len_utf8());
+                HistoryChange::InsertChar { idx, len, .. } => {
+                    let start = rope.utf16_cu_to_char(*idx);
+                    let end = rope.utf16_cu_to_char(*idx + len);
+                    rope.remove(start..end);
                     *idx
                 }
-                HistoryChange::InsertText { idx, text } => {
-                    rope.remove(*idx..idx + text.len());
+                HistoryChange::InsertText { idx, len, .. } => {
+                    let start = rope.utf16_cu_to_char(*idx);
+                    let end = rope.utf16_cu_to_char(*idx + len);
+                    rope.remove(start..end);
                     *idx
                 }
             };
@@ -78,23 +96,28 @@ impl EditorHistory {
 
     pub fn redo(&mut self, rope: &mut Rope) -> Option<usize> {
         if !self.can_redo() {
+            println!("cant redo");
             return None;
         }
 
         let next_change = self.changes.get(self.current_change);
         if let Some(next_change) = next_change {
             let idx_end = match next_change {
-                HistoryChange::Remove { idx, text } => {
-                    rope.remove(*idx..idx + text.chars().count());
+                HistoryChange::Remove { idx, len, .. } => {
+                    let start = rope.utf16_cu_to_char(*idx);
+                    let end = rope.utf16_cu_to_char(*idx + len);
+                    rope.remove(start..end);
                     *idx
                 }
-                HistoryChange::InsertChar { idx, char: ch } => {
-                    rope.insert_char(*idx, *ch);
-                    idx + 1
+                HistoryChange::InsertChar { idx, ch, len } => {
+                    let start = rope.utf16_cu_to_char(*idx);
+                    rope.insert_char(start, *ch);
+                    *idx + len
                 }
-                HistoryChange::InsertText { idx, text, .. } => {
-                    rope.insert(*idx, text);
-                    idx + text.chars().count()
+                HistoryChange::InsertText { idx, text, len } => {
+                    let start = rope.utf16_cu_to_char(*idx);
+                    rope.insert(start, text);
+                    *idx + len
                 }
             };
             self.current_change += 1;
@@ -131,6 +154,7 @@ mod test {
         history.push_change(HistoryChange::InsertText {
             idx: 11,
             text: "\n!!!!".to_owned(),
+            len: "\n!!!!".len(),
         });
 
         assert!(history.can_undo());
@@ -149,16 +173,19 @@ mod test {
         history.push_change(HistoryChange::InsertText {
             idx: 11,
             text: "\n!!!!".to_owned(),
+            len: "\n!!!!".len(),
         });
         rope.insert(16, "\n!!!!");
         history.push_change(HistoryChange::InsertText {
             idx: 16,
             text: "\n!!!!".to_owned(),
+            len: "\n!!!!".len(),
         });
         rope.insert(21, "\n!!!!");
         history.push_change(HistoryChange::InsertText {
             idx: 21,
             text: "\n!!!!".to_owned(),
+            len: "\n!!!!".len(),
         });
 
         assert_eq!(history.any_pending_changes(), 0);
@@ -202,7 +229,11 @@ mod test {
 
         // Dischard any changes that could have been redone
         rope.insert_char(0, '.');
-        history.push_change(HistoryChange::InsertChar { idx: 0, char: '.' });
+        history.push_change(HistoryChange::InsertChar {
+            idx: 0,
+            ch: '.',
+            len: 1,
+        });
         assert_eq!(history.any_pending_changes(), 0);
     }
 }
