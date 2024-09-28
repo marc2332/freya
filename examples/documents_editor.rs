@@ -339,7 +339,7 @@ fn DocumentEditor(path: String, mut editable: UseEditable) -> Element {
     let cursor_reference = editable.cursor_attr();
     let highlights = editable.highlights_attr(0);
     let editor = editable.editor().read();
-    let cursor_char = editor.visible_cursor_pos();
+    let cursor_char = editor.cursor_pos();
 
     let onmousedown = move |e: MouseEvent| {
         editable.process_event(&EditableEvent::MouseDown(e.data, 0));

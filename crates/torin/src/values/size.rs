@@ -85,9 +85,9 @@ impl Size {
         match self {
             Size::Pixels(px) => Some(px.get() + parent_margin),
             Size::Percentage(per) => Some(parent_value / 100.0 * per.get()),
-            Size::DynamicCalculations(calculations) => {
-                Some(run_calculations(calculations.deref(), parent_value).unwrap_or(0.0))
-            }
+            Size::DynamicCalculations(calculations) => Some(
+                run_calculations(calculations.deref(), parent_value, root_value).unwrap_or(0.0),
+            ),
             Size::Fill => Some(available_parent_value),
             Size::FillMinimum if phase == Phase::Final => Some(available_parent_value),
             Size::RootPercentage(per) => Some(root_value / 100.0 * per.get()),
@@ -180,6 +180,7 @@ pub enum DynamicCalculation {
     Div,
     Add,
     Percentage(f32),
+    RootPercentage(f32),
     Pixels(f32),
 }
 
@@ -199,6 +200,7 @@ impl std::fmt::Display for DynamicCalculation {
             DynamicCalculation::Div => f.write_str("/"),
             DynamicCalculation::Add => f.write_str("+"),
             DynamicCalculation::Percentage(p) => f.write_fmt(format_args!("{p}%")),
+            DynamicCalculation::RootPercentage(p) => f.write_fmt(format_args!("{p}v")),
             DynamicCalculation::Pixels(s) => f.write_fmt(format_args!("{s}")),
         }
     }
@@ -208,14 +210,16 @@ impl std::fmt::Display for DynamicCalculation {
 struct DynamicCalculationEvaluator<'a> {
     calcs: Iter<'a, DynamicCalculation>,
     parent_value: f32,
+    root_value: f32,
     current: Option<&'a DynamicCalculation>,
 }
 
 impl<'a> DynamicCalculationEvaluator<'a> {
-    pub fn new(calcs: Iter<'a, DynamicCalculation>, parent_value: f32) -> Self {
+    pub fn new(calcs: Iter<'a, DynamicCalculation>, parent_value: f32, root_value: f32) -> Self {
         Self {
             calcs,
             parent_value,
+            root_value,
             current: None,
         }
     }
@@ -283,6 +287,10 @@ impl<'a> DynamicCalculationEvaluator<'a> {
                 self.current = self.calcs.next();
                 Some((self.parent_value / 100.0 * value).round())
             }
+            DynamicCalculation::RootPercentage(value) => {
+                self.current = self.calcs.next();
+                Some((self.root_value / 100.0 * value).round())
+            }
             DynamicCalculation::Pixels(value) => {
                 self.current = self.calcs.next();
                 Some(*value)
@@ -303,6 +311,10 @@ impl<'a> DynamicCalculationEvaluator<'a> {
 
 /// Calculate dynamic expression with operator precedence.
 /// This value could be for example the width of a node's parent area.
-pub fn run_calculations(calcs: &[DynamicCalculation], value: f32) -> Option<f32> {
-    DynamicCalculationEvaluator::new(calcs.iter(), value).evaluate()
+pub fn run_calculations(
+    calcs: &[DynamicCalculation],
+    parent_value: f32,
+    root_value: f32,
+) -> Option<f32> {
+    DynamicCalculationEvaluator::new(calcs.iter(), parent_value, root_value).evaluate()
 }

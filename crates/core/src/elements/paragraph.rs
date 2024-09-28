@@ -138,7 +138,7 @@ impl ElementUtils for ParagraphElement {
         };
 
         if node_cursor_state.position.is_some() {
-            let (paragraph, _) = create_paragraph(
+            let paragraph = create_paragraph(
                 node_ref,
                 &area.size,
                 font_collection,
