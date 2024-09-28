@@ -82,7 +82,6 @@ pub fn Radio(
             corner_radius: "99",
             rect {
                 a11y_id: focus.attribute(),
-                a11y_focusable: "true",
                 width: "18",
                 height: "18",
                 border: "2 inner {fill}",

@@ -13,13 +13,13 @@ fn app() -> Element {
     let animation = use_animation(move |ctx| {
         ctx.with(
             AnimNum::new(0., 100.)
-                .time(1650)
+                .time(1850)
                 .ease(Ease::Out)
                 .function(Function::Sine),
         )
     });
     let progress = animation.get().read().as_f32();
-    let mut show = use_signal(|| false);
+    let mut open = use_signal(|| false);
 
     rsx!(
         rect {
@@ -30,8 +30,8 @@ fn app() -> Element {
             direction: "horizontal",
             Button {
                 onpress: move |_| {
-                    show.toggle();
-                    if *show.read() {
+                    open.toggle();
+                    if open() {
                         animation.start();
                     } else {
                         animation.reset();
@@ -40,7 +40,7 @@ fn app() -> Element {
                 label { "Install" }
             }
             SnackBar {
-                show,
+                open,
                 ProgressBar {
                     show_progress: true,
                     progress: progress

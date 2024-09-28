@@ -180,7 +180,6 @@ pub fn Button(
             height: "{height}",
             padding: "{padding}",
             margin: "{margin}",
-            a11y_focusable: "true",
             overflow: "clip",
             a11y_role:"button",
             color: "{font_theme.color}",
@@ -191,7 +190,6 @@ pub fn Button(
             text_align: "center",
             main_align: "center",
             cross_align: "center",
-            line_height: "1.1",
             {&children}
         }
     )
@@ -229,13 +227,21 @@ mod test {
         assert_eq!(label.get(0).text(), Some("true"));
 
         utils.push_event(PlatformEvent::Touch {
+            name: EventName::TouchStart,
+            location: (15.0, 15.0).into(),
+            finger_id: 1,
+            phase: TouchPhase::Started,
+            force: None,
+        });
+        utils.wait_for_update().await;
+
+        utils.push_event(PlatformEvent::Touch {
             name: EventName::TouchEnd,
             location: (15.0, 15.0).into(),
             finger_id: 1,
             phase: TouchPhase::Ended,
             force: None,
         });
-
         utils.wait_for_update().await;
 
         assert_eq!(label.get(0).text(), Some("false"));

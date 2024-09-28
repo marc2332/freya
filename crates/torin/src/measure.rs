@@ -228,20 +228,28 @@ where
                 );
             }
 
-            (
-                must_cache_children,
-                LayoutNode {
-                    area,
-                    margin: node.margin,
-                    inner_area,
-                    inner_sizes,
-                    data: node_data,
-                },
-            )
+            inner_sizes.width += node.padding.horizontal();
+            inner_sizes.height += node.padding.vertical();
+
+            let layout_node = LayoutNode {
+                area,
+                margin: node.margin,
+                inner_area,
+                data: node_data,
+            };
+
+            // In case of any layout listener, notify it with the new areas.
+            if node.has_layout_references {
+                if let Some(measurer) = self.measurer {
+                    measurer.notify_layout_references(node_id, layout_node.area, inner_sizes);
+                }
+            }
+
+            (must_cache_children, layout_node)
         } else {
             let layout_node = self.layout.get(node_id).unwrap().clone();
 
-            let mut inner_sizes = layout_node.inner_sizes;
+            let mut inner_sizes = Size2D::default();
             let mut available_area = layout_node.inner_area;
             let mut area = layout_node.area;
             let mut inner_area = layout_node.inner_area;
@@ -265,6 +273,13 @@ where
                     &mut inner_area,
                     false,
                 );
+
+                // In case of any layout listener, notify it with the new areas.
+                if node.has_layout_references {
+                    if let Some(measurer) = self.measurer {
+                        measurer.notify_layout_references(node_id, layout_node.area, inner_sizes);
+                    }
+                }
             }
 
             (false, layout_node)
@@ -487,13 +502,6 @@ where
 
             // Cache the child layout if it was mutated and children must be cached
             if child_revalidated && must_cache_children {
-                // In case of any layout listener, notify it with the new areas.
-                if child_data.has_layout_references {
-                    if let Some(measurer) = self.measurer {
-                        measurer.notify_layout_references(child_id, &child_areas);
-                    }
-                }
-
                 // Finally cache this node areas into Torin
                 self.layout.cache_node(child_id, child_areas);
             }

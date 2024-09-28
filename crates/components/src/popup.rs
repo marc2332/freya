@@ -27,7 +27,7 @@ pub fn PopupBackground(children: Element) -> Element {
         position: "absolute",
         position_top: "0",
         position_left: "0",
-        layer: "-99",
+        layer: "-2000",
         main_align: "center",
         cross_align: "center",
         {children}

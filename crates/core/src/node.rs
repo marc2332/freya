@@ -124,7 +124,7 @@ impl NodeState {
             ),
             (
                 "line_height",
-                AttributeType::Measure(self.font_style.line_height),
+                AttributeType::OptionalMeasure(self.font_style.line_height),
             ),
             (
                 "text_align",
@@ -164,6 +164,7 @@ pub enum AttributeType<'a> {
     Gradient(Fill),
     Size(&'a Size),
     Measure(f32),
+    OptionalMeasure(Option<f32>),
     Measures(Gaps),
     CornerRadius(CornerRadius),
     Direction(&'a DirectionMode),

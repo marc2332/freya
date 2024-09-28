@@ -38,6 +38,15 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
                             }
                         }
                     }
+                    AttributeType::OptionalMeasure(measure) => {
+                        rsx!{
+                            Property {
+                                key: "{i}",
+                                name: "{name}",
+                                value: measure.map(|measure| measure.to_string()).unwrap_or_else(|| "inherit".to_string())
+                            }
+                        }
+                    }
                     AttributeType::Measures(measures) => {
                         rsx!{
                             Property {

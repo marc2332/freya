@@ -29,6 +29,8 @@ use freya_native_core_macro::partial_derive_state;
 
 use crate::{
     CustomAttributeValues,
+    Focusable,
+    Parse,
     ParseAttribute,
     ParseError,
 };
@@ -42,8 +44,8 @@ pub struct AccessibilityNodeState {
     pub a11y_role: Option<Role>,
     pub a11y_alt: Option<String>,
     pub a11y_name: Option<String>,
-    pub a11y_focusable: bool,
     pub a11y_auto_focus: bool,
+    pub a11y_focusable: Focusable,
 }
 
 impl ParseAttribute for AccessibilityNodeState {
@@ -57,6 +59,11 @@ impl ParseAttribute for AccessibilityNodeState {
                     attr.value
                 {
                     self.a11y_id = Some(*id);
+
+                    // Enable focus on nodes that pass a custom a11y id
+                    if self.a11y_focusable.is_unknown() {
+                        self.a11y_focusable = Focusable::Enabled;
+                    }
                 }
             }
             AttributeName::A11YRole => {
@@ -77,14 +84,14 @@ impl ParseAttribute for AccessibilityNodeState {
                     self.a11y_name = Some(attr.to_owned())
                 }
             }
-            AttributeName::A11YFocusable => {
-                if let OwnedAttributeValue::Text(attr) = attr.value {
-                    self.a11y_focusable = attr.parse().unwrap_or_default()
-                }
-            }
             AttributeName::A11YAutoFocus => {
                 if let OwnedAttributeValue::Text(attr) = attr.value {
                     self.a11y_auto_focus = attr.parse().unwrap_or_default()
+                }
+            }
+            AttributeName::A11YFocusable => {
+                if let OwnedAttributeValue::Text(attr) = attr.value {
+                    self.a11y_focusable = Focusable::parse(attr)?;
                 }
             }
             _ => {}
@@ -108,7 +115,6 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
             AttributeName::A11YRole,
             AttributeName::A11YAlt,
             AttributeName::A11YName,
-            AttributeName::A11YFocusable,
             AttributeName::A11YAutoFocus,
         ]));
 
@@ -171,7 +177,7 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
                 #[cfg(debug_assertions)]
                 tracing::info!("Assigned {id:?} to {:?}", node_view.node_id());
 
-                self.a11y_id = Some(id)
+                self.a11y_id = Some(id);
             }
 
             let was_just_created = !had_id && self.a11y_id.is_some();

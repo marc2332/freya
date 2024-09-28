@@ -1,5 +1,5 @@
-mod dark;
-mod light;
+mod base;
+mod themes;
 
 #[doc(hidden)]
 pub use ::core::default::Default;
@@ -7,8 +7,7 @@ pub use ::core::default::Default;
 pub use ::paste::paste;
 #[doc(hidden)]
 pub use ::std::borrow::Cow;
-pub use dark::*;
-pub use light::*;
+pub use themes::*;
 
 /// Alias for `Cow::Borrowed`, because that's used a million times so shortening it is nice.
 /// Makes the code more readable.
@@ -31,13 +30,9 @@ macro_rules! cow_borrowed {
 /// # struct Foo;
 /// define_theme! {
 ///     %[component]
-///     pub Test<'a> {
+///     pub Test {
 ///         %[cows]
 ///         cow_string: str,
-///         %[borrowed]
-///         borrowed_data: &'a Foo,
-///         %[owned]
-///         owned_data: Bar,
 ///         %[subthemes]
 ///         font_theme: FontTheme,
 ///     }
@@ -59,20 +54,6 @@ macro_rules! define_theme {
                 )*
             )?
             $(
-                %[borrowed$($borrowed_attr_control:tt)?]
-                $(
-                    $(#[$borrowed_field_attrs:meta])*
-                    $borrowed_field_name:ident: $borrowed_field_ty:ty,
-                )*
-            )?
-            $(
-                %[owned$($owned_attr_control:tt)?]
-                $(
-                    $(#[$owned_field_attrs:meta])*
-                    $owned_field_name:ident: $owned_field_ty:ty,
-                )*
-            )?
-            $(
                 %[subthemes$($subthemes_attr_control:tt)?]
                 $(
                     $(#[$subtheme_field_attrs:meta])*
@@ -82,22 +63,12 @@ macro_rules! define_theme {
     }) => {
         $crate::define_theme!(NOTHING=$($($component_attr_control)?)?);
         $crate::define_theme!(NOTHING=$($($cows_attr_control)?)?);
-        $crate::define_theme!(NOTHING=$($($borrowed_attr_control)?)?);
-        $crate::define_theme!(NOTHING=$($($owned_attr_control)?)?);
         $crate::define_theme!(NOTHING=$($($subthemes_attr_control)?)?);
         $crate::paste! {
             #[derive(Default, Clone, Debug, PartialEq, Eq)]
             #[doc = "You can use this to change a theme for only one component, with the `theme` property."]
             $(#[$attrs])*
             $vis struct [<$name ThemeWith>] $(<$lifetime>)? {
-                $($(
-                    $(#[$borrowed_field_attrs])*
-                    pub $borrowed_field_name: Option<$borrowed_field_ty>,
-                )*)?
-                $($(
-                    $(#[$owned_field_attrs])*
-                    pub $owned_field_name: Option<$owned_field_ty>,
-                )*)?
                 $($(
                     $(#[$subtheme_field_attrs])*
                     pub $subtheme_field_name: Option< [<$subtheme_field_ty_name With>] $(<$subtheme_field_ty_lifetime>)? >,
@@ -113,14 +84,6 @@ macro_rules! define_theme {
             $(#[$attrs])*
             $vis struct [<$name Theme>] $(<$lifetime>)? {
                 $($(
-                    $(#[$borrowed_field_attrs])*
-                    pub $borrowed_field_name: $borrowed_field_ty,
-                )*)?
-                $($(
-                    $(#[$owned_field_attrs])*
-                    pub $owned_field_name: $owned_field_ty,
-                )*)?
-                $($(
                     $(#[$subtheme_field_attrs])*
                     pub $subtheme_field_name: $subtheme_field_ty_name $(<$subtheme_field_ty_lifetime>)?,
                 )*)?
@@ -131,20 +94,19 @@ macro_rules! define_theme {
             }
 
             impl $(<$lifetime>)? [<$name Theme>] $(<$lifetime>)? {
+
+                pub fn apply_colors(&mut self, colors: &$crate::ColorsSheet) {
+                    $($(
+                        self.$subtheme_field_name.apply_colors(colors);
+                    )*)?
+
+                    $($(
+                        self.$cow_field_name = colors.resolve(self.$cow_field_name.clone());
+                    )*)?
+                }
+
                 #[doc = "Checks each field in `optional` and if it's `Some`, it overwrites the corresponding `self` field."]
                 pub fn apply_optional(&mut self, optional: & $($lifetime)? [<$name ThemeWith>]) {
-                    $($(
-                        if let Some($borrowed_field_name) = optional.$borrowed_field_name {
-                            self.$borrowed_field_name = $borrowed_field_name;
-                        }
-                    )*)?
-
-                    $($(
-                        if let Some($owned_field_name) = &optional.$owned_field_name {
-                            self.$owned_field_name = $owned_field_name.clone();
-                        }
-                    )*)?
-
                     $($(
                         if let Some($subtheme_field_name) = &optional.$subtheme_field_name {
                             self.$subtheme_field_name.apply_optional($subtheme_field_name);
@@ -520,6 +482,7 @@ define_theme! {
         unselected_fill: str,
         selected_fill: str,
         selected_icon_fill: str,
+        border_fill: str,
     }
 }
 
@@ -566,8 +529,56 @@ define_theme! {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ColorsSheet {
+    pub primary: Cow<'static, str>,
+    pub secondary: Cow<'static, str>,
+    pub tertiary: Cow<'static, str>,
+    pub surface: Cow<'static, str>,
+    pub secondary_surface: Cow<'static, str>,
+    pub neutral_surface: Cow<'static, str>,
+    pub focused_surface: Cow<'static, str>,
+    pub opposite_surface: Cow<'static, str>,
+    pub secondary_opposite_surface: Cow<'static, str>,
+    pub tertiary_opposite_surface: Cow<'static, str>,
+    pub background: Cow<'static, str>,
+    pub focused_border: Cow<'static, str>,
+    pub solid: Cow<'static, str>,
+    pub color: Cow<'static, str>,
+    pub placeholder_color: Cow<'static, str>,
+}
+
+impl ColorsSheet {
+    pub fn resolve(&self, val: Cow<'static, str>) -> Cow<'static, str> {
+        if val.starts_with("key") {
+            let key_val = val.replace("key(", "").replace(")", "");
+            match key_val.as_str() {
+                "primary" => self.primary.clone(),
+                "secondary" => self.secondary.clone(),
+                "tertiary" => self.tertiary.clone(),
+                "surface" => self.surface.clone(),
+                "secondary_surface" => self.secondary_surface.clone(),
+                "neutral_surface" => self.neutral_surface.clone(),
+                "focused_surface" => self.focused_surface.clone(),
+                "opposite_surface" => self.opposite_surface.clone(),
+                "secondary_opposite_surface" => self.secondary_opposite_surface.clone(),
+                "tertiary_opposite_surface" => self.tertiary_opposite_surface.clone(),
+                "background" => self.background.clone(),
+                "focused_border" => self.focused_border.clone(),
+                "solid" => self.solid.clone(),
+                "color" => self.color.clone(),
+                "placeholder_color" => self.placeholder_color.clone(),
+                _ => self.primary.clone(),
+            }
+        } else {
+            val
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
     pub name: &'static str,
+    pub colors: ColorsSheet,
     pub body: BodyTheme,
     pub button: ButtonTheme,
     pub switch: SwitchTheme,

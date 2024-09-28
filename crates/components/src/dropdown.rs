@@ -299,7 +299,7 @@ where
                         rect {
                             onglobalclick,
                             onglobalkeydown,
-                            layer: "-99",
+                            layer: "-1000",
                             margin: "{margin}",
                             border: "1 inner {border_fill}",
                             overflow: "clip",
@@ -379,7 +379,7 @@ mod test {
         utils.click_cursor((15., 15.)).await;
 
         // Click on the second option
-        utils.click_cursor((45., 100.)).await;
+        utils.click_cursor((45., 90.)).await;
         utils.wait_for_update().await;
         utils.wait_for_update().await;
 

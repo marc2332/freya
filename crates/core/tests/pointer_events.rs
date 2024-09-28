@@ -12,7 +12,7 @@ pub async fn pointer_events_from_mouse() {
 
         let onpointerup = move |_| state.push("up".to_string());
 
-        let onpointerover = move |_| state.push("over".to_string());
+        let onpointermove = move |_| state.push("move".to_string());
 
         let onpointerenter = move |_| state.push("enter".to_string());
 
@@ -30,7 +30,7 @@ pub async fn pointer_events_from_mouse() {
                     width: "100%",
                     onpointerdown,
                     onpointerup,
-                    onpointerover,
+                    onpointermove,
                     onpointerenter,
                     onpointerleave,
                     onglobalpointerup,
@@ -52,7 +52,13 @@ pub async fn pointer_events_from_mouse() {
     utils.move_cursor((100., 100.)).await;
     assert_eq!(
         label.get(0).text(),
-        Some(format!("{:?}", vec!["enter", "over"]).as_str())
+        Some(format!("{:?}", vec!["enter", "move"]).as_str())
+    );
+
+    utils.move_cursor((101., 100.)).await;
+    assert_eq!(
+        label.get(0).text(),
+        Some(format!("{:?}", vec!["enter", "move", "move"]).as_str())
     );
 
     utils.push_event(PlatformEvent::Mouse {
@@ -63,7 +69,7 @@ pub async fn pointer_events_from_mouse() {
     utils.wait_for_update().await;
     assert_eq!(
         label.get(0).text(),
-        Some(format!("{:?}", vec!["enter", "over", "down"]).as_str())
+        Some(format!("{:?}", vec!["enter", "move", "move", "down"]).as_str())
     );
 
     utils.push_event(PlatformEvent::Mouse {
@@ -74,13 +80,13 @@ pub async fn pointer_events_from_mouse() {
     utils.wait_for_update().await;
     assert_eq!(
         label.get(0).text(),
-        Some(format!("{:?}", vec!["enter", "over", "down", "up"]).as_str())
+        Some(format!("{:?}", vec!["enter", "move", "move", "down", "up"]).as_str())
     );
 
     utils.move_cursor((0., 0.)).await;
     assert_eq!(
         label.get(0).text(),
-        Some(format!("{:?}", vec!["enter", "over", "down", "up", "leave"]).as_str())
+        Some(format!("{:?}", vec!["enter", "move", "move", "down", "up", "leave"]).as_str())
     );
 
     utils.push_event(PlatformEvent::Mouse {
@@ -94,7 +100,7 @@ pub async fn pointer_events_from_mouse() {
         Some(
             format!(
                 "{:?}",
-                vec!["enter", "over", "down", "up", "leave", "globalup"]
+                vec!["enter", "move", "move", "down", "up", "leave", "globalup"]
             )
             .as_str()
         )
@@ -110,7 +116,7 @@ pub async fn pointer_events_from_touch() {
 
         let onpointerup = move |_| state.push("up".to_string());
 
-        let onpointerover = move |_| state.push("over".to_string());
+        let onpointermove = move |_| state.push("move".to_string());
 
         let onpointerenter = move |_| state.push("enter".to_string());
 
@@ -124,7 +130,7 @@ pub async fn pointer_events_from_touch() {
                     width: "100%",
                     onpointerdown: onpointerdown,
                     onpointerup: onpointerup,
-                    onpointerover: onpointerover,
+                    onpointermove: onpointermove,
                     onpointerenter: onpointerenter,
                     label { "{state:?}" }
                 }
@@ -150,7 +156,7 @@ pub async fn pointer_events_from_touch() {
     utils.wait_for_update().await;
     assert_eq!(
         label.get(0).text(),
-        Some(format!("{:?}", vec!["enter", "over"]).as_str())
+        Some(format!("{:?}", vec!["enter", "move"]).as_str())
     );
 
     utils.push_event(PlatformEvent::Touch {
@@ -163,7 +169,7 @@ pub async fn pointer_events_from_touch() {
     utils.wait_for_update().await;
     assert_eq!(
         label.get(0).text(),
-        Some(format!("{:?}", vec!["enter", "over", "down"]).as_str())
+        Some(format!("{:?}", vec!["enter", "move", "down"]).as_str())
     );
 
     utils.push_event(PlatformEvent::Touch {
@@ -176,6 +182,6 @@ pub async fn pointer_events_from_touch() {
     utils.wait_for_update().await;
     assert_eq!(
         label.get(0).text(),
-        Some(format!("{:?}", vec!["enter", "over", "down", "up"]).as_str())
+        Some(format!("{:?}", vec!["enter", "move", "down", "up"]).as_str())
     );
 }
