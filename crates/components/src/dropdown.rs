@@ -379,7 +379,7 @@ mod test {
         utils.click_cursor((15., 15.)).await;
 
         // Click on the second option
-        utils.click_cursor((45., 100.)).await;
+        utils.click_cursor((45., 90.)).await;
         utils.wait_for_update().await;
         utils.wait_for_update().await;
 
