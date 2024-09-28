@@ -355,7 +355,7 @@ pub async fn highlight_multiple_lines_single_editor() {
     utils.wait_for_update().await;
 
     // Move cursor
-    utils.move_cursor((80., 20.)).await;
+    utils.move_cursor((80., 25.)).await;
 
     utils.wait_for_update().await;
 
@@ -849,7 +849,7 @@ pub async fn highlight_shift_click_multiple_lines_single_editor() {
     utils.wait_for_update().await;
 
     // Move and click cursor
-    utils.click_cursor((80., 20.)).await;
+    utils.click_cursor((80., 25.)).await;
 
     utils.wait_for_update().await;
 
