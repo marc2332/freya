@@ -1,7 +1,7 @@
 [package]
 name = "freya-native-core-macro"
 description = "Macro helper for native-core"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 license = "MIT"
 authors = ["Jonathan Kelley", "Evan Almloff", "Marc Espín <mespinsanz@gmail.com>"]
