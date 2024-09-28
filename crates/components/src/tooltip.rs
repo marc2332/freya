@@ -84,11 +84,11 @@ pub fn TooltipContainer(
             onmouseenter,
             onmouseleave,
             {children},
-            if *is_hovering.read() {
-                rect {
-                    height: "0",
-                    width: "0",
-                    layer: "-1500",
+            rect {
+                height: "0",
+                width: "0",
+                layer: "-1500",
+                if *is_hovering.read() {
                     match position {
                         TooltipPosition::Below => rsx!(
                             rect {
@@ -107,7 +107,6 @@ pub fn TooltipContainer(
                             }
                         ),
                     }
-
                 }
             }
         }
