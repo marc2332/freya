@@ -35,7 +35,7 @@ fn app() -> Element {
                 }
             }
             Slider {
-                width: "100",
+                size: "100",
                 value: *opacity.read(),
                 onmoved: move |p| {
                     opacity.set(p);

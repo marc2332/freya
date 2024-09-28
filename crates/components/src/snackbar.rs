@@ -27,7 +27,7 @@ use freya_hooks::{
 ///             height: "100%",
 ///             width: "100%",
 ///             Button {
-///                 onpress: move |_| show.toggle(),
+///                 onpress: move |_| open.toggle(),
 ///                 label { "Open" }
 ///             }
 ///             SnackBar {
@@ -100,6 +100,7 @@ pub fn SnackBarBox(children: Element, theme: Option<SnackBarThemeWith>) -> Eleme
             padding: "10",
             color: "{color}",
             direction: "horizontal",
+            layer: "-1000",
             {children}
         }
     )
@@ -117,18 +118,18 @@ mod test {
     #[tokio::test]
     pub async fn snackbar() {
         fn snackbar_app() -> Element {
-            let mut show = use_signal(|| false);
+            let mut open = use_signal(|| false);
 
             rsx!(
                 rect {
                     height: "100%",
                     width: "100%",
                     Button {
-                        onpress: move |_|  show.toggle(),
+                        onpress: move |_|  open.toggle(),
                         label { "Open" }
                     }
                     SnackBar {
-                        show,
+                        open,
                         label {
                             "Hello, World!"
                         }
@@ -148,7 +149,7 @@ mod test {
         // Open the snackbar by clicking at the button
         utils.click_cursor((15., 15.)).await;
 
-        // Wait a bit for the snackbar to show up
+        // Wait a bit for the snackbar to open up
         utils.wait_for_update().await;
         sleep(Duration::from_millis(15)).await;
         utils.wait_for_update().await;

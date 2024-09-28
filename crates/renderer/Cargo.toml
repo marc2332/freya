@@ -17,6 +17,7 @@ features = ["freya-engine/mocked-engine"]
 [features]
 hot-reload = []
 skia-engine = ["freya-engine/skia-engine"]
+disable-zoom-shortcuts = []
 
 [dependencies]
 freya-node-state = { workspace = true }

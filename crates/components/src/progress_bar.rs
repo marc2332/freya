@@ -47,6 +47,8 @@ pub fn ProgressBar(
         height,
     } = use_applied_theme!(&theme, progress_bar);
 
+    let progress = progress.clamp(0., 100.);
+
     rsx!(
         rect {
             width: "{width}",

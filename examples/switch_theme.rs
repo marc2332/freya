@@ -23,24 +23,41 @@ fn ThemeChanger() -> Element {
             ),
             label { "Banana" }
         }
-        Tile {
-            onselect: move |_| theme.set(DARK_THEME),
-            leading: rsx!(
-                Radio {
-                    selected: theme.read().name == "dark",
-                },
+        TooltipContainer {
+            position: TooltipPosition::Besides,
+            tooltip: rsx!(
+                Tooltip {
+                    text: "Switch to Dark theme"
+                }
             ),
-            label { "Dark" }
+            Tile {
+                onselect: move |_| theme.set(DARK_THEME),
+                leading: rsx!(
+                    Radio {
+                        selected: theme.read().name == "dark",
+                    },
+                ),
+                label { "Dark" }
+            }
         }
-        Tile {
-            onselect: move |_| theme.set(LIGHT_THEME),
-            leading: rsx!(
-                Radio {
-                    selected: theme.read().name == "light",
-                },
+        TooltipContainer {
+            position: TooltipPosition::Besides,
+            tooltip: rsx!(
+                Tooltip {
+                    text: "Switch to Light theme"
+                }
             ),
-            label { "Light" }
+            Tile {
+                onselect: move |_| theme.set(LIGHT_THEME),
+                leading: rsx!(
+                    Radio {
+                        selected: theme.read().name == "light",
+                    },
+                ),
+                label { "Light" }
+            }
         }
+
     )
 }
 
@@ -66,7 +83,7 @@ fn app() -> Element {
                         }
                     }
                     Slider {
-                        width: "fill",
+                        size: "fill",
                         value: value(),
                         onmoved: move |e| value.set(e),
                     }

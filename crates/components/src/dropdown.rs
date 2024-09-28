@@ -299,7 +299,7 @@ where
                         rect {
                             onglobalclick,
                             onglobalkeydown,
-                            layer: "-99",
+                            layer: "-1000",
                             margin: "{margin}",
                             border: "1 solid {border_fill}",
                             overflow: "clip",
