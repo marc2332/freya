@@ -565,17 +565,17 @@ fn app() -> Element {
             width: "100%",
             height: "100%",
             Slider {
-                width: "300",
+                size: "300",
                 value: *r.read(),
                 onmoved: move |value: f64| { r.set(value) }
             }
             Slider {
-                width: "300",
+                size: "300",
                 value: *g.read(),
                 onmoved: move |value: f64| { g.set(value) }
             }
             Slider {
-                width: "300",
+                size: "300",
                 value: *b.read(),
                 onmoved: move |value: f64| { b.set(value) }
             }

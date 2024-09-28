@@ -15,7 +15,10 @@ use freya_hooks::{
 };
 use winit::event::MouseButton;
 
-use crate::Tooltip;
+use crate::{
+    Tooltip,
+    TooltipContainer,
+};
 
 /// Tooltip configuration for the [`Link`] component.
 #[derive(Clone, PartialEq)]
@@ -159,7 +162,7 @@ pub fn Link(
         Some(LinkTooltip::Custom(str)) => Some(str),
     };
 
-    let main_rect = rsx! {
+    let link = rsx! {
         rect {
             onmouseenter,
             onmouseleave,
@@ -169,27 +172,19 @@ pub fn Link(
         }
     };
 
-    let Some(tooltip) = tooltip else {
-        return rsx!({ main_rect });
-    };
-
-    rsx! {
-        rect {
-            {main_rect}
-            rect {
-                height: "0",
-                width: "0",
-                layer: "-1500",
-                rect {
-                    width: "100v",
-                    if *is_hovering.read() {
-                        Tooltip {
-                            url: tooltip
-                        }
+    if let Some(tooltip) = tooltip {
+        rsx!(
+            TooltipContainer {
+                tooltip: rsx!(
+                    Tooltip {
+                        text: tooltip
                     }
-                }
+                )
+                {link}
             }
-        }
+        )
+    } else {
+        link
     }
 }
 
