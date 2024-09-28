@@ -170,8 +170,6 @@ pub fn create_label(
         }
     }
 
-    println!("{height:?} vs {:?}", paragraph.height());
-
     (paragraph, height)
 }
 
