@@ -12,7 +12,6 @@ use freya_engine::prelude::{
     Point,
     Rect,
     SamplingOptions,
-    SaveLayerFlags,
     SaveLayerRec,
     Surface,
 };
