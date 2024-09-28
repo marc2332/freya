@@ -26,7 +26,6 @@ use torin::prelude::{
     Alignment,
     Area,
     LayoutMeasurer,
-    LayoutNode,
     Node,
     Size2D,
 };
@@ -110,14 +109,14 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
             .unwrap_or_default()
     }
 
-    fn notify_layout_references(&self, node_id: NodeId, layout_node: &LayoutNode) {
+    fn notify_layout_references(&self, node_id: NodeId, area: Area, inner_sizes: Size2D) {
         let node = self.rdom.get(node_id).unwrap();
         let size_state = &*node.get::<LayoutState>().unwrap();
 
         if let Some(reference) = &size_state.node_ref {
             let mut node_layout = NodeReferenceLayout {
-                area: layout_node.area,
-                inner: layout_node.inner_sizes,
+                area,
+                inner: inner_sizes,
             };
             node_layout.div(self.scale_factor);
             reference.0.send(node_layout).ok();
