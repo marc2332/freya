@@ -232,7 +232,11 @@ impl Parse for CornerRadius {
             (value, None, None, None) => {
                 radius.fill_all(value);
             }
-            _ => return Err(ParseError("invalid count of numbers (must be 1, 2 or 4)".into()))
+            _ => {
+                return Err(ParseError(
+                    "invalid count of numbers (must be 1, 2 or 4)".into(),
+                ))
+            }
         }
 
         Ok(radius)
