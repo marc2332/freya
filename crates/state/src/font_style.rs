@@ -130,9 +130,7 @@ impl ParseAttribute for FontStyleState {
             }
             AttributeName::TextShadow => {
                 if let Some(value) = attr.value.as_text() {
-                    if value != "none" {
-                        self.text_shadows = TextShadow::parse_with_separator(value, &Token::Comma)?;
-                    }
+                    self.text_shadows = TextShadow::parse_with_separator(value, &Token::Comma)?;
                 }
             }
             AttributeName::FontFamily => {
