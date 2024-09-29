@@ -4,11 +4,7 @@ use freya_elements::{
     events::KeyboardEvent,
 };
 use freya_hooks::{
-    theme_with,
-    use_applied_theme,
-    ButtonThemeWith,
-    PopupTheme,
-    PopupThemeWith,
+    theme_with, use_animation, use_applied_theme, AnimNum, ButtonThemeWith, Ease, Function, PopupTheme, PopupThemeWith
 };
 
 use crate::{
@@ -86,6 +82,15 @@ pub fn Popup(
     #[props(default = true)]
     close_on_escape_key: bool,
 ) -> Element {
+    let animations = use_animation(|ctx| {
+        ctx.auto_start(true);
+        ctx.with(
+            AnimNum::new(0.75, 1.)
+                .time(350)
+                .ease(Ease::Out)
+                .function(Function::Expo),
+        )
+    });
     let PopupTheme {
         background,
         color,
@@ -93,6 +98,8 @@ pub fn Popup(
         width,
         height,
     } = use_applied_theme!(&theme, popup);
+
+    let scale = animations.get();
 
     let request_to_close = move || {
         if let Some(oncloserequest) = &oncloserequest {
@@ -111,6 +118,7 @@ pub fn Popup(
     rsx!(
         PopupBackground {
             rect {
+                scale: "{scale.read().as_f32()}",
                 padding: "14",
                 corner_radius: "8",
                 background: "{background}",

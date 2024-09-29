@@ -30,6 +30,7 @@ pub struct TransformState {
     pub node_id: NodeId,
     pub opacities: Vec<f32>,
     pub rotations: Vec<(NodeId, f32)>,
+    pub scales: Vec<(NodeId, f32)>,
 }
 
 impl ParseAttribute for TransformState {
@@ -56,6 +57,12 @@ impl ParseAttribute for TransformState {
                     self.opacities.push(opacity)
                 }
             }
+            AttributeName::Scale => {
+                if let Some(value) = attr.value.as_text() {
+                    let scale = value.parse::<f32>().map_err(|_| ParseError)?;
+                    self.scales.push((self.node_id, scale))
+                }
+            }
             _ => {}
         }
 
@@ -75,6 +82,7 @@ impl State<CustomAttributeValues> for TransformState {
         NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
             AttributeName::Rotate,
             AttributeName::Opacity,
+            AttributeName::Scale,
         ]));
 
     fn update<'a>(
