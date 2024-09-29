@@ -79,29 +79,25 @@ impl DisplayColor for Color {
 }
 
 fn parse_rgb(parser: &mut Parser) -> Result<Color, ParseError> {
-    parser.consume(&Token::ParenOpen)?;
+    parse_func(parser, "rgb", |parser| {
+        let red = parser.consume_map(Token::try_as_u8)?;
 
-    let red = parser.consume_map(Token::try_as_u8)?;
+        parser.consume(&Token::Comma)?;
 
-    parser.consume(&Token::Comma)?;
+        let green = parser.consume_map(Token::try_as_u8)?;
 
-    let green = parser.consume_map(Token::try_as_u8)?;
+        parser.consume(&Token::Comma)?;
 
-    parser.consume(&Token::Comma)?;
+        let blue = parser.consume_map(Token::try_as_u8)?;
 
-    let blue = parser.consume_map(Token::try_as_u8)?;
+        Ok(if parser.try_consume(&Token::Comma) {
+            let alpha = parser.consume_map(Token::try_as_u8)?;
 
-    let color = if parser.try_consume(&Token::Comma) {
-        let alpha = parser.consume_map(Token::try_as_u8)?;
-
-        Color::from_argb(alpha, red, green, blue)
-    } else {
-        Color::from_rgb(red, green, blue)
-    };
-
-    parser.consume(&Token::ParenClose)?;
-
-    Ok(color)
+            Color::from_argb(alpha, red, green, blue)
+        } else {
+            Color::from_rgb(red, green, blue)
+        })
+    })
 }
 
 fn parse_hsl(parser: &mut Parser) -> Result<Color, ParseError> {
