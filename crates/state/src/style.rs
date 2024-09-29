@@ -29,7 +29,6 @@ use crate::{
     OverflowMode,
     Parse,
     ParseAttribute,
-    ParseError,
     Parser,
     Shadow,
     Token,
