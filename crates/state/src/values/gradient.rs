@@ -86,7 +86,7 @@ impl Parse for LinearGradient {
             if let Ok(angle) = parse_angle(parser) {
                 parser.consume(&Token::Comma)?;
 
-                gradient.angle = angle.to_radians();
+                gradient.angle = angle;
             }
 
             gradient.stops = GradientStop::from_parser_multiple(parser, &Token::Comma)?;
@@ -192,7 +192,7 @@ impl Parse for ConicGradient {
             let mut gradient = Self::default();
 
             if let Ok(angle) = parse_angle(parser) {
-                gradient.angle = Some(angle.to_radians());
+                gradient.angle = Some(angle);
 
                 parser.consume(&Token::Comma)?;
             }
