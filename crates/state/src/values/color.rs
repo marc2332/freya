@@ -136,8 +136,6 @@ fn parse_hsl(parser: &mut Parser) -> Result<Color, ParseError> {
             None
         };
 
-        parser.consume(&Token::ParenClose)?;
-
         // HSL to HSV Conversion
         l *= 2.0;
         s *= if l <= 1.0 { l } else { 2.0 - l };
