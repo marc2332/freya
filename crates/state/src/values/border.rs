@@ -134,8 +134,8 @@ impl Parse for Border {
 
         Ok(Border {
             width: BorderWidth::from_parser(parser)?,
+            alignment: BorderAlignment::from_parser(parser)?,
             fill: Fill::from_parser(parser)?,
-            alignment: BorderAlignment::default(),
         })
     }
 }
