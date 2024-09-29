@@ -27,7 +27,7 @@ pub fn PopupBackground(children: Element) -> Element {
         position: "absolute",
         position_top: "0",
         position_left: "0",
-        layer: "-99",
+        layer: "-2000",
         main_align: "center",
         cross_align: "center",
         {children}
@@ -100,7 +100,7 @@ pub fn Popup(
         }
     };
 
-    let onkeydown = move |event: KeyboardEvent| {
+    let onglobalkeydown = move |event: KeyboardEvent| {
         if close_on_escape_key && event.key == Key::Escape {
             request_to_close()
         }
@@ -118,7 +118,7 @@ pub fn Popup(
                 shadow: "0 4 5 0 rgb(0, 0, 0, 30)",
                 width: "{width}",
                 height: "{height}",
-                onkeydown,
+                onglobalkeydown,
                 if show_close_button {
                     rect {
                         height: "0",
@@ -216,35 +216,20 @@ mod test {
         assert_eq!(utils.sdom().get().layout().size(), 4);
 
         // Open the popup
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (15.0, 15.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((15., 15.)).await;
 
         // Check the popup is opened
         assert_eq!(utils.sdom().get().layout().size(), 10);
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (395.0, 180.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((395., 180.)).await;
 
         // Check the popup is closed
         assert_eq!(utils.sdom().get().layout().size(), 4);
 
         // Open the popup
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (15.0, 15.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((15., 15.)).await;
 
-        // Send a random keydown event
+        // Send a random globalkeydown event
         utils.push_event(PlatformEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::ArrowDown,
@@ -255,7 +240,7 @@ mod test {
         // Check the popup is still open
         assert_eq!(utils.sdom().get().layout().size(), 10);
 
-        // Send a ESC keydown event
+        // Send a ESC globalkeydown event
         utils.push_event(PlatformEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::Escape,

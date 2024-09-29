@@ -109,7 +109,6 @@ impl NodeState {
                 };
                 ("background", fill)
             },
-            ("border", AttributeType::Border(&self.style.border)),
             (
                 "corner_radius",
                 AttributeType::CornerRadius(self.style.corner_radius),
@@ -125,7 +124,7 @@ impl NodeState {
             ),
             (
                 "line_height",
-                AttributeType::Measure(self.font_style.line_height),
+                AttributeType::OptionalMeasure(self.font_style.line_height),
             ),
             (
                 "text_align",
@@ -145,6 +144,11 @@ impl NodeState {
             attributes.push(("shadow", AttributeType::Shadow(shadow)));
         }
 
+        let borders = &self.style.borders;
+        for border in borders {
+            attributes.push(("border", AttributeType::Border(border)));
+        }
+
         let text_shadows = &self.font_style.text_shadows;
 
         for text_shadow in text_shadows {
@@ -160,6 +164,7 @@ pub enum AttributeType<'a> {
     Gradient(Fill),
     Size(&'a Size),
     Measure(f32),
+    OptionalMeasure(Option<f32>),
     Measures(Gaps),
     CornerRadius(CornerRadius),
     Direction(&'a DirectionMode),

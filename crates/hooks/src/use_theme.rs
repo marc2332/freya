@@ -66,12 +66,15 @@ pub fn use_get_theme() -> Theme {
 #[macro_export]
 macro_rules! use_applied_theme {
     ($theme_prop:expr, $theme_name:ident) => {{
-        let mut theme = ::freya_hooks::use_get_theme().$theme_name;
+        let mut theme = ::freya_hooks::use_get_theme();
+        let mut requested_theme = theme.$theme_name;
 
         if let Some(theme_override) = $theme_prop {
-            theme.apply_optional(theme_override);
+            requested_theme.apply_optional(theme_override);
         }
 
-        theme
+        requested_theme.apply_colors(&theme.colors);
+
+        requested_theme
     }};
 }

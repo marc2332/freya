@@ -1,4 +1,7 @@
-use std::fmt;
+use std::{
+    f32::consts::FRAC_PI_2,
+    fmt,
+};
 
 use freya_engine::prelude::*;
 use torin::{
@@ -49,20 +52,26 @@ impl LinearGradient {
         let colors: Vec<Color> = self.stops.iter().map(|stop| stop.color).collect();
         let offsets: Vec<f32> = self.stops.iter().map(|stop| stop.offset).collect();
 
-        let center = bounds.center();
+        let (dy, dx) = (self.angle.to_radians() + FRAC_PI_2).sin_cos();
+        let farthest_corner = Point::new(
+            if dx > 0.0 { bounds.width() } else { 0.0 },
+            if dy > 0.0 { bounds.height() } else { 0.0 },
+        );
+        let delta = farthest_corner - Point::new(bounds.width(), bounds.height()) / 2.0;
+        let u = delta.x * dy - delta.y * dx;
+        let endpoint = farthest_corner + Point::new(-u * dy, u * dx);
 
-        let matrix = Matrix::rotate_deg_pivot(self.angle, (center.x, center.y));
-
+        let origin = Point::new(bounds.min_x(), bounds.min_y());
         Shader::linear_gradient(
             (
-                (bounds.min_x(), bounds.min_y()),
-                (bounds.max_x(), bounds.max_y()),
+                Point::new(bounds.width(), bounds.height()) - endpoint + origin,
+                endpoint + origin,
             ),
             GradientShaderColors::Colors(&colors[..]),
             Some(&offsets[..]),
             TileMode::Clamp,
             None,
-            Some(&matrix),
+            None,
         )
     }
 }

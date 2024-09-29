@@ -1,18 +1,17 @@
-use std::{
-    num::NonZeroU32,
-    path::PathBuf,
-};
+use std::path::PathBuf;
 
 use dioxus_core::VirtualDom;
-use freya_common::EventMessage;
 use freya_core::{
-    accessibility::AccessibilityFocusDirection,
+    accessibility::AccessibilityFocusStrategy,
     dom::SafeDOM,
     events::{
         EventName,
         PlatformEvent,
     },
-    prelude::NavigationMode,
+    prelude::{
+        EventMessage,
+        NavigationMode,
+    },
 };
 use freya_elements::events::{
     map_winit_key,
@@ -20,10 +19,6 @@ use freya_elements::events::{
     map_winit_physical_key,
     Code,
     Key,
-};
-use glutin::prelude::{
-    GlSurface,
-    PossiblyCurrentGlContext,
 };
 use torin::geometry::CursorPoint;
 use winit::{
@@ -49,7 +44,6 @@ use winit::{
 use crate::{
     devtools::Devtools,
     window_state::{
-        create_surface,
         CreatedState,
         NotCreatedState,
         WindowState,
@@ -69,6 +63,7 @@ pub struct DesktopRenderer<'a, State: Clone + 'static> {
     pub(crate) mouse_state: ElementState,
     pub(crate) modifiers_state: ModifiersState,
     pub(crate) dropped_file_path: Option<PathBuf>,
+    pub(crate) custom_scale_factor: f64,
 }
 
 impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
@@ -126,6 +121,7 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
             mouse_state: ElementState::Released,
             modifiers_state: ModifiersState::default(),
             dropped_file_path: None,
+            custom_scale_factor: 0.,
         }
     }
 
@@ -141,7 +137,9 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
     /// Get the current scale factor of the Window
     fn scale_factor(&self) -> f64 {
         match &self.state {
-            WindowState::Created(CreatedState { window, .. }) => window.scale_factor(),
+            WindowState::Created(CreatedState { window, .. }) => {
+                window.scale_factor() + self.custom_scale_factor
+            }
             _ => 0.0,
         }
     }
@@ -193,6 +191,16 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             EventMessage::RequestRerender => {
                 window.request_redraw();
             }
+            EventMessage::RequestFullRerender => {
+                app.resize(window);
+                window.request_redraw();
+            }
+            EventMessage::InvalidateArea(mut area) => {
+                let fdom = app.sdom.get();
+                area.size *= scale_factor as f32;
+                let mut compositor_dirty_area = fdom.compositor_dirty_area();
+                compositor_dirty_area.unite_or_insert(&area)
+            }
             EventMessage::RemeasureTextGroup(text_id) => {
                 app.measure_text_group(text_id, scale_factor);
             }
@@ -202,22 +210,20 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 }
             }
             EventMessage::Accessibility(accesskit_winit::WindowEvent::InitialTreeRequested) => {
-                app.accessibility.process_initial_tree();
+                app.init_accessibility_on_next_render = true;
             }
             EventMessage::SetCursorIcon(icon) => window.set_cursor(icon),
             EventMessage::FocusPrevAccessibilityNode => {
                 app.set_navigation_mode(NavigationMode::Keyboard);
-                app.focus_next_node(AccessibilityFocusDirection::Backward, window);
+                app.focus_next_node(AccessibilityFocusStrategy::Backward, window);
             }
             EventMessage::FocusNextAccessibilityNode => {
                 app.set_navigation_mode(NavigationMode::Keyboard);
-                app.focus_next_node(AccessibilityFocusDirection::Forward, window);
+                app.focus_next_node(AccessibilityFocusStrategy::Forward, window);
             }
             EventMessage::WithWindow(use_window) => (use_window)(window),
-            EventMessage::QueueFocusAccessibilityNode(node_id) => {
-                app.queue_focus_node(node_id);
-            }
             EventMessage::ExitApp => event_loop.exit(),
+            EventMessage::PlatformEvent(platform_event) => self.send_event(platform_event),
             ev => {
                 if let EventMessage::UpdateTemplate(template) = ev {
                     app.vdom_replace_template(template);
@@ -240,17 +246,13 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
     ) {
         let scale_factor = self.scale_factor();
         let CreatedState {
-            gr_context,
             surface,
-            gl_surface,
-            gl_context,
+            dirty_surface,
             window,
-            app,
             window_config,
-            fb_info,
-            num_samples,
-            stencil_size,
+            app,
             is_window_focused,
+            graphics_driver,
             ..
         } = self.state.created_state();
         app.accessibility
@@ -283,12 +285,26 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
 
                     app.measure_layout_on_next_render = false;
                 }
-                surface.canvas().clear(window_config.background);
-                app.render(&self.hovered_node, surface.canvas(), window);
+
+                if app.init_accessibility_on_next_render {
+                    app.init_accessibility();
+                    app.init_accessibility_on_next_render = false;
+                }
+
+                graphics_driver.make_current();
+
+                app.render(
+                    &self.hovered_node,
+                    window_config.background,
+                    surface,
+                    dirty_surface,
+                    window,
+                    scale_factor,
+                );
+
                 app.event_loop_tick();
                 window.pre_present_notify();
-                gr_context.flush_and_submit();
-                gl_surface.swap_buffers(gl_context).unwrap();
+                graphics_driver.flush_and_submit();
             }
             WindowEvent::MouseInput { state, button, .. } => {
                 app.set_navigation_mode(NavigationMode::NotKeyboard);
@@ -300,7 +316,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     ElementState::Released => match button {
                         MouseButton::Middle => EventName::MiddleClick,
                         MouseButton::Right => EventName::RightClick,
-                        MouseButton::Left => EventName::Click,
+                        MouseButton::Left => EventName::MouseUp,
                         _ => EventName::PointerUp,
                     },
                 };
@@ -347,6 +363,37 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     return;
                 }
 
+                #[cfg(not(feature = "disable-zoom-shortcuts"))]
+                {
+                    let is_control_pressed = {
+                        if cfg!(target_os = "macos") {
+                            self.modifiers_state.super_key()
+                        } else {
+                            self.modifiers_state.control_key()
+                        }
+                    };
+
+                    if is_control_pressed && state == ElementState::Pressed {
+                        let ch = logical_key.to_text();
+                        let render_with_new_scale_factor = if ch == Some("+") {
+                            self.custom_scale_factor =
+                                (self.custom_scale_factor + 0.10).clamp(-1.0, 5.0);
+                            true
+                        } else if ch == Some("-") {
+                            self.custom_scale_factor =
+                                (self.custom_scale_factor - 0.10).clamp(-1.0, 5.0);
+                            true
+                        } else {
+                            false
+                        };
+
+                        if render_with_new_scale_factor {
+                            app.resize(window);
+                            window.request_redraw();
+                        }
+                    }
+                }
+
                 let name = match state {
                     ElementState::Pressed => EventName::KeyDown,
                     ElementState::Released => EventName::KeyUp,
@@ -363,7 +410,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     self.cursor_pos = CursorPoint::new(-1.0, -1.0);
 
                     self.send_event(PlatformEvent::Mouse {
-                        name: EventName::MouseOver,
+                        name: EventName::MouseMove,
                         cursor: self.cursor_pos,
                         button: None,
                     });
@@ -373,7 +420,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 self.cursor_pos = CursorPoint::from((position.x, position.y));
 
                 self.send_event(PlatformEvent::Mouse {
-                    name: EventName::MouseOver,
+                    name: EventName::MouseMove,
                     cursor: self.cursor_pos,
                     button: None,
                 });
@@ -411,14 +458,10 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 });
             }
             WindowEvent::Resized(size) => {
-                *surface =
-                    create_surface(window, *fb_info, gr_context, *num_samples, *stencil_size);
+                let (new_surface, new_dirty_surface) = graphics_driver.resize(size);
 
-                gl_surface.resize(
-                    gl_context,
-                    NonZeroU32::new(size.width.max(1)).unwrap(),
-                    NonZeroU32::new(size.height.max(1)).unwrap(),
-                );
+                *surface = new_surface;
+                *dirty_surface = new_dirty_surface;
 
                 window.request_redraw();
 
@@ -450,21 +493,5 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
 
     fn exiting(&mut self, _event_loop: &winit::event_loop::ActiveEventLoop) {
         self.run_on_exit();
-    }
-}
-
-impl<T: Clone> Drop for DesktopRenderer<'_, T> {
-    fn drop(&mut self) {
-        if let WindowState::Created(CreatedState {
-            gl_context,
-            gl_surface,
-            gr_context,
-            ..
-        }) = &mut self.state
-        {
-            if !gl_context.is_current() && gl_context.make_current(gl_surface).is_err() {
-                gr_context.abandon();
-            }
-        }
     }
 }

@@ -16,19 +16,15 @@ fn app() -> Element {
         }),
         body: rsx!(
             ScrollView {
-                theme: theme_with!(ScrollViewTheme {
-                    height: "calc(100% - 75 - 75)".into(),
-                }),
+                height: "calc(100% - 75 - 75)",
                 show_scrollbar: true,
                 Card {
                     title: "Card 0",
                     content: "Content 0",
                 }
                 ScrollView {
-                    theme: theme_with!(ScrollViewTheme {
-                        height: "200".into(),
-                        padding: "0 20".into(),
-                    }),
+                    height: "200",
+                    padding: "0 20",
                     Card {
                         title: "Card 1",
                         content: "Content 1",
@@ -183,7 +179,7 @@ fn Area() -> Element {
             corner_radius: "12",
             main_align: "center",
             cross_align: "center",
-            onmouseover: cursor_moved,
+            onmousemove: cursor_moved,
             onclick: cursor_clicked,
             label {
                 "Mouse is at [x: {cursor_pos_over.read().0}, y: {cursor_pos_over.read().1}] ",

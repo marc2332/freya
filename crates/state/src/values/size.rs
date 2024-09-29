@@ -63,6 +63,8 @@ pub fn parse_calc(parser: &mut Parser) -> Result<Vec<DynamicCalculation>, ParseE
 
             calcs.push(if parser.try_consume(&Token::Percent) {
                 DynamicCalculation::Percentage(value)
+            } else if parser.try_consume(&Token::ident("v")) {
+                DynamicCalculation::Pixels(value)
             } else {
                 DynamicCalculation::Pixels(value)
             });

@@ -1,8 +1,10 @@
 use std::fmt;
 
+use freya_engine::prelude::Color;
 use torin::scaled::Scaled;
 
 use crate::{
+    ExtSplit,
     Fill,
     Parse,
     ParseError,
@@ -10,19 +12,49 @@ use crate::{
     Token,
 };
 
-#[derive(Default, Clone, Copy, Debug, PartialEq)]
-pub enum BorderStyle {
-    #[default]
-    None,
-    Solid,
-}
-
 #[derive(Default, Clone, Debug, PartialEq)]
 pub struct Border {
     pub fill: Fill,
-    pub style: BorderStyle,
-    pub width: f32,
+    pub width: BorderWidth,
     pub alignment: BorderAlignment,
+}
+
+impl Border {
+    #[inline]
+    pub fn is_visible(&self) -> bool {
+        !(self.width.top == 0.0
+            && self.width.left == 0.0
+            && self.width.bottom == 0.0
+            && self.width.right == 0.0)
+            && self.fill != Fill::Color(Color::TRANSPARENT)
+    }
+}
+
+#[derive(Default, Clone, Copy, Debug, PartialEq)]
+pub struct BorderWidth {
+    pub top: f32,
+    pub right: f32,
+    pub bottom: f32,
+    pub left: f32,
+}
+
+impl Scaled for BorderWidth {
+    fn scale(&mut self, scale_factor: f32) {
+        self.top *= scale_factor;
+        self.left *= scale_factor;
+        self.bottom *= scale_factor;
+        self.right *= scale_factor;
+    }
+}
+
+impl fmt::Display for BorderWidth {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{} {} {} {}",
+            self.top, self.right, self.bottom, self.left,
+        )
+    }
 }
 
 #[derive(Default, Clone, Copy, Debug, PartialEq)]
@@ -56,15 +88,6 @@ impl fmt::Display for BorderAlignment {
     }
 }
 
-impl fmt::Display for BorderStyle {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(match self {
-            BorderStyle::Solid => "solid",
-            BorderStyle::None => "none",
-        })
-    }
-}
-
 impl Parse for Border {
     fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
         if parser.try_consume(&Token::ident("none")) {
@@ -73,21 +96,20 @@ impl Parse for Border {
 
         Ok(Border {
             width: parser.consume_map(Token::try_as_f32)?,
-            style: parser.consume_map(|value| {
-                value.try_as_str().and_then(|value| match value {
-                    "none" => Some(BorderStyle::None),
-                    "solid" => Some(BorderStyle::Solid),
-                    _ => None,
-                })
-            })?,
             fill: Fill::from_parser(parser)?,
             alignment: BorderAlignment::default(),
         })
     }
 }
 
+impl fmt::Display for Border {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} {} {}", self.width, self.alignment, self.fill,)
+    }
+}
+
 impl Scaled for Border {
     fn scale(&mut self, scale_factor: f32) {
-        self.width *= scale_factor;
+        self.width.scale(scale_factor);
     }
 }
