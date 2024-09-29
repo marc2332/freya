@@ -21,15 +21,15 @@ pub struct ParseError(pub String);
 impl ParseError {
     pub fn expected_token(expected: &Token, found: Option<&Token>) -> Self {
         if let Some(found) = found {
-            Self(format!("expected {expected:?}, found {found:?}"))
+            Self(format!("expected {expected}, found {found}"))
         } else {
-            Self(format!("expected {expected:?}, found nothing"))
+            Self(format!("expected {expected}, found nothing"))
         }
     }
 
     pub fn unexpected_token(value: Option<&Token>) -> Self {
         if let Some(value) = value {
-            Self(format!("unexpected {value:?}"))
+            Self(format!("unexpected {value}"))
         } else {
             Self("unexpected nothing".into())
         }

@@ -29,8 +29,6 @@ impl Parse for Color {
             let value = parser.consume_if(Token::is_ident).map(Token::into_string)?;
 
             match value.as_str() {
-                "rgb" => parse_rgb(parser),
-                "hsl" => parse_hsl(parser),
                 "red" => Ok(Color::RED),
                 "green" => Ok(Color::GREEN),
                 "blue" => Ok(Color::BLUE),
@@ -42,7 +40,12 @@ impl Parse for Color {
                 "transparent" | "none" => Ok(Color::TRANSPARENT),
                 value => Err(ParseError::invalid_ident(
                     value,
-                    &["built-in color name", "color functions", "none"],
+                    &[
+                        "hex color",
+                        "built-in color name",
+                        "color functions",
+                        "none",
+                    ],
                 )),
             }
         }
@@ -95,7 +98,11 @@ fn parse_rgb(parser: &mut Parser) -> Result<Color, ParseError> {
         let blue = parser.consume_map(Token::try_as_u8)?;
 
         Ok(if parser.try_consume(&Token::Comma) {
-            let alpha = parser.consume_map(Token::try_as_u8)?;
+            let alpha = if let Ok(value) = parser.consume_if(Token::is_f32).map(Token::into_f32) {
+                (value * 255.0).round() as u8
+            } else {
+                parser.consume_map(Token::try_as_u8)?
+            };
 
             Color::from_argb(alpha, red, green, blue)
         } else {

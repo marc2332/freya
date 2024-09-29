@@ -1,4 +1,7 @@
-use std::iter;
+use std::{
+    fmt,
+    iter,
+};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
@@ -102,6 +105,25 @@ impl Token {
             u8::try_from(*value).ok()
         } else {
             None
+        }
+    }
+}
+
+impl fmt::Display for Token {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Token::Ident(value) => f.write_str(value),
+            Token::Float(value) => write!(f, "float {value}"),
+            Token::Integer(value) => write!(f, "integer {value}"),
+            Token::ParenOpen => write!(f, "\"(\""),
+            Token::ParenClose => write!(f, "\")\""),
+            Token::Minus => write!(f, "\"-\""),
+            Token::Plus => write!(f, "\"+\""),
+            Token::Slash => write!(f, "\"/\""),
+            Token::Star => write!(f, "\"*\""),
+            Token::Pound => write!(f, "\"#\""),
+            Token::Percent => write!(f, "\"%\""),
+            Token::Comma => write!(f, "\",\""),
         }
     }
 }
