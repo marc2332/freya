@@ -531,13 +531,16 @@ fn app() -> Element {
     let mut r = use_signal(|| 100.0);
     let mut g: Signal<f64> = use_signal(|| 0.0);
     let mut b = use_signal(|| 0.0);
+    let platform = use_platform();
+    let (reference, size) = use_node_signal();
 
     let triangle_renderer = use_hook(|| Arc::new(Mutex::new(TriangleRenderer::new())));
 
     let canvas = use_canvas(move || {
         let color = (*r.read(), *g.read(), *b.read());
         let triangle_renderer = triangle_renderer.clone();
-
+        platform.invalidate_drawing_area(size.read().area);
+        platform.request_animation_frame();
         Box::new(move |ctx| {
             ctx.canvas.translate((ctx.area.min_x(), ctx.area.min_y()));
             let mut renderer_guard = triangle_renderer.lock().unwrap();
@@ -557,21 +560,22 @@ fn app() -> Element {
 
     rsx!(
         rect {
+            reference,
             canvas_reference: canvas.attribute(),
             width: "100%",
             height: "100%",
             Slider {
-                width: "300",
+                size: "300",
                 value: *r.read(),
                 onmoved: move |value: f64| { r.set(value) }
             }
             Slider {
-                width: "300",
+                size: "300",
                 value: *g.read(),
                 onmoved: move |value: f64| { g.set(value) }
             }
             Slider {
-                width: "300",
+                size: "300",
                 value: *b.read(),
                 onmoved: move |value: f64| { b.set(value) }
             }

@@ -141,9 +141,9 @@ pub fn Switch(props: SwitchProps) -> Element {
 
     let border = if focus.is_selected() {
         if props.enabled {
-            format!("2 solid {}", theme.enabled_focus_border_fill)
+            format!("2 inner {}", theme.enabled_focus_border_fill)
         } else {
-            format!("2 solid {}", theme.focus_border_fill)
+            format!("2 inner {}", theme.focus_border_fill)
         }
     } else {
         "none".to_string()

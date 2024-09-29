@@ -31,8 +31,7 @@ fn app() -> Element {
                 height: "100%",
                 width: "100%",
                 background: "red",
-                border: "7 solid white",
-                border_align: "outer"
+                border: "7 outer white",
             }
         }
     )

@@ -38,6 +38,8 @@ pub struct WindowConfig {
     pub transparent: bool,
     /// Background color of the Window.
     pub background: Color,
+    /// Window visibility. Default to `true`.
+    pub visible: bool,
     /// The Icon of the Window.
     pub icon: Option<Icon>,
     /// Setup callback.
@@ -58,6 +60,7 @@ impl Default for WindowConfig {
             title: "Freya app",
             transparent: false,
             background: Color::WHITE,
+            visible: true,
             icon: None,
             on_setup: None,
             on_exit: None,
@@ -156,6 +159,12 @@ impl<'a, T: Clone> LaunchConfig<'a, T> {
     /// Specify the Window background color.
     pub fn with_background(mut self, background: &str) -> Self {
         self.window_config.background = Color::parse(background).unwrap_or(Color::WHITE);
+        self
+    }
+
+    /// Specify the Window visibility at launch.
+    pub fn with_visible(mut self, visible: bool) -> Self {
+        self.window_config.visible = visible;
         self
     }
 

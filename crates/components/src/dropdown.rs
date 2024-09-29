@@ -274,7 +274,7 @@ where
                 color: "{font_theme.color}",
                 corner_radius: "8",
                 padding: "8 16",
-                border: "1 solid {border_fill}",
+                border: "1 inner {border_fill}",
                 shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
                 direction: "horizontal",
                 main_align: "center",
@@ -299,9 +299,9 @@ where
                         rect {
                             onglobalclick,
                             onglobalkeydown,
-                            layer: "-99",
+                            layer: "-1000",
                             margin: "{margin}",
-                            border: "1 solid {border_fill}",
+                            border: "1 inner {border_fill}",
                             overflow: "clip",
                             corner_radius: "8",
                             background: "{dropdown_background}",
@@ -379,7 +379,7 @@ mod test {
         utils.click_cursor((15., 15.)).await;
 
         // Click on the second option
-        utils.click_cursor((45., 100.)).await;
+        utils.click_cursor((45., 90.)).await;
         utils.wait_for_update().await;
         utils.wait_for_update().await;
 

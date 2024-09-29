@@ -10,6 +10,8 @@
 
 **Freya** is a cross-paltform GUI library for Rust powered by 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/). 
 
+**It does not use any web tech**, check the [Differences with Dioxus](https://book.freyaui.dev/differences_with_dioxus.html). 
+
 ⚠️ It's currently work in progress, but you can already play with it! You can join the [Discord](https://discord.gg/sYejxCdewG) server if you have any question or issue. 
 
 <br/>
@@ -23,7 +25,7 @@
 fn app() -> Element {
     let mut count = use_signal(|| 0);
 
-    render!(
+    rsx!(
         rect {
             height: "50%",
             width: "100%",

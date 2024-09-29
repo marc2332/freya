@@ -101,11 +101,12 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
         let (graphics_driver, window, mut surface) =
             GraphicsDriver::new(event_loop, window_attributes, &config);
 
+        if config.window_config.visible {
+            window.set_visible(true);
+        }
+
         // Allow IME
         window.set_ime_allowed(true);
-
-        // Mak the window visible once built
-        window.set_visible(true);
 
         let mut dirty_surface = surface
             .new_surface_with_dimensions(window.inner_size().to_skia())
