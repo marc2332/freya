@@ -109,6 +109,30 @@ impl Parser {
 // FromStr but we own it so we can impl it on torin and skia_safe types.
 pub trait Parse: Sized {
     fn from_parser(parser: &mut Parser) -> Result<Self, ParseError>;
+    fn from_parser_multiple(
+        parser: &mut Parser,
+        separator: &Token,
+    ) -> Result<Vec<Self>, ParseError> {
+        let mut values = vec![Self::from_parser(parser)?];
+
+        while parser.try_consume(separator) {
+            values.push(Self::from_parser(parser)?);
+        }
+
+        Ok(values)
+    }
+
+    fn parse_with_separator(value: &str, separator: &Token) -> Result<Vec<Self>, ParseError> {
+        let mut parser = Parser::new(Lexer::parse(value));
+
+        let values = Self::from_parser_multiple(&mut parser, separator)?;
+
+        if parser.tokens.len() > 0 {
+            Err(ParseError)
+        } else {
+            Ok(values)
+        }
+    }
 
     fn parse(value: &str) -> Result<Self, ParseError> {
         let mut parser = Parser::new(Lexer::parse(value));
@@ -121,22 +145,30 @@ pub trait Parse: Sized {
             value
         }
     }
+}
 
-    fn parse_with_separator(value: &str, separator: &Token) -> Result<Vec<Self>, ParseError> {
-        let mut parser = Parser::new(Lexer::parse(value));
+pub fn parse_angle(parser: &mut Parser) -> Result<f32, ParseError> {
+    let value = parser.consume_if(Token::is_i64).map(Token::into_f32)?;
 
-        let mut values = vec![Self::from_parser(&mut parser)?];
+    parser.consume(&Token::ident("deg"))?;
 
-        while parser.try_consume(separator) {
-            values.push(Self::from_parser(&mut parser)?);
-        }
+    Ok(value)
+}
 
-        if parser.tokens.len() > 0 {
-            Err(ParseError)
-        } else {
-            Ok(values)
-        }
-    }
+pub fn parse_func<T: AsRef<str>, F: FnOnce(&mut Parser) -> Result<O, ParseError>, O>(
+    parser: &mut Parser,
+    name: T,
+    body: F,
+) -> Result<O, ParseError> {
+    parser.consume(&Token::ident(name.as_ref()))?;
+
+    parser.consume(&Token::ParenOpen)?;
+
+    let value = body(parser)?;
+
+    parser.consume(&Token::ParenClose)?;
+
+    Ok(value)
 }
 
 pub trait ParseAttribute: Sized {

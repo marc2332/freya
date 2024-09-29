@@ -10,6 +10,8 @@ use torin::{
 };
 
 use crate::{
+    parse_angle,
+    parse_func,
     DisplayColor,
     Parse,
     ParseError,
@@ -78,38 +80,19 @@ impl LinearGradient {
 
 impl Parse for LinearGradient {
     fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
-        parser.consume(&Token::ident("linear-gradient"))?;
-        parser.consume(&Token::ParenOpen)?;
+        parse_func(parser, "linear-gradient", |parser| {
+            let mut gradient = Self::default();
 
-        let mut gradient = LinearGradient {
-            angle: if let Ok(angle) = parser.consume_map(Token::try_as_i64).and_then(|value| {
-                if (0..=360).contains(&value) {
-                    Ok(value as f32)
-                } else {
-                    Err(ParseError)
-                }
-            }) {
-                parser.consume(&Token::ident("deg"))?;
+            if let Ok(angle) = parse_angle(parser) {
                 parser.consume(&Token::Comma)?;
 
-                angle
-            } else {
-                0.0
-            },
-            ..Default::default()
-        };
-
-        while !parser.check(&Token::ParenClose) {
-            if !gradient.stops.is_empty() {
-                parser.consume(&Token::Comma)?;
+                gradient.angle = angle.to_radians();
             }
 
-            gradient.stops.push(GradientStop::from_parser(parser)?);
-        }
+            gradient.stops = GradientStop::from_parser_multiple(parser, &Token::Comma)?;
 
-        parser.consume(&Token::ParenClose)?;
-
-        Ok(gradient)
+            Ok(gradient)
+        })
     }
 }
 
@@ -154,22 +137,9 @@ impl RadialGradient {
 
 impl Parse for RadialGradient {
     fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
-        parser.consume(&Token::ident("radial-gradient"))?;
-        parser.consume(&Token::ParenOpen)?;
-
-        let mut gradient = RadialGradient::default();
-
-        while !parser.check(&Token::ParenClose) {
-            if !gradient.stops.is_empty() {
-                parser.consume(&Token::Comma)?;
-            }
-
-            gradient.stops.push(GradientStop::from_parser(parser)?);
-        }
-
-        parser.consume(&Token::ParenClose)?;
-
-        Ok(gradient)
+        parse_func(parser, "radial-gradient", |parser| {
+            GradientStop::from_parser_multiple(parser, &Token::Comma).map(|stops| Self { stops })
+        })
     }
 }
 
@@ -218,71 +188,33 @@ impl ConicGradient {
 
 impl Parse for ConicGradient {
     fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
-        parser.consume(&Token::ident("conic-gradient"))?;
-        parser.consume(&Token::ParenOpen)?;
+        parse_func(parser, "conic-gradient", |parser| {
+            let mut gradient = Self::default();
 
-        let mut gradient = ConicGradient {
-            angle: if let Ok(angle) = parser.consume_map(Token::try_as_i64).and_then(|value| {
-                if (0..=360).contains(&value) {
-                    Ok(value as f32)
-                } else {
-                    Err(ParseError)
-                }
-            }) {
-                parser.consume(&Token::ident("deg"))?;
+            if let Ok(angle) = parse_angle(parser) {
+                gradient.angle = Some(angle.to_radians());
+
                 parser.consume(&Token::Comma)?;
+            }
 
-                Some(angle)
-            } else {
-                None
-            },
-            angles: if parser.try_consume(&Token::ident("from")) {
-                let start = parser.consume_map(Token::try_as_i64).and_then(|value| {
-                    if (0..=360).contains(&value) {
-                        Ok(value as f32)
-                    } else {
-                        Err(ParseError)
-                    }
-                })?;
-
-                parser.consume(&Token::ident("deg"))?;
+            if parser.try_consume(&Token::ident("from")) {
+                let start = parse_angle(parser)?;
 
                 let end = if parser.try_consume(&Token::ident("to")) {
-                    let result = parser.consume_map(Token::try_as_i64).and_then(|value| {
-                        if (0..=360).contains(&value) {
-                            Ok(value as f32)
-                        } else {
-                            Err(ParseError)
-                        }
-                    })?;
-
-                    parser.consume(&Token::ident("deg"))?;
-
-                    result
+                    parse_angle(parser)?
                 } else {
                     360.0
                 };
 
-                parser.consume(&Token::Comma)?;
+                gradient.angles = Some((start, end));
 
-                Some((start, end))
-            } else {
-                None
-            },
-            ..Default::default()
-        };
-
-        while !parser.check(&Token::ParenClose) {
-            if !gradient.stops.is_empty() {
                 parser.consume(&Token::Comma)?;
             }
 
-            gradient.stops.push(GradientStop::from_parser(parser)?);
-        }
+            gradient.stops = GradientStop::from_parser_multiple(parser, &Token::Comma)?;
 
-        parser.consume(&Token::ParenClose)?;
-
-        Ok(gradient)
+            Ok(gradient)
+        })
     }
 }
 

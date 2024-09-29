@@ -201,7 +201,7 @@ impl CornerRadius {
 }
 
 impl Parse for CornerRadius {
-    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
+    fn parse(parser: &mut Parser) -> Result<Self, ParseError> {
         let mut radius = CornerRadius::default();
 
         match (

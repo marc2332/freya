@@ -4,7 +4,6 @@ use freya_engine::prelude::Color;
 use torin::scaled::Scaled;
 
 use crate::{
-    ExtSplit,
     Fill,
     Parse,
     ParseError,
@@ -36,6 +35,45 @@ pub struct BorderWidth {
     pub right: f32,
     pub bottom: f32,
     pub left: f32,
+}
+
+impl Parse for BorderWidth {
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
+        Ok(
+            match (
+                parser.consume_map(Token::try_as_f32)?,
+                parser.consume_map(Token::try_as_f32).ok(),
+                parser.consume_map(Token::try_as_f32).ok(),
+                parser.consume_map(Token::try_as_f32).ok(),
+            ) {
+                (top, Some(right), Some(bottom), Some(left)) => Self {
+                    top,
+                    right,
+                    bottom,
+                    left,
+                },
+                (top, Some(horizontal), Some(bottom), None) => Self {
+                    top,
+                    right: horizontal,
+                    bottom,
+                    left: horizontal,
+                },
+                (vertical, Some(horizontal), None, None) => Self {
+                    top: vertical,
+                    right: horizontal,
+                    bottom: vertical,
+                    left: horizontal,
+                },
+                (all, None, None, None) => Self {
+                    top: all,
+                    right: all,
+                    bottom: all,
+                    left: all,
+                },
+                _ => return Err(ParseError),
+            },
+        )
+    }
 }
 
 impl Scaled for BorderWidth {
@@ -95,7 +133,7 @@ impl Parse for Border {
         }
 
         Ok(Border {
-            width: parser.consume_map(Token::try_as_f32)?,
+            width: BorderWidth::from_parser(parser)?,
             fill: Fill::from_parser(parser)?,
             alignment: BorderAlignment::default(),
         })
@@ -104,7 +142,7 @@ impl Parse for Border {
 
 impl fmt::Display for Border {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} {} {}", self.width, self.alignment, self.fill,)
+        write!(f, "{} {} {}", self.width, self.alignment, self.fill)
     }
 }
 

@@ -1,6 +1,7 @@
 use crate::{
     Parse,
     ParseError,
+    Parser,
 };
 
 #[derive(Clone, Debug, PartialEq, Default, Eq)]
@@ -22,6 +23,10 @@ impl Focusable {
 }
 
 impl Parse for Focusable {
+    fn from_parser(_: &mut Parser) -> Result<Self, ParseError> {
+        unimplemented!()
+    }
+
     fn parse(value: &str) -> Result<Self, ParseError> {
         Ok(match value {
             "true" => Self::Enabled,
