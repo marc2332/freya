@@ -221,7 +221,7 @@ impl Parse for CornerRadius {
                 }
             }
             // By Top and Bottom
-            (top, Some(bottom), ..) => {
+            (top, Some(bottom), None, None) => {
                 // Top
                 radius.fill_top(top);
 
@@ -229,9 +229,10 @@ impl Parse for CornerRadius {
                 radius.fill_bottom(bottom)
             }
             // Same in all corners
-            (value, ..) => {
+            (value, None, None, None) => {
                 radius.fill_all(value);
             }
+            _ => return Err(ParseError("invalid count of numbers (must be 1, 2 or 4)".into()))
         }
 
         Ok(radius)
