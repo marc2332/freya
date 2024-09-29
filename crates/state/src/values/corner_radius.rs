@@ -210,18 +210,6 @@ impl Parse for CornerRadius {
             parser.consume_map(Token::try_as_f32).ok(),
             parser.consume_map(Token::try_as_f32).ok(),
         ) {
-            // Same in all corners
-            (value, None, None, None) => {
-                radius.fill_all(value);
-            }
-            // By Top and Bottom
-            (top, Some(bottom), None, None) => {
-                // Top
-                radius.fill_top(top);
-
-                // Bottom
-                radius.fill_bottom(bottom)
-            }
             // Each corner
             (top_left, Some(top_right), Some(bottom_left), Some(bottom_right)) => {
                 radius = CornerRadius {
@@ -232,7 +220,18 @@ impl Parse for CornerRadius {
                     ..Default::default()
                 }
             }
-            _ => return Err(ParseError),
+            // By Top and Bottom
+            (top, Some(bottom), ..) => {
+                // Top
+                radius.fill_top(top);
+
+                // Bottom
+                radius.fill_bottom(bottom)
+            }
+            // Same in all corners
+            (value, ..) => {
+                radius.fill_all(value);
+            }
         }
 
         Ok(radius)

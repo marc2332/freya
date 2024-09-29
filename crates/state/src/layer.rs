@@ -39,7 +39,9 @@ impl ParseAttribute for LayerState {
         match attr.attribute {
             AttributeName::Layer => {
                 if let Some(value) = attr.value.as_text() {
-                    let layer = value.parse::<i16>().map_err(|_| ParseError)?;
+                    let layer = value
+                        .parse::<i16>()
+                        .map_err(|err| ParseError(err.to_string()))?;
                     self.layer -= layer;
                     self.layer_for_children += layer;
                 }

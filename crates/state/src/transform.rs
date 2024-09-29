@@ -41,18 +41,17 @@ impl ParseAttribute for TransformState {
         match attr.attribute {
             AttributeName::Rotate => {
                 if let Some(value) = attr.value.as_text() {
-                    if value.ends_with("deg") {
-                        let rotation = value
-                            .replacen("deg", "", 1)
-                            .parse::<f32>()
-                            .map_err(|_| ParseError)?;
-                        self.rotations.push((self.node_id, rotation));
-                    }
+                    let mut parser = crate::Parser::new(crate::Lexer::parse(value));
+
+                    self.rotations
+                        .push((self.node_id, crate::parse_angle(&mut parser)?));
                 }
             }
             AttributeName::Opacity => {
                 if let Some(value) = attr.value.as_text() {
-                    let opacity = value.parse::<f32>().map_err(|_| ParseError)?;
+                    let opacity = value
+                        .parse::<f32>()
+                        .map_err(|err| ParseError(err.to_string()))?;
                     self.opacities.push(opacity)
                 }
             }

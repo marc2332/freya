@@ -23,7 +23,10 @@ impl Parse for Size {
                 "auto" => Ok(Self::Inner),
                 "fill" => Ok(Self::Fill),
                 "fill-min" => Ok(Self::FillMinimum),
-                _ => Err(ParseError),
+                value => Err(ParseError::invalid_ident(
+                    value,
+                    &["auto", "fill", "fill-min"],
+                )),
             }
         } else {
             let value = parser.consume_map(Token::try_as_f32)?;

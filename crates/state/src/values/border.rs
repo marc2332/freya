@@ -52,25 +52,24 @@ impl Parse for BorderWidth {
                     bottom,
                     left,
                 },
-                (top, Some(horizontal), Some(bottom), None) => Self {
+                (top, Some(horizontal), Some(bottom), _) => Self {
                     top,
                     right: horizontal,
                     bottom,
                     left: horizontal,
                 },
-                (vertical, Some(horizontal), None, None) => Self {
+                (vertical, Some(horizontal), ..) => Self {
                     top: vertical,
                     right: horizontal,
                     bottom: vertical,
                     left: horizontal,
                 },
-                (all, None, None, None) => Self {
+                (all, ..) => Self {
                     top: all,
                     right: all,
                     bottom: all,
                     left: all,
                 },
-                _ => return Err(ParseError),
             },
         )
     }

@@ -5,6 +5,7 @@ use freya_engine::prelude::*;
 use crate::{
     parse_angle,
     parse_func,
+    parse_range,
     Parse,
     ParseError,
     Parser,
@@ -39,7 +40,10 @@ impl Parse for Color {
                 "white" => Ok(Color::WHITE),
                 "orange" => Ok(Color::from_rgb(255, 165, 0)),
                 "transparent" | "none" => Ok(Color::TRANSPARENT),
-                _ => Err(ParseError),
+                value => Err(ParseError::invalid_ident(
+                    value,
+                    &["built-in color name", "color functions", "none"],
+                )),
             }
         }
     }
@@ -104,50 +108,19 @@ fn parse_hsl(parser: &mut Parser) -> Result<Color, ParseError> {
     parse_func(parser, "hsl", |parser| {
         let h = parse_angle(parser)?;
 
-        if !(0.0..=360.0).contains(&h) {
-            return Err(ParseError);
-        }
-
         parser.consume(&Token::Comma)?;
 
-        let mut s = parser
-            .consume_if(Token::is_i64)
-            .map(Token::into_f32)
-            .and_then(|value| {
-                if (0.0..=100.0).contains(&value) {
-                    Ok(value / 100.0)
-                } else {
-                    Err(ParseError)
-                }
-            })?;
+        let mut s = parse_range(parser, 0..=100)?;
 
         parser.consume(&Token::Percent)?;
         parser.consume(&Token::Comma)?;
 
-        let mut l = parser
-            .consume_if(Token::is_i64)
-            .map(Token::into_f32)
-            .and_then(|value| {
-                if (0.0..=100.0).contains(&value) {
-                    Ok(value / 100.0)
-                } else {
-                    Err(ParseError)
-                }
-            })?;
+        let mut l = parse_range(parser, 0..=100)?;
 
         parser.consume(&Token::Percent)?;
 
-        let a = if parser.consume(&Token::Comma).is_ok() {
-            let value = parser
-                .consume_if(Token::is_i64)
-                .map(Token::into_f32)
-                .and_then(|value| {
-                    if (0.0..=100.0).contains(&value) {
-                        Ok(value / 100.0)
-                    } else {
-                        Err(ParseError)
-                    }
-                })?;
+        let a = if parser.try_consume(&Token::Comma) {
+            let value = parse_range(parser, 0..=100)?;
 
             parser.consume(&Token::Percent)?;
 
@@ -180,20 +153,27 @@ fn parse_hex_color(parser: &mut Parser) -> Result<Color, ParseError> {
     let hex = parser.consume_if(Token::is_ident).map(Token::into_string)?;
 
     if ![6, 8].contains(&hex.len()) {
-        return Err(ParseError);
+        return Err(ParseError("invalid hex color".into()));
     }
 
-    let value = i64::from_str_radix(&hex, 16).map_err(|_| ParseError)?;
+    let value =
+        i64::from_str_radix(&hex, 16).map_err(|_| ParseError("invalid hex color".into()))?;
 
     let a = if hex.len() == 8 {
-        Some(u8::try_from((value >> 24) & 0xFF).map_err(|_| ParseError)?)
+        Some(
+            u8::try_from((value >> 24) & 0xFF)
+                .map_err(|_| ParseError("failed to parse hex color part as u8".into()))?,
+        )
     } else {
         None
     };
 
-    let r = u8::try_from((value >> 16) & 0xFF).map_err(|_| ParseError)?;
-    let g = u8::try_from((value >> 8) & 0xFF).map_err(|_| ParseError)?;
-    let b = u8::try_from(value & 0xFF).map_err(|_| ParseError)?;
+    let r = u8::try_from((value >> 16) & 0xFF)
+        .map_err(|_| ParseError("failed to parse hex color part as u8".into()))?;
+    let g = u8::try_from((value >> 8) & 0xFF)
+        .map_err(|_| ParseError("failed to parse hex color part as u8".into()))?;
+    let b = u8::try_from(value & 0xFF)
+        .map_err(|_| ParseError("failed to parse hex color part as u8".into()))?;
 
     Ok(a.map(|a| Color::from_argb(a, r, g, b))
         .unwrap_or_else(|| Color::from_rgb(r, g, b)))

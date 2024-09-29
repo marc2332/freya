@@ -1,6 +1,9 @@
 use std::{
     iter::Peekable,
-    str::CharIndices,
+    ops::{
+        Bound,
+        RangeBounds,
+    },
     vec::IntoIter,
 };
 
@@ -13,7 +16,46 @@ use crate::{
 };
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct ParseError;
+pub struct ParseError(pub String);
+
+impl ParseError {
+    pub fn expected_token(expected: &Token, found: Option<&Token>) -> Self {
+        if let Some(found) = found {
+            Self(format!("expected {expected:?}, found {found:?}"))
+        } else {
+            Self(format!("expected {expected:?}, found nothing"))
+        }
+    }
+
+    pub fn unexpected_token(value: Option<&Token>) -> Self {
+        if let Some(value) = value {
+            Self(format!("unexpected {value:?}"))
+        } else {
+            Self("unexpected nothing".into())
+        }
+    }
+
+    pub fn invalid_ident(value: &str, expected: &[&str]) -> Self {
+        let expected = match expected.len() {
+            0 => "nothing".into(),
+            1 => expected[0].into(),
+            size => {
+                let other = expected[0..(size - 1)].join(", ");
+                let last = expected[size - 1];
+
+                format!("{other} or {last}")
+            }
+        };
+
+        Self(format!("invalid ident {value} (expected {expected})"))
+    }
+
+    pub fn too_much_tokens(count: usize) -> Self {
+        Self(format!(
+            "found more than zero ({count}) tokens after parsing"
+        ))
+    }
+}
 
 pub struct Parser {
     pub(crate) tokens: Peekable<IntoIter<Token>>,
@@ -52,16 +94,7 @@ impl Parser {
         if self.check(value) {
             Ok(self.next().unwrap())
         } else {
-            Err(ParseError)
-        }
-    }
-
-    /// Consumes the current token if it exists and is equal to one of the values inside `values`, otherwise returning `ParseError`.
-    pub fn consume_one_of(&mut self, values: &[Token]) -> Result<Token, ParseError> {
-        if self.check_if(|value| values.contains(value)) {
-            Ok(self.next().unwrap())
-        } else {
-            Err(ParseError)
+            Err(ParseError::expected_token(value, self.peek()))
         }
     }
 
@@ -70,7 +103,7 @@ impl Parser {
         if self.check_if(func) {
             Ok(self.next().unwrap())
         } else {
-            Err(ParseError)
+            Err(ParseError::unexpected_token(self.peek()))
         }
     }
 
@@ -81,7 +114,7 @@ impl Parser {
 
             Ok(value)
         } else {
-            Err(ParseError)
+            Err(ParseError::unexpected_token(self.peek()))
         }
     }
 
@@ -94,15 +127,6 @@ impl Parser {
     /// Peeks the current token and returns a reference to it wrapped in `Some` if it exists, otherwise returning `None`.
     pub fn peek(&mut self) -> Option<&Token> {
         self.tokens.peek()
-    }
-
-    /// Consumes the current token and returns it wrapped in `Some` if the result of the `func` function is `true`, otherwise returning `None`.
-    pub fn next_if<F: Fn(&Token) -> bool>(&mut self, func: F) -> Option<Token> {
-        if self.check_if(func) {
-            self.next()
-        } else {
-            None
-        }
     }
 }
 
@@ -128,7 +152,7 @@ pub trait Parse: Sized {
         let values = Self::from_parser_multiple(&mut parser, separator)?;
 
         if parser.tokens.len() > 0 {
-            Err(ParseError)
+            Err(ParseError::too_much_tokens(parser.tokens.len()))
         } else {
             Ok(values)
         }
@@ -140,7 +164,7 @@ pub trait Parse: Sized {
         let value = Self::from_parser(&mut parser);
 
         if parser.tokens.len() > 0 {
-            Err(ParseError)
+            Err(ParseError::too_much_tokens(parser.tokens.len()))
         } else {
             value
         }
@@ -148,11 +172,37 @@ pub trait Parse: Sized {
 }
 
 pub fn parse_angle(parser: &mut Parser) -> Result<f32, ParseError> {
-    let value = parser.consume_if(Token::is_i64).map(Token::into_f32)?;
+    let value = parser.consume_map(Token::try_as_i64)?;
 
     parser.consume(&Token::ident("deg"))?;
 
-    Ok(value)
+    Ok((value % 360) as f32)
+}
+
+pub fn parse_range(parser: &mut Parser, range: impl RangeBounds<i64>) -> Result<f32, ParseError> {
+    let value = parser.consume_map(Token::try_as_i64)?;
+
+    if range.contains(&value) {
+        Ok(value as f32)
+    } else {
+        let start = match range.start_bound() {
+            Bound::Included(value) => Some(format!("greater than or equal to {value}")),
+            _ => None,
+        };
+
+        let end = match range.end_bound() {
+            Bound::Included(value) => Some(format!("less than or equal to {value}")),
+            Bound::Excluded(value) => Some(format!("less than {value}")),
+            Bound::Unbounded => None,
+        };
+
+        Err(match [start, end] {
+            [Some(start), Some(end)] => ParseError(format!("{value} must be {start} and {end}")),
+            [Some(start), None] => ParseError(format!("{value} must be {start}")),
+            [None, Some(end)] => ParseError(format!("{value} must be {end}")),
+            [None, None] => unreachable!(),
+        })
+    }
 }
 
 pub fn parse_func<T: AsRef<str>, F: FnOnce(&mut Parser) -> Result<O, ParseError>, O>(
@@ -182,9 +232,9 @@ pub trait ParseAttribute: Sized {
         {
             let error_attr = attr.clone();
 
-            if self.parse_attribute(attr).is_err() {
+            if let Err(ParseError(message)) = self.parse_attribute(attr) {
                 panic!(
-                    "Failed to parse attribute '{:?}' with value '{:?}'",
+                    "Failed to parse attribute '{:?}' with value '{:?}': {message}",
                     error_attr.attribute, error_attr.value
                 );
             }
@@ -192,152 +242,5 @@ pub trait ParseAttribute: Sized {
 
         #[cfg(not(debug_assertions))]
         self.parse_attribute(attr).ok();
-    }
-}
-
-pub trait ExtSplit {
-    fn split_excluding_group(
-        &self,
-        delimiter: char,
-        group_start: char,
-        group_end: char,
-    ) -> SplitExcludingGroup<'_>;
-    fn split_ascii_whitespace_excluding_group(
-        &self,
-        group_start: char,
-        group_end: char,
-    ) -> SplitAsciiWhitespaceExcludingGroup<'_>;
-}
-
-impl ExtSplit for str {
-    fn split_excluding_group(
-        &self,
-        delimiter: char,
-        group_start: char,
-        group_end: char,
-    ) -> SplitExcludingGroup<'_> {
-        SplitExcludingGroup {
-            text: self,
-            chars: self.char_indices(),
-            delimiter,
-            group_start,
-            group_end,
-            trailing_empty: true,
-        }
-    }
-
-    fn split_ascii_whitespace_excluding_group(
-        &self,
-        group_start: char,
-        group_end: char,
-    ) -> SplitAsciiWhitespaceExcludingGroup<'_> {
-        SplitAsciiWhitespaceExcludingGroup {
-            text: self,
-            chars: self.char_indices(),
-            group_start,
-            group_end,
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct SplitExcludingGroup<'a> {
-    pub text: &'a str,
-    pub chars: CharIndices<'a>,
-    pub delimiter: char,
-    pub group_start: char,
-    pub group_end: char,
-    pub trailing_empty: bool,
-}
-
-impl<'a> Iterator for SplitExcludingGroup<'a> {
-    type Item = &'a str;
-
-    fn next(&mut self) -> Option<&'a str> {
-        let first = self.chars.next();
-
-        let (start, mut prev) = match first {
-            None => {
-                if self.text.ends_with(self.delimiter) && self.trailing_empty {
-                    self.trailing_empty = false;
-                    return Some("");
-                }
-                return None;
-            }
-            Some((_, c)) if c == self.delimiter => return Some(""),
-            Some(v) => v,
-        };
-
-        let mut in_group = false;
-        let mut nesting = -1;
-
-        loop {
-            if prev == self.group_start {
-                if nesting == -1 {
-                    in_group = true;
-                }
-                nesting += 1;
-            } else if prev == self.group_end {
-                nesting -= 1;
-                if nesting == -1 {
-                    in_group = false;
-                }
-            }
-
-            prev = match self.chars.next() {
-                None => return Some(&self.text[start..]),
-                Some((end, c)) if c == self.delimiter && !in_group => {
-                    return Some(&self.text[start..end])
-                }
-                Some((_, c)) => c,
-            }
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct SplitAsciiWhitespaceExcludingGroup<'a> {
-    pub text: &'a str,
-    pub chars: CharIndices<'a>,
-    pub group_start: char,
-    pub group_end: char,
-}
-
-impl<'a> Iterator for SplitAsciiWhitespaceExcludingGroup<'a> {
-    type Item = &'a str;
-
-    fn next(&mut self) -> Option<&'a str> {
-        let first = self.chars.next();
-
-        let (start, mut prev) = match first {
-            None => return None,
-            Some((_, c)) if c.is_ascii_whitespace() => return self.next(),
-            Some(v) => v,
-        };
-
-        let mut in_group = false;
-        let mut nesting = -1;
-
-        loop {
-            if prev == self.group_start {
-                if nesting == -1 {
-                    in_group = true;
-                }
-                nesting += 1;
-            } else if prev == self.group_end {
-                nesting -= 1;
-                if nesting == -1 {
-                    in_group = false;
-                }
-            }
-
-            prev = match self.chars.next() {
-                None => return Some(&self.text[start..]),
-                Some((end, c)) if c.is_ascii_whitespace() && !in_group => {
-                    return Some(&self.text[start..end])
-                }
-                Some((_, c)) => c,
-            }
-        }
     }
 }

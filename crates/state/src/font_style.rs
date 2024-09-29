@@ -1,6 +1,12 @@
-use std::sync::{
-    Arc,
-    Mutex,
+use std::{
+    num::{
+        ParseFloatError,
+        ParseIntError,
+    },
+    sync::{
+        Arc,
+        Mutex,
+    },
 };
 
 use freya_common::CompositorDirtyNodes;
@@ -158,7 +164,11 @@ impl ParseAttribute for FontStyleState {
             }
             AttributeName::MaxLines => {
                 if let Some(value) = attr.value.as_text() {
-                    self.max_lines = Some(value.parse().map_err(|_| ParseError)?);
+                    self.max_lines = Some(
+                        value
+                            .parse()
+                            .map_err(|err: ParseIntError| ParseError(err.to_string()))?,
+                    );
                 }
             }
             AttributeName::TextOverflow => {
@@ -200,12 +210,16 @@ impl ParseAttribute for FontStyleState {
             }
             AttributeName::WordSpacing => {
                 if let Some(value) = attr.value.as_text() {
-                    self.word_spacing = value.parse().map_err(|_| ParseError)?;
+                    self.word_spacing = value
+                        .parse()
+                        .map_err(|err: ParseFloatError| ParseError(err.to_string()))?;
                 }
             }
             AttributeName::LetterSpacing => {
                 if let Some(value) = attr.value.as_text() {
-                    self.letter_spacing = value.parse().map_err(|_| ParseError)?;
+                    self.letter_spacing = value
+                        .parse()
+                        .map_err(|err: ParseFloatError| ParseError(err.to_string()))?;
                 }
             }
             _ => {}
