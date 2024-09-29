@@ -459,9 +459,8 @@ pub trait TextEditor {
                         // Remove selected text
                         let selection = self.get_selection_range();
                         if let Some((start, end)) = selection {
-                            let cursor_pos = self.cursor_pos();
-                            let removed_text_len = self.remove(start..end);
-                            self.set_cursor_pos(cursor_pos - removed_text_len);
+                            self.remove(start..end);
+                            self.set_cursor_pos(start);
                             event.insert(TextEvent::TEXT_CHANGED);
                         }
 
