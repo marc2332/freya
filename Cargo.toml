@@ -79,6 +79,7 @@ skia-safe = { workspace = true }
 tokio = { workspace = true, features = ["fs"]}
 dioxus = { workspace = true }
 freya = { workspace = true }
+freya-hooks = { workspace = true }
 freya-core = { workspace = true }
 freya-testing = { workspace = true }
 reqwest = { version = "0.12.0", features = ["json"] }
