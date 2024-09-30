@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch(app);
+    launch_with_props(app, "Switch Theme", (600., 700.));
 }
 
 #[component]
@@ -15,22 +15,53 @@ fn ThemeChanger() -> Element {
 
     rsx!(
         Tile {
-            onselect: move |_| theme.set(DARK_THEME),
+            onselect: move |_| theme.set(BANANA_THEME),
             leading: rsx!(
                 Radio {
-                    selected: theme.read().name == "dark",
+                    selected: theme.read().name == "banana",
                 },
             ),
-            label { "Dark" }
+            label { "Banana" }
         }
-        Tile {
-            onselect: move |_| theme.set(LIGHT_THEME),
-            leading: rsx!(
-                Radio {
-                    selected: theme.read().name == "light",
-                },
+        TooltipContainer {
+            position: TooltipPosition::Besides,
+            tooltip: rsx!(
+                Tooltip {
+                    text: "Switch to Dark theme"
+                }
             ),
-            label { "Light" }
+            Tile {
+                onselect: move |_| theme.set(DARK_THEME),
+                leading: rsx!(
+                    Radio {
+                        selected: theme.read().name == "dark",
+                    },
+                ),
+                label { "Dark" }
+            }
+        }
+        TooltipContainer {
+            position: TooltipPosition::Besides,
+            tooltip: rsx!(
+                Tooltip {
+                    text: "Switch to Light theme"
+                }
+            ),
+            Tile {
+                onselect: move |_| theme.set(LIGHT_THEME),
+                leading: rsx!(
+                    Radio {
+                        selected: theme.read().name == "light",
+                    },
+                ),
+                label { "Light" }
+            }
+        }
+        Link {
+            to: "https://freyaui.dev",
+            label {
+                "https://freyaui.dev"
+            }
         }
     )
 }
@@ -41,63 +72,82 @@ fn app() -> Element {
 
     rsx!(
         Body {
-            rect {
-                width: "fill",
-                height: "fill",
-                main_align: "center",
-                cross_align: "center",
-                spacing: "20",
-                padding: "40",
-                Switch {
-                    enabled: value() >= 50.,
-                    ontoggled: move |_| {
-                        if value() >= 50. {
-                            value.set(25.0);
-                        } else {
-                            value.set(75.0);
+            ScrollView {
+                rect {
+                    spacing: "20",
+                    padding: "40",
+                    cross_align: "center",
+                    Switch {
+                        enabled: value() >= 50.,
+                        ontoggled: move |_| {
+                            if value() >= 50. {
+                                value.set(25.0);
+                            } else {
+                                value.set(75.0);
+                            }
                         }
                     }
-                }
-                Slider {
-                    width: "fill",
-                    value: value(),
-                    onmoved: move |e| value.set(e),
-                }
-                ProgressBar {
-                    show_progress: true,
-                    progress: value() as f32
-                }
-                Tile {
-                    onselect: move |_| {
-                        if value() >= 50. {
-                            value.set(25.0);
-                        } else {
-                            value.set(75.0);
-                        }
-                    },
-                    leading: rsx!(
-                        Checkbox {
-                            selected: value() >= 50.,
+                    Slider {
+                        size: "fill",
+                        value: value(),
+                        onmoved: move |e| value.set(e),
+                    }
+                    ProgressBar {
+                        show_progress: true,
+                        progress: value() as f32
+                    }
+                    Tile {
+                        onselect: move |_| {
+                            if value() >= 50. {
+                                value.set(25.0);
+                            } else {
+                                value.set(75.0);
+                            }
                         },
-                    ),
-                    label { "First choice" }
-                }
-                Tile {
-                    onselect: move |_| {
-                        if value() < 50. {
-                            value.set(75.0);
-                        } else {
-                            value.set(25.0);
-                        }
-                    },
-                    leading: rsx!(
-                        Checkbox {
-                            selected: value() < 50.,
+                        leading: rsx!(
+                            Checkbox {
+                                selected: value() >= 50.,
+                            },
+                        ),
+                        label { "First choice" }
+                    }
+                    Tile {
+                        onselect: move |_| {
+                            if value() < 50. {
+                                value.set(75.0);
+                            } else {
+                                value.set(25.0);
+                            }
                         },
-                    ),
-                    label { "Second choice" }
+                        leading: rsx!(
+                            Checkbox {
+                                selected: value() < 50.,
+                            },
+                        ),
+                        label { "Second choice" }
+                    }
+                    Input {
+                        value: value().round().to_string(),
+                        onchange: move |num: String| {
+                            if let Ok(num) = num.parse() {
+                                *value.write() = num;
+                            }
+                        }
+                    }
+                    Button {
+                        onpress: move |_| value.set(35.),
+                        label {
+                            "Set to 35%"
+                        }
+                    }
+                    ThemeChanger { }
                 }
-                ThemeChanger { }
+            }
+            SnackBar {
+                open: value() >= 50.,
+                label {
+                    "Hello!"
+                }
             }
         }
     )

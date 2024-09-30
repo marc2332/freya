@@ -83,7 +83,7 @@ fn app() -> Element {
             progress: progress * 0.20
         }
         Slider {
-            width: "300",
+            size: "300",
             value: progress as f64,
             onmoved: onmoved
         }

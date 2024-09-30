@@ -38,7 +38,7 @@ pub struct FontStyleState {
     pub font_slant: Slant,
     pub font_weight: Weight,
     pub font_width: Width,
-    pub line_height: f32, // https://developer.mozilla.org/en-US/docs/Web/CSS/line-height,
+    pub line_height: Option<f32>,
     pub decoration: Decoration,
     pub word_spacing: f32,
     pub letter_spacing: f32,
@@ -48,12 +48,7 @@ pub struct FontStyleState {
 }
 
 impl FontStyleState {
-    pub fn text_style(
-        &self,
-        default_font_family: &[String],
-        scale_factor: f32,
-        height_override: bool,
-    ) -> TextStyle {
+    pub fn text_style(&self, default_font_family: &[String], scale_factor: f32) -> TextStyle {
         let mut text_style = TextStyle::new();
         let mut font_family = self.font_family.clone();
 
@@ -69,9 +64,11 @@ impl FontStyleState {
             .set_font_size(self.font_size * scale_factor)
             .set_font_families(&font_family)
             .set_word_spacing(self.word_spacing)
-            .set_letter_spacing(self.letter_spacing)
-            .set_height_override(height_override)
-            .set_height(self.line_height);
+            .set_letter_spacing(self.letter_spacing);
+
+        if let Some(line_height) = self.line_height {
+            text_style.set_height_override(true).set_height(line_height);
+        }
 
         for text_shadow in self.text_shadows.iter() {
             text_style.add_shadow(*text_shadow);
@@ -95,7 +92,7 @@ impl Default for FontStyleState {
             font_weight: Weight::NORMAL,
             font_slant: Slant::Upright,
             font_width: Width::NORMAL,
-            line_height: 1.2,
+            line_height: None,
             word_spacing: 0.0,
             letter_spacing: 0.0,
             decoration: Decoration {
@@ -151,7 +148,7 @@ impl ParseAttribute for FontStyleState {
             AttributeName::LineHeight => {
                 if let Some(value) = attr.value.as_text() {
                     if let Ok(line_height) = value.parse::<f32>() {
-                        self.line_height = line_height.max(1.0);
+                        self.line_height = Some(line_height);
                     }
                 }
             }

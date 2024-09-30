@@ -69,7 +69,7 @@ pub fn Radio(
         unselected_fill
     };
     let border = if focus.is_selected() {
-        format!("4 solid {}", border_fill)
+        format!("4 outer {}", border_fill)
     } else {
         "none".to_string()
     };
@@ -79,13 +79,12 @@ pub fn Radio(
     rsx!(
         rect {
             border,
-            border_align: "outer",
             corner_radius: "99",
             rect {
                 a11y_id: focus.attribute(),
                 width: "18",
                 height: "18",
-                border: "2 solid {fill}",
+                border: "2 inner {fill}",
                 padding: "4",
                 main_align: "center",
                 cross_align: "center",

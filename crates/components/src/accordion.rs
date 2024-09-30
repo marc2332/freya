@@ -100,7 +100,7 @@ pub fn Accordion(props: AccordionProps) -> Element {
             height: "auto",
             background: "{background}",
             onclick,
-            border: "1 solid {border_fill}",
+            border: "1 inner {border_fill}",
             {&props.summary}
             rect {
                 overflow: "clip",
