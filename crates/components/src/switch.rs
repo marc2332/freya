@@ -65,8 +65,6 @@ pub enum SwitchStatus {
 /// ```
 ///
 /// # Preview
-///
-/// #### Enabled
 /// <!--- PREVIEW not_enabled_switch (200.,150.)
 /// use freya::prelude::*;
 /// fn app() -> Element {
@@ -84,9 +82,6 @@ pub enum SwitchStatus {
 ///     )
 /// }
 /// -->
-/// ![Switch Not Enabled Demo][not_enabled_switch]
-///
-/// #### Not Enabled
 /// <!--- PREVIEW enabled_switch (200.,150.)
 /// use freya::prelude::*;
 /// fn app() -> Element {
@@ -105,7 +100,10 @@ pub enum SwitchStatus {
 /// }
 /// -->
 ///
-/// ![Switch Enabled Demo][enabled_switch]
+/// | Enabled       | Not Enabled   |
+/// | ------------- | ------------- |
+/// |![Switch Not Enabled Demo][not_enabled_switch] | ![Switch Enabled Demo][enabled_switch] |
+/// 
 #[embed_doc_image::embed_doc_image("not_enabled_switch", "images/not_enabled_switch.png")]
 #[embed_doc_image::embed_doc_image("enabled_switch", "images/enabled_switch.png")]
 #[allow(non_snake_case)]
