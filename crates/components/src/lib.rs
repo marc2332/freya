@@ -1,6 +1,54 @@
 //! # Freya Components
 //! A collection of basic components to be used in Freya.
 
+
+/// <!--- PREVIEW gallery_enabled_switch (200.,150.)
+/// use freya::prelude::*;
+/// fn app() -> Element {
+///     rsx!(
+///         rect {
+///             main_align: "center",
+///             cross_align: "center",
+///             width: "fill",
+///             height: "fill",
+///             Switch {
+///                 enabled: false,
+///                 ontoggled: move |_| { }
+///             }
+///         }
+///     )
+/// }
+/// -->
+/// <!--- PREVIEW gallery_button (200.,150.)
+/// use freya::prelude::*;
+/// fn app() -> Element {
+///     rsx!(
+///         rect {
+///             main_align: "center",
+///             cross_align: "center",
+///             width: "fill",
+///             height: "fill",
+///             Button {
+///                 label {
+///                     "Click this"
+///                 }
+///             }
+///         }
+///     )
+/// }
+/// -->
+/// | 1 | 2 | 3 | 4 |
+/// | ------------- | ------------- | ------------- | ------------- |
+/// | ![Switch Enabled Demo][gallery_enabled_switch] | ![Button Demo][gallery_button] | ![Switch Enabled Demo][gallery_enabled_switch] | ![Button Demo][gallery_button] |
+/// | [Switch]        | [Button]        | [Switch]        | [Button] |
+/// | ![Switch Enabled Demo][gallery_enabled_switch] | ![Button Demo][gallery_button] | ![Switch Enabled Demo][gallery_enabled_switch] | ![Button Demo][gallery_button] |
+/// | [Switch]        | [Button]        | [Switch]        | [Button] |
+/// | ![Switch Enabled Demo][gallery_enabled_switch] | ![Button Demo][gallery_button] | ![Switch Enabled Demo][gallery_enabled_switch] | ![Button Demo][gallery_button] |
+/// | [Switch]        | [Button]        | [Switch]        | [Button] |
+#[embed_doc_image::embed_doc_image("gallery_button", "images/gallery_button.png")]
+#[embed_doc_image::embed_doc_image("gallery_enabled_switch", "images/gallery_enabled_switch.png")]
+pub fn gallery(){}
+
 mod accordion;
 mod activable_route;
 mod animated_router;

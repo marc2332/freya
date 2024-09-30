@@ -42,7 +42,7 @@ pub enum SwitchStatus {
 
 /// Display whether a state is `true` or `false`.
 /// Commonly used for enabled/disabled scenarios.
-/// Example: light/dark theme.
+/// Example: light/dark theme. 
 ///
 /// # Styling
 ///
@@ -65,7 +65,7 @@ pub enum SwitchStatus {
 /// ```
 ///
 /// # Preview
-/// <!--- PREVIEW not_enabled_switch (200.,150.)
+/// <!--- PREVIEW gallery_not_enabled_switch (200.,150.)
 /// use freya::prelude::*;
 /// fn app() -> Element {
 ///     rsx!(
@@ -82,7 +82,7 @@ pub enum SwitchStatus {
 ///     )
 /// }
 /// -->
-/// <!--- PREVIEW enabled_switch (200.,150.)
+/// <!--- PREVIEW gallery_enabled_switch (200.,150.)
 /// use freya::prelude::*;
 /// fn app() -> Element {
 ///     rsx!(
@@ -102,10 +102,10 @@ pub enum SwitchStatus {
 ///
 /// | Enabled       | Not Enabled   |
 /// | ------------- | ------------- |
-/// |![Switch Not Enabled Demo][not_enabled_switch] | ![Switch Enabled Demo][enabled_switch] |
+/// |![Switch Not Enabled Demo][gallery_not_enabled_switch] | ![Switch Enabled Demo][gallery_enabled_switch] |
 /// 
-#[embed_doc_image::embed_doc_image("not_enabled_switch", "images/not_enabled_switch.png")]
-#[embed_doc_image::embed_doc_image("enabled_switch", "images/enabled_switch.png")]
+#[embed_doc_image::embed_doc_image("gallery_not_enabled_switch", "images/gallery_not_enabled_switch.png")]
+#[embed_doc_image::embed_doc_image("gallery_enabled_switch", "images/gallery_enabled_switch.png")]
 #[allow(non_snake_case)]
 pub fn Switch(props: SwitchProps) -> Element {
     let theme = use_applied_theme!(&props.theme, switch);
