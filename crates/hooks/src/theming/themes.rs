@@ -22,6 +22,7 @@ pub const DARK_THEME: Theme = Theme {
         solid: cow_borrowed!("rgb(240, 240, 240)"),
         color: cow_borrowed!("rgb(250, 250, 250)"),
         placeholder_color: cow_borrowed!("rgb(210, 210, 210)"),
+        highlight_color: cow_borrowed!("rgb(96, 145, 224)"),
     },
     ..BASE_THEME
 };
@@ -44,6 +45,7 @@ pub const LIGHT_THEME: Theme = Theme {
         focused_border: cow_borrowed!("rgb(180, 180, 180)"),
         color: cow_borrowed!("rgb(10, 10, 10)"),
         placeholder_color: cow_borrowed!("rgb(100, 100, 100)"),
+        highlight_color: cow_borrowed!("rgb(38, 89, 170)"),
     },
     ..BASE_THEME
 };
@@ -66,6 +68,7 @@ pub const BANANA_THEME: Theme = Theme {
         focused_border: cow_borrowed!("rgb(255, 239, 151)"),
         color: cow_borrowed!("rgb(85, 60, 5)"),
         placeholder_color: cow_borrowed!("rgb(56, 44, 5)"),
+        highlight_color: cow_borrowed!("rgb(143, 114, 6)"),
     },
     ..BASE_THEME
 };

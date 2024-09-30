@@ -202,7 +202,7 @@ pub fn Slider(
     };
 
     let border = if focus.is_selected() {
-        format!("2 solid {}", theme.border_fill)
+        format!("2 inner {}", theme.border_fill)
     } else {
         "none".to_string()
     };

@@ -155,11 +155,13 @@ pub fn create_label(
     }
 
     let mut paragraph = paragraph_builder.build();
-    paragraph.layout(if font_style.max_lines == Some(1) {
-        f32::MAX
-    } else {
-        area_size.width + 1.0
-    });
+    paragraph.layout(
+        if font_style.max_lines == Some(1) && font_style.text_align == TextAlign::default() {
+            f32::MAX
+        } else {
+            area_size.width + 1.0
+        },
+    );
 
     paragraph
 }
@@ -260,11 +262,13 @@ pub fn create_paragraph(
     }
 
     let mut paragraph = paragraph_builder.build();
-    paragraph.layout(if font_style.max_lines == Some(1) {
-        f32::MAX
-    } else {
-        area_size.width + 1.0
-    });
+    paragraph.layout(
+        if font_style.max_lines == Some(1) && font_style.text_align == TextAlign::default() {
+            f32::MAX
+        } else {
+            area_size.width + 1.0
+        },
+    );
 
     paragraph
 }

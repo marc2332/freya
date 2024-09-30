@@ -210,7 +210,7 @@ pub fn Input(
             direction: "vertical",
             color: "{color}",
             background: "{background}",
-            border: "1 solid {border_fill}",
+            border: "1 inner {border_fill}",
             shadow: "{shadow}",
             corner_radius: "{corner_radius}",
             margin: "{margin}",

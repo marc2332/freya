@@ -132,7 +132,7 @@ fn Home() -> Element {
                 cross_align: "center",
                 rect {
                     background: "rgb(19, 19, 21)",
-                    border: "1 solid rgb(41, 37, 36)",
+                    border: "1 inner rgb(41, 37, 36)",
                     corner_radius: "16",
                     width: "960",
                     height: "612",
@@ -272,7 +272,7 @@ fn Counter() -> Element {
 const CODE: &str = r#"fn app() -> Element {
     let mut count = use_signal(|| 0);
 
-    render!(
+    rsx!(
         rect {
             height: "50%",
             width: "100%",

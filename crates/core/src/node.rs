@@ -109,7 +109,6 @@ impl NodeState {
                 };
                 ("background", fill)
             },
-            ("border", AttributeType::Border(&self.style.border)),
             (
                 "corner_radius",
                 AttributeType::CornerRadius(self.style.corner_radius),
@@ -143,6 +142,11 @@ impl NodeState {
         let shadows = &self.style.shadows;
         for shadow in shadows {
             attributes.push(("shadow", AttributeType::Shadow(shadow)));
+        }
+
+        let borders = &self.style.borders;
+        for border in borders {
+            attributes.push(("border", AttributeType::Border(border)));
         }
 
         let text_shadows = &self.font_style.text_shadows;
