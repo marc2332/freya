@@ -95,7 +95,7 @@ Add Freya and Dioxus as dependencies:
 freya = "0.2"
 dioxus = { version = "0.5", features = ["macro", "hooks"], default-features = false }
 ```
-## Contributing 🧙‍♂️
+### Contributing 🧙‍♂️
 
 If you are interested in contributing please make sure to have read the [Contributing](CONTRIBUTING.md) guide first!
 
