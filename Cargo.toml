@@ -97,6 +97,7 @@ tree-sitter-rust = "0.23.0"
 rfd = "0.14.1"
 bytes = "1.5.0"
 dioxus-sdk = { workspace = true }
+muda = "0.15.1"
 
 [profile.release]
 lto = true
