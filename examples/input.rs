@@ -18,7 +18,6 @@ fn app() -> Element {
             padding: "7",
             width: "100%",
             height: "100%",
-            font_size: "10",
             label {
                 color: "black",
                 "Your name:"
@@ -39,13 +38,6 @@ fn app() -> Element {
                     values.write().1 = txt;
                 }
             },
-            rect {
-                background: "red",
-                label {
-                    color: "black",
-                    "You are {values.read().0} and you are {values.read().1} years old."
-                }
-            }
         }
     )
 }
