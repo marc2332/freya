@@ -23,8 +23,7 @@ use winit::{
     },
 };
 
-pub type EventLoopBuilderHook =
-    Box<dyn FnOnce(EventLoopBuilder<EventMessage>) -> EventLoopBuilder<EventMessage>>;
+pub type EventLoopBuilderHook = Box<dyn FnOnce(&mut EventLoopBuilder<EventMessage>)>;
 pub type WindowBuilderHook = Box<dyn FnOnce(WindowAttributes) -> WindowAttributes>;
 pub type EmbeddedFonts<'a> = Vec<(&'a str, &'a [u8])>;
 
@@ -231,8 +230,7 @@ impl<'a, T: Clone> LaunchConfig<'a, T> {
     /// Register an Event Loop Builder hook.
     pub fn with_event_loop_builder(
         mut self,
-        event_loop_builder_hook: impl FnOnce(EventLoopBuilder<EventMessage>) -> EventLoopBuilder<EventMessage>
-            + 'static,
+        event_loop_builder_hook: impl FnOnce(&mut EventLoopBuilder<EventMessage>) + 'static,
     ) -> Self {
         self.window_config.event_loop_builder_hook = Some(Box::new(event_loop_builder_hook));
         self

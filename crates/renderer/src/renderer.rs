@@ -78,7 +78,7 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
         let mut event_loop_builder = EventLoop::<EventMessage>::with_user_event();
         let event_loop_builder_hook = config.window_config.event_loop_builder_hook.take();
         if let Some(event_loop_builder_hook) = event_loop_builder_hook {
-            event_loop_builder = event_loop_builder_hook(event_loop_builder);
+            event_loop_builder_hook(&mut event_loop_builder);
         }
         let event_loop = event_loop_builder
             .build()
