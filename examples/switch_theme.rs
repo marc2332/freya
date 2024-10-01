@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch(app);
+    launch_with_props(app, "Switch Theme", (600., 700.));
 }
 
 #[component]
@@ -57,7 +57,12 @@ fn ThemeChanger() -> Element {
                 label { "Light" }
             }
         }
-
+        Link {
+            to: "https://freyaui.dev",
+            label {
+                "https://freyaui.dev"
+            }
+        }
     )
 }
 
