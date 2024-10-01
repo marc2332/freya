@@ -116,6 +116,7 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
             AttributeName::A11YAlt,
             AttributeName::A11YName,
             AttributeName::A11YAutoFocus,
+            AttributeName::A11YFocusable,
         ]));
 
     fn update<'a>(

@@ -239,8 +239,6 @@ pub fn ScrollView(
                 return;
             }
         }
-
-        focus.focus();
     };
 
     // Drag the scrollbars
@@ -382,6 +380,7 @@ pub fn ScrollView(
             onglobalkeydown,
             onglobalkeyup,
             a11y_id,
+            a11y_focusable: "false",
             rect {
                 direction: "vertical",
                 width: "{container_width}",
