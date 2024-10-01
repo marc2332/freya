@@ -280,7 +280,7 @@ mod test {
 
         let mut utils = launch_test(input_app);
         let root = utils.root();
-        let text = root.get(0).get(0).get(0);
+        let text = root.get(0).get(0).get(0).get(0).get(0).get(0);
         utils.wait_for_update().await;
 
         // Default value
