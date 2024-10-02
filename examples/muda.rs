@@ -20,7 +20,10 @@ fn main() {
             .with_event_loop_builder(move |event_loop_builder| {
                 let menu_bar = menu_bar.clone();
                 event_loop_builder.with_msg_hook(move |msg| {
-                    use windows_sys::Win32::UI::WindowsAndMessaging::{TranslateAcceleratorW, MSG};
+                    use windows_sys::Win32::UI::WindowsAndMessaging::{
+                        TranslateAcceleratorW,
+                        MSG,
+                    };
                     unsafe {
                         let msg = msg as *const MSG;
                         let translated =
@@ -100,9 +103,9 @@ fn WindowMenu(children: Element) -> Element {
     });
 
     let (tx, rx2) = use_hook(|| {
-       let (tx, rx) = tokio::sync::broadcast::channel::<()>(50);
+        let (tx, rx) = tokio::sync::broadcast::channel::<()>(50);
 
-       (tx, MenuReceiver(rx))
+        (tx, MenuReceiver(rx))
     });
 
     use_memo(move || {
@@ -126,7 +129,6 @@ fn WindowMenu(children: Element) -> Element {
 
     children
 }
-
 
 struct MenuReceiver<T>(pub Receiver<T>);
 
@@ -213,7 +215,7 @@ fn MenuItem(
 
     use_hook(move || {
         let mut rx = consume_context::<MenuReceiver<muda::MenuEvent>>();
-        
+
         spawn(async move {
             while let Ok(ev) = rx.0.recv().await {
                 if let Some(menu) = &*menu.read() {
