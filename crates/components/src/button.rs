@@ -22,20 +22,6 @@ use winit::{
     window::CursorIcon,
 };
 
-pub enum PressEvent {
-    Pointer(PointerEvent),
-    Key(KeyboardEvent),
-}
-
-impl PressEvent {
-    pub fn stop_propagation(&self) {
-        match &self {
-            Self::Pointer(ev) => ev.stop_propagation(),
-            Self::Key(ev) => ev.stop_propagation(),
-        }
-    }
-}
-
 /// Properties for the [`Button`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct ButtonProps {
@@ -47,16 +33,6 @@ pub struct ButtonProps {
     pub onpress: Option<EventHandler<PressEvent>>,
     /// Event handler for when the button is clicked. Not recommended, use `onpress` instead.
     pub onclick: Option<EventHandler<()>>,
-}
-
-/// Identifies the current status of the Button.
-#[derive(Debug, Default, PartialEq, Clone, Copy)]
-pub enum ButtonStatus {
-    /// Default state.
-    #[default]
-    Idle,
-    /// Mouse is hovering the button.
-    Hovering,
 }
 
 /// Clickable button.
@@ -80,13 +56,92 @@ pub enum ButtonStatus {
 /// }
 /// ```
 #[allow(non_snake_case)]
-pub fn Button(
-    ButtonProps {
+pub fn Button(props: ButtonProps) -> Element {
+    let theme = use_applied_theme!(&props.theme, button);
+    ButtonBase(BaseButtonProps {
+        theme,
+        children: props.children,
+        onpress: props.onpress,
+        onclick: props.onclick,
+    })
+}
+
+/// Clickable button.
+///
+/// # Styling
+/// Inherits the filled [`ButtonTheme`](freya_hooks::ButtonTheme) theme.
+///
+/// # Example
+///
+/// ```no_run
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///     rsx!(
+///         FilledButton {
+///             onpress: |_| println!("clicked"),
+///             label {
+///                 "Click this"
+///             }
+///         }
+///     )
+/// }
+/// ```
+#[allow(non_snake_case)]
+pub fn FilledButton(props: ButtonProps) -> Element {
+    let theme = use_applied_theme!(&props.theme, filled_button);
+    ButtonBase(BaseButtonProps {
+        theme,
+        children: props.children,
+        onpress: props.onpress,
+        onclick: props.onclick,
+    })
+}
+
+pub enum PressEvent {
+    Pointer(PointerEvent),
+    Key(KeyboardEvent),
+}
+
+impl PressEvent {
+    pub fn stop_propagation(&self) {
+        match &self {
+            Self::Pointer(ev) => ev.stop_propagation(),
+            Self::Key(ev) => ev.stop_propagation(),
+        }
+    }
+}
+
+/// Properties for the [`Button`] component.
+#[derive(Props, Clone, PartialEq)]
+pub struct BaseButtonProps {
+    /// Theme.
+    pub theme: ButtonTheme,
+    /// Inner children for the Button.
+    pub children: Element,
+    /// Event handler for when the button is pressed.
+    pub onpress: Option<EventHandler<PressEvent>>,
+    /// Event handler for when the button is clicked. Not recommended, use `onpress` instead.
+    pub onclick: Option<EventHandler<()>>,
+}
+
+/// Identifies the current status of the Button.
+#[derive(Debug, Default, PartialEq, Clone, Copy)]
+pub enum ButtonStatus {
+    /// Default state.
+    #[default]
+    Idle,
+    /// Mouse is hovering the button.
+    Hovering,
+}
+
+#[allow(non_snake_case)]
+pub fn ButtonBase(
+    BaseButtonProps {
         onpress,
         children,
         theme,
         onclick,
-    }: ButtonProps,
+    }: BaseButtonProps,
 ) -> Element {
     let mut focus = use_focus();
     let mut status = use_signal(ButtonStatus::default);
@@ -106,7 +161,7 @@ pub fn Button(
         height,
         font_theme,
         shadow,
-    } = use_applied_theme!(&theme, button);
+    } = theme;
 
     let onpointerup = {
         to_owned![onpress, onclick];

@@ -140,6 +140,12 @@ fn app() -> Element {
                             "Set to 35%"
                         }
                     }
+                    FilledButton {
+                        onpress: move |_| value.set(75.),
+                        label {
+                            "Set to 75%"
+                        }
+                    }
                     ThemeChanger { }
                 }
             }
