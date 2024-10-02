@@ -193,10 +193,8 @@ builder_constructors! {
         position_bottom: String,
         position_left: String,
         layer: String,
-        offset_y: String,
-        offset_x: String,
 
-        // Child layout
+        // Children layout
         #[doc = include_str!("_docs/attributes/direction.md")]
         direction: String,
         #[doc = include_str!("_docs/attributes/content.md")]
@@ -208,8 +206,10 @@ builder_constructors! {
         spacing: String,
         #[doc = include_str!("_docs/attributes/overflow.md")]
         overflow: String,
+        offset_x: String,
+        offset_y: String,
 
-        // Box style
+        // Style
         #[doc = include_str!("_docs/attributes/background.md")]
         background: String,
         #[doc = include_str!("_docs/attributes/border.md")]
@@ -307,8 +307,10 @@ builder_constructors! {
         position_bottom: String,
         position_left: String,
         layer: String,
-        offset_y: String,
-        offset_x: String,
+
+        // Children layout
+        #[doc = include_str!("_docs/attributes/main_align_cross_align.md")]
+        main_align: String,
 
         // Font style
         #[doc = include_str!("_docs/attributes/color.md")]
@@ -399,8 +401,10 @@ builder_constructors! {
         position_bottom: String,
         position_left: String,
         layer: String,
-        offset_y: String,
-        offset_x: String,
+
+        // Children layout
+        #[doc = include_str!("_docs/attributes/main_align_cross_align.md")]
+        main_align: String,
 
         // Font style
         #[doc = include_str!("_docs/attributes/color.md")]
@@ -530,8 +534,6 @@ builder_constructors! {
         position_bottom: String,
         position_left: String,
         layer: String,
-        offset_y: String,
-        offset_x: String,
 
         // Transform
         #[doc = include_str!("_docs/attributes/rotate.md")]
@@ -591,8 +593,6 @@ builder_constructors! {
         position_bottom: String,
         position_left: String,
         layer: String,
-        offset_y: String,
-        offset_x: String,
 
         // Transform
         #[doc = include_str!("_docs/attributes/rotate.md")]
