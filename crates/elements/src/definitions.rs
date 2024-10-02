@@ -300,8 +300,6 @@ builder_constructors! {
         max_width: String,
         #[doc = include_str!("_docs/attributes/margin.md")]
         margin: String,
-        #[doc = include_str!("_docs/attributes/padding.md")]
-        padding: String,
         #[doc = include_str!("_docs/attributes/position.md")]
         position: String,
         position_top: String,
@@ -394,8 +392,6 @@ builder_constructors! {
         max_width: String,
         #[doc = include_str!("_docs/attributes/margin.md")]
         margin: String,
-        #[doc = include_str!("_docs/attributes/padding.md")]
-        padding: String,
         #[doc = include_str!("_docs/attributes/position.md")]
         position: String,
         position_top: String,
@@ -490,8 +486,6 @@ builder_constructors! {
         decoration_style: String,
         #[doc = include_str!("_docs/attributes/decoration_color.md")]
         decoration_color: String,
-        #[doc = include_str!("_docs/attributes/text_overflow.md")]
-        text_overflow: String,
         #[doc = include_str!("_docs/attributes/letter_spacing.md")]
         letter_spacing: String,
         #[doc = include_str!("_docs/attributes/word_spacing.md")]
