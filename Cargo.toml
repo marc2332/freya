@@ -98,7 +98,12 @@ rfd = "0.14.1"
 bytes = "1.5.0"
 dioxus-sdk = { workspace = true }
 muda = "0.15.1"
+winit = { workspace = true }
 
 [profile.release]
 lto = true
 opt-level = 3
+
+[target."cfg(target_os = \"windows\")".dependencies.windows-sys]
+version = "0.59"
+features = ["Win32_UI_WindowsAndMessaging", "Win32_Foundation"]
