@@ -57,7 +57,7 @@ pub const BANANA_THEME: Theme = Theme {
     colors: ColorsSheet {
         primary: cow_borrowed!("rgb(240, 200, 50)"),
         secondary: cow_borrowed!("rgb(255, 250, 160)"),
-        tertiary: cow_borrowed!("rgb(255, 255, 240)"),
+        tertiary: cow_borrowed!("rgb(186, 153, 37)"),
         surface: cow_borrowed!("rgb(240, 229, 189)"),
         secondary_surface: cow_borrowed!("rgb(250, 240, 210)"),
         neutral_surface: cow_borrowed!("rgb(255, 245, 220)"),
