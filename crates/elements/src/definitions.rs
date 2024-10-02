@@ -400,9 +400,6 @@ builder_constructors! {
         color: String,
         #[doc = include_str!("_docs/attributes/font_size.md")]
         text_shadow: String,
-        #[doc = include_str!("_docs/attributes/width_height.md")]
-        height: String,
-        width: String,
         #[doc = include_str!("_docs/attributes/font_size.md")]
         font_size: String,
         #[doc = include_str!("_docs/attributes/font_family.md")]
