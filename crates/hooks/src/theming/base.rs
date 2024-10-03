@@ -65,6 +65,21 @@ pub(crate) const BASE_THEME: Theme = Theme {
         width: cow_borrowed!("auto"),
         height: cow_borrowed!("auto"),
     },
+    outline_button: ButtonTheme {
+        background: cow_borrowed!("key(background)"),
+        hover_background: cow_borrowed!("key(neutral_surface)"),
+        font_theme: FontTheme {
+            color: cow_borrowed!("key(primary)"),
+        },
+        border_fill: cow_borrowed!("key(surface)"),
+        focus_border_fill: cow_borrowed!("key(secondary_opposite_surface)"),
+        shadow: cow_borrowed!("none"),
+        padding: cow_borrowed!("8 12"),
+        margin: cow_borrowed!("0"),
+        corner_radius: cow_borrowed!("8"),
+        width: cow_borrowed!("auto"),
+        height: cow_borrowed!("auto"),
+    },
     input: InputTheme {
         background: cow_borrowed!("key(neutral_surface)"),
         hover_background: cow_borrowed!("key(focused_surface)"),

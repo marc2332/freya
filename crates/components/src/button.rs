@@ -97,6 +97,37 @@ pub fn FilledButton(props: ButtonProps) -> Element {
     })
 }
 
+/// Clickable button.
+///
+/// # Styling
+/// Inherits the outline [`ButtonTheme`](freya_hooks::ButtonTheme) theme.
+///
+/// # Example
+///
+/// ```no_run
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///     rsx!(
+///         OutlineButton {
+///             onpress: |_| println!("clicked"),
+///             label {
+///                 "Click this"
+///             }
+///         }
+///     )
+/// }
+/// ```
+#[allow(non_snake_case)]
+pub fn OutlineButton(props: ButtonProps) -> Element {
+    let theme = use_applied_theme!(&props.theme, outline_button);
+    ButtonBase(BaseButtonProps {
+        theme,
+        children: props.children,
+        onpress: props.onpress,
+        onclick: props.onclick,
+    })
+}
+
 pub enum PressEvent {
     Pointer(PointerEvent),
     Key(KeyboardEvent),

@@ -586,6 +586,7 @@ pub struct Theme {
     pub body: BodyTheme,
     pub button: ButtonTheme,
     pub filled_button: ButtonTheme,
+    pub outline_button: ButtonTheme,
     pub switch: SwitchTheme,
     pub scroll_bar: ScrollBarTheme,
     pub slider: SliderTheme,
