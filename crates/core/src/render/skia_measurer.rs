@@ -20,7 +20,6 @@ use freya_node_state::{
     FontStyleState,
     HighlightMode,
     LayoutState,
-    TextOverflow,
 };
 use torin::prelude::{
     Alignment,
@@ -229,8 +228,8 @@ pub fn create_paragraph(
     paragraph_style.set_max_lines(font_style.max_lines);
     paragraph_style.set_replace_tab_characters(true);
 
-    if font_style.text_overflow == TextOverflow::Ellipsis {
-        paragraph_style.set_ellipsis("…");
+    if let Some(ellipsis) = font_style.text_overflow.get_ellipsis() {
+        paragraph_style.set_ellipsis(ellipsis);
     }
 
     let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
