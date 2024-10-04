@@ -153,26 +153,26 @@ mod test {
         utils.wait_for_update().await;
 
         // If the inner circle exists it means that the Radio is activated, otherwise it isn't
-        assert!(root.get(0).get(0).get(0).get(0).get(0).is_element());
-        assert!(root.get(1).get(0).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(2).get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(0).get(0).get(0).get(0).is_element());
+        assert!(root.get(1).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(2).get(0).get(0).get(0).is_placeholder());
 
         utils.click_cursor((20., 50.)).await;
 
-        assert!(root.get(0).get(0).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(1).get(0).get(0).get(0).get(0).is_element());
-        assert!(root.get(2).get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(1).get(0).get(0).get(0).is_element());
+        assert!(root.get(2).get(0).get(0).get(0).is_placeholder());
 
         utils.click_cursor((10., 90.)).await;
 
-        assert!(root.get(0).get(0).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(1).get(0).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(2).get(0).get(0).get(0).get(0).is_element());
+        assert!(root.get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(1).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(2).get(0).get(0).get(0).is_element());
 
         utils.click_cursor((10., 10.)).await;
 
-        assert!(root.get(0).get(0).get(0).get(0).get(0).is_element());
-        assert!(root.get(1).get(0).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(2).get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(0).get(0).get(0).get(0).is_element());
+        assert!(root.get(1).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(2).get(0).get(0).get(0).is_placeholder());
     }
 }
