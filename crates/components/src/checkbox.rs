@@ -109,7 +109,7 @@ pub fn Checkbox(
                     fill: selected_icon_fill
                 }
             }
-        }     
+        }
     )
 }
 

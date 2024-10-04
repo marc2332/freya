@@ -95,7 +95,7 @@ pub fn Radio(
                     corner_radius: "99",
                 }
             }
-        }   
+        }
     )
 }
 
