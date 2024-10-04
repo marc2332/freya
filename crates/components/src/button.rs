@@ -92,7 +92,7 @@ pub fn Button(
     let mut status = use_signal(ButtonStatus::default);
     let platform = use_platform();
 
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
 
     let ButtonTheme {
         background,
@@ -151,8 +151,8 @@ pub fn Button(
         status.set(ButtonStatus::default());
     };
 
-    let onkeydown = move |ev: KeyboardEvent| {
-        if focus.validate_keydown(&ev) {
+    let onglobalkeydown = move |ev: KeyboardEvent| {
+        if focus.validate_globalkeydown(&ev) {
             if let Some(onpress) = &onpress {
                 onpress.call(PressEvent::Key(ev))
             }
@@ -164,9 +164,9 @@ pub fn Button(
         ButtonStatus::Idle => background,
     };
     let border = if focus.is_selected() {
-        format!("2 solid {focus_border_fill}")
+        format!("2 inner {focus_border_fill}")
     } else {
-        format!("1 solid {border_fill}")
+        format!("1 inner {border_fill}")
     };
 
     rsx!(
@@ -174,15 +174,14 @@ pub fn Button(
             onpointerup,
             onmouseenter,
             onmouseleave,
-            onkeydown,
-            focus_id,
+            onglobalkeydown,
+            a11y_id,
             width: "{width}",
             height: "{height}",
             padding: "{padding}",
             margin: "{margin}",
-            focusable: "true",
             overflow: "clip",
-            role: "button",
+            a11y_role:"button",
             color: "{font_theme.color}",
             shadow: "{shadow}",
             border: "{border}",
@@ -191,7 +190,6 @@ pub fn Button(
             text_align: "center",
             main_align: "center",
             cross_align: "center",
-            line_height: "1.1",
             {&children}
         }
     )
@@ -224,15 +222,18 @@ mod test {
 
         assert_eq!(label.get(0).text(), Some("false"));
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (15.0, 15.0).into(),
-            button: Some(MouseButton::Left),
-        });
-
-        utils.wait_for_update().await;
+        utils.click_cursor((15.0, 15.0)).await;
 
         assert_eq!(label.get(0).text(), Some("true"));
+
+        utils.push_event(PlatformEvent::Touch {
+            name: EventName::TouchStart,
+            location: (15.0, 15.0).into(),
+            finger_id: 1,
+            phase: TouchPhase::Started,
+            force: None,
+        });
+        utils.wait_for_update().await;
 
         utils.push_event(PlatformEvent::Touch {
             name: EventName::TouchEnd,
@@ -241,7 +242,6 @@ mod test {
             phase: TouchPhase::Ended,
             force: None,
         });
-
         utils.wait_for_update().await;
 
         assert_eq!(label.get(0).text(), Some("false"));

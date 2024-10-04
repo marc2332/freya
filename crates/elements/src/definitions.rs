@@ -187,7 +187,6 @@ builder_constructors! {
         background: String,
         #[doc = include_str!("_docs/attributes/border.md")]
         border: String,
-        border_align: String,
         #[doc = include_str!("_docs/attributes/direction.md")]
         direction: String,
         #[doc = include_str!("_docs/attributes/shadow.md")]
@@ -233,11 +232,12 @@ builder_constructors! {
         #[doc = include_str!("_docs/attributes/spacing.md")]
         spacing: String,
 
-        name: String,
-        focusable: String,
-        role: String,
-        focus_id: AccessibilityId,
-        alt: String,
+        a11y_auto_focus: String,
+        a11y_name: String,
+        a11y_role:String,
+        a11y_id: AccessibilityId,
+        a11y_alt: String,
+        a11y_focusable: String,
         canvas_reference: String,
         layer: String,
         offset_y: String,
@@ -299,17 +299,18 @@ builder_constructors! {
         decoration_color: String,
         #[doc = include_str!("_docs/attributes/text_overflow.md")]
         text_overflow: String,
-        focusable: String,
         #[doc = include_str!("_docs/attributes/margin.md")]
         margin: String,
         #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
 
         layer: String,
-        role: String,
-        alt: String,
-        focus_id: AccessibilityId,
-        name: String,
+        a11y_auto_focus: String,
+        a11y_name: String,
+        a11y_role:String,
+        a11y_id: AccessibilityId,
+        a11y_alt: String,
+        a11y_focusable: String,
     };
     /// `paragraph` element let's you build texts with different styles.
     ///
@@ -372,7 +373,6 @@ builder_constructors! {
         text_overflow: String,
         #[doc = include_str!("_docs/attributes/overflow.md")]
         overflow: String,
-        focusable: String,
         #[doc = include_str!("_docs/attributes/margin.md")]
         margin: String,
         #[doc = include_str!("_docs/attributes/opacity.md")]
@@ -384,10 +384,12 @@ builder_constructors! {
         cursor_color: String,
         cursor_mode: String,
         cursor_id: String,
-        alt: String,
-        name: String,
-        role: String,
-        focus_id: AccessibilityId,
+        a11y_auto_focus: String,
+        a11y_name: String,
+        a11y_role:String,
+        a11y_id: AccessibilityId,
+        a11y_alt: String,
+        a11y_focusable: String,
         highlights: String,
         highlight_color: String,
         highlight_mode: String,
@@ -398,9 +400,6 @@ builder_constructors! {
         color: String,
         #[doc = include_str!("_docs/attributes/font_size.md")]
         text_shadow: String,
-        #[doc = include_str!("_docs/attributes/width_height.md")]
-        height: String,
-        width: String,
         #[doc = include_str!("_docs/attributes/font_size.md")]
         font_size: String,
         #[doc = include_str!("_docs/attributes/font_family.md")]
@@ -454,11 +453,11 @@ builder_constructors! {
 
         image_data: String,
         image_reference: String,
-        role: String,
-        focus_id: AccessibilityId,
-        alt: String,
-        name: String,
-        focusable: String,
+        a11y_auto_focus: String,
+        a11y_name: String,
+        a11y_role:String,
+        a11y_id: AccessibilityId,
+        a11y_alt: String,
     };
     /// `svg` element let's you display SVG code.
     ///
@@ -493,11 +492,12 @@ builder_constructors! {
 
         svg_data: String,
         svg_content: String,
-        role: String,
-        focus_id: AccessibilityId,
-        alt: String,
-        name: String,
-        focusable: String,
+        a11y_auto_focus: String,
+        a11y_name: String,
+        a11y_role:String,
+        a11y_id: AccessibilityId,
+        a11y_alt: String,
+        a11y_focusable: String,
     };
 }
 
@@ -581,18 +581,20 @@ pub mod events {
         onclick
         #[doc = include_str!("_docs/events/globalclick.md")]
         onglobalclick
-        #[doc = include_str!("_docs/events/onmiddleclick.md")]
+        #[doc = include_str!("_docs/events/middleclick.md")]
         onmiddleclick
-        #[doc = include_str!("_docs/events/onrightclick.md")]
+        #[doc = include_str!("_docs/events/rightclick.md")]
         onrightclick
+        #[doc = include_str!("_docs/events/mouseup.md")]
+        onmouseup
         #[doc = include_str!("_docs/events/mousedown.md")]
         onmousedown
         #[doc = include_str!("_docs/events/globalmousedown.md")]
         onglobalmousedown
-        #[doc = include_str!("_docs/events/mouseover.md")]
-        onmouseover
-        #[doc = include_str!("_docs/events/globalmouseover.md")]
-        onglobalmouseover
+        #[doc = include_str!("_docs/events/mousemove.md")]
+        onmousemove
+        #[doc = include_str!("_docs/events/globalmousemove.md")]
+        onglobalmousemove
         #[doc = include_str!("_docs/events/mouseleave.md")]
         onmouseleave
         #[doc = include_str!("_docs/events/mouseenter.md")]
@@ -609,10 +611,14 @@ pub mod events {
     impl_event! [
         KeyboardData;
 
-        #[doc = include_str!("_docs/events/keydown.md")]
         onkeydown
-        #[doc = include_str!("_docs/events/keyup.md")]
+
         onkeyup
+
+        #[doc = include_str!("_docs/events/globalkeydown.md")]
+        onglobalkeydown
+        #[doc = include_str!("_docs/events/globalkeyup.md")]
+        onglobalkeyup
     ];
 
     impl_event! [
@@ -635,10 +641,10 @@ pub mod events {
         onpointerdown
         #[doc = include_str!("_docs/events/pointerup.md")]
         onpointerup
-        #[doc = include_str!("_docs/events/onglobalpointerup.md")]
+        #[doc = include_str!("_docs/events/globalpointerup.md")]
         onglobalpointerup
-        #[doc = include_str!("_docs/events/pointerover.md")]
-        onpointerover
+        #[doc = include_str!("_docs/events/pointermove.md")]
+        onpointermove
         #[doc = include_str!("_docs/events/pointerenter.md")]
         onpointerenter
         #[doc = include_str!("_docs/events/pointerleave.md")]
@@ -648,11 +654,11 @@ pub mod events {
     impl_event! [
         FileData;
 
-        #[doc = include_str!("_docs/events/onfiledrop.md")]
+        #[doc = include_str!("_docs/events/filedrop.md")]
         onfiledrop
-        #[doc = include_str!("_docs/events/onglobalfilehover.md")]
+        #[doc = include_str!("_docs/events/globalfilehover.md")]
         onglobalfilehover
-        #[doc = include_str!("_docs/events/onglobalfilehovercancelled.md")]
+        #[doc = include_str!("_docs/events/globalfilehovercancelled.md")]
         onglobalfilehovercancelled
     ];
 }

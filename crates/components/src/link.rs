@@ -15,7 +15,10 @@ use freya_hooks::{
 };
 use winit::event::MouseButton;
 
-use crate::Tooltip;
+use crate::{
+    Tooltip,
+    TooltipContainer,
+};
 
 /// Tooltip configuration for the [`Link`] component.
 #[derive(Clone, PartialEq)]
@@ -159,7 +162,7 @@ pub fn Link(
         Some(LinkTooltip::Custom(str)) => Some(str),
     };
 
-    let main_rect = rsx! {
+    let link = rsx! {
         rect {
             onmouseenter,
             onmouseleave,
@@ -169,27 +172,19 @@ pub fn Link(
         }
     };
 
-    let Some(tooltip) = tooltip else {
-        return rsx!({ main_rect });
-    };
-
-    rsx! {
-        rect {
-            {main_rect}
-            rect {
-                height: "0",
-                width: "0",
-                layer: "-999",
-                rect {
-                    width: "100v",
-                    if *is_hovering.read() {
-                        Tooltip {
-                            url: tooltip
-                        }
+    if let Some(tooltip) = tooltip {
+        rsx!(
+            TooltipContainer {
+                tooltip: rsx!(
+                    Tooltip {
+                        text: tooltip
                     }
-                }
+                )
+                {link}
             }
-        }
+        )
+    } else {
+        link
     }
 }
 
@@ -273,32 +268,19 @@ mod test {
 
         let mut utils = launch_test(link_app);
 
-        utils.wait_for_update().await;
-        utils.wait_for_update().await;
-
         // Check route is Home
         assert_eq!(utils.root().get(2).get(0).text(), Some("Home"));
 
         // Go to the "Somewhere" route
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (5., 60.).into(),
-            button: Some(MouseButton::Left),
-        });
-
-        utils.wait_for_update().await;
-        utils.wait_for_update().await;
+        utils.click_cursor((5., 60.)).await;
 
         // Check route is Somewhere
         assert_eq!(utils.root().get(2).get(0).text(), Some("Somewhere"));
 
         // Go to the "Home" route again
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (5., 5.).into(),
-            button: Some(MouseButton::Left),
-        });
+        utils.click_cursor((5., 5.)).await;
 
-        utils.wait_for_update().await;
+        // Check route is Home
+        assert_eq!(utils.root().get(2).get(0).text(), Some("Home"));
     }
 }

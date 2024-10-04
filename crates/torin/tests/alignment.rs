@@ -591,3 +591,75 @@ pub fn space_evenly_alignment() {
         Rect::new(Point2D::new(0.0, 780.0), Size2D::new(100.0, 100.0)),
     );
 }
+
+#[test]
+pub fn alignment_with_absolute_child() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_dom = TestingDOM::default();
+    mocked_dom.add(
+        0,
+        None,
+        vec![1, 2, 3],
+        Node::from_size_and_alignments_and_direction_and_spacing(
+            Size::Percentage(Length::new(100.)),
+            Size::Percentage(Length::new(100.)),
+            Alignment::Center,
+            Alignment::Center,
+            DirectionMode::Vertical,
+            Length::new(15.0),
+        ),
+    );
+    mocked_dom.add(
+        1,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(100.)),
+            Size::Pixels(Length::new(100.)),
+            DirectionMode::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        2,
+        Some(0),
+        vec![],
+        Node::from_size_and_position(
+            Size::Pixels(Length::new(100.)),
+            Size::Pixels(Length::new(100.)),
+            Position::Absolute(Box::new(AbsolutePosition::default())),
+        ),
+    );
+    mocked_dom.add(
+        3,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(100.)),
+            Size::Pixels(Length::new(100.)),
+            DirectionMode::Vertical,
+        ),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        &mut measurer,
+        &mut mocked_dom,
+    );
+
+    assert_eq!(
+        layout.get(1).unwrap().visible_area(),
+        Rect::new(Point2D::new(450.0, 392.5), Size2D::new(100.0, 100.0)),
+    );
+
+    assert_eq!(
+        layout.get(2).unwrap().visible_area(),
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 100.0)),
+    );
+
+    assert_eq!(
+        layout.get(3).unwrap().visible_area(),
+        Rect::new(Point2D::new(450.0, 507.5), Size2D::new(100.0, 100.0)),
+    );
+}

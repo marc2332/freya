@@ -1,4 +1,7 @@
-use std::ops::Deref;
+use std::{
+    ops::Deref,
+    slice::Iter,
+};
 
 pub use euclid::Rect;
 
@@ -69,9 +72,9 @@ impl Size {
         match self {
             Size::Pixels(px) => Some(px.get() + parent_margin),
             Size::Percentage(per) => Some(parent_value / 100.0 * per.get()),
-            Size::DynamicCalculations(calculations) => {
-                Some(run_calculations(calculations.deref(), parent_value))
-            }
+            Size::DynamicCalculations(calculations) => Some(
+                run_calculations(calculations.deref(), parent_value, root_value).unwrap_or(0.0),
+            ),
             Size::Fill => Some(available_parent_value),
             Size::FillMinimum => {
                 if phase == Phase::Initial {
@@ -169,6 +172,7 @@ pub enum DynamicCalculation {
     Div,
     Add,
     Percentage(f32),
+    RootPercentage(f32),
     Pixels(f32),
 }
 
@@ -188,55 +192,121 @@ impl std::fmt::Display for DynamicCalculation {
             DynamicCalculation::Div => f.write_str("/"),
             DynamicCalculation::Add => f.write_str("+"),
             DynamicCalculation::Percentage(p) => f.write_fmt(format_args!("{p}%")),
+            DynamicCalculation::RootPercentage(p) => f.write_fmt(format_args!("{p}v")),
             DynamicCalculation::Pixels(s) => f.write_fmt(format_args!("{s}")),
         }
     }
 }
 
-/// Calculate some chained operations with a given value.
-/// This value could be for example the width of a node's parent area.
-pub fn run_calculations(calcs: &[DynamicCalculation], value: f32) -> f32 {
-    let mut prev_number: Option<f32> = None;
-    let mut prev_op: Option<DynamicCalculation> = None;
+/// [Operator-precedence parser](https://en.wikipedia.org/wiki/Operator-precedence_parser#Precedence_climbing_method)
+struct DynamicCalculationEvaluator<'a> {
+    calcs: Iter<'a, DynamicCalculation>,
+    parent_value: f32,
+    root_value: f32,
+    current: Option<&'a DynamicCalculation>,
+}
 
-    let mut calc_with_op = |val: f32, prev_op: Option<DynamicCalculation>| {
-        if let Some(op) = prev_op {
-            match op {
-                DynamicCalculation::Sub => {
-                    prev_number = Some(prev_number.unwrap() - val);
-                }
-                DynamicCalculation::Add => {
-                    prev_number = Some(prev_number.unwrap() + val);
-                }
-                DynamicCalculation::Mul => {
-                    prev_number = Some(prev_number.unwrap() * val);
-                }
-                DynamicCalculation::Div => {
-                    prev_number = Some(prev_number.unwrap() / val);
-                }
-                _ => {}
-            }
-        } else {
-            prev_number = Some(val);
-        }
-    };
-
-    for calc in calcs {
-        match calc {
-            DynamicCalculation::Percentage(per) => {
-                let val = (value / 100.0 * per).round();
-
-                calc_with_op(val, prev_op);
-
-                prev_op = None;
-            }
-            DynamicCalculation::Pixels(val) => {
-                calc_with_op(*val, prev_op);
-                prev_op = None;
-            }
-            _ => prev_op = Some(*calc),
+impl<'a> DynamicCalculationEvaluator<'a> {
+    pub fn new(calcs: Iter<'a, DynamicCalculation>, parent_value: f32, root_value: f32) -> Self {
+        Self {
+            calcs,
+            parent_value,
+            root_value,
+            current: None,
         }
     }
 
-    prev_number.unwrap()
+    pub fn evaluate(&mut self) -> Option<f32> {
+        // Parse and evaluate the expression
+        let value = self.parse_expression(0);
+
+        // Return the result if there are no more tokens
+        match self.current {
+            Some(_) => None,
+            None => value,
+        }
+    }
+
+    /// Parse and evaluate the expression with operator precedence and following grammar:
+    /// ```ebnf
+    ///     expression = value, { operator, value } ;
+    ///     operator   = "+" | "-" | "*" | "/" ;
+    /// ```
+    fn parse_expression(&mut self, min_precedence: usize) -> Option<f32> {
+        // Parse left-hand side value
+        self.current = self.calcs.next();
+        let mut lhs = self.parse_value()?;
+
+        while let Some(operator_precedence) = self.operator_precedence() {
+            // Return if minimal precedence is reached.
+            if operator_precedence < min_precedence {
+                return Some(lhs);
+            }
+
+            // Save operator to apply after parsing right-hand side value.
+            let operator = self.current?;
+
+            // Parse right-hand side value.
+            //
+            // Next precedence is the current precedence + 1
+            // because all operators are left associative.
+            let rhs = self.parse_expression(operator_precedence + 1)?;
+
+            // Apply operator
+            match operator {
+                DynamicCalculation::Add => lhs += rhs,
+                DynamicCalculation::Sub => lhs -= rhs,
+                DynamicCalculation::Mul => lhs *= rhs,
+                DynamicCalculation::Div => lhs /= rhs,
+                // Precedence will return None for other tokens
+                // and loop will break if it's not an operator
+                _ => unreachable!(),
+            }
+        }
+
+        Some(lhs)
+    }
+
+    /// Parse and evaluate the value with the following grammar:
+    /// ```ebnf
+    ///     value      = percentage | pixels ;
+    ///     percentage = number, "%" ;
+    ///     pixels     = number ;
+    /// ```
+    fn parse_value(&mut self) -> Option<f32> {
+        match self.current? {
+            DynamicCalculation::Percentage(value) => {
+                self.current = self.calcs.next();
+                Some((self.parent_value / 100.0 * value).round())
+            }
+            DynamicCalculation::RootPercentage(value) => {
+                self.current = self.calcs.next();
+                Some((self.root_value / 100.0 * value).round())
+            }
+            DynamicCalculation::Pixels(value) => {
+                self.current = self.calcs.next();
+                Some(*value)
+            }
+            _ => None,
+        }
+    }
+
+    /// Get the precedence of the operator if current token is an operator or None otherwise.
+    fn operator_precedence(&self) -> Option<usize> {
+        match self.current? {
+            DynamicCalculation::Add | DynamicCalculation::Sub => Some(1),
+            DynamicCalculation::Mul | DynamicCalculation::Div => Some(2),
+            _ => None,
+        }
+    }
+}
+
+/// Calculate dynamic expression with operator precedence.
+/// This value could be for example the width of a node's parent area.
+pub fn run_calculations(
+    calcs: &[DynamicCalculation],
+    parent_value: f32,
+    root_value: f32,
+) -> Option<f32> {
+    DynamicCalculationEvaluator::new(calcs.iter(), parent_value, root_value).evaluate()
 }

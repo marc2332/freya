@@ -1,3 +1,9 @@
+use std::sync::{
+    Arc,
+    Mutex,
+};
+
+use freya_common::CompositorDirtyNodes;
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
@@ -17,7 +23,6 @@ use crate::{
     parsing::ExtSplit,
     AttributesBytes,
     Border,
-    BorderAlignment,
     CornerRadius,
     CustomAttributeValues,
     Fill,
@@ -31,13 +36,12 @@ use crate::{
 #[derive(Default, Debug, Clone, PartialEq, Component)]
 pub struct StyleState {
     pub background: Fill,
-    pub border: Border,
+    pub borders: Vec<Border>,
     pub shadows: Vec<Shadow>,
     pub corner_radius: CornerRadius,
     pub image_data: Option<AttributesBytes>,
     pub svg_data: Option<AttributesBytes>,
     pub overflow: OverflowMode,
-    pub opacity: Option<f32>,
 }
 
 impl ParseAttribute for StyleState {
@@ -56,14 +60,10 @@ impl ParseAttribute for StyleState {
             }
             AttributeName::Border => {
                 if let Some(value) = attr.value.as_text() {
-                    let mut border = Border::parse(value)?;
-                    border.alignment = self.border.alignment;
-                    self.border = border;
-                }
-            }
-            AttributeName::BorderAlign => {
-                if let Some(value) = attr.value.as_text() {
-                    self.border.alignment = BorderAlignment::parse(value)?;
+                    self.borders = value
+                        .split_excluding_group(',', '(', ')')
+                        .map(|chunk| Border::parse(chunk).unwrap_or_default())
+                        .collect();
                 }
             }
             AttributeName::Shadow => {
@@ -114,11 +114,6 @@ impl ParseAttribute for StyleState {
                     self.overflow = OverflowMode::parse(value)?;
                 }
             }
-            AttributeName::Opacity => {
-                if let Some(value) = attr.value.as_text() {
-                    self.opacity = Some(value.parse::<f32>().map_err(|_| ParseError)?);
-                }
-            }
             _ => {}
         }
 
@@ -128,7 +123,7 @@ impl ParseAttribute for StyleState {
 
 #[partial_derive_state]
 impl State<CustomAttributeValues> for StyleState {
-    type ParentDependencies = (Self,);
+    type ParentDependencies = ();
 
     type ChildDependencies = ();
 
@@ -139,7 +134,6 @@ impl State<CustomAttributeValues> for StyleState {
             AttributeName::Background,
             AttributeName::Layer,
             AttributeName::Border,
-            AttributeName::BorderAlign,
             AttributeName::Shadow,
             AttributeName::CornerRadius,
             AttributeName::CornerSmoothing,
@@ -147,7 +141,6 @@ impl State<CustomAttributeValues> for StyleState {
             AttributeName::SvgData,
             AttributeName::SvgContent,
             AttributeName::Overflow,
-            AttributeName::Opacity,
         ]));
 
     fn update<'a>(
@@ -156,8 +149,9 @@ impl State<CustomAttributeValues> for StyleState {
         _node: <Self::NodeDependencies as Dependancy>::ElementBorrowed<'a>,
         _parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
-        _context: &SendAnyMap,
+        context: &SendAnyMap,
     ) -> bool {
+        let compositor_dirty_nodes = context.get::<Arc<Mutex<CompositorDirtyNodes>>>().unwrap();
         let mut style = StyleState::default();
 
         if let Some(attributes) = node_view.attributes() {
@@ -167,6 +161,13 @@ impl State<CustomAttributeValues> for StyleState {
         }
 
         let changed = &style != self;
+
+        if changed {
+            compositor_dirty_nodes
+                .lock()
+                .unwrap()
+                .invalidate(node_view.node_id())
+        }
 
         *self = style;
         changed

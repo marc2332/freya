@@ -76,18 +76,18 @@ fn ShaderEditor(editable: UseEditable) -> Element {
         editable.process_event(&EditableEvent::Click);
     };
 
-    let onkeydown = move |e: KeyboardEvent| {
+    let onglobalkeydown = move |e: KeyboardEvent| {
         editable.process_event(&EditableEvent::KeyDown(e.data));
     };
 
-    let onkeyup = move |e: KeyboardEvent| {
+    let onglobalkeyup = move |e: KeyboardEvent| {
         editable.process_event(&EditableEvent::KeyUp(e.data));
     };
 
     rsx!(
         rect {
-            onkeydown,
-            onkeyup,
+            onglobalkeydown,
+            onglobalkeyup,
             onglobalclick,
             cursor_reference,
             width: "50%",
@@ -105,7 +105,7 @@ fn ShaderEditor(editable: UseEditable) -> Element {
 
                     // Only show the cursor in the active line
                     let character_index = if is_line_selected {
-                        editor.visible_cursor_col().to_string()
+                        editor.cursor_col().to_string()
                     } else {
                         "none".to_string()
                     };
@@ -121,8 +121,8 @@ fn ShaderEditor(editable: UseEditable) -> Element {
                         editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
                     };
 
-                    let onmouseover = move |e: MouseEvent| {
-                        editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
+                    let onmousemove = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseMove(e.data, line_index));
                     };
 
                     let highlights = editable.highlights_attr(line_index);
@@ -153,7 +153,7 @@ fn ShaderEditor(editable: UseEditable) -> Element {
                                 cursor_mode: "editable",
                                 cursor_id: "{line_index}",
                                 onmousedown,
-                                onmouseover,
+                                onmousemove,
                                 highlights,
                                 highlight_mode: "expanded",
                                 text {
@@ -173,6 +173,7 @@ fn ShaderEditor(editable: UseEditable) -> Element {
 #[component]
 fn ShaderView(editable: UseEditable) -> Element {
     let platform = use_platform();
+    let (reference, size) = use_node_signal();
 
     use_hook(|| {
         let mut ticker = platform.new_ticker();
@@ -180,6 +181,7 @@ fn ShaderView(editable: UseEditable) -> Element {
         spawn(async move {
             loop {
                 ticker.tick().await;
+                platform.invalidate_drawing_area(size.peek().area);
                 platform.request_animation_frame();
             }
         });
@@ -243,10 +245,11 @@ fn ShaderView(editable: UseEditable) -> Element {
     });
 
     rsx!(rect {
+        canvas_reference: canvas.attribute(),
+        reference,
+        background: "black",
         width: "fill",
         height: "fill",
-        background: "black",
-        canvas_reference: canvas.attribute()
     })
 }
 

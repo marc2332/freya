@@ -28,4 +28,12 @@ freya-engine = { workspace = true }
 freya-native-core = { workspace = true }
 rustc-hash= { workspace = true }
 
+itertools = "0.13.0"
 uuid = { workspace = true }
+
+
+[dev-dependencies]
+dioxus = { workspace = true }
+freya = { path = "../freya" }
+freya-testing = { path = "../testing" }
+tokio = { workspace = true }

@@ -38,10 +38,6 @@ fn app() -> Element {
                     values.write().1 = txt;
                 }
             },
-            label {
-                color: "black",
-                "You are {values.read().0} and you are {values.read().1} years old."
-            }
         }
     )
 }

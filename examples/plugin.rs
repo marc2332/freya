@@ -15,7 +15,7 @@ use freya_core::{
 struct DummyPlugin;
 
 impl FreyaPlugin for DummyPlugin {
-    fn on_event(&mut self, event: &PluginEvent, handle: PluginHandle) {
+    fn on_event(&mut self, event: &PluginEvent, _handle: PluginHandle) {
         if let PluginEvent::AfterRender { .. } = event {
             println!("The app just got rendered to the canvas.");
         }

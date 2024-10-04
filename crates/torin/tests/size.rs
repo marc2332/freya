@@ -777,3 +777,119 @@ pub fn inner_percentage() {
         Rect::new(Point2D::new(0.0, 300.0), Size2D::new(100.0, 100.0)),
     );
 }
+
+#[test]
+pub fn test_calc() {
+    const PARENT_VALUE: f32 = 500.0;
+
+    assert_eq!(
+        run_calculations(
+            &vec![DynamicCalculation::Pixels(10.0)],
+            PARENT_VALUE,
+            PARENT_VALUE
+        ),
+        Some(10.0)
+    );
+
+    assert_eq!(
+        run_calculations(
+            &vec![DynamicCalculation::Percentage(87.5)],
+            PARENT_VALUE,
+            PARENT_VALUE
+        ),
+        Some((87.5 / 100.0 * PARENT_VALUE).round())
+    );
+
+    assert_eq!(
+        run_calculations(
+            &vec![
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::Add,
+                DynamicCalculation::Pixels(20.0),
+                DynamicCalculation::Mul,
+                DynamicCalculation::Percentage(50.0),
+            ],
+            PARENT_VALUE,
+            PARENT_VALUE
+        ),
+        Some(10.0 + 20.0 * (50.0 / 100.0 * PARENT_VALUE).round())
+    );
+
+    assert_eq!(
+        run_calculations(
+            &vec![
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::Add,
+                DynamicCalculation::Percentage(10.0),
+                DynamicCalculation::Add,
+                DynamicCalculation::Pixels(30.0),
+                DynamicCalculation::Mul,
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::Add,
+                DynamicCalculation::Pixels(75.0),
+                DynamicCalculation::Mul,
+                DynamicCalculation::Pixels(2.0),
+            ],
+            PARENT_VALUE,
+            PARENT_VALUE
+        ),
+        Some(10.0 + (10.0 / 100.0 * PARENT_VALUE).round() + 30.0 * 10.0 + 75.0 * 2.0)
+    );
+
+    assert_eq!(
+        run_calculations(
+            &vec![
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::Pixels(20.0),
+            ],
+            PARENT_VALUE,
+            PARENT_VALUE
+        ),
+        None
+    );
+
+    assert_eq!(
+        run_calculations(
+            &vec![DynamicCalculation::Pixels(10.0), DynamicCalculation::Add],
+            PARENT_VALUE,
+            PARENT_VALUE
+        ),
+        None
+    );
+
+    assert_eq!(
+        run_calculations(
+            &vec![DynamicCalculation::Add, DynamicCalculation::Pixels(10.0)],
+            PARENT_VALUE,
+            PARENT_VALUE
+        ),
+        None
+    );
+
+    assert_eq!(
+        run_calculations(
+            &vec![
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::Add,
+                DynamicCalculation::Add,
+                DynamicCalculation::Pixels(10.0)
+            ],
+            PARENT_VALUE,
+            PARENT_VALUE
+        ),
+        None
+    );
+
+    assert_eq!(
+        run_calculations(
+            &vec![
+                DynamicCalculation::Percentage(50.0),
+                DynamicCalculation::Sub,
+                DynamicCalculation::RootPercentage(20.0)
+            ],
+            PARENT_VALUE,
+            PARENT_VALUE
+        ),
+        Some((PARENT_VALUE * 0.5) - (PARENT_VALUE * 0.20))
+    );
+}

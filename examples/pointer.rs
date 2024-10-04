@@ -18,7 +18,7 @@ fn app() -> Element {
         println!("Up -> {:?}", ev.data.get_pointer_type());
     };
 
-    let onpointerover = move |ev: PointerEvent| {
+    let onpointermove = move |ev: PointerEvent| {
         println!("Over -> {:?}", ev.data.get_pointer_type());
     };
 
@@ -50,7 +50,7 @@ fn app() -> Element {
                 padding: "12",
                 onpointerdown,
                 onpointerup,
-                onpointerover,
+                onpointermove,
                 onpointerenter,
                 onpointerleave,
                 onglobalpointerup,

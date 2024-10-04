@@ -1,4 +1,4 @@
-The `keydown` event fires when the user starts pressing any key.
+The `keydown` event fires when the user starts pressing any key in the currently focused element.
 
 Event Data: [`KeyboardData`](crate::events::KeyboardData)
 

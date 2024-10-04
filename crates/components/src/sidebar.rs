@@ -1,11 +1,9 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::{
-    theme_with,
     use_activable_route,
     use_applied_theme,
     use_platform,
-    ScrollViewThemeWith,
     SidebarItemTheme,
     SidebarItemThemeWith,
     SidebarTheme,
@@ -47,10 +45,8 @@ pub fn Sidebar(
                 color: "{font_theme.color}",
                 shadow: "2 0 5 0 rgb(0, 0, 0, 30)",
                 ScrollView {
-                    theme: theme_with!(ScrollViewTheme {
-                        padding: "8".into(),
-                        spacing: spacing,
-                    }),
+                    padding: "8",
+                    spacing,
                     {sidebar}
                 }
             }

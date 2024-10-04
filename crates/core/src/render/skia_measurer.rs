@@ -26,9 +26,7 @@ use torin::prelude::{
     Alignment,
     Area,
     LayoutMeasurer,
-    LayoutNode,
     Node,
-    Point2D,
     Size2D,
 };
 
@@ -77,9 +75,10 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                     self.default_fonts,
                     self.scale_factor,
                 );
-                let res = Size2D::new(label.longest_line(), label.height());
+                let height = label.height();
+                let res = Size2D::new(label.longest_line(), height);
                 let mut map = SendAnyMap::new();
-                map.insert(CachedParagraph(label));
+                map.insert(CachedParagraph(label, height));
                 Some((res, Arc::new(map)))
             }
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Paragraph => {
@@ -91,9 +90,10 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                     self.default_fonts,
                     self.scale_factor,
                 );
-                let res = Size2D::new(paragraph.longest_line(), paragraph.height());
+                let height = paragraph.height();
+                let res = Size2D::new(paragraph.longest_line(), height);
                 let mut map = SendAnyMap::new();
-                map.insert(CachedParagraph(paragraph));
+                map.insert(CachedParagraph(paragraph, height));
                 Some((res, Arc::new(map)))
             }
             _ => None,
@@ -110,14 +110,14 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
             .unwrap_or_default()
     }
 
-    fn notify_layout_references(&self, node_id: NodeId, layout_node: &LayoutNode) {
+    fn notify_layout_references(&self, node_id: NodeId, area: Area, inner_sizes: Size2D) {
         let node = self.rdom.get(node_id).unwrap();
         let size_state = &*node.get::<LayoutState>().unwrap();
 
         if let Some(reference) = &size_state.node_ref {
             let mut node_layout = NodeReferenceLayout {
-                area: layout_node.area,
-                inner: layout_node.inner_sizes,
+                area,
+                inner: inner_sizes,
             };
             node_layout.div(self.scale_factor);
             reference.0.send(node_layout).ok();
@@ -138,12 +138,13 @@ pub fn create_label(
     paragraph_style.set_text_align(font_style.text_align);
     paragraph_style.set_max_lines(font_style.max_lines);
     paragraph_style.set_replace_tab_characters(true);
-    let text_style = font_style.text_style(default_font_family, scale_factor);
-    paragraph_style.set_text_style(&text_style);
 
     if let Some(ellipsis) = font_style.text_overflow.get_ellipsis() {
         paragraph_style.set_ellipsis(ellipsis);
     }
+
+    let text_style = font_style.text_style(default_font_family, scale_factor);
+    paragraph_style.set_text_style(&text_style);
 
     let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
 
@@ -154,7 +155,14 @@ pub fn create_label(
     }
 
     let mut paragraph = paragraph_builder.build();
-    paragraph.layout(area_size.width + 1.0);
+    paragraph.layout(
+        if font_style.max_lines == Some(1) && font_style.text_align == TextAlign::default() {
+            f32::MAX
+        } else {
+            area_size.width + 1.0
+        },
+    );
+
     paragraph
 }
 
@@ -165,26 +173,28 @@ pub fn align_highlights_and_cursor_paragraph(
     paragraph: &Paragraph,
     cursor_rect: &TextBox,
     width: Option<f32>,
-) -> (Point2D, Point2D) {
+) -> Rect {
     let cursor_state = node.get::<CursorState>().unwrap();
 
-    let x = area.min_x() + cursor_rect.rect.left;
-    let x2 = x + width.unwrap_or(cursor_rect.rect.right - cursor_rect.rect.left);
+    let left = area.min_x() + cursor_rect.rect.left;
+    let right = left + width.unwrap_or(cursor_rect.rect.right - cursor_rect.rect.left);
 
     match cursor_state.highlight_mode {
         HighlightMode::Fit => {
-            let y = area.min_y()
+            let top = (area.min_y()
                 + align_main_align_paragraph(node, area, paragraph)
-                + cursor_rect.rect.top;
-            let y2 = y + (cursor_rect.rect.bottom - cursor_rect.rect.top);
+                + cursor_rect.rect.top)
+                .clamp(area.min_y(), area.max_y());
+            let bottom = (top + (cursor_rect.rect.bottom - cursor_rect.rect.top))
+                .clamp(area.min_y(), area.max_y());
 
-            (Point2D::new(x, y), Point2D::new(x2, y2))
+            Rect::new(left, top, right, bottom)
         }
         HighlightMode::Expanded => {
-            let y = area.min_y();
-            let y2 = area.max_y();
+            let top = area.min_y();
+            let bottom = area.max_y();
 
-            (Point2D::new(x, y), Point2D::new(x2, y2))
+            Rect::new(left, top, right, bottom)
         }
     }
 }
@@ -229,20 +239,20 @@ pub fn create_paragraph(
     paragraph_builder.push_style(&text_style);
 
     for text_span in node.children() {
-        match &*text_span.node_type() {
-            NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Text => {
-                let text_nodes = text_span.children();
-                let text_node = *text_nodes.first().unwrap();
-                let text_node_type = &*text_node.node_type();
-                let font_style = text_span.get::<FontStyleState>().unwrap();
-                let text_style = font_style.text_style(default_font_family, scale_factor);
-                paragraph_builder.push_style(&text_style);
+        if let NodeType::Element(ElementNode {
+            tag: TagName::Text, ..
+        }) = &*text_span.node_type()
+        {
+            let text_nodes = text_span.children();
+            let text_node = *text_nodes.first().unwrap();
+            let text_node_type = &*text_node.node_type();
+            let font_style = text_span.get::<FontStyleState>().unwrap();
+            let text_style = font_style.text_style(default_font_family, scale_factor);
+            paragraph_builder.push_style(&text_style);
 
-                if let NodeType::Text(text) = text_node_type {
-                    paragraph_builder.add_text(text);
-                }
+            if let NodeType::Text(text) = text_node_type {
+                paragraph_builder.add_text(text);
             }
-            _ => {}
         }
     }
 
@@ -252,6 +262,13 @@ pub fn create_paragraph(
     }
 
     let mut paragraph = paragraph_builder.build();
-    paragraph.layout(area_size.width + 1.0);
+    paragraph.layout(
+        if font_style.max_lines == Some(1) && font_style.text_align == TextAlign::default() {
+            f32::MAX
+        } else {
+            area_size.width + 1.0
+        },
+    );
+
     paragraph
 }
