@@ -75,6 +75,14 @@ impl ScrollController {
         }
     }
 
+    pub fn x(&self) -> Signal<i32> {
+        self.x
+    }
+
+    pub fn y(&self) -> Signal<i32> {
+        self.y
+    }
+
     pub fn use_apply(&mut self, width: f32, height: f32) {
         let scope_id = current_scope_id().unwrap();
 
