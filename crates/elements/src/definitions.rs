@@ -232,6 +232,8 @@ builder_constructors! {
         #[doc = include_str!("_docs/attributes/spacing.md")]
         spacing: String,
 
+        scale: String,
+
         a11y_auto_focus: String,
         a11y_name: String,
         a11y_role:String,
