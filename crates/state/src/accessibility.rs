@@ -70,7 +70,7 @@ impl ParseAttribute for AccessibilityNodeState {
                 if let OwnedAttributeValue::Text(attr) = attr.value {
                     self.a11y_role = Some(
                         serde_json::from_str::<Role>(&format!("\"{attr}\""))
-                            .map_err(|_| ParseError)?,
+                            .map_err(|err| ParseError(err.to_string()))?,
                     )
                 }
             }

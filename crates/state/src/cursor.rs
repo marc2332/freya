@@ -1,6 +1,9 @@
-use std::sync::{
-    Arc,
-    Mutex,
+use std::{
+    num::ParseIntError,
+    sync::{
+        Arc,
+        Mutex,
+    },
 };
 
 use freya_common::{
@@ -71,7 +74,11 @@ impl ParseAttribute for CursorState {
             AttributeName::CursorIndex => {
                 if let Some(value) = attr.value.as_text() {
                     if value != "none" {
-                        self.position = Some(value.parse().map_err(|_| ParseError)?);
+                        self.position = Some(
+                            value
+                                .parse()
+                                .map_err(|err: ParseIntError| ParseError(err.to_string()))?,
+                        );
                     }
                 }
             }
@@ -87,7 +94,11 @@ impl ParseAttribute for CursorState {
             }
             AttributeName::CursorId => {
                 if let Some(value) = attr.value.as_text() {
-                    self.cursor_id = Some(value.parse().map_err(|_| ParseError)?);
+                    self.cursor_id = Some(
+                        value
+                            .parse()
+                            .map_err(|err: ParseIntError| ParseError(err.to_string()))?,
+                    );
                 }
             }
             AttributeName::Highlights => {
