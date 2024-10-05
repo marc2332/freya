@@ -163,8 +163,13 @@ impl AccessibilityTree {
         }
 
         // Mark the still existing ancenstors as modified
-        for (node_id, ancestor_node_id) in removed_ids {
-            added_or_updated_ids.insert(ancestor_node_id);
+        for (_, ancestor_node_id) in removed_ids.iter() {
+            added_or_updated_ids.insert(*ancestor_node_id);
+        }
+
+        // Remove all the deleted noeds from the added_or_update list
+        for (node_id, _) in removed_ids {
+            added_or_updated_ids.remove(&node_id);
             self.map.retain(|_, id| *id != node_id);
         }
 
