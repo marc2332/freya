@@ -4,6 +4,7 @@ use std::sync::{
 };
 
 use freya_common::CompositorDirtyNodes;
+use freya_engine::prelude::BlendMode;
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
@@ -42,6 +43,8 @@ pub struct StyleState {
     pub image_data: Option<AttributesBytes>,
     pub svg_data: Option<AttributesBytes>,
     pub overflow: OverflowMode,
+    pub blend_mode: Option<BlendMode>,
+    pub backdrop_blur: f32,
 }
 
 impl ParseAttribute for StyleState {
@@ -114,6 +117,16 @@ impl ParseAttribute for StyleState {
                     self.overflow = OverflowMode::parse(value)?;
                 }
             }
+            AttributeName::BlendMode => {
+                if let Some(value) = attr.value.as_text() {
+                    self.blend_mode = Some(BlendMode::parse(value)?);
+                }
+            }
+            AttributeName::BackdropBlur => {
+                if let Some(value) = attr.value.as_text() {
+                    self.backdrop_blur = value.parse::<f32>().map_err(|_| ParseError)?;
+                }
+            }
             _ => {}
         }
 
@@ -141,6 +154,8 @@ impl State<CustomAttributeValues> for StyleState {
             AttributeName::SvgData,
             AttributeName::SvgContent,
             AttributeName::Overflow,
+            AttributeName::BackdropBlur,
+            AttributeName::BlendMode,
         ]));
 
     fn update<'a>(

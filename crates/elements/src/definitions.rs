@@ -231,6 +231,10 @@ builder_constructors! {
         line_height: String,
         #[doc = include_str!("_docs/attributes/spacing.md")]
         spacing: String,
+        // #[doc = include_str!("_docs/attributes/blend_mode.md")]
+        blend_mode: String,
+        // #[doc = include_str!("_docs/attributes/blend_mode.md")]
+        backdrop_blur: String,
 
         a11y_auto_focus: String,
         a11y_name: String,
@@ -303,6 +307,8 @@ builder_constructors! {
         margin: String,
         #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
+        // #[doc = include_str!("_docs/attributes/blend_mode.md")]
+        blend_mode: String,
 
         layer: String,
         a11y_auto_focus: String,
@@ -377,6 +383,8 @@ builder_constructors! {
         margin: String,
         #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
+        // #[doc = include_str!("_docs/attributes/blend_mode.md")]
+        blend_mode: String,
 
         layer: String,
         cursor_index: String,
@@ -450,6 +458,8 @@ builder_constructors! {
         rotate: String,
         #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
+        // #[doc = include_str!("_docs/attributes/blend_mode.md")]
+        blend_mode: String,
 
         image_data: String,
         image_reference: String,
@@ -489,6 +499,8 @@ builder_constructors! {
         rotate: String,
         #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
+        // #[doc = include_str!("_docs/attributes/blend_mode.md")]
+        blend_mode: String,
 
         svg_data: String,
         svg_content: String,

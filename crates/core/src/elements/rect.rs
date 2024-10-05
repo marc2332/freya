@@ -9,6 +9,7 @@ use freya_node_state::{
     ReferencesState,
     ShadowPosition,
     StyleState,
+    TransformState,
 };
 use torin::{
     prelude::{
@@ -337,6 +338,70 @@ impl ElementUtils for RectElement {
             path.add_rrect(rounded_rect, None);
         }
 
+        // This is only done to dupe the borrow checker since [`SaveLayerRec::backdrop`]
+        // takes an [`ImageFilter`] by reference and it'd be otherwise dropped in the
+        // if-statement below.
+        let blur_filter = blur(
+            (
+                node_style.backdrop_blur * scale_factor,
+                node_style.backdrop_blur * scale_factor,
+            ),
+            None,
+            None,
+            rounded_rect.rect(),
+        )
+        .unwrap();
+
+        // If we have a backdrop blur applied, we need to draw that by creating a new
+        // layer, clipping it to the rect's roundness, then blurring behind it before
+        // drawing the rect's initial background box.
+        if node_style.backdrop_blur != 0.0 {
+            // If we can guarantee that the node entirely draws over it's backdrop,
+            // we can avoid this whole (possibly intense) process, since the node's
+            // backdrop is never visible.
+            //
+            // There's probably more that can be done in this area, like checking individual gradient
+            // stops but I'm not completely sure of the diminishing returns here.
+            //
+            // Currently we verify the following:
+            // - Node has a single solid color background.
+            // - The background has 100% opacity.
+            // - The node has no parents with the `opacity` attribute applied.
+            let is_possibly_translucent = if let Fill::Color(color) = node_style.background {
+                let node_transform = &*node_ref.get::<TransformState>().unwrap();
+
+                color.a() != u8::MAX
+                    || node_style.blend_mode.is_some()
+                    || !node_transform.opacities.is_empty()
+            } else {
+                true
+            };
+
+            if is_possibly_translucent {
+                let layer_rec = SaveLayerRec::default()
+                    .bounds(rounded_rect.rect())
+                    .backdrop(&blur_filter);
+
+                // Depending on if the rect is rounded or not, we might need to clip the blur
+                // layer to the shape of the rounded rect.
+                if corner_radius.bottom_left == 0.0
+                    && corner_radius.bottom_right == 0.0
+                    && corner_radius.top_left == 0.0
+                    && corner_radius.top_right == 0.0
+                {
+                    canvas.save_layer(&layer_rec);
+                    canvas.restore();
+                } else {
+                    canvas.save();
+                    canvas.clip_rrect(rounded_rect, ClipOp::Intersect, true);
+                    canvas.save_layer(&layer_rec);
+                    canvas.restore();
+                    canvas.restore();
+                }
+            }
+        }
+
+        // Paint the rect's background.
         canvas.draw_path(&path, &paint);
 
         // Shadows

@@ -67,6 +67,8 @@ pub enum AttributeName {
     SvgData,
     SvgContent,
     Spacing,
+    BlendMode,
+    BackdropBlur,
 }
 
 impl FromStr for AttributeName {
@@ -139,6 +141,8 @@ impl FromStr for AttributeName {
             "svg_data" => Ok(AttributeName::SvgData),
             "svg_content" => Ok(AttributeName::SvgContent),
             "spacing" => Ok(AttributeName::Spacing),
+            "blend_mode" => Ok(AttributeName::BlendMode),
+            "backdrop_blur" => Ok(AttributeName::BackdropBlur),
             _ => Err(format!("{attr} not supported.")),
         }
     }
