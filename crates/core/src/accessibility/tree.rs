@@ -152,12 +152,8 @@ impl AccessibilityTree {
         // Mark the ancestors as modified
         for node_id in added_or_updated_ids.clone() {
             let node_ref = rdom.get(node_id).unwrap();
-            let node_accessibility_state = node_ref.get::<AccessibilityNodeState>().unwrap();
-            added_or_updated_ids.insert(
-                node_accessibility_state
-                    .closest_accessibility_node_id
-                    .unwrap_or(rdom.root_id()),
-            );
+            let node_ref_parent = node_ref.parent_id().unwrap_or(rdom.root_id());
+            added_or_updated_ids.insert(node_ref_parent);
             self.map
                 .insert(node_ref.get_accessibility_id().unwrap(), node_id);
         }
