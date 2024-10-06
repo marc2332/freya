@@ -149,6 +149,19 @@ impl AccessibilityTree {
             );
         }
 
+        // Remove all the removed nodes from the update list
+        for (node_id, _) in removed_ids.iter() {
+            added_or_updated_ids.remove(node_id);
+            self.map.retain(|_, id| id != node_id);
+        }
+
+        // Mark the parent of the removed nodes as updated
+        for (_, parent_id) in removed_ids.iter() {
+            if !removed_ids.contains_key(parent_id) {
+                added_or_updated_ids.insert(*parent_id);
+            }
+        }
+
         // Mark the ancestors as modified
         for node_id in added_or_updated_ids.clone() {
             let node_ref = rdom.get(node_id).unwrap();
@@ -156,17 +169,6 @@ impl AccessibilityTree {
             added_or_updated_ids.insert(node_ref_parent);
             self.map
                 .insert(node_ref.get_accessibility_id().unwrap(), node_id);
-        }
-
-        // Mark the still existing ancenstors as modified
-        for (_, ancestor_node_id) in removed_ids.iter() {
-            added_or_updated_ids.insert(*ancestor_node_id);
-        }
-
-        // Remove all the deleted noeds from the added_or_update list
-        for (node_id, _) in removed_ids {
-            added_or_updated_ids.remove(&node_id);
-            self.map.retain(|_, id| *id != node_id);
         }
 
         // Create the updated nodes
