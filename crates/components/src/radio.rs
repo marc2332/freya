@@ -69,7 +69,7 @@ pub fn Radio(
         unselected_fill
     };
     let border = if focus.is_selected() {
-        format!("2 inner {fill} 4 outer {border_fill}")
+        format!("2 inner {fill}, 4 outer {border_fill}")
     } else {
         format!("2 inner {fill}")
     };
