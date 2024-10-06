@@ -21,6 +21,8 @@ use freya_hooks::{
 };
 use winit::window::CursorIcon;
 
+use crate::ScrollView;
+
 /// Enum to declare is [`Input`] hidden.
 #[derive(Default, Clone, PartialEq)]
 pub enum InputMode {
@@ -137,7 +139,15 @@ pub fn Input(
         editable.process_event(&EditableEvent::KeyUp(e.data));
     };
 
+    let oninputmousedown = move |e: MouseEvent| {
+        if !display_placeholder {
+            editable.process_event(&EditableEvent::MouseDown(e.data, 0));
+        }
+        focus.focus();
+    };
+
     let onmousedown = move |e: MouseEvent| {
+        e.stop_propagation();
         if !display_placeholder {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         }
@@ -217,27 +227,33 @@ pub fn Input(
             main_align: "center",
             cursor_reference,
             a11y_id,
-            a11y_role: "textInput",
+            a11y_role: "text-input",
             a11y_auto_focus: "{auto_focus}",
             onkeydown,
             onkeyup,
             overflow: "clip",
-            paragraph {
-                margin: "8 12",
-                onglobalclick,
-                onmouseenter,
-                onmouseleave,
-                onmousedown,
-                onmousemove,
-                width: "100%",
-                cursor_id: "0",
-                cursor_index: "{cursor_char}",
-                cursor_mode: "editable",
-                cursor_color: "{color}",
-                max_lines: "1",
-                highlights,
-                text {
-                    "{text}"
+            onmousedown: oninputmousedown,
+            onmouseenter,
+            onmouseleave,
+            ScrollView {
+                height: "auto",
+                direction: "horizontal",
+                show_scrollbar: false,
+                paragraph {
+                    min_width: "1",
+                    margin: "8 12",
+                    onglobalclick,
+                    onmousedown,
+                    onmousemove,
+                    cursor_id: "0",
+                    cursor_index: "{cursor_char}",
+                    cursor_mode: "editable",
+                    cursor_color: "{color}",
+                    max_lines: "1",
+                    highlights,
+                    text {
+                        "{text}"
+                    }
                 }
             }
         }
@@ -264,7 +280,7 @@ mod test {
 
         let mut utils = launch_test(input_app);
         let root = utils.root();
-        let text = root.get(0).get(0).get(0);
+        let text = root.get(0).get(0).get(0).get(0).get(0).get(0);
         utils.wait_for_update().await;
 
         // Default value
