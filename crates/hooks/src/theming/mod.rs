@@ -545,6 +545,7 @@ pub struct ColorsSheet {
     pub solid: Cow<'static, str>,
     pub color: Cow<'static, str>,
     pub placeholder_color: Cow<'static, str>,
+    pub highlight_color: Cow<'static, str>,
 }
 
 impl ColorsSheet {
@@ -567,6 +568,7 @@ impl ColorsSheet {
                 "solid" => self.solid.clone(),
                 "color" => self.color.clone(),
                 "placeholder_color" => self.placeholder_color.clone(),
+                "highlight_color" => self.highlight_color.clone(),
                 _ => self.primary.clone(),
             }
         } else {

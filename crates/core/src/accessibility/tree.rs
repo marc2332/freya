@@ -152,19 +152,20 @@ impl AccessibilityTree {
         // Mark the ancestors as modified
         for node_id in added_or_updated_ids.clone() {
             let node_ref = rdom.get(node_id).unwrap();
-            let node_accessibility_state = node_ref.get::<AccessibilityNodeState>().unwrap();
-            added_or_updated_ids.insert(
-                node_accessibility_state
-                    .closest_accessibility_node_id
-                    .unwrap_or(rdom.root_id()),
-            );
+            let node_ref_parent = node_ref.parent_id().unwrap_or(rdom.root_id());
+            added_or_updated_ids.insert(node_ref_parent);
             self.map
                 .insert(node_ref.get_accessibility_id().unwrap(), node_id);
         }
 
         // Mark the still existing ancenstors as modified
-        for (node_id, ancestor_node_id) in removed_ids {
-            added_or_updated_ids.insert(ancestor_node_id);
+        for (_, ancestor_node_id) in removed_ids.iter() {
+            added_or_updated_ids.insert(*ancestor_node_id);
+        }
+
+        // Remove all the deleted noeds from the added_or_update list
+        for (node_id, _) in removed_ids {
+            added_or_updated_ids.remove(&node_id);
             self.map.retain(|_, id| *id != node_id);
         }
 
@@ -180,7 +181,6 @@ impl AccessibilityTree {
             {
                 let accessibility_node =
                     Self::create_node(&node_ref, layout_node, node_accessibility_state);
-
                 let accessibility_id = node_ref.get_accessibility_id().unwrap();
 
                 nodes.push((accessibility_id, accessibility_node));
@@ -332,7 +332,18 @@ impl AccessibilityTree {
         let transform_state = &*node_ref.get::<TransformState>().unwrap();
         let node_type = node_ref.node_type();
 
-        let mut builder = NodeBuilder::new(Role::default());
+        let mut builder = match node_type.tag() {
+            // Make the root accessibility node.
+            Some(&TagName::Root) => NodeBuilder::new(Role::Window),
+
+            // All other node types will either don't have a builder (but don't support
+            // accessibility attributes like with `text`) or have their builder made for
+            // them already.
+            Some(_) => node_accessibility.builder.clone().unwrap(),
+
+            // Tag-less nodes can't have accessibility state
+            None => unreachable!(),
+        };
 
         // Set children
         let children = node_ref.get_accessibility_children();
@@ -346,6 +357,14 @@ impl AccessibilityTree {
             y0: area.min_y(),
             y1: area.max_y(),
         });
+
+        if let NodeType::Element(node) = &*node_type {
+            if matches!(node.tag, TagName::Label | TagName::Paragraph) && builder.name().is_none() {
+                if let Some(inner_text) = node_ref.get_inner_texts() {
+                    builder.set_name(inner_text);
+                }
+            }
+        }
 
         // Set focusable action
         // This will cause assistive technology to offer the user an option
@@ -451,28 +470,6 @@ impl AccessibilityTree {
             builder.set_overline(skia_decoration_style_to_accesskit(
                 font_style_state.decoration.style,
             ));
-        }
-
-        // Set text value
-        if let Some(alt) = &node_accessibility.a11y_alt {
-            builder.set_value(alt.to_owned());
-        } else if let Some(value) = node_ref.get_inner_texts() {
-            builder.set_value(value);
-            builder.set_role(Role::Label);
-        }
-
-        // Set name
-        if let Some(name) = &node_accessibility.a11y_name {
-            builder.set_name(name.to_owned());
-        }
-
-        // Set role
-        if let Some(role) = node_accessibility.a11y_role {
-            builder.set_role(role);
-        }
-        // Set root role
-        if node_ref.id() == node_ref.real_dom().root_id() {
-            builder.set_role(Role::Window);
         }
 
         builder.build()

@@ -14,14 +14,15 @@ pub const DARK_THEME: Theme = Theme {
         secondary_surface: cow_borrowed!("rgb(45, 45, 45)"),
         neutral_surface: cow_borrowed!("rgb(25, 25, 25)"),
         focused_surface: cow_borrowed!("rgb(15, 15, 15)"),
-        opposite_surface: cow_borrowed!("rgb(210, 210, 210)"),
-        secondary_opposite_surface: cow_borrowed!("rgb(225, 225, 225)"),
-        tertiary_opposite_surface: cow_borrowed!("rgb(235, 235, 235)"),
+        opposite_surface: cow_borrowed!("rgb(125, 125, 125)"),
+        secondary_opposite_surface: cow_borrowed!("rgb(150, 150, 150)"),
+        tertiary_opposite_surface: cow_borrowed!("rgb(170, 170, 170)"),
         background: cow_borrowed!("rgb(20, 20, 20)"),
         focused_border: cow_borrowed!("rgb(110, 110, 110)"),
         solid: cow_borrowed!("rgb(240, 240, 240)"),
         color: cow_borrowed!("rgb(250, 250, 250)"),
         placeholder_color: cow_borrowed!("rgb(210, 210, 210)"),
+        highlight_color: cow_borrowed!("rgb(96, 145, 224)"),
     },
     ..BASE_THEME
 };
@@ -44,6 +45,7 @@ pub const LIGHT_THEME: Theme = Theme {
         focused_border: cow_borrowed!("rgb(180, 180, 180)"),
         color: cow_borrowed!("rgb(10, 10, 10)"),
         placeholder_color: cow_borrowed!("rgb(100, 100, 100)"),
+        highlight_color: cow_borrowed!("rgb(38, 89, 170)"),
     },
     ..BASE_THEME
 };
@@ -66,6 +68,7 @@ pub const BANANA_THEME: Theme = Theme {
         focused_border: cow_borrowed!("rgb(255, 239, 151)"),
         color: cow_borrowed!("rgb(85, 60, 5)"),
         placeholder_color: cow_borrowed!("rgb(56, 44, 5)"),
+        highlight_color: cow_borrowed!("rgb(143, 114, 6)"),
     },
     ..BASE_THEME
 };
