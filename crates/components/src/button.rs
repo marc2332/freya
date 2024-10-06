@@ -22,12 +22,12 @@ use winit::{
     window::CursorIcon,
 };
 
-/// Properties for the [`Button`] component.
+/// Properties for the [`Button`], [`FilledButton`] and [`OutlineButton`] components.
 #[derive(Props, Clone, PartialEq)]
 pub struct ButtonProps {
     /// Theme override.
     pub theme: Option<ButtonThemeWith>,
-    /// Inner children for the Button.
+    /// Inner children for the button.
     pub children: Element,
     /// Event handler for when the button is pressed.
     pub onpress: Option<EventHandler<PressEvent>>,
@@ -66,7 +66,7 @@ pub fn Button(props: ButtonProps) -> Element {
     })
 }
 
-/// Clickable button.
+/// Clickable button with a solid fill color.
 ///
 /// # Styling
 /// Inherits the filled [`ButtonTheme`](freya_hooks::ButtonTheme) theme.
@@ -97,7 +97,7 @@ pub fn FilledButton(props: ButtonProps) -> Element {
     })
 }
 
-/// Clickable button.
+/// Clickable button with an outline style.
 ///
 /// # Styling
 /// Inherits the outline [`ButtonTheme`](freya_hooks::ButtonTheme) theme.
@@ -147,7 +147,7 @@ impl PressEvent {
 pub struct BaseButtonProps {
     /// Theme.
     pub theme: ButtonTheme,
-    /// Inner children for the Button.
+    /// Inner children for the button.
     pub children: Element,
     /// Event handler for when the button is pressed.
     pub onpress: Option<EventHandler<PressEvent>>,
