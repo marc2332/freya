@@ -155,7 +155,6 @@ mod test {
             let focus = use_focus();
             rsx!(rect {
                 a11y_id: focus.attribute(),
-                a11y_role: "genericContainer",
                 width: "100%",
                 height: "50%",
             })
@@ -223,12 +222,10 @@ mod test {
             rsx!(
                 rect {
                     a11y_id: focus_1.attribute(),
-                    a11y_role: "genericContainer",
                     a11y_auto_focus: "true",
                 }
                 rect {
                     a11y_id: focus_2.attribute(),
-                    a11y_role: "genericContainer",
                     a11y_auto_focus: "true",
                 }
             )

@@ -94,7 +94,7 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
                 window_attributes.with_max_inner_size(LogicalSize::<f64>::from(max_size));
         }
 
-        if let Some(with_window_attributes) = &config.window_config.window_attributes_hook {
+        if let Some(with_window_attributes) = config.window_config.window_attributes_hook.take() {
             window_attributes = (with_window_attributes)(window_attributes);
         }
 

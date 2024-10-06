@@ -17,7 +17,6 @@ use freya_native_core::{
     NodeId,
 };
 use freya_node_state::{
-    AccessibilityNodeState,
     CursorState,
     CustomAttributeValues,
     LayerState,
@@ -91,9 +90,8 @@ impl<'a> MutationsWriter<'a> {
 
                 // Remove from the accessibility tree
                 if node.get_accessibility_id().is_some() {
-                    let node_accessibility_state = node.get::<AccessibilityNodeState>().unwrap();
-                    let closed_accessibility_node_id = node_accessibility_state
-                        .closest_accessibility_node_id
+                    let closed_accessibility_node_id = node
+                        .parent_id()
                         .unwrap_or(self.native_writer.rdom.root_id());
                     self.accessibility_dirty_nodes
                         .remove(node.id(), closed_accessibility_node_id);

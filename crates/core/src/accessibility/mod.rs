@@ -4,6 +4,7 @@ use freya_native_core::{
     real_dom::NodeImmutable,
 };
 use freya_node_state::AccessibilityNodeState;
+use itertools::Itertools;
 pub use tree::*;
 
 use crate::{
@@ -54,7 +55,9 @@ impl NodeAccessibility for DioxusNode<'_> {
 
     /// Collect all descendant accessibility node ids
     fn get_accessibility_children(&self) -> Vec<AccessibilityId> {
-        let node_accessibility = &*self.get::<AccessibilityNodeState>().unwrap();
-        node_accessibility.descencent_accessibility_ids.clone()
+        self.children()
+            .into_iter()
+            .filter_map(|child| child.get_accessibility_id())
+            .collect_vec()
     }
 }
