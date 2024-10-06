@@ -11,16 +11,25 @@ fn main() {
 
 fn app() -> Element {
     rsx!(
-        Button {
-            onclick: move |_| println!("Button Clicked!"),
-            label { "Button A" }
-        }
-        Button {
-            onpress: move |_| println!("Button Pressed!"),
-            label { "Button B" }
-        }
-        Button {
-            label { "Button C" }
+        Body {
+            rect {
+                width: "fill",
+                height: "fill",
+                spacing: "10",
+                main_align: "center",
+                cross_align: "center",
+                Button {
+                    onclick: move |_| println!("Button Clicked!"),
+                    label { "Button A" }
+                }
+                FilledButton {
+                    onpress: move |_| println!("Button Pressed!"),
+                    label { "Button B" }
+                }
+                OutlineButton {
+                    label { "Button C" }
+                }
+            }
         }
     )
 }
