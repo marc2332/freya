@@ -151,13 +151,13 @@ impl AccessibilityTree {
 
         // Remove all the removed nodes from the update list
         for (node_id, _) in removed_ids.iter() {
-            added_or_updated_ids.remove(&node_id);
+            added_or_updated_ids.remove(node_id);
             self.map.retain(|_, id| id != node_id);
         }
 
         // Mark the parent of the removed nodes as updated
         for (_, parent_id) in removed_ids.iter() {
-            if !removed_ids.contains_key(&parent_id) {
+            if !removed_ids.contains_key(parent_id) {
                 added_or_updated_ids.insert(*parent_id);
             }
         }

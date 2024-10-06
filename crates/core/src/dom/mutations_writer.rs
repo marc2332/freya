@@ -93,8 +93,7 @@ impl<'a> MutationsWriter<'a> {
                     let parent_id = node
                         .parent_id()
                         .unwrap_or(self.native_writer.rdom.root_id());
-                    self.accessibility_dirty_nodes
-                        .remove(node.id(), parent_id);
+                    self.accessibility_dirty_nodes.remove(node.id(), parent_id);
                 }
 
                 // Unite the removed area with the dirty area
