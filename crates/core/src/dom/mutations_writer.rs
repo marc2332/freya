@@ -90,11 +90,11 @@ impl<'a> MutationsWriter<'a> {
 
                 // Remove from the accessibility tree
                 if node.get_accessibility_id().is_some() {
-                    let closed_accessibility_node_id = node
+                    let parent_id = node
                         .parent_id()
                         .unwrap_or(self.native_writer.rdom.root_id());
                     self.accessibility_dirty_nodes
-                        .remove(node.id(), closed_accessibility_node_id);
+                        .remove(node.id(), parent_id);
                 }
 
                 // Unite the removed area with the dirty area
