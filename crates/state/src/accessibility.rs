@@ -51,8 +51,6 @@ use crate::{
 
 #[derive(Clone, Debug, PartialEq, Default, Component)]
 pub struct AccessibilityNodeState {
-    pub closest_accessibility_node_id: Option<NodeId>,
-    pub descencent_accessibility_ids: Vec<AccessibilityId>,
     pub node_id: NodeId,
     pub a11y_id: Option<AccessibilityId>,
     pub a11y_auto_focus: bool,
@@ -316,9 +314,9 @@ impl ParseAttribute for AccessibilityNodeState {
 
 #[partial_derive_state]
 impl State<CustomAttributeValues> for AccessibilityNodeState {
-    type ParentDependencies = (Self,);
+    type ParentDependencies = ();
 
-    type ChildDependencies = (Self,);
+    type ChildDependencies = ();
 
     type NodeDependencies = ();
 
@@ -399,8 +397,8 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
         &mut self,
         node_view: NodeView<CustomAttributeValues>,
         _node: <Self::NodeDependencies as Dependancy>::ElementBorrowed<'a>,
-        parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
-        children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
+        _parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
+        _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         context: &SendAnyMap,
     ) -> bool {
         let root_id = context.get::<NodeId>().unwrap();
@@ -430,28 +428,6 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
             for attr in attributes {
                 accessibility.parse_safe(attr);
             }
-        }
-
-        for (child,) in children {
-            if let Some(child_id) = child.a11y_id {
-                // Mark this child as descendent if it has an ID
-                accessibility.descencent_accessibility_ids.push(child_id)
-            } else {
-                // If it doesn't have an ID then use its descencent accessibility IDs
-                accessibility
-                    .descencent_accessibility_ids
-                    .extend(child.descencent_accessibility_ids.iter());
-            }
-        }
-
-        if let Some(parent) = parent {
-            // Mark the parent accessibility ID as the closest to this node or
-            // fallback to its closest ID.
-            accessibility.closest_accessibility_node_id = parent
-                .0
-                .a11y_id
-                .map(|_| parent.0.node_id)
-                .or(parent.0.closest_accessibility_node_id);
         }
 
         let changed = &accessibility != self;
