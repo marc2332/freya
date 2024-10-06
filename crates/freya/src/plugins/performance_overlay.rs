@@ -82,7 +82,7 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 // FPS
                 add_text(
                     &mut paragraph_builder,
-                    format!("{} \n", self.frames.len()),
+                    format!("{} FPS\n", self.frames.len()),
                     30.0,
                 );
 
