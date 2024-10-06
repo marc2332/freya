@@ -459,7 +459,9 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
 
         *self = accessibility;
 
-        if changed {
+        let is_orphan = node_view.height() == 0 && node_view.node_id() != *root_id;
+
+        if changed && !is_orphan {
             // Assign an accessibility ID if none was passed but the node has a valid builder
             //
             // In our case, builder will be `None` if the node's tag cannot be added to accessibility
