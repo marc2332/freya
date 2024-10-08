@@ -25,8 +25,10 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
     rsx!(
         ScrollView {
             show_scrollbar: true,
-            height : "calc(100% - 35)",
+            height : "fill",
             width: "100%",
+            spacing: "6",
+            padding: "8 16",
             {node.state.attributes().into_iter().enumerate().map(|(i, (name, attr))| {
                 match attr {
                     AttributeType::Measure(measure) => {
@@ -35,6 +37,15 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
                                 key: "{i}",
                                 name: "{name}",
                                 value: measure.to_string()
+                            }
+                        }
+                    }
+                    AttributeType::OptionalMeasure(measure) => {
+                        rsx!{
+                            Property {
+                                key: "{i}",
+                                name: "{name}",
+                                value: measure.map(|measure| measure.to_string()).unwrap_or_else(|| "inherit".to_string())
                             }
                         }
                     }

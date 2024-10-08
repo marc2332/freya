@@ -25,7 +25,7 @@
 fn app() -> Element {
     let mut count = use_signal(|| 0);
 
-    render!(
+    rsx!(
         rect {
             height: "50%",
             width: "100%",
@@ -70,7 +70,7 @@ fn app() -> Element {
 
 Thanks to my sponsors for supporting this project! 😄
 
-<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;avatars.githubusercontent.com&#x2F;u&#x2F;8446285?u&#x3D;fd37db4dd9b4ba94dabe0bccc3a95ef2a35376ab&amp;v&#x3D;4" width="60px" alt="" /></a><!-- sponsors -->
+<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;avatars.githubusercontent.com&#x2F;u&#x2F;8446285?u&#x3D;fd37db4dd9b4ba94dabe0bccc3a95ef2a35376ab&amp;v&#x3D;4" width="60px" alt="" /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;avatars.githubusercontent.com&#x2F;u&#x2F;2295878?v&#x3D;4" width="60px" alt="高庆丰" /></a><!-- sponsors -->
 
 ### Want to try it? 🤔
 

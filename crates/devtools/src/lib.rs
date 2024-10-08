@@ -12,6 +12,7 @@ use freya_components::*;
 use freya_core::prelude::EventMessage;
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::{
+    use_applied_theme,
     use_init_theme,
     use_platform,
     DARK_THEME,
@@ -117,15 +118,15 @@ impl PartialEq for DevToolsProps {
 
 #[allow(non_snake_case)]
 pub fn DevTools(props: DevToolsProps) -> Element {
-    let theme = use_init_theme(|| DARK_THEME);
+    use_init_theme(|| DARK_THEME);
     use_init_radio_station::<DevtoolsState, DevtoolsChannel>(|| DevtoolsState {
         hovered_node: props.hovered_node.clone(),
         devtools_receiver: props.devtools_receiver.clone(),
         devtools_tree: HashSet::default(),
     });
 
-    let theme = theme.read();
-    let color = &theme.body.color;
+    let theme = use_applied_theme!(None, body);
+    let color = &theme.color;
 
     rsx!(
         rect {

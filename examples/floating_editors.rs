@@ -207,7 +207,7 @@ fn Editor() -> Element {
                 rect {
                     cross_align: "center",
                     Slider {
-                        width: "130",
+                        size: "130",
                         value: font_size_percentage(),
                         onmoved: move |p| {
                             font_size_percentage.set(p);
@@ -220,7 +220,7 @@ fn Editor() -> Element {
                 rect {
                     cross_align: "center",
                     Slider {
-                        width: "130",
+                        size: "130",
                         value: line_height_percentage(),
                         onmoved: move |p| {
                             line_height_percentage.set(p);

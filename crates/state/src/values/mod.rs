@@ -1,3 +1,4 @@
+mod accessibility;
 mod alignment;
 mod border;
 mod color;

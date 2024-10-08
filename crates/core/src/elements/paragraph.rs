@@ -31,12 +31,13 @@ use torin::{
 use super::utils::ElementUtils;
 use crate::{
     dom::DioxusNode,
-    prelude::{
-        align_highlights_and_cursor_paragraph,
+    prelude::TextGroupMeasurement,
+    render::{
         align_main_align_paragraph,
-        TextGroupMeasurement,
+        create_paragraph,
+        draw_cursor,
+        draw_cursor_highlights,
     },
-    render::create_paragraph,
 };
 
 pub struct ParagraphElement;
@@ -138,7 +139,7 @@ impl ElementUtils for ParagraphElement {
         };
 
         if node_cursor_state.position.is_some() {
-            let (paragraph, _) = create_paragraph(
+            let paragraph = create_paragraph(
                 node_ref,
                 &area.size,
                 font_collection,
@@ -229,81 +230,4 @@ impl ElementUtils for ParagraphElement {
 
         area
     }
-}
-
-fn draw_cursor_highlights(
-    area: &Area,
-    paragraph: &Paragraph,
-    canvas: &Canvas,
-    node_ref: &DioxusNode,
-) -> Option<()> {
-    let node_cursor_state = &*node_ref.get::<CursorState>().unwrap();
-
-    let highlights = node_cursor_state.highlights.as_ref()?;
-    let highlight_color = node_cursor_state.highlight_color;
-
-    for (from, to) in highlights.iter() {
-        let (from, to) = {
-            if from < to {
-                (from, to)
-            } else {
-                (to, from)
-            }
-        };
-        let cursor_rects = paragraph.get_rects_for_range(
-            *from..*to,
-            RectHeightStyle::Tight,
-            RectWidthStyle::Tight,
-        );
-        for cursor_rect in cursor_rects {
-            let rect = align_highlights_and_cursor_paragraph(
-                node_ref,
-                area,
-                paragraph,
-                &cursor_rect,
-                None,
-            );
-
-            let mut paint = Paint::default();
-            paint.set_anti_alias(true);
-            paint.set_style(PaintStyle::Fill);
-            paint.set_color(highlight_color);
-
-            canvas.draw_rect(rect, &paint);
-        }
-    }
-
-    Some(())
-}
-
-fn draw_cursor(
-    area: &Area,
-    paragraph: &Paragraph,
-    canvas: &Canvas,
-    node_ref: &DioxusNode,
-) -> Option<()> {
-    let node_cursor_state = &*node_ref.get::<CursorState>().unwrap();
-
-    let cursor = node_cursor_state.position?;
-    let cursor_color = node_cursor_state.color;
-    let cursor_position = cursor as usize;
-
-    let cursor_rects = paragraph.get_rects_for_range(
-        cursor_position..cursor_position + 1,
-        RectHeightStyle::Tight,
-        RectWidthStyle::Tight,
-    );
-    let cursor_rect = cursor_rects.first()?;
-
-    let rect =
-        align_highlights_and_cursor_paragraph(node_ref, area, paragraph, cursor_rect, Some(1.0));
-
-    let mut paint = Paint::default();
-    paint.set_anti_alias(true);
-    paint.set_style(PaintStyle::Fill);
-    paint.set_color(cursor_color);
-
-    canvas.draw_rect(rect, &paint);
-
-    Some(())
 }

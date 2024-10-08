@@ -21,8 +21,7 @@ fn app() -> Element {
 
 #[allow(non_snake_case)]
 fn Body() -> Element {
-    let theme = use_theme();
-    let theme = theme.read();
+    let theme = use_applied_theme!(None, body);
 
     let mut editable = use_editable(
         || {
@@ -55,7 +54,7 @@ fn Body() -> Element {
             cursor_reference,
             direction: "horizontal",
             onglobalclick: onclick,
-            background: "{theme.body.background}",
+            background: "{theme.background}",
             VirtualScrollView {
                 width: "50%",
                 length: editor.len_lines(),
@@ -70,7 +69,7 @@ fn Body() -> Element {
 
                     // Only show the cursor in the active line
                     let character_index = if is_line_selected {
-                        editor.visible_cursor_col().to_string()
+                        editor.cursor_col().to_string()
                     } else {
                         "none".to_string()
                     };
@@ -144,7 +143,7 @@ fn Body() -> Element {
 
                     // Only show the cursor in the active line
                     let character_index = if is_line_selected {
-                        editor.visible_cursor_col().to_string()
+                        editor.cursor_col().to_string()
                     } else {
                         "none".to_string()
                     };

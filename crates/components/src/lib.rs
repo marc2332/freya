@@ -15,6 +15,7 @@ mod gesture_area;
 mod graph;
 mod hooks;
 mod icons;
+mod image;
 mod input;
 mod link;
 mod loader;
