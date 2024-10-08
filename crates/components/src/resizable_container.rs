@@ -221,7 +221,7 @@ pub fn ResizableHandle(
                 }
             };
 
-            if displacement_per > 0. {
+            if displacement_per >= 0. {
                 // Resizing to the right
 
                 let mut acc_per = 0.0;
@@ -244,14 +244,9 @@ pub fn ResizableHandle(
                 // Resize panels to the left
                 for prev_item in &mut registry.registry[0..index].iter_mut().rev() {
                     if let Some(panel) = prev_item.try_panel_mut() {
-                        let old_size = panel.size;
                         let new_size = (panel.size + acc_per).clamp(panel.min_size, 100.);
-
                         panel.size = new_size;
-
-                        if old_size > panel.min_size {
-                            break;
-                        }
+                        break;
                     }
                 }
             } else {
@@ -277,14 +272,9 @@ pub fn ResizableHandle(
                 // Resize panels to the right
                 for next_item in &mut registry.registry[index..].iter_mut() {
                     if let Some(panel) = next_item.try_panel_mut() {
-                        let old_size = panel.size;
                         let new_size = (panel.size - acc_per).clamp(panel.min_size, 100.);
-
                         panel.size = new_size;
-
-                        if old_size > panel.min_size {
-                            break;
-                        }
+                        break;
                     }
                 }
             }
