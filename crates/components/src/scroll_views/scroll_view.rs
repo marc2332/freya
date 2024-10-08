@@ -220,8 +220,6 @@ pub fn ScrollView(
             if *scrolled_y.peek() != scroll_position_y {
                 e.stop_propagation();
                 *scrolled_y.write() = scroll_position_y;
-            } else {
-                return;
             }
         } else {
             let scroll_position_x = get_scroll_position_from_wheel(
@@ -235,12 +233,8 @@ pub fn ScrollView(
             if *scrolled_x.peek() != scroll_position_x {
                 e.stop_propagation();
                 *scrolled_x.write() = scroll_position_x;
-            } else {
-                return;
             }
         }
-
-        focus.focus();
     };
 
     // Drag the scrollbars
@@ -372,7 +366,7 @@ pub fn ScrollView(
 
     rsx!(
         rect {
-            a11y_role:"scrollView",
+            a11y_role:"scroll-view",
             overflow: "clip",
             direction: "horizontal",
             width,
@@ -382,6 +376,7 @@ pub fn ScrollView(
             onglobalkeydown,
             onglobalkeyup,
             a11y_id,
+            a11y_focusable: "false",
             rect {
                 direction: "vertical",
                 width: "{container_width}",

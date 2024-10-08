@@ -447,7 +447,7 @@ pub fn VirtualScrollView<
 
     rsx!(
         rect {
-            a11y_role:"scrollView",
+            a11y_role: "scroll-view",
             overflow: "clip",
             direction: "horizontal",
             width: "{width}",
