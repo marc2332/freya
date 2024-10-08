@@ -528,6 +528,15 @@ define_theme! {
     }
 }
 
+define_theme! {
+    %[component]
+    pub ResizableHandle {
+        %[cows]
+        background: str,
+        hover_background: str,
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ColorsSheet {
     pub primary: Cow<'static, str>,
@@ -614,6 +623,7 @@ pub struct Theme {
     pub popup: PopupTheme,
     pub tab: TabTheme,
     pub bottom_tab: BottomTabTheme,
+    pub resizable_handle: ResizableHandleTheme,
 }
 
 impl Default for Theme {
