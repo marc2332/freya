@@ -86,11 +86,14 @@ Add Freya and Dioxus as dependencies:
 freya = "0.2"
 dioxus = { version = "0.5", features = ["macro", "hooks"], default-features = false }
 ```
+### Contributing 🧙‍♂️
+
+If you are interested in contributing please make sure to have read the [Contributing](CONTRIBUTING.md) guide first!
 
 ### Features ✨
 - ⛏️ Built-in **components** (button, scroll views, switch and more) 
-- 🚇 Built-in **hooks** library (animations, text editing and more)
-- 🔍 Built-in **devtools** panel
+- 🚇 Built-in **hooks** (animations, text editing and more)
+- 🔍 Built-in **developer tools** (tree inspection, fps overlay)
 - 🧰 Built-in **headless runner** to test UI
 - 🎨 **Theming** support
 - 🛩️ **Cross-platform** (Windows, Linux, MacOS)
@@ -107,9 +110,11 @@ dioxus = { version = "0.5", features = ["macro", "hooks"], default-features = fa
 - Useful testing APIs
 - Useful and extensible built-in components and hooks
 
-### Sponsors 🤗
+### Support 🤗
 
-Thanks to my sponsors for supporting this project! 😄
+If you are interested in supporting the development of this project feel free to donate to my [Github Sponsor](https://github.com/sponsors/marc2332/) page.
+
+Thanks to my sponsors for supporting this project! 😄 
 
 <!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;avatars.githubusercontent.com&#x2F;u&#x2F;8446285?u&#x3D;fd37db4dd9b4ba94dabe0bccc3a95ef2a35376ab&amp;v&#x3D;4" width="60px" alt="" /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;avatars.githubusercontent.com&#x2F;u&#x2F;2295878?v&#x3D;4" width="60px" alt="高庆丰" /></a><!-- sponsors -->
 
