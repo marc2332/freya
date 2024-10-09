@@ -1,3 +1,10 @@
+pub mod async_tasks;
+pub mod components;
 pub mod devtools;
-pub mod hot_reload;
+pub mod i18n;
+pub mod performance;
+pub mod router;
+pub mod setup;
+pub mod state_management;
 pub mod theming;
+pub mod ui;

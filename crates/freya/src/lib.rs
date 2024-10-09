@@ -4,20 +4,40 @@
 )]
 //! # Freya
 //!
-//! Build native & cross-platform GUI applications using 🦀 Rust.
+//! Build cross-platform native GUI applications using 🦀 Rust.
 //!
 //! Powered by [🧬 Dioxus](https://dioxuslabs.com) and [🎨 Skia](https://skia.org/).
 //!
-//! - [Elements API reference](freya_elements::elements#structs)
-//! - [Events API reference](freya_elements::elements#functions)
-//! - [Elements guides](freya_elements::_docs)
-//! - [Components](freya_components)
-//! - [Hooks](freya_hooks)
+//! ### Learn
+//!
+//! - [Setup](self::_docs::setup)
+//! - [UI](self::_docs::ui)
+//! - [Components](self::_docs::components)
+//! - [Elements](self::_docs::elements)
+//! - [Hooks](self::_docs::hooks)
+//! - [State Management](self::_docs::state_management)
+//!     - [Signals](self::_docs::state_management::signals)
+//!     - [Global Signals](self::_docs::state_management::global_signals)
+//!     - [Lifecycle](self::_docs::state_management::lifecycle)
+//!     - [Context](self::_docs::state_management::context)
+//!     - [Memoization](self::_docs::state_management::memoization)
+//!     - [Third Party](self::_docs::state_management::third_party)
+//! - [Async Tasks](self::_docs::async_tasks)
 //! - [Theming](self::_docs::theming)
-//! - [Hot reload](self::_docs::hot_reload)
-//! - [Testing](freya_testing)
-//! - [Animating](freya_hooks::use_animation)
+//! - [i18n](self::_docs::i18n)
+//! - [Accessibility](self::_docs::accessibility)
+//! - [Router](self::_docs::router)
+//! - [Native Menus](self::_docs)
+//! - [freya-testing](freya_testing)
 //! - [Devtools](self::_docs::devtools)
+//!
+//! ### API References
+//! - [Elements and attributes](freya_elements::elements#structs)
+//! - [Events](freya_elements::elements#functions)
+//! - [Built-in Components](freya_components)
+//! - [Built-in Hooks](freya_hooks)
+//!
+//! ### Example
 //!
 //! ```rust,no_run
 //! use freya::prelude::*;
