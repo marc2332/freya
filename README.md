@@ -66,12 +66,6 @@ fn app() -> Element {
 </td>
 </table>
 
-### Sponsors 🤗
-
-Thanks to my sponsors for supporting this project! 😄
-
-<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;avatars.githubusercontent.com&#x2F;u&#x2F;8446285?u&#x3D;fd37db4dd9b4ba94dabe0bccc3a95ef2a35376ab&amp;v&#x3D;4" width="60px" alt="" /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;avatars.githubusercontent.com&#x2F;u&#x2F;2295878?v&#x3D;4" width="60px" alt="高庆丰" /></a><!-- sponsors -->
-
 ### Want to try it? 🤔
 
 👋 Make sure to check the [Setup guide](https://book.freyaui.dev/setup.html) first.
@@ -99,13 +93,12 @@ dioxus = { version = "0.5", features = ["macro", "hooks"], default-features = fa
 - 🚇 Built-in **hooks** library (animations, text editing and more)
 - 🔍 Built-in **devtools** panel
 - 🧰 Built-in **headless runner** to test UI
-- 🎨 **Theming** support (not extensible yet ⚠️)
+- 🎨 **Theming** support
 - 🛩️ **Cross-platform** (Windows, Linux, MacOS)
 - 🖼️ SKSL **Shaders** support
-- 🔄️ Dioxus **Hot-reload** support
 - 📒 Multi-line **text editing**
-- 🦾 Basic **Accessibility** Support (experimental ⚠️)
-- 🧩Compatible with dioxus-sdk and other Dioxus renderer-agnostic libraries
+- 🦾 **Accessibility** support
+- 🧩 Compatible with dioxus-sdk and other Dioxus renderer-agnostic libraries
 
 ### Goals 😁
 - Performant and low memory usage
@@ -114,6 +107,20 @@ dioxus = { version = "0.5", features = ["macro", "hooks"], default-features = fa
 - Decent Accessibility support 
 - Useful testing APIs
 - Useful and extensible built-in components and hooks
+
+### Sponsors 🤗
+
+Thanks to my sponsors for supporting this project! 😄
+
+<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;avatars.githubusercontent.com&#x2F;u&#x2F;8446285?u&#x3D;fd37db4dd9b4ba94dabe0bccc3a95ef2a35376ab&amp;v&#x3D;4" width="60px" alt="" /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;avatars.githubusercontent.com&#x2F;u&#x2F;2295878?v&#x3D;4" width="60px" alt="高庆丰" /></a><!-- sponsors -->
+
+### Special thanks 💪
+
+- [Jonathan Kelley](https://github.com/jkelleyrtp) and [Evan Almloff](https://github.com/ealmloff) for making [Dioxus](https://dioxuslabs.com/) and all their help, specially when I was still creating Freya.
+- [Armin](https://github.com/pragmatrix) for making [rust-skia](https://github.com/rust-skia/rust-skia/) and all his help and making the favor of hosting prebuilt binaries of skia for the combo of features use by Freya.
+- [geom3trik](https://github.com/geom3trik) for helping me figure out how to add incremental rendering.
+- [Tropical](https://github.com/Tropix126) for this contributions to improving accessibility and rendering.
+- And to the rest of contributors and anybody who gave me any kind of feedback!
 
 ### 🤠 Projects
 
