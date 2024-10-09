@@ -1,7 +1,7 @@
 [package]
 name = "freya-hooks"
 description = "Hooks library designed for Freya."
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
