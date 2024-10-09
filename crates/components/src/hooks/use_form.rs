@@ -55,6 +55,7 @@ impl<Id: Clone + Hash + Eq + Display> UseForm<Id> {
             })),
             children: None,
             onclick: None,
+            enabled: true,
         }
     }
 }

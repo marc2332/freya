@@ -33,6 +33,9 @@ pub struct ButtonProps {
     pub onpress: Option<EventHandler<PressEvent>>,
     /// Event handler for when the button is clicked. Not recommended, use `onpress` instead.
     pub onclick: Option<EventHandler<()>>,
+    /// If set to `false` the button cannot be clicked and pressed. Default `true`.
+    #[props(default = true)]
+    pub enabled: bool,
 }
 
 /// Clickable button.
@@ -63,6 +66,7 @@ pub fn Button(props: ButtonProps) -> Element {
         children: props.children,
         onpress: props.onpress,
         onclick: props.onclick,
+        enabled: props.enabled,
     })
 }
 
@@ -94,6 +98,7 @@ pub fn FilledButton(props: ButtonProps) -> Element {
         children: props.children,
         onpress: props.onpress,
         onclick: props.onclick,
+        enabled: props.enabled,
     })
 }
 
@@ -125,6 +130,7 @@ pub fn OutlineButton(props: ButtonProps) -> Element {
         children: props.children,
         onpress: props.onpress,
         onclick: props.onclick,
+        enabled: props.enabled,
     })
 }
 
@@ -153,6 +159,9 @@ pub struct BaseButtonProps {
     pub onpress: Option<EventHandler<PressEvent>>,
     /// Event handler for when the button is clicked. Not recommended, use `onpress` instead.
     pub onclick: Option<EventHandler<()>>,
+    /// If set to `false` the button cannot be clicked and pressed. Default `true`.
+    #[props(default = true)]
+    pub enabled: bool,
 }
 
 /// Identifies the current status of the Button.
@@ -172,6 +181,7 @@ pub fn ButtonBase(
         children,
         theme,
         onclick,
+        enabled,
     }: BaseButtonProps,
 ) -> Element {
     let mut focus = use_focus();
@@ -197,6 +207,10 @@ pub fn ButtonBase(
     let onpointerup = {
         to_owned![onpress, onclick];
         move |ev: PointerEvent| {
+            if !enabled {
+                return;
+            }
+
             focus.focus();
             if let Some(onpress) = &onpress {
                 let is_valid = match ev.data.pointer_type {
@@ -228,16 +242,25 @@ pub fn ButtonBase(
     });
 
     let onmouseenter = move |_| {
+        if !enabled {
+            return;
+        }
         platform.set_cursor(CursorIcon::Pointer);
         status.set(ButtonStatus::Hovering);
     };
 
     let onmouseleave = move |_| {
+        if !enabled {
+            return;
+        }
         platform.set_cursor(CursorIcon::default());
         status.set(ButtonStatus::default());
     };
 
     let onglobalkeydown = move |ev: KeyboardEvent| {
+        if !enabled {
+            return;
+        }
         if focus.validate_globalkeydown(&ev) {
             if let Some(onpress) = &onpress {
                 onpress.call(PressEvent::Key(ev))
@@ -255,6 +278,8 @@ pub fn ButtonBase(
         format!("1 inner {border_fill}")
     };
 
+    let opacity = if enabled { "1" } else { "0.5" };
+
     rsx!(
         rect {
             onpointerup,
@@ -262,6 +287,7 @@ pub fn ButtonBase(
             onmouseleave,
             onglobalkeydown,
             a11y_id,
+            opacity,
             width: "{width}",
             height: "{height}",
             padding: "{padding}",
@@ -329,6 +355,34 @@ mod test {
             force: None,
         });
         utils.wait_for_update().await;
+
+        assert_eq!(label.get(0).text(), Some("false"));
+    }
+
+    #[tokio::test]
+    pub async fn button_disabled() {
+        fn button_app() -> Element {
+            let mut state = use_signal(|| false);
+
+            rsx!(
+                Button {
+                    enabled: false,
+                    onpress: move |_| state.toggle(),
+                    label {
+                        "{state}"
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(button_app);
+        let root = utils.root();
+        let label = root.get(0).get(0);
+        utils.wait_for_update().await;
+
+        assert_eq!(label.get(0).text(), Some("false"));
+
+        utils.click_cursor((15.0, 15.0)).await;
 
         assert_eq!(label.get(0).text(), Some("false"));
     }
