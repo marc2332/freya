@@ -69,9 +69,8 @@ impl Application {
         fonts_config: EmbeddedFonts,
         plugins: PluginsManager,
         default_fonts: Vec<String>,
+        accessibility: AccessKitManager,
     ) -> Self {
-        let accessibility = AccessKitManager::new(window, proxy.clone());
-
         let mut font_collection = FontCollection::new();
         let def_mgr = FontMgr::default();
 
@@ -287,6 +286,7 @@ impl Application {
         surface: &mut Surface,
         dirty_surface: &mut Surface,
         window: &Window,
+        scale_factor: f64,
     ) {
         self.plugins.send(
             PluginEvent::BeforeRender {
@@ -303,7 +303,7 @@ impl Application {
             surface,
             dirty_surface,
             window.inner_size(),
-            window.scale_factor() as f32,
+            scale_factor as f32,
         );
 
         self.plugins.send(

@@ -14,6 +14,7 @@ hot-reload = ["freya/hot-reload"]
 custom-tokio-rt = ["freya/custom-tokio-rt"]
 performance-overlay = ["freya/performance-overlay"]
 fade-cached-incremental-areas = ["freya/fade-cached-incremental-areas"]
+disable-zoom-shortcuts = ["freya/disable-zoom-shortcuts"]
 
 [patch.crates-io]
 # dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
@@ -78,6 +79,7 @@ skia-safe = { workspace = true }
 tokio = { workspace = true, features = ["fs"]}
 dioxus = { workspace = true }
 freya = { workspace = true }
+freya-hooks = { workspace = true }
 freya-core = { workspace = true }
 freya-testing = { workspace = true }
 reqwest = { version = "0.12.0", features = ["json"] }
@@ -94,6 +96,8 @@ tree-sitter-highlight = "0.23.0"
 tree-sitter-rust = "0.23.0"
 rfd = "0.14.1"
 bytes = "1.5.0"
+dioxus-sdk = { workspace = true }
+winit = { workspace = true }
 
 [profile.release]
 lto = true

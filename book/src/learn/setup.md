@@ -31,6 +31,10 @@ sudo dnf install openssl-devel pkgconf cmake gtk3-devel clang-devel -y
 sudo dnf groupinstall "Development Tools" "C Development Tools and Libraries" -y
 ```
 
+#### NixOS
+
+Copy this [flake.nix](https://github.com/kuba375/freya-flake) into your project root. Then you can enter a dev shell by `nix develop`. 
+
 Don't hesitate to contribute so other distros can be added here.
 
 ### MacOS

@@ -16,7 +16,7 @@ pub async fn multiple_lines_single_editor() {
         );
         let cursor_attr = editable.cursor_attr();
         let editor = editable.editor().read();
-        let cursor_pos = editor.visible_cursor_pos();
+        let cursor_pos = editor.cursor_pos();
 
         let onmousedown = move |e: MouseEvent| {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
@@ -294,7 +294,7 @@ pub async fn highlight_multiple_lines_single_editor() {
             EditableMode::MultipleLinesSingleEditor,
         );
         let editor = editable.editor().read();
-        let cursor_pos = editor.visible_cursor_pos();
+        let cursor_pos = editor.cursor_pos();
         let cursor_reference = editable.cursor_attr();
         let highlights = editable.highlights_attr(0);
 
@@ -355,7 +355,7 @@ pub async fn highlight_multiple_lines_single_editor() {
     utils.wait_for_update().await;
 
     // Move cursor
-    utils.move_cursor((80., 20.)).await;
+    utils.move_cursor((80., 25.)).await;
 
     utils.wait_for_update().await;
 
@@ -397,7 +397,7 @@ pub async fn highlights_single_line_multiple_editors() {
 
                     // Only show the cursor in the active line
                     let character_index = if is_line_selected {
-                        editable.editor().read().visible_cursor_col().to_string()
+                        editable.editor().read().cursor_col().to_string()
                     } else {
                         "none".to_string()
                     };
@@ -462,7 +462,7 @@ pub async fn highlights_single_line_multiple_editors() {
     utils.wait_for_update().await;
 
     let highlights_1 = root.child(0).unwrap().state().cursor.highlights.clone();
-    assert_eq!(highlights_1, Some(vec![(5, 16)]));
+    assert_eq!(highlights_1, Some(vec![(5, 17)]));
 
     let highlights_2 = root.child(1).unwrap().state().cursor.highlights.clone();
     #[cfg(not(target_os = "macos"))]
@@ -481,7 +481,7 @@ pub async fn special_text_editing() {
         );
         let cursor_attr = editable.cursor_attr();
         let editor = editable.editor().read();
-        let cursor_pos = editor.visible_cursor_pos();
+        let cursor_pos = editor.cursor_pos();
 
         let onmousedown = move |e: MouseEvent| {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
@@ -564,13 +564,13 @@ pub async fn special_text_editing() {
     #[cfg(not(target_os = "linux"))]
     {
         assert_eq!(content.text(), Some("你好🦀世界\n👋"));
-        assert_eq!(cursor.text(), Some("0:3"));
+        assert_eq!(cursor.text(), Some("0:4"));
     }
 
     #[cfg(target_os = "linux")]
     {
         assert_eq!(content.text(), Some("你好世界🦀\n👋"));
-        assert_eq!(cursor.text(), Some("0:5"));
+        assert_eq!(cursor.text(), Some("0:6"));
     }
 
     // Move cursor to the begining
@@ -644,7 +644,7 @@ pub async fn special_text_editing() {
     utils.wait_for_update().await;
     let cursor = root.get(1).get(0);
     // Because there is not a third line, the cursor will be moved to the max right
-    assert_eq!(cursor.text(), Some("1:1"));
+    assert_eq!(cursor.text(), Some("1:2"));
 
     // Move cursor with arrow up, twice
     utils.push_event(PlatformEvent::Keyboard {
@@ -674,7 +674,7 @@ pub async fn backspace_remove() {
         );
         let cursor_attr = editable.cursor_attr();
         let editor = editable.editor().read();
-        let cursor_pos = editor.visible_cursor_pos();
+        let cursor_pos = editor.cursor_pos();
 
         let onmousedown = move |e: MouseEvent| {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
@@ -752,7 +752,7 @@ pub async fn backspace_remove() {
     let cursor = root.get(1).get(0);
     let content = root.get(0).get(0).get(0);
     assert_eq!(content.text(), Some("Hello🦀 Rustaceans\nHello Rustaceans"));
-    assert_eq!(cursor.text(), Some("0:6"));
+    assert_eq!(cursor.text(), Some("0:7"));
 
     // Remove text
     utils.push_event(PlatformEvent::Keyboard {
@@ -780,7 +780,7 @@ pub async fn highlight_shift_click_multiple_lines_single_editor() {
             EditableMode::MultipleLinesSingleEditor,
         );
         let editor = editable.editor().read();
-        let cursor_pos = editor.visible_cursor_pos();
+        let cursor_pos = editor.cursor_pos();
         let cursor_reference = editable.cursor_attr();
         let highlights = editable.highlights_attr(0);
 
@@ -849,7 +849,7 @@ pub async fn highlight_shift_click_multiple_lines_single_editor() {
     utils.wait_for_update().await;
 
     // Move and click cursor
-    utils.click_cursor((80., 20.)).await;
+    utils.click_cursor((80., 25.)).await;
 
     utils.wait_for_update().await;
 
@@ -891,7 +891,7 @@ pub async fn highlights_shift_click_single_line_multiple_editors() {
 
                     // Only show the cursor in the active line
                     let character_index = if is_line_selected {
-                        editable.editor().read().visible_cursor_col().to_string()
+                        editable.editor().read().cursor_col().to_string()
                     } else {
                         "none".to_string()
                     };
@@ -960,7 +960,7 @@ pub async fn highlights_shift_click_single_line_multiple_editors() {
 
     let highlights_1 = root.child(0).unwrap().state().cursor.highlights.clone();
 
-    assert_eq!(highlights_1, Some(vec![(5, 16)]));
+    assert_eq!(highlights_1, Some(vec![(5, 17)]));
 
     let highlights_2 = root.child(1).unwrap().state().cursor.highlights.clone();
 
@@ -979,7 +979,7 @@ pub async fn highlight_all_text() {
             EditableMode::MultipleLinesSingleEditor,
         );
         let editor = editable.editor().read();
-        let cursor_pos = editor.visible_cursor_pos();
+        let cursor_pos = editor.cursor_pos();
         let cursor_reference = editable.cursor_attr();
         let highlights = editable.highlights_attr(0);
 
@@ -1068,7 +1068,7 @@ pub async fn replace_text() {
         );
         let cursor_attr = editable.cursor_attr();
         let editor = editable.editor().read();
-        let cursor_pos = editor.visible_cursor_pos();
+        let cursor_pos = editor.cursor_pos();
         let highlights = editable.highlights_attr(0);
 
         let onmousedown = move |e: MouseEvent| {
@@ -1170,12 +1170,12 @@ pub async fn replace_text() {
     #[cfg(not(target_os = "macos"))]
     {
         assert_eq!(content.text(), Some("Hello🦀ceans\nHello Rustaceans"));
-        assert_eq!(cursor.text(), Some("0:6"));
+        assert_eq!(cursor.text(), Some("0:7"));
     }
 
     #[cfg(target_os = "macos")]
     {
         assert_eq!(content.text(), Some("Hello🦀aceans\nHello Rustaceans"));
-        assert_eq!(cursor.text(), Some("0:6"));
+        assert_eq!(cursor.text(), Some("0:7"));
     }
 }
