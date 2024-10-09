@@ -18,12 +18,14 @@ fn app() -> Element {
             padding: "7",
             width: "100%",
             height: "100%",
+            spacing: "4",
             label {
                 color: "black",
                 "Your name:"
             }
             Input {
                 value: values.read().0.clone(),
+                placeholder: "Name",
                 onchange: move |txt| {
                     values.write().0 = txt;
                 }
@@ -34,6 +36,7 @@ fn app() -> Element {
             }
             Input {
                 value: values.read().1.clone(),
+                placeholder: "Age",
                 onchange: move |txt| {
                     values.write().1 = txt;
                 }

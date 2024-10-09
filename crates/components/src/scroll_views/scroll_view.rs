@@ -159,10 +159,16 @@ pub fn ScrollView(
 
     let direction_is_vertical = direction == "vertical";
 
-    let vertical_scrollbar_is_visible =
-        is_scrollbar_visible(show_scrollbar, size.inner.height, size.area.height());
-    let horizontal_scrollbar_is_visible =
-        is_scrollbar_visible(show_scrollbar, size.inner.width, size.area.width());
+    let vertical_scrollbar_is_visible = is_scrollbar_visible(
+        show_scrollbar,
+        size.inner.height.floor(),
+        size.area.height().floor(),
+    );
+    let horizontal_scrollbar_is_visible = is_scrollbar_visible(
+        show_scrollbar,
+        size.inner.width.floor(),
+        size.area.width().floor(),
+    );
 
     let (container_width, content_width) = get_container_size(
         &width,
@@ -220,8 +226,6 @@ pub fn ScrollView(
             if *scrolled_y.peek() != scroll_position_y {
                 e.stop_propagation();
                 *scrolled_y.write() = scroll_position_y;
-            } else {
-                return;
             }
         } else {
             let scroll_position_x = get_scroll_position_from_wheel(
@@ -235,12 +239,8 @@ pub fn ScrollView(
             if *scrolled_x.peek() != scroll_position_x {
                 e.stop_propagation();
                 *scrolled_x.write() = scroll_position_x;
-            } else {
-                return;
             }
         }
-
-        focus.focus();
     };
 
     // Drag the scrollbars
@@ -382,6 +382,7 @@ pub fn ScrollView(
             onglobalkeydown,
             onglobalkeyup,
             a11y_id,
+            a11y_focusable: "false",
             rect {
                 direction: "vertical",
                 width: "{container_width}",

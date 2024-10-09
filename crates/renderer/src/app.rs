@@ -69,9 +69,8 @@ impl Application {
         fonts_config: EmbeddedFonts,
         plugins: PluginsManager,
         default_fonts: Vec<String>,
+        accessibility: AccessKitManager,
     ) -> Self {
-        let accessibility = AccessKitManager::new(window, proxy.clone());
-
         let mut font_collection = FontCollection::new();
         let def_mgr = FontMgr::default();
 
