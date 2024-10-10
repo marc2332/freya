@@ -6,6 +6,7 @@
 //! You can run certain logic when the component is created for the first time by using the `use_hook` hook.
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! fn app() -> Element {
 //!
 //!     use_hook(|| {
@@ -21,6 +22,7 @@
 //! Run some logic when the component is being destroyed.
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! fn app() -> Element {
 //!
 //!     use_drop(|| {
@@ -36,6 +38,7 @@
 //! Run some logic when a signal is changed.
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! fn app() -> Element {
 //!     let mut signal = use_signal(|| 1);
 //!
@@ -55,6 +58,7 @@
 //! Run some logic when some values change.
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! fn app() -> Element {
 //!     let mut signal = use_signal(|| 1);
 //!     let mut other_signal = use_signal(|| 1);
