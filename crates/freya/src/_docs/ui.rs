@@ -20,7 +20,7 @@
 //! }
 //! ```
 //!
-//! Notice that the `app` component is returning an [`Element`](dioxus_core::Element) created by the [`rsx!()`](dioxus_core_macro::rsx!()) macro. So, in other words, the `Element` contains the UI of that component.
+//! Notice that the `app` component is returning an [`Element`](dioxus_core::Element) created by the [`rsx!()`](dioxus_core_macro::rsx!()) macro. So, in other words, the [`Element`](dioxus_core::Element) contains the UI of that component.
 //! Every time the component reruns the [`rsx!()`](dioxus_core_macro::rsx!()) will be called again and thus generate a new UI.
 //!
 //! ### [`rsx!()`](dioxus_core_macro::rsx!())
