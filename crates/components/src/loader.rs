@@ -42,6 +42,6 @@ pub fn Loader(props: LoaderProps) -> Element {
                 stroke-dasharray="256 1400"
                 stroke-linecap="round" />
             </svg>
-        "#
+        "#,
     })
 }
