@@ -29,7 +29,7 @@ torin = { workspace = true }
 dioxus-hooks = { workspace = true }
 dioxus-signals = { workspace = true }
 dioxus-core = { workspace = true }
-dioxus-sdk = { workspace = true }
+dioxus-clipboard = { workspace = true }
 
 tokio = { workspace = true }
 winit = { workspace = true }

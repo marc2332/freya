@@ -4,7 +4,7 @@ use std::{
     ops::Range,
 };
 
-use dioxus_sdk::clipboard::UseClipboard;
+use dioxus_clipboard::prelude::UseClipboard;
 use ropey::iter::Lines;
 pub use ropey::Rope;
 
