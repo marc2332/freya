@@ -1,4 +1,4 @@
-//!  UI
+//! # UI
 //!
 //! Freya uses a declarive model for the UI, which means that you do not use imperative APIs but instead you write in a semi-markup language (integrated with Rust) by using the `rsx!()` macro from Dioxus.
 //!
