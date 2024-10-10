@@ -3,7 +3,7 @@
 //! Global Signals behave like Signals but you declare them statitically and you don't need to pass them through props or context as you can just import it.
 //! Main use case is for apps, not libraries.
 //!
-//! Example:
+//! ### Example
 //!
 //! ```rust
 //! static COUNT: GlobalSignal<usize> = Signal::global(|| 0);

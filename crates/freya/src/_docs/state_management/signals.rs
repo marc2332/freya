@@ -4,7 +4,7 @@
 //!
 //! They are usually created by using the `use_signal` hook.
 //!
-//! Example:
+//! ### Example
 //!
 //! ```rust
 //! fn app() -> Element {

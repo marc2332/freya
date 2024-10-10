@@ -52,7 +52,7 @@
 //!
 //! ## Side effects with dependencies
 //!
-//! Run some logic when a signal is changed.
+//! Run some logic when some values change.
 //!
 //! ```rust
 //! fn app() -> Element {
