@@ -42,7 +42,7 @@ pub struct ButtonProps {
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///     rsx!(
@@ -54,7 +54,19 @@ pub struct ButtonProps {
 ///         }
 ///     )
 /// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           {app()}
+/// #       }
+/// #   )
+/// # }, (200., 150.).into(), "./images/gallery_button.png");
 /// ```
+///
+/// # Preview
+/// ![Button Preview][button]
+#[embed_doc_image::embed_doc_image("button", "images/gallery_button.png")]
 #[allow(non_snake_case)]
 pub fn Button(props: ButtonProps) -> Element {
     let theme = use_applied_theme!(&props.theme, button);

@@ -50,19 +50,55 @@ pub enum SwitchStatus {
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///     let mut enabled = use_signal(|| false);
 ///
 ///     rsx!(Switch {
-///         enabled: *enabled.read(),
+///         enabled: enabled(),
 ///         ontoggled: move |_| {
 ///             enabled.toggle();
 ///         }
 ///     })
 /// }
+/// # use freya_testing::prelude::*;
+/// # // ENABLED
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           Switch {
+/// #               enabled: true,
+/// #               ontoggled: move |_| { }
+/// #           }
+/// #       }
+/// #   )
+/// # }, (200., 150.).into(), "./images/gallery_enabled_switch.png");
+///
+/// # // DISABLED
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           Switch {
+/// #               enabled: false,
+/// #               ontoggled: move |_| { }
+/// #           }
+/// #       }
+/// #   )
+/// # }, (200., 150.).into(), "./images/gallery_not_enabled_switch.png");
 /// ```
+/// # Preview
+///
+/// | Enabled       | Not Enabled   |
+/// | ------------- | ------------- |
+/// | ![Switch Enabled Demo][gallery_enabled_switch] | ![Switch Not Enabled Demo][gallery_not_enabled_switch] |
+#[embed_doc_image::embed_doc_image(
+    "gallery_not_enabled_switch",
+    "images/gallery_not_enabled_switch.png"
+)]
+#[embed_doc_image::embed_doc_image("gallery_enabled_switch", "images/gallery_enabled_switch.png")]
 #[allow(non_snake_case)]
 pub fn Switch(props: SwitchProps) -> Element {
     let theme = use_applied_theme!(&props.theme, switch);

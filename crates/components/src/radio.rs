@@ -17,7 +17,7 @@ use freya_hooks::{
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
 /// #[derive(PartialEq)]
 /// enum Choice {
@@ -48,7 +48,20 @@ use freya_hooks::{
 ///         }
 ///     )
 /// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           Radio {
+/// #               selected: true
+/// #           }
+/// #       }
+/// #   )
+/// # }, (200., 150.).into(), "./images/gallery_radio.png");
 /// ```
+/// # Preview
+/// ![Radio Preview][radio]
+#[embed_doc_image::embed_doc_image("radio", "images/gallery_radio.png")]
 #[allow(non_snake_case)]
 #[component]
 pub fn Radio(

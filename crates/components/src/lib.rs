@@ -1,6 +1,20 @@
 //! # Freya Components
 //! A collection of basic components to be used in Freya.
 
+/// | 1 | 2 | 3 | 4 |
+/// | ------------- | ------------- | ------------- | ------------- |
+/// | ![Switch Preview][gallery_enabled_switch] | ![Button Preview][gallery_button] | ![Slider Preview][gallery_slider] | ![Checkbox Preview][gallery_checkbox] |
+/// | [Switch]        | [Button]        | [Slider]        | [Checkbox] |
+/// | ![Radio Preview][gallery_radio] | ![Input Preview][gallery_input] |
+/// | [Radio]        | [Input]        |
+#[embed_doc_image::embed_doc_image("gallery_button", "images/gallery_button.png")]
+#[embed_doc_image::embed_doc_image("gallery_enabled_switch", "images/gallery_enabled_switch.png")]
+#[embed_doc_image::embed_doc_image("gallery_slider", "images/gallery_slider.png")]
+#[embed_doc_image::embed_doc_image("gallery_checkbox", "images/gallery_checkbox.png")]
+#[embed_doc_image::embed_doc_image("gallery_radio", "images/gallery_radio.png")]
+#[embed_doc_image::embed_doc_image("gallery_input", "images/gallery_input.png")]
+pub fn gallery() {}
+
 mod accordion;
 mod activable_route;
 mod animated_router;
