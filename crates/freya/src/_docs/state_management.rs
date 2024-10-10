@@ -9,10 +9,8 @@
 //! - [Lifecycle](self:::lifecycle)
 //! - [Context](self:::context)
 //! - [Memoization](self:::memoization)
-//! - [Third Party](self:::third_party)
 
 pub mod context;
 pub mod global_signals;
 pub mod memoization;
 pub mod signals;
-pub mod third_party;
