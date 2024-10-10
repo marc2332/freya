@@ -4,7 +4,7 @@
 //!
 //! For example, this is how a simple component would look like in Freya:
 //!
-//! ```rust
+//! ```rust, no_run
 //! # use freya::prelude::*;
 //! fn app() -> Element {
 //!     rsx!(
@@ -29,9 +29,10 @@
 //!
 //! The structure for RSX looks like this:
 //!
-//! ```rust
+//! ```rust, no_run
 //! # use freya::prelude::*;
-//! # rsx!(
+//!
+//! # { rsx!(
 //! // Element, always in lower case
 //! rect {
 //!     // Attribute for the element `rect`
@@ -51,12 +52,15 @@
 //!         prop: 123
 //!     }
 //! }
-//! #)
+//! # )};
+//!
+//! # #[component]
+//! # fn CoolComp(prop: i32) -> Element { None }
 //! ```
 //!
 //! You can reference variables inside the RSX as well:
 //!
-//! ```rust
+//! ```rust, no_run
 //! # use freya::prelude::*;
 //! let onclick = |_| {
 //!     println!("Clicked");
@@ -65,6 +69,7 @@
 //! let width = "100%";
 //! let name = "World";
 //!
+//! # {
 //! rsx!(
 //!     rect {
 //!         background: "red",
@@ -77,15 +82,17 @@
 //!         "{1 + 1} is 2"
 //!         }
 //!     }
-//! ) #;
+//! )
+//! # };
 //! ```
 //!
 //! Or just use if, for-loops, etc.. Inside of the RSX:
 //!
-//! ```rust
+//! ```rust, no_run
 //! # use freya::prelude::*;
 //! let show_text = false;
 //!
+//! # {
 //! rsx!(
 //!     rect {
 //!         for i in 0..5 {
@@ -104,5 +111,6 @@
 //!             }
 //!         }
 //!     }
-//! ) #;
+//! )
+//! # };
 //! ```

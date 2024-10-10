@@ -11,7 +11,7 @@
 //!
 //! fn app() -> Element {
 //!     let onclick = move |_| {
-//!         COUNT += 1; // Modify the global signal, as if it was a normal signal
+//!         *COUNT.write() += 1; // Modify the global signal, as if it was a normal signal
 //!     };
 //!
 //!     rsx!(

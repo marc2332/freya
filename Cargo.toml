@@ -15,6 +15,7 @@ custom-tokio-rt = ["freya/custom-tokio-rt"]
 performance-overlay = ["freya/performance-overlay"]
 fade-cached-incremental-areas = ["freya/fade-cached-incremental-areas"]
 disable-zoom-shortcuts = ["freya/disable-zoom-shortcuts"]
+docs = ["freya/docs"]
 
 [patch.crates-io]
 # dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }

@@ -8,12 +8,11 @@
 //! ```rust
 //! # use freya::prelude::*;
 //! fn app() -> Element {
-//!
 //!     use_hook(|| {
 //!         println!("Component running for the first time!");
 //!     });
 //!
-//!     rsx!(...)
+//!     None
 //! }
 //! ```
 //!
@@ -24,12 +23,11 @@
 //! ```rust
 //! # use freya::prelude::*;
 //! fn app() -> Element {
-//!
 //!     use_drop(|| {
 //!         println!("Component is being dropped.");
 //!     });
 //!
-//!     rsx!(...)
+//!     None
 //! }
 //! ```
 //!
@@ -49,8 +47,7 @@
 //!         println!("Value of signal is {value}");
 //!     });
 //!
-//!     # return None
-//!     rsx!(...)
+//!     None
 //! }
 //! ```
 //!
@@ -70,11 +67,13 @@
 //!     }));
 //!
 //!     // When you need multiple values you can pass a tuple
-//!     use_effect(use_reactive(&(signal, other_signal), |(value, other_signal)| {
-//!         println!("Value of signals are {value} and {other_signal}");
-//!     }));
+//!     use_effect(use_reactive(
+//!         &(signal, other_signal),
+//!         |(value, other_signal)| {
+//!             println!("Value of signals are {value} and {other_signal}");
+//!         },
+//!     ));
 //!
-//!     # return None
-//!     rsx!(...)
+//!     None
 //! }
 //! ```

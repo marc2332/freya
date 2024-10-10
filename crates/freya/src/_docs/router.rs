@@ -6,7 +6,7 @@
 //!
 //! ```rust
 //! # use freya::prelude::*;
-//! # use use dioxus_router::prelude::{
+//! # use dioxus_router::prelude::{
 //! #    Outlet,
 //! #    Routable,
 //! #    Router,

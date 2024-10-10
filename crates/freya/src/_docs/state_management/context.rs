@@ -152,7 +152,7 @@
 //! #[component]
 //! fn CompB() -> Element {
 //!     let value_a = use_context::<ValueA>();
-//!     let value_b = use_context::<Valueb>();
+//!     let value_b = use_context::<ValueB>();
 //!     let value_c = use_context::<ValueC>();
 //!     rsx!(
 //!         label {

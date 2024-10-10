@@ -5,9 +5,8 @@
 //!
 //! You simply need to wrap your `Router` content inside the `NativeRouter` component.
 //!
-//! Example (based on the example from [router](../router.md)):
-//! ```rust
-//! # use freya::prelude::*;
+//! Example (based on the example from [router](crate::_docs::router)):
+//! ```rust, ignore
 //! #[allow(non_snake_case)]
 //! fn AppSidebar() -> Element {
 //!     rsx!(
@@ -25,7 +24,7 @@
 //!                         "Other"
 //!                     }
 //!                 },
-//!                 ...
+//!                 // Rest of app
 //!             }
 //!         }
 //!     )

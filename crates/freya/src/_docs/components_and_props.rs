@@ -32,24 +32,24 @@
 //!         // By declaring this element using `TextLabel`
 //!         // we are creating an instance of that component
 //!         TextLabel {
-//!             "Number 1"
+//!             text: "Number 1"
 //!         }
 //!         label {
 //!             "Number 2"
 //!         }
 //!         // Another instance of the same component
 //!         TextLabel {
-//!             "Number 3"
+//!             text: "Number 3"
 //!         }
 //!     )
 //! }
 //!
 //! // Reusable component that we might call as many times we want
 //! #[component]
-//! fn TextLabel(children: String) -> Element {
+//! fn TextLabel(text: String) -> Element {
 //!     rsx!(
 //!         label {
-//!             "{children}"
+//!             "{text}"
 //!         }
 //!     )
 //! }

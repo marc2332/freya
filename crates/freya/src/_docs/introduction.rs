@@ -13,7 +13,7 @@
 //!
 //! #### Example
 //!
-//! ```rust
+//! ```rust, no_run
 //! # use freya::prelude::*;
 //! fn main() {
 //!     // **Start** your app by specifying the root component and some config parameters

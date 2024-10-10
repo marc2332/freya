@@ -19,11 +19,13 @@
 //!
 //! ```rust
 //! # use freya::prelude::*;
-//! # use dioxus_i18n::prelude::*;
+//! # use dioxus_i18n::{prelude::*, t};
+//! # use dioxus_i18n::unic_langid::langid;
 //!
 //! // main.rs
 //!
 //! fn main() {
+//!     # return;
 //!     launch(app);
 //! }
 //!
@@ -64,7 +66,7 @@
 //! fn app() -> Element {
 //!     // Initialize our i18n config
 //!     use_init_i18n(|| {
-//!         # return I18nConfig::new(langid!("en-US"))
+//!         # return I18nConfig::new(langid!("en-US"));
 //!         I18nConfig::new(langid!("en-US"))
 //!             .with_locale(Locale::new_static(
 //!                 langid!("en-US"),
@@ -72,7 +74,7 @@
 //!             ))
 //!             .with_locale(Locale::new_dynamic(
 //!                 langid!("es-ES"),
-//!                 "./examples/es-ES.ftl",
+//!                 "./es-ES.ftl",
 //!             ))
 //!     });
 //!
