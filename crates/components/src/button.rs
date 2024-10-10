@@ -65,7 +65,7 @@ pub struct ButtonProps {
 /// ```
 ///
 /// # Preview
-/// ![Button Demo][button]
+/// ![Button Preview][button]
 #[embed_doc_image::embed_doc_image("button", "images/gallery_button.png")]
 #[allow(non_snake_case)]
 pub fn Button(props: ButtonProps) -> Element {

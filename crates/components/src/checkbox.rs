@@ -19,7 +19,7 @@ use crate::TickIcon;
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use std::collections::HashSet;
 /// # use freya::prelude::*;
 /// #[derive(PartialEq, Eq, Hash)]
@@ -63,7 +63,23 @@ use crate::TickIcon;
 ///         }
 ///     )
 /// }
+///
+/// # // DISABLED
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           Checkbox {
+///                 selected: true,
+///             },
+/// #       }
+/// #   )
+/// # }, (200., 150.).into(), "./images/gallery_checkbox.png");
 /// ```
+///
+/// # Preview
+/// ![Checkbox Preview][checkbox]
+#[embed_doc_image::embed_doc_image("checkbox", "images/gallery_checkbox.png")]
 #[allow(non_snake_case)]
 #[component]
 pub fn Checkbox(
