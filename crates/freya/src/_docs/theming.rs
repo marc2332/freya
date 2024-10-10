@@ -11,15 +11,15 @@
 //! ```rust
 //! // A custom theme based on the Light Theme that simply tweaks some parts of the Button theme.
 //! const CUSTOM_THEME: Theme = Theme {
-//! button: ButtonTheme {
-//! background: Cow::Borrowed("rgb(230, 0, 0)"),
-//! hover_background: Cow::Borrowed("rgb(150, 0, 0)"),
-//! font_theme: FontTheme {
-//! color: Cow::Borrowed("white"),
-//! },
-//! ..LIGHT_THEME.button
-//! },
-//! ..LIGHT_THEME
+//!     button: ButtonTheme {
+//!         background: Cow::Borrowed("rgb(230, 0, 0)"),
+//!         hover_background: Cow::Borrowed("rgb(150, 0, 0)"),
+//!         font_theme: FontTheme {
+//!             color: Cow::Borrowed("white"),
+//!         },
+//!         ..LIGHT_THEME.button
+//!     },
+//!     ..LIGHT_THEME
 //! };
 //!
 //! fn app() -> Element {
