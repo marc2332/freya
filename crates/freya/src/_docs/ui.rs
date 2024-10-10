@@ -30,6 +30,8 @@
 //! The structure for RSX looks like this:
 //!
 //! ```rust
+//! # use freya::prelude::*;
+//! # rsx!(
 //! // Element, always in lower case
 //! rect {
 //!     // Attribute for the element `rect`
@@ -49,11 +51,13 @@
 //!         prop: 123
 //!     }
 //! }
+//! #)
 //! ```
 //!
 //! You can reference variables inside the RSX as well:
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! let onclick = |_| {
 //!     println!("Clicked");
 //! };
@@ -79,6 +83,7 @@
 //! Or just use if, for-loops, etc.. Inside of the RSX:
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! let show_text = false;
 //!
 //! rsx!(
