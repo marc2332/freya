@@ -69,34 +69,30 @@ pub fn Radio(
         unselected_fill
     };
     let border = if focus.is_selected() {
-        format!("4 outer {}", border_fill)
+        format!("2 inner {fill}, 4 outer {border_fill}")
     } else {
-        "none".to_string()
+        format!("2 inner {fill}")
     };
 
     let onkeydown = move |_: KeyboardEvent| {};
 
     rsx!(
         rect {
+            a11y_id: focus.attribute(),
+            width: "18",
+            height: "18",
             border,
+            padding: "4",
+            main_align: "center",
+            cross_align: "center",
             corner_radius: "99",
-            rect {
-                a11y_id: focus.attribute(),
-                width: "18",
-                height: "18",
-                border: "2 inner {fill}",
-                padding: "4",
-                main_align: "center",
-                cross_align: "center",
-                corner_radius: "99",
-                onkeydown,
-                if selected {
-                    rect {
-                        width: "10",
-                        height: "10",
-                        background: "{fill}",
-                        corner_radius: "99",
-                    }
+            onkeydown,
+            if selected {
+                rect {
+                    width: "10",
+                    height: "10",
+                    background: "{fill}",
+                    corner_radius: "99",
                 }
             }
         }
@@ -157,26 +153,26 @@ mod test {
         utils.wait_for_update().await;
 
         // If the inner circle exists it means that the Radio is activated, otherwise it isn't
-        assert!(root.get(0).get(0).get(0).get(0).get(0).is_element());
-        assert!(root.get(1).get(0).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(2).get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(0).get(0).get(0).get(0).is_element());
+        assert!(root.get(1).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(2).get(0).get(0).get(0).is_placeholder());
 
         utils.click_cursor((20., 50.)).await;
 
-        assert!(root.get(0).get(0).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(1).get(0).get(0).get(0).get(0).is_element());
-        assert!(root.get(2).get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(1).get(0).get(0).get(0).is_element());
+        assert!(root.get(2).get(0).get(0).get(0).is_placeholder());
 
         utils.click_cursor((10., 90.)).await;
 
-        assert!(root.get(0).get(0).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(1).get(0).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(2).get(0).get(0).get(0).get(0).is_element());
+        assert!(root.get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(1).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(2).get(0).get(0).get(0).is_element());
 
         utils.click_cursor((10., 10.)).await;
 
-        assert!(root.get(0).get(0).get(0).get(0).get(0).is_element());
-        assert!(root.get(1).get(0).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(2).get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(0).get(0).get(0).get(0).is_element());
+        assert!(root.get(1).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(2).get(0).get(0).get(0).is_placeholder());
     }
 }

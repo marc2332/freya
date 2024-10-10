@@ -11,9 +11,9 @@ use torin::prelude::{
 };
 
 use super::utils::ElementUtils;
-use crate::prelude::{
-    align_main_align_paragraph,
-    DioxusNode,
+use crate::{
+    prelude::DioxusNode,
+    render::align_main_align_paragraph,
 };
 
 pub struct LabelElement;

@@ -35,22 +35,23 @@ pub fn process_layout(
         let mut compositor_dirty_area = fdom.compositor_dirty_area();
         let mut buffer = layout.dirty.iter().copied().collect_vec();
         while let Some(node_id) = buffer.pop() {
-            if let Some(area) = Compositor::get_drawing_area(node_id, &layout, rdom, scale_factor) {
-                // Unite the invalidated area with the dirty area
-                compositor_dirty_area.unite_or_insert(&area);
+            if let Some(node) = rdom.get(node_id) {
+                if let Some(area) =
+                    Compositor::get_drawing_area(node_id, &layout, rdom, scale_factor)
+                {
+                    // Unite the invalidated area with the dirty area
+                    compositor_dirty_area.unite_or_insert(&area);
 
-                // Mark these elements as dirty for the compositor
-                compositor_dirty_nodes.insert(node_id);
+                    // Mark these elements as dirty for the compositor
+                    compositor_dirty_nodes.insert(node_id);
 
-                // Continue iterating in the children of this node
-                if let Some(node) = rdom.get(node_id) {
                     // Mark as invalidated this node as its layout has changed
                     if node.get_accessibility_id().is_some() {
                         dirty_accessibility_tree.add_or_update(node_id);
                     }
-
-                    buffer.extend(node.child_ids());
                 }
+                // Continue iterating in the children of this node
+                buffer.extend(node.child_ids());
             }
         }
         let root_id = fdom.rdom().root_id();
