@@ -70,8 +70,8 @@ use crate::TickIcon;
 /// #   rsx!(
 /// #       Preview {
 /// #           Checkbox {
-///                 selected: true,
-///             },
+/// #               selected: true,
+/// #           },
 /// #       }
 /// #   )
 /// # }, (200., 150.).into(), "./images/gallery_checkbox.png");
