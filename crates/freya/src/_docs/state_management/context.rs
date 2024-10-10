@@ -60,7 +60,7 @@
 //! fn CompA() -> Element {
 //!     // Initialize the context with `1` usize as value
 //!     // Any component desdendant of `CompA` will be allowed to access this component
-//!     use_provide_context(|| 1);
+//!     use_context_provider(|| 1);
 //!
 //!     rsx!(
 //!         CompB { }
@@ -104,9 +104,9 @@
 //! // Parent component
 //! #[component]
 //! fn CompA() -> Element {
-//!     use_provide_context(|| 1);
-//!     use_provide_context(|| 2);
-//!     use_provide_context(|| 3);
+//!     use_context_provider(|| 1);
+//!     use_context_provider(|| 2);
+//!     use_context_provider(|| 3);
 //!
 //!     // All these 3 contexts share the same type, `usize`, so each context will replace any other context defined previously, which means that only the third context will actually be accessible
 //!
@@ -114,22 +114,33 @@
 //!         CompB { }
 //!     )
 //! }
+//!
+//! # #[component]
+//! # fn CompB() -> Element {
+//! #    None
+//! # }
 //! ```
 //!
 //! If you really need to the tree contexts split you can wrap them in different types so each one gets an unique type instead of just `usize`.
 //!
 //! ```rust
 //! # use freya::prelude::*;
+//!
+//! #[derive(Clone)]
 //! struct ValueA(pub usize);
+//!
+//! #[derive(Clone)]
 //! struct ValueB(pub usize);
+//!
+//! #[derive(Clone)]
 //! struct ValueC(pub usize);
 //!
 //! // Parent component
 //! #[component]
 //! fn CompA() -> Element {
-//!     use_provide_context(|| ValueA(1));
-//!     use_provide_context(|| ValueB(2));
-//!     use_provide_context(|| ValueC(3));
+//!     use_context_provider(|| ValueA(1));
+//!     use_context_provider(|| ValueB(2));
+//!     use_context_provider(|| ValueC(3));
 //!
 //!     // All these 3 contexts share the same type, `usize`, so each context will replace any other context defined previously, which means that only the third context will actually be accessible
 //!

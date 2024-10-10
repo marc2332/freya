@@ -27,7 +27,7 @@
 //!
 //! This is bad because we are storing a derived value (double_state) in an unnecessary reactive wrapper (signal).
 //! The flow would have been:
-//! ```
+//! ```ignore
 //!                              (initial) -> state: 0 , double_state: 0
 //!                   (state gets updated) -> state: 1 , double_state: 0
 //! (effect runs and updates double_state) -> state: 1 , double_state: 1
@@ -55,7 +55,7 @@
 //! ```
 //!
 //! Now, the flow would be:
-//! ```
+//! ```ignore
 //!                                     (initial) -> state: 0 , double_state: 0
 //! (state gets updated and double_state derived) -> state: 1 , double_state: 1
 //! ```
@@ -80,7 +80,7 @@
 //! ```
 //!
 //! The flow would be:
-//! ```
+//! ```ignore
 //!                                                    (initial) -> state: 0 , double_state: 0
 //! (state gets updated and double_state memo run synchronously) -> state: 1 , double_state: 1
 //! ```

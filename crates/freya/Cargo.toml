@@ -27,7 +27,7 @@ default = ["skia"]
 performance-overlay = []
 fade-cached-incremental-areas = ["freya-core/fade-cached-incremental-areas"]
 disable-zoom-shortcuts = ["freya-renderer/disable-zoom-shortcuts"]
-docs = ["dep:freya-testing"]
+docs = ["dep:freya-testing", "dep:dioxus-i18n"]
 
 [dependencies]
 freya-devtools = { workspace = true, optional = true }
@@ -40,7 +40,10 @@ freya-core = { workspace = true }
 freya-components = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
+
+
 freya-testing = { workspace = true, optional = true }
+dioxus-i18n = { workspace = true, optional = true }
 
 dioxus = { workspace = true }
 dioxus-core-macro = { workspace = true }

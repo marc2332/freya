@@ -17,11 +17,14 @@
 //! fn MyComponent(value: bool) -> Element {
 //!     let is_enabled = if value {
 //!         // This should be moved out of the conditional
-//!         use_signal(|| value)
+//!         let state = use_signal(|| value);
+//!
+//!         *state.read()
 //!     } else {
 //!         true
 //!     };
 //!
+//!     # return None
 //!     rsx!(...)
 //! }
 //! ```
@@ -31,8 +34,9 @@
 //! # use freya::prelude::*;
 //! #[component]
 //! fn MyComponent(initial_value: bool) -> Element {
-//!     let is_enabled = use_signal(|| initial_value)
+//!     let is_enabled = use_signal(move || initial_value)
 //!
+//!     # return None
 //!     rsx!(...)
 //! }
 //! ```
@@ -92,6 +96,7 @@
 //!         let state = use_signal(|| i);
 //!     }
 //!
+//!     # return None
 //!     rsx!(...)
 //! }
 //! ```
@@ -103,6 +108,7 @@
 //! fn MyComponent() -> Element {
 //!     let state = use_signal(|| (0..5).iter().collect::<Vec<_>>());
 //!
+//!     # return None
 //!     rsx!(...)
 //! }
 //! ```

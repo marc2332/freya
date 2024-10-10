@@ -46,10 +46,10 @@
 //!
 //! // Reusable component that we might call as many times we want
 //! #[component]
-//! fn TextLabel(text: String) -> Element {
+//! fn TextLabel(children: String) -> Element {
 //!     rsx!(
 //!         label {
-//!             "{text}"
+//!             "{children}"
 //!         }
 //!     )
 //! }

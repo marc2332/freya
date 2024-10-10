@@ -25,8 +25,8 @@
 //!
 //! fn app() -> Element {
 //!     rsx!(
-//!         /// All the components descendant of this ThemeProvider will inherit the Custom Theme
-//!         /// Again, this could be your whole app or maybe just a small part.
+//!         // All the components descendant of this ThemeProvider will inherit the Custom Theme
+//!         // Again, this could be your whole app or maybe just a small part.
 //!         ThemeProvider {
 //!             theme: CUSTOM_THEME,
 //!             rect {

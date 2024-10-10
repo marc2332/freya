@@ -95,7 +95,7 @@
 //!
 //! ```rust
 //! # use freya::prelude::*;
-//! static FERRIS: &[u8] = static_bytes!("./ferris.svg");
+//! static FERRIS: &[u8] = include_bytes!("./ferris.svg");
 //!
 //! fn app() -> Element {
 //!     let ferris = static_bytes(FERRIS);

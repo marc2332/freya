@@ -19,6 +19,8 @@
 //!
 //! ```rust
 //! # use freya::prelude::*;
+//! # use dioxus_i18n::prelude::*;
+//!
 //! // main.rs
 //!
 //! fn main() {
@@ -62,6 +64,7 @@
 //! fn app() -> Element {
 //!     // Initialize our i18n config
 //!     use_init_i18n(|| {
+//!         # return I18nConfig::new(langid!("en-US"))
 //!         I18nConfig::new(langid!("en-US"))
 //!             .with_locale(Locale::new_static(
 //!                 langid!("en-US"),

@@ -49,6 +49,7 @@
 //!         println!("Value of signal is {value}");
 //!     });
 //!
+//!     # return None
 //!     rsx!(...)
 //! }
 //! ```
@@ -73,6 +74,7 @@
 //!         println!("Value of signals are {value} and {other_signal}");
 //!     }));
 //!
+//!     # return None
 //!     rsx!(...)
 //! }
 //! ```

@@ -6,6 +6,11 @@
 //!
 //! ```rust
 //! # use freya::prelude::*;
+//! # use use dioxus_router::prelude::{
+//! #    Outlet,
+//! #    Routable,
+//! #    Router,
+//! # };
 //! fn app() -> Element {
 //!     /// We place the router renderer in the root component
 //!     rsx!(Router::<Route> {})
