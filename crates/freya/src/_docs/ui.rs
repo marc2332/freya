@@ -20,10 +20,10 @@
 //! }
 //! ```
 //!
-//! Notice that the `app` component is returning an `Element` created by the `rsx!()` macro. So, in other words, the `Element` contains the UI of that component.
-//! Every time the component reruns the `rsx!()` will be called again and thus generate a new UI.
+//! Notice that the `app` component is returning an [`Element`](dioxus_core::Element) created by the [`rsx!()`](dioxus_core_macro::rsx!()) macro. So, in other words, the `Element` contains the UI of that component.
+//! Every time the component reruns the [`rsx!()`](dioxus_core_macro::rsx!()) will be called again and thus generate a new UI.
 //!
-//! ### `rsx!()`
+//! ### [`rsx!()`](dioxus_core_macro::rsx!())
 //!
 //! This macro is not a standalone-language or anything like that. It is simply a macro to easily declare how we want the UI to look like. You can still use normal Rust code inside.
 //!
