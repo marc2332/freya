@@ -42,7 +42,7 @@ pub enum SwitchStatus {
 
 /// Display whether a state is `true` or `false`.
 /// Commonly used for enabled/disabled scenarios.
-/// Example: light/dark theme. 
+/// Example: light/dark theme.
 ///
 /// # Styling
 ///
@@ -50,7 +50,7 @@ pub enum SwitchStatus {
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///     let mut enabled = use_signal(|| false);
@@ -62,49 +62,41 @@ pub enum SwitchStatus {
 ///         }
 ///     })
 /// }
-/// ```
+/// # use freya_testing::prelude::*;
+/// # // ENABLED
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           Switch {
+/// #               enabled: true,
+/// #               ontoggled: move |_| { }
+/// #           }
+/// #       }
+/// #   )
+/// # }, (200., 150.).into(), "./images/gallery_enabled_switch.png");
 ///
-/// # Preview
-/// <!--- PREVIEW gallery_not_enabled_switch (200.,150.)
-/// use freya::prelude::*;
-/// fn app() -> Element {
-///     rsx!(
-///         rect {
-///             main_align: "center",
-///             cross_align: "center",
-///             width: "fill",
-///             height: "fill",
-///             Switch {
-///                 enabled: true,
-///                 ontoggled: move |_| { }
-///             }
-///         }
-///     )
-/// }
-/// -->
-/// <!--- PREVIEW gallery_enabled_switch (200.,150.)
-/// use freya::prelude::*;
-/// fn app() -> Element {
-///     rsx!(
-///         rect {
-///             main_align: "center",
-///             cross_align: "center",
-///             width: "fill",
-///             height: "fill",
-///             Switch {
-///                 enabled: false,
-///                 ontoggled: move |_| { }
-///             }
-///         }
-///     )
-/// }
-/// -->
+/// # // DISABLED
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           Switch {
+/// #               enabled: false,
+/// #               ontoggled: move |_| { }
+/// #           }
+/// #       }
+/// #   )
+/// # }, (200., 150.).into(), "./images/gallery_not_enabled_switch.png");
+/// ```
 ///
 /// | Enabled       | Not Enabled   |
 /// | ------------- | ------------- |
-/// |![Switch Not Enabled Demo][gallery_not_enabled_switch] | ![Switch Enabled Demo][gallery_enabled_switch] |
-/// 
-#[embed_doc_image::embed_doc_image("gallery_not_enabled_switch", "images/gallery_not_enabled_switch.png")]
+/// | ![Switch Enabled Demo][gallery_enabled_switch] | ![Switch Not Enabled Demo][gallery_not_enabled_switch] |
+#[embed_doc_image::embed_doc_image(
+    "gallery_not_enabled_switch",
+    "images/gallery_not_enabled_switch.png"
+)]
 #[embed_doc_image::embed_doc_image("gallery_enabled_switch", "images/gallery_enabled_switch.png")]
 #[allow(non_snake_case)]
 pub fn Switch(props: SwitchProps) -> Element {

@@ -21,6 +21,7 @@ use freya_engine::prelude::{
 };
 use freya_native_core::dioxus::NodeImmutableDioxusExt;
 use tokio::{
+    runtime::Runtime,
     sync::{
         broadcast,
         mpsc::{
@@ -101,6 +102,12 @@ impl TestingHandler {
         };
         self.vdom
             .insert_any_root_context(Box::new(accessibility_generator));
+    }
+
+    /// Unoptimized sync version of [wait_for_update].
+    pub fn blocking_wait_for_update(&mut self) -> (bool, bool) {
+        let rt = Runtime::new().unwrap();
+        rt.block_on(self.wait_for_update())
     }
 
     /// Wait and apply new changes

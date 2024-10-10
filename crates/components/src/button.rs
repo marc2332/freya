@@ -66,7 +66,7 @@ pub enum ButtonStatus {
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///     rsx!(
@@ -78,27 +78,17 @@ pub enum ButtonStatus {
 ///         }
 ///     )
 /// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           {app()}
+/// #       }
+/// #   )
+/// # }, (200., 150.).into(), "./images/gallery_button.png");
 /// ```
 ///
 /// # Preview
-/// <!--- PREVIEW button (200.,150.)
-/// use freya::prelude::*;
-/// fn app() -> Element {
-///     rsx!(
-///         rect {
-///             main_align: "center",
-///             cross_align: "center",
-///             width: "fill",
-///             height: "fill",
-///             Button {
-///                 label {
-///                     "Click this"
-///                 }
-///             }
-///         }
-///     )
-/// }
-/// -->
 /// ![Button Demo][button]
 #[embed_doc_image::embed_doc_image("button", "images/gallery_button.png")]
 #[allow(non_snake_case)]
