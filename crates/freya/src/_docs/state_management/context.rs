@@ -7,6 +7,7 @@
 //! **Prop drilling** is when you want to pass a certain data from one parent component to some nested component, and you start to declare the same prop in each one of the components in between the parent and the target component. This causes a huge unnecessary boilerplate that can be used by using the Context API.
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! // Parent component
 //! #[component]
 //! fn CompA() -> Element {
@@ -53,6 +54,7 @@
 //! You can initialize a context that will be identified by its type and be allowed to be accessed from any desdendent from where you intialized it.
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! // Parent component
 //! #[component]
 //! fn CompA() -> Element {
@@ -98,6 +100,7 @@
 //! Because Context are identified by their type, you cannot do the following:
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! // Parent component
 //! #[component]
 //! fn CompA() -> Element {
@@ -116,6 +119,7 @@
 //! If you really need to the tree contexts split you can wrap them in different types so each one gets an unique type instead of just `usize`.
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! struct ValueA(pub usize);
 //! struct ValueB(pub usize);
 //! struct ValueC(pub usize);

@@ -12,6 +12,7 @@
 //!
 //! ❌:
 //! ```rust
+//! # use freya::prelude::*;
 //! #[component]
 //! fn MyComponent(value: bool) -> Element {
 //!     let is_enabled = if value {
@@ -27,6 +28,7 @@
 //!
 //! ✅:
 //! ```rust
+//! # use freya::prelude::*;
 //! #[component]
 //! fn MyComponent(initial_value: bool) -> Element {
 //!     let is_enabled = use_signal(|| initial_value)
@@ -41,6 +43,7 @@
 //!
 //! ❌:
 //! ```rust
+//! # use freya::prelude::*;
 //! #[component]
 //! fn MyComponent() -> Element {
 //!     let onclick = |_| {
@@ -58,6 +61,7 @@
 //!
 //! ✅:
 //! ```rust
+//! # use freya::prelude::*;
 //! #[component]
 //! fn MyComponent() -> Element {
 //!     let mut state = use_signal(|| false);
@@ -81,6 +85,7 @@
 //!
 //! ❌:
 //! ```rust
+//! # use freya::prelude::*;
 //! #[component]
 //! fn MyComponent() -> Element {
 //!     for i in 0..5 {
@@ -93,6 +98,7 @@
 //!
 //! ✅:
 //! ```rust
+//! # use freya::prelude::*;
 //! #[component]
 //! fn MyComponent() -> Element {
 //!     let state = use_signal(|| (0..5).iter().collect::<Vec<_>>());

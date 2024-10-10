@@ -3,7 +3,9 @@
 //! Freya supports the official [Dioxus Router](https://docs.rs/dioxus-router/latest/dioxus_router/), which means you can declare different pages for your app. The only difference is that you will need to use Freya's custom `Link` component.
 //!
 //! ### Example
+//!
 //! ```rust
+//! # use freya::prelude::*;
 //! fn app() -> Element {
 //!     /// We place the router renderer in the root component
 //!     rsx!(Router::<Route> {})

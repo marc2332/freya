@@ -8,6 +8,7 @@
 //! This is how a simple root component looks like:
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! // Usually, the root component of a Freya app is named `app`,
 //! // but it is not a requirement
 //! fn app() -> Element {
@@ -25,6 +26,7 @@
 //! For example, lets create a reusable component:
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! fn app() -> Element {
 //!     rsx!(
 //!         // By declaring this element using `TextLabel`
@@ -58,6 +60,7 @@
 //! For more complex components you might want to put the props in an external struct intead of using the `#[components]` macro:
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! #[derive(Props, PartialEq, Clone)]
 //! struct TextLabelProps {
 //!     text: String
@@ -81,6 +84,7 @@
 //! Consider this simple component:
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! #[component]
 //! fn CoolComp() -> Element {
 //!     let mut count = use_signal(|| 0);

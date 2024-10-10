@@ -5,6 +5,7 @@
 //! For example, this is how a simple component would look like in Freya:
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! fn app() -> Element {
 //!     rsx!(
 //!         rect {

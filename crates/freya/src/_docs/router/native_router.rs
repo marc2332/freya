@@ -7,6 +7,7 @@
 //!
 //! Example (based on the example from [router](../router.md)):
 //! ```rust
+//! # use freya::prelude::*;
 //! #[allow(non_snake_case)]
 //! fn AppSidebar() -> Element {
 //!     rsx!(

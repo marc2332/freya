@@ -6,6 +6,7 @@
 //! The `use_effect` hook is sometimes missused as a synchronization between states
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! fn app() -> Element {
 //!     let mut state = use_signal(|| 1);
 //!     let mut double_state = use_signal(|| 1);
@@ -39,6 +40,7 @@
 //! Because we are reading `double_state`, whenever `state` changes this component function will reerun, so `double_state` will always be up to date.
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! fn app() -> Element {
 //!     let mut state = use_signal(|| 1);
 //!     let double_state = state() * 2;
@@ -63,6 +65,7 @@
 //! We can also use `use_memo` to memoize derived values. This is very useful for values that are expensive to compute (which isn't the case with simple numeric operation)
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! fn app() -> Element {
 //!     let mut state = use_signal(|| 1);
 //!     let double_state = use_memo(move || state() * 2);

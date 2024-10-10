@@ -9,6 +9,7 @@
 //! ### Example
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! // A custom theme based on the Light Theme that simply tweaks some parts of the Button theme.
 //! const CUSTOM_THEME: Theme = Theme {
 //!     button: ButtonTheme {
@@ -49,6 +50,7 @@
 //! ### Example
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! fn app() -> Element {
 //!     rsx!(
 //!         Button {

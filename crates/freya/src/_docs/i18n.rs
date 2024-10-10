@@ -18,6 +18,7 @@
 //! ```
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! // main.rs
 //!
 //! fn main() {

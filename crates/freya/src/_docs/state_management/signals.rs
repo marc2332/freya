@@ -7,6 +7,7 @@
 //! ### Example
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! fn app() -> Element {
 //!     let mut count = use_signal(|| 0);
 //!     // The closure passed to `use_signal` will be called only

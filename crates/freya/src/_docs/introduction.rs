@@ -14,6 +14,7 @@
 //! #### Example
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! fn main() {
 //!     // **Start** your app by specifying the root component and some config parameters
 //!     launch_with_props(app, "Counter", (400.0, 350.0));

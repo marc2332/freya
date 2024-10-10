@@ -3,6 +3,7 @@
 //! You can memoize values by using the `use_memo` hook. This can be useful to have reactive derived across components or to cache expensive value to compute.
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! fn app() -> Element {
 //!     let mut state = use_signal(|| 1);
 //!     // `use_memo` returns a `ReadOnlySignal`, as the name says it is a Signal

@@ -5,6 +5,7 @@
 //! ### `use_focus` hook
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! fn app() -> Element {
 //!     let mut my_focus = use_focus();
 //!

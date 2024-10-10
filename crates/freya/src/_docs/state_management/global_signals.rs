@@ -6,6 +6,7 @@
 //! ### Example
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! static COUNT: GlobalSignal<usize> = Signal::global(|| 0);
 //!
 //! fn app() -> Element {

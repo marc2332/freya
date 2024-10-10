@@ -13,6 +13,7 @@
 //! Example:
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! fn app() -> Element {
 //!     rsx!(
 //!         rect {
@@ -30,6 +31,7 @@
 //! Example:
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! fn app() -> Element {
 //!     rsx!(
 //!         label {
@@ -48,6 +50,7 @@
 //! Example:
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! fn app() -> Element {
 //!     rsx!(
 //!         paragraph {
@@ -71,6 +74,7 @@
 //! Example:
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
 //!
 //! fn app() -> Element {
@@ -90,6 +94,7 @@
 //! Example:
 //!
 //! ```rust
+//! # use freya::prelude::*;
 //! static FERRIS: &[u8] = static_bytes!("./ferris.svg");
 //!
 //! fn app() -> Element {
