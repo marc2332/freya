@@ -2,11 +2,11 @@
 //!
 //! All the built-in components of Freya support themes, so if you find yourself wanting to tweak a certain style attribute of a component you might want to see if it can be changed through a theme.
 //!
-//! ### ThemeProvider
+//! ## ThemeProvider
 //!
 //! You can pass a ThemeProvider to your whole app or maybe just a part of it by using the ThemeProvider component.
 //!
-//! Example:
+//! ### Example
 //!
 //! ```rust
 //! // A custom theme based on the Light Theme that simply tweaks some parts of the Button theme.
@@ -42,11 +42,11 @@
 //! }
 //! ```
 //!
-//! ### `theme` prop
+//! ## `theme` prop
 //!
 //! Most of the components also support being tweaked via their `theme` prop and with the help of the `theme_with` macro.
 //!
-//! Example:
+//! ### Example
 //!
 //! ```rust
 //! fn app() -> Element {
