@@ -23,7 +23,7 @@ jobs:
           prefix-key: "3"   
 
       - name: cargo doc
-        run: cargo doc --no-deps --workspace
+        run: cargo doc --no-deps --workspace --features docs
 
       - name: Upload to Deno Deploy
         uses: denoland/deployctl@v1

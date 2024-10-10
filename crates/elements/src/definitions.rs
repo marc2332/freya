@@ -694,8 +694,8 @@ builder_constructors! {
     ///     rsx!(
     ///         image {
     ///             image_data: image_data,
-    ///             width: "{size}",
-    ///             height: "{size}",
+    ///             width: "100%",
+    ///             height: "100%",
     ///         }
     ///     )
     /// }
@@ -803,9 +803,6 @@ builder_constructors! {
     };
     /// `svg` element let's you display SVG code.
     ///
-    /// You will need to use the [`dynamic_bytes`](https://docs.freyaui.dev/freya/prelude/fn.dynamic_bytes.html)
-    /// to transform the bytes into data the element can recognize.
-    ///
     /// ### Example
     ///
     /// ```rust,ignore
@@ -813,10 +810,12 @@ builder_constructors! {
     /// static FERRIS: &[u8] = include_bytes!("./ferris.svg");
     ///
     /// fn app() -> Element {
-    ///     let ferris = dynamic_bytes(FERRIS);
+    ///     let ferris = static_bytes(FERRIS);
     ///     rsx!(
     ///         svg {
     ///             svg_data: ferris,
+    ///             width: "100%",
+    ///             height: "100%",
     ///         }
     ///     )
     /// }
