@@ -1,13 +1,13 @@
 //! # Accessibility
-//! 
+//!
 //! TODO
-//! 
+//!
 //! ### `use_focus` hook
-//! 
-//! ```rs
+//!
+//! ```rust
 //! fn app() -> Element {
 //!     let mut my_focus = use_focus();
-//! 
+//!
 //!     rsx!(
 //!         rect {
 //!             width: "100%",

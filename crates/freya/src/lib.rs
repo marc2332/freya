@@ -4,9 +4,9 @@
 )]
 //! # Freya
 //!
-//! **Freya** is a declarative, cross-platform GUI Rust library, powered by 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/). 
-//! 
-//! **It does not use any web tech**, check the [Differences with Dioxus](https://book.freyaui.dev/differences_with_dioxus.html). 
+//! **Freya** is a declarative, cross-platform GUI Rust library, powered by 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/).
+//!
+//! **It does not use any web tech**, check the [Differences with Dioxus](https://book.freyaui.dev/differences_with_dioxus.html).
 //!
 //! ### Basics
 //! - [Introduction](self::_docs::introduction)
@@ -21,7 +21,7 @@
 //!         - [Context](self::_docs::state_management::context)
 //!         - [Memoization](self::_docs::state_management::memoization)
 //!     - [Async Tasks](self::_docs::async_tasks)
-//! 
+//!
 //! ### Learn
 //! - [Development Setup](self::_docs::development_setup)
 //! - [Elements Overview](self::_docs::elements)
@@ -43,7 +43,7 @@
 //! - [Elements and attributes](freya_elements::elements#structs)
 //! - [Events](freya_elements::elements#functions)
 //! - [Built-in Components](freya_components)
-//! - [Built-in Hooks](freya_hoo
+//! - [Built-in Hooks](freya_hooks)
 //!
 //! ## Features flags
 //!
