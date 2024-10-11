@@ -277,6 +277,7 @@ impl State<CustomAttributeValues> for FontStyleState {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         context: &SendAnyMap,
     ) -> bool {
+        let root_id = context.get::<NodeId>().unwrap();
         let torin_layout = context.get::<Arc<Mutex<Torin<NodeId>>>>().unwrap();
         let compositor_dirty_nodes = context.get::<Arc<Mutex<CompositorDirtyNodes>>>().unwrap();
 
@@ -290,7 +291,9 @@ impl State<CustomAttributeValues> for FontStyleState {
 
         let changed = &font_style != self;
 
-        if changed {
+        let is_orphan = node_view.height() == 0 && node_view.node_id() != *root_id;
+
+        if changed && !is_orphan {
             torin_layout.lock().unwrap().invalidate(node_view.node_id());
             compositor_dirty_nodes
                 .lock()
