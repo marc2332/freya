@@ -1000,8 +1000,6 @@ impl From<&FontCollection> for FontCollection {
 
 pub struct StrutStyle;
 
-pub struct TextHeightBehavior;
-
 #[repr(i32)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum TextDirection {
