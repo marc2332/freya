@@ -613,6 +613,18 @@ impl TextStyle {
     pub fn set_placeholder(&mut self) -> &mut Self {
         unimplemented!("This is mocked")
     }
+
+    pub fn set_height_behavior(&mut self, behavior: TextHeightBehavior) {
+        unimplemented!("This is mocked")
+    }
+}
+
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum TextHeightBehavior {
+    All = 0,
+    DisableFirstAscent = 1,
+    DisableLastDescent = 2,
+    DisableAll = 3,
 }
 
 pub struct Typeface;
