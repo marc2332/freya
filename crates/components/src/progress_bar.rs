@@ -25,12 +25,35 @@ pub struct ProgressBarProps {
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> Element {
-///     rsx!(ProgressBar { progress: 75.0 })
+///     rsx!(
+///         ProgressBar { 
+///             show_progress: true,
+///             progress: 50.0
+///         }
+///     )
 /// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           ProgressBar {
+/// #               theme: theme_with!(ProgressBarTheme {
+/// #                   width: "50%".into(),
+/// #               }),
+/// #               show_progress: true,
+/// #               progress: 50.0
+/// #           }
+/// #       }
+/// #   )
+/// # }, (200., 150.).into(), "./images/gallery_progress_bar.png");
 /// ```
+///
+/// # Preview
+/// ![ProgressBar Preview][progress_bar]
+#[embed_doc_image::embed_doc_image("progress_bar", "images/gallery_progress_bar.png")]
 #[allow(non_snake_case)]
 pub fn ProgressBar(
     ProgressBarProps {

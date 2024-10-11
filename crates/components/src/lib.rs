@@ -1,18 +1,21 @@
 //! # Freya Components
 //! A collection of basic components to be used in Freya.
+//! 
+//! Go to [Gallery](gallery) to see previews of the components. 
 
 /// | 1 | 2 | 3 | 4 |
 /// | ------------- | ------------- | ------------- | ------------- |
 /// | ![Switch Preview][gallery_enabled_switch] | ![Button Preview][gallery_button] | ![Slider Preview][gallery_slider] | ![Checkbox Preview][gallery_checkbox] |
 /// | [Switch]        | [Button]        | [Slider]        | [Checkbox] |
-/// | ![Radio Preview][gallery_radio] | ![Input Preview][gallery_input] |
-/// | [Radio]        | [Input]        |
+/// | ![Radio Preview][gallery_radio] |  ![Input Preview][gallery_input] | ![ProgressBar Preview][gallery_progress_bar] |
+/// | [Radio]        | [Input]        | [ProgressBar]        |
 #[embed_doc_image::embed_doc_image("gallery_button", "images/gallery_button.png")]
 #[embed_doc_image::embed_doc_image("gallery_enabled_switch", "images/gallery_enabled_switch.png")]
 #[embed_doc_image::embed_doc_image("gallery_slider", "images/gallery_slider.png")]
 #[embed_doc_image::embed_doc_image("gallery_checkbox", "images/gallery_checkbox.png")]
 #[embed_doc_image::embed_doc_image("gallery_radio", "images/gallery_radio.png")]
 #[embed_doc_image::embed_doc_image("gallery_input", "images/gallery_input.png")]
+#[embed_doc_image::embed_doc_image("gallery_progress_bar", "images/gallery_progress_bar.png")]
 pub fn gallery() {}
 
 mod accordion;
