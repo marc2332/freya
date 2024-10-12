@@ -28,12 +28,10 @@ pub struct ProgressBarProps {
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> Element {
-///     rsx!(
-///         ProgressBar { 
-///             show_progress: true,
-///             progress: 50.0
-///         }
-///     )
+///     rsx!(ProgressBar {
+///         show_progress: true,
+///         progress: 50.0
+///     })
 /// }
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {

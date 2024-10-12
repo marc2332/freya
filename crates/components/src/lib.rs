@@ -1,7 +1,7 @@
 //! # Freya Components
 //! A collection of basic components to be used in Freya.
-//! 
-//! Go to [Gallery](gallery) to see previews of the components. 
+//!
+//! Go to [Gallery](gallery) to see previews of the components.
 
 /// | 1 | 2 | 3 | 4 |
 /// | ------------- | ------------- | ------------- | ------------- |
