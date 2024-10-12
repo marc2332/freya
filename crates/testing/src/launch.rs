@@ -116,6 +116,7 @@ pub fn Preview(children: Element) -> Element {
             cross_align: "center",
             width: "fill",
             height: "fill",
+            spacing: "8",
             {children}
         }
     )

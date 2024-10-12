@@ -5,13 +5,17 @@
 
 /// | 1 | 2 | 3 | 4 |
 /// | ------------- | ------------- | ------------- | ------------- |
-/// | ![Switch Preview][gallery_enabled_switch] | ![Button Preview][gallery_button] | ![Slider Preview][gallery_slider] | ![Checkbox Preview][gallery_checkbox] |
-/// | [Switch]        | [Button]        | [Slider]        | [Checkbox] |
-/// | ![Radio Preview][gallery_radio] |  ![Input Preview][gallery_input] | ![ProgressBar Preview][gallery_progress_bar] | ![Dropdown Preview][gallery_dropdown] |
-/// | [Radio]        | [Input]        | [ProgressBar]        | [Dropdown]        |
-/// | ![SnackBar Preview][gallery_snackbar] | ![Tab Preview][gallery_tab] | ![Bottom Tab Preview][gallery_bottom_tab] |
-/// | [SnackBar]        | [BottomTab]        | [Tab]        |
+/// | ![Switch Preview][gallery_enabled_switch] | ![Button Preview][gallery_button] | ![FilledButton Preview][gallery_filled_button] | ![OutlineButton Preview][gallery_outline_button] |
+/// | [Switch]        | [Button]        | [FilledButton]        | [OutlineButton]        |
+/// | ![Slider Preview][gallery_slider] | ![Checkbox Preview][gallery_checkbox] | ![Radio Preview][gallery_radio] | ![Input Preview][gallery_input] |
+/// | [Slider]        | [Checkbox]        | [Radio]        | [Input]        |
+/// | ![ProgressBar Preview][gallery_progress_bar] | ![Dropdown Preview][gallery_dropdown] | ![SnackBar Preview][gallery_snackbar] | ![Tab Preview][gallery_tab] |
+/// | [ProgressBar]        | [Dropdown]        | [SnackBar]        | [Tab]        |
+/// | ![Bottom Tab Preview][gallery_bottom_tab] |  |  |
+/// | [BottomTab]        |  |  |
 #[embed_doc_image::embed_doc_image("gallery_button", "images/gallery_button.png")]
+#[embed_doc_image::embed_doc_image("gallery_filled_button", "images/gallery_filled_button.png")]
+#[embed_doc_image::embed_doc_image("gallery_outline_button", "images/gallery_outline_button.png")]
 #[embed_doc_image::embed_doc_image("gallery_enabled_switch", "images/gallery_enabled_switch.png")]
 #[embed_doc_image::embed_doc_image("gallery_slider", "images/gallery_slider.png")]
 #[embed_doc_image::embed_doc_image("gallery_checkbox", "images/gallery_checkbox.png")]
