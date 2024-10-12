@@ -94,11 +94,15 @@ pub enum SwitchStatus {
 /// | Enabled       | Not Enabled   |
 /// | ------------- | ------------- |
 /// | ![Switch Enabled Demo][gallery_enabled_switch] | ![Switch Not Enabled Demo][gallery_not_enabled_switch] |
-#[embed_doc_image::embed_doc_image(
-    "gallery_not_enabled_switch",
-    "images/gallery_not_enabled_switch.png"
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_doc_image!(
+        "gallery_not_enabled_switch",
+        "images/gallery_not_enabled_switch.png"
+    )
 )]
-#[embed_doc_image::embed_doc_image("gallery_enabled_switch", "images/gallery_enabled_switch.png")]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_doc_image!("gallery_enabled_switch", "images/gallery_enabled_switch.png")
+)]
 #[allow(non_snake_case)]
 pub fn Switch(props: SwitchProps) -> Element {
     let theme = use_applied_theme!(&props.theme, switch);

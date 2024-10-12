@@ -12,10 +12,11 @@ keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
 categories = ["gui", "asynchronous"]
 
 [package.metadata.docs.rs]
-features = ["freya-engine/mocked-engine"]
+features = ["freya-engine/mocked-engine", "docs"]
 
 [features]
 skia-engine = ["freya-engine/skia-engine"]
+docs = []
 
 [dependencies]
 freya-elements = { workspace = true }

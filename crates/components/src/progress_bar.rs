@@ -51,7 +51,9 @@ pub struct ProgressBarProps {
 ///
 /// # Preview
 /// ![ProgressBar Preview][progress_bar]
-#[embed_doc_image::embed_doc_image("progress_bar", "images/gallery_progress_bar.png")]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_doc_image!("progress_bar", "images/gallery_progress_bar.png")
+)]
 #[allow(non_snake_case)]
 pub fn ProgressBar(
     ProgressBarProps {

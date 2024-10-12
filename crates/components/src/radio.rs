@@ -61,7 +61,9 @@ use freya_hooks::{
 /// ```
 /// # Preview
 /// ![Radio Preview][radio]
-#[embed_doc_image::embed_doc_image("radio", "images/gallery_radio.png")]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_doc_image!("radio", "images/gallery_radio.png")
+)]
 #[allow(non_snake_case)]
 #[component]
 pub fn Radio(

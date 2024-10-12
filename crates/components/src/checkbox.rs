@@ -79,7 +79,9 @@ use crate::TickIcon;
 ///
 /// # Preview
 /// ![Checkbox Preview][checkbox]
-#[embed_doc_image::embed_doc_image("checkbox", "images/gallery_checkbox.png")]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_doc_image!("checkbox", "images/gallery_checkbox.png")
+)]
 #[allow(non_snake_case)]
 #[component]
 pub fn Checkbox(

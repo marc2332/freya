@@ -66,7 +66,9 @@ pub struct ButtonProps {
 ///
 /// # Preview
 /// ![Button Preview][button]
-#[embed_doc_image::embed_doc_image("button", "images/gallery_button.png")]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_doc_image!("button", "images/gallery_button.png")
+)]
 #[allow(non_snake_case)]
 pub fn Button(props: ButtonProps) -> Element {
     let theme = use_applied_theme!(&props.theme, button);
@@ -109,7 +111,9 @@ pub fn Button(props: ButtonProps) -> Element {
 ///
 /// # Preview
 /// ![FilledButton Preview][filled_button]
-#[embed_doc_image::embed_doc_image("filled_button", "images/gallery_filled_button.png")]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_doc_image!("filled_button", "images/gallery_filled_button.png")
+)]
 #[allow(non_snake_case)]
 pub fn FilledButton(props: ButtonProps) -> Element {
     let theme = use_applied_theme!(&props.theme, filled_button);
@@ -152,7 +156,9 @@ pub fn FilledButton(props: ButtonProps) -> Element {
 ///
 /// # Preview
 /// ![OutlineButton Preview][outline_button]
-#[embed_doc_image::embed_doc_image("outline_button", "images/gallery_outline_button.png")]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_doc_image!("outline_button", "images/gallery_outline_button.png")
+)]
 #[allow(non_snake_case)]
 pub fn OutlineButton(props: ButtonProps) -> Element {
     let theme = use_applied_theme!(&props.theme, outline_button);

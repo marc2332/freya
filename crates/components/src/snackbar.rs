@@ -62,7 +62,9 @@ use freya_hooks::{
 ///
 /// # Preview
 /// ![Snackbar Preview][snackbar]
-#[embed_doc_image::embed_doc_image("snackbar", "images/gallery_snackbar.png")]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_doc_image!("snackbar", "images/gallery_snackbar.png")
+)]
 #[allow(non_snake_case)]
 #[component]
 pub fn SnackBar(
