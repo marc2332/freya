@@ -127,3 +127,10 @@ pub fn launch_doc(root: AppComponent, size: Size2D, path: &str) {
     utils.blocking_wait_for_update();
     utils.save_snapshot(path);
 }
+
+pub fn launch_doc_with_utils(root: AppComponent, size: Size2D) -> TestingHandler {
+    let mut utils = launch_test(root);
+    utils.resize(size);
+    utils.blocking_wait_for_update();
+    utils
+}

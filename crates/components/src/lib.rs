@@ -7,8 +7,10 @@
 /// | ------------- | ------------- | ------------- | ------------- |
 /// | ![Switch Preview][gallery_enabled_switch] | ![Button Preview][gallery_button] | ![Slider Preview][gallery_slider] | ![Checkbox Preview][gallery_checkbox] |
 /// | [Switch]        | [Button]        | [Slider]        | [Checkbox] |
-/// | ![Radio Preview][gallery_radio] |  ![Input Preview][gallery_input] | ![ProgressBar Preview][gallery_progress_bar] |
-/// | [Radio]        | [Input]        | [ProgressBar]        |
+/// | ![Radio Preview][gallery_radio] |  ![Input Preview][gallery_input] | ![ProgressBar Preview][gallery_progress_bar] | ![Dropdown Preview][gallery_dropdown] |
+/// | [Radio]        | [Input]        | [ProgressBar]        | [Dropdown]        |
+/// | ![SnackBar Preview][gallery_snackbar] | ![Tab Preview][gallery_tab] | ![Bottom Tab Preview][gallery_bottom_tab] |
+/// | [SnackBar]        | [BottomTab]        | [Tab]        |
 #[embed_doc_image::embed_doc_image("gallery_button", "images/gallery_button.png")]
 #[embed_doc_image::embed_doc_image("gallery_enabled_switch", "images/gallery_enabled_switch.png")]
 #[embed_doc_image::embed_doc_image("gallery_slider", "images/gallery_slider.png")]
@@ -16,6 +18,10 @@
 #[embed_doc_image::embed_doc_image("gallery_radio", "images/gallery_radio.png")]
 #[embed_doc_image::embed_doc_image("gallery_input", "images/gallery_input.png")]
 #[embed_doc_image::embed_doc_image("gallery_progress_bar", "images/gallery_progress_bar.png")]
+#[embed_doc_image::embed_doc_image("gallery_dropdown", "images/gallery_dropdown.png")]
+#[embed_doc_image::embed_doc_image("gallery_snackbar", "images/gallery_snackbar.png")]
+#[embed_doc_image::embed_doc_image("gallery_tab", "images/gallery_tab.png")]
+#[embed_doc_image::embed_doc_image("gallery_bottom_tab", "images/gallery_bottom_tab.png")]
 pub fn gallery() {}
 
 mod accordion;
