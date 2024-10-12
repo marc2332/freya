@@ -50,7 +50,7 @@ jobs:
       if: runner.os != 'Linux'
       run: cargo nextest run --workspace --exclude examples
     - name: Run doctests
-      run: cargo test --workspace --doc
+      run: cargo test --workspace --doc --features docs
     - name: Run coverage
       if: runner.os == 'Linux'
       run: |
