@@ -7,7 +7,6 @@ use std::sync::Arc;
 
 use freya::prelude::*;
 use tokio::sync::broadcast::Receiver;
-use winit::platform::windows::EventLoopBuilderExtWindows;
 
 fn main() {
     let menu_bar = muda::Menu::new();
@@ -19,18 +18,21 @@ fn main() {
             .with_state(menu_bar.clone())
             .with_event_loop_builder(move |event_loop_builder| {
                 #[cfg(target_os = "windows")]
-                event_loop_builder.with_msg_hook(move |msg| {
-                    use windows_sys::Win32::UI::WindowsAndMessaging::{
-                        TranslateAcceleratorW,
-                        MSG,
-                    };
-                    unsafe {
-                        let msg = msg as *const MSG;
-                        let translated =
-                            TranslateAcceleratorW((*msg).hwnd, menu_bar.haccel() as _, msg);
-                        translated == 1
-                    }
-                });
+                {
+                    use winit::platform::windows::EventLoopBuilderExtWindows;
+                    event_loop_builder.with_msg_hook(move |msg| {
+                        use windows_sys::Win32::UI::WindowsAndMessaging::{
+                            TranslateAcceleratorW,
+                            MSG,
+                        };
+                        unsafe {
+                            let msg = msg as *const MSG;
+                            let translated =
+                                TranslateAcceleratorW((*msg).hwnd, menu_bar.haccel() as _, msg);
+                            translated == 1
+                        }
+                    });
+                }
             }),
     );
 }
@@ -91,20 +93,22 @@ fn WindowMenu(menu: ReadOnlySignal<Element>) -> Element {
         unsafe impl Send for SharedMenu {}
         unsafe impl Sync for SharedMenu {}
 
+        #[cfg(not(target_os = "macos"))]
         platform.with_window(move |window| {
-            use winit::raw_window_handle::*;
-
             #[cfg(target_os = "windows")]
-            if let RawWindowHandle::Win32(handle) = window.window_handle().unwrap().as_raw() {
-                unsafe { menu_bar.0.init_for_hwnd(handle.hwnd.get()).unwrap() };
+            {
+                use winit::raw_window_handle::*;
+                if let RawWindowHandle::Win32(handle) = window.window_handle().unwrap().as_raw() {
+                    unsafe { menu_bar.0.init_for_hwnd(handle.hwnd.get()).unwrap() };
+                }
             }
 
             #[cfg(target_os = "linux")]
             menu_bar.0.init_for_gtk_window(&window, None);
-
-            #[cfg(target_os = "macos")]
-            menu_bar.0.init_for_nsapp();
         });
+
+        #[cfg(target_os = "macos")]
+        menu_bar.0.init_for_nsapp();
 
         let (tx, rx) = tokio::sync::broadcast::channel::<muda::MenuEvent>(5);
 
