@@ -253,6 +253,8 @@ builder_constructors! {
         letter_spacing: String,
         #[doc = include_str!("_docs/attributes/word_spacing.md")]
         word_spacing: String,
+        #[doc = include_str!("_docs/attributes/text_height.md")]
+        text_height: String,
 
         // Transform
         #[doc = include_str!("_docs/attributes/rotate.md")]
@@ -407,6 +409,8 @@ builder_constructors! {
         letter_spacing: String,
         #[doc = include_str!("_docs/attributes/word_spacing.md")]
         word_spacing: String,
+        #[doc = include_str!("_docs/attributes/text_height.md")]
+        text_height: String,
 
         // Transform
         #[doc = include_str!("_docs/attributes/rotate.md")]
@@ -563,6 +567,8 @@ builder_constructors! {
         letter_spacing: String,
         #[doc = include_str!("_docs/attributes/word_spacing.md")]
         word_spacing: String,
+        #[doc = include_str!("_docs/attributes/text_height.md")]
+        text_height: String,
 
         // Transform
         #[doc = include_str!("_docs/attributes/rotate.md")]
