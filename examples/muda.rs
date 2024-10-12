@@ -93,18 +93,12 @@ fn WindowMenu(menu: ReadOnlySignal<Element>) -> Element {
         unsafe impl Send for SharedMenu {}
         unsafe impl Sync for SharedMenu {}
 
-        #[cfg(not(target_os = "macos"))]
+        #[cfg(target_os = "windows")]
         platform.with_window(move |window| {
-            #[cfg(target_os = "windows")]
-            {
-                use winit::raw_window_handle::*;
-                if let RawWindowHandle::Win32(handle) = window.window_handle().unwrap().as_raw() {
-                    unsafe { menu_bar.0.init_for_hwnd(handle.hwnd.get()).unwrap() };
-                }
+            use winit::raw_window_handle::*;
+            if let RawWindowHandle::Win32(handle) = window.window_handle().unwrap().as_raw() {
+                unsafe { menu_bar.0.init_for_hwnd(handle.hwnd.get()).unwrap() };
             }
-
-            #[cfg(target_os = "linux")]
-            menu_bar.0.init_for_gtk_window(&window, None);
         });
 
         #[cfg(target_os = "macos")]
