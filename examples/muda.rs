@@ -100,10 +100,10 @@ fn WindowMenu(menu: ReadOnlySignal<Element>) -> Element {
             }
 
             #[cfg(target_os = "linux")]
-            menu.init_for_gtk_window(&window, None);
+            menu_bar.0.init_for_gtk_window(&window, None);
 
             #[cfg(target_os = "macos")]
-            menu.init_for_nsapp();
+            menu_bar.0.init_for_nsapp();
         });
 
         let (tx, rx) = tokio::sync::broadcast::channel::<muda::MenuEvent>(5);
