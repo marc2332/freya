@@ -63,6 +63,7 @@ pub struct DesktopRenderer<'a, State: Clone + 'static> {
     pub(crate) mouse_state: ElementState,
     pub(crate) modifiers_state: ModifiersState,
     pub(crate) dropped_file_path: Option<PathBuf>,
+    pub(crate) custom_scale_factor: f64,
 }
 
 impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
@@ -70,11 +71,16 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
     pub fn launch(
         vdom: VirtualDom,
         sdom: SafeDOM,
-        config: LaunchConfig<State>,
+        mut config: LaunchConfig<State>,
         devtools: Option<Devtools>,
         hovered_node: HoveredNode,
     ) {
-        let event_loop = EventLoop::<EventMessage>::with_user_event()
+        let mut event_loop_builder = EventLoop::<EventMessage>::with_user_event();
+        let event_loop_builder_hook = config.window_config.event_loop_builder_hook.take();
+        if let Some(event_loop_builder_hook) = event_loop_builder_hook {
+            event_loop_builder_hook(&mut event_loop_builder);
+        }
+        let event_loop = event_loop_builder
             .build()
             .expect("Failed to create event loop.");
         let proxy = event_loop.create_proxy();
@@ -120,6 +126,7 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
             mouse_state: ElementState::Released,
             modifiers_state: ModifiersState::default(),
             dropped_file_path: None,
+            custom_scale_factor: 0.,
         }
     }
 
@@ -135,7 +142,9 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
     /// Get the current scale factor of the Window
     fn scale_factor(&self) -> f64 {
         match &self.state {
-            WindowState::Created(CreatedState { window, .. }) => window.scale_factor(),
+            WindowState::Created(CreatedState { window, .. }) => {
+                window.scale_factor() + self.custom_scale_factor
+            }
             _ => 0.0,
         }
     }
@@ -193,8 +202,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             }
             EventMessage::InvalidateArea(mut area) => {
                 let fdom = app.sdom.get();
-                let sf = window.scale_factor() as f32;
-                area.size *= sf;
+                area.size *= scale_factor as f32;
                 let mut compositor_dirty_area = fdom.compositor_dirty_area();
                 compositor_dirty_area.unite_or_insert(&area)
             }
@@ -296,6 +304,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     surface,
                     dirty_surface,
                     window,
+                    scale_factor,
                 );
 
                 app.event_loop_tick();
@@ -357,6 +366,37 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             } => {
                 if !*is_window_focused {
                     return;
+                }
+
+                #[cfg(not(feature = "disable-zoom-shortcuts"))]
+                {
+                    let is_control_pressed = {
+                        if cfg!(target_os = "macos") {
+                            self.modifiers_state.super_key()
+                        } else {
+                            self.modifiers_state.control_key()
+                        }
+                    };
+
+                    if is_control_pressed && state == ElementState::Pressed {
+                        let ch = logical_key.to_text();
+                        let render_with_new_scale_factor = if ch == Some("+") {
+                            self.custom_scale_factor =
+                                (self.custom_scale_factor + 0.10).clamp(-1.0, 5.0);
+                            true
+                        } else if ch == Some("-") {
+                            self.custom_scale_factor =
+                                (self.custom_scale_factor - 0.10).clamp(-1.0, 5.0);
+                            true
+                        } else {
+                            false
+                        };
+
+                        if render_with_new_scale_factor {
+                            app.resize(window);
+                            window.request_redraw();
+                        }
+                    }
                 }
 
                 let name = match state {

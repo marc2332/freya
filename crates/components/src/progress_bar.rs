@@ -47,6 +47,8 @@ pub fn ProgressBar(
         height,
     } = use_applied_theme!(&theme, progress_bar);
 
+    let progress = progress.clamp(0., 100.);
+
     rsx!(
         rect {
             width: "{width}",
@@ -59,8 +61,7 @@ pub fn ProgressBar(
                 background: "{background}",
                 font_size: "13",
                 direction: "horizontal",
-                border: "1 solid {background}",
-                border_align: "outer",
+                border: "1 outer {background}",
                 rect {
                     corner_radius: "999",
                     width: "{progress}%",
@@ -75,6 +76,7 @@ pub fn ProgressBar(
                             width: "100%",
                             color: "{color}",
                             max_lines: "1",
+                            text_height: "disable-least-ascent",
                             "{progress.floor()}%"
                         }
                     }

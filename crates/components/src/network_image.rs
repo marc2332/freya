@@ -124,7 +124,7 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
             a11y_id,
             image_data,
             a11y_role: "image",
-            a11y_alt: alt
+            a11y_name: alt
         })
     } else if *status.read() == ImageState::Loading {
         if let Some(loading_element) = &props.loading {

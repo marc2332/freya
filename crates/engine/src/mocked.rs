@@ -613,6 +613,18 @@ impl TextStyle {
     pub fn set_placeholder(&mut self) -> &mut Self {
         unimplemented!("This is mocked")
     }
+
+    pub fn set_height_behavior(&mut self, behavior: TextHeightBehavior) {
+        unimplemented!("This is mocked")
+    }
+}
+
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum TextHeightBehavior {
+    All = 0,
+    DisableFirstAscent = 1,
+    DisableLastDescent = 2,
+    DisableAll = 3,
 }
 
 pub struct Typeface;
@@ -988,8 +1000,6 @@ impl From<&FontCollection> for FontCollection {
 
 pub struct StrutStyle;
 
-pub struct TextHeightBehavior;
-
 #[repr(i32)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum TextDirection {
@@ -1038,6 +1048,15 @@ impl Canvas {
     }
 
     pub fn draw_rect(&self, _rect: Rect, _paint: &Paint) -> &Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn draw_drrect(
+        &self,
+        outer: impl AsRef<RRect>,
+        inner: impl AsRef<RRect>,
+        paint: &Paint,
+    ) -> &Self {
         unimplemented!("This is mocked")
     }
 
@@ -1333,6 +1352,10 @@ impl Path {
     pub fn offset(&mut self, _d: impl Into<Point>) -> &mut Self {
         unimplemented!("This is mocked")
     }
+
+    pub fn set_fill_type(&mut self, _ft: PathFillType) -> &mut Self {
+        unimplemented!("This is mocked")
+    }
 }
 
 #[repr(i32)]
@@ -1354,6 +1377,14 @@ impl AsRef<RRect> for RRect {
 
 impl RRect {
     pub fn new_rect_radii(_rect: Rect, _radii: &[Point; 4]) -> Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn rect(&self) -> &Rect {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn bounds(&self) -> &Rect {
         unimplemented!("This is mocked")
     }
 
@@ -1392,6 +1423,15 @@ pub enum Corner {
     UpperRight = 1,
     LowerRight = 2,
     LowerLeft = 3,
+}
+
+#[repr(i32)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum PathFillType {
+    Winding = 0,
+    EvenOdd = 1,
+    InverseWinding = 2,
+    InverseEvenOdd = 3,
 }
 
 #[repr(i32)]

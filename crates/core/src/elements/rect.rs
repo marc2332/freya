@@ -1,8 +1,6 @@
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::{
-    BorderAlignment,
-    BorderStyle,
     CanvasRunnerContext,
     Fill,
     ReferencesState,
@@ -12,7 +10,6 @@ use freya_node_state::{
 use torin::{
     prelude::{
         Area,
-        AreaModel,
         CursorPoint,
         LayoutNode,
         Point2D,
@@ -22,7 +19,15 @@ use torin::{
 };
 
 use super::utils::ElementUtils;
-use crate::dom::DioxusNode;
+use crate::{
+    dom::DioxusNode,
+    render::{
+        border_shape,
+        render_border,
+        render_shadow,
+        BorderShape,
+    },
+};
 
 pub struct RectElement;
 
@@ -87,185 +92,66 @@ impl ElementUtils for RectElement {
     ) {
         let node_style = &*node_ref.get::<StyleState>().unwrap();
 
-        let mut paint = Paint::default();
-        let mut path = Path::new();
         let area = layout_node.visible_area().to_f32();
-
+        let mut path = Path::new();
+        let mut paint = Paint::default();
         paint.set_anti_alias(true);
         paint.set_style(PaintStyle::Fill);
 
-        match &node_style.background {
-            Fill::Color(color) => {
-                paint.set_color(*color);
-            }
-            Fill::LinearGradient(gradient) => {
-                paint.set_shader(gradient.into_shader(area));
-            }
-            Fill::RadialGradient(gradient) => {
-                paint.set_shader(gradient.into_shader(area));
-            }
-            Fill::ConicGradient(gradient) => {
-                paint.set_shader(gradient.into_shader(area));
-            }
-        }
+        node_style.background.apply_to_paint(&mut paint, area);
 
-        let mut radius = node_style.corner_radius;
-        radius.scale(scale_factor);
+        let mut corner_radius = node_style.corner_radius;
+        corner_radius.scale(scale_factor);
 
+        // Container
         let rounded_rect = RRect::new_rect_radii(
             Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
             &[
-                (radius.top_left, radius.top_left).into(),
-                (radius.top_right, radius.top_right).into(),
-                (radius.bottom_right, radius.bottom_right).into(),
-                (radius.bottom_left, radius.bottom_left).into(),
+                (corner_radius.top_left, corner_radius.top_left).into(),
+                (corner_radius.top_right, corner_radius.top_right).into(),
+                (corner_radius.bottom_right, corner_radius.bottom_right).into(),
+                (corner_radius.bottom_left, corner_radius.bottom_left).into(),
             ],
         );
-
-        if radius.smoothing > 0.0 {
+        if corner_radius.smoothing > 0.0 {
             path.add_path(
-                &radius.smoothed_path(rounded_rect),
+                &corner_radius.smoothed_path(rounded_rect),
                 (area.min_x(), area.min_y()),
                 None,
             );
         } else {
             path.add_rrect(rounded_rect, None);
         }
-
         canvas.draw_path(&path, &paint);
 
         // Shadows
         for mut shadow in node_style.shadows.clone().into_iter() {
             if shadow.fill != Fill::Color(Color::TRANSPARENT) {
                 shadow.scale(scale_factor);
-                let mut shadow_paint = paint.clone();
-                let mut shadow_path = Path::new();
 
-                match &shadow.fill {
-                    Fill::Color(color) => {
-                        shadow_paint.set_color(*color);
-                    }
-                    Fill::LinearGradient(gradient) => {
-                        shadow_paint.set_shader(gradient.into_shader(area));
-                    }
-                    Fill::RadialGradient(gradient) => {
-                        shadow_paint.set_shader(gradient.into_shader(area));
-                    }
-                    Fill::ConicGradient(gradient) => {
-                        shadow_paint.set_shader(gradient.into_shader(area));
-                    }
-                }
-
-                // Shadows can be either outset or inset
-                // If they are outset, we fill a copy of the path outset by spread_radius, and blur it.
-                // Otherwise, we draw a stroke with the inner portion being spread_radius width, and the outer portion being blur_radius width.
-                let outset: Point = match shadow.position {
-                    ShadowPosition::Normal => {
-                        shadow_paint.set_style(PaintStyle::Fill);
-                        (shadow.spread, shadow.spread).into()
-                    }
-                    ShadowPosition::Inset => {
-                        shadow_paint.set_style(PaintStyle::Stroke);
-                        shadow_paint.set_stroke_width(shadow.blur / 2.0 + shadow.spread);
-                        (-shadow.spread / 2.0, -shadow.spread / 2.0).into()
-                    }
-                };
-
-                // Apply gassuan blur to the copied path.
-                if shadow.blur > 0.0 {
-                    shadow_paint.set_mask_filter(MaskFilter::blur(
-                        BlurStyle::Normal,
-                        shadow.blur / 2.0,
-                        false,
-                    ));
-                }
-
-                // Add either the RRect or smoothed path based on whether smoothing is used.
-                if radius.smoothing > 0.0 {
-                    shadow_path.add_path(
-                        &node_style
-                            .corner_radius
-                            .smoothed_path(rounded_rect.with_outset(outset)),
-                        Point::new(area.min_x(), area.min_y()) - outset,
-                        None,
-                    );
-                } else {
-                    shadow_path.add_rrect(rounded_rect.with_outset(outset), None);
-                }
-
-                // Offset our path by the shadow's x and y coordinates.
-                shadow_path.offset((shadow.x, shadow.y));
-
-                // Exclude the original path bounds from the shadow using a clip, then draw the shadow.
-                canvas.save();
-                canvas.clip_path(
-                    &path,
-                    match shadow.position {
-                        ShadowPosition::Normal => ClipOp::Difference,
-                        ShadowPosition::Inset => ClipOp::Intersect,
-                    },
-                    true,
+                render_shadow(
+                    canvas,
+                    node_style,
+                    &mut path,
+                    rounded_rect,
+                    area,
+                    shadow,
+                    corner_radius,
                 );
-                canvas.draw_path(&shadow_path, &shadow_paint);
-                canvas.restore();
             }
         }
 
         // Borders
-        if node_style.border.width > 0.0 && node_style.border.style != BorderStyle::None {
-            let mut border_width = node_style.border.width;
-            border_width *= scale_factor;
+        for mut border in node_style.borders.clone().into_iter() {
+            if border.is_visible() {
+                border.scale(scale_factor);
 
-            // Create a new paint and path
-            let mut border_paint = paint.clone();
-            let mut border_path = Path::new();
-
-            // Setup paint params
-            border_paint.set_anti_alias(true);
-            border_paint.set_style(PaintStyle::Stroke);
-            match &node_style.border.fill {
-                Fill::Color(color) => {
-                    border_paint.set_color(*color);
-                }
-                Fill::LinearGradient(gradient) => {
-                    border_paint.set_shader(gradient.into_shader(area));
-                }
-                Fill::RadialGradient(gradient) => {
-                    border_paint.set_shader(gradient.into_shader(area));
-                }
-                Fill::ConicGradient(gradient) => {
-                    border_paint.set_shader(gradient.into_shader(area));
-                }
+                render_border(canvas, rounded_rect, area, &border, corner_radius);
             }
-            border_paint.set_stroke_width(border_width);
-
-            // Skia draws strokes centered on the edge of the path. This means that half of the stroke is inside the path, and half outside.
-            // For Inner and Outer borders, we need to grow or shrink the stroke path by half the border width.
-            let outset = Point::new(border_width / 2.0, border_width / 2.0)
-                * match node_style.border.alignment {
-                    BorderAlignment::Center => 0.0,
-                    BorderAlignment::Inner => -1.0,
-                    BorderAlignment::Outer => 1.0,
-                };
-
-            // Add either the RRect or smoothed path based on whether smoothing is used.
-            if radius.smoothing > 0.0 {
-                border_path.add_path(
-                    &node_style
-                        .corner_radius
-                        .smoothed_path(rounded_rect.with_outset(outset)),
-                    Point::new(area.min_x(), area.min_y()) - outset,
-                    None,
-                );
-            } else {
-                border_path.add_rrect(rounded_rect.with_outset(outset), None);
-            }
-
-            canvas.draw_path(&border_path, &border_paint);
         }
 
+        // Layout references
         let references = node_ref.get::<ReferencesState>().unwrap();
-
         if let Some(canvas_ref) = &references.canvas_ref {
             let mut ctx = CanvasRunnerContext {
                 canvas,
@@ -281,8 +167,7 @@ impl ElementUtils for RectElement {
     fn element_needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
         let node_style = &*node_ref.get::<StyleState>().unwrap();
 
-        node_style.border.is_visible() && node_style.border.alignment != BorderAlignment::Inner
-            || !node_style.shadows.is_empty()
+        !node_style.borders.is_empty() || !node_style.shadows.is_empty()
     }
 
     fn element_drawing_area(
@@ -294,10 +179,7 @@ impl ElementUtils for RectElement {
         let node_style = &*node_ref.get::<StyleState>().unwrap();
         let mut area = layout_node.visible_area();
 
-        if !node_style.border.is_visible()
-            && node_style.border.alignment != BorderAlignment::Inner
-            && node_style.shadows.is_empty()
-        {
+        if node_style.borders.is_empty() && node_style.shadows.is_empty() {
             return area;
         }
 
@@ -370,49 +252,22 @@ impl ElementUtils for RectElement {
             }
         }
 
-        if node_style.border.width > 0.0 && node_style.border.style != BorderStyle::None {
-            let mut border_width = node_style.border.width;
-            border_width *= scale_factor;
+        for mut border in node_style.borders.clone().into_iter() {
+            if border.is_visible() {
+                border.scale(scale_factor);
 
-            // Create a new paint and path
-            let mut border_path = Path::new();
-
-            // Skia draws strokes centered on the edge of the path. This means that half of the stroke is inside the path, and half outside.
-            // For Inner and Outer borders, we need to grow or shrink the stroke path by half the border width.
-            let outset = Point::new(border_width / 2.0, border_width / 2.0)
-                * match node_style.border.alignment {
-                    BorderAlignment::Center => 0.0,
-                    BorderAlignment::Inner => -1.0,
-                    BorderAlignment::Outer => 1.0,
+                let border_shape =
+                    border_shape(*rounded_rect.rect(), node_style.corner_radius, &border);
+                let border_bounds = match border_shape {
+                    BorderShape::DRRect(ref outer, _) => outer.bounds(),
+                    BorderShape::Path(ref path) => path.bounds(),
                 };
-
-            // Add either the RRect or smoothed path based on whether smoothing is used.
-            if radius.smoothing > 0.0 {
-                border_path.add_path(
-                    &node_style
-                        .corner_radius
-                        .smoothed_path(rounded_rect.with_outset(outset)),
-                    Point::new(area.min_x(), area.min_y()) - outset,
-                    None,
+                let border_area = Area::new(
+                    Point2D::new(border_bounds.x(), border_bounds.y()),
+                    Size2D::new(border_bounds.width(), border_bounds.height()),
                 );
-            } else {
-                border_path.add_rrect(rounded_rect.with_outset(outset), None);
-            }
 
-            let border_bounds = border_path.bounds();
-            let border_area = Area::new(
-                Point2D::new(border_bounds.x(), border_bounds.y()),
-                Size2D::new(border_bounds.width(), border_bounds.height()),
-            );
-            area = area.union(&border_area.round_out());
-
-            match node_style.border.alignment {
-                BorderAlignment::Outer => area.expand(&Size2D::new(
-                    node_style.border.width,
-                    node_style.border.width,
-                )),
-                BorderAlignment::Center => area.expand(&Size2D::new(border_width, border_width)),
-                _ => {}
+                area = area.union(&border_area.round_out());
             }
         }
 
