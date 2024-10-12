@@ -107,7 +107,7 @@ pub struct InputProps {
 /// # Preview
 /// ![Input Preview][input]
 #[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_doc_image!("input", "images/gallery_input.png")
+    doc = embed_doc_image::embed_image!("input", "images/gallery_input.png")
 )]
 #[allow(non_snake_case)]
 pub fn Input(

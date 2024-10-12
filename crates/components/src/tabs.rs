@@ -108,7 +108,7 @@ pub enum TabStatus {
 /// # Preview
 /// ![Tab Preview][tab]
 #[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_doc_image!("tab", "images/gallery_tab.png")
+    doc = embed_doc_image::embed_image!("tab", "images/gallery_tab.png")
 )]
 #[component]
 pub fn Tab(
@@ -271,7 +271,7 @@ pub fn Tab(
 /// # Preview
 /// ![Bottom Tab Preview][bottom_tab]
 #[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_doc_image!("bottom_tab", "images/gallery_bottom_tab.png")
+    doc = embed_doc_image::embed_image!("bottom_tab", "images/gallery_bottom_tab.png")
 )]
 #[component]
 pub fn BottomTab(children: Element, theme: Option<BottomTabThemeWith>) -> Element {

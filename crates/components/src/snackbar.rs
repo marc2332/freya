@@ -63,7 +63,7 @@ use freya_hooks::{
 /// # Preview
 /// ![Snackbar Preview][snackbar]
 #[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_doc_image!("snackbar", "images/gallery_snackbar.png")
+    doc = embed_doc_image::embed_image!("snackbar", "images/gallery_snackbar.png")
 )]
 #[allow(non_snake_case)]
 #[component]

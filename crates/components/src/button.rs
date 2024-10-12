@@ -67,7 +67,7 @@ pub struct ButtonProps {
 /// # Preview
 /// ![Button Preview][button]
 #[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_doc_image!("button", "images/gallery_button.png")
+    doc = embed_doc_image::embed_image!("button", "images/gallery_button.png")
 )]
 #[allow(non_snake_case)]
 pub fn Button(props: ButtonProps) -> Element {
@@ -112,7 +112,7 @@ pub fn Button(props: ButtonProps) -> Element {
 /// # Preview
 /// ![FilledButton Preview][filled_button]
 #[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_doc_image!("filled_button", "images/gallery_filled_button.png")
+    doc = embed_doc_image::embed_image!("filled_button", "images/gallery_filled_button.png")
 )]
 #[allow(non_snake_case)]
 pub fn FilledButton(props: ButtonProps) -> Element {
@@ -157,7 +157,7 @@ pub fn FilledButton(props: ButtonProps) -> Element {
 /// # Preview
 /// ![OutlineButton Preview][outline_button]
 #[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_doc_image!("outline_button", "images/gallery_outline_button.png")
+    doc = embed_doc_image::embed_image!("outline_button", "images/gallery_outline_button.png")
 )]
 #[allow(non_snake_case)]
 pub fn OutlineButton(props: ButtonProps) -> Element {

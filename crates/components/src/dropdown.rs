@@ -192,7 +192,7 @@ pub enum DropdownStatus {
 /// # Preview
 /// ![Dropdown Preview][dropdown]
 #[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_doc_image!("dropdown", "images/gallery_dropdown.png")
+    doc = embed_doc_image::embed_image!("dropdown", "images/gallery_dropdown.png")
 )]
 #[allow(non_snake_case)]
 pub fn Dropdown<T>(props: DropdownProps<T>) -> Element

@@ -101,7 +101,7 @@ pub enum SliderStatus {
 /// # Preview
 /// ![Slider Preview][slider]
 #[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_doc_image!("slider", "images/gallery_slider.png")
+    doc = embed_doc_image::embed_image!("slider", "images/gallery_slider.png")
 )]
 #[allow(non_snake_case)]
 pub fn Slider(

@@ -95,13 +95,13 @@ pub enum SwitchStatus {
 /// | ------------- | ------------- |
 /// | ![Switch Enabled Demo][gallery_enabled_switch] | ![Switch Not Enabled Demo][gallery_not_enabled_switch] |
 #[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_doc_image!(
+    doc = embed_doc_image::embed_image!(
         "gallery_not_enabled_switch",
         "images/gallery_not_enabled_switch.png"
     )
 )]
 #[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_doc_image!("gallery_enabled_switch", "images/gallery_enabled_switch.png")
+    doc = embed_doc_image::embed_image!("gallery_enabled_switch", "images/gallery_enabled_switch.png")
 )]
 #[allow(non_snake_case)]
 pub fn Switch(props: SwitchProps) -> Element {
