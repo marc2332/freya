@@ -53,7 +53,7 @@ use crate::{
 };
 
 /// Manages the lifecycle of your tests.
-pub struct TestingHandler {
+pub struct TestingHandler<T: 'static + Clone> {
     pub(crate) vdom: VirtualDom,
     pub(crate) utils: TestUtils,
     pub(crate) event_emitter: EventEmitter,
@@ -67,12 +67,12 @@ pub struct TestingHandler {
     pub(crate) font_collection: FontCollection,
     pub(crate) font_mgr: FontMgr,
     pub(crate) accessibility_tree: SharedAccessibilityTree,
-    pub(crate) config: TestingConfig,
+    pub(crate) config: TestingConfig<T>,
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) cursor_icon: CursorIcon,
 }
 
-impl TestingHandler {
+impl<T: 'static + Clone> TestingHandler<T> {
     /// Init the DOM.
     pub(crate) fn init_dom(&mut self) {
         self.provide_vdom_contexts();
@@ -82,7 +82,7 @@ impl TestingHandler {
     }
 
     /// Get a mutable reference to the current [`TestingConfig`].
-    pub fn config(&mut self) -> &mut TestingConfig {
+    pub fn config(&mut self) -> &mut TestingConfig<T> {
         &mut self.config
     }
 
@@ -101,6 +101,10 @@ impl TestingHandler {
         };
         self.vdom
             .insert_any_root_context(Box::new(accessibility_generator));
+
+        if let Some(state) = self.config.state.clone() {
+            self.vdom.insert_any_root_context(Box::new(state));
+        }
     }
 
     /// Wait and apply new changes
