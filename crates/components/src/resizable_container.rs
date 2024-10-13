@@ -175,7 +175,7 @@ pub fn ResizableHandle(
     let platform = use_platform();
     let mut allow_resizing = use_signal(|| false);
 
-    use_effect(move || {
+    use_memo(move || {
         size.read();
         allow_resizing.set(true);
 
