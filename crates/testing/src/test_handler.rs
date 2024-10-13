@@ -347,13 +347,14 @@ impl TestingHandler {
             .expect("Failed to encode the snapshot.")
     }
 
+/// Render the app into a canvas and save it into a file.
     pub fn save_snapshot(&mut self, snapshot_path: impl Into<PathBuf>) {
         let mut snapshot_file =
             File::create(snapshot_path.into()).expect("Failed to create the snapshot file.");
-        let data = self.create_snapshot();
+        let snapshot_data = self.create_snapshot();
 
         snapshot_file
-            .write_all(&data)
+            .write_all(&snapshot_data )
             .expect("Failed to save the snapshot file.");
     }
 
