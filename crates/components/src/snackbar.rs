@@ -40,7 +40,7 @@ use freya_hooks::{
 ///     )
 /// }
 /// # use freya_testing::prelude::*;
-/// # let mut utils = launch_doc_with_utils(|| {
+/// # launch_doc_with_utils(|| {
 /// #   rsx!(
 /// #       Preview {
 /// #           SnackBar {
@@ -51,13 +51,14 @@ use freya_hooks::{
 /// #           }
 /// #       }
 /// #   )
-/// # }, (200., 150.).into());
-/// # utils.blocking_wait_for_update();
-/// # utils.blocking_wait_for_update();
-/// # utils.blocking_wait_for_update();
-/// # utils.blocking_wait_for_update();
-/// # utils.blocking_wait_for_update();
+/// # }, (185., 185.).into(), |mut utils| async move {
+/// #   utils.wait_for_update().await;
+/// #   utils.wait_for_update().await;
+/// #   utils.wait_for_update().await;
+/// #   utils.wait_for_update().await;
+/// #   utils.wait_for_update().await;
 /// # utils.save_snapshot("./images/gallery_snackbar.png");
+/// # });
 /// ```
 ///
 /// # Preview

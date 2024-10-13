@@ -11,8 +11,10 @@
 /// | [Slider]        | [Checkbox]        | [Radio]        | [Input]        |
 /// | ![ProgressBar Preview][gallery_progress_bar] | ![Dropdown Preview][gallery_dropdown] | ![SnackBar Preview][gallery_snackbar] | ![Tab Preview][gallery_tab] |
 /// | [ProgressBar]        | [Dropdown]        | [SnackBar]        | [Tab]        |
-/// | ![Bottom Tab Preview][gallery_bottom_tab] |  |  |
-/// | [BottomTab]        |  |  |
+/// | ![BottomTab Preview][gallery_bottom_tab] | ![NetworkImage Preview][gallery_network_image] |  ![ScrollView Preview][gallery_scroll_view] |  ![VirtualScrollView Preview][gallery_virtual_scroll_view] |
+/// | [BottomTab]        | [NetworkImage] | [ScrollView] | [VirtualScrollView] |
+/// | ![Loader Preview][gallery_loader] |  ![Menu Preview][gallery_menu] |  |  |
+/// | [Loader]        | [Loader] |  |  |
 #[cfg_attr(feature = "docs",
     doc = embed_doc_image::embed_image!("gallery_button", "images/gallery_button.png"),
     doc = embed_doc_image::embed_image!("gallery_filled_button", "images/gallery_filled_button.png"),
@@ -27,6 +29,11 @@
     doc = embed_doc_image::embed_image!("gallery_snackbar", "images/gallery_snackbar.png"),
     doc = embed_doc_image::embed_image!("gallery_tab", "images/gallery_tab.png"),
     doc = embed_doc_image::embed_image!("gallery_bottom_tab", "images/gallery_bottom_tab.png"),
+    doc = embed_doc_image::embed_image!("gallery_network_image", "images/gallery_network_image.png"),
+    doc = embed_doc_image::embed_image!("gallery_scroll_view", "images/gallery_scroll_view.png"),
+    doc = embed_doc_image::embed_image!("gallery_virtual_scroll_view", "images/gallery_virtual_scroll_view.png"),
+    doc = embed_doc_image::embed_image!("gallery_loader", "images/gallery_loader.png"),
+    doc = embed_doc_image::embed_image!("gallery_menu", "images/gallery_menu.png"),
 )]
 pub fn gallery() {}
 

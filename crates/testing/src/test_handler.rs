@@ -21,7 +21,6 @@ use freya_engine::prelude::{
 };
 use freya_native_core::dioxus::NodeImmutableDioxusExt;
 use tokio::{
-    runtime::Runtime,
     sync::{
         broadcast,
         mpsc::{
@@ -102,12 +101,6 @@ impl TestingHandler {
         };
         self.vdom
             .insert_any_root_context(Box::new(accessibility_generator));
-    }
-
-    /// Unoptimized sync version of [Self::wait_for_update].
-    pub fn blocking_wait_for_update(&mut self) -> (bool, bool) {
-        let rt = Runtime::new().unwrap();
-        rt.block_on(self.wait_for_update())
     }
 
     /// Wait and apply new changes
@@ -294,6 +287,11 @@ impl TestingHandler {
             state.information.viewport_size = size;
         });
         self.utils.sdom().get_mut().layout().reset();
+        self.utils
+            .sdom()
+            .get_mut()
+            .compositor_dirty_area()
+            .unite_or_insert(&Area::new((0.0, 0.0).into(), size));
     }
 
     /// Get the current [CursorIcon].
@@ -366,7 +364,7 @@ impl TestingHandler {
         self.push_event(PlatformEvent::Mouse {
             name: EventName::MouseMove,
             cursor: cursor.into(),
-            button: Some(MouseButton::Left),
+            button: None,
         });
         self.wait_for_update().await;
     }

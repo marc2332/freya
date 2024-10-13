@@ -61,7 +61,7 @@ pub struct ButtonProps {
 /// #           {app()}
 /// #       }
 /// #   )
-/// # }, (200., 150.).into(), "./images/gallery_button.png");
+/// # }, (185., 185.).into(), "./images/gallery_button.png");
 /// ```
 ///
 /// # Preview
@@ -106,7 +106,7 @@ pub fn Button(props: ButtonProps) -> Element {
 /// #           {app()}
 /// #       }
 /// #   )
-/// # }, (200., 150.).into(), "./images/gallery_filled_button.png");
+/// # }, (185., 185.).into(), "./images/gallery_filled_button.png");
 /// ```
 ///
 /// # Preview
@@ -151,7 +151,7 @@ pub fn FilledButton(props: ButtonProps) -> Element {
 /// #           {app()}
 /// #       }
 /// #   )
-/// # }, (200., 150.).into(), "./images/gallery_outline_button.png");
+/// # }, (185., 185.).into(), "./images/gallery_outline_button.png");
 /// ```
 ///
 /// # Preview

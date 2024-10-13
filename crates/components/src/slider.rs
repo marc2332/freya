@@ -96,7 +96,7 @@ pub enum SliderStatus {
 /// #           }
 /// #       }
 /// #   )
-/// # }, (200., 150.).into(), "./images/gallery_slider.png");
+/// # }, (185., 185.).into(), "./images/gallery_slider.png");
 /// ```
 /// # Preview
 /// ![Slider Preview][slider]

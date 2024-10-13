@@ -186,7 +186,7 @@ pub enum DropdownStatus {
 /// #           {app()}
 /// #       }
 /// #   )
-/// # }, (200., 150.).into(), "./images/gallery_dropdown.png");
+/// # }, (185., 185.).into(), "./images/gallery_dropdown.png");
 /// ```
 ///
 /// # Preview

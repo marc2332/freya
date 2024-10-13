@@ -74,7 +74,7 @@ pub enum SwitchStatus {
 /// #           }
 /// #       }
 /// #   )
-/// # }, (200., 150.).into(), "./images/gallery_enabled_switch.png");
+/// # }, (185., 185.).into(), "./images/gallery_enabled_switch.png");
 ///
 /// # // DISABLED
 /// # use freya_testing::prelude::*;
@@ -87,7 +87,7 @@ pub enum SwitchStatus {
 /// #           }
 /// #       }
 /// #   )
-/// # }, (200., 150.).into(), "./images/gallery_not_enabled_switch.png");
+/// # }, (185., 185.).into(), "./images/gallery_not_enabled_switch.png");
 /// ```
 /// # Preview
 ///

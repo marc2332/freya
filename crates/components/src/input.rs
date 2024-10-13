@@ -102,7 +102,7 @@ pub struct InputProps {
 /// #           }
 /// #       }
 /// #   )
-/// # }, (200., 150.).into(), "./images/gallery_input.png");
+/// # }, (185., 185.).into(), "./images/gallery_input.png");
 /// ```
 /// # Preview
 /// ![Input Preview][input]

@@ -18,6 +18,31 @@ pub struct LoaderProps {
 
 /// # Styling
 /// Inherits the [`LoaderTheme`](freya_hooks::LoaderTheme) theme.
+///
+/// Use cases: showing the progress of an external task (http calls for example), etc.
+///
+/// # Example
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///     rsx!(Loader {})
+/// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           {app()}
+/// #       }
+/// #   )
+/// # }, (185., 185.).into(), "./images/gallery_loader.png");
+/// ```
+///
+/// # Preview
+/// ![Loader Preview][loader]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("loader", "images/gallery_loader.png")
+)]
 #[allow(non_snake_case)]
 pub fn Loader(props: LoaderProps) -> Element {
     let theme = use_applied_theme!(&props.theme, loader);

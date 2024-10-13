@@ -1,6 +1,10 @@
-use std::sync::{
-    Arc,
-    Mutex,
+use std::{
+    future::Future,
+    path::PathBuf,
+    sync::{
+        Arc,
+        Mutex,
+    },
 };
 
 use dioxus_core::{
@@ -21,10 +25,13 @@ use freya_core::prelude::{
 };
 use freya_elements::elements as dioxus_elements;
 use freya_engine::prelude::*;
-use tokio::sync::{
-    broadcast,
-    mpsc::unbounded_channel,
-    watch,
+use tokio::{
+    runtime::Runtime,
+    sync::{
+        broadcast,
+        mpsc::unbounded_channel,
+        watch,
+    },
 };
 use torin::prelude::Size2D;
 use winit::window::CursorIcon;
@@ -122,16 +129,23 @@ pub fn Preview(children: Element) -> Element {
     )
 }
 
-pub fn launch_doc(root: AppComponent, size: Size2D, path: &str) {
-    let mut utils = launch_test(root);
-    utils.resize(size);
-    utils.blocking_wait_for_update();
-    utils.save_snapshot(path);
+pub fn launch_doc(root: AppComponent, size: Size2D, path: impl Into<PathBuf>) {
+    let path: PathBuf = path.into();
+    launch_doc_with_utils(root, size, move |mut utils| async move {
+        utils.wait_for_update().await;
+        utils.save_snapshot(&path);
+    });
 }
 
-pub fn launch_doc_with_utils(root: AppComponent, size: Size2D) -> TestingHandler {
+pub fn launch_doc_with_utils<F: Future<Output = ()>>(
+    root: AppComponent,
+    size: Size2D,
+    cb: impl FnOnce(TestingHandler) -> F,
+) {
     let mut utils = launch_test(root);
     utils.resize(size);
-    utils.blocking_wait_for_update();
-    utils
+    let rt = Runtime::new().unwrap();
+    rt.block_on(async move {
+        cb(utils).await;
+    });
 }
