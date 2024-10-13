@@ -21,12 +21,14 @@ pub fn create_label(
     paragraph_style.set_text_align(font_style.text_align);
     paragraph_style.set_max_lines(font_style.max_lines);
     paragraph_style.set_replace_tab_characters(true);
+    paragraph_style.set_text_height_behavior(font_style.text_height);
 
     if let Some(ellipsis) = font_style.text_overflow.get_ellipsis() {
         paragraph_style.set_ellipsis(ellipsis);
     }
 
-    let text_style = font_style.text_style(default_font_family, scale_factor);
+    let text_style =
+        font_style.text_style(default_font_family, scale_factor, font_style.text_height);
     paragraph_style.set_text_style(&text_style);
 
     let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);

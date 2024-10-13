@@ -43,8 +43,6 @@ pub fn Tile(
     onselect: Option<EventHandler<()>>,
     /// Theme override.
     theme: Option<TileThemeWith>,
-
-    a11y_name: Option<String>,
 ) -> Element {
     let mut status = use_signal(TileStatus::default);
     let platform = use_platform();

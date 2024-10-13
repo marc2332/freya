@@ -159,10 +159,16 @@ pub fn ScrollView(
 
     let direction_is_vertical = direction == "vertical";
 
-    let vertical_scrollbar_is_visible =
-        is_scrollbar_visible(show_scrollbar, size.inner.height, size.area.height());
-    let horizontal_scrollbar_is_visible =
-        is_scrollbar_visible(show_scrollbar, size.inner.width, size.area.width());
+    let vertical_scrollbar_is_visible = is_scrollbar_visible(
+        show_scrollbar,
+        size.inner.height.floor(),
+        size.area.height().floor(),
+    );
+    let horizontal_scrollbar_is_visible = is_scrollbar_visible(
+        show_scrollbar,
+        size.inner.width.floor(),
+        size.area.width().floor(),
+    );
 
     let (container_width, content_width) = get_container_size(
         &width,

@@ -15,6 +15,7 @@ use freya_core::prelude::{
 use freya_engine::prelude::{
     raster_n32_premul,
     Color,
+    Data,
     EncodedImageFormat,
     FontCollection,
     FontMgr,
@@ -53,7 +54,7 @@ use crate::{
 };
 
 /// Manages the lifecycle of your tests.
-pub struct TestingHandler {
+pub struct TestingHandler<T: 'static + Clone> {
     pub(crate) vdom: VirtualDom,
     pub(crate) utils: TestUtils,
     pub(crate) event_emitter: EventEmitter,
@@ -67,12 +68,12 @@ pub struct TestingHandler {
     pub(crate) font_collection: FontCollection,
     pub(crate) font_mgr: FontMgr,
     pub(crate) accessibility_tree: SharedAccessibilityTree,
-    pub(crate) config: TestingConfig,
+    pub(crate) config: TestingConfig<T>,
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) cursor_icon: CursorIcon,
 }
 
-impl TestingHandler {
+impl<T: 'static + Clone> TestingHandler<T> {
     /// Init the DOM.
     pub(crate) fn init_dom(&mut self) {
         self.provide_vdom_contexts();
@@ -82,7 +83,7 @@ impl TestingHandler {
     }
 
     /// Get a mutable reference to the current [`TestingConfig`].
-    pub fn config(&mut self) -> &mut TestingConfig {
+    pub fn config(&mut self) -> &mut TestingConfig<T> {
         &mut self.config
     }
 
@@ -101,6 +102,10 @@ impl TestingHandler {
         };
         self.vdom
             .insert_any_root_context(Box::new(accessibility_generator));
+
+        if let Some(state) = self.config.state.clone() {
+            self.vdom.insert_any_root_context(Box::new(state));
+        }
     }
 
     /// Wait and apply new changes
@@ -299,8 +304,8 @@ impl TestingHandler {
         self.utils.sdom()
     }
 
-    /// Render the app into a canvas and save it into a file.
-    pub fn save_snapshot(&mut self, snapshot_path: impl Into<PathBuf>) {
+    /// Render the app into a canvas and make a snapshot of it.
+    pub fn create_snapshot(&mut self) -> Data {
         let fdom = self.utils.sdom.get();
         let (width, height) = self.config.size.to_i32().to_tuple();
 
@@ -341,16 +346,19 @@ impl TestingHandler {
         // Capture snapshot
         let image = surface.image_snapshot();
         let mut context = surface.direct_context();
-        let snapshot_data = image
+        image
             .encode(context.as_mut(), EncodedImageFormat::PNG, None)
-            .expect("Failed to encode the snapshot.");
+            .expect("Failed to encode the snapshot.")
+    }
 
-        // Save snapshot
+    /// Render the app into a canvas and save it into a file.
+    pub fn save_snapshot(&mut self, snapshot_path: impl Into<PathBuf>) {
         let mut snapshot_file =
             File::create(snapshot_path.into()).expect("Failed to create the snapshot file.");
-        let snapshot_bytes = snapshot_data.as_bytes();
+        let snapshot_data = self.create_snapshot();
+
         snapshot_file
-            .write_all(snapshot_bytes)
+            .write_all(&snapshot_data)
             .expect("Failed to save the snapshot file.");
     }
 
