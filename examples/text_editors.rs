@@ -3,7 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus_sdk::clipboard::use_clipboard;
+use dioxus_clipboard::prelude::use_clipboard;
 use freya::prelude::*;
 
 fn main() {

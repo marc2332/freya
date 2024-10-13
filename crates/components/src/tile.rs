@@ -2,6 +2,7 @@ use dioxus::prelude::*;
 use freya_elements::{
     elements as dioxus_elements,
     events::{
+        keyboard::Key,
         KeyboardEvent,
         MouseEvent,
     },
@@ -42,8 +43,6 @@ pub fn Tile(
     onselect: Option<EventHandler<()>>,
     /// Theme override.
     theme: Option<TileThemeWith>,
-
-    a11y_name: Option<String>,
 ) -> Element {
     let mut status = use_signal(TileStatus::default);
     let platform = use_platform();
