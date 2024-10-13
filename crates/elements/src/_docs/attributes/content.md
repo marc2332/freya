@@ -4,10 +4,12 @@ Accepted values:
 
 - `normal` (default): Uses parent bounds.
 - `fit`: Uses parent bounds but later shrunks to the size of the biggest element inside.
+- `flex`: Marks the container as flex container, children of this element will be able to use `size`/`size(n)` in their `width` and `height` attributes.
+
+
+### `fit`
 
 The `fit` mode will allow the inner elements using `width: fill-min` to expand to the biggest element inside this element.
-
-### Example
 
 ```rust, no_run
 # use freya::prelude::*;
