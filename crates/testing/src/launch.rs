@@ -46,12 +46,15 @@ use crate::{
 /// Run a Component in a headless testing environment.
 ///
 /// Default size is `500x500`.
-pub fn launch_test(root: AppComponent) -> TestingHandler {
+pub fn launch_test(root: AppComponent) -> TestingHandler<()> {
     launch_test_with_config(root, TestingConfig::default())
 }
 
 /// Run a Component in a headless testing environment
-pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> TestingHandler {
+pub fn launch_test_with_config<T: 'static + Clone>(
+    root: AppComponent,
+    config: TestingConfig<T>,
+) -> TestingHandler<T> {
     let vdom = with_accessibility(root);
     let fdom = FreyaDOM::default();
     let sdom = SafeDOM::new(fdom);
