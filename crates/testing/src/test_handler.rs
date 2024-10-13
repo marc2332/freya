@@ -299,7 +299,7 @@ impl TestingHandler {
         self.utils.sdom()
     }
 
-    /// Render the app into a canvas and save it into a file.
+    /// Render the app into a canvas and make a snapshot of it.
     pub fn create_snapshot(&mut self) -> Vec<u8> {
         let fdom = self.utils.sdom.get();
         let (width, height) = self.config.size.to_i32().to_tuple();
