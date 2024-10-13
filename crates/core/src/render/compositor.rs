@@ -257,7 +257,7 @@ mod test {
     use itertools::sorted;
 
     fn run_compositor(
-        utils: &TestingHandler,
+        utils: &TestingHandler<()>,
         compositor: &mut Compositor,
     ) -> (Layers, Layers, usize) {
         let sdom = utils.sdom();

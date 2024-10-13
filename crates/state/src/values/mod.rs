@@ -16,6 +16,7 @@ mod overflow;
 mod position;
 mod shadow;
 mod size;
+mod text_height;
 mod text_shadow;
 
 pub use border::*;
@@ -30,3 +31,4 @@ pub use highlight::*;
 pub use overflow::*;
 pub use shadow::*;
 pub use size::*;
+pub use text_height::*;

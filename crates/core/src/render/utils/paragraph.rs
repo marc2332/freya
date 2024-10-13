@@ -34,6 +34,7 @@ pub fn create_paragraph(
     paragraph_style.set_text_align(font_style.text_align);
     paragraph_style.set_max_lines(font_style.max_lines);
     paragraph_style.set_replace_tab_characters(true);
+    paragraph_style.set_text_height_behavior(font_style.text_height);
 
     if let Some(ellipsis) = font_style.text_overflow.get_ellipsis() {
         paragraph_style.set_ellipsis(ellipsis);
@@ -41,7 +42,8 @@ pub fn create_paragraph(
 
     let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
 
-    let text_style = font_style.text_style(default_font_family, scale_factor);
+    let text_style =
+        font_style.text_style(default_font_family, scale_factor, font_style.text_height);
     paragraph_builder.push_style(&text_style);
 
     for text_span in node.children() {
@@ -52,8 +54,12 @@ pub fn create_paragraph(
             let text_nodes = text_span.children();
             let text_node = *text_nodes.first().unwrap();
             let text_node_type = &*text_node.node_type();
-            let font_style = text_span.get::<FontStyleState>().unwrap();
-            let text_style = font_style.text_style(default_font_family, scale_factor);
+            let text_font_style = text_span.get::<FontStyleState>().unwrap();
+            let text_style = text_font_style.text_style(
+                default_font_family,
+                scale_factor,
+                font_style.text_height,
+            );
             paragraph_builder.push_style(&text_style);
 
             if let NodeType::Text(text) = text_node_type {
