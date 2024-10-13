@@ -1,13 +1,13 @@
 use std::rc::Rc;
 
+use dioxus_clipboard::prelude::{
+    use_clipboard,
+    UseClipboard,
+};
 use dioxus_core::{
     prelude::spawn,
     use_hook,
     AttributeValue,
-};
-use dioxus_sdk::clipboard::{
-    use_clipboard,
-    UseClipboard,
 };
 use dioxus_signals::{
     Readable,

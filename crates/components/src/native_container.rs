@@ -2,7 +2,13 @@ use dioxus::prelude::*;
 use freya_core::prelude::EventMessage;
 use freya_elements::{
     elements as dioxus_elements,
-    events::KeyboardEvent,
+    events::{
+        keyboard::{
+            Key,
+            Modifiers,
+        },
+        KeyboardEvent,
+    },
 };
 use freya_hooks::{
     use_init_native_platform,
