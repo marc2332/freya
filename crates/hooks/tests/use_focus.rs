@@ -37,7 +37,7 @@ pub async fn track_focus() {
 
     let mut utils = launch_test_with_config(
         use_focus_app,
-        TestingConfig {
+        TestingConfig::<()> {
             size: (100.0, 100.0).into(),
             ..TestingConfig::default()
         },
@@ -117,7 +117,7 @@ pub async fn block_focus() {
 
     let mut utils = launch_test_with_config(
         use_focus_app,
-        TestingConfig {
+        TestingConfig::<()> {
             size: (100.0, 100.0).into(),
             ..TestingConfig::default()
         },
