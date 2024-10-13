@@ -173,6 +173,14 @@ pub fn ResizableHandle(
     let mut registry = use_context::<Signal<ResizableContext>>();
     let container_size = use_context::<ReadOnlySignal<NodeReferenceLayout>>();
     let platform = use_platform();
+    let mut allow_resizing = use_signal(|| false);
+
+    use_effect(move || {
+        size.read();
+        allow_resizing.set(true);
+
+        // Only allow more resizing after the node layout has updated
+    });
 
     use_drop(move || {
         if *status.peek() == HandleStatus::Hovering {
@@ -205,6 +213,10 @@ pub fn ResizableHandle(
 
     let onmousemove = move |e: MouseEvent| {
         if clicking() {
+            if !allow_resizing() {
+                return;
+            }
+
             let coordinates = e.get_screen_coordinates();
             let mut registry = registry.write();
 
@@ -221,6 +233,8 @@ pub fn ResizableHandle(
                 }
             };
 
+            let mut changed_panels = false;
+
             if displacement_per >= 0. {
                 // Resizing to the right
 
@@ -231,6 +245,10 @@ pub fn ResizableHandle(
                     if let Some(panel) = next_item.try_panel_mut() {
                         let old_size = panel.size;
                         let new_size = (panel.size - displacement_per).clamp(panel.min_size, 100.);
+
+                        if panel.size != new_size {
+                            changed_panels = true
+                        }
 
                         panel.size = new_size;
                         acc_per -= new_size - old_size;
@@ -245,6 +263,11 @@ pub fn ResizableHandle(
                 for prev_item in &mut registry.registry[0..index].iter_mut().rev() {
                     if let Some(panel) = prev_item.try_panel_mut() {
                         let new_size = (panel.size + acc_per).clamp(panel.min_size, 100.);
+
+                        if panel.size != new_size {
+                            changed_panels = true
+                        }
+
                         panel.size = new_size;
                         break;
                     }
@@ -260,6 +283,10 @@ pub fn ResizableHandle(
                         let old_size = panel.size;
                         let new_size = (panel.size + displacement_per).clamp(panel.min_size, 100.);
 
+                        if panel.size != new_size {
+                            changed_panels = true
+                        }
+
                         panel.size = new_size;
                         acc_per += new_size - old_size;
 
@@ -273,10 +300,19 @@ pub fn ResizableHandle(
                 for next_item in &mut registry.registry[index..].iter_mut() {
                     if let Some(panel) = next_item.try_panel_mut() {
                         let new_size = (panel.size - acc_per).clamp(panel.min_size, 100.);
+
+                        if panel.size != new_size {
+                            changed_panels = true
+                        }
+
                         panel.size = new_size;
                         break;
                     }
                 }
+            }
+
+            if changed_panels {
+                allow_resizing.set(false);
             }
         }
     };
