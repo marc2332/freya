@@ -5,21 +5,21 @@ use dioxus_router::{
 };
 use freya_hooks::ActivableRouteContext;
 
-/// Sometimes you might want to know if a route is selected so you can style a specific UI element in a different way, 
+/// Sometimes you might want to know if a route is selected so you can style a specific UI element in a different way,
 /// like a button with a different color.
-/// To avoid cluttering your components with router-specific code you might instead want to wrap your component in an `ActivableRoute` 
+/// To avoid cluttering your components with router-specific code you might instead want to wrap your component in an `ActivableRoute`
 /// and inside your component call `use_activable_route`.
-/// 
+///
 /// This way, your component and all its desdendants will just know whether a route is activated or not, but not which one.
-/// 
+///
 /// ```rs
-/// Link { 
+/// Link {
 ///     to: Route::Home, // Direction route
 ///     ActivableRoute {
 ///         route: Route::Home, // Activation route
-///         SidebarItem { 
+///         SidebarItem {
 ///             // `SidebarItem` will now appear "activated" when the route is `Route::Home`
-///             // `ActivableRoute` is letting it know whether `Route::Home` is enabled 
+///             // `ActivableRoute` is letting it know whether `Route::Home` is enabled
 ///             // or not, without the need to add router-specific logic in `SidebarItem`.
 ///             label {
 ///                 "Go to Hey ! 👋"
@@ -28,7 +28,6 @@ use freya_hooks::ActivableRouteContext;
 ///     }
 /// }
 /// ```
-/// 
 #[allow(non_snake_case)]
 #[component]
 pub fn ActivableRoute<T: Clone + PartialEq + Routable + 'static>(

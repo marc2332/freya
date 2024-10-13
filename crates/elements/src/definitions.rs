@@ -688,9 +688,9 @@ builder_constructors! {
         word_spacing: String,
     };
     /// `image` element let's you show an image.
-    /// 
+    ///
     /// For dynamic Images you may use `dynamic_bytes`.
-    /// 
+    ///
     /// ### Example
     ///
     /// ```rust, ignore, no_run
@@ -810,7 +810,7 @@ builder_constructors! {
         a11y_vertical_offset: String,
     };
     /// `svg` element let's you display SVG code.
-    /// 
+    ///
     /// For dynamic SVGs you may use `dynamic_bytes`.
     ///
     /// ### Example
