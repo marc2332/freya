@@ -324,6 +324,41 @@ impl<O: 'static + Clone, Animated: AnimatedValue<Output = O> + Clone + PartialEq
     }
 }
 
+/// Creates an animated value that can be used in components.
+///
+/// This function returns a `UseAnimator` struct that allows you to control and access the animated value.
+///
+/// The `run` closure is provided with a `Context` object that can be used to configure animation settings.
+/// You should return an animator object (like `SegmentCompositor`) from this closure.
+///
+/// # Examples
+///
+/// Animating a color:
+///
+/// ```rust
+/// let mut animation = use_animation(|ctx| {
+///     ctx.auto_start();
+///     SegmentCompositor::new(
+///         "hsl(45deg, 50%, 50%)",
+///         "hsl(360deg, 50%, 50%)",
+///         2000,
+///         functions::Linear::ease_in_out,
+///     )
+/// });
+///
+/// let color = animation.value();
+/// ```
+///
+/// Animating a number:
+///
+/// ```rust
+/// let mut animation = use_animation(|ctx| {
+///     ctx.auto_start();
+///     SegmentCompositor::new(5.0, 100.0, 2000, functions::Expo::ease_in_out)
+/// });
+///
+/// let width = animation.value();
+/// ```
 pub fn use_animation<
     O: 'static + Clone,
     Animated: AnimatedValue<Output = O> + Clone + PartialEq + 'static,
