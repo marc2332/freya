@@ -1,56 +1,25 @@
-use std::{
-    fs::File,
-    io::Write,
-    path::PathBuf,
-    sync::Arc,
-    time::Duration,
-};
+use std::{fs::File, io::Write, path::PathBuf, sync::Arc, time::Duration};
 
 use dioxus_core::VirtualDom;
-use freya_core::prelude::{
-    EventMessage,
-    TextGroupMeasurement,
-    *,
-};
+use freya_core::prelude::{EventMessage, TextGroupMeasurement, *};
 use freya_engine::prelude::{
-    raster_n32_premul,
-    Color,
-    EncodedImageFormat,
-    FontCollection,
-    FontMgr,
+    raster_n32_premul, Color, Data, EncodedImageFormat, FontCollection, FontMgr,
 };
 use freya_native_core::dioxus::NodeImmutableDioxusExt;
 use tokio::{
     sync::{
         broadcast,
-        mpsc::{
-            UnboundedReceiver,
-            UnboundedSender,
-        },
+        mpsc::{UnboundedReceiver, UnboundedSender},
     },
-    time::{
-        interval,
-        timeout,
-    },
+    time::{interval, timeout},
 };
 use torin::{
-    geometry::{
-        Area,
-        Size2D,
-    },
+    geometry::{Area, Size2D},
     prelude::CursorPoint,
 };
-use winit::{
-    event::MouseButton,
-    window::CursorIcon,
-};
+use winit::{event::MouseButton, window::CursorIcon};
 
-use crate::{
-    config::TestingConfig,
-    test_node::TestNode,
-    test_utils::TestUtils,
-    SCALE_FACTOR,
-};
+use crate::{config::TestingConfig, test_node::TestNode, test_utils::TestUtils, SCALE_FACTOR};
 
 /// Manages the lifecycle of your tests.
 pub struct TestingHandler {
@@ -300,7 +269,7 @@ impl TestingHandler {
     }
 
     /// Render the app into a canvas and make a snapshot of it.
-    pub fn create_snapshot(&mut self) -> Vec<u8> {
+    pub fn create_snapshot(&mut self) -> Data {
         let fdom = self.utils.sdom.get();
         let (width, height) = self.config.size.to_i32().to_tuple();
 
@@ -341,20 +310,18 @@ impl TestingHandler {
         // Capture snapshot
         let image = surface.image_snapshot();
         let mut context = surface.direct_context();
-        let snapshot_data = image
+        image
             .encode(context.as_mut(), EncodedImageFormat::PNG, None)
-            .expect("Failed to encode the snapshot.");
-
-        snapshot_data.as_bytes().to_vec()
+            .expect("Failed to encode the snapshot.")
     }
 
     pub fn save_snapshot(&mut self, snapshot_path: impl Into<PathBuf>) {
         let mut snapshot_file =
             File::create(snapshot_path.into()).expect("Failed to create the snapshot file.");
-        let bytes = self.create_snapshot();
+        let data = self.create_snapshot();
 
         snapshot_file
-            .write_all(&bytes)
+            .write_all(&data)
             .expect("Failed to save the snapshot file.");
     }
 
