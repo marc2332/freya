@@ -143,7 +143,7 @@ pub fn launch_doc(root: AppComponent, size: Size2D, path: impl Into<PathBuf>) {
 pub fn launch_doc_with_utils<F: Future<Output = ()>>(
     root: AppComponent,
     size: Size2D,
-    cb: impl FnOnce(TestingHandler) -> F,
+    cb: impl FnOnce(TestingHandler<()>) -> F,
 ) {
     let mut utils = launch_test(root);
     utils.resize(size);
