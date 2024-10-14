@@ -8,6 +8,7 @@ mod text_editor;
 mod theming;
 
 mod use_activable_route;
+pub mod use_animate;
 mod use_animation;
 mod use_asset_cacher;
 mod use_canvas;
