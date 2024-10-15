@@ -379,6 +379,7 @@ pub struct Context {
     animated_values: Vec<Signal<Box<dyn AnimatedValue>>>,
     on_finish: OnFinish,
     auto_start: bool,
+    on_deps_change: OnDepsChange,
 }
 
 impl Context {
@@ -396,6 +397,11 @@ impl Context {
 
     pub fn auto_start(&mut self, auto_start: bool) -> &mut Self {
         self.auto_start = auto_start;
+        self
+    }
+
+    pub fn on_deps_change(&mut self, on_deps_change: OnDepsChange) -> &mut Self {
+        self.on_deps_change = on_deps_change;
         self
     }
 }
@@ -425,6 +431,14 @@ pub enum OnFinish {
     Restart,
 }
 
+/// What to do once the animation dependencies change. By default it is [`Reset`](OnDepsChange::Reset)
+#[derive(PartialEq, Clone, Copy, Default)]
+pub enum OnDepsChange {
+    #[default]
+    Reset,
+    Run,
+}
+
 /// Animate your elements. Use [`use_animation`] to use this.
 #[derive(PartialEq, Clone)]
 pub struct UseAnimator<Animated: PartialEq + Clone + 'static> {
@@ -433,6 +447,7 @@ pub struct UseAnimator<Animated: PartialEq + Clone + 'static> {
     pub(crate) is_running: Signal<bool>,
     pub(crate) has_run_yet: Signal<bool>,
     pub(crate) task: Signal<Option<Task>>,
+    pub(crate) last_direction: Signal<AnimDirection>,
 }
 
 impl<T: PartialEq + Clone + 'static> Copy for UseAnimator<T> {}
@@ -445,7 +460,10 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
 
     /// Reset the animation to the default state.
     pub fn reset(&self) {
+        let mut has_run_yet = self.has_run_yet;
         let mut task = self.task;
+
+        has_run_yet.set(false);
 
         if let Some(task) = task.write().take() {
             task.cancel();
@@ -454,6 +472,21 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
         for value in &self.value_and_ctx.read().1.animated_values {
             let mut value = *value;
             value.write().prepare(AnimDirection::Forward);
+        }
+    }
+
+    /// Update the animation.
+    pub fn run_update(&self) {
+        let mut task = self.task;
+
+        if let Some(task) = task.write().take() {
+            task.cancel();
+        }
+
+        for value in &self.value_and_ctx.read().1.animated_values {
+            let mut value = *value;
+            let time = value.peek().time().as_millis() as i32;
+            value.write().advance(time, *self.last_direction.peek());
         }
     }
 
@@ -492,6 +525,9 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
         let mut has_run_yet = self.has_run_yet;
         let on_finish = ctx.on_finish;
         let mut task = self.task;
+        let mut last_direction = self.last_direction;
+
+        last_direction.set(direction);
 
         // Cancel previous animations
         if let Some(task) = task.write().take() {
@@ -649,6 +685,7 @@ pub fn use_animation<Animated: PartialEq + Clone + 'static>(
     let is_running = use_signal(|| false);
     let has_run_yet = use_signal(|| false);
     let task = use_signal(|| None);
+    let last_direction = use_signal(|| AnimDirection::Reverse);
 
     let value_and_ctx = use_memo(move || {
         let mut ctx = Context::default();
@@ -661,6 +698,7 @@ pub fn use_animation<Animated: PartialEq + Clone + 'static>(
         is_running,
         has_run_yet,
         task,
+        last_direction,
     };
 
     use_hook(move || {
@@ -683,6 +721,7 @@ where
     let is_running = use_signal(|| false);
     let has_run_yet = use_signal(|| false);
     let task = use_signal(|| None);
+    let last_direction = use_signal(|| AnimDirection::Reverse);
 
     let value_and_ctx = use_memo(use_reactive(deps, move |vals| {
         let mut ctx = Context::default();
@@ -695,7 +734,15 @@ where
         is_running,
         has_run_yet,
         task,
+        last_direction,
     };
+
+    use_memo(move || {
+        let value_and_ctx = value_and_ctx.read();
+        if *has_run_yet.peek() && value_and_ctx.1.on_deps_change == OnDepsChange::Run {
+            animator.run_update()
+        }
+    });
 
     use_hook(move || {
         if animator.value_and_ctx.read().1.auto_start {

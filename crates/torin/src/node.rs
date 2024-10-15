@@ -54,6 +54,8 @@ pub struct Node {
     pub has_layout_references: bool,
 
     pub contains_text: bool,
+
+    pub spacing: Length,
 }
 
 impl Scaled for Node {
@@ -69,6 +71,7 @@ impl Scaled for Node {
         self.offset_x *= scale_factor;
         self.offset_y *= scale_factor;
         self.position.scale(scale_factor);
+        self.spacing *= scale_factor;
     }
 }
 
@@ -128,6 +131,26 @@ impl Node {
             main_alignment,
             cross_alignment,
             direction,
+            ..Default::default()
+        }
+    }
+
+    /// Construct a new Node given a size, alignments, direction and spacing
+    pub fn from_size_and_alignments_and_direction_and_spacing(
+        width: Size,
+        height: Size,
+        main_alignment: Alignment,
+        cross_alignment: Alignment,
+        direction: DirectionMode,
+        spacing: Length,
+    ) -> Self {
+        Self {
+            width,
+            height,
+            main_alignment,
+            cross_alignment,
+            direction,
+            spacing,
             ..Default::default()
         }
     }
@@ -198,13 +221,31 @@ impl Node {
         }
     }
 
+    /// Construct a new Node given a size and spacing
+    pub fn from_size_and_direction_and_spacing(
+        width: Size,
+        height: Size,
+        direction: DirectionMode,
+        spacing: Length,
+    ) -> Self {
+        Self {
+            width,
+            height,
+            direction,
+            spacing,
+            ..Default::default()
+        }
+    }
+
     /// Has properties that depend on the inner Nodes?
     pub fn does_depend_on_inner(&self) -> bool {
-        self.width.inner_sized()
-            || self.height.inner_sized()
-            || self.has_layout_references
-            || self.cross_alignment.is_not_start()
+        self.width.inner_sized() || self.height.inner_sized() || self.contains_text
+    }
+
+    /// Has properties that make its children dependant on it?
+    pub fn do_inner_depend_on_parent(&self) -> bool {
+        self.cross_alignment.is_not_start()
             || self.main_alignment.is_not_start()
-            || self.contains_text
+            || self.has_layout_references
     }
 }

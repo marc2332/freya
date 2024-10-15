@@ -13,9 +13,7 @@ fn app() -> Element {
     rsx!(
         ScrollView {
             show_scrollbar: true,
-            theme: theme_with!(ScrollViewTheme {
-               padding: "5".into(),
-            }),
+            padding: "5",
             Accordion {
                 summary: rsx!(AccordionSummary {
                     label {

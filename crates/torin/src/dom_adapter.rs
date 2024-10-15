@@ -4,10 +4,7 @@ pub use euclid::Rect;
 use freya_native_core::SendAnyMap;
 
 use crate::{
-    geometry::{
-        Area,
-        Size2D,
-    },
+    geometry::Area,
     node::Node,
     prelude::{
         AreaModel,
@@ -24,9 +21,6 @@ pub struct LayoutNode {
     /// Area inside this Node
     pub inner_area: Area,
 
-    /// Ocuppied sizes from the inner children in this Node
-    pub inner_sizes: Size2D,
-
     /// Outer margin
     pub margin: Gaps,
 
@@ -38,7 +32,6 @@ impl PartialEq for LayoutNode {
     fn eq(&self, other: &Self) -> bool {
         self.area == other.area
             && self.inner_area == other.inner_area
-            && self.inner_sizes == other.inner_sizes
             && self.margin == other.margin
     }
 }
@@ -46,7 +39,7 @@ impl PartialEq for LayoutNode {
 impl LayoutNode {
     // The area without any margin
     pub fn visible_area(&self) -> Area {
-        self.area.after_gaps(&self.margin)
+        self.area.without_gaps(&self.margin)
     }
 }
 

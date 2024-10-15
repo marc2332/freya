@@ -3,6 +3,7 @@ use std::sync::{
     Mutex,
 };
 
+use freya_common::CompositorDirtyNodes;
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
@@ -48,6 +49,7 @@ pub struct LayoutState {
     pub content: Content,
     pub node_ref: Option<NodeReference>,
     pub node_id: NodeId,
+    pub spacing: Length,
 }
 
 impl ParseAttribute for LayoutState {
@@ -167,6 +169,11 @@ impl ParseAttribute for LayoutState {
                     self.node_ref = Some(reference.clone());
                 }
             }
+            AttributeName::Spacing => {
+                if let Some(value) = attr.value.as_text() {
+                    self.spacing = Length::new(value.parse::<f32>().map_err(|_| ParseError)?);
+                }
+            }
             _ => {}
         }
         Ok(())
@@ -203,6 +210,7 @@ impl State<CustomAttributeValues> for LayoutState {
             AttributeName::PositionBottom,
             AttributeName::PositionLeft,
             AttributeName::Content,
+            AttributeName::Spacing,
         ]));
 
     fn update<'a>(
@@ -213,7 +221,9 @@ impl State<CustomAttributeValues> for LayoutState {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         context: &SendAnyMap,
     ) -> bool {
+        let root_id = context.get::<NodeId>().unwrap();
         let torin_layout = context.get::<Arc<Mutex<Torin<NodeId>>>>().unwrap();
+        let compositor_dirty_nodes = context.get::<Arc<Mutex<CompositorDirtyNodes>>>().unwrap();
 
         let mut layout = LayoutState {
             node_id: node_view.node_id(),
@@ -228,8 +238,14 @@ impl State<CustomAttributeValues> for LayoutState {
 
         let changed = layout != *self;
 
-        if changed {
+        let is_orphan = node_view.height() == 0 && node_view.node_id() != *root_id;
+
+        if changed && !is_orphan {
             torin_layout.lock().unwrap().invalidate(node_view.node_id());
+            compositor_dirty_nodes
+                .lock()
+                .unwrap()
+                .invalidate(node_view.node_id());
         }
 
         *self = layout;

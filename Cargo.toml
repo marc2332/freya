@@ -7,11 +7,14 @@ edition = "2021"
 members = ["crates/renderer", "crates/state", "crates/freya", "crates/elements", "crates/components", "crates/hooks", "crates/common", "crates/core", "crates/testing", "crates/devtools", "crates/torin", "crates/engine", "./examples/installer",  "crates/native-core",  "crates/native-core-macro"]
 
 [features]
-log = ["freya/log"]
+tracing-subscriber = ["freya/tracing-subscriber"]
 devtools = ["freya/devtools"]
 use_camera = ["freya/use_camera"]
 hot-reload = ["freya/hot-reload"]
 custom-tokio-rt = ["freya/custom-tokio-rt"]
+performance-overlay = ["freya/performance-overlay"]
+fade-cached-incremental-areas = ["freya/fade-cached-incremental-areas"]
+disable-zoom-shortcuts = ["freya/disable-zoom-shortcuts"]
 
 [patch.crates-io]
 # dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
@@ -48,7 +51,7 @@ dioxus-signals = { version = "0.5" }
 dioxus-core = { version = "0.5" }
 dioxus-hot-reload = { version = "0.5", features = ["file_watcher"], default-features = false }
 dioxus-router = { version = "0.5", default-features = false }
-dioxus-sdk = { version = "0.5", features = ["clipboard"]}
+dioxus-clipboard = "0.1"
 
 skia-safe = { version = "0.75.0", features = ["gl", "textlayout", "svg"] }
 
@@ -76,16 +79,25 @@ skia-safe = { workspace = true }
 tokio = { workspace = true, features = ["fs"]}
 dioxus = { workspace = true }
 freya = { workspace = true }
+freya-hooks = { workspace = true }
 freya-core = { workspace = true }
 freya-testing = { workspace = true }
 reqwest = { version = "0.12.0", features = ["json"] }
 serde = "1.0.189"
-dioxus-sdk = { version = "0.5", features = ["i18n"] }
+dioxus-i18n = "0.2"
 rand = "0.8.5"
 dioxus-router = { workspace = true }
 itertools = "0.13.0"
 home = "0.5.9"
 dioxus-query = "0.5.1"
+gilrs = "0.10.8"
+gl = { workspace = true }
+tree-sitter-highlight = "0.23.0"
+tree-sitter-rust = "0.23.0"
+rfd = "0.14.1"
+bytes = "1.5.0"
+dioxus-clipboard = { workspace = true }
+winit = { workspace = true }
 
 [profile.release]
 lto = true

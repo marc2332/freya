@@ -6,48 +6,155 @@
 use freya::prelude::*;
 
 fn main() {
-    launch(app);
+    launch_with_props(app, "Switch Theme", (600., 700.));
 }
 
-#[allow(non_snake_case)]
-fn TheOtherSwitch() -> Element {
+#[component]
+fn ThemeChanger() -> Element {
     let mut theme = use_theme();
 
-    let is_enabled = theme.read().name == "dark";
-
-    rsx!(Switch {
-        enabled: is_enabled,
-        ontoggled: move |_| {
-            if is_enabled {
-                *theme.write() = LIGHT_THEME
-            } else {
-                *theme.write() = DARK_THEME
+    rsx!(
+        Tile {
+            onselect: move |_| theme.set(BANANA_THEME),
+            leading: rsx!(
+                Radio {
+                    selected: theme.read().name == "banana",
+                },
+            ),
+            label { "Banana" }
+        }
+        TooltipContainer {
+            position: TooltipPosition::Besides,
+            tooltip: rsx!(
+                Tooltip {
+                    text: "Switch to Dark theme"
+                }
+            ),
+            Tile {
+                onselect: move |_| theme.set(DARK_THEME),
+                leading: rsx!(
+                    Radio {
+                        selected: theme.read().name == "dark",
+                    },
+                ),
+                label { "Dark" }
             }
         }
-    })
+        TooltipContainer {
+            position: TooltipPosition::Besides,
+            tooltip: rsx!(
+                Tooltip {
+                    text: "Switch to Light theme"
+                }
+            ),
+            Tile {
+                onselect: move |_| theme.set(LIGHT_THEME),
+                leading: rsx!(
+                    Radio {
+                        selected: theme.read().name == "light",
+                    },
+                ),
+                label { "Light" }
+            }
+        }
+        Link {
+            to: "https://freyaui.dev",
+            label {
+                "https://freyaui.dev"
+            }
+        }
+    )
 }
 
 fn app() -> Element {
     use_init_default_theme();
-    let mut enabled = use_signal(|| true);
-
-    let is_enabled = if *enabled.read() { "Yes" } else { "No" };
+    let mut value = use_signal::<f64>(|| 50.);
 
     rsx!(
         Body {
-            theme: theme_with!(BodyTheme {
-                padding: "20".into(),
-            }),
-            Switch {
-                enabled: *enabled.read(),
-                ontoggled: move |_| {
-                    enabled.toggle();
+            ScrollView {
+                rect {
+                    spacing: "20",
+                    padding: "40",
+                    cross_align: "center",
+                    Switch {
+                        enabled: value() >= 50.,
+                        ontoggled: move |_| {
+                            if value() >= 50. {
+                                value.set(25.0);
+                            } else {
+                                value.set(75.0);
+                            }
+                        }
+                    }
+                    Slider {
+                        size: "fill",
+                        value: value(),
+                        onmoved: move |e| value.set(e),
+                    }
+                    ProgressBar {
+                        show_progress: true,
+                        progress: value() as f32
+                    }
+                    Tile {
+                        onselect: move |_| {
+                            if value() >= 50. {
+                                value.set(25.0);
+                            } else {
+                                value.set(75.0);
+                            }
+                        },
+                        leading: rsx!(
+                            Checkbox {
+                                selected: value() >= 50.,
+                            },
+                        ),
+                        label { "First choice" }
+                    }
+                    Tile {
+                        onselect: move |_| {
+                            if value() < 50. {
+                                value.set(75.0);
+                            } else {
+                                value.set(25.0);
+                            }
+                        },
+                        leading: rsx!(
+                            Checkbox {
+                                selected: value() < 50.,
+                            },
+                        ),
+                        label { "Second choice" }
+                    }
+                    Input {
+                        value: value().round().to_string(),
+                        onchange: move |num: String| {
+                            if let Ok(num) = num.parse() {
+                                *value.write() = num;
+                            }
+                        }
+                    }
+                    Button {
+                        onpress: move |_| value.set(35.),
+                        label {
+                            "Set to 35%"
+                        }
+                    }
+                    FilledButton {
+                        onpress: move |_| value.set(75.),
+                        label {
+                            "Set to 75%"
+                        }
+                    }
+                    ThemeChanger { }
                 }
             }
-            label {
-                "Is enabled? {is_enabled}"
+            SnackBar {
+                open: value() >= 50.,
+                label {
+                    "Hello!"
+                }
             }
-            TheOtherSwitch { }
         }
     )
 }

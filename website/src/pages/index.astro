@@ -6,7 +6,7 @@ const EXAMPLE_CODE = `
 fn app() -> Element {
     let mut count = use_signal(|| 0);
 
-    render!(
+    rsx!(
         rect {
             height: "50%",
             width: "100%",
@@ -48,7 +48,7 @@ fn app() -> Element {
             <p>Build native & cross-platform GUI applications  using 🦀 <a href="https://www.rust-lang.org/" class="underline">Rust</a>. <br/>Powered by 🧬 <a href="https://dioxuslabs.com/" class="underline">Dioxus</a> and 🎨 <a href="https://skia.org/" rel="noreferrer"class="underline">Skia</a>.</p>
             <br/>
             <a class="sm:inline-block sm:my-0 block text-start sm:text-center px-6 my-2 mr-2 py-2 bg-sky-500 rounded-lg text-black hover:bg-sky-600 transition-colors delay-[10]" href="https://book.freyaui.dev/getting_started.html">Get Started</a>
-            <a class="sm:inline-block sm:my-0 block text-start sm:text-center px-6 my-2 mr-2 py-2 bg-orange-300 rounded-lg text-black hover:bg-orange-400 transition-colors delay-[10]" href="https://github.com/marc2332/freya">Contribute</a>
+            <a class="sm:inline-block sm:my-0 block text-start sm:text-center px-6 my-2 mr-2 py-2 bg-orange-300 rounded-lg text-black hover:bg-orange-400 transition-colors delay-[10]" href="https://github.com/marc2332/freya">Source Code</a>
             <a class="sm:inline-block sm:my-0 block text-start sm:text-center px-6 my-2 mr-2 py-2 bg-pink-300 rounded-lg text-black hover:bg-pink-400 transition-colors delay-[10]" href="https://github.com/sponsors/marc2332">Sponsor</a>
         </div>
     </div>

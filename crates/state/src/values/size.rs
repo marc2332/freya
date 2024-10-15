@@ -66,6 +66,10 @@ pub fn parse_calc(mut value: &str) -> Result<Vec<DynamicCalculation>, ParseError
             calcs.push(DynamicCalculation::Percentage(
                 val.replace('%', "").parse().map_err(|_| ParseError)?,
             ));
+        } else if val.contains('v') {
+            calcs.push(DynamicCalculation::RootPercentage(
+                val.replace('v', "").parse().map_err(|_| ParseError)?,
+            ));
         } else if val == "+" {
             calcs.push(DynamicCalculation::Add);
         } else if val == "-" {

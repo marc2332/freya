@@ -8,11 +8,12 @@
 
 [Website](https://freyaui.dev) | [Nightly Docs](https://docs.freyaui.dev/freya) | [Stable Docs](https://docs.rs/freya/latest/freya) | [Book](https://book.freyaui.dev) | [Discord](https://discord.gg/sYejxCdewG)
 
-**Freya** is a cross-paltform GUI library for Rust powered by 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/). 
+**Freya** is a cross-platform GUI library for Rust powered by 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/). 
+
+**It does not use any web tech**, check the [Differences with Dioxus](https://book.freyaui.dev/differences_with_dioxus.html). 
 
 ⚠️ It's currently work in progress, but you can already play with it! You can join the [Discord](https://discord.gg/sYejxCdewG) server if you have any question or issue. 
 
-<br/>
 <br/>
 
 <table>
@@ -23,7 +24,7 @@
 fn app() -> Element {
     let mut count = use_signal(|| 0);
 
-    render!(
+    rsx!(
         rect {
             height: "50%",
             width: "100%",
@@ -64,12 +65,6 @@ fn app() -> Element {
 </td>
 </table>
 
-### Sponsors 🤗
-
-Thanks to my sponsors for supporting this project! 😄
-
-<!-- sponsors --><a href="https://github.com/piny4man"><img src="https://github.com/piny4man.png" width="60px" alt="Alberto" /></a><a href="https://github.com/albinekb"><img src="https://github.com/albinekb.png" width="60px" alt="Albin Ekblom" /></a><!-- sponsors -->
-
 ### Want to try it? 🤔
 
 👋 Make sure to check the [Setup guide](https://book.freyaui.dev/setup.html) first.
@@ -91,19 +86,21 @@ Add Freya and Dioxus as dependencies:
 freya = "0.2"
 dioxus = { version = "0.5", features = ["macro", "hooks"], default-features = false }
 ```
+### Contributing 🧙‍♂️
+
+If you are interested in contributing please make sure to have read the [Contributing](CONTRIBUTING.md) guide first!
 
 ### Features ✨
 - ⛏️ Built-in **components** (button, scroll views, switch and more) 
-- 🚇 Built-in **hooks** library (animations, text editing and more)
-- 🔍 Built-in **devtools** panel
+- 🚇 Built-in **hooks** (animations, text editing and more)
+- 🔍 Built-in **developer tools** (tree inspection, fps overlay)
 - 🧰 Built-in **headless runner** to test UI
-- 🎨 **Theming** support (not extensible yet ⚠️)
+- 🎨 **Theming** support
 - 🛩️ **Cross-platform** (Windows, Linux, MacOS)
 - 🖼️ SKSL **Shaders** support
-- 🔄️ Dioxus **Hot-reload** support
 - 📒 Multi-line **text editing**
-- 🦾 Basic **Accessibility** Support (experimental ⚠️)
-- 🧩Compatible with dioxus-sdk and other Dioxus renderer-agnostic libraries
+- 🦾 **Accessibility** support
+- 🧩 Compatible with dioxus-sdk and other Dioxus renderer-agnostic libraries
 
 ### Goals 😁
 - Performant and low memory usage
@@ -112,6 +109,22 @@ dioxus = { version = "0.5", features = ["macro", "hooks"], default-features = fa
 - Decent Accessibility support 
 - Useful testing APIs
 - Useful and extensible built-in components and hooks
+
+### Support 🤗
+
+If you are interested in supporting the development of this project feel free to donate to my [Github Sponsor](https://github.com/sponsors/marc2332/) page.
+
+Thanks to my sponsors for supporting this project! 😄 
+
+<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;avatars.githubusercontent.com&#x2F;u&#x2F;8446285?u&#x3D;fd37db4dd9b4ba94dabe0bccc3a95ef2a35376ab&amp;v&#x3D;4" width="60px" alt="" /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;avatars.githubusercontent.com&#x2F;u&#x2F;2295878?v&#x3D;4" width="60px" alt="高庆丰" /></a><!-- sponsors -->
+
+### Special thanks 💪
+
+- [Jonathan Kelley](https://github.com/jkelleyrtp) and [Evan Almloff](https://github.com/ealmloff) for making [Dioxus](https://dioxuslabs.com/) and all their help, specially when I was still creating Freya.
+- [Armin](https://github.com/pragmatrix) for making [rust-skia](https://github.com/rust-skia/rust-skia/) and all his help and making the favor of hosting prebuilt binaries of skia for the combo of features use by Freya.
+- [geom3trik](https://github.com/geom3trik) for helping me figure out how to add incremental rendering.
+- [Tropical](https://github.com/Tropix126) for this contributions to improving accessibility and rendering.
+- And to the rest of contributors and anybody who gave me any kind of feedback!
 
 ### 🤠 Projects
 
