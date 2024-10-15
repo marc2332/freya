@@ -1,4 +1,5 @@
 pub use skia_safe::{
+    canvas::SaveLayerRec,
     font_style::{
         Slant,
         Weight,
@@ -55,7 +56,9 @@ pub use skia_safe::{
         TextStyle,
         TypefaceFontProvider,
     },
+    wrapper::PointerWrapper,
     Bitmap,
+    BlendMode,
     BlurStyle,
     Canvas,
     ClipOp,

@@ -860,6 +860,8 @@ builder_constructors! {
         // Svg
         svg_data: String,
         svg_content: String,
+        #[doc = include_str!("_docs/attributes/fill.md")]
+        fill: String,
 
         // Accessibility
         a11y_id: String,
