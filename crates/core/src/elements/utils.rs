@@ -85,7 +85,7 @@ pub trait ElementUtils {
             }
         }
 
-        Some(drawing_area)
+        Some(drawing_area.inflate(1.0, 1.0))
     }
 
     /// Measure the area for this element considering other
