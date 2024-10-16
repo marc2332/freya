@@ -6,14 +6,16 @@ use crate::{
 };
 
 impl Parse for TextHeightBehavior {
-    fn parse(value: &str) -> Result<Self, ParseError> {
-        match value {
-            "all" => Ok(TextHeightBehavior::All),
-            "disable-first-ascent" => Ok(TextHeightBehavior::DisableFirstAscent),
-            "disable-least-ascent" => Ok(TextHeightBehavior::DisableLastDescent),
-            "disable-all" => Ok(TextHeightBehavior::DisableAll),
-            _ => Err(ParseError),
-        }
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
+        parser.consume_map(|value| {
+            value.try_as_str().and_then(|value| match value {
+                "all" => Some(TextHeightBehavior::All),
+                "disable-first-ascent" => Some(TextHeightBehavior::DisableFirstAscent),
+                "disable-least-ascent" => Some(TextHeightBehavior::DisableLastDescent),
+                "disable-all" => Some(TextHeightBehavior::DisableAll),
+                _ => None,
+            })
+        })
     }
 }
 
