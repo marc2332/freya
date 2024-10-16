@@ -84,6 +84,7 @@ impl State<CustomAttributeValues> for TransformState {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         context: &SendAnyMap,
     ) -> bool {
+        let root_id = context.get::<NodeId>().unwrap();
         let compositor_dirty_nodes = context.get::<Arc<Mutex<CompositorDirtyNodes>>>().unwrap();
         let inherited_transform = parent.map(|(p,)| p.clone()).unwrap_or_default();
 
@@ -100,7 +101,9 @@ impl State<CustomAttributeValues> for TransformState {
 
         let changed = transform_state != *self;
 
-        if changed {
+        let is_orphan = node_view.height() == 0 && node_view.node_id() != *root_id;
+
+        if changed && !is_orphan {
             compositor_dirty_nodes
                 .lock()
                 .unwrap()

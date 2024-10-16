@@ -32,6 +32,8 @@ use crate::{
     Parse,
     ParseAttribute,
     ParseError,
+    TextHeight,
+    TextHeightBehavior,
     TextOverflow,
     Token,
 };
@@ -52,10 +54,16 @@ pub struct FontStyleState {
     pub text_align: TextAlign,
     pub max_lines: Option<usize>,
     pub text_overflow: TextOverflow,
+    pub text_height: TextHeightBehavior,
 }
 
 impl FontStyleState {
-    pub fn text_style(&self, default_font_family: &[String], scale_factor: f32) -> TextStyle {
+    pub fn text_style(
+        &self,
+        default_font_family: &[String],
+        scale_factor: f32,
+        paragraph_text_height: TextHeightBehavior,
+    ) -> TextStyle {
         let mut text_style = TextStyle::new();
         let mut font_family = self.font_family.clone();
 
@@ -72,6 +80,11 @@ impl FontStyleState {
             .set_font_families(&font_family)
             .set_word_spacing(self.word_spacing)
             .set_letter_spacing(self.letter_spacing);
+
+        if paragraph_text_height.needs_custom_height() {
+            text_style.set_height_override(true);
+            text_style.set_half_leading(true);
+        }
 
         if let Some(line_height) = self.line_height {
             text_style.set_height_override(true).set_height(line_height);
@@ -109,6 +122,7 @@ impl Default for FontStyleState {
             text_align: TextAlign::default(),
             max_lines: None,
             text_overflow: TextOverflow::default(),
+            text_height: TextHeightBehavior::DisableAll,
         }
     }
 }
@@ -222,6 +236,14 @@ impl ParseAttribute for FontStyleState {
                         .map_err(|err: ParseFloatError| ParseError(err.to_string()))?;
                 }
             }
+            AttributeName::TextHeight => {
+                let value = attr.value.as_text();
+                if let Some(value) = value {
+                    if let Ok(text_height) = TextHeightBehavior::parse(value) {
+                        self.text_height = text_height;
+                    }
+                }
+            }
             _ => {}
         }
 
@@ -255,6 +277,7 @@ impl State<CustomAttributeValues> for FontStyleState {
             AttributeName::DecorationColor,
             AttributeName::DecorationStyle,
             AttributeName::TextOverflow,
+            AttributeName::TextHeight,
         ]));
 
     fn update<'a>(
@@ -265,6 +288,7 @@ impl State<CustomAttributeValues> for FontStyleState {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         context: &SendAnyMap,
     ) -> bool {
+        let root_id = context.get::<NodeId>().unwrap();
         let torin_layout = context.get::<Arc<Mutex<Torin<NodeId>>>>().unwrap();
         let compositor_dirty_nodes = context.get::<Arc<Mutex<CompositorDirtyNodes>>>().unwrap();
 
@@ -278,7 +302,9 @@ impl State<CustomAttributeValues> for FontStyleState {
 
         let changed = &font_style != self;
 
-        if changed {
+        let is_orphan = node_view.height() == 0 && node_view.node_id() != *root_id;
+
+        if changed && !is_orphan {
             torin_layout.lock().unwrap().invalidate(node_view.node_id());
             compositor_dirty_nodes
                 .lock()

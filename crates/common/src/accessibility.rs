@@ -25,8 +25,8 @@ impl AccessibilityDirtyNodes {
         self.added_or_updated.insert(node_id);
     }
 
-    pub fn remove(&mut self, node_id: NodeId, ancestor_node_id: NodeId) {
-        self.removed.insert(node_id, ancestor_node_id);
+    pub fn remove(&mut self, node_id: NodeId, parent_id: NodeId) {
+        self.removed.insert(node_id, parent_id);
     }
 
     pub fn clear(&mut self) {

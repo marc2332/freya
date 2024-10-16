@@ -1,6 +1,10 @@
 use std::fmt;
 
-use freya_engine::prelude::Color;
+use freya_engine::prelude::{
+    Color,
+    Paint,
+};
+use torin::prelude::Area;
 
 use crate::{
     ConicGradient,
@@ -19,6 +23,25 @@ pub enum Fill {
     LinearGradient(LinearGradient),
     RadialGradient(RadialGradient),
     ConicGradient(ConicGradient),
+}
+
+impl Fill {
+    pub fn apply_to_paint(&self, paint: &mut Paint, area: Area) {
+        match &self {
+            Fill::Color(color) => {
+                paint.set_color(*color);
+            }
+            Fill::LinearGradient(gradient) => {
+                paint.set_shader(gradient.into_shader(area));
+            }
+            Fill::RadialGradient(gradient) => {
+                paint.set_shader(gradient.into_shader(area));
+            }
+            Fill::ConicGradient(gradient) => {
+                paint.set_shader(gradient.into_shader(area));
+            }
+        }
+    }
 }
 
 impl Default for Fill {

@@ -125,7 +125,7 @@ impl RadialGradient {
 
         Shader::radial_gradient(
             Point::new(center.x, center.y),
-            bounds.width().max(bounds.height()),
+            bounds.width().max(bounds.height()) / 2.0,
             GradientShaderColors::Colors(&colors[..]),
             Some(&offsets[..]),
             TileMode::Clamp,

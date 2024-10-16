@@ -172,8 +172,7 @@ builder_constructors! {
     /// }
     /// ```
     rect {
-        #[doc = include_str!("_docs/attributes/padding.md")]
-        padding: String,
+        // Layout
         #[doc = include_str!("_docs/attributes/width_height.md")]
         height: String,
         width: String,
@@ -183,17 +182,45 @@ builder_constructors! {
         #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_height: String,
         max_width: String,
+        #[doc = include_str!("_docs/attributes/margin.md")]
+        margin: String,
+        #[doc = include_str!("_docs/attributes/padding.md")]
+        padding: String,
+        #[doc = include_str!("_docs/attributes/position.md")]
+        position: String,
+        position_top: String,
+        position_right: String,
+        position_bottom: String,
+        position_left: String,
+        layer: String,
+
+        // Children layout
+        #[doc = include_str!("_docs/attributes/direction.md")]
+        direction: String,
+        #[doc = include_str!("_docs/attributes/content.md")]
+        content: String,
+        #[doc = include_str!("_docs/attributes/main_align_cross_align.md")]
+        main_align: String,
+        cross_align: String,
+        #[doc = include_str!("_docs/attributes/spacing.md")]
+        spacing: String,
+        #[doc = include_str!("_docs/attributes/overflow.md")]
+        overflow: String,
+        offset_x: String,
+        offset_y: String,
+
+        // Style
         #[doc = include_str!("_docs/attributes/background.md")]
         background: String,
         #[doc = include_str!("_docs/attributes/border.md")]
         border: String,
-        #[doc = include_str!("_docs/attributes/direction.md")]
-        direction: String,
         #[doc = include_str!("_docs/attributes/shadow.md")]
         shadow: String,
         #[doc = include_str!("_docs/attributes/corner.md")]
         corner_radius: String,
         corner_smoothing: String,
+
+        // Font style
         #[doc = include_str!("_docs/attributes/color.md")]
         color: String,
         #[doc = include_str!("_docs/attributes/font_size.md")]
@@ -206,44 +233,109 @@ builder_constructors! {
         font_weight: String,
         #[doc = include_str!("_docs/attributes/font_width.md")]
         font_width: String,
-        #[doc = include_str!("_docs/attributes/main_align_cross_align.md")]
-        main_align: String,
-        cross_align: String,
         #[doc = include_str!("_docs/attributes/text_align.md")]
         text_align: String,
-        #[doc = include_str!("_docs/attributes/rotate.md")]
-        rotate: String,
-        #[doc = include_str!("_docs/attributes/overflow.md")]
-        overflow: String,
-        #[doc = include_str!("_docs/attributes/margin.md")]
-        margin: String,
-        #[doc = include_str!("_docs/attributes/position.md")]
-        position: String,
-        position_top: String,
-        position_right: String,
-        position_bottom: String,
-        position_left: String,
-        #[doc = include_str!("_docs/attributes/opacity.md")]
-        opacity: String,
-        #[doc = include_str!("_docs/attributes/content.md")]
-        content: String,
         #[doc = include_str!("_docs/attributes/line_height.md")]
         line_height: String,
-        #[doc = include_str!("_docs/attributes/spacing.md")]
-        spacing: String,
+        #[doc = include_str!("_docs/attributes/text_shadow.md")]
+        text_shadow: String,
+        #[doc = include_str!("_docs/attributes/max_lines.md")]
+        max_lines: String,
+        #[doc = include_str!("_docs/attributes/decoration.md")]
+        decoration: String,
+        #[doc = include_str!("_docs/attributes/decoration_style.md")]
+        decoration_style: String,
+        #[doc = include_str!("_docs/attributes/decoration_color.md")]
+        decoration_color: String,
+        #[doc = include_str!("_docs/attributes/text_overflow.md")]
+        text_overflow: String,
+        #[doc = include_str!("_docs/attributes/letter_spacing.md")]
+        letter_spacing: String,
+        #[doc = include_str!("_docs/attributes/word_spacing.md")]
+        word_spacing: String,
+        #[doc = include_str!("_docs/attributes/text_height.md")]
+        text_height: String,
 
-        a11y_auto_focus: String,
-        a11y_name: String,
-        a11y_role:String,
-        a11y_id: AccessibilityId,
-        a11y_alt: String,
-        a11y_focusable: String,
+        // Transform
+        #[doc = include_str!("_docs/attributes/rotate.md")]
+        rotate: String,
+        #[doc = include_str!("_docs/attributes/opacity.md")]
+        opacity: String,
+
+        // Reference
         canvas_reference: String,
-        layer: String,
-        offset_y: String,
-        offset_x: String,
         reference: Reference,
         cursor_reference: CursorReference,
+
+        // Accessibility
+        a11y_id: String,
+        a11y_focusable: String,
+        a11y_auto_focus: String,
+        a11y_name: String,
+        a11y_description: String,
+        a11y_value: String,
+        a11y_access_key: String,
+        a11y_author_id: String,
+        a11y_keyboard_shortcut: String,
+        a11y_language: String,
+        a11y_placeholder: String,
+        a11y_role_description: String,
+        a11y_state_description: String,
+        a11y_tooltip: String,
+        a11y_url: String,
+        a11y_row_index_text: String,
+        a11y_column_index_text: String,
+        a11y_scroll_x: String,
+        a11y_scroll_x_min: String,
+        a11y_scroll_x_max: String,
+        a11y_scroll_y: String,
+        a11y_scroll_y_min: String,
+        a11y_scroll_y_max: String,
+        a11y_numeric_value: String,
+        a11y_min_numeric_value: String,
+        a11y_max_numeric_value: String,
+        a11y_numeric_value_step: String,
+        a11y_numeric_value_jump: String,
+        a11y_row_count: String,
+        a11y_column_count: String,
+        a11y_row_index: String,
+        a11y_column_index: String,
+        a11y_row_span: String,
+        a11y_column_span: String,
+        a11y_level: String,
+        a11y_size_of_set: String,
+        a11y_position_in_set: String,
+        a11y_color_value: String,
+        a11y_expanded: String,
+        a11y_selected: String,
+        a11y_hovered: String,
+        a11y_hidden: String,
+        a11y_linked: String,
+        a11y_multiselectable: String,
+        a11y_required: String,
+        a11y_visited: String,
+        a11y_busy: String,
+        a11y_live_atomic: String,
+        a11y_modal: String,
+        a11y_touch_transparent: String,
+        a11y_read_only: String,
+        a11y_disabled: String,
+        a11y_is_spelling_error: String,
+        a11y_is_grammar_error: String,
+        a11y_is_search_match: String,
+        a11y_is_suggestion: String,
+        a11y_role: String,
+        a11y_invalid: String,
+        a11y_toggled: String,
+        a11y_live: String,
+        a11y_default_action_verb: String,
+        a11y_orientation: String,
+        a11y_sort_direction: String,
+        a11y_current: String,
+        a11y_auto_complete: String,
+        a11y_has_popup: String,
+        a11y_list_style: String,
+        a11y_vertical_offset: String,
     };
     /// `label` simply let's you display some text.
     ///
@@ -260,15 +352,33 @@ builder_constructors! {
     /// }
     /// ```
     label {
-        #[doc = include_str!("_docs/attributes/color.md")]
-        color: String,
-        #[doc = include_str!("_docs/attributes/text_shadow.md")]
-        text_shadow: String,
+        // Layout
         #[doc = include_str!("_docs/attributes/width_height.md")]
         height: String,
         width: String,
+        #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
+        min_height: String,
+        min_width: String,
+        #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
+        max_height: String,
+        max_width: String,
+        #[doc = include_str!("_docs/attributes/margin.md")]
+        margin: String,
+        #[doc = include_str!("_docs/attributes/position.md")]
+        position: String,
+        position_top: String,
+        position_right: String,
+        position_bottom: String,
+        position_left: String,
+        layer: String,
+
+        // Children layout
         #[doc = include_str!("_docs/attributes/main_align_cross_align.md")]
         main_align: String,
+
+        // Font style
+        #[doc = include_str!("_docs/attributes/color.md")]
+        color: String,
         #[doc = include_str!("_docs/attributes/font_size.md")]
         font_size: String,
         #[doc = include_str!("_docs/attributes/font_family.md")]
@@ -281,16 +391,12 @@ builder_constructors! {
         font_width: String,
         #[doc = include_str!("_docs/attributes/text_align.md")]
         text_align: String,
-        #[doc = include_str!("_docs/attributes/max_lines.md")]
-        max_lines: String,
-        #[doc = include_str!("_docs/attributes/rotate.md")]
-        rotate: String,
         #[doc = include_str!("_docs/attributes/line_height.md")]
         line_height: String,
-        #[doc = include_str!("_docs/attributes/letter_spacing.md")]
-        letter_spacing: String,
-        #[doc = include_str!("_docs/attributes/word_spacing.md")]
-        word_spacing: String,
+        #[doc = include_str!("_docs/attributes/text_shadow.md")]
+        text_shadow: String,
+        #[doc = include_str!("_docs/attributes/max_lines.md")]
+        max_lines: String,
         #[doc = include_str!("_docs/attributes/decoration.md")]
         decoration: String,
         #[doc = include_str!("_docs/attributes/decoration_style.md")]
@@ -299,18 +405,88 @@ builder_constructors! {
         decoration_color: String,
         #[doc = include_str!("_docs/attributes/text_overflow.md")]
         text_overflow: String,
-        #[doc = include_str!("_docs/attributes/margin.md")]
-        margin: String,
+        #[doc = include_str!("_docs/attributes/letter_spacing.md")]
+        letter_spacing: String,
+        #[doc = include_str!("_docs/attributes/word_spacing.md")]
+        word_spacing: String,
+        #[doc = include_str!("_docs/attributes/text_height.md")]
+        text_height: String,
+
+        // Transform
+        #[doc = include_str!("_docs/attributes/rotate.md")]
+        rotate: String,
         #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
 
-        layer: String,
+        // Accessibility
+        a11y_id: String,
         a11y_auto_focus: String,
-        a11y_name: String,
-        a11y_role:String,
-        a11y_id: AccessibilityId,
-        a11y_alt: String,
         a11y_focusable: String,
+        a11y_name: String,
+        a11y_description: String,
+        a11y_value: String,
+        a11y_access_key: String,
+        a11y_author_id: String,
+        a11y_keyboard_shortcut: String,
+        a11y_language: String,
+        a11y_placeholder: String,
+        a11y_role_description: String,
+        a11y_state_description: String,
+        a11y_tooltip: String,
+        a11y_url: String,
+        a11y_row_index_text: String,
+        a11y_column_index_text: String,
+        a11y_scroll_x: String,
+        a11y_scroll_x_min: String,
+        a11y_scroll_x_max: String,
+        a11y_scroll_y: String,
+        a11y_scroll_y_min: String,
+        a11y_scroll_y_max: String,
+        a11y_numeric_value: String,
+        a11y_min_numeric_value: String,
+        a11y_max_numeric_value: String,
+        a11y_numeric_value_step: String,
+        a11y_numeric_value_jump: String,
+        a11y_row_count: String,
+        a11y_column_count: String,
+        a11y_row_index: String,
+        a11y_column_index: String,
+        a11y_row_span: String,
+        a11y_column_span: String,
+        a11y_level: String,
+        a11y_size_of_set: String,
+        a11y_position_in_set: String,
+        a11y_color_value: String,
+        a11y_expanded: String,
+        a11y_selected: String,
+        a11y_hovered: String,
+        a11y_hidden: String,
+        a11y_linked: String,
+        a11y_multiselectable: String,
+        a11y_required: String,
+        a11y_visited: String,
+        a11y_busy: String,
+        a11y_live_atomic: String,
+        a11y_modal: String,
+        a11y_touch_transparent: String,
+        a11y_read_only: String,
+        a11y_disabled: String,
+        a11y_is_spelling_error: String,
+        a11y_is_grammar_error: String,
+        a11y_is_search_match: String,
+        a11y_is_suggestion: String,
+        a11y_role: String,
+        a11y_invalid: String,
+        a11y_toggled: String,
+        a11y_live: String,
+        a11y_default_action_verb: String,
+        a11y_orientation: String,
+        a11y_sort_direction: String,
+        a11y_current: String,
+        a11y_auto_complete: String,
+        a11y_has_popup: String,
+        a11y_list_style: String,
+        a11y_vertical_offset: String,
     };
     /// `paragraph` element let's you build texts with different styles.
     ///
@@ -334,6 +510,7 @@ builder_constructors! {
     /// }
     /// ```
     paragraph {
+        // Layout
         #[doc = include_str!("_docs/attributes/width_height.md")]
         height: String,
         width: String,
@@ -343,67 +520,24 @@ builder_constructors! {
         #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_height: String,
         max_width: String,
-        #[doc = include_str!("_docs/attributes/main_align_cross_align.md")]
-        main_align: String,
-        #[doc = include_str!("_docs/attributes/text_align.md")]
-        text_align: String,
-        #[doc = include_str!("_docs/attributes/rotate.md")]
-        rotate: String,
-        #[doc = include_str!("_docs/attributes/font_size.md")]
-        font_size: String,
-        #[doc = include_str!("_docs/attributes/font_family.md")]
-        font_family: String,
-        #[doc = include_str!("_docs/attributes/font_style.md")]
-        font_style: String,
-        #[doc = include_str!("_docs/attributes/font_weight.md")]
-        font_weight: String,
-        #[doc = include_str!("_docs/attributes/font_width.md")]
-        font_width: String,
-        #[doc = include_str!("_docs/attributes/line_height.md")]
-        line_height: String,
-        #[doc = include_str!("_docs/attributes/letter_spacing.md")]
-        letter_spacing: String,
-        #[doc = include_str!("_docs/attributes/word_spacing.md")]
-        word_spacing: String,
-        #[doc = include_str!("_docs/attributes/decoration.md")]
-        decoration: String,
-        #[doc = include_str!("_docs/attributes/decoration_style.md")]
-        decoration_style: String,
-        #[doc = include_str!("_docs/attributes/decoration_color.md")]
-        text_overflow: String,
-        #[doc = include_str!("_docs/attributes/overflow.md")]
-        overflow: String,
         #[doc = include_str!("_docs/attributes/margin.md")]
         margin: String,
-        #[doc = include_str!("_docs/attributes/opacity.md")]
-        opacity: String,
-
+        #[doc = include_str!("_docs/attributes/position.md")]
+        position: String,
+        position_top: String,
+        position_right: String,
+        position_bottom: String,
+        position_left: String,
         layer: String,
-        cursor_index: String,
-        max_lines: String,
-        cursor_color: String,
-        cursor_mode: String,
-        cursor_id: String,
-        a11y_auto_focus: String,
-        a11y_name: String,
-        a11y_role:String,
-        a11y_id: AccessibilityId,
-        a11y_alt: String,
-        a11y_focusable: String,
-        highlights: String,
-        highlight_color: String,
-        highlight_mode: String,
-    };
-    /// `text` element is simply a text span used for the `paragraph` element.
-    text {
+
+        // Children layout
+        #[doc = include_str!("_docs/attributes/main_align_cross_align.md")]
+        main_align: String,
+
+        // Font style
         #[doc = include_str!("_docs/attributes/color.md")]
         color: String,
         #[doc = include_str!("_docs/attributes/font_size.md")]
-        text_shadow: String,
-        #[doc = include_str!("_docs/attributes/width_height.md")]
-        height: String,
-        width: String,
-        #[doc = include_str!("_docs/attributes/font_size.md")]
         font_size: String,
         #[doc = include_str!("_docs/attributes/font_family.md")]
         font_family: String,
@@ -413,20 +547,149 @@ builder_constructors! {
         font_weight: String,
         #[doc = include_str!("_docs/attributes/font_width.md")]
         font_width: String,
+        #[doc = include_str!("_docs/attributes/text_align.md")]
+        text_align: String,
         #[doc = include_str!("_docs/attributes/line_height.md")]
         line_height: String,
-        #[doc = include_str!("_docs/attributes/letter_spacing.md")]
-        letter_spacing: String,
-        #[doc = include_str!("_docs/attributes/word_spacing.md")]
-        word_spacing: String,
+        #[doc = include_str!("_docs/attributes/text_shadow.md")]
+        text_shadow: String,
+        #[doc = include_str!("_docs/attributes/max_lines.md")]
+        max_lines: String,
         #[doc = include_str!("_docs/attributes/decoration.md")]
         decoration: String,
         #[doc = include_str!("_docs/attributes/decoration_style.md")]
         decoration_style: String,
         #[doc = include_str!("_docs/attributes/decoration_color.md")]
         decoration_color: String,
+        #[doc = include_str!("_docs/attributes/text_overflow.md")]
+        text_overflow: String,
+        #[doc = include_str!("_docs/attributes/letter_spacing.md")]
+        letter_spacing: String,
+        #[doc = include_str!("_docs/attributes/word_spacing.md")]
+        word_spacing: String,
+        #[doc = include_str!("_docs/attributes/text_height.md")]
+        text_height: String,
+
+        // Transform
+        #[doc = include_str!("_docs/attributes/rotate.md")]
+        rotate: String,
+        #[doc = include_str!("_docs/attributes/opacity.md")]
+        opacity: String,
+
+        // Text Editing
+        cursor_index: String,
+        cursor_color: String,
+        cursor_mode: String,
+        cursor_id: String,
+        highlights: String,
+        highlight_color: String,
+        highlight_mode: String,
+
+        // Accessibility
+        a11y_id: String,
+        a11y_focusable: String,
+        a11y_auto_focus: String,
+        a11y_name: String,
+        a11y_description: String,
+        a11y_value: String,
+        a11y_access_key: String,
+        a11y_author_id: String,
+        a11y_keyboard_shortcut: String,
+        a11y_language: String,
+        a11y_placeholder: String,
+        a11y_role_description: String,
+        a11y_state_description: String,
+        a11y_tooltip: String,
+        a11y_url: String,
+        a11y_row_index_text: String,
+        a11y_column_index_text: String,
+        a11y_scroll_x: String,
+        a11y_scroll_x_min: String,
+        a11y_scroll_x_max: String,
+        a11y_scroll_y: String,
+        a11y_scroll_y_min: String,
+        a11y_scroll_y_max: String,
+        a11y_numeric_value: String,
+        a11y_min_numeric_value: String,
+        a11y_max_numeric_value: String,
+        a11y_numeric_value_step: String,
+        a11y_numeric_value_jump: String,
+        a11y_row_count: String,
+        a11y_column_count: String,
+        a11y_row_index: String,
+        a11y_column_index: String,
+        a11y_row_span: String,
+        a11y_column_span: String,
+        a11y_level: String,
+        a11y_size_of_set: String,
+        a11y_position_in_set: String,
+        a11y_color_value: String,
+        a11y_expanded: String,
+        a11y_selected: String,
+        a11y_hovered: String,
+        a11y_hidden: String,
+        a11y_linked: String,
+        a11y_multiselectable: String,
+        a11y_required: String,
+        a11y_visited: String,
+        a11y_busy: String,
+        a11y_live_atomic: String,
+        a11y_modal: String,
+        a11y_touch_transparent: String,
+        a11y_read_only: String,
+        a11y_disabled: String,
+        a11y_is_spelling_error: String,
+        a11y_is_grammar_error: String,
+        a11y_is_search_match: String,
+        a11y_is_suggestion: String,
+        a11y_role: String,
+        a11y_invalid: String,
+        a11y_toggled: String,
+        a11y_live: String,
+        a11y_default_action_verb: String,
+        a11y_orientation: String,
+        a11y_sort_direction: String,
+        a11y_current: String,
+        a11y_auto_complete: String,
+        a11y_has_popup: String,
+        a11y_list_style: String,
+        a11y_vertical_offset: String,
+    };
+    /// `text` element is simply a text span used for the `paragraph` element.
+    text {
+        // Font style
+        #[doc = include_str!("_docs/attributes/color.md")]
+        color: String,
+        #[doc = include_str!("_docs/attributes/font_size.md")]
+        font_size: String,
+        #[doc = include_str!("_docs/attributes/font_family.md")]
+        font_family: String,
+        #[doc = include_str!("_docs/attributes/font_style.md")]
+        font_style: String,
+        #[doc = include_str!("_docs/attributes/font_weight.md")]
+        font_weight: String,
+        #[doc = include_str!("_docs/attributes/font_width.md")]
+        font_width: String,
+        #[doc = include_str!("_docs/attributes/text_align.md")]
+        text_align: String,
+        #[doc = include_str!("_docs/attributes/line_height.md")]
+        line_height: String,
+        #[doc = include_str!("_docs/attributes/text_shadow.md")]
+        text_shadow: String,
+        #[doc = include_str!("_docs/attributes/decoration.md")]
+        decoration: String,
+        #[doc = include_str!("_docs/attributes/decoration_style.md")]
+        decoration_style: String,
+        #[doc = include_str!("_docs/attributes/decoration_color.md")]
+        decoration_color: String,
+        #[doc = include_str!("_docs/attributes/letter_spacing.md")]
+        letter_spacing: String,
+        #[doc = include_str!("_docs/attributes/word_spacing.md")]
+        word_spacing: String,
     };
     /// `image` element let's you show an image.
+    ///
+    /// For dynamic Images you may use `dynamic_bytes`.
     ///
     /// ### Example
     ///
@@ -439,33 +702,116 @@ builder_constructors! {
     ///     rsx!(
     ///         image {
     ///             image_data: image_data,
-    ///             width: "{size}",
-    ///             height: "{size}",
+    ///             width: "100%", // You must specify size otherwhise it will default to 0
+    ///             height: "100%",
     ///         }
     ///     )
     /// }
     /// ```
     image {
-       #[doc = include_str!("_docs/attributes/width_height.md")]
+        // Layout
+        #[doc = include_str!("_docs/attributes/width_height.md")]
         height: String,
         width: String,
+        #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
+        min_height: String,
+        min_width: String,
+        #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
+        max_height: String,
+        max_width: String,
+        #[doc = include_str!("_docs/attributes/margin.md")]
+        margin: String,
+        #[doc = include_str!("_docs/attributes/position.md")]
+        position: String,
+        position_top: String,
+        position_right: String,
+        position_bottom: String,
+        position_left: String,
+        layer: String,
+
+        // Transform
         #[doc = include_str!("_docs/attributes/rotate.md")]
         rotate: String,
         #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
 
+        // Image
         image_data: String,
         image_reference: String,
+
+        // Accessibility
+        a11y_id: String,
+        a11y_focusable: String,
         a11y_auto_focus: String,
         a11y_name: String,
-        a11y_role:String,
-        a11y_id: AccessibilityId,
-        a11y_alt: String,
+        a11y_description: String,
+        a11y_value: String,
+        a11y_access_key: String,
+        a11y_author_id: String,
+        a11y_keyboard_shortcut: String,
+        a11y_language: String,
+        a11y_placeholder: String,
+        a11y_role_description: String,
+        a11y_state_description: String,
+        a11y_tooltip: String,
+        a11y_url: String,
+        a11y_row_index_text: String,
+        a11y_column_index_text: String,
+        a11y_scroll_x: String,
+        a11y_scroll_x_min: String,
+        a11y_scroll_x_max: String,
+        a11y_scroll_y: String,
+        a11y_scroll_y_min: String,
+        a11y_scroll_y_max: String,
+        a11y_numeric_value: String,
+        a11y_min_numeric_value: String,
+        a11y_max_numeric_value: String,
+        a11y_numeric_value_step: String,
+        a11y_numeric_value_jump: String,
+        a11y_row_count: String,
+        a11y_column_count: String,
+        a11y_row_index: String,
+        a11y_column_index: String,
+        a11y_row_span: String,
+        a11y_column_span: String,
+        a11y_level: String,
+        a11y_size_of_set: String,
+        a11y_position_in_set: String,
+        a11y_color_value: String,
+        a11y_expanded: String,
+        a11y_selected: String,
+        a11y_hovered: String,
+        a11y_hidden: String,
+        a11y_linked: String,
+        a11y_multiselectable: String,
+        a11y_required: String,
+        a11y_visited: String,
+        a11y_busy: String,
+        a11y_live_atomic: String,
+        a11y_modal: String,
+        a11y_touch_transparent: String,
+        a11y_read_only: String,
+        a11y_disabled: String,
+        a11y_is_spelling_error: String,
+        a11y_is_grammar_error: String,
+        a11y_is_search_match: String,
+        a11y_is_suggestion: String,
+        a11y_role: String,
+        a11y_invalid: String,
+        a11y_toggled: String,
+        a11y_live: String,
+        a11y_default_action_verb: String,
+        a11y_orientation: String,
+        a11y_sort_direction: String,
+        a11y_current: String,
+        a11y_auto_complete: String,
+        a11y_has_popup: String,
+        a11y_list_style: String,
+        a11y_vertical_offset: String,
     };
     /// `svg` element let's you display SVG code.
     ///
-    /// You will need to use the [`dynamic_bytes`](https://docs.freyaui.dev/freya/prelude/fn.dynamic_bytes.html)
-    /// to transform the bytes into data the element can recognize.
+    /// For dynamic SVGs you may use `dynamic_bytes`.
     ///
     /// ### Example
     ///
@@ -474,33 +820,116 @@ builder_constructors! {
     /// static FERRIS: &[u8] = include_bytes!("./ferris.svg");
     ///
     /// fn app() -> Element {
-    ///     let ferris = dynamic_bytes(FERRIS);
+    ///     let ferris = static_bytes(FERRIS);
     ///     rsx!(
     ///         svg {
     ///             svg_data: ferris,
+    ///             width: "100%", // You must specify size otherwhise it will default to 0
+    ///             height: "100%",
     ///         }
     ///     )
     /// }
     /// ```
     svg {
-        #[doc = include_str!("_docs/attributes/margin.md")]
-        margin: String,
-       #[doc = include_str!("_docs/attributes/width_height.md")]
+        // Layout
+        #[doc = include_str!("_docs/attributes/width_height.md")]
         height: String,
         width: String,
+        #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
+        min_height: String,
+        min_width: String,
+        #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
+        max_height: String,
+        max_width: String,
+        #[doc = include_str!("_docs/attributes/margin.md")]
+        margin: String,
+        #[doc = include_str!("_docs/attributes/position.md")]
+        position: String,
+        position_top: String,
+        position_right: String,
+        position_bottom: String,
+        position_left: String,
+        layer: String,
+
+        // Transform
         #[doc = include_str!("_docs/attributes/rotate.md")]
         rotate: String,
         #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
 
+        // Svg
         svg_data: String,
         svg_content: String,
+
+        // Accessibility
+        a11y_id: String,
+        a11y_focusable: String,
         a11y_auto_focus: String,
         a11y_name: String,
-        a11y_role:String,
-        a11y_id: AccessibilityId,
-        a11y_alt: String,
-        a11y_focusable: String,
+        a11y_description: String,
+        a11y_value: String,
+        a11y_access_key: String,
+        a11y_author_id: String,
+        a11y_keyboard_shortcut: String,
+        a11y_language: String,
+        a11y_placeholder: String,
+        a11y_role_description: String,
+        a11y_state_description: String,
+        a11y_tooltip: String,
+        a11y_url: String,
+        a11y_row_index_text: String,
+        a11y_column_index_text: String,
+        a11y_scroll_x: String,
+        a11y_scroll_x_min: String,
+        a11y_scroll_x_max: String,
+        a11y_scroll_y: String,
+        a11y_scroll_y_min: String,
+        a11y_scroll_y_max: String,
+        a11y_numeric_value: String,
+        a11y_min_numeric_value: String,
+        a11y_max_numeric_value: String,
+        a11y_numeric_value_step: String,
+        a11y_numeric_value_jump: String,
+        a11y_row_count: String,
+        a11y_column_count: String,
+        a11y_row_index: String,
+        a11y_column_index: String,
+        a11y_row_span: String,
+        a11y_column_span: String,
+        a11y_level: String,
+        a11y_size_of_set: String,
+        a11y_position_in_set: String,
+        a11y_color_value: String,
+        a11y_expanded: String,
+        a11y_selected: String,
+        a11y_hovered: String,
+        a11y_hidden: String,
+        a11y_linked: String,
+        a11y_multiselectable: String,
+        a11y_required: String,
+        a11y_visited: String,
+        a11y_busy: String,
+        a11y_live_atomic: String,
+        a11y_modal: String,
+        a11y_touch_transparent: String,
+        a11y_read_only: String,
+        a11y_disabled: String,
+        a11y_is_spelling_error: String,
+        a11y_is_grammar_error: String,
+        a11y_is_search_match: String,
+        a11y_is_suggestion: String,
+        a11y_role: String,
+        a11y_invalid: String,
+        a11y_toggled: String,
+        a11y_live: String,
+        a11y_default_action_verb: String,
+        a11y_orientation: String,
+        a11y_sort_direction: String,
+        a11y_current: String,
+        a11y_auto_complete: String,
+        a11y_has_popup: String,
+        a11y_list_style: String,
+        a11y_vertical_offset: String,
     };
 }
 
