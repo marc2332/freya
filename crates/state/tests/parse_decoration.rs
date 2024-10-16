@@ -12,8 +12,9 @@ fn parse_text_decoration() {
     let line_through = TextDecoration::parse("line-through");
     assert_eq!(line_through, Ok(TextDecoration::LINE_THROUGH));
 
-    let fallback = TextDecoration::parse("Rust");
-    assert_eq!(fallback, Ok(TextDecoration::NO_DECORATION));
+    let invalid_decoration_name = TextDecoration::parse("Rust");
+
+    assert!(invalid_decoration_name.is_err());
 }
 
 #[test]
@@ -33,6 +34,7 @@ fn parse_text_decoration_style() {
     let wavy = TextDecorationStyle::parse("wavy");
     assert_eq!(wavy, Ok(TextDecorationStyle::Wavy));
 
-    let fallback = TextDecorationStyle::parse("Rust");
-    assert_eq!(fallback, Ok(TextDecorationStyle::Solid));
+    let invalid_decoration_style = TextDecorationStyle::parse("Rust");
+
+    assert!(invalid_decoration_style.is_err());
 }

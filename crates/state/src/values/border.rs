@@ -4,10 +4,11 @@ use freya_engine::prelude::Color;
 use torin::scaled::Scaled;
 
 use crate::{
-    ExtSplit,
     Fill,
     Parse,
     ParseError,
+    Parser,
+    Token,
 };
 
 #[derive(Default, Clone, Debug, PartialEq)]
@@ -34,6 +35,44 @@ pub struct BorderWidth {
     pub right: f32,
     pub bottom: f32,
     pub left: f32,
+}
+
+impl Parse for BorderWidth {
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
+        Ok(
+            match (
+                parser.consume_map(Token::try_as_f32)?,
+                parser.consume_map(Token::try_as_f32).ok(),
+                parser.consume_map(Token::try_as_f32).ok(),
+                parser.consume_map(Token::try_as_f32).ok(),
+            ) {
+                (top, Some(right), Some(bottom), Some(left)) => Self {
+                    top,
+                    right,
+                    bottom,
+                    left,
+                },
+                (top, Some(horizontal), Some(bottom), _) => Self {
+                    top,
+                    right: horizontal,
+                    bottom,
+                    left: horizontal,
+                },
+                (vertical, Some(horizontal), ..) => Self {
+                    top: vertical,
+                    right: horizontal,
+                    bottom: vertical,
+                    left: horizontal,
+                },
+                (all, ..) => Self {
+                    top: all,
+                    right: all,
+                    bottom: all,
+                    left: all,
+                },
+            },
+        )
+    }
 }
 
 impl Scaled for BorderWidth {
@@ -64,12 +103,14 @@ pub enum BorderAlignment {
 }
 
 impl Parse for BorderAlignment {
-    fn parse(value: &str) -> Result<Self, ParseError> {
-        Ok(match value {
-            "inner" => BorderAlignment::Inner,
-            "outer" => BorderAlignment::Outer,
-            "center" => BorderAlignment::Center,
-            _ => BorderAlignment::default(),
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
+        parser.consume_map(|value| {
+            value.try_as_str().and_then(|value| match value {
+                "inner" => Some(BorderAlignment::Inner),
+                "outer" => Some(BorderAlignment::Outer),
+                "center" => Some(BorderAlignment::Center),
+                _ => None,
+            })
         })
     }
 }
@@ -85,126 +126,22 @@ impl fmt::Display for BorderAlignment {
 }
 
 impl Parse for Border {
-    fn parse(value: &str) -> Result<Self, ParseError> {
-        if value == "none" {
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
+        if parser.try_consume(&Token::ident("none")) {
             return Ok(Self::default());
         }
 
-        let mut border_values = value.split_ascii_whitespace_excluding_group('(', ')');
-
-        Ok(match border_values.clone().count() {
-            // <width> <style> <fill>
-            3 => {
-                let width = border_values
-                    .next()
-                    .ok_or(ParseError)?
-                    .parse::<f32>()
-                    .map_err(|_| ParseError)?;
-
-                Border {
-                    width: BorderWidth {
-                        top: width,
-                        left: width,
-                        bottom: width,
-                        right: width,
-                    },
-                    alignment: BorderAlignment::parse(border_values.next().ok_or(ParseError)?)?,
-                    fill: Fill::parse(&border_values.collect::<Vec<&str>>().join(" "))
-                        .map_err(|_| ParseError)?,
-                }
-            }
-
-            // <vertical> <horizontal> <solid> <fill>
-            4 => {
-                let vertical_width = border_values
-                    .next()
-                    .ok_or(ParseError)?
-                    .parse::<f32>()
-                    .map_err(|_| ParseError)?;
-                let horizontal_width = border_values
-                    .next()
-                    .ok_or(ParseError)?
-                    .parse::<f32>()
-                    .map_err(|_| ParseError)?;
-
-                Border {
-                    width: BorderWidth {
-                        top: vertical_width,
-                        left: horizontal_width,
-                        bottom: vertical_width,
-                        right: horizontal_width,
-                    },
-                    alignment: BorderAlignment::parse(border_values.next().ok_or(ParseError)?)?,
-                    fill: Fill::parse(&border_values.collect::<Vec<&str>>().join(" "))
-                        .map_err(|_| ParseError)?,
-                }
-            }
-            // <top> <horizontal> <bottom> <style> <fill>
-            5 => {
-                let top_width = border_values
-                    .next()
-                    .ok_or(ParseError)?
-                    .parse::<f32>()
-                    .map_err(|_| ParseError)?;
-                let horizontal_width = border_values
-                    .next()
-                    .ok_or(ParseError)?
-                    .parse::<f32>()
-                    .map_err(|_| ParseError)?;
-                let bottom_width = border_values
-                    .next()
-                    .ok_or(ParseError)?
-                    .parse::<f32>()
-                    .map_err(|_| ParseError)?;
-
-                Border {
-                    width: BorderWidth {
-                        top: top_width,
-                        left: horizontal_width,
-                        bottom: bottom_width,
-                        right: horizontal_width,
-                    },
-                    alignment: BorderAlignment::parse(border_values.next().ok_or(ParseError)?)?,
-                    fill: Fill::parse(&border_values.collect::<Vec<&str>>().join(" "))
-                        .map_err(|_| ParseError)?,
-                }
-            }
-            // <top> <right> <bottom> <left> <style> <fill>
-            6 => Border {
-                width: BorderWidth {
-                    top: border_values
-                        .next()
-                        .ok_or(ParseError)?
-                        .parse::<f32>()
-                        .map_err(|_| ParseError)?,
-                    right: border_values
-                        .next()
-                        .ok_or(ParseError)?
-                        .parse::<f32>()
-                        .map_err(|_| ParseError)?,
-                    bottom: border_values
-                        .next()
-                        .ok_or(ParseError)?
-                        .parse::<f32>()
-                        .map_err(|_| ParseError)?,
-                    left: border_values
-                        .next()
-                        .ok_or(ParseError)?
-                        .parse::<f32>()
-                        .map_err(|_| ParseError)?,
-                },
-                alignment: BorderAlignment::parse(border_values.next().ok_or(ParseError)?)?,
-                fill: Fill::parse(&border_values.collect::<Vec<&str>>().join(" "))
-                    .map_err(|_| ParseError)?,
-            },
-            _ => return Err(ParseError),
+        Ok(Border {
+            width: BorderWidth::from_parser(parser)?,
+            alignment: BorderAlignment::from_parser(parser)?,
+            fill: Fill::from_parser(parser)?,
         })
     }
 }
 
 impl fmt::Display for Border {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} {} {}", self.width, self.alignment, self.fill,)
+        write!(f, "{} {} {}", self.width, self.alignment, self.fill)
     }
 }
 

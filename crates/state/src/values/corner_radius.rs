@@ -9,6 +9,8 @@ use torin::scaled::Scaled;
 use crate::{
     Parse,
     ParseError,
+    Parser,
+    Token,
 };
 
 #[derive(PartialEq, Clone, Debug, Default, Copy)]
@@ -199,68 +201,42 @@ impl CornerRadius {
 }
 
 impl Parse for CornerRadius {
-    fn parse(value: &str) -> Result<Self, ParseError> {
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
         let mut radius = CornerRadius::default();
-        let mut values = value.split_ascii_whitespace();
 
-        match values.clone().count() {
-            // Same in all corners
-            1 => {
-                radius.fill_all(
-                    values
-                        .next()
-                        .ok_or(ParseError)?
-                        .parse::<f32>()
-                        .map_err(|_| ParseError)?,
-                );
-            }
-            // By Top and Bottom
-            2 => {
-                // Top
-                radius.fill_top(
-                    values
-                        .next()
-                        .ok_or(ParseError)?
-                        .parse::<f32>()
-                        .map_err(|_| ParseError)?,
-                );
-
-                // Bottom
-                radius.fill_bottom(
-                    values
-                        .next()
-                        .ok_or(ParseError)?
-                        .parse::<f32>()
-                        .map_err(|_| ParseError)?,
-                )
-            }
+        match (
+            parser.consume_map(Token::try_as_f32)?,
+            parser.consume_map(Token::try_as_f32).ok(),
+            parser.consume_map(Token::try_as_f32).ok(),
+            parser.consume_map(Token::try_as_f32).ok(),
+        ) {
             // Each corner
-            4 => {
+            (top_left, Some(top_right), Some(bottom_left), Some(bottom_right)) => {
                 radius = CornerRadius {
-                    top_left: values
-                        .next()
-                        .ok_or(ParseError)?
-                        .parse::<f32>()
-                        .map_err(|_| ParseError)?,
-                    top_right: values
-                        .next()
-                        .ok_or(ParseError)?
-                        .parse::<f32>()
-                        .map_err(|_| ParseError)?,
-                    bottom_left: values
-                        .next()
-                        .ok_or(ParseError)?
-                        .parse::<f32>()
-                        .map_err(|_| ParseError)?,
-                    bottom_right: values
-                        .next()
-                        .ok_or(ParseError)?
-                        .parse::<f32>()
-                        .map_err(|_| ParseError)?,
+                    top_left,
+                    top_right,
+                    bottom_left,
+                    bottom_right,
                     ..Default::default()
                 }
             }
-            _ => return Err(ParseError),
+            // By Top and Bottom
+            (top, Some(bottom), None, None) => {
+                // Top
+                radius.fill_top(top);
+
+                // Bottom
+                radius.fill_bottom(bottom)
+            }
+            // Same in all corners
+            (value, None, None, None) => {
+                radius.fill_all(value);
+            }
+            _ => {
+                return Err(ParseError(
+                    "invalid count of numbers (must be 1, 2 or 4)".into(),
+                ))
+            }
         }
 
         Ok(radius)

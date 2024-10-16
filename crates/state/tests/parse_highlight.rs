@@ -18,5 +18,6 @@ fn parse_fit_highlight_mode() {
 #[test]
 fn parse_fallback_highlight_mode() {
     let fallback = HighlightMode::parse("Hello, World!");
-    assert_eq!(fallback, Ok(HighlightMode::Fit));
+
+    assert!(fallback.is_err());
 }

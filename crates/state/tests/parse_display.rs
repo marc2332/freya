@@ -40,5 +40,6 @@ fn parse_space_evenly_alignment() {
 #[test]
 fn parse_fallback_alignment() {
     let alignment = Alignment::parse("Hello, World!");
-    assert_eq!(alignment, Ok(Alignment::Start));
+
+    assert!(alignment.is_err());
 }
