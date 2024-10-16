@@ -366,13 +366,17 @@ where
 
                 let is_last_child = last_child == Some(*child_id);
 
-                let inner_area = initial_phase_inner_area;
+                let (parent_area, available_parent_area) = if child_data.position.is_absolute() {
+                    (&initial_phase_area, &initial_phase_area)
+                } else {
+                    (&initial_phase_inner_area, &initial_phase_available_area)
+                };
 
                 let (_, child_areas) = self.measure_node(
                     *child_id,
                     &child_data,
-                    &inner_area,
-                    &initial_phase_available_area,
+                    parent_area,
+                    available_parent_area,
                     false,
                     parent_is_dirty,
                     Phase::Initial,
@@ -473,12 +477,18 @@ where
                 }
             }
 
+            let (parent_area, parent_available_area) = if child_data.position.is_absolute() {
+                (&*area, &*area)
+            } else {
+                (&*inner_area, &adapted_available_area)
+            };
+
             // Final measurement
             let (child_revalidated, mut child_areas) = self.measure_node(
                 child_id,
                 &child_data,
-                inner_area,
-                &adapted_available_area,
+                parent_area,
+                parent_available_area,
                 must_cache_children,
                 parent_is_dirty,
                 Phase::Final,
