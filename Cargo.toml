@@ -53,7 +53,7 @@ dioxus-hot-reload = { version = "0.5", features = ["file_watcher"], default-feat
 dioxus-router = { version = "0.5", default-features = false }
 dioxus-clipboard = "0.1"
 
-skia-safe = { version = "0.75.0", features = ["gl", "textlayout", "svg"] }
+skia-safe = { version = "0.78.0", features = ["gl", "textlayout", "svg"] }
 
 gl = "0.14.0"
 glutin = "0.32.0"
@@ -63,7 +63,7 @@ winit = "0.30.0"
 tokio = { version = "1.33.0", features = ["sync", "rt-multi-thread", "time", "macros"] }
 accesskit = { version = "0.16.0", features = ["serde"]}
 accesskit_winit = "0.22.0"
-shipyard = { version = "0.6.2", features = ["proc", "std", "parallel"], default-features = false }
+shipyard = { version = "0.7.0", features = ["proc", "std", "parallel"], default-features = false }
 smallvec = "1.13.1"
 
 euclid = "0.22.9"
@@ -90,11 +90,11 @@ dioxus-router = { workspace = true }
 itertools = "0.13.0"
 home = "0.5.9"
 dioxus-query = "0.5.1"
-gilrs = "0.10.8"
+gilrs = "0.11.0"
 gl = { workspace = true }
-tree-sitter-highlight = "0.23.0"
+tree-sitter-highlight = "0.24.0"
 tree-sitter-rust = "0.23.0"
-rfd = "0.14.1"
+rfd = "0.15.0"
 bytes = "1.5.0"
 dioxus-clipboard = { workspace = true }
 winit = { workspace = true }
