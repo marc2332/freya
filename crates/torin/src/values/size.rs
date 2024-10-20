@@ -264,13 +264,11 @@ impl<'a> DynamicCalculationEvaluator<'a> {
         Some(lhs)
     }
 
-    /// Parse and evaluate the value with the following grammar:
-    /// ```ebnf
-    ///     value      = percentage | pixels ;
-    ///     percentage = number, "%" ;
-    ///     pixels     = number ;
-    /// ```
+    /// Parse and evaluate the term, implements implicit multiplication. only parenthesis count as
+    /// a seperator, so syntax like 50 50 isnt correct, but 50(50) is because the parenthesis act
+    /// as a seperator
     fn parse_term(&mut self) -> Option<f32> {
+        let prefix = self.parse_prefix()?;
         let mut lhs = None;
         // set to true so that the first value is multiplied and counts as normal syntax
         let mut last_is_seperator = true;
@@ -283,10 +281,22 @@ impl<'a> DynamicCalculationEvaluator<'a> {
             }
             last_is_seperator = seperator;
         }
-
-        lhs
+        if let Some(prefix) = prefix {
+            match prefix {
+                DynamicCalculation::Add => lhs,
+                DynamicCalculation::Sub => lhs.map(|v| v * -1.0),
+                _ => unreachable!(),
+            }
+        } else {
+            lhs
+        }
     }
-
+    /// parse and evaluate the value with the following grammar:
+    /// ```ebnf
+    ///     value      = percentage | pixels ;
+    ///     percentage = number, "%" ;
+    ///     pixels     = number ;
+    /// `
     fn parse_value(&mut self) -> Option<(f32, bool)> {
         match self.current? {
             DynamicCalculation::Percentage(value) => {
@@ -302,11 +312,27 @@ impl<'a> DynamicCalculationEvaluator<'a> {
                 Some((*value, false))
             }
             DynamicCalculation::OpenParenthesis => {
+                // function should return on DynamicCalculation::ClosedParenthesis because it does
+                // not have a precedence, thats how it actually works
                 let val = self.parse_expression(0);
                 self.current = self.calcs.next();
                 Some((val?, true))
             }
             _ => None,
+        }
+    }
+
+    fn parse_prefix(&mut self) -> Option<Option<DynamicCalculation>> {
+        match self.current? {
+            DynamicCalculation::Add => {
+                self.current = self.calcs.next();
+                Some(Some(DynamicCalculation::Add))
+            }
+            DynamicCalculation::Sub => {
+                self.current = self.calcs.next();
+                Some(Some(DynamicCalculation::Sub))
+            }
+            _ => Some(None),
         }
     }
 

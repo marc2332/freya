@@ -860,7 +860,8 @@ pub fn test_calc() {
             PARENT_VALUE,
             PARENT_VALUE
         ),
-        None
+        // becasue +10 is just 10
+        Some(10.0)
     );
 
     assert_eq!(
@@ -868,13 +869,14 @@ pub fn test_calc() {
             &vec![
                 DynamicCalculation::Pixels(10.0),
                 DynamicCalculation::Add,
+                // counts as a prefix
                 DynamicCalculation::Add,
                 DynamicCalculation::Pixels(10.0)
             ],
             PARENT_VALUE,
             PARENT_VALUE
         ),
-        None
+        Some(20.0)
     );
 
     assert_eq!(
@@ -924,5 +926,20 @@ pub fn test_calc() {
             PARENT_VALUE
         ),
         Some((10.0 * (10.0 + 20.0) * 10.0) + (10.0 * (10.0) * 10.0))
+    );
+
+    assert_eq!(
+        run_calculations(
+            &vec![
+                DynamicCalculation::Sub,
+                DynamicCalculation::OpenParenthesis,
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::ClosedParenthesis,
+                DynamicCalculation::Pixels(20.0)
+            ],
+            PARENT_VALUE,
+            PARENT_VALUE
+        ),
+        Some(-1.0 * 10.0 * 20.0)
     );
 }
