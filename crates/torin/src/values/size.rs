@@ -1,15 +1,8 @@
-use std::{
-    ops::Deref,
-    slice::Iter,
-};
+use std::{ops::Deref, slice::Iter};
 
 pub use euclid::Rect;
 
-use crate::{
-    geometry::Length,
-    measure::Phase,
-    scaled::Scaled,
-};
+use crate::{geometry::Length, measure::Phase, scaled::Scaled};
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum Size {
@@ -171,6 +164,8 @@ pub enum DynamicCalculation {
     Mul,
     Div,
     Add,
+    OpenParenthesis,
+    ClosedParenthesis,
     Percentage(f32),
     RootPercentage(f32),
     Pixels(f32),
@@ -191,6 +186,8 @@ impl std::fmt::Display for DynamicCalculation {
             DynamicCalculation::Mul => f.write_str("*"),
             DynamicCalculation::Div => f.write_str("/"),
             DynamicCalculation::Add => f.write_str("+"),
+            DynamicCalculation::OpenParenthesis => f.write_str("("),
+            DynamicCalculation::ClosedParenthesis => f.write_str(")"),
             DynamicCalculation::Percentage(p) => f.write_fmt(format_args!("{p}%")),
             DynamicCalculation::RootPercentage(p) => f.write_fmt(format_args!("{p}v")),
             DynamicCalculation::Pixels(s) => f.write_fmt(format_args!("{s}")),
@@ -235,7 +232,7 @@ impl<'a> DynamicCalculationEvaluator<'a> {
     fn parse_expression(&mut self, min_precedence: usize) -> Option<f32> {
         // Parse left-hand side value
         self.current = self.calcs.next();
-        let mut lhs = self.parse_value()?;
+        let mut lhs = self.parse_term()?;
 
         while let Some(operator_precedence) = self.operator_precedence() {
             // Return if minimal precedence is reached.
@@ -273,19 +270,41 @@ impl<'a> DynamicCalculationEvaluator<'a> {
     ///     percentage = number, "%" ;
     ///     pixels     = number ;
     /// ```
-    fn parse_value(&mut self) -> Option<f32> {
+    fn parse_term(&mut self) -> Option<f32> {
+        let mut lhs = None;
+        // set to true so that the first value is multiplied and counts as normal syntax
+        let mut last_is_seperator = true;
+
+        while let Some((rhs, seperator)) = self.parse_value() {
+            if last_is_seperator || seperator {
+                lhs = Some(lhs.unwrap_or(1.0) * rhs);
+            } else {
+                return None;
+            }
+            last_is_seperator = seperator;
+        }
+
+        lhs
+    }
+
+    fn parse_value(&mut self) -> Option<(f32, bool)> {
         match self.current? {
             DynamicCalculation::Percentage(value) => {
                 self.current = self.calcs.next();
-                Some((self.parent_value / 100.0 * value).round())
+                Some(((self.parent_value / 100.0 * value).round(), false))
             }
             DynamicCalculation::RootPercentage(value) => {
                 self.current = self.calcs.next();
-                Some((self.root_value / 100.0 * value).round())
+                Some(((self.root_value / 100.0 * value).round(), false))
             }
             DynamicCalculation::Pixels(value) => {
                 self.current = self.calcs.next();
-                Some(*value)
+                Some((*value, false))
+            }
+            DynamicCalculation::OpenParenthesis => {
+                let val = self.parse_expression(0);
+                self.current = self.calcs.next();
+                Some((val?, true))
             }
             _ => None,
         }
@@ -296,6 +315,7 @@ impl<'a> DynamicCalculationEvaluator<'a> {
         match self.current? {
             DynamicCalculation::Add | DynamicCalculation::Sub => Some(1),
             DynamicCalculation::Mul | DynamicCalculation::Div => Some(2),
+            DynamicCalculation::OpenParenthesis => Some(0),
             _ => None,
         }
     }

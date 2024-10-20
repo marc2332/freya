@@ -1,8 +1,5 @@
 use euclid::Length;
-use torin::{
-    prelude::*,
-    test_utils::*,
-};
+use torin::{prelude::*, test_utils::*};
 
 #[test]
 pub fn unsized_parent_with_child_with_margin() {
@@ -891,5 +888,41 @@ pub fn test_calc() {
             PARENT_VALUE
         ),
         Some((PARENT_VALUE * 0.5) - (PARENT_VALUE * 0.20))
+    );
+
+    assert_eq!(
+        run_calculations(
+            &vec![
+                DynamicCalculation::OpenParenthesis,
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::ClosedParenthesis,
+            ],
+            PARENT_VALUE,
+            PARENT_VALUE
+        ),
+        Some(10.0)
+    );
+
+    assert_eq!(
+        run_calculations(
+            &vec![
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::OpenParenthesis,
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::Add,
+                DynamicCalculation::Pixels(20.0),
+                DynamicCalculation::ClosedParenthesis,
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::Add,
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::OpenParenthesis,
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::ClosedParenthesis,
+                DynamicCalculation::Pixels(10.0),
+            ],
+            PARENT_VALUE,
+            PARENT_VALUE
+        ),
+        Some((10.0 * (10.0 + 20.0) * 10.0) + (10.0 * (10.0) * 10.0))
     );
 }
