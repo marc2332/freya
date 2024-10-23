@@ -292,6 +292,11 @@ impl<T: 'static + Clone> TestingHandler<T> {
             state.information.viewport_size = size;
         });
         self.utils.sdom().get_mut().layout().reset();
+        self.utils
+            .sdom()
+            .get_mut()
+            .compositor_dirty_area()
+            .unite_or_insert(&Area::new((0.0, 0.0).into(), size));
     }
 
     /// Get the current [CursorIcon].
@@ -367,7 +372,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
         self.push_event(PlatformEvent::Mouse {
             name: EventName::MouseMove,
             cursor: cursor.into(),
-            button: Some(MouseButton::Left),
+            button: None,
         });
         self.wait_for_update().await;
     }

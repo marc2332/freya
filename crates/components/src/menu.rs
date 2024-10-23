@@ -18,7 +18,7 @@ use winit::window::CursorIcon;
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///    let mut show_menu = use_signal(|| false);
@@ -64,8 +64,42 @@ use winit::window::CursorIcon;
 ///        }
 ///    )
 /// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc_with_utils(|| {
+/// #   rsx!(
+/// #      Menu {
+/// #         onclose: move |_| {},
+/// #         MenuButton {
+/// #             label {
+/// #                 "Open"
+/// #             }
+/// #         }
+/// #         SubMenu {
+/// #             menu: rsx!(
+/// #                 MenuButton {
+/// #                     label {
+/// #                         "Whatever"
+/// #                     }
+/// #                 }
+/// #             ),
+/// #             label {
+/// #                 "Options"
+/// #             }
+/// #         }
+/// #     }
+/// #  )
+/// # }, (185., 185.).into(), |mut utils| async move {
+/// #   utils.wait_for_update().await;
+/// #   utils.move_cursor((15., 60.)).await;
+/// #   utils.save_snapshot("./images/gallery_menu.png");
+/// # });
 /// ```
-#[allow(non_snake_case)]
+///
+/// # Preview
+/// ![Menu Preview][menu]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("menu", "images/gallery_menu.png")
+)]
 #[component]
 pub fn Menu(children: Element, onclose: Option<EventHandler<()>>) -> Element {
     // Provide the menus ID generator
@@ -174,6 +208,7 @@ pub fn MenuItem(
     });
 
     let onmouseenter = move |_| {
+        println!("ENTER");
         platform.set_cursor(CursorIcon::Pointer);
         status.set(MenuItemStatus::Hovering);
 
@@ -183,6 +218,7 @@ pub fn MenuItem(
     };
 
     let onmouseleave = move |_| {
+        println!("LEAVE");
         platform.set_cursor(CursorIcon::default());
         status.set(MenuItemStatus::default());
     };
