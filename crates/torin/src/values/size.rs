@@ -322,6 +322,9 @@ impl<'a> DynamicCalculationEvaluator<'a> {
                 // function should return on DynamicCalculation::ClosedParenthesis because it does
                 // not have a precedence, thats how it actually works
                 let val = self.parse_expression(0);
+                if self.current != Some(&DynamicCalculation::ClosedParenthesis) {
+                    return None;
+                }
                 self.current = self.calcs.next();
                 Some((val?, true))
             }

@@ -945,4 +945,16 @@ pub fn test_calc() {
         ),
         Some(-1.0 * 10.0 * 20.0)
     );
+
+    assert_eq!(
+        run_calculations(
+            &vec![
+                DynamicCalculation::OpenParenthesis,
+                DynamicCalculation::Pixels(10.0),
+            ],
+            PARENT_VALUE,
+            PARENT_VALUE
+        ),
+        None
+    );
 }
