@@ -99,18 +99,18 @@ pub fn position() {
 
     assert_eq!(
         layout.get(2).unwrap().area,
-        Rect::new(Point2D::new(100.0, 150.0), Size2D::new(200.0, 200.0)),
+        Rect::new(Point2D::new(70.0, 120.0), Size2D::new(200.0, 200.0)),
     );
     assert_eq!(
         layout.get(3).unwrap().area.round(),
-        Rect::new(Point2D::new(700.0, 150.0), Size2D::new(200.0, 200.0)),
+        Rect::new(Point2D::new(730.0, 120.0), Size2D::new(200.0, 200.0)),
     );
     assert_eq!(
         layout.get(4).unwrap().area.round(),
-        Rect::new(Point2D::new(700.0, 650.0), Size2D::new(200.0, 200.0)),
+        Rect::new(Point2D::new(730.0, 680.0), Size2D::new(200.0, 200.0)),
     );
     assert_eq!(
         layout.get(5).unwrap().area.round(),
-        Rect::new(Point2D::new(100.0, 650.0), Size2D::new(200.0, 200.0)),
+        Rect::new(Point2D::new(70.0, 680.0), Size2D::new(200.0, 200.0)),
     );
 }
