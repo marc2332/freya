@@ -292,7 +292,7 @@ impl<'a> DynamicCalculationEvaluator<'a> {
             match prefix {
                 DynamicCalculation::Add => lhs,
                 DynamicCalculation::Sub => lhs.map(|v| v * -1.0),
-                _ => unreachable!(),
+                _ => unreachable!("make sure to add the prefix here"),
             }
         } else {
             lhs
