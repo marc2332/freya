@@ -863,7 +863,7 @@ pub fn test_calc() {
             PARENT_VALUE,
             PARENT_VALUE
         ),
-        // becasue +10 is just 10
+        // Because +10 is just 10
         Some(10.0)
     );
 
