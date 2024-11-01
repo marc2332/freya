@@ -85,6 +85,7 @@ pub trait ElementUtils {
             }
         }
 
+        // Inflate the area by 1px in each side to cover potential off-bounds rendering caused by antialising
         Some(drawing_area.inflate(1.0, 1.0))
     }
 
