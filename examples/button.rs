@@ -29,6 +29,18 @@ fn app() -> Element {
                 OutlineButton {
                     label { "Button C" }
                 }
+                Button {
+                    enabled: false,
+                    label { "Button A Disabled" }
+                }
+                FilledButton {
+                    enabled: false,
+                    label { "Button B Disabled " }
+                }
+                OutlineButton {
+                    enabled: false,
+                    label { "Button C Disabled" }
+                }
             }
         }
     )
