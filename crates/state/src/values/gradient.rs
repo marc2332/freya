@@ -10,10 +10,13 @@ use torin::{
 };
 
 use crate::{
+    parse_angle,
+    parse_func,
     DisplayColor,
-    ExtSplit,
     Parse,
     ParseError,
+    Parser,
+    Token,
 };
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -23,25 +26,13 @@ pub struct GradientStop {
 }
 
 impl Parse for GradientStop {
-    fn parse(value: &str) -> Result<Self, ParseError> {
-        let mut split = value.split_ascii_whitespace_excluding_group('(', ')');
-        let color_str = split.next().ok_or(ParseError)?;
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
+        let color = Color::from_parser(parser)?;
+        let offset = (parser.consume_map(Token::try_as_f32)? / 100.0).clamp(0.0, 1.0);
 
-        let offset_str = split.next().ok_or(ParseError)?.trim();
-        if !offset_str.ends_with('%') || split.next().is_some() {
-            return Err(ParseError);
-        }
+        parser.consume(&Token::Percent)?;
 
-        let offset = offset_str
-            .replacen('%', "", 1)
-            .parse::<f32>()
-            .map_err(|_| ParseError)?
-            / 100.0;
-
-        Ok(GradientStop {
-            color: Color::parse(color_str).map_err(|_| ParseError)?,
-            offset,
-        })
+        Ok(GradientStop { color, offset })
     }
 }
 
@@ -88,34 +79,20 @@ impl LinearGradient {
 }
 
 impl Parse for LinearGradient {
-    fn parse(value: &str) -> Result<Self, ParseError> {
-        if !value.starts_with("linear-gradient(") || !value.ends_with(')') {
-            return Err(ParseError);
-        }
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
+        parse_func(parser, "linear-gradient", |parser| {
+            let mut gradient = Self::default();
 
-        let mut gradient = LinearGradient::default();
-        let mut value = value.replacen("linear-gradient(", "", 1);
-        value.remove(value.rfind(')').ok_or(ParseError)?);
+            if let Ok(angle) = parse_angle(parser) {
+                parser.consume(&Token::Comma)?;
 
-        let mut split = value.split_excluding_group(',', '(', ')');
-
-        let angle_or_first_stop = split.next().ok_or(ParseError)?.trim();
-
-        if angle_or_first_stop.ends_with("deg") {
-            if let Ok(angle) = angle_or_first_stop.replacen("deg", "", 1).parse::<f32>() {
                 gradient.angle = angle;
             }
-        } else {
-            gradient
-                .stops
-                .push(GradientStop::parse(angle_or_first_stop)?);
-        }
 
-        for stop in split {
-            gradient.stops.push(GradientStop::parse(stop)?);
-        }
+            gradient.stops = GradientStop::from_parser_multiple(parser, &Token::Comma)?;
 
-        Ok(gradient)
+            Ok(gradient)
+        })
     }
 }
 
@@ -159,21 +136,10 @@ impl RadialGradient {
 }
 
 impl Parse for RadialGradient {
-    fn parse(value: &str) -> Result<Self, ParseError> {
-        if !value.starts_with("radial-gradient(") || !value.ends_with(')') {
-            return Err(ParseError);
-        }
-
-        let mut gradient = RadialGradient::default();
-        let mut value = value.replacen("radial-gradient(", "", 1);
-
-        value.remove(value.rfind(')').ok_or(ParseError)?);
-
-        for stop in value.split_excluding_group(',', '(', ')') {
-            gradient.stops.push(GradientStop::parse(stop)?);
-        }
-
-        Ok(gradient)
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
+        parse_func(parser, "radial-gradient", |parser| {
+            GradientStop::from_parser_multiple(parser, &Token::Comma).map(|stops| Self { stops })
+        })
     }
 }
 
@@ -221,59 +187,34 @@ impl ConicGradient {
 }
 
 impl Parse for ConicGradient {
-    fn parse(value: &str) -> Result<Self, ParseError> {
-        if !value.starts_with("conic-gradient(") || !value.ends_with(')') {
-            return Err(ParseError);
-        }
+    fn from_parser(parser: &mut Parser) -> Result<Self, ParseError> {
+        parse_func(parser, "conic-gradient", |parser| {
+            let mut gradient = Self::default();
 
-        let mut gradient = ConicGradient::default();
-        let mut value = value.replacen("conic-gradient(", "", 1);
-
-        value.remove(value.rfind(')').ok_or(ParseError)?);
-
-        let mut split = value.split_excluding_group(',', '(', ')');
-
-        let angle_or_first_stop = split.next().ok_or(ParseError)?.trim();
-
-        if angle_or_first_stop.ends_with("deg") {
-            if let Ok(angle) = angle_or_first_stop.replacen("deg", "", 1).parse::<f32>() {
+            if let Ok(angle) = parse_angle(parser) {
                 gradient.angle = Some(angle);
+
+                parser.consume(&Token::Comma)?;
             }
-        } else {
-            gradient
-                .stops
-                .push(GradientStop::parse(angle_or_first_stop).map_err(|_| ParseError)?);
-        }
 
-        if let Some(angles_or_second_stop) = split.next().map(str::trim) {
-            if angles_or_second_stop.starts_with("from ") && angles_or_second_stop.ends_with("deg")
-            {
-                if let Some(start) = angles_or_second_stop
-                    .find("deg")
-                    .and_then(|index| angles_or_second_stop.get(5..index))
-                    .and_then(|slice| slice.parse::<f32>().ok())
-                {
-                    let end = angles_or_second_stop
-                        .find(" to ")
-                        .and_then(|index| angles_or_second_stop.get(index + 4..))
-                        .and_then(|slice| slice.find("deg").and_then(|index| slice.get(0..index)))
-                        .and_then(|slice| slice.parse::<f32>().ok())
-                        .unwrap_or(360.0);
+            if parser.try_consume(&Token::ident("from")) {
+                let start = parse_angle(parser)?;
 
-                    gradient.angles = Some((start, end));
-                }
-            } else {
-                gradient
-                    .stops
-                    .push(GradientStop::parse(angles_or_second_stop)?);
+                let end = if parser.try_consume(&Token::ident("to")) {
+                    parse_angle(parser)?
+                } else {
+                    360.0
+                };
+
+                gradient.angles = Some((start, end));
+
+                parser.consume(&Token::Comma)?;
             }
-        }
 
-        for stop in split {
-            gradient.stops.push(GradientStop::parse(stop)?);
-        }
+            gradient.stops = GradientStop::from_parser_multiple(parser, &Token::Comma)?;
 
-        Ok(gradient)
+            Ok(gradient)
+        })
     }
 }
 

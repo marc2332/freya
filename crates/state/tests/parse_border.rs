@@ -132,5 +132,5 @@ fn parse_border_alignments() {
     assert_eq!(inner, Ok(BorderAlignment::Inner));
     assert_eq!(outer, Ok(BorderAlignment::Outer));
     assert_eq!(center, Ok(BorderAlignment::Center));
-    assert_eq!(invalid, Ok(BorderAlignment::Inner));
+    assert!(invalid.is_err());
 }

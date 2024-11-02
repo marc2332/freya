@@ -102,18 +102,32 @@ impl ParseAttribute for LayoutState {
                 if let Some(value) = attr.value.as_text() {
                     self.direction = match value {
                         "horizontal" => DirectionMode::Horizontal,
-                        _ => DirectionMode::Vertical,
+                        "vertical" => DirectionMode::Vertical,
+                        value => {
+                            return Err(ParseError::invalid_ident(
+                                value,
+                                &["horizontal", "vertical"],
+                            ))
+                        }
                     }
                 }
             }
             AttributeName::OffsetY => {
                 if let Some(value) = attr.value.as_text() {
-                    self.offset_y = Length::new(value.parse::<f32>().map_err(|_| ParseError)?);
+                    self.offset_y = Length::new(
+                        value
+                            .parse::<f32>()
+                            .map_err(|err| ParseError(err.to_string()))?,
+                    );
                 }
             }
             AttributeName::OffsetX => {
                 if let Some(value) = attr.value.as_text() {
-                    self.offset_x = Length::new(value.parse::<f32>().map_err(|_| ParseError)?);
+                    self.offset_x = Length::new(
+                        value
+                            .parse::<f32>()
+                            .map_err(|err| ParseError(err.to_string()))?,
+                    );
                 }
             }
             AttributeName::MainAlign => {
@@ -135,26 +149,38 @@ impl ParseAttribute for LayoutState {
             }
             AttributeName::PositionTop => {
                 if let Some(value) = attr.value.as_text() {
-                    self.position
-                        .set_top(value.parse::<f32>().map_err(|_| ParseError)?);
+                    self.position.set_top(
+                        value
+                            .parse::<f32>()
+                            .map_err(|err| ParseError(err.to_string()))?,
+                    );
                 }
             }
             AttributeName::PositionRight => {
                 if let Some(value) = attr.value.as_text() {
-                    self.position
-                        .set_right(value.parse::<f32>().map_err(|_| ParseError)?);
+                    self.position.set_right(
+                        value
+                            .parse::<f32>()
+                            .map_err(|err| ParseError(err.to_string()))?,
+                    );
                 }
             }
             AttributeName::PositionBottom => {
                 if let Some(value) = attr.value.as_text() {
-                    self.position
-                        .set_bottom(value.parse::<f32>().map_err(|_| ParseError)?);
+                    self.position.set_bottom(
+                        value
+                            .parse::<f32>()
+                            .map_err(|err| ParseError(err.to_string()))?,
+                    );
                 }
             }
             AttributeName::PositionLeft => {
                 if let Some(value) = attr.value.as_text() {
-                    self.position
-                        .set_left(value.parse::<f32>().map_err(|_| ParseError)?);
+                    self.position.set_left(
+                        value
+                            .parse::<f32>()
+                            .map_err(|err| ParseError(err.to_string()))?,
+                    );
                 }
             }
             AttributeName::Content => {
@@ -171,7 +197,11 @@ impl ParseAttribute for LayoutState {
             }
             AttributeName::Spacing => {
                 if let Some(value) = attr.value.as_text() {
-                    self.spacing = Length::new(value.parse::<f32>().map_err(|_| ParseError)?);
+                    self.spacing = Length::new(
+                        value
+                            .parse::<f32>()
+                            .map_err(|err| ParseError(err.to_string()))?,
+                    );
                 }
             }
             _ => {}
