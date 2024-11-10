@@ -79,6 +79,7 @@ pub fn launch_test_with_config<T: 'static + Clone>(
     };
 
     handler.init_dom();
+    handler.resize(handler.config.size);
 
     handler
 }
