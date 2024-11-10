@@ -367,6 +367,7 @@ mod test {
                     height: "100",
                     width: "200",
                     background: "red",
+                    margin: "0 0 2 0",
                     onclick: move |_| height += 10,
                 }
                 rect {
@@ -374,6 +375,7 @@ mod test {
                     width: "200",
                     background: "green",
                     shadow: "0 {shadow} 8 0 rgb(0, 0, 0, 0.5)",
+                    margin: "0 0 2 0",
                     onclick: move |_| height -= 10,
                 }
                 rect {
@@ -418,7 +420,7 @@ mod test {
 
         let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
-        // Root + First + Second rect + Third rect
+        // Root + First rect + Second rect + Third Rect
         assert_eq!(painted_nodes, 4);
     }
 
@@ -440,6 +442,7 @@ mod test {
                     height: "200",
                     width: "200",
                     direction: "horizontal",
+                    spacing: "2",
                     rect {
                         onclick: move |_| msg_state.toggle(),
                         height: "200",

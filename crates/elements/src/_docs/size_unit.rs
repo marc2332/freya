@@ -102,3 +102,30 @@
 //!     )
 //! }
 //! ```
+//!
+//! #### Flex Factor
+//!
+//! When being a children of an element with `content: flex` you may change the growth factor of the size attributes.
+//!
+//! ```rust, no_run
+//! # use freya::prelude::*;
+//! fn app() -> Element {
+//!     rsx!(
+//!         rect {
+//!             content: "flex",
+//!             width: "200",
+//!             height: "200",
+//!             rect {
+//!                 height: "flex(1)",
+//!                 width: "100%",
+//!                 background: "red"
+//!             }
+//!             rect {
+//!                 height: "flex(3)",
+//!                 width: "100%",
+//!                 background: "blue"
+//!             }
+//!         }
+//!     )
+//! }
+//! ```
