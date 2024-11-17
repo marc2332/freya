@@ -76,6 +76,7 @@ pub fn ProgressBar(
                             width: "100%",
                             color: "{color}",
                             max_lines: "1",
+                            text_height: "disable-least-ascent",
                             "{progress.floor()}%"
                         }
                     }

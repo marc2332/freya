@@ -16,6 +16,7 @@ use winit::{
 };
 
 use crate::{
+    accessibility::AccessKitManager,
     app::Application,
     config::WindowConfig,
     devtools::Devtools,
@@ -94,12 +95,14 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
                 window_attributes.with_max_inner_size(LogicalSize::<f64>::from(max_size));
         }
 
-        if let Some(with_window_attributes) = &config.window_config.window_attributes_hook {
+        if let Some(with_window_attributes) = config.window_config.window_attributes_hook.take() {
             window_attributes = (with_window_attributes)(window_attributes);
         }
 
         let (graphics_driver, window, mut surface) =
             GraphicsDriver::new(event_loop, window_attributes, &config);
+
+        let accessibility = AccessKitManager::new(&window, event_loop_proxy.clone());
 
         if config.window_config.visible {
             window.set_visible(true);
@@ -135,6 +138,7 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
             config.embedded_fonts,
             config.plugins,
             config.default_fonts,
+            accessibility,
         );
 
         app.init_doms(scale_factor as f32, config.state.clone());

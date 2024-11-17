@@ -379,6 +379,7 @@ pub struct Context {
     animated_values: Vec<Signal<Box<dyn AnimatedValue>>>,
     on_finish: OnFinish,
     auto_start: bool,
+    on_deps_change: OnDepsChange,
 }
 
 impl Context {
@@ -396,6 +397,11 @@ impl Context {
 
     pub fn auto_start(&mut self, auto_start: bool) -> &mut Self {
         self.auto_start = auto_start;
+        self
+    }
+
+    pub fn on_deps_change(&mut self, on_deps_change: OnDepsChange) -> &mut Self {
+        self.on_deps_change = on_deps_change;
         self
     }
 }
@@ -425,6 +431,14 @@ pub enum OnFinish {
     Restart,
 }
 
+/// What to do once the animation dependencies change. By default it is [`Reset`](OnDepsChange::Reset)
+#[derive(PartialEq, Clone, Copy, Default)]
+pub enum OnDepsChange {
+    #[default]
+    Reset,
+    Run,
+}
+
 /// Animate your elements. Use [`use_animation`] to use this.
 #[derive(PartialEq, Clone)]
 pub struct UseAnimator<Animated: PartialEq + Clone + 'static> {
@@ -446,7 +460,10 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
 
     /// Reset the animation to the default state.
     pub fn reset(&self) {
+        let mut has_run_yet = self.has_run_yet;
         let mut task = self.task;
+
+        has_run_yet.set(false);
 
         if let Some(task) = task.write().take() {
             task.cancel();
@@ -721,8 +738,8 @@ where
     };
 
     use_memo(move || {
-        let _ = value_and_ctx.read();
-        if *has_run_yet.peek() {
+        let value_and_ctx = value_and_ctx.read();
+        if *has_run_yet.peek() && value_and_ctx.1.on_deps_change == OnDepsChange::Run {
             animator.run_update()
         }
     });

@@ -15,6 +15,7 @@ use freya_hooks::{
     AnimNum,
     Ease,
     Function,
+    OnDepsChange,
     SwitchThemeWith,
 };
 use winit::window::CursorIcon;
@@ -67,6 +68,7 @@ pub enum SwitchStatus {
 pub fn Switch(props: SwitchProps) -> Element {
     let theme = use_applied_theme!(&props.theme, switch);
     let animation = use_animation_with_dependencies(&theme, |ctx, theme| {
+        ctx.on_deps_change(OnDepsChange::Run);
         (
             ctx.with(
                 AnimNum::new(2., 22.)
