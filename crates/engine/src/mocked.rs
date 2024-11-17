@@ -1487,7 +1487,7 @@ pub mod svg {
     pub struct Dom;
 
     impl Dom {
-        pub fn from_bytes(_bytes: &[u8], font_mgr: &FontMgr) -> Result<Self, ()> {
+        pub fn from_bytes(_bytes: &[u8], provider: LocalResourceProvider) -> Result<Self, ()> {
             unimplemented!("This is mocked")
         }
 
