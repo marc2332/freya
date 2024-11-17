@@ -62,7 +62,7 @@ impl DirtyNodes {
 
     pub fn pop(&mut self) -> Option<NodeId> {
         self.nodes_dirty.iter().next().copied().inspect(|id| {
-            self.nodes_dirty.remove(&id);
+            self.nodes_dirty.remove(id);
         })
     }
 }
