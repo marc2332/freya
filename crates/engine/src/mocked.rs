@@ -1751,3 +1751,11 @@ pub enum EncodedImageFormat {
     AVIF = 12,
     JPEGXL = 13,
 }
+
+struct LocalResourceProvider;
+
+impl LocalResourceProvider {
+    pub fn new(font_mgr: &FontMgr) -> Self {
+        unimplemented!("This is mocked")
+    }
+}
