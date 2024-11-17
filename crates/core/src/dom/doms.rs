@@ -39,11 +39,14 @@ use freya_node_state::{
 use torin::prelude::*;
 
 use super::mutations_writer::MutationsWriter;
-use crate::prelude::{
-    CompositorCache,
-    CompositorDirtyArea,
-    ParagraphElement,
-    TextGroupMeasurement,
+use crate::{
+    prelude::{
+        CompositorCache,
+        CompositorDirtyArea,
+        ParagraphElement,
+        TextGroupMeasurement,
+    },
+    render::ParagraphCache,
 };
 
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
@@ -130,6 +133,7 @@ pub struct FreyaDOM {
     compositor_cache: Arc<Mutex<CompositorCache>>,
     accessibility_dirty_nodes: Arc<Mutex<AccessibilityDirtyNodes>>,
     accessibility_generator: Arc<AccessibilityGenerator>,
+    paragraph_cache: Arc<Mutex<ParagraphCache>>,
 }
 
 impl Default for FreyaDOM {
@@ -157,6 +161,7 @@ impl Default for FreyaDOM {
             compositor_cache: Arc::default(),
             accessibility_dirty_nodes: Arc::default(),
             accessibility_generator: Arc::default(),
+            paragraph_cache: Arc::default(),
         }
     }
 }
@@ -192,6 +197,10 @@ impl FreyaDOM {
 
     pub fn accessibility_generator(&self) -> &Arc<AccessibilityGenerator> {
         &self.accessibility_generator
+    }
+
+    pub fn paragraph_cache(&self) -> MutexGuard<ParagraphCache> {
+        self.paragraph_cache.lock().unwrap()
     }
 
     /// Create the initial DOM from the given Mutations

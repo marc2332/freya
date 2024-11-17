@@ -82,7 +82,7 @@ impl Parse for Weight {
     }
 }
 
-#[derive(Default, Clone, Debug, PartialEq)]
+#[derive(Default, Clone, Debug, PartialEq, Hash)]
 pub enum TextOverflow {
     #[default]
     Clip,

@@ -262,6 +262,8 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
         } = self.state.created_state();
         app.accessibility
             .process_accessibility_event(&event, window);
+        // let mut p_cache = app.font_collection.paragraph_cache_mut();
+        // p_cache.print_statistics();
         match event {
             WindowEvent::ThemeChanged(theme) => {
                 app.platform_sender.send_modify(|state| {

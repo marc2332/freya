@@ -23,7 +23,10 @@ use torin::{
 };
 
 use super::*;
-use crate::dom::DioxusNode;
+use crate::{
+    dom::DioxusNode,
+    render::ParagraphCache,
+};
 
 pub trait ElementUtils {
     fn is_point_inside_area(
@@ -55,6 +58,7 @@ pub trait ElementUtils {
         font_manager: &FontMgr,
         default_fonts: &[String],
         scale_factor: f32,
+        paragraph_cache: &mut ParagraphCache,
     );
 
     fn element_drawing_area(
@@ -198,6 +202,7 @@ impl ElementUtils for ElementWithUtils {
         font_manager: &FontMgr,
         default_fonts: &[String],
         scale_factor: f32,
+        paragraph_cache: &mut ParagraphCache,
     ) {
         match self {
             Self::Rect(el) => el.render(
@@ -208,6 +213,7 @@ impl ElementUtils for ElementWithUtils {
                 font_manager,
                 default_fonts,
                 scale_factor,
+                paragraph_cache,
             ),
             Self::Svg(el) => el.render(
                 layout_node,
@@ -217,6 +223,7 @@ impl ElementUtils for ElementWithUtils {
                 font_manager,
                 default_fonts,
                 scale_factor,
+                paragraph_cache,
             ),
             Self::Paragraph(el) => el.render(
                 layout_node,
@@ -226,6 +233,7 @@ impl ElementUtils for ElementWithUtils {
                 font_manager,
                 default_fonts,
                 scale_factor,
+                paragraph_cache,
             ),
             Self::Image(el) => el.render(
                 layout_node,
@@ -235,6 +243,7 @@ impl ElementUtils for ElementWithUtils {
                 font_manager,
                 default_fonts,
                 scale_factor,
+                paragraph_cache,
             ),
             Self::Label(el) => el.render(
                 layout_node,
@@ -244,6 +253,7 @@ impl ElementUtils for ElementWithUtils {
                 font_manager,
                 default_fonts,
                 scale_factor,
+                paragraph_cache,
             ),
         }
     }

@@ -13,7 +13,10 @@ use torin::prelude::{
 use super::utils::ElementUtils;
 use crate::{
     prelude::DioxusNode,
-    render::align_main_align_paragraph,
+    render::{
+        align_main_align_paragraph,
+        ParagraphCache,
+    },
 };
 
 pub struct LabelElement;
@@ -28,6 +31,7 @@ impl ElementUtils for LabelElement {
         _font_manager: &FontMgr,
         _default_fonts: &[String],
         _scale_factor: f32,
+        _paragraph_cache: &mut ParagraphCache,
     ) {
         let paragraph = &layout_node
             .data
@@ -57,15 +61,15 @@ impl ElementUtils for LabelElement {
         node_ref: &DioxusNode,
         scale_factor: f32,
     ) -> Area {
-        let paragraph_font_height = &layout_node
+        let paragraph = &layout_node
             .data
             .as_ref()
             .unwrap()
             .get::<CachedParagraph>()
             .unwrap()
-            .1;
+            .0;
         let mut area = layout_node.visible_area();
-        area.size.height = area.size.height.max(*paragraph_font_height);
+        area.size.height = area.size.height.max(paragraph.height());
 
         let font_style = node_ref.get::<FontStyleState>().unwrap();
 

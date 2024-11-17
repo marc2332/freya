@@ -37,6 +37,7 @@ use crate::{
         create_paragraph,
         draw_cursor,
         draw_cursor_highlights,
+        ParagraphCache,
     },
 };
 
@@ -121,6 +122,7 @@ impl ElementUtils for ParagraphElement {
         _font_manager: &FontMgr,
         default_fonts: &[String],
         scale_factor: f32,
+        paragraph_cache: &mut ParagraphCache,
     ) {
         let area = layout_node.visible_area();
         let node_cursor_state = &*node_ref.get::<CursorState>().unwrap();
@@ -146,7 +148,9 @@ impl ElementUtils for ParagraphElement {
                 true,
                 default_fonts,
                 scale_factor,
-            );
+                paragraph_cache,
+            )
+            .0;
             paint(&paragraph);
         } else {
             let paragraph = &layout_node
@@ -183,15 +187,15 @@ impl ElementUtils for ParagraphElement {
         node_ref: &DioxusNode,
         scale_factor: f32,
     ) -> Area {
-        let paragraph_font_height = &layout_node
+        let paragraph = &layout_node
             .data
             .as_ref()
             .unwrap()
             .get::<CachedParagraph>()
             .unwrap()
-            .1;
+            .0;
         let mut area = layout_node.visible_area();
-        area.size.height = area.size.height.max(*paragraph_font_height);
+        area.size.height = area.size.height.max(paragraph.height());
 
         // Iterate over all the text spans inside this paragraph and if any of them
         // has a shadow at all, apply this shadow to the general paragraph.

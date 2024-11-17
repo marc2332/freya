@@ -29,12 +29,15 @@ use super::{
 };
 use crate::dom::*;
 
+pub type ParagraphCache = indexmap::IndexMap<u64, CachedParagraph>;
+
 /// Provides Text measurements using Skia APIs like SkParagraph
 pub struct SkiaMeasurer<'a> {
     pub font_collection: &'a FontCollection,
     pub rdom: &'a DioxusDOM,
     pub default_fonts: &'a [String],
     pub scale_factor: f32,
+    pub paragraph_cache: &'a mut ParagraphCache,
 }
 
 impl<'a> SkiaMeasurer<'a> {
@@ -43,12 +46,14 @@ impl<'a> SkiaMeasurer<'a> {
         font_collection: &'a FontCollection,
         default_fonts: &'a [String],
         scale_factor: f32,
+        paragraph_cache: &'a mut ParagraphCache,
     ) -> Self {
         Self {
             font_collection,
             rdom,
             default_fonts,
             scale_factor,
+            paragraph_cache,
         }
     }
 }
@@ -63,6 +68,8 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
         let node = self.rdom.get(node_id).unwrap();
         let node_type = node.node_type();
 
+        // println!("Measured in {}ms", a.elapsed().as_millis());
+
         match &*node_type {
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Label => {
                 let label = create_label(
@@ -71,11 +78,12 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                     self.font_collection,
                     self.default_fonts,
                     self.scale_factor,
+                    self.paragraph_cache,
                 );
-                let height = label.height();
-                let res = Size2D::new(label.longest_line(), height);
+                let height = label.0.height();
+                let res = Size2D::new(label.0.longest_line(), height);
                 let mut map = SendAnyMap::new();
-                map.insert(CachedParagraph(label, height));
+                map.insert(label);
                 Some((res, Arc::new(map)))
             }
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Paragraph => {
@@ -86,11 +94,12 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                     false,
                     self.default_fonts,
                     self.scale_factor,
+                    self.paragraph_cache,
                 );
-                let height = paragraph.height();
-                let res = Size2D::new(paragraph.longest_line(), height);
+                let height = paragraph.0.height();
+                let res = Size2D::new(paragraph.0.longest_line(), height);
                 let mut map = SendAnyMap::new();
-                map.insert(CachedParagraph(paragraph, height));
+                map.insert(paragraph);
                 Some((res, Arc::new(map)))
             }
             _ => None,

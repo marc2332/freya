@@ -1,4 +1,7 @@
-use std::ops::Div;
+use std::{
+    ops::Div,
+    rc::Rc,
+};
 
 use freya_engine::prelude::Paragraph;
 use torin::geometry::{
@@ -27,7 +30,8 @@ pub enum CursorLayoutResponse {
     TextSelection { from: usize, to: usize, id: usize },
 }
 
-pub struct CachedParagraph(pub Paragraph, pub f32);
+#[derive(Clone)]
+pub struct CachedParagraph(pub Rc<Paragraph>);
 
 /// # Safety
 /// Skia `Paragraph` are neither Sync or Send, but in order to store them in the Associated
