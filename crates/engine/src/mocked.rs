@@ -1472,6 +1472,18 @@ pub mod svg {
         Size,
     };
 
+    pub enum LengthUnit {
+        Percentage,
+    }
+
+    pub struct Length;
+
+    impl Length {
+        pub fn new(value: f32, unit: LengthUnit) -> Self {
+            unimplemented!("This is mocked")
+        }
+    }
+
     pub struct Dom;
 
     impl Dom {
@@ -1752,7 +1764,7 @@ pub enum EncodedImageFormat {
     JPEGXL = 13,
 }
 
-struct LocalResourceProvider;
+pub struct LocalResourceProvider;
 
 impl LocalResourceProvider {
     pub fn new(font_mgr: &FontMgr) -> Self {
