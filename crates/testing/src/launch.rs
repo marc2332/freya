@@ -42,7 +42,7 @@ pub fn launch_test_with_config<T: 'static + Clone>(
     config: TestingConfig<T>,
 ) -> TestingHandler<T> {
     let vdom = with_accessibility(root);
-    let fdom = FreyaDOM::default();
+    let fdom = FreyaDOM::new(ParagraphCache::MAX_SIZE);
     let sdom = SafeDOM::new(fdom);
 
     let (event_emitter, event_receiver) = unbounded_channel();

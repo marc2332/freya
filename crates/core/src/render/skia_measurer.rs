@@ -1,9 +1,6 @@
 use std::sync::Arc;
 
-use freya_common::{
-    CachedParagraph,
-    NodeReferenceLayout,
-};
+use freya_common::NodeReferenceLayout;
 use freya_engine::prelude::*;
 use freya_native_core::{
     prelude::{
@@ -26,10 +23,9 @@ use torin::prelude::{
 use super::{
     create_label,
     create_paragraph,
+    ParagraphCache,
 };
 use crate::dom::*;
-
-pub type ParagraphCache = indexmap::IndexMap<u64, CachedParagraph>;
 
 /// Provides Text measurements using Skia APIs like SkParagraph
 pub struct SkiaMeasurer<'a> {

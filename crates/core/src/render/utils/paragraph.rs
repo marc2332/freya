@@ -1,5 +1,5 @@
 use std::{
-    hash::Hash,
+    borrow::Cow,
     rc::Rc,
     vec,
 };
@@ -17,7 +17,6 @@ use freya_node_state::{
     FontStyleState,
     HighlightMode,
     LayoutState,
-    TextOverflow,
 };
 use rustc_hash::FxBuildHasher;
 use torin::prelude::{
@@ -28,25 +27,11 @@ use torin::prelude::{
 
 use crate::{
     dom::DioxusNode,
-    render::ParagraphCache,
+    render::{
+        ParagraphCache,
+        ParagraphCacheKey,
+    },
 };
-#[derive(Hash)]
-pub struct ParagraphCacheKey<'a> {
-    pub color: (u8, u8, u8),
-    pub font_family: &'a [String],
-    pub font_size: u32,
-    pub font_slant: Slant,
-    pub font_weight: i32,
-    pub font_width: i32,
-    pub line_height: Option<u32>,
-    pub word_spacing: u32,
-    pub letter_spacing: u32,
-    pub text_align: TextAlign,
-    pub max_lines: Option<usize>,
-    pub text_overflow: TextOverflow,
-    pub text_height: TextHeightBehavior,
-    pub text: Option<String>,
-}
 
 /// Compose a new SkParagraph
 pub fn create_paragraph(
@@ -62,26 +47,7 @@ pub fn create_paragraph(
 
     let mut paragraph_cache_key: (u32, ParagraphCacheKey, Vec<ParagraphCacheKey>) = (
         area_size.width.to_bits(),
-        ParagraphCacheKey {
-            color: (
-                font_style.color.r(),
-                font_style.color.g(),
-                font_style.color.b(),
-            ),
-            font_family: default_font_family,
-            font_size: font_style.font_size.to_bits(),
-            font_slant: font_style.font_slant,
-            font_weight: *font_style.font_weight,
-            font_width: *font_style.font_width,
-            line_height: font_style.line_height.map(|n| n.to_bits()),
-            word_spacing: font_style.word_spacing.to_bits(),
-            letter_spacing: font_style.letter_spacing.to_bits(),
-            text_align: font_style.text_align,
-            max_lines: font_style.max_lines,
-            text_overflow: font_style.text_overflow.clone(),
-            text_height: font_style.text_height,
-            text: None,
-        },
+        ParagraphCacheKey::new(font_style, default_font_family, None),
         vec![],
     );
 
@@ -94,32 +60,18 @@ pub fn create_paragraph(
             let text_node = *text_nodes.first().unwrap();
             let text_node_type = &*text_node.node_type();
             let text_font_style = text_span.get::<FontStyleState>().unwrap();
-            let mut key = ParagraphCacheKey {
-                color: (
-                    text_font_style.color.r(),
-                    font_style.color.g(),
-                    font_style.color.b(),
-                ),
-                font_family: default_font_family,
-                font_size: text_font_style.font_size.to_bits(),
-                font_slant: text_font_style.font_slant,
-                font_weight: *text_font_style.font_weight,
-                font_width: *text_font_style.font_width,
-                line_height: text_font_style.line_height.map(|n| n.to_bits()),
-                word_spacing: text_font_style.word_spacing.to_bits(),
-                letter_spacing: text_font_style.letter_spacing.to_bits(),
-                text_align: text_font_style.text_align,
-                max_lines: text_font_style.max_lines,
-                text_overflow: text_font_style.text_overflow.clone(),
-                text_height: text_font_style.text_height,
-                text: None,
-            };
 
-            if let NodeType::Text(text) = text_node_type {
-                key.text = Some(text.clone());
+            let span_text = text_node_type.text().map(str::to_owned);
+
+            if let Some(span_text) = span_text {
+                let key = ParagraphCacheKey::new(
+                    &text_font_style,
+                    default_font_family,
+                    Some(Cow::Owned(span_text)),
+                );
+
+                paragraph_cache_key.2.push(key);
             }
-
-            paragraph_cache_key.2.push(key);
         }
     }
 
@@ -187,11 +139,6 @@ pub fn create_paragraph(
     let paragraph = CachedParagraph(Rc::new(paragraph));
 
     paragraph_cache.insert(paragraph_cache_key_hash, paragraph.clone());
-
-    if paragraph_cache.len() > 128 {
-        let first = *paragraph_cache.first().unwrap().0;
-        paragraph_cache.shift_remove(&first);
-    }
 
     paragraph
 }

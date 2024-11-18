@@ -1,4 +1,7 @@
-use std::rc::Rc;
+use std::{
+    borrow::Cow,
+    rc::Rc,
+};
 
 use freya_common::CachedParagraph;
 use freya_engine::prelude::*;
@@ -10,10 +13,12 @@ use freya_node_state::FontStyleState;
 use rustc_hash::FxBuildHasher;
 use torin::prelude::Size2D;
 
-use super::ParagraphCacheKey;
 use crate::{
     dom::*,
-    render::ParagraphCache,
+    render::{
+        ParagraphCache,
+        ParagraphCacheKey,
+    },
 };
 
 pub fn create_label(
@@ -26,35 +31,22 @@ pub fn create_label(
 ) -> CachedParagraph {
     let font_style = &*node.get::<FontStyleState>().unwrap();
 
-    let mut paragraph_cache_key: (u32, ParagraphCacheKey) = (
-        area_size.width.to_bits(),
-        ParagraphCacheKey {
-            color: (
-                font_style.color.r(),
-                font_style.color.g(),
-                font_style.color.b(),
-            ),
-            font_family: default_font_family,
-            font_size: font_style.font_size.to_bits(),
-            font_slant: font_style.font_slant,
-            font_weight: *font_style.font_weight,
-            font_width: *font_style.font_width,
-            line_height: font_style.line_height.map(|n| n.to_bits()),
-            word_spacing: font_style.word_spacing.to_bits(),
-            letter_spacing: font_style.letter_spacing.to_bits(),
-            text_align: font_style.text_align,
-            max_lines: font_style.max_lines,
-            text_overflow: font_style.text_overflow.clone(),
-            text_height: font_style.text_height,
-            text: Some("".to_string()),
-        },
-    );
+    let mut label_text = String::new();
 
     for child in node.children() {
         if let NodeType::Text(text) = &*child.node_type() {
-            paragraph_cache_key.1.text.as_mut().unwrap().push_str(text);
+            label_text.push_str(text);
         }
     }
+
+    let paragraph_cache_key: (u32, ParagraphCacheKey) = (
+        area_size.width.to_bits(),
+        ParagraphCacheKey::new(
+            font_style,
+            default_font_family,
+            Some(Cow::Borrowed(&label_text)),
+        ),
+    );
 
     use std::hash::BuildHasher;
 
@@ -82,11 +74,7 @@ pub fn create_label(
 
     let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
 
-    for child in node.children() {
-        if let NodeType::Text(text) = &*child.node_type() {
-            paragraph_builder.add_text(text);
-        }
-    }
+    paragraph_builder.add_text(label_text);
 
     let mut paragraph = paragraph_builder.build();
     paragraph.layout(
@@ -100,11 +88,6 @@ pub fn create_label(
     let paragraph = CachedParagraph(Rc::new(paragraph));
 
     paragraph_cache.insert(paragraph_cache_key_hash, paragraph.clone());
-
-    if paragraph_cache.len() > 128 {
-        let first = *paragraph_cache.first().unwrap().0;
-        paragraph_cache.shift_remove(&first);
-    }
 
     paragraph
 }
