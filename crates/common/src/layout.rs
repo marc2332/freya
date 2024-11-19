@@ -1,4 +1,5 @@
 use std::{
+    cell::RefCell,
     ops::Div,
     rc::Rc,
 };
@@ -31,7 +32,7 @@ pub enum CursorLayoutResponse {
 }
 
 #[derive(Clone)]
-pub struct CachedParagraph(pub Rc<Paragraph>);
+pub struct CachedParagraph(pub Rc<RefCell<Paragraph>>);
 
 /// # Safety
 /// Skia `Paragraph` are neither Sync or Send, but in order to store them in the Associated

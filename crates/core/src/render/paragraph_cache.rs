@@ -58,14 +58,20 @@ pub struct ParagraphCacheKey<'a> {
     pub max_lines: Option<usize>,
     pub text_overflow: TextOverflow,
     pub text_height: TextHeightBehavior,
-    pub text: Option<Cow<'a, str>>,
+    pub text: Option<ParagraphCacheText>,
+}
+
+#[derive(Hash)]
+pub enum ParagraphCacheText {
+    Hashes(Vec<u64>),
+    Hash(u64),
 }
 
 impl<'a> ParagraphCacheKey<'a> {
     pub fn new(
         font_style: &FontStyleState,
         font_family: &'a [String],
-        text: Option<Cow<'a, str>>,
+        text: Option<ParagraphCacheText>,
     ) -> Self {
         Self {
             color: (

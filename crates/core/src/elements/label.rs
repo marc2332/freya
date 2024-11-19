@@ -43,9 +43,9 @@ impl ElementUtils for LabelElement {
         let area = layout_node.visible_area();
 
         let x = area.min_x();
-        let y = area.min_y() + align_main_align_paragraph(node_ref, &area, paragraph);
+        let y = area.min_y() + align_main_align_paragraph(node_ref, &area, &paragraph.borrow());
 
-        paragraph.paint(canvas, (x, y));
+        paragraph.borrow().paint(canvas, (x, y));
     }
 
     #[inline]
@@ -69,7 +69,7 @@ impl ElementUtils for LabelElement {
             .unwrap()
             .0;
         let mut area = layout_node.visible_area();
-        area.size.height = area.size.height.max(paragraph.height());
+        area.size.height = area.size.height.max(paragraph.borrow().height());
 
         let font_style = node_ref.get::<FontStyleState>().unwrap();
 

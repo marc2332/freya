@@ -1,6 +1,7 @@
 use std::{
-    borrow::Cow,
+    cell::RefCell,
     rc::Rc,
+    time::Instant,
 };
 
 use freya_common::CachedParagraph;
@@ -18,6 +19,7 @@ use crate::{
     render::{
         ParagraphCache,
         ParagraphCacheKey,
+        ParagraphCacheText,
     },
 };
 
@@ -31,21 +33,19 @@ pub fn create_label(
 ) -> CachedParagraph {
     let font_style = &*node.get::<FontStyleState>().unwrap();
 
-    let mut label_text = String::new();
+    let mut label_text = Vec::new();
 
     for child in node.children() {
         if let NodeType::Text(text) = &*child.node_type() {
-            label_text.push_str(text);
+            let span_text_hash = FxBuildHasher.hash_one(text);
+            label_text.push(span_text_hash);
         }
     }
 
-    let paragraph_cache_key: (u32, ParagraphCacheKey) = (
-        area_size.width.to_bits(),
-        ParagraphCacheKey::new(
-            font_style,
-            default_font_family,
-            Some(Cow::Borrowed(&label_text)),
-        ),
+    let paragraph_cache_key = ParagraphCacheKey::new(
+        font_style,
+        default_font_family,
+        Some(ParagraphCacheText::Hashes(label_text)),
     );
 
     use std::hash::BuildHasher;
@@ -54,40 +54,39 @@ pub fn create_label(
     let paragraph_cache_key_hash = hasher.hash_one(paragraph_cache_key);
 
     let paragraph = paragraph_cache.get(&paragraph_cache_key_hash).cloned();
-    if let Some(paragraph) = paragraph {
-        return paragraph;
-    }
 
-    let mut paragraph_style = ParagraphStyle::default();
-    paragraph_style.set_text_align(font_style.text_align);
-    paragraph_style.set_max_lines(font_style.max_lines);
-    paragraph_style.set_replace_tab_characters(true);
-    paragraph_style.set_text_height_behavior(font_style.text_height);
+    let paragraph = paragraph.unwrap_or_else(|| {
+        let mut paragraph_style = ParagraphStyle::default();
+        paragraph_style.set_text_align(font_style.text_align);
+        paragraph_style.set_max_lines(font_style.max_lines);
+        paragraph_style.set_replace_tab_characters(true);
+        paragraph_style.set_text_height_behavior(font_style.text_height);
 
-    if let Some(ellipsis) = font_style.text_overflow.get_ellipsis() {
-        paragraph_style.set_ellipsis(ellipsis);
-    }
+        if let Some(ellipsis) = font_style.text_overflow.get_ellipsis() {
+            paragraph_style.set_ellipsis(ellipsis);
+        }
 
-    let text_style =
-        font_style.text_style(default_font_family, scale_factor, font_style.text_height);
-    paragraph_style.set_text_style(&text_style);
+        let text_style =
+            font_style.text_style(default_font_family, scale_factor, font_style.text_height);
+        paragraph_style.set_text_style(&text_style);
 
-    let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
+        let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
 
-    paragraph_builder.add_text(label_text);
+        for child in node.children() {
+            if let NodeType::Text(text) = &*child.node_type() {
+                paragraph_builder.add_text(text);
+            }
+        }
 
-    let mut paragraph = paragraph_builder.build();
-    paragraph.layout(
+        CachedParagraph(Rc::new(RefCell::new(paragraph_builder.build())))
+    });
+    paragraph.0.borrow_mut().layout(
         if font_style.max_lines == Some(1) && font_style.text_align == TextAlign::default() {
             f32::MAX
         } else {
             area_size.width + 1.0
         },
     );
-
-    let paragraph = CachedParagraph(Rc::new(paragraph));
-
-    paragraph_cache.insert(paragraph_cache_key_hash, paragraph.clone());
 
     paragraph
 }

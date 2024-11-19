@@ -65,14 +65,14 @@ impl ParagraphElement {
             return;
         }
 
-        let y = align_main_align_paragraph(node, &layout_node.area, paragraph);
+        let y = align_main_align_paragraph(node, &layout_node.area, &paragraph.borrow());
 
         if let Some(cursor_reference) = &cursor_state.cursor_ref {
             if let Some(cursor_position) = text_measurement.cursor_position {
                 let position = CursorPoint::new(cursor_position.x, cursor_position.y - y as f64);
 
                 // Calculate the new cursor position
-                let char_position = paragraph.get_glyph_position_at_coordinate(
+                let char_position = paragraph.borrow().get_glyph_position_at_coordinate(
                     position.mul(scale_factor).to_i32().to_tuple(),
                 );
 
@@ -91,11 +91,11 @@ impl ParagraphElement {
                 let dist_position = CursorPoint::new(dist.x, dist.y - y as f64);
 
                 // Calculate the start of the highlighting
-                let origin_char = paragraph.get_glyph_position_at_coordinate(
+                let origin_char = paragraph.borrow().get_glyph_position_at_coordinate(
                     origin_position.mul(scale_factor).to_i32().to_tuple(),
                 );
                 // Calculate the end of the highlighting
-                let dist_char = paragraph.get_glyph_position_at_coordinate(
+                let dist_char = paragraph.borrow().get_glyph_position_at_coordinate(
                     dist_position.mul(scale_factor).to_i32().to_tuple(),
                 );
 
@@ -151,7 +151,7 @@ impl ElementUtils for ParagraphElement {
                 paragraph_cache,
             )
             .0;
-            paint(&paragraph);
+            paint(&paragraph.borrow());
         } else {
             let paragraph = &layout_node
                 .data
@@ -160,7 +160,7 @@ impl ElementUtils for ParagraphElement {
                 .get::<CachedParagraph>()
                 .unwrap()
                 .0;
-            paint(paragraph);
+            paint(&paragraph.borrow());
         };
     }
 
@@ -195,7 +195,7 @@ impl ElementUtils for ParagraphElement {
             .unwrap()
             .0;
         let mut area = layout_node.visible_area();
-        area.size.height = area.size.height.max(paragraph.height());
+        area.size.height = area.size.height.max(paragraph.borrow().height());
 
         // Iterate over all the text spans inside this paragraph and if any of them
         // has a shadow at all, apply this shadow to the general paragraph.
