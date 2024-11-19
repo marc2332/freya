@@ -84,7 +84,7 @@ impl Application {
         let font_mgr: FontMgr = provider.into();
         font_collection.set_default_font_manager(def_mgr, None);
         font_collection.set_dynamic_font_manager(font_mgr.clone());
-        font_collection.paragraph_cache_mut().turn_on(true);
+        font_collection.paragraph_cache_mut().turn_on(false);
 
         let (event_emitter, event_receiver) = mpsc::unbounded_channel();
         let (platform_sender, platform_receiver) = watch::channel(NativePlatformState {

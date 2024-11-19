@@ -1,7 +1,6 @@
 use std::{
     cell::RefCell,
     rc::Rc,
-    time::Instant,
     vec,
 };
 
@@ -82,6 +81,7 @@ pub fn create_paragraph(
     let paragraph_cache_key_hash = hasher.hash_one(paragraph_cache_key);
 
     let paragraph = paragraph_cache.get(&paragraph_cache_key_hash).cloned();
+
     let paragraph = paragraph.unwrap_or_else(|| {
         let mut paragraph_style = ParagraphStyle::default();
         paragraph_style.set_text_align(font_style.text_align);
@@ -136,6 +136,8 @@ pub fn create_paragraph(
             area_size.width + 1.0
         },
     );
+
+    paragraph_cache.insert(paragraph_cache_key_hash, paragraph.clone());
 
     paragraph
 }

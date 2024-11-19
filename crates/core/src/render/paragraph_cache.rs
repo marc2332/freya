@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 
 use freya_common::CachedParagraph;
 use freya_engine::prelude::*;

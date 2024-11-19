@@ -1,7 +1,6 @@
 use std::{
     cell::RefCell,
     rc::Rc,
-    time::Instant,
 };
 
 use freya_common::CachedParagraph;
@@ -87,6 +86,8 @@ pub fn create_label(
             area_size.width + 1.0
         },
     );
+
+    paragraph_cache.insert(paragraph_cache_key_hash, paragraph.clone());
 
     paragraph
 }
