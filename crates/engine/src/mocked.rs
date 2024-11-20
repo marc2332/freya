@@ -1484,6 +1484,18 @@ pub mod svg {
         }
     }
 
+    pub struct SvgNode;
+
+    impl SvgNode {
+        fn set_width(&mut self, _width: Length) {
+            unimplemented!("This is mocked")
+        }
+
+        fn set_height(&mut self, _height: Length) {
+            unimplemented!("This is mocked")
+        }
+    }
+
     pub struct Dom;
 
     impl Dom {
@@ -1499,7 +1511,7 @@ pub mod svg {
             unimplemented!("This is mocked")
         }
 
-        pub fn root(&self) {
+        pub fn root(&self) -> SvgNode {
             unimplemented!("This is mocked")
         }
     }
