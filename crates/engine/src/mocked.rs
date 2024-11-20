@@ -1468,7 +1468,7 @@ pub enum BlurStyle {
 pub mod svg {
     use super::{
         Canvas,
-        FontMgr,
+        LocalResourceProvider,
         Size,
     };
 
@@ -1480,6 +1480,18 @@ pub mod svg {
 
     impl Length {
         pub fn new(value: f32, unit: LengthUnit) -> Self {
+            unimplemented!("This is mocked")
+        }
+    }
+
+    pub struct SvgNode;
+
+    impl SvgNode {
+        pub fn set_width(&mut self, _width: Length) {
+            unimplemented!("This is mocked")
+        }
+
+        pub fn set_height(&mut self, _height: Length) {
             unimplemented!("This is mocked")
         }
     }
@@ -1496,6 +1508,10 @@ pub mod svg {
         }
 
         pub fn render(&self, _canvas: &Canvas) {
+            unimplemented!("This is mocked")
+        }
+
+        pub fn root(&self) -> SvgNode {
             unimplemented!("This is mocked")
         }
     }
