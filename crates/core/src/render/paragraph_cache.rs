@@ -1,4 +1,3 @@
-
 use freya_common::CachedParagraph;
 use freya_engine::prelude::*;
 use freya_node_state::{
