@@ -1498,6 +1498,10 @@ pub mod svg {
         pub fn render(&self, _canvas: &Canvas) {
             unimplemented!("This is mocked")
         }
+
+        pub fn root(&self) {
+            unimplemented!("This is mocked")
+        }
     }
 }
 
