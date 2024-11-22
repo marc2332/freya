@@ -251,7 +251,7 @@ impl FreyaDOM {
         ctx.insert(self.accessibility_generator.clone());
 
         // Update the Node's states
-        let (_, diff) = self.rdom.update_state(ctx);
+        let diff = self.rdom.update_state(ctx);
 
         let must_repaint = !diff.is_empty();
         let must_relayout = !self.layout().get_dirty_nodes().is_empty();
