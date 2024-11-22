@@ -1,24 +1,29 @@
+use std::time::{
+    Duration,
+    SystemTime,
+    UNIX_EPOCH,
+};
+
 use freya::prelude::*;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 fn add_zero(time: i64) -> String {
     if time.to_string().len() == 1 {
         let mut zero = "0".to_owned();
         zero.push_str(&time.to_string());
-        return zero;
+        zero
     } else {
-        return time.to_string();
+        time.to_string()
     }
 }
 
 fn negative_add_zero(time: i64) -> String {
     if time < 0 {
-        let number = add_zero(time * -1);
+        let number = add_zero(-time);
         let mut minus = "-".to_owned();
         minus.push_str(&number);
-        return minus;
+        minus
     } else {
-        return add_zero(time);
+        add_zero(time)
     }
 }
 
@@ -28,11 +33,11 @@ fn format_time(time: &SystemTime, time_zone: i8) -> String {
     let seconds = add_zero(current_time.rem_euclid(60));
     let minutes = add_zero(current_time.rem_euclid(3600) / 60);
     let hours = add_zero(current_time.rem_euclid(86400) / 3600);
-    return hours + ":" + &minutes + ":" + &seconds;
+    hours + ":" + &minutes + ":" + &seconds
 }
 
 fn app() -> Element {
-    let mut system_time = use_signal(|| SystemTime::now());
+    let mut system_time = use_signal(SystemTime::now);
     use_effect(move || {
         spawn(async move {
             let mut interval = tokio::time::interval(Duration::from_millis(500));
@@ -45,7 +50,7 @@ fn app() -> Element {
     });
 
     let mut time_zone = use_signal(|| 0);
-    let time = format_time(&*system_time.read(), *time_zone.read());
+    let time = format_time(&system_time.read(), *time_zone.read());
 
     rsx!(
         rect {
@@ -94,8 +99,8 @@ fn main() {
     launch_cfg(
         app,
         LaunchConfig::<()>::new()
-        .with_size(500.0, 400.0)
-        .with_min_size(500.0, 400.0)
-        .with_title("Clock")
+            .with_size(500.0, 400.0)
+            .with_min_size(500.0, 400.0)
+            .with_title("Clock"),
     );
 }
