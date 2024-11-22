@@ -1,6 +1,4 @@
-use std::{
-    any::Any,
-};
+use std::any::Any;
 
 use node_ref::NodeMask;
 
