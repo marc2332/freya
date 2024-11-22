@@ -26,10 +26,7 @@ use gilrs::{
 };
 
 fn main() {
-    launch_cfg(
-        app,
-        LaunchConfig::<()>::new().with_plugin(GamePadPlugin),
-    )
+    launch_cfg(app, LaunchConfig::<()>::new().with_plugin(GamePadPlugin))
 }
 
 #[derive(Default)]

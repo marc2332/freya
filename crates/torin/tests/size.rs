@@ -802,11 +802,13 @@ pub fn test_calc() {
 
     assert_eq!(
         run_calculations(
-            &[DynamicCalculation::Pixels(10.0),
+            &[
+                DynamicCalculation::Pixels(10.0),
                 DynamicCalculation::Add,
                 DynamicCalculation::Pixels(20.0),
                 DynamicCalculation::Mul,
-                DynamicCalculation::Percentage(50.0)],
+                DynamicCalculation::Percentage(50.0)
+            ],
             PARENT_VALUE,
             PARENT_VALUE
         ),
@@ -815,7 +817,8 @@ pub fn test_calc() {
 
     assert_eq!(
         run_calculations(
-            &[DynamicCalculation::Pixels(10.0),
+            &[
+                DynamicCalculation::Pixels(10.0),
                 DynamicCalculation::Add,
                 DynamicCalculation::Percentage(10.0),
                 DynamicCalculation::Add,
@@ -825,7 +828,8 @@ pub fn test_calc() {
                 DynamicCalculation::Add,
                 DynamicCalculation::Pixels(75.0),
                 DynamicCalculation::Mul,
-                DynamicCalculation::Pixels(2.0)],
+                DynamicCalculation::Pixels(2.0)
+            ],
             PARENT_VALUE,
             PARENT_VALUE
         ),
@@ -834,8 +838,10 @@ pub fn test_calc() {
 
     assert_eq!(
         run_calculations(
-            &[DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::Pixels(20.0)],
+            &[
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::Pixels(20.0)
+            ],
             PARENT_VALUE,
             PARENT_VALUE
         ),
@@ -862,10 +868,12 @@ pub fn test_calc() {
 
     assert_eq!(
         run_calculations(
-            &[DynamicCalculation::Pixels(10.0),
+            &[
+                DynamicCalculation::Pixels(10.0),
                 DynamicCalculation::Add,
                 DynamicCalculation::Add,
-                DynamicCalculation::Pixels(10.0)],
+                DynamicCalculation::Pixels(10.0)
+            ],
             PARENT_VALUE,
             PARENT_VALUE
         ),
@@ -874,9 +882,11 @@ pub fn test_calc() {
 
     assert_eq!(
         run_calculations(
-            &[DynamicCalculation::Percentage(50.0),
+            &[
+                DynamicCalculation::Percentage(50.0),
                 DynamicCalculation::Sub,
-                DynamicCalculation::RootPercentage(20.0)],
+                DynamicCalculation::RootPercentage(20.0)
+            ],
             PARENT_VALUE,
             PARENT_VALUE
         ),
