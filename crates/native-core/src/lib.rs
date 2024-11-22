@@ -1,10 +1,8 @@
 use std::{
     any::Any,
-    hash::BuildHasherDefault,
 };
 
 use node_ref::NodeMask;
-use rustc_hash::FxHasher;
 
 pub mod attributes;
 pub mod dioxus;
@@ -65,9 +63,5 @@ pub mod prelude {
     };
 }
 
-/// A map that can be sent between threads
-pub type FxDashMap<K, V> = dashmap::DashMap<K, V, BuildHasherDefault<FxHasher>>;
-/// A set that can be sent between threads
-pub type FxDashSet<K> = dashmap::DashSet<K, BuildHasherDefault<FxHasher>>;
 /// A map of types that can be sent between threads
 pub type SendAnyMap = anymap::Map<dyn Any + Send + Sync + 'static>;
