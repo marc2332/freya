@@ -1,4 +1,7 @@
-use std::any::Any;
+use std::any::{
+    Any,
+    TypeId,
+};
 
 use node_ref::NodeMask;
 
@@ -12,6 +15,7 @@ pub mod real_dom;
 pub mod tags;
 pub mod tree;
 
+use rustc_hash::FxHashMap;
 pub use shipyard::EntityId as NodeId;
 
 pub mod exports {
@@ -62,4 +66,31 @@ pub mod prelude {
 }
 
 /// A map of types that can be sent between threads
-pub type SendAnyMap = anymap::Map<dyn Any + Send + Sync + 'static>;
+#[derive(Debug)]
+pub struct SendAnyMap {
+    map: FxHashMap<TypeId, Box<dyn Any + Send + Sync + 'static>>,
+}
+
+impl Default for SendAnyMap {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl SendAnyMap {
+    pub fn new() -> Self {
+        Self {
+            map: FxHashMap::default(),
+        }
+    }
+
+    pub fn get<T: 'static>(&self) -> Option<&T> {
+        self.map
+            .get(&TypeId::of::<T>())
+            .and_then(|any| any.downcast_ref::<T>())
+    }
+
+    pub fn insert<T: Send + Sync + 'static>(&mut self, value: T) {
+        self.map.insert(TypeId::of::<T>(), Box::new(value));
+    }
+}
