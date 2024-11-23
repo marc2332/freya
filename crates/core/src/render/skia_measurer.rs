@@ -25,7 +25,10 @@ use super::{
     create_paragraph,
     ParagraphCache,
 };
-use crate::dom::*;
+use crate::{
+    dom::*,
+    render::ParagraphData,
+};
 
 /// Provides Text measurements using Skia APIs like SkParagraph
 pub struct SkiaMeasurer<'a> {
@@ -68,7 +71,7 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
 
         match &*node_type {
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Label => {
-                let label = create_label(
+                let ParagraphData { paragraph, size } = create_label(
                     &node,
                     area_size,
                     self.font_collection,
@@ -76,14 +79,12 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                     self.scale_factor,
                     self.paragraph_cache,
                 );
-                let height = label.0.borrow().height();
-                let res = Size2D::new(label.0.borrow().longest_line(), height);
                 let mut map = SendAnyMap::new();
-                map.insert(label);
-                Some((res, Arc::new(map)))
+                map.insert(paragraph);
+                Some((size, Arc::new(map)))
             }
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Paragraph => {
-                let paragraph = create_paragraph(
+                let ParagraphData { paragraph, size } = create_paragraph(
                     &node,
                     area_size,
                     self.font_collection,
@@ -92,11 +93,9 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                     self.scale_factor,
                     self.paragraph_cache,
                 );
-                let height = paragraph.0.borrow().height();
-                let res = Size2D::new(paragraph.0.borrow().longest_line(), height);
                 let mut map = SendAnyMap::new();
                 map.insert(paragraph);
-                Some((res, Arc::new(map)))
+                Some((size, Arc::new(map)))
             }
             _ => None,
         }

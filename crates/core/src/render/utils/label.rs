@@ -13,6 +13,7 @@ use freya_node_state::FontStyleState;
 use rustc_hash::FxBuildHasher;
 use torin::prelude::Size2D;
 
+use super::ParagraphData;
 use crate::{
     dom::*,
     render::{
@@ -29,7 +30,7 @@ pub fn create_label(
     default_font_family: &[String],
     scale_factor: f32,
     paragraph_cache: &mut ParagraphCache,
-) -> CachedParagraph {
+) -> ParagraphData {
     let font_style = &*node.get::<FontStyleState>().unwrap();
 
     let mut label_text = Vec::new();
@@ -89,5 +90,14 @@ pub fn create_label(
 
     paragraph_cache.insert(paragraph_cache_key_hash, paragraph.clone());
 
-    paragraph
+    let width = match font_style.text_align {
+        TextAlign::Start | TextAlign::Left => paragraph.0.borrow().longest_line(),
+        _ => paragraph.0.borrow().max_width(),
+    };
+    let height = paragraph.0.borrow().height();
+
+    ParagraphData {
+        size: Size2D::new(width, height),
+        paragraph,
+    }
 }

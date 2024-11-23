@@ -38,6 +38,7 @@ use crate::{
         draw_cursor,
         draw_cursor_highlights,
         ParagraphCache,
+        ParagraphData,
     },
 };
 
@@ -141,7 +142,7 @@ impl ElementUtils for ParagraphElement {
         };
 
         if node_cursor_state.position.is_some() {
-            let paragraph = create_paragraph(
+            let ParagraphData { paragraph, .. } = create_paragraph(
                 node_ref,
                 &area.size,
                 font_collection,
@@ -149,9 +150,8 @@ impl ElementUtils for ParagraphElement {
                 default_fonts,
                 scale_factor,
                 paragraph_cache,
-            )
-            .0;
-            paint(&paragraph.borrow());
+            );
+            paint(&paragraph.0.borrow());
         } else {
             let paragraph = &layout_node
                 .data
@@ -181,7 +181,7 @@ impl ElementUtils for ParagraphElement {
         false
     }
 
-    fn drawing_area(
+    fn element_drawing_area(
         &self,
         layout_node: &LayoutNode,
         node_ref: &DioxusNode,
