@@ -42,7 +42,7 @@ impl ElementUtils for SvgElement {
                 if let Some(color) = node_style.fill_stroke.0.as_ref() {
                     root.set_fill(svg::Paint::from_color(*color));
                 }
-                if let Some(color) = node_style.fill_stroke.1.as_ref() {
+                if let Some(color) = node_style.svg_fill.as_ref() {
                     root.set_stroke(svg::Paint::from_color(*color));
                 }
                 svg_dom.render(canvas);
