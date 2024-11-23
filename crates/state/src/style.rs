@@ -74,7 +74,7 @@ impl ParseAttribute for StyleState {
                     if value == "none" {
                         return Ok(());
                     }
-                    self.fill_stroke.1 = Some(Color::parse(value)?);
+                    self.svg_fill = Some(Color::parse(value)?);
                 }
             }
             AttributeName::Border => {
