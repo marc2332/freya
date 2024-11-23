@@ -152,6 +152,7 @@ impl State<CustomAttributeValues> for StyleState {
         NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
             AttributeName::Background,
             AttributeName::Fill,
+            AttributeName::Stroke,
             AttributeName::Layer,
             AttributeName::Border,
             AttributeName::Shadow,
