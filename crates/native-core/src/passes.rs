@@ -218,7 +218,7 @@ pub struct RunPassView<'a, V: FromAnyValue + Send + Sync = ()> {
 #[doc(hidden)]
 pub fn run_pass<V: FromAnyValue + Send + Sync>(
     type_id: TypeId,
-    dependants: Arc<Dependants>,
+    dependants: &Dependants,
     pass_direction: PassDirection,
     view: RunPassView<V>,
     mut update_node: impl FnMut(NodeId, &SendAnyMap, u16) -> bool,
