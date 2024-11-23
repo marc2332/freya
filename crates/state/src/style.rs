@@ -1,42 +1,26 @@
-use std::sync::{
-    Arc,
-    Mutex,
-};
+use std::sync::{Arc, Mutex};
 
 use freya_common::CompositorDirtyNodes;
+use freya_engine::prelude::Color;
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
     node::OwnedAttributeValue,
     node_ref::NodeView,
-    prelude::{
-        AttributeMaskBuilder,
-        Dependancy,
-        NodeMaskBuilder,
-        State,
-    },
+    prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
     SendAnyMap,
 };
 use freya_native_core_macro::partial_derive_state;
 
 use crate::{
-    parsing::ExtSplit,
-    AttributesBytes,
-    Border,
-    CornerRadius,
-    CustomAttributeValues,
-    Fill,
-    OverflowMode,
-    Parse,
-    ParseAttribute,
-    ParseError,
-    Shadow,
+    parsing::ExtSplit, AttributesBytes, Border, CornerRadius, CustomAttributeValues, Fill,
+    OverflowMode, Parse, ParseAttribute, ParseError, Shadow,
 };
 
 #[derive(Default, Debug, Clone, PartialEq, Component)]
 pub struct StyleState {
     pub background: Fill,
-    pub fill: Option<Fill>,
+    pub fill_stroke: (Option<Color>, Option<Color>),
     pub borders: Vec<Border>,
     pub shadows: Vec<Shadow>,
     pub corner_radius: CornerRadius,
@@ -64,7 +48,15 @@ impl ParseAttribute for StyleState {
                     if value == "none" {
                         return Ok(());
                     }
-                    self.fill = Some(Fill::parse(value)?);
+                    self.fill_stroke.0 = Some(Color::parse(value)?);
+                }
+            }
+            AttributeName::Stroke => {
+                if let Some(value) = attr.value.as_text() {
+                    if value == "none" {
+                        return Ok(());
+                    }
+                    self.fill_stroke.1 = Some(Color::parse(value)?);
                 }
             }
             AttributeName::Border => {

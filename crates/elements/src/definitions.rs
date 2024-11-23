@@ -860,8 +860,9 @@ builder_constructors! {
         // Svg
         svg_data: String,
         svg_content: String,
-        #[doc = include_str!("_docs/attributes/fill.md")]
+        #[doc = include_str!("_docs/attributes/fill_stroke.md")]
         fill: String,
+        stroke: String,
 
         // Accessibility
         a11y_id: String,

@@ -1515,22 +1515,8 @@ pub enum BlurStyle {
 }
 
 pub mod svg {
-    use super::{
-        Canvas,
-        LocalResourceProvider,
-        Size,
-    };
+    use super::{Canvas, LocalResourceProvider, Size};
 
-<<<<<<< HEAD
-    pub struct Dom {
-        pub fContainerSize: SkSize,
-    }
-
-    pub struct SkSize {
-        pub fWidth: f32,
-        pub fHeight: f32,
-    }
-=======
     pub enum LengthUnit {
         Percentage,
     }
@@ -1539,6 +1525,14 @@ pub mod svg {
 
     impl Length {
         pub fn new(value: f32, unit: LengthUnit) -> Self {
+            unimplemented!("This is mocked")
+        }
+    }
+
+    pub struct Paint;
+
+    impl Paint {
+        pub fn from_color(_color: Color) -> Self {
             unimplemented!("This is mocked")
         }
     }
@@ -1553,10 +1547,21 @@ pub mod svg {
         pub fn set_height(&mut self, _height: Length) {
             unimplemented!("This is mocked")
         }
+
+        pub fn set_color(&mut self, _value: Color) {
+            unimplemented!("This is mocked")
+        }
+
+        pub fn set_fill(&mut self, _value: Paint) {
+            unimplemented!("This is mocked")
+        }
+
+        pub fn set_stroke(&mut self, _value: Paint) {
+            unimplemented!("This is mocked")
+        }
     }
 
     pub struct Dom;
->>>>>>> upstream/main
 
     impl Dom {
         pub fn from_bytes(_bytes: &[u8], provider: LocalResourceProvider) -> Result<Self, ()> {
@@ -1571,11 +1576,7 @@ pub mod svg {
             unimplemented!("This is mocked")
         }
 
-<<<<<<< HEAD
-        pub fn inner(&self) -> &Self {
-=======
         pub fn root(&self) -> SvgNode {
->>>>>>> upstream/main
             unimplemented!("This is mocked")
         }
     }
@@ -1652,10 +1653,7 @@ pub enum ColorType {
 
 pub struct SurfaceProps;
 
-use std::ops::{
-    Deref,
-    DerefMut,
-};
+use std::ops::{Deref, DerefMut};
 
 pub struct RecordingContext;
 
@@ -1671,11 +1669,7 @@ pub enum SurfaceOrigin {
 pub struct ContextOptions;
 
 pub mod direct_contexts {
-    use super::{
-        ContextOptions,
-        DirectContext,
-        Interface,
-    };
+    use super::{ContextOptions, DirectContext, Interface};
     pub fn make_gl<'a>(
         _interface: impl Into<Option<Interface>>,
         _options: impl Into<Option<&'a ContextOptions>>,

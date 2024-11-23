@@ -1,4 +1,4 @@
-The `fill` attribute allows you to specify the fill color for the `svg`.
+The `fill` and `stroke` attributes allows you to specify the fill or stroke color for the `svg`.
 
 You can learn about the syntax of this attribute in [`Color Syntax`](crate::_docs::color_syntax).
 
