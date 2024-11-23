@@ -286,15 +286,15 @@ impl<'a> DynamicCalculationEvaluator<'a> {
         let prefix = self.parse_prefix()?;
         let mut lhs = None;
         // set to true so that the first value is multiplied and counts as normal syntax
-        let mut last_is_seperator = true;
+        let mut last_is_separator = true;
 
         while let Some((rhs, seperator)) = self.parse_value() {
-            if last_is_seperator || seperator {
+            if last_is_separator || seperator {
                 lhs = Some(lhs.unwrap_or(1.0) * rhs);
             } else {
                 return None;
             }
-            last_is_seperator = seperator;
+            last_is_separator = seperator;
         }
         if let Some(prefix) = prefix {
             match prefix {
