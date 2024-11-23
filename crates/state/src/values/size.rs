@@ -1,14 +1,8 @@
 use nom::{
     branch::alt,
-    bytes::{
-        complete::tag,
-        streaming::take_while,
-    },
+    bytes::complete::tag,
     character::complete::multispace0,
-    combinator::{
-        map,
-        map_parser,
-    },
+    combinator::map,
     multi::many1,
     number::complete::float,
     sequence::{
@@ -86,7 +80,7 @@ pub fn parse_calc(mut value: &str) -> Result<Vec<DynamicCalculation>, ParseError
         .ok_or(ParseError)?
         .strip_suffix(')')
         .ok_or(ParseError)?;
-    fn inner_parse(mut value: &str) -> IResult<&str, Vec<DynamicCalculation>> {
+    fn inner_parse(value: &str) -> IResult<&str, Vec<DynamicCalculation>> {
         many1(preceded(
             multispace0,
             alt((
@@ -102,7 +96,7 @@ pub fn parse_calc(mut value: &str) -> Result<Vec<DynamicCalculation>, ParseError
                 map(tuple((float, tag("v"))), |(v, _)| {
                     DynamicCalculation::RootPercentage(v)
                 }),
-                map(float, |v| DynamicCalculation::Pixels(v)),
+                map(float, DynamicCalculation::Pixels),
             )),
         ))(value)
     }
