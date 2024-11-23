@@ -1517,6 +1517,7 @@ pub enum BlurStyle {
 pub mod svg {
     use super::{
         Canvas,
+        Color,
         LocalResourceProvider,
         Size,
     };
