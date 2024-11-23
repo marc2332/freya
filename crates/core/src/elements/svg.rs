@@ -39,7 +39,7 @@ impl ElementUtils for SvgElement {
                 root.set_width(svg::Length::new(100.0, svg::LengthUnit::Percentage));
                 root.set_height(svg::Length::new(100.0, svg::LengthUnit::Percentage));
                 root.set_color(font_style.color);
-                if let Some(color) = node_style.fill_stroke.0.as_ref() {
+                if let Some(color) = node_style.svg_stroke.as_ref() {
                     root.set_fill(svg::Paint::from_color(*color));
                 }
                 if let Some(color) = node_style.svg_fill.as_ref() {
