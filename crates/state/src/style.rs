@@ -37,7 +37,8 @@ use crate::{
 #[derive(Default, Debug, Clone, PartialEq, Component)]
 pub struct StyleState {
     pub background: Fill,
-    pub fill_stroke: (Option<Color>, Option<Color>),
+    pub svg_fill: Option<Color>,
+    pub svg_stroke: Option<Color>,
     pub borders: Vec<Border>,
     pub shadows: Vec<Shadow>,
     pub corner_radius: CornerRadius,
