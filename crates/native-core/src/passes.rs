@@ -33,10 +33,7 @@ use crate::{
         NodeMaskBuilder,
         NodeView,
     },
-    real_dom::{
-        DirtyNodesResult,
-        SendAnyMapWrapper,
-    },
+    real_dom::SendAnyMapWrapper,
     tree::{
         TreeRef,
         TreeRefView,
@@ -61,9 +58,8 @@ impl DirtyNodes {
     }
 
     pub fn pop(&mut self) -> Option<NodeId> {
-        self.nodes_dirty.iter().next().copied().map(|id| {
-            self.nodes_dirty.remove(&id);
-            id
+        self.nodes_dirty.iter().next().copied().inspect(|id| {
+            self.nodes_dirty.remove(id);
         })
     }
 }
@@ -213,7 +209,6 @@ fn pass_direction<V: FromAnyValue + Send + Sync, S: State<V>>() -> PassDirection
 pub struct RunPassView<'a, V: FromAnyValue + Send + Sync = ()> {
     pub tree: TreeRefView<'a>,
     pub node_type: View<'a, NodeType<V>>,
-    dirty_nodes_result: UniqueView<'a, DirtyNodesResult>,
     node_states: UniqueView<'a, DirtyNodeStates>,
     any_map: UniqueView<'a, SendAnyMapWrapper>,
 }
@@ -230,7 +225,6 @@ pub fn run_pass<V: FromAnyValue + Send + Sync>(
 ) {
     let RunPassView {
         tree,
-        dirty_nodes_result: nodes_updated,
         node_states: dirty,
         any_map: ctx,
         ..
@@ -240,7 +234,6 @@ pub fn run_pass<V: FromAnyValue + Send + Sync>(
         PassDirection::ParentToChild => {
             while let Some((height, id)) = dirty.pop_front(type_id) {
                 if (update_node)(id, ctx, height) {
-                    nodes_updated.insert(id);
                     dependants.mark_dirty(&dirty, id, &tree, height);
                 }
             }
@@ -248,7 +241,6 @@ pub fn run_pass<V: FromAnyValue + Send + Sync>(
         PassDirection::ChildToParent => {
             while let Some((height, id)) = dirty.pop_back(type_id) {
                 if (update_node)(id, ctx, height) {
-                    nodes_updated.insert(id);
                     dependants.mark_dirty(&dirty, id, &tree, height);
                 }
             }
@@ -256,7 +248,6 @@ pub fn run_pass<V: FromAnyValue + Send + Sync>(
         PassDirection::AnyOrder => {
             while let Some((height, id)) = dirty.pop_back(type_id) {
                 if (update_node)(id, ctx, height) {
-                    nodes_updated.insert(id);
                     dependants.mark_dirty(&dirty, id, &tree, height);
                 }
             }

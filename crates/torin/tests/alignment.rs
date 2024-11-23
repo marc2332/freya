@@ -627,7 +627,7 @@ pub fn alignment_with_absolute_child() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(100.)),
             Size::Pixels(Length::new(100.)),
-            Position::Absolute(Box::new(AbsolutePosition::default())),
+            Position::Absolute(Box::default()),
         ),
     );
     mocked_dom.add(

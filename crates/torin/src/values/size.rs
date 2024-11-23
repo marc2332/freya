@@ -21,6 +21,7 @@ pub enum Size {
     RootPercentage(Length),
     InnerPercentage(Length),
     DynamicCalculations(Box<Vec<DynamicCalculation>>),
+    Flex(Length),
 }
 
 impl Default for Size {
@@ -30,6 +31,17 @@ impl Default for Size {
 }
 
 impl Size {
+    pub fn flex_grow(&self) -> Option<Length> {
+        match self {
+            Self::Flex(f) => Some(*f),
+            _ => None,
+        }
+    }
+
+    pub fn is_flex(&self) -> bool {
+        matches!(self, Self::Flex(_))
+    }
+
     pub fn inner_sized(&self) -> bool {
         matches!(
             self,
@@ -58,6 +70,7 @@ impl Size {
             Size::FillMinimum => "fill-min".to_string(),
             Size::RootPercentage(p) => format!("{}% of root", p.get()),
             Size::InnerPercentage(p) => format!("{}% of auto", p.get()),
+            Size::Flex(f) => format!("flex({}", f.get()),
         }
     }
 
@@ -76,14 +89,9 @@ impl Size {
                 run_calculations(calculations.deref(), parent_value, root_value).unwrap_or(0.0),
             ),
             Size::Fill => Some(available_parent_value),
-            Size::FillMinimum => {
-                if phase == Phase::Initial {
-                    None
-                } else {
-                    Some(available_parent_value)
-                }
-            }
+            Size::FillMinimum if phase == Phase::Final => Some(available_parent_value),
             Size::RootPercentage(per) => Some(root_value / 100.0 * per.get()),
+            Size::Flex(_) if phase == Phase::Final => Some(available_parent_value),
             _ => None,
         }
     }

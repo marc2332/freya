@@ -25,6 +25,7 @@ pub use skia_safe::{
         set_resource_cache_total_bytes_limit,
     },
     path::ArcSize,
+    resources::LocalResourceProvider,
     rrect::Corner,
     runtime_effect::Uniform,
     surfaces::raster_n32_premul,

@@ -1517,10 +1517,11 @@ pub enum BlurStyle {
 pub mod svg {
     use super::{
         Canvas,
-        FontMgr,
+        LocalResourceProvider,
         Size,
     };
 
+<<<<<<< HEAD
     pub struct Dom {
         pub fContainerSize: SkSize,
     }
@@ -1529,9 +1530,36 @@ pub mod svg {
         pub fWidth: f32,
         pub fHeight: f32,
     }
+=======
+    pub enum LengthUnit {
+        Percentage,
+    }
+
+    pub struct Length;
+
+    impl Length {
+        pub fn new(value: f32, unit: LengthUnit) -> Self {
+            unimplemented!("This is mocked")
+        }
+    }
+
+    pub struct SvgNode;
+
+    impl SvgNode {
+        pub fn set_width(&mut self, _width: Length) {
+            unimplemented!("This is mocked")
+        }
+
+        pub fn set_height(&mut self, _height: Length) {
+            unimplemented!("This is mocked")
+        }
+    }
+
+    pub struct Dom;
+>>>>>>> upstream/main
 
     impl Dom {
-        pub fn from_bytes(_bytes: &[u8], font_mgr: &FontMgr) -> Result<Self, ()> {
+        pub fn from_bytes(_bytes: &[u8], provider: LocalResourceProvider) -> Result<Self, ()> {
             unimplemented!("This is mocked")
         }
 
@@ -1543,7 +1571,11 @@ pub mod svg {
             unimplemented!("This is mocked")
         }
 
+<<<<<<< HEAD
         pub fn inner(&self) -> &Self {
+=======
+        pub fn root(&self) -> SvgNode {
+>>>>>>> upstream/main
             unimplemented!("This is mocked")
         }
     }
@@ -1810,4 +1842,12 @@ pub enum EncodedImageFormat {
     HEIF = 11,
     AVIF = 12,
     JPEGXL = 13,
+}
+
+pub struct LocalResourceProvider;
+
+impl LocalResourceProvider {
+    pub fn new(font_mgr: &FontMgr) -> Self {
+        unimplemented!("This is mocked")
+    }
 }

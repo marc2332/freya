@@ -353,7 +353,7 @@ fn Code() -> Element {
             .highlight(&rust_config, CODE.as_bytes(), None, |_| None)
             .unwrap();
 
-        let rope = Rope::from_str(&CODE);
+        let rope = Rope::from_str(CODE);
 
         let mut syntax_blocks = SyntaxBlocks::default();
 
