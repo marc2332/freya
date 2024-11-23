@@ -1,15 +1,9 @@
 use torin::{
     geometry::Length,
-    size::{
-        DynamicCalculation,
-        Size,
-    },
+    size::{DynamicCalculation, Size},
 };
 
-use crate::{
-    Parse,
-    ParseError,
-};
+use crate::{Parse, ParseError};
 
 impl Parse for Size {
     fn parse(value: &str) -> Result<Self, ParseError> {
@@ -88,6 +82,10 @@ pub fn parse_calc(mut value: &str) -> Result<Vec<DynamicCalculation>, ParseError
             calcs.push(DynamicCalculation::Div);
         } else if val == "*" {
             calcs.push(DynamicCalculation::Mul);
+        } else if val == "(" {
+            calcs.push(DynamicCalculation::OpenParenthesis);
+        } else if val == ")" {
+            calcs.push(DynamicCalculation::ClosedParenthesis);
         } else {
             calcs.push(DynamicCalculation::Pixels(
                 val.parse::<f32>().map_err(|_| ParseError)?,
