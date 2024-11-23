@@ -66,7 +66,7 @@ impl ParseAttribute for StyleState {
                     if value == "none" {
                         return Ok(());
                     }
-                    self.fill_stroke.0 = Some(Color::parse(value)?);
+                    self.svg_stroke = Some(Color::parse(value)?);
                 }
             }
             AttributeName::Stroke => {
