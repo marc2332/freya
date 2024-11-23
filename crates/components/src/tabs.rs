@@ -146,7 +146,6 @@ pub fn Tab(
             a11y_role:"tab",
             color: "{font_theme.color}",
             background: "{background}",
-            text_align: "center",
             content: "fit",
             rect {
                 padding: "{padding}",
@@ -257,7 +256,6 @@ pub fn BottomTab(children: Element, theme: Option<BottomTabThemeWith>) -> Elemen
             a11y_role:"tab",
             color: "{font_theme.color}",
             background: "{background}",
-            text_align: "center",
             padding: "{padding}",
             main_align: "center",
             cross_align: "center",
