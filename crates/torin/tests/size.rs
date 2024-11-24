@@ -863,7 +863,8 @@ pub fn test_calc() {
             PARENT_VALUE,
             PARENT_VALUE
         ),
-        None
+        // Because +10 is just 10
+        Some(10.0)
     );
 
     assert_eq!(
@@ -871,13 +872,14 @@ pub fn test_calc() {
             &[
                 DynamicCalculation::Pixels(10.0),
                 DynamicCalculation::Add,
+                // counts as a prefix
                 DynamicCalculation::Add,
                 DynamicCalculation::Pixels(10.0)
             ],
             PARENT_VALUE,
             PARENT_VALUE
         ),
-        None
+        Some(20.0)
     );
 
     assert_eq!(
@@ -891,5 +893,60 @@ pub fn test_calc() {
             PARENT_VALUE
         ),
         Some((PARENT_VALUE * 0.5) - (PARENT_VALUE * 0.20))
+    );
+
+    assert_eq!(
+        run_calculations(
+            &[DynamicCalculation::OpenParenthesis,
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::ClosedParenthesis],
+            PARENT_VALUE,
+            PARENT_VALUE
+        ),
+        Some(10.0)
+    );
+
+    assert_eq!(
+        run_calculations(
+            &[DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::OpenParenthesis,
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::Add,
+                DynamicCalculation::Pixels(20.0),
+                DynamicCalculation::ClosedParenthesis,
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::Add,
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::OpenParenthesis,
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::ClosedParenthesis,
+                DynamicCalculation::Pixels(10.0)],
+            PARENT_VALUE,
+            PARENT_VALUE
+        ),
+        Some((10.0 * (10.0 + 20.0) * 10.0) + (10.0 * (10.0) * 10.0))
+    );
+
+    assert_eq!(
+        run_calculations(
+            &[DynamicCalculation::Sub,
+                DynamicCalculation::OpenParenthesis,
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::ClosedParenthesis,
+                DynamicCalculation::Pixels(20.0)],
+            PARENT_VALUE,
+            PARENT_VALUE
+        ),
+        Some(-1.0 * 10.0 * 20.0)
+    );
+
+    assert_eq!(
+        run_calculations(
+            &[DynamicCalculation::OpenParenthesis,
+                DynamicCalculation::Pixels(10.0)],
+            PARENT_VALUE,
+            PARENT_VALUE
+        ),
+        None
     );
 }
