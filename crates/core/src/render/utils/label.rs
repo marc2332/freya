@@ -6,6 +6,7 @@ use freya_native_core::{
 use freya_node_state::FontStyleState;
 use torin::prelude::Size2D;
 
+use super::ParagraphData;
 use crate::dom::*;
 
 pub fn create_label(
@@ -14,7 +15,7 @@ pub fn create_label(
     font_collection: &FontCollection,
     default_font_family: &[String],
     scale_factor: f32,
-) -> Paragraph {
+) -> ParagraphData {
     let font_style = &*node.get::<FontStyleState>().unwrap();
 
     let mut paragraph_style = ParagraphStyle::default();
@@ -48,5 +49,13 @@ pub fn create_label(
         },
     );
 
-    paragraph
+    let width = match font_style.text_align {
+        TextAlign::Start | TextAlign::Left => paragraph.longest_line(),
+        _ => paragraph.max_width(),
+    };
+
+    ParagraphData {
+        size: Size2D::new(width, paragraph.height()),
+        paragraph,
+    }
 }

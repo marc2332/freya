@@ -273,7 +273,6 @@ pub fn ButtonBase(
             border: "{border}",
             corner_radius: "{corner_radius}",
             background: "{background}",
-            text_align: "center",
             text_height: "disable-least-ascent",
             main_align: "center",
             cross_align: "center",
