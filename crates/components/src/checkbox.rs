@@ -1,7 +1,11 @@
 use dioxus::prelude::*;
-use freya_elements as dioxus_elements;
+use freya_elements::{
+    self as dioxus_elements,
+    events::KeyboardEvent,
+};
 use freya_hooks::{
     use_applied_theme,
+    use_focus,
     CheckboxTheme,
     CheckboxThemeWith,
 };
@@ -68,27 +72,38 @@ pub fn Checkbox(
     /// Theme override.
     theme: Option<CheckboxThemeWith>,
 ) -> Element {
+    let focus = use_focus();
     let CheckboxTheme {
+        border_fill,
         unselected_fill,
         selected_fill,
         selected_icon_fill,
     } = use_applied_theme!(&theme, checkbox);
-    let (fill, border) = if selected {
+    let (inner_fill, outer_fill) = if selected {
         (selected_fill.as_ref(), selected_fill.as_ref())
     } else {
         ("transparent", unselected_fill.as_ref())
     };
+    let border = if focus.is_selected() {
+        format!("2 inner {outer_fill}, 4 outer {border_fill}")
+    } else {
+        format!("2 inner {outer_fill}")
+    };
+
+    let onkeydown = move |_: KeyboardEvent| {};
 
     rsx!(
         rect {
+            a11y_id: focus.attribute(),
             width: "18",
             height: "18",
             padding: "4",
             main_align: "center",
             cross_align: "center",
             corner_radius: "4",
-            border: "2 solid {border}",
-            background: "{fill}",
+            border,
+            background: "{inner_fill}",
+            onkeydown,
             if selected {
                 TickIcon {
                     fill: selected_icon_fill
@@ -176,39 +191,21 @@ mod test {
         assert!(root.get(1).get(0).get(0).get(0).is_placeholder());
         assert!(root.get(2).get(0).get(0).get(0).is_placeholder());
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (20.0, 50.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
+        utils.click_cursor((20., 50.)).await;
 
         assert!(root.get(0).get(0).get(0).get(0).is_placeholder());
         assert!(root.get(1).get(0).get(0).get(0).is_element());
         assert!(root.get(2).get(0).get(0).get(0).is_placeholder());
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (10.0, 90.0).into(),
-            button: Some(MouseButton::Left),
-        });
+        utils.click_cursor((10., 90.)).await;
         utils.wait_for_update().await;
 
         assert!(root.get(0).get(0).get(0).get(0).is_placeholder());
         assert!(root.get(1).get(0).get(0).get(0).is_element());
         assert!(root.get(2).get(0).get(0).get(0).is_element());
 
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (10.0, 10.0).into(),
-            button: Some(MouseButton::Left),
-        });
-        utils.wait_for_update().await;
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (10.0, 50.0).into(),
-            button: Some(MouseButton::Left),
-        });
+        utils.click_cursor((10., 10.)).await;
+        utils.click_cursor((10., 50.)).await;
         utils.wait_for_update().await;
 
         assert!(root.get(0).get(0).get(0).get(0).is_element());

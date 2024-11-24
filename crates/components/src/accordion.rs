@@ -100,7 +100,7 @@ pub fn Accordion(props: AccordionProps) -> Element {
             height: "auto",
             background: "{background}",
             onclick,
-            border: "1 solid {border_fill}",
+            border: "1 inner {border_fill}",
             {&props.summary}
             rect {
                 overflow: "clip",
@@ -149,7 +149,6 @@ mod test {
     use freya::prelude::*;
     use freya_testing::prelude::*;
     use tokio::time::sleep;
-    use winit::event::MouseButton;
 
     #[tokio::test]
     pub async fn accordion() {
@@ -176,19 +175,12 @@ mod test {
         let content = root.get(0).get(1).get(0);
         let label = content.get(0);
         utils.wait_for_update().await;
-        utils.wait_for_update().await;
 
         // Accordion is closed, therefore label is hidden.
         assert!(!label.is_visible());
 
         // Click on the accordion
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (5., 5.).into(),
-            button: Some(MouseButton::Left),
-        });
-
-        utils.wait_for_update().await;
+        utils.click_cursor((5., 5.)).await;
 
         // State somewhere in the middle
         sleep(Duration::from_millis(70)).await;

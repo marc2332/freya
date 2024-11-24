@@ -6,7 +6,7 @@ use crate::{
     dom_adapter::NodeKey,
     geometry::Size2D,
     node::Node,
-    prelude::LayoutNode,
+    prelude::Area,
 };
 
 pub trait LayoutMeasurer<Key: NodeKey> {
@@ -19,5 +19,5 @@ pub trait LayoutMeasurer<Key: NodeKey> {
 
     fn should_measure_inner_children(&mut self, node_id: Key) -> bool;
 
-    fn notify_layout_references(&self, _node_id: Key, _layout_node: &LayoutNode) {}
+    fn notify_layout_references(&self, _node_id: Key, _area: Area, _inner_sizes: Size2D) {}
 }

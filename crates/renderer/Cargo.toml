@@ -15,8 +15,8 @@ categories = ["gui", "asynchronous"]
 features = ["freya-engine/mocked-engine"]
 
 [features]
-hot-reload = []
 skia-engine = ["freya-engine/skia-engine"]
+disable-zoom-shortcuts = []
 
 [dependencies]
 freya-node-state = { workspace = true }
@@ -29,7 +29,6 @@ torin = { workspace = true }
 
 freya-native-core = { workspace = true }
 dioxus-core = { workspace = true }
-dioxus-hot-reload = { workspace = true }
 
 tokio = { workspace = true }
 gl = { workspace = true }

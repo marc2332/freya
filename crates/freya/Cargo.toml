@@ -18,12 +18,14 @@ no-default-features = true
 [features]
 custom-tokio-rt = []
 skia = ["freya-engine/skia-engine"]
-hot-reload = ["freya-renderer/hot-reload", "dioxus/hot-reload"]
-log = ["dep:tracing", "dep:tracing-subscriber"]
+tracing-subscriber = ["dep:tracing-subscriber"]
 devtools = ["dep:freya-devtools"]
 use_camera = ["freya-hooks/use_camera"]
 mocked-engine-development = ["freya-engine/mocked-engine"] # This is just for the CI
 default = ["skia"]
+performance-overlay = []
+fade-cached-incremental-areas = ["freya-core/fade-cached-incremental-areas"]
+disable-zoom-shortcuts = ["freya-renderer/disable-zoom-shortcuts"]
 
 [dependencies]
 freya-devtools = { workspace = true, optional = true }
@@ -41,9 +43,7 @@ dioxus = { workspace = true }
 dioxus-core-macro = { workspace = true }
 dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
-dioxus-hot-reload = { workspace = true }
 dioxus-signals = { workspace = true }
 
 tokio = { workspace = true }
-tracing = { workspace = true, optional = true }
-tracing-subscriber = { workspace = true, optional = true }
+tracing-subscriber = { workspace = true, optional = true, features = ["env-filter"]}

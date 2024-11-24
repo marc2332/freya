@@ -1,31 +1,29 @@
-pub mod accessibility_manager;
-pub use accessibility_manager::*;
+mod tree;
 use freya_native_core::{
     node::NodeType,
     real_dom::NodeImmutable,
-    tags::TagName,
-    NodeId,
 };
 use freya_node_state::AccessibilityNodeState;
-use torin::torin::Torin;
+use itertools::Itertools;
+pub use tree::*;
 
 use crate::{
-    dom::{
-        DioxusDOM,
-        DioxusNode,
-    },
+    dom::DioxusNode,
     types::AccessibilityId,
 };
 
-/// Direction for the next Accessibility Node to be focused.
+/// Strategy for the next Accessibility Node to be focused.
 #[derive(PartialEq)]
-pub enum AccessibilityFocusDirection {
+pub enum AccessibilityFocusStrategy {
     Forward,
     Backward,
+    // We could add more strategies in the future
 }
 
 /// Shortcut functions to retrieve Acessibility info from a Dioxus Node
-trait NodeAccessibility {
+pub trait NodeAccessibility {
+    fn get_accessibility_id(&self) -> Option<AccessibilityId>;
+
     /// Return the first text node from this Node
     fn get_inner_texts(&self) -> Option<String>;
 
@@ -34,6 +32,15 @@ trait NodeAccessibility {
 }
 
 impl NodeAccessibility for DioxusNode<'_> {
+    fn get_accessibility_id(&self) -> Option<AccessibilityId> {
+        if self.id() == self.real_dom().root_id() {
+            Some(ACCESSIBILITY_ROOT_ID)
+        } else {
+            let node_accessibility = &*self.get::<AccessibilityNodeState>()?;
+            node_accessibility.a11y_id
+        }
+    }
+
     /// Return the first text node from this Node
     fn get_inner_texts(&self) -> Option<String> {
         let children = self.children();
@@ -46,49 +53,11 @@ impl NodeAccessibility for DioxusNode<'_> {
         }
     }
 
-    /// Collect all the AccessibilityIDs from a Node's children
+    /// Collect all descendant accessibility node ids
     fn get_accessibility_children(&self) -> Vec<AccessibilityId> {
         self.children()
-            .iter()
-            .filter_map(|child| {
-                if child.node_type().is_visible_element() {
-                    let node_accessibility = &*child.get::<AccessibilityNodeState>().unwrap();
-                    node_accessibility.accessibility_id
-                } else {
-                    None
-                }
-            })
-            .collect::<Vec<AccessibilityId>>()
+            .into_iter()
+            .filter_map(|child| child.get_accessibility_id())
+            .collect_vec()
     }
-}
-
-pub fn process_accessibility(
-    layout: &Torin<NodeId>,
-    rdom: &DioxusDOM,
-    accessibility_manager: &mut AccessibilityManager,
-) {
-    rdom.traverse_depth_first_advanced(|node| {
-        if !node.node_type().is_element() {
-            return false;
-        }
-
-        let layout_node = layout.get(node.id()).unwrap();
-        let node_accessibility = &*node.get::<AccessibilityNodeState>().unwrap();
-        if let Some(accessibility_id) = node_accessibility.accessibility_id {
-            accessibility_manager.add_node(
-                &node,
-                layout_node,
-                accessibility_id,
-                node_accessibility,
-            );
-        }
-
-        if let Some(tag) = node.node_type().tag() {
-            if *tag == TagName::Paragraph || *tag == TagName::Label {
-                return false;
-            }
-        }
-
-        true
-    });
 }

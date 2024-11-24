@@ -21,8 +21,7 @@ fn app() -> Element {
 
 #[allow(non_snake_case)]
 fn Body() -> Element {
-    let theme = use_theme();
-    let theme = theme.read();
+    let theme = use_applied_theme!(None, body);
 
     let mut editable = use_editable(
         || {
@@ -37,11 +36,11 @@ fn Body() -> Element {
         editable.process_event(&EditableEvent::Click);
     };
 
-    let onkeydown = move |e: KeyboardEvent| {
+    let onglobalkeydown = move |e: KeyboardEvent| {
         editable.process_event(&EditableEvent::KeyDown(e.data));
     };
 
-    let onkeyup = move |e: KeyboardEvent| {
+    let onglobalkeyup = move |e: KeyboardEvent| {
         editable.process_event(&EditableEvent::KeyUp(e.data));
     };
 
@@ -50,16 +49,14 @@ fn Body() -> Element {
             width: "100%",
             height: "100%",
             padding: "10",
-            onkeydown,
-            onkeyup,
+            onglobalkeydown,
+            onglobalkeyup,
             cursor_reference,
             direction: "horizontal",
             onglobalclick: onclick,
-            background: "{theme.body.background}",
+            background: "{theme.background}",
             VirtualScrollView {
-                theme: theme_with!(ScrollViewTheme {
-                    width: "50%".into(),
-                }),
+                width: "50%",
                 length: editor.len_lines(),
                 item_size: 35.0,
                 scroll_with_arrows: false,
@@ -72,7 +69,7 @@ fn Body() -> Element {
 
                     // Only show the cursor in the active line
                     let character_index = if is_line_selected {
-                        editor.visible_cursor_col().to_string()
+                        editor.cursor_col().to_string()
                     } else {
                         "none".to_string()
                     };
@@ -88,8 +85,8 @@ fn Body() -> Element {
                         editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
                     };
 
-                    let onmouseover = move |e: MouseEvent| {
-                        editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
+                    let onmousemove = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseMove(e.data, line_index));
                     };
 
                     let highlights = editable.highlights_attr(line_index);
@@ -120,7 +117,7 @@ fn Body() -> Element {
                                 cursor_mode: "editable",
                                 cursor_id: "{line_index}",
                                 onmousedown,
-                                onmouseover,
+                                onmousemove,
                                 highlights,
                                 text {
                                     color: "rgb(240, 240, 240)",
@@ -133,9 +130,7 @@ fn Body() -> Element {
                 }
             }
             VirtualScrollView {
-                theme: theme_with!(ScrollViewTheme {
-                    width: "50%".into(),
-                }),
+                width: "50%",
                 length: editor.len_lines(),
                 item_size: 60.0,
                 scroll_with_arrows: false,
@@ -148,7 +143,7 @@ fn Body() -> Element {
 
                     // Only show the cursor in the active line
                     let character_index = if is_line_selected {
-                        editor.visible_cursor_col().to_string()
+                        editor.cursor_col().to_string()
                     } else {
                         "none".to_string()
                     };
@@ -164,8 +159,8 @@ fn Body() -> Element {
                         editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
                     };
 
-                    let onmouseover = move |e: MouseEvent| {
-                        editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
+                    let onmousemove = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseMove(e.data, line_index));
                     };
 
                     let highlights = editable.highlights_attr(line_index);
@@ -196,7 +191,7 @@ fn Body() -> Element {
                                 cursor_mode: "editable",
                                 cursor_id: "{line_index}",
                                 onmousedown,
-                                onmouseover,
+                                onmousemove,
                                 highlights,
                                 highlight_mode: "expanded",
                                 text {

@@ -1,10 +1,6 @@
 use dioxus::prelude::*;
 use freya_components::*;
 use freya_core::prelude::*;
-use freya_hooks::{
-    theme_with,
-    ScrollViewThemeWith,
-};
 use freya_native_core::NodeId;
 
 use crate::{
@@ -31,20 +27,27 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
     rsx!(
         ScrollView {
             show_scrollbar: true,
-            theme: theme_with!(
-                ScrollViewTheme {
-                    height : "calc(100% - 35)".into(),
-                    width: "100%".into(),
-                }
-            ),
-            {node.state.attributes().into_iter().enumerate().map(|(i, (name, attr))| {
-                match attr {
+            height : "fill",
+            width: "100%",
+            spacing: "6",
+            padding: "8 16",
+            {node.state.attributes().into_iter().enumerate().filter_map(|(i, (name, attr))| {
+                Some(match attr {
                     AttributeType::Measure(measure) => {
                         rsx!{
                             Property {
                                 key: "{i}",
                                 name: "{name}",
                                 value: measure.to_string()
+                            }
+                        }
+                    }
+                    AttributeType::OptionalMeasure(measure) => {
+                        rsx!{
+                            Property {
+                                key: "{i}",
+                                name: "{name}",
+                                value: measure.map(|measure| measure.to_string()).unwrap_or_else(|| "inherit".to_string())
                             }
                         }
                     }
@@ -82,6 +85,19 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
                                 name: "{name}",
                                 fill: fill.clone()
                             }
+                        }
+                    }
+                    AttributeType::OptionalColor(fill) => {
+                        if let Some(fill) = fill {
+                            rsx!{
+                                ColorProperty {
+                                    key: "{i}",
+                                    name: "{name}",
+                                    fill: fill.clone()
+                                }
+                            }
+                        } else {
+                            return None;
                         }
                     }
                     AttributeType::Gradient(fill) => {
@@ -183,7 +199,7 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
                             }
                         }
                     }
-                }
+                })
             })}
         }
     )

@@ -8,18 +8,23 @@ use freya_core::{
         FreyaPlugin,
         PluginsManager,
     },
+    prelude::EventMessage,
     style::default_fonts,
 };
 use freya_engine::prelude::Color;
 use freya_node_state::Parse;
 use image::ImageReader;
-use winit::window::{
-    Icon,
-    Window,
-    WindowAttributes,
+use winit::{
+    event_loop::EventLoopBuilder,
+    window::{
+        Icon,
+        Window,
+        WindowAttributes,
+    },
 };
 
-pub type WindowBuilderHook = Box<dyn Fn(WindowAttributes) -> WindowAttributes>;
+pub type EventLoopBuilderHook = Box<dyn FnOnce(&mut EventLoopBuilder<EventMessage>)>;
+pub type WindowBuilderHook = Box<dyn FnOnce(WindowAttributes) -> WindowAttributes>;
 pub type EmbeddedFonts<'a> = Vec<(&'a str, &'a [u8])>;
 
 /// Configuration for a Window.
@@ -38,6 +43,8 @@ pub struct WindowConfig {
     pub transparent: bool,
     /// Background color of the Window.
     pub background: Color,
+    /// Window visibility. Default to `true`.
+    pub visible: bool,
     /// The Icon of the Window.
     pub icon: Option<Icon>,
     /// Setup callback.
@@ -46,6 +53,8 @@ pub struct WindowConfig {
     pub on_exit: Option<WindowCallback>,
     /// Hook function called with the Window Attributes.
     pub window_attributes_hook: Option<WindowBuilderHook>,
+    /// Hook function called with the Event Loop Builder.
+    pub event_loop_builder_hook: Option<EventLoopBuilderHook>,
 }
 
 impl Default for WindowConfig {
@@ -58,10 +67,12 @@ impl Default for WindowConfig {
             title: "Freya app",
             transparent: false,
             background: Color::WHITE,
+            visible: true,
             icon: None,
             on_setup: None,
             on_exit: None,
             window_attributes_hook: None,
+            event_loop_builder_hook: None,
         }
     }
 }
@@ -159,6 +170,12 @@ impl<'a, T: Clone> LaunchConfig<'a, T> {
         self
     }
 
+    /// Specify the Window visibility at launch.
+    pub fn with_visible(mut self, visible: bool) -> Self {
+        self.window_config.visible = visible;
+        self
+    }
+
     /// Embed a font.
     pub fn with_font(mut self, font_name: &'a str, font: &'a [u8]) -> Self {
         self.embedded_fonts.push((font_name, font));
@@ -204,9 +221,18 @@ impl<'a, T: Clone> LaunchConfig<'a, T> {
     /// Register a Window Attributes hook.
     pub fn with_window_attributes(
         mut self,
-        window_attributes_hook: impl Fn(WindowAttributes) -> WindowAttributes + 'static,
+        window_attributes_hook: impl FnOnce(WindowAttributes) -> WindowAttributes + 'static,
     ) -> Self {
         self.window_config.window_attributes_hook = Some(Box::new(window_attributes_hook));
+        self
+    }
+
+    /// Register an Event Loop Builder hook.
+    pub fn with_event_loop_builder(
+        mut self,
+        event_loop_builder_hook: impl FnOnce(&mut EventLoopBuilder<EventMessage>) + 'static,
+    ) -> Self {
+        self.window_config.event_loop_builder_hook = Some(Box::new(event_loop_builder_hook));
         self
     }
 }

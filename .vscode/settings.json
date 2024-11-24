@@ -1,7 +1,8 @@
 {
     "rust-analyzer.cargo.features": [
         "devtools",
-        "log",
-        "use_camera"
+        "tracing-subscriber",
+        "use_camera",
+        "fade-cached-incremental-areas"
     ]
 }

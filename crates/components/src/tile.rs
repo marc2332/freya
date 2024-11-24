@@ -1,8 +1,14 @@
 use dioxus::prelude::*;
-use freya_elements as dioxus_elements;
+use freya_elements::{
+    self as dioxus_elements,
+    events::{
+        Key,
+        KeyboardEvent,
+        MouseEvent,
+    },
+};
 use freya_hooks::{
     use_applied_theme,
-    use_focus,
     use_platform,
     TileTheme,
     TileThemeWith,
@@ -38,12 +44,9 @@ pub fn Tile(
     /// Theme override.
     theme: Option<TileThemeWith>,
 ) -> Element {
-    let mut focus = use_focus();
     let mut status = use_signal(TileStatus::default);
     let platform = use_platform();
     let TileTheme { padding } = use_applied_theme!(&theme, tile);
-
-    let focus_id = focus.attribute();
 
     use_drop(move || {
         if *status.read() == TileStatus::Hovering {
@@ -51,9 +54,18 @@ pub fn Tile(
         }
     });
 
-    let onclick = move |_| {
-        focus.focus();
+    let onkeydown = move |e: KeyboardEvent| {
+        if e.key == Key::Enter {
+            if let Some(onselect) = &onselect {
+                e.stop_propagation();
+                onselect.call(())
+            }
+        }
+    };
+
+    let onclick = move |e: MouseEvent| {
         if let Some(onselect) = &onselect {
+            e.stop_propagation();
             onselect.call(())
         }
     };
@@ -70,10 +82,10 @@ pub fn Tile(
 
     rsx!(
         rect {
+            onkeydown,
             onclick,
             onmouseenter,
             onmouseleave,
-            focus_id,
             direction: "horizontal",
             padding: "{padding}",
             cross_align: "center",

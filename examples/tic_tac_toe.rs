@@ -182,7 +182,7 @@ fn app() -> Element {
                                 width: "48",
                                 height: "48",
                                 corner_radius: "6",
-                                border: "2 solid rgb(40, 40, 40)",
+                                border: "2 inner rgb(40, 40, 40)",
                                 background: "rgb(250, 250, 250)",
                                 main_align: "center",
                                 cross_align: "center",

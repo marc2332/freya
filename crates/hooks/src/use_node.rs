@@ -90,7 +90,7 @@ mod test {
 
         let mut utils = launch_test_with_config(
             use_node_app,
-            TestingConfig {
+            TestingConfig::<()> {
                 size: (500.0, 800.0).into(),
                 ..TestingConfig::default()
             },
@@ -103,7 +103,7 @@ mod test {
             Ok(500.0 * 0.5)
         );
 
-        utils.config().size = (300.0, 800.0).into();
+        utils.resize((300.0, 800.0).into());
         utils.wait_for_update().await;
 
         let root = utils.root().get(0);

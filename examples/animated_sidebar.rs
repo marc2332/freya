@@ -8,7 +8,10 @@ use dioxus_router::prelude::{
     Routable,
     Router,
 };
-use freya::prelude::*;
+use freya::{
+    common::NodeReferenceLayout,
+    prelude::*,
+};
 
 fn main() {
     launch_with_props(app, "Animated Sidebar", (650.0, 500.0));
@@ -34,9 +37,12 @@ pub enum Route {
 }
 
 #[component]
-fn FromRouteToCurrent(from: Element, upwards: bool) -> Element {
+fn FromRouteToCurrent(
+    from: Element,
+    upwards: bool,
+    node_size: ReadOnlySignal<NodeReferenceLayout>,
+) -> Element {
     let mut animated_router = use_animated_router::<Route>();
-    let (reference, node_size) = use_node();
     let animations = use_animation_with_dependencies(&upwards, move |ctx, upwards| {
         let (start, end) = if upwards { (1., 0.) } else { (0., 1.) };
         ctx.with(
@@ -60,7 +66,7 @@ fn FromRouteToCurrent(from: Element, upwards: bool) -> Element {
     }));
 
     let offset = animations.get().read().as_f32();
-    let height = node_size.area.height();
+    let height = node_size.read().area.height();
 
     let offset = height - (offset * height);
     let to = rsx!(Outlet::<Route> {});
@@ -68,7 +74,6 @@ fn FromRouteToCurrent(from: Element, upwards: bool) -> Element {
 
     rsx!(
         rect {
-            reference,
             height: "fill",
             width: "fill",
             offset_y: "-{offset}",
@@ -93,6 +98,7 @@ fn Expand(children: Element) -> Element {
 
 #[component]
 fn AnimatedOutlet(children: Element) -> Element {
+    let (reference, node_size) = use_node_signal();
     let animated_router = use_context::<Signal<AnimatedRouterContext<Route>>>();
 
     let from_route = match animated_router() {
@@ -105,15 +111,18 @@ fn AnimatedOutlet(children: Element) -> Element {
         _ => None,
     };
 
-    if let Some((from, upwards)) = from_route {
-        rsx!(FromRouteToCurrent { upwards, from })
-    } else {
-        rsx!(
-            Expand {
-                Outlet::<Route> {}
+    rsx!(
+        rect {
+            reference,
+            if let Some((from, upwards)) = from_route {
+                FromRouteToCurrent { upwards, from, node_size }
+            } else {
+                Expand {
+                    Outlet::<Route> {}
+                }
             }
-        )
-    }
+        }
+    )
 }
 
 #[allow(non_snake_case)]

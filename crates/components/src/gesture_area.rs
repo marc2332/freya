@@ -65,7 +65,7 @@ type EventsQueue = VecDeque<(Instant, TouchEvent)>;
 #[allow(non_snake_case)]
 pub fn GestureArea(props: GestureAreaProps) -> Element {
     let event_emitter = use_coroutine(
-        |mut rx: UnboundedReceiver<(Instant, TouchEvent)>| async move {
+        move |mut rx: UnboundedReceiver<(Instant, TouchEvent)>| async move {
             let mut touch_events = VecDeque::<(Instant, TouchEvent)>::new();
 
             while let Some(new_event) = rx.next().await {

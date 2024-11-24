@@ -66,7 +66,7 @@ pub fn NodeElement(
             cross_align: "center",
             rect {
                 onmousedown: onarrowmousedown,
-                margin: "0 8 0 0",
+                width: "16",
                 if let Some(is_open) = is_open {
                     {
                         let arrow_degree = if is_open {

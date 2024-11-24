@@ -1,10 +1,19 @@
 use freya_common::CachedParagraph;
 use freya_engine::prelude::*;
+use freya_native_core::prelude::NodeImmutable;
+use freya_node_state::FontStyleState;
+use torin::prelude::{
+    Area,
+    AreaModel,
+    LayoutNode,
+    Length,
+    Size2D,
+};
 
 use super::utils::ElementUtils;
-use crate::prelude::{
-    align_main_align_paragraph,
-    DioxusNode,
+use crate::{
+    prelude::DioxusNode,
+    render::align_main_align_paragraph,
 };
 
 pub struct LabelElement;
@@ -33,5 +42,46 @@ impl ElementUtils for LabelElement {
         let y = area.min_y() + align_main_align_paragraph(node_ref, &area, paragraph);
 
         paragraph.paint(canvas, (x, y));
+    }
+
+    #[inline]
+    fn element_needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
+        let font_style = node_ref.get::<FontStyleState>().unwrap();
+
+        !font_style.text_shadows.is_empty()
+    }
+
+    fn element_drawing_area(
+        &self,
+        layout_node: &LayoutNode,
+        node_ref: &DioxusNode,
+        scale_factor: f32,
+    ) -> Area {
+        let paragraph_font_height = &layout_node
+            .data
+            .as_ref()
+            .unwrap()
+            .get::<CachedParagraph>()
+            .unwrap()
+            .1;
+        let mut area = layout_node.visible_area();
+        area.size.height = area.size.height.max(*paragraph_font_height);
+
+        let font_style = node_ref.get::<FontStyleState>().unwrap();
+
+        let mut text_shadow_area = area;
+
+        for text_shadow in &font_style.text_shadows {
+            text_shadow_area.move_with_offsets(
+                &Length::new(text_shadow.offset.x),
+                &Length::new(text_shadow.offset.y),
+            );
+
+            let expanded_size = text_shadow.blur_sigma.ceil() as f32 * scale_factor;
+
+            text_shadow_area.expand(&Size2D::new(expanded_size, expanded_size))
+        }
+
+        area.union(&text_shadow_area)
     }
 }

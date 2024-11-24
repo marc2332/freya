@@ -1,4 +1,12 @@
-use freya_common::ParagraphElements;
+use std::sync::{
+    Arc,
+    Mutex,
+};
+
+use freya_common::{
+    CompositorDirtyNodes,
+    ParagraphElements,
+};
 use freya_engine::prelude::*;
 use freya_native_core::{
     attributes::AttributeName,
@@ -13,6 +21,7 @@ use freya_native_core::{
         State,
     },
     tags::TagName,
+    NodeId,
     SendAnyMap,
 };
 use freya_native_core_macro::partial_derive_state;
@@ -143,7 +152,9 @@ impl State<CustomAttributeValues> for CursorState {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         context: &SendAnyMap,
     ) -> bool {
-        let paragraphs = context.get::<ParagraphElements>().unwrap();
+        let root_id = context.get::<NodeId>().unwrap();
+        let paragraphs = context.get::<Arc<Mutex<ParagraphElements>>>().unwrap();
+        let compositor_dirty_nodes = context.get::<Arc<Mutex<CompositorDirtyNodes>>>().unwrap();
         let mut cursor = parent.map(|(p,)| p.clone()).unwrap_or_default();
 
         if let Some(attributes) = node_view.attributes() {
@@ -153,12 +164,21 @@ impl State<CustomAttributeValues> for CursorState {
         }
         let changed = &cursor != self;
 
-        if changed && CursorMode::Editable == cursor.mode {
+        let is_orphan = node_view.height() == 0 && node_view.node_id() != *root_id;
+
+        if changed && CursorMode::Editable == cursor.mode && !is_orphan {
             if let Some((tag, cursor_ref)) = node_view.tag().zip(cursor.cursor_ref.as_ref()) {
                 if *tag == TagName::Paragraph {
-                    paragraphs.insert_paragraph(node_view.node_id(), cursor_ref.text_id)
+                    paragraphs
+                        .lock()
+                        .unwrap()
+                        .insert_paragraph(node_view.node_id(), cursor_ref.text_id)
                 }
             }
+            compositor_dirty_nodes
+                .lock()
+                .unwrap()
+                .invalidate(node_view.node_id());
         }
 
         *self = cursor;

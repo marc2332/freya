@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use dioxus::prelude::*;
 use dioxus_router::prelude::{
     navigator,
-    IntoRoutable,
+    NavigationTarget,
 };
 use freya_elements::{
     self as dioxus_elements,
@@ -15,7 +15,10 @@ use freya_hooks::{
 };
 use winit::event::MouseButton;
 
-use crate::Tooltip;
+use crate::{
+    Tooltip,
+    TooltipContainer,
+};
 
 /// Tooltip configuration for the [`Link`] component.
 #[derive(Clone, PartialEq)]
@@ -93,7 +96,7 @@ pub fn Link(
     theme: Option<LinkThemeWith>,
     /// The route or external URL string to navigate to.
     #[props(into)]
-    to: IntoRoutable,
+    to: NavigationTarget,
     /// Inner children for the Link.
     children: Element,
     /// This event will be fired if opening an external link fails.
@@ -109,7 +112,7 @@ pub fn Link(
     let theme = use_applied_theme!(&theme, link);
     let mut is_hovering = use_signal(|| false);
 
-    let url = if let IntoRoutable::FromStr(ref url) = to {
+    let url = if let NavigationTarget::External(ref url) = to {
         Some(url.clone())
     } else {
         None
@@ -141,7 +144,9 @@ pub fn Link(
 
                 // TODO(marc2332): Log unhandled errors
             } else {
+                println!("111");
                 let router = navigator();
+                println!("222");
                 router.push(to.clone());
             }
         }
@@ -159,7 +164,7 @@ pub fn Link(
         Some(LinkTooltip::Custom(str)) => Some(str),
     };
 
-    let main_rect = rsx! {
+    let link = rsx! {
         rect {
             onmouseenter,
             onmouseleave,
@@ -169,24 +174,19 @@ pub fn Link(
         }
     };
 
-    let Some(tooltip) = tooltip else {
-        return rsx!({ main_rect });
-    };
-
-    rsx! {
-        {main_rect}
-        rect {
-            height: "0",
-            layer: "-999",
-            rect {
-                width: "100v",
-                if *is_hovering.read() {
+    if let Some(tooltip) = tooltip {
+        rsx!(
+            TooltipContainer {
+                tooltip: rsx!(
                     Tooltip {
-                        url: tooltip
+                        text: tooltip
                     }
-                }
+                ),
+                {link}
             }
-        }
+        )
+    } else {
+        link
     }
 }
 
@@ -270,32 +270,19 @@ mod test {
 
         let mut utils = launch_test(link_app);
 
-        utils.wait_for_update().await;
-        utils.wait_for_update().await;
-
         // Check route is Home
         assert_eq!(utils.root().get(2).get(0).text(), Some("Home"));
 
         // Go to the "Somewhere" route
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (5., 70.).into(),
-            button: Some(MouseButton::Left),
-        });
-
-        utils.wait_for_update().await;
-        utils.wait_for_update().await;
+        utils.click_cursor((5., 60.)).await;
 
         // Check route is Somewhere
         assert_eq!(utils.root().get(2).get(0).text(), Some("Somewhere"));
 
         // Go to the "Home" route again
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (5., 5.).into(),
-            button: Some(MouseButton::Left),
-        });
+        utils.click_cursor((5., 5.)).await;
 
-        utils.wait_for_update().await;
+        // Check route is Home
+        assert_eq!(utils.root().get(2).get(0).text(), Some("Home"));
     }
 }

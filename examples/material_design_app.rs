@@ -104,10 +104,8 @@ fn Scaffold(props: ScaffoldProps) -> Element {
             }
             {props.navbar}
             ScrollView {
-                theme: theme_with!(ScrollViewTheme {
-                    height: height.into(),
-                    padding: "3 10 0 10".into(),
-                }),
+                height,
+                padding: "3 10 0 10",
                 {props.children}
             }
         }

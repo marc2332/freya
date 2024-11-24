@@ -7,14 +7,11 @@ use std::{
 };
 
 use bytes::Bytes;
-use dioxus_core::{
-    prelude::{
-        current_scope_id,
-        spawn,
-        ScopeId,
-        Task,
-    },
-    Runtime,
+use dioxus_core::prelude::{
+    current_scope_id,
+    spawn_forever,
+    ScopeId,
+    Task,
 };
 use dioxus_hooks::{
     use_context,
@@ -82,10 +79,10 @@ impl AssetCacher {
         subscribe: bool,
     ) -> Signal<Bytes> {
         // Cancel previous caches
-        if let Some(mut asset_state) = self.registry.write().remove(&asset_config) {
+        if let Some(asset_state) = self.registry.write().remove(&asset_config) {
             if let AssetUsers::ClearTask(task) = asset_state.users {
                 task.cancel();
-                asset_state.asset_bytes.take();
+                asset_state.asset_bytes.manually_drop();
             }
         }
 
@@ -139,18 +136,17 @@ impl AssetCacher {
             // Only clear the asset if a duration was specified
             if let AssetAge::Duration(duration) = asset_config.age {
                 // Why not use `spawn_forever`? Reason: https://github.com/DioxusLabs/dioxus/issues/2215
-                let clear_task = Runtime::current().unwrap().on_scope(ScopeId(0), || {
-                    spawn({
-                        let asset_config = asset_config.clone();
-                        async move {
-                            sleep(duration).await;
-                            if let Some(mut asset_state) = registry.write().remove(&asset_config) {
-                                // Clear the asset
-                                asset_state.asset_bytes.take();
-                            }
+                let clear_task = spawn_forever({
+                    let asset_config = asset_config.clone();
+                    async move {
+                        sleep(duration).await;
+                        if let Some(asset_state) = registry.write().remove(&asset_config) {
+                            // Clear the asset
+                            asset_state.asset_bytes.manually_drop();
                         }
-                    })
-                });
+                    }
+                })
+                .unwrap();
 
                 // Registry the clear-task
                 let mut registry = registry.write();
@@ -168,7 +164,7 @@ impl AssetCacher {
                 AssetUsers::ClearTask(task) => {
                     // Cancel clear-tasks
                     task.cancel();
-                    asset_state.asset_bytes.take();
+                    asset_state.asset_bytes.manually_drop();
 
                     // Start using this asset
                     asset_state.users =

@@ -1,3 +1,16 @@
+use nom::{
+    branch::alt,
+    bytes::complete::tag,
+    character::complete::multispace0,
+    combinator::map,
+    multi::many1,
+    number::complete::float,
+    sequence::{
+        preceded,
+        tuple,
+    },
+    IResult,
+};
 use torin::{
     geometry::Length,
     size::{
@@ -15,6 +28,16 @@ impl Parse for Size {
     fn parse(value: &str) -> Result<Self, ParseError> {
         if value == "auto" {
             Ok(Size::Inner)
+        } else if value == "flex" {
+            Ok(Size::Flex(Length::new(1.0)))
+        } else if value.contains("flex") {
+            Ok(Size::Flex(Length::new(
+                value
+                    .replace("flex(", "")
+                    .replace(')', "")
+                    .parse::<f32>()
+                    .map_err(|_| ParseError)?,
+            )))
         } else if value == "fill" {
             Ok(Size::Fill)
         } else if value == "fill-min" {
@@ -51,35 +74,34 @@ impl Parse for Size {
 }
 
 pub fn parse_calc(mut value: &str) -> Result<Vec<DynamicCalculation>, ParseError> {
-    let mut calcs = Vec::new();
+    // No need to parse this using nom
 
     value = value
         .strip_prefix("calc(")
         .ok_or(ParseError)?
         .strip_suffix(')')
         .ok_or(ParseError)?;
-
-    let values = value.split_whitespace();
-
-    for val in values {
-        if val.contains('%') {
-            calcs.push(DynamicCalculation::Percentage(
-                val.replace('%', "").parse().map_err(|_| ParseError)?,
-            ));
-        } else if val == "+" {
-            calcs.push(DynamicCalculation::Add);
-        } else if val == "-" {
-            calcs.push(DynamicCalculation::Sub);
-        } else if val == "/" {
-            calcs.push(DynamicCalculation::Div);
-        } else if val == "*" {
-            calcs.push(DynamicCalculation::Mul);
-        } else {
-            calcs.push(DynamicCalculation::Pixels(
-                val.parse::<f32>().map_err(|_| ParseError)?,
-            ));
-        }
+    fn inner_parse(value: &str) -> IResult<&str, Vec<DynamicCalculation>> {
+        many1(preceded(
+            multispace0,
+            alt((
+                map(tag("+"), |_| DynamicCalculation::Add),
+                map(tag("-"), |_| DynamicCalculation::Sub),
+                map(tag("*"), |_| DynamicCalculation::Mul),
+                map(tag("/"), |_| DynamicCalculation::Div),
+                map(tag("("), |_| DynamicCalculation::OpenParenthesis),
+                map(tag(")"), |_| DynamicCalculation::ClosedParenthesis),
+                map(tuple((float, tag("%"))), |(v, _)| {
+                    DynamicCalculation::Percentage(v)
+                }),
+                map(tuple((float, tag("v"))), |(v, _)| {
+                    DynamicCalculation::RootPercentage(v)
+                }),
+                map(float, DynamicCalculation::Pixels),
+            )),
+        ))(value)
     }
+    let tokens = inner_parse(value).map_err(|_| ParseError)?.1;
 
-    Ok(calcs)
+    Ok(tokens)
 }

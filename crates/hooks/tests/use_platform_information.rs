@@ -1,4 +1,8 @@
-use freya::prelude::*;
+use freya::prelude::{
+    use_platform_information,
+    *,
+};
+use freya_elements::elements as dioxus_elements;
 use freya_testing::prelude::*;
 
 #[tokio::test]
@@ -13,7 +17,7 @@ async fn window_size() {
 
     let mut utils = launch_test_with_config(
         use_animation_app,
-        TestingConfig {
+        TestingConfig::<()> {
             size: (333.0, 190.0).into(),
             ..TestingConfig::default()
         },

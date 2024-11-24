@@ -13,10 +13,8 @@ pub fn Property(name: String, value: String) -> Element {
     rsx!(
         rect {
             overflow: "clip",
-            height: "30",
             width: "100%",
             direction: "horizontal",
-            padding: "10",
             paragraph {
                 width: "100%",
                 text {
@@ -43,25 +41,22 @@ pub fn Property(name: String, value: String) -> Element {
 #[component]
 pub fn GradientProperty(name: String, fill: Fill) -> Element {
     rsx!(
-        rect {
-            padding: "5 10",
-            paragraph {
-                line_height: "1.9",
-                text {
-                    font_size: "15",
-                    color: "rgb(71, 180, 240)",
-                    "{name}"
-                }
-                text {
-                    font_size: "15",
-                    color: "rgb(215, 215, 215)",
-                    ": "
-                }
-                text {
-                    font_size: "15",
-                    color: "rgb(252,181,172)",
-                    "{fill}"
-                }
+        paragraph {
+            line_height: "1.9",
+            text {
+                font_size: "15",
+                color: "rgb(71, 180, 240)",
+                "{name}"
+            }
+            text {
+                font_size: "15",
+                color: "rgb(215, 215, 215)",
+                ": "
+            }
+            text {
+                font_size: "15",
+                color: "rgb(252,181,172)",
+                "{fill}",
             }
         }
     )
@@ -73,10 +68,8 @@ pub fn ColorProperty(name: String, fill: Fill) -> Element {
     rsx!(
         rect {
             overflow: "clip",
-            height: "30",
             width: "100%",
             direction: "horizontal",
-            padding: "10",
             label {
                 font_size: "15",
                 color: "rgb(71, 180, 240)",
@@ -121,10 +114,8 @@ pub fn ShadowProperty(name: String, shadow: Shadow) -> Element {
     rsx!(
         rect {
             overflow: "clip",
-            height: "30",
             width: "100%",
             direction: "horizontal",
-            padding: "10",
             paragraph {
                 text {
                     font_size: "15",
@@ -177,10 +168,8 @@ pub fn BorderProperty(name: String, border: Border) -> Element {
     rsx!(
         rect {
             overflow: "clip",
-            height: "30",
             width: "100%",
             direction: "horizontal",
-            padding: "10",
             paragraph {
                 text {
                     font_size: "15",
@@ -195,7 +184,7 @@ pub fn BorderProperty(name: String, border: Border) -> Element {
                 text {
                     font_size: "15",
                     color: "rgb(252,181,172)",
-                    "{border.width} {border.style:?} {border.alignment:?}"
+                    "{border.width} {border.alignment:?}"
                 }
             }
             rect {
@@ -233,10 +222,8 @@ pub fn TextShadowProperty(name: String, text_shadow: TextShadow) -> Element {
     rsx!(
         rect {
             overflow: "clip",
-            height: "30",
             width: "100%",
             direction: "horizontal",
-            padding: "10",
             paragraph {
                 text {
                     font_size: "15",

@@ -2,6 +2,8 @@ use dioxus::prelude::*;
 use freya_elements::{
     self as dioxus_elements,
     events::{
+        keyboard::Key,
+        KeyboardEvent,
         MouseEvent,
         WheelEvent,
     },
@@ -13,7 +15,6 @@ use freya_hooks::{
     use_platform,
     SliderThemeWith,
 };
-use tracing::info;
 use winit::window::CursorIcon;
 
 /// Properties for the [`Slider`] component.
@@ -23,20 +24,24 @@ pub struct SliderProps {
     pub theme: Option<SliderThemeWith>,
     /// Handler for the `onmoved` event.
     pub onmoved: EventHandler<f64>,
-    /// Width of the Slider.
+    /// Size of the Slider.
     #[props(into, default = "100%".to_string())]
-    pub width: String,
+    pub size: String,
     /// Height of the Slider.
     pub value: f64,
+    #[props(default = "horizontal".to_string())]
+    pub direction: String,
 }
 
 #[inline]
 fn ensure_correct_slider_range(value: f64) -> f64 {
     if value < 0.0 {
-        info!("Slider value is less than 0.0, setting to 0.0");
+        #[cfg(debug_assertions)]
+        tracing::info!("Slider value is less than 0.0, setting to 0.0");
         0.0
     } else if value > 100.0 {
-        info!("Slider value is greater than 100.0, setting to 100.0");
+        #[cfg(debug_assertions)]
+        tracing::info!("Slider value is greater than 100.0, setting to 100.0");
         100.0
     } else {
         value
@@ -72,7 +77,7 @@ pub enum SliderStatus {
 ///             "Value: {percentage}"
 ///         }
 ///         Slider {
-///             width: "50%",
+///             size: "50%",
 ///             value: *percentage.read(),
 ///             onmoved: move |p| {
 ///                 percentage.set(p);
@@ -87,7 +92,8 @@ pub fn Slider(
         value,
         onmoved,
         theme,
-        width,
+        size,
+        direction,
     }: SliderProps,
 ) -> Element {
     let theme = use_applied_theme!(&theme, slider);
@@ -95,16 +101,41 @@ pub fn Slider(
     let mut status = use_signal(SliderStatus::default);
     let mut clicking = use_signal(|| false);
     let platform = use_platform();
-    let (node_reference, size) = use_node();
+    let (node_reference, node_size) = use_node();
 
+    let direction_is_vertical = direction == "vertical";
     let value = ensure_correct_slider_range(value);
-    let focus_id = focus.attribute();
+    let a11y_id = focus.attribute();
 
     use_drop(move || {
         if *status.peek() == SliderStatus::Hovering {
             platform.set_cursor(CursorIcon::default());
         }
     });
+
+    let onkeydown = move |e: KeyboardEvent| match e.key {
+        Key::ArrowLeft if !direction_is_vertical => {
+            e.stop_propagation();
+            let percentage = (value - 4.).clamp(0.0, 100.0);
+            onmoved.call(percentage);
+        }
+        Key::ArrowRight if !direction_is_vertical => {
+            e.stop_propagation();
+            let percentage = (value + 4.).clamp(0.0, 100.0);
+            onmoved.call(percentage);
+        }
+        Key::ArrowUp if direction_is_vertical => {
+            e.stop_propagation();
+            let percentage = (value + 4.).clamp(0.0, 100.0);
+            onmoved.call(percentage);
+        }
+        Key::ArrowDown if direction_is_vertical => {
+            e.stop_propagation();
+            let percentage = (value - 4.).clamp(0.0, 100.0);
+            onmoved.call(percentage);
+        }
+        _ => {}
+    };
 
     let onmouseleave = move |e: MouseEvent| {
         e.stop_propagation();
@@ -118,14 +149,19 @@ pub fn Slider(
         platform.set_cursor(CursorIcon::Pointer);
     };
 
-    let onmouseover = {
+    let onmousemove = {
         to_owned![onmoved];
         move |e: MouseEvent| {
             e.stop_propagation();
             if *clicking.peek() {
                 let coordinates = e.get_element_coordinates();
-                let x = coordinates.x - size.area.min_x() as f64 - 6.0;
-                let percentage = x / (size.area.width() as f64 - 15.0) * 100.0;
+                let percentage = if direction_is_vertical {
+                    let y = coordinates.y - node_size.area.min_y() as f64 - 6.0;
+                    100. - (y / (node_size.area.height() as f64 - 15.0) * 100.0)
+                } else {
+                    let x = coordinates.x - node_size.area.min_x() as f64 - 6.0;
+                    x / (node_size.area.width() as f64 - 15.0) * 100.0
+                };
                 let percentage = percentage.clamp(0.0, 100.0);
 
                 onmoved.call(percentage);
@@ -140,8 +176,13 @@ pub fn Slider(
             focus.focus();
             clicking.set(true);
             let coordinates = e.get_element_coordinates();
-            let x = coordinates.x - 6.0;
-            let percentage = x / (size.area.width() as f64 - 15.0) * 100.0;
+            let percentage = if direction_is_vertical {
+                let y = coordinates.y - 6.0;
+                100. - (y / (node_size.area.height() as f64 - 15.0) * 100.0)
+            } else {
+                let x = coordinates.x - 6.0;
+                x / (node_size.area.width() as f64 - 15.0) * 100.0
+            };
             let percentage = percentage.clamp(0.0, 100.0);
 
             onmoved.call(percentage);
@@ -161,59 +202,108 @@ pub fn Slider(
         onmoved.call(percentage);
     };
 
-    let inner_width = (size.area.width() - 15.0) * (value / 100.0) as f32;
     let border = if focus.is_selected() {
-        format!("2 solid {}", theme.border_fill)
+        format!("2 inner {}", theme.border_fill)
     } else {
         "none".to_string()
     };
+
+    let (
+        width,
+        height,
+        container_width,
+        container_height,
+        inner_width,
+        inner_height,
+        main_align,
+        offset_x,
+        offset_y,
+    ) = if direction_is_vertical {
+        let inner_height = (node_size.area.height() - 15.0) * (value / 100.0) as f32;
+        (
+            "20",
+            size.as_str(),
+            "6",
+            "100%",
+            "100%".to_string(),
+            inner_height.to_string(),
+            "end",
+            -6,
+            3,
+        )
+    } else {
+        let inner_width = (node_size.area.width() - 15.0) * (value / 100.0) as f32;
+        (
+            size.as_str(),
+            "20",
+            "100%",
+            "6",
+            inner_width.to_string(),
+            "100%".to_string(),
+            "start",
+            -3,
+            -6,
+        )
+    };
+
+    let inner_fill = rsx!(rect {
+        background: "{theme.thumb_inner_background}",
+        width: "{inner_width}",
+        height: "{inner_height}",
+        corner_radius: "50"
+    });
+
+    let thumb = rsx!(
+        rect {
+            width: "fill",
+            offset_x: "{offset_x}",
+            offset_y: "{offset_y}",
+            rect {
+                background: "{theme.thumb_background}",
+                width: "18",
+                height: "18",
+                corner_radius: "50",
+                padding: "4",
+                rect {
+                    height: "100%",
+                    width: "100%",
+                    background: "{theme.thumb_inner_background}",
+                    corner_radius: "50"
+                }
+            }
+        }
+    );
 
     rsx!(
         rect {
             reference: node_reference,
             width: "{width}",
-            height: "20",
+            height: "{height}",
             onmousedown,
             onglobalclick: onclick,
-            focus_id,
+            a11y_id,
             onmouseenter,
-            onglobalmouseover: onmouseover,
+            onglobalmousemove: onmousemove,
             onmouseleave,
             onwheel: onwheel,
+            onkeydown,
             main_align: "center",
             cross_align: "center",
             border: "{border}",
             corner_radius: "8",
             rect {
                 background: "{theme.background}",
-                width: "100%",
-                height: "6",
-                direction: "horizontal",
+                width: "{container_width}",
+                height: "{container_height}",
+                main_align: "{main_align}",
+                direction: "{direction}",
                 corner_radius: "50",
-                rect {
-                    background: "{theme.thumb_inner_background}",
-                    width: "{inner_width}",
-                    height: "100%",
-                    corner_radius: "50"
-                }
-                rect {
-                    width: "fill",
-                    height: "100%",
-                    offset_y: "-6",
-                    offset_x: "-3",
-                    rect {
-                        background: "{theme.thumb_background}",
-                        width: "18",
-                        height: "18",
-                        corner_radius: "50",
-                        padding: "4",
-                        rect {
-                            height: "100%",
-                            width: "100%",
-                            background: "{theme.thumb_inner_background}",
-                            corner_radius: "50"
-                        }
-                    }
+                if direction_is_vertical {
+                    {thumb}
+                    {inner_fill}
+                } else {
+                    {inner_fill}
+                    {thumb}
                 }
             }
         }
@@ -252,7 +342,7 @@ mod test {
         assert_eq!(label.get(0).text(), Some("50"));
 
         utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
+            name: EventName::MouseMove,
             cursor: (250.0, 7.0).into(),
             button: Some(MouseButton::Left),
         });
@@ -262,16 +352,10 @@ mod test {
             button: Some(MouseButton::Left),
         });
         utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
+            name: EventName::MouseMove,
             cursor: (500.0, 7.0).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
-            name: EventName::Click,
-            cursor: (500.0, 7.0).into(),
-            button: Some(MouseButton::Left),
-        });
-
         utils.wait_for_update().await;
 
         assert_eq!(label.get(0).text(), Some("100"));
