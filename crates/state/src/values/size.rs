@@ -75,7 +75,7 @@ impl Parse for Size {
 
 pub fn parse_calc(mut value: &str) -> Result<Vec<DynamicCalculation>, ParseError> {
     // No need to parse this using nom
-    
+
     value = value
         .strip_prefix("calc(")
         .ok_or(ParseError)?
