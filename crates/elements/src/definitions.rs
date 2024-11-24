@@ -914,7 +914,7 @@ pub mod events {
             $data:ty;
             $(
                 $( #[$attr:meta] )*
-                $name:ident $(: $js_name:literal)?
+                $name:ident $(: $event:literal)?
             )*
         ) => {
             $(
@@ -923,7 +923,7 @@ pub mod events {
                 pub fn $name<__Marker>(mut _f: impl ::dioxus_core::prelude::SuperInto<::dioxus_core::prelude::EventHandler<::dioxus_core::Event<$data>>, __Marker>) -> ::dioxus_core::Attribute {
                     let event_handler = _f.super_into();
                     ::dioxus_core::Attribute::new(
-                        impl_event!(@name $name $($js_name)?),
+                        impl_event!(@name $name $($event)?),
                         ::dioxus_core::AttributeValue::listener(move |e: ::dioxus_core::Event<crate::PlatformEventData>| {
                             event_handler.call(e.map(|e| e.into()));
                         }),
@@ -952,8 +952,8 @@ pub mod events {
             )*
         };
 
-        (@name $name:ident $js_name:literal) => {
-            $js_name
+        (@name $name:ident $event:literal) => {
+            $event
         };
         (@name $name:ident) => {
             stringify!($name)
