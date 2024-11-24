@@ -45,9 +45,9 @@ pub enum TabStatus {
 /// # use freya::prelude::*;
 /// # use dioxus_router::prelude::Routable;
 /// # #[allow(non_snake_case)]
-/// # fn PageNotFound() -> Element { None }
+/// # fn PageNotFound() -> Element { Ok(VNode::empty()) }
 /// # #[allow(non_snake_case)]
-/// # fn Settings() -> Element { None }
+/// # fn Settings() -> Element { Ok(VNode::empty()) }
 /// # #[derive(Routable, Clone, PartialEq)]
 /// # #[rustfmt::skip]
 /// # pub enum Route {
@@ -174,9 +174,9 @@ pub fn Tab(
 /// # use freya::prelude::*;
 /// # use dioxus_router::prelude::Routable;
 /// # #[allow(non_snake_case)]
-/// # fn PageNotFound() -> Element { None }
+/// # fn PageNotFound() -> Element { Ok(VNode::empty()) }
 /// # #[allow(non_snake_case)]
-/// # fn Settings() -> Element { None }
+/// # fn Settings() -> Element { Ok(VNode::empty()) }
 /// # #[derive(Routable, Clone, PartialEq)]
 /// # #[rustfmt::skip]
 /// # pub enum Route {
