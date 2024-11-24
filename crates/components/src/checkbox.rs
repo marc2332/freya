@@ -43,7 +43,7 @@ use crate::TickIcon;
 ///                 Checkbox {
 ///                     selected: selected.read().contains(&Choice::First),
 ///                 }
-///             )
+///             ),
 ///             label { "First choice" }
 ///         }
 ///         Tile {
