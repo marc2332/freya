@@ -29,8 +29,8 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
             width: "100%",
             spacing: "6",
             padding: "8 16",
-            {node.state.attributes().into_iter().enumerate().map(|(i, (name, attr))| {
-                match attr {
+            {node.state.attributes().into_iter().enumerate().filter_map(|(i, (name, attr))| {
+                Some(match attr {
                     AttributeType::Measure(measure) => {
                         rsx!{
                             Property {
@@ -83,6 +83,19 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
                                 name: "{name}",
                                 fill: fill.clone()
                             }
+                        }
+                    }
+                    AttributeType::OptionalColor(fill) => {
+                        if let Some(fill) = fill {
+                            rsx!{
+                                ColorProperty {
+                                    key: "{i}",
+                                    name: "{name}",
+                                    fill: fill.clone()
+                                }
+                            }
+                        } else {
+                            return None;
                         }
                     }
                     AttributeType::Gradient(fill) => {
@@ -184,7 +197,7 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
                             }
                         }
                     }
-                }
+                })
             })}
         }
     )

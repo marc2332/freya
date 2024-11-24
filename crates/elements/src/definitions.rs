@@ -858,6 +858,8 @@ builder_constructors! {
         opacity: String,
 
         // Svg
+        #[doc = include_str!("_docs/attributes/color.md")]
+        color: String,
         svg_data: String,
         svg_content: String,
         #[doc = include_str!("_docs/attributes/fill_stroke.md")]
