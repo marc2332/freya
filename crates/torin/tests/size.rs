@@ -897,9 +897,11 @@ pub fn test_calc() {
 
     assert_eq!(
         run_calculations(
-            &[DynamicCalculation::OpenParenthesis,
+            &[
+                DynamicCalculation::OpenParenthesis,
                 DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::ClosedParenthesis],
+                DynamicCalculation::ClosedParenthesis
+            ],
             PARENT_VALUE,
             PARENT_VALUE
         ),
@@ -908,7 +910,8 @@ pub fn test_calc() {
 
     assert_eq!(
         run_calculations(
-            &[DynamicCalculation::Pixels(10.0),
+            &[
+                DynamicCalculation::Pixels(10.0),
                 DynamicCalculation::OpenParenthesis,
                 DynamicCalculation::Pixels(10.0),
                 DynamicCalculation::Add,
@@ -920,7 +923,8 @@ pub fn test_calc() {
                 DynamicCalculation::OpenParenthesis,
                 DynamicCalculation::Pixels(10.0),
                 DynamicCalculation::ClosedParenthesis,
-                DynamicCalculation::Pixels(10.0)],
+                DynamicCalculation::Pixels(10.0)
+            ],
             PARENT_VALUE,
             PARENT_VALUE
         ),
@@ -929,11 +933,13 @@ pub fn test_calc() {
 
     assert_eq!(
         run_calculations(
-            &[DynamicCalculation::Sub,
+            &[
+                DynamicCalculation::Sub,
                 DynamicCalculation::OpenParenthesis,
                 DynamicCalculation::Pixels(10.0),
                 DynamicCalculation::ClosedParenthesis,
-                DynamicCalculation::Pixels(20.0)],
+                DynamicCalculation::Pixels(20.0)
+            ],
             PARENT_VALUE,
             PARENT_VALUE
         ),
@@ -942,8 +948,10 @@ pub fn test_calc() {
 
     assert_eq!(
         run_calculations(
-            &[DynamicCalculation::OpenParenthesis,
-                DynamicCalculation::Pixels(10.0)],
+            &[
+                DynamicCalculation::OpenParenthesis,
+                DynamicCalculation::Pixels(10.0)
+            ],
             PARENT_VALUE,
             PARENT_VALUE
         ),

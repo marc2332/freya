@@ -166,7 +166,10 @@ impl Scaled for Size {
         match self {
             Size::Pixels(s) => *s *= scale_factor,
             Size::DynamicCalculations(calcs) => {
-                calcs.iter_mut().for_each(|calc| calc.scale(scale_factor));
+                calcs.insert(0, DynamicCalculation::OpenParenthesis);
+                calcs.push(DynamicCalculation::ClosedParenthesis);
+                // implicit multiplication
+                calcs.push(DynamicCalculation::Pixels(scale_factor));
             }
             _ => (),
         }
@@ -184,14 +187,6 @@ pub enum DynamicCalculation {
     Percentage(f32),
     RootPercentage(f32),
     Pixels(f32),
-}
-
-impl Scaled for DynamicCalculation {
-    fn scale(&mut self, scale_factor: f32) {
-        if let DynamicCalculation::Pixels(s) = self {
-            *s *= scale_factor;
-        }
-    }
 }
 
 impl std::fmt::Display for DynamicCalculation {
