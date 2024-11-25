@@ -1,15 +1,8 @@
-use std::{
-    ops::Deref,
-    slice::Iter,
-};
+use std::{ops::Deref, slice::Iter};
 
 pub use euclid::Rect;
 
-use crate::{
-    geometry::Length,
-    measure::Phase,
-    scaled::Scaled,
-};
+use crate::{geometry::Length, measure::Phase, scaled::Scaled};
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum Size {
@@ -168,7 +161,7 @@ impl Scaled for Size {
             Size::DynamicCalculations(calcs) => {
                 calcs.insert(0, DynamicCalculation::OpenParenthesis);
                 calcs.push(DynamicCalculation::ClosedParenthesis);
-                // implicit multiplication
+                calcs.push(DynamicCalculation::Mul);
                 calcs.push(DynamicCalculation::Pixels(scale_factor));
             }
             _ => (),
