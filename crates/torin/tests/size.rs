@@ -958,3 +958,85 @@ pub fn test_calc() {
         None
     );
 }
+
+#[test]
+pub fn test_scaling_factor() {
+    const PARENT_VALUE: f32 = 500.0;
+
+    assert_eq!(
+        {
+            let mut size =
+                Size::DynamicCalculations(Box::new(vec![DynamicCalculation::Pixels(10.0)]));
+            size.scale(1.5);
+            size
+        }
+        .eval(
+            PARENT_VALUE,
+            PARENT_VALUE,
+            0.0,
+            PARENT_VALUE,
+            Phase::Initial
+        ),
+        Some((10.0) * 1.5)
+    );
+
+    assert_eq!(
+        {
+            let mut size = Size::DynamicCalculations(Box::new(vec![
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::OpenParenthesis,
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::Add,
+                DynamicCalculation::Pixels(20.0),
+                DynamicCalculation::ClosedParenthesis,
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::Add,
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::OpenParenthesis,
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::ClosedParenthesis,
+                DynamicCalculation::Pixels(10.0),
+            ]));
+            size.scale(1.5);
+            size
+        }
+        .eval(
+            PARENT_VALUE,
+            PARENT_VALUE,
+            0.0,
+            PARENT_VALUE,
+            Phase::Initial
+        ),
+        Some(((10.0 * (10.0 + 20.0) * 10.0) + (10.0 * (10.0) * 10.0)) * 1.5)
+    );
+
+    assert_eq!(
+        {
+            let mut size = Size::DynamicCalculations(Box::new(vec![
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::OpenParenthesis,
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::Add,
+                DynamicCalculation::Pixels(20.0),
+                DynamicCalculation::ClosedParenthesis,
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::Add,
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::OpenParenthesis,
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::ClosedParenthesis,
+                DynamicCalculation::Pixels(10.0),
+            ]));
+            size.scale(1.2);
+            size
+        }
+        .eval(
+            PARENT_VALUE,
+            PARENT_VALUE,
+            0.0,
+            PARENT_VALUE,
+            Phase::Initial
+        ),
+        Some(((10.0 * (10.0 + 20.0) * 10.0) + (10.0 * (10.0) * 10.0)) * 1.2)
+    );
+}
