@@ -85,23 +85,27 @@ where
             area_size.width = node.width.min_max(
                 area_size.width,
                 parent_area.size.width,
+                parent_area.size.height,
                 available_parent_area.size.width,
                 node.margin.left(),
                 node.margin.horizontal(),
                 &node.minimum_width,
                 &node.maximum_width,
                 self.layout_metadata.root_area.width(),
+                self.layout_metadata.root_area.height(),
                 phase,
             );
             area_size.height = node.height.min_max(
                 area_size.height,
                 parent_area.size.height,
+                parent_area.size.width,
                 available_parent_area.size.height,
                 node.margin.top(),
                 node.margin.vertical(),
                 &node.minimum_height,
                 &node.maximum_height,
                 self.layout_metadata.root_area.height(),
+                self.layout_metadata.root_area.width(),
                 phase,
             );
 
@@ -125,12 +129,14 @@ where
                         area_size.width = node.width.min_max(
                             custom_size.width,
                             parent_area.size.width,
+                            parent_area.size.height,
                             available_parent_area.size.width,
                             node.margin.left(),
                             node.margin.horizontal(),
                             &node.minimum_width,
                             &node.maximum_width,
                             self.layout_metadata.root_area.width(),
+                            self.layout_metadata.root_area.height(),
                             phase,
                         );
                     }
@@ -138,12 +144,14 @@ where
                         area_size.height = node.height.min_max(
                             custom_size.height,
                             parent_area.size.height,
+                            parent_area.size.width,
                             available_parent_area.size.height,
                             node.margin.top(),
                             node.margin.vertical(),
                             &node.minimum_height,
                             &node.maximum_height,
                             self.layout_metadata.root_area.height(),
+                            self.layout_metadata.root_area.width(),
                             phase,
                         );
                     }
@@ -174,12 +182,14 @@ where
                     inner_size.width = node.width.min_max(
                         available_parent_area.width(),
                         parent_area.size.width,
+                        parent_area.size.height,
                         available_parent_area.width(),
                         node.margin.left(),
                         node.margin.horizontal(),
                         &node.minimum_width,
                         &node.maximum_width,
                         self.layout_metadata.root_area.width(),
+                        self.layout_metadata.root_area.height(),
                         phase,
                     );
                 }
@@ -187,12 +197,14 @@ where
                     inner_size.height = node.height.min_max(
                         available_parent_area.height(),
                         parent_area.size.height,
+                        parent_area.size.width,
                         available_parent_area.height(),
                         node.margin.top(),
                         node.margin.vertical(),
                         &node.minimum_height,
                         &node.maximum_height,
                         self.layout_metadata.root_area.height(),
+                        self.layout_metadata.root_area.width(),
                         phase,
                     );
                 }
