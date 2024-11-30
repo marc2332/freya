@@ -90,6 +90,15 @@ pub fn parse_calc(mut value: &str) -> Result<Vec<DynamicCalculation>, ParseError
         many1(preceded(
             multispace0,
             alt((
+                map(tag("min"), |_| {
+                    DynamicCalculation::Function(LexFunction::Min)
+                }),
+                map(tag("max"), |_| {
+                    DynamicCalculation::Function(LexFunction::Max)
+                }),
+                map(tag("clamp"), |_| {
+                    DynamicCalculation::Function(LexFunction::Clamp)
+                }),
                 map(tag("+"), |_| DynamicCalculation::Add),
                 map(tag("-"), |_| DynamicCalculation::Sub),
                 map(tag("*"), |_| DynamicCalculation::Mul),
@@ -118,15 +127,6 @@ pub fn parse_calc(mut value: &str) -> Result<Vec<DynamicCalculation>, ParseError
                     },
                 ),
                 map(float, DynamicCalculation::Pixels),
-                map(tag("min"), |_| {
-                    DynamicCalculation::Function(LexFunction::Min)
-                }),
-                map(tag("max"), |_| {
-                    DynamicCalculation::Function(LexFunction::Max)
-                }),
-                map(tag("clamp"), |_| {
-                    DynamicCalculation::Function(LexFunction::Clamp)
-                }),
             )),
         ))(value)
     }
