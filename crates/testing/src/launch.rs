@@ -9,6 +9,10 @@ use dioxus_core::{
     VirtualDom,
 };
 use dioxus_core_macro::rsx;
+use dioxus_signals::{
+    GlobalSignal,
+    Readable,
+};
 use freya_components::NativeContainer;
 use freya_core::prelude::{
     EventMessage,

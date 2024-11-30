@@ -1,66 +1,7 @@
-use dioxus_rsx::HotReloadingContext;
 pub use events::*;
 
 #[doc(hidden)]
 pub type AttributeDescription = (&'static str, Option<&'static str>, bool);
-
-macro_rules! impl_element_match {
-    (
-        $el:ident $name:ident None {
-            $(
-                $fil:ident: $vil:ident,
-            )*
-        }
-    ) => {
-        if $el == stringify!($name) {
-            return Some((stringify!($name), None));
-        }
-    };
-}
-
-macro_rules! impl_attribute_match {
-    (
-        $attr:ident $fil:ident: $vil:ident,
-    ) => {
-        if $attr == stringify!($fil) {
-            return Some((stringify!($fil), None));
-        }
-    };
-}
-
-macro_rules! impl_element_match_attributes {
-    (
-        $el:ident $attr:ident $name:ident None {
-            $(
-                $fil:ident: $vil:ident,
-            )*
-        }
-    ) => {
-        if $el == stringify!($name) {
-            $(
-                impl_attribute_match!(
-                    $attr $fil: $vil,
-                );
-            )*
-        }
-    };
-
-    (
-        $el:ident $attr:ident $name:ident  {
-            $(
-                $fil:ident: $vil:ident,
-            )*
-        }
-    ) => {
-        if $el == stringify!($name) {
-            $(
-                impl_attribute_match!(
-                    $attr $fil: $vil,
-                );
-            )*
-        }
-    }
-}
 
 macro_rules! builder_constructors {
     (
@@ -74,37 +15,6 @@ macro_rules! builder_constructors {
             };
          )*
         ) => {
-        #[doc(hidden)]
-        pub struct FreyaCtx;
-
-        impl HotReloadingContext for FreyaCtx {
-            fn map_attribute(element: &str, attribute: &str) -> Option<(&'static str, Option<&'static str>)> {
-                $(
-                    impl_element_match_attributes!(
-                        element attribute $name {
-                            $(
-                                $fil: $vil,
-                            )*
-                        }
-                    );
-                )*
-               None
-            }
-
-            fn map_element(element: &str) -> Option<(&'static str, Option<&'static str>)> {
-                $(
-                    impl_element_match!(
-                        element $name None {
-                            $(
-                                $fil: $vil,
-                            )*
-                        }
-                    );
-                )*
-                None
-            }
-        }
-
         $(
             impl_element!(
                 $(#[$attr])*
@@ -116,6 +26,19 @@ macro_rules! builder_constructors {
                 };
             );
         )*
+
+        /// This module contains helpers for rust analyzer autocompletion
+        #[doc(hidden)]
+        pub mod completions {
+            /// This helper tells rust analyzer that it should autocomplete the element name with braces.
+            #[allow(non_camel_case_types)]
+            pub enum CompleteWithBraces {
+                $(
+                    $(#[$attr])*
+                    $name {}
+                ),*
+            }
+        }
     };
 }
 
@@ -991,23 +914,49 @@ pub mod events {
             $data:ty;
             $(
                 $( #[$attr:meta] )*
-                $name:ident $(: $js_name:literal)?
+                $name:ident $(: $event:literal)?
             )*
         ) => {
             $(
                 $( #[$attr] )*
                 #[inline]
-                pub fn $name<E: EventReturn<T>, T>(mut _f: impl FnMut(::dioxus_core::Event<$data>) -> E + 'static) -> ::dioxus_core::Attribute {
+                pub fn $name<__Marker>(mut _f: impl ::dioxus_core::prelude::SuperInto<::dioxus_core::prelude::EventHandler<::dioxus_core::Event<$data>>, __Marker>) -> ::dioxus_core::Attribute {
+                    let event_handler = _f.super_into();
                     ::dioxus_core::Attribute::new(
-                        stringify!($name),
-    ::dioxus_core::AttributeValue::listener(move |e: ::dioxus_core::Event<PlatformEventData>| {
-                            _f(e.map(|e|e.into())).spawn();
+                        impl_event!(@name $name $($event)?),
+                        ::dioxus_core::AttributeValue::listener(move |e: ::dioxus_core::Event<crate::PlatformEventData>| {
+                            event_handler.call(e.map(|e| e.into()));
                         }),
                         None,
                         false,
                     ).into()
                 }
+
+                #[doc(hidden)]
+                $( #[$attr] )*
+                pub mod $name {
+                    use super::*;
+
+                    // When expanding the macro, we use this version of the function if we see an inline closure to give better type inference
+                    $( #[$attr] )*
+                    pub fn call_with_explicit_closure<
+                        __Marker,
+                        Return: ::dioxus_core::SpawnIfAsync<__Marker> + 'static,
+                    >(
+                        event_handler: impl FnMut(::dioxus_core::Event<$data>) -> Return + 'static,
+                    ) -> ::dioxus_core::Attribute {
+                        #[allow(deprecated)]
+                        super::$name(event_handler)
+                    }
+                }
             )*
+        };
+
+        (@name $name:ident $event:literal) => {
+            $event
+        };
+        (@name $name:ident) => {
+            stringify!($name)
         };
     }
 
