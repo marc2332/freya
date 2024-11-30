@@ -74,19 +74,30 @@ impl Size {
         }
     }
 
+    // i really do not want to make a new type just so this lint goes away
+    #[allow(clippy::too_many_arguments)]
     pub fn eval(
         &self,
         parent_value: f32,
+        other_parent_value: f32,
         available_parent_value: f32,
         parent_margin: f32,
         root_value: f32,
+        other_root_value: f32,
         phase: Phase,
     ) -> Option<f32> {
         match self {
             Size::Pixels(px) => Some(px.get() + parent_margin),
             Size::Percentage(per) => Some(parent_value / 100.0 * per.get()),
             Size::DynamicCalculations(calculations) => Some(
-                run_calculations(calculations.deref(), parent_value, root_value).unwrap_or(0.0),
+                run_calculations(
+                    calculations.deref(),
+                    parent_value,
+                    other_parent_value,
+                    root_value,
+                    other_root_value,
+                )
+                .unwrap_or(0.0),
             ),
             Size::Fill => Some(available_parent_value),
             Size::FillMinimum if phase == Phase::Final => Some(available_parent_value),
@@ -101,20 +112,24 @@ impl Size {
         &self,
         value: f32,
         parent_value: f32,
+        other_parent_value: f32,
         available_parent_value: f32,
         single_margin: f32,
         margin: f32,
         minimum: &Self,
         maximum: &Self,
         root_value: f32,
+        other_root_value: f32,
         phase: Phase,
     ) -> f32 {
         let value = self
             .eval(
                 parent_value,
+                other_parent_value,
                 available_parent_value,
                 margin,
                 root_value,
+                other_root_value,
                 phase,
             )
             .unwrap_or(value + margin);
@@ -122,17 +137,21 @@ impl Size {
         let minimum_value = minimum
             .eval(
                 parent_value,
+                other_parent_value,
                 available_parent_value,
                 margin,
                 root_value,
+                other_root_value,
                 phase,
             )
             .map(|v| v + single_margin);
         let maximum_value = maximum.eval(
             parent_value,
+            other_parent_value,
             available_parent_value,
             margin,
             root_value,
+            other_root_value,
             phase,
         );
 
@@ -184,9 +203,41 @@ pub enum DynamicCalculation {
     Add,
     OpenParenthesis,
     ClosedParenthesis,
-    Percentage(f32),
-    RootPercentage(f32),
+    FunctionSeparator,
+    Percentage(Dimension),
+    RootPercentage(Dimension),
+    // no dimension because this isnt using any parent value
     Pixels(f32),
+    Function(LexFunction),
+}
+
+// a token of a function name, not the whole function, this is a lex token not a parse tree.
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum LexFunction {
+    Min,
+    Max,
+    Clamp,
+}
+
+/// dimension as in height/width, allows for the use of the parent height and parent width inside
+/// of one side, for example:
+/// ```rust
+/// rsx! {
+///     rect {
+///         width: "200",
+///         height: "400",
+///         rect {
+///             width: "calc(min(100%, 100%'))", // the ' signifies the other side which would be
+///             // the height
+///             height: "calc(min(100%, 100%'))"
+///         }
+///     }
+/// }
+/// ```
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum Dimension {
+    Current(f32),
+    Other(f32),
 }
 
 impl std::fmt::Display for DynamicCalculation {
@@ -198,9 +249,23 @@ impl std::fmt::Display for DynamicCalculation {
             DynamicCalculation::Add => f.write_str("+"),
             DynamicCalculation::OpenParenthesis => f.write_str("("),
             DynamicCalculation::ClosedParenthesis => f.write_str(")"),
-            DynamicCalculation::Percentage(p) => f.write_fmt(format_args!("{p}%")),
-            DynamicCalculation::RootPercentage(p) => f.write_fmt(format_args!("{p}v")),
+            DynamicCalculation::FunctionSeparator => f.write_str(","),
+            DynamicCalculation::Percentage(Dimension::Current(p)) => {
+                f.write_fmt(format_args!("{p}%"))
+            }
+            DynamicCalculation::Percentage(Dimension::Other(p)) => {
+                f.write_fmt(format_args!("{p}%'"))
+            }
+            DynamicCalculation::RootPercentage(Dimension::Current(p)) => {
+                f.write_fmt(format_args!("{p}v"))
+            }
+            DynamicCalculation::RootPercentage(Dimension::Other(p)) => {
+                f.write_fmt(format_args!("{p}v"))
+            }
             DynamicCalculation::Pixels(s) => f.write_fmt(format_args!("{s}")),
+            DynamicCalculation::Function(LexFunction::Min) => f.write_str("min"),
+            DynamicCalculation::Function(LexFunction::Max) => f.write_str("max"),
+            DynamicCalculation::Function(LexFunction::Clamp) => f.write_str("clamp"),
         }
     }
 }
@@ -209,16 +274,26 @@ impl std::fmt::Display for DynamicCalculation {
 struct DynamicCalculationEvaluator<'a> {
     calcs: Iter<'a, DynamicCalculation>,
     parent_value: f32,
+    other_parent_value: f32,
     root_value: f32,
+    other_root_value: f32,
     current: Option<&'a DynamicCalculation>,
 }
 
 impl<'a> DynamicCalculationEvaluator<'a> {
-    pub fn new(calcs: Iter<'a, DynamicCalculation>, parent_value: f32, root_value: f32) -> Self {
+    pub fn new(
+        calcs: Iter<'a, DynamicCalculation>,
+        parent_value: f32,
+        other_parent_value: f32,
+        root_value: f32,
+        other_root_value: f32,
+    ) -> Self {
         Self {
             calcs,
             parent_value,
+            other_parent_value,
             root_value,
+            other_root_value,
             current: None,
         }
     }
@@ -309,13 +384,21 @@ impl<'a> DynamicCalculationEvaluator<'a> {
     /// `
     fn parse_value(&mut self) -> Option<(f32, bool)> {
         match self.current? {
-            DynamicCalculation::Percentage(value) => {
+            DynamicCalculation::Percentage(Dimension::Current(value)) => {
                 self.current = self.calcs.next();
                 Some(((self.parent_value / 100.0 * value).round(), false))
             }
-            DynamicCalculation::RootPercentage(value) => {
+            DynamicCalculation::Percentage(Dimension::Other(value)) => {
+                self.current = self.calcs.next();
+                Some(((self.other_parent_value / 100.0 * value).round(), false))
+            }
+            DynamicCalculation::RootPercentage(Dimension::Current(value)) => {
                 self.current = self.calcs.next();
                 Some(((self.root_value / 100.0 * value).round(), false))
+            }
+            DynamicCalculation::RootPercentage(Dimension::Other(value)) => {
+                self.current = self.calcs.next();
+                Some(((self.other_root_value / 100.0 * value).round(), false))
             }
             DynamicCalculation::Pixels(value) => {
                 self.current = self.calcs.next();
@@ -324,15 +407,51 @@ impl<'a> DynamicCalculationEvaluator<'a> {
             DynamicCalculation::OpenParenthesis => {
                 // function should return on DynamicCalculation::ClosedParenthesis because it does
                 // not have a precedence, thats how it actually works
-                let val = self.parse_expression(0);
+                let val = self.parse_expression(0)?;
                 if self.current != Some(&DynamicCalculation::ClosedParenthesis) {
                     return None;
                 }
                 self.current = self.calcs.next();
-                Some((val?, true))
+                Some((val, true))
+            }
+            DynamicCalculation::Function(func) => {
+                // oh god here we gg
+                self.current = self.calcs.next();
+                let vals = self.parse_function_inputs()?;
+                let res = match func {
+                    LexFunction::Min => vals.into_iter().reduce(f32::min),
+                    LexFunction::Max => vals.into_iter().reduce(f32::max),
+                    LexFunction::Clamp => {
+                        if vals.len() != 3 {
+                            None
+                        } else {
+                            Some(vals[0].max(vals[1].min(vals[2])))
+                        }
+                    }
+                }?;
+
+                Some((res, true))
             }
             _ => None,
         }
+    }
+
+    fn parse_function_inputs(&mut self) -> Option<Vec<f32>> {
+        let mut res = vec![];
+        loop {
+            let val = self.parse_expression(0)?;
+            match self.current? {
+                DynamicCalculation::FunctionSeparator => {}
+                DynamicCalculation::ClosedParenthesis => {
+                    res.push(val);
+                    break;
+                }
+                _ => return None,
+            }
+            res.push(val);
+        }
+        self.current = self.calcs.next();
+        Some(res)
     }
 
     /// parses out the prefix, like a + or -
@@ -355,7 +474,6 @@ impl<'a> DynamicCalculationEvaluator<'a> {
         match self.current? {
             DynamicCalculation::Add | DynamicCalculation::Sub => Some(1),
             DynamicCalculation::Mul | DynamicCalculation::Div => Some(2),
-            DynamicCalculation::OpenParenthesis => Some(0),
             _ => None,
         }
     }
@@ -366,7 +484,16 @@ impl<'a> DynamicCalculationEvaluator<'a> {
 pub fn run_calculations(
     calcs: &[DynamicCalculation],
     parent_value: f32,
+    other_parent_value: f32,
     root_value: f32,
+    other_root_value: f32,
 ) -> Option<f32> {
-    DynamicCalculationEvaluator::new(calcs.iter(), parent_value, root_value).evaluate()
+    DynamicCalculationEvaluator::new(
+        calcs.iter(),
+        parent_value,
+        other_parent_value,
+        root_value,
+        other_root_value,
+    )
+    .evaluate()
 }
