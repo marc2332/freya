@@ -37,6 +37,7 @@ use crate::{
         create_paragraph,
         draw_cursor,
         draw_cursor_highlights,
+        ParagraphCache,
         ParagraphData,
     },
 };
@@ -65,14 +66,14 @@ impl ParagraphElement {
             return;
         }
 
-        let y = align_main_align_paragraph(node, &layout_node.area, paragraph);
+        let y = align_main_align_paragraph(node, &layout_node.area, &paragraph.borrow());
 
         if let Some(cursor_reference) = &cursor_state.cursor_ref {
             if let Some(cursor_position) = text_measurement.cursor_position {
                 let position = CursorPoint::new(cursor_position.x, cursor_position.y - y as f64);
 
                 // Calculate the new cursor position
-                let char_position = paragraph.get_glyph_position_at_coordinate(
+                let char_position = paragraph.borrow().get_glyph_position_at_coordinate(
                     position.mul(scale_factor).to_i32().to_tuple(),
                 );
 
@@ -91,11 +92,11 @@ impl ParagraphElement {
                 let dist_position = CursorPoint::new(dist.x, dist.y - y as f64);
 
                 // Calculate the start of the highlighting
-                let origin_char = paragraph.get_glyph_position_at_coordinate(
+                let origin_char = paragraph.borrow().get_glyph_position_at_coordinate(
                     origin_position.mul(scale_factor).to_i32().to_tuple(),
                 );
                 // Calculate the end of the highlighting
-                let dist_char = paragraph.get_glyph_position_at_coordinate(
+                let dist_char = paragraph.borrow().get_glyph_position_at_coordinate(
                     dist_position.mul(scale_factor).to_i32().to_tuple(),
                 );
 
@@ -122,6 +123,7 @@ impl ElementUtils for ParagraphElement {
         _font_manager: &FontMgr,
         default_fonts: &[String],
         scale_factor: f32,
+        paragraph_cache: &mut ParagraphCache,
     ) {
         let area = layout_node.visible_area();
         let node_cursor_state = &*node_ref.get::<CursorState>().unwrap();
@@ -147,8 +149,9 @@ impl ElementUtils for ParagraphElement {
                 true,
                 default_fonts,
                 scale_factor,
+                paragraph_cache,
             );
-            paint(&paragraph);
+            paint(&paragraph.0.borrow());
         } else {
             let paragraph = &layout_node
                 .data
@@ -157,7 +160,7 @@ impl ElementUtils for ParagraphElement {
                 .get::<CachedParagraph>()
                 .unwrap()
                 .0;
-            paint(paragraph);
+            paint(&paragraph.borrow());
         };
     }
 
@@ -184,15 +187,15 @@ impl ElementUtils for ParagraphElement {
         node_ref: &DioxusNode,
         scale_factor: f32,
     ) -> Area {
-        let paragraph_font_height = &layout_node
+        let paragraph = &layout_node
             .data
             .as_ref()
             .unwrap()
             .get::<CachedParagraph>()
             .unwrap()
-            .1;
+            .0;
         let mut area = layout_node.visible_area();
-        area.size.height = area.size.height.max(*paragraph_font_height);
+        area.size.height = area.size.height.max(paragraph.borrow().height());
 
         // Iterate over all the text spans inside this paragraph and if any of them
         // has a shadow at all, apply this shadow to the general paragraph.

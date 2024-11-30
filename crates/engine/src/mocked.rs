@@ -307,6 +307,13 @@ impl From<i32> for Weight {
     }
 }
 
+impl Deref for Weight {
+    type Target = i32;
+    fn deref(&self) -> &Self::Target {
+        unimplemented!("This is mocked")
+    }
+}
+
 #[allow(non_upper_case_globals)]
 impl Weight {
     pub const INVISIBLE: Self = Self(0);
@@ -322,7 +329,7 @@ impl Weight {
     pub const EXTRA_BLACK: Self = Self(1000);
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
 pub enum Slant {
     Upright = 0,
     Italic = 1,
@@ -332,6 +339,13 @@ pub enum Slant {
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
 #[repr(transparent)]
 pub struct Width(i32);
+
+impl Deref for Width {
+    type Target = i32;
+    fn deref(&self) -> &Self::Target {
+        unimplemented!("This is mocked")
+    }
+}
 
 #[allow(non_upper_case_globals)]
 impl Width {
@@ -704,6 +718,12 @@ pub struct FontFeature;
 
 pub struct TypefaceFontProvider;
 
+impl Default for TypefaceFontProvider {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TypefaceFontProvider {
     pub fn new() -> Self {
         unimplemented!("This is mocked")
@@ -727,6 +747,12 @@ impl From<TypefaceFontProvider> for FontMgr {
 #[derive(Clone)]
 pub struct FontCollection;
 
+impl Default for FontCollection {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl FontCollection {
     pub fn new() -> Self {
         unimplemented!("This is mocked")
@@ -741,6 +767,18 @@ impl FontCollection {
     }
 
     pub fn set_dynamic_font_manager(&mut self, _font_manager: impl Into<Option<FontMgr>>) {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn paragraph_cache_mut(&mut self) -> &mut ParagraphCache {
+        unimplemented!("This is mocked")
+    }
+}
+
+pub struct ParagraphCache;
+
+impl ParagraphCache {
+    pub fn turn_on(&self, state: bool) -> f32 {
         unimplemented!("This is mocked")
     }
 }
@@ -1305,6 +1343,12 @@ impl FilterMode {
 }
 
 pub struct Path;
+
+impl Default for Path {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl Path {
     pub fn new() -> Self {

@@ -345,6 +345,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,
             default_fonts: &["Fira Sans".to_string()],
+            paragraph_cache: &mut fdom.paragraph_cache(),
         };
         render_pipeline.run();
 

@@ -60,7 +60,10 @@ fn app() -> Element {
                 rotate: "{rotate.read().as_f32()}deg",
                 height: "50%",
                 background: "{color.read().as_string()}",
-                corner_radius: "{radius.read().as_f32()}"
+                corner_radius: "{radius.read().as_f32()}",
+                label {
+                    "{color.read().as_string()}"
+                }
             }
         }
     )
