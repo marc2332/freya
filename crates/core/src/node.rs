@@ -137,6 +137,14 @@ impl NodeState {
             ("offset_x", AttributeType::Measure(self.size.offset_x.get())),
             ("offset_y", AttributeType::Measure(self.size.offset_y.get())),
             ("content", AttributeType::Content(&self.size.content)),
+            (
+                "fill",
+                AttributeType::OptionalColor(self.style.svg_fill.map(|color| color.into())),
+            ),
+            (
+                "svg_stroke",
+                AttributeType::OptionalColor(self.style.svg_stroke.map(|color| color.into())),
+            ),
         ];
 
         let shadows = &self.style.shadows;
@@ -161,6 +169,7 @@ impl NodeState {
 
 pub enum AttributeType<'a> {
     Color(Fill),
+    OptionalColor(Option<Fill>),
     Gradient(Fill),
     Size(&'a Size),
     Measure(f32),
