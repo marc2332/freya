@@ -1,7 +1,7 @@
 pub mod custom_measurer;
 pub mod dom_adapter;
 pub mod geometry;
-mod measure;
+pub mod measure;
 pub mod node;
 pub mod scaled;
 pub mod torin;
@@ -15,6 +15,7 @@ pub mod prelude {
         dom_adapter::*,
         gaps::*,
         geometry::*,
+        measure::*,
         node::*,
         scaled::*,
         torin::*,
