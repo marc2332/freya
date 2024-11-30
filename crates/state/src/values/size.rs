@@ -2,7 +2,10 @@ use nom::{
     branch::alt,
     bytes::complete::tag,
     character::complete::multispace0,
-    combinator::map,
+    combinator::{
+        map,
+        opt,
+    },
     multi::many1,
     number::complete::float,
     sequence::{
@@ -14,7 +17,9 @@ use nom::{
 use torin::{
     geometry::Length,
     size::{
+        Dimension,
         DynamicCalculation,
+        LexFunction,
         Size,
     },
 };
@@ -91,13 +96,37 @@ pub fn parse_calc(mut value: &str) -> Result<Vec<DynamicCalculation>, ParseError
                 map(tag("/"), |_| DynamicCalculation::Div),
                 map(tag("("), |_| DynamicCalculation::OpenParenthesis),
                 map(tag(")"), |_| DynamicCalculation::ClosedParenthesis),
-                map(tuple((float, tag("%"))), |(v, _)| {
-                    DynamicCalculation::Percentage(v)
-                }),
-                map(tuple((float, tag("v"))), |(v, _)| {
-                    DynamicCalculation::RootPercentage(v)
-                }),
+                map(tag(","), |_| DynamicCalculation::FunctionSeparator),
+                map(
+                    tuple((float, tag("%"), opt(tag("'")))),
+                    |(v, _, inv): (f32, _, Option<&str>)| {
+                        if inv.is_some() {
+                            DynamicCalculation::Percentage(Dimension::Other(v))
+                        } else {
+                            DynamicCalculation::Percentage(Dimension::Current(v))
+                        }
+                    },
+                ),
+                map(
+                    tuple((float, tag("v"), opt(tag("'")))),
+                    |(v, _, inv): (f32, _, Option<&str>)| {
+                        if inv.is_some() {
+                            DynamicCalculation::RootPercentage(Dimension::Other(v))
+                        } else {
+                            DynamicCalculation::RootPercentage(Dimension::Current(v))
+                        }
+                    },
+                ),
                 map(float, DynamicCalculation::Pixels),
+                map(tag("min"), |_| {
+                    DynamicCalculation::Function(LexFunction::Min)
+                }),
+                map(tag("max"), |_| {
+                    DynamicCalculation::Function(LexFunction::Max)
+                }),
+                map(tag("clamp"), |_| {
+                    DynamicCalculation::Function(LexFunction::Clamp)
+                }),
             )),
         ))(value)
     }
