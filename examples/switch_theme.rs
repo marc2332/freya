@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch(app);
+    launch_with_props(app, "Switch Theme", (600., 700.));
 }
 
 #[component]
@@ -57,7 +57,12 @@ fn ThemeChanger() -> Element {
                 label { "Light" }
             }
         }
-
+        Link {
+            to: "https://freyaui.dev",
+            label {
+                "https://freyaui.dev"
+            }
+        }
     )
 }
 
@@ -133,6 +138,12 @@ fn app() -> Element {
                         onpress: move |_| value.set(35.),
                         label {
                             "Set to 35%"
+                        }
+                    }
+                    FilledButton {
+                        onpress: move |_| value.set(75.),
+                        label {
+                            "Set to 75%"
                         }
                     }
                     ThemeChanger { }

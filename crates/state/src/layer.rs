@@ -14,6 +14,7 @@ use freya_native_core::{
         NodeMaskBuilder,
         State,
     },
+    NodeId,
     SendAnyMap,
 };
 use freya_native_core_macro::partial_derive_state;
@@ -75,6 +76,7 @@ impl State<CustomAttributeValues> for LayerState {
             return false;
         }
 
+        let root_id = context.get::<NodeId>().unwrap();
         let layers = context.get::<Arc<Mutex<Layers>>>().unwrap();
         let inherited_layer = parent.map(|(p,)| p.layer_for_children).unwrap_or(0i16);
 
@@ -91,7 +93,9 @@ impl State<CustomAttributeValues> for LayerState {
 
         let changed = &layer_state != self;
 
-        if changed {
+        let is_orphan = node_view.height() == 0 && node_view.node_id() != *root_id;
+
+        if changed && !is_orphan {
             layers
                 .lock()
                 .unwrap()

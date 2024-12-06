@@ -25,10 +25,12 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
     rsx!(
         ScrollView {
             show_scrollbar: true,
-            height : "calc(100% - 35)",
+            height : "fill",
             width: "100%",
-            {node.state.attributes().into_iter().enumerate().map(|(i, (name, attr))| {
-                match attr {
+            spacing: "6",
+            padding: "8 16",
+            {node.state.attributes().into_iter().enumerate().filter_map(|(i, (name, attr))| {
+                Some(match attr {
                     AttributeType::Measure(measure) => {
                         rsx!{
                             Property {
@@ -81,6 +83,19 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
                                 name: "{name}",
                                 fill: fill.clone()
                             }
+                        }
+                    }
+                    AttributeType::OptionalColor(fill) => {
+                        if let Some(fill) = fill {
+                            rsx!{
+                                ColorProperty {
+                                    key: "{i}",
+                                    name: "{name}",
+                                    fill: fill.clone()
+                                }
+                            }
+                        } else {
+                            return None;
                         }
                     }
                     AttributeType::Gradient(fill) => {
@@ -182,7 +197,7 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
                             }
                         }
                     }
-                }
+                })
             })}
         }
     )

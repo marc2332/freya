@@ -51,9 +51,9 @@ dioxus-signals = { version = "0.5" }
 dioxus-core = { version = "0.5" }
 dioxus-hot-reload = { version = "0.5", features = ["file_watcher"], default-features = false }
 dioxus-router = { version = "0.5", default-features = false }
-dioxus-sdk = { version = "0.5", features = ["clipboard"]}
+dioxus-clipboard = "0.1"
 
-skia-safe = { version = "0.75.0", features = ["gl", "textlayout", "svg"] }
+skia-safe = { version = "0.80.0", features = ["gl", "textlayout", "svg"] }
 
 gl = "0.14.0"
 glutin = "0.32.0"
@@ -79,6 +79,7 @@ skia-safe = { workspace = true }
 tokio = { workspace = true, features = ["fs"]}
 dioxus = { workspace = true }
 freya = { workspace = true }
+freya-hooks = { workspace = true }
 freya-core = { workspace = true }
 freya-testing = { workspace = true }
 reqwest = { version = "0.12.0", features = ["json"] }
@@ -95,7 +96,8 @@ tree-sitter-highlight = "0.23.0"
 tree-sitter-rust = "0.23.0"
 rfd = "0.14.1"
 bytes = "1.5.0"
-dioxus-sdk = { workspace = true }
+dioxus-clipboard = { workspace = true }
+winit = { workspace = true }
 
 [profile.release]
 lto = true

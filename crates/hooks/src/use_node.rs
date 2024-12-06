@@ -90,7 +90,7 @@ mod test {
 
         let mut utils = launch_test_with_config(
             use_node_app,
-            TestingConfig {
+            TestingConfig::<()> {
                 size: (500.0, 800.0).into(),
                 ..TestingConfig::default()
             },

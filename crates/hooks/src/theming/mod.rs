@@ -544,7 +544,9 @@ pub struct ColorsSheet {
     pub focused_border: Cow<'static, str>,
     pub solid: Cow<'static, str>,
     pub color: Cow<'static, str>,
+    pub primary_color: Cow<'static, str>,
     pub placeholder_color: Cow<'static, str>,
+    pub highlight_color: Cow<'static, str>,
 }
 
 impl ColorsSheet {
@@ -566,7 +568,9 @@ impl ColorsSheet {
                 "focused_border" => self.focused_border.clone(),
                 "solid" => self.solid.clone(),
                 "color" => self.color.clone(),
+                "primary_color" => self.primary_color.clone(),
                 "placeholder_color" => self.placeholder_color.clone(),
+                "highlight_color" => self.highlight_color.clone(),
                 _ => self.primary.clone(),
             }
         } else {
@@ -581,6 +585,8 @@ pub struct Theme {
     pub colors: ColorsSheet,
     pub body: BodyTheme,
     pub button: ButtonTheme,
+    pub filled_button: ButtonTheme,
+    pub outline_button: ButtonTheme,
     pub switch: SwitchTheme,
     pub scroll_bar: ScrollBarTheme,
     pub slider: SliderTheme,

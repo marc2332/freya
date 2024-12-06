@@ -20,7 +20,9 @@ pub(crate) const BASE_THEME: Theme = Theme {
         focused_border: cow_borrowed!(""),
         solid: cow_borrowed!(""),
         color: cow_borrowed!(""),
+        primary_color: cow_borrowed!(""),
         placeholder_color: cow_borrowed!(""),
+        highlight_color: cow_borrowed!(""),
     },
     body: BodyTheme {
         background: cow_borrowed!("key(background)"),
@@ -48,6 +50,36 @@ pub(crate) const BASE_THEME: Theme = Theme {
         width: cow_borrowed!("auto"),
         height: cow_borrowed!("auto"),
     },
+    filled_button: ButtonTheme {
+        background: cow_borrowed!("key(primary)"),
+        hover_background: cow_borrowed!("key(tertiary)"),
+        font_theme: FontTheme {
+            color: cow_borrowed!("key(primary_color)"),
+        },
+        border_fill: cow_borrowed!("none"),
+        focus_border_fill: cow_borrowed!("key(focused_border)"),
+        shadow: cow_borrowed!("0 4 5 0 rgb(0, 0, 0, 0.1)"),
+        padding: cow_borrowed!("8 12"),
+        margin: cow_borrowed!("0"),
+        corner_radius: cow_borrowed!("8"),
+        width: cow_borrowed!("auto"),
+        height: cow_borrowed!("auto"),
+    },
+    outline_button: ButtonTheme {
+        background: cow_borrowed!("key(background)"),
+        hover_background: cow_borrowed!("key(neutral_surface)"),
+        font_theme: FontTheme {
+            color: cow_borrowed!("key(primary)"),
+        },
+        border_fill: cow_borrowed!("key(surface)"),
+        focus_border_fill: cow_borrowed!("key(secondary_opposite_surface)"),
+        shadow: cow_borrowed!("none"),
+        padding: cow_borrowed!("8 12"),
+        margin: cow_borrowed!("0"),
+        corner_radius: cow_borrowed!("8"),
+        width: cow_borrowed!("auto"),
+        height: cow_borrowed!("auto"),
+    },
     input: InputTheme {
         background: cow_borrowed!("key(neutral_surface)"),
         hover_background: cow_borrowed!("key(focused_surface)"),
@@ -55,7 +87,7 @@ pub(crate) const BASE_THEME: Theme = Theme {
             color: cow_borrowed!("key(color)"),
         },
         placeholder_font_theme: FontTheme {
-            color: cow_borrowed!("rgb(100, 100, 100)"),
+            color: cow_borrowed!("key(placeholder_color)"),
         },
         border_fill: cow_borrowed!("key(surface)"),
         width: cow_borrowed!("150"),
@@ -94,7 +126,7 @@ pub(crate) const BASE_THEME: Theme = Theme {
             color: cow_borrowed!("key(color)"),
         },
         border_fill: cow_borrowed!("key(surface)"),
-        arrow_fill: cow_borrowed!("rgb(40, 40, 40)"),
+        arrow_fill: cow_borrowed!("key(solid)"),
     },
     dropdown_item: DropdownItemTheme {
         background: cow_borrowed!("key(background)"),
@@ -105,7 +137,7 @@ pub(crate) const BASE_THEME: Theme = Theme {
         },
     },
     accordion: AccordionTheme {
-        color: cow_borrowed!("black"),
+        color: cow_borrowed!("key(color)"),
         background: cow_borrowed!("key(neutral_surface)"),
         border_fill: cow_borrowed!("key(surface)"),
     },
@@ -113,7 +145,7 @@ pub(crate) const BASE_THEME: Theme = Theme {
         primary_color: cow_borrowed!("key(tertiary_opposite_surface)"),
     },
     link: LinkTheme {
-        highlight_color: cow_borrowed!("rgb(43,106,208)"),
+        highlight_color: cow_borrowed!("key(highlight_color)"),
     },
     progress_bar: ProgressBarTheme {
         color: cow_borrowed!("white"),
@@ -124,10 +156,10 @@ pub(crate) const BASE_THEME: Theme = Theme {
     },
     table: TableTheme {
         font_theme: FontTheme {
-            color: cow_borrowed!("black"),
+            color: cow_borrowed!("key(color)"),
         },
         background: cow_borrowed!("key(background)"),
-        arrow_fill: cow_borrowed!("rgb(40, 40, 40)"),
+        arrow_fill: cow_borrowed!("key(solid)"),
         row_background: cow_borrowed!("transparent"),
         alternate_row_background: cow_borrowed!("key(neutral_surface)"),
         divider_fill: cow_borrowed!("key(secondary_surface)"),
@@ -200,7 +232,7 @@ pub(crate) const BASE_THEME: Theme = Theme {
     },
     popup: PopupTheme {
         background: cow_borrowed!("key(background)"),
-        color: cow_borrowed!("black"),
+        color: cow_borrowed!("key(color)"),
         cross_fill: cow_borrowed!("key(solid)"),
         width: cow_borrowed!("350"),
         height: cow_borrowed!("200"),
