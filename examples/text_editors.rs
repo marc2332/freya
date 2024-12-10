@@ -53,7 +53,7 @@ fn app() -> Element {
         rect {
             spacing: "10",
             for (i, editable) in text_editors.into_iter().enumerate() {
-                TextEditor {
+                Editor {
                     key: "{i}",
                     editable
                 }
@@ -63,7 +63,7 @@ fn app() -> Element {
 }
 
 #[component]
-fn TextEditor(mut editable: UseEditable) -> Element {
+fn Editor(mut editable: UseEditable) -> Element {
     let mut focus = use_focus();
     let cursor_reference = editable.cursor_attr();
     let highlights = editable.highlights_attr(0);

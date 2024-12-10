@@ -1,6 +1,8 @@
-use dioxus::prelude::*;
-use freya::prelude::use_platform_information;
-use freya_elements::elements as dioxus_elements;
+use freya::prelude::{
+    use_platform_information,
+    *,
+};
+use freya_elements as dioxus_elements;
 use freya_testing::prelude::*;
 
 #[tokio::test]

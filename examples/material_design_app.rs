@@ -102,7 +102,7 @@ fn Scaffold(props: ScaffoldProps) -> Element {
 
                 }
             }
-            {props.navbar},
+            {props.navbar}
             ScrollView {
                 height,
                 padding: "3 10 0 10",

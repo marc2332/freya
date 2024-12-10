@@ -85,20 +85,6 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
             .expect("Failed to create event loop.");
         let proxy = event_loop.create_proxy();
 
-        // Hotreload support for Dioxus
-        #[cfg(feature = "hot-reload")]
-        {
-            use std::process::exit;
-            let proxy = proxy.clone();
-            dioxus_hot_reload::connect(move |msg| match msg {
-                dioxus_hot_reload::HotReloadMsg::UpdateTemplate(template) => {
-                    let _ = proxy.send_event(EventMessage::UpdateTemplate(template));
-                }
-                dioxus_hot_reload::HotReloadMsg::Shutdown => exit(0),
-                dioxus_hot_reload::HotReloadMsg::UpdateAsset(_) => {}
-            });
-        }
-
         let mut desktop_renderer =
             DesktopRenderer::new(vdom, sdom, config, devtools, hovered_node, proxy);
 
@@ -230,9 +216,9 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             EventMessage::ExitApp => event_loop.exit(),
             EventMessage::PlatformEvent(platform_event) => self.send_event(platform_event),
             ev => {
-                if let EventMessage::UpdateTemplate(template) = ev {
-                    app.vdom_replace_template(template);
-                }
+                // if let EventMessage::UpdateTemplate(template) = ev {
+                //     app.vdom_replace_template(template);
+                // }
 
                 if matches!(ev, EventMessage::PollVDOM)
                     || matches!(ev, EventMessage::UpdateTemplate(_))
