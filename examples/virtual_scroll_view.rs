@@ -10,11 +10,11 @@ fn main() {
 }
 
 fn app() -> Element {
-    let values = use_signal(|| ["Hello, World!"].repeat(300));
+    let values = use_signal(|| ["Hello, World!"].repeat(128));
 
     rsx!(VirtualScrollView {
         length: values.read().len(),
-        item_size: 25.0,
+        item_size: 5.0,
         direction: "vertical",
         builder: move |index, _: &Option<()>| {
             let value = values.read()[index];
@@ -27,9 +27,10 @@ fn app() -> Element {
                 rect {
                     key: "{index}",
                     background: "{background}",
-                    width: "100%",
+                    width: "200",
                     label {
-                        height: "25",
+                        height: "5",
+                        width: "200",
                         "{index} {value}"
                     }
                 }
