@@ -64,6 +64,7 @@ pub enum AttributeName {
     SvgData,
     SvgContent,
     Spacing,
+    Scale,
 
     // Focus
     A11yId,
@@ -287,6 +288,7 @@ impl FromStr for AttributeName {
             "svg_data" => Ok(AttributeName::SvgData),
             "svg_content" => Ok(AttributeName::SvgContent),
             "spacing" => Ok(AttributeName::Spacing),
+            "scale" => Ok(AttributeName::Scale),
             "a11y_id" => Ok(AttributeName::A11yId),
             "a11y_focusable" => Ok(AttributeName::A11yFocusable),
             "a11y_auto_focus" => Ok(AttributeName::A11yAutoFocus),

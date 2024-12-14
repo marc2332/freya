@@ -262,6 +262,7 @@ builder_constructors! {
         #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
 
+        scale: String,
         // Reference
         canvas_reference: String,
         reference: Reference,
