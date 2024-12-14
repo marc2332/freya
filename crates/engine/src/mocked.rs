@@ -9,6 +9,9 @@ use std::ops::*;
 use bitflags::bitflags;
 use glutin::context::PossiblyCurrentContext;
 
+#[derive(Default, Debug)]
+pub struct SaveLayerRec;
+
 #[derive(Clone, Debug, PartialEq, Copy, Eq)]
 pub struct Color(u32);
 
@@ -663,6 +666,10 @@ impl Paint {
         unimplemented!("This is mocked")
     }
 
+    pub fn set_blend_mode(&mut self, _mode: BlendMode) -> &mut Self {
+        unimplemented!("This is mocked")
+    }
+
     pub fn set_style(&mut self, _style: PaintStyle) -> &mut Self {
         unimplemented!("This is mocked")
     }
@@ -1123,11 +1130,19 @@ impl Canvas {
         unimplemented!("This is mocked")
     }
 
+    pub fn draw_paint(&self, _: &Paint) -> &Self {
+        unimplemented!("This is mocked")
+    }
+
     pub fn draw_line(&self, _p1: impl Into<Point>, _p2: impl Into<Point>, _paint: &Paint) -> &Self {
         unimplemented!("This is mocked")
     }
 
     pub fn draw_circle(&self, _center: impl Into<Point>, _radius: f32, _paint: &Paint) -> &Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn save_layer(&self, layer_rec: &SaveLayerRec) -> usize {
         unimplemented!("This is mocked")
     }
 
@@ -1497,6 +1512,40 @@ impl MaskFilter {
     }
 }
 
+#[repr(i32)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum BlendMode {
+    Clear = 0,
+    Src = 1,
+    Dst = 2,
+    SrcOver = 3,
+    DstOver = 4,
+    SrcIn = 5,
+    DstIn = 6,
+    SrcOut = 7,
+    DstOut = 8,
+    SrcATop = 9,
+    DstATop = 10,
+    Xor = 11,
+    Plus = 12,
+    Modulate = 13,
+    Screen = 14,
+    Overlay = 15,
+    Darken = 16,
+    Lighten = 17,
+    ColorDodge = 18,
+    ColorBurn = 19,
+    HardLight = 20,
+    SoftLight = 21,
+    Difference = 22,
+    Exclusion = 23,
+    Multiply = 24,
+    Hue = 25,
+    Saturation = 26,
+    Color = 27,
+    Luminosity = 28,
+}
+
 impl BlurStyle {
     pub const LastEnum: BlurStyle = BlurStyle::Inner;
 }
@@ -1512,6 +1561,7 @@ pub enum BlurStyle {
 pub mod svg {
     use super::{
         Canvas,
+        Color,
         LocalResourceProvider,
         Size,
     };
@@ -1528,6 +1578,14 @@ pub mod svg {
         }
     }
 
+    pub struct Paint;
+
+    impl Paint {
+        pub fn from_color(_color: Color) -> Self {
+            unimplemented!("This is mocked")
+        }
+    }
+
     pub struct SvgNode;
 
     impl SvgNode {
@@ -1536,6 +1594,18 @@ pub mod svg {
         }
 
         pub fn set_height(&mut self, _height: Length) {
+            unimplemented!("This is mocked")
+        }
+
+        pub fn set_color(&mut self, _value: Color) {
+            unimplemented!("This is mocked")
+        }
+
+        pub fn set_fill(&mut self, _value: Paint) {
+            unimplemented!("This is mocked")
+        }
+
+        pub fn set_stroke(&mut self, _value: Paint) {
             unimplemented!("This is mocked")
         }
     }
