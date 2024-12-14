@@ -34,16 +34,16 @@ pub enum TabStatus {
     Hovering,
 }
 
-///  Clickable Tab. Usually used in combination with [`Tabsbar`], [`Link`] and [`ActivableRoute`].
+///  Clickable Tab. Usually used in combination with [`Tabsbar`], [`crate::Link`] and [`crate::ActivableRoute`].
 ///
 /// # Styling
 /// Inherits the [`TabTheme`](freya_hooks::TabTheme) theme.
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
-/// # use dioxus_router::prelude::Routable;
+/// # use dioxus_router::prelude::{Routable, Router};
 /// # #[allow(non_snake_case)]
 /// # fn PageNotFound() -> Element { None }
 /// # #[allow(non_snake_case)]
@@ -51,8 +51,10 @@ pub enum TabStatus {
 /// # #[derive(Routable, Clone, PartialEq)]
 /// # #[rustfmt::skip]
 /// # pub enum Route {
-/// #     #[route("/settings")]
-/// #     Settings,
+/// #     #[layout(Bar)]
+/// #       #[route("/")]
+/// #       Settings,
+/// #     #[end_layout]
 /// #     #[route("/..route")]
 /// #     PageNotFound { },
 /// # }
@@ -68,15 +70,46 @@ pub enum TabStatus {
 ///                 to: Route::Settings,
 ///                 Tab {
 ///                     label {
-///                         "Go to Settings"
+///                         "Settings"
 ///                     }
 ///                 }
 ///             }
 ///         }
 ///     )
 /// }
+/// # use freya_testing::prelude::*;
+/// # #[component]
+/// # fn Bar() -> Element {
+/// #   rsx!(
+/// #       Preview {
+/// #          Tabsbar {
+/// #              Tab {
+/// #                  label {
+/// #                      "Home"
+/// #                  }
+/// #              }
+/// #              ActivableRoute {
+/// #                  route: Route::Settings,
+/// #                  Tab {
+/// #                      label {
+/// #                          "Settings"
+/// #                      }
+/// #                  }
+/// #              }
+/// #          }
+/// #       }
+/// #   )
+/// # }
+/// # launch_doc(|| {
+/// #   rsx!(Router::<Route> {})
+/// # }, (185., 185.).into(), "./images/gallery_tab.png");
 /// ```
-#[allow(non_snake_case)]
+///
+/// # Preview
+/// ![Tab Preview][tab]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("tab", "images/gallery_tab.png")
+)]
 #[component]
 pub fn Tab(
     children: Element,
@@ -163,16 +196,16 @@ pub fn Tab(
 }
 
 ///  Clickable BottomTab. Same thing as Tab but designed to be placed in the bottom of your app,
-///  usually used in combination with [`Tabsbar`], [`Link`] and [`ActivableRoute`].
+///  usually used in combination with [`Tabsbar`], [`crate::Link`] and [`crate::ActivableRoute`].
 ///
 /// # Styling
 /// Inherits the [`BottomTabTheme`](freya_hooks::BottomTabTheme) theme.
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
-/// # use dioxus_router::prelude::Routable;
+/// # use dioxus_router::prelude::{Routable, Router};
 /// # #[allow(non_snake_case)]
 /// # fn PageNotFound() -> Element { None }
 /// # #[allow(non_snake_case)]
@@ -180,8 +213,10 @@ pub fn Tab(
 /// # #[derive(Routable, Clone, PartialEq)]
 /// # #[rustfmt::skip]
 /// # pub enum Route {
-/// #     #[route("/settings")]
-/// #     Settings,
+/// #     #[layout(Bar)]
+/// #       #[route("/")]
+/// #       Settings,
+/// #     #[end_layout]
 /// #     #[route("/..route")]
 /// #     PageNotFound { },
 /// # }
@@ -197,15 +232,46 @@ pub fn Tab(
 ///                 to: Route::Settings,
 ///                 BottomTab {
 ///                     label {
-///                         "Go to Settings"
+///                         "Settings"
 ///                     }
 ///                 }
 ///             }
 ///         }
 ///     )
 /// }
+/// # use freya_testing::prelude::*;
+/// # #[component]
+/// # fn Bar() -> Element {
+/// #   rsx!(
+/// #       Preview {
+/// #          Tabsbar {
+/// #              BottomTab {
+/// #                  label {
+/// #                      "Home"
+/// #                  }
+/// #              }
+/// #              ActivableRoute {
+/// #                  route: Route::Settings,
+/// #                  BottomTab {
+/// #                      label {
+/// #                          "Settings"
+/// #                      }
+/// #                  }
+/// #              }
+/// #          }
+/// #       }
+/// #   )
+/// # }
+/// # launch_doc(|| {
+/// #   rsx!(Router::<Route> {})
+/// # }, (185., 185.).into(), "./images/gallery_bottom_tab.png");
 /// ```
-#[allow(non_snake_case)]
+///
+/// # Preview
+/// ![Bottom Tab Preview][bottom_tab]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("bottom_tab", "images/gallery_bottom_tab.png")
+)]
 #[component]
 pub fn BottomTab(children: Element, theme: Option<BottomTabThemeWith>) -> Element {
     let focus = use_focus();
