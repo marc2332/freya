@@ -57,9 +57,9 @@ macro_rules! impl_element {
         $(
             #[allow(non_camel_case_types)]
             $(#[$attr])*
-            pub struct $name;
-
-            impl $name {
+            pub mod $name {
+                #[allow(unused)]
+                use super::*;
                 #[doc(hidden)]
                 pub const TAG_NAME: &'static str = stringify!($name);
                 #[doc(hidden)]
