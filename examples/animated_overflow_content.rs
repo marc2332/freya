@@ -3,8 +3,6 @@
     windows_subsystem = "windows"
 )]
 
-use std::time::Duration;
-
 use freya::prelude::*;
 
 fn main() {
