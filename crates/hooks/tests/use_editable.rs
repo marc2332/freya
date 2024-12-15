@@ -569,7 +569,7 @@ pub async fn special_text_editing() {
 
     #[cfg(target_os = "linux")]
     {
-        assert_eq!(content.text(), Some("你好世界🦀\n👋"));
+        assert_eq!(content.text(), Some("你好世🦀界\n👋"));
         assert_eq!(cursor.text(), Some("0:5"));
     }
 
