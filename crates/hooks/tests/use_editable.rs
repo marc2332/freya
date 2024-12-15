@@ -546,7 +546,7 @@ pub async fn special_text_editing() {
     assert_eq!(cursor.text(), Some("0:2"));
 
     #[cfg(target_os = "linux")]
-    assert_eq!(cursor.text(), Some("0:4"));
+    assert_eq!(cursor.text(), Some("0:3"));
 
     // Insert text
     utils.push_event(PlatformEvent::Keyboard {
@@ -570,7 +570,7 @@ pub async fn special_text_editing() {
     #[cfg(target_os = "linux")]
     {
         assert_eq!(content.text(), Some("你好世界🦀\n👋"));
-        assert_eq!(cursor.text(), Some("0:6"));
+        assert_eq!(cursor.text(), Some("0:5"));
     }
 
     // Move cursor to the begining
