@@ -200,9 +200,12 @@ where
             };
 
             // Create the areas
-            let area_origin =
-                node.position
-                    .get_origin(available_parent_area, parent_area, &area_size);
+            let area_origin = node.position.get_origin(
+                available_parent_area,
+                parent_area,
+                &area_size,
+                &self.layout_metadata.root_area,
+            );
             let mut area = Rect::new(area_origin, area_size);
             let mut inner_area = Rect::new(area_origin, inner_size)
                 .without_gaps(&node.padding)
