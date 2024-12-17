@@ -28,7 +28,6 @@ use freya_hooks::{
 ///                 rect {
 ///                     direction: "horizontal",
 ///                     cross_align: "center",
-///                     Ferris { }
 ///                     label {
 ///                         "Freya is a cross-platform GUI library for Rust"
 ///                     }
