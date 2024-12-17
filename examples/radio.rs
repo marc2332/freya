@@ -25,7 +25,7 @@ fn app() -> Element {
             leading: rsx!(
                 Radio {
                     selected: *selected.read() == Choice::First,
-                },
+                }
             ),
             label { "First choice" }
         }
@@ -34,7 +34,7 @@ fn app() -> Element {
             leading: rsx!(
                 Radio {
                     selected: *selected.read() == Choice::Second,
-                },
+                }
             ),
             label { "Second choice" }
         }
@@ -43,7 +43,7 @@ fn app() -> Element {
             leading: rsx!(
                 Radio {
                     selected: *selected.read() == Choice::Third,
-                },
+                }
             ),
             label { "Third choice" }
         }

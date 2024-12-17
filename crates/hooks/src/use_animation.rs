@@ -375,14 +375,14 @@ pub trait AnimatedValue {
 pub type ReadAnimatedValue = ReadOnlySignal<Box<dyn AnimatedValue>>;
 
 #[derive(Default, PartialEq, Clone)]
-pub struct Context {
+pub struct AnimationContext {
     animated_values: Vec<Signal<Box<dyn AnimatedValue>>>,
     on_finish: OnFinish,
     auto_start: bool,
     on_deps_change: OnDepsChange,
 }
 
-impl Context {
+impl AnimationContext {
     pub fn with(&mut self, animated_value: impl AnimatedValue + 'static) -> ReadAnimatedValue {
         let val: Box<dyn AnimatedValue> = Box::new(animated_value);
         let signal = Signal::new(val);
@@ -442,7 +442,7 @@ pub enum OnDepsChange {
 /// Animate your elements. Use [`use_animation`] to use this.
 #[derive(PartialEq, Clone)]
 pub struct UseAnimator<Animated: PartialEq + Clone + 'static> {
-    pub(crate) value_and_ctx: Memo<(Animated, Context)>,
+    pub(crate) value_and_ctx: Memo<(Animated, AnimationContext)>,
     pub(crate) platform: UsePlatform,
     pub(crate) is_running: Signal<bool>,
     pub(crate) has_run_yet: Signal<bool>,
@@ -679,7 +679,7 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
 /// }
 /// ```
 pub fn use_animation<Animated: PartialEq + Clone + 'static>(
-    run: impl Fn(&mut Context) -> Animated + Clone + 'static,
+    run: impl Fn(&mut AnimationContext) -> Animated + Clone + 'static,
 ) -> UseAnimator<Animated> {
     let platform = use_platform();
     let is_running = use_signal(|| false);
@@ -688,7 +688,7 @@ pub fn use_animation<Animated: PartialEq + Clone + 'static>(
     let last_direction = use_signal(|| AnimDirection::Reverse);
 
     let value_and_ctx = use_memo(move || {
-        let mut ctx = Context::default();
+        let mut ctx = AnimationContext::default();
         (run(&mut ctx), ctx)
     });
 
@@ -712,7 +712,7 @@ pub fn use_animation<Animated: PartialEq + Clone + 'static>(
 
 pub fn use_animation_with_dependencies<Animated: PartialEq + Clone + 'static, D: Dependency>(
     deps: D,
-    run: impl Fn(&mut Context, D::Out) -> Animated + 'static,
+    run: impl Fn(&mut AnimationContext, D::Out) -> Animated + 'static,
 ) -> UseAnimator<Animated>
 where
     D::Out: 'static + Clone,
@@ -724,7 +724,7 @@ where
     let last_direction = use_signal(|| AnimDirection::Reverse);
 
     let value_and_ctx = use_memo(use_reactive(deps, move |vals| {
-        let mut ctx = Context::default();
+        let mut ctx = AnimationContext::default();
         (run(&mut ctx, vals), ctx)
     }));
 
