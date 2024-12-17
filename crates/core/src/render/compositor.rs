@@ -273,10 +273,10 @@ mod test {
 
         // Process what nodes need to be rendered
         let rendering_layers = compositor.run(
-            &mut *compositor_dirty_nodes,
-            &mut *compositor_dirty_area,
+            &mut compositor_dirty_nodes,
+            &mut compositor_dirty_area,
             &mut compositor_cache,
-            &*layers,
+            &layers,
             &mut dirty_layers,
             &layout,
             rdom,

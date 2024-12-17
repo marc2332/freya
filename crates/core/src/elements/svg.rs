@@ -1,6 +1,9 @@
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
-use freya_node_state::StyleState;
+use freya_node_state::{
+    FontStyleState,
+    StyleState,
+};
 use torin::prelude::LayoutNode;
 
 use super::utils::ElementUtils;
@@ -21,15 +24,27 @@ impl ElementUtils for SvgElement {
     ) {
         let area = layout_node.visible_area();
         let node_style = &*node_ref.get::<StyleState>().unwrap();
+        let font_style = &*node_ref.get::<FontStyleState>().unwrap();
 
         let x = area.min_x();
         let y = area.min_y();
         if let Some(svg_data) = &node_style.svg_data {
-            let svg_dom = svg::Dom::from_bytes(svg_data.as_slice(), font_manager);
+            let resource_provider = LocalResourceProvider::new(font_manager);
+            let svg_dom = svg::Dom::from_bytes(svg_data.as_slice(), resource_provider);
             if let Ok(mut svg_dom) = svg_dom {
                 canvas.save();
                 canvas.translate((x, y));
                 svg_dom.set_container_size((area.width() as i32, area.height() as i32));
+                let mut root = svg_dom.root();
+                root.set_width(svg::Length::new(100.0, svg::LengthUnit::Percentage));
+                root.set_height(svg::Length::new(100.0, svg::LengthUnit::Percentage));
+                root.set_color(font_style.color);
+                if let Some(color) = node_style.svg_stroke.as_ref() {
+                    root.set_fill(svg::Paint::from_color(*color));
+                }
+                if let Some(color) = node_style.svg_fill.as_ref() {
+                    root.set_stroke(svg::Paint::from_color(*color));
+                }
                 svg_dom.render(canvas);
                 canvas.restore();
             }

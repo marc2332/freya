@@ -19,6 +19,11 @@ use torin::prelude::{
 
 use crate::dom::DioxusNode;
 
+pub struct ParagraphData {
+    pub paragraph: Paragraph,
+    pub size: Size2D,
+}
+
 /// Compose a new SkParagraph
 pub fn create_paragraph(
     node: &DioxusNode,
@@ -27,7 +32,7 @@ pub fn create_paragraph(
     is_rendering: bool,
     default_font_family: &[String],
     scale_factor: f32,
-) -> Paragraph {
+) -> ParagraphData {
     let font_style = &*node.get::<FontStyleState>().unwrap();
 
     let mut paragraph_style = ParagraphStyle::default();
@@ -82,7 +87,15 @@ pub fn create_paragraph(
         },
     );
 
-    paragraph
+    let width = match font_style.text_align {
+        TextAlign::Start | TextAlign::Left => paragraph.longest_line(),
+        _ => paragraph.max_width(),
+    };
+
+    ParagraphData {
+        size: Size2D::new(width, paragraph.height()),
+        paragraph,
+    }
 }
 
 pub fn draw_cursor_highlights(

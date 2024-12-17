@@ -27,7 +27,10 @@ use super::{
     create_label,
     create_paragraph,
 };
-use crate::dom::*;
+use crate::{
+    dom::*,
+    render::ParagraphData,
+};
 
 /// Provides Text measurements using Skia APIs like SkParagraph
 pub struct SkiaMeasurer<'a> {
@@ -65,21 +68,19 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
 
         match &*node_type {
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Label => {
-                let label = create_label(
+                let ParagraphData { paragraph, size } = create_label(
                     &node,
                     area_size,
                     self.font_collection,
                     self.default_fonts,
                     self.scale_factor,
                 );
-                let height = label.height();
-                let res = Size2D::new(label.longest_line(), height);
                 let mut map = SendAnyMap::new();
-                map.insert(CachedParagraph(label, height));
-                Some((res, Arc::new(map)))
+                map.insert(CachedParagraph(paragraph, size.height));
+                Some((size, Arc::new(map)))
             }
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Paragraph => {
-                let paragraph = create_paragraph(
+                let ParagraphData { paragraph, size } = create_paragraph(
                     &node,
                     area_size,
                     self.font_collection,
@@ -87,11 +88,9 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                     self.default_fonts,
                     self.scale_factor,
                 );
-                let height = paragraph.height();
-                let res = Size2D::new(paragraph.longest_line(), height);
                 let mut map = SendAnyMap::new();
-                map.insert(CachedParagraph(paragraph, height));
-                Some((res, Arc::new(map)))
+                map.insert(CachedParagraph(paragraph, size.height));
+                Some((size, Arc::new(map)))
             }
             _ => None,
         }
