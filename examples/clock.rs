@@ -38,9 +38,9 @@ fn format_time(time: &SystemTime, time_zone: i8) -> String {
 
 fn app() -> Element {
     let mut system_time = use_signal(SystemTime::now);
-    use_effect(move || {
+    use_hook(move || {
         spawn(async move {
-            let mut interval = tokio::time::interval(Duration::from_millis(500));
+            let mut interval = tokio::time::interval(Duration::from_secs(1));
 
             loop {
                 interval.tick().await;
