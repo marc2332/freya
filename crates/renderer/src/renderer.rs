@@ -285,7 +285,6 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 });
 
                 if app.measure_layout_on_next_render {
-                    app.resize(window);
                     app.process_layout(window.inner_size(), scale_factor);
                     app.process_accessibility(window);
 
