@@ -10,8 +10,8 @@ fn main() {
 }
 
 fn app() -> Element {
-    let mut cursor_pos_over = use_signal(|| CursorPoint::default());
-    let mut cursor_pos_click = use_signal(|| CursorPoint::default());
+    let mut cursor_pos_over = use_signal(CursorPoint::default);
+    let mut cursor_pos_click = use_signal(CursorPoint::default);
 
     let onmousemove = move |e: MouseEvent| {
         let cursor_pos = e.get_screen_coordinates();

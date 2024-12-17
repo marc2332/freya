@@ -26,10 +26,7 @@ use gilrs::{
 };
 
 fn main() {
-    launch_cfg(
-        app,
-        LaunchConfig::<()>::new().with_plugin(GamePadPlugin::default()),
-    )
+    launch_cfg(app, LaunchConfig::<()>::new().with_plugin(GamePadPlugin))
 }
 
 #[derive(Default)]
@@ -61,7 +58,7 @@ impl GamePadPlugin {
                         }
 
                         if diff_x != 0.0 {
-                            x += diff_x as f64 * 10.;
+                            x += diff_x * 10.;
                             handle.send_platform_event(PlatformEvent::Mouse {
                                 name: EventName::MouseMove,
                                 cursor: (x, y).into(),
@@ -70,7 +67,7 @@ impl GamePadPlugin {
                         }
 
                         if diff_x != 0.0 {
-                            y -= diff_y as f64 * 10.;
+                            y -= diff_y * 10.;
                             handle.send_platform_event(PlatformEvent::Mouse {
                                 name: EventName::MouseMove,
                                 cursor: (x, y).into(),
@@ -95,11 +92,8 @@ impl GamePadPlugin {
 
 impl FreyaPlugin for GamePadPlugin {
     fn on_event(&mut self, event: &PluginEvent, handle: PluginHandle) {
-        match event {
-            PluginEvent::WindowCreated(_) => {
-                Self::listen_gamepad(handle);
-            }
-            _ => {}
+        if let PluginEvent::WindowCreated(_) = event {
+            Self::listen_gamepad(handle);
         }
     }
 }
