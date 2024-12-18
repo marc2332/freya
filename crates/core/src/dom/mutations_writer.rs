@@ -160,8 +160,10 @@ impl<'a> WriteMutations for MutationsWriter<'a> {
 
     fn insert_nodes_after(&mut self, id: dioxus_core::ElementId, m: usize) {
         if m > 0 {
-            self.layout.invalidate(self.native_writer.state.element_to_node_id(id));
-            let new_nodes = &self.native_writer.state.stack[self.native_writer.state.stack.len() - m..];
+            self.layout
+                .invalidate(self.native_writer.state.element_to_node_id(id));
+            let new_nodes =
+                &self.native_writer.state.stack[self.native_writer.state.stack.len() - m..];
             for new in new_nodes {
                 self.layout.invalidate(*new);
             }
@@ -172,8 +174,10 @@ impl<'a> WriteMutations for MutationsWriter<'a> {
 
     fn insert_nodes_before(&mut self, id: dioxus_core::ElementId, m: usize) {
         if m > 0 {
-            self.layout.invalidate(self.native_writer.state.element_to_node_id(id));
-            let new_nodes = &self.native_writer.state.stack[self.native_writer.state.stack.len() - m..];
+            self.layout
+                .invalidate(self.native_writer.state.element_to_node_id(id));
+            let new_nodes =
+                &self.native_writer.state.stack[self.native_writer.state.stack.len() - m..];
             for new in new_nodes {
                 self.layout.invalidate(*new);
             }
