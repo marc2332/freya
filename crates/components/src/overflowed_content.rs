@@ -56,7 +56,7 @@ pub fn OverflowedContent(
 
         ctx.with(
             AnimNum::new(0., 100.)
-                .time(duration.as_millis() as u64)
+                .duration(duration)
                 .ease(Ease::InOut)
                 .function(Function::Linear),
         )
@@ -90,4 +90,48 @@ pub fn OverflowedContent(
             }
         }
     )
+}
+
+#[cfg(test)]
+mod test {
+    use std::time::Duration;
+
+    use freya::prelude::*;
+    use freya_testing::prelude::*;
+    use tokio::time::sleep;
+
+    #[tokio::test]
+    pub async fn overflowed_content() {
+        fn app() -> Element {
+            rsx!(
+                OverflowedContent {
+                    duration: Duration::from_millis(50),
+                    width: "50",
+                    label {
+                        "123456789123456789"
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(app);
+
+        let root = utils.root();
+        let label = root.get(0).get(0).get(0);
+
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+        assert_eq!(label.layout().unwrap().area.min_x(), 50.);
+
+        sleep(Duration::from_millis(50)).await;
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+        assert!(label.layout().unwrap().area.min_x() < -100.);
+
+        sleep(Duration::from_millis(50)).await;
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+        assert_eq!(label.layout().unwrap().area.min_x(), 50.);
+    }
 }
