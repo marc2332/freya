@@ -3,7 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use std::fmt::Debug;
+use std::{fmt::Debug, time::Duration};
 
 use freya::prelude::*;
 
@@ -30,7 +30,7 @@ impl Debug for FoodState {
     }
 }
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Debug)]
 struct Food {
     name: &'static str,
     state: FoodState,
@@ -77,18 +77,6 @@ fn app() -> Element {
                     data,
                     state: FoodState::ReallyBad
                 }
-                Column {
-                    data,
-                    state: FoodState::Meh
-                }
-                Column {
-                    data,
-                    state: FoodState::Normal
-                }
-                Column {
-                    data,
-                    state: FoodState::Amazing
-                }
             }
         }
     )
@@ -98,12 +86,14 @@ fn app() -> Element {
 #[component]
 fn Column(data: Signal<Vec<Food>>, state: FoodState) -> Element {
     let move_food = move |food_name: &'static str| {
-        let mut food = data
-            .iter_mut()
-            .find(|food| food.name == food_name)
-            .expect("Failed to find food");
+        let idx = data.iter().enumerate().find_map(|(i, food)| if food.name == food_name { Some(i) } else { None }).unwrap();
+        let mut food = data.write().remove(idx);
         food.state = state;
+        println!("{idx}");
+        data.write().insert(0, food);
     };
+
+    println!("{:?}",  data.read().iter().filter(|food| food.state == FoodState::ReallyBad).collect::<Vec<_>>());
 
     rsx!(
         DropZone{
@@ -115,28 +105,36 @@ fn Column(data: Signal<Vec<Food>>, state: FoodState) -> Element {
                 padding: "10",
                 spacing: "10",
                 width: "200",
-                for food in data.read().iter().filter(|food| food.state == state) {
-                    DragZone {
-                        hide_while_dragging: true,
-                        data: food.name,
-                        drag_element: rsx!(
+                for food in data.read().iter() {
+                    rect {
+                        key: "{food.name}",
+                        width: "fill",
+                        height: "70",
+                        DragZone {
+                            hide_while_dragging: true,
+                            data: food.name,
+                            drag_element: rsx!(
+                                rect {
+                                    width: "200",
+                                    background: "rgb(210, 210, 210)",
+                                    corner_radius: "8",
+                                    padding: "10",
+                                    layer: "-999",
+                                    shadow: "0 2 10 2 rgb(0,0,0,0.2)",
+                                    label {
+                                        "{food.quantity} of {food.name} in {food.state:?} state."
+                                    }
+                                }
+                            ),
                             rect {
-                                width: "200",
+                                width: "fill",
+                                height: "fill",
                                 background: "rgb(210, 210, 210)",
                                 corner_radius: "8",
                                 padding: "10",
                                 label {
                                     "{food.quantity} of {food.name} in {food.state:?} state."
                                 }
-                            }
-                        ),
-                        rect {
-                            width: "fill",
-                            background: "rgb(210, 210, 210)",
-                            corner_radius: "8",
-                            padding: "10",
-                            label {
-                                "{food.quantity} of {food.name} in {food.state:?} state."
                             }
                         }
                     }
