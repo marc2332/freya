@@ -119,6 +119,7 @@ pub struct DropZoneProps<T: 'static + PartialEq + Clone> {
     #[props(default = "auto".to_string())]
     width: String,
     /// Height of the [DropZone].
+    #[props(default = "auto".to_string())]
     height: String,
 }
 
