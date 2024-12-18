@@ -3,12 +3,15 @@
     windows_subsystem = "windows"
 )]
 
-use std::{fmt::Debug, time::Duration};
+use std::{
+    fmt::Debug,
+    time::Duration,
+};
 
 use freya::prelude::*;
 
 fn main() {
-    launch(app);
+    launch_with_props(app, "Drag and Drop", (800., 600.));
 }
 
 #[derive(PartialEq, Clone, Copy)]
@@ -73,9 +76,22 @@ fn app() -> Element {
                 height: "fill",
                 spacing: "20",
                 padding: "20",
+                content: "flex",
                 Column {
                     data,
                     state: FoodState::ReallyBad
+                }
+                Column {
+                    data,
+                    state: FoodState::Meh
+                }
+                Column {
+                    data,
+                    state: FoodState::Normal
+                }
+                Column {
+                    data,
+                    state: FoodState::Amazing
                 }
             }
         }
@@ -86,47 +102,61 @@ fn app() -> Element {
 #[component]
 fn Column(data: Signal<Vec<Food>>, state: FoodState) -> Element {
     let move_food = move |food_name: &'static str| {
-        let idx = data.iter().enumerate().find_map(|(i, food)| if food.name == food_name { Some(i) } else { None }).unwrap();
-        let mut food = data.write().remove(idx);
-        food.state = state;
-        println!("{idx}");
-        data.write().insert(0, food);
+        let (idx, food) = data
+            .iter()
+            .enumerate()
+            .find_map(|(i, food)| {
+                if food.name == food_name {
+                    Some((i, food.clone()))
+                } else {
+                    None
+                }
+            })
+            .unwrap();
+        if food.state != state {
+            let mut food = data.write().remove(idx);
+            food.state = state;
+            data.write().insert(0, food);
+        }
     };
-
-    println!("{:?}",  data.read().iter().filter(|food| food.state == FoodState::ReallyBad).collect::<Vec<_>>());
 
     rsx!(
         DropZone{
             ondrop: move_food,
+            width: "flex(1)",
+            height: "fill",
             rect {
-                height: "100%",
                 background: "rgb(235, 235, 235)",
                 corner_radius: "8",
                 padding: "10",
-                spacing: "10",
-                width: "200",
-                for food in data.read().iter() {
-                    rect {
+                spacing: "8",
+                width: "fill",
+                height: "fill",
+                for food in data.read().iter().filter(|food| food.state == state) {
+                    DragZone {
                         key: "{food.name}",
-                        width: "fill",
-                        height: "70",
-                        DragZone {
-                            hide_while_dragging: true,
-                            data: food.name,
-                            drag_element: rsx!(
-                                rect {
-                                    width: "200",
-                                    background: "rgb(210, 210, 210)",
-                                    corner_radius: "8",
-                                    padding: "10",
-                                    layer: "-999",
-                                    shadow: "0 2 10 2 rgb(0,0,0,0.2)",
-                                    label {
-                                        "{food.quantity} of {food.name} in {food.state:?} state."
-                                    }
-                                }
-                            ),
+                        hide_while_dragging: true,
+                        data: food.name,
+                        drag_element: rsx!(
                             rect {
+                                width: "200",
+                                height: "70",
+                                background: "rgb(210, 210, 210)",
+                                corner_radius: "8",
+                                padding: "10",
+                                layer: "-999",
+                                shadow: "0 2 7 1 rgb(0,0,0,0.15)",
+                                label {
+                                    "{food.quantity} of {food.name} in {food.state:?} state."
+                                }
+                            }
+                        ),
+                        AnimatedPosition {
+                            width: "fill",
+                            height: "70",
+                            function: Function::Elastic,
+                            duration: Duration::from_secs(1),
+                                rect {
                                 width: "fill",
                                 height: "fill",
                                 background: "rgb(210, 210, 210)",
