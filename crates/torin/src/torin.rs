@@ -4,10 +4,7 @@ use std::{
 };
 
 pub use euclid::Rect;
-use rustc_hash::{
-    FxHashMap,
-    FxHashSet,
-};
+use rustc_hash::FxHashMap;
 
 use crate::{
     custom_measurer::LayoutMeasurer,
@@ -67,12 +64,19 @@ impl<Key: NodeKey> RootNodeCandidate<Key> {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum DirtyReason {
+    None,
+    /// Node was moved from one position to another in its parent' children list.
+    Reorder,
+}
+
 pub struct Torin<Key: NodeKey> {
     /// Layout results of the registered Nodes
     pub results: FxHashMap<Key, LayoutNode>,
 
     /// Invalid registered nodes since previous layout measurement
-    pub dirty: FxHashSet<Key>,
+    pub dirty: FxHashMap<Key, DirtyReason>,
 
     /// Best Root node candidate from where to start measuring
     pub root_node_candidate: RootNodeCandidate<Key>,
@@ -89,7 +93,7 @@ impl<Key: NodeKey> Torin<Key> {
     pub fn new() -> Self {
         Self {
             results: HashMap::default(),
-            dirty: FxHashSet::default(),
+            dirty: FxHashMap::default(),
             root_node_candidate: RootNodeCandidate::None,
         }
     }
@@ -106,7 +110,7 @@ impl<Key: NodeKey> Torin<Key> {
     }
 
     /// Read the HashSet of dirty nodes
-    pub fn get_dirty_nodes(&self) -> &FxHashSet<Key> {
+    pub fn get_dirty_nodes(&self) -> &FxHashMap<Key, DirtyReason> {
         &self.dirty
     }
 
@@ -142,26 +146,32 @@ impl<Key: NodeKey> Torin<Key> {
         }
     }
 
-    /// Safely mark as dirty a Node
+    /// Safely mark as dirty a Node, with no reason.
     pub fn safe_invalidate(&mut self, node_id: Key, dom_adapter: &mut impl DOMAdapter<Key>) {
         if dom_adapter.is_node_valid(&node_id) {
-            self.dirty.insert(node_id);
+            self.dirty.insert(node_id, DirtyReason::None);
         }
     }
 
-    /// Mark as dirty a Node
+    /// Mark as dirty a Node, with no reason.
     pub fn invalidate(&mut self, node_id: Key) {
-        self.dirty.insert(node_id);
+        self.dirty.insert(node_id, DirtyReason::None);
+    }
+
+    /// Mark as dirty a Node, with a reason.
+    pub fn invalidate_with_reason(&mut self, node_id: Key, reason: DirtyReason) {
+        self.dirty.insert(node_id, reason);
     }
 
     // Mark as dirty the given Node and all the nodes that depend on it
     pub fn check_dirty_dependants(
         &mut self,
         node_id: Key,
+        reason: DirtyReason,
         dom_adapter: &mut impl DOMAdapter<Key>,
         ignore: bool,
     ) {
-        if (self.dirty.contains(&node_id) && ignore) || !dom_adapter.is_node_valid(&node_id) {
+        if (self.dirty.contains_key(&node_id) && ignore) || !dom_adapter.is_node_valid(&node_id) {
             return;
         }
 
@@ -180,13 +190,23 @@ impl<Key: NodeKey> Torin<Key> {
             if let Some(parent) = parent {
                 if parent.does_depend_on_inner() {
                     // Mark parent if it depends on it's inner children
-                    self.check_dirty_dependants(parent_id, dom_adapter, true);
+                    self.check_dirty_dependants(parent_id, DirtyReason::None, dom_adapter, true);
                 } else {
                     let parent_children = dom_adapter.children_of(&parent_id);
                     let multiple_children = parent_children.len() > 1;
 
+                    let mut found_node = match reason {
+                        DirtyReason::None => false,
+                        // Invalidate all siblings if the node was reordered
+                        DirtyReason::Reorder => true,
+                    };
                     for child_id in parent_children {
-                        self.safe_invalidate(child_id, dom_adapter);
+                        if found_node {
+                            self.safe_invalidate(child_id, dom_adapter);
+                        }
+                        if child_id == node_id {
+                            found_node = true;
+                        }
                     }
 
                     // Try using the node's parent as root candidate if it has multiple children
@@ -209,8 +229,8 @@ impl<Key: NodeKey> Torin<Key> {
         if self.results.is_empty() {
             return;
         }
-        for dirty in self.dirty.clone() {
-            self.check_dirty_dependants(dirty, dom_adapter, false);
+        for (id, reason) in self.dirty.clone() {
+            self.check_dirty_dependants(id, reason, dom_adapter, false);
         }
     }
 
