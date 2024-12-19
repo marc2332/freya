@@ -38,4 +38,10 @@ pub async fn nodes_reorder() {
     assert_eq!(utils.root().get(1).get(0).text(), Some("2"));
     assert_eq!(utils.root().get(2).get(0).text(), Some("3"));
     assert_eq!(utils.root().get(3).get(0).text(), Some("1"));
+
+    utils.click_cursor((5., 5.)).await;
+
+    assert_eq!(utils.root().get(1).get(0).text(), Some("3"));
+    assert_eq!(utils.root().get(2).get(0).text(), Some("1"));
+    assert_eq!(utils.root().get(3).get(0).text(), Some("2"));
 }
