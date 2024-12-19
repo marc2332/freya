@@ -1,8 +1,4 @@
-use rustc_hash::{
-    FxHashMap,
-    FxHashSet,
-};
-#[cfg(test)]
+use rustc_hash::FxHashMap;
 use torin::{
     prelude::*,
     test_utils::*,
@@ -413,4 +409,124 @@ pub fn deep_tree() {
     );
 
     assert_eq!(layout.get_root_candidate(), RootNodeCandidate::None);
+}
+
+#[test]
+pub fn node_reordering() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_dom = TestingDOM::default();
+    mocked_dom.add(
+        0,
+        None,
+        vec![1, 2],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(200.0)),
+            Size::Pixels(Length::new(200.0)),
+            DirectionMode::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        1,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(200.0)),
+            Size::Pixels(Length::new(100.0)),
+            DirectionMode::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        2,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(200.0)),
+            Size::Pixels(Length::new(100.0)),
+            DirectionMode::Vertical,
+        ),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        &mut measurer,
+        &mut mocked_dom,
+    );
+
+    assert_eq!(
+        layout.get(0).unwrap().area,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
+    );
+
+    assert_eq!(
+        layout.get(1).unwrap().area,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 100.0)),
+    );
+
+    assert_eq!(
+        layout.get(2).unwrap().area,
+        Rect::new(Point2D::new(0.0, 100.0), Size2D::new(200.0, 100.0)),
+    );
+
+    layout.invalidate_with_reason(1, DirtyReason::Reorder);
+    layout.invalidate_with_reason(2, DirtyReason::Reorder);
+
+    mocked_dom.add(
+        0,
+        None,
+        vec![2, 1],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(200.0)),
+            Size::Pixels(Length::new(200.0)),
+            DirectionMode::Vertical,
+        ),
+    );
+
+    layout.find_best_root(&mut mocked_dom);
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        &mut measurer,
+        &mut mocked_dom,
+    );
+
+    assert_eq!(
+        layout.get(2).unwrap().area,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 100.0)),
+    );
+
+    assert_eq!(
+        layout.get(1).unwrap().area,
+        Rect::new(Point2D::new(0.0, 100.0), Size2D::new(200.0, 100.0)),
+    );
+
+    // This will not cause the desired output expected by the user as we are not properly invalidating those reordered nodes
+    layout.invalidate_with_reason(1, DirtyReason::None);
+
+    mocked_dom.add(
+        0,
+        None,
+        vec![1, 2],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(200.0)),
+            Size::Pixels(Length::new(200.0)),
+            DirectionMode::Vertical,
+        ),
+    );
+
+    layout.find_best_root(&mut mocked_dom);
+
+    // That is why these nodes still have the same positions as before
+
+    assert_eq!(
+        layout.get(2).unwrap().area,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 100.0)),
+    );
+
+    assert_eq!(
+        layout.get(1).unwrap().area,
+        Rect::new(Point2D::new(0.0, 100.0), Size2D::new(200.0, 100.0)),
+    );
 }
