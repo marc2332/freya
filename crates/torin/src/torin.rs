@@ -201,7 +201,12 @@ impl<Key: NodeKey> Torin<Key> {
                         DirtyReason::Reorder => true,
                     };
                     for child_id in parent_children {
-                        self.safe_invalidate(child_id, dom_adapter);
+                        if found_node {
+                            self.safe_invalidate(child_id, dom_adapter);
+                        }
+                        if child_id == node_id {
+                            found_node = true;
+                        }
                     }
 
                     // Try using the node's parent as root candidate if it has multiple children
