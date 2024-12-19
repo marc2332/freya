@@ -1,10 +1,9 @@
 ---
 import Layout from "./Layout.astro";
-import BlogPostTOC  from "../components/BlogPostTOC.astro"
-const { frontmatter, headings  } = Astro.props;
+import BlogPostTOC from "../components/BlogPostTOC.astro";
+const { frontmatter, headings } = Astro.props;
 
-const formattedDate = (new Date(frontmatter.date)).toLocaleString().split(',')[0]
-
+const formattedDate = new Date(frontmatter.date).toLocaleString().split(",")[0];
 ---
 
 <Layout title={frontmatter.title}>
