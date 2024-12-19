@@ -273,7 +273,7 @@ impl<'a> TreeMut for TreeMutView<'a> {
 
         let mut node_state = &mut self.1;
         let old_node = node_state.get(old_id).unwrap();
-        let parent_id = old_node.parent.expect("tried to insert before root");
+        let parent_id = old_node.parent.expect("tried to insert after root");
         (&mut node_state).get(new_id).unwrap().parent = Some(parent_id);
         let parent = (&mut node_state).get(parent_id).unwrap();
         let index = parent
