@@ -1,4 +1,7 @@
-use std::time::Duration;
+use std::{
+    fmt,
+    time::Duration,
+};
 
 use dioxus_core::prelude::{
     spawn,
@@ -96,7 +99,7 @@ pub fn apply_value(
     }
 }
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Function {
     Back,
     Bounce,
@@ -111,10 +114,16 @@ pub enum Function {
     Sine,
 }
 
-#[derive(Default, Clone, Copy)]
+impl fmt::Display for Function {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+#[derive(Default, Clone, Copy, PartialEq, Eq)]
 pub enum Ease {
-    #[default]
     In,
+    #[default]
     Out,
     InOut,
 }
@@ -534,10 +543,7 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
             task.cancel();
         }
 
-        if !self.peek_has_run_yet() {
-            *has_run_yet.write() = true;
-        }
-        is_running.set(true);
+        let peek_has_run_yet = self.peek_has_run_yet();
 
         let animation_task = spawn(async move {
             platform.request_animation_frame();
@@ -549,6 +555,11 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
             for value in values.iter_mut() {
                 value.write().prepare(direction);
             }
+
+            if !peek_has_run_yet {
+                *has_run_yet.write() = true;
+            }
+            is_running.set(true);
 
             loop {
                 // Wait for the event loop to tick

@@ -36,7 +36,7 @@ pub fn position() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Absolute(Box::new(AbsolutePosition {
+            Position::Absolute(Box::new(PositionSides {
                 top: Some(100.0),
                 right: None,
                 bottom: None,
@@ -51,7 +51,7 @@ pub fn position() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Absolute(Box::new(AbsolutePosition {
+            Position::Absolute(Box::new(PositionSides {
                 top: Some(100.0),
                 right: Some(50.0),
                 bottom: None,
@@ -66,7 +66,7 @@ pub fn position() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Absolute(Box::new(AbsolutePosition {
+            Position::Absolute(Box::new(PositionSides {
                 top: None,
                 right: Some(50.0),
                 bottom: Some(100.0),
@@ -81,7 +81,7 @@ pub fn position() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Absolute(Box::new(AbsolutePosition {
+            Position::Absolute(Box::new(PositionSides {
                 top: None,
                 right: None,
                 bottom: Some(100.0),
