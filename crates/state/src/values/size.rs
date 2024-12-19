@@ -2,16 +2,10 @@ use nom::{
     branch::alt,
     bytes::complete::tag,
     character::complete::multispace0,
-    combinator::{
-        map,
-        opt,
-    },
+    combinator::map,
     multi::many1,
     number::complete::float,
-    sequence::{
-        preceded,
-        tuple,
-    },
+    sequence::preceded,
     IResult,
 };
 use torin::{
@@ -99,6 +93,31 @@ pub fn parse_calc(mut value: &str) -> Result<Vec<DynamicCalculation>, ParseError
                 map(tag("clamp"), |_| {
                     DynamicCalculation::Function(LexFunction::Clamp)
                 }),
+                map(tag("scale"), |_| DynamicCalculation::ScalingFactor),
+                map(tag("parent.width"), |_| {
+                    DynamicCalculation::Parent(Dimension::Width)
+                }),
+                map(tag("parent.height"), |_| {
+                    DynamicCalculation::Parent(Dimension::Height)
+                }),
+                map(tag("parent.other"), |_| {
+                    DynamicCalculation::Parent(Dimension::Other)
+                }),
+                map(tag("parent"), |_| {
+                    DynamicCalculation::Parent(Dimension::Current)
+                }),
+                map(tag("root.width"), |_| {
+                    DynamicCalculation::Parent(Dimension::Width)
+                }),
+                map(tag("root.height"), |_| {
+                    DynamicCalculation::Parent(Dimension::Height)
+                }),
+                map(tag("root.other"), |_| {
+                    DynamicCalculation::Parent(Dimension::Other)
+                }),
+                map(tag("root"), |_| {
+                    DynamicCalculation::Parent(Dimension::Current)
+                }),
                 map(tag("+"), |_| DynamicCalculation::Add),
                 map(tag("-"), |_| DynamicCalculation::Sub),
                 map(tag("*"), |_| DynamicCalculation::Mul),
@@ -106,26 +125,6 @@ pub fn parse_calc(mut value: &str) -> Result<Vec<DynamicCalculation>, ParseError
                 map(tag("("), |_| DynamicCalculation::OpenParenthesis),
                 map(tag(")"), |_| DynamicCalculation::ClosedParenthesis),
                 map(tag(","), |_| DynamicCalculation::FunctionSeparator),
-                map(
-                    tuple((float, tag("%"), opt(tag("'")))),
-                    |(v, _, inv): (f32, _, Option<&str>)| {
-                        if inv.is_some() {
-                            DynamicCalculation::Percentage(Dimension::Other(v))
-                        } else {
-                            DynamicCalculation::Percentage(Dimension::Current(v))
-                        }
-                    },
-                ),
-                map(
-                    tuple((float, tag("v"), opt(tag("'")))),
-                    |(v, _, inv): (f32, _, Option<&str>)| {
-                        if inv.is_some() {
-                            DynamicCalculation::RootPercentage(Dimension::Other(v))
-                        } else {
-                            DynamicCalculation::RootPercentage(Dimension::Current(v))
-                        }
-                    },
-                ),
                 map(float, DynamicCalculation::Pixels),
             )),
         ))(value)
