@@ -10,16 +10,16 @@ importers:
     dependencies:
       '@astrojs/deno':
         specifier: ^5.0.0
-        version: 5.0.1(astro@5.0.5)
+        version: 5.0.1(astro@5.0.8(jiti@1.21.6)(rollup@4.28.1)(typescript@5.7.2)(yaml@2.4.5))
       '@astrojs/rss':
         specifier: ^4.0.1
         version: 4.0.7
       '@astrojs/tailwind':
         specifier: ^5.0.2
-        version: 5.1.0(astro@5.0.5)(tailwindcss@3.4.4)
+        version: 5.1.0(astro@5.0.8(jiti@1.21.6)(rollup@4.28.1)(typescript@5.7.2)(yaml@2.4.5))(tailwindcss@3.4.4)
       astro:
-        specifier: 5.0.5
-        version: 5.0.5(typescript@5.7.2)
+        specifier: 5.0.8
+        version: 5.0.8(jiti@1.21.6)(rollup@4.28.1)(typescript@5.7.2)(yaml@2.4.5)
       rehype-accessible-emojis:
         specifier: ^0.3.2
         version: 0.3.2
@@ -849,9 +849,6 @@ packages:
   '@types/debug@4.1.7':
     resolution: {integrity: sha512-9AonUzyTjXXhEOa0DnqpzZi6VHlqKMswga9EXjpXnnqxwLtdvPPtlO8evrI5D9S6asFRCQ6v+wpiUKbw+vKqyg==}
 
-  '@types/estree@1.0.5':
-    resolution: {integrity: sha512-/kYRxGDLWzHOB7q+wtSUQlFrtcdUccpfy+X+9iMBpHK8QLLhx2wIPYuS5DYtR9Wa/YlZAbIovy7qVdB1Aq6Lyw==}
-
   '@types/estree@1.0.6':
     resolution: {integrity: sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw==}
 
@@ -923,8 +920,8 @@ packages:
   array-iterate@2.0.1:
     resolution: {integrity: sha512-I1jXZMjAgCMmxT4qxXfPXa6SthSoE8h6gkSI9BGGNv8mP8G/v0blc+qFnZu6K42vTOiuME596QaLO0TP3Lk0xg==}
 
-  astro@5.0.5:
-    resolution: {integrity: sha512-xfptdmurDsQcj/Anc7mU+eKlcyV7ppJIlmaSwhX3ZWwK5N/0rGKVmUqnuILgR6MB0XVJiIfublNzDGoyj4Q6BQ==}
+  astro@5.0.8:
+    resolution: {integrity: sha512-nW4TmRCeG3t2iDmm91KPvYpYNljNfjeaneN4BX463DKAZ3MPmUn92aKefOXC0bjMHQ2Gamc8MIZ6sORS2EhyAQ==}
     engines: {node: ^18.17.1 || ^20.3.0 || >=22.0.0, npm: '>=9.6.5', pnpm: '>=7.1.0'}
     hasBin: true
 
@@ -1236,9 +1233,6 @@ packages:
     resolution: {integrity: sha512-f2dvO0VU6Oej7RkWJGrehjbzMAjFp5/VKPp5tTpWIV4JHHZK1/BxbFRtf/siA2SWTe09caDmVtYYzWEIbBS4zw==}
     engines: {node: '>= 0.4.0'}
 
-  hast-util-from-html@2.0.1:
-    resolution: {integrity: sha512-RXQBLMl9kjKVNkJTIO6bZyb2n+cUH8LFaSSzo82jiLT6Tfc+Pt7VQCS+/h3YwG4jaNE2TA2sdJisGWR+aJrp0g==}
-
   hast-util-from-html@2.0.3:
     resolution: {integrity: sha512-CUSRHXyKjzHov8yKsQjGOElXy/3EKpyX56ELnkHH34vDVw1N1XSQ1ZcAvTyAPtGqLTuKP/uxM+aLkSPqF/EtMw==}
 
@@ -1259,9 +1253,6 @@ packages:
 
   hast-util-raw@9.0.1:
     resolution: {integrity: sha512-5m1gmba658Q+lO5uqL5YNGQWeh1MYWZbZmWrM5lncdcuiXuo5E2HT/CIOp0rLF8ksfSwiCVJ3twlgVRyTGThGA==}
-
-  hast-util-to-html@9.0.0:
-    resolution: {integrity: sha512-IVGhNgg7vANuUA2XKrT6sOIIPgaYZnmLx3l/CCOAK0PtgfoHrZwX7jCSYyFxHTrGmC6S9q8aQQekjp4JPZF+cw==}
 
   hast-util-to-html@9.0.4:
     resolution: {integrity: sha512-wxQzXtdbhiwGAUKrnQJXlOPmHnEehzphwkK7aluUPQ+lEc1xefC8pblMgpp2w5ldBTEfveRIrADcrhGIWrlTDA==}
@@ -1755,9 +1746,6 @@ packages:
   rehype-slug@6.0.0:
     resolution: {integrity: sha512-lWyvf/jwu+oS5+hL5eClVd3hNdmwM1kAC0BUvEGD19pajQMIzcNUd/k9GsfQ+FfECvX+JE+e9/btsKH0EjJT6A==}
 
-  rehype-stringify@10.0.0:
-    resolution: {integrity: sha512-1TX1i048LooI9QoecrXy7nGFFbFSufxVRAfc6Y9YMRAi56l+oB0zP51mLSV312uRuvVLPV1opSlJmslozR1XHQ==}
-
   rehype-stringify@10.0.1:
     resolution: {integrity: sha512-k9ecfXHmIPuFVI61B9DeLPN0qFHfawM6RsuX48hoqlaKSF61RskNjSm1lI8PhBEM0MRdLxVVm4WmTqJQccH9mA==}
 
@@ -2128,9 +2116,9 @@ snapshots:
 
   '@astrojs/compiler@2.10.3': {}
 
-  '@astrojs/deno@5.0.1(astro@5.0.5)':
+  '@astrojs/deno@5.0.1(astro@5.0.8(jiti@1.21.6)(rollup@4.28.1)(typescript@5.7.2)(yaml@2.4.5))':
     dependencies:
-      astro: 5.0.5(typescript@5.7.2)
+      astro: 5.0.8(jiti@1.21.6)(rollup@4.28.1)(typescript@5.7.2)(yaml@2.4.5)
       esbuild: 0.19.12
 
   '@astrojs/internal-helpers@0.4.2': {}
@@ -2168,9 +2156,9 @@ snapshots:
       fast-xml-parser: 4.4.0
       kleur: 4.1.5
 
-  '@astrojs/tailwind@5.1.0(astro@5.0.5)(tailwindcss@3.4.4)':
+  '@astrojs/tailwind@5.1.0(astro@5.0.8(jiti@1.21.6)(rollup@4.28.1)(typescript@5.7.2)(yaml@2.4.5))(tailwindcss@3.4.4)':
     dependencies:
-      astro: 5.0.5(typescript@5.7.2)
+      astro: 5.0.8(jiti@1.21.6)(rollup@4.28.1)(typescript@5.7.2)(yaml@2.4.5)
       autoprefixer: 10.4.19(postcss@8.4.38)
       postcss: 8.4.38
       postcss-load-config: 4.0.2(postcss@8.4.38)
@@ -2554,7 +2542,7 @@ snapshots:
   '@jridgewell/trace-mapping@0.3.25':
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
-      '@jridgewell/sourcemap-codec': 1.4.15
+      '@jridgewell/sourcemap-codec': 1.5.0
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -2573,11 +2561,13 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@rollup/pluginutils@5.1.3':
+  '@rollup/pluginutils@5.1.3(rollup@4.28.1)':
     dependencies:
-      '@types/estree': 1.0.5
+      '@types/estree': 1.0.6
       estree-walker: 2.0.2
       picomatch: 4.0.2
+    optionalDependencies:
+      rollup: 4.28.1
 
   '@rollup/rollup-android-arm-eabi@4.28.1':
     optional: true
@@ -2669,8 +2659,6 @@ snapshots:
     dependencies:
       '@types/ms': 0.7.31
 
-  '@types/estree@1.0.5': {}
-
   '@types/estree@1.0.6': {}
 
   '@types/hast@3.0.1':
@@ -2730,14 +2718,14 @@ snapshots:
 
   array-iterate@2.0.1: {}
 
-  astro@5.0.5(typescript@5.7.2):
+  astro@5.0.8(jiti@1.21.6)(rollup@4.28.1)(typescript@5.7.2)(yaml@2.4.5):
     dependencies:
       '@astrojs/compiler': 2.10.3
       '@astrojs/internal-helpers': 0.4.2
       '@astrojs/markdown-remark': 6.0.1
       '@astrojs/telemetry': 3.2.0
       '@oslojs/encoding': 1.1.0
-      '@rollup/pluginutils': 5.1.3
+      '@rollup/pluginutils': 5.1.3(rollup@4.28.1)
       '@types/cookie': 0.6.0
       acorn: 8.14.0
       aria-query: 5.3.2
@@ -2781,8 +2769,8 @@ snapshots:
       ultrahtml: 1.5.3
       unist-util-visit: 5.0.0
       vfile: 6.0.3
-      vite: 6.0.3
-      vitefu: 1.0.4(vite@6.0.3)
+      vite: 6.0.3(jiti@1.21.6)(yaml@2.4.5)
+      vitefu: 1.0.4(vite@6.0.3(jiti@1.21.6)(yaml@2.4.5))
       which-pm: 3.0.0
       xxhash-wasm: 1.1.0
       yargs-parser: 21.1.1
@@ -3062,7 +3050,7 @@ snapshots:
 
   estree-walker@3.0.3:
     dependencies:
-      '@types/estree': 1.0.5
+      '@types/estree': 1.0.6
 
   eventemitter3@5.0.1: {}
 
@@ -3074,7 +3062,7 @@ snapshots:
       '@nodelib/fs.walk': 1.2.8
       glob-parent: 5.1.2
       merge2: 1.4.1
-      micromatch: 4.0.7
+      micromatch: 4.0.8
 
   fast-xml-parser@4.4.0:
     dependencies:
@@ -3142,18 +3130,9 @@ snapshots:
     dependencies:
       function-bind: 1.1.1
 
-  hast-util-from-html@2.0.1:
-    dependencies:
-      '@types/hast': 3.0.1
-      devlop: 1.1.0
-      hast-util-from-parse5: 8.0.1
-      parse5: 7.1.2
-      vfile: 6.0.3
-      vfile-message: 4.0.2
-
   hast-util-from-html@2.0.3:
     dependencies:
-      '@types/hast': 3.0.1
+      '@types/hast': 3.0.4
       devlop: 1.1.0
       hast-util-from-parse5: 8.0.1
       parse5: 7.1.2
@@ -3162,7 +3141,7 @@ snapshots:
 
   hast-util-from-parse5@8.0.1:
     dependencies:
-      '@types/hast': 3.0.1
+      '@types/hast': 3.0.4
       '@types/unist': 3.0.0
       devlop: 1.1.0
       hastscript: 8.0.0
@@ -3183,11 +3162,11 @@ snapshots:
 
   hast-util-parse-selector@4.0.0:
     dependencies:
-      '@types/hast': 3.0.1
+      '@types/hast': 3.0.4
 
   hast-util-raw@9.0.1:
     dependencies:
-      '@types/hast': 3.0.1
+      '@types/hast': 3.0.4
       '@types/unist': 3.0.0
       '@ungap/structured-clone': 1.2.0
       hast-util-from-parse5: 8.0.1
@@ -3199,21 +3178,6 @@ snapshots:
       unist-util-visit: 5.0.0
       vfile: 6.0.3
       web-namespaces: 2.0.1
-      zwitch: 2.0.4
-
-  hast-util-to-html@9.0.0:
-    dependencies:
-      '@types/hast': 3.0.1
-      '@types/unist': 3.0.0
-      ccount: 2.0.1
-      comma-separated-tokens: 2.0.3
-      hast-util-raw: 9.0.1
-      hast-util-whitespace: 3.0.0
-      html-void-elements: 3.0.0
-      mdast-util-to-hast: 13.0.2
-      property-information: 6.2.0
-      space-separated-tokens: 2.0.2
-      stringify-entities: 4.0.3
       zwitch: 2.0.4
 
   hast-util-to-html@9.0.4:
@@ -3232,7 +3196,7 @@ snapshots:
 
   hast-util-to-parse5@8.0.0:
     dependencies:
-      '@types/hast': 3.0.1
+      '@types/hast': 3.0.4
       comma-separated-tokens: 2.0.3
       devlop: 1.1.0
       property-information: 6.2.0
@@ -3246,7 +3210,7 @@ snapshots:
 
   hast-util-to-text@4.0.2:
     dependencies:
-      '@types/hast': 3.0.1
+      '@types/hast': 3.0.4
       '@types/unist': 3.0.0
       hast-util-is-element: 3.0.0
       unist-util-find-after: 5.0.0
@@ -3257,7 +3221,7 @@ snapshots:
 
   hastscript@8.0.0:
     dependencies:
-      '@types/hast': 3.0.1
+      '@types/hast': 3.0.4
       comma-separated-tokens: 2.0.3
       hast-util-parse-selector: 4.0.0
       property-information: 6.2.0
@@ -3356,7 +3320,7 @@ snapshots:
     dependencies:
       '@babel/parser': 7.26.3
       '@babel/types': 7.26.3
-      source-map-js: 1.2.0
+      source-map-js: 1.2.1
 
   markdown-table@3.0.3: {}
 
@@ -3454,7 +3418,7 @@ snapshots:
 
   mdast-util-to-hast@13.0.2:
     dependencies:
-      '@types/hast': 3.0.1
+      '@types/hast': 3.0.4
       '@types/mdast': 4.0.1
       '@ungap/structured-clone': 1.2.0
       devlop: 1.1.0
@@ -3799,8 +3763,9 @@ snapshots:
   postcss-load-config@4.0.2(postcss@8.4.38):
     dependencies:
       lilconfig: 3.1.2
-      postcss: 8.4.38
       yaml: 2.4.5
+    optionalDependencies:
+      postcss: 8.4.38
 
   postcss-nested@6.0.1(postcss@8.4.38):
     dependencies:
@@ -3879,13 +3844,13 @@ snapshots:
 
   rehype-parse@9.0.0:
     dependencies:
-      '@types/hast': 3.0.1
-      hast-util-from-html: 2.0.1
+      '@types/hast': 3.0.4
+      hast-util-from-html: 2.0.3
       unified: 11.0.5
 
   rehype-raw@7.0.0:
     dependencies:
-      '@types/hast': 3.0.1
+      '@types/hast': 3.0.4
       hast-util-raw: 9.0.1
       vfile: 6.0.3
 
@@ -3897,23 +3862,17 @@ snapshots:
       hast-util-to-string: 3.0.0
       unist-util-visit: 5.0.0
 
-  rehype-stringify@10.0.0:
-    dependencies:
-      '@types/hast': 3.0.1
-      hast-util-to-html: 9.0.0
-      unified: 11.0.5
-
   rehype-stringify@10.0.1:
     dependencies:
-      '@types/hast': 3.0.1
-      hast-util-to-html: 9.0.0
+      '@types/hast': 3.0.4
+      hast-util-to-html: 9.0.4
       unified: 11.0.5
 
   rehype@13.0.2:
     dependencies:
-      '@types/hast': 3.0.1
+      '@types/hast': 3.0.4
       rehype-parse: 9.0.0
-      rehype-stringify: 10.0.0
+      rehype-stringify: 10.0.1
       unified: 11.0.5
 
   remark-gfm@4.0.0:
@@ -3938,7 +3897,7 @@ snapshots:
 
   remark-rehype@11.1.1:
     dependencies:
-      '@types/hast': 3.0.1
+      '@types/hast': 3.0.4
       '@types/mdast': 4.0.1
       mdast-util-to-hast: 13.0.2
       unified: 11.0.5
@@ -4175,7 +4134,7 @@ snapshots:
   ts-interface-checker@0.1.13: {}
 
   tsconfck@3.1.4(typescript@5.7.2):
-    dependencies:
+    optionalDependencies:
       typescript: 5.7.2
 
   tslib@2.6.3:
@@ -4255,7 +4214,7 @@ snapshots:
     dependencies:
       browserslist: 4.23.1
       escalade: 3.1.2
-      picocolors: 1.0.1
+      picocolors: 1.1.1
 
   util-deprecate@1.0.2: {}
 
@@ -4280,17 +4239,19 @@ snapshots:
       '@types/unist': 3.0.0
       vfile-message: 4.0.2
 
-  vite@6.0.3:
+  vite@6.0.3(jiti@1.21.6)(yaml@2.4.5):
     dependencies:
       esbuild: 0.24.0
       postcss: 8.4.49
       rollup: 4.28.1
     optionalDependencies:
       fsevents: 2.3.3
+      jiti: 1.21.6
+      yaml: 2.4.5
 
-  vitefu@1.0.4(vite@6.0.3):
-    dependencies:
-      vite: 6.0.3
+  vitefu@1.0.4(vite@6.0.3(jiti@1.21.6)(yaml@2.4.5)):
+    optionalDependencies:
+      vite: 6.0.3(jiti@1.21.6)(yaml@2.4.5)
 
   web-namespaces@2.0.1: {}
 
