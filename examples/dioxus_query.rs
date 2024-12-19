@@ -87,7 +87,7 @@ fn app() -> Element {
             cross_align: "center",
             direction: "horizontal",
             Button {
-                onclick: new_joke,
+                onpress: new_joke,
                 label { "New joke" }
             }
         }

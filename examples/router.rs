@@ -61,7 +61,7 @@ fn AppSidebar() -> Element {
                         }
                     },
                     SidebarItem {
-                        onclick: |_| println!("Hello!"),
+                        onpress: |_| println!("Hello!"),
                         label {
                             "Print Hello! 👀"
                         }

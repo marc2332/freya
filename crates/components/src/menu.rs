@@ -139,8 +139,8 @@ pub fn MenuItem(
     children: Element,
     /// Theme override for the MenuItem.
     theme: Option<MenuItemThemeWith>,
-    /// Handler for the `onclick` event.
-    onclick: Option<EventHandler<Option<MouseEvent>>>,
+    /// Handler for the `onpress` event.
+    onpress: Option<EventHandler<Option<MouseEvent>>>,
     /// Handler for the `onmouseenter` event.
     onmouseenter: Option<EventHandler<()>>,
 ) -> Element {
@@ -149,7 +149,7 @@ pub fn MenuItem(
     let platform = use_platform();
 
     let a11y_id = focus.attribute();
-    let click = &onclick;
+    let click = &onpress;
 
     let MenuItemTheme {
         hover_background,
@@ -161,8 +161,8 @@ pub fn MenuItem(
         to_owned![click];
         move |ev| {
             focus.focus();
-            if let Some(onclick) = &click {
-                onclick.call(Some(ev))
+            if let Some(onpress) = &click {
+                onpress.call(Some(ev))
             }
         }
     };
@@ -263,17 +263,17 @@ pub fn SubMenu(
 pub fn MenuButton(
     /// Inner children for the MenuButton
     children: Element,
-    /// Handler for the `onclick` event.
-    onclick: Option<EventHandler<Option<MouseEvent>>>,
+    /// Handler for the `onpress` event.
+    onpress: Option<EventHandler<Option<MouseEvent>>>,
 ) -> Element {
     let mut menus = use_context::<Signal<Vec<MenuId>>>();
     let parent_menu_id = use_context::<MenuId>();
     rsx!(
         MenuItem {
             onmouseenter: move |_| close_menus_until(&mut menus, parent_menu_id),
-            onclick: move |e| {
-                if let Some(onclick) = &onclick {
-                    onclick.call(e)
+            onpress: move |e| {
+                if let Some(onpress) = &onpress {
+                    onpress.call(e)
                 }
             }
             {children}

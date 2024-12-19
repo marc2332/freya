@@ -35,15 +35,15 @@ fn app() -> Element {
         width: "100%",
         background,
         Button {
-            onclick: move |_| gradient.set(GradientExample::Linear),
+            onpress: move |_| gradient.set(GradientExample::Linear),
             label { "Linear Gradient" }
         }
         Button {
-            onclick: move |_| gradient.set(GradientExample::Radial),
+            onpress: move |_| gradient.set(GradientExample::Radial),
             label { "Radial Gradient" }
         }
         Button {
-            onclick: move |_| gradient.set(GradientExample::Conic),
+            onpress: move |_| gradient.set(GradientExample::Conic),
             label { "Conic Gradient" }
         }
     })

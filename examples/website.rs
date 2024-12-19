@@ -256,11 +256,11 @@ fn Counter() -> Element {
                     direction: "horizontal",
                     spacing: "8",
                     Button {
-                        onclick: move |_| count += 1,
+                        onpress: move |_| count += 1,
                         label { "Increase" }
                     }
                     Button {
-                        onclick: move |_| count -= 1,
+                        onpress: move |_| count -= 1,
                         label { "Decrease" }
                     }
                 }
@@ -294,11 +294,11 @@ const CODE: &str = r#"fn app() -> Element {
             cross_align: "center",
             direction: "horizontal",
             Button {
-                onclick: move |_| count += 1,
+                onpress: move |_| count += 1,
                 label { "Increase" }
             }
             Button {
-                onclick: move |_| count -= 1,
+                onpress: move |_| count -= 1,
                 label { "Decrease" }
             }
         }
