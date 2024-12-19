@@ -75,7 +75,7 @@ where
         // 2. If this Node has been marked as dirty
         // 3. If there is no know cached data about this Node.
         let must_revalidate = parent_is_dirty
-            || self.layout.dirty.contains(&node_id)
+            || self.layout.dirty.contains_key(&node_id)
             || !self.layout.results.contains_key(&node_id);
         if must_revalidate {
             // Create the initial Node area size
