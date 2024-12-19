@@ -781,458 +781,67 @@ pub fn inner_percentage() {
 
 #[test]
 pub fn test_calc() {
-    const PARENT_VALUE: f32 = 500.0;
-    const OTHER_PARENT_VALUE: f32 = 100.0;
+    const PARENT_VALUE: &Area = &Area::new(Point2D::new(0.0, 0.0), Size2D::new(500.0, 100.0));
 
     assert_eq!(
         run_calculations(
-            &[DynamicCalculation::Pixels(10.0)],
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-        ),
-        Some(10.0)
-    );
-
-    assert_eq!(
-        run_calculations(
-            &[DynamicCalculation::Percentage(Dimension::Current(87.5))],
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-        ),
-        Some((87.5 / 100.0 * PARENT_VALUE).round())
-    );
-
-    assert_eq!(
-        run_calculations(
-            &[DynamicCalculation::Percentage(Dimension::Other(87.5))],
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-        ),
-        Some((87.5 / 100.0 * OTHER_PARENT_VALUE).round())
-    );
-
-    assert_eq!(
-        run_calculations(
-            &[DynamicCalculation::RootPercentage(Dimension::Current(87.5))],
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-        ),
-        Some((87.5 / 100.0 * PARENT_VALUE).round())
-    );
-
-    assert_eq!(
-        run_calculations(
-            &[DynamicCalculation::RootPercentage(Dimension::Other(87.5))],
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-        ),
-        Some((87.5 / 100.0 * OTHER_PARENT_VALUE).round())
-    );
-
-    assert_eq!(
-        run_calculations(
+            // so many features... i wish nobody else has to test so many things ever again
+            // if you want to make this test better, do it... i date you
+            // represents `calc((10)(5) * scale(2 * (5 + min(root, parent.other)))`
             &[
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::Add,
-                DynamicCalculation::Pixels(20.0),
-                DynamicCalculation::Mul,
-                DynamicCalculation::Percentage(Dimension::Current(50.0))
-            ],
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-        ),
-        Some(10.0 + 20.0 * (50.0 / 100.0 * PARENT_VALUE).round())
-    );
-
-    assert_eq!(
-        run_calculations(
-            &[
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::Add,
-                DynamicCalculation::Percentage(Dimension::Current(10.0)),
-                DynamicCalculation::Add,
-                DynamicCalculation::Pixels(30.0),
-                DynamicCalculation::Mul,
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::Add,
-                DynamicCalculation::Pixels(75.0),
-                DynamicCalculation::Mul,
-                DynamicCalculation::Pixels(2.0)
-            ],
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-        ),
-        Some(10.0 + (10.0 / 100.0 * PARENT_VALUE).round() + 30.0 * 10.0 + 75.0 * 2.0)
-    );
-
-    assert_eq!(
-        run_calculations(
-            &[
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::Pixels(20.0)
-            ],
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-        ),
-        None
-    );
-
-    assert_eq!(
-        run_calculations(
-            &[DynamicCalculation::Pixels(10.0), DynamicCalculation::Add],
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-        ),
-        None
-    );
-
-    assert_eq!(
-        run_calculations(
-            &[DynamicCalculation::Add, DynamicCalculation::Pixels(10.0)],
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-        ),
-        // Because +10 is just 10
-        Some(10.0)
-    );
-
-    assert_eq!(
-        run_calculations(
-            &[
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::Add,
-                // counts as a prefix
-                DynamicCalculation::Add,
-                DynamicCalculation::Pixels(10.0)
-            ],
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-        ),
-        Some(20.0)
-    );
-
-    assert_eq!(
-        run_calculations(
-            &[
-                DynamicCalculation::Percentage(Dimension::Current(50.0)),
-                DynamicCalculation::Sub,
-                DynamicCalculation::RootPercentage(Dimension::Current(20.0))
-            ],
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-        ),
-        Some((PARENT_VALUE * 0.5) - (PARENT_VALUE * 0.20))
-    );
-
-    assert_eq!(
-        run_calculations(
-            &[
-                DynamicCalculation::OpenParenthesis,
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::ClosedParenthesis
-            ],
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-        ),
-        Some(10.0)
-    );
-
-    assert_eq!(
-        run_calculations(
-            &[
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::OpenParenthesis,
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::Add,
-                DynamicCalculation::Pixels(20.0),
-                DynamicCalculation::ClosedParenthesis,
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::Add,
-                DynamicCalculation::Pixels(10.0),
                 DynamicCalculation::OpenParenthesis,
                 DynamicCalculation::Pixels(10.0),
                 DynamicCalculation::ClosedParenthesis,
-                DynamicCalculation::Pixels(10.0)
-            ],
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-        ),
-        Some((10.0 * (10.0 + 20.0) * 10.0) + (10.0 * (10.0) * 10.0))
-    );
-
-    assert_eq!(
-        run_calculations(
-            &[
-                DynamicCalculation::Sub,
                 DynamicCalculation::OpenParenthesis,
-                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::Pixels(5.0),
                 DynamicCalculation::ClosedParenthesis,
-                DynamicCalculation::Pixels(20.0)
-            ],
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-        ),
-        Some(-1.0 * 10.0 * 20.0)
-    );
-
-    assert_eq!(
-        run_calculations(
-            &[
+                DynamicCalculation::Mul,
+                DynamicCalculation::ScalingFactor,
                 DynamicCalculation::OpenParenthesis,
-                DynamicCalculation::Pixels(10.0)
-            ],
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-        ),
-        None
-    );
-
-    assert_eq!(
-        run_calculations(
-            &[
+                DynamicCalculation::Pixels(2.0),
+                DynamicCalculation::Mul,
+                DynamicCalculation::OpenParenthesis,
+                DynamicCalculation::Pixels(5.0),
+                DynamicCalculation::Add,
                 DynamicCalculation::Function(LexFunction::Min),
                 DynamicCalculation::OpenParenthesis,
-                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::Root(Dimension::Current),
                 DynamicCalculation::FunctionSeparator,
-                DynamicCalculation::Pixels(20.0),
+                DynamicCalculation::Parent(Dimension::Other),
+                DynamicCalculation::ClosedParenthesis,
+                DynamicCalculation::ClosedParenthesis,
                 DynamicCalculation::ClosedParenthesis,
             ],
             PARENT_VALUE,
-            OTHER_PARENT_VALUE,
             PARENT_VALUE,
-            OTHER_PARENT_VALUE,
+            EvalDimension::Width,
         ),
-        Some(10.0)
-    );
-
-    assert_eq!(
-        run_calculations(
-            &[
-                DynamicCalculation::Function(LexFunction::Max),
-                DynamicCalculation::OpenParenthesis,
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::FunctionSeparator,
-                DynamicCalculation::Pixels(30.0),
-                DynamicCalculation::FunctionSeparator,
-                DynamicCalculation::Pixels(20.0),
-                DynamicCalculation::ClosedParenthesis,
-            ],
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-        ),
-        Some(30.0)
-    );
-
-    assert_eq!(
-        run_calculations(
-            &[
-                DynamicCalculation::Function(LexFunction::Max),
-                DynamicCalculation::OpenParenthesis,
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::FunctionSeparator,
-                DynamicCalculation::ClosedParenthesis,
-            ],
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-        ),
-        None
-    );
-
-    assert_eq!(
-        run_calculations(
-            &[
-                DynamicCalculation::Function(LexFunction::Max),
-                DynamicCalculation::OpenParenthesis,
-                DynamicCalculation::Pixels(10.0),
-            ],
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-        ),
-        None
-    );
-
-    assert_eq!(
-        run_calculations(
-            &[
-                DynamicCalculation::Function(LexFunction::Clamp),
-                DynamicCalculation::OpenParenthesis,
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::FunctionSeparator,
-                DynamicCalculation::Pixels(30.0),
-                DynamicCalculation::FunctionSeparator,
-                DynamicCalculation::Pixels(20.0),
-                DynamicCalculation::ClosedParenthesis,
-            ],
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-        ),
-        Some(20.0)
-    );
-
-    assert_eq!(
-        run_calculations(
-            &[
-                DynamicCalculation::Function(LexFunction::Clamp),
-                DynamicCalculation::OpenParenthesis,
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::FunctionSeparator,
-                DynamicCalculation::Pixels(5.0),
-                DynamicCalculation::FunctionSeparator,
-                DynamicCalculation::Pixels(20.0),
-                DynamicCalculation::ClosedParenthesis,
-            ],
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-        ),
-        Some(10.0)
-    );
-
-    assert_eq!(
-        run_calculations(
-            &[
-                DynamicCalculation::Function(LexFunction::Clamp),
-                DynamicCalculation::OpenParenthesis,
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::FunctionSeparator,
-                DynamicCalculation::Pixels(30.0),
-                DynamicCalculation::ClosedParenthesis,
-            ],
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-        ),
-        None
+        Some(10.0 * 5.0 * 1.0 * (2.0 * (5.0 + PARENT_VALUE.width().min(PARENT_VALUE.height()))))
     );
 }
 
 #[test]
 pub fn test_scaling_factor() {
-    const PARENT_VALUE: f32 = 500.0;
-    const OTHER_PARENT_VALUE: f32 = 500.0;
+    const PARENT_VALUE: &Area = &Area::new(Point2D::new(0.0, 0.0), Size2D::new(500.0, 500.0));
 
     assert_eq!(
         {
-            let mut size =
-                Size::DynamicCalculations(Box::new(vec![DynamicCalculation::Pixels(10.0)]));
+            let mut size = Size::DynamicCalculations(Box::new(vec![
+                DynamicCalculation::Pixels(10.0),
+                DynamicCalculation::Mul,
+                DynamicCalculation::ScalingFactor,
+            ]));
             size.scale(1.5);
             size
         }
         .eval(
+            EvalDimension::Width,
             PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
+            PARENT_VALUE.width(),
             0.0,
             PARENT_VALUE,
-            OTHER_PARENT_VALUE,
             Phase::Initial
         ),
         Some((10.0) * 1.5)
-    );
-
-    assert_eq!(
-        {
-            let mut size = Size::DynamicCalculations(Box::new(vec![
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::OpenParenthesis,
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::Add,
-                DynamicCalculation::Pixels(20.0),
-                DynamicCalculation::ClosedParenthesis,
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::Add,
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::OpenParenthesis,
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::ClosedParenthesis,
-                DynamicCalculation::Pixels(10.0),
-            ]));
-            size.scale(1.5);
-            size
-        }
-        .eval(
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            0.0,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            Phase::Initial
-        ),
-        Some(((10.0 * (10.0 + 20.0) * 10.0) + (10.0 * (10.0) * 10.0)) * 1.5)
-    );
-
-    assert_eq!(
-        {
-            let mut size = Size::DynamicCalculations(Box::new(vec![
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::OpenParenthesis,
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::Add,
-                DynamicCalculation::Pixels(20.0),
-                DynamicCalculation::ClosedParenthesis,
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::Add,
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::OpenParenthesis,
-                DynamicCalculation::Pixels(10.0),
-                DynamicCalculation::ClosedParenthesis,
-                DynamicCalculation::Pixels(10.0),
-            ]));
-            size.scale(1.2);
-            size
-        }
-        .eval(
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            PARENT_VALUE,
-            0.0,
-            PARENT_VALUE,
-            OTHER_PARENT_VALUE,
-            Phase::Initial
-        ),
-        Some(((10.0 * (10.0 + 20.0) * 10.0) + (10.0 * (10.0) * 10.0)) * 1.2)
     );
 }

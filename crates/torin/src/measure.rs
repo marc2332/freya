@@ -23,6 +23,7 @@ use crate::{
         Length,
         Torin,
     },
+    size::EvalDimension,
 };
 
 /// Some layout strategies require two-phase measurements
@@ -83,28 +84,26 @@ where
             // Compute the width and height given the size, the minimum size, the maximum size and margins
             area_size.width = node.width.min_max(
                 area_size.width,
-                parent_area.size.width,
-                parent_area.size.height,
-                available_parent_area.size.width,
+                EvalDimension::Width,
+                parent_area,
+                available_parent_area.width(),
                 node.margin.left(),
                 node.margin.horizontal(),
                 &node.minimum_width,
                 &node.maximum_width,
-                self.layout_metadata.root_area.width(),
-                self.layout_metadata.root_area.height(),
+                &self.layout_metadata.root_area,
                 phase,
             );
             area_size.height = node.height.min_max(
                 area_size.height,
-                parent_area.size.height,
-                parent_area.size.width,
-                available_parent_area.size.height,
+                EvalDimension::Height,
+                parent_area,
+                available_parent_area.height(),
                 node.margin.top(),
                 node.margin.vertical(),
                 &node.minimum_height,
                 &node.maximum_height,
-                self.layout_metadata.root_area.height(),
-                self.layout_metadata.root_area.width(),
+                &self.layout_metadata.root_area,
                 phase,
             );
 
@@ -127,30 +126,28 @@ where
                     if node.width.inner_sized() {
                         area_size.width = node.width.min_max(
                             custom_size.width,
-                            parent_area.size.width,
-                            parent_area.size.height,
-                            available_parent_area.size.width,
+                            EvalDimension::Width,
+                            parent_area,
+                            available_parent_area.width(),
                             node.margin.left(),
                             node.margin.horizontal(),
                             &node.minimum_width,
                             &node.maximum_width,
-                            self.layout_metadata.root_area.width(),
-                            self.layout_metadata.root_area.height(),
+                            &self.layout_metadata.root_area,
                             phase,
                         );
                     }
                     if node.height.inner_sized() {
                         area_size.height = node.height.min_max(
                             custom_size.height,
-                            parent_area.size.height,
-                            parent_area.size.width,
-                            available_parent_area.size.height,
+                            EvalDimension::Height,
+                            parent_area,
+                            available_parent_area.height(),
                             node.margin.top(),
                             node.margin.vertical(),
                             &node.minimum_height,
                             &node.maximum_height,
-                            self.layout_metadata.root_area.height(),
-                            self.layout_metadata.root_area.width(),
+                            &self.layout_metadata.root_area,
                             phase,
                         );
                     }
@@ -180,30 +177,28 @@ where
                 if node.width.inner_sized() {
                     inner_size.width = node.width.min_max(
                         available_parent_area.width(),
-                        parent_area.size.width,
-                        parent_area.size.height,
+                        EvalDimension::Width,
+                        parent_area,
                         available_parent_area.width(),
                         node.margin.left(),
                         node.margin.horizontal(),
                         &node.minimum_width,
                         &node.maximum_width,
-                        self.layout_metadata.root_area.width(),
-                        self.layout_metadata.root_area.height(),
+                        &self.layout_metadata.root_area,
                         phase,
                     );
                 }
                 if node.height.inner_sized() {
                     inner_size.height = node.height.min_max(
                         available_parent_area.height(),
-                        parent_area.size.height,
-                        parent_area.size.width,
+                        EvalDimension::Height,
+                        parent_area,
                         available_parent_area.height(),
                         node.margin.top(),
                         node.margin.vertical(),
                         &node.minimum_height,
                         &node.maximum_height,
-                        self.layout_metadata.root_area.height(),
-                        self.layout_metadata.root_area.width(),
+                        &self.layout_metadata.root_area,
                         phase,
                     );
                 }
