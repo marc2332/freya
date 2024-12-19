@@ -1,4 +1,7 @@
-use rustc_hash::FxHashSet;
+use rustc_hash::{
+    FxHashMap,
+    FxHashSet,
+};
 #[cfg(test)]
 use torin::{
     prelude::*,
@@ -139,7 +142,10 @@ pub fn layout_dirty_nodes() {
     );
     layout.invalidate(2);
 
-    assert_eq!(layout.get_dirty_nodes(), &FxHashSet::from_iter([2]));
+    assert_eq!(
+        layout.get_dirty_nodes(),
+        &FxHashMap::from_iter([(2, DirtyReason::None)])
+    );
 
     // CASE 2
     // Same as Case 1 but we make Child A depend on Child A[0]'s size
@@ -154,7 +160,10 @@ pub fn layout_dirty_nodes() {
     );
     layout.invalidate(1);
 
-    assert_eq!(layout.get_dirty_nodes(), &FxHashSet::from_iter([2, 1]));
+    assert_eq!(
+        layout.get_dirty_nodes(),
+        &FxHashMap::from_iter([(2, DirtyReason::None), (1, DirtyReason::None)])
+    );
 
     // CASE 3
     // Same as Case 2, but triggers a change in Child A[0]
@@ -169,7 +178,10 @@ pub fn layout_dirty_nodes() {
     );
     layout.invalidate(2);
 
-    assert_eq!(layout.get_dirty_nodes(), &FxHashSet::from_iter([2, 1]));
+    assert_eq!(
+        layout.get_dirty_nodes(),
+        &FxHashMap::from_iter([(2, DirtyReason::None), (1, DirtyReason::None)])
+    );
 
     // CASE 4
     // Same as Case 3, but triggers a change in the root
@@ -184,7 +196,14 @@ pub fn layout_dirty_nodes() {
     );
     layout.invalidate(0);
 
-    assert_eq!(layout.get_dirty_nodes(), &FxHashSet::from_iter([2, 1, 0]));
+    assert_eq!(
+        layout.get_dirty_nodes(),
+        &FxHashMap::from_iter([
+            (2, DirtyReason::None),
+            (1, DirtyReason::None),
+            (0, DirtyReason::None)
+        ])
+    );
 }
 
 #[test]
@@ -269,7 +288,10 @@ pub fn node_removal() {
 
     layout.find_best_root(&mut mocked_dom);
 
-    assert_eq!(layout.get_dirty_nodes(), &FxHashSet::from_iter([1]));
+    assert_eq!(
+        layout.get_dirty_nodes(),
+        &FxHashMap::from_iter([(1, DirtyReason::None)])
+    );
 
     assert_eq!(layout.size(), 3);
 

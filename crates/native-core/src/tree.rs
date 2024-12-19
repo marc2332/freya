@@ -229,13 +229,24 @@ impl<'a> TreeMut for TreeMutView<'a> {
     }
 
     fn insert_before(&mut self, old_id: NodeId, new_id: NodeId) {
+        let new_parent_id = {
+            let new_id = self.1.get(new_id).unwrap();
+            new_id.parent
+        };
+        if let Some(new_parent_id) = new_parent_id {
+            (&mut self.1)
+                .get(new_parent_id)
+                .unwrap()
+                .children
+                .retain(|id| *id != new_id);
+        }
+
         let parent_id = {
             let old_node = self.1.get(old_id).unwrap();
             old_node.parent.expect("tried to insert before root")
         };
-        {
-            (&mut self.1).get(new_id).unwrap().parent = Some(parent_id);
-        }
+        (&mut self.1).get(new_id).unwrap().parent = Some(parent_id);
+
         let parent = (&mut self.1).get(parent_id).unwrap();
         let index = parent
             .children
@@ -248,6 +259,18 @@ impl<'a> TreeMut for TreeMutView<'a> {
     }
 
     fn insert_after(&mut self, old_id: NodeId, new_id: NodeId) {
+        let new_parent_id = {
+            let new_id = self.1.get(new_id).unwrap();
+            new_id.parent
+        };
+        if let Some(new_parent_id) = new_parent_id {
+            (&mut self.1)
+                .get(new_parent_id)
+                .unwrap()
+                .children
+                .retain(|id| *id != new_id);
+        }
+
         let mut node_state = &mut self.1;
         let old_node = node_state.get(old_id).unwrap();
         let parent_id = old_node.parent.expect("tried to insert before root");

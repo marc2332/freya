@@ -34,7 +34,7 @@ struct ElementIdComponent(ElementId);
 /// The state of the Dioxus integration with the RealDom
 pub struct DioxusState {
     templates: FxHashMap<String, Vec<NodeId>>,
-    stack: Vec<NodeId>,
+    pub stack: Vec<NodeId>,
     node_id_mapping: Vec<Option<NodeId>>,
 }
 
