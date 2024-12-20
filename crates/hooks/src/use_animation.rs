@@ -562,8 +562,6 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
 
                 index += prev_frame.elapsed().as_millis();
 
-                println!("{index:?}");
-
                 let is_finished = values
                     .iter()
                     .all(|value| value.peek().is_finished(index, direction));
