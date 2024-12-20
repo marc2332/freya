@@ -87,3 +87,77 @@ pub fn AnimatedPosition(
         }
     )
 }
+
+#[cfg(test)]
+mod test {
+    use std::time::Duration;
+
+    use freya::prelude::*;
+    use freya_testing::prelude::*;
+
+    #[tokio::test]
+    pub async fn animated_position() {
+        fn animated_position_app() -> Element {
+            let mut padding = use_signal(|| (100., 100.));
+
+            rsx!(
+                rect {
+                    padding: "{padding().0} {padding().1}",
+                    onclick: move |_| {
+                        padding.write().0 += 10.;
+                        padding.write().1 += 10.;
+                    },
+                    AnimatedPosition {
+                        width: "50",
+                        height: "50",
+                        function: Function::Linear
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(animated_position_app);
+
+        // Disable event loop ticker
+        utils.config().event_loop_ticker = false;
+
+        let root = utils.root();
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+
+        let get_positions = || {
+            root.get(0)
+                .get(0)
+                .get(0)
+                .get(0)
+                .layout()
+                .unwrap()
+                .area
+                .origin
+        };
+
+        assert_eq!(get_positions().x, 100.);
+        assert_eq!(get_positions().y, 100.);
+
+        utils.click_cursor((5.0, 5.0)).await;
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+        tokio::time::sleep(Duration::from_millis(125)).await;
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+
+        assert!(get_positions().x < 106.);
+        assert!(get_positions().x > 105.);
+
+        assert!(get_positions().y < 106.);
+        assert!(get_positions().y > 105.);
+
+        utils.config().event_loop_ticker = true;
+
+        utils.wait_for_update().await;
+        tokio::time::sleep(Duration::from_millis(125)).await;
+        utils.wait_for_update().await;
+
+        assert_eq!(get_positions().x, 110.);
+    }
+}
