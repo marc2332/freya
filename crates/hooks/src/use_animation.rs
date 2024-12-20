@@ -1,4 +1,7 @@
-use std::time::Duration;
+use std::{
+    fmt,
+    time::Duration,
+};
 
 use dioxus_core::prelude::{
     spawn,
@@ -31,7 +34,7 @@ use crate::{
 pub fn apply_value(
     origin: f32,
     destination: f32,
-    index: i32,
+    index: u128,
     time: Duration,
     ease: Ease,
     function: Function,
@@ -96,7 +99,7 @@ pub fn apply_value(
     }
 }
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Function {
     Back,
     Bounce,
@@ -111,10 +114,16 @@ pub enum Function {
     Sine,
 }
 
-#[derive(Default, Clone, Copy)]
+impl fmt::Display for Function {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+#[derive(Default, Clone, Copy, PartialEq, Eq)]
 pub enum Ease {
-    #[default]
     In,
+    #[default]
     Out,
     InOut,
 }
@@ -196,17 +205,17 @@ impl AnimatedValue for AnimColor {
         }
     }
 
-    fn is_finished(&self, index: i32, direction: AnimDirection) -> bool {
+    fn is_finished(&self, index: u128, direction: AnimDirection) -> bool {
         match direction {
             AnimDirection::Forward => {
-                index > self.time.as_millis() as i32
+                index > self.time.as_millis()
                     && self.value.r() == self.destination.r()
                     && self.value.g() == self.destination.g()
                     && self.value.b() == self.destination.b()
                     && self.value.a() == self.destination.a()
             }
             AnimDirection::Reverse => {
-                index > self.time.as_millis() as i32
+                index > self.time.as_millis()
                     && self.value.r() == self.origin.r()
                     && self.value.g() == self.origin.g()
                     && self.value.b() == self.origin.b()
@@ -215,46 +224,44 @@ impl AnimatedValue for AnimColor {
         }
     }
 
-    fn advance(&mut self, index: i32, direction: AnimDirection) {
-        if !self.is_finished(index, direction) {
-            let (origin, destination) = match direction {
-                AnimDirection::Forward => (self.origin, self.destination),
-                AnimDirection::Reverse => (self.destination, self.origin),
-            };
-            let r = apply_value(
-                origin.r() as f32,
-                destination.r() as f32,
-                index.min(self.time.as_millis() as i32),
-                self.time,
-                self.ease,
-                self.function,
-            );
-            let g = apply_value(
-                origin.g() as f32,
-                destination.g() as f32,
-                index.min(self.time.as_millis() as i32),
-                self.time,
-                self.ease,
-                self.function,
-            );
-            let b = apply_value(
-                origin.b() as f32,
-                destination.b() as f32,
-                index.min(self.time.as_millis() as i32),
-                self.time,
-                self.ease,
-                self.function,
-            );
-            let a = apply_value(
-                origin.a() as f32,
-                destination.a() as f32,
-                index.min(self.time.as_millis() as i32),
-                self.time,
-                self.ease,
-                self.function,
-            );
-            self.value = Color::from_argb(a as u8, r as u8, g as u8, b as u8);
-        }
+    fn advance(&mut self, index: u128, direction: AnimDirection) {
+        let (origin, destination) = match direction {
+            AnimDirection::Forward => (self.origin, self.destination),
+            AnimDirection::Reverse => (self.destination, self.origin),
+        };
+        let r = apply_value(
+            origin.r() as f32,
+            destination.r() as f32,
+            index.min(self.time.as_millis()),
+            self.time,
+            self.ease,
+            self.function,
+        );
+        let g = apply_value(
+            origin.g() as f32,
+            destination.g() as f32,
+            index.min(self.time.as_millis()),
+            self.time,
+            self.ease,
+            self.function,
+        );
+        let b = apply_value(
+            origin.b() as f32,
+            destination.b() as f32,
+            index.min(self.time.as_millis()),
+            self.time,
+            self.ease,
+            self.function,
+        );
+        let a = apply_value(
+            origin.a() as f32,
+            destination.a() as f32,
+            index.min(self.time.as_millis()),
+            self.time,
+            self.ease,
+            self.function,
+        );
+        self.value = Color::from_argb(a as u8, r as u8, g as u8, b as u8);
     }
 }
 
@@ -329,32 +336,28 @@ impl AnimatedValue for AnimNum {
         }
     }
 
-    fn is_finished(&self, index: i32, direction: AnimDirection) -> bool {
+    fn is_finished(&self, index: u128, direction: AnimDirection) -> bool {
         match direction {
             AnimDirection::Forward => {
-                index > self.time.as_millis() as i32 && self.value >= self.destination
+                index > self.time.as_millis() && self.value >= self.destination
             }
-            AnimDirection::Reverse => {
-                index > self.time.as_millis() as i32 && self.value <= self.origin
-            }
+            AnimDirection::Reverse => index > self.time.as_millis() && self.value <= self.origin,
         }
     }
 
-    fn advance(&mut self, index: i32, direction: AnimDirection) {
-        if !self.is_finished(index, direction) {
-            let (origin, destination) = match direction {
-                AnimDirection::Forward => (self.origin, self.destination),
-                AnimDirection::Reverse => (self.destination, self.origin),
-            };
-            self.value = apply_value(
-                origin,
-                destination,
-                index.min(self.time.as_millis() as i32),
-                self.time,
-                self.ease,
-                self.function,
-            )
-        }
+    fn advance(&mut self, index: u128, direction: AnimDirection) {
+        let (origin, destination) = match direction {
+            AnimDirection::Forward => (self.origin, self.destination),
+            AnimDirection::Reverse => (self.destination, self.origin),
+        };
+        self.value = apply_value(
+            origin,
+            destination,
+            index.min(self.time.as_millis()),
+            self.time,
+            self.ease,
+            self.function,
+        )
     }
 }
 
@@ -367,9 +370,9 @@ pub trait AnimatedValue {
 
     fn prepare(&mut self, direction: AnimDirection);
 
-    fn is_finished(&self, index: i32, direction: AnimDirection) -> bool;
+    fn is_finished(&self, index: u128, direction: AnimDirection) -> bool;
 
-    fn advance(&mut self, index: i32, direction: AnimDirection);
+    fn advance(&mut self, index: u128, direction: AnimDirection);
 }
 
 pub type ReadAnimatedValue = ReadOnlySignal<Box<dyn AnimatedValue>>;
@@ -485,7 +488,7 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
 
         for value in &self.value_and_ctx.read().1.animated_values {
             let mut value = *value;
-            let time = value.peek().time().as_millis() as i32;
+            let time = value.peek().time().as_millis();
             value.write().advance(time, *self.last_direction.peek());
         }
     }
@@ -534,15 +537,12 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
             task.cancel();
         }
 
-        if !self.peek_has_run_yet() {
-            *has_run_yet.write() = true;
-        }
-        is_running.set(true);
+        let peek_has_run_yet = self.peek_has_run_yet();
 
         let animation_task = spawn(async move {
             platform.request_animation_frame();
 
-            let mut index = 0;
+            let mut index = 0u128;
             let mut prev_frame = Instant::now();
 
             // Prepare the animations with the the proper direction
@@ -550,12 +550,17 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
                 value.write().prepare(direction);
             }
 
+            if !peek_has_run_yet {
+                *has_run_yet.write() = true;
+            }
+            is_running.set(true);
+
             loop {
                 // Wait for the event loop to tick
                 ticker.tick().await;
                 platform.request_animation_frame();
 
-                index += prev_frame.elapsed().as_millis() as i32;
+                index += prev_frame.elapsed().as_millis();
 
                 let is_finished = values
                     .iter()
