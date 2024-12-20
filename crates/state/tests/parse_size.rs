@@ -29,7 +29,7 @@ fn parse_auto_size() {
 
 #[test]
 fn parse_calc_size() {
-    let size = Size::parse("calc(min(max(clamp(1, 2, 3), 4), parent.width + root.height - root.other * 2 / 1, scale, parent, root, parent.height, parent.other, +5.0, -3.0))");
+    let size = Size::parse("calc(min(max(clamp(1, 2, 3), 4), parent.width + root.height - root.cross * 2 / 1, scale, parent, root, parent.height, parent.cross, +5.0, -3.0))");
     assert_eq!(
         size,
         Ok(Size::DynamicCalculations(Box::new(vec![
@@ -53,7 +53,7 @@ fn parse_calc_size() {
             DynamicCalculation::Add,
             DynamicCalculation::Root(Dimension::Height),
             DynamicCalculation::Sub,
-            DynamicCalculation::Root(Dimension::Other),
+            DynamicCalculation::Root(Dimension::Cross),
             DynamicCalculation::Mul,
             DynamicCalculation::Pixels(2.0),
             DynamicCalculation::Div,
@@ -67,7 +67,7 @@ fn parse_calc_size() {
             DynamicCalculation::FunctionSeparator,
             DynamicCalculation::Parent(Dimension::Height),
             DynamicCalculation::FunctionSeparator,
-            DynamicCalculation::Parent(Dimension::Other),
+            DynamicCalculation::Parent(Dimension::Cross),
             DynamicCalculation::FunctionSeparator,
             DynamicCalculation::Add,
             DynamicCalculation::Pixels(5.0),

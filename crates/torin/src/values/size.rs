@@ -238,7 +238,7 @@ pub enum LexFunction {
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Dimension {
     Current,
-    Other,
+    Cross,
     Width,
     Height,
 }
@@ -276,11 +276,11 @@ impl std::fmt::Display for DynamicCalculation {
             DynamicCalculation::Function(LexFunction::Clamp) => f.write_str("clamp"),
             DynamicCalculation::ScalingFactor => f.write_str("scale"),
             DynamicCalculation::Parent(Dimension::Current) => f.write_str("parent"),
-            DynamicCalculation::Parent(Dimension::Other) => f.write_str("parent.other"),
+            DynamicCalculation::Parent(Dimension::Cross) => f.write_str("parent.other"),
             DynamicCalculation::Parent(Dimension::Width) => f.write_str("parent.width"),
             DynamicCalculation::Parent(Dimension::Height) => f.write_str("parent.height"),
             DynamicCalculation::Root(Dimension::Current) => f.write_str("root"),
-            DynamicCalculation::Root(Dimension::Other) => f.write_str("root.other"),
+            DynamicCalculation::Root(Dimension::Cross) => f.write_str("root.other"),
             DynamicCalculation::Root(Dimension::Width) => f.write_str("root.width"),
             DynamicCalculation::Root(Dimension::Height) => f.write_str("root.height"),
         }
@@ -412,7 +412,7 @@ impl<'a> DynamicCalculationEvaluator<'a> {
                     EvalDimension::Height => Some((self.root_value.height(), true)),
                 }
             }
-            DynamicCalculation::Root(Dimension::Other) => {
+            DynamicCalculation::Root(Dimension::Cross) => {
                 self.current = self.calcs.next();
                 match self.dimension {
                     EvalDimension::Width => Some((self.root_value.height(), true)),
@@ -434,7 +434,7 @@ impl<'a> DynamicCalculationEvaluator<'a> {
                     EvalDimension::Height => Some((self.parent_value.height(), true)),
                 }
             }
-            DynamicCalculation::Parent(Dimension::Other) => {
+            DynamicCalculation::Parent(Dimension::Cross) => {
                 self.current = self.calcs.next();
                 match self.dimension {
                     EvalDimension::Width => Some((self.parent_value.height(), true)),

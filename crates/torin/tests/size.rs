@@ -807,7 +807,7 @@ pub fn test_calc() {
                 DynamicCalculation::OpenParenthesis,
                 DynamicCalculation::Root(Dimension::Current),
                 DynamicCalculation::FunctionSeparator,
-                DynamicCalculation::Parent(Dimension::Other),
+                DynamicCalculation::Parent(Dimension::Cross),
                 DynamicCalculation::ClosedParenthesis,
                 DynamicCalculation::ClosedParenthesis,
                 DynamicCalculation::ClosedParenthesis,

@@ -100,23 +100,23 @@ pub fn parse_calc(mut value: &str) -> Result<Vec<DynamicCalculation>, ParseError
                 map(tag("parent.height"), |_| {
                     DynamicCalculation::Parent(Dimension::Height)
                 }),
-                map(tag("parent.other"), |_| {
-                    DynamicCalculation::Parent(Dimension::Other)
+                map(tag("parent.cross"), |_| {
+                    DynamicCalculation::Parent(Dimension::Cross)
                 }),
                 map(tag("parent"), |_| {
                     DynamicCalculation::Parent(Dimension::Current)
                 }),
                 map(tag("root.width"), |_| {
-                    DynamicCalculation::Parent(Dimension::Width)
+                    DynamicCalculation::Root(Dimension::Width)
                 }),
                 map(tag("root.height"), |_| {
-                    DynamicCalculation::Parent(Dimension::Height)
+                    DynamicCalculation::Root(Dimension::Height)
                 }),
-                map(tag("root.other"), |_| {
-                    DynamicCalculation::Parent(Dimension::Other)
+                map(tag("root.cross"), |_| {
+                    DynamicCalculation::Root(Dimension::Cross)
                 }),
                 map(tag("root"), |_| {
-                    DynamicCalculation::Parent(Dimension::Current)
+                    DynamicCalculation::Root(Dimension::Current)
                 }),
                 map(tag("+"), |_| DynamicCalculation::Add),
                 map(tag("-"), |_| DynamicCalculation::Sub),
