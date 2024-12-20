@@ -80,6 +80,9 @@ impl Easable for &str {
     }
 }
 
+// weird name but this in reality is just a struct that holds the information needed for what value
+// a function should give back, given some time. this of it like a mathematical function f(t) where
+// it has a method calc to input the t in.
 #[derive(PartialEq, Clone)]
 pub struct SegmentCompositor<T: Easable<Output = O> + Clone, O: Clone> {
     segments: Vec<Segment<T, O>>,
@@ -222,93 +225,108 @@ impl<O: 'static + Clone, Animated: AnimatedValue<Output = O> + Clone + PartialEq
 impl<O: 'static + Clone, Animated: AnimatedValue<Output = O> + Clone + PartialEq + 'static>
     UseAnimator<O, Animated>
 {
+    // starts an animation, or switches the direction it is running in
     pub fn run(&mut self, direction: Direction) {
+        // this is done because sometimes the animation is running and we only need to switch the
+        // direction of it.
         *self.direction.write() = direction;
 
-        if !(self.is_running)() {
-            let direction = self.direction;
-            let function_and_ctx = self.function_and_ctx;
-            let mut value = self.value;
-            let mut is_running = self.is_running;
-            let platform = self.platform;
-            let mut ticker = platform.new_ticker();
+        if self.is_running() {
+            return;
+        }
 
-            is_running.set(true);
-            let task = spawn(async move {
-                platform.request_animation_frame();
-                let mut anchor = match *direction.peek() {
-                    Direction::Forward => 0,
-                    Direction::Backward => {
-                        let duration = function_and_ctx.read().0.duration();
-                        duration
-                    }
-                };
+        // i have forgotten why i have done this but i think its because of it not being Copy. i
+        // think if i dont do this self gets moved in as it isnt a signal itself (even though it
+        // could be but i dont know how to do that)
+        let direction = self.direction;
+        let function_and_ctx = self.function_and_ctx;
+        let mut value = self.value;
+        let mut is_running = self.is_running;
+        let platform = self.platform;
 
-                let mut offset = Instant::now();
+        let mut ticker = platform.new_ticker();
 
-                let mut last_direction = *direction.peek();
+        is_running.set(true);
+        let task = spawn(async move {
+            // the initialization/setup of the loop
 
-                loop {
-                    fn offset_time(
-                        direction: Direction,
-                        anchor: u32,
-                        offset: Instant,
-                    ) -> Option<u32> {
-                        match direction {
-                            Direction::Forward => {
-                                let elapsed = offset.elapsed().as_millis() as u32;
-                                Some(anchor + elapsed)
-                            }
-                            Direction::Backward => {
-                                let elapsed = offset.elapsed().as_millis() as u32;
-                                anchor.checked_sub(elapsed)
-                            }
+            platform.request_animation_frame();
+            let mut anchor = match *direction.peek() {
+                Direction::Forward => 0,
+                Direction::Backward => {
+                    let duration = function_and_ctx.read().0.duration();
+                    duration
+                }
+            };
+
+            let mut offset = Instant::now();
+
+            let mut last_direction = *direction.peek();
+
+            // every frame we check if the direction has changed, if it has then we change the
+            // anchor to the timestamp we are at. we do this to minimize the error
+            loop {
+                // we need a way to know the timestamp our animation is in, this is just a helper
+                // to do anchor + offset
+                fn offset_time(direction: Direction, anchor: u32, offset: Instant) -> Option<u32> {
+                    match direction {
+                        Direction::Forward => {
+                            let elapsed = offset.elapsed().as_millis() as u32;
+                            Some(anchor + elapsed)
+                        }
+                        Direction::Backward => {
+                            let elapsed = offset.elapsed().as_millis() as u32;
+                            anchor.checked_sub(elapsed)
                         }
                     }
-
-                    ticker.tick().await;
-
-                    platform.request_animation_frame();
-
-                    let current_offset_time =
-                        offset_time(last_direction, anchor, offset).unwrap_or(0);
-
-                    if current_offset_time == 0 && *direction.peek() == Direction::Backward {
-                        *value.write() = function_and_ctx.read().0.calc(0);
-
-                        *is_running.write() = false;
-                        break;
-                    }
-
-                    if current_offset_time >= function_and_ctx.read().0.duration()
-                        && *direction.peek() == Direction::Forward
-                    {
-                        *value.write() = function_and_ctx
-                            .read()
-                            .0
-                            .calc(function_and_ctx.read().0.duration());
-
-                        *is_running.write() = false;
-                        break;
-                    }
-
-                    if last_direction != *direction.peek() {
-                        anchor =
-                            offset_time(last_direction, anchor, offset).expect("to not underflow");
-                        offset = Instant::now();
-
-                        last_direction = *direction.peek();
-                    }
-
-                    *value.write() = function_and_ctx.read().0.calc(
-                        offset_time(*direction.peek(), anchor, offset).expect("to not underflow"),
-                    );
                 }
-            });
 
-            let mut x: Write<Option<Task>, UnsyncStorage> = self.task.write();
-            x.replace(task);
-        }
+                ticker.tick().await;
+
+                platform.request_animation_frame();
+
+                let current_offset_time = offset_time(last_direction, anchor, offset).unwrap_or(0);
+
+                // 2 if checks to check if the animation is at the end or the start. We make sure
+                //   the start and end values are constant.
+                if current_offset_time == 0 && *direction.peek() == Direction::Backward {
+                    *value.write() = function_and_ctx.read().0.calc(0);
+
+                    *is_running.write() = false;
+                    break;
+                }
+
+                if current_offset_time >= function_and_ctx.read().0.duration()
+                    && *direction.peek() == Direction::Forward
+                {
+                    *value.write() = function_and_ctx
+                        .read()
+                        .0
+                        .calc(function_and_ctx.read().0.duration());
+
+                    *is_running.write() = false;
+                    break;
+                }
+
+                // if the direction of the animation is switched, we set the anchor to the current
+                // time and reset the offset.
+                if last_direction != *direction.peek() {
+                    anchor = offset_time(last_direction, anchor, offset).expect("to not underflow");
+                    offset = Instant::now();
+
+                    last_direction = *direction.peek();
+                }
+
+                // at the end we just do the normal thing which is to set the animation value based
+                // on the time
+                *value.write() = function_and_ctx.read().0.calc(
+                    offset_time(*direction.peek(), anchor, offset).expect("to not underflow"),
+                );
+            }
+        });
+
+        let mut x: Write<Option<Task>, UnsyncStorage> = self.task.write();
+        x.replace(task);
     }
 
     pub fn toggle(&mut self) {
@@ -319,6 +337,7 @@ impl<O: 'static + Clone, Animated: AnimatedValue<Output = O> + Clone + PartialEq
         self.run(direction);
     }
 
+    // gives the signal to the current value of the animation
     pub fn value(&self) -> ReadOnlySignal<O> {
         ReadOnlySignal::new(self.value)
     }
