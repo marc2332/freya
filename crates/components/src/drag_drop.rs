@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::MouseEvent,
 };
 use freya_hooks::use_node_signal;
@@ -175,7 +175,7 @@ mod test {
                                 "Move"
                             }
                         }
-                    },
+                    }
                     DropZone {
                         ondrop: move |data: bool| {
                             state.set(data);

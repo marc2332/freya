@@ -46,7 +46,7 @@ fn app() -> Element {
                     image {
                         width: "fill",
                         height: "fill",
-                        image_data
+                        image_data,
                     }
                 } else {
                     label {

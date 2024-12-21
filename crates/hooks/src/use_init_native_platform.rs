@@ -110,7 +110,7 @@ mod test {
                 rect {
                     width: "100%",
                     height: "100%",
-                    OtherChild {},
+                    OtherChild {}
                     OtherChild {}
                 }
             )
