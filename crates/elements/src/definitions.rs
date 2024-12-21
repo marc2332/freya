@@ -341,6 +341,9 @@ builder_constructors! {
         #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity,
 
+        // Reference
+        reference: Reference,
+
         // Accessibility
         a11y_id,
         a11y_auto_focus,
