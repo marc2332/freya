@@ -418,6 +418,9 @@ builder_constructors! {
         #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
 
+        // Reference
+        reference: Reference,
+
         // Accessibility
         a11y_id: String,
         a11y_auto_focus: String,
