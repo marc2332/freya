@@ -139,7 +139,7 @@
 //!
 //!     let mut utils = launch_test_with_config(
 //!         our_component,
-//!         TestingConfig {
+//!         TestingConfig::<()> {
 //!             size: (500.0, 800.0).into(),
 //!             ..TestingConfig::default()
 //!         },

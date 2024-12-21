@@ -3,9 +3,10 @@ Specify how you want the element to be positioned inside it's parent area.
 Accepted values:
 
 - `stacked` (default)
-- `absolute`
+- `absolute` (Floating element relative to the parent element)
+- `global` (Floating element relative to the window)
 
-When using the `absolute` mode, you can also combine it with the following attributes:
+When using the `absolute` or `global` modes, you can also combine them with the following attributes:
 
 - `position_top`
 - `position_right`

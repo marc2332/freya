@@ -1,7 +1,10 @@
 use dioxus::prelude::*;
 use freya_elements::{
     elements as dioxus_elements,
-    events::KeyboardEvent,
+    events::{
+        keyboard::Key,
+        KeyboardEvent,
+    },
 };
 use freya_hooks::{
     theme_with,

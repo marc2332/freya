@@ -116,7 +116,7 @@ If you are interested in supporting the development of this project feel free to
 
 Thanks to my sponsors for supporting this project! 😄 
 
-<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;avatars.githubusercontent.com&#x2F;u&#x2F;8446285?u&#x3D;fd37db4dd9b4ba94dabe0bccc3a95ef2a35376ab&amp;v&#x3D;4" width="60px" alt="" /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;avatars.githubusercontent.com&#x2F;u&#x2F;2295878?v&#x3D;4" width="60px" alt="高庆丰" /></a><!-- sponsors -->
+<!-- sponsors --><!-- sponsors -->
 
 ### Special thanks 💪
 
