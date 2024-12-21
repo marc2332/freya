@@ -75,7 +75,7 @@ pub fn AnimatedPosition(
                 height: "0",
                 offset_x: "{offset_x}",
                 offset_y: "{offset_y}",
-                position: "fixed",
+                position: "global",
                 if render_element() {
                     rect {
                         width: "{size.read().as_ref().unwrap().area.width()}",

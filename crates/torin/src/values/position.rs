@@ -23,7 +23,7 @@ pub enum Position {
     Stacked,
 
     Absolute(Box<PositionSides>),
-    Fixed(Box<PositionSides>),
+    Global(Box<PositionSides>),
 }
 
 impl Position {
@@ -38,7 +38,7 @@ impl Position {
                 } = absolute_position.deref();
                 top.is_some() && right.is_some() && bottom.is_some() && left.is_some()
             }
-            Self::Fixed(absolute_position) => {
+            Self::Global(absolute_position) => {
                 let PositionSides {
                     top,
                     right,
@@ -60,8 +60,8 @@ impl Position {
         }))
     }
 
-    pub fn new_fixed() -> Self {
-        Self::Fixed(Box::new(PositionSides {
+    pub fn new_global() -> Self {
+        Self::Global(Box::new(PositionSides {
             top: None,
             right: None,
             bottom: None,
@@ -73,8 +73,8 @@ impl Position {
         matches!(self, Self::Absolute { .. })
     }
 
-    pub fn is_fixed(&self) -> bool {
-        matches!(self, Self::Fixed { .. })
+    pub fn is_global(&self) -> bool {
+        matches!(self, Self::Global { .. })
     }
 
     pub fn set_top(&mut self, value: f32) {
@@ -149,13 +149,13 @@ impl Position {
                 };
                 Point2D::new(x, y)
             }
-            Position::Fixed(fixed_position) => {
+            Position::Global(global_position) => {
                 let PositionSides {
                     top,
                     right,
                     bottom,
                     left,
-                } = fixed_position.deref();
+                } = global_position.deref();
                 let y = {
                     let mut y = 0.;
                     if let Some(top) = top {
@@ -210,7 +210,7 @@ impl Position {
                 positions.bottom.unwrap_or_default(),
                 positions.left.unwrap_or_default()
             ),
-            Self::Fixed(positions) => format!(
+            Self::Global(positions) => format!(
                 "{}, {}, {}, {}",
                 positions.top.unwrap_or_default(),
                 positions.right.unwrap_or_default(),
