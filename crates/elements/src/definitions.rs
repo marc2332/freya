@@ -342,7 +342,7 @@ builder_constructors! {
         opacity,
 
         // Reference
-        reference: Reference,
+        reference,
 
         // Accessibility
         a11y_id,
