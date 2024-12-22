@@ -156,19 +156,42 @@ fn Column(data: Signal<Vec<Food>>, state: FoodState) -> Element {
                             height: "70",
                             function: Function::Elastic,
                             duration: Duration::from_secs(1),
-                                rect {
-                                width: "fill",
-                                height: "fill",
-                                background: "rgb(210, 210, 210)",
-                                corner_radius: "8",
-                                padding: "10",
-                                label {
-                                    "{food.quantity} of {food.name} in {food.state:?} state."
-                                }
+                            Card {
+                                food: food.clone()
                             }
                         }
                     }
                 }
+            }
+        }
+    )
+}
+
+#[component]
+fn Card(food: Food) -> Element {
+    let animation = use_animation(move |ctx| {
+        ctx.auto_start(true);
+        ctx.with(
+            AnimNum::new(0.7, 1.)
+                .time(1000)
+                .function(Function::Elastic)
+                .ease(Ease::Out),
+        )
+    });
+
+    let scale = animation.get();
+    let scale = scale.read().as_f32();
+
+    rsx!(
+        rect {
+            width: "fill",
+            height: "fill",
+            background: "rgb(210, 210, 210)",
+            corner_radius: "8",
+            padding: "10",
+            scale: "{scale}",
+            label {
+                "{food.quantity} of {food.name} in {food.state:?} state."
             }
         }
     )

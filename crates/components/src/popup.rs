@@ -7,7 +7,15 @@ use freya_elements::{
     },
 };
 use freya_hooks::{
-    theme_with, use_animation, use_applied_theme, AnimNum, ButtonThemeWith, Ease, Function, PopupTheme, PopupThemeWith
+    theme_with,
+    use_animation,
+    use_applied_theme,
+    AnimNum,
+    ButtonThemeWith,
+    Ease,
+    Function,
+    PopupTheme,
+    PopupThemeWith,
 };
 
 use crate::{

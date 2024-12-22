@@ -74,7 +74,7 @@ pub trait ElementUtils {
         layout: &Torin<NodeId>,
         scale_factor: f32,
     ) -> Option<Area> {
-        let mut drawing_area = self.drawing_area(layout_node, node_ref, scale_factor);
+        let mut drawing_area = self.drawing_area(layout_node, node_ref, layout, scale_factor);
         let node_viewports = node_ref.get::<ViewportState>().unwrap();
 
         for viewport_id in &node_viewports.viewports {
@@ -95,10 +95,25 @@ pub trait ElementUtils {
         &self,
         layout_node: &LayoutNode,
         node_ref: &DioxusNode,
+        layout: &Torin<NodeId>,
         scale_factor: f32,
     ) -> Area {
-        let drawing_area = self.element_drawing_area(layout_node, node_ref, scale_factor);
+        let mut drawing_area = self.element_drawing_area(layout_node, node_ref, scale_factor);
         let transform = node_ref.get::<TransformState>().unwrap();
+
+        for (id, scale) in &transform.scales {
+            let layout_node = layout.get(*id).unwrap();
+            let center = layout_node.area.center();
+            drawing_area = drawing_area.translate(-center.to_vector());
+            drawing_area = drawing_area.scale(*scale, *scale);
+            drawing_area = drawing_area.translate(center.to_vector());
+
+            // Inflate the area by 2px * scale in each side to cover potential off-bounds rendering caused by antialising
+            let antialising_extra = (2.0 * scale).max(1.0);
+            drawing_area = drawing_area
+                .inflate(antialising_extra, antialising_extra)
+                .round_out();
+        }
 
         if !transform.rotations.is_empty() {
             let area = layout_node.visible_area();
@@ -252,14 +267,15 @@ impl ElementUtils for ElementWithUtils {
         &self,
         layout_node: &LayoutNode,
         node_ref: &DioxusNode,
+        layout: &Torin<NodeId>,
         scale_factor: f32,
     ) -> Area {
         match self {
-            Self::Rect(el) => el.drawing_area(layout_node, node_ref, scale_factor),
-            Self::Svg(el) => el.drawing_area(layout_node, node_ref, scale_factor),
-            Self::Paragraph(el) => el.drawing_area(layout_node, node_ref, scale_factor),
-            Self::Image(el) => el.drawing_area(layout_node, node_ref, scale_factor),
-            Self::Label(el) => el.drawing_area(layout_node, node_ref, scale_factor),
+            Self::Rect(el) => el.drawing_area(layout_node, node_ref, layout, scale_factor),
+            Self::Svg(el) => el.drawing_area(layout_node, node_ref, layout, scale_factor),
+            Self::Paragraph(el) => el.drawing_area(layout_node, node_ref, layout, scale_factor),
+            Self::Image(el) => el.drawing_area(layout_node, node_ref, layout, scale_factor),
+            Self::Label(el) => el.drawing_area(layout_node, node_ref, layout, scale_factor),
         }
     }
 

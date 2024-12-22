@@ -97,22 +97,45 @@ fn app() -> Element {
                             Function::Elastic => Duration::from_millis(1100),
                             _ => Duration::from_millis(250),
                         },
-                        rect {
-                            width: "100%",
-                            height: "100%",
-                            background: "rgb(240, 200, 50)",
-                            corner_radius: "999",
-                            padding: "6 10",
-                            main_align: "center",
-                            cross_align: "center",
-                            label {
-                                font_size: "14",
-                                color: "black",
-                                "{e}"
-                            }
+                        Card {
+                            "{e}"
                         }
                     }
                 ))}
+            }
+        }
+    )
+}
+
+#[component]
+fn Card(children: Element) -> Element {
+    let animation = use_animation(move |ctx| {
+        ctx.auto_start(true);
+        ctx.with(
+            AnimNum::new(0.9, 1.)
+                .time(300)
+                .function(Function::Elastic)
+                .ease(Ease::Out),
+        )
+    });
+
+    let scale = animation.get();
+    let scale = scale.read().as_f32();
+
+    rsx!(
+        rect {
+            width: "100%",
+            height: "100%",
+            background: "rgb(240, 200, 50)",
+            corner_radius: "999",
+            padding: "6 10",
+            main_align: "center",
+            cross_align: "center",
+            scale: "{scale}",
+            label {
+                font_size: "14",
+                color: "black",
+                {children}
             }
         }
     )
