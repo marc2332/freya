@@ -21,7 +21,10 @@ use freya_node_state::{
     CustomAttributeValues,
     LayerState,
 };
-use torin::torin::Torin;
+use torin::torin::{
+    DirtyReason,
+    Torin,
+};
 
 use crate::prelude::{
     Compositor,
@@ -160,12 +163,34 @@ impl<'a> WriteMutations for MutationsWriter<'a> {
 
     fn insert_nodes_after(&mut self, id: dioxus_core::ElementId, m: usize) {
         if m > 0 {
+            self.layout.invalidate_with_reason(
+                self.native_writer.state.element_to_node_id(id),
+                DirtyReason::Reorder,
+            );
+            let new_nodes =
+                &self.native_writer.state.stack[self.native_writer.state.stack.len() - m..];
+            for new in new_nodes {
+                self.layout
+                    .invalidate_with_reason(*new, DirtyReason::Reorder);
+            }
+
             self.native_writer.insert_nodes_after(id, m);
         }
     }
 
     fn insert_nodes_before(&mut self, id: dioxus_core::ElementId, m: usize) {
         if m > 0 {
+            self.layout.invalidate_with_reason(
+                self.native_writer.state.element_to_node_id(id),
+                DirtyReason::Reorder,
+            );
+            let new_nodes =
+                &self.native_writer.state.stack[self.native_writer.state.stack.len() - m..];
+            for new in new_nodes {
+                self.layout
+                    .invalidate_with_reason(*new, DirtyReason::Reorder);
+            }
+
             self.native_writer.insert_nodes_before(id, m);
         }
     }
