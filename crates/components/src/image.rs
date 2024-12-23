@@ -1,6 +1,6 @@
 /// Generate a Dioxus component rendering the specified image.
 ///
-/// Example:
+/// ### Example
 ///
 /// ```no_run
 /// # use freya::prelude::*;
