@@ -116,17 +116,22 @@ mod test {
 
         let mut utils = launch_test(app);
 
+        // Disable event loop ticker
+        utils.config().event_loop_ticker = false;
+
         let root = utils.root();
         let label = root.get(0).get(0).get(0);
 
         utils.wait_for_update().await;
         utils.wait_for_update().await;
+        utils.wait_for_update().await;
         assert_eq!(label.layout().unwrap().area.min_x(), 50.);
 
-        sleep(Duration::from_millis(50)).await;
+        sleep(Duration::from_millis(15)).await;
         utils.wait_for_update().await;
         utils.wait_for_update().await;
-        assert!(label.layout().unwrap().area.min_x() < 0.);
+        utils.wait_for_update().await;
+        assert!(label.layout().unwrap().area.min_x() < -40.);
 
         sleep(Duration::from_millis(50)).await;
         utils.wait_for_update().await;
