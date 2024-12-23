@@ -140,6 +140,6 @@ mod test {
         utils.wait_for_update().await;
         utils.wait_for_update().await;
         utils.wait_for_update().await;
-        assert!(label.layout().unwrap().area.min_x() > 0.);
+        assert_eq!(label.layout().unwrap().area.min_x(), 999.);
     }
 }
