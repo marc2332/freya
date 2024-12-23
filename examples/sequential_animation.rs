@@ -11,7 +11,6 @@ fn main() {
     launch_with_props(app, "Counter", (600.0, 350.0));
 }
 
-
 fn app() -> Element {
     let mut toggle = use_signal(|| true);
     let mut animations = use_animation(|ctx| {

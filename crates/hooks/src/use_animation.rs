@@ -262,6 +262,7 @@ impl AnimatedValue for AnimColor {
 }
 
 /// Chain a sequence of animated values.
+#[derive(Default)]
 pub struct AnimSequential {
     values: Vec<Box<dyn AnimatedValue>>,
     curr_value: usize,
@@ -270,11 +271,7 @@ pub struct AnimSequential {
 
 impl AnimSequential {
     pub fn new() -> Self {
-        Self {
-            values: Vec::new(),
-            curr_value: 0,
-            acc_index: 0,
-        }
+        Self::default()
     }
 
     pub fn with(mut self, animated_value: impl AnimatedValue + 'static) -> Self {
@@ -429,6 +426,7 @@ pub trait AnimatedValue {
     }
 
     /// Read the inner animated valued. Will panic if not supported.
+    #[allow(clippy::borrowed_box)]
     fn sub(&self, _index: usize) -> &Box<dyn AnimatedValue> {
         unimplemented!("Sub values are not supported in this animated value.")
     }
