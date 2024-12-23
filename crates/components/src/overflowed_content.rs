@@ -131,7 +131,6 @@ mod test {
         utils.wait_for_update().await;
         utils.wait_for_update().await;
         utils.wait_for_update().await;
-        utils.wait_for_update().await;
         #[cfg(target = "linux")]
         assert_eq!(label.layout().unwrap().area.min_x(), -30.);
 
