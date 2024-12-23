@@ -182,10 +182,6 @@ impl AnimatedValue for AnimColor {
         self.time
     }
 
-    fn as_f32(&self) -> f32 {
-        panic!("This is not a f32.")
-    }
-
     fn as_string(&self) -> String {
         format!(
             "rgb({}, {}, {}, {})",
@@ -265,6 +261,68 @@ impl AnimatedValue for AnimColor {
     }
 }
 
+/// Chain a sequence of animated values.
+pub struct AnimSequential {
+    values: Vec<Box<dyn AnimatedValue>>,
+    curr_value: usize,
+    acc_index: u128,
+}
+
+impl AnimSequential {
+    pub fn new() -> Self {
+        Self {
+            values: Vec::new(),
+            curr_value: 0,
+            acc_index: 0,
+        }
+    }
+
+    pub fn with(mut self, animated_value: impl AnimatedValue + 'static) -> Self {
+        self.values.push(Box::new(animated_value));
+        self
+    }
+}
+
+impl AnimatedValue for AnimSequential {
+    fn advance(&mut self, index: u128, direction: AnimDirection) {
+        if let Some(value) = self.values.get_mut(self.curr_value) {
+            let index = index - self.acc_index;
+            value.advance(index, direction);
+
+            if value.is_finished(index, direction) {
+                self.curr_value += 1;
+                self.acc_index += index;
+            }
+        }
+    }
+
+    fn is_finished(&self, index: u128, direction: AnimDirection) -> bool {
+        if let Some(value) = self.values.get(self.curr_value) {
+            value.is_finished(index, direction)
+        } else {
+            true
+        }
+    }
+
+    fn prepare(&mut self, direction: AnimDirection) {
+        self.acc_index = 0;
+        self.curr_value = 0;
+        for val in &mut self.values {
+            val.prepare(direction);
+        }
+    }
+
+    fn time(&self) -> std::time::Duration {
+        self.values
+            .iter()
+            .fold(Duration::default(), |acc, v| acc + v.time())
+    }
+
+    fn sub(&self, index: usize) -> &Box<dyn AnimatedValue> {
+        &self.values[index]
+    }
+}
+
 /// Animate a numeric value.
 pub struct AnimNum {
     origin: f32,
@@ -323,10 +381,6 @@ impl AnimatedValue for AnimNum {
         self.value
     }
 
-    fn as_string(&self) -> String {
-        panic!("This is not a String");
-    }
-
     fn prepare(&mut self, direction: AnimDirection) {
         match direction {
             AnimDirection::Forward => self.value = self.origin,
@@ -339,9 +393,9 @@ impl AnimatedValue for AnimNum {
     fn is_finished(&self, index: u128, direction: AnimDirection) -> bool {
         match direction {
             AnimDirection::Forward => {
-                index > self.time.as_millis() && self.value >= self.destination
+                index > self.time.as_millis() && self.value == self.destination
             }
-            AnimDirection::Reverse => index > self.time.as_millis() && self.value <= self.origin,
+            AnimDirection::Reverse => index > self.time.as_millis() && self.value == self.origin,
         }
     }
 
@@ -357,16 +411,27 @@ impl AnimatedValue for AnimNum {
             self.time,
             self.ease,
             self.function,
-        )
+        );
     }
 }
 
 pub trait AnimatedValue {
     fn time(&self) -> Duration;
 
-    fn as_f32(&self) -> f32;
+    /// Read the animated value as a [f32]. Will panic if not supported.
+    fn as_f32(&self) -> f32 {
+        unimplemented!("f32 is not supported in this animated value.")
+    }
 
-    fn as_string(&self) -> String;
+    /// Read the animated value as a [String]. Will panic if not supported.
+    fn as_string(&self) -> String {
+        unimplemented!("String is not supported in this animated value.")
+    }
+
+    /// Read the inner animated valued. Will panic if not supported.
+    fn sub(&self, _index: usize) -> &Box<dyn AnimatedValue> {
+        unimplemented!("Sub values are not supported in this animated value.")
+    }
 
     fn prepare(&mut self, direction: AnimDirection);
 
