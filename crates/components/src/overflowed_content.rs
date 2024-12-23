@@ -126,6 +126,7 @@ mod test {
         sleep(Duration::from_millis(50)).await;
         utils.wait_for_update().await;
         utils.wait_for_update().await;
+        utils.wait_for_update().await;
         assert!(label.layout().unwrap().area.min_x() < 0.);
 
         sleep(Duration::from_millis(50)).await;
