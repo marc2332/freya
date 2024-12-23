@@ -5,6 +5,9 @@ on:
       - 'crates/**/*'
       - '.github/workflows/deploy_docs.yml'
 
+env:
+  RUSTDOCFLAGS: "-D warnings"
+
 jobs:
   deploy:
     name: Deploy
