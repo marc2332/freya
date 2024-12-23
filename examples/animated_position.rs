@@ -70,10 +70,10 @@ fn app() -> Element {
                     value: function(),
                     for func in &[Function::Quad, Function::Elastic, Function::Quart, Function::Linear, Function::Circ] {
                         DropdownItem {
-                            value: func.clone(),
+                            value: *func,
                             onclick: {
                                 to_owned![func];
-                                move |_| function.set(func.clone())
+                                move |_| function.set(func)
                             },
                             label { "{func:?}" }
                         }
