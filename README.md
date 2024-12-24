@@ -83,7 +83,7 @@ You can also try [`freya-template`](https://github.com/marc2332/freya-template)
 Add Freya and Dioxus as dependencies:
 
 ```toml
-freya = "0.2"
+freya = "0.3.0-rc.0"
 dioxus = { version = "0.5", features = ["macro", "hooks"], default-features = false }
 ```
 ### Contributing 🧙‍♂️
