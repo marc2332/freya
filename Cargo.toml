@@ -15,6 +15,7 @@ custom-tokio-rt = ["freya/custom-tokio-rt"]
 performance-overlay = ["freya/performance-overlay"]
 fade-cached-incremental-areas = ["freya/fade-cached-incremental-areas"]
 disable-zoom-shortcuts = ["freya/disable-zoom-shortcuts"]
+docs = ["freya/docs"]
 
 [patch.crates-io]
 # dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
@@ -52,6 +53,7 @@ dioxus-core = { version = "0.5" }
 dioxus-hot-reload = { version = "0.5", features = ["file_watcher"], default-features = false }
 dioxus-router = { version = "0.5", default-features = false }
 dioxus-clipboard = "0.1"
+dioxus-i18n = "0.3"
 
 skia-safe = { version = "0.80.0", features = ["gl", "textlayout", "svg"] }
 
@@ -84,7 +86,7 @@ freya-core = { workspace = true }
 freya-testing = { workspace = true }
 reqwest = { version = "0.12.0", features = ["json"] }
 serde = "1.0.189"
-dioxus-i18n = "0.2"
+dioxus-i18n = { workspace = true }
 rand = "0.8.5"
 dioxus-router = { workspace = true }
 itertools = "0.13.0"

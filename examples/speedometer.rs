@@ -89,7 +89,7 @@ fn Speedometer(speed: ReadOnlySignal<u8>, width: f32, height: f32) -> Element {
         Box::new(move |ctx| {
             ctx.canvas.translate((ctx.area.min_x(), ctx.area.min_y()));
 
-            draw_speedometer(&mut ctx.canvas, &ctx.area, &mut ctx.font_collection, speed);
+            draw_speedometer(ctx.canvas, &ctx.area, ctx.font_collection, speed);
 
             ctx.canvas.restore();
         })
@@ -106,7 +106,7 @@ fn Speedometer(speed: ReadOnlySignal<u8>, width: f32, height: f32) -> Element {
 fn draw_speedometer(
     canvas: &skia_safe::Canvas,
     area: &Area,
-    font_collection: &mut FontCollection,
+    font_collection: &FontCollection,
     speed: u8,
 ) {
     let center = Point::new(area.width() * 0.5, area.height() * 0.5);
@@ -161,7 +161,7 @@ fn draw_speedometer(
 fn draw_text(
     text: &str,
     canvas: &skia_safe::Canvas,
-    font_collection: &mut FontCollection,
+    font_collection: &FontCollection,
     width: f32,
     x: f32,
     y: f32,

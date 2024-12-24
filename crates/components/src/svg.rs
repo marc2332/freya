@@ -1,6 +1,6 @@
 /// Generate a Dioxus component rendering the specified SVG.
 ///
-/// Example:
+/// ### Example
 ///
 /// ```no_run
 /// # use freya::prelude::*;

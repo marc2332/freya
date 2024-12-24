@@ -10,7 +10,7 @@ use crate::{
 };
 
 #[derive(Default, PartialEq, Clone, Debug)]
-pub struct AbsolutePosition {
+pub struct PositionSides {
     pub top: Option<f32>,
     pub right: Option<f32>,
     pub bottom: Option<f32>,
@@ -22,14 +22,24 @@ pub enum Position {
     #[default]
     Stacked,
 
-    Absolute(Box<AbsolutePosition>),
+    Absolute(Box<PositionSides>),
+    Global(Box<PositionSides>),
 }
 
 impl Position {
     pub fn is_empty(&self) -> bool {
         match self {
             Self::Absolute(absolute_position) => {
-                let AbsolutePosition {
+                let PositionSides {
+                    top,
+                    right,
+                    bottom,
+                    left,
+                } = absolute_position.deref();
+                top.is_some() && right.is_some() && bottom.is_some() && left.is_some()
+            }
+            Self::Global(absolute_position) => {
+                let PositionSides {
                     top,
                     right,
                     bottom,
@@ -42,7 +52,16 @@ impl Position {
     }
 
     pub fn new_absolute() -> Self {
-        Self::Absolute(Box::new(AbsolutePosition {
+        Self::Absolute(Box::new(PositionSides {
+            top: None,
+            right: None,
+            bottom: None,
+            left: None,
+        }))
+    }
+
+    pub fn new_global() -> Self {
+        Self::Global(Box::new(PositionSides {
             top: None,
             right: None,
             bottom: None,
@@ -52,6 +71,10 @@ impl Position {
 
     pub fn is_absolute(&self) -> bool {
         matches!(self, Self::Absolute { .. })
+    }
+
+    pub fn is_global(&self) -> bool {
+        matches!(self, Self::Global { .. })
     }
 
     pub fn set_top(&mut self, value: f32) {
@@ -95,11 +118,12 @@ impl Position {
         available_parent_area: &Area,
         parent_area: &Area,
         area_size: &Size2D,
+        root_area: &Area,
     ) -> Point2D {
         match self {
             Position::Stacked => available_parent_area.origin,
             Position::Absolute(absolute_position) => {
-                let AbsolutePosition {
+                let PositionSides {
                     top,
                     right,
                     bottom,
@@ -120,6 +144,33 @@ impl Position {
                         x += left;
                     } else if let Some(right) = right {
                         x = parent_area.max_x() - right - area_size.width;
+                    }
+                    x
+                };
+                Point2D::new(x, y)
+            }
+            Position::Global(global_position) => {
+                let PositionSides {
+                    top,
+                    right,
+                    bottom,
+                    left,
+                } = global_position.deref();
+                let y = {
+                    let mut y = 0.;
+                    if let Some(top) = top {
+                        y = *top;
+                    } else if let Some(bottom) = bottom {
+                        y = root_area.max_y() - bottom;
+                    }
+                    y
+                };
+                let x = {
+                    let mut x = 0.;
+                    if let Some(left) = left {
+                        x = *left;
+                    } else if let Some(right) = right {
+                        x = root_area.max_x() - right;
                     }
                     x
                 };
@@ -153,6 +204,13 @@ impl Position {
         match self {
             Self::Stacked => "stacked".to_string(),
             Self::Absolute(positions) => format!(
+                "{}, {}, {}, {}",
+                positions.top.unwrap_or_default(),
+                positions.right.unwrap_or_default(),
+                positions.bottom.unwrap_or_default(),
+                positions.left.unwrap_or_default()
+            ),
+            Self::Global(positions) => format!(
                 "{}, {}, {}, {}",
                 positions.top.unwrap_or_default(),
                 positions.right.unwrap_or_default(),

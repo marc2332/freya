@@ -200,9 +200,12 @@ where
             };
 
             // Create the areas
-            let area_origin =
-                node.position
-                    .get_origin(available_parent_area, parent_area, &area_size);
+            let area_origin = node.position.get_origin(
+                available_parent_area,
+                parent_area,
+                &area_size,
+                &self.layout_metadata.root_area,
+            );
             let mut area = Rect::new(area_origin, area_size);
             let mut inner_area = Rect::new(area_origin, inner_size)
                 .without_gaps(&node.padding)
@@ -372,7 +375,7 @@ where
 
                 let inner_area = initial_phase_inner_area;
 
-                let (_, child_areas) = self.measure_node(
+                let (_, mut child_areas) = self.measure_node(
                     *child_id,
                     &child_data,
                     &inner_area,
@@ -381,6 +384,8 @@ where
                     parent_is_dirty,
                     Phase::Initial,
                 );
+
+                child_areas.area.adjust_size(&child_data);
 
                 // Stack this child into the parent
                 Self::stack_child(
