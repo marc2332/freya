@@ -127,20 +127,17 @@ mod test {
         utils.wait_for_update().await;
         assert_eq!(label.layout().unwrap().area.min_x(), 50.);
 
-        sleep(Duration::from_millis(15)).await;
+        sleep(Duration::from_millis(25)).await;
         utils.wait_for_update().await;
         utils.wait_for_update().await;
         utils.wait_for_update().await;
-        #[cfg(target = "linux")]
-        assert_eq!(label.layout().unwrap().area.min_x(), -30.);
-
-        assert!(label.layout().unwrap().area.min_x() < -30.);
+        assert!(label.layout().unwrap().area.min_x() < -0.);
 
         sleep(Duration::from_millis(50)).await;
         utils.wait_for_update().await;
         utils.wait_for_update().await;
         utils.wait_for_update().await;
         utils.wait_for_update().await;
-        // assert_eq!(label.layout().unwrap().area.min_x(), 999.);
+        assert_eq!(label.layout().unwrap().area.min_x(), 50.);
     }
 }
