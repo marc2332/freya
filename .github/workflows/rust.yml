@@ -37,7 +37,7 @@ jobs:
     - name: Check examples
       run: cargo check --examples
     - name: Lint
-      run: cargo clippy --workspace -- -D warnings
+      run: cargo clippy --workspace --examples --features docs -- -D warnings
     - name: Format
       run: cargo +nightly fmt --all --check -- --error-on-unformatted --unstable-features
     - name: Run Linux tests
@@ -50,14 +50,14 @@ jobs:
       if: runner.os != 'Linux'
       run: cargo nextest run --workspace --exclude examples
     - name: Run doctests
-      run: cargo test --workspace --doc
+      run: cargo test --workspace --doc --features docs
     - name: Run coverage
       if: runner.os == 'Linux'
       run: |
         rustup component add llvm-tools-preview 
         curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf -
         ./grcov . --binary-path ./target/debug/deps -s . -t lcov --branch --ignore-not-existing --ignore "../*" --ignore "/*" -o cov.lcov
-    - uses: codecov/codecov-action@v4
+    - uses: codecov/codecov-action@v5
       if: runner.os == 'Linux'
       with:
         token: ${{ secrets.CODECOV_TOKEN }}

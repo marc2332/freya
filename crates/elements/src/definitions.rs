@@ -418,6 +418,9 @@ builder_constructors! {
         #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
 
+        // Reference
+        reference: Reference,
+
         // Accessibility
         a11y_id: String,
         a11y_auto_focus: String,
@@ -858,8 +861,13 @@ builder_constructors! {
         opacity: String,
 
         // Svg
+        #[doc = include_str!("_docs/attributes/color.md")]
+        color: String,
         svg_data: String,
         svg_content: String,
+        #[doc = include_str!("_docs/attributes/fill_stroke.md")]
+        fill: String,
+        stroke: String,
 
         // Accessibility
         a11y_id: String,

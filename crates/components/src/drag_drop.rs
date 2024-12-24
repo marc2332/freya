@@ -115,6 +115,12 @@ pub struct DropZoneProps<T: 'static + PartialEq + Clone> {
     children: Element,
     /// Handler for the `ondrop` event.
     ondrop: EventHandler<T>,
+    /// Width of the [DropZone].
+    #[props(default = "auto".to_string())]
+    width: String,
+    /// Height of the [DropZone].
+    #[props(default = "auto".to_string())]
+    height: String,
 }
 
 /// Elements from [`DragZone`]s can be dropped here.
@@ -122,7 +128,8 @@ pub struct DropZoneProps<T: 'static + PartialEq + Clone> {
 pub fn DropZone<T: 'static + Clone + PartialEq>(props: DropZoneProps<T>) -> Element {
     let mut drags = use_context::<Signal<Option<T>>>();
 
-    let onmouseup = move |_: MouseEvent| {
+    let onmouseup = move |e: MouseEvent| {
+        e.stop_propagation();
         if let Some(current_drags) = &*drags.read() {
             props.ondrop.call(current_drags.clone());
         }
@@ -134,6 +141,8 @@ pub fn DropZone<T: 'static + Clone + PartialEq>(props: DropZoneProps<T>) -> Elem
     rsx!(
         rect {
             onmouseup,
+            width: props.width,
+            height: props.height,
             {props.children}
         }
     )

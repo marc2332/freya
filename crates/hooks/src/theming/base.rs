@@ -259,4 +259,8 @@ pub(crate) const BASE_THEME: Theme = Theme {
         width: cow_borrowed!("auto"),
         height: cow_borrowed!("auto"),
     },
+    resizable_handle: ResizableHandleTheme {
+        background: cow_borrowed!("key(secondary_surface)"),
+        hover_background: cow_borrowed!("key(surface)"),
+    },
 };
