@@ -5,7 +5,7 @@
 //! It uses a model where you compose the app by splitting the UI in different components that return pieces of UI or call other components, this is because
 //! Freya runs on 🧬 [Dioxus](https://dioxuslabs.com), a renderer-agnostic UI library inspired by ReactJS.
 //!
-//! Even though you might have seen that Dioxus renders to HTML, that it uses WASM, or that it uses CSS. this does not apply to Freya. In fact, Freya only uses some of the core
+//! Even though you might have seen that Dioxus render to HTML, use CSS/JavaScript/WASM/WebView/WGPU. this does not apply to Freya. In fact, Freya only uses some of the core
 //! crates of Dioxus, which means that you will be writing Dioxus components and using some of its APIs but, the elements, attributes, styling, layout, events, and more things
 //! will be provided by Freya.
 //!
@@ -32,7 +32,7 @@
 //!            background: "rgb(35, 35, 35)",
 //!            color: "white",
 //!            padding: "12",
-//!            onclick: move |_| count += 1, // **Update** the state
+//!            onclick: move |_| count += 1, // **Update** the state on click events
 //!            label { "Click to increase -> {count}" } // Display the **state**
 //!        }
 //!    )

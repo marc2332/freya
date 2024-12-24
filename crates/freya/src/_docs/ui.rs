@@ -31,7 +31,6 @@
 //!
 //! ```rust, no_run
 //! # use freya::prelude::*;
-//!
 //! # { rsx!(
 //! // Element, always in lower case
 //! rect {
@@ -86,7 +85,7 @@
 //! # };
 //! ```
 //!
-//! Or just use if, for-loops, etc.. Inside of the RSX:
+//! Or just use if, for-loops, etc... inside of the RSX:
 //!
 //! ```rust, no_run
 //! # use freya::prelude::*;
@@ -103,8 +102,7 @@
 //!                 "Value -> {i}"
 //!             }
 //!         }
-//!         // When this condition is not met the inner element will
-//!         // simply not be rendered
+//!         // When this condition is not met the inner element will simply not be rendered
 //!         if show_text {
 //!             label {
 //!                 "Hello, World!"
