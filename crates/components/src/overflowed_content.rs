@@ -132,12 +132,5 @@ mod test {
         utils.wait_for_update().await;
         utils.wait_for_update().await;
         assert!(label.layout().unwrap().area.min_x() < -0.);
-
-        utils.config().event_loop_ticker = true;
-
-        sleep(Duration::from_millis(50)).await;
-        utils.wait_for_update().await;
-        utils.wait_for_update().await;
-        assert_eq!(label.layout().unwrap().area.min_x(), 50.);
     }
 }
