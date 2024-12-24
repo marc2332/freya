@@ -36,10 +36,16 @@ fn app() -> Element {
                     .ease(Ease::InOut)
                     .function(Function::Bounce),
             ),
+            ctx.with(
+                AnimNum::new(0.8, 1.3)
+                    .time(550)
+                    .ease(Ease::InOut)
+                    .function(Function::Bounce),
+            ),
         )
     });
 
-    let (size, color, rotate, radius) = animations.get();
+    let (size, color, rotate, radius, scale) = animations.get();
 
     rsx!(
         rect {
@@ -56,6 +62,7 @@ fn app() -> Element {
                 toggle.toggle();
             },
             rect {
+                scale: "{scale.read().as_f32()}",
                 width: "{size.read().as_f32()}",
                 rotate: "{rotate.read().as_f32()}deg",
                 height: "50%",
