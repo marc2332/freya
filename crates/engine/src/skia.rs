@@ -51,7 +51,6 @@ pub use skia_safe::{
         TextDecorationStyle,
         TextDirection,
         TextHeightBehavior,
-        TextIndex,
         TextRange,
         TextShadow,
         TextStyle,

@@ -1,9 +1,6 @@
 use std::sync::Arc;
 
-use freya_common::{
-    CachedParagraph,
-    NodeReferenceLayout,
-};
+use freya_common::NodeReferenceLayout;
 use freya_engine::prelude::*;
 use freya_native_core::{
     prelude::{
@@ -26,6 +23,7 @@ use torin::prelude::{
 use super::{
     create_label,
     create_paragraph,
+    ParagraphCache,
 };
 use crate::{
     dom::*,
@@ -38,6 +36,7 @@ pub struct SkiaMeasurer<'a> {
     pub rdom: &'a DioxusDOM,
     pub default_fonts: &'a [String],
     pub scale_factor: f32,
+    pub paragraph_cache: &'a mut ParagraphCache,
 }
 
 impl<'a> SkiaMeasurer<'a> {
@@ -46,12 +45,14 @@ impl<'a> SkiaMeasurer<'a> {
         font_collection: &'a FontCollection,
         default_fonts: &'a [String],
         scale_factor: f32,
+        paragraph_cache: &'a mut ParagraphCache,
     ) -> Self {
         Self {
             font_collection,
             rdom,
             default_fonts,
             scale_factor,
+            paragraph_cache,
         }
     }
 }
@@ -66,6 +67,8 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
         let node = self.rdom.get(node_id).unwrap();
         let node_type = node.node_type();
 
+        // println!("Measured in {}ms", a.elapsed().as_millis());
+
         match &*node_type {
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Label => {
                 let ParagraphData { paragraph, size } = create_label(
@@ -74,9 +77,10 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                     self.font_collection,
                     self.default_fonts,
                     self.scale_factor,
+                    self.paragraph_cache,
                 );
                 let mut map = SendAnyMap::new();
-                map.insert(CachedParagraph(paragraph, size.height));
+                map.insert(paragraph);
                 Some((size, Arc::new(map)))
             }
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Paragraph => {
@@ -87,9 +91,10 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                     false,
                     self.default_fonts,
                     self.scale_factor,
+                    self.paragraph_cache,
                 );
                 let mut map = SendAnyMap::new();
-                map.insert(CachedParagraph(paragraph, size.height));
+                map.insert(paragraph);
                 Some((size, Arc::new(map)))
             }
             _ => None,
