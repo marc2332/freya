@@ -32,8 +32,8 @@ pub struct DropdownItemProps<T: 'static + Clone + PartialEq> {
     pub children: Element,
     /// Selected value.
     pub value: T,
-    /// Handler for the `onclick` event.
-    pub onclick: Option<EventHandler<()>>,
+    /// Handler for the `onpress` event.
+    pub onpress: Option<EventHandler<()>>,
 }
 
 /// Current status of the DropdownItem.
@@ -54,7 +54,7 @@ pub fn DropdownItem<T>(
         theme,
         children,
         value,
-        onclick,
+        onpress,
     }: DropdownItemProps<T>,
 ) -> Element
 where
@@ -95,19 +95,19 @@ where
     };
 
     let onglobalkeydown = {
-        to_owned![onclick];
+        to_owned![onpress];
         move |ev: KeyboardEvent| {
             if ev.key == Key::Enter && is_focused {
-                if let Some(onclick) = &onclick {
-                    onclick.call(())
+                if let Some(onpress) = &onpress {
+                    onpress.call(())
                 }
             }
         }
     };
 
     let onclick = move |_: MouseEvent| {
-        if let Some(onclick) = &onclick {
-            onclick.call(())
+        if let Some(onpress) = &onpress {
+            onpress.call(())
         }
     };
 
@@ -169,7 +169,7 @@ pub enum DropdownStatus {
 ///             for ch in values {
 ///                 DropdownItem {
 ///                     value: ch.to_string(),
-///                     onclick: {
+///                     onpress: {
 ///                         to_owned![ch];
 ///                         move |_| selected_dropdown.set(ch.clone())
 ///                     },
@@ -354,7 +354,7 @@ mod test {
                     for ch in values {
                         DropdownItem {
                             value: ch.clone(),
-                            onclick: {
+                            onpress: {
                                 to_owned![ch];
                                 move |_| selected_dropdown.set(ch.clone())
                             },

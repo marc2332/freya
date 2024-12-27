@@ -192,6 +192,8 @@ pub struct BaseButtonProps {
     /// Inner children for the button.
     pub children: Element,
     /// Event handler for when the button is pressed.
+    ///
+    /// This will fire upon **mouse click** or pressing the **enter key**.
     pub onpress: Option<EventHandler<PressEvent>>,
     /// Event handler for when the button is clicked. Not recommended, use `onpress` instead.
     pub onclick: Option<EventHandler<()>>,

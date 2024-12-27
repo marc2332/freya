@@ -115,7 +115,7 @@ pub fn Tab(
     children: Element,
     theme: Option<TabThemeWith>,
     /// Optionally handle the `onclick` event in the SidebarItem.
-    onclick: Option<EventHandler<()>>,
+    onpress: Option<EventHandler<()>>,
 ) -> Element {
     let focus = use_focus();
     let mut status = use_signal(TabStatus::default);
@@ -142,8 +142,8 @@ pub fn Tab(
     });
 
     let onclick = move |_| {
-        if let Some(onclick) = &onclick {
-            onclick.call(());
+        if let Some(onpress) = &onpress {
+            onpress.call(());
         }
     };
 
