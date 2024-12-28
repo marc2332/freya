@@ -186,7 +186,7 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
         SafeDOM,
     };
 
-    let fdom = FreyaDOM::default();
+    let fdom = FreyaDOM::new(config.max_paragraph_cache_size);
     let sdom = SafeDOM::new(fdom);
 
     #[cfg(feature = "tracing-subscriber")]

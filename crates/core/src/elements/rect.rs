@@ -26,6 +26,7 @@ use crate::{
         render_border,
         render_shadow,
         BorderShape,
+        ParagraphCache,
     },
 };
 
@@ -89,6 +90,7 @@ impl ElementUtils for RectElement {
         _font_manager: &FontMgr,
         _default_fonts: &[String],
         scale_factor: f32,
+        _paragraph_cache: &mut ParagraphCache,
     ) {
         let node_style = &*node_ref.get::<StyleState>().unwrap();
 

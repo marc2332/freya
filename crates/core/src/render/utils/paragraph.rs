@@ -1,3 +1,10 @@
+use std::{
+    cell::RefCell,
+    rc::Rc,
+    vec,
+};
+
+use freya_common::CachedParagraph;
 use freya_engine::prelude::*;
 use freya_native_core::{
     node::ElementNode,
@@ -11,16 +18,24 @@ use freya_node_state::{
     HighlightMode,
     LayoutState,
 };
+use rustc_hash::FxBuildHasher;
 use torin::prelude::{
     Alignment,
     Area,
     Size2D,
 };
 
-use crate::dom::DioxusNode;
+use crate::{
+    dom::DioxusNode,
+    render::{
+        ParagraphCache,
+        ParagraphCacheKey,
+        ParagraphCacheText,
+    },
+};
 
 pub struct ParagraphData {
-    pub paragraph: Paragraph,
+    pub paragraph: CachedParagraph,
     pub size: Size2D,
 }
 
@@ -32,24 +47,14 @@ pub fn create_paragraph(
     is_rendering: bool,
     default_font_family: &[String],
     scale_factor: f32,
+    paragraph_cache: &mut ParagraphCache,
 ) -> ParagraphData {
     let font_style = &*node.get::<FontStyleState>().unwrap();
 
-    let mut paragraph_style = ParagraphStyle::default();
-    paragraph_style.set_text_align(font_style.text_align);
-    paragraph_style.set_max_lines(font_style.max_lines);
-    paragraph_style.set_replace_tab_characters(true);
-    paragraph_style.set_text_height_behavior(font_style.text_height);
-
-    if let Some(ellipsis) = font_style.text_overflow.get_ellipsis() {
-        paragraph_style.set_ellipsis(ellipsis);
-    }
-
-    let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
-
-    let text_style =
-        font_style.text_style(default_font_family, scale_factor, font_style.text_height);
-    paragraph_builder.push_style(&text_style);
+    let mut paragraph_cache_key: (ParagraphCacheKey, Vec<ParagraphCacheKey>) = (
+        ParagraphCacheKey::new(font_style, default_font_family, None),
+        vec![],
+    );
 
     for text_span in node.children() {
         if let NodeType::Element(ElementNode {
@@ -60,26 +65,76 @@ pub fn create_paragraph(
             let text_node = *text_nodes.first().unwrap();
             let text_node_type = &*text_node.node_type();
             let text_font_style = text_span.get::<FontStyleState>().unwrap();
-            let text_style = text_font_style.text_style(
-                default_font_family,
-                scale_factor,
-                font_style.text_height,
-            );
-            paragraph_builder.push_style(&text_style);
 
-            if let NodeType::Text(text) = text_node_type {
-                paragraph_builder.add_text(text);
+            let span_text = text_node_type.text();
+
+            if let Some(span_text) = span_text {
+                let span_text_hash = FxBuildHasher.hash_one(span_text);
+                let key = ParagraphCacheKey::new(
+                    &text_font_style,
+                    default_font_family,
+                    Some(ParagraphCacheText::Hash(span_text_hash)),
+                );
+
+                paragraph_cache_key.1.push(key);
             }
         }
     }
 
-    if is_rendering {
-        // This is very tricky, but it works! It allows freya to render the cursor at the end of a line.
-        paragraph_builder.add_text(" ");
-    }
+    use std::hash::BuildHasher;
+    let hasher = FxBuildHasher;
+    let paragraph_cache_key_hash = hasher.hash_one(paragraph_cache_key);
 
-    let mut paragraph = paragraph_builder.build();
-    paragraph.layout(
+    let paragraph = paragraph_cache.get(&paragraph_cache_key_hash).cloned();
+
+    let paragraph = paragraph.unwrap_or_else(|| {
+        let mut paragraph_style = ParagraphStyle::default();
+        paragraph_style.set_text_align(font_style.text_align);
+        paragraph_style.set_max_lines(font_style.max_lines);
+        paragraph_style.set_replace_tab_characters(true);
+        paragraph_style.set_text_height_behavior(font_style.text_height);
+
+        if let Some(ellipsis) = font_style.text_overflow.get_ellipsis() {
+            paragraph_style.set_ellipsis(ellipsis);
+        }
+
+        let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
+
+        let text_style =
+            font_style.text_style(default_font_family, scale_factor, font_style.text_height);
+        paragraph_builder.push_style(&text_style);
+
+        for text_span in node.children() {
+            if let NodeType::Element(ElementNode {
+                tag: TagName::Text, ..
+            }) = &*text_span.node_type()
+            {
+                let text_nodes = text_span.children();
+                let text_node = *text_nodes.first().unwrap();
+                let text_node_type = &*text_node.node_type();
+                let text_font_style = text_span.get::<FontStyleState>().unwrap();
+                let text_style = text_font_style.text_style(
+                    default_font_family,
+                    scale_factor,
+                    font_style.text_height,
+                );
+                paragraph_builder.push_style(&text_style);
+
+                if let NodeType::Text(text) = text_node_type {
+                    paragraph_builder.add_text(text);
+                }
+            }
+        }
+
+        if is_rendering {
+            // This is very tricky, but it works! It allows freya to render the cursor at the end of a line.
+            paragraph_builder.add_text(" ");
+        }
+
+        CachedParagraph(Rc::new(RefCell::new(paragraph_builder.build())))
+    });
+
+    paragraph.0.borrow_mut().layout(
         if font_style.max_lines == Some(1) && font_style.text_align == TextAlign::default() {
             f32::MAX
         } else {
@@ -87,13 +142,16 @@ pub fn create_paragraph(
         },
     );
 
+    paragraph_cache.insert(paragraph_cache_key_hash, paragraph.clone());
+
     let width = match font_style.text_align {
-        TextAlign::Start | TextAlign::Left => paragraph.longest_line(),
-        _ => paragraph.max_width(),
+        TextAlign::Start | TextAlign::Left => paragraph.0.borrow().longest_line(),
+        _ => paragraph.0.borrow().max_width(),
     };
+    let height = paragraph.0.borrow().height();
 
     ParagraphData {
-        size: Size2D::new(width, paragraph.height()),
+        size: Size2D::new(width, height),
         paragraph,
     }
 }
