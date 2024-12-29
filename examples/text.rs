@@ -80,15 +80,12 @@ fn app() -> Element {
                     width: "100%",
                     "Center align"
                 }
-                rect {
-                    width: "50a",
-                    overflow: "clip",
-                    label {
-                        font_size: "18",
-                        font_family: "Inter",
-                        text_align: "center",
-                        "Center align with auto size\nNew line\nLast line"
-                    }
+                label {
+                    font_size: "18",
+                    font_family: "Inter",
+                    text_align: "center",
+                    width: "auto",
+                    "Center align with auto size\nNew line\nLast line"
                 }
                 label {
                     font_size: "18",
