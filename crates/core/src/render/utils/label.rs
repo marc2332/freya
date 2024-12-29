@@ -4,7 +4,10 @@ use freya_native_core::{
     real_dom::NodeImmutable,
 };
 use freya_node_state::FontStyleState;
-use torin::{node::Node, prelude::Size2D};
+use torin::{
+    node::Node,
+    prelude::Size2D,
+};
 
 use super::ParagraphData;
 use crate::dom::*;
@@ -52,7 +55,9 @@ pub fn create_label(
 
     // Relayout the paragraph so that its aligned based on its longest width
     match font_style.text_align {
-        TextAlign::Center | TextAlign::Justify | TextAlign::Right | TextAlign::End if torin_node.width.inner_sized() => {
+        TextAlign::Center | TextAlign::Justify | TextAlign::Right | TextAlign::End
+            if torin_node.width.inner_sized() =>
+        {
             paragraph.layout(paragraph.longest_line() + 1.);
         }
         _ => {}
