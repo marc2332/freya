@@ -61,13 +61,13 @@ fn app() -> Element {
                 cross_align: "center",
                 spacing: "4",
                 Button {
-                    onclick: min,
+                    onpress: min,
                     label {
                         "🛑"
                     }
                 }
                 Button {
-                    onclick: max,
+                    onpress: max,
                     label {
                         "🏎️"
                     }

@@ -71,7 +71,7 @@ fn app() -> Element {
                     for func in &[Function::Quad, Function::Elastic, Function::Quart, Function::Linear, Function::Circ] {
                         DropdownItem {
                             value: *func,
-                            onclick: {
+                            onpress: {
                                 to_owned![func];
                                 move |_| function.set(func)
                             },

@@ -179,7 +179,7 @@ fn AppSidebar() -> Element {
                         }
                     },
                     SidebarItem {
-                        onclick: move |_| {
+                        onpress: move |_| {
                             spawn(async move {
                                 load_documents(documents).await;
                             });
@@ -232,7 +232,7 @@ fn Home() -> Element {
 
     rsx!(
         Button {
-            onclick: edit_blank,
+            onpress: edit_blank,
             label {
                 "Blank Document"
             }
@@ -313,7 +313,7 @@ fn DocumentEdit(path: String) -> Element {
                         width: "fill".into(),
                         padding: "10".into()
                     }),
-                    onclick: save_file,
+                    onpress: save_file,
                     label {
                         width: "100%",
                         "Save"

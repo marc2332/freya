@@ -104,7 +104,7 @@ fn app() -> Element {
                             TableCell {
                                 key: "{n}",
                                 order_direction: if *order.read() == order_by { Some(*order_direction.read()) } else { None },
-                                onclick: move |_| on_column_head_click(&order_by),
+                                onpress: move |_| on_column_head_click(&order_by),
                                 label {
                                     "{text}"
                                 }
