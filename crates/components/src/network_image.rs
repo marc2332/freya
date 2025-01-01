@@ -45,7 +45,7 @@ pub enum ImageState {
     Errored,
 
     /// Image has been fetched.
-    Loaded(Signal<Bytes>),
+    Loaded(Bytes),
 }
 
 /// Image component that automatically fetches and caches remote (HTTP) images.
@@ -74,7 +74,7 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
     let NetworkImageTheme { width, height } = use_applied_theme!(&props.theme, network_image);
     let alt = props.alt.as_deref();
 
-    use_memo(move || {
+    use_effect(move || {
         let url = props.url.read().clone();
         // Cancel previous asset fetching requests
         for asset_task in assets_tasks.write().drain(..) {
@@ -101,10 +101,13 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
             let asset_task = spawn(async move {
                 let asset = fetch_image(url).await;
                 if let Ok(asset_bytes) = asset {
-                    let asset_signal =
-                        asset_cacher.cache(asset_configuration.clone(), asset_bytes, true);
+                    asset_cacher.cache_asset(
+                        asset_configuration.clone(),
+                        asset_bytes.clone(),
+                        true,
+                    );
                     // Image loaded
-                    status.set(ImageState::Loaded(asset_signal));
+                    status.set(ImageState::Loaded(asset_bytes));
                     cached_assets.write().push(asset_configuration);
                 } else if let Err(_err) = asset {
                     // Image errored
@@ -116,45 +119,51 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
         }
     });
 
-    if let ImageState::Loaded(bytes) = &*status.read_unchecked() {
-        let image_data = dynamic_bytes(bytes.read().clone());
-        rsx!(image {
-            height: "{height}",
-            width: "{width}",
-            a11y_id,
-            image_data,
-            a11y_role: "image",
-            a11y_name: alt
-        })
-    } else if *status.read() == ImageState::Loading {
-        if let Some(loading_element) = &props.loading {
-            rsx!({ loading_element })
-        } else {
-            rsx!(
-                rect {
-                    height: "{height}",
-                    width: "{width}",
-                    main_align: "center",
-                    cross_align: "center",
-                    Loader {}
-                }
-            )
-        }
-    } else if let Some(fallback_element) = &props.fallback {
-        rsx!({ fallback_element })
-    } else {
-        rsx!(
-            rect {
+    match &*status.read_unchecked() {
+        ImageState::Loaded(bytes) => {
+            let image_data = dynamic_bytes(bytes.clone());
+            rsx!(image {
                 height: "{height}",
                 width: "{width}",
-                main_align: "center",
-                cross_align: "center",
-                label {
-                    text_align: "center",
-                    "Error"
-                }
+                a11y_id,
+                image_data,
+                a11y_role: "image",
+                a11y_name: alt
+            })
+        }
+        ImageState::Loading => {
+            if let Some(loading_element) = props.loading {
+                rsx!({ loading_element })
+            } else {
+                rsx!(
+                    rect {
+                        height: "{height}",
+                        width: "{width}",
+                        main_align: "center",
+                        cross_align: "center",
+                        Loader {}
+                    }
+                )
             }
-        )
+        }
+        _ => {
+            if let Some(fallback_element) = props.fallback {
+                rsx!({ fallback_element })
+            } else {
+                rsx!(
+                    rect {
+                        height: "{height}",
+                        width: "{width}",
+                        main_align: "center",
+                        cross_align: "center",
+                        label {
+                            text_align: "center",
+                            "Error"
+                        }
+                    }
+                )
+            }
+        }
     }
 }
 
