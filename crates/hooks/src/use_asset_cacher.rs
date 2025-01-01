@@ -7,11 +7,14 @@ use std::{
 };
 
 use bytes::Bytes;
-use dioxus_core::prelude::{
-    current_scope_id,
-    spawn_forever,
-    ScopeId,
-    Task,
+use dioxus_core::{
+    prelude::{
+        current_scope_id,
+        spawn_forever,
+        ScopeId,
+        Task,
+    },
+    schedule_update_any,
 };
 use dioxus_hooks::{
     use_context,
@@ -23,6 +26,7 @@ use dioxus_signals::{
     Writable,
 };
 use tokio::time::sleep;
+use tracing::info;
 
 /// Defines the duration for which an Asset will remain cached after it's user has stopped using it.
 /// The default is 1h (3600s).
@@ -36,7 +40,7 @@ pub enum AssetAge {
 
 impl Default for AssetAge {
     fn default() -> Self {
-        Self::Duration(Duration::from_secs(3600)) // 1h
+        Self::Duration(Duration::from_secs(10)) // 1h
     }
 }
 
@@ -62,7 +66,7 @@ enum AssetUsers {
 
 struct AssetState {
     users: AssetUsers,
-    asset_bytes: Signal<Bytes>,
+    asset_bytes: Bytes,
 }
 
 #[derive(Clone, Copy, Default)]
@@ -71,38 +75,37 @@ pub struct AssetCacher {
 }
 
 impl AssetCacher {
-    /// Cache the given [`AssetConfiguration`]
-    pub fn cache(
+    /// Cache the given [`AssetConfiguration`]. If it already exists and has a pending clear-task, it will get cancelled.
+    pub fn cache_asset(
         &mut self,
         asset_config: AssetConfiguration,
         asset_bytes: Bytes,
         subscribe: bool,
-    ) -> Signal<Bytes> {
-        // Cancel previous caches
+    ) {
+        // Invalidate previous caches
         if let Some(asset_state) = self.registry.write().remove(&asset_config) {
             if let AssetUsers::ClearTask(task) = asset_state.users {
                 task.cancel();
-                asset_state.asset_bytes.manually_drop();
+                info!("Clear task of asset with ID '{}' has been cancelled as the asset has been revalidated", asset_config.id);
             }
         }
 
         // Insert the asset into the cache
-        let value = ScopeId::ROOT.in_runtime(|| asset_bytes);
-        let asset_bytes = Signal::new_in_scope(value, ScopeId::ROOT);
+        let current_scope_id = current_scope_id().unwrap();
 
         self.registry.write().insert(
             asset_config.clone(),
             AssetState {
                 asset_bytes,
                 users: AssetUsers::Scopes(if subscribe {
-                    HashSet::from([current_scope_id().unwrap()])
+                    HashSet::from([current_scope_id])
                 } else {
                     HashSet::default()
                 }),
             },
         );
 
-        asset_bytes
+        schedule_update_any()(current_scope_id);
     }
 
     /// Stop using an asset. It will get removed after the specified duration if it's not used until then.
@@ -136,15 +139,13 @@ impl AssetCacher {
         if spawn_clear_task {
             // Only clear the asset if a duration was specified
             if let AssetAge::Duration(duration) = asset_config.age {
-                // Why not use `spawn_forever`? Reason: https://github.com/DioxusLabs/dioxus/issues/2215
                 let clear_task = spawn_forever({
                     let asset_config = asset_config.clone();
                     async move {
+                        info!("Waiting asset with ID '{}' to be cleared", asset_config.id);
                         sleep(duration).await;
-                        if let Some(asset_state) = registry.write().remove(&asset_config) {
-                            // Clear the asset
-                            asset_state.asset_bytes.manually_drop();
-                        }
+                        registry.write().remove(&asset_config);
+                        info!("Cleared asset with ID '{}'", asset_config.id);
                     }
                 })
                 .unwrap();
@@ -158,14 +159,17 @@ impl AssetCacher {
     }
 
     /// Start using an Asset. Your scope will get subscribed, to stop using an asset use [`Self::unuse_asset`]
-    pub fn use_asset(&mut self, config: &AssetConfiguration) -> Option<Signal<Bytes>> {
+    pub fn use_asset(&mut self, asset_config: &AssetConfiguration) -> Option<Bytes> {
         let mut registry = self.registry.write();
-        if let Some(asset_state) = registry.get_mut(config) {
+        if let Some(asset_state) = registry.get_mut(asset_config) {
             match &mut asset_state.users {
                 AssetUsers::ClearTask(task) => {
-                    // Cancel clear-tasks
+                    // Cancel clear-task
                     task.cancel();
-                    asset_state.asset_bytes.manually_drop();
+                    info!(
+                        "Clear task of asset with ID '{}' has been cancelled",
+                        asset_config.id
+                    );
 
                     // Start using this asset
                     asset_state.users =
@@ -176,32 +180,38 @@ impl AssetCacher {
                     scopes.insert(current_scope_id().unwrap());
                 }
             }
+
+            // Reruns those subscribed components
+            if let AssetUsers::Scopes(scopes) = &asset_state.users {
+                let schedule = schedule_update_any();
+                for scope in scopes {
+                    schedule(*scope);
+                }
+                info!(
+                    "Reran {} scopes subscribed to asset with id '{}'",
+                    scopes.len(),
+                    asset_config.id
+                );
+            }
         }
 
-        registry.get(config).map(|s| s.asset_bytes)
+        registry.get(asset_config).map(|s| s.asset_bytes.clone())
     }
 
-    /// Get the size of the cache registry.
+    /// Read the size of the cache registry.
     pub fn size(&self) -> usize {
         self.registry.read().len()
     }
-
-    /// Clear all the assets from the cache registry.
-    pub fn clear(&mut self) {
-        self.registry.try_write().unwrap().clear();
-    }
 }
 
-/// Global caching system for assets.
-///
-/// This is a "low level" hook, so you probably won't need it.
+/// Get access to the global cache of assets.
 pub fn use_asset_cacher() -> AssetCacher {
     use_context()
 }
 
-/// Initialize the global caching system for assets.
+/// Initialize the global cache of assets.
 ///
-/// This is a "low level" hook, so you probably won't need it.
+/// This is a **low level** hook that **runs by default** in all Freya apps, you don't need it.
 pub fn use_init_asset_cacher() {
     use_context_provider(AssetCacher::default);
 }
