@@ -740,6 +740,9 @@ builder_constructors! {
 
         // Image
         image_data: String,
+
+        // Reference
+        reference: Reference,
         image_reference: String,
 
         // Accessibility
