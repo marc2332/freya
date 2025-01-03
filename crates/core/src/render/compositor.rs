@@ -158,7 +158,8 @@ impl Compositor {
                 for node_id in nodes {
                     Self::with_utils(*node_id, layout, rdom, |node_ref, utils, layout_node| {
                         if utils.needs_cached_area(&node_ref) {
-                            let area = utils.drawing_area(layout_node, &node_ref, scale_factor);
+                            let area =
+                                utils.drawing_area(layout_node, &node_ref, layout, scale_factor);
                             // Cache the drawing area so it can be invalidated in the next frame
                             cache.insert(*node_id, area);
                         }
