@@ -6,7 +6,10 @@ use freya_node_state::{
 };
 
 use super::utils::ElementUtils;
-use crate::dom::DioxusNode;
+use crate::{
+    dom::DioxusNode,
+    render::ParagraphCache,
+};
 
 pub struct ImageElement;
 
@@ -20,6 +23,7 @@ impl ElementUtils for ImageElement {
         _font_manager: &FontMgr,
         _default_fonts: &[String],
         _scale_factor: f32,
+        _paragraph_cache: &mut ParagraphCache,
     ) {
         let area = layout_node.visible_area();
         let node_style = node_ref.get::<StyleState>().unwrap();

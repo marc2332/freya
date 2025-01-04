@@ -22,8 +22,8 @@ pub fn process_layout(
 ) {
     {
         let rdom = fdom.rdom();
+        let mut paragraph_cache = fdom.paragraph_cache();
         let mut dom_adapter = DioxusDOMAdapter::new(rdom, scale_factor);
-        let skia_measurer = SkiaMeasurer::new(rdom, font_collection, default_fonts, scale_factor);
 
         let mut layout = fdom.layout();
 
@@ -54,7 +54,15 @@ pub fn process_layout(
                 buffer.extend(node.child_ids());
             }
         }
+
         let root_id = fdom.rdom().root_id();
+        let skia_measurer = SkiaMeasurer::new(
+            rdom,
+            font_collection,
+            default_fonts,
+            scale_factor,
+            &mut paragraph_cache,
+        );
 
         // Measure the layout
         layout.measure(root_id, area, &mut Some(skia_measurer), &mut dom_adapter);

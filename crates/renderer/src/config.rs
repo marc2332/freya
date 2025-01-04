@@ -9,6 +9,7 @@ use freya_core::{
         PluginsManager,
     },
     prelude::EventMessage,
+    render::ParagraphCache,
     style::default_fonts,
 };
 use freya_engine::prelude::Color;
@@ -84,6 +85,7 @@ pub struct LaunchConfig<'a, T: Clone = ()> {
     pub embedded_fonts: EmbeddedFonts<'a>,
     pub plugins: PluginsManager,
     pub default_fonts: Vec<String>,
+    pub max_paragraph_cache_size: usize,
 }
 
 impl<'a, T: Clone> Default for LaunchConfig<'a, T> {
@@ -94,6 +96,7 @@ impl<'a, T: Clone> Default for LaunchConfig<'a, T> {
             embedded_fonts: Default::default(),
             plugins: Default::default(),
             default_fonts: default_fonts(),
+            max_paragraph_cache_size: ParagraphCache::MAX_SIZE,
         }
     }
 }
@@ -233,6 +236,12 @@ impl<'a, T: Clone> LaunchConfig<'a, T> {
         event_loop_builder_hook: impl FnOnce(&mut EventLoopBuilder<EventMessage>) + 'static,
     ) -> Self {
         self.window_config.event_loop_builder_hook = Some(Box::new(event_loop_builder_hook));
+        self
+    }
+
+    /// Set a custom max paragraph cache size.
+    pub fn with_max_paragraph_cache_size(mut self, max_paragraph_cache_size: usize) -> Self {
+        self.max_paragraph_cache_size = max_paragraph_cache_size;
         self
     }
 }

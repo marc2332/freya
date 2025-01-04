@@ -43,6 +43,7 @@ accesskit_winit = { workspace = true }
 tracing = { workspace = true }
 futures-task ={ workspace = true }
 futures-util = { workspace = true }
+rustc-hash= { workspace = true }
 
 itertools = "0.13.0"
 uuid = { workspace = true }

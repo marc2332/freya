@@ -1,7 +1,13 @@
-use std::sync::{
-    Arc,
-    Mutex,
-    MutexGuard,
+use std::{
+    cell::{
+        RefCell,
+        RefMut,
+    },
+    sync::{
+        Arc,
+        Mutex,
+        MutexGuard,
+    },
 };
 
 use dioxus_core::VirtualDom;
@@ -39,11 +45,14 @@ use freya_node_state::{
 use torin::prelude::*;
 
 use super::mutations_writer::MutationsWriter;
-use crate::prelude::{
-    CompositorCache,
-    CompositorDirtyArea,
-    ParagraphElement,
-    TextGroupMeasurement,
+use crate::{
+    prelude::{
+        CompositorCache,
+        CompositorDirtyArea,
+        ParagraphElement,
+        TextGroupMeasurement,
+    },
+    render::ParagraphCache,
 };
 
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
@@ -130,10 +139,11 @@ pub struct FreyaDOM {
     compositor_cache: Arc<Mutex<CompositorCache>>,
     accessibility_dirty_nodes: Arc<Mutex<AccessibilityDirtyNodes>>,
     accessibility_generator: Arc<AccessibilityGenerator>,
+    paragraph_cache: RefCell<ParagraphCache>,
 }
 
-impl Default for FreyaDOM {
-    fn default() -> Self {
+impl FreyaDOM {
+    pub fn new(paragraph_cache_max_size: usize) -> Self {
         let mut rdom = RealDom::<CustomAttributeValues>::new([
             CursorState::to_type_erased(),
             FontStyleState::to_type_erased(),
@@ -157,6 +167,7 @@ impl Default for FreyaDOM {
             compositor_cache: Arc::default(),
             accessibility_dirty_nodes: Arc::default(),
             accessibility_generator: Arc::default(),
+            paragraph_cache: RefCell::new(ParagraphCache::new(paragraph_cache_max_size)),
         }
     }
 }
@@ -192,6 +203,10 @@ impl FreyaDOM {
 
     pub fn accessibility_generator(&self) -> &Arc<AccessibilityGenerator> {
         &self.accessibility_generator
+    }
+
+    pub fn paragraph_cache(&self) -> RefMut<ParagraphCache> {
+        self.paragraph_cache.borrow_mut()
     }
 
     /// Create the initial DOM from the given Mutations

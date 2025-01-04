@@ -37,6 +37,7 @@ use super::{
     wireframe_renderer,
     CompositorCache,
     CompositorDirtyArea,
+    ParagraphCache,
 };
 use crate::{
     dom::{
@@ -68,6 +69,7 @@ pub struct RenderPipeline<'a> {
     pub scale_factor: f32,
     pub selected_node: Option<NodeId>,
     pub default_fonts: &'a [String],
+    pub paragraph_cache: &'a mut ParagraphCache,
 }
 
 impl RenderPipeline<'_> {
@@ -257,6 +259,7 @@ impl RenderPipeline<'_> {
                 self.font_manager,
                 self.default_fonts,
                 self.scale_factor,
+                self.paragraph_cache,
             );
 
             if render_wireframe {
