@@ -43,14 +43,12 @@ fn FromRouteToCurrent(
     node_size: ReadOnlySignal<NodeReferenceLayout>,
 ) -> Element {
     let mut animated_router = use_animated_router::<Route>();
-    let animations = use_animation_with_dependencies(&upwards, move |ctx, upwards| {
+    let animations = use_animation_with_dependencies(&upwards, move |_conf, upwards| {
         let (start, end) = if upwards { (1., 0.) } else { (0., 1.) };
-        ctx.with(
-            AnimNum::new(start, end)
-                .time(500)
-                .ease(Ease::Out)
-                .function(Function::Expo),
-        )
+        AnimNum::new(start, end)
+            .time(500)
+            .ease(Ease::Out)
+            .function(Function::Expo)
     });
 
     // Only render the destination route once the animation has finished

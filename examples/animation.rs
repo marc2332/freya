@@ -11,7 +11,7 @@ fn main() {
 
 fn app() -> Element {
     let mut toggle = use_signal(|| true);
-    let animation = use_animation(|ctx| {
+    let animation = use_animation(|_conf| {
         (
             AnimNum::new(100., 200.)
                 .time(500)

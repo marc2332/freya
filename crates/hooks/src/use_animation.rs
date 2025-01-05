@@ -622,8 +622,8 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 /// }
 ///
 /// fn app() -> Element {
-///     let animation = use_animation(|ctx| {
-///         ctx.auto_start(true);
+///     let animation = use_animation(|conf| {
+///         conf.auto_start(true);
 ///         AnimNum::new(0., 100.).time(50)
 ///     });
 ///
@@ -642,8 +642,8 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 /// ```rust,no_run
 /// # use freya::prelude::*;
 /// fn app() -> Element {
-///     let animation = use_animation(|ctx| {
-///         ctx.auto_start(true);
+///     let animation = use_animation(|conf| {
+///         conf.auto_start(true);
 ///         (
 ///             AnimNum::new(0., 100.).time(50),
 ///             AnimColor::new("red", "blue").time(50),
@@ -660,13 +660,13 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 /// }
 /// ```
 ///
-/// You can also tweak what to do once the animation has finished with [`Context::on_finish`].
+/// You can also tweak what to do once the animation has finished with [`AnimConfiguration::on_finish`].
 ///
 /// ```rust,no_run
 /// # use freya::prelude::*;
 /// fn app() -> Element {
-///     let animation = use_animation(|ctx| {
-///         ctx.on_finish(OnFinish::Restart);
+///     let animation = use_animation(|conf| {
+///         conf.on_finish(OnFinish::Restart);
 ///         (
 ///             AnimNum::new(0., 100.).time(50),
 ///             AnimColor::new("red", "blue").time(50),
