@@ -23,24 +23,21 @@ fn main() {
 
 fn app() -> Element {
     use_init_theme(|| DARK_THEME);
-    let animations = use_animation(|ctx| {
-        ctx.with(
-            AnimNum::new(0., 255.)
-                .time(1600)
-                .ease(Ease::Out)
-                .function(Function::Expo),
-        )
+    let animation = use_animation(|_conf| {
+        AnimNum::new(0., 255.)
+            .time(1600)
+            .ease(Ease::Out)
+            .function(Function::Expo)
     });
 
-    let speed = animations.get();
-    let speed = speed.read().as_f32() as u8;
+    let speed = animation.get().read().as_f32() as u8;
 
     let min = move |_| {
-        animations.run(AnimDirection::Reverse);
+        animation.run(AnimDirection::Reverse);
     };
 
     let max = move |_| {
-        animations.run(AnimDirection::Forward);
+        animation.run(AnimDirection::Forward);
     };
 
     rsx!(

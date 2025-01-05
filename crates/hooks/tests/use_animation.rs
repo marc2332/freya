@@ -13,9 +13,9 @@ use tokio::time::sleep;
 #[tokio::test]
 pub async fn track_progress() {
     fn use_animation_app() -> Element {
-        let animation = use_animation(|ctx| ctx.with(AnimNum::new(0., 100.).time(50)));
+        let animation = use_animation(|_conf| AnimNum::new(0., 100.).time(50));
 
-        let progress = animation.get().read().as_f32();
+        let progress = animation.get().read().read();
 
         use_hook(|| {
             animation.start();
@@ -59,9 +59,9 @@ pub async fn track_progress() {
 #[tokio::test]
 pub async fn reverse_progress() {
     fn use_animation_app() -> Element {
-        let animation = use_animation(|ctx| ctx.with(AnimNum::new(10., 100.).time(50)));
+        let animation = use_animation(|_conf| AnimNum::new(10., 100.).time(50));
 
-        let progress = animation.get().read().as_f32();
+        let progress = animation.get().read().read();
 
         use_hook(|| {
             animation.start();
@@ -113,10 +113,9 @@ pub async fn reverse_progress() {
 #[tokio::test]
 pub async fn animate_color() {
     fn use_animation_app() -> Element {
-        let animation =
-            use_animation(|ctx| ctx.with(AnimColor::new("red", "rgb(50, 100, 200)").time(50)));
+        let animation = use_animation(|_conf| AnimColor::new("red", "rgb(50, 100, 200)").time(50));
 
-        let progress = animation.get().read().as_string();
+        let progress = animation.get().read().read();
 
         use_hook(|| {
             animation.start();
@@ -167,12 +166,12 @@ pub async fn animate_color() {
 #[tokio::test]
 pub async fn auto_start() {
     fn use_animation_app() -> Element {
-        let animation = use_animation(|ctx| {
-            ctx.auto_start(true);
-            ctx.with(AnimNum::new(10., 100.).time(50))
+        let animation = use_animation(|conf| {
+            conf.auto_start(true);
+            AnimNum::new(10., 100.).time(50)
         });
 
-        let progress = animation.get().read().as_f32();
+        let progress = animation.get().read().read();
 
         rsx!(rect {
             background: "white",

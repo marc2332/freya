@@ -10,13 +10,11 @@ fn main() {
 }
 
 fn app() -> Element {
-    let animation = use_animation(move |ctx| {
-        ctx.with(
-            AnimNum::new(0., 100.)
-                .time(1850)
-                .ease(Ease::Out)
-                .function(Function::Sine),
-        )
+    let animation = use_animation(move |_conf| {
+        AnimNum::new(0., 100.)
+            .time(1850)
+            .ease(Ease::Out)
+            .function(Function::Sine)
     });
     let progress = animation.get().read().as_f32();
     let mut open = use_signal(|| false);

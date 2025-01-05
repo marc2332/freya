@@ -18,13 +18,11 @@ fn main() {
 const TARGET: f32 = 650.0;
 
 fn app() -> Element {
-    let animation = use_animation(|ctx| {
-        ctx.with(
-            AnimNum::new(15., TARGET)
-                .time(400)
-                .ease(Ease::InOut)
-                .function(Function::Sine),
-        )
+    let animation = use_animation(|_conf| {
+        AnimNum::new(15., TARGET)
+            .time(400)
+            .ease(Ease::InOut)
+            .function(Function::Sine)
     });
 
     let progress = animation.get().read().as_f32();
