@@ -775,6 +775,7 @@ macro_rules! impl_tuple_call {
                         $type.prepare(direction);
                     )*
                 }
+
                 fn is_finished(&self, index: u128, direction: AnimDirection) -> bool {
                     #[allow(non_snake_case)]
                     let ($($type,)*) = self;
@@ -793,6 +794,7 @@ macro_rules! impl_tuple_call {
                         $type.advance(index, direction);
                     )*
                 }
+
                 fn finish(&mut self, direction: AnimDirection) {
                     #[allow(non_snake_case)]
                     let ($($type,)*) = self;
