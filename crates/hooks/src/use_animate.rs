@@ -84,7 +84,7 @@ impl Easable for &str {
 // a function should give back, given some time. this of it like a mathematical function f(t) where
 // it has a method calc to input the t in.
 #[derive(PartialEq, Clone)]
-pub struct SegmentCompositor<T: Easable<Output = O> + Clone, O: Clone> {
+pub struct AnimSegmented<T: Easable<Output = O> + Clone, O: Clone> {
     segments: Vec<Segment<T, O>>,
     total_duration: u32,
 }
@@ -97,7 +97,7 @@ struct Segment<T: Easable<Output = O> + Clone, O: Clone> {
     function: EasingFunction,
 }
 
-impl<T: Easable<Output = O> + Clone, O: Clone> SegmentCompositor<T, O> {
+impl<T: Easable<Output = O> + Clone, O: Clone> AnimSegmented<T, O> {
     pub fn new(start: T, end: T, duration: u32, function: EasingFunction) -> Self {
         let segment = Segment {
             start: start.clone(),
@@ -145,13 +145,13 @@ impl<T: Easable<Output = O> + Clone, O: Clone> SegmentCompositor<T, O> {
     }
 }
 
-impl<T: Easable<Output = O> + Clone, O: Clone> AnimatedValue for SegmentCompositor<T, O> {
+impl<T: Easable<Output = O> + Clone, O: Clone> AnimatedValue for AnimSegmented<T, O> {
     type Output = O;
     fn duration(&self) -> u32 {
         self.total_duration
     }
 
-    fn calc(&self, index: u32) -> Self::Output {
+    fn calc(&self, index: u32, _direction: Direction, _first_frame: bool) -> Self::Output {
         let mut accumulated_time = 0;
         let mut res = None;
         for segment in &self.segments {
@@ -177,7 +177,7 @@ pub trait AnimatedValue {
     type Output;
     fn duration(&self) -> u32;
 
-    fn calc(&self, index: u32) -> Self::Output;
+    fn calc(&self, index: u32, direction: Direction, first_frame: bool) -> Self::Output;
 }
 
 #[derive(PartialEq, Eq, Clone, Copy)]
@@ -262,6 +262,7 @@ impl<O: 'static + Clone, Animated: AnimatedValue<Output = O> + Clone + PartialEq
             let mut offset = Instant::now();
 
             let mut last_direction = *direction.peek();
+            let mut first_frame = false;
 
             // every frame we check if the direction has changed, if it has then we change the
             // anchor to the timestamp we are at. we do this to minimize the error
@@ -290,7 +291,7 @@ impl<O: 'static + Clone, Animated: AnimatedValue<Output = O> + Clone + PartialEq
                 // 2 if checks to check if the animation is at the end or the start. We make sure
                 //   the start and end values are constant.
                 if current_offset_time == 0 && *direction.peek() == Direction::Backward {
-                    *value.write() = function_and_ctx.read().0.calc(0);
+                    *value.write() = function_and_ctx.read().0.calc(0, direction, first_frame);
 
                     *is_running.write() = false;
                     break;
@@ -299,10 +300,11 @@ impl<O: 'static + Clone, Animated: AnimatedValue<Output = O> + Clone + PartialEq
                 if current_offset_time >= function_and_ctx.read().0.duration()
                     && *direction.peek() == Direction::Forward
                 {
-                    *value.write() = function_and_ctx
-                        .read()
-                        .0
-                        .calc(function_and_ctx.read().0.duration());
+                    *value.write() = function_and_ctx.read().0.calc(
+                        function_and_ctx.read().0.duration(),
+                        direction,
+                        first_frame,
+                    );
 
                     *is_running.write() = false;
                     break;
@@ -321,7 +323,11 @@ impl<O: 'static + Clone, Animated: AnimatedValue<Output = O> + Clone + PartialEq
                 // on the time
                 *value.write() = function_and_ctx.read().0.calc(
                     offset_time(*direction.peek(), anchor, offset).expect("to not underflow"),
+                    direction,
+                    first_frame,
                 );
+
+                first_frame = true;
             }
         });
 
@@ -397,11 +403,12 @@ pub fn use_animation<
     let is_running = use_signal(move || false);
     let direction = use_signal(move || function_and_ctx.read().1.starting_direction);
     let value = use_signal(move || {
-        let time = match *direction.peek() {
+        let direction = *direction.peek();
+        let time = match direction {
             Direction::Forward => 0,
             Direction::Backward => function_and_ctx.read().0.duration(),
         };
-        function_and_ctx.read().0.calc(time)
+        function_and_ctx.read().0.calc(time, direction, true)
     });
 
     let mut animator = UseAnimator {
