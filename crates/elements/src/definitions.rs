@@ -940,12 +940,13 @@ pub mod events {
                         false,
                     ).into()
                 }
-    
+
+                #[cfg(not(feature = "docs"))]
                 #[doc(hidden)]
                 $( #[$attr] )*
                 pub mod $name {
                     use super::*;
-    
+
                     // When expanding the macro, we use this version of the function if we see an inline closure to give better type inference
                     $( #[$attr] )*
                     pub fn call_with_explicit_closure<
@@ -961,9 +962,6 @@ pub mod events {
             )*
         };
 
-        (@name $name:ident $event:literal) => {
-            $event
-        };
         (@name $name:ident) => {
             stringify!($name)
         };
