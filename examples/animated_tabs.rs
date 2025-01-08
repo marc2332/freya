@@ -43,13 +43,14 @@ fn FromRouteToCurrent(
     node_size: ReadOnlySignal<NodeReferenceLayout>,
 ) -> Element {
     let mut animated_router = use_animated_router::<Route>();
-    let animations = use_animation_with_dependencies(&left_to_right, move |_conf, left_to_right| {
-        let (start, end) = if left_to_right { (1., 0.) } else { (0., 1.) };
-        AnimNum::new(start, end)
-            .time(400)
-            .ease(Ease::Out)
-            .function(Function::Expo)
-    });
+    let animations =
+        use_animation_with_dependencies(&left_to_right, move |_conf, left_to_right| {
+            let (start, end) = if left_to_right { (1., 0.) } else { (0., 1.) };
+            AnimNum::new(start, end)
+                .time(400)
+                .ease(Ease::Out)
+                .function(Function::Expo)
+        });
 
     // Only render the destination route once the animation has finished
     use_memo(move || {
@@ -63,7 +64,7 @@ fn FromRouteToCurrent(
         animations.run(AnimDirection::Forward)
     }));
 
-    let offset = animations.get().read().as_f32();
+    let offset = animations.get().read().read();
     let width = node_size.read().area.width();
 
     let offset = width - (offset * width);

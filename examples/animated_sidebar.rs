@@ -63,7 +63,7 @@ fn FromRouteToCurrent(
         animations.run(AnimDirection::Forward)
     }));
 
-    let offset = animations.get().read().as_f32();
+    let offset = animations.get().read().read();
     let height = node_size.read().area.height();
 
     let offset = height - (offset * height);

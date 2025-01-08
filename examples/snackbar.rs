@@ -16,7 +16,7 @@ fn app() -> Element {
             .ease(Ease::Out)
             .function(Function::Sine)
     });
-    let progress = animation.get().read().as_f32();
+    let progress = animation.get().read().read();
     let mut open = use_signal(|| false);
 
     rsx!(
