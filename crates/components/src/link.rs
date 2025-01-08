@@ -20,7 +20,7 @@ use crate::{
     TooltipContainer,
 };
 
-/// Tooltip configuration for the [`Link`] component.
+/// Tooltip configuration for the [`Link()`] component.
 #[derive(Clone, PartialEq)]
 pub enum LinkTooltip {
     /// No tooltip at all.
@@ -34,7 +34,7 @@ pub enum LinkTooltip {
     Custom(String),
 }
 
-/// Similar to [`Link`](dioxus_router::components::Link), but you can use it in Freya.
+/// Similar to [`Link`](dioxus_router::components::Link()), but you can use it in Freya.
 /// Both internal routes (dioxus-router) and external links are supported. When using internal routes
 /// make sure the Link is descendant of a [`Router`](dioxus_router::components::Router) component.
 ///

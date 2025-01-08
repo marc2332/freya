@@ -47,7 +47,7 @@ struct ResizableContext {
     pub direction: String,
 }
 
-/// Resizable container, used in combination with [ResizablePanel] and [ResizableHandle].
+/// Resizable container, used in combination with [ResizablePanel()] and [ResizableHandle()].
 ///
 /// Example:
 ///
@@ -81,7 +81,7 @@ pub fn ResizableContainer(
     /// Default to `vertical`.
     #[props(default = "vertical".to_string())]
     direction: String,
-    /// Inner children for the [ResizableContainer].
+    /// Inner children for the [ResizableContainer()].
     children: Element,
 ) -> Element {
     let (node_reference, size) = use_node_signal();
@@ -106,7 +106,7 @@ pub fn ResizableContainer(
     )
 }
 
-/// Resizable panel to be used in combination with [ResizableContainer] and [ResizableHandle].
+/// Resizable panel to be used in combination with [ResizableContainer()] and [ResizableHandle()].
 #[component]
 pub fn ResizablePanel(
     /// Initial size in % for this panel. Default to `10`.
@@ -115,7 +115,7 @@ pub fn ResizablePanel(
     /// Minimum size in % for this panel. Default to `4`.
     #[props(default = 4.)]
     min_size: f32,
-    /// Inner children for the [ResizablePanel].
+    /// Inner children for the [ResizablePanel()].
     children: Element,
 ) -> Element {
     let mut registry = use_context::<Signal<ResizableContext>>();
@@ -157,7 +157,7 @@ pub enum HandleStatus {
     Hovering,
 }
 
-/// Resizable panel to be used in combination with [ResizableContainer] and [ResizablePanel].
+/// Resizable panel to be used in combination with [ResizableContainer()] and [ResizablePanel()].
 #[component]
 pub fn ResizableHandle(
     /// Theme override.

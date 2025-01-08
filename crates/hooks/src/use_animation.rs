@@ -661,7 +661,7 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
 /// }
 /// ```
 ///
-/// You can also tweak what to do once the animation has finished with [`Context::on_finish`].
+/// You can also tweak what to do once the animation has finished with [`AnimationContext::on_finish`].
 ///
 /// ```rust,no_run
 /// # use freya::prelude::*;

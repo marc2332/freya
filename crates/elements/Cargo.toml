@@ -11,13 +11,10 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
 categories = ["gui", "asynchronous"]
 
-[features]
-docs = []
-
 [dependencies]
 torin = { workspace = true }
 
-generational-box ={ workspace = true }
+generational-box = { workspace = true }
 dioxus-rsx = { workspace = true }
 dioxus-core = { workspace = true }
 

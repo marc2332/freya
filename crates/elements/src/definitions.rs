@@ -941,7 +941,6 @@ pub mod events {
                     ).into()
                 }
 
-                #[cfg(not(feature = "docs"))]
                 #[doc(hidden)]
                 $( #[$attr] )*
                 pub mod $name {

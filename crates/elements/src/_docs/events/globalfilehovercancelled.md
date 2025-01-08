@@ -1,4 +1,4 @@
-The `onglobalfilehovercancelled` event fires when the user cancels the hovering of a file over the window. It's the opposite of [`onglobalfilehover`](crate::elements::onglobalfilehover).
+The `onglobalfilehovercancelled` event fires when the user cancels the hovering of a file over the window. It's the opposite of [`onglobalfilehover`](crate::elements::onglobalfilehover()).
 
 Event Data: [`FileData`](crate::events::FileData)
 

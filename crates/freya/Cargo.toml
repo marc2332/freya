@@ -26,7 +26,7 @@ default = ["skia"]
 performance-overlay = []
 fade-cached-incremental-areas = ["freya-core/fade-cached-incremental-areas"]
 disable-zoom-shortcuts = ["freya-renderer/disable-zoom-shortcuts"]
-docs = ["dep:freya-testing", "dep:dioxus-i18n", "dep:dioxus-router", "freya-elements/docs"]
+docs = ["dep:freya-testing", "dep:dioxus-i18n", "dep:dioxus-router"]
 
 [dependencies]
 freya-devtools = { workspace = true, optional = true }
