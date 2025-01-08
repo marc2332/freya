@@ -31,7 +31,7 @@ fn app() -> Element {
         )
     });
 
-    let (size, background, rotate, radius) = animation.get();
+    let (size, background, rotate, radius) = &*animation.get().read_unchecked();
 
     rsx!(
         rect {
