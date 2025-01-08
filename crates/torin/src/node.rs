@@ -244,6 +244,7 @@ impl Node {
             || self.contains_text
             || self.cross_alignment.is_not_start()
             || self.main_alignment.is_not_start()
+            || self.content.is_flex()
     }
 
     /// Has properties that make its children dependant on it?

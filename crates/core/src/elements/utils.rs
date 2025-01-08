@@ -110,7 +110,7 @@ pub trait ElementUtils {
 
     /// Check if this element requires any kind of special caching.
     /// Mainly used for text-like elements with shadows.
-    /// See [crate::compositor::CompositorCache].
+    /// See [crate::render::CompositorCache].
     /// Default to `false`.
     #[inline]
     fn element_needs_cached_area(&self, _node_ref: &DioxusNode) -> bool {
