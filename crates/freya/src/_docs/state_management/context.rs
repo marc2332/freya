@@ -117,7 +117,7 @@
 //!
 //! # #[component]
 //! # fn CompB() -> Element {
-//! #    None
+//! #    Ok(VNode::placeholder())
 //! # }
 //! ```
 //!

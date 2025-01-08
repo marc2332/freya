@@ -12,7 +12,7 @@
 //!         println!("Component running for the first time!");
 //!     });
 //!
-//!     None
+//!     Ok(VNode::placeholder())
 //! }
 //! ```
 //!
@@ -27,7 +27,7 @@
 //!         println!("Component is being dropped.");
 //!     });
 //!
-//!     None
+//!     Ok(VNode::placeholder())
 //! }
 //! ```
 //!
@@ -47,7 +47,7 @@
 //!         println!("Value of signal is {value}");
 //!     });
 //!
-//!     None
+//!     Ok(VNode::placeholder())
 //! }
 //! ```
 //!
@@ -74,6 +74,6 @@
 //!         },
 //!     ));
 //!
-//!     None
+//!     Ok(VNode::placeholder())
 //! }
 //! ```

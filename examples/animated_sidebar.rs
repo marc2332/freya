@@ -141,9 +141,9 @@ fn AppSidebar() -> Element {
                                     label {
                                         "Go to Hey ! 👋"
                                     }
-                                },
+                                }
                             }
-                        },
+                        }
                         Link {
                             to: Route::Wow,
                             ActivableRoute {
@@ -152,9 +152,9 @@ fn AppSidebar() -> Element {
                                     label {
                                         "Go to Wow! 👈"
                                     }
-                                },
+                                }
                             }
-                        },
+                        }
                         Link {
                             to: Route::Crab,
                             ActivableRoute {
@@ -163,9 +163,9 @@ fn AppSidebar() -> Element {
                                     label {
                                         "Go to Crab! 🦀"
                                     }
-                                },
+                                }
                             }
-                        },
+                        }
                     ),
                     Body {
                         AnimatedOutlet { }

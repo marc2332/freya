@@ -6,7 +6,10 @@ use std::{
     time::Duration,
 };
 
-use dioxus_core::VirtualDom;
+use dioxus_core::{
+    Event,
+    VirtualDom,
+};
 use freya_core::prelude::{
     EventMessage,
     TextGroupMeasurement,
@@ -193,8 +196,8 @@ impl<T: 'static + Clone> TestingHandler<T> {
                     {
                         let name = event.name.into();
                         let data = event.data.any();
-                        self.vdom
-                            .handle_event(name, data, element_id, event.bubbles);
+                        let event = Event::new(data, event.bubbles);
+                        self.vdom.runtime().handle_event(name, event, element_id);
                         self.vdom.process_events();
                     }
                 }

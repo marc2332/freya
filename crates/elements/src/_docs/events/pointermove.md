@@ -1,5 +1,5 @@
 The `pointermove` event fires when the user moves the cursor or touches over an element.
-Unlike [`onpointerenter`](crate::elements::onpointerenter), this fires even if the user was already hovering over
+Unlike [`onpointerenter`](crate::elements::onpointerenter()), this fires even if the user was already hovering over
 the element.
 
 Event Data: [`PointerData`](crate::events::PointerData)

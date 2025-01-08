@@ -54,7 +54,7 @@
 //! # )};
 //!
 //! # #[component]
-//! # fn CoolComp(prop: i32) -> Element { None }
+//! # fn CoolComp(prop: i32) -> Element { Ok(VNode::placeholder()) }
 //! ```
 //!
 //! You can reference variables inside the RSX as well:
