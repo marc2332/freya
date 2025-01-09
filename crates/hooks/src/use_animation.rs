@@ -1,5 +1,6 @@
 use std::{
     fmt,
+    ops::Deref,
     time::Duration,
 };
 
@@ -279,9 +280,13 @@ impl<Animated: AnimatedValue, const N: usize> AnimSequential<Animated, N> {
             acc_index: 0,
         }
     }
+}
 
-    pub fn sub(&self, index: usize) -> &Animated {
-        &self.values[index]
+impl<Animated: AnimatedValue, const N: usize> Deref for AnimSequential<Animated, N> {
+    type Target = [Animated; N];
+
+    fn deref(&self) -> &Self::Target {
+        &self.values
     }
 }
 

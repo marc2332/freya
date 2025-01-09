@@ -26,8 +26,8 @@ fn app() -> Element {
 
     let sequential = animations.get();
 
-    let rotate_a = sequential.read().sub(0).read();
-    let rotate_b = sequential.read().sub(1).read();
+    let rotate_a = sequential.read()[0].read();
+    let rotate_b = sequential.read()[1].read();
 
     rsx!(
         rect {
