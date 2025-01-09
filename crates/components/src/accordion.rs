@@ -44,18 +44,16 @@ pub struct AccordionProps {
 pub fn Accordion(props: AccordionProps) -> Element {
     let theme = use_applied_theme!(&props.theme, accordion);
     let mut open = use_signal(|| false);
-    let animation = use_animation(move |ctx| {
-        ctx.with(
-            AnimNum::new(0., 100.)
-                .time(300)
-                .function(Function::Expo)
-                .ease(Ease::Out),
-        )
+    let animation = use_animation(move |_conf| {
+        AnimNum::new(0., 100.)
+            .time(300)
+            .function(Function::Expo)
+            .ease(Ease::Out)
     });
     let mut status = use_signal(AccordionStatus::default);
     let platform = use_platform();
 
-    let animation_value = animation.get().read().as_f32();
+    let animation_value = animation.get().read().read();
     let AccordionTheme {
         background,
         color,
