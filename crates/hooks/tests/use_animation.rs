@@ -257,9 +257,9 @@ pub async fn sequential() {
 
     // Finished A and started B
     utils.wait_for_update().await;
-    sleep(Duration::from_millis(32)).await;
+    sleep(Duration::from_millis(16)).await;
     utils.wait_for_update().await;
-    sleep(Duration::from_millis(32)).await;
+    sleep(Duration::from_millis(16)).await;
     utils.wait_for_update().await;
 
     let width_a = utils.root().get(0).area().unwrap().width();
