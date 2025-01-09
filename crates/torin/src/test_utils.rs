@@ -18,13 +18,11 @@ impl TestingDOM {
     }
 
     pub fn remove(&mut self, node_id: usize) {
-        let node = self.mapper.get(&node_id).unwrap().clone();
+        let node = self.mapper.remove(&node_id).unwrap();
 
         if let Some((_, parent_children, _, _)) = node.0.and_then(|p| self.mapper.get_mut(&p)) {
             parent_children.retain(|c| *c != node_id);
         }
-
-        self.mapper.remove(&node_id);
 
         for child in node.1 {
             self.remove(child);
