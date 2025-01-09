@@ -16,7 +16,6 @@ use dioxus_hooks::{
     use_signal,
 };
 use dioxus_signals::{
-    CopyValue,
     ReadOnlySignal,
     Readable,
     Signal,
@@ -40,7 +39,6 @@ use nokhwa::{
 };
 
 use crate::{
-    use_node,
     use_node_with_reference,
     use_platform,
 };

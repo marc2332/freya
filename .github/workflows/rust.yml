@@ -37,7 +37,7 @@ jobs:
     - name: Check examples
       run: cargo check --examples
     - name: Lint
-      run: cargo clippy --workspace --examples --features docs -- -D warnings
+      run: cargo clippy --workspace --examples --features "docs, use_camera" -- -D warnings
     - name: Format
       run: cargo +nightly fmt --all --check -- --error-on-unformatted --unstable-features
     - name: Run Linux tests
