@@ -126,8 +126,8 @@ pub enum OrderDirection {
 pub struct TableCellProps {
     /// The content of this cell.
     pub children: Element,
-    /// Onclick event handler for the TableCell.
-    pub onclick: Option<EventHandler<MouseEvent>>,
+    /// Handler for the `onpress` event.
+    pub onpress: Option<EventHandler<MouseEvent>>,
     /// The direction in which this TableCell's column will be ordered.
     ///
     /// **This is only a visual change (it changes the icon), you need to sort stuff yourself.**
@@ -164,8 +164,8 @@ pub fn TableCell(props: TableCellProps) -> Element {
             height: "{height}",
             direction: "horizontal",
             onclick: move |e| {
-                if let Some(onclick) = &props.onclick {
-                    onclick.call(e);
+                if let Some(onpress) = &props.onpress {
+                    onpress.call(e);
                 }
             },
             if let Some(order_direction) = &order_direction {

@@ -31,7 +31,7 @@ fn app() -> Element {
                 for ch in values.iter() {
                     DropdownItem {
                         value: ch.clone(),
-                        onclick: {
+                        onpress: {
                             to_owned![ch];
                             move |_| selected_dropdown.set(ch.clone())
                         },
@@ -44,7 +44,7 @@ fn app() -> Element {
                 for ch in values {
                     DropdownItem {
                         value: ch.clone(),
-                        onclick: {
+                        onpress: {
                             to_owned![ch];
                             move |_| selected_dropdown.set(ch.clone())
                         },

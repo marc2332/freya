@@ -129,6 +129,7 @@ pub enum Ease {
 }
 
 /// Animate a color.
+#[derive(Clone, PartialEq)]
 pub struct AnimColor {
     origin: Color,
     destination: Color,
@@ -175,14 +176,9 @@ impl AnimColor {
         self.function = function;
         self
     }
-}
 
-impl AnimatedValue for AnimColor {
-    fn time(&self) -> Duration {
-        self.time
-    }
-
-    fn as_string(&self) -> String {
+    /// Read the value of the [AnimColor] as a String.
+    pub fn read(&self) -> String {
         format!(
             "rgb({}, {}, {}, {})",
             self.value.r(),
@@ -191,7 +187,9 @@ impl AnimatedValue for AnimColor {
             self.value.a()
         )
     }
+}
 
+impl AnimatedValue for AnimColor {
     fn prepare(&mut self, direction: AnimDirection) {
         match direction {
             AnimDirection::Forward => self.value = self.origin,
@@ -259,28 +257,35 @@ impl AnimatedValue for AnimColor {
         );
         self.value = Color::from_argb(a as u8, r as u8, g as u8, b as u8);
     }
+
+    fn finish(&mut self, direction: AnimDirection) {
+        self.advance(self.time.as_millis(), direction);
+    }
 }
 
 /// Chain a sequence of animated values.
-#[derive(Default)]
-pub struct AnimSequential {
-    values: Vec<Box<dyn AnimatedValue>>,
+#[derive(Clone)]
+pub struct AnimSequential<Animated: AnimatedValue, const N: usize> {
+    values: [Animated; N],
     curr_value: usize,
     acc_index: u128,
 }
 
-impl AnimSequential {
-    pub fn new() -> Self {
-        Self::default()
+impl<Animated: AnimatedValue, const N: usize> AnimSequential<Animated, N> {
+    pub fn new(values: [Animated; N]) -> Self {
+        Self {
+            values,
+            curr_value: 0,
+            acc_index: 0,
+        }
     }
 
-    pub fn with(mut self, animated_value: impl AnimatedValue + 'static) -> Self {
-        self.values.push(Box::new(animated_value));
-        self
+    pub fn sub(&self, index: usize) -> &Animated {
+        &self.values[index]
     }
 }
 
-impl AnimatedValue for AnimSequential {
+impl<Animated: AnimatedValue, const N: usize> AnimatedValue for AnimSequential<Animated, N> {
     fn advance(&mut self, index: u128, direction: AnimDirection) {
         if let Some(value) = self.values.get_mut(self.curr_value) {
             let index = index - self.acc_index;
@@ -309,18 +314,15 @@ impl AnimatedValue for AnimSequential {
         }
     }
 
-    fn time(&self) -> std::time::Duration {
-        self.values
-            .iter()
-            .fold(Duration::default(), |acc, v| acc + v.time())
-    }
-
-    fn sub(&self, index: usize) -> &Box<dyn AnimatedValue> {
-        &self.values[index]
+    fn finish(&mut self, direction: AnimDirection) {
+        for value in &mut self.values {
+            value.finish(direction);
+        }
     }
 }
 
 /// Animate a numeric value.
+#[derive(Clone, PartialEq)]
 pub struct AnimNum {
     origin: f32,
     destination: f32,
@@ -367,17 +369,14 @@ impl AnimNum {
         self.function = function;
         self
     }
+
+    /// Read the value of the [AnimNum] as a f32.
+    pub fn read(&self) -> f32 {
+        self.value
+    }
 }
 
 impl AnimatedValue for AnimNum {
-    fn time(&self) -> Duration {
-        self.time
-    }
-
-    fn as_f32(&self) -> f32 {
-        self.value
-    }
-
     fn prepare(&mut self, direction: AnimDirection) {
         match direction {
             AnimDirection::Forward => self.value = self.origin,
@@ -410,52 +409,30 @@ impl AnimatedValue for AnimNum {
             self.function,
         );
     }
+
+    fn finish(&mut self, direction: AnimDirection) {
+        self.advance(self.time.as_millis(), direction);
+    }
 }
 
-pub trait AnimatedValue {
-    fn time(&self) -> Duration;
-
-    /// Read the animated value as a [f32]. Will panic if not supported.
-    fn as_f32(&self) -> f32 {
-        unimplemented!("f32 is not supported in this animated value.")
-    }
-
-    /// Read the animated value as a [String]. Will panic if not supported.
-    fn as_string(&self) -> String {
-        unimplemented!("String is not supported in this animated value.")
-    }
-
-    /// Read the inner animated valued. Will panic if not supported.
-    #[allow(clippy::borrowed_box)]
-    fn sub(&self, _index: usize) -> &Box<dyn AnimatedValue> {
-        unimplemented!("Sub values are not supported in this animated value.")
-    }
-
+pub trait AnimatedValue: Clone + 'static {
     fn prepare(&mut self, direction: AnimDirection);
 
     fn is_finished(&self, index: u128, direction: AnimDirection) -> bool;
 
     fn advance(&mut self, index: u128, direction: AnimDirection);
+
+    fn finish(&mut self, direction: AnimDirection);
 }
 
-pub type ReadAnimatedValue = ReadOnlySignal<Box<dyn AnimatedValue>>;
-
 #[derive(Default, PartialEq, Clone)]
-pub struct Context {
-    animated_values: Vec<Signal<Box<dyn AnimatedValue>>>,
+pub struct AnimConfiguration {
     on_finish: OnFinish,
     auto_start: bool,
     on_deps_change: OnDepsChange,
 }
 
-impl Context {
-    pub fn with(&mut self, animated_value: impl AnimatedValue + 'static) -> ReadAnimatedValue {
-        let val: Box<dyn AnimatedValue> = Box::new(animated_value);
-        let signal = Signal::new(val);
-        self.animated_values.push(signal);
-        ReadOnlySignal::new(signal)
-    }
-
+impl AnimConfiguration {
     pub fn on_finish(&mut self, on_finish: OnFinish) -> &mut Self {
         self.on_finish = on_finish;
         self
@@ -469,6 +446,18 @@ impl Context {
     pub fn on_deps_change(&mut self, on_deps_change: OnDepsChange) -> &mut Self {
         self.on_deps_change = on_deps_change;
         self
+    }
+}
+
+#[derive(Clone)]
+pub struct Context<Animated: AnimatedValue> {
+    value: Signal<Animated>,
+    conf: AnimConfiguration,
+}
+
+impl<Animated: AnimatedValue> PartialEq for Context<Animated> {
+    fn eq(&self, other: &Self) -> bool {
+        self.value.eq(&other.value) && self.conf.eq(&other.conf)
     }
 }
 
@@ -502,13 +491,13 @@ pub enum OnFinish {
 pub enum OnDepsChange {
     #[default]
     Reset,
-    Run,
+    Finish,
 }
 
 /// Animate your elements. Use [`use_animation`] to use this.
-#[derive(PartialEq, Clone)]
-pub struct UseAnimator<Animated: PartialEq + Clone + 'static> {
-    pub(crate) value_and_ctx: Memo<(Animated, Context)>,
+#[derive(Clone)]
+pub struct UseAnimation<Animated: AnimatedValue> {
+    pub(crate) context: Memo<Context<Animated>>,
     pub(crate) platform: UsePlatform,
     pub(crate) is_running: Signal<bool>,
     pub(crate) has_run_yet: Signal<bool>,
@@ -516,12 +505,23 @@ pub struct UseAnimator<Animated: PartialEq + Clone + 'static> {
     pub(crate) last_direction: Signal<AnimDirection>,
 }
 
-impl<T: PartialEq + Clone + 'static> Copy for UseAnimator<T> {}
+impl<T: AnimatedValue> PartialEq for UseAnimation<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.context.eq(&other.context)
+            && self.platform.eq(&other.platform)
+            && self.is_running.eq(&other.is_running)
+            && self.has_run_yet.eq(&other.has_run_yet)
+            && self.task.eq(&other.task)
+            && self.last_direction.eq(&other.last_direction)
+    }
+}
 
-impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
+impl<T: AnimatedValue> Copy for UseAnimation<T> {}
+
+impl<Animated: AnimatedValue> UseAnimation<Animated> {
     /// Get the animated value.
-    pub fn get(&self) -> Animated {
-        self.value_and_ctx.read().0.clone()
+    pub fn get(&self) -> ReadOnlySignal<Animated> {
+        self.context.read().value.into()
     }
 
     /// Reset the animation to the default state.
@@ -535,25 +535,26 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
             task.cancel();
         }
 
-        for value in &self.value_and_ctx.read().1.animated_values {
-            let mut value = *value;
-            value.write().prepare(AnimDirection::Forward);
-        }
+        self.context
+            .peek()
+            .value
+            .write_unchecked()
+            .prepare(AnimDirection::Forward);
     }
 
-    /// Update the animation.
-    pub fn run_update(&self) {
+    /// Finish the animation with the final state.
+    pub fn finish(&self) {
         let mut task = self.task;
 
         if let Some(task) = task.write().take() {
             task.cancel();
         }
 
-        for value in &self.value_and_ctx.read().1.animated_values {
-            let mut value = *value;
-            let time = value.peek().time().as_millis();
-            value.write().advance(time, *self.last_direction.peek());
-        }
+        self.context
+            .peek()
+            .value
+            .write_unchecked()
+            .finish(*self.last_direction.peek());
     }
 
     /// Checks if there is any animation running.
@@ -583,15 +584,15 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
 
     /// Run the animation with a given [`AnimDirection`]
     pub fn run(&self, mut direction: AnimDirection) {
-        let ctx = &self.value_and_ctx.peek().1;
+        let context = &self.context.peek();
         let platform = self.platform;
         let mut is_running = self.is_running;
-        let mut ticker = platform.new_ticker();
-        let mut values = ctx.animated_values.clone();
         let mut has_run_yet = self.has_run_yet;
-        let on_finish = ctx.on_finish;
         let mut task = self.task;
         let mut last_direction = self.last_direction;
+
+        let on_finish = context.conf.on_finish;
+        let mut value = context.value;
 
         last_direction.set(direction);
 
@@ -601,6 +602,7 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
         }
 
         let peek_has_run_yet = self.peek_has_run_yet();
+        let mut ticker = platform.new_ticker();
 
         let animation_task = spawn(async move {
             platform.request_animation_frame();
@@ -609,9 +611,7 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
             let mut prev_frame = Instant::now();
 
             // Prepare the animations with the the proper direction
-            for value in values.iter_mut() {
-                value.write().prepare(direction);
-            }
+            value.write().prepare(direction);
 
             if !peek_has_run_yet {
                 *has_run_yet.write() = true;
@@ -625,14 +625,10 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
 
                 index += prev_frame.elapsed().as_millis();
 
-                let is_finished = values
-                    .iter()
-                    .all(|value| value.peek().is_finished(index, direction));
+                let is_finished = value.peek().is_finished(index, direction);
 
                 // Advance the animations
-                for value in values.iter_mut() {
-                    value.write().advance(index, direction);
-                }
+                value.write().advance(index, direction);
 
                 prev_frame = Instant::now();
 
@@ -646,9 +642,7 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
                             index = 0;
 
                             // Restart the animation
-                            for value in values.iter_mut() {
-                                value.write().prepare(direction);
-                            }
+                            value.write().prepare(direction);
                         }
                         OnFinish::Stop => {
                             // Stop if all the animations are finished
@@ -686,12 +680,12 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
 /// }
 ///
 /// fn app() -> Element {
-///     let animation = use_animation(|ctx| {
-///         ctx.auto_start(true);
-///         ctx.with(AnimNum::new(0., 100.).time(50))
+///     let animation = use_animation(|conf| {
+///         conf.auto_start(true);
+///         AnimNum::new(0., 100.).time(50)
 ///     });
 ///
-///     let width = animation.get().read().as_f32();
+///     let width = animation.get().read().read();
 ///
 ///     rsx!(rect {
 ///         width: "{width}",
@@ -706,62 +700,64 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
 /// ```rust,no_run
 /// # use freya::prelude::*;
 /// fn app() -> Element {
-///     let animation = use_animation(|ctx| {
-///         ctx.auto_start(true);
+///     let animation = use_animation(|conf| {
+///         conf.auto_start(true);
 ///         (
-///             ctx.with(AnimNum::new(0., 100.).time(50)),
-///             ctx.with(AnimColor::new("red", "blue").time(50)),
+///             AnimNum::new(0., 100.).time(50),
+///             AnimColor::new("red", "blue").time(50),
 ///         )
 ///     });
 ///
-///     let (width, color) = animation.get();
+///     let (width, color) = &*animation.get().read_unchecked();
 ///
 ///     rsx!(rect {
-///         width: "{width.read().as_f32()}",
+///         width: "{width.read()}",
 ///         height: "100%",
-///         background: "{color.read().as_string()}"
+///         background: "{color.read()}"
 ///     })
 /// }
 /// ```
 ///
-/// You can also tweak what to do once the animation has finished with [`Context::on_finish`].
+/// You can also tweak what to do once the animation has finished with [`AnimConfiguration::on_finish`].
 ///
 /// ```rust,no_run
 /// # use freya::prelude::*;
 /// fn app() -> Element {
-///     let animation = use_animation(|ctx| {
-///         ctx.on_finish(OnFinish::Restart);
+///     let animation = use_animation(|conf| {
+///         conf.on_finish(OnFinish::Restart);
 ///         (
-///             ctx.with(AnimNum::new(0., 100.).time(50)),
-///             ctx.with(AnimColor::new("red", "blue").time(50)),
+///             AnimNum::new(0., 100.).time(50),
+///             AnimColor::new("red", "blue").time(50),
 ///         )
 ///     });
 ///
-///     let (width, color) = animation.get();
+///     let (width, color) = &*animation.get().read_unchecked();
 ///
 ///     rsx!(rect {
-///         width: "{width.read().as_f32()}",
+///         width: "{width.read()}",
 ///         height: "100%",
-///         background: "{color.read().as_string()}"
+///         background: "{color.read()}"
 ///     })
 /// }
 /// ```
-pub fn use_animation<Animated: PartialEq + Clone + 'static>(
-    run: impl Fn(&mut Context) -> Animated + Clone + 'static,
-) -> UseAnimator<Animated> {
+pub fn use_animation<Animated: AnimatedValue>(
+    run: impl 'static + Fn(&mut AnimConfiguration) -> Animated,
+) -> UseAnimation<Animated> {
     let platform = use_platform();
     let is_running = use_signal(|| false);
     let has_run_yet = use_signal(|| false);
     let task = use_signal(|| None);
     let last_direction = use_signal(|| AnimDirection::Reverse);
 
-    let value_and_ctx = use_memo(move || {
-        let mut ctx = Context::default();
-        (run(&mut ctx), ctx)
+    let context = use_memo(move || {
+        let mut conf = AnimConfiguration::default();
+        let value = run(&mut conf);
+        let value = Signal::new(value);
+        Context { value, conf }
     });
 
-    let animator = UseAnimator {
-        value_and_ctx,
+    let animation = UseAnimation {
+        context,
         platform,
         is_running,
         has_run_yet,
@@ -770,18 +766,18 @@ pub fn use_animation<Animated: PartialEq + Clone + 'static>(
     };
 
     use_hook(move || {
-        if animator.value_and_ctx.read().1.auto_start {
-            animator.run(AnimDirection::Forward);
+        if animation.context.read().conf.auto_start {
+            animation.run(AnimDirection::Forward);
         }
     });
 
-    animator
+    animation
 }
 
-pub fn use_animation_with_dependencies<Animated: PartialEq + Clone + 'static, D: Dependency>(
+pub fn use_animation_with_dependencies<Animated: PartialEq + AnimatedValue, D: Dependency>(
     deps: D,
-    run: impl Fn(&mut Context, D::Out) -> Animated + 'static,
-) -> UseAnimator<Animated>
+    run: impl 'static + Fn(&mut AnimConfiguration, D::Out) -> Animated,
+) -> UseAnimation<Animated>
 where
     D::Out: 'static + Clone,
 {
@@ -791,13 +787,15 @@ where
     let task = use_signal(|| None);
     let last_direction = use_signal(|| AnimDirection::Reverse);
 
-    let value_and_ctx = use_memo(use_reactive(deps, move |vals| {
-        let mut ctx = Context::default();
-        (run(&mut ctx, vals), ctx)
+    let context = use_memo(use_reactive(deps, move |deps| {
+        let mut conf = AnimConfiguration::default();
+        let value = run(&mut conf, deps);
+        let value = Signal::new(value);
+        Context { value, conf }
     }));
 
-    let animator = UseAnimator {
-        value_and_ctx,
+    let animation = UseAnimation {
+        context,
         platform,
         is_running,
         has_run_yet,
@@ -806,17 +804,84 @@ where
     };
 
     use_memo(move || {
-        let value_and_ctx = value_and_ctx.read();
-        if *has_run_yet.peek() && value_and_ctx.1.on_deps_change == OnDepsChange::Run {
-            animator.run_update()
+        let context = context.read();
+        if *has_run_yet.peek() && context.conf.on_deps_change == OnDepsChange::Finish {
+            animation.finish()
         }
     });
 
     use_hook(move || {
-        if animator.value_and_ctx.read().1.auto_start {
-            animator.run(AnimDirection::Forward);
+        if animation.context.read().conf.auto_start {
+            animation.run(AnimDirection::Forward);
         }
     });
 
-    animator
+    animation
 }
+
+macro_rules! impl_tuple_call {
+    ($(($($type:ident),*)),*) => {
+        $(
+            impl<$($type,)*> AnimatedValue for ($($type,)*)
+            where
+                $($type: AnimatedValue,)*
+            {
+                fn prepare(&mut self, direction: AnimDirection) {
+                    #[allow(non_snake_case)]
+                    let ($($type,)*) = self;
+                    $(
+                        $type.prepare(direction);
+                    )*
+                }
+
+                fn is_finished(&self, index: u128, direction: AnimDirection) -> bool {
+                    #[allow(non_snake_case)]
+                    let ($($type,)*) = self;
+                    $(
+                        if !$type.is_finished(index, direction) {
+                            return false;
+                        }
+                    )*
+                    true
+                }
+
+                fn advance(&mut self, index: u128, direction: AnimDirection) {
+                    #[allow(non_snake_case)]
+                    let ($($type,)*) = self;
+                    $(
+                        $type.advance(index, direction);
+                    )*
+                }
+
+                fn finish(&mut self, direction: AnimDirection) {
+                    #[allow(non_snake_case)]
+                    let ($($type,)*) = self;
+                    $(
+                        $type.finish(direction);
+                    )*
+                }
+            }
+        )*
+    };
+}
+
+impl_tuple_call!(
+    (T1),
+    (T1, T2),
+    (T1, T2, T3),
+    (T1, T2, T3, T4),
+    (T1, T2, T3, T4, T5),
+    (T1, T2, T3, T4, T5, T6),
+    (T1, T2, T3, T4, T5, T6, T7),
+    (T1, T2, T3, T4, T5, T6, T7, T8),
+    (T1, T2, T3, T4, T5, T6, T7, T8, T9),
+    (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10),
+    (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11),
+    (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12),
+    (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13),
+    (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14),
+    (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15),
+    (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16),
+    (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17),
+    (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18)
+);

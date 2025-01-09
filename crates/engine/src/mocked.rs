@@ -1274,6 +1274,13 @@ impl Data {
     }
 }
 
+impl Deref for Data {
+    type Target = [u8];
+    fn deref(&self) -> &Self::Target {
+        unimplemented!("This is mocked")
+    }
+}
+
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq, Eq, Default, Debug)]
 pub struct IRect {

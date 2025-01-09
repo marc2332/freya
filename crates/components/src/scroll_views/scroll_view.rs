@@ -110,10 +110,10 @@ pub struct ScrollViewProps {
 ///                 width: "100%"
 ///             }
 ///             Button {
+///                 onpress: move |_| {
+///                    scroll_controller.scroll_to(ScrollPosition::Start, ScrollDirection::Vertical);
+///                 },
 ///                 label {
-///                     onclick: move |_| {
-///                          scroll_controller.scroll_to(ScrollPosition::Start, ScrollDirection::Vertical);
-///                     },
 ///                     label {
 ///                         "Scroll up"
 ///                     }

@@ -3,8 +3,6 @@
     windows_subsystem = "windows"
 )]
 
-use std::time::Duration;
-
 use freya::prelude::*;
 
 fn main() {
@@ -13,28 +11,23 @@ fn main() {
 
 fn app() -> Element {
     let mut toggle = use_signal(|| true);
-    let mut animations = use_animation(|ctx| {
-        ctx.with(
-            AnimSequential::new()
-                .with(
-                    AnimNum::new(0., 360.)
-                        .time(500)
-                        .ease(Ease::InOut)
-                        .function(Function::Expo),
-                )
-                .with(
-                    AnimNum::new(0., 180.)
-                        .time(2000)
-                        .ease(Ease::Out)
-                        .function(Function::Elastic),
-                ),
-        )
+    let animations = use_animation(|_conf| {
+        AnimSequential::new([
+            AnimNum::new(0., 360.)
+                .time(500)
+                .ease(Ease::InOut)
+                .function(Function::Expo),
+            AnimNum::new(0., 180.)
+                .time(2000)
+                .ease(Ease::Out)
+                .function(Function::Elastic),
+        ])
     });
 
     let sequential = animations.get();
 
-    let rotate_a = sequential.read().sub(0).as_f32();
-    let rotate_b = sequential.read().sub(1).as_f32();
+    let rotate_a = sequential.read().sub(0).read();
+    let rotate_b = sequential.read().sub(1).read();
 
     rsx!(
         rect {

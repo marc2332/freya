@@ -11,15 +11,13 @@ fn main() {
 
 fn app() -> Element {
     let mut start_origin = use_signal(|| 50.);
-    let animation = use_animation(move |ctx| {
-        ctx.with(
-            AnimNum::new(*start_origin.read(), 100.)
-                .time(400)
-                .ease(Ease::InOut)
-                .function(Function::Sine),
-        )
+    let animation = use_animation(move |_conf| {
+        AnimNum::new(*start_origin.read(), 100.)
+            .time(400)
+            .ease(Ease::InOut)
+            .function(Function::Sine)
     });
-    let progress = animation.get().read().as_f32();
+    let progress = animation.get().read().read();
 
     let set_to_max = move |_| {
         animation.start();

@@ -34,7 +34,7 @@ pub enum TabStatus {
     Hovering,
 }
 
-///  Clickable Tab. Usually used in combination with [`Tabsbar`], [`Link`] and [`ActivableRoute`].
+///  Clickable Tab. Usually used in combination with [`Tabsbar`], [`crate::Link`] and [`crate::ActivableRoute`].
 ///
 /// # Styling
 /// Inherits the [`TabTheme`](freya_hooks::TabTheme) theme.
@@ -82,7 +82,7 @@ pub fn Tab(
     children: Element,
     theme: Option<TabThemeWith>,
     /// Optionally handle the `onclick` event in the SidebarItem.
-    onclick: Option<EventHandler<()>>,
+    onpress: Option<EventHandler<()>>,
 ) -> Element {
     let focus = use_focus();
     let mut status = use_signal(TabStatus::default);
@@ -109,8 +109,8 @@ pub fn Tab(
     });
 
     let onclick = move |_| {
-        if let Some(onclick) = &onclick {
-            onclick.call(());
+        if let Some(onpress) = &onpress {
+            onpress.call(());
         }
     };
 
@@ -163,7 +163,7 @@ pub fn Tab(
 }
 
 ///  Clickable BottomTab. Same thing as Tab but designed to be placed in the bottom of your app,
-///  usually used in combination with [`Tabsbar`], [`Link`] and [`ActivableRoute`].
+///  usually used in combination with [`Tabsbar`], [`crate::Link`] and [`crate::ActivableRoute`].
 ///
 /// # Styling
 /// Inherits the [`BottomTabTheme`](freya_hooks::BottomTabTheme) theme.

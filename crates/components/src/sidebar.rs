@@ -68,8 +68,8 @@ pub fn SidebarItem(
     theme: Option<SidebarItemThemeWith>,
     /// Inner content for the SidebarItem.
     children: Element,
-    /// Optionally handle the `onclick` event in the SidebarItem.
-    onclick: Option<EventHandler<()>>,
+    /// Optionally handle the `onpress` event in the SidebarItem.
+    onpress: Option<EventHandler<()>>,
 ) -> Element {
     let SidebarItemTheme {
         margin,
@@ -88,8 +88,8 @@ pub fn SidebarItem(
     });
 
     let onclick = move |_| {
-        if let Some(onclick) = &onclick {
-            onclick.call(());
+        if let Some(onpress) = &onpress {
+            onpress.call(());
         }
     };
 
