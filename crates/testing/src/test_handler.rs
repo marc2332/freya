@@ -372,7 +372,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
         self.push_event(PlatformEvent::Mouse {
             name: EventName::MouseMove,
             cursor: cursor.into(),
-            button: Some(MouseButton::Left),
+            button: None,
         });
         self.wait_for_update().await;
     }
