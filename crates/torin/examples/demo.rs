@@ -66,13 +66,11 @@ impl DemoDOM {
 
     // Recursively remove a Node from the DOM
     pub fn remove(&mut self, node_id: usize) {
-        let node = self.nodes.get(&node_id).unwrap().clone();
+        let node = self.nodes.remove(&node_id).unwrap();
 
         if let Some(DemoNode { children, .. }) = node.parent.and_then(|p| self.nodes.get_mut(&p)) {
             children.retain(|c| *c != node_id);
         }
-
-        self.nodes.remove(&node_id);
 
         for child in node.children {
             self.remove(child);
