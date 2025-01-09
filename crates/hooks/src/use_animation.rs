@@ -1,5 +1,6 @@
 use std::{
     fmt,
+    ops::Deref,
     time::Duration,
 };
 
@@ -263,6 +264,68 @@ impl AnimatedValue for AnimColor {
     }
 }
 
+/// Chain a sequence of animated values.
+#[derive(Clone)]
+pub struct AnimSequential<Animated: AnimatedValue, const N: usize> {
+    values: [Animated; N],
+    curr_value: usize,
+    acc_index: u128,
+}
+
+impl<Animated: AnimatedValue, const N: usize> AnimSequential<Animated, N> {
+    pub fn new(values: [Animated; N]) -> Self {
+        Self {
+            values,
+            curr_value: 0,
+            acc_index: 0,
+        }
+    }
+}
+
+impl<Animated: AnimatedValue, const N: usize> Deref for AnimSequential<Animated, N> {
+    type Target = [Animated; N];
+
+    fn deref(&self) -> &Self::Target {
+        &self.values
+    }
+}
+
+impl<Animated: AnimatedValue, const N: usize> AnimatedValue for AnimSequential<Animated, N> {
+    fn advance(&mut self, index: u128, direction: AnimDirection) {
+        if let Some(value) = self.values.get_mut(self.curr_value) {
+            let index = index - self.acc_index;
+            value.advance(index, direction);
+
+            if value.is_finished(index, direction) {
+                self.curr_value += 1;
+                self.acc_index += index;
+            }
+        }
+    }
+
+    fn is_finished(&self, index: u128, direction: AnimDirection) -> bool {
+        if let Some(value) = self.values.get(self.curr_value) {
+            value.is_finished(index, direction)
+        } else {
+            true
+        }
+    }
+
+    fn prepare(&mut self, direction: AnimDirection) {
+        self.acc_index = 0;
+        self.curr_value = 0;
+        for val in &mut self.values {
+            val.prepare(direction);
+        }
+    }
+
+    fn finish(&mut self, direction: AnimDirection) {
+        for value in &mut self.values {
+            value.finish(direction);
+        }
+    }
+}
+
 /// Animate a numeric value.
 #[derive(Clone, PartialEq)]
 pub struct AnimNum {
@@ -331,9 +394,9 @@ impl AnimatedValue for AnimNum {
     fn is_finished(&self, index: u128, direction: AnimDirection) -> bool {
         match direction {
             AnimDirection::Forward => {
-                index > self.time.as_millis() && self.value >= self.destination
+                index > self.time.as_millis() && self.value == self.destination
             }
-            AnimDirection::Reverse => index > self.time.as_millis() && self.value <= self.origin,
+            AnimDirection::Reverse => index > self.time.as_millis() && self.value == self.origin,
         }
     }
 
@@ -349,7 +412,7 @@ impl AnimatedValue for AnimNum {
             self.time,
             self.ease,
             self.function,
-        )
+        );
     }
 
     fn finish(&mut self, direction: AnimDirection) {

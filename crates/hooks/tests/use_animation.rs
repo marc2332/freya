@@ -206,3 +206,74 @@ pub async fn auto_start() {
     let width = utils.root().get(0).area().unwrap().width();
     assert_eq!(width, 100.0);
 }
+
+#[tokio::test]
+pub async fn sequential() {
+    fn use_animation_app() -> Element {
+        let animation = use_animation(|conf| {
+            conf.auto_start(true);
+            AnimSequential::new([
+                AnimNum::new(10., 100.).time(50),
+                AnimNum::new(10., 100.).time(50),
+            ])
+        });
+
+        let progress_a = animation.get().read()[0].read();
+        let progress_b = animation.get().read()[1].read();
+
+        rsx!(
+            rect {
+                background: "white",
+                height: "100%",
+                width: "{progress_a}",
+                rect {
+                    background: "white",
+                    height: "100%",
+                    width: "{progress_b}",
+                }
+            }
+        )
+    }
+
+    let mut utils = launch_test(use_animation_app);
+
+    // Disable event loop ticker
+    utils.config().event_loop_ticker = false;
+
+    // Initial state
+    utils.wait_for_update().await;
+
+    assert_eq!(utils.root().get(0).area().unwrap().width(), 10.0);
+    assert_eq!(utils.root().get(0).get(0).area().unwrap().width(), 10.0);
+
+    // State somewhere in the middle
+    sleep(Duration::from_millis(32)).await;
+    utils.wait_for_update().await;
+
+    let width_a = utils.root().get(0).area().unwrap().width();
+    let width_b = utils.root().get(0).get(0).area().unwrap().width();
+    assert!(width_a > 10.0);
+    assert_eq!(width_b, 10.0);
+
+    // Finished A and started B
+    utils.wait_for_update().await;
+    sleep(Duration::from_millis(16)).await;
+    utils.wait_for_update().await;
+    sleep(Duration::from_millis(16)).await;
+    utils.wait_for_update().await;
+
+    let width_a = utils.root().get(0).area().unwrap().width();
+    let width_b = utils.root().get(0).get(0).area().unwrap().width();
+    assert_eq!(width_a, 100.0);
+    assert!(width_b > 10.0);
+    assert_ne!(width_b, 100.0);
+
+    // Finished B
+    sleep(Duration::from_millis(32)).await;
+    utils.wait_for_update().await;
+
+    let width_a = utils.root().get(0).area().unwrap().width();
+    let width_b = utils.root().get(0).get(0).area().unwrap().width();
+    assert_eq!(width_a, 100.0);
+    assert_eq!(width_b, 100.0);
+}
