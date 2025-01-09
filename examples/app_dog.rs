@@ -4,7 +4,6 @@
 )]
 
 use freya::prelude::*;
-use rand::seq::SliceRandom;
 use reqwest::Url;
 use serde::Deserialize;
 
@@ -18,21 +17,11 @@ struct DogApiResponse {
 }
 
 async fn fetch_random_dog() -> Option<Url> {
-    // let res = reqwest::get("https://dog.ceo/api/breeds/image/random")
-    //     .await
-    //     .ok()?;
-    // let data = res.json::<DogApiResponse>().await.ok()?;
-    // data.message.parse().ok()
-    vec![
-        "https://images.dog.ceo/breeds/terrier-norwich/n02094258_2617.jpg"
-            .parse::<Url>()
-            .unwrap(),
-        "https://images.dog.ceo/breeds/weimaraner/n02092339_2157.jpg"
-            .parse::<Url>()
-            .unwrap(),
-    ]
-    .choose(&mut rand::thread_rng())
-    .map(|e| e.clone())
+    let res = reqwest::get("https://dog.ceo/api/breeds/image/random")
+        .await
+        .ok()?;
+    let data = res.json::<DogApiResponse>().await.ok()?;
+    data.message.parse().ok()
 }
 
 fn app() -> Element {
