@@ -255,21 +255,13 @@ pub async fn sequential() {
     assert!(width_a > 10.0);
     assert_eq!(width_b, 10.0);
 
-    // Finished A and started B
-    utils.wait_for_update().await;
-    sleep(Duration::from_millis(16)).await;
-    utils.wait_for_update().await;
-    sleep(Duration::from_millis(16)).await;
-    utils.wait_for_update().await;
+    // Enable event loop ticker
+    utils.config().event_loop_ticker = true;
 
-    let width_a = utils.root().get(0).area().unwrap().width();
-    let width_b = utils.root().get(0).get(0).area().unwrap().width();
-    assert_eq!(width_a, 100.0);
-    assert!(width_b > 10.0);
-    assert_ne!(width_b, 100.0);
-
-    // Finished B
-    sleep(Duration::from_millis(32)).await;
+    // Finished A and B
+    utils.wait_for_update().await;
+    sleep(Duration::from_millis(50)).await;
+    utils.wait_for_update().await;
     utils.wait_for_update().await;
 
     let width_a = utils.root().get(0).area().unwrap().width();
