@@ -26,7 +26,7 @@ async fn asset_cacher() {
             cacher.unuse_asset(asset_config.clone());
         });
 
-        rsx!(label { "{asset.read()[2]}" })
+        rsx!(label { "{asset[2]}" })
     }
 
     fn asset_cacher_app() -> Element {
@@ -39,7 +39,7 @@ async fn asset_cacher() {
                 id: "test-asset".to_string(),
             };
 
-            cacher.cache(asset_config.clone(), vec![9, 8, 7, 6].into(), false);
+            cacher.cache_asset(asset_config.clone(), vec![9, 8, 7, 6].into(), false);
         });
 
         rsx!(
