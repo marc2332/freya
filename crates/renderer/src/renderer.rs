@@ -52,7 +52,8 @@ use crate::{
     LaunchConfig,
 };
 
-const WHEEL_SPEED_MODIFIER: f32 = 53.0;
+const WHEEL_SPEED_MODIFIER: f64 = 53.0;
+const TOUCHPAD_SPEED_MODIFIER: f64 = 2.0;
 
 /// Desktop renderer using Skia, Glutin and Winit
 pub struct DesktopRenderer<'a, State: Clone + 'static> {
@@ -337,10 +338,13 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     let scroll_data = {
                         match delta {
                             MouseScrollDelta::LineDelta(x, y) => (
-                                (x * WHEEL_SPEED_MODIFIER) as f64,
-                                (y * WHEEL_SPEED_MODIFIER) as f64,
+                                (x as f64 * WHEEL_SPEED_MODIFIER),
+                                (y as f64 * WHEEL_SPEED_MODIFIER),
                             ),
-                            MouseScrollDelta::PixelDelta(pos) => (pos.x, pos.y),
+                            MouseScrollDelta::PixelDelta(pos) => (
+                                (pos.x * TOUCHPAD_SPEED_MODIFIER),
+                                (pos.y * TOUCHPAD_SPEED_MODIFIER),
+                            ),
                         }
                     };
 

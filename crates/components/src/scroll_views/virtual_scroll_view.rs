@@ -254,44 +254,48 @@ pub fn VirtualScrollView<
             1.0
         };
 
-        let wheel_movement = e.get_delta_y() as f32 * speed_multiplier;
+        let invert_direction = !((invert_scroll_wheel && clicking_shift())
+            || (!invert_scroll_wheel && !clicking_shift()));
 
-        let scroll_vertically_or_not =
-            (invert_scroll_wheel && clicking_shift()) || !invert_scroll_wheel && !clicking_shift();
-
-        if scroll_vertically_or_not {
-            let scroll_position_y = get_scroll_position_from_wheel(
-                wheel_movement,
-                inner_size,
-                size.area.height(),
-                corrected_scrolled_y,
-            );
-
-            // Only scroll when there is still area to scroll
-            if *scrolled_y.peek() != scroll_position_y {
-                e.stop_propagation();
-                *scrolled_y.write() = scroll_position_y;
-            } else {
-                return;
-            }
+        let (x_movement, y_movement) = if invert_direction {
+            (
+                e.get_delta_y() as f32 * speed_multiplier,
+                e.get_delta_x() as f32 * speed_multiplier,
+            )
         } else {
-            let scroll_position_x = get_scroll_position_from_wheel(
-                wheel_movement,
-                inner_size,
-                size.area.width(),
-                corrected_scrolled_x,
-            );
+            (
+                e.get_delta_x() as f32 * speed_multiplier,
+                e.get_delta_y() as f32 * speed_multiplier,
+            )
+        };
 
-            // Only scroll when there is still area to scroll
-            if *scrolled_x.peek() != scroll_position_x {
-                e.stop_propagation();
-                *scrolled_x.write() = scroll_position_x;
-            } else {
-                return;
-            }
+        let scroll_position_y = get_scroll_position_from_wheel(
+            y_movement,
+            inner_size,
+            size.area.height(),
+            corrected_scrolled_y,
+        );
+
+        // Only scroll when there is still area to scroll
+        if *scrolled_y.peek() != scroll_position_y {
+            e.stop_propagation();
+            *scrolled_y.write() = scroll_position_y;
+            focus.focus();
         }
 
-        focus.focus();
+        let scroll_position_x = get_scroll_position_from_wheel(
+            x_movement,
+            inner_size,
+            size.area.width(),
+            corrected_scrolled_x,
+        );
+
+        // Only scroll when there is still area to scroll
+        if *scrolled_x.peek() != scroll_position_x {
+            e.stop_propagation();
+            *scrolled_x.write() = scroll_position_x;
+            focus.focus();
+        }
     };
 
     // Drag the scrollbars
