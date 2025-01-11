@@ -9,7 +9,6 @@ use criterion::{
     criterion_main,
     Criterion,
 };
-use freya_native_core::SendAnyMap;
 use torin::prelude::*;
 
 struct TestingMeasurer;
