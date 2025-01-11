@@ -192,6 +192,7 @@ define_theme! {
         background_button: str,
         hover_background: str,
         border_fill: str,
+        focus_border_fill: str,
         arrow_fill: str,
         %[subthemes]
         font_theme: FontTheme,
@@ -205,6 +206,8 @@ define_theme! {
         background: str,
         select_background: str,
         hover_background: str,
+        border_fill: str,
+        select_border_fill: str,
         %[subthemes]
         font_theme: FontTheme,
     }
