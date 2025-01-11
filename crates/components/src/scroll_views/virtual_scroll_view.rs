@@ -254,8 +254,8 @@ pub fn VirtualScrollView<
             1.0
         };
 
-        let invert_direction = !((invert_scroll_wheel && clicking_shift())
-            || (!invert_scroll_wheel && !clicking_shift()));
+        let invert_direction = (clicking_shift() || invert_scroll_wheel)
+            && (!clicking_shift() || !invert_scroll_wheel);
 
         let (x_movement, y_movement) = if invert_direction {
             (
