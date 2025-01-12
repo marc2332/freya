@@ -276,6 +276,7 @@ builder_constructors! {
         a11y_value: String,
         a11y_access_key: String,
         a11y_author_id: String,
+        a11y_member_of: String,
         a11y_keyboard_shortcut: String,
         a11y_language: String,
         a11y_placeholder: String,

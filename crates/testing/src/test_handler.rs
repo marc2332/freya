@@ -20,7 +20,11 @@ use freya_engine::prelude::{
     FontCollection,
     FontMgr,
 };
-use freya_native_core::dioxus::NodeImmutableDioxusExt;
+use freya_native_core::{
+    dioxus::NodeImmutableDioxusExt,
+    prelude::NodeImmutable,
+};
+use freya_node_state::AccessibilityNodeState;
 use tokio::{
     sync::{
         broadcast,
@@ -144,34 +148,66 @@ impl<T: 'static + Clone> TestingHandler<T> {
                             .lock()
                             .unwrap()
                             .set_focus_with_update(node_id);
-                        if let Some((tree, _)) = res {
+                        if let Some((tree, node_id)) = res {
+                            let fdom = self.utils.sdom.get();
+                            let rdom = fdom.rdom();
+                            let layout = fdom.layout();
                             self.platform_sender.send_modify(|state| {
-                                state.focused_id = tree.focus;
+                                state.focused_accessibility_id = tree.focus;
+                                let node_ref = rdom.get(node_id).unwrap();
+                                let node_accessibility =
+                                    node_ref.get::<AccessibilityNodeState>().unwrap();
+                                let layout_node = layout.get(node_id).unwrap();
+                                state.focused_accessibility_node = AccessibilityTree::create_node(
+                                    &node_ref,
+                                    layout_node,
+                                    &node_accessibility,
+                                )
                             });
                         }
                     }
                     EventMessage::FocusNextAccessibilityNode => {
                         let fdom = self.utils.sdom.get();
                         let rdom = fdom.rdom();
-                        let (tree, _) = self
+                        let layout = fdom.layout();
+                        let (tree, node_id) = self
                             .accessibility_tree
                             .lock()
                             .unwrap()
                             .set_focus_on_next_node(AccessibilityFocusStrategy::Forward, rdom);
                         self.platform_sender.send_modify(|state| {
-                            state.focused_id = tree.focus;
+                            state.focused_accessibility_id = tree.focus;
+                            let node_ref = rdom.get(node_id).unwrap();
+                            let node_accessibility =
+                                node_ref.get::<AccessibilityNodeState>().unwrap();
+                            let layout_node = layout.get(node_id).unwrap();
+                            state.focused_accessibility_node = AccessibilityTree::create_node(
+                                &node_ref,
+                                layout_node,
+                                &node_accessibility,
+                            )
                         });
                     }
                     EventMessage::FocusPrevAccessibilityNode => {
                         let fdom = self.utils.sdom.get();
                         let rdom = fdom.rdom();
-                        let (tree, _) = self
+                        let layout = fdom.layout();
+                        let (tree, node_id) = self
                             .accessibility_tree
                             .lock()
                             .unwrap()
                             .set_focus_on_next_node(AccessibilityFocusStrategy::Backward, rdom);
                         self.platform_sender.send_modify(|state| {
-                            state.focused_id = tree.focus;
+                            state.focused_accessibility_id = tree.focus;
+                            let node_ref = rdom.get(node_id).unwrap();
+                            let node_accessibility =
+                                node_ref.get::<AccessibilityNodeState>().unwrap();
+                            let layout_node = layout.get(node_id).unwrap();
+                            state.focused_accessibility_node = AccessibilityTree::create_node(
+                                &node_ref,
+                                layout_node,
+                                &node_accessibility,
+                            )
                         });
                     }
                     EventMessage::SetCursorIcon(icon) => {
