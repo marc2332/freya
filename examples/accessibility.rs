@@ -71,10 +71,8 @@ fn app() -> Element {
             }
             NetworkImage {
                 url,
-                theme: theme_with!(NetworkImageTheme {
-                    width: "150".into(),
-                    height: "100".into(),
-                }),
+                width: "150",
+                height: "100",
                 alt: "This is an image"
             }
         }

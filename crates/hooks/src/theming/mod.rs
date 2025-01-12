@@ -387,15 +387,6 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub NetworkImage {
-        %[cows]
-        width: str,
-        height: str,
-    }
-}
-
-define_theme! {
-    %[component]
     pub Icon {
         %[cows]
         margin: str,
@@ -610,7 +601,6 @@ pub struct Theme {
     pub input: InputTheme,
     pub canvas: CanvasTheme,
     pub graph: GraphTheme,
-    pub network_image: NetworkImageTheme,
     pub icon: IconTheme,
     pub sidebar: SidebarTheme,
     pub sidebar_item: SidebarItemTheme,
