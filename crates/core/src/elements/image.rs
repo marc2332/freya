@@ -1,7 +1,10 @@
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::{
-    AspectRatio, ReferencesState, StyleState, TransformState
+    AspectRatio,
+    ReferencesState,
+    StyleState,
+    TransformState,
 };
 
 use super::utils::ElementUtils;
@@ -37,19 +40,19 @@ impl ElementUtils for ImageElement {
                 let ratio = match node_transform.aspect_ratio {
                     AspectRatio::Max => width_ratio.max(height_ratio),
                     AspectRatio::Min => width_ratio.min(height_ratio),
-                    AspectRatio::None => 1.0
+                    AspectRatio::None => 1.0,
                 };
 
                 let width = pic.width() as f32 * ratio;
                 let height = pic.height() as f32 * ratio;
 
-                let rect = Rect::new(area.min_x(), area.min_y() , area.min_x() + width, area.min_y() + height);
-                canvas.draw_image_rect(
-                    pic,
-                    None,
-                    rect,
-                    &paint
+                let rect = Rect::new(
+                    area.min_x(),
+                    area.min_y(),
+                    area.min_x() + width,
+                    area.min_y() + height,
                 );
+                canvas.draw_image_rect(pic, None, rect, &paint);
             }
         };
 

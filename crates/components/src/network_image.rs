@@ -33,7 +33,7 @@ pub struct NetworkImageProps {
     /// Information about the image.
     pub alt: Option<String>,
 
-    pub aspect_ratio: Option<String>
+    pub aspect_ratio: Option<String>,
 }
 
 /// Image status.

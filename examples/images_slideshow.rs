@@ -15,12 +15,11 @@ fn Card(selected: ReadOnlySignal<bool>, children: Element) -> Element {
     let animations = use_animation(move |conf| {
         conf.on_deps_change(OnDepsChange::Rerun);
         conf.auto_start(true);
-        let (from, to) = if selected() {
-            (1.0, 3.0)
-        } else {
-            (3.0, 1.0)
-        };
-        AnimNum::new(from, to).time(250).ease(Ease::Out).function(Function::Expo)
+        let (from, to) = if selected() { (1.0, 3.0) } else { (3.0, 1.0) };
+        AnimNum::new(from, to)
+            .time(250)
+            .ease(Ease::Out)
+            .function(Function::Expo)
     });
 
     let width = animations.get().read().read();
@@ -54,7 +53,7 @@ fn app() -> Element {
             spacing: "5",
             width: "100%",
             padding: "5",
-            
+
             for (i, url) in [
                 "https://images.dog.ceo/breeds/dachshund/dachshund-2033796_640.jpg",
                 "https://images.dog.ceo/breeds/cavapoo/doggo4.jpg",

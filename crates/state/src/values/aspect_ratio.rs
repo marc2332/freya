@@ -1,11 +1,14 @@
-use crate::{Parse, ParseError};
+use crate::{
+    Parse,
+    ParseError,
+};
 
 #[derive(Default, Clone, Debug, PartialEq)]
 pub enum AspectRatio {
     Min,
     Max,
     #[default]
-    None
+    None,
 }
 
 impl Parse for AspectRatio {
@@ -14,7 +17,7 @@ impl Parse for AspectRatio {
             "min" => Ok(Self::Min),
             "max" => Ok(Self::Max),
             "none" => Ok(Self::None),
-            _ => Err(ParseError)
+            _ => Err(ParseError),
         }
     }
 }

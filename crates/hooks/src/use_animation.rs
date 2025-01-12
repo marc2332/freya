@@ -779,12 +779,9 @@ pub fn use_animation<Animated: AnimatedValue>(
 
     use_memo(move || {
         let context = context.read();
-        if *has_run_yet.peek()
-        {
+        if *has_run_yet.peek() {
             match context.conf.on_deps_change {
-                OnDepsChange::Finish => {
-                    animation.finish()
-                }
+                OnDepsChange::Finish => animation.finish(),
                 OnDepsChange::Rerun => {
                     let last_direction = *animation.last_direction.peek();
                     animation.run(last_direction);
@@ -828,12 +825,9 @@ where
 
     use_memo(move || {
         let context = context.read();
-        if *has_run_yet.peek()
-        {
+        if *has_run_yet.peek() {
             match context.conf.on_deps_change {
-                OnDepsChange::Finish => {
-                    animation.finish()
-                }
+                OnDepsChange::Finish => animation.finish(),
                 OnDepsChange::Rerun => {
                     animation.run(*animation.last_direction.peek());
                 }

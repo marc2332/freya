@@ -20,7 +20,11 @@ use freya_native_core::{
 use freya_native_core_macro::partial_derive_state;
 
 use crate::{
-    AspectRatio, CustomAttributeValues, Parse, ParseAttribute, ParseError
+    AspectRatio,
+    CustomAttributeValues,
+    Parse,
+    ParseAttribute,
+    ParseError,
 };
 
 #[derive(Default, Clone, Debug, Component, PartialEq)]
@@ -28,7 +32,7 @@ pub struct TransformState {
     pub node_id: NodeId,
     pub opacities: Vec<f32>,
     pub rotations: Vec<(NodeId, f32)>,
-    pub aspect_ratio: AspectRatio
+    pub aspect_ratio: AspectRatio,
 }
 
 impl ParseAttribute for TransformState {
@@ -79,7 +83,7 @@ impl State<CustomAttributeValues> for TransformState {
         NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
             AttributeName::Rotate,
             AttributeName::Opacity,
-            AttributeName::AspectRatio
+            AttributeName::AspectRatio,
         ]));
 
     fn update<'a>(
