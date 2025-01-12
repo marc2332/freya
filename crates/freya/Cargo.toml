@@ -18,7 +18,6 @@ no-default-features = true
 [features]
 custom-tokio-rt = []
 skia = ["freya-engine/skia-engine"]
-hot-reload = ["freya-renderer/hot-reload", "dioxus/hot-reload"]
 tracing-subscriber = ["dep:tracing-subscriber"]
 devtools = ["dep:freya-devtools"]
 use_camera = ["freya-hooks/use_camera"]
