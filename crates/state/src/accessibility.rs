@@ -85,6 +85,15 @@ impl ParseAttribute for AccessibilityNodeState {
                     self.a11y_auto_focus = attr.parse().unwrap_or_default()
                 }
             }
+            AttributeName::A11yMemberOf => {
+                if let OwnedAttributeValue::Custom(CustomAttributeValues::AccessibilityId(id)) =
+                    attr.value
+                {
+                    if let Some(builder) = self.builder.as_mut() {
+                        builder.set_member_of(*id);
+                    }
+                }
+            }
             a11y_attr => {
                 if let OwnedAttributeValue::Text(attr) = attr.value {
                     if let Some(builder) = self.builder.as_mut() {
@@ -330,6 +339,7 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
             AttributeName::A11yValue,
             AttributeName::A11yAccessKey,
             AttributeName::A11yAuthorId,
+            AttributeName::A11yMemberOf,
             AttributeName::A11yKeyboardShortcut,
             AttributeName::A11yLanguage,
             AttributeName::A11yPlaceholder,

@@ -1,11 +1,15 @@
-use accesskit::NodeId as AccessibilityId;
+use accesskit::{
+    Node as AccessibilityNode,
+    NodeId as AccessibilityId,
+};
 use torin::prelude::Size2D;
 use winit::window::Window;
 
 /// State consumed by components and updated by the platform.
 #[derive(Clone, Debug)]
 pub struct NativePlatformState {
-    pub focused_id: AccessibilityId,
+    pub focused_accessibility_id: AccessibilityId,
+    pub focused_accessibility_node: AccessibilityNode,
     pub preferred_theme: PreferredTheme,
     pub navigation_mode: NavigationMode,
     pub information: PlatformInformation,

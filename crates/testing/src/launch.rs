@@ -3,6 +3,10 @@ use std::sync::{
     Mutex,
 };
 
+use accesskit::{
+    NodeBuilder,
+    Role,
+};
 use dioxus_core::{
     fc_to_builder,
     Element,
@@ -48,7 +52,8 @@ pub fn launch_test_with_config<T: 'static + Clone>(
     let (event_emitter, event_receiver) = unbounded_channel();
     let (platform_event_emitter, platform_event_receiver) = unbounded_channel::<EventMessage>();
     let (platform_sender, platform_receiver) = watch::channel(NativePlatformState {
-        focused_id: ACCESSIBILITY_ROOT_ID,
+        focused_accessibility_id: ACCESSIBILITY_ROOT_ID,
+        focused_accessibility_node: NodeBuilder::new(Role::Window).build(),
         preferred_theme: PreferredTheme::default(),
         navigation_mode: NavigationMode::default(),
         information: PlatformInformation::new(config.size, false, false, false),

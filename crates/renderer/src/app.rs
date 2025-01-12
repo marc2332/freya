@@ -1,5 +1,9 @@
 use std::sync::Arc;
 
+use accesskit::{
+    NodeBuilder,
+    Role,
+};
 use dioxus_core::{
     Template,
     VirtualDom,
@@ -87,7 +91,8 @@ impl Application {
 
         let (event_emitter, event_receiver) = mpsc::unbounded_channel();
         let (platform_sender, platform_receiver) = watch::channel(NativePlatformState {
-            focused_id: ACCESSIBILITY_ROOT_ID,
+            focused_accessibility_id: ACCESSIBILITY_ROOT_ID,
+            focused_accessibility_node: NodeBuilder::new(Role::Window).build(),
             preferred_theme: window.theme().map(|theme| theme.into()).unwrap_or_default(),
             navigation_mode: NavigationMode::default(),
             information: PlatformInformation::from_winit(window),
@@ -344,8 +349,9 @@ impl Application {
     pub fn focus_node(&mut self, node_id: AccessibilityId, window: &Window) {
         let fdom = self.sdom.get();
         let layout = fdom.layout();
+        let rdom = fdom.rdom();
         self.accessibility
-            .focus_node(node_id, &self.platform_sender, window, &layout)
+            .focus_node(rdom, node_id, &self.platform_sender, window, &layout)
     }
 
     pub fn focus_next_node(&mut self, direction: AccessibilityFocusStrategy, window: &Window) {
