@@ -32,6 +32,8 @@ pub struct NetworkImageProps {
 
     /// Information about the image.
     pub alt: Option<String>,
+
+    pub aspect_ratio: Option<String>
 }
 
 /// Image status.
@@ -128,7 +130,8 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
                 a11y_id,
                 image_data,
                 a11y_role: "image",
-                a11y_name: alt
+                a11y_name: alt,
+                aspect_ratio: props.aspect_ratio
             })
         }
         ImageState::Loading => {

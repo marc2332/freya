@@ -740,6 +740,7 @@ builder_constructors! {
 
         // Image
         image_data: String,
+        aspect_ratio: String,
 
         // Reference
         reference: Reference,
