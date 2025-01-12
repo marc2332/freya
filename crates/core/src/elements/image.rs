@@ -1,8 +1,10 @@
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::{
+    AspectRatio,
     ReferencesState,
     StyleState,
+    TransformState,
 };
 
 use super::utils::ElementUtils;
@@ -24,19 +26,33 @@ impl ElementUtils for ImageElement {
         let area = layout_node.visible_area();
         let node_style = node_ref.get::<StyleState>().unwrap();
         let node_references = node_ref.get::<ReferencesState>().unwrap();
+        let node_transform = node_ref.get::<TransformState>().unwrap();
 
         let draw_img = |bytes: &[u8]| {
             let pic = Image::from_encoded(unsafe { Data::new_bytes(bytes) });
             if let Some(pic) = pic {
                 let mut paint = Paint::default();
                 paint.set_anti_alias(true);
-                canvas.draw_image_nine(
-                    pic,
-                    IRect::new(0, 0, 0, 0),
-                    Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
-                    FilterMode::Last,
-                    Some(&paint),
+
+                let width_ratio = area.width() / pic.width() as f32;
+                let height_ratio = area.height() / pic.height() as f32;
+
+                let ratio = match node_transform.aspect_ratio {
+                    AspectRatio::Max => width_ratio.max(height_ratio),
+                    AspectRatio::Min => width_ratio.min(height_ratio),
+                    AspectRatio::None => 1.0,
+                };
+
+                let width = pic.width() as f32 * ratio;
+                let height = pic.height() as f32 * ratio;
+
+                let rect = Rect::new(
+                    area.min_x(),
+                    area.min_y(),
+                    area.min_x() + width,
+                    area.min_y() + height,
                 );
+                canvas.draw_image_rect(pic, None, rect, &paint);
             }
         };
 
