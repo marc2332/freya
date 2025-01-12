@@ -2,13 +2,10 @@ use bytes::Bytes;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::{
-    use_applied_theme,
     use_asset_cacher,
     use_focus,
     AssetAge,
     AssetConfiguration,
-    NetworkImageTheme,
-    NetworkImageThemeWith,
 };
 use freya_node_state::dynamic_bytes;
 use reqwest::Url;
@@ -63,7 +60,16 @@ pub enum ImageState {
 ///     )
 /// }
 #[allow(non_snake_case)]
-pub fn NetworkImage(NetworkImageProps { width, height, url, fallback, loading, alt }: NetworkImageProps) -> Element {
+pub fn NetworkImage(
+    NetworkImageProps {
+        width,
+        height,
+        url,
+        fallback,
+        loading,
+        alt,
+    }: NetworkImageProps,
+) -> Element {
     let mut asset_cacher = use_asset_cacher();
     let focus = use_focus();
     let mut status = use_signal(|| ImageState::Loading);

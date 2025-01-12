@@ -176,10 +176,6 @@ pub(crate) const BASE_THEME: Theme = Theme {
         width: cow_borrowed!("100%"),
         height: cow_borrowed!("100%"),
     },
-    network_image: NetworkImageTheme {
-        width: cow_borrowed!("100%"),
-        height: cow_borrowed!("100%"),
-    },
     icon: IconTheme {
         width: cow_borrowed!("10"),
         height: cow_borrowed!("10"),
