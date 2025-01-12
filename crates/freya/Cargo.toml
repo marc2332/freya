@@ -50,7 +50,6 @@ dioxus = { workspace = true }
 dioxus-core-macro = { workspace = true }
 dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
-dioxus-hot-reload = { workspace = true }
 dioxus-signals = { workspace = true }
 
 tokio = { workspace = true }
