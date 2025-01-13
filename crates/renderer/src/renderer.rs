@@ -139,24 +139,16 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
     /// Run the `on_setup` callback that was passed to the launch function
     pub fn run_on_setup(&mut self) {
         let state = self.state.created_state();
-        if let Some(on_setup) = &mut state.window_config.on_setup {
-            if let Some(on_setup) = on_setup.take() {
-                (on_setup)(&mut state.window)
-            } else {
-                unreachable!("on_setup can only be called once")
-            }
+        if let Some(on_setup) = state.window_config.on_setup.take() {
+            (on_setup)(&mut state.window)
         }
     }
 
     /// Run the `on_exit` callback that was passed to the launch function
     pub fn run_on_exit(&mut self) {
         let state = self.state.created_state();
-        if let Some(on_exit) = &mut state.window_config.on_exit {
-            if let Some(on_exit) = on_exit.take() {
-                (on_exit)(&mut state.window)
-            } else {
-                unreachable!("on_setup can only be called once")
-            }
+        if let Some(on_exit) = state.window_config.on_exit.take() {
+            (on_exit)(&mut state.window)
         }
     }
 }
