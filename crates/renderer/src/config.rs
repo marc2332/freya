@@ -119,7 +119,7 @@ impl LaunchConfig<'_, ()> {
     }
 }
 
-pub type WindowCallback = Arc<Box<fn(&mut Window)>>;
+pub type WindowCallback = Option<Box<dyn FnOnce(&mut Window)>>;
 
 impl<'a, T: Clone> LaunchConfig<'a, T> {
     /// Specify a Window size.
@@ -201,14 +201,14 @@ impl<'a, T: Clone> LaunchConfig<'a, T> {
     }
 
     /// Register a callback that will be executed when the window is created.
-    pub fn on_setup(mut self, callback: fn(&mut Window)) -> Self {
-        self.window_config.on_setup = Some(Arc::new(Box::new(callback)));
+    pub fn on_setup(mut self, callback: impl FnOnce(&mut Window) + 'static) -> Self {
+        self.window_config.on_setup = Some(Some(Box::new(callback)));
         self
     }
 
     /// Register a callback that will be executed when the window is closed.
     pub fn on_exit(mut self, callback: fn(&mut Window)) -> Self {
-        self.window_config.on_exit = Some(Arc::new(Box::new(callback)));
+        self.window_config.on_exit = Some(Some(Box::new(callback)));
         self
     }
 
