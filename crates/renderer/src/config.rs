@@ -1,7 +1,4 @@
-use std::{
-    io::Cursor,
-    sync::Arc,
-};
+use std::io::Cursor;
 
 use freya_core::{
     plugins::{
@@ -23,6 +20,7 @@ use winit::{
     },
 };
 
+pub type WindowCallback = Box<dyn FnOnce(&mut Window)>;
 pub type EventLoopBuilderHook = Box<dyn FnOnce(&mut EventLoopBuilder<EventMessage>)>;
 pub type WindowBuilderHook = Box<dyn FnOnce(WindowAttributes) -> WindowAttributes>;
 pub type EmbeddedFonts<'a> = Vec<(&'a str, &'a [u8])>;
@@ -119,8 +117,6 @@ impl LaunchConfig<'_, ()> {
     }
 }
 
-pub type WindowCallback = Arc<Box<fn(&mut Window)>>;
-
 impl<'a, T: Clone> LaunchConfig<'a, T> {
     /// Specify a Window size.
     pub fn with_size(mut self, width: f64, height: f64) -> Self {
@@ -201,14 +197,14 @@ impl<'a, T: Clone> LaunchConfig<'a, T> {
     }
 
     /// Register a callback that will be executed when the window is created.
-    pub fn on_setup(mut self, callback: fn(&mut Window)) -> Self {
-        self.window_config.on_setup = Some(Arc::new(Box::new(callback)));
+    pub fn on_setup(mut self, callback: impl FnOnce(&mut Window) + 'static) -> Self {
+        self.window_config.on_setup = Some(Box::new(callback));
         self
     }
 
     /// Register a callback that will be executed when the window is closed.
-    pub fn on_exit(mut self, callback: fn(&mut Window)) -> Self {
-        self.window_config.on_exit = Some(Arc::new(Box::new(callback)));
+    pub fn on_exit(mut self, callback: impl FnOnce(&mut Window) + 'static) -> Self {
+        self.window_config.on_exit = Some(Box::new(callback));
         self
     }
 
