@@ -207,7 +207,7 @@ impl<'a, T: Clone> LaunchConfig<'a, T> {
     }
 
     /// Register a callback that will be executed when the window is closed.
-    pub fn on_exit(mut self, callback: fn(&mut Window)) -> Self {
+    pub fn on_exit(mut self, callback: impl FnOnce(&mut Window) + 'static) -> Self {
         self.window_config.on_exit = Some(Some(Box::new(callback)));
         self
     }
