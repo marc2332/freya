@@ -30,6 +30,7 @@ fn app() -> Element {
                 width: "100%",
                 background: "white",
                 border: "2 solid black",
+                content: "flex",
                 spacing: "2",
                 padding: "5",
                 direction: "horizontal",
@@ -104,6 +105,7 @@ fn app() -> Element {
                     width: "200",
                     background: "white",
                     border: "2 solid black",
+                    spacing: "2",
                     padding: "5",
                     direction: "horizontal",
                     rect {
