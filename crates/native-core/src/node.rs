@@ -154,7 +154,7 @@ impl FromAnyValue for () {
 impl<V: FromAnyValue> Debug for OwnedAttributeValue<V> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Text(arg0) => f.debug_tuple("Text2").field(arg0).finish(),
+            Self::Text(arg0) => f.debug_tuple("Text").field(arg0).finish(),
             Self::Float(arg0) => f.debug_tuple("Float").field(arg0).finish(),
             Self::Int(arg0) => f.debug_tuple("Int").field(arg0).finish(),
             Self::Bool(arg0) => f.debug_tuple("Bool").field(arg0).finish(),
