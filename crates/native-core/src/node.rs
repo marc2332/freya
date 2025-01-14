@@ -106,7 +106,7 @@ pub struct OwnedAttributeView<'a, V: FromAnyValue = ()> {
 #[derive(Clone)]
 pub enum OwnedAttributeValue<V: FromAnyValue = ()> {
     /// A string value. This is the most common type of attribute.
-    Text(String),
+    Text(Box<str>),
     /// A floating point value.
     Float(f64),
     /// An integer value.
@@ -115,12 +115,6 @@ pub enum OwnedAttributeValue<V: FromAnyValue = ()> {
     Bool(bool),
     /// A custom value specific to the renderer
     Custom(V),
-}
-
-impl<V: FromAnyValue> From<String> for OwnedAttributeValue<V> {
-    fn from(value: String) -> Self {
-        Self::Text(value)
-    }
 }
 
 impl<V: FromAnyValue> From<f64> for OwnedAttributeValue<V> {
@@ -160,7 +154,7 @@ impl FromAnyValue for () {
 impl<V: FromAnyValue> Debug for OwnedAttributeValue<V> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Text(arg0) => f.debug_tuple("Text").field(arg0).finish(),
+            Self::Text(arg0) => f.debug_tuple("Text2").field(arg0).finish(),
             Self::Float(arg0) => f.debug_tuple("Float").field(arg0).finish(),
             Self::Int(arg0) => f.debug_tuple("Int").field(arg0).finish(),
             Self::Bool(arg0) => f.debug_tuple("Bool").field(arg0).finish(),
@@ -172,7 +166,7 @@ impl<V: FromAnyValue> Debug for OwnedAttributeValue<V> {
 impl<V: FromAnyValue> From<&dioxus_core::AttributeValue> for OwnedAttributeValue<V> {
     fn from(value: &dioxus_core::AttributeValue) -> Self {
         match value {
-            dioxus_core::AttributeValue::Text(text) => Self::Text(text.clone()),
+            dioxus_core::AttributeValue::Text(text) => Self::Text(text.clone().into_boxed_str()),
             dioxus_core::AttributeValue::Float(float) => Self::Float(*float),
             dioxus_core::AttributeValue::Int(int) => Self::Int(*int),
             dioxus_core::AttributeValue::Bool(bool) => Self::Bool(*bool),
