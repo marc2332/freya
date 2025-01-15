@@ -1,11 +1,16 @@
-use std::{cell::RefCell, rc::Rc, sync::{
-    Arc,
-    Mutex,
-    MutexGuard,
-}};
-
-use std::cell::RefMut;
-use std::cell::Ref;
+use std::{
+    cell::{
+        Ref,
+        RefCell,
+        RefMut,
+    },
+    rc::Rc,
+    sync::{
+        Arc,
+        Mutex,
+        MutexGuard,
+    },
+};
 
 use dioxus_core::VirtualDom;
 use freya_common::{
@@ -105,14 +110,13 @@ impl SafeDOM {
     /// Get a reference to the DOM.
     #[cfg(feature = "rc-dom")]
     pub fn get(&self) -> Ref<FreyaDOM> {
-
-        return self.fdom.borrow()
+        return self.fdom.borrow();
     }
 
     /// Get a mutable reference to the dom.
     #[cfg(feature = "rc-dom")]
     pub fn get_mut(&self) -> RefMut<FreyaDOM> {
-        return self.fdom.borrow_mut()
+        return self.fdom.borrow_mut();
     }
 }
 
