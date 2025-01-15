@@ -117,6 +117,12 @@ pub enum OwnedAttributeValue<V: FromAnyValue = ()> {
     Custom(V),
 }
 
+impl<V: FromAnyValue> From<String> for OwnedAttributeValue<V> {
+    fn from(value: String) -> Self {
+        Self::Text(value.into_boxed_str())
+    }
+}
+
 impl<V: FromAnyValue> From<f64> for OwnedAttributeValue<V> {
     fn from(value: f64) -> Self {
         Self::Float(value)
