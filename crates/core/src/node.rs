@@ -1,6 +1,7 @@
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::{
+    AccessibilityNodeState,
     Border,
     CornerRadius,
     CursorState,
@@ -34,6 +35,7 @@ pub struct NodeState {
     pub size: LayoutState,
     pub style: StyleState,
     pub transform: TransformState,
+    pub accessibility: AccessibilityNodeState,
 }
 
 pub fn get_node_state(node: &DioxusNode) -> NodeState {
@@ -67,6 +69,11 @@ pub fn get_node_state(node: &DioxusNode) -> NodeState {
         .as_deref()
         .cloned()
         .unwrap_or_default();
+    let accessibility = node
+        .get::<AccessibilityNodeState>()
+        .as_deref()
+        .cloned()
+        .unwrap_or_default();
 
     NodeState {
         cursor,
@@ -75,6 +82,7 @@ pub fn get_node_state(node: &DioxusNode) -> NodeState {
         size,
         style,
         transform,
+        accessibility,
     }
 }
 

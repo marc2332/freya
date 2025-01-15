@@ -27,6 +27,8 @@ freya-components = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
 dioxus-radio = "0.2"
+serde_json = "1.0.107"
+accesskit = { workspace = true }
 
 dioxus = { workspace = true }
 freya-native-core = { workspace = true }

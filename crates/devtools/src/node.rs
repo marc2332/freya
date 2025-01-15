@@ -1,3 +1,4 @@
+use accesskit::Role;
 use dioxus::prelude::*;
 use freya_components::{
     ArrowIcon,
@@ -49,6 +50,26 @@ pub fn NodeElement(
     let margin_left = (node.height * 10) as f32 - 20.;
     let id = node_id.index();
 
+    let role = node
+        .state
+        .accessibility
+        .builder
+        .clone()
+        .and_then(|builder| {
+            let built_node = builder.build();
+            let role = built_node.role();
+            if role != Role::GenericContainer {
+                serde_json::to_value(&role)
+                    .ok()
+                    .and_then(|v| v.as_str().map(String::from))
+            } else {
+                None
+            }
+        });
+    let name = role
+        .map(|role| format!("{}, tag: {}", role, node.tag))
+        .unwrap_or_else(|| node.tag.to_string());
+
     rsx!(
         rect {
             corner_radius: "7",
@@ -84,7 +105,7 @@ pub fn NodeElement(
             label {
                 font_size: "14",
                 color: "white",
-                "{node.tag} ({id})"
+                "{name}, id: {id}"
             }
         }
     )
