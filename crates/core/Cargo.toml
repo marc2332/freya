@@ -15,7 +15,7 @@ categories = ["gui", "asynchronous"]
 features = ["freya-engine/mocked-engine"]
 
 [features]
-shared = []
+rc-dom = []
 skia-engine = ["freya-engine/skia-engine"]
 fade-cached-incremental-areas = []
 
