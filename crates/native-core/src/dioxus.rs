@@ -278,7 +278,7 @@ fn create_template_node<V: FromAnyValue + Send + Sync>(
                     .filter_map(|attr| match attr {
                         dioxus_core::TemplateAttribute::Static { name, value, .. } => Some((
                             AttributeName::from_str(name).expect("Unexpected."),
-                            OwnedAttributeValue::Text(value.to_string()),
+                            OwnedAttributeValue::Text(value.to_string().into_boxed_str()),
                         )),
                         dioxus_core::TemplateAttribute::Dynamic { .. } => None,
                     })

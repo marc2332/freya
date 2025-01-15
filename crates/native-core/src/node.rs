@@ -106,7 +106,7 @@ pub struct OwnedAttributeView<'a, V: FromAnyValue = ()> {
 #[derive(Clone)]
 pub enum OwnedAttributeValue<V: FromAnyValue = ()> {
     /// A string value. This is the most common type of attribute.
-    Text(String),
+    Text(Box<str>),
     /// A floating point value.
     Float(f64),
     /// An integer value.
@@ -119,7 +119,7 @@ pub enum OwnedAttributeValue<V: FromAnyValue = ()> {
 
 impl<V: FromAnyValue> From<String> for OwnedAttributeValue<V> {
     fn from(value: String) -> Self {
-        Self::Text(value)
+        Self::Text(value.into_boxed_str())
     }
 }
 
@@ -172,7 +172,7 @@ impl<V: FromAnyValue> Debug for OwnedAttributeValue<V> {
 impl<V: FromAnyValue> From<&dioxus_core::AttributeValue> for OwnedAttributeValue<V> {
     fn from(value: &dioxus_core::AttributeValue) -> Self {
         match value {
-            dioxus_core::AttributeValue::Text(text) => Self::Text(text.clone()),
+            dioxus_core::AttributeValue::Text(text) => Self::Text(text.clone().into_boxed_str()),
             dioxus_core::AttributeValue::Float(float) => Self::Float(*float),
             dioxus_core::AttributeValue::Int(int) => Self::Int(*int),
             dioxus_core::AttributeValue::Bool(bool) => Self::Bool(*bool),

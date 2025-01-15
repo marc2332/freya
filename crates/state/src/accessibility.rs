@@ -76,42 +76,40 @@ impl ParseAttribute for AccessibilityNodeState {
                 }
             }
             AttributeName::A11yFocusable => {
-                if let OwnedAttributeValue::Text(attr) = attr.value {
+                if let Some(attr) = attr.value.as_text() {
                     self.a11y_focusable = Focusable::parse(attr)?;
                 }
             }
             AttributeName::A11yAutoFocus => {
-                if let OwnedAttributeValue::Text(attr) = attr.value {
+                if let Some(attr) = attr.value.as_text() {
                     self.a11y_auto_focus = attr.parse().unwrap_or_default()
                 }
             }
             a11y_attr => {
-                if let OwnedAttributeValue::Text(attr) = attr.value {
+                if let Some(attr) = attr.value.as_text() {
                     if let Some(builder) = self.builder.as_mut() {
                         match a11y_attr {
-                            AttributeName::A11yName => builder.set_name(attr.clone()),
-                            AttributeName::A11yDescription => builder.set_description(attr.clone()),
-                            AttributeName::A11yValue => builder.set_value(attr.clone()),
-                            AttributeName::A11yAccessKey => builder.set_access_key(attr.clone()),
-                            AttributeName::A11yAuthorId => builder.set_author_id(attr.clone()),
+                            AttributeName::A11yName => builder.set_name(attr),
+                            AttributeName::A11yDescription => builder.set_description(attr),
+                            AttributeName::A11yValue => builder.set_value(attr),
+                            AttributeName::A11yAccessKey => builder.set_access_key(attr),
+                            AttributeName::A11yAuthorId => builder.set_author_id(attr),
                             AttributeName::A11yKeyboardShortcut => {
-                                builder.set_keyboard_shortcut(attr.clone())
+                                builder.set_keyboard_shortcut(attr)
                             }
-                            AttributeName::A11yLanguage => builder.set_language(attr.clone()),
-                            AttributeName::A11yPlaceholder => builder.set_placeholder(attr.clone()),
+                            AttributeName::A11yLanguage => builder.set_language(attr),
+                            AttributeName::A11yPlaceholder => builder.set_placeholder(attr),
                             AttributeName::A11yRoleDescription => {
-                                builder.set_role_description(attr.clone())
+                                builder.set_role_description(attr)
                             }
                             AttributeName::A11yStateDescription => {
-                                builder.set_state_description(attr.clone())
+                                builder.set_state_description(attr)
                             }
-                            AttributeName::A11yTooltip => builder.set_tooltip(attr.clone()),
-                            AttributeName::A11yUrl => builder.set_url(attr.clone()),
-                            AttributeName::A11yRowIndexText => {
-                                builder.set_row_index_text(attr.clone())
-                            }
+                            AttributeName::A11yTooltip => builder.set_tooltip(attr),
+                            AttributeName::A11yUrl => builder.set_url(attr),
+                            AttributeName::A11yRowIndexText => builder.set_row_index_text(attr),
                             AttributeName::A11yColumnIndexText => {
-                                builder.set_column_index_text(attr.clone())
+                                builder.set_column_index_text(attr)
                             }
                             AttributeName::A11yScrollX => {
                                 builder.set_scroll_x(attr.parse().map_err(|_| ParseError)?)
