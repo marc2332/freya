@@ -15,7 +15,10 @@ use accesskit::{
     Tree,
     TreeUpdate,
 };
-use freya_common::AccessibilityDirtyNodes;
+use freya_common::{
+    AccessibilityDirtyNodes,
+    LayoutNodeData,
+};
 use freya_engine::prelude::{
     Color,
     Slant,
@@ -81,7 +84,7 @@ impl AccessibilityTree {
     pub fn init(
         &self,
         rdom: &DioxusDOM,
-        layout: &Torin<NodeId>,
+        layout: &Torin<NodeId, LayoutNodeData>,
         dirty_nodes: &mut AccessibilityDirtyNodes,
     ) -> TreeUpdate {
         dirty_nodes.clear();
@@ -130,7 +133,7 @@ impl AccessibilityTree {
     pub fn process_updates(
         &mut self,
         rdom: &DioxusDOM,
-        layout: &Torin<NodeId>,
+        layout: &Torin<NodeId, LayoutNodeData>,
         dirty_nodes: &mut AccessibilityDirtyNodes,
     ) -> (TreeUpdate, NodeId) {
         let requested_focus_id = dirty_nodes.requested_focus.take();
@@ -326,7 +329,7 @@ impl AccessibilityTree {
     /// Create an accessibility node
     pub fn create_node(
         node_ref: &DioxusNode,
-        layout_node: &LayoutNode,
+        layout_node: &LayoutNode<LayoutNodeData>,
         node_accessibility: &AccessibilityNodeState,
     ) -> Node {
         let font_style_state = &*node_ref.get::<FontStyleState>().unwrap();

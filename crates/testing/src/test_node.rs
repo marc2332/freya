@@ -1,3 +1,4 @@
+use freya_common::LayoutNodeData;
 use freya_core::node::NodeState;
 use freya_native_core::{
     node::NodeType,
@@ -53,7 +54,7 @@ impl TestNode {
     }
 
     /// Get the Node layout
-    pub fn layout(&self) -> Option<LayoutNode> {
+    pub fn layout(&self) -> Option<LayoutNode<LayoutNodeData>> {
         self.utils()
             .sdom()
             .get()

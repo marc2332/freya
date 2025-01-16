@@ -6,6 +6,7 @@ use std::ops::{
 use freya_common::{
     CompositorDirtyNodes,
     Layers,
+    LayoutNodeData,
 };
 use freya_native_core::{
     prelude::NodeImmutable,
@@ -109,7 +110,7 @@ impl Compositor {
     #[inline]
     pub fn get_drawing_area(
         node_id: NodeId,
-        layout: &Torin<NodeId>,
+        layout: &Torin<NodeId, LayoutNodeData>,
         rdom: &DioxusDOM,
         scale_factor: f32,
     ) -> Option<Area> {
@@ -123,9 +124,9 @@ impl Compositor {
     #[inline]
     pub fn with_utils<T>(
         node_id: NodeId,
-        layout: &Torin<NodeId>,
+        layout: &Torin<NodeId, LayoutNodeData>,
         rdom: &DioxusDOM,
-        run: impl FnOnce(DioxusNode, ElementWithUtils, &LayoutNode) -> T,
+        run: impl FnOnce(DioxusNode, ElementWithUtils, &LayoutNode<LayoutNodeData>) -> T,
     ) -> Option<T> {
         let layout_node = layout.get(node_id)?;
         let node = rdom.get(node_id)?;
@@ -149,7 +150,7 @@ impl Compositor {
         cache: &mut CompositorCache,
         layers: &'a Layers,
         dirty_layers: &'a mut Layers,
-        layout: &Torin<NodeId>,
+        layout: &Torin<NodeId, LayoutNodeData>,
         rdom: &DioxusDOM,
         scale_factor: f32,
     ) -> &'a Layers {

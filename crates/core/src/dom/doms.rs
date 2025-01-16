@@ -10,6 +10,7 @@ use freya_common::{
     AccessibilityGenerator,
     CompositorDirtyNodes,
     Layers,
+    LayoutNodeData,
     ParagraphElements,
 };
 use freya_native_core::{
@@ -122,7 +123,7 @@ impl SafeDOM {
 pub struct FreyaDOM {
     rdom: DioxusDOM,
     dioxus_integration_state: DioxusState,
-    torin: Arc<Mutex<Torin<NodeId>>>,
+    torin: Arc<Mutex<Torin<NodeId, LayoutNodeData>>>,
     paragraphs: Arc<Mutex<ParagraphElements>>,
     layers: Arc<Mutex<Layers>>,
     compositor_dirty_nodes: Arc<Mutex<CompositorDirtyNodes>>,
@@ -162,7 +163,7 @@ impl Default for FreyaDOM {
 }
 
 impl FreyaDOM {
-    pub fn layout(&self) -> MutexGuard<Torin<NodeId>> {
+    pub fn layout(&self) -> MutexGuard<Torin<NodeId, LayoutNodeData>> {
         self.torin.lock().unwrap()
     }
 

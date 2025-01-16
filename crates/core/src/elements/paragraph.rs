@@ -3,6 +3,7 @@ use std::ops::Mul;
 use freya_common::{
     CachedParagraph,
     CursorLayoutResponse,
+    LayoutNodeData,
 };
 use freya_engine::prelude::*;
 use freya_native_core::{
@@ -47,7 +48,7 @@ impl ParagraphElement {
     /// Merasure the cursor positio and text selection and notify the subscribed component of the element.
     pub fn measure_paragraph(
         node: &DioxusNode,
-        layout_node: &LayoutNode,
+        layout_node: &LayoutNode<LayoutNodeData>,
         text_measurement: &TextGroupMeasurement,
         scale_factor: f64,
     ) {
@@ -115,7 +116,7 @@ impl ParagraphElement {
 impl ElementUtils for ParagraphElement {
     fn render(
         self,
-        layout_node: &torin::prelude::LayoutNode,
+        layout_node: &torin::prelude::LayoutNode<LayoutNodeData>,
         node_ref: &DioxusNode,
         canvas: &Canvas,
         font_collection: &mut FontCollection,
@@ -180,7 +181,7 @@ impl ElementUtils for ParagraphElement {
 
     fn element_drawing_area(
         &self,
-        layout_node: &LayoutNode,
+        layout_node: &LayoutNode<LayoutNodeData>,
         node_ref: &DioxusNode,
         scale_factor: f32,
     ) -> Area {

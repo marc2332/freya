@@ -59,8 +59,8 @@ impl DOMAdapter<usize> for TestingDOM {
     }
 }
 
-pub fn test_utils() -> (Torin<usize>, Option<NoopMeasurer>) {
-    let layout = Torin::<usize>::new();
+pub fn test_utils() -> (Torin<usize, ()>, Option<NoopMeasurer>) {
+    let layout = Torin::<usize, ()>::new();
     let measurer = None::<NoopMeasurer>;
 
     (layout, measurer)

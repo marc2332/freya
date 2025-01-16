@@ -1,9 +1,19 @@
-use std::ops::Div;
+use std::{
+    ops::{
+        Deref,
+        Div,
+    },
+    sync::Arc,
+};
 
 use freya_engine::prelude::Paragraph;
-use torin::geometry::{
-    Area,
-    Size2D,
+use freya_native_core::SendAnyMap;
+use torin::{
+    geometry::{
+        Area,
+        Size2D,
+    },
+    prelude::NodeData,
 };
 
 /// Layout info of a certain Node, used by `use_node`.
@@ -36,3 +46,16 @@ pub struct CachedParagraph(pub Paragraph, pub f32);
 /// In the main thread when measuring the layout and painting.
 unsafe impl Send for CachedParagraph {}
 unsafe impl Sync for CachedParagraph {}
+
+#[derive(Clone)]
+pub struct LayoutNodeData(pub Arc<SendAnyMap>);
+
+impl Deref for LayoutNodeData {
+    type Target = Arc<SendAnyMap>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl NodeData for LayoutNodeData {}

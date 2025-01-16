@@ -6,6 +6,7 @@ use freya_common::{
     AccessibilityDirtyNodes,
     CompositorDirtyNodes,
     Layers,
+    LayoutNodeData,
     ParagraphElements,
 };
 use freya_native_core::{
@@ -36,7 +37,7 @@ use crate::prelude::{
 
 pub struct MutationsWriter<'a> {
     pub native_writer: DioxusNativeCoreMutationWriter<'a, CustomAttributeValues>,
-    pub layout: &'a mut Torin<NodeId>,
+    pub layout: &'a mut Torin<NodeId, LayoutNodeData>,
     pub layers: &'a mut Layers,
     pub paragraphs: &'a mut ParagraphElements,
     pub scale_factor: f32,

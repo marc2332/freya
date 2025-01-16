@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 pub use euclid::Rect;
 
 use crate::{
@@ -8,13 +6,12 @@ use crate::{
     prelude::{
         AreaModel,
         Gaps,
-        SendAnyMap,
     },
 };
 
 /// Cached layout results of a Node
 #[derive(Debug, Default, Clone)]
-pub struct LayoutNode {
+pub struct LayoutNode<Data: NodeData> {
     /// Area that ocuppies this node
     pub area: Area,
 
@@ -25,10 +22,10 @@ pub struct LayoutNode {
     pub margin: Gaps,
 
     /// Associated data
-    pub data: Option<Arc<SendAnyMap>>,
+    pub data: Option<Data>,
 }
 
-impl PartialEq for LayoutNode {
+impl<Data: NodeData> PartialEq for LayoutNode<Data> {
     fn eq(&self, other: &Self) -> bool {
         self.area == other.area
             && self.inner_area == other.inner_area
@@ -36,16 +33,19 @@ impl PartialEq for LayoutNode {
     }
 }
 
-impl LayoutNode {
+impl<Data: NodeData> LayoutNode<Data> {
     // The area without any margin
     pub fn visible_area(&self) -> Area {
         self.area.without_gaps(&self.margin)
     }
 }
 
-pub trait NodeKey: Clone + PartialEq + Eq + std::hash::Hash + Copy + std::fmt::Debug {}
+pub trait NodeKey: Clone + PartialEq + Eq + core::hash::Hash + Copy + core::fmt::Debug {}
+
+pub trait NodeData: Clone {}
 
 impl NodeKey for usize {}
+impl NodeData for () {}
 
 #[cfg(feature = "dioxus")]
 impl NodeKey for freya_native_core::NodeId {}
@@ -74,12 +74,12 @@ pub trait DOMAdapter<Key: NodeKey> {
         let height_b = self.height(node_b)?;
 
         let (node_a, node_b) = match height_a.cmp(&height_b) {
-            std::cmp::Ordering::Less => (
+            core::cmp::Ordering::Less => (
                 *node_a,
                 balance_heights(self, *node_b, *node_a).unwrap_or(*node_b),
             ),
-            std::cmp::Ordering::Equal => (*node_a, *node_b),
-            std::cmp::Ordering::Greater => (
+            core::cmp::Ordering::Equal => (*node_a, *node_b),
+            core::cmp::Ordering::Greater => (
                 balance_heights(self, *node_a, *node_b).unwrap_or(*node_a),
                 *node_b,
             ),

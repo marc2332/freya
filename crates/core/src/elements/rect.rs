@@ -1,3 +1,4 @@
+use freya_common::LayoutNodeData;
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::{
@@ -34,7 +35,7 @@ pub struct RectElement;
 impl RectElement {
     fn get_rounded_rect(
         &self,
-        layout_node: &LayoutNode,
+        layout_node: &LayoutNode<LayoutNodeData>,
         node_ref: &DioxusNode,
         scale_factor: f32,
     ) -> RRect {
@@ -60,7 +61,7 @@ impl ElementUtils for RectElement {
         &self,
         point: &CursorPoint,
         node_ref: &DioxusNode,
-        layout_node: &LayoutNode,
+        layout_node: &LayoutNode<LayoutNodeData>,
         scale_factor: f32,
     ) -> bool {
         let rounded_rect = self.get_rounded_rect(layout_node, node_ref, scale_factor);
@@ -70,7 +71,7 @@ impl ElementUtils for RectElement {
 
     fn clip(
         &self,
-        layout_node: &LayoutNode,
+        layout_node: &LayoutNode<LayoutNodeData>,
         node_ref: &DioxusNode,
         canvas: &Canvas,
         scale_factor: f32,
@@ -82,7 +83,7 @@ impl ElementUtils for RectElement {
 
     fn render(
         self,
-        layout_node: &LayoutNode,
+        layout_node: &LayoutNode<LayoutNodeData>,
         node_ref: &DioxusNode,
         canvas: &Canvas,
         font_collection: &mut FontCollection,
@@ -172,7 +173,7 @@ impl ElementUtils for RectElement {
 
     fn element_drawing_area(
         &self,
-        layout_node: &LayoutNode,
+        layout_node: &LayoutNode<LayoutNodeData>,
         node_ref: &DioxusNode,
         scale_factor: f32,
     ) -> Area {

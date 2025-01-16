@@ -1,4 +1,7 @@
-use freya_common::CachedParagraph;
+use freya_common::{
+    CachedParagraph,
+    LayoutNodeData,
+};
 use freya_engine::prelude::*;
 use freya_native_core::prelude::NodeImmutable;
 use freya_node_state::FontStyleState;
@@ -21,7 +24,7 @@ pub struct LabelElement;
 impl ElementUtils for LabelElement {
     fn render(
         self,
-        layout_node: &torin::prelude::LayoutNode,
+        layout_node: &torin::prelude::LayoutNode<LayoutNodeData>,
         node_ref: &DioxusNode,
         canvas: &Canvas,
         _font_collection: &mut FontCollection,
@@ -53,7 +56,7 @@ impl ElementUtils for LabelElement {
 
     fn element_drawing_area(
         &self,
-        layout_node: &LayoutNode,
+        layout_node: &LayoutNode<LayoutNodeData>,
         node_ref: &DioxusNode,
         scale_factor: f32,
     ) -> Area {

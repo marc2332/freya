@@ -12,15 +12,17 @@ keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
 categories = ["gui", "caching"]
 
 [features]
-std = ["euclid/std"]
+std = ["euclid/std", "dep:tracing", "dep:rustc-hash"]
+no_std = ["dep:hashbrown"]
 dioxus = ["dep:freya-native-core"]
 default = ["dioxus", "std"]
 
 [dependencies]
-tracing = { workspace = true }
-euclid = { workspace = true, default-features = false }
-rustc-hash = { workspace = true }
+tracing = { workspace = true, optional = true }
+euclid = { workspace = true }
+rustc-hash = { workspace = true, optional = true }
 freya-native-core = { workspace = true, optional = true }
+hashbrown = { version = "0.15.2", optional = true }
 
 [dev-dependencies]
 criterion = "0.5.1"

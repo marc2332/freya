@@ -3,7 +3,10 @@ use std::sync::{
     Mutex,
 };
 
-use freya_common::CompositorDirtyNodes;
+use freya_common::{
+    CompositorDirtyNodes,
+    LayoutNodeData,
+};
 use freya_engine::prelude::*;
 use freya_native_core::{
     attributes::AttributeName,
@@ -300,7 +303,9 @@ impl State<CustomAttributeValues> for FontStyleState {
         context: &SendAnyMap,
     ) -> bool {
         let root_id = context.get::<NodeId>().unwrap();
-        let torin_layout = context.get::<Arc<Mutex<Torin<NodeId>>>>().unwrap();
+        let torin_layout = context
+            .get::<Arc<Mutex<Torin<NodeId, LayoutNodeData>>>>()
+            .unwrap();
         let compositor_dirty_nodes = context.get::<Arc<Mutex<CompositorDirtyNodes>>>().unwrap();
 
         let mut font_style = parent.map(|(v,)| v.clone()).unwrap_or_default();

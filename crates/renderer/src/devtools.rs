@@ -1,3 +1,4 @@
+use freya_common::LayoutNodeData;
 use freya_core::prelude::{
     get_node_state,
     FreyaDOM,
@@ -81,5 +82,5 @@ pub struct NodeInfo {
     pub tag: TagName,
     pub height: u16,
     pub state: NodeState,
-    pub layout_node: LayoutNode,
+    pub layout_node: LayoutNode<LayoutNodeData>,
 }

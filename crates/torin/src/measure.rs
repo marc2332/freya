@@ -21,6 +21,7 @@ use crate::{
         DirectionMode,
         LayoutMetadata,
         Length,
+        NodeData,
         Torin,
     },
 };
@@ -33,22 +34,24 @@ pub enum Phase {
     Final,
 }
 
-pub struct MeasureContext<'a, Key, L, D>
+pub struct MeasureContext<'a, Key, Data, L, D>
 where
     Key: NodeKey,
-    L: LayoutMeasurer<Key>,
+    Data: NodeData,
+    L: LayoutMeasurer<Key, Data>,
     D: DOMAdapter<Key>,
 {
-    pub layout: &'a mut Torin<Key>,
+    pub layout: &'a mut Torin<Key, Data>,
     pub measurer: &'a mut Option<L>,
     pub dom_adapter: &'a mut D,
     pub layout_metadata: LayoutMetadata,
 }
 
-impl<Key, L, D> MeasureContext<'_, Key, L, D>
+impl<Key, Data, L, D> MeasureContext<'_, Key, Data, L, D>
 where
     Key: NodeKey,
-    L: LayoutMeasurer<Key>,
+    Data: NodeData,
+    L: LayoutMeasurer<Key, Data>,
     D: DOMAdapter<Key>,
 {
     /// Measure a Node.
@@ -70,7 +73,7 @@ where
         parent_is_dirty: bool,
         // Current phase of measurement
         phase: Phase,
-    ) -> (bool, LayoutNode) {
+    ) -> (bool, LayoutNode<Data>) {
         // 1. If parent is dirty
         // 2. If this Node has been marked as dirty
         // 3. If there is no know cached data about this Node.

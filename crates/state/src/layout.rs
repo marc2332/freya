@@ -3,7 +3,10 @@ use std::sync::{
     Mutex,
 };
 
-use freya_common::CompositorDirtyNodes;
+use freya_common::{
+    CompositorDirtyNodes,
+    LayoutNodeData,
+};
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
@@ -222,7 +225,9 @@ impl State<CustomAttributeValues> for LayoutState {
         context: &SendAnyMap,
     ) -> bool {
         let root_id = context.get::<NodeId>().unwrap();
-        let torin_layout = context.get::<Arc<Mutex<Torin<NodeId>>>>().unwrap();
+        let torin_layout = context
+            .get::<Arc<Mutex<Torin<NodeId, LayoutNodeData>>>>()
+            .unwrap();
         let compositor_dirty_nodes = context.get::<Arc<Mutex<CompositorDirtyNodes>>>().unwrap();
 
         let mut layout = LayoutState {

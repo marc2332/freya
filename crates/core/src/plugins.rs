@@ -1,3 +1,4 @@
+use freya_common::LayoutNodeData;
 use freya_engine::prelude::{
     Canvas,
     FontCollection,
@@ -80,10 +81,10 @@ pub enum PluginEvent<'a> {
     },
 
     /// Before starting to measure the layout.
-    StartedLayout(&'a Torin<NodeId>),
+    StartedLayout(&'a Torin<NodeId, LayoutNodeData>),
 
     /// After measuring the layout.
-    FinishedLayout(&'a Torin<NodeId>),
+    FinishedLayout(&'a Torin<NodeId, LayoutNodeData>),
 
     StartedUpdatingDOM,
 

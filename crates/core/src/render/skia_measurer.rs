@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use freya_common::{
     CachedParagraph,
+    LayoutNodeData,
     NodeReferenceLayout,
 };
 use freya_engine::prelude::*;
@@ -13,13 +14,13 @@ use freya_native_core::{
     real_dom::NodeImmutable,
     tags::TagName,
     NodeId,
+    SendAnyMap,
 };
 use freya_node_state::LayoutState;
 use torin::prelude::{
     Area,
     LayoutMeasurer,
     Node,
-    SendAnyMap,
     Size2D,
 };
 
@@ -56,13 +57,13 @@ impl<'a> SkiaMeasurer<'a> {
     }
 }
 
-impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
+impl<'a> LayoutMeasurer<NodeId, LayoutNodeData> for SkiaMeasurer<'a> {
     fn measure(
         &mut self,
         node_id: NodeId,
         _node: &Node,
         area_size: &Size2D,
-    ) -> Option<(Size2D, Arc<SendAnyMap>)> {
+    ) -> Option<(Size2D, LayoutNodeData)> {
         let node = self.rdom.get(node_id).unwrap();
         let node_type = node.node_type();
 
@@ -77,7 +78,7 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                 );
                 let mut map = SendAnyMap::new();
                 map.insert(CachedParagraph(paragraph, size.height));
-                Some((size, Arc::new(map)))
+                Some((size, LayoutNodeData(Arc::new(map))))
             }
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Paragraph => {
                 let ParagraphData { paragraph, size } = create_paragraph(
@@ -90,7 +91,7 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                 );
                 let mut map = SendAnyMap::new();
                 map.insert(CachedParagraph(paragraph, size.height));
-                Some((size, Arc::new(map)))
+                Some((size, LayoutNodeData(Arc::new(map))))
             }
             _ => None,
         }

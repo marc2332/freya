@@ -1,7 +1,4 @@
-use std::{
-    collections::HashMap,
-    mem,
-};
+use core::mem;
 
 pub use euclid::Rect;
 use rustc_hash::FxHashMap;
@@ -21,6 +18,7 @@ use crate::{
     prelude::{
         AreaModel,
         Gaps,
+        NodeData,
     },
 };
 
@@ -71,9 +69,9 @@ pub enum DirtyReason {
     Reorder,
 }
 
-pub struct Torin<Key: NodeKey> {
+pub struct Torin<Key: NodeKey, Data: NodeData> {
     /// Layout results of the registered Nodes
-    pub results: FxHashMap<Key, LayoutNode>,
+    pub results: FxHashMap<Key, LayoutNode<Data>>,
 
     /// Invalid registered nodes since previous layout measurement
     pub dirty: FxHashMap<Key, DirtyReason>,
@@ -82,17 +80,17 @@ pub struct Torin<Key: NodeKey> {
     pub root_node_candidate: RootNodeCandidate<Key>,
 }
 
-impl<Key: NodeKey> Default for Torin<Key> {
+impl<Key: NodeKey, Data: NodeData> Default for Torin<Key, Data> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<Key: NodeKey> Torin<Key> {
+impl<Key: NodeKey, Data: NodeData> Torin<Key, Data> {
     /// Create a new Layout
     pub fn new() -> Self {
         Self {
-            results: HashMap::default(),
+            results: FxHashMap::default(),
             dirty: FxHashMap::default(),
             root_node_candidate: RootNodeCandidate::None,
         }
@@ -239,7 +237,7 @@ impl<Key: NodeKey> Torin<Key> {
         &mut self,
         suggested_root_id: Key,
         root_area: Area,
-        measurer: &mut Option<impl LayoutMeasurer<Key>>,
+        measurer: &mut Option<impl LayoutMeasurer<Key, Data>>,
         dom_adapter: &mut impl DOMAdapter<Key>,
     ) {
         // If there are previosuly cached results
@@ -266,7 +264,7 @@ impl<Key: NodeKey> Torin<Key> {
             });
         let root = dom_adapter.get_node(&root_id).unwrap();
 
-        #[cfg(debug_assertions)]
+        #[cfg(all(debug_assertions, feature = "std"))]
         {
             let root_height = dom_adapter.height(&root_id).unwrap();
             tracing::info!(
@@ -315,12 +313,12 @@ impl<Key: NodeKey> Torin<Key> {
     }
 
     /// Get the layout_node of a Node
-    pub fn get(&self, node_id: Key) -> Option<&LayoutNode> {
+    pub fn get(&self, node_id: Key) -> Option<&LayoutNode<Data>> {
         self.results.get(&node_id)
     }
 
     /// Cache a Node's layout_node
-    pub fn cache_node(&mut self, node_id: Key, layout_node: LayoutNode) {
+    pub(crate) fn cache_node(&mut self, node_id: Key, layout_node: LayoutNode<Data>) {
         self.results.insert(node_id, layout_node);
     }
 }

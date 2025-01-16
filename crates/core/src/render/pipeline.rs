@@ -1,6 +1,7 @@
 use freya_common::{
     CompositorDirtyNodes,
     Layers,
+    LayoutNodeData,
 };
 use freya_engine::prelude::{
     ClipOp,
@@ -54,7 +55,7 @@ use crate::{
 pub struct RenderPipeline<'a> {
     pub rdom: &'a DioxusDOM,
     pub layers: &'a Layers,
-    pub layout: &'a Torin<NodeId>,
+    pub layout: &'a Torin<NodeId, LayoutNodeData>,
     pub compositor_dirty_nodes: &'a mut CompositorDirtyNodes,
     pub compositor_dirty_area: &'a mut CompositorDirtyArea,
     pub compositor_cache: &'a mut CompositorCache,
@@ -188,7 +189,7 @@ impl RenderPipeline<'_> {
     pub fn render(
         &mut self,
         node_ref: DioxusNode,
-        layout_node: &LayoutNode,
+        layout_node: &LayoutNode<LayoutNodeData>,
         render_wireframe: bool,
     ) {
         let dirty_canvas = self.dirty_surface.canvas();

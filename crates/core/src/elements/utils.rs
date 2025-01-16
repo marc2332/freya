@@ -1,3 +1,4 @@
+use freya_common::LayoutNodeData;
 use freya_engine::prelude::{
     Canvas,
     FontCollection,
@@ -30,7 +31,7 @@ pub trait ElementUtils {
         &self,
         point: &CursorPoint,
         _node_ref: &DioxusNode,
-        layout_node: &LayoutNode,
+        layout_node: &LayoutNode<LayoutNodeData>,
         _scale_factor: f32,
     ) -> bool {
         layout_node.area.contains(point.to_f32())
@@ -38,7 +39,7 @@ pub trait ElementUtils {
 
     fn clip(
         &self,
-        _layout_node: &LayoutNode,
+        _layout_node: &LayoutNode<LayoutNodeData>,
         _node_ref: &DioxusNode,
         _canvas: &Canvas,
         _scale_factor: f32,
@@ -48,7 +49,7 @@ pub trait ElementUtils {
     #[allow(clippy::too_many_arguments)]
     fn render(
         self,
-        layout_node: &LayoutNode,
+        layout_node: &LayoutNode<LayoutNodeData>,
         node_ref: &DioxusNode,
         canvas: &Canvas,
         font_collection: &mut FontCollection,
@@ -59,7 +60,7 @@ pub trait ElementUtils {
 
     fn element_drawing_area(
         &self,
-        layout_node: &LayoutNode,
+        layout_node: &LayoutNode<LayoutNodeData>,
         _node_ref: &DioxusNode,
         _scale_factor: f32,
     ) -> Area {
@@ -69,9 +70,9 @@ pub trait ElementUtils {
 
     fn drawing_area_with_viewports(
         &self,
-        layout_node: &LayoutNode,
+        layout_node: &LayoutNode<LayoutNodeData>,
         node_ref: &DioxusNode,
-        layout: &Torin<NodeId>,
+        layout: &Torin<NodeId, LayoutNodeData>,
         scale_factor: f32,
     ) -> Option<Area> {
         let mut drawing_area = self.drawing_area(layout_node, node_ref, scale_factor);
@@ -93,7 +94,7 @@ pub trait ElementUtils {
     /// factors like shadows or borders, which are not part of the layout.
     fn drawing_area(
         &self,
-        layout_node: &LayoutNode,
+        layout_node: &LayoutNode<LayoutNodeData>,
         node_ref: &DioxusNode,
         scale_factor: f32,
     ) -> Area {
@@ -157,7 +158,7 @@ pub enum ElementWithUtils {
 impl ElementUtils for ElementWithUtils {
     fn clip(
         &self,
-        layout_node: &LayoutNode,
+        layout_node: &LayoutNode<LayoutNodeData>,
         node_ref: &DioxusNode,
         canvas: &Canvas,
         scale_factor: f32,
@@ -175,7 +176,7 @@ impl ElementUtils for ElementWithUtils {
         &self,
         point: &CursorPoint,
         node_ref: &DioxusNode,
-        layout_node: &LayoutNode,
+        layout_node: &LayoutNode<LayoutNodeData>,
         scale_factor: f32,
     ) -> bool {
         match self {
@@ -191,7 +192,7 @@ impl ElementUtils for ElementWithUtils {
 
     fn render(
         self,
-        layout_node: &LayoutNode,
+        layout_node: &LayoutNode<LayoutNodeData>,
         node_ref: &DioxusNode,
         canvas: &Canvas,
         font_collection: &mut FontCollection,
@@ -250,7 +251,7 @@ impl ElementUtils for ElementWithUtils {
 
     fn drawing_area(
         &self,
-        layout_node: &LayoutNode,
+        layout_node: &LayoutNode<LayoutNodeData>,
         node_ref: &DioxusNode,
         scale_factor: f32,
     ) -> Area {

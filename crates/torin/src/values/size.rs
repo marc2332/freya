@@ -1,4 +1,4 @@
-use std::{
+use core::{
     ops::Deref,
     slice::Iter,
 };
@@ -194,8 +194,8 @@ impl Scaled for DynamicCalculation {
     }
 }
 
-impl std::fmt::Display for DynamicCalculation {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for DynamicCalculation {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             DynamicCalculation::Sub => f.write_str("-"),
             DynamicCalculation::Mul => f.write_str("*"),

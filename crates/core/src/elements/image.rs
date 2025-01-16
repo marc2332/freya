@@ -1,3 +1,4 @@
+use freya_common::LayoutNodeData;
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::{
@@ -13,7 +14,7 @@ pub struct ImageElement;
 impl ElementUtils for ImageElement {
     fn render(
         self,
-        layout_node: &torin::prelude::LayoutNode,
+        layout_node: &torin::prelude::LayoutNode<LayoutNodeData>,
         node_ref: &DioxusNode,
         canvas: &Canvas,
         _font_collection: &mut FontCollection,

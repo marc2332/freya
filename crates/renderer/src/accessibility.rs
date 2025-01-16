@@ -4,7 +4,10 @@ use std::sync::{
 };
 
 use accesskit_winit::Adapter;
-use freya_common::AccessibilityDirtyNodes;
+use freya_common::{
+    AccessibilityDirtyNodes,
+    LayoutNodeData,
+};
 use freya_core::{
     dom::DioxusDOM,
     prelude::{
@@ -63,7 +66,7 @@ impl AccessKitManager {
     pub fn init_accessibility(
         &mut self,
         rdom: &DioxusDOM,
-        layout: &Torin<NodeId>,
+        layout: &Torin<NodeId, LayoutNodeData>,
         dirty_nodes: &mut AccessibilityDirtyNodes,
     ) {
         let tree = self
@@ -81,7 +84,7 @@ impl AccessKitManager {
     pub fn process_updates(
         &mut self,
         rdom: &DioxusDOM,
-        layout: &Torin<NodeId>,
+        layout: &Torin<NodeId, LayoutNodeData>,
         platform_sender: &NativePlatformSender,
         window: &Window,
         dirty_nodes: &mut AccessibilityDirtyNodes,
@@ -113,7 +116,7 @@ impl AccessKitManager {
         direction: AccessibilityFocusStrategy,
         platform_sender: &NativePlatformSender,
         window: &Window,
-        layout: &Torin<NodeId>,
+        layout: &Torin<NodeId, LayoutNodeData>,
     ) {
         let (tree, node_id) = self
             .accessibility_tree
@@ -141,7 +144,7 @@ impl AccessKitManager {
         id: AccessibilityId,
         platform_sender: &NativePlatformSender,
         window: &Window,
-        layout: &Torin<NodeId>,
+        layout: &Torin<NodeId, LayoutNodeData>,
     ) {
         let res = self
             .accessibility_tree
@@ -166,7 +169,12 @@ impl AccessKitManager {
     }
 
     /// Update the Window IME Position with the bounds of the currently focused accessibility node
-    fn update_ime_position(&self, node_id: NodeId, window: &Window, layout: &Torin<NodeId>) {
+    fn update_ime_position(
+        &self,
+        node_id: NodeId,
+        window: &Window,
+        layout: &Torin<NodeId, LayoutNodeData>,
+    ) {
         let layout_node = layout.get(node_id);
         if let Some(layout_node) = layout_node {
             let area = layout_node.visible_area();
