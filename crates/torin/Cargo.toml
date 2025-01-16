@@ -12,12 +12,13 @@ keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
 categories = ["gui", "caching"]
 
 [features]
+std = ["euclid/std"]
 dioxus = ["dep:freya-native-core"]
-default = ["dioxus"]
+default = ["dioxus", "std"]
 
 [dependencies]
 tracing = { workspace = true }
-euclid = { workspace = true }
+euclid = { workspace = true, default-features = false }
 rustc-hash = { workspace = true }
 freya-native-core = { workspace = true, optional = true }
 
