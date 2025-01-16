@@ -1,3 +1,7 @@
+extern crate alloc;
+
+use alloc::string::String;
+
 pub use euclid::Rect;
 
 use crate::{

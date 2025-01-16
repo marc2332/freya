@@ -1,4 +1,14 @@
-use core::mem;
+use core::{
+    default::Default,
+    mem,
+    option::{
+        Option,
+        Option::{
+            None,
+            Some,
+        },
+    },
+};
 
 pub use euclid::Rect;
 #[cfg(not(feature = "std"))]

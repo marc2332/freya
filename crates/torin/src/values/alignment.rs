@@ -1,3 +1,6 @@
+extern crate alloc;
+use alloc::string::String;
+
 #[derive(PartialEq, Clone, Debug, Default)]
 pub enum Alignment {
     #[default]

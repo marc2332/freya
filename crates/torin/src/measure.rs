@@ -1,3 +1,15 @@
+use core::{
+    cmp::Eq,
+    default::Default,
+    option::{
+        Option,
+        Option::{
+            None,
+            Some,
+        },
+    },
+};
+
 pub use euclid::Rect;
 #[cfg(not(feature = "std"))]
 use hashbrown::HashMap;

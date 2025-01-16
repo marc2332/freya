@@ -1,4 +1,7 @@
-use core::ops::Deref;
+use core::{
+    default::Default,
+    ops::Deref,
+};
 
 use crate::{
     prelude::{
@@ -7,6 +10,18 @@ use crate::{
         Size2D,
     },
     scaled::Scaled,
+};
+extern crate alloc;
+use alloc::{
+    boxed::Box,
+    string::String,
+};
+use core::option::{
+    Option,
+    Option::{
+        None,
+        Some,
+    },
 };
 
 #[derive(Default, PartialEq, Clone, Debug)]

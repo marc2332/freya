@@ -1,4 +1,17 @@
 use core::f32::consts::PI;
+extern crate alloc;
+use alloc::vec::Vec;
+use core::{
+    cmp::Eq,
+    default::Default,
+    option::{
+        Option,
+        Option::{
+            None,
+            Some,
+        },
+    },
+};
 
 use crate::{
     node::Node,

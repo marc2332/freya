@@ -1,3 +1,23 @@
+use core::{
+    clone::Clone,
+    cmp::{
+        Eq,
+        PartialEq,
+    },
+    default::Default,
+    marker::{
+        Copy,
+        Sized,
+    },
+    option::{
+        Option,
+        Option::{
+            None,
+            Some,
+        },
+    },
+};
+
 pub use euclid::Rect;
 
 use crate::{
@@ -8,6 +28,8 @@ use crate::{
         Gaps,
     },
 };
+extern crate alloc;
+use alloc::vec::Vec;
 
 /// Cached layout results of a Node
 #[derive(Debug, Default, Clone)]

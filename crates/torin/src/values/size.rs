@@ -1,6 +1,23 @@
+extern crate alloc;
+use alloc::{
+    boxed::Box,
+    string::String,
+    vec::Vec,
+};
 use core::{
+    cmp::Eq,
+    default::Default,
+    matches,
     ops::Deref,
+    option::{
+        Option,
+        Option::{
+            None,
+            Some,
+        },
+    },
     slice::Iter,
+    unreachable,
 };
 
 pub use euclid::Rect;

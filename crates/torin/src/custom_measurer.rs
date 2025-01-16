@@ -1,3 +1,15 @@
+use core::{
+    cmp::Eq,
+    default::Default,
+    option::{
+        Option,
+        Option::{
+            None,
+            Some,
+        },
+    },
+};
+
 use crate::{
     dom_adapter::NodeKey,
     geometry::Size2D,
