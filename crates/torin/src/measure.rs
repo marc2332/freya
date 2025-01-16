@@ -1,5 +1,8 @@
 pub use euclid::Rect;
-use rustc_hash::FxHashMap;
+#[cfg(not(feature = "std"))]
+use hashbrown::HashMap;
+#[cfg(feature = "std")]
+use rustc_hash::FxHashMap as HashMap;
 
 use crate::{
     custom_measurer::LayoutMeasurer,
@@ -315,8 +318,8 @@ where
     ) {
         let children = self.dom_adapter.children_of(parent_node_id);
 
-        let mut initial_phase_flex_grows = FxHashMap::default();
-        let mut initial_phase_sizes = FxHashMap::default();
+        let mut initial_phase_flex_grows = HashMap::<Key, Length>::default();
+        let mut initial_phase_sizes = HashMap::<Key, Size2D>::default();
         let mut initial_phase_inner_sizes = Size2D::default();
 
         // Used to calculate the spacing and some alignments

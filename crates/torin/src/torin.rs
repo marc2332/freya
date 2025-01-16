@@ -1,7 +1,10 @@
 use core::mem;
 
 pub use euclid::Rect;
-use rustc_hash::FxHashMap;
+#[cfg(not(feature = "std"))]
+use hashbrown::HashMap;
+#[cfg(feature = "std")]
+use rustc_hash::FxHashMap as HashMap;
 
 use crate::{
     custom_measurer::LayoutMeasurer,
@@ -71,10 +74,10 @@ pub enum DirtyReason {
 
 pub struct Torin<Key: NodeKey, Data: NodeData> {
     /// Layout results of the registered Nodes
-    pub results: FxHashMap<Key, LayoutNode<Data>>,
+    pub results: HashMap<Key, LayoutNode<Data>>,
 
     /// Invalid registered nodes since previous layout measurement
-    pub dirty: FxHashMap<Key, DirtyReason>,
+    pub dirty: HashMap<Key, DirtyReason>,
 
     /// Best Root node candidate from where to start measuring
     pub root_node_candidate: RootNodeCandidate<Key>,
@@ -90,8 +93,8 @@ impl<Key: NodeKey, Data: NodeData> Torin<Key, Data> {
     /// Create a new Layout
     pub fn new() -> Self {
         Self {
-            results: FxHashMap::default(),
-            dirty: FxHashMap::default(),
+            results: HashMap::default(),
+            dirty: HashMap::default(),
             root_node_candidate: RootNodeCandidate::None,
         }
     }
@@ -107,8 +110,8 @@ impl<Key: NodeKey, Data: NodeData> Torin<Key, Data> {
         self.dirty.clear();
     }
 
-    /// Read the HashSet of dirty nodes
-    pub fn get_dirty_nodes(&self) -> &FxHashMap<Key, DirtyReason> {
+    /// Read the dirty nodes
+    pub fn get_dirty_nodes(&self) -> &HashMap<Key, DirtyReason> {
         &self.dirty
     }
 

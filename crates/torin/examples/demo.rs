@@ -89,7 +89,7 @@ impl DOMAdapter<usize> for DemoDOM {
 }
 
 fn main() {
-    let mut layout = Torin::<usize>::new();
+    let mut layout = Torin::<usize, ()>::new();
 
     let mut demo_dom = DemoDOM::default();
 
