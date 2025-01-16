@@ -11,23 +11,6 @@ use criterion::{
 };
 use torin::prelude::*;
 
-struct TestingMeasurer;
-
-impl LayoutMeasurer<usize> for TestingMeasurer {
-    fn measure(
-        &mut self,
-        _node_id: usize,
-        _node: &Node,
-        _size: &Size2D,
-    ) -> Option<(Size2D, Arc<SendAnyMap>)> {
-        None
-    }
-
-    fn should_measure_inner_children(&mut self, _node_id: usize) -> bool {
-        true
-    }
-}
-
 #[derive(Default)]
 struct TestingDOM {
     mapper: HashMap<usize, (Option<usize>, Vec<usize>, u16, Node)>,
@@ -272,7 +255,6 @@ fn criterion_benchmark(c: &mut Criterion) {
             let root_area = Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0));
             b.iter_batched(
                 || {
-                    let mut measurer = Some(TestingMeasurer);
                     let mut mocked_dom = TestingDOM::default();
 
                     mocked_dom.add(
@@ -340,11 +322,11 @@ fn criterion_benchmark(c: &mut Criterion) {
                         &mut invalidate_node,
                     );
 
-                    let mut layout = Torin::<usize>::new();
+                    let mut layout = Torin::<usize, ()>::new();
 
                     if mode == BenchmarkMode::InvalidatedCache {
                         layout.find_best_root(&mut mocked_dom);
-                        layout.measure(0, root_area, &mut measurer, &mut mocked_dom);
+                        layout.measure(0, root_area, &mut None::<NoopMeasurer>, &mut mocked_dom);
                         mocked_dom.set_node(
                             invalidate_node,
                             Node::from_size_and_direction(
@@ -356,11 +338,11 @@ fn criterion_benchmark(c: &mut Criterion) {
                         layout.invalidate(invalidate_node);
                     }
 
-                    (mocked_dom, measurer, layout)
+                    (mocked_dom, layout)
                 },
-                |(mut mocked_dom, mut measurer, mut layout)| {
+                |(mut mocked_dom, mut layout)| {
                     layout.find_best_root(&mut mocked_dom);
-                    layout.measure(0, root_area, &mut measurer, &mut mocked_dom)
+                    layout.measure(0, root_area, &mut None::<NoopMeasurer>, &mut mocked_dom)
                 },
                 criterion::BatchSize::SmallInput,
             )
