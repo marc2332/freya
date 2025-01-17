@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 use freya_components::*;
 use freya_core::prelude::*;
+use freya_elements::elements as dioxus_elements;
 use freya_native_core::NodeId;
 
 use crate::{
@@ -26,11 +27,15 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
         ScrollView {
             show_scrollbar: true,
             height : "fill",
-            width: "100%",
-            spacing: "6",
-            padding: "8 16",
+            width: "fill",
             {node.state.attributes().into_iter().enumerate().filter_map(|(i, (name, attr))| {
-                Some(match attr {
+                let background = if i % 2 == 0 {
+                    "rgb(255, 255, 255, 0.1)"
+                } else {
+                    "transparent"
+                };
+
+                let el = match attr {
                     AttributeType::Measure(measure) => {
                         rsx!{
                             Property {
@@ -197,7 +202,17 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
                             }
                         }
                     }
-                })
+                };
+
+
+
+                Some(rsx!(
+                    rect {
+                        background,
+                        padding: "5 16",
+                        {el}
+                    }
+                ))
             })}
         }
     )

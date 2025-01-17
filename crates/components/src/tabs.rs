@@ -207,7 +207,12 @@ pub fn Tab(
 /// ```
 #[allow(non_snake_case)]
 #[component]
-pub fn BottomTab(children: Element, theme: Option<BottomTabThemeWith>) -> Element {
+pub fn BottomTab(
+    children: Element,
+    theme: Option<BottomTabThemeWith>,
+    /// Optionally handle the `onclick` event in the SidebarItem.
+    onpress: Option<EventHandler<()>>,
+) -> Element {
     let focus = use_focus();
     let mut status = use_signal(TabStatus::default);
     let platform = use_platform();
@@ -230,6 +235,12 @@ pub fn BottomTab(children: Element, theme: Option<BottomTabThemeWith>) -> Elemen
         }
     });
 
+    let onclick = move |_| {
+        if let Some(onpress) = &onpress {
+            onpress.call(());
+        }
+    };
+
     let onmouseenter = move |_| {
         platform.set_cursor(CursorIcon::Pointer);
         status.set(TabStatus::Hovering);
@@ -245,8 +256,10 @@ pub fn BottomTab(children: Element, theme: Option<BottomTabThemeWith>) -> Elemen
         TabStatus::Hovering => hover_background,
         TabStatus::Idle => background,
     };
+
     rsx!(
         rect {
+            onclick,
             onmouseenter,
             onmouseleave,
             a11y_id,

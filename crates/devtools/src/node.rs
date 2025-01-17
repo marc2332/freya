@@ -83,6 +83,7 @@ pub fn NodeElement(
             onmouseleave,
             direction: "horizontal",
             cross_align: "center",
+            overflow: "clip",
             rect {
                 onmousedown: onarrowmousedown,
                 width: "16",
