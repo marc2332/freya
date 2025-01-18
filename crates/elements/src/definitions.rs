@@ -696,9 +696,9 @@ builder_constructors! {
     ///
     /// ### Example
     ///
-    /// ```rust, ignore, no_run
+    /// ```rust, no_run
     /// # use freya::prelude::*;
-    /// static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
+    /// static RUST_LOGO: &[u8] = include_bytes!("./_docs/rust_logo.png");
     ///
     /// fn app() -> Element {
     ///     let image_data = static_bytes(RUST_LOGO);
@@ -740,6 +740,7 @@ builder_constructors! {
 
         // Image
         image_data: String,
+        #[doc = include_str!("_docs/attributes/aspect_ratio.md")]
         aspect_ratio: String,
 
         // Reference
@@ -822,9 +823,9 @@ builder_constructors! {
     ///
     /// ### Example
     ///
-    /// ```rust,ignore
+    /// ```rust
     /// # use freya::prelude::*;
-    /// static FERRIS: &[u8] = include_bytes!("./ferris.svg");
+    /// static FERRIS: &[u8] = include_bytes!("./_docs/ferris.svg");
     ///
     /// fn app() -> Element {
     ///     let ferris = static_bytes(FERRIS);

@@ -65,9 +65,7 @@ fn app() -> Element {
                     NetworkImage {
                         url: url.parse::<Url>().unwrap(),
                         aspect_ratio: "max",
-                        theme: theme_with!(NetworkImageTheme {
-                            height: "100%".into(),
-                        })
+                        height: "100%",
                     }
                 }
             }

@@ -29,7 +29,7 @@ pub struct NetworkImageProps {
     pub loading: Option<Element>,
     /// Information about the image.
     pub alt: Option<String>,
-
+    /// Aspect ratio of the image.
     pub aspect_ratio: Option<String>,
 }
 
@@ -70,6 +70,7 @@ pub fn NetworkImage(
         fallback,
         loading,
         alt,
+        aspect_ratio,
     }: NetworkImageProps,
 ) -> Element {
     let mut asset_cacher = use_asset_cacher();
@@ -129,13 +130,13 @@ pub fn NetworkImage(
         ImageState::Loaded(bytes) => {
             let image_data = dynamic_bytes(bytes.clone());
             rsx!(image {
-                height: "{height}",
-                width: "{width}",
+                height,
+                width,
                 a11y_id,
                 image_data,
                 a11y_role: "image",
                 a11y_name: alt,
-                aspect_ratio: props.aspect_ratio
+                aspect_ratio
             })
         }
         ImageState::Loading => {
@@ -144,8 +145,8 @@ pub fn NetworkImage(
             } else {
                 rsx!(
                     rect {
-                        height: "{height}",
-                        width: "{width}",
+                        height,
+                        width,
                         main_align: "center",
                         cross_align: "center",
                         Loader {}
@@ -159,8 +160,8 @@ pub fn NetworkImage(
             } else {
                 rsx!(
                     rect {
-                        height: "{height}",
-                        width: "{width}",
+                        height,
+                        width,
                         main_align: "center",
                         cross_align: "center",
                         label {
