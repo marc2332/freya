@@ -1,7 +1,15 @@
-use std::sync::{
-    Arc,
-    Mutex,
-    MutexGuard,
+use std::{
+    cell::{
+        Ref,
+        RefCell,
+        RefMut,
+    },
+    rc::Rc,
+    sync::{
+        Arc,
+        Mutex,
+        MutexGuard,
+    },
 };
 
 use dioxus_core::VirtualDom;
@@ -52,14 +60,14 @@ pub type DioxusNode<'a> = NodeRef<'a, CustomAttributeValues>;
 /// Tiny wrapper over [FreyaDOM] to make it thread-safe if desired.
 /// This is primarily used by the Devtools and Testing renderer.
 pub struct SafeDOM {
-    #[cfg(not(feature = "shared"))]
+    #[cfg(not(feature = "rc-dom"))]
     pub fdom: FreyaDOM,
 
-    #[cfg(feature = "shared")]
-    pub fdom: Arc<Mutex<FreyaDOM>>,
+    #[cfg(feature = "rc-dom")]
+    pub fdom: Rc<RefCell<FreyaDOM>>,
 }
 
-#[cfg(feature = "shared")]
+#[cfg(feature = "rc-dom")]
 impl Clone for SafeDOM {
     fn clone(&self) -> Self {
         Self {
@@ -69,52 +77,46 @@ impl Clone for SafeDOM {
 }
 
 impl SafeDOM {
-    #[cfg(not(feature = "shared"))]
+    #[cfg(not(feature = "rc-dom"))]
     pub fn new(fdom: FreyaDOM) -> Self {
         Self { fdom }
     }
 
-    #[cfg(feature = "shared")]
+    #[cfg(feature = "rc-dom")]
     pub fn new(fdom: FreyaDOM) -> Self {
         Self {
-            fdom: Arc::new(Mutex::new(fdom)),
+            fdom: Rc::new(RefCell::new(fdom)),
         }
     }
 
     /// Get a reference to the DOM.
-    #[cfg(not(feature = "shared"))]
+    #[cfg(not(feature = "rc-dom"))]
     pub fn get(&self) -> &FreyaDOM {
         &self.fdom
     }
 
     /// Get a reference to the DOM.
-    #[cfg(not(feature = "shared"))]
+    #[cfg(not(feature = "rc-dom"))]
     pub fn try_get(&self) -> Option<&FreyaDOM> {
         Some(&self.fdom)
     }
 
     /// Get a mutable reference to the DOM.
-    #[cfg(not(feature = "shared"))]
+    #[cfg(not(feature = "rc-dom"))]
     pub fn get_mut(&mut self) -> &mut FreyaDOM {
         &mut self.fdom
     }
 
     /// Get a reference to the DOM.
-    #[cfg(feature = "shared")]
-    pub fn get(&self) -> MutexGuard<FreyaDOM> {
-        return self.fdom.lock().unwrap();
-    }
-
-    /// Get a reference to the DOM.
-    #[cfg(feature = "shared")]
-    pub fn try_get(&self) -> Option<MutexGuard<FreyaDOM>> {
-        return self.fdom.try_lock().ok();
+    #[cfg(feature = "rc-dom")]
+    pub fn get(&self) -> Ref<FreyaDOM> {
+        return self.fdom.borrow();
     }
 
     /// Get a mutable reference to the dom.
-    #[cfg(feature = "shared")]
-    pub fn get_mut(&self) -> MutexGuard<FreyaDOM> {
-        return self.fdom.lock().unwrap();
+    #[cfg(feature = "rc-dom")]
+    pub fn get_mut(&self) -> RefMut<FreyaDOM> {
+        return self.fdom.borrow_mut();
     }
 }
 
