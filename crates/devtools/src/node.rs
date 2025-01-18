@@ -59,7 +59,7 @@ pub fn NodeElement(
             let built_node = builder.build();
             let role = built_node.role();
             if role != Role::GenericContainer {
-                serde_json::to_value(&role)
+                serde_json::to_value(role)
                     .ok()
                     .and_then(|v| v.as_str().map(String::from))
             } else {
