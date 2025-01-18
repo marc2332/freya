@@ -497,6 +497,7 @@ pub enum OnDepsChange {
     #[default]
     Reset,
     Finish,
+    Rerun,
 }
 
 /// Animate your elements. Use [`use_animation`] to use this.
@@ -781,6 +782,20 @@ pub fn use_animation<Animated: AnimatedValue>(
         }
     });
 
+    use_memo(move || {
+        let context = context.read();
+        if *has_run_yet.peek() {
+            match context.conf.on_deps_change {
+                OnDepsChange::Finish => animation.finish(),
+                OnDepsChange::Rerun => {
+                    let last_direction = *animation.last_direction.peek();
+                    animation.run(last_direction);
+                }
+                _ => {}
+            }
+        }
+    });
+
     animation
 }
 
@@ -820,8 +835,14 @@ where
 
     use_memo(move || {
         let context = context.read();
-        if *has_run_yet.peek() && context.conf.on_deps_change == OnDepsChange::Finish {
-            animation.finish()
+        if *has_run_yet.peek() {
+            match context.conf.on_deps_change {
+                OnDepsChange::Finish => animation.finish(),
+                OnDepsChange::Rerun => {
+                    animation.run(*animation.last_direction.peek());
+                }
+                _ => {}
+            }
         }
     });
 
