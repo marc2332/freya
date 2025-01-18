@@ -2,13 +2,10 @@ use bytes::Bytes;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::{
-    use_applied_theme,
     use_asset_cacher,
     use_focus,
     AssetAge,
     AssetConfiguration,
-    NetworkImageTheme,
-    NetworkImageThemeWith,
 };
 use freya_node_state::dynamic_bytes;
 use reqwest::Url;
@@ -18,18 +15,18 @@ use crate::Loader;
 /// Properties for the [`NetworkImage`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct NetworkImageProps {
-    /// Theme override.
-    pub theme: Option<NetworkImageThemeWith>,
-
+    /// Width of the image container. Default to `fill`.
+    #[props(default = "fill".into())]
+    pub width: String,
+    /// Height of the image container. Default to `fill`.
+    #[props(default = "fill".into())]
+    pub height: String,
     /// URL of the image.
     pub url: ReadOnlySignal<Url>,
-
     /// Fallback element.
     pub fallback: Option<Element>,
-
     /// Loading element.
     pub loading: Option<Element>,
-
     /// Information about the image.
     pub alt: Option<String>,
 
@@ -65,7 +62,16 @@ pub enum ImageState {
 ///     )
 /// }
 #[allow(non_snake_case)]
-pub fn NetworkImage(props: NetworkImageProps) -> Element {
+pub fn NetworkImage(
+    NetworkImageProps {
+        width,
+        height,
+        url,
+        fallback,
+        loading,
+        alt,
+    }: NetworkImageProps,
+) -> Element {
     let mut asset_cacher = use_asset_cacher();
     let focus = use_focus();
     let mut status = use_signal(|| ImageState::Loading);
@@ -73,11 +79,9 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
     let mut assets_tasks = use_signal::<Vec<Task>>(Vec::new);
 
     let a11y_id = focus.attribute();
-    let NetworkImageTheme { width, height } = use_applied_theme!(&props.theme, network_image);
-    let alt = props.alt.as_deref();
 
     use_effect(move || {
-        let url = props.url.read().clone();
+        let url = url.read().clone();
         // Cancel previous asset fetching requests
         for asset_task in assets_tasks.write().drain(..) {
             asset_task.cancel();
@@ -135,7 +139,7 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
             })
         }
         ImageState::Loading => {
-            if let Some(loading_element) = props.loading {
+            if let Some(loading_element) = loading {
                 rsx!({ loading_element })
             } else {
                 rsx!(
@@ -150,7 +154,7 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
             }
         }
         _ => {
-            if let Some(fallback_element) = props.fallback {
+            if let Some(fallback_element) = fallback {
                 rsx!({ fallback_element })
             } else {
                 rsx!(
