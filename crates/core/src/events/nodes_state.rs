@@ -41,6 +41,7 @@ impl NodesState {
         let recent_mouse_press_event = any_event_of(events, |e| e.was_cursor_pressed_or_released());
 
         // Pressed Nodes
+        #[allow(unused_variables)]
         self.pressed_nodes.retain(|node_id, _| {
             // Always unmark as pressed when there has been a new mouse down or click event
             if recent_mouse_press_event.is_some() {
