@@ -126,12 +126,15 @@ pub(crate) const BASE_THEME: Theme = Theme {
             color: cow_borrowed!("key(color)"),
         },
         border_fill: cow_borrowed!("key(surface)"),
+        focus_border_fill: cow_borrowed!("key(focused_border)"),
         arrow_fill: cow_borrowed!("key(solid)"),
     },
     dropdown_item: DropdownItemTheme {
         background: cow_borrowed!("key(background)"),
-        select_background: cow_borrowed!("key(neutral_surface)"),
+        select_background: cow_borrowed!("key(secondary_surface)"),
         hover_background: cow_borrowed!("key(focused_surface)"),
+        border_fill: cow_borrowed!("none"),
+        select_border_fill: cow_borrowed!("key(focused_border)"),
         font_theme: FontTheme {
             color: cow_borrowed!("key(color)"),
         },
