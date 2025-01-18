@@ -22,7 +22,7 @@ freya-node-state = { workspace = true }
 freya-renderer = { workspace = true }
 freya-elements = { workspace = true }
 freya-hooks = { workspace = true }
-freya-core = { workspace = true, features = ["shared"] }
+freya-core = { workspace = true }
 freya-components = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
