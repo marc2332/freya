@@ -1,3 +1,9 @@
+use std::sync::{
+    Arc,
+    Mutex,
+    MutexGuard,
+};
+#[cfg(feature = "rc-dom")]
 use std::{
     cell::{
         Ref,
@@ -5,11 +11,6 @@ use std::{
         RefMut,
     },
     rc::Rc,
-    sync::{
-        Arc,
-        Mutex,
-        MutexGuard,
-    },
 };
 
 use dioxus_core::VirtualDom;
