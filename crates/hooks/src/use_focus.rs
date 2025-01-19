@@ -1,8 +1,10 @@
 use std::sync::Arc;
 
+
 use dioxus_core::{
     use_hook,
     AttributeValue,
+    prelude::consume_context
 };
 use dioxus_hooks::{
     use_context,
@@ -45,6 +47,12 @@ pub struct UseFocus {
 }
 
 impl UseFocus {
+    pub fn new_id() -> AccessibilityId {
+        let accessibility_generator = consume_context::<Arc<AccessibilityGenerator>>();
+
+        AccessibilityId(accessibility_generator.new_id())
+    }
+
     /// Focus this node
     pub fn focus(&mut self) {
         if !*self.is_focused.peek() {
@@ -95,13 +103,17 @@ impl UseFocus {
 
 /// Create a focus manager for a node.
 pub fn use_focus() -> UseFocus {
-    let accessibility_generator = use_context::<Arc<AccessibilityGenerator>>();
+    let id = use_hook(|| UseFocus::new_id());
+
+    use_focus_from_id(id)
+}
+
+/// Create a focus manager for a node with the provided [AccessibilityId].
+pub fn use_focus_from_id(id: AccessibilityId) -> UseFocus {
     let focused_id = use_context::<Signal<AccessibilityId>>();
     let navigation_mode = use_context::<Signal<NavigationMode>>();
     let navigation_mark = use_context::<Signal<NavigationMark>>();
     let platform = use_platform();
-
-    let id = use_hook(|| AccessibilityId(accessibility_generator.new_id()));
 
     let is_focused = use_memo(move || id == *focused_id.read());
 
