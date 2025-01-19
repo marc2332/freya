@@ -4,10 +4,6 @@
 )]
 
 use freya::prelude::*;
-use freya_core::{
-    prelude::EventMessage,
-    types::AccessibilityId,
-};
 
 fn main() {
     launch_with_props(app, "Controlled Focus", (400.0, 350.0));
@@ -33,9 +29,7 @@ fn app() -> Element {
 
     use_effect(move || {
         let platform = UsePlatform::new();
-        platform
-            .send(EventMessage::FocusAccessibilityNode(nodes[current()]))
-            .ok();
+        platform.focus(nodes[current()]);
     });
 
     rsx!(
