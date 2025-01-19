@@ -82,29 +82,32 @@ pub fn NodeElement(
                 direction: "horizontal",
                 width: "fill",
                 cross_align: "center",
-                if let Some(is_open) = is_open {
-                    {
-                        let arrow_degree = if is_open {
-                            0
-                        } else {
-                            270
-                        };
-                        rsx!(
-                            OutlineButton {
-                                theme: theme_with!(ButtonTheme {
-                                    corner_radius: "99".into(),
-                                    border_fill: "none".into(),
-                                    padding: "2".into(),
-                                    background: "none".into(),
-                                    hover_background: "none".into(),
-                                }),
-                                onpress: onopen,
-                                ArrowIcon {
-                                    fill: "white",
-                                    rotate: "{arrow_degree}"
+                rect {
+                    width: "20",
+                    if let Some(is_open) = is_open {
+                        {
+                            let arrow_degree = if is_open {
+                                0
+                            } else {
+                                270
+                            };
+                            rsx!(
+                                OutlineButton {
+                                    theme: theme_with!(ButtonTheme {
+                                        corner_radius: "99".into(),
+                                        border_fill: "none".into(),
+                                        padding: "2".into(),
+                                        background: "none".into(),
+                                        hover_background: "none".into(),
+                                    }),
+                                    onpress: onopen,
+                                    ArrowIcon {
+                                        fill: "white",
+                                        rotate: "{arrow_degree}"
+                                    }
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
                 }
                 label {
