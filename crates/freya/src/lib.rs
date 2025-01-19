@@ -110,7 +110,10 @@ pub mod prelude {
     pub use dioxus_hooks::*;
     pub use dioxus_signals::*;
     pub use freya_components::*;
-    pub use freya_core::prelude::PreferredTheme;
+    pub use freya_core::prelude::{
+        AccessibilityId,
+        PreferredTheme,
+    };
     pub use freya_elements::{
         elements as dioxus_elements,
         events::*,
