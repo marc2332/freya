@@ -1,10 +1,9 @@
 use std::sync::Arc;
 
-
 use dioxus_core::{
+    prelude::consume_context,
     use_hook,
     AttributeValue,
-    prelude::consume_context
 };
 use dioxus_hooks::{
     use_context,
@@ -103,7 +102,7 @@ impl UseFocus {
 
 /// Create a focus manager for a node.
 pub fn use_focus() -> UseFocus {
-    let id = use_hook(|| UseFocus::new_id());
+    let id = use_hook(UseFocus::new_id);
 
     use_focus_from_id(id)
 }

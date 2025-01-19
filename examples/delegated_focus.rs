@@ -4,19 +4,24 @@
 )]
 
 use freya::prelude::*;
-use freya_core::{prelude::EventMessage, types::AccessibilityId};
+use freya_core::{
+    prelude::EventMessage,
+    types::AccessibilityId,
+};
 
 fn main() {
     launch_with_props(app, "Controlled Focus", (400.0, 350.0));
 }
 
 fn app() -> Element {
-    let nodes = use_hook(|| [
-        UseFocus::new_id(),
-        UseFocus::new_id(),
-        UseFocus::new_id(),
-        UseFocus::new_id()
-    ]);
+    let nodes = use_hook(|| {
+        [
+            UseFocus::new_id(),
+            UseFocus::new_id(),
+            UseFocus::new_id(),
+            UseFocus::new_id(),
+        ]
+    });
     let mut current = use_signal(|| 0);
 
     let onwheel = move |_| {
@@ -62,7 +67,7 @@ fn Card(index: usize, id: AccessibilityId) -> Element {
     } else {
         "black"
     };
-    
+
     rsx!(
         rect {
             height: "100",
