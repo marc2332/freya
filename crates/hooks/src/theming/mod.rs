@@ -173,10 +173,12 @@ macro_rules! theme_with {
         ),* $(,)?
     }) => {
         $crate::paste! {
-            [<$theme_name With>] {
+            {
                 #[allow(clippy::needless_update)]
-                $($theme_field_name: Some($theme_field_val),)*
-                ..$crate::Default::default()
+                [<$theme_name With>] {
+                    $($theme_field_name: Some($theme_field_val),)*
+                    ..$crate::Default::default()
+                }
             }
         }
     };
