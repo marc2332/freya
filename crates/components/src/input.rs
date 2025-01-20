@@ -174,16 +174,19 @@ pub fn Input(
             let text = editable.editor().peek().to_string();
 
             let apply_change = if let Some(onvalidate) = onvalidate {
+                let editor = editable.editor_mut();
+                let mut editor = editor.write();
                 let validator = InputValidator::new(text.clone());
                 onvalidate(validator.clone());
                 let is_valid = validator.is_valid();
 
                 if !is_valid {
-                    let undo_result = editable.editor_mut().write().undo();
+                    // If it is not valid then undo the latest change and discard all the redos
+                    let undo_result = editor.undo();
                     if let Some(idx) = undo_result {
-                        editable.editor_mut().write().set_cursor_pos(idx);
+                        editor.set_cursor_pos(idx);
                     }
-                    editable.editor_mut().write().editor_history().clear_redos();
+                    editor.editor_history().clear_redos();
                 }
 
                 is_valid
