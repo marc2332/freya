@@ -38,9 +38,7 @@ fn app() -> Element {
                 value: values().1,
                 placeholder: "Age",
                 onvalidate: |validator: InputValidator| {
-                    if validator.text().parse::<u8>().is_err() {
-                        validator.set_valid(false)
-                    }
+                    validator.set_valid(validator.text().parse::<u8>().is_err())
                 },
                 onchange: move |txt| {
                     values.write().1 = txt;
