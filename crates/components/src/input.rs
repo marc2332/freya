@@ -1,3 +1,11 @@
+use std::{
+    cell::{
+        Ref,
+        RefCell,
+    },
+    rc::Rc,
+};
+
 use dioxus::prelude::*;
 use freya_elements::{
     elements as dioxus_elements,
@@ -49,6 +57,35 @@ pub enum InputStatus {
     Hovering,
 }
 
+#[derive(Clone)]
+pub struct InputValidator {
+    valid: Rc<RefCell<bool>>,
+    text: Rc<RefCell<String>>,
+}
+
+impl InputValidator {
+    pub fn new(text: String) -> Self {
+        Self {
+            valid: Rc::new(RefCell::new(true)),
+            text: Rc::new(RefCell::new(text)),
+        }
+    }
+
+    pub fn text(&self) -> Ref<String> {
+        self.text.borrow()
+    }
+
+    /// Mark the text as valid.
+    pub fn set_valid(&self, is_valid: bool) {
+        *self.valid.borrow_mut() = is_valid;
+    }
+
+    /// Check if the text was marked as valid.
+    pub fn is_valid(&self) -> bool {
+        *self.valid.borrow()
+    }
+}
+
 /// Properties for the [`Input`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct InputProps {
@@ -66,6 +103,8 @@ pub struct InputProps {
     /// Automatically focus this Input upon creation. Default `false`.
     #[props(default = false)]
     pub auto_focus: bool,
+    /// Handler for the `onvalidate` function.
+    pub onvalidate: Option<EventHandler<InputValidator>>,
 }
 
 /// Small box to edit text.
@@ -102,6 +141,7 @@ pub fn Input(
         mode,
         placeholder,
         auto_focus,
+        onvalidate,
     }: InputProps,
 ) -> Element {
     let platform = use_platform();
@@ -118,6 +158,7 @@ pub fn Input(
 
     if &value != editable.editor().read().rope() {
         editable.editor_mut().write().set(&value);
+        editable.editor_mut().write().editor_history().clear();
     }
 
     use_drop(move || {
@@ -130,7 +171,29 @@ pub fn Input(
         if e.data.key != Key::Enter && e.data.key != Key::Tab {
             e.stop_propagation();
             editable.process_event(&EditableEvent::KeyDown(e.data));
-            onchange.call(editable.editor().peek().to_string());
+            let text = editable.editor().peek().to_string();
+
+            let apply_change = if let Some(onvalidate) = onvalidate {
+                let validator = InputValidator::new(text.clone());
+                onvalidate(validator.clone());
+                let is_valid = validator.is_valid();
+
+                if !is_valid {
+                    let undo_result = editable.editor_mut().write().undo();
+                    if let Some(idx) = undo_result {
+                        editable.editor_mut().write().set_cursor_pos(idx);
+                    }
+                    editable.editor_mut().write().editor_history().clear_redos();
+                }
+
+                is_valid
+            } else {
+                true
+            };
+
+            if apply_change {
+                onchange.call(text);
+            }
         }
     };
 
@@ -311,5 +374,58 @@ mod test {
 
         // Check that "d" has been written into the input.
         assert_eq!(text.get(0).text(), Some("Hello, World"));
+    }
+
+    #[tokio::test]
+    pub async fn validate() {
+        fn input_app() -> Element {
+            let mut value = use_signal(|| "A".to_string());
+
+            rsx!(Input {
+                value: value.read().clone(),
+                onvalidate: |validator: InputValidator| {
+                    if validator.text().len() > 3 {
+                        validator.set_valid(false)
+                    }
+                },
+                onchange: move |new_value| {
+                    value.set(new_value);
+                }
+            },)
+        }
+
+        let mut utils = launch_test(input_app);
+        let root = utils.root();
+        let text = root.get(0).get(0).get(0).get(0).get(0).get(0);
+        utils.wait_for_update().await;
+
+        // Default value
+        assert_eq!(text.get(0).text(), Some("A"));
+
+        // Focus the input in the end of the text
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseDown,
+            cursor: (115., 25.).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+
+        assert_ne!(utils.focus_id(), ACCESSIBILITY_ROOT_ID);
+
+        // Try to write "BCDEFG"
+        for c in ['B', 'C', 'D', 'E', 'F', 'G'] {
+            utils.push_event(PlatformEvent::Keyboard {
+                name: EventName::KeyDown,
+                key: Key::Character(c.to_string()),
+                code: Code::Unidentified,
+                modifiers: Modifiers::default(),
+            });
+            utils.wait_for_update().await;
+        }
+
+        // Check that only "BC" was been written to the input.
+        assert_eq!(text.get(0).text(), Some("ABC"));
     }
 }

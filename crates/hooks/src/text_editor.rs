@@ -12,6 +12,8 @@ use freya_elements::events::keyboard::{
     Modifiers,
 };
 
+use crate::EditorHistory;
+
 /// Holds the position of a cursor in a text
 #[derive(Clone, Default, PartialEq, Debug)]
 pub struct TextCursor(usize);
@@ -497,6 +499,8 @@ pub trait TextEditor {
     fn undo(&mut self) -> Option<usize>;
 
     fn redo(&mut self) -> Option<usize>;
+
+    fn editor_history(&mut self) -> &mut EditorHistory;
 
     fn get_selection_range(&self) -> Option<(usize, usize)>;
 
