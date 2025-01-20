@@ -497,6 +497,7 @@ pub enum OnDepsChange {
     #[default]
     Reset,
     Finish,
+    Rerun,
 }
 
 /// Animate your elements. Use [`use_animation`] to use this.
@@ -753,11 +754,16 @@ pub fn use_animation<Animated: AnimatedValue>(
     let has_run_yet = use_signal(|| false);
     let task = use_signal(|| None);
     let last_direction = use_signal(|| AnimDirection::Reverse);
+    let mut prev_value = use_signal::<Option<Signal<Animated>>>(|| None);
 
     let context = use_memo(move || {
+        if let Some(prev_value) = prev_value.take() {
+            prev_value.manually_drop();
+        }
         let mut conf = AnimConfiguration::default();
         let value = run(&mut conf);
         let value = Signal::new(value);
+        prev_value.set(Some(value));
         Context { value, conf }
     });
 
@@ -776,6 +782,20 @@ pub fn use_animation<Animated: AnimatedValue>(
         }
     });
 
+    use_memo(move || {
+        let context = context.read();
+        if *has_run_yet.peek() {
+            match context.conf.on_deps_change {
+                OnDepsChange::Finish => animation.finish(),
+                OnDepsChange::Rerun => {
+                    let last_direction = *animation.last_direction.peek();
+                    animation.run(last_direction);
+                }
+                _ => {}
+            }
+        }
+    });
+
     animation
 }
 
@@ -791,11 +811,16 @@ where
     let has_run_yet = use_signal(|| false);
     let task = use_signal(|| None);
     let last_direction = use_signal(|| AnimDirection::Reverse);
+    let mut prev_value = use_signal::<Option<Signal<Animated>>>(|| None);
 
     let context = use_memo(use_reactive(deps, move |deps| {
+        if let Some(prev_value) = prev_value.take() {
+            prev_value.manually_drop();
+        }
         let mut conf = AnimConfiguration::default();
         let value = run(&mut conf, deps);
         let value = Signal::new(value);
+        prev_value.set(Some(value));
         Context { value, conf }
     }));
 
@@ -810,8 +835,14 @@ where
 
     use_memo(move || {
         let context = context.read();
-        if *has_run_yet.peek() && context.conf.on_deps_change == OnDepsChange::Finish {
-            animation.finish()
+        if *has_run_yet.peek() {
+            match context.conf.on_deps_change {
+                OnDepsChange::Finish => animation.finish(),
+                OnDepsChange::Rerun => {
+                    animation.run(*animation.last_direction.peek());
+                }
+                _ => {}
+            }
         }
     });
 
