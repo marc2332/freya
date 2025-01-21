@@ -150,20 +150,6 @@ impl<V: FromAnyValue + Send + Sync> WriteMutations for DioxusNativeCoreMutationW
         self.state.stack.push(node_id);
     }
 
-    // fn hydrate_text_node(&mut self, path: &'static [u8], value: &str, id: ElementId) {
-    //     let node_id = self.state.load_child(self.rdom, path);
-    //     let node = self.rdom.get_mut(node_id).unwrap();
-    //     self.state.set_element_id(node, id);
-    //     let mut node = self.rdom.get_mut(node_id).unwrap();
-    //     let node_type_mut = node.node_type_mut();
-    //     if let NodeTypeMut::Text(mut text) = node_type_mut {
-    //         *text.text_mut() = value.to_string();
-    //     } else {
-    //         drop(node_type_mut);
-    //         node.set_type(NodeType::Text(value.to_string()));
-    //     }
-    // }
-
     fn load_template(&mut self, template: Template, index: usize, id: ElementId) {
         let template_entry = self.state.templates.entry(template).or_insert_with(|| {
             let template_root_ids: Vec<NodeId> = template
@@ -305,9 +291,6 @@ fn create_template_node<V: FromAnyValue + Send + Sync>(
         }
         TemplateNode::Text { text } => rdom.create_node(NodeType::Text(text.to_string())).id(),
         TemplateNode::Dynamic { .. } => rdom.create_node(NodeType::Placeholder).id(),
-        // TemplateNode::DynamicText { .. } => {
-        //     rdom.create_node(NodeType::Text(String::default())).id()
-        // }
     }
 }
 

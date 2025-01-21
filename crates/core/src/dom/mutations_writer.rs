@@ -121,10 +121,6 @@ impl<'a> MutationsWriter<'a> {
 }
 
 impl<'a> WriteMutations for MutationsWriter<'a> {
-    // fn register_template(&mut self, template: dioxus_core::prelude::Template) {
-    //     self.native_writer.register_template(template);
-    // }
-
     fn append_children(&mut self, id: dioxus_core::ElementId, m: usize) {
         self.native_writer.append_children(id, m);
     }
@@ -140,10 +136,6 @@ impl<'a> WriteMutations for MutationsWriter<'a> {
     fn create_text_node(&mut self, value: &str, id: dioxus_core::ElementId) {
         self.native_writer.create_text_node(value, id);
     }
-
-    // fn hydrate_text_node(&mut self, path: &'static [u8], value: &str, id: dioxus_core::ElementId) {
-    //     self.native_writer.hydrate_text_node(path, value, id);
-    // }
 
     fn load_template(&mut self, template: Template, index: usize, id: dioxus_core::ElementId) {
         self.native_writer.load_template(template, index, id);

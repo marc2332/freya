@@ -275,11 +275,6 @@ impl Application {
         self.process_events(scale_factor);
     }
 
-    /// Replace a VirtualDOM Template
-    // pub fn vdom_replace_template(&mut self, template: Template) {
-    //     self.vdom.replace_template(template);
-    // }
-
     /// Render the App into the Window Canvas
     pub fn render(
         &mut self,
