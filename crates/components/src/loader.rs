@@ -21,15 +21,15 @@ pub struct LoaderProps {
 #[allow(non_snake_case)]
 pub fn Loader(props: LoaderProps) -> Element {
     let theme = use_applied_theme!(&props.theme, loader);
-    let anim = use_animation(|ctx| {
-        ctx.auto_start(true);
-        ctx.on_finish(OnFinish::Restart);
-        ctx.with(AnimNum::new(0.0, 360.0).time(650))
+    let animation = use_animation(|conf| {
+        conf.auto_start(true);
+        conf.on_finish(OnFinish::Restart);
+        AnimNum::new(0.0, 360.0).time(650)
     });
 
     let LoaderTheme { primary_color } = theme;
 
-    let degrees = anim.get().read().as_f32();
+    let degrees = animation.get().read().read();
 
     rsx!(svg {
         rotate: "{degrees}deg",

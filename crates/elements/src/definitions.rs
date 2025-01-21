@@ -663,6 +663,9 @@ builder_constructors! {
 
         // Image
         image_data,
+
+        // Reference
+        reference,
         image_reference,
 
         // Accessibility

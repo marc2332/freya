@@ -1,47 +1,65 @@
-#![cfg_attr(
-    all(not(debug_assertions), target_os = "windows"),
-    windows_subsystem = "windows"
-)]
-
+#![allow(non_snake_case)]
+use dioxus::prelude::dioxus_core::NoOpMutations;
 use freya::prelude::*;
 
-fn main() {
-    launch_with_props(app, "Counter", (400.0, 350.0));
-}
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    fn app() -> Element {
+        rsx! {
+            Spammer {}
+            Spammer {}
+            Spammer {}
+            Spammer {}
+        }
+    }
 
-fn app() -> Element {
-    let mut count = use_signal(|| 0);
+    fn Spammer() -> Element {
+        let mut count = use_signal(|| 0);
 
-    rsx!(
-        rect {
-            height: "50%",
-            width: "100%",
-            main_align: "center",
-            cross_align: "center",
-            background: "rgb(0, 119, 182)",
-            color: "white",
-            shadow: "0 4 20 5 rgb(0, 0, 0, 80)",
-            label {
-                font_size: "75",
-                font_weight: "bold",
-                "{count}"
+        use_hook(|| {
+            spawn(async move {
+                loop {
+                    tokio::time::sleep(std::time::Duration::from_nanos(1)).await;
+                    let val = *count.peek_unchecked();
+                    if val == 70 {
+                        count.set(0);
+                    } else {
+                        count.set(val + 1);
+                    }
+                }
+            })
+        });
+
+        rsx! {
+            for el in 0..*count.read() {
+                // To avoid the leak simply replace this by `div {`
+                Comp {
+                    key: "{el}",
+                }
             }
         }
-        rect {
-            height: "50%",
-            width: "100%",
-            main_align: "center",
-            cross_align: "center",
-            direction: "horizontal",
-            spacing: "8",
-            Button {
-                onpress: move |_| count += 1,
-                label { "Increase" }
+    }
+
+    #[component]
+    fn Comp() -> Element {
+        rsx!(rect {})
+    }
+
+    // create the vdom, the real_dom, and the binding layer between them
+    let mut vdom = VirtualDom::new(app);
+
+    vdom.rebuild(&mut NoOpMutations);
+
+    // we need to run the vdom in a async runtime
+    tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()?
+        .block_on(async {
+            loop {
+                // wait for the vdom to update
+                vdom.wait_for_work().await;
+
+                // get the mutations from the vdom
+                vdom.render_immediate(&mut NoOpMutations);
             }
-            Button {
-                onpress: move |_| count -= 1,
-                label { "Decrease" }
-            }
-        }
-    )
+        })
 }

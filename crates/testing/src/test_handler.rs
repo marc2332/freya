@@ -81,7 +81,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
     pub(crate) fn init_dom(&mut self) {
         self.provide_vdom_contexts();
         let sdom = self.utils.sdom();
-        let mut fdom = sdom.get();
+        let mut fdom = sdom.get_mut();
         fdom.init_dom(&mut self.vdom, SCALE_FACTOR as f32);
     }
 

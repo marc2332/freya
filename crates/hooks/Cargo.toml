@@ -41,6 +41,7 @@ nokhwa = { version = "0.10.7", features = ["input-native"], optional = true }
 paste = "1.0.14"
 bitflags = "2.4.1"
 bytes = "1.5.0"
+tracing = { workspace = true }
 
 [dev-dependencies]
 dioxus = { workspace = true }

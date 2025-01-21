@@ -52,7 +52,8 @@ use crate::{
     LaunchConfig,
 };
 
-const WHEEL_SPEED_MODIFIER: f32 = 53.0;
+const WHEEL_SPEED_MODIFIER: f64 = 53.0;
+const TOUCHPAD_SPEED_MODIFIER: f64 = 2.0;
 
 /// Desktop renderer using Skia, Glutin and Winit
 pub struct DesktopRenderer<'a, State: Clone + 'static> {
@@ -138,7 +139,7 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
     /// Run the `on_setup` callback that was passed to the launch function
     pub fn run_on_setup(&mut self) {
         let state = self.state.created_state();
-        if let Some(on_setup) = &state.window_config.on_setup {
+        if let Some(on_setup) = state.window_config.on_setup.take() {
             (on_setup)(&mut state.window)
         }
     }
@@ -146,7 +147,7 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
     /// Run the `on_exit` callback that was passed to the launch function
     pub fn run_on_exit(&mut self) {
         let state = self.state.created_state();
-        if let Some(on_exit) = &state.window_config.on_exit {
+        if let Some(on_exit) = state.window_config.on_exit.take() {
             (on_exit)(&mut state.window)
         }
     }
@@ -323,10 +324,13 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     let scroll_data = {
                         match delta {
                             MouseScrollDelta::LineDelta(x, y) => (
-                                (x * WHEEL_SPEED_MODIFIER) as f64,
-                                (y * WHEEL_SPEED_MODIFIER) as f64,
+                                (x as f64 * WHEEL_SPEED_MODIFIER),
+                                (y as f64 * WHEEL_SPEED_MODIFIER),
                             ),
-                            MouseScrollDelta::PixelDelta(pos) => (pos.x, pos.y),
+                            MouseScrollDelta::PixelDelta(pos) => (
+                                (pos.x * TOUCHPAD_SPEED_MODIFIER),
+                                (pos.y * TOUCHPAD_SPEED_MODIFIER),
+                            ),
                         }
                     };
 
