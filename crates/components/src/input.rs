@@ -71,6 +71,7 @@ impl InputValidator {
         }
     }
 
+    /// Read the text to validate.
     pub fn text(&self) -> Ref<String> {
         self.text.borrow()
     }
