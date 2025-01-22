@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_activable_route,
     use_applied_theme,
@@ -45,9 +45,9 @@ pub enum TabStatus {
 /// # use freya::prelude::*;
 /// # use dioxus_router::prelude::Routable;
 /// # #[allow(non_snake_case)]
-/// # fn PageNotFound() -> Element { None }
+/// # fn PageNotFound() -> Element { VNode::empty() }
 /// # #[allow(non_snake_case)]
-/// # fn Settings() -> Element { None }
+/// # fn Settings() -> Element { VNode::empty() }
 /// # #[derive(Routable, Clone, PartialEq)]
 /// # #[rustfmt::skip]
 /// # pub enum Route {
@@ -151,7 +151,7 @@ pub fn Tab(
                 padding: "{padding}",
                 main_align: "center",
                 cross_align: "center",
-                {children},
+                {children}
             }
             rect {
                 height: "2",
@@ -174,9 +174,9 @@ pub fn Tab(
 /// # use freya::prelude::*;
 /// # use dioxus_router::prelude::Routable;
 /// # #[allow(non_snake_case)]
-/// # fn PageNotFound() -> Element { None }
+/// # fn PageNotFound() -> Element { VNode::empty() }
 /// # #[allow(non_snake_case)]
-/// # fn Settings() -> Element { None }
+/// # fn Settings() -> Element { VNode::empty() }
 /// # #[derive(Routable, Clone, PartialEq)]
 /// # #[rustfmt::skip]
 /// # pub enum Route {
@@ -274,7 +274,7 @@ pub fn BottomTab(
             cross_align: "center",
             corner_radius: "99",
             margin: "2 4",
-            {children},
+            {children}
         }
     )
 }

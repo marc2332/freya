@@ -1,7 +1,9 @@
 use dioxus::prelude::*;
 use freya_components::*;
 use freya_core::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_elements::{
+    self as dioxus_elements,
+};
 use freya_native_core::NodeId;
 
 use crate::{
@@ -21,7 +23,9 @@ use crate::{
 #[component]
 pub fn NodeInspectorStyle(node_id: String) -> Element {
     let node_id = NodeId::deserialize(&node_id);
-    let node = use_node_info(node_id)?;
+    let Some(node) = use_node_info(node_id) else {
+        return Ok(VNode::placeholder());
+    };
 
     rsx!(
         ScrollView {

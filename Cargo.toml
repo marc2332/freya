@@ -18,13 +18,14 @@ disable-zoom-shortcuts = ["freya/disable-zoom-shortcuts"]
 docs = ["freya/docs"]
 
 [patch.crates-io]
-# dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
-# dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
-# dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
-# dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
-# dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
-# dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
-# dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
+# dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "640a3e00af272bfb3464f86ac3d175eaa80af182" }
+# dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev = "640a3e00af272bfb3464f86ac3d175eaa80af182" }
+# dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "640a3e00af272bfb3464f86ac3d175eaa80af182" }
+# dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev = "640a3e00af272bfb3464f86ac3d175eaa80af182" }
+# dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus", rev = "640a3e00af272bfb3464f86ac3d175eaa80af182" }
+# dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "640a3e00af272bfb3464f86ac3d175eaa80af182" }
+# dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev = "640a3e00af272bfb3464f86ac3d175eaa80af182" }
+# generational-box  = { git = "https://github.com/DioxusLabs/dioxus", rev = "640a3e00af272bfb3464f86ac3d175eaa80af182" }
 
 [workspace.dependencies]
 freya = { path = "crates/freya", version = "0.3.0-rc.0" }
@@ -43,14 +44,16 @@ torin = { path = "crates/torin", version = "0.3.0-rc.0" }
 freya-native-core-macro = { path = "crates/native-core-macro", version = "0.3.0-rc.0" }
 freya-native-core = { path = "crates/native-core", version = "0.3.0-rc.0" }
 
-dioxus = { version = "0.5", default-features = false, features = ["macro", "signals", "hooks"]}
-dioxus-rsx = { version = "0.5" }
-dioxus-core-macro = { version = "0.5" }
-dioxus-hooks = { version = "0.5" }
-dioxus-signals = { version = "0.5" }
-dioxus-core = { version = "0.5" }
-dioxus-router = { version = "0.5", default-features = false }
-dioxus-clipboard = "0.1"
+dioxus = { version = "0.6.2", default-features = false, features = ["macro", "signals", "hooks"] }
+dioxus-rsx = { version = "0.6.2" }
+dioxus-core-macro = { version = "0.6.2" }
+dioxus-hooks = { version = "0.6.2" }
+dioxus-signals = { version = "0.6.2" }
+dioxus-core = { version = "0.6.2" }
+dioxus-router = { version = "0.6.2", default-features = false }
+generational-box = { version = "0.6.2" }
+
+dioxus-clipboard = "0.2.0"
 dioxus-i18n = "0.3"
 
 skia-safe = { version = "0.80.0", features = ["gl", "textlayout", "svg"] }
@@ -89,7 +92,7 @@ rand = "0.8.5"
 dioxus-router = { workspace = true }
 itertools = "0.13.0"
 home = "0.5.9"
-dioxus-query = "0.5.1"
+dioxus-query = "0.6.0"
 gilrs = "0.10.8"
 gl = { workspace = true }
 tree-sitter-highlight = "0.23.0"

@@ -13,7 +13,7 @@ use dioxus_router::{
 };
 use freya_components::*;
 use freya_core::prelude::EventMessage;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_applied_theme,
     use_init_theme,
@@ -84,7 +84,7 @@ fn AppWithDevtools(props: AppWithDevtoolsProps) -> Element {
                 direction: "horizontal",
                 ResizablePanel {
                     initial_size: 75.,
-                    Root { },
+                    Root { }
                 }
                 ResizableHandle { }
                 ResizablePanel {
@@ -165,24 +165,22 @@ pub fn DevtoolsBar() -> Element {
     )
 }
 
-#[derive(Routable, Clone, PartialEq)]
+#[derive(Routable, Clone, PartialEq, Debug)]
 #[rustfmt::skip]
 pub enum Route {
     #[layout(DevtoolsBar)]
-        #[nest("/")]
-            #[layout(LayoutForDOMInspector)]
-                #[route("/")]
-                DOMInspector  {},
-                #[nest("/node/:node_id")]
-                    #[layout(LayoutForNodeInspector)]
-                        #[route("/style")]
-                        NodeInspectorStyle { node_id: String },
-                        #[route("/layout")]
-                        NodeInspectorLayout { node_id: String },
-                    #[end_layout]
-                #[end_nest]
-            #[end_layout]
-        #[end_nest]
+        #[layout(LayoutForDOMInspector)]
+            #[route("/")]
+            DOMInspector  {},
+            #[nest("/node/:node_id")]
+                #[layout(LayoutForNodeInspector)]
+                    #[route("/style")]
+                    NodeInspectorStyle { node_id: String },
+                    #[route("/layout")]
+                    NodeInspectorLayout { node_id: String },
+                #[end_layout]
+            #[end_nest]
+        #[end_layout]
     #[end_layout]
     #[route("/..route")]
     PageNotFound { },
@@ -335,7 +333,7 @@ fn LayoutForDOMInspector() -> Element {
 #[allow(non_snake_case)]
 #[component]
 fn DOMInspector() -> Element {
-    None
+    Ok(VNode::placeholder())
 }
 
 pub trait NodeIdSerializer {

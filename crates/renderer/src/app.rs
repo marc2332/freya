@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use dioxus_core::{
-    Template,
+    Event,
     VirtualDom,
 };
 use freya_core::prelude::*;
@@ -199,8 +199,10 @@ impl Application {
                             {
                                 let name = event.name.into();
                                 let data = event.data.any();
+                                let event = Event::new(data, event.bubbles);
                                 self.vdom
-                                    .handle_event(name, data, element_id, event.bubbles);
+                                    .runtime()
+                                    .handle_event(name, event, element_id);
                                 self.vdom.process_events();
                             }
                         }
@@ -271,11 +273,6 @@ impl Application {
     pub fn send_event(&mut self, event: PlatformEvent, scale_factor: f64) {
         self.events.push(event);
         self.process_events(scale_factor);
-    }
-
-    /// Replace a VirtualDOM Template
-    pub fn vdom_replace_template(&mut self, template: Template) {
-        self.vdom.replace_template(template);
     }
 
     /// Render the App into the Window Canvas

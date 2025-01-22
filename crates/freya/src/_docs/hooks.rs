@@ -24,7 +24,7 @@
 //!         true
 //!     };
 //!
-//!     None
+//!     Ok(VNode::placeholder())
 //! }
 //! ```
 //!
@@ -35,7 +35,7 @@
 //! fn MyComponent(initial_value: bool) -> Element {
 //!     let is_enabled = use_signal(move || initial_value);
 //!
-//!     None
+//!     Ok(VNode::placeholder())
 //! }
 //! ```
 //!
@@ -94,7 +94,7 @@
 //!         let state = use_signal(|| i);
 //!     }
 //!
-//!     None
+//!     Ok(VNode::placeholder())
 //! }
 //! ```
 //!
@@ -105,6 +105,6 @@
 //! fn MyComponent() -> Element {
 //!     let state = use_signal(|| (0..5).into_iter().collect::<Vec<_>>());
 //!
-//!     None
+//!     Ok(VNode::placeholder())
 //! }
 //! ```

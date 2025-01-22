@@ -7,7 +7,9 @@ use freya_components::{
     OutlineButton,
     PressEvent,
 };
-use freya_elements::elements as dioxus_elements;
+use freya_elements::{
+    self as dioxus_elements,
+};
 use freya_hooks::{
     theme_with,
     ButtonThemeWith,
@@ -25,7 +27,9 @@ pub fn NodeElement(
     onselected: EventHandler<()>,
     onarrow: EventHandler<()>,
 ) -> Element {
-    let node = use_node_info(node_id)?;
+    let Some(node) = use_node_info(node_id) else {
+        return Ok(VNode::placeholder());
+    };
 
     let onselect = move |_| onselected.call(());
 
