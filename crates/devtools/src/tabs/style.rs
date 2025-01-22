@@ -20,7 +20,9 @@ use crate::{
 #[component]
 pub fn NodeInspectorStyle(node_id: String) -> Element {
     let node_id = NodeId::deserialize(&node_id);
-    let node = use_node_info(node_id)?;
+    let Some(node) = use_node_info(node_id) else {
+        return Ok(VNode::placeholder());
+    };
 
     rsx!(
         ScrollView {

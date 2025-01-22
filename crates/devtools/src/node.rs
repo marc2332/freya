@@ -5,7 +5,7 @@ use freya_components::{
     ButtonStatus,
 };
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::MouseEvent,
 };
 use freya_native_core::prelude::NodeId;
@@ -22,7 +22,9 @@ pub fn NodeElement(
     onarrow: EventHandler<()>,
 ) -> Element {
     let mut status = use_signal(ButtonStatus::default);
-    let node = use_node_info(node_id)?;
+    let Some(node) = use_node_info(node_id) else {
+        return Ok(VNode::placeholder());
+    };
 
     let onmousedown = move |_| onselected.call(());
 

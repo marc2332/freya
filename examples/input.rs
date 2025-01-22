@@ -29,7 +29,7 @@ fn app() -> Element {
                 onchange: move |txt| {
                     values.write().0 = txt;
                 }
-            },
+            }
             label {
                 color: "black",
                 "Your age:"

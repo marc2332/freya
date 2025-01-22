@@ -230,7 +230,7 @@ pub async fn single_line_multiple_editors() {
                             }
                         }
                     )
-                })},
+                })}
                 label {
                     color: "black",
                     height: "50%",
@@ -428,7 +428,7 @@ pub async fn highlights_single_line_multiple_editors() {
                             }
                         }
                     )
-                })},
+                })}
                 label {
                     color: "black",
                     height: "50%",
@@ -927,7 +927,7 @@ pub async fn highlights_shift_click_single_line_multiple_editors() {
                             }
                         }
                     )
-                })},
+                })}
                 label {
                     color: "black",
                     height: "50%",
