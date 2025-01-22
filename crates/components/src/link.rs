@@ -144,9 +144,7 @@ pub fn Link(
 
                 // TODO(marc2332): Log unhandled errors
             } else {
-                println!("111");
                 let router = navigator();
-                println!("222");
                 router.push(to.clone());
             }
         }

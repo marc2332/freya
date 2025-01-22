@@ -18,99 +18,197 @@ pub fn NodeInspectorLayout(node_id: String) -> Element {
 
     let inner_area = format!(
         "{}x{}",
-        node.layout_node.inner_area.width(),
-        node.layout_node.inner_area.height()
+        node.layout_node.inner_area.width().round(),
+        node.layout_node.inner_area.height().round()
     );
     let area = format!(
         "{}x{}",
-        node.layout_node.area.width(),
-        node.layout_node.area.height()
+        node.layout_node.area.width().round(),
+        node.layout_node.area.height().round()
     );
     let paddings = node.state.size.padding;
+    let margins = node.state.size.margin;
 
     rsx!(
         ScrollView {
             show_scrollbar: true,
-            height: "calc(100% - 35)",
             rect {
-                width: "100%",
-                height: "200",
                 padding: "20",
-                label {
-                    height: "25",
-                    "Area: {area}"
-                }
+                cross_align: "center",
+                width: "100%",
                 rect {
                     width: "100%",
-                    height: "calc(100% - 25)",
-                    main_align: "center",
-                    cross_align: "center",
-                    background: "rgb(40, 40, 40)",
+                    max_width: "300",
+                    label {
+                        height: "25",
+                        "Area: {area}"
+                    }
                     rect {
                         width: "100%",
-                        height: "100%",
-                        background: "rgb(71, 180, 240)",
+                        height: "250",
+                        main_align: "center",
+                        cross_align: "center",
+                        background: "rgb(197, 46, 139)",
                         corner_radius: "5",
-                        rect {
-                            main_align: "center",
-                            cross_align: "center",
-                            width: "100%",
-                            height: "25",
+                        content: "flex",
+                        TooltipContainer {
+                            tooltip: rsx!(
+                                Tooltip {
+                                    text: "Top margin"
+                                }
+                            ),
                             label {
-                                width: "100%",
+                                main_align: "center",
                                 text_align: "center",
-                                "{paddings.top()}"
+                                width: "100%",
+                                height: "25",
+                                "{margins.top()}"
                             }
                         }
                         rect {
-                            width: "100%",
-                            height: "calc(100% - 50)",
                             direction: "horizontal",
-                            rect {
-                                main_align: "center",
-                                cross_align: "center",
-                                width: "25",
-                                height: "100%",
+                            content: "flex",
+                            height: "flex(1)",
+                            width: "100%",
+                            cross_align: "center",
+                            TooltipContainer {
+                                tooltip: rsx!(
+                                    Tooltip {
+                                        text: "Left margin"
+                                    }
+                                ),
                                 label {
-                                    width: "100%",
+                                    main_align: "center",
                                     text_align: "center",
-                                    "{paddings.left()}"
+                                    width: "25",
+                                    height: "25",
+                                    "{margins.left()}"
                                 }
                             }
+
                             rect {
-                                width: "calc(100% - 50)",
-                                height: "100%",
+                                width: "flex(1)",
+                                height: "200",
                                 main_align: "center",
                                 cross_align: "center",
-                                background: "rgb(40, 40, 40)",
+                                background: "rgb(71, 180, 240)",
                                 corner_radius: "5",
-                                label {
-                                    "{inner_area}"
+                                content: "flex",
+                                TooltipContainer {
+                                    tooltip: rsx!(
+                                        Tooltip {
+                                            text: "Top margin"
+                                        }
+                                    ),
+                                    label {
+                                        main_align: "center",
+                                        text_align: "center",
+                                        width: "100%",
+                                        height: "25",
+                                        "{margins.top()}"
+                                    }
                                 }
+                                rect {
+                                    direction: "horizontal",
+                                    content: "flex",
+                                    height: "flex(1)",
+                                    cross_align: "center",
+                                    TooltipContainer {
+                                        tooltip: rsx!(
+                                            Tooltip {
+                                                text: "Left padding"
+                                            }
+                                        ),
+                                        label {
+                                            main_align: "center",
+                                            text_align: "center",
+                                            width: "25",
+                                            height: "25",
+                                            "{paddings.left()}"
+                                        }
+                                    }
+
+                                    rect {
+                                        width: "flex(1)",
+                                        height: "fill",
+                                        main_align: "center",
+                                        cross_align: "center",
+                                        background: "rgb(40, 40, 40)",
+                                        corner_radius: "5",
+                                        TooltipContainer {
+                                            tooltip: rsx!(
+                                                Tooltip {
+                                                    text: "Inner area"
+                                                }
+                                            ),
+                                            label {
+                                                "{inner_area}"
+                                            }
+                                        }
+                                    }
+                                    TooltipContainer {
+                                        tooltip: rsx!(
+                                            Tooltip {
+                                                text: "Right padding"
+                                            }
+                                        ),
+                                        label {
+                                            main_align: "center",
+                                            text_align: "center",
+                                            width: "25",
+                                            height: "25",
+                                            "{paddings.right()}"
+                                        }
+                                    }
+
+                                }
+                                TooltipContainer {
+                                    tooltip: rsx!(
+                                        Tooltip {
+                                            text: "Bottom padding"
+                                        }
+                                    ),
+                                    label {
+                                        main_align: "center",
+                                        text_align: "center",
+                                        width: "100%",
+                                        height: "25",
+                                        "{paddings.bottom()}"
+                                    }
+                                }
+
                             }
-                            rect {
-                                main_align: "center",
-                                cross_align: "center",
-                                width: "25",
-                                height: "100%",
+                            TooltipContainer {
+                                tooltip: rsx!(
+                                    Tooltip {
+                                        text: "Right padding"
+                                    }
+                                ),
                                 label {
-                                    width: "100%",
+                                    main_align: "center",
                                     text_align: "center",
+                                    width: "25",
+                                    height: "25",
                                     "{paddings.right()}"
                                 }
                             }
+
                         }
-                        rect {
-                            main_align: "center",
-                            cross_align: "center",
-                            width: "100%",
-                            height: "25",
+                        TooltipContainer {
+                            tooltip: rsx!(
+                                Tooltip {
+                                    text: "Bottom padding"
+                                }
+                            ),
                             label {
-                                width: "100%",
+                                main_align: "center",
                                 text_align: "center",
+                                width: "100%",
+                                height: "25",
                                 "{paddings.bottom()}"
                             }
                         }
+
                     }
                 }
             }
