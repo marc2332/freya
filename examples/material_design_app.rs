@@ -12,6 +12,7 @@ fn main() {
                 floating_button: rsx!(
                     FloatingButton {
                         label {
+                            text_height: "disable-least-ascent",
                             "+"
                         }
                     }
@@ -57,7 +58,6 @@ fn FloatingButton(FloatingButtonProps { children }: FloatingButtonProps) -> Elem
             width: "50",
             background: "rgb(104, 24, 245)",
             shadow: "0 0 15 3 rgb(0, 0, 0, 60)",
-            padding: "15",
             color: "white",
             font_size: "22",
             corner_radius: "50",
@@ -87,20 +87,11 @@ fn Scaffold(props: ScaffoldProps) -> Element {
             height: "100%",
             width: "100%",
             rect {
-                width: "0",
-                height: "0",
-                rect {
-                    width: "100v",
-                    height: "100v",
-                    rect {
-                        layer: "-999",
-                        position: "absolute",
-                        position_bottom: "70",
-                        position_right: "70",
-                        {props.floating_button}
-                    }
-
-                }
+                layer: "-999",
+                position: "absolute",
+                position_bottom: "70",
+                position_right: "70",
+                {props.floating_button}
             }
             {props.navbar}
             ScrollView {
