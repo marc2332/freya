@@ -4,7 +4,7 @@ Accepted values:
 
 - `clip` (default): Simply cut the text.
 - `ellipsis`: Show `…`.
-- `<custom-value>: Show a custom value.
+- `[custom-value]: Show a custom value.
 
 ### Ellipsis example
 
