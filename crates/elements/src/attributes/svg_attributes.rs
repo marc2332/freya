@@ -12,7 +12,7 @@ def_attribute!(
     /// ```rust, no_run
     /// # use freya::prelude::*;
     /// fn app() -> Element {
-    ///     let svg_content = include_str!("../../../examples/settings.svg");
+    ///     let svg_content = include_str!("../../../../examples/settings.svg");
     ///
     ///     rsx!(
     ///         svg {
@@ -35,7 +35,7 @@ def_attribute!(
     /// ```rust, no_run
     /// # use freya::prelude::*;
     /// fn app() -> Element {
-    ///     let svg_content = include_str!("../../../examples/settings.svg");
+    ///     let svg_content = include_str!("../../../../examples/settings.svg");
     ///
     ///     rsx!(
     ///         svg {
