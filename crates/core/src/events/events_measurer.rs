@@ -260,9 +260,10 @@ fn measure_dom_events(
                             layer: *layer,
                         });
 
-                        // Stack events that do not bubble up
+                        // Events that bubble will only be emitted once
+                        // Those that don't will be stacked
                         if event.get_name().does_bubble() {
-                            continue 'event;
+                            break 'event;
                         }
                     }
                 }
