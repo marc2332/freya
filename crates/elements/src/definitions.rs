@@ -98,12 +98,15 @@ builder_constructors! {
         // Layout
         #[doc = include_str!("_docs/attributes/width_height.md")]
         height,
+        #[doc = include_str!("_docs/attributes/width_height.md")]
         width,
         #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
         min_height,
+        #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
         min_width,
         #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_height,
+        #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_width,
         #[doc = include_str!("_docs/attributes/margin.md")]
         margin,
@@ -111,10 +114,15 @@ builder_constructors! {
         padding,
         #[doc = include_str!("_docs/attributes/position.md")]
         position,
+        #[doc = include_str!("_docs/attributes/position.md")]
         position_top,
+        #[doc = include_str!("_docs/attributes/position.md")]
         position_right,
+        #[doc = include_str!("_docs/attributes/position.md")]
         position_bottom,
+        #[doc = include_str!("_docs/attributes/position.md")]
         position_left,
+        #[doc = include_str!("_docs/attributes/position.md")]
         layer,
 
         // Children layout
@@ -124,6 +132,7 @@ builder_constructors! {
         content,
         #[doc = include_str!("_docs/attributes/main_align_cross_align.md")]
         main_align,
+        #[doc = include_str!("_docs/attributes/main_align_cross_align.md")]
         cross_align,
         #[doc = include_str!("_docs/attributes/spacing.md")]
         spacing,
@@ -141,6 +150,7 @@ builder_constructors! {
         shadow,
         #[doc = include_str!("_docs/attributes/corner.md")]
         corner_radius,
+        #[doc = include_str!("_docs/attributes/corner.md")]
         corner_smoothing,
 
         // Font style
@@ -278,20 +288,27 @@ builder_constructors! {
         // Layout
         #[doc = include_str!("_docs/attributes/width_height.md")]
         height,
+        #[doc = include_str!("_docs/attributes/width_height.md")]
         width,
         #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
         min_height,
+        #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
         min_width,
         #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_height,
+        #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_width,
         #[doc = include_str!("_docs/attributes/margin.md")]
         margin,
         #[doc = include_str!("_docs/attributes/position.md")]
         position,
+        #[doc = include_str!("_docs/attributes/position.md")]
         position_top,
+        #[doc = include_str!("_docs/attributes/position.md")]
         position_right,
+        #[doc = include_str!("_docs/attributes/position.md")]
         position_bottom,
+        #[doc = include_str!("_docs/attributes/position.md")]
         position_left,
         layer,
 
@@ -439,20 +456,27 @@ builder_constructors! {
         // Layout
         #[doc = include_str!("_docs/attributes/width_height.md")]
         height,
+        #[doc = include_str!("_docs/attributes/width_height.md")]
         width,
         #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
         min_height,
+        #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
         min_width,
         #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_height,
+        #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_width,
         #[doc = include_str!("_docs/attributes/margin.md")]
         margin,
         #[doc = include_str!("_docs/attributes/position.md")]
         position,
+        #[doc = include_str!("_docs/attributes/position.md")]
         position_top,
+        #[doc = include_str!("_docs/attributes/position.md")]
         position_right,
+        #[doc = include_str!("_docs/attributes/position.md")]
         position_bottom,
+        #[doc = include_str!("_docs/attributes/position.md")]
         position_left,
         layer,
 
@@ -638,20 +662,27 @@ builder_constructors! {
         // Layout
         #[doc = include_str!("_docs/attributes/width_height.md")]
         height,
+        #[doc = include_str!("_docs/attributes/width_height.md")]
         width,
         #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
         min_height,
+        #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
         min_width,
         #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_height,
+        #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_width,
         #[doc = include_str!("_docs/attributes/margin.md")]
         margin,
         #[doc = include_str!("_docs/attributes/position.md")]
         position,
+        #[doc = include_str!("_docs/attributes/position.md")]
         position_top,
+        #[doc = include_str!("_docs/attributes/position.md")]
         position_right,
+        #[doc = include_str!("_docs/attributes/position.md")]
         position_bottom,
+        #[doc = include_str!("_docs/attributes/position.md")]
         position_left,
         layer,
 
@@ -763,20 +794,27 @@ builder_constructors! {
         // Layout
         #[doc = include_str!("_docs/attributes/width_height.md")]
         height,
+        #[doc = include_str!("_docs/attributes/width_height.md")]
         width,
         #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
         min_height,
+        #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
         min_width,
         #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_height,
+        #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_width,
         #[doc = include_str!("_docs/attributes/margin.md")]
         margin,
         #[doc = include_str!("_docs/attributes/position.md")]
         position,
+        #[doc = include_str!("_docs/attributes/position.md")]
         position_top,
+        #[doc = include_str!("_docs/attributes/position.md")]
         position_right,
+        #[doc = include_str!("_docs/attributes/position.md")]
         position_bottom,
+        #[doc = include_str!("_docs/attributes/position.md")]
         position_left,
         layer,
 
