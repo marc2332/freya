@@ -2,10 +2,11 @@ Determines how text is treated when it exceeds its [`max_lines`](#max_lines) cou
 
 Accepted values:
 
-- `clip` (default)
-- `ellipsis`
+- `clip` (default): Simply cut the text.
+- `ellipsis`: Show `…`.
+- `<custom-value>: Show a custom value.
 
-### Example
+### Ellipsis example
 
 ```rust, no_run
 # use freya::prelude::*;
@@ -19,3 +20,19 @@ fn app() -> Element {
     )
 }
 ```
+
+### Custom value example
+
+```rust, no_run
+# use freya::prelude::*;
+fn app() -> Element {
+    rsx!(
+        label {
+            max_lines: "3",
+            text_overflow: ".......too long.",
+            "Looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text"
+        }
+    )
+}
+```
+
