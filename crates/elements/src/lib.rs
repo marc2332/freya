@@ -4,6 +4,7 @@
 //! - [Events](crate::elements#functions)
 
 pub mod _docs;
+pub mod attributes;
 
 mod definitions;
 pub mod events;

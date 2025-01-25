@@ -1,9 +1,6 @@
 pub use events::*;
 
-#[doc(hidden)]
-pub type AttributeDescription = (&'static str, Option<&'static str>, bool);
-
-macro_rules! builder_constructors {
+macro_rules! def_element {
     (
         $(
             $(#[$attr:meta])*
@@ -58,24 +55,41 @@ macro_rules! impl_element {
             #[allow(non_camel_case_types)]
             $(#[$attr])*
             pub mod $name {
-                #[allow(unused)]
-                use super::*;
                 #[doc(hidden)]
                 pub const TAG_NAME: &'static str = stringify!($name);
                 #[doc(hidden)]
                 pub const NAME_SPACE: Option<&'static str> = None;
 
                 $(
-                    #[allow(non_upper_case_globals)]
-                    $(#[$attr_method])*
-                    pub const $fil: AttributeDescription = (stringify!($fil), None, false);
+                   pub use crate::attributes::$fil::$fil;
                 )*
             }
         )*
     };
 }
 
-builder_constructors! {
+#[macro_export]
+macro_rules! def_attribute {
+    (
+        $(
+            $(#[$attr:meta])*
+            $fil:ident,
+         )*
+    ) => {
+        $(
+            #[allow(non_camel_case_types)]
+
+            pub mod $fil {
+
+                #[allow(non_upper_case_globals)]
+                $(#[$attr])*
+                pub const $fil: (&'static str, Option<&'static str>, bool) = (stringify!($fil), None, false);
+            }
+        )*
+    };
+}
+
+def_element!(
     /// `rect` is a generic element that acts as a container for other elements.
     ///
     /// You can specify things like [`width`](#width-and-height), [`padding`](#padding) or even in what [`direction`](#direction) the inner elements are stacked.
@@ -96,103 +110,59 @@ builder_constructors! {
     /// ```
     rect {
         // Layout
-        #[doc = include_str!("_docs/attributes/width_height.md")]
         height,
-        #[doc = include_str!("_docs/attributes/width_height.md")]
         width,
-        #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
         min_height,
-        #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
         min_width,
-        #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_height,
-        #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_width,
-        #[doc = include_str!("_docs/attributes/margin.md")]
         margin,
-        #[doc = include_str!("_docs/attributes/padding.md")]
         padding,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position_top,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position_right,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position_bottom,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position_left,
-        #[doc = include_str!("_docs/attributes/position.md")]
         layer,
 
         // Children layout
-        #[doc = include_str!("_docs/attributes/direction.md")]
         direction,
-        #[doc = include_str!("_docs/attributes/content.md")]
         content,
-        #[doc = include_str!("_docs/attributes/main_align_cross_align.md")]
         main_align,
-        #[doc = include_str!("_docs/attributes/main_align_cross_align.md")]
         cross_align,
-        #[doc = include_str!("_docs/attributes/spacing.md")]
         spacing,
-        #[doc = include_str!("_docs/attributes/overflow.md")]
         overflow,
         offset_x,
         offset_y,
 
         // Style
-        #[doc = include_str!("_docs/attributes/background.md")]
         background,
-        #[doc = include_str!("_docs/attributes/border.md")]
         border,
-        #[doc = include_str!("_docs/attributes/shadow.md")]
         shadow,
-        #[doc = include_str!("_docs/attributes/corner.md")]
         corner_radius,
-        #[doc = include_str!("_docs/attributes/corner.md")]
         corner_smoothing,
 
         // Font style
-        #[doc = include_str!("_docs/attributes/color.md")]
         color,
-        #[doc = include_str!("_docs/attributes/font_size.md")]
         font_size,
-        #[doc = include_str!("_docs/attributes/font_family.md")]
         font_family,
-        #[doc = include_str!("_docs/attributes/font_style.md")]
         font_style,
-        #[doc = include_str!("_docs/attributes/font_weight.md")]
         font_weight,
-        #[doc = include_str!("_docs/attributes/font_width.md")]
         font_width,
-        #[doc = include_str!("_docs/attributes/text_align.md")]
         text_align,
-        #[doc = include_str!("_docs/attributes/line_height.md")]
         line_height,
-        #[doc = include_str!("_docs/attributes/text_shadow.md")]
         text_shadow,
-        #[doc = include_str!("_docs/attributes/max_lines.md")]
         max_lines,
-        #[doc = include_str!("_docs/attributes/decoration.md")]
         decoration,
-        #[doc = include_str!("_docs/attributes/decoration_style.md")]
         decoration_style,
-        #[doc = include_str!("_docs/attributes/decoration_color.md")]
         decoration_color,
-        #[doc = include_str!("_docs/attributes/text_overflow.md")]
         text_overflow,
-        #[doc = include_str!("_docs/attributes/letter_spacing.md")]
         letter_spacing,
-        #[doc = include_str!("_docs/attributes/word_spacing.md")]
         word_spacing,
-        #[doc = include_str!("_docs/attributes/text_height.md")]
         text_height,
 
         // Transform
-        #[doc = include_str!("_docs/attributes/rotate.md")]
         rotate,
-        #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity,
 
         // Reference
@@ -286,76 +256,44 @@ builder_constructors! {
     /// ```
     label {
         // Layout
-        #[doc = include_str!("_docs/attributes/width_height.md")]
         height,
-        #[doc = include_str!("_docs/attributes/width_height.md")]
         width,
-        #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
         min_height,
-        #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
         min_width,
-        #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_height,
-        #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_width,
-        #[doc = include_str!("_docs/attributes/margin.md")]
         margin,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position_top,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position_right,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position_bottom,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position_left,
         layer,
 
         // Children layout
-        #[doc = include_str!("_docs/attributes/main_align_cross_align.md")]
         main_align,
 
         // Font style
-        #[doc = include_str!("_docs/attributes/color.md")]
         color,
-        #[doc = include_str!("_docs/attributes/font_size.md")]
         font_size,
-        #[doc = include_str!("_docs/attributes/font_family.md")]
         font_family,
-        #[doc = include_str!("_docs/attributes/font_style.md")]
         font_style,
-        #[doc = include_str!("_docs/attributes/font_weight.md")]
         font_weight,
-        #[doc = include_str!("_docs/attributes/font_width.md")]
         font_width,
-        #[doc = include_str!("_docs/attributes/text_align.md")]
         text_align,
-        #[doc = include_str!("_docs/attributes/line_height.md")]
         line_height,
-        #[doc = include_str!("_docs/attributes/text_shadow.md")]
         text_shadow,
-        #[doc = include_str!("_docs/attributes/max_lines.md")]
         max_lines,
-        #[doc = include_str!("_docs/attributes/decoration.md")]
         decoration,
-        #[doc = include_str!("_docs/attributes/decoration_style.md")]
         decoration_style,
-        #[doc = include_str!("_docs/attributes/decoration_color.md")]
         decoration_color,
-        #[doc = include_str!("_docs/attributes/text_overflow.md")]
         text_overflow,
-        #[doc = include_str!("_docs/attributes/letter_spacing.md")]
         letter_spacing,
-        #[doc = include_str!("_docs/attributes/word_spacing.md")]
         word_spacing,
-        #[doc = include_str!("_docs/attributes/text_height.md")]
         text_height,
 
         // Transform
-        #[doc = include_str!("_docs/attributes/rotate.md")]
         rotate,
-        #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity,
 
         // Reference
@@ -454,76 +392,44 @@ builder_constructors! {
     /// ```
     paragraph {
         // Layout
-        #[doc = include_str!("_docs/attributes/width_height.md")]
         height,
-        #[doc = include_str!("_docs/attributes/width_height.md")]
         width,
-        #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
         min_height,
-        #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
         min_width,
-        #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_height,
-        #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_width,
-        #[doc = include_str!("_docs/attributes/margin.md")]
         margin,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position_top,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position_right,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position_bottom,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position_left,
         layer,
 
         // Children layout
-        #[doc = include_str!("_docs/attributes/main_align_cross_align.md")]
         main_align,
 
         // Font style
-        #[doc = include_str!("_docs/attributes/color.md")]
         color,
-        #[doc = include_str!("_docs/attributes/font_size.md")]
         font_size,
-        #[doc = include_str!("_docs/attributes/font_family.md")]
         font_family,
-        #[doc = include_str!("_docs/attributes/font_style.md")]
         font_style,
-        #[doc = include_str!("_docs/attributes/font_weight.md")]
         font_weight,
-        #[doc = include_str!("_docs/attributes/font_width.md")]
         font_width,
-        #[doc = include_str!("_docs/attributes/text_align.md")]
         text_align,
-        #[doc = include_str!("_docs/attributes/line_height.md")]
         line_height,
-        #[doc = include_str!("_docs/attributes/text_shadow.md")]
         text_shadow,
-        #[doc = include_str!("_docs/attributes/max_lines.md")]
         max_lines,
-        #[doc = include_str!("_docs/attributes/decoration.md")]
         decoration,
-        #[doc = include_str!("_docs/attributes/decoration_style.md")]
         decoration_style,
-        #[doc = include_str!("_docs/attributes/decoration_color.md")]
         decoration_color,
-        #[doc = include_str!("_docs/attributes/text_overflow.md")]
         text_overflow,
-        #[doc = include_str!("_docs/attributes/letter_spacing.md")]
         letter_spacing,
-        #[doc = include_str!("_docs/attributes/word_spacing.md")]
         word_spacing,
-        #[doc = include_str!("_docs/attributes/text_height.md")]
         text_height,
 
         // Transform
-        #[doc = include_str!("_docs/attributes/rotate.md")]
         rotate,
-        #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity,
 
         // Text Editing
@@ -608,33 +514,19 @@ builder_constructors! {
     /// `text` element is simply a text span used for the `paragraph` element.
     text {
         // Font style
-        #[doc = include_str!("_docs/attributes/color.md")]
         color,
-        #[doc = include_str!("_docs/attributes/font_size.md")]
         font_size,
-        #[doc = include_str!("_docs/attributes/font_family.md")]
         font_family,
-        #[doc = include_str!("_docs/attributes/font_style.md")]
         font_style,
-        #[doc = include_str!("_docs/attributes/font_weight.md")]
         font_weight,
-        #[doc = include_str!("_docs/attributes/font_width.md")]
         font_width,
-        #[doc = include_str!("_docs/attributes/text_align.md")]
         text_align,
-        #[doc = include_str!("_docs/attributes/line_height.md")]
         line_height,
-        #[doc = include_str!("_docs/attributes/text_shadow.md")]
         text_shadow,
-        #[doc = include_str!("_docs/attributes/decoration.md")]
         decoration,
-        #[doc = include_str!("_docs/attributes/decoration_style.md")]
         decoration_style,
-        #[doc = include_str!("_docs/attributes/decoration_color.md")]
         decoration_color,
-        #[doc = include_str!("_docs/attributes/letter_spacing.md")]
         letter_spacing,
-        #[doc = include_str!("_docs/attributes/word_spacing.md")]
         word_spacing,
     };
     /// `image` element let's you show an image.
@@ -660,36 +552,22 @@ builder_constructors! {
     /// ```
     image {
         // Layout
-        #[doc = include_str!("_docs/attributes/width_height.md")]
         height,
-        #[doc = include_str!("_docs/attributes/width_height.md")]
         width,
-        #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
         min_height,
-        #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
         min_width,
-        #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_height,
-        #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_width,
-        #[doc = include_str!("_docs/attributes/margin.md")]
         margin,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position_top,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position_right,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position_bottom,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position_left,
         layer,
 
         // Transform
-        #[doc = include_str!("_docs/attributes/rotate.md")]
         rotate,
-        #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity,
 
         // Image
@@ -792,44 +670,28 @@ builder_constructors! {
     /// ```
     svg {
         // Layout
-        #[doc = include_str!("_docs/attributes/width_height.md")]
         height,
-        #[doc = include_str!("_docs/attributes/width_height.md")]
         width,
-        #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
         min_height,
-        #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
         min_width,
-        #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_height,
-        #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_width,
-        #[doc = include_str!("_docs/attributes/margin.md")]
         margin,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position_top,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position_right,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position_bottom,
-        #[doc = include_str!("_docs/attributes/position.md")]
         position_left,
         layer,
 
         // Transform
-        #[doc = include_str!("_docs/attributes/rotate.md")]
         rotate,
-        #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity,
 
         // Svg
-        #[doc = include_str!("_docs/attributes/color.md")]
         color,
         svg_data,
         svg_content,
-        #[doc = include_str!("_docs/attributes/fill_stroke.md")]
         fill,
         stroke,
 
@@ -903,7 +765,7 @@ builder_constructors! {
         a11y_list_style,
         a11y_vertical_offset,
     };
-}
+);
 
 pub mod events {
     use std::any::Any;
@@ -1010,34 +872,22 @@ pub mod events {
     impl_event! [
         MouseData;
 
-        #[doc = include_str!("_docs/events/click.md")]
         onclick
-        #[doc = include_str!("_docs/events/globalclick.md")]
         onglobalclick
-        #[doc = include_str!("_docs/events/middleclick.md")]
         onmiddleclick
-        #[doc = include_str!("_docs/events/rightclick.md")]
         onrightclick
-        #[doc = include_str!("_docs/events/mouseup.md")]
         onmouseup
-        #[doc = include_str!("_docs/events/mousedown.md")]
         onmousedown
-        #[doc = include_str!("_docs/events/globalmousedown.md")]
         onglobalmousedown
-        #[doc = include_str!("_docs/events/mousemove.md")]
         onmousemove
-        #[doc = include_str!("_docs/events/globalmousemove.md")]
         onglobalmousemove
-        #[doc = include_str!("_docs/events/mouseleave.md")]
         onmouseleave
-        #[doc = include_str!("_docs/events/mouseenter.md")]
         onmouseenter
     ];
 
     impl_event! [
         WheelData;
 
-        #[doc = include_str!("_docs/events/wheel.md")]
         onwheel
     ];
 
@@ -1048,50 +898,35 @@ pub mod events {
 
         onkeyup
 
-        #[doc = include_str!("_docs/events/globalkeydown.md")]
         onglobalkeydown
-        #[doc = include_str!("_docs/events/globalkeyup.md")]
         onglobalkeyup
     ];
 
     impl_event! [
         TouchData;
 
-        #[doc = include_str!("_docs/events/touchcancel.md")]
         ontouchcancel
-        #[doc = include_str!("_docs/events/touchend.md")]
         ontouchend
-        #[doc = include_str!("_docs/events/touchmove.md")]
         ontouchmove
-        #[doc = include_str!("_docs/events/touchstart.md")]
         ontouchstart
     ];
 
     impl_event! [
         PointerData;
 
-        #[doc = include_str!("_docs/events/pointerdown.md")]
         onpointerdown
-        #[doc = include_str!("_docs/events/pointerup.md")]
         onpointerup
-        #[doc = include_str!("_docs/events/globalpointerup.md")]
         onglobalpointerup
-        #[doc = include_str!("_docs/events/pointermove.md")]
         onpointermove
-        #[doc = include_str!("_docs/events/pointerenter.md")]
         onpointerenter
-        #[doc = include_str!("_docs/events/pointerleave.md")]
         onpointerleave
     ];
 
     impl_event! [
         FileData;
 
-        #[doc = include_str!("_docs/events/filedrop.md")]
         onfiledrop
-        #[doc = include_str!("_docs/events/globalfilehover.md")]
         onglobalfilehover
-        #[doc = include_str!("_docs/events/globalfilehovercancelled.md")]
         onglobalfilehovercancelled
     ];
 }
