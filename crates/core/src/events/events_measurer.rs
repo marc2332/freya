@@ -196,21 +196,17 @@ pub fn measure_potential_event_listeners(
 }
 
 pub fn is_node_parent_of(rdom: &DioxusDOM, node: NodeId, parent_node: NodeId) -> bool {
-    let mut stack = vec![parent_node];
-    while let Some(id) = stack.pop() {
+    let mut head = Some(node);
+    while let Some(id) = head.take() {
         let tree = rdom.tree_ref();
-        let mut children = tree.children_ids(id);
-        drop(tree);
-        if children.contains(&node) {
-            return true;
-        }
+        if let Some(parent_id) = tree.parent_id(id) {
+            if parent_id == parent_node {
+                return true;
+            }
 
-        if rdom.contains(id) {
-            children.reverse();
-            stack.extend(children.iter());
+            head = Some(parent_id)
         }
     }
-
     false
 }
 
