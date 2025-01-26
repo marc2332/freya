@@ -244,13 +244,13 @@ fn measure_dom_events(
                     continue;
                 };
 
-                let valid_node = if let Some(child_node) = child_node {
-                    is_node_parent_of(rdom, child_node, *node_id)
-                } else {
-                    true
-                };
+                if let Some(child_node) = child_node {
+                    if !is_node_parent_of(rdom, child_node, *node_id) {
+                        continue;
+                    }
+                }
 
-                if rdom.is_node_listening(node_id, &collateral_event) && valid_node {
+                if rdom.is_node_listening(node_id, &collateral_event) {
                     let mut valid_event = event.clone();
                     valid_event.set_name(collateral_event);
                     valid_events.push(PotentialEvent {
@@ -270,7 +270,6 @@ fn measure_dom_events(
 
                 if background != &Fill::Color(Color::TRANSPARENT)
                     && !event.get_name().does_go_through_solid()
-                    && valid_node
                 {
                     // If the background isn't transparent,
                     // we must make sure that next nodes are parent of it

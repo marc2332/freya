@@ -33,6 +33,84 @@ fn app() -> Element {
                 "This is a button. Apparently, buttons can be pressed."
             }
         }
+        MyButton {
+            onpress: |_| println!("button pressed"),
+            label {
+                "This is a button. Apparently, buttons can be pressed."
+            }
+        }
+        MyButton {
+            onpress: |_| println!("button pressed"),
+            label {
+                "This is a button. Apparently, buttons can be pressed."
+            }
+        }
+        MyButton {
+            onpress: |_| println!("button pressed"),
+            label {
+                "This is a button. Apparently, buttons can be pressed."
+            }
+        }
+        MyButton {
+            onpress: |_| println!("button pressed"),
+            label {
+                "This is a button. Apparently, buttons can be pressed."
+            }
+        }
+        MyButton {
+            onpress: |_| println!("button pressed"),
+            label {
+                "This is a button. Apparently, buttons can be pressed."
+            }
+        }
+        MyButton {
+            onpress: |_| println!("button pressed"),
+            label {
+                "This is a button. Apparently, buttons can be pressed."
+            }
+        }
+        MyButton {
+            onpress: |_| println!("button pressed"),
+            label {
+                "This is a button. Apparently, buttons can be pressed."
+            }
+        }
+        MyButton {
+            onpress: |_| println!("button pressed"),
+            label {
+                "This is a button. Apparently, buttons can be pressed."
+            }
+        }
+        MyButton {
+            onpress: |_| println!("button pressed"),
+            label {
+                "This is a button. Apparently, buttons can be pressed."
+            }
+        }
+        MyButton {
+            onpress: |_| println!("button pressed"),
+            label {
+                "This is a button. Apparently, buttons can be pressed."
+            }
+        }
+        MyButton {
+            onpress: |_| println!("button pressed"),
+            label {
+                "This is a button. Apparently, buttons can be pressed."
+            }
+        }
+        MyButton {
+            onpress: |_| println!("button pressed"),
+            label {
+                "This is a button. Apparently, buttons can be pressed."
+            }
+        }
+        MyButton {
+            onpress: |_| println!("button pressed"),
+            label {
+                "This is a button. Apparently, buttons can be pressed."
+            }
+        }
     )
 }
 
@@ -43,7 +121,7 @@ pub fn MyButton(children: Element, onpress: Option<EventHandler<PressEvent>>) ->
             onpress: onpress,
             rect {
                 // Comment this out and suddenly the button can't be clicked when behind a dropdown.
-                background: "red",
+                // background: "red",
 
                 {children}
             }

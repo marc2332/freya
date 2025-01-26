@@ -127,18 +127,17 @@ impl NodesState {
                 layer,
             } in events.iter().rev()
             {
-                let valid_node = if let Some(child_node) = child_node {
-                    is_node_parent_of(rdom, child_node, *node_id)
-                } else {
-                    true
-                };
+                if let Some(child_node) = child_node {
+                    if !is_node_parent_of(rdom, child_node, *node_id) {
+                        continue;
+                    }
+                }
 
                 let node = rdom.get(*node_id).unwrap();
                 let StyleState { background, .. } = &*node.get::<StyleState>().unwrap();
 
                 if background != &Fill::Color(Color::TRANSPARENT)
                     && !event.get_name().does_go_through_solid()
-                    && valid_node
                 {
                     // If the background isn't transparent,
                     // we must make sure that next nodes are parent of it
@@ -149,37 +148,24 @@ impl NodesState {
                 match event.get_name() {
                     // Update hovered nodes state
                     name if name.can_change_hover_state() => {
-                        let is_hovered = self.hovered_nodes.contains_key(node_id);
-
                         // Mark the Node as hovered if it wasn't already
-                        if !is_hovered && valid_node {
-                            self.hovered_nodes
-                                .insert(*node_id, NodeMetadata { layer: *layer });
-
+                        self.hovered_nodes.entry(*node_id).or_insert_with(|| {
                             #[cfg(debug_assertions)]
                             tracing::info!("Marked as hovered {:?}", node_id);
-                        }
 
-                        if name.is_enter() {
-                            // If the Node was already hovered, we don't need to emit an `enter` event again.
-                            if is_hovered {
-                                continue;
-                            }
-                        }
+                            NodeMetadata { layer: *layer }
+                        });
                     }
 
                     // Update pressed nodes state
                     name if name.can_change_press_state() => {
-                        let is_pressed = self.pressed_nodes.contains_key(node_id);
-
                         // Mark the Node as pressed if it wasn't already
-                        if !is_pressed {
-                            self.pressed_nodes
-                                .insert(*node_id, NodeMetadata { layer: *layer });
-
+                        self.pressed_nodes.entry(*node_id).or_insert_with(|| {
                             #[cfg(debug_assertions)]
                             tracing::info!("Marked as pressed {:?}", node_id);
-                        }
+
+                            NodeMetadata { layer: *layer }
+                        });
                     }
                     _ => {}
                 }
