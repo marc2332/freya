@@ -42,12 +42,12 @@ impl NodesState {
     pub fn process_collateral(
         &mut self,
         fdom: &FreyaDOM,
-        pontential_events: &PotentialEvents,
+        potential_events: &PotentialEvents,
         dom_events: &mut Vec<DomEvent>,
         events: &[PlatformEvent],
     ) -> PotentialEvents {
         let rdom = fdom.rdom();
-        let mut potential_events = PotentialEvents::default();
+        let mut potential_collateral_events = PotentialEvents::default();
 
         // Any mouse press event at all
         let recent_mouse_press_event = any_event_of(events, |e| e.was_cursor_pressed_or_released());
@@ -82,7 +82,9 @@ impl NodesState {
                 if let Some(PlatformEvent::Mouse { cursor, button, .. }) =
                     recent_mouse_movement_event
                 {
-                    let events = potential_events.entry(EventName::MouseLeave).or_default();
+                    let events = potential_collateral_events
+                        .entry(EventName::MouseLeave)
+                        .or_default();
 
                     // Emit a MouseLeave event as the cursor was moved outside the Node bounds
                     events.push(PotentialEvent {
@@ -118,7 +120,7 @@ impl NodesState {
         });
 
         // Update the state of the nodes given the new events.
-        for events in pontential_events.values() {
+        for events in potential_events.values() {
             let mut child_node: Option<NodeId> = None;
 
             for PotentialEvent {
@@ -173,11 +175,13 @@ impl NodesState {
         }
 
         // Order the events by their Nodes layer
-        for events in potential_events.values_mut() {
+        for events in potential_collateral_events.values_mut() {
             events.sort_by(|left, right| left.layer.cmp(&right.layer))
         }
 
-        potential_events
+        // println!("potential_events {}, dom_events {}, potential_collateral_events {} ", potential_events.len(), dom_events.len(), potential_collateral_events.len());
+
+        potential_collateral_events
     }
 }
 
