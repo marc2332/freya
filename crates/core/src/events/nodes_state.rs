@@ -1,10 +1,20 @@
 #![allow(clippy::type_complexity)]
 
-use freya_native_core::NodeId;
+use freya_engine::prelude::Color;
+use freya_native_core::{
+    prelude::NodeImmutable,
+    NodeId,
+};
+use freya_node_state::{
+    Fill,
+    StyleState,
+};
 use rustc_hash::FxHashMap;
 
 use crate::{
+    dom::FreyaDOM,
     events::{
+        is_node_parent_of,
         DomEvent,
         PlatformEvent,
     },
@@ -31,10 +41,12 @@ impl NodesState {
     /// Update the node states given the new events and suggest potential collateral new events
     pub fn process_collateral(
         &mut self,
+        fdom: &FreyaDOM,
         pontential_events: &PotentialEvents,
         dom_events: &mut Vec<DomEvent>,
         events: &[PlatformEvent],
     ) -> PotentialEvents {
+        let rdom = fdom.rdom();
         let mut potential_events = PotentialEvents::default();
 
         // Any mouse press event at all
@@ -93,27 +105,54 @@ impl NodesState {
             true
         });
 
-        // Update the state of the noves given the new events.
+        dom_events.retain(|ev| {
+            match ev.name {
+                // Filter out enter events for nodes that were already hovered
+                _ if ev.name.is_enter() => !self.hovered_nodes.contains_key(&ev.node_id),
 
-        // We clone this here so events emitted in the same batch that mark an node
-        // as hovered or pressed will not affect the other events
-        let hovered_nodes = self.hovered_nodes.clone();
-        let pressed_nodes = self.pressed_nodes.clone();
+                // Filter out press events for nodes that were already pressed
+                _ if ev.name.is_pressed() => !self.pressed_nodes.contains_key(&ev.node_id),
 
+                _ => true,
+            }
+        });
+
+        // Update the state of the nodes given the new events.
         for events in pontential_events.values() {
+            let mut child_node: Option<NodeId> = None;
+
             for PotentialEvent {
                 node_id,
                 event,
                 layer,
-            } in events
+            } in events.iter().rev()
             {
+                let valid_node = if let Some(child_node) = child_node {
+                    is_node_parent_of(rdom, child_node, *node_id)
+                } else {
+                    true
+                };
+
+                let node = rdom.get(*node_id).unwrap();
+                let StyleState { background, .. } = &*node.get::<StyleState>().unwrap();
+
+                if background != &Fill::Color(Color::TRANSPARENT)
+                    && !event.get_name().does_go_through_solid()
+                    && valid_node
+                {
+                    // If the background isn't transparent,
+                    // we must make sure that next nodes are parent of it
+                    // This only matters for events that bubble up (e.g. cursor movement events)
+                    child_node = Some(*node_id);
+                }
+
                 match event.get_name() {
                     // Update hovered nodes state
                     name if name.can_change_hover_state() => {
-                        let is_hovered = hovered_nodes.contains_key(node_id);
+                        let is_hovered = self.hovered_nodes.contains_key(node_id);
 
                         // Mark the Node as hovered if it wasn't already
-                        if !is_hovered {
+                        if !is_hovered && valid_node {
                             self.hovered_nodes
                                 .insert(*node_id, NodeMetadata { layer: *layer });
 
@@ -131,7 +170,7 @@ impl NodesState {
 
                     // Update pressed nodes state
                     name if name.can_change_press_state() => {
-                        let is_pressed = pressed_nodes.contains_key(node_id);
+                        let is_pressed = self.pressed_nodes.contains_key(node_id);
 
                         // Mark the Node as pressed if it wasn't already
                         if !is_pressed {
@@ -146,18 +185,6 @@ impl NodesState {
                 }
             }
         }
-
-        dom_events.retain(|ev| {
-            match ev.name {
-                // Filter out enter events for nodes that were already hovered
-                _ if ev.name.is_enter() => !hovered_nodes.contains_key(&ev.node_id),
-
-                // Filter out press events for nodes that were already pressed
-                _ if ev.name.is_pressed() => !pressed_nodes.contains_key(&ev.node_id),
-
-                _ => true,
-            }
-        });
 
         // Order the events by their Nodes layer
         for events in potential_events.values_mut() {

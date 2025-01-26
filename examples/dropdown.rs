@@ -1,8 +1,3 @@
-#![cfg_attr(
-    all(not(debug_assertions), target_os = "windows"),
-    windows_subsystem = "windows"
-)]
-
 use freya::prelude::*;
 
 fn main() {
@@ -18,40 +13,40 @@ fn app() -> Element {
         ]
     });
     let mut selected_dropdown = use_signal(|| "First Option".to_string());
-
     rsx!(
-        rect {
-            direction: "horizontal",
-            Dropdown {
-                theme: theme_with!(DropdownTheme {
-                    width: "200".into(),
-                    arrow_fill: "rgb(0, 119, 182)".into()
-                }),
-                value: selected_dropdown.read().clone(),
-                for ch in values.iter() {
-                    DropdownItem {
-                        value: ch.clone(),
-                        onpress: {
-                            to_owned![ch];
-                            move |_| selected_dropdown.set(ch.clone())
-                        },
-                        label { "Custom {ch}" }
-                    }
-                }
-            }
-            Dropdown {
-                value: selected_dropdown.read().clone(),
-                for ch in values {
-                    DropdownItem {
-                        value: ch.clone(),
-                        onpress: {
-                            to_owned![ch];
-                            move |_| selected_dropdown.set(ch.clone())
-                        },
-                        label { "{ch}" }
-                    }
+        Dropdown {
+            value: selected_dropdown.read().clone(),
+            for ch in values {
+                DropdownItem {
+                    value: ch.clone(),
+                    onpress: {
+                        to_owned![ch];
+                        move |_| selected_dropdown.set(ch.clone())
+                    },
+                    label { "{ch}" }
                 }
             }
         }
+        MyButton {
+            onpress: |_| println!("button pressed"),
+            label {
+                "This is a button. Apparently, buttons can be pressed."
+            }
+        }
     )
+}
+
+#[component]
+pub fn MyButton(children: Element, onpress: Option<EventHandler<PressEvent>>) -> Element {
+    rsx!(rect {
+        Button {
+            onpress: onpress,
+            rect {
+                // Comment this out and suddenly the button can't be clicked when behind a dropdown.
+                background: "red",
+
+                {children}
+            }
+        }
+    })
 }

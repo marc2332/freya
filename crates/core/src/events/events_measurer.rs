@@ -42,7 +42,7 @@ pub fn process_events(
 
     // 4. Get potential collateral events, e.g. mousemove -> mouseenter
     let potential_collateral_events =
-        nodes_state.process_collateral(&potential_events, &mut dom_events, events);
+        nodes_state.process_collateral(dom, &potential_events, &mut dom_events, events);
 
     // 5. Get what collateral events can actually be emitted
     let to_emit_dom_collateral_events =
@@ -195,7 +195,7 @@ pub fn measure_potential_event_listeners(
     potential_events
 }
 
-fn is_node_parent_of(rdom: &DioxusDOM, node: NodeId, parent_node: NodeId) -> bool {
+pub fn is_node_parent_of(rdom: &DioxusDOM, node: NodeId, parent_node: NodeId) -> bool {
     let mut stack = vec![parent_node];
     while let Some(id) = stack.pop() {
         let tree = rdom.tree_ref();
@@ -244,27 +244,25 @@ fn measure_dom_events(
                     continue;
                 };
 
-                if rdom.is_node_listening(node_id, &collateral_event) {
-                    let valid_node = if let Some(child_node) = child_node {
-                        is_node_parent_of(rdom, child_node, *node_id)
-                    } else {
-                        true
-                    };
+                let valid_node = if let Some(child_node) = child_node {
+                    is_node_parent_of(rdom, child_node, *node_id)
+                } else {
+                    true
+                };
 
-                    if valid_node {
-                        let mut valid_event = event.clone();
-                        valid_event.set_name(collateral_event);
-                        valid_events.push(PotentialEvent {
-                            node_id: *node_id,
-                            event: valid_event,
-                            layer: *layer,
-                        });
+                if rdom.is_node_listening(node_id, &collateral_event) && valid_node {
+                    let mut valid_event = event.clone();
+                    valid_event.set_name(collateral_event);
+                    valid_events.push(PotentialEvent {
+                        node_id: *node_id,
+                        event: valid_event,
+                        layer: *layer,
+                    });
 
-                        // Events that bubble will only be emitted once
-                        // Those that don't will be stacked
-                        if event.get_name().does_bubble() {
-                            break 'event;
-                        }
+                    // Events that bubble will only be emitted once
+                    // Those that don't will be stacked
+                    if event.get_name().does_bubble() {
+                        continue 'event;
                     }
                 }
 
@@ -272,6 +270,7 @@ fn measure_dom_events(
 
                 if background != &Fill::Color(Color::TRANSPARENT)
                     && !event.get_name().does_go_through_solid()
+                    && valid_node
                 {
                     // If the background isn't transparent,
                     // we must make sure that next nodes are parent of it
