@@ -94,7 +94,7 @@ impl TextOverflow {
     pub fn get_ellipsis(&self) -> Option<&str> {
         match self {
             Self::Clip => None,
-            Self::Ellipsis => Some("..."),
+            Self::Ellipsis => Some("…"),
             Self::Custom(custom) => Some(custom),
         }
     }

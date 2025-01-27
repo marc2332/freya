@@ -3,7 +3,7 @@ use std::fmt::Display;
 use dioxus::prelude::*;
 use freya_core::types::AccessibilityId;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::{
         keyboard::Key,
         KeyboardEvent,

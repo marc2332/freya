@@ -24,7 +24,7 @@ fn app() -> Element {
             onchange: move |txt| {
                 text.set(txt);
             }
-        },
+        }
         Button {
             onpress,
             label {

@@ -1,4 +1,4 @@
-use crate::definitions::PlatformEventData;
+use crate::definitions::ErasedEventData;
 
 /// Data of a Wheel event.
 #[derive(Debug, Clone, PartialEq)]
@@ -26,8 +26,8 @@ impl WheelData {
     }
 }
 
-impl From<&PlatformEventData> for WheelData {
-    fn from(val: &PlatformEventData) -> Self {
+impl From<&ErasedEventData> for WheelData {
+    fn from(val: &ErasedEventData) -> Self {
         val.downcast::<WheelData>().cloned().unwrap()
     }
 }

@@ -11,6 +11,7 @@ use freya_core::prelude::{
     EventName,
     FreyaPlugin,
     PlatformEvent,
+    PlatformEventData,
     PluginEvent,
     PluginHandle,
 };
@@ -49,11 +50,13 @@ impl GamePadPlugin {
                                 );
                             }
                             13 => {
-                                handle.send_platform_event(PlatformEvent::Keyboard {
+                                handle.send_platform_event(PlatformEvent {
                                     name: EventName::KeyDown,
-                                    key: Key::Enter,
-                                    code: Code::Enter,
-                                    modifiers: Modifiers::default(),
+                                    data: PlatformEventData::Keyboard {
+                                        key: Key::Enter,
+                                        code: Code::Enter,
+                                        modifiers: Modifiers::default(),
+                                    },
                                 });
                             }
                             _ => {}

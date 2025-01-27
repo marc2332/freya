@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::{
         keyboard::Key,
         KeyboardEvent,
@@ -454,11 +454,11 @@ mod test {
                     rect {
                         height: "200",
                         width: "200",
-                    },
+                    }
                     rect {
                         height: "200",
                         width: "200",
-                    },
+                    }
                     rect {
                         height: "200",
                         width: "200",
@@ -483,7 +483,7 @@ mod test {
         assert!(content.get(2).is_visible()); // 3. 400 -> 600, 400 < 500
         assert!(!content.get(3).is_visible()); // 4. 600 -> 800, 600 is NOT < 500, which means it is not visible.
 
-        utils.push_event(PlatformEvent::Wheel {
+        utils.push_event(TestEvent::Wheel {
             name: EventName::Wheel,
             scroll: (0., -300.).into(),
             cursor: (5., 5.).into(),
@@ -507,11 +507,11 @@ mod test {
                     rect {
                         height: "200",
                         width: "200",
-                    },
+                    }
                     rect {
                         height: "200",
                         width: "200",
-                    },
+                    }
                     rect {
                         height: "200",
                         width: "200",
@@ -537,22 +537,22 @@ mod test {
         assert!(!content.get(3).is_visible()); // 4. 600 -> 800, 600 is NOT < 500, which means it is not visible.
 
         // Simulate the user dragging the scrollbar
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
             cursor: (490., 20.).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseDown,
             cursor: (490., 20.).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
             cursor: (490., 320.).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseUp,
             cursor: (490., 320.).into(),
             button: Some(MouseButton::Left),
@@ -569,7 +569,7 @@ mod test {
 
         // Scroll up with arrows
         for _ in 0..5 {
-            utils.push_event(PlatformEvent::Keyboard {
+            utils.push_event(TestEvent::Keyboard {
                 name: EventName::KeyDown,
                 key: Key::ArrowUp,
                 code: Code::ArrowUp,
@@ -584,7 +584,7 @@ mod test {
         assert!(!content.get(3).is_visible());
 
         // Scroll to the bottom with arrows
-        utils.push_event(PlatformEvent::Keyboard {
+        utils.push_event(TestEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::End,
             code: Code::End,

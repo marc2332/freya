@@ -455,12 +455,12 @@ impl AnimConfiguration {
 }
 
 #[derive(Clone)]
-pub struct Context<Animated: AnimatedValue> {
+pub struct AnimationContext<Animated: AnimatedValue> {
     value: Signal<Animated>,
     conf: AnimConfiguration,
 }
 
-impl<Animated: AnimatedValue> PartialEq for Context<Animated> {
+impl<Animated: AnimatedValue> PartialEq for AnimationContext<Animated> {
     fn eq(&self, other: &Self) -> bool {
         self.value.eq(&other.value) && self.conf.eq(&other.conf)
     }
@@ -497,12 +497,13 @@ pub enum OnDepsChange {
     #[default]
     Reset,
     Finish,
+    Rerun,
 }
 
 /// Animate your elements. Use [`use_animation`] to use this.
 #[derive(Clone)]
 pub struct UseAnimation<Animated: AnimatedValue> {
-    pub(crate) context: Memo<Context<Animated>>,
+    pub(crate) context: Memo<AnimationContext<Animated>>,
     pub(crate) platform: UsePlatform,
     pub(crate) is_running: Signal<bool>,
     pub(crate) has_run_yet: Signal<bool>,
@@ -763,7 +764,7 @@ pub fn use_animation<Animated: AnimatedValue>(
         let value = run(&mut conf);
         let value = Signal::new(value);
         prev_value.set(Some(value));
-        Context { value, conf }
+        AnimationContext { value, conf }
     });
 
     let animation = UseAnimation {
@@ -778,6 +779,20 @@ pub fn use_animation<Animated: AnimatedValue>(
     use_hook(move || {
         if animation.context.read().conf.auto_start {
             animation.run(AnimDirection::Forward);
+        }
+    });
+
+    use_memo(move || {
+        let context = context.read();
+        if *has_run_yet.peek() {
+            match context.conf.on_deps_change {
+                OnDepsChange::Finish => animation.finish(),
+                OnDepsChange::Rerun => {
+                    let last_direction = *animation.last_direction.peek();
+                    animation.run(last_direction);
+                }
+                _ => {}
+            }
         }
     });
 
@@ -806,7 +821,7 @@ where
         let value = run(&mut conf, deps);
         let value = Signal::new(value);
         prev_value.set(Some(value));
-        Context { value, conf }
+        AnimationContext { value, conf }
     }));
 
     let animation = UseAnimation {
@@ -820,8 +835,14 @@ where
 
     use_memo(move || {
         let context = context.read();
-        if *has_run_yet.peek() && context.conf.on_deps_change == OnDepsChange::Finish {
-            animation.finish()
+        if *has_run_yet.peek() {
+            match context.conf.on_deps_change {
+                OnDepsChange::Finish => animation.finish(),
+                OnDepsChange::Rerun => {
+                    animation.run(*animation.last_direction.peek());
+                }
+                _ => {}
+            }
         }
     });
 

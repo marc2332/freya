@@ -218,11 +218,11 @@ mod test {
                     rect {
                         height: "200",
                         width: "200",
-                    },
+                    }
                     rect {
                         height: "200",
                         width: "200",
-                    },
+                    }
                     rect {
                         height: "200",
                         width: "200",
