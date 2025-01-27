@@ -28,26 +28,30 @@ use freya_engine::prelude::{
 #[derive(Default)]
 pub struct PerformanceOverlayPlugin {
     frames: Vec<Instant>,
-    started_render: Option<Instant>,
-    started_layout: Option<Instant>,
-    finished_layout: Option<Duration>,
-    started_dom_updates: Option<Instant>,
-    finished_dom_updates: Option<Duration>,
-    started_events: Option<Instant>,
-    finished_events: Option<Duration>,
     fps_historic: Vec<usize>,
     max_fps: usize,
+
+    started_render: Option<Instant>,
+
+    started_layout: Option<Instant>,
+    finished_layout: Option<Duration>,
+
+    started_dom_updates: Option<Instant>,
+    finished_dom_updates: Option<Duration>,
+
+    started_events: Option<Instant>,
+    finished_events: Option<Duration>,
 }
 
 impl FreyaPlugin for PerformanceOverlayPlugin {
     fn on_event(&mut self, event: &PluginEvent, _handle: PluginHandle) {
         match event {
-            PluginEvent::StartedLayout(_) => self.started_layout = Some(Instant::now()),
-            PluginEvent::FinishedLayout(_) => {
+            PluginEvent::StartedMeasuringLayout(_) => self.started_layout = Some(Instant::now()),
+            PluginEvent::FinishedMeasuringLayout(_) => {
                 self.finished_layout = Some(self.started_layout.unwrap().elapsed())
             }
-            PluginEvent::BeforeEvents => self.started_events = Some(Instant::now()),
-            PluginEvent::AfterEvents => {
+            PluginEvent::StartedMeasuringEvents => self.started_events = Some(Instant::now()),
+            PluginEvent::FinishedMeasuringEvents => {
                 self.finished_events = Some(self.started_events.unwrap().elapsed())
             }
             PluginEvent::StartedUpdatingDOM => self.started_dom_updates = Some(Instant::now()),
@@ -64,6 +68,7 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 let finished_layout = self.finished_layout.unwrap();
                 let finished_events = self.finished_events.unwrap_or_default();
                 let finished_dom_updates = self.finished_dom_updates.unwrap();
+
                 let rdom = freya_dom.rdom();
                 let layout = freya_dom.layout();
 

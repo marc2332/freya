@@ -239,8 +239,10 @@ impl Application {
     /// Process the events queue
     pub fn process_events(&mut self, scale_factor: f64) {
         let focus_id = self.accessibility.focused_node_id();
-        self.plugins
-            .send(PluginEvent::BeforeEvents, PluginHandle::new(&self.proxy));
+        self.plugins.send(
+            PluginEvent::StartedMeasuringEvents,
+            PluginHandle::new(&self.proxy),
+        );
         process_events(
             &self.sdom.get(),
             &mut self.events,
@@ -249,8 +251,10 @@ impl Application {
             scale_factor,
             focus_id,
         );
-        self.plugins
-            .send(PluginEvent::AfterEvents, PluginHandle::new(&self.proxy));
+        self.plugins.send(
+            PluginEvent::FinishedMeasuringEvents,
+            PluginHandle::new(&self.proxy),
+        );
     }
 
     pub fn init_accessibility(&mut self) {
@@ -381,7 +385,7 @@ impl Application {
             let fdom = self.sdom.get();
 
             self.plugins.send(
-                PluginEvent::StartedLayout(&fdom.layout()),
+                PluginEvent::StartedMeasuringLayout(&fdom.layout()),
                 PluginHandle::new(&self.proxy),
             );
 
@@ -394,7 +398,7 @@ impl Application {
             );
 
             self.plugins.send(
-                PluginEvent::FinishedLayout(&fdom.layout()),
+                PluginEvent::FinishedMeasuringLayout(&fdom.layout()),
                 PluginHandle::new(&self.proxy),
             );
         }
