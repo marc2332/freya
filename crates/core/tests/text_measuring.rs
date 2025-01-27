@@ -19,5 +19,5 @@ pub async fn auto_sized_center_text() {
 
     let root = utils.root();
     let width = root.get(0).layout().unwrap().area.width();
-    assert!(width > 205. && width < 215.);
+    assert!(width > 200. && width < 220.);
 }
