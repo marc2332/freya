@@ -554,7 +554,7 @@ mod test {
             );
         }
 
-        utils.push_event(PlatformEvent::Wheel {
+        utils.push_event(TestEvent::Wheel {
             name: EventName::Wheel,
             scroll: (0., -300.).into(),
             cursor: (5., 5.).into(),
@@ -619,22 +619,22 @@ mod test {
         }
 
         // Simulate the user dragging the scrollbar
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
             cursor: (490., 20.).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseDown,
             cursor: (490., 20.).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
             cursor: (490., 320.).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseUp,
             cursor: (490., 320.).into(),
             button: Some(MouseButton::Left),
@@ -657,7 +657,7 @@ mod test {
 
         // Scroll up with arrows
         for _ in 0..11 {
-            utils.push_event(PlatformEvent::Keyboard {
+            utils.push_event(TestEvent::Keyboard {
                 name: EventName::KeyDown,
                 key: Key::ArrowUp,
                 code: Code::ArrowUp,
@@ -678,7 +678,7 @@ mod test {
         }
 
         // Scroll to the bottom with arrows
-        utils.push_event(PlatformEvent::Keyboard {
+        utils.push_event(TestEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::End,
             code: Code::End,

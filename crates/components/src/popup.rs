@@ -233,7 +233,7 @@ mod test {
         utils.click_cursor((15., 15.)).await;
 
         // Send a random globalkeydown event
-        utils.push_event(PlatformEvent::Keyboard {
+        utils.push_event(TestEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::ArrowDown,
             code: Code::ArrowDown,
@@ -244,7 +244,7 @@ mod test {
         assert_eq!(utils.sdom().get().layout().size(), 10);
 
         // Send a ESC globalkeydown event
-        utils.push_event(PlatformEvent::Keyboard {
+        utils.push_event(TestEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::Escape,
             code: Code::Escape,

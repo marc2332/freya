@@ -420,17 +420,17 @@ mod test {
         assert_eq!(panel_4.layout().unwrap().area.width().round(), 164.0);
 
         // Vertical
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseDown,
             cursor: (100.0, 250.0).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
             cursor: (100.0, 200.0).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseUp,
             cursor: (0.0, 0.0).into(),
             button: Some(MouseButton::Left),
@@ -441,17 +441,17 @@ mod test {
         assert_eq!(panel_1.layout().unwrap().area.height().round(), 296.0); // 500 - 200 - 4
 
         // Horizontal
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseDown,
             cursor: (167.0, 300.0).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
             cursor: (187.0, 300.0).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseUp,
             cursor: (0.0, 0.0).into(),
             button: Some(MouseButton::Left),
