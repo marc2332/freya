@@ -359,7 +359,7 @@ pub async fn highlight_multiple_lines_single_editor() {
 
     utils.wait_for_update().await;
 
-    let highlights = root.child(0).unwrap().state().cursor.highlights.clone();
+    let highlights = root.get(0).state().cursor.highlights.clone();
     #[cfg(not(target_os = "macos"))]
     assert_eq!(highlights, Some(vec![(5, 28)]));
 
@@ -461,10 +461,10 @@ pub async fn highlights_single_line_multiple_editors() {
 
     utils.wait_for_update().await;
 
-    let highlights_1 = root.child(0).unwrap().state().cursor.highlights.clone();
+    let highlights_1 = root.get(0).state().cursor.highlights.clone();
     assert_eq!(highlights_1, Some(vec![(5, 17)]));
 
-    let highlights_2 = root.child(1).unwrap().state().cursor.highlights.clone();
+    let highlights_2 = root.get(1).state().cursor.highlights.clone();
     #[cfg(not(target_os = "macos"))]
     assert_eq!(highlights_2, Some(vec![(0, 11)]));
 
@@ -853,7 +853,7 @@ pub async fn highlight_shift_click_multiple_lines_single_editor() {
 
     utils.wait_for_update().await;
 
-    let highlights = root.child(0).unwrap().state().cursor.highlights.clone();
+    let highlights = root.get(0).state().cursor.highlights.clone();
     #[cfg(not(target_os = "macos"))]
     assert_eq!(highlights, Some(vec![(5, 28)]));
 
@@ -958,11 +958,11 @@ pub async fn highlights_shift_click_single_line_multiple_editors() {
 
     utils.wait_for_update().await;
 
-    let highlights_1 = root.child(0).unwrap().state().cursor.highlights.clone();
+    let highlights_1 = root.get(0).state().cursor.highlights.clone();
 
     assert_eq!(highlights_1, Some(vec![(5, 17)]));
 
-    let highlights_2 = root.child(1).unwrap().state().cursor.highlights.clone();
+    let highlights_2 = root.get(1).state().cursor.highlights.clone();
 
     #[cfg(not(target_os = "macos"))]
     assert_eq!(highlights_2, Some(vec![(0, 11)]));
@@ -1051,7 +1051,7 @@ pub async fn highlight_all_text() {
     utils.wait_for_update().await;
     utils.wait_for_update().await;
 
-    let highlights = root.child(0).unwrap().state().cursor.highlights.clone();
+    let highlights = root.get(0).state().cursor.highlights.clone();
 
     let start = 0;
     let end = 34;
