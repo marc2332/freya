@@ -8,21 +8,39 @@ use freya::prelude::*;
 fn main() {
     launch_with_props(app, "Counter", (400.0, 350.0));
 }
+
 fn app() -> Element {
-    let mut state = use_signal(Vec::new);
+    let mut count = use_signal(|| 0);
 
     rsx!(
         rect {
-            height: "100%",
+            height: "50%",
             width: "100%",
-            onglobalmousemove: move |e: MouseEvent| {
-                state.push(1);
-            },
-            onglobalclick: move |e: MouseEvent| {
-                state.push(2);
-            },
+            main_align: "center",
+            cross_align: "center",
+            background: "rgb(0, 119, 182)",
+            color: "white",
+            shadow: "0 4 20 5 rgb(0, 0, 0, 80)",
             label {
-                "{state:?}"
+                font_size: "75",
+                font_weight: "bold",
+                "{count}"
+            }
+        }
+        rect {
+            height: "50%",
+            width: "100%",
+            main_align: "center",
+            cross_align: "center",
+            direction: "horizontal",
+            spacing: "8",
+            Button {
+                onpress: move |_| count += 1,
+                label { "Increase" }
+            }
+            Button {
+                onpress: move |_| count -= 1,
+                label { "Decrease" }
             }
         }
     )
