@@ -16,6 +16,7 @@ use freya_core::prelude::{
     EventName,
     FreyaPlugin,
     PlatformEvent,
+    PlatformEventData,
     PluginEvent,
     PluginHandle,
 };
