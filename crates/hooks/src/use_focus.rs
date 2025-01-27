@@ -11,6 +11,7 @@ use dioxus_hooks::{
 };
 use dioxus_signals::{
     Memo,
+    ReadOnlySignal,
     Readable,
     Signal,
     Writable,
@@ -20,7 +21,10 @@ use freya_core::{
     accessibility::ACCESSIBILITY_ROOT_ID,
     platform_state::NavigationMode,
     prelude::EventMessage,
-    types::AccessibilityId,
+    types::{
+        AccessibilityId,
+        AccessibilityNode,
+    },
 };
 use freya_elements::events::{
     keyboard::Code,
@@ -43,6 +47,8 @@ pub struct UseFocus {
     navigation_mode: Signal<NavigationMode>,
     navigation_mark: Signal<NavigationMark>,
     platform: UsePlatform,
+    focused_id: Signal<AccessibilityId>,
+    focused_node: Signal<AccessibilityNode>,
 }
 
 impl UseFocus {
@@ -68,7 +74,12 @@ impl UseFocus {
 
     /// Create a node focus ID attribute
     pub fn attribute(&self) -> AttributeValue {
-        AttributeValue::any_value(CustomAttributeValues::AccessibilityId(self.id))
+        Self::attribute_for_id(self.id)
+    }
+
+    /// Create a node focus ID attribute
+    pub fn attribute_for_id(id: AccessibilityId) -> AttributeValue {
+        AttributeValue::any_value(CustomAttributeValues::AccessibilityId(id))
     }
 
     /// Check if this node is currently focused
@@ -98,6 +109,16 @@ impl UseFocus {
     pub fn prevent_navigation(&mut self) {
         self.navigation_mark.write().set_allowed(false);
     }
+
+    /// Get a readable of the currently focused Node Id.
+    pub fn focused_id(&self) -> ReadOnlySignal<AccessibilityId> {
+        self.focused_id.into()
+    }
+
+    /// Get a readable of the currently focused Node.
+    pub fn focused_node(&self) -> ReadOnlySignal<AccessibilityNode> {
+        self.focused_node.into()
+    }
 }
 
 /// Create a focus manager for a node.
@@ -110,6 +131,7 @@ pub fn use_focus() -> UseFocus {
 /// Create a focus manager for a node with the provided [AccessibilityId].
 pub fn use_focus_from_id(id: AccessibilityId) -> UseFocus {
     let focused_id = use_context::<Signal<AccessibilityId>>();
+    let focused_node = use_context::<Signal<AccessibilityNode>>();
     let navigation_mode = use_context::<Signal<NavigationMode>>();
     let navigation_mark = use_context::<Signal<NavigationMark>>();
     let platform = use_platform();
@@ -126,5 +148,7 @@ pub fn use_focus_from_id(id: AccessibilityId) -> UseFocus {
         navigation_mode,
         navigation_mark,
         platform,
+        focused_id,
+        focused_node,
     })
 }

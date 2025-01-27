@@ -199,6 +199,7 @@ builder_constructors! {
         a11y_value,
         a11y_access_key,
         a11y_author_id,
+        a11y_member_of,
         a11y_keyboard_shortcut,
         a11y_language,
         a11y_placeholder,

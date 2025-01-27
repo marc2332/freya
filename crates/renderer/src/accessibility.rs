@@ -3,6 +3,7 @@ use std::sync::{
     Mutex,
 };
 
+use accesskit::TreeUpdate;
 use accesskit_winit::Adapter;
 use freya_common::AccessibilityDirtyNodes;
 use freya_core::{
@@ -19,7 +20,11 @@ use freya_core::{
         NativePlatformSender,
     },
 };
-use freya_native_core::NodeId;
+use freya_native_core::{
+    prelude::NodeImmutable,
+    NodeId,
+};
+use freya_node_state::AccessibilityNodeState;
 use torin::torin::Torin;
 use winit::{
     dpi::{
@@ -93,9 +98,7 @@ impl AccessKitManager {
                 .process_updates(rdom, layout, dirty_nodes);
 
         // Notify the components
-        platform_sender.send_modify(|state| {
-            state.focused_id = tree.focus;
-        });
+        self.sync_accessibility(rdom, layout, platform_sender, node_id, &tree);
 
         // Update the IME Cursor area
         self.update_ime_position(node_id, window, layout);
@@ -122,9 +125,7 @@ impl AccessKitManager {
             .set_focus_on_next_node(direction, rdom);
 
         // Notify the components
-        platform_sender.send_modify(|state| {
-            state.focused_id = tree.focus;
-        });
+        self.sync_accessibility(rdom, layout, platform_sender, node_id, &tree);
 
         // Update the IME Cursor area
         self.update_ime_position(node_id, window, layout);
@@ -138,6 +139,7 @@ impl AccessKitManager {
     /// Focus a new accessibility node
     pub fn focus_node(
         &mut self,
+        rdom: &DioxusDOM,
         id: AccessibilityId,
         platform_sender: &NativePlatformSender,
         window: &Window,
@@ -151,9 +153,7 @@ impl AccessKitManager {
 
         if let Some((tree, node_id)) = res {
             // Notify the components
-            platform_sender.send_modify(|state| {
-                state.focused_id = tree.focus;
-            });
+            self.sync_accessibility(rdom, layout, platform_sender, node_id, &tree);
 
             // Update the IME Cursor area
             self.update_ime_position(node_id, window, layout);
@@ -180,5 +180,24 @@ impl AccessKitManager {
             window.inner_position().unwrap_or_default(),
             LogicalSize::<u32>::default(),
         );
+    }
+
+    /// Keep the components on sync with the latest accessibility tree update.
+    pub(crate) fn sync_accessibility(
+        &self,
+        rdom: &DioxusDOM,
+        layout: &Torin<NodeId>,
+        platform_sender: &NativePlatformSender,
+        node_id: NodeId,
+        tree: &TreeUpdate,
+    ) {
+        platform_sender.send_modify(|state| {
+            state.focused_accessibility_id = tree.focus;
+            let node_ref = rdom.get(node_id).unwrap();
+            let node_accessibility = node_ref.get::<AccessibilityNodeState>().unwrap();
+            let layout_node = layout.get(node_id).unwrap();
+            state.focused_accessibility_node =
+                AccessibilityTree::create_node(&node_ref, layout_node, &node_accessibility)
+        });
     }
 }
