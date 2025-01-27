@@ -118,7 +118,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
         }
     }
 
-    /// Wait and apply new changes
+    /// Apply the latest changes of the virtual dom.
     pub async fn wait_for_update(&mut self) -> (bool, bool) {
         self.wait_for_work(self.config.size());
 
@@ -228,8 +228,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
     }
 
     /// Wait for layout and events to be processed
-    pub fn wait_for_work(&mut self, size: Size2D) {
-        // Measure layout
+    fn wait_for_work(&mut self, size: Size2D) {
         process_layout(
             &self.utils.sdom().get(),
             Area {
@@ -270,6 +269,19 @@ impl<T: 'static + Clone> TestingHandler<T> {
     }
 
     /// Push an event to the events queue
+    ///
+    /// ```rust, no_run
+    /// # use freya_testing::prelude::*;
+    /// # use freya::prelude::*;
+    /// # let mut utils = launch_test(|| rsx!( rect { } ));
+    /// utils.push_event(TestEvent::Mouse {
+    ///     name: EventName::MouseDown,
+    ///     cursor: (490., 20.).into(),
+    ///     button: Some(MouseButton::Left),
+    /// });
+    /// ```
+    ///
+    /// For mouse movements and clicks you can use shorcuts like [Self::move_cursor] and [Self::click_cursor].
     pub fn push_event(&mut self, event: impl Into<PlatformEvent>) {
         self.events_queue.push(event.into());
     }
@@ -295,6 +307,13 @@ impl<T: 'static + Clone> TestingHandler<T> {
     }
 
     /// Resize the simulated canvas.
+    ///
+    /// ```rust, no_run
+    /// # use freya_testing::prelude::*;
+    /// # use freya::prelude::*;
+    /// # let mut utils = launch_test(|| rsx!( rect { } ));
+    /// utils.resize((500., 250.).into());
+    /// ```
     pub fn resize(&mut self, size: Size2D) {
         self.config.size = size;
         self.platform_sender.send_modify(|state| {
@@ -318,7 +337,14 @@ impl<T: 'static + Clone> TestingHandler<T> {
         self.utils.sdom()
     }
 
-    /// Render the app into a canvas and make a snapshot of it.
+    /// Render the app into a canvas and create a snapshot of it.
+    ///
+    /// ```rust, no_run
+    /// # use freya_testing::prelude::*;
+    /// # use freya::prelude::*;
+    /// # let mut utils = launch_test(|| rsx!( rect { } ));
+    /// utils.save_snapshot("./snapshot.png");
+    /// ```
     pub fn create_snapshot(&mut self) -> Data {
         let fdom = self.utils.sdom.get();
         let (width, height) = self.config.size.to_i32().to_tuple();
@@ -366,6 +392,13 @@ impl<T: 'static + Clone> TestingHandler<T> {
     }
 
     /// Render the app into a canvas and save it into a file.
+    ///
+    /// ```rust, no_run
+    /// # use freya_testing::prelude::*;
+    /// # use freya::prelude::*;
+    /// # let mut utils = launch_test(|| rsx!( rect { } ));
+    /// utils.save_snapshot("./snapshot.png");
+    /// ```
     pub fn save_snapshot(&mut self, snapshot_path: impl Into<PathBuf>) {
         let mut snapshot_file =
             File::create(snapshot_path.into()).expect("Failed to create the snapshot file.");
@@ -377,6 +410,13 @@ impl<T: 'static + Clone> TestingHandler<T> {
     }
 
     /// Shorthand to simulate a cursor move to the given location.
+    ///
+    /// ```rust
+    /// # use freya_testing::prelude::*;
+    /// # use freya::prelude::*;
+    /// # let mut utils = launch_test(|| rsx!( rect { } ));
+    /// utils.move_cursor((5., 5.));
+    /// ```
     pub async fn move_cursor(&mut self, cursor: impl Into<CursorPoint>) {
         self.push_event(PlatformEvent {
             name: EventName::MouseMove,
@@ -389,6 +429,13 @@ impl<T: 'static + Clone> TestingHandler<T> {
     }
 
     /// Shorthand to simulate a click with cursor in the given location.
+    ///
+    /// ```rust
+    /// # use freya_testing::prelude::*;
+    /// # use freya::prelude::*;
+    /// # let mut utils = launch_test(|| rsx!( rect { } ));
+    /// utils.click_cursor((5., 5.));
+    /// ```
     pub async fn click_cursor(&mut self, cursor: impl Into<CursorPoint> + Clone) {
         self.push_event(PlatformEvent {
             name: EventName::MouseDown,

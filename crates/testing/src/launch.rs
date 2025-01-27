@@ -39,7 +39,35 @@ use crate::{
 
 /// Run a Component in a headless testing environment.
 ///
-/// Default size is `500x500`.
+/// ```rust
+/// # use freya_testing::prelude::*;
+/// # use freya::prelude::*;
+/// # let rt = tokio::runtime::Builder::new_current_thread()
+/// # .enable_all()
+/// # .build()
+/// # .unwrap();
+/// # let _guard = rt.enter();
+/// fn app() -> Element {
+///     rsx!(
+///         rect {
+///             label {
+///                 "Hello, World!"
+///             }
+///         }
+///     )
+/// }
+///
+/// # rt.block_on(async move {
+/// let mut utils = launch_test(app);
+///
+/// let root = utils.root();
+/// let rect = root.get(0);
+/// let label = rect.get(0);
+/// let text = label.get(0);
+///
+/// assert_eq!(text.text(), Some("Hello, World!"));
+/// # });
+/// ```
 pub fn launch_test(root: AppComponent) -> TestingHandler<()> {
     launch_test_with_config(root, TestingConfig::default())
 }
