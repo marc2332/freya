@@ -9,7 +9,6 @@ use freya_native_core::{
     prelude::{
         ElementNode,
         NodeType,
-        SendAnyMap,
     },
     real_dom::NodeImmutable,
     tags::TagName,
@@ -20,6 +19,7 @@ use torin::prelude::{
     Area,
     LayoutMeasurer,
     Node,
+    SendAnyMap,
     Size2D,
 };
 

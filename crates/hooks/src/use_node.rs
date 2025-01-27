@@ -93,6 +93,25 @@ pub fn use_node_signal_with_prev() -> (
     )
 }
 
+pub fn use_node_with_reference() -> (NodeReference, ReadOnlySignal<NodeReferenceLayout>) {
+    let (tx, signal) = use_hook(|| {
+        let (tx, mut rx) = channel::<NodeReferenceLayout>(NodeReferenceLayout::default());
+        let mut signal = Signal::new(NodeReferenceLayout::default());
+
+        spawn(async move {
+            while rx.changed().await.is_ok() {
+                if *signal.peek() != *rx.borrow() {
+                    signal.set(rx.borrow().clone());
+                }
+            }
+        });
+
+        (Arc::new(tx), signal)
+    });
+
+    (NodeReference(tx), signal.into())
+}
+
 #[cfg(test)]
 mod test {
     use freya::prelude::*;

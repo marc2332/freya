@@ -29,7 +29,7 @@ pub async fn track_focus() {
             rect {
                 width: "100%",
                 height: "100%",
-                OtherChild {},
+                OtherChild {}
                 OtherChild {}
             }
         )
@@ -109,7 +109,7 @@ pub async fn block_focus() {
             rect {
                 width: "100%",
                 height: "100%",
-                Child {},
+                Child {}
                 BlockingChild {}
             }
         )
@@ -136,7 +136,7 @@ pub async fn block_focus() {
     assert_eq!(root.get(1).get(0).get(0).text(), Some("false"));
 
     // Navigate to the second rect
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         key: Key::Tab,
         code: Code::Tab,
@@ -150,7 +150,7 @@ pub async fn block_focus() {
     assert_eq!(root.get(1).get(0).get(0).text(), Some("true"));
 
     // Try to navigate to the first rect again
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         key: Key::Tab,
         code: Code::Tab,

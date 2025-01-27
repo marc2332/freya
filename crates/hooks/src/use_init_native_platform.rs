@@ -110,7 +110,7 @@ mod test {
                 rect {
                     width: "100%",
                     height: "100%",
-                    OtherChild {},
+                    OtherChild {}
                     OtherChild {}
                 }
             )
@@ -184,7 +184,7 @@ mod test {
         assert_eq!(utils.focus_id(), ACCESSIBILITY_ROOT_ID);
 
         // Navigate to the first rect
-        utils.push_event(PlatformEvent::Keyboard {
+        utils.push_event(TestEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::Tab,
             code: Code::Tab,
@@ -199,7 +199,7 @@ mod test {
         assert_ne!(first_focus_id, ACCESSIBILITY_ROOT_ID);
 
         // Navigate to the second rect
-        utils.push_event(PlatformEvent::Keyboard {
+        utils.push_event(TestEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::Tab,
             code: Code::Tab,

@@ -85,6 +85,12 @@ pub enum PluginEvent<'a> {
     /// After measuring the layout.
     FinishedLayout(&'a Torin<NodeId>),
 
+    /// Before starting to process queued events.
+    BeforeEvents,
+
+    /// After processing queued events.
+    AfterEvents,
+
     StartedUpdatingDOM,
 
     FinishedUpdatingDOM,

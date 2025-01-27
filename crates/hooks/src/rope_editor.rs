@@ -322,6 +322,10 @@ impl TextEditor for RopeEditor {
         self.history.redo(&mut self.rope)
     }
 
+    fn editor_history(&mut self) -> &mut EditorHistory {
+        &mut self.history
+    }
+
     fn get_identation(&self) -> u8 {
         self.identation
     }

@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_animation,
     use_applied_theme,
@@ -50,13 +50,11 @@ pub fn SnackBar(
     /// Theme override.
     theme: Option<SnackBarThemeWith>,
 ) -> Element {
-    let animation = use_animation(|ctx| {
-        ctx.with(
-            AnimNum::new(50., 0.)
-                .time(200)
-                .ease(Ease::Out)
-                .function(Function::Expo),
-        )
+    let animation = use_animation(|_conf| {
+        AnimNum::new(50., 0.)
+            .time(200)
+            .ease(Ease::Out)
+            .function(Function::Expo)
     });
 
     use_effect(move || {
@@ -67,7 +65,7 @@ pub fn SnackBar(
         }
     });
 
-    let offset_y = animation.get().read().as_f32();
+    let offset_y = animation.get().read().read();
 
     rsx!(
         rect {

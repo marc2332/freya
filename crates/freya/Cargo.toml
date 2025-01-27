@@ -1,7 +1,7 @@
 [package]
 name = "freya"
 description = "Cross-platform GUI Library powered by Dioxus and Skia."
-version = "0.2.2"
+version = "0.3.0-rc.0"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
@@ -18,7 +18,6 @@ no-default-features = true
 [features]
 custom-tokio-rt = []
 skia = ["freya-engine/skia-engine"]
-hot-reload = ["freya-renderer/hot-reload", "dioxus/hot-reload"]
 tracing-subscriber = ["dep:tracing-subscriber"]
 devtools = ["dep:freya-devtools"]
 use_camera = ["freya-hooks/use_camera"]
@@ -50,7 +49,6 @@ dioxus = { workspace = true }
 dioxus-core-macro = { workspace = true }
 dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
-dioxus-hot-reload = { workspace = true }
 dioxus-signals = { workspace = true }
 
 tokio = { workspace = true }

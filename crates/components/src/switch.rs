@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::{
         KeyboardEvent,
         MouseEvent,
@@ -67,33 +67,25 @@ pub enum SwitchStatus {
 #[allow(non_snake_case)]
 pub fn Switch(props: SwitchProps) -> Element {
     let theme = use_applied_theme!(&props.theme, switch);
-    let animation = use_animation_with_dependencies(&theme, |ctx, theme| {
-        ctx.on_deps_change(OnDepsChange::Run);
+    let animation = use_animation_with_dependencies(&theme, |conf, theme| {
+        conf.on_deps_change(OnDepsChange::Finish);
         (
-            ctx.with(
-                AnimNum::new(2., 22.)
-                    .time(300)
-                    .function(Function::Expo)
-                    .ease(Ease::Out),
-            ),
-            ctx.with(
-                AnimNum::new(14., 18.)
-                    .time(300)
-                    .function(Function::Expo)
-                    .ease(Ease::Out),
-            ),
-            ctx.with(
-                AnimColor::new(&theme.background, &theme.enabled_background)
-                    .time(300)
-                    .function(Function::Expo)
-                    .ease(Ease::Out),
-            ),
-            ctx.with(
-                AnimColor::new(&theme.thumb_background, &theme.enabled_thumb_background)
-                    .time(300)
-                    .function(Function::Expo)
-                    .ease(Ease::Out),
-            ),
+            AnimNum::new(2., 22.)
+                .time(300)
+                .function(Function::Expo)
+                .ease(Ease::Out),
+            AnimNum::new(14., 18.)
+                .time(300)
+                .function(Function::Expo)
+                .ease(Ease::Out),
+            AnimColor::new(&theme.background, &theme.enabled_background)
+                .time(300)
+                .function(Function::Expo)
+                .ease(Ease::Out),
+            AnimColor::new(&theme.thumb_background, &theme.enabled_thumb_background)
+                .time(300)
+                .function(Function::Expo)
+                .ease(Ease::Out),
         )
     });
     let platform = use_platform();
@@ -136,10 +128,11 @@ pub fn Switch(props: SwitchProps) -> Element {
         }
     };
 
-    let offset_x = animation.get().0.read().as_f32();
-    let size = animation.get().1.read().as_f32();
-    let background = animation.get().2.read().as_string();
-    let circle = animation.get().3.read().as_string();
+    let (offset_x, size, background, circle) = &*animation.get().read_unchecked();
+    let offset_x = offset_x.read();
+    let size = size.read();
+    let background = background.read();
+    let circle = circle.read();
 
     let border = if focus.is_selected() {
         if props.enabled {

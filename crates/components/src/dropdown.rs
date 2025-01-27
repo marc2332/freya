@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::{
         keyboard::Key,
         KeyboardEvent,
@@ -14,6 +14,7 @@ use freya_hooks::{
     use_applied_theme,
     use_focus,
     use_platform,
+    DropdownItemTheme,
     DropdownItemThemeWith,
     DropdownTheme,
     DropdownThemeWith,
@@ -70,13 +71,25 @@ where
     let is_focused = focus.is_focused();
     let is_selected = *selected.read() == value;
 
+    let DropdownItemTheme {
+        font_theme,
+        background,
+        hover_background,
+        select_background,
+        border_fill,
+        select_border_fill,
+    } = &theme;
+
     let background = match *status.read() {
-        _ if is_selected => theme.select_background,
-        _ if is_focused => theme.hover_background,
-        DropdownItemStatus::Hovering => theme.hover_background,
-        DropdownItemStatus::Idle => theme.background,
+        _ if is_selected => select_background,
+        DropdownItemStatus::Hovering => hover_background,
+        DropdownItemStatus::Idle => background,
     };
-    let color = theme.font_theme.color;
+    let border = if focus.is_selected() {
+        format!("2 inner {select_border_fill}")
+    } else {
+        format!("1 inner {border_fill}")
+    };
 
     use_drop(move || {
         if *status.peek() == DropdownItemStatus::Hovering {
@@ -114,10 +127,11 @@ where
     rsx!(
         rect {
             width: "fill-min",
-            color: "{color}",
+            color: "{font_theme.color}",
             a11y_id,
-            a11y_role:"button",
+            a11y_role: "button",
             background: "{background}",
+            border,
             padding: "6 22 6 16",
             corner_radius: "6",
             main_align: "center",
@@ -249,12 +263,18 @@ where
         background_button,
         hover_background,
         border_fill,
+        focus_border_fill,
         arrow_fill,
     } = &theme;
 
-    let button_background = match *status.read() {
+    let background = match *status.read() {
         DropdownStatus::Hovering => hover_background,
         DropdownStatus::Idle => background_button,
+    };
+    let border = if focus.is_selected() {
+        format!("2 inner {focus_border_fill}")
+    } else {
+        format!("1 inner {border_fill}")
     };
 
     let selected = selected.read().to_string();
@@ -270,11 +290,11 @@ where
                 onglobalkeydown,
                 margin: "{margin}",
                 a11y_id,
-                background: "{button_background}",
+                background: "{background}",
                 color: "{font_theme.color}",
                 corner_radius: "8",
                 padding: "8 16",
-                border: "1 inner {border_fill}",
+                border,
                 shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
                 direction: "horizontal",
                 main_align: "center",

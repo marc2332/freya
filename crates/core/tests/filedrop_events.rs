@@ -52,7 +52,7 @@ pub async fn filedrop_events() {
     assert_eq!(root.get(0).get(0).get(0).text(), Some("Default"));
     assert_eq!(root.get(0).style().background, Fill::Color(Color::BLUE));
 
-    utils.push_event(PlatformEvent::File {
+    utils.push_event(TestEvent::File {
         name: EventName::GlobalFileHover,
         cursor: (5., 5.).into(),
         file_path: None,
@@ -62,7 +62,7 @@ pub async fn filedrop_events() {
 
     assert_eq!(root.get(0).style().background, Fill::Color(Color::RED));
 
-    utils.push_event(PlatformEvent::File {
+    utils.push_event(TestEvent::File {
         name: EventName::FileDrop,
         cursor: (5., 5.).into(),
         file_path: Some(PathBuf::from_str("/nice/path/right.rs").unwrap()),
