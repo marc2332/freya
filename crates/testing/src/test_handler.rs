@@ -264,8 +264,8 @@ impl<T: 'static + Clone> TestingHandler<T> {
     }
 
     /// Push an event to the events queue
-    pub fn push_event(&mut self, event: PlatformEvent) {
-        self.events_queue.push(event);
+    pub fn push_event(&mut self, event: impl Into<PlatformEvent>) {
+        self.events_queue.push(event.into());
     }
 
     /// Get the root node
@@ -372,26 +372,32 @@ impl<T: 'static + Clone> TestingHandler<T> {
 
     /// Shorthand to simulate a cursor move to the given location.
     pub async fn move_cursor(&mut self, cursor: impl Into<CursorPoint>) {
-        self.push_event(PlatformEvent::Mouse {
+        self.push_event(PlatformEvent {
             name: EventName::MouseMove,
-            cursor: cursor.into(),
-            button: Some(MouseButton::Left),
+            data: PlatformEventData::Mouse {
+                cursor: cursor.into(),
+                button: Some(MouseButton::Left),
+            },
         });
         self.wait_for_update().await;
     }
 
     /// Shorthand to simulate a click with cursor in the given location.
     pub async fn click_cursor(&mut self, cursor: impl Into<CursorPoint> + Clone) {
-        self.push_event(PlatformEvent::Mouse {
+        self.push_event(PlatformEvent {
             name: EventName::MouseDown,
-            cursor: cursor.clone().into(),
-            button: Some(MouseButton::Left),
+            data: PlatformEventData::Mouse {
+                cursor: cursor.clone().into(),
+                button: Some(MouseButton::Left),
+            },
         });
         self.wait_for_update().await;
-        self.push_event(PlatformEvent::Mouse {
+        self.push_event(PlatformEvent {
             name: EventName::MouseUp,
-            cursor: cursor.into(),
-            button: Some(MouseButton::Left),
+            data: PlatformEventData::Mouse {
+                cursor: cursor.into(),
+                button: Some(MouseButton::Left),
+            },
         });
         self.wait_for_update().await;
     }

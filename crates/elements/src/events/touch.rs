@@ -4,7 +4,7 @@ pub use winit::event::{
     TouchPhase,
 };
 
-use crate::definitions::PlatformEventData;
+use crate::definitions::ErasedEventData;
 
 /// Data of a Touch event.
 #[derive(Debug, Clone, PartialEq)]
@@ -59,8 +59,8 @@ impl TouchData {
     }
 }
 
-impl From<&PlatformEventData> for TouchData {
-    fn from(val: &PlatformEventData) -> Self {
+impl From<&ErasedEventData> for TouchData {
+    fn from(val: &ErasedEventData) -> Self {
         val.downcast::<TouchData>().cloned().unwrap()
     }
 }

@@ -5,7 +5,7 @@ use winit::event::{
     TouchPhase,
 };
 
-use crate::definitions::PlatformEventData;
+use crate::definitions::ErasedEventData;
 
 /// The type of device that triggered a Pointer event.
 #[derive(Debug, Clone, PartialEq, Copy)]
@@ -59,8 +59,8 @@ impl PointerData {
     }
 }
 
-impl From<&PlatformEventData> for PointerData {
-    fn from(val: &PlatformEventData) -> Self {
+impl From<&ErasedEventData> for PointerData {
+    fn from(val: &ErasedEventData) -> Self {
         val.downcast::<PointerData>().cloned().unwrap()
     }
 }

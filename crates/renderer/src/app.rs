@@ -1,7 +1,4 @@
-use std::{
-    sync::Arc,
-    time::Instant,
-};
+use std::sync::Arc;
 
 use dioxus_core::{
     Event,
@@ -237,7 +234,8 @@ impl Application {
     /// Process the events queue
     pub fn process_events(&mut self, scale_factor: f64) {
         let focus_id = self.accessibility.focused_node_id();
-        let a = Instant::now();
+        self.plugins
+            .send(PluginEvent::BeforeEvents, PluginHandle::new(&self.proxy));
         process_events(
             &self.sdom.get(),
             &mut self.events,
@@ -246,7 +244,8 @@ impl Application {
             scale_factor,
             focus_id,
         );
-        println!("{}ms", a.elapsed().as_millis());
+        self.plugins
+            .send(PluginEvent::AfterEvents, PluginHandle::new(&self.proxy));
     }
 
     pub fn init_accessibility(&mut self) {

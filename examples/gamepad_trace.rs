@@ -59,19 +59,23 @@ impl GamePadPlugin {
 
                         if diff_x != 0.0 {
                             x += diff_x * 10.;
-                            handle.send_platform_event(PlatformEvent::Mouse {
+                            handle.send_platform_event(PlatformEvent {
                                 name: EventName::MouseMove,
-                                cursor: (x, y).into(),
-                                button: None,
+                                data: PlatformEventData::Mouse {
+                                    cursor: (x, y).into(),
+                                    button: None,
+                                },
                             });
                         }
 
                         if diff_x != 0.0 {
                             y -= diff_y * 10.;
-                            handle.send_platform_event(PlatformEvent::Mouse {
+                            handle.send_platform_event(PlatformEvent {
                                 name: EventName::MouseMove,
-                                cursor: (x, y).into(),
-                                button: None,
+                                data: PlatformEventData::Mouse {
+                                    cursor: (x, y).into(),
+                                    button: None,
+                                },
                             });
                         }
 
