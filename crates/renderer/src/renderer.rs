@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 
 use dioxus_core::VirtualDom;
+use freya_common::AccessibilityFocusStrategy;
 use freya_core::{
-    accessibility::AccessibilityFocusStrategy,
     dom::SafeDOM,
     events::{
         EventName,
@@ -178,8 +178,9 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
         let scale_factor = self.scale_factor();
         let CreatedState { window, app, .. } = self.state.created_state();
         match event {
-            EventMessage::FocusAccessibilityNode(id) => {
-                app.focus_node(id, window);
+            EventMessage::FocusAccessibilityNode(strategy) => {
+                app.request_focus_node(strategy);
+                window.request_redraw();
             }
             EventMessage::RequestRerender => {
                 window.request_redraw();
@@ -199,31 +200,21 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             }
             EventMessage::Accessibility(accesskit_winit::WindowEvent::ActionRequested(request)) => {
                 if accesskit::Action::Focus == request.action {
-                    app.focus_node(request.target, window);
+                    app.request_focus_node(AccessibilityFocusStrategy::Node(request.target));
+                    window.request_redraw();
                 }
             }
             EventMessage::Accessibility(accesskit_winit::WindowEvent::InitialTreeRequested) => {
                 app.init_accessibility_on_next_render = true;
             }
             EventMessage::SetCursorIcon(icon) => window.set_cursor(icon),
-            EventMessage::FocusPrevAccessibilityNode => {
-                app.set_navigation_mode(NavigationMode::Keyboard);
-                app.focus_next_node(AccessibilityFocusStrategy::Backward, window);
-            }
-            EventMessage::FocusNextAccessibilityNode => {
-                app.set_navigation_mode(NavigationMode::Keyboard);
-                app.focus_next_node(AccessibilityFocusStrategy::Forward, window);
-            }
             EventMessage::WithWindow(use_window) => (use_window)(window),
             EventMessage::ExitApp => event_loop.exit(),
             EventMessage::PlatformEvent(platform_event) => self.send_event(platform_event),
-            ev => {
-                if matches!(ev, EventMessage::PollVDOM)
-                    || matches!(ev, EventMessage::UpdateTemplate(_))
-                {
-                    app.poll_vdom(window);
-                }
+            EventMessage::PollVDOM => {
+                app.poll_vdom(window);
             }
+            _ => {}
         }
     }
 
@@ -270,11 +261,14 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     scale_factor_is_different
                 });
 
-                if app.measure_layout_on_next_render {
+                if app.process_layout_on_next_render {
                     app.process_layout(window.inner_size(), scale_factor);
-                    app.process_accessibility(window);
 
-                    app.measure_layout_on_next_render = false;
+                    app.process_layout_on_next_render = false;
+                }
+
+                if app.process_accessibility_on_next_render {
+                    app.process_accessibility(window);
                 }
 
                 if app.init_accessibility_on_next_render {

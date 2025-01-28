@@ -5,7 +5,10 @@
 
 use std::thread;
 
-use freya::prelude::*;
+use freya::{
+    common::AccessibilityFocusStrategy,
+    prelude::*,
+};
 use freya_core::prelude::{
     EventMessage,
     EventName,
@@ -40,14 +43,14 @@ impl GamePadPlugin {
                         // NOTE: You might need to tweak these codes
                         match code.into_u32() {
                             4 => {
-                                handle.send_event_loop_event(
-                                    EventMessage::FocusPrevAccessibilityNode,
-                                );
+                                handle.send_event_loop_event(EventMessage::FocusAccessibilityNode(
+                                    AccessibilityFocusStrategy::Backward,
+                                ));
                             }
                             6 => {
-                                handle.send_event_loop_event(
-                                    EventMessage::FocusNextAccessibilityNode,
-                                );
+                                handle.send_event_loop_event(EventMessage::FocusAccessibilityNode(
+                                    AccessibilityFocusStrategy::Forward,
+                                ));
                             }
                             13 => {
                                 handle.send_platform_event(PlatformEvent {

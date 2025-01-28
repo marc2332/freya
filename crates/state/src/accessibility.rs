@@ -21,6 +21,7 @@ use accesskit::{
 };
 use freya_common::{
     AccessibilityDirtyNodes,
+    AccessibilityFocusStrategy,
     AccessibilityGenerator,
 };
 use freya_engine::prelude::Color;
@@ -460,8 +461,6 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
                 self.a11y_id = Some(id);
             }
 
-            let was_just_created = !had_id && self.a11y_id.is_some();
-
             // Add or update this node if it is the Root or if it has an accessibility ID
             if self.a11y_id.is_some() || node_view.node_id() == *root_id {
                 accessibility_dirty_nodes
@@ -470,14 +469,16 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
                     .add_or_update(node_view.node_id())
             }
 
-            if was_just_created && self.a11y_auto_focus {
-                #[cfg(debug_assertions)]
-                tracing::info!("Requested auto focus for {:?}", self.a11y_id.unwrap());
+            if let Some(a11y_id) = self.a11y_id {
+                if !had_id && self.a11y_auto_focus {
+                    #[cfg(debug_assertions)]
+                    tracing::info!("Requested auto focus for {:?}", a11y_id);
 
-                accessibility_dirty_nodes
-                    .lock()
-                    .unwrap()
-                    .request_focus(node_view.node_id())
+                    accessibility_dirty_nodes
+                        .lock()
+                        .unwrap()
+                        .request_focus(AccessibilityFocusStrategy::Node(a11y_id))
+                }
             }
         }
 
