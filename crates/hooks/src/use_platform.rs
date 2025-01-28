@@ -9,10 +9,8 @@ use dioxus_signals::{
     Readable,
     Signal,
 };
-use freya_core::{
-    prelude::EventMessage,
-    types::AccessibilityId,
-};
+use freya_common::AccessibilityFocusStrategy;
+use freya_core::prelude::EventMessage;
 use tokio::sync::{
     broadcast,
     mpsc::UnboundedSender,
@@ -133,8 +131,9 @@ impl UsePlatform {
         self.send(EventMessage::RequestRerender).ok();
     }
 
-    pub fn focus(&self, id: AccessibilityId) {
-        self.send(EventMessage::FocusAccessibilityNode(id)).ok();
+    pub fn focus(&self, strategy: AccessibilityFocusStrategy) {
+        self.send(EventMessage::FocusAccessibilityNode(strategy))
+            .ok();
     }
 
     pub fn new_ticker(&self) -> Ticker {

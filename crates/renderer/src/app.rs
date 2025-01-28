@@ -8,6 +8,7 @@ use dioxus_core::{
     Event,
     VirtualDom,
 };
+use freya_common::AccessibilityFocusStrategy;
 use freya_core::prelude::*;
 use freya_engine::prelude::*;
 use freya_native_core::prelude::NodeImmutableDioxusExt;
@@ -57,7 +58,8 @@ pub struct Application {
     pub(crate) font_mgr: FontMgr,
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) plugins: PluginsManager,
-    pub(crate) measure_layout_on_next_render: bool,
+    pub(crate) process_layout_on_next_render: bool,
+    pub(crate) process_accessibility_on_next_render: bool,
     pub(crate) init_accessibility_on_next_render: bool,
     pub(crate) default_fonts: Vec<String>,
 }
@@ -116,7 +118,8 @@ impl Application {
             font_mgr,
             ticker_sender: broadcast::channel(5).0,
             plugins,
-            measure_layout_on_next_render: false,
+            process_layout_on_next_render: false,
+            process_accessibility_on_next_render: false,
             init_accessibility_on_next_render: false,
             default_fonts,
             compositor: Compositor::default(),
@@ -228,7 +231,8 @@ impl Application {
         let (must_repaint, must_relayout) = self.render_mutations(window.scale_factor() as f32);
 
         if must_relayout {
-            self.measure_layout_on_next_render = true;
+            self.process_layout_on_next_render = true;
+            self.process_accessibility_on_next_render = true;
         }
 
         if must_relayout || must_repaint {
@@ -328,7 +332,8 @@ impl Application {
 
     /// Resize the Window
     pub fn resize(&mut self, window: &Window) {
-        self.measure_layout_on_next_render = true;
+        self.process_layout_on_next_render = true;
+        self.process_accessibility_on_next_render = true;
         self.init_accessibility_on_next_render = true;
         self.compositor.reset();
         self.sdom
@@ -351,20 +356,18 @@ impl Application {
             .measure_paragraphs(text_measurement, scale_factor);
     }
 
-    pub fn focus_node(&mut self, node_id: AccessibilityId, window: &Window) {
-        let fdom = self.sdom.get();
-        let layout = fdom.layout();
-        let rdom = fdom.rdom();
-        self.accessibility
-            .focus_node(rdom, node_id, &self.platform_sender, window, &layout)
-    }
+    pub fn request_focus_node(&mut self, focus_strategy: AccessibilityFocusStrategy) {
+        match focus_strategy {
+            AccessibilityFocusStrategy::Backward | AccessibilityFocusStrategy::Forward => {
+                self.set_navigation_mode(NavigationMode::Keyboard);
+            }
+            _ => {}
+        }
 
-    pub fn focus_next_node(&mut self, direction: AccessibilityFocusStrategy, window: &Window) {
         let fdom = self.sdom.get();
-        let rdom = fdom.rdom();
-        let layout = fdom.layout();
-        self.accessibility
-            .focus_next_node(rdom, direction, &self.platform_sender, window, &layout);
+        fdom.accessibility_dirty_nodes()
+            .request_focus(focus_strategy);
+        self.process_accessibility_on_next_render = true;
     }
 
     /// Notify components subscribed to event loop ticks.

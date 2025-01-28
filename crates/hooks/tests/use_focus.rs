@@ -51,6 +51,7 @@ pub async fn track_focus() {
 
     // Click on the first rect
     utils.click_cursor((5., 5.)).await;
+    utils.wait_for_update().await;
 
     // First rect is now focused
     assert_eq!(root.get(0).get(0).get(0).text(), Some("true"));
@@ -130,6 +131,7 @@ pub async fn block_focus() {
 
     // Click on the first rect
     utils.click_cursor((5., 5.)).await;
+    utils.wait_for_update().await;
 
     // First rect is now focused
     assert_eq!(root.get(0).get(0).get(0).text(), Some("true"));

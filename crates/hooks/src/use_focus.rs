@@ -16,7 +16,10 @@ use dioxus_signals::{
     Signal,
     Writable,
 };
-use freya_common::AccessibilityGenerator;
+use freya_common::{
+    AccessibilityFocusStrategy,
+    AccessibilityGenerator,
+};
 use freya_core::{
     accessibility::ACCESSIBILITY_ROOT_ID,
     platform_state::NavigationMode,
@@ -62,8 +65,7 @@ impl UseFocus {
     pub fn focus(&mut self) {
         if !*self.is_focused.peek() {
             self.platform
-                .send(EventMessage::FocusAccessibilityNode(self.id))
-                .ok();
+                .focus(AccessibilityFocusStrategy::Node(self.id));
         }
     }
 
@@ -95,7 +97,9 @@ impl UseFocus {
     /// Unfocus the currently focused node.
     pub fn unfocus(&mut self) {
         self.platform
-            .send(EventMessage::FocusAccessibilityNode(ACCESSIBILITY_ROOT_ID))
+            .send(EventMessage::FocusAccessibilityNode(
+                AccessibilityFocusStrategy::Node(ACCESSIBILITY_ROOT_ID),
+            ))
             .ok();
     }
 

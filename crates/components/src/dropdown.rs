@@ -482,12 +482,15 @@ mod test {
             modifiers: Modifiers::default(),
         });
         utils.wait_for_update().await;
+        utils.wait_for_update().await;
         utils.push_event(TestEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::Enter,
             code: Code::Enter,
             modifiers: Modifiers::default(),
         });
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
         utils.wait_for_update().await;
 
         // Now that the dropwdown is opened, there are more nodes in the layout
@@ -522,12 +525,14 @@ mod test {
             modifiers: Modifiers::default(),
         });
         utils.wait_for_update().await;
+        utils.wait_for_update().await;
         utils.push_event(TestEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::Tab,
             code: Code::Tab,
             modifiers: Modifiers::default(),
         });
+        utils.wait_for_update().await;
         utils.wait_for_update().await;
         utils.push_event(TestEvent::Keyboard {
             name: EventName::KeyDown,
@@ -536,7 +541,6 @@ mod test {
             modifiers: Modifiers::default(),
         });
         utils.wait_for_update().await;
-
         utils.wait_for_update().await;
 
         // Close with Escape
@@ -546,6 +550,7 @@ mod test {
             code: Code::Escape,
             modifiers: Modifiers::default(),
         });
+        utils.wait_for_update().await;
         utils.wait_for_update().await;
 
         // Now the layout size is like in the begining, again
