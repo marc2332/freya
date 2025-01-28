@@ -1,4 +1,3 @@
-use dioxus_core::Template;
 use freya_common::AccessibilityFocusStrategy;
 use torin::prelude::{
     Area,
@@ -21,8 +20,6 @@ pub struct TextGroupMeasurement {
 
 /// Custom EventLoop messages
 pub enum EventMessage {
-    /// Update the given template
-    UpdateTemplate(Template),
     /// Poll the VirtualDOM
     PollVDOM,
     /// Request a rerender

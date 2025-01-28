@@ -211,13 +211,10 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             EventMessage::WithWindow(use_window) => (use_window)(window),
             EventMessage::ExitApp => event_loop.exit(),
             EventMessage::PlatformEvent(platform_event) => self.send_event(platform_event),
-            ev => {
-                if matches!(ev, EventMessage::PollVDOM)
-                    || matches!(ev, EventMessage::UpdateTemplate(_))
-                {
-                    app.poll_vdom(window);
-                }
+            EventMessage::PollVDOM => {
+                app.poll_vdom(window);
             }
+            _ => {}
         }
     }
 
