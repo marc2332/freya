@@ -168,7 +168,7 @@ impl_event! [
     onglobalmousedown
 
     /// The `mousemove` event fires when the user moves the mouse over an element.
-    /// Unlike [`onmouseenter`](crate::elements::onmouseenter()), this fires even if the user was already hovering over
+    /// Unlike [`onmouseenter`](crate::events::onmouseenter()), this fires even if the user was already hovering over
     /// the element. For that reason, it's less efficient.
     ///
     /// Event Data: [`MouseData`](crate::events::MouseData)
