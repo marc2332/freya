@@ -3,17 +3,15 @@ use std::{
     rc::Rc,
 };
 
-use freya_elements::{
-    elements::ErasedEventData,
-    events::{
-        pointer::PointerType,
-        FileData,
-        KeyboardData,
-        MouseData,
-        PointerData,
-        TouchData,
-        WheelData,
-    },
+use freya_elements::events::{
+    pointer::PointerType,
+    ErasedEventData,
+    FileData,
+    KeyboardData,
+    MouseData,
+    PointerData,
+    TouchData,
+    WheelData,
 };
 use freya_native_core::NodeId;
 use torin::prelude::*;

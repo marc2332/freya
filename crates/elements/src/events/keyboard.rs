@@ -8,7 +8,86 @@ use winit::keyboard::{
     NamedKey,
 };
 
-use crate::definitions::ErasedEventData;
+use crate::{
+    events::ErasedEventData,
+    impl_event,
+};
+
+impl_event! [
+    KeyboardData;
+
+    /// The `keydown` event fires when the user starts pressing any key in the currently focused element.
+    ///
+    /// Event Data: [`KeyboardData`](crate::events::KeyboardData)
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             onkeydown: |e| println!("Event: {e:?}")
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    onkeydown
+
+    /// The `keyup` event fires when the user releases any key being pressed in the currently focused element.
+    ///
+    /// Event Data: [`KeyboardData`](crate::events::KeyboardData)
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             onkeyup: |e| println!("Event: {e:?}")
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    onkeyup
+
+    /// The `globalkeydown` event fires when the user starts pressing any key.
+    ///
+    /// Event Data: [`KeyboardData`](crate::events::KeyboardData)
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             onglobalkeydown: |e| println!("Event: {e:?}")
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    onglobalkeydown
+
+    /// The `globalkeyup` event fires when the user releases any key being pressed.
+    ///
+    /// Event Data: [`KeyboardData`](crate::events::KeyboardData)
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             onglobalkeyup: |e| println!("Event: {e:?}")
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    onglobalkeyup
+];
 
 // Return the equivalent of Winit `ModifiersState` in keyboard_types
 pub fn map_winit_modifiers(modifiers: keyboard::ModifiersState) -> Modifiers {

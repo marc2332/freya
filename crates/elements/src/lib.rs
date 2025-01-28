@@ -5,15 +5,8 @@
 
 pub mod _docs;
 pub mod attributes;
-
-mod definitions;
+pub mod elements;
 pub mod events;
+mod macros;
 
-pub mod elements {
-    pub use crate::{
-        definitions::*,
-        events::*,
-    };
-}
-
-pub use crate::definitions::*;
+pub use crate::elements::*;
