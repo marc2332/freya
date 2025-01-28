@@ -179,6 +179,7 @@ def_element!(
         a11y_value,
         a11y_access_key,
         a11y_author_id,
+        a11y_member_of,
         a11y_keyboard_shortcut,
         a11y_language,
         a11y_placeholder,
@@ -793,11 +794,11 @@ pub mod events {
 
     /// A platform specific event.
     #[doc(hidden)]
-    pub struct PlatformEventData {
+    pub struct ErasedEventData {
         event: Box<dyn Any>,
     }
 
-    impl PlatformEventData {
+    impl ErasedEventData {
         pub fn new(event: Box<dyn Any>) -> Self {
             Self { event }
         }
@@ -834,7 +835,7 @@ pub mod events {
                     let event_handler = ::dioxus_core::prelude::with_owner(owner.clone(), || _f.super_into());
                     ::dioxus_core::Attribute::new(
                         impl_event!(@name $name $($event)?),
-                        ::dioxus_core::AttributeValue::listener(move |e: ::dioxus_core::Event<crate::PlatformEventData>| {
+                        ::dioxus_core::AttributeValue::listener(move |e: ::dioxus_core::Event<crate::ErasedEventData>| {
                             // Force the owner to be moved into the event handler
                             _ = &owner;
                             event_handler.call(e.map(|e| e.into()));

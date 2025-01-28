@@ -1,6 +1,7 @@
 use std::fmt::Display;
 
 use dioxus::prelude::*;
+use freya_core::types::AccessibilityId;
 use freya_elements::{
     self as dioxus_elements,
     events::{
@@ -19,6 +20,7 @@ use freya_hooks::{
     DropdownTheme,
     DropdownThemeWith,
     IconThemeWith,
+    UseFocus,
 };
 use winit::window::CursorIcon;
 
@@ -66,8 +68,10 @@ where
     let focus = use_focus();
     let mut status = use_signal(DropdownItemStatus::default);
     let platform = use_platform();
+    let dropdown_group = use_context::<DropdownGroup>();
 
     let a11y_id = focus.attribute();
+    let a11y_member_of = UseFocus::attribute_for_id(dropdown_group.group_id);
     let is_focused = focus.is_focused();
     let is_selected = *selected.read() == value;
 
@@ -130,6 +134,7 @@ where
             color: "{font_theme.color}",
             a11y_id,
             a11y_role: "button",
+            a11y_member_of,
             background: "{background}",
             border,
             padding: "6 22 6 16",
@@ -163,6 +168,11 @@ pub enum DropdownStatus {
     Idle,
     /// Dropdown is being hovered.
     Hovering,
+}
+
+#[derive(Clone)]
+struct DropdownGroup {
+    group_id: AccessibilityId,
 }
 
 /// Select from multiple options, use alongside [`DropdownItem`].
@@ -206,14 +216,27 @@ where
     let mut opened = use_signal(|| false);
     let platform = use_platform();
 
+    use_context_provider(|| DropdownGroup {
+        group_id: focus.id(),
+    });
+
     let is_opened = *opened.read();
     let is_focused = focus.is_focused();
     let a11y_id = focus.attribute();
+    let a11y_member_of = focus.attribute();
 
-    // Update the provided value if the passed value changes
-    use_effect(use_reactive(&props.value, move |value| {
-        *selected.write() = value;
-    }));
+    if *selected.peek() != props.value {
+        *selected.write() = props.value;
+    }
+
+    // Close if the focused node is not part of the Dropdown
+    use_effect(move || {
+        if let Some(member_of) = focus.focused_node().read().member_of() {
+            if member_of != focus.id() {
+                opened.set(false);
+            }
+        }
+    });
 
     use_drop(move || {
         if *status.peek() == DropdownStatus::Hovering {
@@ -290,6 +313,7 @@ where
                 onglobalkeydown,
                 margin: "{margin}",
                 a11y_id,
+                a11y_member_of,
                 background: "{background}",
                 color: "{font_theme.color}",
                 corner_radius: "8",
@@ -407,6 +431,127 @@ mod test {
         assert_eq!(utils.sdom().get().layout().size(), start_size);
 
         // The second optio was selected
+        assert_eq!(label.get(0).text(), Some("Value B"));
+    }
+
+    #[tokio::test]
+    pub async fn dropdown_keyboard_navigation() {
+        fn dropdown_keyboard_navigation_app() -> Element {
+            let values = use_hook(|| {
+                vec![
+                    "Value A".to_string(),
+                    "Value B".to_string(),
+                    "Value C".to_string(),
+                ]
+            });
+            let mut selected_dropdown = use_signal(|| "Value A".to_string());
+
+            rsx!(
+                Dropdown {
+                    value: selected_dropdown.read().clone(),
+                    for ch in values {
+                        DropdownItem {
+                            value: ch.clone(),
+                            onpress: {
+                                to_owned![ch];
+                                move |_| selected_dropdown.set(ch.clone())
+                            },
+                            label { "{ch}" }
+                        }
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(dropdown_keyboard_navigation_app);
+        let root = utils.root();
+        let label = root.get(0).get(0).get(0);
+        utils.wait_for_update().await;
+
+        // Currently closed
+        let start_size = utils.sdom().get().layout().size();
+
+        // Default value
+        assert_eq!(label.get(0).text(), Some("Value A"));
+
+        // Open the dropdown
+        utils.push_event(TestEvent::Keyboard {
+            name: EventName::KeyDown,
+            key: Key::Tab,
+            code: Code::Tab,
+            modifiers: Modifiers::default(),
+        });
+        utils.wait_for_update().await;
+        utils.push_event(TestEvent::Keyboard {
+            name: EventName::KeyDown,
+            key: Key::Enter,
+            code: Code::Enter,
+            modifiers: Modifiers::default(),
+        });
+        utils.wait_for_update().await;
+
+        // Now that the dropwdown is opened, there are more nodes in the layout
+        assert!(utils.sdom().get().layout().size() > start_size);
+
+        // Close the dropdown by pressinc Esc
+        utils.push_event(TestEvent::Keyboard {
+            name: EventName::KeyDown,
+            key: Key::Escape,
+            code: Code::Escape,
+            modifiers: Modifiers::default(),
+        });
+        utils.wait_for_update().await;
+
+        // Now the layout size is like in the begining
+        assert_eq!(utils.sdom().get().layout().size(), start_size);
+
+        // Open the dropdown again
+        utils.push_event(TestEvent::Keyboard {
+            name: EventName::KeyDown,
+            key: Key::Enter,
+            code: Code::Enter,
+            modifiers: Modifiers::default(),
+        });
+        utils.wait_for_update().await;
+
+        // Click on the second option
+        utils.push_event(TestEvent::Keyboard {
+            name: EventName::KeyDown,
+            key: Key::Tab,
+            code: Code::Tab,
+            modifiers: Modifiers::default(),
+        });
+        utils.wait_for_update().await;
+        utils.push_event(TestEvent::Keyboard {
+            name: EventName::KeyDown,
+            key: Key::Tab,
+            code: Code::Tab,
+            modifiers: Modifiers::default(),
+        });
+        utils.wait_for_update().await;
+        utils.push_event(TestEvent::Keyboard {
+            name: EventName::KeyDown,
+            key: Key::Enter,
+            code: Code::Enter,
+            modifiers: Modifiers::default(),
+        });
+        utils.wait_for_update().await;
+
+        utils.wait_for_update().await;
+
+        // Close with Escape
+        utils.push_event(TestEvent::Keyboard {
+            name: EventName::KeyDown,
+            key: Key::Escape,
+            code: Code::Escape,
+            modifiers: Modifiers::default(),
+        });
+        utils.wait_for_update().await;
+
+        // Now the layout size is like in the begining, again
+        assert_eq!(utils.sdom().get().layout().size(), start_size);
+
+        // The second option was selected
         assert_eq!(label.get(0).text(), Some("Value B"));
     }
 }

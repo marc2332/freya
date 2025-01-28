@@ -8,7 +8,7 @@ use winit::keyboard::{
     NamedKey,
 };
 
-use crate::definitions::PlatformEventData;
+use crate::definitions::ErasedEventData;
 
 // Return the equivalent of Winit `ModifiersState` in keyboard_types
 pub fn map_winit_modifiers(modifiers: keyboard::ModifiersState) -> Modifiers {
@@ -345,8 +345,8 @@ impl KeyboardData {
     }
 }
 
-impl From<&PlatformEventData> for KeyboardData {
-    fn from(val: &PlatformEventData) -> Self {
+impl From<&ErasedEventData> for KeyboardData {
+    fn from(val: &ErasedEventData) -> Self {
         val.downcast::<KeyboardData>().cloned().unwrap()
     }
 }

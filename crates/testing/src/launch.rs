@@ -3,6 +3,10 @@ use std::sync::{
     Mutex,
 };
 
+use accesskit::{
+    NodeBuilder,
+    Role,
+};
 use dioxus_core::{
     fc_to_builder,
     Element,
@@ -35,7 +39,35 @@ use crate::{
 
 /// Run a Component in a headless testing environment.
 ///
-/// Default size is `500x500`.
+/// ```rust
+/// # use freya_testing::prelude::*;
+/// # use freya::prelude::*;
+/// # let rt = tokio::runtime::Builder::new_current_thread()
+/// # .enable_all()
+/// # .build()
+/// # .unwrap();
+/// # let _guard = rt.enter();
+/// fn app() -> Element {
+///     rsx!(
+///         rect {
+///             label {
+///                 "Hello, World!"
+///             }
+///         }
+///     )
+/// }
+///
+/// # rt.block_on(async move {
+/// let mut utils = launch_test(app);
+///
+/// let root = utils.root();
+/// let rect = root.get(0);
+/// let label = rect.get(0);
+/// let text = label.get(0);
+///
+/// assert_eq!(text.text(), Some("Hello, World!"));
+/// # });
+/// ```
 pub fn launch_test(root: AppComponent) -> TestingHandler<()> {
     launch_test_with_config(root, TestingConfig::default())
 }
@@ -52,7 +84,8 @@ pub fn launch_test_with_config<T: 'static + Clone>(
     let (event_emitter, event_receiver) = unbounded_channel();
     let (platform_event_emitter, platform_event_receiver) = unbounded_channel::<EventMessage>();
     let (platform_sender, platform_receiver) = watch::channel(NativePlatformState {
-        focused_id: ACCESSIBILITY_ROOT_ID,
+        focused_accessibility_id: ACCESSIBILITY_ROOT_ID,
+        focused_accessibility_node: NodeBuilder::new(Role::Window).build(),
         preferred_theme: PreferredTheme::default(),
         navigation_mode: NavigationMode::default(),
         information: PlatformInformation::new(config.size, false, false, false),

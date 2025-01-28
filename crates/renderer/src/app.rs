@@ -1,5 +1,9 @@
 use std::sync::Arc;
 
+use accesskit::{
+    NodeBuilder,
+    Role,
+};
 use dioxus_core::{
     Event,
     VirtualDom,
@@ -87,7 +91,8 @@ impl Application {
 
         let (event_emitter, event_receiver) = mpsc::unbounded_channel();
         let (platform_sender, platform_receiver) = watch::channel(NativePlatformState {
-            focused_id: ACCESSIBILITY_ROOT_ID,
+            focused_accessibility_id: ACCESSIBILITY_ROOT_ID,
+            focused_accessibility_node: NodeBuilder::new(Role::Window).build(),
             preferred_theme: window.theme().map(|theme| theme.into()).unwrap_or_default(),
             navigation_mode: NavigationMode::default(),
             information: PlatformInformation::from_winit(window),
@@ -234,6 +239,10 @@ impl Application {
     /// Process the events queue
     pub fn process_events(&mut self, scale_factor: f64) {
         let focus_id = self.accessibility.focused_node_id();
+        self.plugins.send(
+            PluginEvent::StartedMeasuringEvents,
+            PluginHandle::new(&self.proxy),
+        );
         process_events(
             &self.sdom.get(),
             &mut self.events,
@@ -241,7 +250,11 @@ impl Application {
             &mut self.nodes_state,
             scale_factor,
             focus_id,
-        )
+        );
+        self.plugins.send(
+            PluginEvent::FinishedMeasuringEvents,
+            PluginHandle::new(&self.proxy),
+        );
     }
 
     pub fn init_accessibility(&mut self) {
@@ -341,8 +354,9 @@ impl Application {
     pub fn focus_node(&mut self, node_id: AccessibilityId, window: &Window) {
         let fdom = self.sdom.get();
         let layout = fdom.layout();
+        let rdom = fdom.rdom();
         self.accessibility
-            .focus_node(node_id, &self.platform_sender, window, &layout)
+            .focus_node(rdom, node_id, &self.platform_sender, window, &layout)
     }
 
     pub fn focus_next_node(&mut self, direction: AccessibilityFocusStrategy, window: &Window) {
@@ -371,7 +385,7 @@ impl Application {
             let fdom = self.sdom.get();
 
             self.plugins.send(
-                PluginEvent::StartedLayout(&fdom.layout()),
+                PluginEvent::StartedMeasuringLayout(&fdom.layout()),
                 PluginHandle::new(&self.proxy),
             );
 
@@ -384,7 +398,7 @@ impl Application {
             );
 
             self.plugins.send(
-                PluginEvent::FinishedLayout(&fdom.layout()),
+                PluginEvent::FinishedMeasuringLayout(&fdom.layout()),
                 PluginHandle::new(&self.proxy),
             );
         }

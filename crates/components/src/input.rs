@@ -356,7 +356,7 @@ mod test {
         assert_eq!(utils.focus_id(), ACCESSIBILITY_ROOT_ID);
 
         // Focus the input in the end of the text
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseDown,
             cursor: (115., 25.).into(),
             button: Some(MouseButton::Left),
@@ -368,7 +368,7 @@ mod test {
         assert_ne!(utils.focus_id(), ACCESSIBILITY_ROOT_ID);
 
         // Write "d"
-        utils.push_event(PlatformEvent::Keyboard {
+        utils.push_event(TestEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::Character("d".to_string()),
             code: Code::KeyD,
@@ -407,7 +407,7 @@ mod test {
         assert_eq!(text.get(0).text(), Some("A"));
 
         // Focus the input in the end of the text
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseDown,
             cursor: (115., 25.).into(),
             button: Some(MouseButton::Left),
@@ -420,7 +420,7 @@ mod test {
 
         // Try to write "BCDEFG"
         for c in ['B', 'C', 'D', 'E', 'F', 'G'] {
-            utils.push_event(PlatformEvent::Keyboard {
+            utils.push_event(TestEvent::Keyboard {
                 name: EventName::KeyDown,
                 key: Key::Character(c.to_string()),
                 code: Code::Unidentified,

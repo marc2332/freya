@@ -344,10 +344,11 @@ def_attribute!(
     ///
     /// Accepted values:
     ///
-    /// - `clip` (default)
-    /// - `ellipsis`
+    /// - `clip` (default): Simply cut the text.
+    /// - `ellipsis`: Show `…`.
+    /// - `[custom-value]: Show a custom value.
     ///
-    /// ### Example
+    /// ### Ellipsis example
     ///
     /// ```rust, no_run
     /// # use freya::prelude::*;
@@ -356,6 +357,21 @@ def_attribute!(
     ///         label {
     ///             max_lines: "3",
     ///             text_overflow: "ellipsis",
+    ///             "Looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text"
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    ///
+    /// ### Custom value example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         label {
+    ///             max_lines: "3",
+    ///             text_overflow: ".......too long.",
     ///             "Looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text"
     ///         }
     ///     )

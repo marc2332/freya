@@ -1,7 +1,7 @@
 use torin::geometry::CursorPoint;
 pub use winit::event::MouseButton;
 
-use crate::definitions::PlatformEventData;
+use crate::definitions::ErasedEventData;
 
 /// Data of a Mouse event.
 #[derive(Debug, Clone, PartialEq)]
@@ -42,8 +42,8 @@ impl MouseData {
     }
 }
 
-impl From<&PlatformEventData> for MouseData {
-    fn from(val: &PlatformEventData) -> Self {
+impl From<&ErasedEventData> for MouseData {
+    fn from(val: &ErasedEventData) -> Self {
         val.downcast::<MouseData>().cloned().unwrap()
     }
 }

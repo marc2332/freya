@@ -6,6 +6,7 @@ use std::{
     time::Duration,
 };
 
+use accesskit::TreeUpdate;
 use dioxus_core::{
     Event,
     VirtualDom,
@@ -23,7 +24,12 @@ use freya_engine::prelude::{
     FontCollection,
     FontMgr,
 };
-use freya_native_core::dioxus::NodeImmutableDioxusExt;
+use freya_native_core::{
+    dioxus::NodeImmutableDioxusExt,
+    prelude::NodeImmutable,
+    NodeId,
+};
+use freya_node_state::AccessibilityNodeState;
 use tokio::{
     sync::{
         broadcast,
@@ -43,6 +49,7 @@ use torin::{
         Size2D,
     },
     prelude::CursorPoint,
+    torin::Torin,
 };
 use winit::{
     event::MouseButton,
@@ -111,7 +118,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
         }
     }
 
-    /// Wait and apply new changes
+    /// Apply the latest changes of the virtual dom.
     pub async fn wait_for_update(&mut self) -> (bool, bool) {
         self.wait_for_work(self.config.size());
 
@@ -142,40 +149,39 @@ impl<T: 'static + Clone> TestingHandler<T> {
                         }
                     }
                     EventMessage::FocusAccessibilityNode(node_id) => {
+                        let fdom = self.utils.sdom.get();
+                        let rdom = fdom.rdom();
+                        let layout = fdom.layout();
                         let res = self
                             .accessibility_tree
                             .lock()
                             .unwrap()
                             .set_focus_with_update(node_id);
-                        if let Some((tree, _)) = res {
-                            self.platform_sender.send_modify(|state| {
-                                state.focused_id = tree.focus;
-                            });
+                        if let Some((tree, node_id)) = res {
+                            self.sync_accessibility(rdom, &layout, node_id, tree)
                         }
                     }
                     EventMessage::FocusNextAccessibilityNode => {
                         let fdom = self.utils.sdom.get();
                         let rdom = fdom.rdom();
-                        let (tree, _) = self
+                        let layout = fdom.layout();
+                        let (tree, node_id) = self
                             .accessibility_tree
                             .lock()
                             .unwrap()
                             .set_focus_on_next_node(AccessibilityFocusStrategy::Forward, rdom);
-                        self.platform_sender.send_modify(|state| {
-                            state.focused_id = tree.focus;
-                        });
+                        self.sync_accessibility(rdom, &layout, node_id, tree)
                     }
                     EventMessage::FocusPrevAccessibilityNode => {
                         let fdom = self.utils.sdom.get();
                         let rdom = fdom.rdom();
-                        let (tree, _) = self
+                        let layout = fdom.layout();
+                        let (tree, node_id) = self
                             .accessibility_tree
                             .lock()
                             .unwrap()
                             .set_focus_on_next_node(AccessibilityFocusStrategy::Backward, rdom);
-                        self.platform_sender.send_modify(|state| {
-                            state.focused_id = tree.focus;
-                        });
+                        self.sync_accessibility(rdom, &layout, node_id, tree)
                     }
                     EventMessage::SetCursorIcon(icon) => {
                         self.cursor_icon = icon;
@@ -222,8 +228,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
     }
 
     /// Wait for layout and events to be processed
-    pub fn wait_for_work(&mut self, size: Size2D) {
-        // Measure layout
+    fn wait_for_work(&mut self, size: Size2D) {
         process_layout(
             &self.utils.sdom().get(),
             Area {
@@ -264,8 +269,21 @@ impl<T: 'static + Clone> TestingHandler<T> {
     }
 
     /// Push an event to the events queue
-    pub fn push_event(&mut self, event: PlatformEvent) {
-        self.events_queue.push(event);
+    ///
+    /// ```rust, no_run
+    /// # use freya_testing::prelude::*;
+    /// # use freya::prelude::*;
+    /// # let mut utils = launch_test(|| rsx!( rect { } ));
+    /// utils.push_event(TestEvent::Mouse {
+    ///     name: EventName::MouseDown,
+    ///     cursor: (490., 20.).into(),
+    ///     button: Some(MouseButton::Left),
+    /// });
+    /// ```
+    ///
+    /// For mouse movements and clicks you can use shorcuts like [Self::move_cursor] and [Self::click_cursor].
+    pub fn push_event(&mut self, event: impl Into<PlatformEvent>) {
+        self.events_queue.push(event.into());
     }
 
     /// Get the root node
@@ -289,6 +307,13 @@ impl<T: 'static + Clone> TestingHandler<T> {
     }
 
     /// Resize the simulated canvas.
+    ///
+    /// ```rust, no_run
+    /// # use freya_testing::prelude::*;
+    /// # use freya::prelude::*;
+    /// # let mut utils = launch_test(|| rsx!( rect { } ));
+    /// utils.resize((500., 250.).into());
+    /// ```
     pub fn resize(&mut self, size: Size2D) {
         self.config.size = size;
         self.platform_sender.send_modify(|state| {
@@ -312,7 +337,14 @@ impl<T: 'static + Clone> TestingHandler<T> {
         self.utils.sdom()
     }
 
-    /// Render the app into a canvas and make a snapshot of it.
+    /// Render the app into a canvas and create a snapshot of it.
+    ///
+    /// ```rust, no_run
+    /// # use freya_testing::prelude::*;
+    /// # use freya::prelude::*;
+    /// # let mut utils = launch_test(|| rsx!( rect { } ));
+    /// utils.save_snapshot("./snapshot.png");
+    /// ```
     pub fn create_snapshot(&mut self) -> Data {
         let fdom = self.utils.sdom.get();
         let (width, height) = self.config.size.to_i32().to_tuple();
@@ -360,6 +392,13 @@ impl<T: 'static + Clone> TestingHandler<T> {
     }
 
     /// Render the app into a canvas and save it into a file.
+    ///
+    /// ```rust, no_run
+    /// # use freya_testing::prelude::*;
+    /// # use freya::prelude::*;
+    /// # let mut utils = launch_test(|| rsx!( rect { } ));
+    /// utils.save_snapshot("./snapshot.png");
+    /// ```
     pub fn save_snapshot(&mut self, snapshot_path: impl Into<PathBuf>) {
         let mut snapshot_file =
             File::create(snapshot_path.into()).expect("Failed to create the snapshot file.");
@@ -371,28 +410,66 @@ impl<T: 'static + Clone> TestingHandler<T> {
     }
 
     /// Shorthand to simulate a cursor move to the given location.
+    ///
+    /// ```rust
+    /// # use freya_testing::prelude::*;
+    /// # use freya::prelude::*;
+    /// # let mut utils = launch_test(|| rsx!( rect { } ));
+    /// utils.move_cursor((5., 5.));
+    /// ```
     pub async fn move_cursor(&mut self, cursor: impl Into<CursorPoint>) {
-        self.push_event(PlatformEvent::Mouse {
+        self.push_event(PlatformEvent {
             name: EventName::MouseMove,
-            cursor: cursor.into(),
-            button: Some(MouseButton::Left),
+            data: PlatformEventData::Mouse {
+                cursor: cursor.into(),
+                button: Some(MouseButton::Left),
+            },
         });
         self.wait_for_update().await;
     }
 
     /// Shorthand to simulate a click with cursor in the given location.
+    ///
+    /// ```rust
+    /// # use freya_testing::prelude::*;
+    /// # use freya::prelude::*;
+    /// # let mut utils = launch_test(|| rsx!( rect { } ));
+    /// utils.click_cursor((5., 5.));
+    /// ```
     pub async fn click_cursor(&mut self, cursor: impl Into<CursorPoint> + Clone) {
-        self.push_event(PlatformEvent::Mouse {
+        self.push_event(PlatformEvent {
             name: EventName::MouseDown,
-            cursor: cursor.clone().into(),
-            button: Some(MouseButton::Left),
+            data: PlatformEventData::Mouse {
+                cursor: cursor.clone().into(),
+                button: Some(MouseButton::Left),
+            },
         });
         self.wait_for_update().await;
-        self.push_event(PlatformEvent::Mouse {
+        self.push_event(PlatformEvent {
             name: EventName::MouseUp,
-            cursor: cursor.into(),
-            button: Some(MouseButton::Left),
+            data: PlatformEventData::Mouse {
+                cursor: cursor.into(),
+                button: Some(MouseButton::Left),
+            },
         });
         self.wait_for_update().await;
+    }
+
+    /// Keep the components on sync with the latest accessibility tree update.
+    pub(crate) fn sync_accessibility(
+        &self,
+        rdom: &DioxusDOM,
+        layout: &Torin<NodeId>,
+        node_id: NodeId,
+        tree: TreeUpdate,
+    ) {
+        self.platform_sender.send_modify(|state| {
+            state.focused_accessibility_id = tree.focus;
+            let node_ref = rdom.get(node_id).unwrap();
+            let node_accessibility = node_ref.get::<AccessibilityNodeState>().unwrap();
+            let layout_node = layout.get(node_id).unwrap();
+            state.focused_accessibility_node =
+                AccessibilityTree::create_node(&node_ref, layout_node, &node_accessibility)
+        });
     }
 }
