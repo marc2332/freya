@@ -21,6 +21,7 @@ use torin::{
     prelude::{
         Content,
         Position,
+        VisibleSize,
     },
     size::Size,
 };
@@ -95,6 +96,14 @@ impl NodeState {
             ("min_height", AttributeType::Size(&self.size.minimum_height)),
             ("max_width", AttributeType::Size(&self.size.maximum_width)),
             ("max_height", AttributeType::Size(&self.size.maximum_height)),
+            (
+                "visible_width",
+                AttributeType::VisibleSize(&self.size.visible_width),
+            ),
+            (
+                "visible_height",
+                AttributeType::VisibleSize(&self.size.visible_height),
+            ),
             ("direction", AttributeType::Direction(&self.size.direction)),
             ("padding", AttributeType::Measures(self.size.padding)),
             ("margin", AttributeType::Measures(self.size.margin)),
@@ -180,6 +189,7 @@ pub enum AttributeType<'a> {
     OptionalColor(Option<Fill>),
     Gradient(Fill),
     Size(&'a Size),
+    VisibleSize(&'a VisibleSize),
     Measure(f32),
     OptionalMeasure(Option<f32>),
     Measures(Gaps),

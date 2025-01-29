@@ -16,7 +16,7 @@ impl VisibleSize {
     pub fn pretty(&self) -> String {
         match self {
             Self::Full => "full".to_string(),
-            Self::InnerPercentage(p) => format!("{}% of auto", p.get()),
+            Self::InnerPercentage(p) => format!("{}%", p.get()),
         }
     }
 }
