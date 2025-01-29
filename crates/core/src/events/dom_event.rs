@@ -29,7 +29,6 @@ pub struct DomEvent {
     pub node_id: NodeId,
     pub data: DomEventData,
     pub bubbles: bool,
-    pub layer: Option<i16>,
 }
 
 impl Eq for DomEvent {}
@@ -50,9 +49,9 @@ impl DomEvent {
     pub fn new(
         PotentialEvent {
             node_id,
-            layer,
             name,
             data,
+            ..
         }: PotentialEvent,
         node_area: Option<Area>,
         scale_factor: f64,
@@ -88,7 +87,6 @@ impl DomEvent {
                     name,
                     data: event_data,
                     bubbles,
-                    layer,
                 }
             }
             PlatformEventData::Wheel { scroll, .. } => Self {
@@ -96,7 +94,6 @@ impl DomEvent {
                 name,
                 data: DomEventData::Wheel(WheelData::new(scroll.x, scroll.y)),
                 bubbles,
-                layer,
             },
             PlatformEventData::Keyboard {
                 ref key,
@@ -108,7 +105,6 @@ impl DomEvent {
                 name,
                 data: DomEventData::Keyboard(KeyboardData::new(key.clone(), code, modifiers)),
                 bubbles,
-                layer,
             },
             PlatformEventData::Touch {
                 location,
@@ -145,7 +141,6 @@ impl DomEvent {
                     name,
                     data: event_data,
                     bubbles,
-                    layer,
                 }
             }
             PlatformEventData::File { file_path, .. } => {
@@ -156,7 +151,6 @@ impl DomEvent {
                     name,
                     data: event_data,
                     bubbles,
-                    layer,
                 }
             }
         }

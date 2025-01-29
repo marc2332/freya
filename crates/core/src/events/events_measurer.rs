@@ -70,10 +70,12 @@ pub fn measure_collateral_global_events(events: &[DomEvent]) -> Vec<DomEvent> {
         let Some(event_name) = event.name.get_global_event() else {
             continue;
         };
-        let mut global_event = event.clone();
-        global_event.name = event_name;
-        global_event.layer = None;
-        global_events.push(global_event);
+        global_events.push(DomEvent {
+            name: event_name,
+            node_id: event.node_id,
+            data: event.data.clone(),
+            bubbles: event.bubbles,
+        });
     }
     global_events
 }
