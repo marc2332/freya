@@ -4,15 +4,9 @@
 //! - [Events](crate::elements#functions)
 
 pub mod _docs;
-
-mod definitions;
+pub mod attributes;
+pub mod elements;
 pub mod events;
+mod macros;
 
-pub mod elements {
-    pub use crate::{
-        definitions::*,
-        events::*,
-    };
-}
-
-pub use crate::definitions::*;
+pub use crate::elements::*;
