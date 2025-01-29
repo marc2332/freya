@@ -129,6 +129,9 @@ def_attribute!(
     /// ```
     max_height,
 
+    visible_width,
+    visible_height,
+
     /// Specify the margin of an element.
     /// You can do so by four different ways, just like in CSS.
     ///

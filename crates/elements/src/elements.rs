@@ -27,6 +27,8 @@ def_element!(
         min_width,
         max_height,
         max_width,
+        visible_width,
+        visible_height,
         margin,
         padding,
         position,
