@@ -1054,6 +1054,16 @@ impl Canvas {
         unimplemented!("This is mocked")
     }
 
+    pub fn draw_image_rect(
+        &self,
+        image: impl AsRef<Image>,
+        src: Option<(&Rect, SrcRectConstraint)>,
+        dst: impl AsRef<Rect>,
+        paint: &Paint,
+    ) -> &Self {
+        unimplemented!("This is mocked")
+    }
+
     pub fn draw_rect(&self, _rect: Rect, _paint: &Paint) -> &Self {
         unimplemented!("This is mocked")
     }
@@ -1111,6 +1121,11 @@ impl Canvas {
     pub fn save_layer_alpha_f(&self, bounds: impl Into<Option<Rect>>, alpha: f32) -> usize {
         unimplemented!("This is mocked")
     }
+}
+
+pub enum SrcRectConstraint {
+    Strict = 0,
+    Fast = 1,
 }
 
 #[derive(Default)]
@@ -1232,6 +1247,12 @@ pub struct Rect {
     pub bottom: f32,
 }
 
+impl AsRef<Rect> for Rect {
+    fn as_ref(&self) -> &Rect {
+        self
+    }
+}
+
 impl Rect {
     pub fn new(_left: f32, _top: f32, _right: f32, _bottom: f32) -> Self {
         unimplemented!("This is mocked")
@@ -1256,8 +1277,22 @@ impl Rect {
 
 pub struct Image;
 
+impl AsRef<Image> for Image {
+    fn as_ref(&self) -> &Image {
+        self
+    }
+}
+
 impl Image {
     pub fn from_encoded(_data: Data) -> Option<Self> {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn width(&self) -> i32 {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn height(&self) -> i32 {
         unimplemented!("This is mocked")
     }
 }
