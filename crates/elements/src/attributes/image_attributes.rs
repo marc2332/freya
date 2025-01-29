@@ -14,7 +14,7 @@ def_attribute!(
     ///
     /// ```rust, no_run
     /// # use freya::prelude::*;
-    /// static RUST_LOGO: &[u8] = include_bytes!("./_docs/rust_logo.png");
+    /// static RUST_LOGO: &[u8] = include_bytes!("../_docs/rust_logo.png");
     ///
     /// fn app() -> Element {
     ///     let image_data = static_bytes(RUST_LOGO);

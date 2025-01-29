@@ -566,9 +566,9 @@ def_element!(
     ///
     /// ### Example
     ///
-    /// ```rust,ignore
+    /// ```rust, no_run
     /// # use freya::prelude::*;
-    /// static FERRIS: &[u8] = include_bytes!("./ferris.svg");
+    /// static FERRIS: &[u8] = include_bytes!("_docs/ferris.svg");
     ///
     /// fn app() -> Element {
     ///     let ferris = static_bytes(FERRIS);
