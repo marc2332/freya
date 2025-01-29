@@ -5,7 +5,21 @@ use winit::event::{
     TouchPhase,
 };
 
-use crate::definitions::ErasedEventData;
+use crate::{
+    events::ErasedEventData,
+    impl_event,
+};
+
+impl_event! [
+    PointerData;
+
+    onpointerdown
+    onpointerup
+    onglobalpointerup
+    onpointermove
+    onpointerenter
+    onpointerleave
+];
 
 /// The type of device that triggered a Pointer event.
 #[derive(Debug, Clone, PartialEq, Copy)]
