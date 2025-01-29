@@ -11,7 +11,6 @@ use freya_native_core::{
     prelude::NodeImmutable,
     NodeId,
 };
-use itertools::sorted;
 use rustc_hash::FxHashMap;
 use torin::prelude::{
     Area,
@@ -173,13 +172,9 @@ impl Compositor {
         loop {
             let mut any_marked = false;
 
-            for (layer_n, layer) in sorted(running_layers.iter_mut()).rev() {
+            for (layer_n, layer) in running_layers.iter_mut() {
                 layer.retain(|node_id| {
                     Self::with_utils(*node_id, layout, rdom, |node_ref, utils, layout_node| {
-                        // Use the cached area to invalidate the previous frame area if necessary
-                        let cached_area = cache.get(node_id);
-                        let needs_cached_area = utils.needs_cached_area(&node_ref);
-
                         let Some(area) = utils.drawing_area_with_viewports(
                             layout_node,
                             &node_ref,
@@ -190,31 +185,35 @@ impl Compositor {
                         };
 
                         let is_dirty = dirty_nodes.remove(node_id);
-                        let cached_area_is_invalidated = cached_area
-                            .map(|cached_area| {
-                                if is_dirty {
-                                    true
-                                } else {
-                                    dirty_area.intersects(cached_area)
-                                }
-                            })
-                            .unwrap_or_default();
 
-                        let is_invalidated =
-                            is_dirty || cached_area_is_invalidated || dirty_area.intersects(&area);
+                        // Use the cached area to invalidate the previous frame area if necessary
+                        let mut invalidated_cache_area =
+                            cache.get(node_id).and_then(|cached_area| {
+                                if is_dirty || dirty_area.intersects(cached_area) {
+                                    Some(*cached_area)
+                                } else {
+                                    None
+                                }
+                            });
+
+                        let is_invalidated = is_dirty
+                            || invalidated_cache_area.is_some()
+                            || dirty_area.intersects(&area);
 
                         if is_invalidated {
                             // Save this node to the layer it corresponds for rendering
                             dirty_layers.insert_node_in_layer(*node_id, *layer_n);
 
                             // Expand the dirty area with the cached area so it gets cleaned up
-                            if is_dirty && cached_area_is_invalidated {
-                                dirty_area.unite_or_insert(cached_area.unwrap());
-                                any_marked = true;
+                            if let Some(invalidated_cache_area) = invalidated_cache_area.take() {
+                                if is_dirty {
+                                    dirty_area.unite_or_insert(&invalidated_cache_area);
+                                    any_marked = true;
+                                }
                             }
 
                             // Cache the drawing area so it can be invalidated in the next frame
-                            if needs_cached_area {
+                            if utils.needs_cached_area(&node_ref) {
                                 cache.insert(*node_id, area);
                             }
 

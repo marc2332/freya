@@ -30,10 +30,12 @@ torin = { workspace = true }
 freya-native-core = { workspace = true }
 dioxus-core-macro = { workspace = true }
 dioxus-core = { workspace = true }
+dioxus-signals = { workspace = true }
 dioxus = { workspace = true }
 
 tokio = { workspace = true }
 winit = { workspace = true }
+accesskit = { workspace = true }
 
 [dev-dependencies]
 dioxus = { workspace = true }

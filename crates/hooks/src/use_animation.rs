@@ -455,12 +455,12 @@ impl AnimConfiguration {
 }
 
 #[derive(Clone)]
-pub struct Context<Animated: AnimatedValue> {
+pub struct AnimationContext<Animated: AnimatedValue> {
     value: Signal<Animated>,
     conf: AnimConfiguration,
 }
 
-impl<Animated: AnimatedValue> PartialEq for Context<Animated> {
+impl<Animated: AnimatedValue> PartialEq for AnimationContext<Animated> {
     fn eq(&self, other: &Self) -> bool {
         self.value.eq(&other.value) && self.conf.eq(&other.conf)
     }
@@ -503,7 +503,7 @@ pub enum OnDepsChange {
 /// Animate your elements. Use [`use_animation`] to use this.
 #[derive(Clone)]
 pub struct UseAnimation<Animated: AnimatedValue> {
-    pub(crate) context: Memo<Context<Animated>>,
+    pub(crate) context: Memo<AnimationContext<Animated>>,
     pub(crate) platform: UsePlatform,
     pub(crate) is_running: Signal<bool>,
     pub(crate) has_run_yet: Signal<bool>,
@@ -764,7 +764,7 @@ pub fn use_animation<Animated: AnimatedValue>(
         let value = run(&mut conf);
         let value = Signal::new(value);
         prev_value.set(Some(value));
-        Context { value, conf }
+        AnimationContext { value, conf }
     });
 
     let animation = UseAnimation {
@@ -821,7 +821,7 @@ where
         let value = run(&mut conf, deps);
         let value = Signal::new(value);
         prev_value.set(Some(value));
-        Context { value, conf }
+        AnimationContext { value, conf }
     }));
 
     let animation = UseAnimation {

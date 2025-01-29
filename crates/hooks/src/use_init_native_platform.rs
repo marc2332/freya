@@ -48,7 +48,8 @@ pub fn use_init_native_platform() -> UsePlatformEvents {
         let platform_state = platform_receiver.borrow();
 
         let mut preferred_theme = Signal::new(platform_state.preferred_theme);
-        let mut focused_id = Signal::new(platform_state.focused_id);
+        let mut focused_id = Signal::new(platform_state.focused_accessibility_id);
+        let mut focused_node = Signal::new(platform_state.focused_accessibility_node.clone());
         let mut navigation_mode = Signal::new(platform_state.navigation_mode);
         let mut information = Signal::new(platform_state.information);
 
@@ -58,8 +59,12 @@ pub fn use_init_native_platform() -> UsePlatformEvents {
         spawn(async move {
             while platform_receiver.changed().await.is_ok() {
                 let state = platform_receiver.borrow();
-                if *focused_id.peek() != state.focused_id {
-                    *focused_id.write() = state.focused_id;
+                if *focused_id.peek() != state.focused_accessibility_id {
+                    *focused_id.write() = state.focused_accessibility_id;
+                }
+
+                if *focused_node.peek() != state.focused_accessibility_node {
+                    *focused_node.write() = state.focused_accessibility_node.clone();
                 }
 
                 if *preferred_theme.peek() != state.preferred_theme {
@@ -80,6 +85,7 @@ pub fn use_init_native_platform() -> UsePlatformEvents {
         provide_context(navigation_mode);
         provide_context(information);
         provide_context(focused_id);
+        provide_context(focused_node);
     });
 
     UsePlatformEvents { navigation_mark }
@@ -110,7 +116,7 @@ mod test {
                 rect {
                     width: "100%",
                     height: "100%",
-                    OtherChild {},
+                    OtherChild {}
                     OtherChild {}
                 }
             )
@@ -184,7 +190,7 @@ mod test {
         assert_eq!(utils.focus_id(), ACCESSIBILITY_ROOT_ID);
 
         // Navigate to the first rect
-        utils.push_event(PlatformEvent::Keyboard {
+        utils.push_event(TestEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::Tab,
             code: Code::Tab,
@@ -199,7 +205,7 @@ mod test {
         assert_ne!(first_focus_id, ACCESSIBILITY_ROOT_ID);
 
         // Navigate to the second rect
-        utils.push_event(PlatformEvent::Keyboard {
+        utils.push_event(TestEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::Tab,
             code: Code::Tab,

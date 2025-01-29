@@ -100,7 +100,7 @@ pub enum AttributeName {
     // ActiveDescendant,
     // A11yErrorMessage,
     // A11yInPageLinkTarget,
-    // A11yMemberOf,
+    A11yMemberOf,
     // A11yNextOnLine,
     // A11yPreviousOnLine,
     // A11yPopupFor,
@@ -359,6 +359,7 @@ impl FromStr for AttributeName {
             "a11y_has_popup" => Ok(AttributeName::A11yHasPopup),
             "a11y_list_style" => Ok(AttributeName::A11yListStyle),
             "a11y_vertical_offset" => Ok(AttributeName::A11yVerticalOffset),
+            "a11y_member_of" => Ok(AttributeName::A11yMemberOf),
             _ => Err(format!("{attr} not supported.")),
         }
     }

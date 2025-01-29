@@ -1,6 +1,6 @@
 use bytes::Bytes;
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_asset_cacher,
     use_focus,
@@ -136,7 +136,7 @@ pub fn NetworkImage(
                 image_data,
                 a11y_role: "image",
                 a11y_name: alt,
-                aspect_ratio
+                aspect_ratio,
             })
         }
         ImageState::Loading => {

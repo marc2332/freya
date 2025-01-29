@@ -3,26 +3,24 @@ use std::{
     rc::Rc,
 };
 
-use freya_elements::{
-    elements::PlatformEventData,
-    events::{
-        pointer::PointerType,
-        FileData,
-        KeyboardData,
-        MouseData,
-        PointerData,
-        TouchData,
-        WheelData,
-    },
+use freya_elements::events::{
+    pointer::PointerType,
+    ErasedEventData,
+    FileData,
+    KeyboardData,
+    MouseData,
+    PointerData,
+    TouchData,
+    WheelData,
 };
 use freya_native_core::NodeId;
 use torin::prelude::*;
 
-use super::event_name::EventName;
-use crate::{
-    events::PlatformEvent,
-    prelude::PotentialEvent,
+use super::{
+    EventName,
+    PlatformEventData,
 };
+use crate::prelude::PotentialEvent;
 
 /// Event emitted to the DOM.
 #[derive(Debug, Clone, PartialEq)]
@@ -53,17 +51,16 @@ impl DomEvent {
         PotentialEvent {
             node_id,
             layer,
-            event,
+            name,
+            data,
         }: PotentialEvent,
         node_area: Option<Area>,
         scale_factor: f64,
     ) -> Self {
-        let name = event.get_name();
-
         let bubbles = name.does_bubble();
 
-        match event {
-            PlatformEvent::Mouse { cursor, button, .. } => {
+        match data {
+            PlatformEventData::Mouse { cursor, button, .. } => {
                 let screen_coordinates = cursor / scale_factor;
                 let element_x =
                     (cursor.x - node_area.unwrap_or_default().min_x() as f64) / scale_factor;
@@ -94,14 +91,14 @@ impl DomEvent {
                     layer,
                 }
             }
-            PlatformEvent::Wheel { scroll, .. } => Self {
+            PlatformEventData::Wheel { scroll, .. } => Self {
                 node_id,
                 name,
                 data: DomEventData::Wheel(WheelData::new(scroll.x, scroll.y)),
                 bubbles,
                 layer,
             },
-            PlatformEvent::Keyboard {
+            PlatformEventData::Keyboard {
                 ref key,
                 code,
                 modifiers,
@@ -113,7 +110,7 @@ impl DomEvent {
                 bubbles,
                 layer,
             },
-            PlatformEvent::Touch {
+            PlatformEventData::Touch {
                 location,
                 finger_id,
                 phase,
@@ -151,9 +148,7 @@ impl DomEvent {
                     layer,
                 }
             }
-            PlatformEvent::File {
-                name, file_path, ..
-            } => {
+            PlatformEventData::File { file_path, .. } => {
                 let event_data = DomEventData::File(FileData { file_path });
 
                 Self {
@@ -182,12 +177,12 @@ pub enum DomEventData {
 impl DomEventData {
     pub fn any(self) -> Rc<dyn Any> {
         match self {
-            DomEventData::Mouse(m) => Rc::new(PlatformEventData::new(Box::new(m))),
-            DomEventData::Keyboard(k) => Rc::new(PlatformEventData::new(Box::new(k))),
-            DomEventData::Wheel(w) => Rc::new(PlatformEventData::new(Box::new(w))),
-            DomEventData::Touch(t) => Rc::new(PlatformEventData::new(Box::new(t))),
-            DomEventData::Pointer(p) => Rc::new(PlatformEventData::new(Box::new(p))),
-            DomEventData::File(fd) => Rc::new(PlatformEventData::new(Box::new(fd))),
+            DomEventData::Mouse(m) => Rc::new(ErasedEventData::new(Box::new(m))),
+            DomEventData::Keyboard(k) => Rc::new(ErasedEventData::new(Box::new(k))),
+            DomEventData::Wheel(w) => Rc::new(ErasedEventData::new(Box::new(w))),
+            DomEventData::Touch(t) => Rc::new(ErasedEventData::new(Box::new(t))),
+            DomEventData::Pointer(p) => Rc::new(ErasedEventData::new(Box::new(p))),
+            DomEventData::File(fd) => Rc::new(ErasedEventData::new(Box::new(fd))),
         }
     }
 }

@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_animation,
     use_node_signal,
@@ -124,9 +124,7 @@ mod test {
         utils.wait_for_update().await;
         assert_eq!(label.layout().unwrap().area.min_x(), 50.);
 
-        sleep(Duration::from_millis(25)).await;
-        utils.wait_for_update().await;
-        utils.wait_for_update().await;
+        sleep(Duration::from_millis(5)).await;
         utils.wait_for_update().await;
         utils.wait_for_update().await;
         assert_ne!(label.layout().unwrap().area.min_x(), 50.);

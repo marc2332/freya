@@ -8,7 +8,86 @@ use winit::keyboard::{
     NamedKey,
 };
 
-use crate::definitions::PlatformEventData;
+use crate::{
+    events::ErasedEventData,
+    impl_event,
+};
+
+impl_event! [
+    KeyboardData;
+
+    /// The `keydown` event fires when the user starts pressing any key in the currently focused element.
+    ///
+    /// Event Data: [`KeyboardData`](crate::events::KeyboardData)
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             onkeydown: |e| println!("Event: {e:?}")
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    onkeydown
+
+    /// The `keyup` event fires when the user releases any key being pressed in the currently focused element.
+    ///
+    /// Event Data: [`KeyboardData`](crate::events::KeyboardData)
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             onkeyup: |e| println!("Event: {e:?}")
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    onkeyup
+
+    /// The `globalkeydown` event fires when the user starts pressing any key.
+    ///
+    /// Event Data: [`KeyboardData`](crate::events::KeyboardData)
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             onglobalkeydown: |e| println!("Event: {e:?}")
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    onglobalkeydown
+
+    /// The `globalkeyup` event fires when the user releases any key being pressed.
+    ///
+    /// Event Data: [`KeyboardData`](crate::events::KeyboardData)
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             onglobalkeyup: |e| println!("Event: {e:?}")
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    onglobalkeyup
+];
 
 // Return the equivalent of Winit `ModifiersState` in keyboard_types
 pub fn map_winit_modifiers(modifiers: keyboard::ModifiersState) -> Modifiers {
@@ -291,18 +370,18 @@ pub fn map_winit_physical_key(key: &keyboard::PhysicalKey) -> Code {
             keyboard::KeyCode::BracketRight => Code::BracketRight,
             keyboard::KeyCode::ShiftLeft => Code::ShiftLeft,
             keyboard::KeyCode::Meta => Code::MetaLeft,
-            keyboard::KeyCode::MediaSelect => Code::Unidentified,
-            keyboard::KeyCode::MediaStop => Code::Unidentified,
-            keyboard::KeyCode::Minus => Code::Unidentified,
-            keyboard::KeyCode::Period => Code::Unidentified,
-            keyboard::KeyCode::Power => Code::Unidentified,
+            keyboard::KeyCode::MediaSelect => Code::MediaSelect,
+            keyboard::KeyCode::MediaStop => Code::MediaStop,
+            keyboard::KeyCode::Minus => Code::Minus,
+            keyboard::KeyCode::Period => Code::Period,
+            keyboard::KeyCode::Power => Code::Power,
             keyboard::KeyCode::AltRight => Code::AltRight,
             keyboard::KeyCode::ControlLeft => Code::ControlLeft,
             keyboard::KeyCode::ControlRight => Code::ControlRight,
             keyboard::KeyCode::ShiftRight => Code::ShiftRight,
             keyboard::KeyCode::Semicolon => Code::Semicolon,
-            keyboard::KeyCode::Slash => Code::Unidentified,
-            keyboard::KeyCode::Sleep => Code::Unidentified,
+            keyboard::KeyCode::Slash => Code::Slash,
+            keyboard::KeyCode::Sleep => Code::Sleep,
             keyboard::KeyCode::Tab => Code::Tab,
             keyboard::KeyCode::AudioVolumeUp => Code::AudioVolumeUp,
             keyboard::KeyCode::IntlYen => Code::IntlYen,
@@ -345,8 +424,8 @@ impl KeyboardData {
     }
 }
 
-impl From<&PlatformEventData> for KeyboardData {
-    fn from(val: &PlatformEventData) -> Self {
+impl From<&ErasedEventData> for KeyboardData {
+    fn from(val: &ErasedEventData) -> Self {
         val.downcast::<KeyboardData>().cloned().unwrap()
     }
 }

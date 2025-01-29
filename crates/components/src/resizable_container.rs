@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use freya_common::NodeReferenceLayout;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::MouseEvent,
 };
 use freya_hooks::{
@@ -47,7 +47,7 @@ struct ResizableContext {
     pub direction: String,
 }
 
-/// Resizable container, used in combination with [ResizablePanel] and [ResizableHandle].
+/// Resizable container, used in combination with [ResizablePanel()] and [ResizableHandle()].
 ///
 /// Example:
 ///
@@ -81,7 +81,7 @@ pub fn ResizableContainer(
     /// Default to `vertical`.
     #[props(default = "vertical".to_string())]
     direction: String,
-    /// Inner children for the [ResizableContainer].
+    /// Inner children for the [ResizableContainer()].
     children: Element,
 ) -> Element {
     let (node_reference, size) = use_node_signal();
@@ -106,7 +106,7 @@ pub fn ResizableContainer(
     )
 }
 
-/// Resizable panel to be used in combination with [ResizableContainer] and [ResizableHandle].
+/// Resizable panel to be used in combination with [ResizableContainer()] and [ResizableHandle()].
 #[component]
 pub fn ResizablePanel(
     /// Initial size in % for this panel. Default to `10`.
@@ -115,7 +115,7 @@ pub fn ResizablePanel(
     /// Minimum size in % for this panel. Default to `4`.
     #[props(default = 4.)]
     min_size: f32,
-    /// Inner children for the [ResizablePanel].
+    /// Inner children for the [ResizablePanel()].
     children: Element,
 ) -> Element {
     let mut registry = use_context::<Signal<ResizableContext>>();
@@ -157,7 +157,7 @@ pub enum HandleStatus {
     Hovering,
 }
 
-/// Resizable panel to be used in combination with [ResizableContainer] and [ResizablePanel].
+/// Resizable panel to be used in combination with [ResizableContainer()] and [ResizablePanel()].
 #[component]
 pub fn ResizableHandle(
     /// Theme override.
@@ -420,17 +420,17 @@ mod test {
         assert_eq!(panel_4.layout().unwrap().area.width().round(), 164.0);
 
         // Vertical
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseDown,
             cursor: (100.0, 250.0).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
             cursor: (100.0, 200.0).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseUp,
             cursor: (0.0, 0.0).into(),
             button: Some(MouseButton::Left),
@@ -441,17 +441,17 @@ mod test {
         assert_eq!(panel_1.layout().unwrap().area.height().round(), 296.0); // 500 - 200 - 4
 
         // Horizontal
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseDown,
             cursor: (167.0, 300.0).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
             cursor: (187.0, 300.0).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseUp,
             cursor: (0.0, 0.0).into(),
             button: Some(MouseButton::Left),

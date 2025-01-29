@@ -197,7 +197,7 @@ fn Navigation() -> Element {
             Link {
                 to: "https://freyaui.dev/blog",
                 label {
-                    "Book"
+                    "Blog"
                 }
             }
             Link {
