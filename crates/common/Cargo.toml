@@ -20,8 +20,6 @@ skia-engine = ["freya-engine/skia-engine"]
 [dependencies]
 torin = { workspace = true }
 
-dioxus-core = { workspace = true }
-
 accesskit = { workspace = true }
 winit = { workspace = true }
 freya-engine = { workspace = true }

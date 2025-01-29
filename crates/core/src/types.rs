@@ -1,4 +1,7 @@
-pub use accesskit::NodeId as AccessibilityId;
+pub use accesskit::{
+    Node as AccessibilityNode,
+    NodeId as AccessibilityId,
+};
 use rustc_hash::FxHashMap;
 use smallvec::SmallVec;
 use tokio::sync::{

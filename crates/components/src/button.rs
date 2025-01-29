@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::{
         KeyboardEvent,
         PointerEvent,
@@ -314,7 +314,7 @@ mod test {
 
         assert_eq!(label.get(0).text(), Some("true"));
 
-        utils.push_event(PlatformEvent::Touch {
+        utils.push_event(TestEvent::Touch {
             name: EventName::TouchStart,
             location: (15.0, 15.0).into(),
             finger_id: 1,
@@ -323,7 +323,7 @@ mod test {
         });
         utils.wait_for_update().await;
 
-        utils.push_event(PlatformEvent::Touch {
+        utils.push_event(TestEvent::Touch {
             name: EventName::TouchEnd,
             location: (15.0, 15.0).into(),
             finger_id: 1,

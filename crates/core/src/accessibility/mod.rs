@@ -12,14 +12,6 @@ use crate::{
     types::AccessibilityId,
 };
 
-/// Strategy for the next Accessibility Node to be focused.
-#[derive(PartialEq)]
-pub enum AccessibilityFocusStrategy {
-    Forward,
-    Backward,
-    // We could add more strategies in the future
-}
-
 /// Shortcut functions to retrieve Acessibility info from a Dioxus Node
 pub trait NodeAccessibility {
     fn get_accessibility_id(&self) -> Option<AccessibilityId>;

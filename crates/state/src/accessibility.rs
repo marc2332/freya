@@ -21,6 +21,7 @@ use accesskit::{
 };
 use freya_common::{
     AccessibilityDirtyNodes,
+    AccessibilityFocusStrategy,
     AccessibilityGenerator,
 };
 use freya_engine::prelude::Color;
@@ -83,6 +84,15 @@ impl ParseAttribute for AccessibilityNodeState {
             AttributeName::A11yAutoFocus => {
                 if let Some(attr) = attr.value.as_text() {
                     self.a11y_auto_focus = attr.parse().unwrap_or_default()
+                }
+            }
+            AttributeName::A11yMemberOf => {
+                if let OwnedAttributeValue::Custom(CustomAttributeValues::AccessibilityId(id)) =
+                    attr.value
+                {
+                    if let Some(builder) = self.builder.as_mut() {
+                        builder.set_member_of(*id);
+                    }
                 }
             }
             a11y_attr => {
@@ -328,6 +338,7 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
             AttributeName::A11yValue,
             AttributeName::A11yAccessKey,
             AttributeName::A11yAuthorId,
+            AttributeName::A11yMemberOf,
             AttributeName::A11yKeyboardShortcut,
             AttributeName::A11yLanguage,
             AttributeName::A11yPlaceholder,
@@ -448,8 +459,6 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
                 self.a11y_id = Some(id);
             }
 
-            let was_just_created = !had_id && self.a11y_id.is_some();
-
             // Add or update this node if it is the Root or if it has an accessibility ID
             if self.a11y_id.is_some() || node_view.node_id() == *root_id {
                 accessibility_dirty_nodes
@@ -458,14 +467,16 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
                     .add_or_update(node_view.node_id())
             }
 
-            if was_just_created && self.a11y_auto_focus {
-                #[cfg(debug_assertions)]
-                tracing::info!("Requested auto focus for {:?}", self.a11y_id.unwrap());
+            if let Some(a11y_id) = self.a11y_id {
+                if !had_id && self.a11y_auto_focus {
+                    #[cfg(debug_assertions)]
+                    tracing::info!("Requested auto focus for {:?}", a11y_id);
 
-                accessibility_dirty_nodes
-                    .lock()
-                    .unwrap()
-                    .request_focus(node_view.node_id())
+                    accessibility_dirty_nodes
+                        .lock()
+                        .unwrap()
+                        .request_focus(AccessibilityFocusStrategy::Node(a11y_id))
+                }
             }
         }
 

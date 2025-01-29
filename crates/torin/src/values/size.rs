@@ -70,7 +70,7 @@ impl Size {
             Size::FillMinimum => "fill-min".to_string(),
             Size::RootPercentage(p) => format!("{}% of root", p.get()),
             Size::InnerPercentage(p) => format!("{}% of auto", p.get()),
-            Size::Flex(f) => format!("flex({}", f.get()),
+            Size::Flex(f) => format!("flex({})", f.get()),
         }
     }
 

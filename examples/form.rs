@@ -32,10 +32,10 @@ fn app() -> Element {
     rsx!(
         Input {
             ..form.input(FormEntry::Name)
-        },
+        }
         Input {
             ..form.input(FormEntry::Description)
-        },
+        }
         Button {
             children: rsx!(
                 label {

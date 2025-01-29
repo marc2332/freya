@@ -88,12 +88,6 @@ pub mod core {
 pub use freya_elements::elements;
 /// Events data.
 pub use freya_elements::events;
-
-/// Hot reload configuration.
-pub mod hotreload {
-    pub use freya_elements::elements::FreyaCtx;
-}
-
 pub use torin;
 
 pub mod plugins;
@@ -115,7 +109,7 @@ pub mod prelude {
         PreferredTheme,
     };
     pub use freya_elements::{
-        elements as dioxus_elements,
+        self as dioxus_elements,
         events::*,
     };
     pub use freya_hooks::*;

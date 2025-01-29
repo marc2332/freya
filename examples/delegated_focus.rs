@@ -3,7 +3,10 @@
     windows_subsystem = "windows"
 )]
 
-use freya::prelude::*;
+use freya::{
+    common::AccessibilityFocusStrategy,
+    prelude::*,
+};
 
 fn main() {
     launch_with_props(app, "Controlled Focus", (400.0, 350.0));
@@ -29,7 +32,7 @@ fn app() -> Element {
 
     use_effect(move || {
         let platform = UsePlatform::new();
-        platform.focus(nodes[current()]);
+        platform.focus(AccessibilityFocusStrategy::Node(nodes[current()]));
     });
 
     rsx!(
