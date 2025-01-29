@@ -103,7 +103,7 @@ pub fn Accordion(props: AccordionProps) -> Element {
             rect {
                 overflow: "clip",
                 width: "100%",
-                height: "{animation_value}a",
+                visible_height: "{animation_value}%",
                 {&props.children}
             }
         }

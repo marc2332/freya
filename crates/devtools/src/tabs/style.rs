@@ -85,6 +85,15 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
                             }
                         }
                     }
+                    AttributeType::VisibleSize(visible_size) => {
+                        rsx!{
+                            Property {
+                                key: "{i}",
+                                name: "{name}",
+                                value: visible_size.pretty()
+                            }
+                        }
+                    }
                     AttributeType::Color(fill) => {
                         rsx!{
                             ColorProperty {

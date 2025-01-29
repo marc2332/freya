@@ -728,10 +728,11 @@ pub fn inner_percentage() {
         0,
         None,
         vec![1, 2],
-        Node::from_size_and_direction(
+        Node::from_size_and_visible_size(
             Size::Inner,
-            Size::InnerPercentage(Length::new(50.0)),
-            DirectionMode::Vertical,
+            Size::Inner,
+            VisibleSize::Full,
+            VisibleSize::InnerPercentage(Length::new(50.0)),
         ),
     );
     mocked_dom.add(

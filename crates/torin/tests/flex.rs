@@ -349,10 +349,11 @@ pub fn flex_with_inner_percentage() {
         2,
         Some(0),
         vec![3],
-        Node::from_size_and_direction(
+        Node::from_size_and_visible_size(
             Size::Pixels(Length::new(100.0)),
-            Size::InnerPercentage(Length::new(50.0)),
-            DirectionMode::Vertical,
+            Size::Inner,
+            VisibleSize::Full,
+            VisibleSize::InnerPercentage(Length::new(50.0)),
         ),
     );
     mocked_dom.add(

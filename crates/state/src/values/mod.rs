@@ -19,6 +19,7 @@ mod shadow;
 mod size;
 mod text_height;
 mod text_shadow;
+mod visible_size;
 
 pub use aspect_ratio::*;
 pub use border::*;

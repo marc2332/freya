@@ -38,6 +38,8 @@ pub struct LayoutState {
     pub minimum_height: Size,
     pub maximum_height: Size,
     pub maximum_width: Size,
+    pub visible_width: VisibleSize,
+    pub visible_height: VisibleSize,
     pub padding: Gaps,
     pub margin: Gaps,
     pub direction: DirectionMode,
@@ -86,6 +88,16 @@ impl ParseAttribute for LayoutState {
             AttributeName::MaxWidth => {
                 if let Some(value) = attr.value.as_text() {
                     self.maximum_width = Size::parse(value)?;
+                }
+            }
+            AttributeName::VisibleWidth => {
+                if let Some(value) = attr.value.as_text() {
+                    self.visible_width = VisibleSize::parse(value)?;
+                }
+            }
+            AttributeName::VisibleHeight => {
+                if let Some(value) = attr.value.as_text() {
+                    self.visible_height = VisibleSize::parse(value)?;
                 }
             }
             AttributeName::Padding => {
@@ -196,6 +208,8 @@ impl State<CustomAttributeValues> for LayoutState {
             AttributeName::MinHeight,
             AttributeName::MaxWidth,
             AttributeName::MaxHeight,
+            AttributeName::VisibleWidth,
+            AttributeName::VisibleHeight,
             AttributeName::Padding,
             AttributeName::Direction,
             AttributeName::OffsetX,
