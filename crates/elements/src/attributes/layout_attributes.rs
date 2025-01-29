@@ -129,7 +129,42 @@ def_attribute!(
     /// ```
     max_height,
 
+    /// Specify the percentage of width to be visible.
+    ///
+    /// ##### Usage
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             background: "red",
+    ///             visible_width: "50%", // 250
+    ///             width: "500",
+    ///             height: "500",
+    ///         }
+    ///     )
+    /// }
+    /// ```
     visible_width,
+
+    /// Specify the percentage of height to be visible.
+    ///
+    /// ##### Usage
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             background: "red",
+    ///             visible_height: "50%", // 250
+    ///             width: "500",
+    ///             height: "500",
+    ///         }
+    ///     )
+    /// }
+    /// ```
     visible_height,
 
     /// Specify the margin of an element.
