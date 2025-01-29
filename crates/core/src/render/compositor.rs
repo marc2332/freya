@@ -187,16 +187,14 @@ impl Compositor {
                         let is_dirty = dirty_nodes.remove(node_id);
 
                         // Use the cached area to invalidate the previous frame area if necessary
-                        let mut invalidated_cache_area = cache
-                            .get(node_id)
-                            .map(|cached_area| {
+                        let mut invalidated_cache_area =
+                            cache.get(node_id).and_then(|cached_area| {
                                 if is_dirty || dirty_area.intersects(cached_area) {
                                     Some(*cached_area)
                                 } else {
                                     None
                                 }
-                            })
-                            .flatten();
+                            });
 
                         let is_invalidated = is_dirty
                             || invalidated_cache_area.is_some()
