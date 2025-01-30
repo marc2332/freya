@@ -208,7 +208,7 @@ mod test {
                 ScrollView {
                     scroll_controller,
                     Button {
-                        onclick: move |_| {
+                        onpress: move |_| {
                             scroll_controller.scroll_to(ScrollPosition::End, ScrollDirection::Vertical);
                         },
                         label {
@@ -218,11 +218,11 @@ mod test {
                     rect {
                         height: "200",
                         width: "200",
-                    },
+                    }
                     rect {
                         height: "200",
                         width: "200",
-                    },
+                    }
                     rect {
                         height: "200",
                         width: "200",
@@ -232,7 +232,7 @@ mod test {
                         width: "200",
                     }
                     Button {
-                        onclick: move |_| {
+                        onpress: move |_| {
                             scroll_controller.scroll_to(ScrollPosition::Start, ScrollDirection::Vertical);
                         },
                         label {

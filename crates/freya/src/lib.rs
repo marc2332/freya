@@ -4,44 +4,46 @@
 )]
 //! # Freya
 //!
-//! Build native & cross-platform GUI applications using 🦀 Rust.
+//! **Freya** is a declarative, cross-platform GUI Rust library, powered by 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/).
 //!
-//! Powered by [🧬 Dioxus](https://dioxuslabs.com) and [🎨 Skia](https://skia.org/).
+//! **It does not use any web tech**, check the [Differences with Dioxus](https://book.freyaui.dev/differences_with_dioxus.html).
 //!
-//! - [Elements API reference](freya_elements::elements#structs)
-//! - [Events API reference](freya_elements::elements#functions)
-//! - [Elements guides](freya_elements::_docs)
-//! - [Components](freya_components)
-//! - [Hooks](freya_hooks)
+//! ### Basics
+//! - [Introduction](self::_docs::introduction)
+//! - [Dioxus Fundamentals](self::_docs::dioxus_fundamentals)
+//!     - [UI](self::_docs::ui)
+//!     - [Components](self::_docs::components_and_props)
+//!     - [Hooks](self::_docs::hooks)
+//!     - [State Management](self::_docs::state_management)
+//!         - [Signals](self::_docs::state_management::signals)
+//!         - [Global Signals](self::_docs::state_management::global_signals)
+//!         - [Lifecycle](self::_docs::state_management::lifecycle)
+//!         - [Context](self::_docs::state_management::context)
+//!         - [Memoization](self::_docs::state_management::memoization)
+//!     - [Async Tasks](self::_docs::async_tasks)
+//!
+//! ### Learn
+//! - [Development Setup](self::_docs::development_setup)
+//! - [Elements Overview](self::_docs::elements)
 //! - [Theming](self::_docs::theming)
-//! - [Hot reload](self::_docs::hot_reload)
-//! - [Testing](freya_testing)
-//! - [Animating](freya_hooks::use_animation)
+//! - [i18n](self::_docs::i18n)
+//! - [Accessibility](self::_docs::accessibility)
+//! - [Text Editing](self::_docs)
+//! - [Animations](self::_docs)
+//! - [Router](self::_docs::router)
+//!     - [Native Router](self::_docs::router::native_router)
+//!     - [Animated transitions](self::_docs::router::animated_transitions)
+//! - [Native Menus](self::_docs)
+//! - [Third Party State Managemement](self::_docs::third_party_state)
+//! - [Unit Testing for Components](freya_testing)
 //! - [Devtools](self::_docs::devtools)
+//! - [Performance Tips](self::_docs::performance)
 //!
-//! ```rust,no_run
-//! use freya::prelude::*;
-//!
-//! fn main(){
-//!     launch(app);
-//! }
-//!
-//! fn app() -> Element {
-//!    let mut count = use_signal(|| 0);
-//!
-//!    rsx!(
-//!        rect {
-//!            height: "100%",
-//!            width: "100%",
-//!            background: "rgb(35, 35, 35)",
-//!            color: "white",
-//!            padding: "12",
-//!            onclick: move |_| count += 1,
-//!            label { "Click to increase -> {count}" }
-//!        }
-//!    )
-//! }
-//! ```
+//! ### API References
+//! - [Elements and attributes](self::elements#structs)
+//! - [Events](self::events#functions)
+//! - [Built-in Components](self::components)
+//! - [Built-in Hooks](self::hooks)
 //!
 //! ## Features flags
 //!
@@ -86,12 +88,6 @@ pub mod core {
 pub use freya_elements::elements;
 /// Events data.
 pub use freya_elements::events;
-
-/// Hot reload configuration.
-pub mod hotreload {
-    pub use freya_elements::elements::FreyaCtx;
-}
-
 pub use torin;
 
 pub mod plugins;
@@ -106,16 +102,14 @@ pub mod prelude {
     };
     pub use dioxus_core_macro::*;
     pub use dioxus_hooks::*;
-    pub use dioxus_hot_reload::{
-        self,
-        hot_reload_init,
-        Config,
-    };
     pub use dioxus_signals::*;
     pub use freya_components::*;
-    pub use freya_core::prelude::PreferredTheme;
+    pub use freya_core::prelude::{
+        AccessibilityId,
+        PreferredTheme,
+    };
     pub use freya_elements::{
-        elements as dioxus_elements,
+        self as dioxus_elements,
         events::*,
     };
     pub use freya_hooks::*;

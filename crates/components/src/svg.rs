@@ -1,6 +1,6 @@
 /// Generate a Dioxus component rendering the specified SVG.
 ///
-/// Example:
+/// ### Example
 ///
 /// ```no_run
 /// # use freya::prelude::*;
@@ -41,7 +41,7 @@ macro_rules! import_svg {
                 stroke,
                 width,
                 height,
-                svg_data
+                svg_data,
             })
         }
     };
@@ -65,7 +65,7 @@ macro_rules! import_svg {
                 stroke,
                 width,
                 height,
-                svg_data
+                svg_data,
             })
         }
     };

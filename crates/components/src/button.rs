@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::{
         KeyboardEvent,
         PointerEvent,
@@ -150,6 +150,8 @@ pub struct BaseButtonProps {
     /// Inner children for the button.
     pub children: Element,
     /// Event handler for when the button is pressed.
+    ///
+    /// This will fire upon **mouse click** or pressing the **enter key**.
     pub onpress: Option<EventHandler<PressEvent>>,
     /// Event handler for when the button is clicked. Not recommended, use `onpress` instead.
     pub onclick: Option<EventHandler<()>>,
@@ -312,7 +314,7 @@ mod test {
 
         assert_eq!(label.get(0).text(), Some("true"));
 
-        utils.push_event(PlatformEvent::Touch {
+        utils.push_event(TestEvent::Touch {
             name: EventName::TouchStart,
             location: (15.0, 15.0).into(),
             finger_id: 1,
@@ -321,7 +323,7 @@ mod test {
         });
         utils.wait_for_update().await;
 
-        utils.push_event(PlatformEvent::Touch {
+        utils.push_event(TestEvent::Touch {
             name: EventName::TouchEnd,
             location: (15.0, 15.0).into(),
             finger_id: 1,

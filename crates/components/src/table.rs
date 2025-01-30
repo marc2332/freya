@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::MouseEvent,
 };
 use freya_hooks::{
@@ -126,8 +126,8 @@ pub enum OrderDirection {
 pub struct TableCellProps {
     /// The content of this cell.
     pub children: Element,
-    /// Onclick event handler for the TableCell.
-    pub onclick: Option<EventHandler<MouseEvent>>,
+    /// Handler for the `onpress` event.
+    pub onpress: Option<EventHandler<MouseEvent>>,
     /// The direction in which this TableCell's column will be ordered.
     ///
     /// **This is only a visual change (it changes the icon), you need to sort stuff yourself.**
@@ -164,8 +164,8 @@ pub fn TableCell(props: TableCellProps) -> Element {
             height: "{height}",
             direction: "horizontal",
             onclick: move |e| {
-                if let Some(onclick) = &props.onclick {
-                    onclick.call(e);
+                if let Some(onpress) = &props.onpress {
+                    onpress.call(e);
                 }
             },
             if let Some(order_direction) = &order_direction {
@@ -188,6 +188,9 @@ pub fn TableCell(props: TableCellProps) -> Element {
 /// Properties for the [`Table`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct TableProps {
+    /// Width of the table. Default to `fill`.
+    #[props(default = "fill".into())]
+    pub height: String,
     /// Theme override.
     pub theme: Option<TableThemeWith>,
     /// Number of columns used in the table.
@@ -203,6 +206,7 @@ pub struct TableProps {
 #[allow(non_snake_case)]
 pub fn Table(
     TableProps {
+        height,
         theme,
         columns,
         children,
@@ -210,7 +214,6 @@ pub fn Table(
 ) -> Element {
     let TableTheme {
         background,
-        height,
         corner_radius,
         shadow,
         font_theme: FontTheme { color },

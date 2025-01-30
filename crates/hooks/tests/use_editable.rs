@@ -65,7 +65,7 @@ pub async fn multiple_lines_single_editor() {
     assert_eq!(content.text(), Some("Hello Rustaceans\nHello Rustaceans"));
 
     // Move cursor
-    utils.push_event(PlatformEvent::Mouse {
+    utils.push_event(TestEvent::Mouse {
         name: EventName::MouseDown,
         cursor: (35.0, 3.0).into(),
         button: Some(MouseButton::Left),
@@ -80,7 +80,7 @@ pub async fn multiple_lines_single_editor() {
     assert_eq!(cursor.text(), Some("0:5"));
 
     // Insert text
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         key: Key::Character("!".to_string()),
         code: Code::Unidentified,
@@ -96,7 +96,7 @@ pub async fn multiple_lines_single_editor() {
     assert_eq!(cursor.text(), Some("0:6"));
 
     // Move cursor to the begining
-    utils.push_event(PlatformEvent::Mouse {
+    utils.push_event(TestEvent::Mouse {
         name: EventName::MouseDown,
         cursor: (3.0, 3.0).into(),
         button: Some(MouseButton::Left),
@@ -107,7 +107,7 @@ pub async fn multiple_lines_single_editor() {
     assert_eq!(cursor.text(), Some("0:0"));
 
     // Move cursor with arrow down
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         code: Code::ArrowDown,
         key: Key::ArrowDown,
@@ -118,7 +118,7 @@ pub async fn multiple_lines_single_editor() {
     assert_eq!(cursor.text(), Some("1:0"));
 
     // Move cursor with arrow right
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         code: Code::ArrowRight,
         key: Key::ArrowRight,
@@ -129,7 +129,7 @@ pub async fn multiple_lines_single_editor() {
     assert_eq!(cursor.text(), Some("1:1"));
 
     // Move cursor with arrow up
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         code: Code::ArrowUp,
         key: Key::ArrowUp,
@@ -140,7 +140,7 @@ pub async fn multiple_lines_single_editor() {
     assert_eq!(cursor.text(), Some("0:1"));
 
     // Move cursor with arrow left
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         code: Code::ArrowLeft,
         key: Key::ArrowLeft,
@@ -151,13 +151,13 @@ pub async fn multiple_lines_single_editor() {
     assert_eq!(cursor.text(), Some("0:0"));
 
     // Move cursor with arrow down, twice
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         code: Code::ArrowDown,
         key: Key::ArrowDown,
         modifiers: Modifiers::default(),
     });
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         code: Code::ArrowDown,
         key: Key::ArrowDown,
@@ -169,13 +169,13 @@ pub async fn multiple_lines_single_editor() {
     assert_eq!(cursor.text(), Some("1:16"));
 
     // Move cursor with arrow up, twice
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         code: Code::ArrowUp,
         key: Key::ArrowUp,
         modifiers: Modifiers::default(),
     });
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         code: Code::ArrowUp,
         key: Key::ArrowUp,
@@ -230,7 +230,7 @@ pub async fn single_line_multiple_editors() {
                             }
                         }
                     )
-                })},
+                })}
                 label {
                     color: "black",
                     height: "50%",
@@ -250,7 +250,7 @@ pub async fn single_line_multiple_editors() {
     assert_eq!(content.text(), Some("Hello Rustaceans\n"));
 
     // Move cursor
-    utils.push_event(PlatformEvent::Mouse {
+    utils.push_event(TestEvent::Mouse {
         name: EventName::MouseDown,
         cursor: (35.0, 3.0).into(),
         button: Some(MouseButton::Left),
@@ -265,7 +265,7 @@ pub async fn single_line_multiple_editors() {
     assert_eq!(cursor.text(), Some("0:5"));
 
     // Insert text
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         key: Key::Character("!".to_string()),
         code: Code::Unidentified,
@@ -346,7 +346,7 @@ pub async fn highlight_multiple_lines_single_editor() {
     let root = utils.root().get(0);
 
     // Click cursor
-    utils.push_event(PlatformEvent::Mouse {
+    utils.push_event(TestEvent::Mouse {
         name: EventName::MouseDown,
         cursor: (35.0, 3.0).into(),
         button: Some(MouseButton::Left),
@@ -359,7 +359,7 @@ pub async fn highlight_multiple_lines_single_editor() {
 
     utils.wait_for_update().await;
 
-    let highlights = root.child(0).unwrap().state().cursor.highlights.clone();
+    let highlights = root.get(0).state().cursor.highlights.clone();
     #[cfg(not(target_os = "macos"))]
     assert_eq!(highlights, Some(vec![(5, 28)]));
 
@@ -428,7 +428,7 @@ pub async fn highlights_single_line_multiple_editors() {
                             }
                         }
                     )
-                })},
+                })}
                 label {
                     color: "black",
                     height: "50%",
@@ -443,7 +443,7 @@ pub async fn highlights_single_line_multiple_editors() {
     let root = utils.root().get(0);
 
     // Click cursor
-    utils.push_event(PlatformEvent::Mouse {
+    utils.push_event(TestEvent::Mouse {
         name: EventName::MouseDown,
         cursor: (35.0, 3.0).into(),
         button: Some(MouseButton::Left),
@@ -461,10 +461,10 @@ pub async fn highlights_single_line_multiple_editors() {
 
     utils.wait_for_update().await;
 
-    let highlights_1 = root.child(0).unwrap().state().cursor.highlights.clone();
+    let highlights_1 = root.get(0).state().cursor.highlights.clone();
     assert_eq!(highlights_1, Some(vec![(5, 17)]));
 
-    let highlights_2 = root.child(1).unwrap().state().cursor.highlights.clone();
+    let highlights_2 = root.get(1).state().cursor.highlights.clone();
     #[cfg(not(target_os = "macos"))]
     assert_eq!(highlights_2, Some(vec![(0, 11)]));
 
@@ -530,7 +530,7 @@ pub async fn special_text_editing() {
     assert_eq!(content.text(), Some("你好世界\n👋"));
 
     // Move cursor
-    utils.push_event(PlatformEvent::Mouse {
+    utils.push_event(TestEvent::Mouse {
         name: EventName::MouseDown,
         cursor: (35.0, 3.0).into(),
         button: Some(MouseButton::Left),
@@ -549,7 +549,7 @@ pub async fn special_text_editing() {
     assert_eq!(cursor.text(), Some("0:3"));
 
     // Insert text
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         key: Key::Character("🦀".to_string()),
         code: Code::Unidentified,
@@ -574,7 +574,7 @@ pub async fn special_text_editing() {
     }
 
     // Move cursor to the begining
-    utils.push_event(PlatformEvent::Mouse {
+    utils.push_event(TestEvent::Mouse {
         name: EventName::MouseDown,
         cursor: (3.0, 3.0).into(),
         button: Some(MouseButton::Left),
@@ -585,7 +585,7 @@ pub async fn special_text_editing() {
     assert_eq!(cursor.text(), Some("0:0"));
 
     // Move cursor with arrow down
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         code: Code::ArrowDown,
         key: Key::ArrowDown,
@@ -596,7 +596,7 @@ pub async fn special_text_editing() {
     assert_eq!(cursor.text(), Some("1:0"));
 
     // Move cursor with arrow right
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         code: Code::ArrowRight,
         key: Key::ArrowRight,
@@ -607,7 +607,7 @@ pub async fn special_text_editing() {
     assert_eq!(cursor.text(), Some("1:1"));
 
     // Move cursor with arrow up
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         code: Code::ArrowUp,
         key: Key::ArrowUp,
@@ -618,7 +618,7 @@ pub async fn special_text_editing() {
     assert_eq!(cursor.text(), Some("0:1"));
 
     // Move cursor with arrow left
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         code: Code::ArrowLeft,
         key: Key::ArrowLeft,
@@ -629,13 +629,13 @@ pub async fn special_text_editing() {
     assert_eq!(cursor.text(), Some("0:0"));
 
     // Move cursor with arrow down, twice
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         code: Code::ArrowDown,
         key: Key::ArrowDown,
         modifiers: Modifiers::default(),
     });
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         code: Code::ArrowDown,
         key: Key::ArrowDown,
@@ -647,13 +647,13 @@ pub async fn special_text_editing() {
     assert_eq!(cursor.text(), Some("1:2"));
 
     // Move cursor with arrow up, twice
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         code: Code::ArrowUp,
         key: Key::ArrowUp,
         modifiers: Modifiers::default(),
     });
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         code: Code::ArrowUp,
         key: Key::ArrowUp,
@@ -723,7 +723,7 @@ pub async fn backspace_remove() {
     assert_eq!(content.text(), Some("Hello Rustaceans\nHello Rustaceans"));
 
     // Move cursor
-    utils.push_event(PlatformEvent::Mouse {
+    utils.push_event(TestEvent::Mouse {
         name: EventName::MouseDown,
         cursor: (35.0, 3.0).into(),
         button: Some(MouseButton::Left),
@@ -738,7 +738,7 @@ pub async fn backspace_remove() {
     assert_eq!(cursor.text(), Some("0:5"));
 
     // Insert text
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         key: Key::Character("🦀".to_string()),
         code: Code::Unidentified,
@@ -755,7 +755,7 @@ pub async fn backspace_remove() {
     assert_eq!(cursor.text(), Some("0:7"));
 
     // Remove text
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         key: Key::Backspace,
         code: Code::Unidentified,
@@ -840,7 +840,7 @@ pub async fn highlight_shift_click_multiple_lines_single_editor() {
     utils.click_cursor((35., 3.)).await;
 
     // Press shift
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         key: Key::Shift,
         code: Code::ShiftLeft,
@@ -853,7 +853,7 @@ pub async fn highlight_shift_click_multiple_lines_single_editor() {
 
     utils.wait_for_update().await;
 
-    let highlights = root.child(0).unwrap().state().cursor.highlights.clone();
+    let highlights = root.get(0).state().cursor.highlights.clone();
     #[cfg(not(target_os = "macos"))]
     assert_eq!(highlights, Some(vec![(5, 28)]));
 
@@ -927,7 +927,7 @@ pub async fn highlights_shift_click_single_line_multiple_editors() {
                             }
                         }
                     )
-                })},
+                })}
                 label {
                     color: "black",
                     height: "50%",
@@ -945,7 +945,7 @@ pub async fn highlights_shift_click_single_line_multiple_editors() {
     utils.click_cursor((35., 3.)).await;
 
     // Press shift
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         key: Key::Shift,
         code: Code::ShiftLeft,
@@ -958,11 +958,11 @@ pub async fn highlights_shift_click_single_line_multiple_editors() {
 
     utils.wait_for_update().await;
 
-    let highlights_1 = root.child(0).unwrap().state().cursor.highlights.clone();
+    let highlights_1 = root.get(0).state().cursor.highlights.clone();
 
     assert_eq!(highlights_1, Some(vec![(5, 17)]));
 
-    let highlights_2 = root.child(1).unwrap().state().cursor.highlights.clone();
+    let highlights_2 = root.get(1).state().cursor.highlights.clone();
 
     #[cfg(not(target_os = "macos"))]
     assert_eq!(highlights_2, Some(vec![(0, 11)]));
@@ -1042,7 +1042,7 @@ pub async fn highlight_all_text() {
     let modifiers = Modifiers::CONTROL;
 
     // Select all text
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         key: Key::Character("a".to_string()),
         code: Code::KeyA,
@@ -1051,7 +1051,7 @@ pub async fn highlight_all_text() {
     utils.wait_for_update().await;
     utils.wait_for_update().await;
 
-    let highlights = root.child(0).unwrap().state().cursor.highlights.clone();
+    let highlights = root.get(0).state().cursor.highlights.clone();
 
     let start = 0;
     let end = 34;
@@ -1124,7 +1124,7 @@ pub async fn replace_text() {
     assert_eq!(content.text(), Some("Hello Rustaceans\nHello Rustaceans"));
 
     // Move cursor
-    utils.push_event(PlatformEvent::Mouse {
+    utils.push_event(TestEvent::Mouse {
         name: EventName::MouseDown,
         cursor: (35.0, 3.0).into(),
         button: Some(MouseButton::Left),
@@ -1142,7 +1142,7 @@ pub async fn replace_text() {
     utils.click_cursor((35., 3.)).await;
 
     // Press shift
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         key: Key::Shift,
         code: Code::ShiftLeft,
@@ -1154,7 +1154,7 @@ pub async fn replace_text() {
     utils.click_cursor((80., 3.)).await;
 
     // Insert text
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         key: Key::Character("🦀".to_string()),
         code: Code::Unidentified,

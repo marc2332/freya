@@ -1,8 +1,8 @@
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::{
-        keyboard::Key,
+        Key,
         KeyboardEvent,
     },
 };
@@ -93,14 +93,12 @@ pub fn Popup(
     #[props(default = true)]
     close_on_escape_key: bool,
 ) -> Element {
-    let animations = use_animation(|ctx| {
-        ctx.auto_start(true);
-        ctx.with(
-            AnimNum::new(0.75, 1.)
-                .time(350)
-                .ease(Ease::Out)
-                .function(Function::Expo),
-        )
+    let animations = use_animation(|conf| {
+        conf.auto_start(true);
+        AnimNum::new(1.25, 1.)
+            .time(350)
+            .ease(Ease::Out)
+            .function(Function::Expo)
     });
     let PopupTheme {
         background,
@@ -129,7 +127,7 @@ pub fn Popup(
     rsx!(
         PopupBackground {
             rect {
-                scale: "{scale.read().as_f32()}",
+                scale: "{scale.read().read()}",
                 padding: "14",
                 corner_radius: "8",
                 background: "{background}",
@@ -249,7 +247,7 @@ mod test {
         utils.click_cursor((15., 15.)).await;
 
         // Send a random globalkeydown event
-        utils.push_event(PlatformEvent::Keyboard {
+        utils.push_event(TestEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::ArrowDown,
             code: Code::ArrowDown,
@@ -260,7 +258,7 @@ mod test {
         assert_eq!(utils.sdom().get().layout().size(), 10);
 
         // Send a ESC globalkeydown event
-        utils.push_event(PlatformEvent::Keyboard {
+        utils.push_event(TestEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::Escape,
             code: Code::Escape,

@@ -1,14 +1,11 @@
 use bytes::Bytes;
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_hooks::{
-    use_applied_theme,
     use_asset_cacher,
     use_focus,
     AssetAge,
     AssetConfiguration,
-    NetworkImageTheme,
-    NetworkImageThemeWith,
 };
 use freya_node_state::dynamic_bytes;
 use reqwest::Url;
@@ -18,20 +15,22 @@ use crate::Loader;
 /// Properties for the [`NetworkImage`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct NetworkImageProps {
-    /// Theme override.
-    pub theme: Option<NetworkImageThemeWith>,
-
+    /// Width of the image container. Default to `fill`.
+    #[props(default = "fill".into())]
+    pub width: String,
+    /// Height of the image container. Default to `fill`.
+    #[props(default = "fill".into())]
+    pub height: String,
     /// URL of the image.
     pub url: ReadOnlySignal<Url>,
-
     /// Fallback element.
     pub fallback: Option<Element>,
-
     /// Loading element.
     pub loading: Option<Element>,
-
     /// Information about the image.
     pub alt: Option<String>,
+    /// Aspect ratio of the image.
+    pub aspect_ratio: Option<String>,
 }
 
 /// Image status.
@@ -45,7 +44,7 @@ pub enum ImageState {
     Errored,
 
     /// Image has been fetched.
-    Loaded(Signal<Bytes>),
+    Loaded(Bytes),
 }
 
 /// Image component that automatically fetches and caches remote (HTTP) images.
@@ -63,7 +62,17 @@ pub enum ImageState {
 ///     )
 /// }
 #[allow(non_snake_case)]
-pub fn NetworkImage(props: NetworkImageProps) -> Element {
+pub fn NetworkImage(
+    NetworkImageProps {
+        width,
+        height,
+        url,
+        fallback,
+        loading,
+        alt,
+        aspect_ratio,
+    }: NetworkImageProps,
+) -> Element {
     let mut asset_cacher = use_asset_cacher();
     let focus = use_focus();
     let mut status = use_signal(|| ImageState::Loading);
@@ -71,11 +80,9 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
     let mut assets_tasks = use_signal::<Vec<Task>>(Vec::new);
 
     let a11y_id = focus.attribute();
-    let NetworkImageTheme { width, height } = use_applied_theme!(&props.theme, network_image);
-    let alt = props.alt.as_deref();
 
-    use_memo(move || {
-        let url = props.url.read().clone();
+    use_effect(move || {
+        let url = url.read().clone();
         // Cancel previous asset fetching requests
         for asset_task in assets_tasks.write().drain(..) {
             asset_task.cancel();
@@ -101,10 +108,13 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
             let asset_task = spawn(async move {
                 let asset = fetch_image(url).await;
                 if let Ok(asset_bytes) = asset {
-                    let asset_signal =
-                        asset_cacher.cache(asset_configuration.clone(), asset_bytes, true);
+                    asset_cacher.cache_asset(
+                        asset_configuration.clone(),
+                        asset_bytes.clone(),
+                        true,
+                    );
                     // Image loaded
-                    status.set(ImageState::Loaded(asset_signal));
+                    status.set(ImageState::Loaded(asset_bytes));
                     cached_assets.write().push(asset_configuration);
                 } else if let Err(_err) = asset {
                     // Image errored
@@ -116,45 +126,52 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
         }
     });
 
-    if let ImageState::Loaded(bytes) = &*status.read_unchecked() {
-        let image_data = dynamic_bytes(bytes.read().clone());
-        rsx!(image {
-            height: "{height}",
-            width: "{width}",
-            a11y_id,
-            image_data,
-            a11y_role: "image",
-            a11y_name: alt
-        })
-    } else if *status.read() == ImageState::Loading {
-        if let Some(loading_element) = &props.loading {
-            rsx!({ loading_element })
-        } else {
-            rsx!(
-                rect {
-                    height: "{height}",
-                    width: "{width}",
-                    main_align: "center",
-                    cross_align: "center",
-                    Loader {}
-                }
-            )
+    match &*status.read_unchecked() {
+        ImageState::Loaded(bytes) => {
+            let image_data = dynamic_bytes(bytes.clone());
+            rsx!(image {
+                height,
+                width,
+                a11y_id,
+                image_data,
+                a11y_role: "image",
+                a11y_name: alt,
+                aspect_ratio,
+            })
         }
-    } else if let Some(fallback_element) = &props.fallback {
-        rsx!({ fallback_element })
-    } else {
-        rsx!(
-            rect {
-                height: "{height}",
-                width: "{width}",
-                main_align: "center",
-                cross_align: "center",
-                label {
-                    text_align: "center",
-                    "Error"
-                }
+        ImageState::Loading => {
+            if let Some(loading_element) = loading {
+                rsx!({ loading_element })
+            } else {
+                rsx!(
+                    rect {
+                        height,
+                        width,
+                        main_align: "center",
+                        cross_align: "center",
+                        Loader {}
+                    }
+                )
             }
-        )
+        }
+        _ => {
+            if let Some(fallback_element) = fallback {
+                rsx!({ fallback_element })
+            } else {
+                rsx!(
+                    rect {
+                        height,
+                        width,
+                        main_align: "center",
+                        cross_align: "center",
+                        label {
+                            text_align: "center",
+                            "Error"
+                        }
+                    }
+                )
+            }
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 /// Generate a Dioxus component rendering the specified image.
 ///
-/// Example:
+/// ### Example
 ///
 /// ```no_run
 /// # use freya::prelude::*;
@@ -35,7 +35,7 @@ macro_rules! import_image {
             rsx!(image {
                 width,
                 height,
-                image_data
+                image_data,
             })
         }
     };
@@ -50,7 +50,7 @@ macro_rules! import_image {
             rsx!(image {
                 width,
                 height,
-                image_data
+                image_data,
             })
         }
     };

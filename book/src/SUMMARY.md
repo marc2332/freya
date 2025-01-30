@@ -1,5 +1,3 @@
-# Summary
-
 # Introduction
 
 - [Overview](./index.md)

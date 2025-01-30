@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_applied_theme,
     ProgressBarTheme,
@@ -9,6 +9,9 @@ use freya_hooks::{
 /// Properties for the [`ProgressBar`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct ProgressBarProps {
+    /// Width of the progress bar. Default to `fill`.
+    #[props(default = "fill".into())]
+    pub width: String,
     /// Theme override.
     pub theme: Option<ProgressBarThemeWith>,
     /// Show a label with the current progress. Default to false.
@@ -34,6 +37,7 @@ pub struct ProgressBarProps {
 #[allow(non_snake_case)]
 pub fn ProgressBar(
     ProgressBarProps {
+        width,
         theme,
         show_progress,
         progress,
@@ -43,7 +47,6 @@ pub fn ProgressBar(
         color,
         background,
         progress_background,
-        width,
         height,
     } = use_applied_theme!(&theme, progress_bar);
 

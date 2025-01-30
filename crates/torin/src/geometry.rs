@@ -5,7 +5,7 @@ use crate::{
     prelude::{
         DirectionMode,
         Gaps,
-        Size,
+        VisibleSize,
     },
 };
 
@@ -54,10 +54,10 @@ impl AreaModel for Area {
     }
 
     fn adjust_size(&mut self, node: &Node) {
-        if let Size::InnerPercentage(p) = node.width {
+        if let VisibleSize::InnerPercentage(p) = node.visible_width {
             self.size.width *= p.get() / 100.;
         }
-        if let Size::InnerPercentage(p) = node.height {
+        if let VisibleSize::InnerPercentage(p) = node.visible_height {
             self.size.height *= p.get() / 100.;
         }
     }

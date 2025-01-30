@@ -106,7 +106,7 @@ fn App(props: AppProps) -> Element {
             rect {
                 width: "100%",
                 height: "100%",
-                {props.navbar},
+                {props.navbar}
                 {props.body}
             }
         }
@@ -182,8 +182,8 @@ fn Area() -> Element {
             onmousemove: cursor_moved,
             onclick: cursor_clicked,
             label {
-                "Mouse is at [x: {cursor_pos_over.read().0}, y: {cursor_pos_over.read().1}] ",
-            },
+                "Mouse is at [x: {cursor_pos_over.read().0}, y: {cursor_pos_over.read().1}] "
+            }
             label {
                 "Mouse clicked at [x: {cursor_pos_click.read().0}, y: {cursor_pos_click.read().1}]"
             }

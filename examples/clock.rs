@@ -70,7 +70,7 @@ fn app() -> Element {
                         for i in -12..=14 {
                             DropdownItem {
                                 value: i,
-                                onclick: move |_| time_zone.set(i),
+                                onpress: move |_| time_zone.set(i),
                                 label {"UTC {negative_add_zero(i as i64)}:00"}
                             }
                         }

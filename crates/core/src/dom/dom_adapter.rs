@@ -51,6 +51,8 @@ impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
             minimum_height: layout.minimum_height,
             maximum_width: layout.maximum_width,
             maximum_height: layout.maximum_height,
+            visible_width: layout.visible_width,
+            visible_height: layout.visible_height,
             direction: layout.direction,
             padding: layout.padding,
             margin: layout.margin,

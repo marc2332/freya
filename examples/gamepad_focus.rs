@@ -5,12 +5,16 @@
 
 use std::thread;
 
-use freya::prelude::*;
+use freya::{
+    common::AccessibilityFocusStrategy,
+    prelude::*,
+};
 use freya_core::prelude::{
     EventMessage,
     EventName,
     FreyaPlugin,
     PlatformEvent,
+    PlatformEventData,
     PluginEvent,
     PluginHandle,
 };
@@ -39,21 +43,23 @@ impl GamePadPlugin {
                         // NOTE: You might need to tweak these codes
                         match code.into_u32() {
                             4 => {
-                                handle.send_event_loop_event(
-                                    EventMessage::FocusPrevAccessibilityNode,
-                                );
+                                handle.send_event_loop_event(EventMessage::FocusAccessibilityNode(
+                                    AccessibilityFocusStrategy::Backward,
+                                ));
                             }
                             6 => {
-                                handle.send_event_loop_event(
-                                    EventMessage::FocusNextAccessibilityNode,
-                                );
+                                handle.send_event_loop_event(EventMessage::FocusAccessibilityNode(
+                                    AccessibilityFocusStrategy::Forward,
+                                ));
                             }
                             13 => {
-                                handle.send_platform_event(PlatformEvent::Keyboard {
+                                handle.send_platform_event(PlatformEvent {
                                     name: EventName::KeyDown,
-                                    key: Key::Enter,
-                                    code: Code::Enter,
-                                    modifiers: Modifiers::default(),
+                                    data: PlatformEventData::Keyboard {
+                                        key: Key::Enter,
+                                        code: Code::Enter,
+                                        modifiers: Modifiers::default(),
+                                    },
                                 });
                             }
                             _ => {}
