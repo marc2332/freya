@@ -9,4 +9,7 @@ pub mod elements;
 pub mod events;
 mod macros;
 
-pub use crate::elements::*;
+pub use crate::{
+    elements::*,
+    events::*,
+};

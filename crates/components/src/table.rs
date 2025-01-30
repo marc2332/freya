@@ -188,6 +188,9 @@ pub fn TableCell(props: TableCellProps) -> Element {
 /// Properties for the [`Table`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct TableProps {
+    /// Width of the table. Default to `fill`.
+    #[props(default = "fill".into())]
+    pub height: String,
     /// Theme override.
     pub theme: Option<TableThemeWith>,
     /// Number of columns used in the table.
@@ -203,6 +206,7 @@ pub struct TableProps {
 #[allow(non_snake_case)]
 pub fn Table(
     TableProps {
+        height,
         theme,
         columns,
         children,
@@ -210,7 +214,6 @@ pub fn Table(
 ) -> Element {
     let TableTheme {
         background,
-        height,
         corner_radius,
         shadow,
         font_theme: FontTheme { color },

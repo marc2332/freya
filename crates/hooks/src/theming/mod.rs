@@ -349,7 +349,6 @@ define_theme! {
         color: str,
         background: str,
         progress_background: str,
-        width: str,
         height: str,
     }
 }
@@ -363,21 +362,10 @@ define_theme! {
         alternate_row_background: str,
         row_background: str,
         divider_fill: str,
-        height: str,
         corner_radius: str,
         shadow: str,
         %[subthemes]
         font_theme: FontTheme,
-    }
-}
-
-define_theme! {
-    %[component]
-    pub Canvas {
-        %[cows]
-        width: str,
-        height: str,
-        background: str,
     }
 }
 
@@ -604,7 +592,6 @@ pub struct Theme {
     pub progress_bar: ProgressBarTheme,
     pub table: TableTheme,
     pub input: InputTheme,
-    pub canvas: CanvasTheme,
     pub graph: GraphTheme,
     pub icon: IconTheme,
     pub sidebar: SidebarTheme,

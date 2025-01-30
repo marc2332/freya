@@ -154,7 +154,6 @@ pub(crate) const BASE_THEME: Theme = Theme {
         color: cow_borrowed!("white"),
         background: cow_borrowed!("key(surface)"),
         progress_background: cow_borrowed!("key(primary)"),
-        width: cow_borrowed!("fill"),
         height: cow_borrowed!("20"),
     },
     table: TableTheme {
@@ -166,14 +165,8 @@ pub(crate) const BASE_THEME: Theme = Theme {
         row_background: cow_borrowed!("transparent"),
         alternate_row_background: cow_borrowed!("key(neutral_surface)"),
         divider_fill: cow_borrowed!("key(secondary_surface)"),
-        height: cow_borrowed!("auto"),
         corner_radius: cow_borrowed!("6"),
         shadow: cow_borrowed!("0 2 15 5 rgb(35, 35, 35, 70)"),
-    },
-    canvas: CanvasTheme {
-        width: cow_borrowed!("300"),
-        height: cow_borrowed!("150"),
-        background: cow_borrowed!("white"),
     },
     graph: GraphTheme {
         width: cow_borrowed!("100%"),
