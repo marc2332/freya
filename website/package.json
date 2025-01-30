@@ -14,7 +14,7 @@
   "dependencies": {
     "@astrojs/deno": "^5.0.0",
     "@astrojs/rss": "^4.0.1",
-    "@astrojs/tailwind": "^5.0.2",
+    "@astrojs/tailwind": "^6.0.0",
     "astro": "5.0.8",
     "rehype-accessible-emojis": "^0.3.2",
     "rehype-autolink-headings": "^7.1.0",
