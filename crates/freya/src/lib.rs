@@ -40,10 +40,10 @@
 //! - [Performance Tips](self::_docs::performance)
 //!
 //! ### API References
-//! - [Elements and attributes](freya_elements::elements#structs)
-//! - [Events](freya_elements::elements#functions)
-//! - [Built-in Components](freya_components)
-//! - [Built-in Hooks](freya_hooks)
+//! - [Elements and attributes](self::elements#structs)
+//! - [Events](self::events#functions)
+//! - [Built-in Components](self::components)
+//! - [Built-in Hooks](self::hooks)
 //!
 //! ## Features flags
 //!
