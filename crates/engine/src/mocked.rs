@@ -1413,6 +1413,10 @@ impl Path {
     pub fn set_fill_type(&mut self, _ft: PathFillType) -> &mut Self {
         unimplemented!("This is mocked")
     }
+
+    pub fn with_outset(&self, _delta: impl Into<Point>) -> Self {
+        unimplemented!("This is mocked")
+    }
 }
 
 #[repr(i32)]
