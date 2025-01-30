@@ -205,6 +205,8 @@ pub fn PopupContent(children: Element) -> Element {
 
 #[cfg(test)]
 mod test {
+    use std::time::Duration;
+
     use dioxus::prelude::use_signal;
     use freya::prelude::*;
     use freya_elements::events::keyboard::{
@@ -213,6 +215,7 @@ mod test {
         Modifiers,
     };
     use freya_testing::prelude::*;
+    use tokio::time::sleep;
 
     #[tokio::test]
     pub async fn popup() {
@@ -247,6 +250,8 @@ mod test {
 
         // Open the popup
         utils.click_cursor((15., 15.)).await;
+        sleep(Duration::from_millis(150)).await;
+        utils.wait_for_update().await;
 
         // Check the popup is opened
         assert_eq!(utils.sdom().get().layout().size(), 10);
