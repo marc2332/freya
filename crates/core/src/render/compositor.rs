@@ -374,7 +374,7 @@ mod test {
                     height: "{height}",
                     width: "200",
                     background: "green",
-                    shadow: "0 {shadow} 8 0 rgb(0, 0, 0, 0.5)",
+                    shadow: "0 {shadow} 1 0 rgb(0, 0, 0, 0.5)",
                     margin: "0 0 2 0",
                     onclick: move |_| height -= 10,
                 }
