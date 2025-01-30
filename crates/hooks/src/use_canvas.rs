@@ -46,17 +46,29 @@ impl UseCanvas {
 /// ```rust,no_run
 /// # use freya::prelude::*;
 /// fn app() -> Element {
-///     let value = use_signal(|| 0);
+///     let (reference, size) = use_node_signal();
+///     let mut value = use_signal(|| 0);
+///     let platform = use_platform();
 ///
 ///     let canvas = use_canvas(move || {
 ///         let curr = value();
+///         platform.invalidate_drawing_area(size.peek().area);
+///         platform.request_animation_frame();
 ///         Box::new(move |ctx| {
 ///             // Draw using the canvas !
 ///             // use `curr`
 ///         })
 ///     });
 ///
-///     rsx!(Canvas { canvas })
+///     rsx!(rect {
+///         onclick: move |_| {
+///             value += 1;
+///         },
+///         canvas_reference: canvas.attribute(),
+///         reference,
+///         width: "fill",
+///         height: "fill",
+///     })
 /// }
 /// ```
 pub fn use_canvas(renderer_cb: impl Fn() -> Box<CanvasRunner> + 'static) -> UseCanvas {
@@ -72,16 +84,28 @@ pub fn use_canvas(renderer_cb: impl Fn() -> Box<CanvasRunner> + 'static) -> UseC
 /// ```rust,no_run
 /// # use freya::prelude::*;
 /// fn app() -> Element {
-///     let value = use_signal(|| 0);
+///     let (reference, size) = use_node_signal();
+///     let mut value = use_signal(|| 0);
+///     let platform = use_platform();
 ///
-///     let canvas = use_canvas_with_deps(&value(), |curr| {
+///     let canvas = use_canvas_with_deps(&value(), move |curr| {
+///         platform.invalidate_drawing_area(size.peek().area);
+///         platform.request_animation_frame();
 ///         Box::new(move |ctx| {
 ///             // Draw using the canvas !
 ///             // use `curr`
 ///         })
 ///     });
 ///
-///     rsx!(Canvas { canvas })
+///     rsx!(rect {
+///         onclick: move |_| {
+///             value += 1;
+///         },
+///         canvas_reference: canvas.attribute(),
+///         reference,
+///         width: "fill",
+///         height: "fill",
+///     })
 /// }
 /// ```
 pub fn use_canvas_with_deps<D: Dependency>(
