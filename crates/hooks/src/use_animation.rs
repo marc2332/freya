@@ -627,6 +627,12 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
             loop {
                 // Wait for the event loop to tick
                 ticker.tick().await;
+
+                // Its okay to stop this animation if the value has been dropped
+                if value.try_peek().is_err() {
+                    break;
+                }
+
                 platform.request_animation_frame();
 
                 index += prev_frame.elapsed().as_millis();
