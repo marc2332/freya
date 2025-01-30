@@ -28,8 +28,8 @@ fn app() -> Element {
                 .time(550)
                 .ease(Ease::InOut)
                 .function(Function::Bounce),
-            AnimNum::new(2., 1.)
-                .time(1300)
+            AnimNum::new(0.5, 1.)
+                .time(800)
                 .ease(Ease::Out)
                 .function(Function::Bounce),
         )

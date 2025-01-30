@@ -101,18 +101,12 @@ pub trait ElementUtils {
         let mut drawing_area = self.element_drawing_area(layout_node, node_ref, scale_factor);
         let transform = node_ref.get::<TransformState>().unwrap();
 
-        for (id, scale) in &transform.scales {
+        for (id, scale_x, scale_y) in &transform.scales {
             let layout_node = layout.get(*id).unwrap();
             let center = layout_node.area.center();
             drawing_area = drawing_area.translate(-center.to_vector());
-            drawing_area = drawing_area.scale(*scale, *scale);
+            drawing_area = drawing_area.scale(*scale_x, *scale_y);
             drawing_area = drawing_area.translate(center.to_vector());
-
-            // Inflate the area by 2px * scale in each side to cover potential off-bounds rendering caused by antialising
-            let antialising_extra = (2.0 * scale).max(1.0);
-            drawing_area = drawing_area
-                .inflate(antialising_extra, antialising_extra)
-                .round_out();
         }
 
         if !transform.rotations.is_empty() {

@@ -32,7 +32,7 @@ pub struct TransformState {
     pub node_id: NodeId,
     pub opacities: Vec<f32>,
     pub rotations: Vec<(NodeId, f32)>,
-    pub scales: Vec<(NodeId, f32)>,
+    pub scales: Vec<(NodeId, f32, f32)>,
     pub aspect_ratio: AspectRatio,
 }
 
@@ -62,8 +62,19 @@ impl ParseAttribute for TransformState {
             }
             AttributeName::Scale => {
                 if let Some(value) = attr.value.as_text() {
-                    let scale = value.parse::<f32>().map_err(|_| ParseError)?;
-                    self.scales.push((self.node_id, scale))
+                    let (scale_x, scale_y) = if !value.trim().contains(' ') {
+                        let scale = value.parse::<f32>().map_err(|_| ParseError)?;
+                        (scale, scale)
+                    } else {
+                        let Some((scale_x, scale_y)) = value.split_once(' ') else {
+                            return Err(ParseError);
+                        };
+                        let scale_x = scale_x.parse::<f32>().map_err(|_| ParseError)?;
+                        let scale_y = scale_y.parse::<f32>().map_err(|_| ParseError)?;
+                        (scale_x, scale_y)
+                    };
+                    self.scales
+                        .push((self.node_id, scale_x.max(0.), scale_y.max(0.)))
                 }
             }
             AttributeName::AspectRatio => {

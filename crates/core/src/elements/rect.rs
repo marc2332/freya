@@ -185,22 +185,22 @@ impl ElementUtils for RectElement {
 
         let mut path = Path::new();
 
-        let mut radius = node_style.corner_radius;
-        radius.scale(scale_factor);
+        let mut corner_radius = node_style.corner_radius;
+        corner_radius.scale(scale_factor);
 
         let rounded_rect = RRect::new_rect_radii(
             Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
             &[
-                (radius.top_left, radius.top_left).into(),
-                (radius.top_right, radius.top_right).into(),
-                (radius.bottom_right, radius.bottom_right).into(),
-                (radius.bottom_left, radius.bottom_left).into(),
+                (corner_radius.top_left, corner_radius.top_left).into(),
+                (corner_radius.top_right, corner_radius.top_right).into(),
+                (corner_radius.bottom_right, corner_radius.bottom_right).into(),
+                (corner_radius.bottom_left, corner_radius.bottom_left).into(),
             ],
         );
 
-        if radius.smoothing > 0.0 {
+        if corner_radius.smoothing > 0.0 {
             path.add_path(
-                &radius.smoothed_path(rounded_rect),
+                &corner_radius.smoothed_path(rounded_rect),
                 (area.min_x(), area.min_y()),
                 None,
             );
@@ -228,7 +228,7 @@ impl ElementUtils for RectElement {
 
                 if let Some(outset) = outset {
                     // Add either the RRect or smoothed path based on whether smoothing is used.
-                    if radius.smoothing > 0.0 {
+                    if corner_radius.smoothing > 0.0 {
                         shadow_path.add_path(
                             &node_style
                                 .corner_radius
@@ -243,11 +243,16 @@ impl ElementUtils for RectElement {
 
                 shadow_path.offset((shadow.x, shadow.y));
 
-                let shadow_bounds = shadow_path.bounds();
+                // Why 3? Because it seems to be used by skia internally
+                let good_enough_blur = shadow.blur * 3.;
+
+                let shadow_bounds = *shadow_path.bounds();
+                let shadow_rect = shadow_bounds.with_outset((good_enough_blur, good_enough_blur));
                 let shadow_area = Area::new(
-                    Point2D::new(shadow_bounds.x(), shadow_bounds.y()),
-                    Size2D::new(shadow_bounds.width(), shadow_bounds.height()),
+                    Point2D::new(shadow_rect.x(), shadow_rect.y()),
+                    Size2D::new(shadow_rect.width(), shadow_rect.height()),
                 );
+
                 area = area.union(&shadow_area);
             }
         }

@@ -95,10 +95,20 @@ pub fn Popup(
 ) -> Element {
     let animations = use_animation(|conf| {
         conf.auto_start(true);
-        AnimNum::new(1.25, 1.)
-            .time(350)
-            .ease(Ease::Out)
-            .function(Function::Expo)
+        (
+            AnimNum::new(0.85, 1.)
+                .time(150)
+                .ease(Ease::Out)
+                .function(Function::Quad),
+            AnimNum::new(40., 1.)
+                .time(150)
+                .ease(Ease::Out)
+                .function(Function::Quad),
+            AnimNum::new(0.2, 1.)
+                .time(150)
+                .ease(Ease::Out)
+                .function(Function::Quad),
+        )
     });
     let PopupTheme {
         background,
@@ -109,6 +119,7 @@ pub fn Popup(
     } = use_applied_theme!(&theme, popup);
 
     let scale = animations.get();
+    let (scale, margin, opacity) = &*scale.read();
 
     let request_to_close = move || {
         if let Some(oncloserequest) = &oncloserequest {
@@ -127,7 +138,9 @@ pub fn Popup(
     rsx!(
         PopupBackground {
             rect {
-                scale: "{scale.read().read()}",
+                scale: "{scale.read()} {scale.read()}",
+                margin: "{margin.read()} 0 0 0",
+                opacity: "{opacity.read()}",
                 padding: "14",
                 corner_radius: "8",
                 background: "{background}",

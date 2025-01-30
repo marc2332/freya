@@ -231,12 +231,12 @@ impl RenderPipeline<'_> {
             }
 
             // Apply inherited scale effects
-            for (id, scale) in &node_transform.scales {
+            for (id, scale_x, scale_y) in &node_transform.scales {
                 let layout_node = self.layout.get(*id).unwrap();
                 let area = layout_node.visible_area();
                 let center = area.center();
                 dirty_canvas.translate((center.x, center.y));
-                dirty_canvas.scale((*scale, *scale));
+                dirty_canvas.scale((*scale_x, *scale_y));
                 dirty_canvas.translate((-center.x, -center.y));
             }
 
