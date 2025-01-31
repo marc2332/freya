@@ -57,10 +57,8 @@ pub enum ImageState {
 /// fn app() -> Element {
 ///     rsx!(
 ///         NetworkImage {
-///             theme: theme_with!(NetworkImageTheme {
-///                 width: "100%".into(),
-///                 height: "100%".into(),
-///             }),
+///             width: "100%",
+///             height: "100%",
 ///             url: "https://raw.githubusercontent.com/marc2332/freya/refs/heads/main/examples/rust_logo.png".parse::<Url>().unwrap()
 ///         }
 ///     )

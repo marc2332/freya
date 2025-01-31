@@ -66,7 +66,7 @@ pub enum SwitchStatus {
 /// # use freya_testing::prelude::*;
 /// # // ENABLED
 /// # use freya_testing::prelude::*;
-/// # launch_doc(|| {
+/// # launch_doc_with_utils(|| {
 /// #   rsx!(
 /// #       Preview {
 /// #           Switch {
@@ -75,8 +75,13 @@ pub enum SwitchStatus {
 /// #           }
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), "./images/gallery_enabled_switch.png");
-///
+/// # }, (185., 185.).into(), |mut utils| async move {
+/// #   utils.wait_for_update().await;
+/// #   tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+/// #   utils.wait_for_update().await;
+/// #   utils.save_snapshot("./images/gallery_enabled_switch.png");
+/// # });
+/// #
 /// # // DISABLED
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {

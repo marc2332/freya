@@ -41,9 +41,7 @@ pub struct ProgressBarProps {
 /// #   rsx!(
 /// #       Preview {
 /// #           ProgressBar {
-/// #               theme: theme_with!(ProgressBarTheme {
-/// #                   width: "50%".into(),
-/// #               }),
+/// #               width: "50%",
 /// #               show_progress: true,
 /// #               progress: 50.0
 /// #           }

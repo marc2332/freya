@@ -17,7 +17,11 @@ use dioxus_core::{
     IntoDynNode,
     VirtualDom,
 };
-use dioxus_core_macro::{component, rsx, Props};
+use dioxus_core_macro::{
+    component,
+    rsx,
+    Props,
+};
 use dioxus_signals::{
     GlobalSignal,
     Readable,
