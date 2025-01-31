@@ -9,7 +9,7 @@ use rustc_hash::FxHashMap;
 #[derive(Default, PartialEq, Eq, Hash, Clone, Debug)]
 pub struct ImageCacheKey(pub String);
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct ImagesCache {
     cache: FxHashMap<ImageCacheKey, Image>,
 }
