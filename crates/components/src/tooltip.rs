@@ -23,7 +23,7 @@ pub struct TooltipProps {
 ///
 /// # Styling
 /// Inherits the [`TooltipTheme`](freya_hooks::TooltipTheme)
-/// 
+///
 /// # Example
 ///
 /// ```rust
