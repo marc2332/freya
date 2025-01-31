@@ -63,12 +63,8 @@ impl ElementUtils for ImageElement {
                     let width_offset = (width - area.width()) / 2.;
                     let height_offset = (height - area.height()) / 2.;
 
-                    let clip_rect = Rect::new(
-                        area.min_x(),
-                        area.min_y(),
-                        area.max_x(),
-                        area.max_y(),
-                    );
+                    let clip_rect =
+                        Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
 
                     rect.left -= width_offset;
                     rect.right -= width_offset;
