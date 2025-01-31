@@ -52,7 +52,7 @@ impl ElementUtils for ImageElement {
                     AspectRatio::None => (area.width(), area.height()),
                 };
 
-                let rect = Rect::new(
+                let mut rect = Rect::new(
                     area.min_x(),
                     area.min_y(),
                     area.min_x() + width,
@@ -60,11 +60,14 @@ impl ElementUtils for ImageElement {
                 );
 
                 if node_transform.image_cover == ImageCover::Center {
-                    let extra_width = width - area.width();
-                    let extra_height = height - area.height();
+                    let width_offset = (width - area.width()) / 2.;
+                    let height_offset = (height - area.height()) / 2.;
+                    rect.left -= width_offset;
+                    rect.right -= width_offset;
+                    rect.top -= height_offset;
+                    rect.bottom -= height_offset;
                     canvas.save();
-                    canvas.clip_rect(rect, None, true);
-                    canvas.translate((-extra_width / 2., -extra_height / 2.));
+                    canvas.clip_rect(rect, ClipOp::Intersect, true);
                 }
 
                 canvas.draw_image_rect(pic, None, rect, &paint);
