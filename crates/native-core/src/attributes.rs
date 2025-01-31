@@ -298,7 +298,7 @@ impl FromStr for AttributeName {
             "spacing" => Ok(AttributeName::Spacing),
             "scale" => Ok(AttributeName::Scale),
             "aspect_ratio" => Ok(AttributeName::AspectRatio),
-            "fit" => Ok(AttributeName::ImageCover),
+            "cover" => Ok(AttributeName::ImageCover),
             "a11y_id" => Ok(AttributeName::A11yId),
             "a11y_focusable" => Ok(AttributeName::A11yFocusable),
             "a11y_auto_focus" => Ok(AttributeName::A11yAutoFocus),
