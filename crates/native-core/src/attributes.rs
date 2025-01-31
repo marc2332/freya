@@ -66,6 +66,7 @@ pub enum AttributeName {
     SvgData,
     SvgContent,
     Spacing,
+    Scale,
 
     // Image element
     AspectRatio,
@@ -294,6 +295,7 @@ impl FromStr for AttributeName {
             "svg_data" => Ok(AttributeName::SvgData),
             "svg_content" => Ok(AttributeName::SvgContent),
             "spacing" => Ok(AttributeName::Spacing),
+            "scale" => Ok(AttributeName::Scale),
             "aspect_ratio" => Ok(AttributeName::AspectRatio),
             "a11y_id" => Ok(AttributeName::A11yId),
             "a11y_focusable" => Ok(AttributeName::A11yFocusable),

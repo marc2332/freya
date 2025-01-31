@@ -157,7 +157,8 @@ impl Compositor {
                 for node_id in nodes {
                     Self::with_utils(*node_id, layout, rdom, |node_ref, utils, layout_node| {
                         if utils.needs_cached_area(&node_ref) {
-                            let area = utils.drawing_area(layout_node, &node_ref, scale_factor);
+                            let area =
+                                utils.drawing_area(layout_node, &node_ref, layout, scale_factor);
                             // Cache the drawing area so it can be invalidated in the next frame
                             cache.insert(*node_id, area);
                         }
@@ -373,7 +374,7 @@ mod test {
                     height: "{height}",
                     width: "200",
                     background: "green",
-                    shadow: "0 {shadow} 8 0 rgb(0, 0, 0, 0.5)",
+                    shadow: "0 {shadow} 1 0 rgb(0, 0, 0, 0.5)",
                     margin: "0 0 2 0",
                     onclick: move |_| height -= 10,
                 }
@@ -597,5 +598,81 @@ mod test {
 
         // Everything
         assert_eq!(painted_nodes, 7);
+    }
+
+    #[tokio::test]
+    pub async fn scale_drawing() {
+        fn compositor_app() -> Element {
+            let mut scale = use_signal(|| 1.);
+
+            rsx!(
+                rect {
+                    scale: "{scale()} {scale()}",
+                    height: "50%",
+                    width: "100%",
+                    main_align: "center",
+                    cross_align: "center",
+                    background: "rgb(0, 119, 182)",
+                    color: "white",
+                    shadow: "0 4 20 5 rgb(0, 0, 0, 80)",
+                    label {
+                        text_shadow: "0 180 12 rgb(0, 0, 0, 240)",
+                        "Hello"
+                    }
+                    label {
+                        "World"
+                    }
+                }
+                rect {
+                    height: "50%",
+                    width: "100%",
+                    main_align: "center",
+                    cross_align: "center",
+                    direction: "horizontal",
+                    Button {
+                        onclick: move |_| scale += 0.1,
+                        label { "More" }
+                    }
+                    Button {
+                        onclick: move |_| scale -= 0.1,
+                        label { "Less" }
+                    }
+                }
+            )
+        }
+
+        let mut compositor = Compositor::default();
+        let mut utils = launch_test_with_config(
+            compositor_app,
+            TestingConfig::<()> {
+                size: (400.0, 400.0).into(),
+                ..TestingConfig::default()
+            },
+        );
+        utils.wait_for_update().await;
+
+        let (layers, rendering_layers, _) = run_compositor(&utils, &mut compositor);
+        // First render is always a full render
+        assert_eq!(layers, rendering_layers);
+
+        utils.click_cursor((180., 310.)).await;
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+        assert_eq!(painted_nodes, 9);
+
+        utils.click_cursor((250., 310.)).await;
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+        assert_eq!(painted_nodes, 9);
+
+        utils.click_cursor((250., 310.)).await;
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+        assert_eq!(painted_nodes, 7);
+
+        utils.click_cursor((250., 310.)).await;
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+        assert_eq!(painted_nodes, 7);
+
+        utils.click_cursor((250., 310.)).await;
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+        assert_eq!(painted_nodes, 5);
     }
 }

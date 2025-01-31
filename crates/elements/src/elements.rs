@@ -77,6 +77,7 @@ def_element!(
         // Transform
         rotate,
         opacity,
+        scale,
 
         // Reference
         canvas_reference,

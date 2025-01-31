@@ -1273,6 +1273,10 @@ impl Rect {
     pub fn height(&self) -> f32 {
         unimplemented!("This is mocked")
     }
+
+    pub fn with_outset(&self, _delta: impl Into<Point>) -> Self {
+        unimplemented!("This is mocked")
+    }
 }
 
 pub struct Image;

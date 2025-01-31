@@ -28,10 +28,14 @@ fn app() -> Element {
                 .time(550)
                 .ease(Ease::InOut)
                 .function(Function::Bounce),
+            AnimNum::new(0.5, 1.)
+                .time(800)
+                .ease(Ease::Out)
+                .function(Function::Bounce),
         )
     });
 
-    let (size, background, rotate, radius) = &*animation.get().read_unchecked();
+    let (size, background, rotate, radius, scale) = &*animation.get().read_unchecked();
 
     rsx!(
         rect {
@@ -48,6 +52,7 @@ fn app() -> Element {
                 toggle.toggle();
             },
             rect {
+                scale: "{scale.read()}",
                 width: "{size.read()}",
                 rotate: "{rotate.read()}deg",
                 height: "50%",
