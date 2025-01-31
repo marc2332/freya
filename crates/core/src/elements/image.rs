@@ -37,14 +37,19 @@ impl ElementUtils for ImageElement {
                 let width_ratio = area.width() / pic.width() as f32;
                 let height_ratio = area.height() / pic.height() as f32;
 
-                let ratio = match node_transform.aspect_ratio {
-                    AspectRatio::Max => width_ratio.max(height_ratio),
-                    AspectRatio::Min => width_ratio.min(height_ratio),
-                    AspectRatio::None => 1.0,
-                };
+                let (width, height) = match node_transform.aspect_ratio {
+                    AspectRatio::Max => {
+                        let ratio = width_ratio.max(height_ratio);
 
-                let width = pic.width() as f32 * ratio;
-                let height = pic.height() as f32 * ratio;
+                        (pic.width() as f32 * ratio, pic.height() as f32 * ratio)
+                    }
+                    AspectRatio::Min => {
+                        let ratio = width_ratio.min(height_ratio);
+
+                        (pic.width() as f32 * ratio, pic.height() as f32 * ratio)
+                    }
+                    AspectRatio::None => (area.width(), area.height()),
+                };
 
                 let rect = Rect::new(
                     area.min_x(),
