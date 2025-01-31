@@ -17,7 +17,7 @@ use freya_hooks::{
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///     let mut open = use_signal(|| false);
@@ -39,7 +39,33 @@ use freya_hooks::{
 ///         }
 ///     )
 /// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc_with_utils(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           SnackBar {
+/// #               open: true,
+/// #               label {
+/// #                   "Hello, World!"
+/// #               }
+/// #           }
+/// #       }
+/// #   )
+/// # }, (185., 185.).into(), |mut utils| async move {
+/// #   utils.wait_for_update().await;
+/// #   utils.wait_for_update().await;
+/// #   utils.wait_for_update().await;
+/// #   utils.wait_for_update().await;
+/// #   utils.wait_for_update().await;
+/// # utils.save_snapshot("./images/gallery_snackbar.png");
+/// # });
 /// ```
+///
+/// # Preview
+/// ![Snackbar Preview][snackbar]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("snackbar", "images/gallery_snackbar.png")
+)]
 #[allow(non_snake_case)]
 #[component]
 pub fn SnackBar(

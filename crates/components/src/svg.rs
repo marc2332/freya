@@ -9,14 +9,13 @@
 /// import_svg!(FerrisWithRequiredSize, "../../../examples/ferris.svg");
 ///
 /// fn app() -> Element {
-///     rsx!(Ferris {})
-/// }
-///
-/// fn another_app() -> Element {
-///     rsx!(FerrisWithRequiredSize {
-///         width: "150",
-///         height: "40%",
-///     })
+///     rsx!(
+///         Ferris { }
+///         FerrisWithRequiredSize {
+///             width: "50%",
+///             height: "50%",
+///         }
+///     )
 /// }
 /// ```
 #[macro_export]

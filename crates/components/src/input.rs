@@ -115,7 +115,7 @@ pub struct InputProps {
 ///
 /// # Example
 ///
-/// ```rust,no_run
+/// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///     let mut value = use_signal(String::new);
@@ -132,7 +132,23 @@ pub struct InputProps {
 ///         }
 ///     )
 /// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           Input {
+/// #               value: "Some text...",
+/// #               onchange: move |_| { }
+/// #           }
+/// #       }
+/// #   )
+/// # }, (185., 185.).into(), "./images/gallery_input.png");
 /// ```
+/// # Preview
+/// ![Input Preview][input]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("input", "images/gallery_input.png")
+)]
 #[allow(non_snake_case)]
 pub fn Input(
     InputProps {

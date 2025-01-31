@@ -51,16 +51,34 @@ pub enum ImageState {
 ///
 /// # Example
 ///
-/// ```rust,no_run
+/// ```rust
 /// # use reqwest::Url;
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///     rsx!(
 ///         NetworkImage {
-///             url: "https://raw.githubusercontent.com/jigsawpieces/dog-api-images/main/greyhound/Cordelia.jpg".parse::<Url>().unwrap()
+///             width: "100%",
+///             height: "100%",
+///             url: "https://raw.githubusercontent.com/marc2332/freya/refs/heads/main/examples/rust_logo.png".parse::<Url>().unwrap()
 ///         }
 ///     )
 /// }
+/// # use freya_testing::prelude::*;
+/// # import_image!(Rust, "../../../examples/rust_logo.png", "100%", "100%");
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           Rust { }
+/// #       }
+/// #   )
+/// # }, (185., 185.).into(), "./images/gallery_network_image.png");
+/// ```
+///
+/// # Preview
+/// ![NetworkImage Preview][network_image]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("network_image", "images/gallery_network_image.png")
+)]
 #[allow(non_snake_case)]
 pub fn NetworkImage(
     NetworkImageProps {

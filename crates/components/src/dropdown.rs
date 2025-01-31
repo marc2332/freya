@@ -181,12 +181,12 @@ struct DropdownGroup {
 /// Inherits the [`DropdownTheme`](freya_hooks::DropdownTheme) theme.
 ///
 /// # Example
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
 ///
 /// fn app() -> Element {
-///     let values = use_hook(|| vec!["A".to_string(), "B".to_string(), "C".to_string()]);
-///     let mut selected_dropdown = use_signal(|| "A".to_string());
+///     let values = use_hook(|| vec!["Value A".to_string(), "Value B".to_string(), "Value C".to_string()]);
+///     let mut selected_dropdown = use_signal(|| "Value A".to_string());
 ///     rsx!(
 ///         Dropdown {
 ///             value: selected_dropdown.read().clone(),
@@ -203,7 +203,21 @@ struct DropdownGroup {
 ///         }
 ///     )
 /// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           {app()}
+/// #       }
+/// #   )
+/// # }, (185., 185.).into(), "./images/gallery_dropdown.png");
 /// ```
+///
+/// # Preview
+/// ![Dropdown Preview][dropdown]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("dropdown", "images/gallery_dropdown.png")
+)]
 #[allow(non_snake_case)]
 pub fn Dropdown<T>(props: DropdownProps<T>) -> Element
 where

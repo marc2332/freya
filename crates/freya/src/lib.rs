@@ -64,7 +64,9 @@ pub use freya_elements::_docs as elements_docs;
 /// Launch your app.
 pub mod launch;
 
-/// Collection of basic components.
+/// Collection of components.
+///
+/// Go to [Gallery](freya_components::gallery) to see previews of the components.
 pub mod components {
     pub use freya_components::*;
 }

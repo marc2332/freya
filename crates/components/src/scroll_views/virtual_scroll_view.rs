@@ -129,45 +129,51 @@ fn get_render_range(
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
-/// # use std::rc::Rc;
 /// fn app() -> Element {
 ///     rsx!(VirtualScrollView {
-///         length: 5,
-///         item_size: 80.0,
+///         length: 35,
+///         item_size: 20.0,
 ///         direction: "vertical",
 ///         builder: move |i, _other_args: &Option<()>| {
 ///             rsx! {
 ///                 label {
 ///                     key: "{i}",
-///                     height: "80",
+///                     height: "20",
 ///                     "Number {i}"
 ///                 }
 ///             }
 ///         }
 ///     })
 /// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           {app()}
+/// #       }
+/// #   )
+/// # }, (185., 185.).into(), "./images/gallery_virtual_scroll_view.png");
 /// ```
 ///
 /// # With a Scroll Controller
 ///
 /// ```no_run
 /// # use freya::prelude::*;
-/// # use std::rc::Rc;
 /// fn app() -> Element {
 ///     let mut scroll_controller = use_scroll_controller(|| ScrollConfig::default());
 ///
 ///     rsx!(VirtualScrollView {
 ///         scroll_controller,
-///         length: 5,
-///         item_size: 80.0,
+///         length: 35,
+///         item_size: 20.0,
 ///         direction: "vertical",
 ///         builder: move |i, _other_args: &Option<()>| {
 ///             rsx! {
 ///                 label {
 ///                     key: "{i}",
-///                     height: "80",
+///                     height: "20",
 ///                     onclick: move |_| {
 ///                          scroll_controller.scroll_to(ScrollPosition::Start, ScrollDirection::Vertical);
 ///                     },
@@ -178,6 +184,12 @@ fn get_render_range(
 ///     })
 /// }
 /// ```
+///
+/// # Preview
+/// ![VirtualScrollView Preview][virtual_scroll_view]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("virtual_scroll_view", "images/gallery_virtual_scroll_view.png")
+)]
 #[allow(non_snake_case)]
 pub fn VirtualScrollView<
     Builder: Clone + Fn(usize, &Option<BuilderArgs>) -> Element,

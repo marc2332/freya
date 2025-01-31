@@ -12,10 +12,11 @@ keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
 categories = ["gui", "asynchronous"]
 
 [package.metadata.docs.rs]
-features = ["freya-engine/mocked-engine"]
+features = ["freya-engine/mocked-engine", "docs"]
 
 [features]
 skia-engine = ["freya-engine/skia-engine"]
+docs = []
 
 [dependencies]
 freya-elements = { workspace = true }
@@ -37,6 +38,7 @@ tracing = { workspace = true }
 open = "5"
 reqwest = { version = "0.12.0", features = ["json"] }
 bytes = "1.5.0"
+embed-doc-image = "*"
 
 [dev-dependencies]
 freya = { path = "../freya" }

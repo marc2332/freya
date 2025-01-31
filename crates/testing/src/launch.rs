@@ -1,6 +1,10 @@
-use std::sync::{
-    Arc,
-    Mutex,
+use std::{
+    future::Future,
+    path::PathBuf,
+    sync::{
+        Arc,
+        Mutex,
+    },
 };
 
 use accesskit::{
@@ -10,9 +14,14 @@ use accesskit::{
 use dioxus_core::{
     fc_to_builder,
     Element,
+    IntoDynNode,
     VirtualDom,
 };
-use dioxus_core_macro::rsx;
+use dioxus_core_macro::{
+    component,
+    rsx,
+    Props,
+};
 use dioxus_signals::{
     GlobalSignal,
     Readable,
@@ -22,12 +31,17 @@ use freya_core::prelude::{
     EventMessage,
     *,
 };
+use freya_elements as dioxus_elements;
 use freya_engine::prelude::*;
-use tokio::sync::{
-    broadcast,
-    mpsc::unbounded_channel,
-    watch,
+use tokio::{
+    runtime::Runtime,
+    sync::{
+        broadcast,
+        mpsc::unbounded_channel,
+        watch,
+    },
 };
+use torin::prelude::Size2D;
 use winit::window::CursorIcon;
 
 use crate::{
@@ -141,3 +155,38 @@ fn with_accessibility(app: AppComponent) -> VirtualDom {
 }
 
 type AppComponent = fn() -> Element;
+
+#[component]
+pub fn Preview(children: Element) -> Element {
+    rsx!(
+        rect {
+            main_align: "center",
+            cross_align: "center",
+            width: "fill",
+            height: "fill",
+            spacing: "8",
+            {children}
+        }
+    )
+}
+
+pub fn launch_doc(root: AppComponent, size: Size2D, path: impl Into<PathBuf>) {
+    let path: PathBuf = path.into();
+    launch_doc_with_utils(root, size, move |mut utils| async move {
+        utils.wait_for_update().await;
+        utils.save_snapshot(&path);
+    });
+}
+
+pub fn launch_doc_with_utils<F: Future<Output = ()>>(
+    root: AppComponent,
+    size: Size2D,
+    cb: impl FnOnce(TestingHandler<()>) -> F,
+) {
+    let mut utils = launch_test(root);
+    utils.resize(size);
+    let rt = Runtime::new().unwrap();
+    rt.block_on(async move {
+        cb(utils).await;
+    });
+}
