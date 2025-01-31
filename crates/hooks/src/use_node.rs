@@ -20,10 +20,15 @@ use tokio::sync::watch::channel;
 
 /// Subscribe to a Node layout changes.
 pub fn use_node() -> (AttributeValue, NodeReferenceLayout) {
+    use_node_from_signal(Signal::default)
+}
+
+pub fn use_node_from_signal(
+    init: impl FnOnce() -> Signal<NodeReferenceLayout>,
+) -> (AttributeValue, NodeReferenceLayout) {
     let (tx, signal) = use_hook(|| {
         let (tx, mut rx) = channel::<NodeReferenceLayout>(NodeReferenceLayout::default());
-        let mut signal = Signal::new(NodeReferenceLayout::default());
-
+        let mut signal = init();
         spawn(async move {
             while rx.changed().await.is_ok() {
                 if *signal.peek() != *rx.borrow() {

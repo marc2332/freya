@@ -11,7 +11,7 @@ use freya_elements::{
 use freya_hooks::{
     use_applied_theme,
     use_focus,
-    use_node,
+    use_node_from_signal,
     ScrollBarThemeWith,
 };
 
@@ -150,7 +150,7 @@ pub fn ScrollView(
     let mut scroll_controller =
         scroll_controller.unwrap_or_else(|| use_scroll_controller(ScrollConfig::default));
     let (mut scrolled_x, mut scrolled_y) = scroll_controller.into();
-    let (node_ref, size) = use_node();
+    let (node_ref, size) = use_node_from_signal(|| scroll_controller.layout());
 
     let mut focus = use_focus();
     let applied_scrollbar_theme = use_applied_theme!(&scrollbar_theme, scroll_bar);
