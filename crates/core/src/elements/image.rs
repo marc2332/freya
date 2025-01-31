@@ -2,6 +2,7 @@ use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::{
     AspectRatio,
+    ImageCover,
     ReferencesState,
     StyleState,
     TransformState,
@@ -57,7 +58,20 @@ impl ElementUtils for ImageElement {
                     area.min_x() + width,
                     area.min_y() + height,
                 );
+
+                if node_transform.image_cover == ImageCover::Center {
+                    let extra_width = width - area.width();
+                    let extra_height = height - area.height();
+                    canvas.save();
+                    canvas.clip_rect(rect, None, true);
+                    canvas.translate((-extra_width / 2., -extra_height / 2.));
+                }
+
                 canvas.draw_image_rect(pic, None, rect, &paint);
+
+                if node_transform.image_cover == ImageCover::Center {
+                    canvas.restore();
+                }
             }
         };
 

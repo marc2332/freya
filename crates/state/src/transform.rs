@@ -22,6 +22,7 @@ use freya_native_core_macro::partial_derive_state;
 use crate::{
     AspectRatio,
     CustomAttributeValues,
+    ImageCover,
     Parse,
     ParseAttribute,
     ParseError,
@@ -34,6 +35,7 @@ pub struct TransformState {
     pub rotations: Vec<(NodeId, f32)>,
     pub scales: Vec<(NodeId, f32, f32)>,
     pub aspect_ratio: AspectRatio,
+    pub image_cover: ImageCover,
 }
 
 impl ParseAttribute for TransformState {
@@ -82,6 +84,11 @@ impl ParseAttribute for TransformState {
                     self.aspect_ratio = AspectRatio::parse(value).map_err(|_| ParseError)?;
                 }
             }
+            AttributeName::ImageCover => {
+                if let Some(value) = attr.value.as_text() {
+                    self.image_cover = ImageCover::parse(value).map_err(|_| ParseError)?;
+                }
+            }
             _ => {}
         }
 
@@ -103,6 +110,7 @@ impl State<CustomAttributeValues> for TransformState {
             AttributeName::Opacity,
             AttributeName::Scale,
             AttributeName::AspectRatio,
+            AttributeName::ImageCover,
         ]));
 
     fn update<'a>(
