@@ -3,6 +3,7 @@ use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::{
     AspectRatio,
     ReferencesState,
+    SamplingMode,
     StyleState,
     TransformState,
 };
@@ -31,9 +32,6 @@ impl ElementUtils for ImageElement {
         let draw_img = |bytes: &[u8]| {
             let pic = Image::from_encoded(unsafe { Data::new_bytes(bytes) });
             if let Some(pic) = pic {
-                let mut paint = Paint::default();
-                paint.set_anti_alias(true);
-
                 let width_ratio = area.width() / pic.width() as f32;
                 let height_ratio = area.height() / pic.height() as f32;
 
@@ -57,7 +55,30 @@ impl ElementUtils for ImageElement {
                     area.min_x() + width,
                     area.min_y() + height,
                 );
-                canvas.draw_image_rect(pic, None, rect, &paint);
+
+                let sampling = match node_style.image_sampling {
+                    SamplingMode::Nearest => {
+                        SamplingOptions::new(FilterMode::Nearest, MipmapMode::None)
+                    }
+                    SamplingMode::Bilinear => {
+                        SamplingOptions::new(FilterMode::Linear, MipmapMode::None)
+                    }
+                    SamplingMode::Trilinear => {
+                        SamplingOptions::new(FilterMode::Linear, MipmapMode::Linear)
+                    }
+                    SamplingMode::Mitchell => SamplingOptions::from(CubicResampler::mitchell()),
+                    SamplingMode::CatmullRom => {
+                        SamplingOptions::from(CubicResampler::catmull_rom())
+                    }
+                };
+
+                canvas.draw_image_rect_with_sampling_options(
+                    pic,
+                    None,
+                    rect,
+                    sampling,
+                    &Paint::default(),
+                );
             }
         };
 

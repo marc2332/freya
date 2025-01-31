@@ -31,6 +31,7 @@ use crate::{
     Parse,
     ParseAttribute,
     ParseError,
+    SamplingMode,
     Shadow,
 };
 
@@ -42,6 +43,7 @@ pub struct StyleState {
     pub borders: Vec<Border>,
     pub shadows: Vec<Shadow>,
     pub corner_radius: CornerRadius,
+    pub image_sampling: SamplingMode,
     pub image_data: Option<AttributesBytes>,
     pub svg_data: Option<AttributesBytes>,
     pub overflow: OverflowMode,
@@ -111,6 +113,11 @@ impl ParseAttribute for StyleState {
                     }
                 }
             }
+            AttributeName::Sampling => {
+                if let Some(value) = attr.value.as_text() {
+                    self.image_sampling = SamplingMode::parse(value)?;
+                }
+            }
             AttributeName::ImageData => {
                 if let OwnedAttributeValue::Custom(CustomAttributeValues::Bytes(bytes)) = attr.value
                 {
@@ -158,6 +165,7 @@ impl State<CustomAttributeValues> for StyleState {
             AttributeName::Shadow,
             AttributeName::CornerRadius,
             AttributeName::CornerSmoothing,
+            AttributeName::Sampling,
             AttributeName::ImageData,
             AttributeName::SvgData,
             AttributeName::SvgContent,

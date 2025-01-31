@@ -28,4 +28,5 @@ def_attribute!(
     /// }
     /// ```
     aspect_ratio,
+    sampling,
 );
