@@ -360,6 +360,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,
             default_fonts: &["Fira Sans".to_string()],
+            images_cache: &mut fdom.images_cache(),
         };
         render_pipeline.run();
 

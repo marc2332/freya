@@ -1,3 +1,4 @@
+use freya_common::ImagesCache;
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::{
@@ -21,6 +22,7 @@ impl ElementUtils for ImageElement {
         _font_collection: &mut FontCollection,
         _font_manager: &FontMgr,
         _default_fonts: &[String],
+        images_cache: &mut ImagesCache,
         _scale_factor: f32,
     ) {
         let area = layout_node.visible_area();
@@ -28,25 +30,41 @@ impl ElementUtils for ImageElement {
         let node_references = node_ref.get::<ReferencesState>().unwrap();
         let node_transform = node_ref.get::<TransformState>().unwrap();
 
-        let draw_img = |bytes: &[u8]| {
-            let pic = Image::from_encoded(unsafe { Data::new_bytes(bytes) });
-            if let Some(pic) = pic {
+        let mut draw_img = |bytes: &[u8]| {
+            let image = if let Some(image_cache_key) = &node_style.image_cache_key {
+                let cached_image = if let Some(image) = images_cache.get(image_cache_key).cloned() {
+                    image
+                } else {
+                    let Some(image) = Image::from_encoded(unsafe { Data::new_bytes(bytes) }) else {
+                        return;
+                    };
+                    images_cache.insert(image_cache_key.clone(), image.clone());
+
+                    image
+                };
+
+                Some(cached_image)
+            } else {
+                Image::from_encoded(unsafe { Data::new_bytes(bytes) })
+            };
+
+            if let Some(image) = image {
                 let mut paint = Paint::default();
                 paint.set_anti_alias(true);
 
-                let width_ratio = area.width() / pic.width() as f32;
-                let height_ratio = area.height() / pic.height() as f32;
+                let width_ratio = area.width() / image.width() as f32;
+                let height_ratio = area.height() / image.height() as f32;
 
                 let (width, height) = match node_transform.aspect_ratio {
                     AspectRatio::Max => {
                         let ratio = width_ratio.max(height_ratio);
 
-                        (pic.width() as f32 * ratio, pic.height() as f32 * ratio)
+                        (image.width() as f32 * ratio, image.height() as f32 * ratio)
                     }
                     AspectRatio::Min => {
                         let ratio = width_ratio.min(height_ratio);
 
-                        (pic.width() as f32 * ratio, pic.height() as f32 * ratio)
+                        (image.width() as f32 * ratio, image.height() as f32 * ratio)
                     }
                     AspectRatio::None => (area.width(), area.height()),
                 };
@@ -57,7 +75,7 @@ impl ElementUtils for ImageElement {
                     area.min_x() + width,
                     area.min_y() + height,
                 );
-                canvas.draw_image_rect(pic, None, rect, &paint);
+                canvas.draw_image_rect(image, None, rect, &paint);
             }
         };
 

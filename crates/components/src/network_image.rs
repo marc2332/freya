@@ -155,6 +155,7 @@ pub fn NetworkImage(
                 a11y_role: "image",
                 a11y_name: alt,
                 aspect_ratio,
+                cache_key: "{url}"
             })
         }
         ImageState::Loading => {

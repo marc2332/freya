@@ -28,4 +28,6 @@ def_attribute!(
     /// }
     /// ```
     aspect_ratio,
+
+    cache_key,
 );

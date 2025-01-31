@@ -1,4 +1,7 @@
-use freya_common::CachedParagraph;
+use freya_common::{
+    CachedParagraph,
+    ImagesCache,
+};
 use freya_engine::prelude::*;
 use freya_native_core::prelude::NodeImmutable;
 use freya_node_state::FontStyleState;
@@ -27,6 +30,7 @@ impl ElementUtils for LabelElement {
         _font_collection: &mut FontCollection,
         _font_manager: &FontMgr,
         _default_fonts: &[String],
+        _images_cache: &mut ImagesCache,
         _scale_factor: f32,
     ) {
         let paragraph = &layout_node
