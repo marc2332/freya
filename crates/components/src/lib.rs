@@ -13,8 +13,8 @@
 /// | [ProgressBar()]        | [Dropdown()]        | [SnackBar()]        | [Tab()]        |
 /// | ![BottomTab Preview][gallery_bottom_tab] | ![NetworkImage Preview][gallery_network_image] |  ![ScrollView Preview][gallery_scroll_view] |  ![VirtualScrollView Preview][gallery_virtual_scroll_view] |
 /// | [BottomTab()]        | [NetworkImage()] | [ScrollView()] | [VirtualScrollView()] |
-/// | ![Loader Preview][gallery_loader] |  ![Menu Preview][gallery_menu] |  |  |
-/// | [Loader()]        | [Menu()] |  |  |
+/// | ![Loader Preview][gallery_loader] |  ![Menu Preview][gallery_menu] | ![ToolTip Preview][gallery_tooltip] |  |
+/// | [Loader()]        | [Menu()] | [ToolTip()] |  |
 #[cfg_attr(feature = "docs",
     doc = embed_doc_image::embed_image!("gallery_button", "images/gallery_button.png"),
     doc = embed_doc_image::embed_image!("gallery_filled_button", "images/gallery_filled_button.png"),
@@ -34,6 +34,7 @@
     doc = embed_doc_image::embed_image!("gallery_virtual_scroll_view", "images/gallery_virtual_scroll_view.png"),
     doc = embed_doc_image::embed_image!("gallery_loader", "images/gallery_loader.png"),
     doc = embed_doc_image::embed_image!("gallery_menu", "images/gallery_menu.png"),
+    doc = embed_doc_image::embed_image!("gallery_tooltip", "images/gallery_tooltip.png"),
 )]
 pub fn gallery() {}
 
