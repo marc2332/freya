@@ -28,15 +28,16 @@ pub struct TestNode {
 }
 
 impl TestNode {
-    /// Quickly get a child of the Node by the given index, if the child is not found it will panic
+    /// Get a node by its position in this node children list. Will panic if not found.
     #[track_caller]
     pub fn get(&self, child_index: usize) -> Self {
-        self.child(child_index)
+        self.try_get(child_index)
             .unwrap_or_else(|| panic!("Child by index {child_index} not found"))
     }
 
-    /// Get a child of the Node by the given index
-    pub fn child(&self, child_index: usize) -> Option<Self> {
+    /// Get a node by its position in this node children list.
+    #[track_caller]
+    pub fn try_get(&self, child_index: usize) -> Option<Self> {
         let child_id = self.children_ids.get(child_index)?;
         let child: TestNode = self.utils.get_node_by_id(*child_id);
         Some(child)

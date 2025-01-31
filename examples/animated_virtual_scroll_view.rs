@@ -44,21 +44,19 @@ fn app() -> Element {
 
 #[component]
 fn AnimatedContainer(height: f32, children: Element) -> Element {
-    let animations = use_animation(|ctx| {
-        ctx.auto_start(true);
-        ctx.with(
-            AnimNum::new(350., 0.)
-                .time(500)
-                .ease(Ease::InOut)
-                .function(Function::Expo),
-        )
+    let animation = use_animation(|conf| {
+        conf.auto_start(true);
+        AnimNum::new(350., 0.)
+            .time(500)
+            .ease(Ease::InOut)
+            .function(Function::Expo)
     });
 
-    let pos = animations.get();
+    let pos = animation.get().read().read();
 
     rsx!(
         rect {
-            offset_x: "{pos.read().as_f32()}",
+            offset_x: "{pos}",
             height: "{height}",
             width: "100%",
             padding: "4",

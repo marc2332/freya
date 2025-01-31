@@ -4,7 +4,8 @@
 //!
 //! ### Windows
 //!
-//! You will need C++ build tools which you can get through Visual Studio 2022, learn more [here](https://learn.microsoft.com/en-us/windows/dev-environment/rust/setup#install-visual-studio-recommended-or-the-microsoft-c-build-tools).
+//! Install Visual Studio 2022 with the `Desktop Development with C++` workflow.
+//! You can learn learn more [here](https://learn.microsoft.com/en-us/windows/dev-environment/rust/setup#install-visual-studio-recommended-or-the-microsoft-c-build-tools).
 //!
 //! ### Linux
 //!

@@ -41,6 +41,7 @@ impl<Id: Clone + Hash + Eq + Display> UseForm<Id> {
             value,
             placeholder: Some(placeholder),
             auto_focus: false,
+            onvalidate: None,
         }
     }
 
@@ -53,7 +54,7 @@ impl<Id: Clone + Hash + Eq + Display> UseForm<Id> {
             onpress: Some(EventHandler::new(move |_| {
                 (submit.peek())(&data.read());
             })),
-            children: None,
+            children: Ok(VNode::placeholder()),
             onclick: None,
         }
     }

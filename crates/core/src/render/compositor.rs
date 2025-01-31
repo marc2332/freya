@@ -11,7 +11,6 @@ use freya_native_core::{
     prelude::NodeImmutable,
     NodeId,
 };
-use itertools::sorted;
 use rustc_hash::FxHashMap;
 use torin::prelude::{
     Area,
@@ -158,7 +157,8 @@ impl Compositor {
                 for node_id in nodes {
                     Self::with_utils(*node_id, layout, rdom, |node_ref, utils, layout_node| {
                         if utils.needs_cached_area(&node_ref) {
-                            let area = utils.drawing_area(layout_node, &node_ref, scale_factor);
+                            let area =
+                                utils.drawing_area(layout_node, &node_ref, layout, scale_factor);
                             // Cache the drawing area so it can be invalidated in the next frame
                             cache.insert(*node_id, area);
                         }
@@ -173,13 +173,9 @@ impl Compositor {
         loop {
             let mut any_marked = false;
 
-            for (layer_n, layer) in sorted(running_layers.iter_mut()).rev() {
+            for (layer_n, layer) in running_layers.iter_mut() {
                 layer.retain(|node_id| {
                     Self::with_utils(*node_id, layout, rdom, |node_ref, utils, layout_node| {
-                        // Use the cached area to invalidate the previous frame area if necessary
-                        let cached_area = cache.get(node_id);
-                        let needs_cached_area = utils.needs_cached_area(&node_ref);
-
                         let Some(area) = utils.drawing_area_with_viewports(
                             layout_node,
                             &node_ref,
@@ -190,31 +186,35 @@ impl Compositor {
                         };
 
                         let is_dirty = dirty_nodes.remove(node_id);
-                        let cached_area_is_invalidated = cached_area
-                            .map(|cached_area| {
-                                if is_dirty {
-                                    true
-                                } else {
-                                    dirty_area.intersects(cached_area)
-                                }
-                            })
-                            .unwrap_or_default();
 
-                        let is_invalidated =
-                            is_dirty || cached_area_is_invalidated || dirty_area.intersects(&area);
+                        // Use the cached area to invalidate the previous frame area if necessary
+                        let mut invalidated_cache_area =
+                            cache.get(node_id).and_then(|cached_area| {
+                                if is_dirty || dirty_area.intersects(cached_area) {
+                                    Some(*cached_area)
+                                } else {
+                                    None
+                                }
+                            });
+
+                        let is_invalidated = is_dirty
+                            || invalidated_cache_area.is_some()
+                            || dirty_area.intersects(&area);
 
                         if is_invalidated {
                             // Save this node to the layer it corresponds for rendering
                             dirty_layers.insert_node_in_layer(*node_id, *layer_n);
 
                             // Expand the dirty area with the cached area so it gets cleaned up
-                            if is_dirty && cached_area_is_invalidated {
-                                dirty_area.unite_or_insert(cached_area.unwrap());
-                                any_marked = true;
+                            if let Some(invalidated_cache_area) = invalidated_cache_area.take() {
+                                if is_dirty {
+                                    dirty_area.unite_or_insert(&invalidated_cache_area);
+                                    any_marked = true;
+                                }
                             }
 
                             // Cache the drawing area so it can be invalidated in the next frame
-                            if needs_cached_area {
+                            if utils.needs_cached_area(&node_ref) {
                                 cache.insert(*node_id, area);
                             }
 
@@ -356,144 +356,144 @@ mod test {
         assert_eq!(label.get(0).text(), Some("1"));
     }
 
-    // #[tokio::test]
-    // pub async fn after_shadow_drawing() {
-    //     fn compositor_app() -> Element {
-    //         let mut height = use_signal(|| 200);
-    //         let mut shadow = use_signal(|| 20);
+    #[tokio::test]
+    pub async fn after_shadow_drawing() {
+        fn compositor_app() -> Element {
+            let mut height = use_signal(|| 200);
+            let mut shadow = use_signal(|| 20);
 
-    //         rsx!(
-    //             rect {
-    //                 height: "100",
-    //                 width: "200",
-    //                 background: "red",
-    //                 margin: "0 0 2 0",
-    //                 onclick: move |_| height += 10,
-    //             }
-    //             rect {
-    //                 height: "{height}",
-    //                 width: "200",
-    //                 background: "green",
-    //                 shadow: "0 {shadow} 8 0 rgb(0, 0, 0, 0.5)",
-    //                 margin: "0 0 2 0",
-    //                 onclick: move |_| height -= 10,
-    //             }
-    //             rect {
-    //                 height: "100",
-    //                 width: "200",
-    //                 background: "blue",
-    //                 onclick: move |_| shadow.set(-20),
-    //             }
-    //         )
-    //     }
+            rsx!(
+                rect {
+                    height: "100",
+                    width: "200",
+                    background: "red",
+                    margin: "0 0 2 0",
+                    onclick: move |_| height += 10,
+                }
+                rect {
+                    height: "{height}",
+                    width: "200",
+                    background: "green",
+                    shadow: "0 {shadow} 1 0 rgb(0, 0, 0, 0.5)",
+                    margin: "0 0 2 0",
+                    onclick: move |_| height -= 10,
+                }
+                rect {
+                    height: "100",
+                    width: "200",
+                    background: "blue",
+                    onclick: move |_| shadow.set(-20),
+                }
+            )
+        }
 
-    //     let mut compositor = Compositor::default();
-    //     let mut utils = launch_test(compositor_app);
-    //     utils.wait_for_update().await;
+        let mut compositor = Compositor::default();
+        let mut utils = launch_test(compositor_app);
+        utils.wait_for_update().await;
 
-    //     let (layers, rendering_layers, _) = run_compositor(&utils, &mut compositor);
-    //     // First render is always a full render
-    //     assert_eq!(layers, rendering_layers);
+        let (layers, rendering_layers, _) = run_compositor(&utils, &mut compositor);
+        // First render is always a full render
+        assert_eq!(layers, rendering_layers);
 
-    //     utils.click_cursor((5., 5.)).await;
+        utils.click_cursor((5., 5.)).await;
 
-    //     let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
-    //     // Root + Second rect + Third rect
-    //     assert_eq!(painted_nodes, 3);
+        // Root + Second rect + Third rect
+        assert_eq!(painted_nodes, 3);
 
-    //     utils.click_cursor((5., 150.)).await;
+        utils.click_cursor((5., 150.)).await;
 
-    //     let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
-    //     // Root + Second rect + Third rect
-    //     assert_eq!(painted_nodes, 3);
+        // Root + Second rect + Third rect
+        assert_eq!(painted_nodes, 3);
 
-    //     utils.click_cursor((5., 350.)).await;
+        utils.click_cursor((5., 350.)).await;
 
-    //     let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
-    //     // Root + First rect + Second rect + Third Rect
-    //     assert_eq!(painted_nodes, 4);
+        // Root + First rect + Second rect + Third Rect
+        assert_eq!(painted_nodes, 4);
 
-    //     utils.click_cursor((5., 150.)).await;
+        utils.click_cursor((5., 150.)).await;
 
-    //     let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
-    //     // Root + First rect + Second rect + Third Rect
-    //     assert_eq!(painted_nodes, 4);
-    // }
+        // Root + First rect + Second rect + Third Rect
+        assert_eq!(painted_nodes, 4);
+    }
 
-    // #[tokio::test]
-    // pub async fn paragraph_drawing() {
-    //     fn compositor_app() -> Element {
-    //         let mut msg_state = use_signal(|| true);
-    //         let mut shadow_state = use_signal(|| true);
+    #[tokio::test]
+    pub async fn paragraph_drawing() {
+        fn compositor_app() -> Element {
+            let mut msg_state = use_signal(|| true);
+            let mut shadow_state = use_signal(|| true);
 
-    //         let msg = if msg_state() { "12" } else { "23" };
-    //         let shadow = if shadow_state() {
-    //             "-40 0 20 black"
-    //         } else {
-    //             "none"
-    //         };
+            let msg = if msg_state() { "12" } else { "23" };
+            let shadow = if shadow_state() {
+                "-40 0 20 black"
+            } else {
+                "none"
+            };
 
-    //         rsx!(
-    //             rect {
-    //                 height: "200",
-    //                 width: "200",
-    //                 direction: "horizontal",
-    //                 spacing: "2",
-    //                 rect {
-    //                     onclick: move |_| msg_state.toggle(),
-    //                     height: "200",
-    //                     width: "200",
-    //                     background: "red"
-    //                 }
-    //                 paragraph {
-    //                     onclick: move |_| shadow_state.toggle(),
-    //                     text {
-    //                         font_size: "75",
-    //                         font_weight: "bold",
-    //                         text_shadow: "{shadow}",
-    //                         "{msg}"
-    //                     }
-    //                 }
-    //             }
-    //         )
-    //     }
+            rsx!(
+                rect {
+                    height: "200",
+                    width: "200",
+                    direction: "horizontal",
+                    spacing: "2",
+                    rect {
+                        onclick: move |_| msg_state.toggle(),
+                        height: "200",
+                        width: "200",
+                        background: "red"
+                    }
+                    paragraph {
+                        onclick: move |_| shadow_state.toggle(),
+                        text {
+                            font_size: "75",
+                            font_weight: "bold",
+                            text_shadow: "{shadow}",
+                            "{msg}"
+                        }
+                    }
+                }
+            )
+        }
 
-    //     let mut compositor = Compositor::default();
-    //     let mut utils = launch_test(compositor_app);
-    //     let root = utils.root();
-    //     utils.wait_for_update().await;
+        let mut compositor = Compositor::default();
+        let mut utils = launch_test(compositor_app);
+        let root = utils.root();
+        utils.wait_for_update().await;
 
-    //     assert_eq!(root.get(0).get(1).get(0).get(0).text(), Some("12"));
+        assert_eq!(root.get(0).get(1).get(0).get(0).text(), Some("12"));
 
-    //     let (layers, rendering_layers, _) = run_compositor(&utils, &mut compositor);
-    //     // First render is always a full render
-    //     assert_eq!(layers, rendering_layers);
+        let (layers, rendering_layers, _) = run_compositor(&utils, &mut compositor);
+        // First render is always a full render
+        assert_eq!(layers, rendering_layers);
 
-    //     utils.click_cursor((5., 5.)).await;
+        utils.click_cursor((5., 5.)).await;
 
-    //     let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
-    //     // Root + First rect + Paragraph + Second rect
-    //     assert_eq!(painted_nodes, 4);
+        // Root + First rect + Paragraph + Second rect
+        assert_eq!(painted_nodes, 4);
 
-    //     utils.click_cursor((205., 5.)).await;
+        utils.click_cursor((205., 5.)).await;
 
-    //     let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
-    //     // Root + First rect + Paragraph + Second rect
-    //     assert_eq!(painted_nodes, 4);
+        // Root + First rect + Paragraph + Second rect
+        assert_eq!(painted_nodes, 4);
 
-    //     utils.click_cursor((5., 5.)).await;
+        utils.click_cursor((5., 5.)).await;
 
-    //     let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
-    //     // Root + First rect + Paragraph
-    //     assert_eq!(painted_nodes, 2);
-    // }
+        // Root + First rect + Paragraph
+        assert_eq!(painted_nodes, 2);
+    }
 
     #[tokio::test]
     pub async fn rotated_drawing() {
@@ -598,5 +598,81 @@ mod test {
 
         // Everything
         assert_eq!(painted_nodes, 7);
+    }
+
+    #[tokio::test]
+    pub async fn scale_drawing() {
+        fn compositor_app() -> Element {
+            let mut scale = use_signal(|| 1.);
+
+            rsx!(
+                rect {
+                    scale: "{scale()} {scale()}",
+                    height: "50%",
+                    width: "100%",
+                    main_align: "center",
+                    cross_align: "center",
+                    background: "rgb(0, 119, 182)",
+                    color: "white",
+                    shadow: "0 4 20 5 rgb(0, 0, 0, 80)",
+                    label {
+                        text_shadow: "0 180 12 rgb(0, 0, 0, 240)",
+                        "Hello"
+                    }
+                    label {
+                        "World"
+                    }
+                }
+                rect {
+                    height: "50%",
+                    width: "100%",
+                    main_align: "center",
+                    cross_align: "center",
+                    direction: "horizontal",
+                    Button {
+                        onclick: move |_| scale += 0.1,
+                        label { "More" }
+                    }
+                    Button {
+                        onclick: move |_| scale -= 0.1,
+                        label { "Less" }
+                    }
+                }
+            )
+        }
+
+        let mut compositor = Compositor::default();
+        let mut utils = launch_test_with_config(
+            compositor_app,
+            TestingConfig::<()> {
+                size: (400.0, 400.0).into(),
+                ..TestingConfig::default()
+            },
+        );
+        utils.wait_for_update().await;
+
+        let (layers, rendering_layers, _) = run_compositor(&utils, &mut compositor);
+        // First render is always a full render
+        assert_eq!(layers, rendering_layers);
+
+        utils.click_cursor((180., 310.)).await;
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+        assert_eq!(painted_nodes, 9);
+
+        utils.click_cursor((250., 310.)).await;
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+        assert_eq!(painted_nodes, 9);
+
+        utils.click_cursor((250., 310.)).await;
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+        assert_eq!(painted_nodes, 7);
+
+        utils.click_cursor((250., 310.)).await;
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+        assert_eq!(painted_nodes, 7);
+
+        utils.click_cursor((250., 310.)).await;
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+        assert_eq!(painted_nodes, 5);
     }
 }

@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::{
         keyboard::Key,
         KeyboardEvent,
@@ -359,17 +359,17 @@ mod test {
 
         assert_eq!(label.get(0).text(), Some("50"));
 
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
             cursor: (250.0, 7.0).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseDown,
             cursor: (250.0, 7.0).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
             cursor: (500.0, 7.0).into(),
             button: Some(MouseButton::Left),

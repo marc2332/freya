@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::KeyboardEvent,
 };
 use freya_hooks::{
@@ -42,7 +42,7 @@ use crate::TickIcon;
 ///             leading: rsx!(
 ///                 Checkbox {
 ///                     selected: selected.read().contains(&Choice::First),
-///                 },
+///                 }
 ///             ),
 ///             label { "First choice" }
 ///         }
@@ -57,7 +57,7 @@ use crate::TickIcon;
 ///             leading: rsx!(
 ///                 Checkbox {
 ///                     selected: selected.read().contains(&Choice::Second),
-///                 },
+///                 }
 ///             ),
 ///             label { "Second choice" }
 ///         }
@@ -163,7 +163,7 @@ mod test {
                     leading: rsx!(
                         Checkbox {
                             selected: selected.read().contains(&Choice::First),
-                        },
+                        }
                     ),
                     label { "First choice" }
                 }
@@ -178,7 +178,7 @@ mod test {
                     leading: rsx!(
                         Checkbox {
                             selected: selected.read().contains(&Choice::Second),
-                        },
+                        }
                     ),
                     label { "Second choice" }
                 }
@@ -193,7 +193,7 @@ mod test {
                     leading: rsx!(
                         Checkbox {
                             selected: selected.read().contains(&Choice::Third),
-                        },
+                        }
                     ),
                     label { "Third choice" }
                 }

@@ -20,7 +20,9 @@ use freya_native_core::{
 use freya_native_core_macro::partial_derive_state;
 
 use crate::{
+    AspectRatio,
     CustomAttributeValues,
+    Parse,
     ParseAttribute,
     ParseError,
 };
@@ -30,6 +32,8 @@ pub struct TransformState {
     pub node_id: NodeId,
     pub opacities: Vec<f32>,
     pub rotations: Vec<(NodeId, f32)>,
+    pub scales: Vec<(NodeId, f32, f32)>,
+    pub aspect_ratio: AspectRatio,
 }
 
 impl ParseAttribute for TransformState {
@@ -56,6 +60,28 @@ impl ParseAttribute for TransformState {
                     self.opacities.push(opacity)
                 }
             }
+            AttributeName::Scale => {
+                if let Some(value) = attr.value.as_text() {
+                    let (scale_x, scale_y) = if !value.trim().contains(' ') {
+                        let scale = value.parse::<f32>().map_err(|_| ParseError)?;
+                        (scale, scale)
+                    } else {
+                        let Some((scale_x, scale_y)) = value.split_once(' ') else {
+                            return Err(ParseError);
+                        };
+                        let scale_x = scale_x.parse::<f32>().map_err(|_| ParseError)?;
+                        let scale_y = scale_y.parse::<f32>().map_err(|_| ParseError)?;
+                        (scale_x, scale_y)
+                    };
+                    self.scales
+                        .push((self.node_id, scale_x.max(0.), scale_y.max(0.)))
+                }
+            }
+            AttributeName::AspectRatio => {
+                if let Some(value) = attr.value.as_text() {
+                    self.aspect_ratio = AspectRatio::parse(value).map_err(|_| ParseError)?;
+                }
+            }
             _ => {}
         }
 
@@ -75,6 +101,8 @@ impl State<CustomAttributeValues> for TransformState {
         NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
             AttributeName::Rotate,
             AttributeName::Opacity,
+            AttributeName::Scale,
+            AttributeName::AspectRatio,
         ]));
 
     fn update<'a>(

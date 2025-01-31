@@ -1,6 +1,7 @@
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::{
+    AccessibilityNodeState,
     Border,
     CornerRadius,
     CursorState,
@@ -20,6 +21,7 @@ use torin::{
     prelude::{
         Content,
         Position,
+        VisibleSize,
     },
     size::Size,
 };
@@ -34,6 +36,7 @@ pub struct NodeState {
     pub size: LayoutState,
     pub style: StyleState,
     pub transform: TransformState,
+    pub accessibility: AccessibilityNodeState,
 }
 
 pub fn get_node_state(node: &DioxusNode) -> NodeState {
@@ -67,6 +70,11 @@ pub fn get_node_state(node: &DioxusNode) -> NodeState {
         .as_deref()
         .cloned()
         .unwrap_or_default();
+    let accessibility = node
+        .get::<AccessibilityNodeState>()
+        .as_deref()
+        .cloned()
+        .unwrap_or_default();
 
     NodeState {
         cursor,
@@ -75,6 +83,7 @@ pub fn get_node_state(node: &DioxusNode) -> NodeState {
         size,
         style,
         transform,
+        accessibility,
     }
 }
 
@@ -87,6 +96,14 @@ impl NodeState {
             ("min_height", AttributeType::Size(&self.size.minimum_height)),
             ("max_width", AttributeType::Size(&self.size.maximum_width)),
             ("max_height", AttributeType::Size(&self.size.maximum_height)),
+            (
+                "visible_width",
+                AttributeType::VisibleSize(&self.size.visible_width),
+            ),
+            (
+                "visible_height",
+                AttributeType::VisibleSize(&self.size.visible_height),
+            ),
             ("direction", AttributeType::Direction(&self.size.direction)),
             ("padding", AttributeType::Measures(self.size.padding)),
             ("margin", AttributeType::Measures(self.size.margin)),
@@ -172,6 +189,7 @@ pub enum AttributeType<'a> {
     OptionalColor(Option<Fill>),
     Gradient(Fill),
     Size(&'a Size),
+    VisibleSize(&'a VisibleSize),
     Measure(f32),
     OptionalMeasure(Option<f32>),
     Measures(Gaps),

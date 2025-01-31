@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::MouseEvent,
 };
 use freya_hooks::{
@@ -273,7 +273,7 @@ pub fn SubMenu(
                 close_menus_until(&mut menus, parent_menu_id);
                 push_menu(&mut menus, submenu_id);
             },
-            {children},
+            {children}
             if show_submenu {
                 rect {
                     position_top: "-12",
@@ -311,7 +311,7 @@ pub fn MenuButton(
                 if let Some(onpress) = &onpress {
                     onpress.call(e)
                 }
-            }
+            },
             {children}
         }
     )
@@ -359,7 +359,7 @@ mod test {
                     Button {
                         onpress: move |_| show_menu.toggle(),
                         label { "Open Menu" }
-                    },
+                    }
                     if *show_menu.read() {
                         Menu {
                             onclose: move |_| show_menu.set(false),

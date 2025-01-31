@@ -9,7 +9,6 @@ use freya_native_core::{
     prelude::{
         ElementNode,
         NodeType,
-        SendAnyMap,
     },
     real_dom::NodeImmutable,
     tags::TagName,
@@ -20,6 +19,7 @@ use torin::prelude::{
     Area,
     LayoutMeasurer,
     Node,
+    SendAnyMap,
     Size2D,
 };
 
@@ -60,7 +60,7 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
     fn measure(
         &mut self,
         node_id: NodeId,
-        _node: &Node,
+        torin_node: &Node,
         area_size: &Size2D,
     ) -> Option<(Size2D, Arc<SendAnyMap>)> {
         let node = self.rdom.get(node_id).unwrap();
@@ -70,6 +70,7 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Label => {
                 let ParagraphData { paragraph, size } = create_label(
                     &node,
+                    torin_node,
                     area_size,
                     self.font_collection,
                     self.default_fonts,

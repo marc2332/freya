@@ -40,10 +40,10 @@
 //! - [Performance Tips](self::_docs::performance)
 //!
 //! ### API References
-//! - [Elements and attributes](freya_elements::elements#structs)
-//! - [Events](freya_elements::elements#functions)
-//! - [Built-in Components](freya_components)
-//! - [Built-in Hooks](freya_hooks)
+//! - [Elements and attributes](self::elements#structs)
+//! - [Events](self::events#functions)
+//! - [Built-in Components](self::components)
+//! - [Built-in Hooks](self::hooks)
 //!
 //! ## Features flags
 //!
@@ -88,12 +88,6 @@ pub mod core {
 pub use freya_elements::elements;
 /// Events data.
 pub use freya_elements::events;
-
-/// Hot reload configuration.
-pub mod hotreload {
-    pub use freya_elements::elements::FreyaCtx;
-}
-
 pub use torin;
 
 pub mod plugins;
@@ -108,16 +102,14 @@ pub mod prelude {
     };
     pub use dioxus_core_macro::*;
     pub use dioxus_hooks::*;
-    pub use dioxus_hot_reload::{
-        self,
-        hot_reload_init,
-        Config,
-    };
     pub use dioxus_signals::*;
     pub use freya_components::*;
-    pub use freya_core::prelude::PreferredTheme;
+    pub use freya_core::prelude::{
+        AccessibilityId,
+        PreferredTheme,
+    };
     pub use freya_elements::{
-        elements as dioxus_elements,
+        self as dioxus_elements,
         events::*,
     };
     pub use freya_hooks::*;

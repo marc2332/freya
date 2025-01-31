@@ -105,7 +105,7 @@
 //!     assert_eq!(text.text(), Some("Is enabled? false"));
 //!
 //!     // Push a click event to the events queue
-//!     utils.push_event(PlatformEvent::Mouse {
+//!     utils.push_event(TestEvent::Mouse {
 //!         name: "click",
 //!         cursor: (5.0, 5.0).into(),
 //!         button: Some(MouseButton::Left),
@@ -154,6 +154,7 @@
 //! ````
 
 pub mod config;
+pub mod event;
 pub mod launch;
 pub mod test_handler;
 pub mod test_node;
@@ -167,6 +168,7 @@ pub mod prelude {
 
     pub use crate::{
         config::*,
+        event::*,
         launch::*,
         test_handler::*,
         test_node::*,

@@ -5,7 +5,144 @@ use winit::event::{
     TouchPhase,
 };
 
-use crate::definitions::PlatformEventData;
+use crate::{
+    events::ErasedEventData,
+    impl_event,
+};
+impl_event! [
+    PointerData;
+
+    /// The `pointerdown` event fires when the user clicks/starts touching an element.
+    ///
+    /// Event Data: [`PointerData`](crate::events::PointerData)
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             width: "100",
+    ///             height: "100",
+    ///             background: "red",
+    ///             onpointerdown: |_| println!("Clicked/started pressing!")
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    onpointerdown
+
+    /// The `pointerup` event fires when the user releases their mouse button or stops touching the element.
+    ///
+    /// Event Data: [`PointerData`](crate::events::PointerData)
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             width: "100",
+    ///             height: "100",
+    ///             background: "red",
+    ///             onpointerup: |_| println!("Released mouse button, or no longer touching!")
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    onpointerup
+
+    /// The `globalpointerup` event fires when the user releases the point anywhere in the app.
+    ///
+    /// Event Data: [`PointerData`](crate::events::PointerData)
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             onglobalpointerup: |_| println!("Pointer released somewhere else!")
+    ///         }
+    ///         rect {
+    ///             width: "100",
+    ///             height: "100",
+    ///             background: "red",
+    ///             onclick: |_| println!("Clicked!")
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    onglobalpointerup
+
+    /// The `pointermove` event fires when the user moves the cursor or touches over an element.
+    /// Unlike [`onpointerenter`](crate::events::onpointerenter()), this fires even if the user was already hovering over
+    /// the element.
+    ///
+    /// Event Data: [`PointerData`](crate::events::PointerData)
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             width: "100",
+    ///             height: "100",
+    ///             background: "red",
+    ///             onpointermove: |_| println!("Moving or touching!")
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    onpointermove
+
+    /// The `pointerenter` event fires when the user starts hovering/touching an element.
+    ///
+    /// Event Data: [`PointerData`](crate::events::PointerData)
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             width: "100",
+    ///             height: "100",
+    ///             background: "red",
+    ///             onpointerenter: |_| println!("Started hovering or touching!")
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    onpointerenter
+
+    /// The `pointerleave` event fires when the user stops hovering/touching an element.
+    ///
+    /// Event Data: [`PointerData`](crate::events::PointerData)
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             width: "100",
+    ///             height: "100",
+    ///             background: "red",
+    ///             onpointerleave: |_| println!("Started hovering or touching!")
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    onpointerleave
+];
 
 /// The type of device that triggered a Pointer event.
 #[derive(Debug, Clone, PartialEq, Copy)]
@@ -59,8 +196,8 @@ impl PointerData {
     }
 }
 
-impl From<&PlatformEventData> for PointerData {
-    fn from(val: &PlatformEventData) -> Self {
+impl From<&ErasedEventData> for PointerData {
+    fn from(val: &ErasedEventData) -> Self {
         val.downcast::<PointerData>().cloned().unwrap()
     }
 }

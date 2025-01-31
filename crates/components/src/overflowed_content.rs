@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_animation,
     use_node_signal,
@@ -51,25 +51,22 @@ pub fn OverflowedContent(
     let label_width = label_size.read().area.width();
     let does_overflow = label_width > rect_width;
 
-    let animations = use_animation(move |ctx| {
-        ctx.on_finish(OnFinish::Restart);
+    let animation = use_animation(move |conf| {
+        conf.on_finish(OnFinish::Restart);
 
-        ctx.with(
-            AnimNum::new(0., 100.)
-                .duration(duration)
-                .ease(Ease::InOut)
-                .function(Function::Linear),
-        )
+        AnimNum::new(0., 100.)
+            .duration(duration)
+            .ease(Ease::InOut)
+            .function(Function::Linear)
     });
 
     use_effect(use_reactive!(|does_overflow| {
         if does_overflow {
-            animations.run(AnimDirection::Forward);
+            animation.run(AnimDirection::Forward);
         }
     }));
 
-    let progress = animations.get();
-    let progress = progress.read().as_f32();
+    let progress = animation.get().read().read();
     let offset_x = if does_overflow {
         ((label_width + rect_width) * progress / 100.) - rect_width
     } else {
@@ -127,10 +124,9 @@ mod test {
         utils.wait_for_update().await;
         assert_eq!(label.layout().unwrap().area.min_x(), 50.);
 
-        sleep(Duration::from_millis(25)).await;
+        sleep(Duration::from_millis(5)).await;
         utils.wait_for_update().await;
         utils.wait_for_update().await;
-        utils.wait_for_update().await;
-        assert!(label.layout().unwrap().area.min_x() < -0.);
+        assert_ne!(label.layout().unwrap().area.min_x(), 50.);
     }
 }

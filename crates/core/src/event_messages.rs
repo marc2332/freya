@@ -1,4 +1,4 @@
-use dioxus_core::Template;
+use freya_common::AccessibilityFocusStrategy;
 use torin::prelude::{
     Area,
     CursorPoint,
@@ -20,8 +20,6 @@ pub struct TextGroupMeasurement {
 
 /// Custom EventLoop messages
 pub enum EventMessage {
-    /// Update the given template
-    UpdateTemplate(Template),
     /// Poll the VirtualDOM
     PollVDOM,
     /// Request a rerender
@@ -36,12 +34,8 @@ pub enum EventMessage {
     SetCursorIcon(CursorIcon),
     /// Accessibility Window Event
     Accessibility(accesskit_winit::WindowEvent),
-    /// Focus the given accessibility NodeID
-    FocusAccessibilityNode(accesskit::NodeId),
-    /// Focus the next accessibility Node
-    FocusNextAccessibilityNode,
-    /// Focus the previous accessibility Node
-    FocusPrevAccessibilityNode,
+    /// Focus with the given strategy
+    FocusAccessibilityNode(AccessibilityFocusStrategy),
     /// Close the whole app
     ExitApp,
     /// Callback to access the Window.

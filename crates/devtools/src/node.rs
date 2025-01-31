@@ -1,11 +1,18 @@
+use std::borrow::Cow;
+
+use accesskit::Role;
 use dioxus::prelude::*;
 use freya_components::{
     ArrowIcon,
-    ButtonStatus,
+    OutlineButton,
+    PressEvent,
 };
 use freya_elements::{
-    elements as dioxus_elements,
-    events::MouseEvent,
+    self as dioxus_elements,
+};
+use freya_hooks::{
+    theme_with,
+    ButtonThemeWith,
 };
 use freya_native_core::prelude::NodeId;
 
@@ -20,71 +27,98 @@ pub fn NodeElement(
     onselected: EventHandler<()>,
     onarrow: EventHandler<()>,
 ) -> Element {
-    let mut status = use_signal(ButtonStatus::default);
-    let node = use_node_info(node_id)?;
+    let Some(node) = use_node_info(node_id) else {
+        return Ok(VNode::placeholder());
+    };
 
-    let onmousedown = move |_| onselected.call(());
+    let onselect = move |_| onselected.call(());
 
-    let onarrowmousedown = move |e: MouseEvent| {
+    let onopen = move |e: PressEvent| {
         if is_open.is_some() {
             onarrow.call(());
             e.stop_propagation();
         }
     };
 
-    let onmouseenter = move |_| {
-        status.set(ButtonStatus::Hovering);
-    };
-
-    let onmouseleave = move |_| {
-        status.set(ButtonStatus::default());
-    };
-
-    let background = match *status.read() {
-        _ if is_selected => "rgb(100, 100, 100)",
-        ButtonStatus::Idle => "transparent",
-        ButtonStatus::Hovering => "rgb(80, 80, 80)",
-    };
-
     let margin_left = (node.height * 10) as f32 - 20.;
     let id = node_id.index();
 
+    let role = node
+        .state
+        .accessibility
+        .builder
+        .clone()
+        .and_then(|builder| {
+            let built_node = builder.build();
+            let role = built_node.role();
+            if role != Role::GenericContainer {
+                serde_json::to_value(role)
+                    .ok()
+                    .and_then(|v| v.as_str().map(String::from))
+            } else {
+                None
+            }
+        });
+    let name = role
+        .map(|role| format!("{}, tag: {}", role, node.tag))
+        .unwrap_or_else(|| node.tag.to_string());
+
+    let mut theme = theme_with!(ButtonTheme {
+        width: "100%".into(),
+        height: "27".into(),
+        border_fill: "none".into()
+    });
+
+    if is_selected {
+        theme.background = Some(Cow::Borrowed("rgb(25, 25, 25)"));
+        theme.hover_background = Some(Cow::Borrowed("rgb(25, 25, 25)"));
+    } else {
+        theme.background = Some(Cow::Borrowed("none"));
+        theme.hover_background = Some(Cow::Borrowed("rgb(30, 30, 30)"));
+    }
+
     rsx!(
-        rect {
-            corner_radius: "7",
-            padding: "5 5 5 0",
-            background,
-            width: "100%",
-            height: "27",
-            offset_x: "{margin_left}",
-            onmousedown,
-            onmouseenter,
-            onmouseleave,
-            direction: "horizontal",
-            cross_align: "center",
+        OutlineButton {
+            theme,
+            onpress: onselect,
             rect {
-                onmousedown: onarrowmousedown,
-                width: "16",
-                if let Some(is_open) = is_open {
-                    {
-                        let arrow_degree = if is_open {
-                            0
-                        } else {
-                            270
-                        };
-                        rsx!(
-                            ArrowIcon {
-                                fill: "white",
-                                rotate: "{arrow_degree}"
-                            }
-                        )
+                offset_x: "{margin_left}",
+                direction: "horizontal",
+                width: "fill",
+                cross_align: "center",
+                rect {
+                    width: "20",
+                    if let Some(is_open) = is_open {
+                        {
+                            let arrow_degree = if is_open {
+                                0
+                            } else {
+                                270
+                            };
+                            rsx!(
+                                OutlineButton {
+                                    theme: theme_with!(ButtonTheme {
+                                        corner_radius: "99".into(),
+                                        border_fill: "none".into(),
+                                        padding: "2".into(),
+                                        background: "none".into(),
+                                        hover_background: "none".into(),
+                                    }),
+                                    onpress: onopen,
+                                    ArrowIcon {
+                                        fill: "white",
+                                        rotate: "{arrow_degree}"
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
-            }
-            label {
-                font_size: "14",
-                color: "white",
-                "{node.tag} ({id})"
+                label {
+                    font_size: "14",
+                    color: "white",
+                    "{name}, id: {id}"
+                }
             }
         }
     )

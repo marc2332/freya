@@ -15,7 +15,10 @@ use accesskit::{
     Tree,
     TreeUpdate,
 };
-use freya_common::AccessibilityDirtyNodes;
+use freya_common::{
+    AccessibilityDirtyNodes,
+    AccessibilityFocusStrategy,
+};
 use freya_engine::prelude::{
     Color,
     Slant,
@@ -46,10 +49,7 @@ use torin::{
     torin::Torin,
 };
 
-use super::{
-    AccessibilityFocusStrategy,
-    NodeAccessibility,
-};
+use super::NodeAccessibility;
 use crate::dom::{
     DioxusDOM,
     DioxusNode,
@@ -133,7 +133,7 @@ impl AccessibilityTree {
         layout: &Torin<NodeId>,
         dirty_nodes: &mut AccessibilityDirtyNodes,
     ) -> (TreeUpdate, NodeId) {
-        let requested_focus_id = dirty_nodes.requested_focus.take();
+        let requested_focus = dirty_nodes.requested_focus.take();
         let removed_ids = dirty_nodes.removed.drain().collect::<FxHashMap<_, _>>();
         let mut added_or_updated_ids = dirty_nodes
             .added_or_updated
@@ -189,16 +189,9 @@ impl AccessibilityTree {
             }
         }
 
-        // Try to focus the requested node id
-        if let Some(node_id) = requested_focus_id {
-            let node_ref = rdom.get(node_id).unwrap();
-            let node_accessibility_state = node_ref.get::<AccessibilityNodeState>();
-            if let Some(focused_id) = node_accessibility_state
-                .as_ref()
-                .and_then(|state| state.a11y_id)
-            {
-                self.focused_id = focused_id;
-            }
+        // Focus the requested node id if there is one
+        if let Some(requested_focus) = requested_focus {
+            self.focus_node_with_strategy(requested_focus, rdom);
         }
 
         // Fallback the focused id to the root if the focused node no longer exists
@@ -218,37 +211,17 @@ impl AccessibilityTree {
         )
     }
 
-    /// Update the focused Node ID and generate a TreeUpdate if necessary.
-    pub fn set_focus_with_update(
-        &mut self,
-        new_focus_id: AccessibilityId,
-    ) -> Option<(TreeUpdate, NodeId)> {
-        self.focused_id = new_focus_id;
-
-        // Only focus the element if it exists
-        if let Some(node_id) = self.map.get(&new_focus_id).copied() {
-            #[cfg(debug_assertions)]
-            tracing::info!("Focused {new_focus_id:?} node.");
-
-            Some((
-                TreeUpdate {
-                    nodes: Vec::new(),
-                    tree: Some(Tree::new(ACCESSIBILITY_ROOT_ID)),
-                    focus: self.focused_id,
-                },
-                node_id,
-            ))
-        } else {
-            None
-        }
-    }
-
     /// Focus a Node given the strategy.
-    pub fn set_focus_on_next_node(
+    pub fn focus_node_with_strategy(
         &mut self,
         stragegy: AccessibilityFocusStrategy,
         rdom: &DioxusDOM,
-    ) -> (TreeUpdate, NodeId) {
+    ) {
+        if let AccessibilityFocusStrategy::Node(id) = stragegy {
+            self.focused_id = id;
+            return;
+        }
+
         let mut nodes = Vec::new();
 
         rdom.traverse_depth_first_advanced(|node_ref| {
@@ -261,7 +234,7 @@ impl AccessibilityTree {
             if let Some(accessibility_id) = accessibility_id {
                 let accessibility_state = node_ref.get::<AccessibilityNodeState>().unwrap();
                 if accessibility_state.a11y_focusable.is_enabled() {
-                    nodes.push((accessibility_id, node_ref.id()))
+                    nodes.push(accessibility_id)
                 }
             }
 
@@ -276,9 +249,7 @@ impl AccessibilityTree {
 
         let node_index = nodes
             .iter()
-            .enumerate()
-            .find(|(_, (accessibility_id, _))| *accessibility_id == self.focused_id)
-            .map(|(i, _)| i);
+            .position(|accessibility_id| *accessibility_id == self.focused_id);
 
         let target_node = if stragegy == AccessibilityFocusStrategy::Forward {
             // Find the next Node
@@ -304,23 +275,10 @@ impl AccessibilityTree {
             }
         };
 
-        let (accessibility_id, node_id) = target_node
-            .copied()
-            .unwrap_or((ACCESSIBILITY_ROOT_ID, rdom.root_id()));
-
-        self.focused_id = accessibility_id;
+        self.focused_id = target_node.copied().unwrap_or(ACCESSIBILITY_ROOT_ID);
 
         #[cfg(debug_assertions)]
-        tracing::info!("Focused {accessibility_id:?} node.");
-
-        (
-            TreeUpdate {
-                nodes: Vec::new(),
-                tree: Some(Tree::new(ACCESSIBILITY_ROOT_ID)),
-                focus: self.focused_id,
-            },
-            node_id,
-        )
+        tracing::info!("Focused {:?} node.", self.focused_id);
     }
 
     /// Create an accessibility node

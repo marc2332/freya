@@ -40,7 +40,7 @@ macro_rules! import_svg {
                 stroke,
                 width,
                 height,
-                svg_data
+                svg_data,
             })
         }
     };
@@ -64,7 +64,7 @@ macro_rules! import_svg {
                 stroke,
                 width,
                 height,
-                svg_data
+                svg_data,
             })
         }
     };
