@@ -62,12 +62,16 @@ impl ElementUtils for ImageElement {
                 if node_transform.image_cover == ImageCover::Center {
                     let width_offset = (width - area.width()) / 2.;
                     let height_offset = (height - area.height()) / 2.;
+
+                    let clip_rect = rect.clone();
+
                     rect.left -= width_offset;
                     rect.right -= width_offset;
                     rect.top -= height_offset;
                     rect.bottom -= height_offset;
+
                     canvas.save();
-                    canvas.clip_rect(rect, ClipOp::Intersect, true);
+                    canvas.clip_rect(clip_rect, ClipOp::Intersect, true);
                 }
 
                 canvas.draw_image_rect(pic, None, rect, &paint);
