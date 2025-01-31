@@ -250,6 +250,10 @@ fn with_accessibility(app: AppComponent) -> VirtualDom {
     use dioxus::prelude::Props;
     use dioxus_core::fc_to_builder;
     use dioxus_core_macro::rsx;
+    use dioxus_signals::{
+        GlobalSignal,
+        Readable,
+    };
     use freya_components::NativeContainer;
 
     #[derive(Props, Clone, PartialEq)]

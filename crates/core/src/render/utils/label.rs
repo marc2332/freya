@@ -4,17 +4,22 @@ use freya_native_core::{
     real_dom::NodeImmutable,
 };
 use freya_node_state::FontStyleState;
-use torin::prelude::Size2D;
+use torin::{
+    node::Node,
+    prelude::Size2D,
+};
 
+use super::ParagraphData;
 use crate::dom::*;
 
 pub fn create_label(
     node: &DioxusNode,
+    torin_node: &Node,
     area_size: &Size2D,
     font_collection: &FontCollection,
     default_font_family: &[String],
     scale_factor: f32,
-) -> Paragraph {
+) -> ParagraphData {
     let font_style = &*node.get::<FontStyleState>().unwrap();
 
     let mut paragraph_style = ParagraphStyle::default();
@@ -48,5 +53,18 @@ pub fn create_label(
         },
     );
 
-    paragraph
+    // Relayout the paragraph so that its aligned based on its longest width
+    match font_style.text_align {
+        TextAlign::Center | TextAlign::Justify | TextAlign::Right | TextAlign::End
+            if torin_node.width.inner_sized() =>
+        {
+            paragraph.layout(paragraph.longest_line() + 1.);
+        }
+        _ => {}
+    }
+
+    ParagraphData {
+        size: Size2D::new(paragraph.longest_line(), paragraph.height()),
+        paragraph,
+    }
 }

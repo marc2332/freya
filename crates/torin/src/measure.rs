@@ -75,7 +75,7 @@ where
         // 2. If this Node has been marked as dirty
         // 3. If there is no know cached data about this Node.
         let must_revalidate = parent_is_dirty
-            || self.layout.dirty.contains(&node_id)
+            || self.layout.dirty.contains_key(&node_id)
             || !self.layout.results.contains_key(&node_id);
         if must_revalidate {
             // Create the initial Node area size
@@ -200,9 +200,12 @@ where
             };
 
             // Create the areas
-            let area_origin =
-                node.position
-                    .get_origin(available_parent_area, parent_area, &area_size);
+            let area_origin = node.position.get_origin(
+                available_parent_area,
+                parent_area,
+                &area_size,
+                &self.layout_metadata.root_area,
+            );
             let mut area = Rect::new(area_origin, area_size);
             let mut inner_area = Rect::new(area_origin, inner_size)
                 .without_gaps(&node.padding)
@@ -376,7 +379,7 @@ where
                     (&initial_phase_inner_area, &initial_phase_available_area)
                 };
 
-                let (_, child_areas) = self.measure_node(
+                let (_, mut child_areas) = self.measure_node(
                     *child_id,
                     &child_data,
                     parent_area,
@@ -385,6 +388,8 @@ where
                     parent_is_dirty,
                     Phase::Initial,
                 );
+
+                child_areas.area.adjust_size(&child_data);
 
                 // Stack this child into the parent
                 Self::stack_child(

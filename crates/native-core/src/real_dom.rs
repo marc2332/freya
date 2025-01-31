@@ -57,7 +57,6 @@ use crate::{
         TreeRef,
         TreeRefView,
     },
-    FxDashSet,
     NodeId,
     SendAnyMap,
 };
@@ -68,18 +67,6 @@ pub(crate) struct SendAnyMapWrapper(SendAnyMap);
 
 impl Deref for SendAnyMapWrapper {
     type Target = SendAnyMap;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-/// The nodes that were changed when updating the state of the RealDom
-#[derive(Unique, Default)]
-pub(crate) struct DirtyNodesResult(FxDashSet<NodeId>);
-
-impl Deref for DirtyNodesResult {
-    type Target = FxDashSet<NodeId>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -247,6 +234,11 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
         }
     }
 
+    pub fn deep_clone_node(&mut self, node_id: NodeId) -> NodeMut<V> {
+        let clone_id = self.get_mut(node_id).unwrap().clone_node();
+        self.get_mut(clone_id).unwrap()
+    }
+
     /// Get a reference to the tree.
     pub fn tree_ref(&self) -> TreeRefView {
         self.world.borrow().unwrap()
@@ -330,10 +322,7 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
     }
 
     /// Update the state of the dom, after appling some mutations. This will keep the nodes in the dom up to date with their VNode counterparts.
-    pub fn update_state(
-        &mut self,
-        ctx: SendAnyMap,
-    ) -> (FxDashSet<NodeId>, FxHashMap<NodeId, NodeMask>) {
+    pub fn update_state(&mut self, ctx: SendAnyMap) -> FxHashMap<NodeId, NodeMask> {
         let passes = std::mem::take(&mut self.dirty_nodes.passes_updated);
         let nodes_updated = std::mem::take(&mut self.dirty_nodes.nodes_updated);
 
@@ -353,13 +342,10 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
         let _ = self.world.remove_unique::<SendAnyMapWrapper>();
         self.world.add_unique(dirty_nodes);
         self.world.add_unique(SendAnyMapWrapper(ctx));
-        self.world.add_unique(DirtyNodesResult::default());
 
         self.workload.run_with_world(&self.world).unwrap();
 
-        let dirty = self.world.remove_unique::<DirtyNodesResult>().unwrap();
-
-        (dirty.0, nodes_updated)
+        nodes_updated
     }
 
     /// Traverses the dom in a depth first manner,

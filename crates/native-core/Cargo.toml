@@ -1,7 +1,7 @@
 [package]
 name = "freya-native-core"
 description = "Native DOM for Freya"
-version = "0.2.1"
+version = "0.3.0-rc.0"
 edition = "2021"
 license = "MIT"
 authors = ["Jonathan Kelley", "Evan Almloff", "Marc Espín <mespinsanz@gmail.com>"]
@@ -16,9 +16,7 @@ dioxus-core = { workspace = true}
 
 smallvec = { workspace = true }
 rustc-hash = { workspace = true }
-anymap = "1.0.0-beta.2"
 parking_lot = { version = "0.12.1", features = ["send_guard"] }
-dashmap = "6.0.0"
 shipyard = { workspace = true }
 
 [dev-dependencies]

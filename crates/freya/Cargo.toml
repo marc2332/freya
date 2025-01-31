@@ -1,7 +1,7 @@
 [package]
 name = "freya"
 description = "Cross-platform GUI Library powered by Dioxus and Skia."
-version = "0.2.2"
+version = "0.3.0-rc.0"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
@@ -12,13 +12,12 @@ keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
 categories = ["gui", "asynchronous"]
 
 [package.metadata.docs.rs]
-features = ["freya-engine/mocked-engine"]
+features = ["freya-engine/mocked-engine", "docs"]
 no-default-features = true
 
 [features]
 custom-tokio-rt = []
 skia = ["freya-engine/skia-engine"]
-hot-reload = ["freya-renderer/hot-reload", "dioxus/hot-reload"]
 tracing-subscriber = ["dep:tracing-subscriber"]
 devtools = ["dep:freya-devtools"]
 use_camera = ["freya-hooks/use_camera"]
@@ -27,6 +26,7 @@ default = ["skia"]
 performance-overlay = []
 fade-cached-incremental-areas = ["freya-core/fade-cached-incremental-areas"]
 disable-zoom-shortcuts = ["freya-renderer/disable-zoom-shortcuts"]
+docs = ["dep:freya-testing", "dep:dioxus-i18n", "dep:dioxus-router"]
 
 [dependencies]
 freya-devtools = { workspace = true, optional = true }
@@ -40,11 +40,15 @@ freya-components = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
 
+
+freya-testing = { workspace = true, optional = true }
+dioxus-i18n = { workspace = true, optional = true }
+dioxus-router = { workspace = true, optional = true }
+
 dioxus = { workspace = true }
 dioxus-core-macro = { workspace = true }
 dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
-dioxus-hot-reload = { workspace = true }
 dioxus-signals = { workspace = true }
 
 tokio = { workspace = true }

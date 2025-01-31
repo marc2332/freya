@@ -14,31 +14,34 @@ use winit::event::{
 
 use crate::prelude::EventName;
 
-/// Events emitted in Freya.
+/// Events emitted by a Freya platform, such as desktop or freya-testing.
 #[derive(Clone, Debug)]
-pub enum PlatformEvent {
+pub struct PlatformEvent {
+    pub name: EventName,
+    pub data: PlatformEventData,
+}
+
+/// Data for [PlatformEvent].
+#[derive(Clone, Debug)]
+pub enum PlatformEventData {
     /// A Mouse Event.
     Mouse {
-        name: EventName,
         cursor: CursorPoint,
         button: Option<MouseButton>,
     },
     /// A Wheel event.
     Wheel {
-        name: EventName,
         scroll: CursorPoint,
         cursor: CursorPoint,
     },
     /// A Keyboard event.
     Keyboard {
-        name: EventName,
         key: Key,
         code: Code,
         modifiers: Modifiers,
     },
     /// A Touch event.
     Touch {
-        name: EventName,
         location: CursorPoint,
         finger_id: u64,
         phase: TouchPhase,
@@ -46,30 +49,7 @@ pub enum PlatformEvent {
     },
     /// A File event.
     File {
-        name: EventName,
         cursor: CursorPoint,
         file_path: Option<PathBuf>,
     },
-}
-
-impl PlatformEvent {
-    pub fn get_name(&self) -> EventName {
-        match self {
-            Self::Mouse { name, .. } => *name,
-            Self::Wheel { name, .. } => *name,
-            Self::Keyboard { name, .. } => *name,
-            Self::Touch { name, .. } => *name,
-            Self::File { name, .. } => *name,
-        }
-    }
-
-    pub fn set_name(&mut self, new_name: EventName) {
-        match self {
-            Self::Mouse { name, .. } => *name = new_name,
-            Self::Wheel { name, .. } => *name = new_name,
-            Self::Keyboard { name, .. } => *name = new_name,
-            Self::Touch { name, .. } => *name = new_name,
-            Self::File { name, .. } => *name = new_name,
-        }
-    }
 }

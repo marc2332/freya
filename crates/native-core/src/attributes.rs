@@ -8,6 +8,8 @@ pub enum AttributeName {
     MinHeight,
     MaxWidth,
     MaxHeight,
+    VisibleWidth,
+    VisibleHeight,
     Padding,
     Background,
     Border,
@@ -16,6 +18,8 @@ pub enum AttributeName {
     CornerRadius,
     CornerSmoothing,
     Color,
+    Fill,
+    Stroke,
     FontSize,
     FontFamily,
     FontStyle,
@@ -62,6 +66,10 @@ pub enum AttributeName {
     SvgData,
     SvgContent,
     Spacing,
+    Scale,
+
+    // Image element
+    AspectRatio,
 
     // Focus
     A11yId,
@@ -95,7 +103,7 @@ pub enum AttributeName {
     // ActiveDescendant,
     // A11yErrorMessage,
     // A11yInPageLinkTarget,
-    // A11yMemberOf,
+    A11yMemberOf,
     // A11yNextOnLine,
     // A11yPreviousOnLine,
     // A11yPopupFor,
@@ -229,6 +237,8 @@ impl FromStr for AttributeName {
             "min_height" => Ok(AttributeName::MinHeight),
             "max_width" => Ok(AttributeName::MaxWidth),
             "max_height" => Ok(AttributeName::MaxHeight),
+            "visible_width" => Ok(AttributeName::VisibleWidth),
+            "visible_height" => Ok(AttributeName::VisibleHeight),
             "padding" => Ok(AttributeName::Padding),
             "background" => Ok(AttributeName::Background),
             "border" => Ok(AttributeName::Border),
@@ -237,6 +247,8 @@ impl FromStr for AttributeName {
             "corner_radius" => Ok(AttributeName::CornerRadius),
             "corner_smoothing" => Ok(AttributeName::CornerSmoothing),
             "color" => Ok(AttributeName::Color),
+            "fill" => Ok(AttributeName::Fill),
+            "stroke" => Ok(AttributeName::Stroke),
             "font_size" => Ok(AttributeName::FontSize),
             "font_family" => Ok(AttributeName::FontFamily),
             "font_style" => Ok(AttributeName::FontStyle),
@@ -283,6 +295,8 @@ impl FromStr for AttributeName {
             "svg_data" => Ok(AttributeName::SvgData),
             "svg_content" => Ok(AttributeName::SvgContent),
             "spacing" => Ok(AttributeName::Spacing),
+            "scale" => Ok(AttributeName::Scale),
+            "aspect_ratio" => Ok(AttributeName::AspectRatio),
             "a11y_id" => Ok(AttributeName::A11yId),
             "a11y_focusable" => Ok(AttributeName::A11yFocusable),
             "a11y_auto_focus" => Ok(AttributeName::A11yAutoFocus),
@@ -351,6 +365,7 @@ impl FromStr for AttributeName {
             "a11y_has_popup" => Ok(AttributeName::A11yHasPopup),
             "a11y_list_style" => Ok(AttributeName::A11yListStyle),
             "a11y_vertical_offset" => Ok(AttributeName::A11yVerticalOffset),
+            "a11y_member_of" => Ok(AttributeName::A11yMemberOf),
             _ => Err(format!("{attr} not supported.")),
         }
     }

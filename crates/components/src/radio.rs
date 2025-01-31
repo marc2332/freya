@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::KeyboardEvent,
 };
 use freya_hooks::{
@@ -17,7 +17,7 @@ use freya_hooks::{
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
 /// #[derive(PartialEq)]
 /// enum Choice {
@@ -48,7 +48,22 @@ use freya_hooks::{
 ///         }
 ///     )
 /// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           Radio {
+/// #               selected: true
+/// #           }
+/// #       }
+/// #   )
+/// # }, (185., 185.).into(), "./images/gallery_radio.png");
 /// ```
+/// # Preview
+/// ![Radio Preview][radio]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("radio", "images/gallery_radio.png")
+)]
 #[allow(non_snake_case)]
 #[component]
 pub fn Radio(
@@ -123,7 +138,7 @@ mod test {
                     leading: rsx!(
                         Radio {
                             selected: *selected.read() == Choice::First,
-                        },
+                        }
                     ),
                     label { "First choice" }
                 }
@@ -132,7 +147,7 @@ mod test {
                     leading: rsx!(
                         Radio {
                             selected: *selected.read() == Choice::Second,
-                        },
+                        }
                     ),
                     label { "Second choice" }
                 }
@@ -141,7 +156,7 @@ mod test {
                     leading: rsx!(
                         Radio {
                             selected: *selected.read() == Choice::Third,
-                        },
+                        }
                     ),
                     label { "Third choice" }
                 }

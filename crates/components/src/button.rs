@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::{
         KeyboardEvent,
         PointerEvent,
@@ -42,7 +42,7 @@ pub struct ButtonProps {
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///     rsx!(
@@ -54,7 +54,21 @@ pub struct ButtonProps {
 ///         }
 ///     )
 /// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           {app()}
+/// #       }
+/// #   )
+/// # }, (185., 185.).into(), "./images/gallery_button.png");
 /// ```
+///
+/// # Preview
+/// ![Button Preview][button]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("button", "images/gallery_button.png")
+)]
 #[allow(non_snake_case)]
 pub fn Button(props: ButtonProps) -> Element {
     let theme = use_applied_theme!(&props.theme, button);
@@ -73,7 +87,7 @@ pub fn Button(props: ButtonProps) -> Element {
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///     rsx!(
@@ -85,7 +99,21 @@ pub fn Button(props: ButtonProps) -> Element {
 ///         }
 ///     )
 /// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           {app()}
+/// #       }
+/// #   )
+/// # }, (185., 185.).into(), "./images/gallery_filled_button.png");
 /// ```
+///
+/// # Preview
+/// ![FilledButton Preview][filled_button]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("filled_button", "images/gallery_filled_button.png")
+)]
 #[allow(non_snake_case)]
 pub fn FilledButton(props: ButtonProps) -> Element {
     let theme = use_applied_theme!(&props.theme, filled_button);
@@ -104,7 +132,7 @@ pub fn FilledButton(props: ButtonProps) -> Element {
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///     rsx!(
@@ -116,7 +144,21 @@ pub fn FilledButton(props: ButtonProps) -> Element {
 ///         }
 ///     )
 /// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           {app()}
+/// #       }
+/// #   )
+/// # }, (185., 185.).into(), "./images/gallery_outline_button.png");
 /// ```
+///
+/// # Preview
+/// ![OutlineButton Preview][outline_button]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("outline_button", "images/gallery_outline_button.png")
+)]
 #[allow(non_snake_case)]
 pub fn OutlineButton(props: ButtonProps) -> Element {
     let theme = use_applied_theme!(&props.theme, outline_button);
@@ -150,6 +192,8 @@ pub struct BaseButtonProps {
     /// Inner children for the button.
     pub children: Element,
     /// Event handler for when the button is pressed.
+    ///
+    /// This will fire upon **mouse click** or pressing the **enter key**.
     pub onpress: Option<EventHandler<PressEvent>>,
     /// Event handler for when the button is clicked. Not recommended, use `onpress` instead.
     pub onclick: Option<EventHandler<()>>,
@@ -273,7 +317,6 @@ pub fn ButtonBase(
             border: "{border}",
             corner_radius: "{corner_radius}",
             background: "{background}",
-            text_align: "center",
             text_height: "disable-least-ascent",
             main_align: "center",
             cross_align: "center",
@@ -313,7 +356,7 @@ mod test {
 
         assert_eq!(label.get(0).text(), Some("true"));
 
-        utils.push_event(PlatformEvent::Touch {
+        utils.push_event(TestEvent::Touch {
             name: EventName::TouchStart,
             location: (15.0, 15.0).into(),
             finger_id: 1,
@@ -322,7 +365,7 @@ mod test {
         });
         utils.wait_for_update().await;
 
-        utils.push_event(PlatformEvent::Touch {
+        utils.push_event(TestEvent::Touch {
             name: EventName::TouchEnd,
             location: (15.0, 15.0).into(),
             finger_id: 1,

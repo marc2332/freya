@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::MouseEvent,
 };
 use freya_hooks::{
@@ -19,10 +19,47 @@ pub struct TooltipProps {
     pub text: String,
 }
 
-/// `Tooltip` component
+/// `Tooltip` component. Use in combination with [TooltipContainer()].
 ///
 /// # Styling
 /// Inherits the [`TooltipTheme`](freya_hooks::TooltipTheme)
+///
+/// # Example
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///     rsx!(
+///         TooltipContainer {
+///             tooltip: rsx!(
+///                 Tooltip {
+///                     text: "Hey!"
+///                 }
+///             ),
+///             label { "Hover me!" }
+///        }
+///     )
+/// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc_with_utils(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           {app()}
+/// #       }
+/// #   )
+/// # }, (185., 185.).into(), |mut utils| async move {
+/// #   utils.wait_for_update().await;
+/// #   utils.move_cursor((90., 90.)).await;
+/// #   utils.wait_for_update().await;
+/// #   utils.save_snapshot("./images/gallery_tooltip.png");
+/// # });
+/// ```
+///
+/// # Preview
+/// ![Tooltip Preview][tooltip]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("tooltip", "images/gallery_tooltip.png")
+)]
 #[allow(non_snake_case)]
 pub fn Tooltip(TooltipProps { text, theme }: TooltipProps) -> Element {
     let theme = use_applied_theme!(&theme, tooltip);

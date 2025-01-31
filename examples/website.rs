@@ -197,7 +197,7 @@ fn Navigation() -> Element {
             Link {
                 to: "https://freyaui.dev/blog",
                 label {
-                    "Book"
+                    "Blog"
                 }
             }
             Link {
@@ -256,11 +256,11 @@ fn Counter() -> Element {
                     direction: "horizontal",
                     spacing: "8",
                     Button {
-                        onclick: move |_| count += 1,
+                        onpress: move |_| count += 1,
                         label { "Increase" }
                     }
                     Button {
-                        onclick: move |_| count -= 1,
+                        onpress: move |_| count -= 1,
                         label { "Decrease" }
                     }
                 }
@@ -294,11 +294,11 @@ const CODE: &str = r#"fn app() -> Element {
             cross_align: "center",
             direction: "horizontal",
             Button {
-                onclick: move |_| count += 1,
+                onpress: move |_| count += 1,
                 label { "Increase" }
             }
             Button {
-                onclick: move |_| count -= 1,
+                onpress: move |_| count -= 1,
                 label { "Decrease" }
             }
         }
@@ -353,7 +353,7 @@ fn Code() -> Element {
             .highlight(&rust_config, CODE.as_bytes(), None, |_| None)
             .unwrap();
 
-        let rope = Rope::from_str(&CODE);
+        let rope = Rope::from_str(CODE);
 
         let mut syntax_blocks = SyntaxBlocks::default();
 

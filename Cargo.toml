@@ -2,6 +2,7 @@
 name = "examples"
 version = "0.0.0"
 edition = "2021"
+publish = false
 
 [workspace]
 members = ["crates/renderer", "crates/state", "crates/freya", "crates/elements", "crates/components", "crates/hooks", "crates/common", "crates/core", "crates/testing", "crates/devtools", "crates/torin", "crates/engine", "./examples/installer",  "crates/native-core",  "crates/native-core-macro"]
@@ -10,50 +11,52 @@ members = ["crates/renderer", "crates/state", "crates/freya", "crates/elements",
 tracing-subscriber = ["freya/tracing-subscriber"]
 devtools = ["freya/devtools"]
 use_camera = ["freya/use_camera"]
-hot-reload = ["freya/hot-reload"]
 custom-tokio-rt = ["freya/custom-tokio-rt"]
 performance-overlay = ["freya/performance-overlay"]
 fade-cached-incremental-areas = ["freya/fade-cached-incremental-areas"]
 disable-zoom-shortcuts = ["freya/disable-zoom-shortcuts"]
+docs = ["freya/docs"]
 
 [patch.crates-io]
-# dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
-# dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
-# dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
-# dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
-# dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
-# dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
-# dioxus-hot-reload = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
-# dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
+dioxus = { git = "https://github.com/marc2332/dioxus", rev = "0e4862a272fbc27222c67b1a33baf59a05a8f534" }
+dioxus-rsx = { git = "https://github.com/marc2332/dioxus", rev = "0e4862a272fbc27222c67b1a33baf59a05a8f534" }
+dioxus-core-macro = { git = "https://github.com/marc2332/dioxus", rev = "0e4862a272fbc27222c67b1a33baf59a05a8f534" }
+dioxus-hooks = { git = "https://github.com/marc2332/dioxus", rev = "0e4862a272fbc27222c67b1a33baf59a05a8f534" }
+dioxus-signals = { git = "https://github.com/marc2332/dioxus", rev = "0e4862a272fbc27222c67b1a33baf59a05a8f534" }
+dioxus-core = { git = "https://github.com/marc2332/dioxus", rev = "0e4862a272fbc27222c67b1a33baf59a05a8f534" }
+dioxus-router = { git = "https://github.com/marc2332/dioxus", rev = "0e4862a272fbc27222c67b1a33baf59a05a8f534" }
+generational-box  = { git = "https://github.com/marc2332/dioxus", rev = "0e4862a272fbc27222c67b1a33baf59a05a8f534" }
 
 [workspace.dependencies]
-freya = { path = "crates/freya", version = "0.2" }
-freya-devtools = { path = "crates/devtools", version = "0.2" }
-freya-node-state = { path = "crates/state", version = "0.2" }
-freya-renderer = { path = "crates/renderer", version = "0.2" }
-freya-elements = { path = "crates/elements", version = "0.2" }
-freya-common = { path = "crates/common", version = "0.2" }
-freya-hooks = { path = "crates/hooks", version = "0.2" }
-freya-core = { path = "crates/core", version = "0.2" }
-freya-components = { path = "crates/components", version = "0.2" }
-freya-testing = { path = "crates/testing", version = "0.2" }
-freya-engine = { path = "crates/engine", version = "0.2" }
-torin = { path = "crates/torin", version = "0.2" }
+freya = { path = "crates/freya", version = "0.3.0-rc.0" }
+freya-devtools = { path = "crates/devtools", version = "0.3.0-rc.0" }
+freya-node-state = { path = "crates/state", version = "0.3.0-rc.0" }
+freya-renderer = { path = "crates/renderer", version = "0.3.0-rc.0" }
+freya-elements = { path = "crates/elements", version = "0.3.0-rc.0" }
+freya-common = { path = "crates/common", version = "0.3.0-rc.0" }
+freya-hooks = { path = "crates/hooks", version = "0.3.0-rc.0" }
+freya-core = { path = "crates/core", version = "0.3.0-rc.0" }
+freya-components = { path = "crates/components", version = "0.3.0-rc.0" }
+freya-testing = { path = "crates/testing", version = "0.3.0-rc.0" }
+freya-engine = { path = "crates/engine", version = "0.3.0-rc.0" }
+torin = { path = "crates/torin", version = "0.3.0-rc.0" }
 
-freya-native-core-macro = { path = "crates/native-core-macro", version = "0.2" }
-freya-native-core = { path = "crates/native-core", version = "0.2" }
+freya-native-core-macro = { path = "crates/native-core-macro", version = "0.3.0-rc.0" }
+freya-native-core = { path = "crates/native-core", version = "0.3.0-rc.0" }
 
-dioxus = { version = "0.5", default-features = false, features = ["macro", "signals", "hooks"]}
-dioxus-rsx = { version = "0.5", features = ["hot_reload"] }
-dioxus-core-macro = { version = "0.5" }
-dioxus-hooks = { version = "0.5" }
-dioxus-signals = { version = "0.5" }
-dioxus-core = { version = "0.5" }
-dioxus-hot-reload = { version = "0.5", features = ["file_watcher"], default-features = false }
-dioxus-router = { version = "0.5", default-features = false }
-dioxus-clipboard = "0.1"
+dioxus = { version = "0.6.2", default-features = false, features = ["macro", "signals", "hooks"] }
+dioxus-rsx = { version = "0.6.2" }
+dioxus-core-macro = { version = "0.6.2" }
+dioxus-hooks = { version = "0.6.2" }
+dioxus-signals = { version = "0.6.2" }
+dioxus-core = { version = "0.6.2" }
+dioxus-router = { version = "0.6.2", default-features = false }
+generational-box = { version = "0.6.2" }
 
-skia-safe = { version = "0.75.0", features = ["gl", "textlayout", "svg"] }
+dioxus-clipboard = "0.2.0"
+dioxus-i18n = "0.3"
+
+skia-safe = { version = "0.80.0", features = ["gl", "textlayout", "svg"] }
 
 gl = "0.14.0"
 glutin = "0.32.0"
@@ -84,12 +87,12 @@ freya-core = { workspace = true }
 freya-testing = { workspace = true }
 reqwest = { version = "0.12.0", features = ["json"] }
 serde = "1.0.189"
-dioxus-i18n = "0.2"
+dioxus-i18n = { workspace = true }
 rand = "0.8.5"
 dioxus-router = { workspace = true }
 itertools = "0.13.0"
 home = "0.5.9"
-dioxus-query = "0.5.1"
+dioxus-query = "0.6.0"
 gilrs = "0.10.8"
 gl = { workspace = true }
 tree-sitter-highlight = "0.23.0"
