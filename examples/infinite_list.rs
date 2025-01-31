@@ -25,7 +25,7 @@ async fn fetch_random_dog() -> Option<Url> {
 }
 
 fn app() -> Element {
-    let scroll_controller = use_scroll_controller(|| ScrollConfig::default());
+    let scroll_controller = use_scroll_controller(ScrollConfig::default);
     let mut cards = use_signal(|| 5);
 
     use_effect(move || {
