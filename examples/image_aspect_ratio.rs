@@ -16,6 +16,7 @@ enum AspectRatio {
     Max,
     Min,
     None,
+    Fit,
 }
 
 impl Display for AspectRatio {
@@ -24,13 +25,14 @@ impl Display for AspectRatio {
             Self::Max => f.write_str("max"),
             Self::Min => f.write_str("min"),
             Self::None => f.write_str("none"),
+            Self::Fit => f.write_str("fit"),
         }
     }
 }
 
 fn app() -> Element {
     let image_data = static_bytes(RUST_LOGO);
-    let mut aspect_ratio = use_signal(|| AspectRatio::None);
+    let mut aspect_ratio = use_signal(|| AspectRatio::Min);
 
     rsx!(
         rect {
@@ -41,7 +43,7 @@ fn app() -> Element {
             cross_align: "center",
             Dropdown {
                 value: aspect_ratio(),
-                for ar in [AspectRatio::Max, AspectRatio::Min, AspectRatio::None] {
+                for ar in [AspectRatio::Max, AspectRatio::Min, AspectRatio::None, AspectRatio::Fit] {
                     DropdownItem {
                         value: ar,
                         onpress: move |_| aspect_ratio.set(ar),
