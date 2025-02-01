@@ -7,10 +7,10 @@ def_attribute!(
     /// `aspect_ratio` controls how an `image` element is rendered when facing unexpected dimensions.
     ///
     /// Accepted values:
-    /// - `none` (default): The image will be rendered with its original dimensions.
+    /// - `auto` (default): The image will be rendered with its original dimensions.
+    /// - `none`: The image will be rendered stretching in all the maximum dimensions.
     /// - `min`: The image will be rendered with the minimum dimensions possible.
     /// - `max`: The image will be rendered with the maximum dimensions possible.
-    ///
     ///
     /// ```rust, no_run
     /// # use freya::prelude::*;
@@ -20,7 +20,7 @@ def_attribute!(
     ///     let image_data = static_bytes(RUST_LOGO);
     ///     rsx!(
     ///         image {
-    ///             image_data: image_data,
+    ///             image_data,
     ///             width: "100%",
     ///             height: "100%",
     ///             aspect_ratio: "max"
@@ -45,7 +45,7 @@ def_attribute!(
     ///     let image_data = static_bytes(RUST_LOGO);
     ///     rsx!(
     ///         image {
-    ///             image_data: image_data,
+    ///             image_data,
     ///             width: "100%",
     ///             height: "100%",
     ///             cover: "center"

@@ -33,6 +33,7 @@ fn app() -> Element {
                 image {
                     width: "100%",
                     height: "100%",
+                    aspect_ratio: "none",
                     reference: image.attribute(),
                     image_reference: image.image_attribute()
                 }

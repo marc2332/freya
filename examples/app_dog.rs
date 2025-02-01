@@ -45,9 +45,14 @@ fn app() -> Element {
                 overflow: "clip",
                 width: "100%",
                 height: "calc(100% - 60)",
+                main_align: "center",
+                cross_align: "center",
                 {dog_url.read().as_ref().map(|dog_url| rsx!(
                     NetworkImage {
-                        url: dog_url.clone()
+                        url: dog_url.clone(),
+                        min_width: "300",
+                        min_height: "300",
+                        aspect_ratio: "min"
                     }
                ))}
             }

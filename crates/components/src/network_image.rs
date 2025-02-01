@@ -15,12 +15,16 @@ use crate::Loader;
 /// Properties for the [`NetworkImage`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct NetworkImageProps {
-    /// Width of the image container. Default to `fill`.
-    #[props(default = "fill".into())]
+    /// Width of the image container. Default to `auto`.
+    #[props(default = "auto".into())]
     pub width: String,
-    /// Height of the image container. Default to `fill`.
-    #[props(default = "fill".into())]
+    /// Height of the image container. Default to `auto`.
+    #[props(default = "auto".into())]
     pub height: String,
+    /// Min width of the image container.
+    pub min_width: Option<String>,
+    /// Min height of the image container.
+    pub min_height: Option<String>,
     /// URL of the image.
     pub url: ReadOnlySignal<Url>,
     /// Fallback element.
@@ -86,6 +90,8 @@ pub fn NetworkImage(
     NetworkImageProps {
         width,
         height,
+        min_width,
+        min_height,
         url,
         fallback,
         loading,
@@ -153,6 +159,8 @@ pub fn NetworkImage(
             rsx!(image {
                 height,
                 width,
+                min_width,
+                min_height,
                 a11y_id,
                 image_data,
                 a11y_role: "image",
@@ -170,6 +178,8 @@ pub fn NetworkImage(
                     rect {
                         height,
                         width,
+                        min_width,
+                        min_height,
                         main_align: "center",
                         cross_align: "center",
                         Loader {}
@@ -185,6 +195,8 @@ pub fn NetworkImage(
                     rect {
                         height,
                         width,
+                        min_width,
+                        min_height,
                         main_align: "center",
                         cross_align: "center",
                         label {

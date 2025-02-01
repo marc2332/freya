@@ -458,7 +458,7 @@ def_element!(
     ///     let image_data = static_bytes(RUST_LOGO);
     ///     rsx!(
     ///         image {
-    ///             image_data: image_data,
+    ///             image_data,
     ///             width: "100%", // You must specify size otherwhise it will default to 0
     ///             height: "100%",
     ///         }

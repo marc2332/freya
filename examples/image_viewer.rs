@@ -3,6 +3,8 @@
     windows_subsystem = "windows"
 )]
 
+use std::path::PathBuf;
+
 use bytes::Bytes;
 use freya::prelude::*;
 
@@ -11,11 +13,7 @@ fn main() {
 }
 
 fn app() -> Element {
-    let mut image_bytes = use_signal::<Option<Bytes>>(|| None);
-    let image_data = image_bytes
-        .read()
-        .as_ref()
-        .map(|bytes| dynamic_bytes(bytes.clone()));
+    let mut image = use_signal::<Option<(Bytes, PathBuf)>>(|| None);
 
     let open_image = move |_| {
         spawn(async move {
@@ -23,7 +21,7 @@ fn app() -> Element {
             if let Some(file) = file {
                 let file_content = tokio::fs::read(file.path()).await;
                 if let Ok(file_content) = file_content {
-                    image_bytes.set(Some(Bytes::from(file_content)));
+                    image.set(Some((Bytes::from(file_content), file.path().into())));
                 }
             }
         });
@@ -42,11 +40,11 @@ fn app() -> Element {
                 height: "90%",
                 main_align: "center",
                 cross_align: "center",
-                if let Some(image_data) = image_data {
+                if let Some((bytes, path)) = &*image.read() {
                     image {
-                        width: "fill",
-                        height: "fill",
-                        image_data,
+                        aspect_ratio: "min",
+                        image_data: dynamic_bytes(bytes.clone()),
+                        cache_key: "{path:?}"
                     }
                 } else {
                     label {

@@ -29,9 +29,10 @@ fn app() -> Element {
             padding: "50",
             main_align: "center",
             cross_align: "center",
-            onwheel: onwheel,
+            onwheel,
             image {
-                image_data: image_data,
+                image_data,
+                aspect_ratio: "min",
                 width: "{size}",
                 height: "{size}",
             }
