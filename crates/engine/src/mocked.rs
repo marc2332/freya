@@ -1064,6 +1064,17 @@ impl Canvas {
         unimplemented!("This is mocked")
     }
 
+    pub fn draw_image_rect_with_sampling_options(
+        &self,
+        image: impl AsRef<Image>,
+        src: Option<(&Rect, SrcRectConstraint)>,
+        dst: impl AsRef<Rect>,
+        sampling_options: impl Into<SamplingOptions>,
+        paint: &Paint,
+    ) -> &Self {
+        unimplemented!("This is mocked")
+    }
+
     pub fn draw_rect(&self, _rect: Rect, _paint: &Paint) -> &Self {
         unimplemented!("This is mocked")
     }
@@ -1130,6 +1141,30 @@ pub enum SrcRectConstraint {
 
 #[derive(Default)]
 pub struct SamplingOptions;
+
+impl SamplingOptions {
+    pub fn new(filter_mode: FilterMode, mm: MipmapMode) -> Self {
+        unimplemented!("This is mocked")
+    }
+}
+
+pub struct CubicResampler;
+
+impl CubicResampler {
+    pub fn mitchell() -> Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn catmull_rom() -> Self {
+        unimplemented!("This is mocked")
+    }
+}
+
+impl From<CubicResampler> for SamplingOptions {
+    fn from(_: CubicResampler) -> Self {
+        unimplemented!("This is mocked")
+    }
+}
 
 #[repr(i32)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Default)]
@@ -1349,6 +1384,18 @@ pub enum FilterMode {
 
 impl FilterMode {
     pub const Last: FilterMode = FilterMode::Linear;
+}
+
+#[repr(i32)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum MipmapMode {
+    None = 0,
+    Nearest = 1,
+    Linear = 2,
+}
+
+impl MipmapMode {
+    pub const Last: MipmapMode = MipmapMode::Linear;
 }
 
 pub struct Path;

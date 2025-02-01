@@ -5,6 +5,7 @@ use freya_node_state::{
     AspectRatio,
     ImageCover,
     ReferencesState,
+    SamplingMode,
     StyleState,
     TransformState,
 };
@@ -46,9 +47,6 @@ impl ElementUtils for ImageElement {
                 return;
             };
 
-            let mut paint = Paint::default();
-            paint.set_anti_alias(true);
-
             let width_ratio = area.width() / image.width() as f32;
             let height_ratio = area.height() / image.height() as f32;
 
@@ -88,7 +86,27 @@ impl ElementUtils for ImageElement {
                 canvas.clip_rect(clip_rect, ClipOp::Intersect, true);
             }
 
-            canvas.draw_image_rect(image, None, rect, &paint);
+            let sampling = match node_style.image_sampling {
+                SamplingMode::Nearest => {
+                    SamplingOptions::new(FilterMode::Nearest, MipmapMode::None)
+                }
+                SamplingMode::Bilinear => {
+                    SamplingOptions::new(FilterMode::Linear, MipmapMode::None)
+                }
+                SamplingMode::Trilinear => {
+                    SamplingOptions::new(FilterMode::Linear, MipmapMode::Linear)
+                }
+                SamplingMode::Mitchell => SamplingOptions::from(CubicResampler::mitchell()),
+                SamplingMode::CatmullRom => SamplingOptions::from(CubicResampler::catmull_rom()),
+            };
+
+            canvas.draw_image_rect_with_sampling_options(
+                image,
+                None,
+                rect,
+                sampling,
+                &Paint::default(),
+            );
 
             if node_transform.image_cover == ImageCover::Center {
                 canvas.restore();
