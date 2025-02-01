@@ -20,9 +20,11 @@ use freya_native_core::{
         NodeMaskBuilder,
         State,
     },
+    NodeId,
     SendAnyMap,
 };
 use freya_native_core_macro::partial_derive_state;
+use torin::torin::Torin;
 
 use crate::{
     parsing::ExtSplit,
@@ -191,8 +193,6 @@ impl State<CustomAttributeValues> for StyleState {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         context: &SendAnyMap,
     ) -> bool {
-        let compositor_dirty_nodes = context.get::<Arc<Mutex<CompositorDirtyNodes>>>().unwrap();
-        let images_cache = context.get::<Arc<Mutex<ImagesCache>>>().unwrap();
         let mut style = StyleState::default();
 
         if let Some(attributes) = node_view.attributes() {
@@ -202,16 +202,24 @@ impl State<CustomAttributeValues> for StyleState {
         }
 
         let changed = &style != self;
+        let changed_image_cache_key = style.image_cache_key != self.image_cache_key;
 
         if changed {
+            let compositor_dirty_nodes = context.get::<Arc<Mutex<CompositorDirtyNodes>>>().unwrap();
             compositor_dirty_nodes
                 .lock()
                 .unwrap()
                 .invalidate(node_view.node_id());
+        }
 
+        if changed_image_cache_key {
             if let Some(image_cache_key) = &self.image_cache_key {
+                let images_cache = context.get::<Arc<Mutex<ImagesCache>>>().unwrap();
                 images_cache.lock().unwrap().remove(image_cache_key);
             }
+
+            let torin_layout = context.get::<Arc<Mutex<Torin<NodeId>>>>().unwrap();
+            torin_layout.lock().unwrap().invalidate(node_view.node_id());
         }
 
         *self = style;

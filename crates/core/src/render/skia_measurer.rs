@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use freya_common::{
     CachedParagraph,
+    ImagesCache,
     NodeReferenceLayout,
 };
 use freya_engine::prelude::*;
@@ -26,6 +27,8 @@ use torin::prelude::{
 use super::{
     create_label,
     create_paragraph,
+    get_or_create_image,
+    ImageData,
 };
 use crate::{
     dom::*,
@@ -38,6 +41,7 @@ pub struct SkiaMeasurer<'a> {
     pub rdom: &'a DioxusDOM,
     pub default_fonts: &'a [String],
     pub scale_factor: f32,
+    pub images_cache: &'a mut ImagesCache,
 }
 
 impl<'a> SkiaMeasurer<'a> {
@@ -46,12 +50,14 @@ impl<'a> SkiaMeasurer<'a> {
         font_collection: &'a FontCollection,
         default_fonts: &'a [String],
         scale_factor: f32,
+        images_cache: &'a mut ImagesCache,
     ) -> Self {
         Self {
             font_collection,
             rdom,
             default_fonts,
             scale_factor,
+            images_cache,
         }
     }
 }
@@ -92,6 +98,14 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                 let mut map = SendAnyMap::new();
                 map.insert(CachedParagraph(paragraph, size.height));
                 Some((size, Arc::new(map)))
+            }
+            NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Image => {
+                let Some(ImageData { size, .. }) =
+                    get_or_create_image(&node, area_size, self.images_cache)
+                else {
+                    return Some((*area_size, Arc::default()));
+                };
+                Some((size, Arc::default()))
             }
             _ => None,
         }

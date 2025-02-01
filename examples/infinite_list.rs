@@ -71,6 +71,8 @@ fn RandomImage() -> Element {
             corner_radius: "8",
             if let Some(url) = url.read().clone().flatten() {
                 NetworkImage {
+                    width: "fill",
+                    height: "fill",
                     aspect_ratio: "max",
                     url
                 }

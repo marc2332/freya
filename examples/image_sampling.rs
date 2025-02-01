@@ -38,6 +38,7 @@ fn app() -> Element {
                         image_data: image_data.clone(),
                         width: "96",
                         height: "96",
+                        cache_key: "{sampling}",
                         sampling,
                     }
 
