@@ -215,7 +215,7 @@ mod test {
                         width: "50",
                         height: "50",
                         function: Function::Linear,
-                        key: 0
+                        id: 0
                     }
                 }
             )
