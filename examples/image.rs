@@ -32,7 +32,6 @@ fn app() -> Element {
             onwheel,
             image {
                 image_data,
-                aspect_ratio: "min",
                 width: "{size}",
                 height: "{size}",
             }

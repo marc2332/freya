@@ -5,10 +5,10 @@ use crate::{
 
 #[derive(Default, Clone, Debug, PartialEq)]
 pub enum AspectRatio {
+    #[default]
     Min,
     Max,
-    #[default]
-    Auto,
+    Fit,
     None,
 }
 
@@ -17,7 +17,7 @@ impl Parse for AspectRatio {
         match value {
             "min" => Ok(Self::Min),
             "max" => Ok(Self::Max),
-            "auto" => Ok(Self::Auto),
+            "fit" => Ok(Self::Fit),
             "none" => Ok(Self::None),
             _ => Err(ParseError),
         }

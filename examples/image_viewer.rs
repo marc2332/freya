@@ -42,7 +42,6 @@ fn app() -> Element {
                 cross_align: "center",
                 if let Some((bytes, path)) = &*image.read() {
                     image {
-                        aspect_ratio: "min",
                         image_data: dynamic_bytes(bytes.clone()),
                         cache_key: "{path:?}"
                     }

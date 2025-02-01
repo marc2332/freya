@@ -490,6 +490,7 @@ def_element!(
         aspect_ratio,
         cover,
         cache_key,
+        sampling,
 
         // Reference
         reference,

@@ -37,6 +37,8 @@ pub struct NetworkImageProps {
     pub aspect_ratio: Option<String>,
     /// Cover of the image.
     pub cover: Option<String>,
+    /// Image sampling algorithm.
+    pub sampling: Option<String>,
 }
 
 /// Image status.
@@ -98,6 +100,7 @@ pub fn NetworkImage(
         alt,
         aspect_ratio,
         cover,
+        sampling,
     }: NetworkImageProps,
 ) -> Element {
     let mut asset_cacher = use_asset_cacher();
@@ -167,7 +170,8 @@ pub fn NetworkImage(
                 a11y_name: alt,
                 aspect_ratio,
                 cover,
-                cache_key: "{url}"
+                cache_key: "{url}",
+                sampling,
             })
         }
         ImageState::Loading => {

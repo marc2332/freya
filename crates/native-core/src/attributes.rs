@@ -72,6 +72,7 @@ pub enum AttributeName {
     AspectRatio,
     ImageCover,
     ImageCacheKey,
+    Sampling,
 
     // Focus
     A11yId,
@@ -301,6 +302,7 @@ impl FromStr for AttributeName {
             "aspect_ratio" => Ok(AttributeName::AspectRatio),
             "cover" => Ok(AttributeName::ImageCover),
             "cache_key" => Ok(AttributeName::ImageCacheKey),
+            "sampling" => Ok(AttributeName::Sampling),
             "a11y_id" => Ok(AttributeName::A11yId),
             "a11y_focusable" => Ok(AttributeName::A11yFocusable),
             "a11y_auto_focus" => Ok(AttributeName::A11yAutoFocus),

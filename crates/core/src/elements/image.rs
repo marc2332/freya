@@ -3,6 +3,8 @@ use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::{
     ImageCover,
+    SamplingMode,
+    StyleState,
     TransformState,
 };
 
@@ -38,6 +40,7 @@ impl ElementUtils for ImageElement {
         };
 
         let node_transform = node_ref.get::<TransformState>().unwrap();
+        let node_style = node_ref.get::<StyleState>().unwrap();
 
         let mut rect = Rect::new(
             area.min_x(),
@@ -63,7 +66,22 @@ impl ElementUtils for ImageElement {
 
         let mut paint = Paint::default();
         paint.set_anti_alias(true);
-        canvas.draw_image_rect(image, None, rect, &paint);
+
+        let sampling = match node_style.image_sampling {
+            SamplingMode::Nearest => SamplingOptions::new(FilterMode::Nearest, MipmapMode::None),
+            SamplingMode::Bilinear => SamplingOptions::new(FilterMode::Linear, MipmapMode::None),
+            SamplingMode::Trilinear => SamplingOptions::new(FilterMode::Linear, MipmapMode::Linear),
+            SamplingMode::Mitchell => SamplingOptions::from(CubicResampler::mitchell()),
+            SamplingMode::CatmullRom => SamplingOptions::from(CubicResampler::catmull_rom()),
+        };
+
+        canvas.draw_image_rect_with_sampling_options(
+            image,
+            None,
+            rect,
+            sampling,
+            &Paint::default(),
+        );
 
         canvas.restore();
     }

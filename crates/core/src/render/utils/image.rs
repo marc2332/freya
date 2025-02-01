@@ -71,7 +71,7 @@ pub fn get_or_create_image(
 
             Size2D::new(image_width * ratio, image_height * ratio)
         }
-        AspectRatio::Auto => Size2D::new(image_width, image_height),
+        AspectRatio::Fit => Size2D::new(image_width, image_height),
         AspectRatio::None => *area_size,
     };
 

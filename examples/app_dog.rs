@@ -52,7 +52,6 @@ fn app() -> Element {
                         url: dog_url.clone(),
                         min_width: "300",
                         min_height: "300",
-                        aspect_ratio: "min"
                     }
                ))}
             }
