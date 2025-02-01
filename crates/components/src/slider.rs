@@ -220,7 +220,7 @@ pub fn Slider(
         onmoved.call(percentage);
     };
 
-    let border = if focus.is_selected() {
+    let border = if focus.is_focused_with_keyboard() {
         format!("2 inner {}", theme.border_fill)
     } else {
         "none".to_string()

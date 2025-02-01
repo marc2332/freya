@@ -2,7 +2,6 @@ use dioxus::prelude::*;
 use freya_elements::{
     self as dioxus_elements,
     events::{
-        Key,
         KeyboardEvent,
         MouseEvent,
     },
@@ -53,11 +52,9 @@ pub fn Tile(
     });
 
     let onkeydown = move |e: KeyboardEvent| {
-        if e.key == Key::Enter {
-            if let Some(onselect) = &onselect {
-                e.stop_propagation();
-                onselect.call(())
-            }
+        if let Some(onselect) = &onselect {
+            e.stop_propagation();
+            onselect.call(())
         }
     };
 

@@ -161,7 +161,7 @@ pub fn Tab(
         TabStatus::Hovering => hover_background,
         TabStatus::Idle => background,
     };
-    let border = if focus.is_selected() || is_active {
+    let border = if focus.is_focused_with_keyboard() || is_active {
         focus_border_fill
     } else {
         border_fill
@@ -318,7 +318,7 @@ pub fn BottomTab(
     };
 
     let background = match *status.read() {
-        _ if focus.is_selected() || is_active => hover_background,
+        _ if focus.is_focused_with_keyboard() || is_active => hover_background,
         TabStatus::Hovering => hover_background,
         TabStatus::Idle => background,
     };

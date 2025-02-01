@@ -45,7 +45,7 @@ use crate::{
 #[derive(Clone, Copy)]
 pub struct UseFocus {
     id: AccessibilityId,
-    is_selected: Memo<bool>,
+    is_focused_with_keyboard: Memo<bool>,
     is_focused: Memo<bool>,
     navigation_mode: Signal<NavigationMode>,
     navigation_mark: Signal<NavigationMark>,
@@ -90,8 +90,9 @@ impl UseFocus {
     }
 
     /// Check if this node is currently selected
-    pub fn is_selected(&self) -> bool {
-        *self.is_selected.read() && *self.navigation_mode.read() == NavigationMode::Keyboard
+    pub fn is_focused_with_keyboard(&self) -> bool {
+        *self.is_focused_with_keyboard.read()
+            && *self.navigation_mode.read() == NavigationMode::Keyboard
     }
 
     /// Unfocus the currently focused node.
@@ -103,9 +104,10 @@ impl UseFocus {
             .ok();
     }
 
-    /// Validate globalkeydown event
-    pub fn validate_globalkeydown(&self, e: &KeyboardEvent) -> bool {
-        e.data.code == Code::Enter && self.is_selected()
+    /// Validate a `keydown` event.
+    pub fn validate_keydown(&self, e: &KeyboardEvent) -> bool {
+        (e.data.code == Code::Enter || e.data.code == Code::Space)
+            && self.is_focused_with_keyboard()
     }
 
     /// Prevent navigating the accessible nodes with the keyboard.
@@ -142,13 +144,13 @@ pub fn use_focus_from_id(id: AccessibilityId) -> UseFocus {
 
     let is_focused = use_memo(move || id == *focused_id.read());
 
-    let is_selected =
+    let is_focused_with_keyboard =
         use_memo(move || *is_focused.read() && *navigation_mode.read() == NavigationMode::Keyboard);
 
     use_hook(move || UseFocus {
         id,
         is_focused,
-        is_selected,
+        is_focused_with_keyboard,
         navigation_mode,
         navigation_mark,
         platform,

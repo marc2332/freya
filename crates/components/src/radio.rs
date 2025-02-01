@@ -83,13 +83,17 @@ pub fn Radio(
     } else {
         unselected_fill
     };
-    let border = if focus.is_selected() {
+    let border = if focus.is_focused_with_keyboard() {
         format!("2 inner {fill}, 4 outer {border_fill}")
     } else {
         format!("2 inner {fill}")
     };
 
-    let onkeydown = move |_: KeyboardEvent| {};
+    let onkeydown = move |e: KeyboardEvent| {
+        if !focus.validate_keydown(&e) {
+            e.stop_propagation();
+        }
+    };
 
     rsx!(
         rect {

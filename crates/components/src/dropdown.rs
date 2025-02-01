@@ -89,7 +89,7 @@ where
         DropdownItemStatus::Hovering => hover_background,
         DropdownItemStatus::Idle => background,
     };
-    let border = if focus.is_selected() {
+    let border = if focus.is_focused_with_keyboard() {
         format!("2 inner {select_border_fill}")
     } else {
         format!("1 inner {border_fill}")
@@ -308,7 +308,7 @@ where
         DropdownStatus::Hovering => hover_background,
         DropdownStatus::Idle => background_button,
     };
-    let border = if focus.is_selected() {
+    let border = if focus.is_focused_with_keyboard() {
         format!("2 inner {focus_border_fill}")
     } else {
         format!("1 inner {border_fill}")
