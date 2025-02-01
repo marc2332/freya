@@ -281,8 +281,8 @@ pub fn ButtonBase(
         status.set(ButtonStatus::default());
     };
 
-    let onglobalkeydown = move |ev: KeyboardEvent| {
-        if focus.validate_globalkeydown(&ev) {
+    let onkeydown = move |ev: KeyboardEvent| {
+        if focus.validate_keydown(&ev) {
             if let Some(onpress) = &onpress {
                 onpress.call(PressEvent::Key(ev))
             }
@@ -293,7 +293,7 @@ pub fn ButtonBase(
         ButtonStatus::Hovering => hover_background,
         ButtonStatus::Idle => background,
     };
-    let border = if focus.is_selected() {
+    let border = if focus.is_focused_with_keyboard() {
         format!("2 inner {focus_border_fill}")
     } else {
         format!("1 inner {border_fill}")
@@ -304,7 +304,7 @@ pub fn ButtonBase(
             onpointerup,
             onmouseenter,
             onmouseleave,
-            onglobalkeydown,
+            onkeydown,
             a11y_id,
             width: "{width}",
             height: "{height}",

@@ -167,8 +167,8 @@ pub fn Switch(props: SwitchProps) -> Element {
         props.ontoggled.call(());
     };
 
-    let onglobalkeydown = move |e: KeyboardEvent| {
-        if focus.validate_globalkeydown(&e) {
+    let onkeydown = move |e: KeyboardEvent| {
+        if focus.validate_keydown(&e) {
             props.ontoggled.call(());
         }
     };
@@ -179,7 +179,7 @@ pub fn Switch(props: SwitchProps) -> Element {
     let background = background.read();
     let circle = circle.read();
 
-    let border = if focus.is_selected() {
+    let border = if focus.is_focused_with_keyboard() {
         if props.enabled {
             format!("2 inner {}", theme.enabled_focus_border_fill)
         } else {
@@ -209,7 +209,7 @@ pub fn Switch(props: SwitchProps) -> Element {
             onmousedown,
             onmouseenter,
             onmouseleave,
-            onglobalkeydown,
+            onkeydown,
             onclick,
             a11y_id,
             offset_x: "{offset_x}",
