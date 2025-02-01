@@ -3,7 +3,11 @@ use std::sync::{
     Mutex,
 };
 
-use freya_common::CompositorDirtyNodes;
+use freya_common::{
+    CompositorDirtyNodes,
+    ImageCacheKey,
+    ImagesCache,
+};
 use freya_engine::prelude::Color;
 use freya_native_core::{
     attributes::AttributeName,
@@ -45,6 +49,7 @@ pub struct StyleState {
     pub image_data: Option<AttributesBytes>,
     pub svg_data: Option<AttributesBytes>,
     pub overflow: OverflowMode,
+    pub image_cache_key: Option<ImageCacheKey>,
 }
 
 impl ParseAttribute for StyleState {
@@ -133,6 +138,11 @@ impl ParseAttribute for StyleState {
                     self.overflow = OverflowMode::parse(value)?;
                 }
             }
+            AttributeName::ImageCacheKey => {
+                if let OwnedAttributeValue::Text(key) = attr.value {
+                    self.image_cache_key = Some(ImageCacheKey(key.clone()));
+                }
+            }
             _ => {}
         }
 
@@ -162,6 +172,7 @@ impl State<CustomAttributeValues> for StyleState {
             AttributeName::SvgData,
             AttributeName::SvgContent,
             AttributeName::Overflow,
+            AttributeName::ImageCacheKey,
         ]));
 
     fn update<'a>(
@@ -173,6 +184,7 @@ impl State<CustomAttributeValues> for StyleState {
         context: &SendAnyMap,
     ) -> bool {
         let compositor_dirty_nodes = context.get::<Arc<Mutex<CompositorDirtyNodes>>>().unwrap();
+        let images_cache = context.get::<Arc<Mutex<ImagesCache>>>().unwrap();
         let mut style = StyleState::default();
 
         if let Some(attributes) = node_view.attributes() {
@@ -187,7 +199,11 @@ impl State<CustomAttributeValues> for StyleState {
             compositor_dirty_nodes
                 .lock()
                 .unwrap()
-                .invalidate(node_view.node_id())
+                .invalidate(node_view.node_id());
+
+            if let Some(image_cache_key) = &self.image_cache_key {
+                images_cache.lock().unwrap().remove(image_cache_key);
+            }
         }
 
         *self = style;

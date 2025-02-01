@@ -18,6 +18,7 @@ use freya_common::{
     AccessibilityDirtyNodes,
     AccessibilityGenerator,
     CompositorDirtyNodes,
+    ImagesCache,
     Layers,
     ParagraphElements,
 };
@@ -133,6 +134,7 @@ pub struct FreyaDOM {
     compositor_cache: Arc<Mutex<CompositorCache>>,
     accessibility_dirty_nodes: Arc<Mutex<AccessibilityDirtyNodes>>,
     accessibility_generator: Arc<AccessibilityGenerator>,
+    images_cache: Arc<Mutex<ImagesCache>>,
 }
 
 impl Default for FreyaDOM {
@@ -160,6 +162,7 @@ impl Default for FreyaDOM {
             compositor_cache: Arc::default(),
             accessibility_dirty_nodes: Arc::default(),
             accessibility_generator: Arc::default(),
+            images_cache: Arc::default(),
         }
     }
 }
@@ -197,6 +200,10 @@ impl FreyaDOM {
         &self.accessibility_generator
     }
 
+    pub fn images_cache(&self) -> MutexGuard<ImagesCache> {
+        self.images_cache.lock().unwrap()
+    }
+
     /// Create the initial DOM from the given Mutations
     pub fn init_dom(&mut self, vdom: &mut VirtualDom, scale_factor: f32) {
         // Build the RealDOM
@@ -212,6 +219,7 @@ impl FreyaDOM {
             compositor_dirty_area: &mut self.compositor_dirty_area.lock().unwrap(),
             compositor_cache: &mut self.compositor_cache.lock().unwrap(),
             accessibility_dirty_nodes: &mut self.accessibility_dirty_nodes.lock().unwrap(),
+            images_cache: &mut self.images_cache.lock().unwrap(),
         });
 
         let mut ctx = SendAnyMap::new();
@@ -222,6 +230,7 @@ impl FreyaDOM {
         ctx.insert(self.accessibility_dirty_nodes.clone());
         ctx.insert(self.rdom.root_id());
         ctx.insert(self.accessibility_generator.clone());
+        ctx.insert(self.images_cache.clone());
 
         self.rdom.update_state(ctx);
     }
@@ -241,6 +250,7 @@ impl FreyaDOM {
             compositor_dirty_area: &mut self.compositor_dirty_area.lock().unwrap(),
             compositor_cache: &mut self.compositor_cache.lock().unwrap(),
             accessibility_dirty_nodes: &mut self.accessibility_dirty_nodes.lock().unwrap(),
+            images_cache: &mut self.images_cache.lock().unwrap(),
         });
 
         // Update the Nodes states
@@ -252,6 +262,7 @@ impl FreyaDOM {
         ctx.insert(self.accessibility_dirty_nodes.clone());
         ctx.insert(self.rdom.root_id());
         ctx.insert(self.accessibility_generator.clone());
+        ctx.insert(self.images_cache.clone());
 
         // Update the Node's states
         let diff = self.rdom.update_state(ctx);

@@ -3,6 +3,7 @@ use std::ops::Mul;
 use freya_common::{
     CachedParagraph,
     CursorLayoutResponse,
+    ImagesCache,
 };
 use freya_engine::prelude::*;
 use freya_native_core::{
@@ -121,6 +122,7 @@ impl ElementUtils for ParagraphElement {
         font_collection: &mut FontCollection,
         _font_manager: &FontMgr,
         default_fonts: &[String],
+        _images_cache: &mut ImagesCache,
         scale_factor: f32,
     ) {
         let area = layout_node.visible_area();
