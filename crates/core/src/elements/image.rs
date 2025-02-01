@@ -32,51 +32,46 @@ impl ElementUtils for ImageElement {
 
         let mut draw_img = |bytes: &[u8]| {
             let image = if let Some(image_cache_key) = &node_style.image_cache_key {
-                let cached_image = if let Some(image) = images_cache.get(image_cache_key).cloned() {
-                    image
-                } else {
-                    let Some(image) = Image::from_encoded(unsafe { Data::new_bytes(bytes) }) else {
-                        return;
-                    };
-                    images_cache.insert(image_cache_key.clone(), image.clone());
-
-                    image
-                };
-
-                Some(cached_image)
+                images_cache.get(image_cache_key).cloned().or_else(|| {
+                    Image::from_encoded(unsafe { Data::new_bytes(bytes) }).inspect(|image| {
+                        images_cache.insert(image_cache_key.clone(), image.clone());
+                    })
+                })
             } else {
                 Image::from_encoded(unsafe { Data::new_bytes(bytes) })
             };
 
-            if let Some(image) = image {
-                let mut paint = Paint::default();
-                paint.set_anti_alias(true);
+            let Some(image) = image else {
+                return;
+            };
 
-                let width_ratio = area.width() / image.width() as f32;
-                let height_ratio = area.height() / image.height() as f32;
+            let mut paint = Paint::default();
+            paint.set_anti_alias(true);
 
-                let (width, height) = match node_transform.aspect_ratio {
-                    AspectRatio::Max => {
-                        let ratio = width_ratio.max(height_ratio);
+            let width_ratio = area.width() / image.width() as f32;
+            let height_ratio = area.height() / image.height() as f32;
 
-                        (image.width() as f32 * ratio, image.height() as f32 * ratio)
-                    }
-                    AspectRatio::Min => {
-                        let ratio = width_ratio.min(height_ratio);
+            let (width, height) = match node_transform.aspect_ratio {
+                AspectRatio::Max => {
+                    let ratio = width_ratio.max(height_ratio);
 
-                        (image.width() as f32 * ratio, image.height() as f32 * ratio)
-                    }
-                    AspectRatio::None => (area.width(), area.height()),
-                };
+                    (image.width() as f32 * ratio, image.height() as f32 * ratio)
+                }
+                AspectRatio::Min => {
+                    let ratio = width_ratio.min(height_ratio);
 
-                let rect = Rect::new(
-                    area.min_x(),
-                    area.min_y(),
-                    area.min_x() + width,
-                    area.min_y() + height,
-                );
-                canvas.draw_image_rect(image, None, rect, &paint);
-            }
+                    (image.width() as f32 * ratio, image.height() as f32 * ratio)
+                }
+                AspectRatio::None => (area.width(), area.height()),
+            };
+
+            let rect = Rect::new(
+                area.min_x(),
+                area.min_y(),
+                area.min_x() + width,
+                area.min_y() + height,
+            );
+            canvas.draw_image_rect(image, None, rect, &paint);
         };
 
         if let Some(image_ref) = &node_references.image_ref {
