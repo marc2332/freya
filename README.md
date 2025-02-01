@@ -124,6 +124,8 @@ Thanks to my sponsors for supporting this project! 😄
 - [Armin](https://github.com/pragmatrix) for making [rust-skia](https://github.com/rust-skia/rust-skia/) and all his help and making the favor of hosting prebuilt binaries of skia for the combo of features use by Freya.
 - [geom3trik](https://github.com/geom3trik) for helping me figure out how to add incremental rendering.
 - [Tropical](https://github.com/Tropix126) for this contributions to improving accessibility and rendering.
+- [Aiving](https://github.com/Aiving) for having made heavy contributions to [rust-skia](https://github.com/rust-skia/rust-skia/) for better SVG support, and helped optimizing images rendering in Freya.
+- [RobertasJ](https://github.com/RobertasJ) for having added nested parenthesis to the `calc()` function and also pushed for improvements in the animation APIs.
 - And to the rest of contributors and anybody who gave me any kind of feedback!
 
 ### 🤠 Projects
