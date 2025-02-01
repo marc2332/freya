@@ -9,7 +9,7 @@ fn main() {
     launch(app);
 }
 
-static RUST_LOGO: &[u8] = include_bytes!("./RUST_LOGO.png");
+static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
 
 fn app() -> Element {
     rsx!(
