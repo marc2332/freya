@@ -488,6 +488,8 @@ def_element!(
         // Image
         image_data,
         aspect_ratio,
+        cover,
+        cache_key,
         sampling,
 
         // Reference

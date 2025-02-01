@@ -1314,6 +1314,7 @@ impl Rect {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct Image;
 
 impl AsRef<Image> for Image {

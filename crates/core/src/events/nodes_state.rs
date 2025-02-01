@@ -48,6 +48,7 @@ impl NodesState {
         events: &[PlatformEvent],
     ) -> PotentialEvents {
         let rdom = fdom.rdom();
+        let layout = fdom.layout();
         let mut potential_collateral_events = PotentialEvents::default();
 
         // Any mouse press event at all
@@ -83,20 +84,22 @@ impl NodesState {
                 if let Some(PlatformEventData::Mouse { cursor, button, .. }) =
                     recent_mouse_movement_event
                 {
-                    let events = potential_collateral_events
-                        .entry(EventName::MouseLeave)
-                        .or_default();
+                    if layout.get(*node_id).is_some() {
+                        let events = potential_collateral_events
+                            .entry(EventName::MouseLeave)
+                            .or_default();
 
-                    // Emit a MouseLeave event as the cursor was moved outside the Node bounds
-                    events.push(PotentialEvent {
-                        node_id: *node_id,
-                        layer: metadata.layer,
-                        name: EventName::MouseLeave,
-                        data: PlatformEventData::Mouse { cursor, button },
-                    });
+                        // Emit a MouseLeave event as the cursor was moved outside the Node bounds
+                        events.push(PotentialEvent {
+                            node_id: *node_id,
+                            layer: metadata.layer,
+                            name: EventName::MouseLeave,
+                            data: PlatformEventData::Mouse { cursor, button },
+                        });
 
-                    #[cfg(debug_assertions)]
-                    tracing::info!("Unmarked as hovered {:?}", node_id);
+                        #[cfg(debug_assertions)]
+                        tracing::info!("Unmarked as hovered {:?}", node_id);
+                    }
 
                     // Remove the node from the list of hovered nodes
                     return false;

@@ -1,5 +1,6 @@
 use freya_common::{
     CompositorDirtyNodes,
+    ImagesCache,
     Layers,
 };
 use freya_engine::prelude::{
@@ -63,6 +64,7 @@ pub struct RenderPipeline<'a> {
     pub compositor: &'a mut Compositor,
     pub font_collection: &'a mut FontCollection,
     pub font_manager: &'a FontMgr,
+    pub images_cache: &'a mut ImagesCache,
     pub canvas_area: Area,
     pub background: Color,
     pub scale_factor: f32,
@@ -266,6 +268,7 @@ impl RenderPipeline<'_> {
                 self.font_collection,
                 self.font_manager,
                 self.default_fonts,
+                self.images_cache,
                 self.scale_factor,
             );
 

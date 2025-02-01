@@ -1,3 +1,4 @@
+use freya_common::ImagesCache;
 use freya_engine::prelude::{
     Canvas,
     FontCollection,
@@ -54,6 +55,7 @@ pub trait ElementUtils {
         font_collection: &mut FontCollection,
         font_manager: &FontMgr,
         default_fonts: &[String],
+        images_cache: &mut ImagesCache,
         scale_factor: f32,
     );
 
@@ -206,6 +208,7 @@ impl ElementUtils for ElementWithUtils {
         font_collection: &mut FontCollection,
         font_manager: &FontMgr,
         default_fonts: &[String],
+        images_cache: &mut ImagesCache,
         scale_factor: f32,
     ) {
         match self {
@@ -216,6 +219,7 @@ impl ElementUtils for ElementWithUtils {
                 font_collection,
                 font_manager,
                 default_fonts,
+                images_cache,
                 scale_factor,
             ),
             Self::Svg(el) => el.render(
@@ -225,6 +229,7 @@ impl ElementUtils for ElementWithUtils {
                 font_collection,
                 font_manager,
                 default_fonts,
+                images_cache,
                 scale_factor,
             ),
             Self::Paragraph(el) => el.render(
@@ -234,6 +239,7 @@ impl ElementUtils for ElementWithUtils {
                 font_collection,
                 font_manager,
                 default_fonts,
+                images_cache,
                 scale_factor,
             ),
             Self::Image(el) => el.render(
@@ -243,6 +249,7 @@ impl ElementUtils for ElementWithUtils {
                 font_collection,
                 font_manager,
                 default_fonts,
+                images_cache,
                 scale_factor,
             ),
             Self::Label(el) => el.render(
@@ -252,6 +259,7 @@ impl ElementUtils for ElementWithUtils {
                 font_collection,
                 font_manager,
                 default_fonts,
+                images_cache,
                 scale_factor,
             ),
         }
