@@ -234,6 +234,11 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
         }
     }
 
+    pub fn deep_clone_node(&mut self, node_id: NodeId) -> NodeMut<V> {
+        let clone_id = self.get_mut(node_id).unwrap().clone_node();
+        self.get_mut(clone_id).unwrap()
+    }
+
     /// Get a reference to the tree.
     pub fn tree_ref(&self) -> TreeRefView {
         self.world.borrow().unwrap()

@@ -70,10 +70,10 @@ fn app() -> Element {
                     value: function(),
                     for func in &[Function::Quad, Function::Elastic, Function::Quart, Function::Linear, Function::Circ] {
                         DropdownItem {
-                            value: func.clone(),
-                            onclick: {
+                            value: *func,
+                            onpress: {
                                 to_owned![func];
-                                move |_| function.set(func.clone())
+                                move |_| function.set(func)
                             },
                             label { "{func:?}" }
                         }
@@ -109,18 +109,16 @@ fn app() -> Element {
 
 #[component]
 fn Card(children: Element) -> Element {
-    let animation = use_animation(move |ctx| {
-        ctx.auto_start(true);
-        ctx.with(
-            AnimNum::new(0.9, 1.)
-                .time(300)
-                .function(Function::Elastic)
-                .ease(Ease::Out),
-        )
+    let animation = use_animation(move |conf| {
+        conf.auto_start(true);
+        AnimNum::new(0.9, 1.)
+            .time(300)
+            .function(Function::Elastic)
+            .ease(Ease::Out)
     });
 
     let scale = animation.get();
-    let scale = scale.read().as_f32();
+    let scale = scale.read();
 
     rsx!(
         rect {
@@ -131,7 +129,7 @@ fn Card(children: Element) -> Element {
             padding: "6 10",
             main_align: "center",
             cross_align: "center",
-            scale: "{scale}",
+            scale: "{scale.read()}",
             label {
                 font_size: "14",
                 color: "black",

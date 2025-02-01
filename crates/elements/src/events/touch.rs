@@ -4,7 +4,99 @@ pub use winit::event::{
     TouchPhase,
 };
 
-use crate::definitions::PlatformEventData;
+use crate::{
+    events::ErasedEventData,
+    impl_event,
+};
+
+impl_event! [
+    TouchData;
+
+    /// The `touchcancel` event fires when the user cancels the touching, this is usually caused by the hardware or the OS.
+    /// Also see [`ontouchend`](crate::events::ontouchend()).
+    ///
+    /// Event Data: [`TouchData`](crate::events::TouchData)
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             width: "100",
+    ///             height: "100",
+    ///             background: "red",
+    ///             ontouchcancel: |_| println!("Touching canceled!")
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    ontouchcancel
+
+    /// The `touchend` event fires when the user stops touching an element.
+    ///
+    /// Event Data: [`TouchData`](crate::events::TouchData)
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             width: "100",
+    ///             height: "100",
+    ///             background: "red",
+    ///             ontouchend: |_| println!("Stopped touching!")
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    ontouchend
+
+    /// The `touchmove` event fires when the user is touching over an element.
+    ///
+    /// Event Data: [`TouchData`](crate::events::TouchData)
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             width: "100",
+    ///             height: "100",
+    ///             background: "red",
+    ///             ontouchmove: |_| println!("Touching!")
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    ontouchmove
+
+    /// The `touchstart` event fires when the user starts touching an element.
+    ///
+    /// Event Data: [`TouchData`](crate::events::TouchData)
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             width: "100",
+    ///             height: "100",
+    ///             background: "red",
+    ///             ontouchstart: |_| println!("Started touching!")
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    ontouchstart
+];
 
 /// Data of a Touch event.
 #[derive(Debug, Clone, PartialEq)]
@@ -59,8 +151,8 @@ impl TouchData {
     }
 }
 
-impl From<&PlatformEventData> for TouchData {
-    fn from(val: &PlatformEventData) -> Self {
+impl From<&ErasedEventData> for TouchData {
+    fn from(val: &ErasedEventData) -> Self {
         val.downcast::<TouchData>().cloned().unwrap()
     }
 }

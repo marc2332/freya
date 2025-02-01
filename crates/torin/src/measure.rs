@@ -375,7 +375,7 @@ where
 
                 let inner_area = initial_phase_inner_area;
 
-                let (_, child_areas) = self.measure_node(
+                let (_, mut child_areas) = self.measure_node(
                     *child_id,
                     &child_data,
                     &inner_area,
@@ -384,6 +384,8 @@ where
                     parent_is_dirty,
                     Phase::Initial,
                 );
+
+                child_areas.area.adjust_size(&child_data);
 
                 // Stack this child into the parent
                 Self::stack_child(

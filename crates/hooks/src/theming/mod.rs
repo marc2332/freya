@@ -173,10 +173,12 @@ macro_rules! theme_with {
         ),* $(,)?
     }) => {
         $crate::paste! {
-            #[allow(clippy::needless_update)]
-            [<$theme_name With>] {
-                $($theme_field_name: Some($theme_field_val),)*
-                ..$crate::Default::default()
+            {
+                #[allow(clippy::needless_update)]
+                [<$theme_name With>] {
+                    $($theme_field_name: Some($theme_field_val),)*
+                    ..$crate::Default::default()
+                }
             }
         }
     };
@@ -192,6 +194,7 @@ define_theme! {
         background_button: str,
         hover_background: str,
         border_fill: str,
+        focus_border_fill: str,
         arrow_fill: str,
         %[subthemes]
         font_theme: FontTheme,
@@ -205,6 +208,8 @@ define_theme! {
         background: str,
         select_background: str,
         hover_background: str,
+        border_fill: str,
+        select_border_fill: str,
         %[subthemes]
         font_theme: FontTheme,
     }
@@ -344,7 +349,6 @@ define_theme! {
         color: str,
         background: str,
         progress_background: str,
-        width: str,
         height: str,
     }
 }
@@ -358,7 +362,6 @@ define_theme! {
         alternate_row_background: str,
         row_background: str,
         divider_fill: str,
-        height: str,
         corner_radius: str,
         shadow: str,
         %[subthemes]
@@ -368,26 +371,7 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub Canvas {
-        %[cows]
-        width: str,
-        height: str,
-        background: str,
-    }
-}
-
-define_theme! {
-    %[component]
     pub Graph {
-        %[cows]
-        width: str,
-        height: str,
-    }
-}
-
-define_theme! {
-    %[component]
-    pub NetworkImage {
         %[cows]
         width: str,
         height: str,
@@ -608,9 +592,7 @@ pub struct Theme {
     pub progress_bar: ProgressBarTheme,
     pub table: TableTheme,
     pub input: InputTheme,
-    pub canvas: CanvasTheme,
     pub graph: GraphTheme,
-    pub network_image: NetworkImageTheme,
     pub icon: IconTheme,
     pub sidebar: SidebarTheme,
     pub sidebar_item: SidebarItemTheme,

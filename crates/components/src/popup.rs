@@ -1,8 +1,8 @@
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::{
-        keyboard::Key,
+        Key,
         KeyboardEvent,
     },
 };
@@ -93,13 +93,21 @@ pub fn Popup(
     #[props(default = true)]
     close_on_escape_key: bool,
 ) -> Element {
-    let animations = use_animation(|ctx| {
-        ctx.auto_start(true);
-        ctx.with(
-            AnimNum::new(0.75, 1.)
-                .time(350)
+    let animations = use_animation(|conf| {
+        conf.auto_start(true);
+        (
+            AnimNum::new(0.85, 1.)
+                .time(150)
                 .ease(Ease::Out)
-                .function(Function::Expo),
+                .function(Function::Quad),
+            AnimNum::new(40., 1.)
+                .time(150)
+                .ease(Ease::Out)
+                .function(Function::Quad),
+            AnimNum::new(0.2, 1.)
+                .time(150)
+                .ease(Ease::Out)
+                .function(Function::Quad),
         )
     });
     let PopupTheme {
@@ -111,6 +119,7 @@ pub fn Popup(
     } = use_applied_theme!(&theme, popup);
 
     let scale = animations.get();
+    let (scale, margin, opacity) = &*scale.read();
 
     let request_to_close = move || {
         if let Some(oncloserequest) = &oncloserequest {
@@ -129,7 +138,9 @@ pub fn Popup(
     rsx!(
         PopupBackground {
             rect {
-                scale: "{scale.read().as_f32()}",
+                scale: "{scale.read()} {scale.read()}",
+                margin: "{margin.read()} 0 0 0",
+                opacity: "{opacity.read()}",
                 padding: "14",
                 corner_radius: "8",
                 background: "{background}",
@@ -194,6 +205,8 @@ pub fn PopupContent(children: Element) -> Element {
 
 #[cfg(test)]
 mod test {
+    use std::time::Duration;
+
     use dioxus::prelude::use_signal;
     use freya::prelude::*;
     use freya_elements::events::keyboard::{
@@ -202,6 +215,7 @@ mod test {
         Modifiers,
     };
     use freya_testing::prelude::*;
+    use tokio::time::sleep;
 
     #[tokio::test]
     pub async fn popup() {
@@ -236,6 +250,8 @@ mod test {
 
         // Open the popup
         utils.click_cursor((15., 15.)).await;
+        sleep(Duration::from_millis(150)).await;
+        utils.wait_for_update().await;
 
         // Check the popup is opened
         assert_eq!(utils.sdom().get().layout().size(), 10);
@@ -249,7 +265,7 @@ mod test {
         utils.click_cursor((15., 15.)).await;
 
         // Send a random globalkeydown event
-        utils.push_event(PlatformEvent::Keyboard {
+        utils.push_event(TestEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::ArrowDown,
             code: Code::ArrowDown,
@@ -260,7 +276,7 @@ mod test {
         assert_eq!(utils.sdom().get().layout().size(), 10);
 
         // Send a ESC globalkeydown event
-        utils.push_event(PlatformEvent::Keyboard {
+        utils.push_event(TestEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::Escape,
             code: Code::Escape,

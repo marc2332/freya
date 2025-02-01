@@ -20,10 +20,15 @@ use tokio::sync::watch::channel;
 
 /// Subscribe to a Node layout changes.
 pub fn use_node() -> (AttributeValue, NodeReferenceLayout) {
+    use_node_from_signal(Signal::default)
+}
+
+pub fn use_node_from_signal(
+    init: impl FnOnce() -> Signal<NodeReferenceLayout>,
+) -> (AttributeValue, NodeReferenceLayout) {
     let (tx, signal) = use_hook(|| {
         let (tx, mut rx) = channel::<NodeReferenceLayout>(NodeReferenceLayout::default());
-        let mut signal = Signal::new(NodeReferenceLayout::default());
-
+        let mut signal = init();
         spawn(async move {
             while rx.changed().await.is_ok() {
                 if *signal.peek() != *rx.borrow() {
@@ -91,6 +96,25 @@ pub fn use_node_signal_with_prev() -> (
         curr_signal.into(),
         prev_signal.into(),
     )
+}
+
+pub fn use_node_with_reference() -> (NodeReference, ReadOnlySignal<NodeReferenceLayout>) {
+    let (tx, signal) = use_hook(|| {
+        let (tx, mut rx) = channel::<NodeReferenceLayout>(NodeReferenceLayout::default());
+        let mut signal = Signal::new(NodeReferenceLayout::default());
+
+        spawn(async move {
+            while rx.changed().await.is_ok() {
+                if *signal.peek() != *rx.borrow() {
+                    signal.set(rx.borrow().clone());
+                }
+            }
+        });
+
+        (Arc::new(tx), signal)
+    });
+
+    (NodeReference(tx), signal.into())
 }
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 /// Generate a Dioxus component rendering the specified SVG.
 ///
-/// Example:
+/// ### Example
 ///
 /// ```no_run
 /// # use freya::prelude::*;
@@ -9,14 +9,13 @@
 /// import_svg!(FerrisWithRequiredSize, "../../../examples/ferris.svg");
 ///
 /// fn app() -> Element {
-///     rsx!(Ferris {})
-/// }
-///
-/// fn another_app() -> Element {
-///     rsx!(FerrisWithRequiredSize {
-///         width: "150",
-///         height: "40%",
-///     })
+///     rsx!(
+///         Ferris { }
+///         FerrisWithRequiredSize {
+///             width: "50%",
+///             height: "50%",
+///         }
+///     )
 /// }
 /// ```
 #[macro_export]
@@ -41,7 +40,7 @@ macro_rules! import_svg {
                 stroke,
                 width,
                 height,
-                svg_data
+                svg_data,
             })
         }
     };
@@ -65,7 +64,7 @@ macro_rules! import_svg {
                 stroke,
                 width,
                 height,
-                svg_data
+                svg_data,
             })
         }
     };

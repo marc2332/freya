@@ -1,3 +1,4 @@
+use freya_common::ImagesCache;
 use freya_engine::prelude::{
     Canvas,
     FontCollection,
@@ -54,6 +55,7 @@ pub trait ElementUtils {
         font_collection: &mut FontCollection,
         font_manager: &FontMgr,
         default_fonts: &[String],
+        images_cache: &mut ImagesCache,
         scale_factor: f32,
     );
 
@@ -101,18 +103,12 @@ pub trait ElementUtils {
         let mut drawing_area = self.element_drawing_area(layout_node, node_ref, scale_factor);
         let transform = node_ref.get::<TransformState>().unwrap();
 
-        for (id, scale) in &transform.scales {
+        for (id, scale_x, scale_y) in &transform.scales {
             let layout_node = layout.get(*id).unwrap();
             let center = layout_node.area.center();
             drawing_area = drawing_area.translate(-center.to_vector());
-            drawing_area = drawing_area.scale(*scale, *scale);
+            drawing_area = drawing_area.scale(*scale_x, *scale_y);
             drawing_area = drawing_area.translate(center.to_vector());
-
-            // Inflate the area by 2px * scale in each side to cover potential off-bounds rendering caused by antialising
-            let antialising_extra = (2.0 * scale).max(1.0);
-            drawing_area = drawing_area
-                .inflate(antialising_extra, antialising_extra)
-                .round_out();
         }
 
         if !transform.rotations.is_empty() {
@@ -125,7 +121,7 @@ pub trait ElementUtils {
 
     /// Check if this element requires any kind of special caching.
     /// Mainly used for text-like elements with shadows.
-    /// See [crate::compositor::CompositorCache].
+    /// See [crate::render::CompositorCache].
     /// Default to `false`.
     #[inline]
     fn element_needs_cached_area(&self, _node_ref: &DioxusNode) -> bool {
@@ -212,6 +208,7 @@ impl ElementUtils for ElementWithUtils {
         font_collection: &mut FontCollection,
         font_manager: &FontMgr,
         default_fonts: &[String],
+        images_cache: &mut ImagesCache,
         scale_factor: f32,
     ) {
         match self {
@@ -222,6 +219,7 @@ impl ElementUtils for ElementWithUtils {
                 font_collection,
                 font_manager,
                 default_fonts,
+                images_cache,
                 scale_factor,
             ),
             Self::Svg(el) => el.render(
@@ -231,6 +229,7 @@ impl ElementUtils for ElementWithUtils {
                 font_collection,
                 font_manager,
                 default_fonts,
+                images_cache,
                 scale_factor,
             ),
             Self::Paragraph(el) => el.render(
@@ -240,6 +239,7 @@ impl ElementUtils for ElementWithUtils {
                 font_collection,
                 font_manager,
                 default_fonts,
+                images_cache,
                 scale_factor,
             ),
             Self::Image(el) => el.render(
@@ -249,6 +249,7 @@ impl ElementUtils for ElementWithUtils {
                 font_collection,
                 font_manager,
                 default_fonts,
+                images_cache,
                 scale_factor,
             ),
             Self::Label(el) => el.render(
@@ -258,6 +259,7 @@ impl ElementUtils for ElementWithUtils {
                 font_collection,
                 font_manager,
                 default_fonts,
+                images_cache,
                 scale_factor,
             ),
         }

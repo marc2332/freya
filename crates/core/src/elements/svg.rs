@@ -1,3 +1,4 @@
+use freya_common::ImagesCache;
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::{
@@ -20,6 +21,7 @@ impl ElementUtils for SvgElement {
         _font_collection: &mut FontCollection,
         font_manager: &FontMgr,
         _default_fonts: &[String],
+        _images_cache: &mut ImagesCache,
         _scale_factor: f32,
     ) {
         let area = layout_node.visible_area();

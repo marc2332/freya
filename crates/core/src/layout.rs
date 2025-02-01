@@ -22,8 +22,15 @@ pub fn process_layout(
 ) {
     {
         let rdom = fdom.rdom();
+        let mut images_cache = fdom.images_cache();
         let mut dom_adapter = DioxusDOMAdapter::new(rdom, scale_factor);
-        let skia_measurer = SkiaMeasurer::new(rdom, font_collection, default_fonts, scale_factor);
+        let skia_measurer = SkiaMeasurer::new(
+            rdom,
+            font_collection,
+            default_fonts,
+            scale_factor,
+            &mut images_cache,
+        );
 
         let mut layout = fdom.layout();
 

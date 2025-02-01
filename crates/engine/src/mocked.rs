@@ -1054,6 +1054,27 @@ impl Canvas {
         unimplemented!("This is mocked")
     }
 
+    pub fn draw_image_rect(
+        &self,
+        image: impl AsRef<Image>,
+        src: Option<(&Rect, SrcRectConstraint)>,
+        dst: impl AsRef<Rect>,
+        paint: &Paint,
+    ) -> &Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn draw_image_rect_with_sampling_options(
+        &self,
+        image: impl AsRef<Image>,
+        src: Option<(&Rect, SrcRectConstraint)>,
+        dst: impl AsRef<Rect>,
+        sampling_options: impl Into<SamplingOptions>,
+        paint: &Paint,
+    ) -> &Self {
+        unimplemented!("This is mocked")
+    }
+
     pub fn draw_rect(&self, _rect: Rect, _paint: &Paint) -> &Self {
         unimplemented!("This is mocked")
     }
@@ -1113,8 +1134,37 @@ impl Canvas {
     }
 }
 
+pub enum SrcRectConstraint {
+    Strict = 0,
+    Fast = 1,
+}
+
 #[derive(Default)]
 pub struct SamplingOptions;
+
+impl SamplingOptions {
+    pub fn new(filter_mode: FilterMode, mm: MipmapMode) -> Self {
+        unimplemented!("This is mocked")
+    }
+}
+
+pub struct CubicResampler;
+
+impl CubicResampler {
+    pub fn mitchell() -> Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn catmull_rom() -> Self {
+        unimplemented!("This is mocked")
+    }
+}
+
+impl From<CubicResampler> for SamplingOptions {
+    fn from(_: CubicResampler) -> Self {
+        unimplemented!("This is mocked")
+    }
+}
 
 #[repr(i32)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Default)]
@@ -1232,6 +1282,12 @@ pub struct Rect {
     pub bottom: f32,
 }
 
+impl AsRef<Rect> for Rect {
+    fn as_ref(&self) -> &Rect {
+        self
+    }
+}
+
 impl Rect {
     pub fn new(_left: f32, _top: f32, _right: f32, _bottom: f32) -> Self {
         unimplemented!("This is mocked")
@@ -1252,12 +1308,31 @@ impl Rect {
     pub fn height(&self) -> f32 {
         unimplemented!("This is mocked")
     }
+
+    pub fn with_outset(&self, _delta: impl Into<Point>) -> Self {
+        unimplemented!("This is mocked")
+    }
 }
 
+#[derive(Clone, Debug)]
 pub struct Image;
+
+impl AsRef<Image> for Image {
+    fn as_ref(&self) -> &Image {
+        self
+    }
+}
 
 impl Image {
     pub fn from_encoded(_data: Data) -> Option<Self> {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn width(&self) -> i32 {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn height(&self) -> i32 {
         unimplemented!("This is mocked")
     }
 }
@@ -1270,6 +1345,13 @@ impl Data {
     }
 
     pub unsafe fn new_bytes(_bytes: &[u8]) -> Self {
+        unimplemented!("This is mocked")
+    }
+}
+
+impl Deref for Data {
+    type Target = [u8];
+    fn deref(&self) -> &Self::Target {
         unimplemented!("This is mocked")
     }
 }
@@ -1302,6 +1384,18 @@ pub enum FilterMode {
 
 impl FilterMode {
     pub const Last: FilterMode = FilterMode::Linear;
+}
+
+#[repr(i32)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum MipmapMode {
+    None = 0,
+    Nearest = 1,
+    Linear = 2,
+}
+
+impl MipmapMode {
+    pub const Last: MipmapMode = MipmapMode::Linear;
 }
 
 pub struct Path;

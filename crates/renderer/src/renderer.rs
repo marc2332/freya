@@ -1,12 +1,13 @@
 use std::path::PathBuf;
 
 use dioxus_core::VirtualDom;
+use freya_common::AccessibilityFocusStrategy;
 use freya_core::{
-    accessibility::AccessibilityFocusStrategy,
     dom::SafeDOM,
     events::{
         EventName,
         PlatformEvent,
+        PlatformEventData,
     },
     prelude::{
         EventMessage,
@@ -52,7 +53,8 @@ use crate::{
     LaunchConfig,
 };
 
-const WHEEL_SPEED_MODIFIER: f32 = 53.0;
+const WHEEL_SPEED_MODIFIER: f64 = 53.0;
+const TOUCHPAD_SPEED_MODIFIER: f64 = 2.0;
 
 /// Desktop renderer using Skia, Glutin and Winit
 pub struct DesktopRenderer<'a, State: Clone + 'static> {
@@ -84,20 +86,6 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
             .build()
             .expect("Failed to create event loop.");
         let proxy = event_loop.create_proxy();
-
-        // Hotreload support for Dioxus
-        #[cfg(feature = "hot-reload")]
-        {
-            use std::process::exit;
-            let proxy = proxy.clone();
-            dioxus_hot_reload::connect(move |msg| match msg {
-                dioxus_hot_reload::HotReloadMsg::UpdateTemplate(template) => {
-                    let _ = proxy.send_event(EventMessage::UpdateTemplate(template));
-                }
-                dioxus_hot_reload::HotReloadMsg::Shutdown => exit(0),
-                dioxus_hot_reload::HotReloadMsg::UpdateAsset(_) => {}
-            });
-        }
 
         let mut desktop_renderer =
             DesktopRenderer::new(vdom, sdom, config, devtools, hovered_node, proxy);
@@ -152,7 +140,7 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
     /// Run the `on_setup` callback that was passed to the launch function
     pub fn run_on_setup(&mut self) {
         let state = self.state.created_state();
-        if let Some(on_setup) = &state.window_config.on_setup {
+        if let Some(on_setup) = state.window_config.on_setup.take() {
             (on_setup)(&mut state.window)
         }
     }
@@ -160,7 +148,7 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
     /// Run the `on_exit` callback that was passed to the launch function
     pub fn run_on_exit(&mut self) {
         let state = self.state.created_state();
-        if let Some(on_exit) = &state.window_config.on_exit {
+        if let Some(on_exit) = state.window_config.on_exit.take() {
             (on_exit)(&mut state.window)
         }
     }
@@ -190,8 +178,9 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
         let scale_factor = self.scale_factor();
         let CreatedState { window, app, .. } = self.state.created_state();
         match event {
-            EventMessage::FocusAccessibilityNode(id) => {
-                app.focus_node(id, window);
+            EventMessage::FocusAccessibilityNode(strategy) => {
+                app.request_focus_node(strategy);
+                window.request_redraw();
             }
             EventMessage::RequestRerender => {
                 window.request_redraw();
@@ -211,35 +200,21 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             }
             EventMessage::Accessibility(accesskit_winit::WindowEvent::ActionRequested(request)) => {
                 if accesskit::Action::Focus == request.action {
-                    app.focus_node(request.target, window);
+                    app.request_focus_node(AccessibilityFocusStrategy::Node(request.target));
+                    window.request_redraw();
                 }
             }
             EventMessage::Accessibility(accesskit_winit::WindowEvent::InitialTreeRequested) => {
                 app.init_accessibility_on_next_render = true;
             }
             EventMessage::SetCursorIcon(icon) => window.set_cursor(icon),
-            EventMessage::FocusPrevAccessibilityNode => {
-                app.set_navigation_mode(NavigationMode::Keyboard);
-                app.focus_next_node(AccessibilityFocusStrategy::Backward, window);
-            }
-            EventMessage::FocusNextAccessibilityNode => {
-                app.set_navigation_mode(NavigationMode::Keyboard);
-                app.focus_next_node(AccessibilityFocusStrategy::Forward, window);
-            }
             EventMessage::WithWindow(use_window) => (use_window)(window),
             EventMessage::ExitApp => event_loop.exit(),
             EventMessage::PlatformEvent(platform_event) => self.send_event(platform_event),
-            ev => {
-                if let EventMessage::UpdateTemplate(template) = ev {
-                    app.vdom_replace_template(template);
-                }
-
-                if matches!(ev, EventMessage::PollVDOM)
-                    || matches!(ev, EventMessage::UpdateTemplate(_))
-                {
-                    app.poll_vdom(window);
-                }
+            EventMessage::PollVDOM => {
+                app.poll_vdom(window);
             }
+            _ => {}
         }
     }
 
@@ -270,11 +245,13 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             }
             WindowEvent::CloseRequested => event_loop.exit(),
             WindowEvent::Ime(Ime::Commit(text)) => {
-                self.send_event(PlatformEvent::Keyboard {
+                self.send_event(PlatformEvent {
                     name: EventName::KeyDown,
-                    key: Key::Character(text),
-                    code: Code::Unidentified,
-                    modifiers: map_winit_modifiers(self.modifiers_state),
+                    data: PlatformEventData::Keyboard {
+                        key: Key::Character(text),
+                        code: Code::Unidentified,
+                        modifiers: map_winit_modifiers(self.modifiers_state),
+                    },
                 });
             }
             WindowEvent::RedrawRequested => {
@@ -284,11 +261,14 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     scale_factor_is_different
                 });
 
-                if app.measure_layout_on_next_render {
+                if app.process_layout_on_next_render {
                     app.process_layout(window.inner_size(), scale_factor);
-                    app.process_accessibility(window);
 
-                    app.measure_layout_on_next_render = false;
+                    app.process_layout_on_next_render = false;
+                }
+
+                if app.process_accessibility_on_next_render {
+                    app.process_accessibility(window);
                 }
 
                 if app.init_accessibility_on_next_render {
@@ -326,10 +306,12 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     },
                 };
 
-                self.send_event(PlatformEvent::Mouse {
+                self.send_event(PlatformEvent {
                     name,
-                    cursor: self.cursor_pos,
-                    button: Some(button),
+                    data: PlatformEventData::Mouse {
+                        cursor: self.cursor_pos,
+                        button: Some(button),
+                    },
                 });
             }
             WindowEvent::MouseWheel { delta, phase, .. } => {
@@ -337,17 +319,22 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     let scroll_data = {
                         match delta {
                             MouseScrollDelta::LineDelta(x, y) => (
-                                (x * WHEEL_SPEED_MODIFIER) as f64,
-                                (y * WHEEL_SPEED_MODIFIER) as f64,
+                                (x as f64 * WHEEL_SPEED_MODIFIER),
+                                (y as f64 * WHEEL_SPEED_MODIFIER),
                             ),
-                            MouseScrollDelta::PixelDelta(pos) => (pos.x, pos.y),
+                            MouseScrollDelta::PixelDelta(pos) => (
+                                (pos.x * TOUCHPAD_SPEED_MODIFIER),
+                                (pos.y * TOUCHPAD_SPEED_MODIFIER),
+                            ),
                         }
                     };
 
-                    self.send_event(PlatformEvent::Wheel {
+                    self.send_event(PlatformEvent {
                         name: EventName::Wheel,
-                        scroll: CursorPoint::from(scroll_data),
-                        cursor: self.cursor_pos,
+                        data: PlatformEventData::Wheel {
+                            scroll: CursorPoint::from(scroll_data),
+                            cursor: self.cursor_pos,
+                        },
                     });
                 }
             }
@@ -403,38 +390,46 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     ElementState::Pressed => EventName::KeyDown,
                     ElementState::Released => EventName::KeyUp,
                 };
-                self.send_event(PlatformEvent::Keyboard {
+                self.send_event(PlatformEvent {
                     name,
-                    key: map_winit_key(&logical_key),
-                    code: map_winit_physical_key(&physical_key),
-                    modifiers: map_winit_modifiers(self.modifiers_state),
+                    data: PlatformEventData::Keyboard {
+                        key: map_winit_key(&logical_key),
+                        code: map_winit_physical_key(&physical_key),
+                        modifiers: map_winit_modifiers(self.modifiers_state),
+                    },
                 })
             }
             WindowEvent::CursorLeft { .. } => {
                 if self.mouse_state == ElementState::Released {
                     self.cursor_pos = CursorPoint::new(-1.0, -1.0);
 
-                    self.send_event(PlatformEvent::Mouse {
+                    self.send_event(PlatformEvent {
                         name: EventName::MouseMove,
-                        cursor: self.cursor_pos,
-                        button: None,
+                        data: PlatformEventData::Mouse {
+                            cursor: self.cursor_pos,
+                            button: None,
+                        },
                     });
                 }
             }
             WindowEvent::CursorMoved { position, .. } => {
                 self.cursor_pos = CursorPoint::from((position.x, position.y));
 
-                self.send_event(PlatformEvent::Mouse {
+                self.send_event(PlatformEvent {
                     name: EventName::MouseMove,
-                    cursor: self.cursor_pos,
-                    button: None,
+                    data: PlatformEventData::Mouse {
+                        cursor: self.cursor_pos,
+                        button: None,
+                    },
                 });
 
                 if let Some(dropped_file_path) = self.dropped_file_path.take() {
-                    self.send_event(PlatformEvent::File {
+                    self.send_event(PlatformEvent {
                         name: EventName::FileDrop,
-                        file_path: Some(dropped_file_path),
-                        cursor: self.cursor_pos,
+                        data: PlatformEventData::File {
+                            file_path: Some(dropped_file_path),
+                            cursor: self.cursor_pos,
+                        },
                     });
                 }
             }
@@ -454,12 +449,14 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     TouchPhase::Started => EventName::TouchStart,
                 };
 
-                self.send_event(PlatformEvent::Touch {
+                self.send_event(PlatformEvent {
                     name,
-                    location: self.cursor_pos,
-                    finger_id: id,
-                    phase,
-                    force,
+                    data: PlatformEventData::Touch {
+                        location: self.cursor_pos,
+                        finger_id: id,
+                        phase,
+                        force,
+                    },
                 });
             }
             WindowEvent::Resized(size) => {
@@ -476,17 +473,21 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 self.dropped_file_path = Some(file_path);
             }
             WindowEvent::HoveredFile(file_path) => {
-                self.send_event(PlatformEvent::File {
+                self.send_event(PlatformEvent {
                     name: EventName::GlobalFileHover,
-                    file_path: Some(file_path),
-                    cursor: self.cursor_pos,
+                    data: PlatformEventData::File {
+                        file_path: Some(file_path),
+                        cursor: self.cursor_pos,
+                    },
                 });
             }
             WindowEvent::HoveredFileCancelled => {
-                self.send_event(PlatformEvent::File {
+                self.send_event(PlatformEvent {
                     name: EventName::GlobalFileHoverCancelled,
-                    file_path: None,
-                    cursor: self.cursor_pos,
+                    data: PlatformEventData::File {
+                        file_path: None,
+                        cursor: self.cursor_pos,
+                    },
                 });
             }
             WindowEvent::Focused(is_focused) => {

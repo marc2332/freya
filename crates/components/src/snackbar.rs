@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_animation,
     use_applied_theme,
@@ -17,7 +17,7 @@ use freya_hooks::{
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///     let mut open = use_signal(|| false);
@@ -39,7 +39,33 @@ use freya_hooks::{
 ///         }
 ///     )
 /// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc_with_utils(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           SnackBar {
+/// #               open: true,
+/// #               label {
+/// #                   "Hello, World!"
+/// #               }
+/// #           }
+/// #       }
+/// #   )
+/// # }, (185., 185.).into(), |mut utils| async move {
+/// #   utils.wait_for_update().await;
+/// #   utils.wait_for_update().await;
+/// #   utils.wait_for_update().await;
+/// #   utils.wait_for_update().await;
+/// #   utils.wait_for_update().await;
+/// # utils.save_snapshot("./images/gallery_snackbar.png");
+/// # });
 /// ```
+///
+/// # Preview
+/// ![Snackbar Preview][snackbar]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("snackbar", "images/gallery_snackbar.png")
+)]
 #[allow(non_snake_case)]
 #[component]
 pub fn SnackBar(
@@ -50,13 +76,11 @@ pub fn SnackBar(
     /// Theme override.
     theme: Option<SnackBarThemeWith>,
 ) -> Element {
-    let animation = use_animation(|ctx| {
-        ctx.with(
-            AnimNum::new(50., 0.)
-                .time(200)
-                .ease(Ease::Out)
-                .function(Function::Expo),
-        )
+    let animation = use_animation(|_conf| {
+        AnimNum::new(50., 0.)
+            .time(200)
+            .ease(Ease::Out)
+            .function(Function::Expo)
     });
 
     use_effect(move || {
@@ -67,7 +91,7 @@ pub fn SnackBar(
         }
     });
 
-    let offset_y = animation.get().read().as_f32();
+    let offset_y = animation.get().read().read();
 
     rsx!(
         rect {

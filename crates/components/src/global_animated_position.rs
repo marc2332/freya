@@ -8,7 +8,7 @@ use std::{
 use dioxus::prelude::*;
 use dioxus_core::AttributeValue;
 use freya_common::NodeReferenceLayout;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_animation_with_dependencies,
     AnimDirection,
@@ -123,22 +123,18 @@ pub fn GlobalAnimatedPosition<T: Clone + PartialEq + Hash + Eq + 'static>(
 
     let animations = use_animation_with_dependencies(
         &(function, duration, ease),
-        move |ctx, (function, duration, ease)| {
+        move |_conf, (function, duration, ease)| {
             let old_size = init_size.peek().unwrap_or(old_size().unwrap_or_default());
             let size = size().unwrap_or_default();
             (
-                ctx.with(
-                    AnimNum::new(size.origin.x, old_size.origin.x)
-                        .duration(duration)
-                        .ease(ease)
-                        .function(function),
-                ),
-                ctx.with(
-                    AnimNum::new(size.origin.y, old_size.origin.y)
-                        .duration(duration)
-                        .ease(ease)
-                        .function(function),
-                ),
+                AnimNum::new(size.origin.x, old_size.origin.x)
+                    .duration(duration)
+                    .ease(ease)
+                    .function(function),
+                AnimNum::new(size.origin.y, old_size.origin.y)
+                    .duration(duration)
+                    .ease(ease)
+                    .function(function),
             )
         },
     );
@@ -168,9 +164,10 @@ pub fn GlobalAnimatedPosition<T: Clone + PartialEq + Hash + Eq + 'static>(
         }
     });
 
-    let (offset_x, offset_y) = animations.get();
-    let offset_x = offset_x.read().as_f32();
-    let offset_y = offset_y.read().as_f32();
+    let animations = animations.get();
+    let (offset_x, offset_y) = &*animations.read();
+    let offset_x = offset_x.read();
+    let offset_y = offset_y.read();
 
     rsx!(
         rect {

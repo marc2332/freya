@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::{
         keyboard::Key,
         KeyboardEvent,
@@ -11,7 +11,7 @@ use freya_elements::{
 use freya_hooks::{
     use_applied_theme,
     use_focus,
-    use_node,
+    use_node_from_signal,
     ScrollBarThemeWith,
 };
 
@@ -96,7 +96,7 @@ pub struct ScrollViewProps {
 ///
 /// # With a Scroll Controller
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///     let mut scroll_controller = use_scroll_controller(|| ScrollConfig::default());
@@ -110,10 +110,10 @@ pub struct ScrollViewProps {
 ///                 width: "100%"
 ///             }
 ///             Button {
+///                 onpress: move |_| {
+///                    scroll_controller.scroll_to(ScrollPosition::Start, ScrollDirection::Vertical);
+///                 },
 ///                 label {
-///                     onclick: move |_| {
-///                          scroll_controller.scroll_to(ScrollPosition::Start, ScrollDirection::Vertical);
-///                     },
 ///                     label {
 ///                         "Scroll up"
 ///                     }
@@ -127,7 +127,25 @@ pub struct ScrollViewProps {
 ///         }
 ///     )
 /// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           ScrollView {
+/// #               label {
+/// #                   "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum laoreet tristique diam, ut gravida enim. Phasellus viverra vitae risus sit amet iaculis. Morbi porttitor quis nisl eu vulputate. Etiam vitae ligula a purus suscipit iaculis non ac risus. Suspendisse potenti. Aenean orci massa, ornare ut elit id, tristique commodo dui."
+/// #               }
+/// #           }
+/// #       }
+/// #   )
+/// # }, (185., 185.).into(), "./images/gallery_scroll_view.png");
 /// ```
+///
+/// # Preview
+/// ![ScrollView Preview][scroll_view]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("scroll_view", "images/gallery_scroll_view.png")
+)]
 #[allow(non_snake_case)]
 pub fn ScrollView(
     ScrollViewProps {
@@ -150,7 +168,7 @@ pub fn ScrollView(
     let mut scroll_controller =
         scroll_controller.unwrap_or_else(|| use_scroll_controller(ScrollConfig::default));
     let (mut scrolled_x, mut scrolled_y) = scroll_controller.into();
-    let (node_ref, size) = use_node();
+    let (node_ref, size) = use_node_from_signal(|| scroll_controller.layout());
 
     let mut focus = use_focus();
     let applied_scrollbar_theme = use_applied_theme!(&scrollbar_theme, scroll_bar);
@@ -201,7 +219,7 @@ pub fn ScrollView(
     let (scrollbar_x, scrollbar_width) =
         get_scrollbar_pos_and_size(size.inner.width, size.area.width(), corrected_scrolled_x);
 
-    // Moves the Y axis when the user scrolls in the container
+    // Moves the axis when the user scrolls in the container
     let onwheel = move |e: WheelEvent| {
         let speed_multiplier = if *clicking_alt.peek() {
             SCROLL_SPEED_MULTIPLIER
@@ -209,37 +227,45 @@ pub fn ScrollView(
             1.0
         };
 
-        let wheel_movement = e.get_delta_y() as f32 * speed_multiplier;
+        let invert_direction = (clicking_shift() || invert_scroll_wheel)
+            && (!clicking_shift() || !invert_scroll_wheel);
 
-        let scroll_vertically_or_not =
-            (invert_scroll_wheel && clicking_shift()) || !invert_scroll_wheel && !clicking_shift();
-
-        if scroll_vertically_or_not {
-            let scroll_position_y = get_scroll_position_from_wheel(
-                wheel_movement,
-                size.inner.height,
-                size.area.height(),
-                corrected_scrolled_y,
-            );
-
-            // Only scroll when there is still area to scroll
-            if *scrolled_y.peek() != scroll_position_y {
-                e.stop_propagation();
-                *scrolled_y.write() = scroll_position_y;
-            }
+        let (x_movement, y_movement) = if invert_direction {
+            (
+                e.get_delta_y() as f32 * speed_multiplier,
+                e.get_delta_x() as f32 * speed_multiplier,
+            )
         } else {
-            let scroll_position_x = get_scroll_position_from_wheel(
-                wheel_movement,
-                size.inner.width,
-                size.area.width(),
-                corrected_scrolled_x,
-            );
+            (
+                e.get_delta_x() as f32 * speed_multiplier,
+                e.get_delta_y() as f32 * speed_multiplier,
+            )
+        };
 
-            // Only scroll when there is still area to scroll
-            if *scrolled_x.peek() != scroll_position_x {
-                e.stop_propagation();
-                *scrolled_x.write() = scroll_position_x;
-            }
+        let scroll_position_y = get_scroll_position_from_wheel(
+            y_movement,
+            size.inner.height,
+            size.area.height(),
+            corrected_scrolled_y,
+        );
+
+        // Only scroll when there is still area to scroll
+        if *scrolled_y.peek() != scroll_position_y {
+            e.stop_propagation();
+            *scrolled_y.write() = scroll_position_y;
+        }
+
+        let scroll_position_x = get_scroll_position_from_wheel(
+            x_movement,
+            size.inner.width,
+            size.area.width(),
+            corrected_scrolled_x,
+        );
+
+        // Only scroll when there is still area to scroll
+        if *scrolled_x.peek() != scroll_position_x {
+            e.stop_propagation();
+            *scrolled_x.write() = scroll_position_x;
         }
     };
 
@@ -446,11 +472,11 @@ mod test {
                     rect {
                         height: "200",
                         width: "200",
-                    },
+                    }
                     rect {
                         height: "200",
                         width: "200",
-                    },
+                    }
                     rect {
                         height: "200",
                         width: "200",
@@ -475,7 +501,7 @@ mod test {
         assert!(content.get(2).is_visible()); // 3. 400 -> 600, 400 < 500
         assert!(!content.get(3).is_visible()); // 4. 600 -> 800, 600 is NOT < 500, which means it is not visible.
 
-        utils.push_event(PlatformEvent::Wheel {
+        utils.push_event(TestEvent::Wheel {
             name: EventName::Wheel,
             scroll: (0., -300.).into(),
             cursor: (5., 5.).into(),
@@ -499,11 +525,11 @@ mod test {
                     rect {
                         height: "200",
                         width: "200",
-                    },
+                    }
                     rect {
                         height: "200",
                         width: "200",
-                    },
+                    }
                     rect {
                         height: "200",
                         width: "200",
@@ -529,22 +555,22 @@ mod test {
         assert!(!content.get(3).is_visible()); // 4. 600 -> 800, 600 is NOT < 500, which means it is not visible.
 
         // Simulate the user dragging the scrollbar
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
             cursor: (490., 20.).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseDown,
             cursor: (490., 20.).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
             cursor: (490., 320.).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseUp,
             cursor: (490., 320.).into(),
             button: Some(MouseButton::Left),
@@ -561,7 +587,7 @@ mod test {
 
         // Scroll up with arrows
         for _ in 0..5 {
-            utils.push_event(PlatformEvent::Keyboard {
+            utils.push_event(TestEvent::Keyboard {
                 name: EventName::KeyDown,
                 key: Key::ArrowUp,
                 code: Code::ArrowUp,
@@ -576,7 +602,7 @@ mod test {
         assert!(!content.get(3).is_visible());
 
         // Scroll to the bottom with arrows
-        utils.push_event(PlatformEvent::Keyboard {
+        utils.push_event(TestEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::End,
             code: Code::End,

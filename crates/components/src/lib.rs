@@ -1,5 +1,42 @@
 //! # Freya Components
 //! A collection of basic components to be used in Freya.
+//!
+//! Go to [Gallery](gallery) to see previews of the components.
+
+/// | 1 | 2 | 3 | 4 |
+/// | ------------- | ------------- | ------------- | ------------- |
+/// | ![Switch Preview][gallery_enabled_switch] | ![Button Preview][gallery_button] | ![FilledButton Preview][gallery_filled_button] | ![OutlineButton Preview][gallery_outline_button] |
+/// | [Switch()]        | [Button()]        | [FilledButton()]        | [OutlineButton()]        |
+/// | ![Slider Preview][gallery_slider] | ![Checkbox Preview][gallery_checkbox] | ![Radio Preview][gallery_radio] | ![Input Preview][gallery_input] |
+/// | [Slider()]        | [Checkbox()]        | [Radio()]        | [Input()]        |
+/// | ![ProgressBar Preview][gallery_progress_bar] | ![Dropdown Preview][gallery_dropdown] | ![SnackBar Preview][gallery_snackbar] | ![Tab Preview][gallery_tab] |
+/// | [ProgressBar()]        | [Dropdown()]        | [SnackBar()]        | [Tab()]        |
+/// | ![BottomTab Preview][gallery_bottom_tab] | ![NetworkImage Preview][gallery_network_image] |  ![ScrollView Preview][gallery_scroll_view] |  ![VirtualScrollView Preview][gallery_virtual_scroll_view] |
+/// | [BottomTab()]        | [NetworkImage()] | [ScrollView()] | [VirtualScrollView()] |
+/// | ![Loader Preview][gallery_loader] |  ![Menu Preview][gallery_menu] | ![Tooltip Preview][gallery_tooltip] |  |
+/// | [Loader()]        | [Menu()] | [Tooltip()] |  |
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("gallery_button", "images/gallery_button.png"),
+    doc = embed_doc_image::embed_image!("gallery_filled_button", "images/gallery_filled_button.png"),
+    doc = embed_doc_image::embed_image!("gallery_outline_button", "images/gallery_outline_button.png"),
+    doc = embed_doc_image::embed_image!("gallery_enabled_switch", "images/gallery_enabled_switch.png"),
+    doc = embed_doc_image::embed_image!("gallery_slider", "images/gallery_slider.png"),
+    doc = embed_doc_image::embed_image!("gallery_checkbox", "images/gallery_checkbox.png"),
+    doc = embed_doc_image::embed_image!("gallery_radio", "images/gallery_radio.png"),
+    doc = embed_doc_image::embed_image!("gallery_input", "images/gallery_input.png"),
+    doc = embed_doc_image::embed_image!("gallery_progress_bar", "images/gallery_progress_bar.png"),
+    doc = embed_doc_image::embed_image!("gallery_dropdown", "images/gallery_dropdown.png"),
+    doc = embed_doc_image::embed_image!("gallery_snackbar", "images/gallery_snackbar.png"),
+    doc = embed_doc_image::embed_image!("gallery_tab", "images/gallery_tab.png"),
+    doc = embed_doc_image::embed_image!("gallery_bottom_tab", "images/gallery_bottom_tab.png"),
+    doc = embed_doc_image::embed_image!("gallery_network_image", "images/gallery_network_image.png"),
+    doc = embed_doc_image::embed_image!("gallery_scroll_view", "images/gallery_scroll_view.png"),
+    doc = embed_doc_image::embed_image!("gallery_virtual_scroll_view", "images/gallery_virtual_scroll_view.png"),
+    doc = embed_doc_image::embed_image!("gallery_loader", "images/gallery_loader.png"),
+    doc = embed_doc_image::embed_image!("gallery_menu", "images/gallery_menu.png"),
+    doc = embed_doc_image::embed_image!("gallery_tooltip", "images/gallery_tooltip.png"),
+)]
+pub fn gallery() {}
 
 mod accordion;
 mod activable_route;
@@ -7,7 +44,6 @@ mod animated_position;
 mod animated_router;
 mod body;
 mod button;
-mod canvas;
 mod checkbox;
 mod cursor_area;
 mod drag_drop;
@@ -50,7 +86,6 @@ pub use animated_position::*;
 pub use animated_router::*;
 pub use body::*;
 pub use button::*;
-pub use canvas::*;
 pub use checkbox::*;
 pub use cursor_area::*;
 pub use drag_drop::*;

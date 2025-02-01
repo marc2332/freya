@@ -69,31 +69,29 @@ fn app() -> Element {
     });
 
     rsx!(
-        GlobalAnimatedPositionProvider::<&'static str> {
-            DragProvider::<&'static str> {
-                rect {
-                    direction: "horizontal",
-                    width: "fill",
-                    height: "fill",
-                    spacing: "20",
-                    padding: "20",
-                    content: "flex",
-                    Column {
-                        data,
-                        state: FoodState::ReallyBad
-                    }
-                    Column {
-                        data,
-                        state: FoodState::Meh
-                    }
-                    Column {
-                        data,
-                        state: FoodState::Normal
-                    }
-                    Column {
-                        data,
-                        state: FoodState::Amazing
-                    }
+        DragProvider::<&'static str> {
+            rect {
+                direction: "horizontal",
+                width: "fill",
+                height: "fill",
+                spacing: "20",
+                padding: "20",
+                content: "flex",
+                Column {
+                    data,
+                    state: FoodState::ReallyBad
+                }
+                Column {
+                    data,
+                    state: FoodState::Meh
+                }
+                Column {
+                    data,
+                    state: FoodState::Normal
+                }
+                Column {
+                    data,
+                    state: FoodState::Amazing
                 }
             }
         }
@@ -123,7 +121,7 @@ fn Column(data: Signal<Vec<Food>>, state: FoodState) -> Element {
     };
 
     rsx!(
-        DropZone {
+        DropZone{
             ondrop: move_food,
             width: "flex(1)",
             height: "fill",
@@ -137,28 +135,27 @@ fn Column(data: Signal<Vec<Food>>, state: FoodState) -> Element {
                 for food in data.read().iter().filter(|food| food.state == state) {
                     DragZone {
                         key: "{food.name}",
-                        hide_while_dragging: false,
+                        hide_while_dragging: true,
                         data: food.name,
                         drag_element: rsx!(
                             rect {
-                                width: "190",
-                                height: "auto",
-                                background: "rgb(220, 220, 220)",
-                                corner_radius: "99",
+                                width: "200",
+                                height: "70",
+                                background: "rgb(210, 210, 210)",
+                                corner_radius: "8",
                                 padding: "10",
                                 layer: "-999",
-                                shadow: "0 2 5 1 rgb(0,0,0,0.10)",
+                                shadow: "0 2 7 1 rgb(0,0,0,0.15)",
                                 label {
-                                    "Dragging {food.name}"
+                                    "{food.quantity} of {food.name} in {food.state:?} state."
                                 }
                             }
                         ),
-                        GlobalAnimatedPosition {
+                        AnimatedPosition {
                             width: "fill",
                             height: "70",
                             function: Function::Elastic,
                             duration: Duration::from_secs(1),
-                            id: food.name,
                             Card {
                                 food: food.clone()
                             }
@@ -172,18 +169,16 @@ fn Column(data: Signal<Vec<Food>>, state: FoodState) -> Element {
 
 #[component]
 fn Card(food: Food) -> Element {
-    let animation = use_animation(move |ctx| {
-        ctx.auto_start(true);
-        ctx.with(
-            AnimNum::new(0.7, 1.)
-                .time(1000)
-                .function(Function::Elastic)
-                .ease(Ease::Out),
-        )
+    let animation = use_animation(move |conf| {
+        conf.auto_start(true);
+        AnimNum::new(0.7, 1.)
+            .time(1000)
+            .function(Function::Elastic)
+            .ease(Ease::Out)
     });
 
     let scale = animation.get();
-    let scale = scale.read().as_f32();
+    let scale = scale.read();
 
     rsx!(
         rect {
@@ -192,7 +187,7 @@ fn Card(food: Food) -> Element {
             background: "rgb(210, 210, 210)",
             corner_radius: "8",
             padding: "10",
-            scale: "{scale}",
+            scale: "{scale.read()}",
             label {
                 "{food.quantity} of {food.name} in {food.state:?} state."
             }
