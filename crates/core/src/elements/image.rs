@@ -53,7 +53,7 @@ impl ElementUtils for ImageElement {
 
         if node_transform.image_cover == ImageCover::Center {
             let width_offset = (size.width - area.width()) / 2.;
-            let height_offset = (size.width - area.height()) / 2.;
+            let height_offset = (size.height - area.height()) / 2.;
 
             rect.left -= width_offset;
             rect.right -= width_offset;

@@ -65,7 +65,9 @@ fn app() -> Element {
                     NetworkImage {
                         url: url.parse::<Url>().unwrap(),
                         aspect_ratio: "max",
-                        cover: "center"
+                        cover: "center",
+                        width: "fill",
+                        height: "fill"
                     }
                 }
             }
