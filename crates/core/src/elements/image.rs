@@ -103,7 +103,7 @@ impl ElementUtils for ImageElement {
             };
 
             canvas.draw_image_rect_with_sampling_options(
-                pic,
+                image,
                 None,
                 rect,
                 sampling,
