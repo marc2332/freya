@@ -200,28 +200,31 @@ mod test {
     use freya_testing::prelude::*;
 
     #[tokio::test]
-    pub async fn animated_position() {
-        fn animated_position_app() -> Element {
+    pub async fn global_animated_position() {
+        fn global_animated_position_app() -> Element {
             let mut padding = use_signal(|| (100., 100.));
 
             rsx!(
-                rect {
-                    padding: "{padding().0} {padding().1}",
-                    onclick: move |_| {
-                        padding.write().0 += 10.;
-                        padding.write().1 += 10.;
-                    },
-                    GlobalAnimatedPosition {
-                        width: "50",
-                        height: "50",
-                        function: Function::Linear,
-                        id: 0
+                GlobalAnimatedPositionProvider::<i32> {
+                    rect {
+                        padding: "{padding().0} {padding().1}",
+                        onclick: move |_| {
+                            padding.write().0 += 10.;
+                            padding.write().1 += 10.;
+                        },
+                        GlobalAnimatedPosition {
+                            width: "50",
+                            height: "50",
+                            function: Function::Linear,
+                            id: 0
+                        }
                     }
                 }
+
             )
         }
 
-        let mut utils = launch_test(animated_position_app);
+        let mut utils = launch_test(global_animated_position_app);
 
         // Disable event loop ticker
         utils.config().event_loop_ticker = false;
