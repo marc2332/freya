@@ -7,7 +7,7 @@ use freya::prelude::*;
 use reqwest::Url;
 
 fn main() {
-    launch_with_props(app, "Animation", (400.0, 350.0));
+    launch_with_props(app, "Images Slideshow", (400.0, 350.0));
 }
 
 #[component]
@@ -65,7 +65,7 @@ fn app() -> Element {
                     NetworkImage {
                         url: url.parse::<Url>().unwrap(),
                         aspect_ratio: "max",
-                        height: "100%",
+                        cover: "center"
                     }
                 }
             }
