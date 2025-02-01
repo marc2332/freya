@@ -194,7 +194,7 @@ impl State<CustomAttributeValues> for StyleState {
         }
 
         let changed = &style != self;
-        let changed_image_cache_key = &style.image_cache_key != &self.image_cache_key;
+        let changed_image_cache_key = style.image_cache_key != self.image_cache_key;
 
         if changed {
             let compositor_dirty_nodes = context.get::<Arc<Mutex<CompositorDirtyNodes>>>().unwrap();

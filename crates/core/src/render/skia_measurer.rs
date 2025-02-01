@@ -101,7 +101,7 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
             }
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Image => {
                 let Some(ImageData { size, .. }) =
-                    get_or_create_image(&node, area_size, &mut self.images_cache)
+                    get_or_create_image(&node, area_size, self.images_cache)
                 else {
                     return Some((*area_size, Arc::default()));
                 };

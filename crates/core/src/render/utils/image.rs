@@ -50,11 +50,7 @@ pub fn get_or_create_image(
         get_or_create_image(image_data.as_slice())
     } else {
         None
-    };
-
-    let Some(image) = image else {
-        return None;
-    };
+    }?;
 
     let node_transform = node_ref.get::<TransformState>().unwrap();
 
