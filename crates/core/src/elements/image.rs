@@ -97,9 +97,7 @@ impl ElementUtils for ImageElement {
                     SamplingOptions::new(FilterMode::Linear, MipmapMode::Linear)
                 }
                 SamplingMode::Mitchell => SamplingOptions::from(CubicResampler::mitchell()),
-                SamplingMode::CatmullRom => {
-                    SamplingOptions::from(CubicResampler::catmull_rom())
-                }
+                SamplingMode::CatmullRom => SamplingOptions::from(CubicResampler::catmull_rom()),
             };
 
             canvas.draw_image_rect_with_sampling_options(
@@ -109,7 +107,7 @@ impl ElementUtils for ImageElement {
                 sampling,
                 &Paint::default(),
             );
-          
+
             if node_transform.image_cover == ImageCover::Center {
                 canvas.restore();
             }

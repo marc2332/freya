@@ -79,7 +79,7 @@ def_attribute!(
     /// }
     /// ```
     cache_key,
-  
+
     /// `sampling` controls how an `image` element is resized when scaling from its original size to smaller or larger sizes.
     ///
     /// Accepted values:
