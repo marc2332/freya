@@ -24,19 +24,22 @@ fn app() -> Element {
                 "Your name:"
             }
             Input {
-                value: values.read().0.clone(),
+                value: values().0,
                 placeholder: "Name",
                 onchange: move |txt| {
                     values.write().0 = txt;
                 }
-            },
+            }
             label {
                 color: "black",
                 "Your age:"
             }
             Input {
-                value: values.read().1.clone(),
+                value: values().1,
                 placeholder: "Age",
+                onvalidate: |validator: InputValidator| {
+                    validator.set_valid(validator.text().parse::<u8>().is_err())
+                },
                 onchange: move |txt| {
                     values.write().1 = txt;
                 }

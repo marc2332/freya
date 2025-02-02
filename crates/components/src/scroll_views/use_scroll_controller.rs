@@ -11,6 +11,7 @@ use dioxus::prelude::{
     Writable,
     WritableVecExt,
 };
+use freya_common::NodeReferenceLayout;
 
 #[derive(Default, PartialEq, Eq)]
 pub enum ScrollPosition {
@@ -57,6 +58,7 @@ pub struct ScrollController {
     requests: Signal<Vec<ScrollRequest>>,
     x: Signal<i32>,
     y: Signal<i32>,
+    layout: Signal<NodeReferenceLayout>,
 }
 
 impl From<ScrollController> for (Signal<i32>, Signal<i32>) {
@@ -72,6 +74,7 @@ impl ScrollController {
             y: Signal::new(y),
             requests_subscribers: Signal::new(HashSet::new()),
             requests: Signal::new(initial_requests),
+            layout: Signal::default(),
         }
     }
 
@@ -81,6 +84,10 @@ impl ScrollController {
 
     pub fn y(&self) -> Signal<i32> {
         self.y
+    }
+
+    pub fn layout(&self) -> Signal<NodeReferenceLayout> {
+        self.layout
     }
 
     pub fn use_apply(&mut self, width: f32, height: f32) {
@@ -208,7 +215,7 @@ mod test {
                 ScrollView {
                     scroll_controller,
                     Button {
-                        onclick: move |_| {
+                        onpress: move |_| {
                             scroll_controller.scroll_to(ScrollPosition::End, ScrollDirection::Vertical);
                         },
                         label {
@@ -218,11 +225,11 @@ mod test {
                     rect {
                         height: "200",
                         width: "200",
-                    },
+                    }
                     rect {
                         height: "200",
                         width: "200",
-                    },
+                    }
                     rect {
                         height: "200",
                         width: "200",
@@ -232,7 +239,7 @@ mod test {
                         width: "200",
                     }
                     Button {
-                        onclick: move |_| {
+                        onpress: move |_| {
                             scroll_controller.scroll_to(ScrollPosition::Start, ScrollDirection::Vertical);
                         },
                         label {

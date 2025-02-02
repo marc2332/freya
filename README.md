@@ -116,7 +116,7 @@ If you are interested in supporting the development of this project feel free to
 
 Thanks to my sponsors for supporting this project! 😄 
 
-<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;avatars.githubusercontent.com&#x2F;u&#x2F;8446285?u&#x3D;fd37db4dd9b4ba94dabe0bccc3a95ef2a35376ab&amp;v&#x3D;4" width="60px" alt="" /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;avatars.githubusercontent.com&#x2F;u&#x2F;2295878?v&#x3D;4" width="60px" alt="高庆丰" /></a><!-- sponsors -->
+<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;github.com&#x2F;piny4man.png" width="60px" alt="User avatar: " /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;github.com&#x2F;gqf2008.png" width="60px" alt="User avatar: 高庆丰" /></a><a href="https://github.com/lino-levan"><img src="https:&#x2F;&#x2F;github.com&#x2F;lino-levan.png" width="60px" alt="User avatar: Lino Le Van" /></a><!-- sponsors -->
 
 ### Special thanks 💪
 
@@ -124,6 +124,8 @@ Thanks to my sponsors for supporting this project! 😄
 - [Armin](https://github.com/pragmatrix) for making [rust-skia](https://github.com/rust-skia/rust-skia/) and all his help and making the favor of hosting prebuilt binaries of skia for the combo of features use by Freya.
 - [geom3trik](https://github.com/geom3trik) for helping me figure out how to add incremental rendering.
 - [Tropical](https://github.com/Tropix126) for this contributions to improving accessibility and rendering.
+- [Aiving](https://github.com/Aiving) for having made heavy contributions to [rust-skia](https://github.com/rust-skia/rust-skia/) for better SVG support, and helped optimizing images rendering in Freya.
+- [RobertasJ](https://github.com/RobertasJ) for having added nested parenthesis to the `calc()` function and also pushed for improvements in the animation APIs.
 - And to the rest of contributors and anybody who gave me any kind of feedback!
 
 ### 🤠 Projects

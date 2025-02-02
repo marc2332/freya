@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::MouseEvent,
 };
 use freya_hooks::use_node_signal;
@@ -115,6 +115,12 @@ pub struct DropZoneProps<T: 'static + PartialEq + Clone> {
     children: Element,
     /// Handler for the `ondrop` event.
     ondrop: EventHandler<T>,
+    /// Width of the [DropZone].
+    #[props(default = "auto".to_string())]
+    width: String,
+    /// Height of the [DropZone].
+    #[props(default = "auto".to_string())]
+    height: String,
 }
 
 /// Elements from [`DragZone`]s can be dropped here.
@@ -122,7 +128,8 @@ pub struct DropZoneProps<T: 'static + PartialEq + Clone> {
 pub fn DropZone<T: 'static + Clone + PartialEq>(props: DropZoneProps<T>) -> Element {
     let mut drags = use_context::<Signal<Option<T>>>();
 
-    let onmouseup = move |_: MouseEvent| {
+    let onmouseup = move |e: MouseEvent| {
+        e.stop_propagation();
         if let Some(current_drags) = &*drags.read() {
             props.ondrop.call(current_drags.clone());
         }
@@ -134,6 +141,8 @@ pub fn DropZone<T: 'static + Clone + PartialEq>(props: DropZoneProps<T>) -> Elem
     rsx!(
         rect {
             onmouseup,
+            width: props.width,
+            height: props.height,
             {props.children}
         }
     )
@@ -166,7 +175,7 @@ mod test {
                                 "Move"
                             }
                         }
-                    },
+                    }
                     DropZone {
                         ondrop: move |data: bool| {
                             state.set(data);
@@ -187,7 +196,7 @@ mod test {
         let root = utils.root();
         utils.wait_for_update().await;
 
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseDown,
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Left),
@@ -205,7 +214,7 @@ mod test {
         );
         assert_eq!(root.get(0).get(0).get(1).get(0).text(), Some("Move"));
 
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseUp,
             cursor: (5.0, 300.0).into(),
             button: Some(MouseButton::Left),
@@ -263,7 +272,7 @@ mod test {
         let root = utils.root();
         utils.wait_for_update().await;
 
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseDown,
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Left),
@@ -281,7 +290,7 @@ mod test {
         );
         assert!(!root.get(0).get(0).get(1).is_visible());
 
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseUp,
             cursor: (5.0, 300.0).into(),
             button: Some(MouseButton::Left),

@@ -1,8 +1,12 @@
 use dioxus::prelude::*;
-use freya_core::prelude::EventMessage;
+use freya_common::AccessibilityFocusStrategy;
 use freya_elements::{
-    elements as dioxus_elements,
-    events::KeyboardEvent,
+    self as dioxus_elements,
+    events::{
+        Key,
+        KeyboardEvent,
+        Modifiers,
+    },
 };
 use freya_hooks::{
     use_init_native_platform,
@@ -19,13 +23,9 @@ pub fn NativeContainer(children: Element) -> Element {
         let allowed_to_navigate = native_platform.navigation_mark.peek().allowed();
         if e.key == Key::Tab && allowed_to_navigate {
             if e.modifiers.contains(Modifiers::SHIFT) {
-                platform
-                    .send(EventMessage::FocusPrevAccessibilityNode)
-                    .unwrap();
+                platform.focus(AccessibilityFocusStrategy::Backward);
             } else {
-                platform
-                    .send(EventMessage::FocusNextAccessibilityNode)
-                    .unwrap();
+                platform.focus(AccessibilityFocusStrategy::Forward);
             }
         } else {
             native_platform.navigation_mark.write().set_allowed(true)

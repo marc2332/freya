@@ -8,18 +8,18 @@ use freya_common::AccessibilityDirtyNodes;
 use freya_core::{
     dom::DioxusDOM,
     prelude::{
-        AccessibilityFocusStrategy,
         AccessibilityTree,
         EventMessage,
         SharedAccessibilityTree,
         ACCESSIBILITY_ROOT_ID,
     },
-    types::{
-        AccessibilityId,
-        NativePlatformSender,
-    },
+    types::NativePlatformSender,
 };
-use freya_native_core::NodeId;
+use freya_native_core::{
+    prelude::NodeImmutable,
+    NodeId,
+};
+use freya_node_state::AccessibilityNodeState;
 use torin::torin::Torin;
 use winit::{
     dpi::{
@@ -94,7 +94,12 @@ impl AccessKitManager {
 
         // Notify the components
         platform_sender.send_modify(|state| {
-            state.focused_id = tree.focus;
+            state.focused_accessibility_id = tree.focus;
+            let node_ref = rdom.get(node_id).unwrap();
+            let node_accessibility = node_ref.get::<AccessibilityNodeState>().unwrap();
+            let layout_node = layout.get(node_id).unwrap();
+            state.focused_accessibility_node =
+                AccessibilityTree::create_node(&node_ref, layout_node, &node_accessibility)
         });
 
         // Update the IME Cursor area
@@ -103,65 +108,6 @@ impl AccessKitManager {
         if self.adapter_initialized {
             // Update the Adapter
             self.accessibility_adapter.update_if_active(|| tree);
-        }
-    }
-
-    /// Focus the next accessibility node
-    pub fn focus_next_node(
-        &mut self,
-        rdom: &DioxusDOM,
-        direction: AccessibilityFocusStrategy,
-        platform_sender: &NativePlatformSender,
-        window: &Window,
-        layout: &Torin<NodeId>,
-    ) {
-        let (tree, node_id) = self
-            .accessibility_tree
-            .lock()
-            .unwrap()
-            .set_focus_on_next_node(direction, rdom);
-
-        // Notify the components
-        platform_sender.send_modify(|state| {
-            state.focused_id = tree.focus;
-        });
-
-        // Update the IME Cursor area
-        self.update_ime_position(node_id, window, layout);
-
-        if self.adapter_initialized {
-            // Update the Adapter
-            self.accessibility_adapter.update_if_active(|| tree);
-        }
-    }
-
-    /// Focus a new accessibility node
-    pub fn focus_node(
-        &mut self,
-        id: AccessibilityId,
-        platform_sender: &NativePlatformSender,
-        window: &Window,
-        layout: &Torin<NodeId>,
-    ) {
-        let res = self
-            .accessibility_tree
-            .lock()
-            .unwrap()
-            .set_focus_with_update(id);
-
-        if let Some((tree, node_id)) = res {
-            // Notify the components
-            platform_sender.send_modify(|state| {
-                state.focused_id = tree.focus;
-            });
-
-            // Update the IME Cursor area
-            self.update_ime_position(node_id, window, layout);
-
-            if self.adapter_initialized {
-                // Update the Adapter
-                self.accessibility_adapter.update_if_active(|| tree);
-            }
         }
     }
 

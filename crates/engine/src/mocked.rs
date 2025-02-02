@@ -9,6 +9,9 @@ use std::ops::*;
 use bitflags::bitflags;
 use glutin::context::PossiblyCurrentContext;
 
+#[derive(Default, Debug)]
+pub struct SaveLayerRec;
+
 #[derive(Clone, Debug, PartialEq, Copy, Eq)]
 pub struct Color(u32);
 
@@ -649,6 +652,10 @@ impl Paint {
         unimplemented!("This is mocked")
     }
 
+    pub fn set_blend_mode(&mut self, _mode: BlendMode) -> &mut Self {
+        unimplemented!("This is mocked")
+    }
+
     pub fn set_style(&mut self, _style: PaintStyle) -> &mut Self {
         unimplemented!("This is mocked")
     }
@@ -1047,6 +1054,27 @@ impl Canvas {
         unimplemented!("This is mocked")
     }
 
+    pub fn draw_image_rect(
+        &self,
+        image: impl AsRef<Image>,
+        src: Option<(&Rect, SrcRectConstraint)>,
+        dst: impl AsRef<Rect>,
+        paint: &Paint,
+    ) -> &Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn draw_image_rect_with_sampling_options(
+        &self,
+        image: impl AsRef<Image>,
+        src: Option<(&Rect, SrcRectConstraint)>,
+        dst: impl AsRef<Rect>,
+        sampling_options: impl Into<SamplingOptions>,
+        paint: &Paint,
+    ) -> &Self {
+        unimplemented!("This is mocked")
+    }
+
     pub fn draw_rect(&self, _rect: Rect, _paint: &Paint) -> &Self {
         unimplemented!("This is mocked")
     }
@@ -1085,6 +1113,10 @@ impl Canvas {
         unimplemented!("This is mocked")
     }
 
+    pub fn draw_paint(&self, _: &Paint) -> &Self {
+        unimplemented!("This is mocked")
+    }
+
     pub fn draw_line(&self, _p1: impl Into<Point>, _p2: impl Into<Point>, _paint: &Paint) -> &Self {
         unimplemented!("This is mocked")
     }
@@ -1093,13 +1125,46 @@ impl Canvas {
         unimplemented!("This is mocked")
     }
 
+    pub fn save_layer(&self, layer_rec: &SaveLayerRec) -> usize {
+        unimplemented!("This is mocked")
+    }
+
     pub fn save_layer_alpha_f(&self, bounds: impl Into<Option<Rect>>, alpha: f32) -> usize {
         unimplemented!("This is mocked")
     }
 }
 
+pub enum SrcRectConstraint {
+    Strict = 0,
+    Fast = 1,
+}
+
 #[derive(Default)]
 pub struct SamplingOptions;
+
+impl SamplingOptions {
+    pub fn new(filter_mode: FilterMode, mm: MipmapMode) -> Self {
+        unimplemented!("This is mocked")
+    }
+}
+
+pub struct CubicResampler;
+
+impl CubicResampler {
+    pub fn mitchell() -> Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn catmull_rom() -> Self {
+        unimplemented!("This is mocked")
+    }
+}
+
+impl From<CubicResampler> for SamplingOptions {
+    fn from(_: CubicResampler) -> Self {
+        unimplemented!("This is mocked")
+    }
+}
 
 #[repr(i32)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Default)]
@@ -1217,6 +1282,12 @@ pub struct Rect {
     pub bottom: f32,
 }
 
+impl AsRef<Rect> for Rect {
+    fn as_ref(&self) -> &Rect {
+        self
+    }
+}
+
 impl Rect {
     pub fn new(_left: f32, _top: f32, _right: f32, _bottom: f32) -> Self {
         unimplemented!("This is mocked")
@@ -1237,12 +1308,31 @@ impl Rect {
     pub fn height(&self) -> f32 {
         unimplemented!("This is mocked")
     }
+
+    pub fn with_outset(&self, _delta: impl Into<Point>) -> Self {
+        unimplemented!("This is mocked")
+    }
 }
 
+#[derive(Clone, Debug)]
 pub struct Image;
+
+impl AsRef<Image> for Image {
+    fn as_ref(&self) -> &Image {
+        self
+    }
+}
 
 impl Image {
     pub fn from_encoded(_data: Data) -> Option<Self> {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn width(&self) -> i32 {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn height(&self) -> i32 {
         unimplemented!("This is mocked")
     }
 }
@@ -1255,6 +1345,13 @@ impl Data {
     }
 
     pub unsafe fn new_bytes(_bytes: &[u8]) -> Self {
+        unimplemented!("This is mocked")
+    }
+}
+
+impl Deref for Data {
+    type Target = [u8];
+    fn deref(&self) -> &Self::Target {
         unimplemented!("This is mocked")
     }
 }
@@ -1287,6 +1384,18 @@ pub enum FilterMode {
 
 impl FilterMode {
     pub const Last: FilterMode = FilterMode::Linear;
+}
+
+#[repr(i32)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum MipmapMode {
+    None = 0,
+    Nearest = 1,
+    Linear = 2,
+}
+
+impl MipmapMode {
+    pub const Last: MipmapMode = MipmapMode::Linear;
 }
 
 pub struct Path;
@@ -1453,6 +1562,40 @@ impl MaskFilter {
     }
 }
 
+#[repr(i32)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum BlendMode {
+    Clear = 0,
+    Src = 1,
+    Dst = 2,
+    SrcOver = 3,
+    DstOver = 4,
+    SrcIn = 5,
+    DstIn = 6,
+    SrcOut = 7,
+    DstOut = 8,
+    SrcATop = 9,
+    DstATop = 10,
+    Xor = 11,
+    Plus = 12,
+    Modulate = 13,
+    Screen = 14,
+    Overlay = 15,
+    Darken = 16,
+    Lighten = 17,
+    ColorDodge = 18,
+    ColorBurn = 19,
+    HardLight = 20,
+    SoftLight = 21,
+    Difference = 22,
+    Exclusion = 23,
+    Multiply = 24,
+    Hue = 25,
+    Saturation = 26,
+    Color = 27,
+    Luminosity = 28,
+}
+
 impl BlurStyle {
     pub const LastEnum: BlurStyle = BlurStyle::Inner;
 }
@@ -1468,14 +1611,59 @@ pub enum BlurStyle {
 pub mod svg {
     use super::{
         Canvas,
-        FontMgr,
+        Color,
+        LocalResourceProvider,
         Size,
     };
+
+    pub enum LengthUnit {
+        Percentage,
+    }
+
+    pub struct Length;
+
+    impl Length {
+        pub fn new(value: f32, unit: LengthUnit) -> Self {
+            unimplemented!("This is mocked")
+        }
+    }
+
+    pub struct Paint;
+
+    impl Paint {
+        pub fn from_color(_color: Color) -> Self {
+            unimplemented!("This is mocked")
+        }
+    }
+
+    pub struct SvgNode;
+
+    impl SvgNode {
+        pub fn set_width(&mut self, _width: Length) {
+            unimplemented!("This is mocked")
+        }
+
+        pub fn set_height(&mut self, _height: Length) {
+            unimplemented!("This is mocked")
+        }
+
+        pub fn set_color(&mut self, _value: Color) {
+            unimplemented!("This is mocked")
+        }
+
+        pub fn set_fill(&mut self, _value: Paint) {
+            unimplemented!("This is mocked")
+        }
+
+        pub fn set_stroke(&mut self, _value: Paint) {
+            unimplemented!("This is mocked")
+        }
+    }
 
     pub struct Dom;
 
     impl Dom {
-        pub fn from_bytes(_bytes: &[u8], font_mgr: &FontMgr) -> Result<Self, ()> {
+        pub fn from_bytes(_bytes: &[u8], provider: LocalResourceProvider) -> Result<Self, ()> {
             unimplemented!("This is mocked")
         }
 
@@ -1484,6 +1672,10 @@ pub mod svg {
         }
 
         pub fn render(&self, _canvas: &Canvas) {
+            unimplemented!("This is mocked")
+        }
+
+        pub fn root(&self) -> SvgNode {
             unimplemented!("This is mocked")
         }
     }
@@ -1750,4 +1942,12 @@ pub enum EncodedImageFormat {
     HEIF = 11,
     AVIF = 12,
     JPEGXL = 13,
+}
+
+pub struct LocalResourceProvider;
+
+impl LocalResourceProvider {
+    pub fn new(font_mgr: &FontMgr) -> Self {
+        unimplemented!("This is mocked")
+    }
 }

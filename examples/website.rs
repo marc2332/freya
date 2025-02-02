@@ -180,9 +180,18 @@ fn Home() -> Element {
     )
 }
 
-import_svg!(IconLogo, "./freya_icon.svg", "50", "50");
-import_svg!(FreyaLogo, "./freya_logo.svg", "50", "50");
-import_svg!(BigFreyaLogo, "./freya_icon.svg", "150", "150");
+import_svg!(IconLogo, "./freya_icon.svg", {
+    width: "50",
+    height: "50"
+});
+import_svg!(FreyaLogo, "./freya_logo.svg", {
+    width: "50",
+    height: "50"
+});
+import_svg!(BigFreyaLogo, "./freya_icon.svg", {
+    width: "150",
+    height: "150"
+});
 
 #[allow(non_snake_case)]
 fn Navigation() -> Element {
@@ -197,7 +206,7 @@ fn Navigation() -> Element {
             Link {
                 to: "https://freyaui.dev/blog",
                 label {
-                    "Book"
+                    "Blog"
                 }
             }
             Link {
@@ -256,11 +265,11 @@ fn Counter() -> Element {
                     direction: "horizontal",
                     spacing: "8",
                     Button {
-                        onclick: move |_| count += 1,
+                        onpress: move |_| count += 1,
                         label { "Increase" }
                     }
                     Button {
-                        onclick: move |_| count -= 1,
+                        onpress: move |_| count -= 1,
                         label { "Decrease" }
                     }
                 }
@@ -294,11 +303,11 @@ const CODE: &str = r#"fn app() -> Element {
             cross_align: "center",
             direction: "horizontal",
             Button {
-                onclick: move |_| count += 1,
+                onpress: move |_| count += 1,
                 label { "Increase" }
             }
             Button {
-                onclick: move |_| count -= 1,
+                onpress: move |_| count -= 1,
                 label { "Decrease" }
             }
         }
@@ -353,7 +362,7 @@ fn Code() -> Element {
             .highlight(&rust_config, CODE.as_bytes(), None, |_| None)
             .unwrap();
 
-        let rope = Rope::from_str(&CODE);
+        let rope = Rope::from_str(CODE);
 
         let mut syntax_blocks = SyntaxBlocks::default();
 

@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 pub use euclid::Rect;
-use freya_native_core::SendAnyMap;
 
 use crate::{
     geometry::Area,
@@ -9,6 +8,7 @@ use crate::{
     prelude::{
         AreaModel,
         Gaps,
+        SendAnyMap,
     },
 };
 

@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::KeyboardEvent,
 };
 use freya_hooks::{
@@ -19,7 +19,7 @@ use crate::TickIcon;
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use std::collections::HashSet;
 /// # use freya::prelude::*;
 /// #[derive(PartialEq, Eq, Hash)]
@@ -42,7 +42,7 @@ use crate::TickIcon;
 ///             leading: rsx!(
 ///                 Checkbox {
 ///                     selected: selected.read().contains(&Choice::First),
-///                 },
+///                 }
 ///             ),
 ///             label { "First choice" }
 ///         }
@@ -57,13 +57,31 @@ use crate::TickIcon;
 ///             leading: rsx!(
 ///                 Checkbox {
 ///                     selected: selected.read().contains(&Choice::Second),
-///                 },
+///                 }
 ///             ),
 ///             label { "Second choice" }
 ///         }
 ///     )
 /// }
+///
+/// # // DISABLED
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           Checkbox {
+/// #               selected: true,
+/// #           },
+/// #       }
+/// #   )
+/// # }, (185., 185.).into(), "./images/gallery_checkbox.png");
 /// ```
+///
+/// # Preview
+/// ![Checkbox Preview][checkbox]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("checkbox", "images/gallery_checkbox.png")
+)]
 #[allow(non_snake_case)]
 #[component]
 pub fn Checkbox(
@@ -84,13 +102,17 @@ pub fn Checkbox(
     } else {
         ("transparent", unselected_fill.as_ref())
     };
-    let border = if focus.is_selected() {
+    let border = if focus.is_focused_with_keyboard() {
         format!("2 inner {outer_fill}, 4 outer {border_fill}")
     } else {
         format!("2 inner {outer_fill}")
     };
 
-    let onkeydown = move |_: KeyboardEvent| {};
+    let onkeydown = move |e: KeyboardEvent| {
+        if !focus.validate_keydown(&e) {
+            e.stop_propagation();
+        }
+    };
 
     rsx!(
         rect {
@@ -145,7 +167,7 @@ mod test {
                     leading: rsx!(
                         Checkbox {
                             selected: selected.read().contains(&Choice::First),
-                        },
+                        }
                     ),
                     label { "First choice" }
                 }
@@ -160,7 +182,7 @@ mod test {
                     leading: rsx!(
                         Checkbox {
                             selected: selected.read().contains(&Choice::Second),
-                        },
+                        }
                     ),
                     label { "Second choice" }
                 }
@@ -175,7 +197,7 @@ mod test {
                     leading: rsx!(
                         Checkbox {
                             selected: selected.read().contains(&Choice::Third),
-                        },
+                        }
                     ),
                     label { "Third choice" }
                 }

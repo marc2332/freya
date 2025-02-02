@@ -3,7 +3,12 @@ use std::sync::{
     Mutex,
 };
 
-use freya_common::CompositorDirtyNodes;
+use freya_common::{
+    CompositorDirtyNodes,
+    ImageCacheKey,
+    ImagesCache,
+};
+use freya_engine::prelude::Color;
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
@@ -15,9 +20,11 @@ use freya_native_core::{
         NodeMaskBuilder,
         State,
     },
+    NodeId,
     SendAnyMap,
 };
 use freya_native_core_macro::partial_derive_state;
+use torin::torin::Torin;
 
 use crate::{
     parsing::ExtSplit,
@@ -30,18 +37,23 @@ use crate::{
     Parse,
     ParseAttribute,
     ParseError,
+    SamplingMode,
     Shadow,
 };
 
 #[derive(Default, Debug, Clone, PartialEq, Component)]
 pub struct StyleState {
     pub background: Fill,
+    pub svg_fill: Option<Color>,
+    pub svg_stroke: Option<Color>,
     pub borders: Vec<Border>,
     pub shadows: Vec<Shadow>,
     pub corner_radius: CornerRadius,
+    pub image_sampling: SamplingMode,
     pub image_data: Option<AttributesBytes>,
     pub svg_data: Option<AttributesBytes>,
     pub overflow: OverflowMode,
+    pub image_cache_key: Option<ImageCacheKey>,
 }
 
 impl ParseAttribute for StyleState {
@@ -56,6 +68,22 @@ impl ParseAttribute for StyleState {
                         return Ok(());
                     }
                     self.background = Fill::parse(value)?;
+                }
+            }
+            AttributeName::Fill => {
+                if let Some(value) = attr.value.as_text() {
+                    if value == "none" {
+                        return Ok(());
+                    }
+                    self.svg_stroke = Some(Color::parse(value)?);
+                }
+            }
+            AttributeName::Stroke => {
+                if let Some(value) = attr.value.as_text() {
+                    if value == "none" {
+                        return Ok(());
+                    }
+                    self.svg_fill = Some(Color::parse(value)?);
                 }
             }
             AttributeName::Border => {
@@ -92,6 +120,11 @@ impl ParseAttribute for StyleState {
                     }
                 }
             }
+            AttributeName::Sampling => {
+                if let Some(value) = attr.value.as_text() {
+                    self.image_sampling = SamplingMode::parse(value)?;
+                }
+            }
             AttributeName::ImageData => {
                 if let OwnedAttributeValue::Custom(CustomAttributeValues::Bytes(bytes)) = attr.value
                 {
@@ -114,6 +147,11 @@ impl ParseAttribute for StyleState {
                     self.overflow = OverflowMode::parse(value)?;
                 }
             }
+            AttributeName::ImageCacheKey => {
+                if let OwnedAttributeValue::Text(key) = attr.value {
+                    self.image_cache_key = Some(ImageCacheKey(key.clone()));
+                }
+            }
             _ => {}
         }
 
@@ -132,15 +170,19 @@ impl State<CustomAttributeValues> for StyleState {
     const NODE_MASK: NodeMaskBuilder<'static> =
         NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
             AttributeName::Background,
+            AttributeName::Fill,
+            AttributeName::Stroke,
             AttributeName::Layer,
             AttributeName::Border,
             AttributeName::Shadow,
             AttributeName::CornerRadius,
             AttributeName::CornerSmoothing,
+            AttributeName::Sampling,
             AttributeName::ImageData,
             AttributeName::SvgData,
             AttributeName::SvgContent,
             AttributeName::Overflow,
+            AttributeName::ImageCacheKey,
         ]));
 
     fn update<'a>(
@@ -151,7 +193,6 @@ impl State<CustomAttributeValues> for StyleState {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         context: &SendAnyMap,
     ) -> bool {
-        let compositor_dirty_nodes = context.get::<Arc<Mutex<CompositorDirtyNodes>>>().unwrap();
         let mut style = StyleState::default();
 
         if let Some(attributes) = node_view.attributes() {
@@ -161,12 +202,24 @@ impl State<CustomAttributeValues> for StyleState {
         }
 
         let changed = &style != self;
+        let changed_image_cache_key = style.image_cache_key != self.image_cache_key;
 
         if changed {
+            let compositor_dirty_nodes = context.get::<Arc<Mutex<CompositorDirtyNodes>>>().unwrap();
             compositor_dirty_nodes
                 .lock()
                 .unwrap()
-                .invalidate(node_view.node_id())
+                .invalidate(node_view.node_id());
+        }
+
+        if changed_image_cache_key {
+            if let Some(image_cache_key) = &self.image_cache_key {
+                let images_cache = context.get::<Arc<Mutex<ImagesCache>>>().unwrap();
+                images_cache.lock().unwrap().remove(image_cache_key);
+            }
+
+            let torin_layout = context.get::<Arc<Mutex<Torin<NodeId>>>>().unwrap();
+            torin_layout.lock().unwrap().invalidate(node_view.node_id());
         }
 
         *self = style;

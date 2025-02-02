@@ -1,5 +1,6 @@
 use freya_common::{
     CompositorDirtyNodes,
+    ImagesCache,
     Layers,
 };
 use freya_engine::prelude::{
@@ -63,6 +64,7 @@ pub struct RenderPipeline<'a> {
     pub compositor: &'a mut Compositor,
     pub font_collection: &'a mut FontCollection,
     pub font_manager: &'a FontMgr,
+    pub images_cache: &'a mut ImagesCache,
     pub canvas_area: Area,
     pub background: Color,
     pub scale_factor: f32,
@@ -230,6 +232,16 @@ impl RenderPipeline<'_> {
                 );
             }
 
+            // Apply inherited scale effects
+            for (id, scale_x, scale_y) in &node_transform.scales {
+                let layout_node = self.layout.get(*id).unwrap();
+                let area = layout_node.visible_area();
+                let center = area.center();
+                dirty_canvas.translate((center.x, center.y));
+                dirty_canvas.scale((*scale_x, *scale_y));
+                dirty_canvas.translate((-center.x, -center.y));
+            }
+
             // Clip all elements with their corresponding viewports
             let node_viewports = node_ref.get::<ViewportState>().unwrap();
             // Only clip the element iself when it's paragraph because
@@ -256,6 +268,7 @@ impl RenderPipeline<'_> {
                 self.font_collection,
                 self.font_manager,
                 self.default_fonts,
+                self.images_cache,
                 self.scale_factor,
             );
 

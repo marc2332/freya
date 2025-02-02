@@ -5,12 +5,14 @@ use std::{
     ops::Range,
 };
 
-use dioxus_sdk::clipboard::UseClipboard;
+use dioxus_clipboard::prelude::UseClipboard;
 use freya_elements::events::keyboard::{
     Code,
     Key,
     Modifiers,
 };
+
+use crate::EditorHistory;
 
 /// Holds the position of a cursor in a text
 #[derive(Clone, Default, PartialEq, Debug)]
@@ -497,6 +499,8 @@ pub trait TextEditor {
     fn undo(&mut self) -> Option<usize>;
 
     fn redo(&mut self) -> Option<usize>;
+
+    fn editor_history(&mut self) -> &mut EditorHistory;
 
     fn get_selection_range(&self) -> Option<(usize, usize)>;
 

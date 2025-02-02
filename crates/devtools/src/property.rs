@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_engine::prelude::*;
 use freya_node_state::{
     Border,
@@ -15,11 +15,12 @@ pub fn Property(name: String, value: String) -> Element {
             overflow: "clip",
             width: "100%",
             direction: "horizontal",
+            cross_align: "center",
             paragraph {
                 width: "100%",
                 text {
                     font_size: "15",
-                    color: "rgb(71, 180, 240)",
+                    color: "rgb(102, 163, 217)",
                     "{name}"
                 }
                 text {
@@ -45,7 +46,7 @@ pub fn GradientProperty(name: String, fill: Fill) -> Element {
             line_height: "1.9",
             text {
                 font_size: "15",
-                color: "rgb(71, 180, 240)",
+                color: "rgb(102, 163, 217)",
                 "{name}"
             }
             text {
@@ -70,9 +71,10 @@ pub fn ColorProperty(name: String, fill: Fill) -> Element {
             overflow: "clip",
             width: "100%",
             direction: "horizontal",
+            cross_align: "center",
             label {
                 font_size: "15",
-                color: "rgb(71, 180, 240)",
+                color: "rgb(102, 163, 217)",
                 "{name}"
             }
             label {
@@ -102,7 +104,7 @@ pub fn ColorProperty(name: String, fill: Fill) -> Element {
             label {
                 font_size: "15",
                 color: "rgb(252,181,172)",
-                "{fill}",
+                "{fill}"
             }
         }
     )
@@ -116,10 +118,11 @@ pub fn ShadowProperty(name: String, shadow: Shadow) -> Element {
             overflow: "clip",
             width: "100%",
             direction: "horizontal",
+            cross_align: "center",
             paragraph {
                 text {
                     font_size: "15",
-                    color: "rgb(71, 180, 240)",
+                    color: "rgb(102, 163, 217)",
                     "{name}"
                 }
                 text {
@@ -170,10 +173,11 @@ pub fn BorderProperty(name: String, border: Border) -> Element {
             overflow: "clip",
             width: "100%",
             direction: "horizontal",
+            cross_align: "center",
             paragraph {
                 text {
                     font_size: "15",
-                    color: "rgb(71, 180, 240)",
+                    color: "rgb(102, 163, 217)",
                     "{name}"
                 }
                 text {
@@ -224,10 +228,11 @@ pub fn TextShadowProperty(name: String, text_shadow: TextShadow) -> Element {
             overflow: "clip",
             width: "100%",
             direction: "horizontal",
+            cross_align: "center",
             paragraph {
                 text {
                     font_size: "15",
-                    color: "rgb(71, 180, 240)",
+                    color: "rgb(102, 163, 217)",
                     "{name}"
                 }
                 text {

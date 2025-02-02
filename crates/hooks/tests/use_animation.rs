@@ -13,9 +13,9 @@ use tokio::time::sleep;
 #[tokio::test]
 pub async fn track_progress() {
     fn use_animation_app() -> Element {
-        let animation = use_animation(|ctx| ctx.with(AnimNum::new(0., 100.).time(50)));
+        let animation = use_animation(|_conf| AnimNum::new(0., 100.).time(50));
 
-        let progress = animation.get().read().as_f32();
+        let progress = animation.get().read().read();
 
         use_hook(|| {
             animation.start();
@@ -59,9 +59,9 @@ pub async fn track_progress() {
 #[tokio::test]
 pub async fn reverse_progress() {
     fn use_animation_app() -> Element {
-        let animation = use_animation(|ctx| ctx.with(AnimNum::new(10., 100.).time(50)));
+        let animation = use_animation(|_conf| AnimNum::new(10., 100.).time(50));
 
-        let progress = animation.get().read().as_f32();
+        let progress = animation.get().read().read();
 
         use_hook(|| {
             animation.start();
@@ -113,10 +113,9 @@ pub async fn reverse_progress() {
 #[tokio::test]
 pub async fn animate_color() {
     fn use_animation_app() -> Element {
-        let animation =
-            use_animation(|ctx| ctx.with(AnimColor::new("red", "rgb(50, 100, 200)").time(50)));
+        let animation = use_animation(|_conf| AnimColor::new("red", "rgb(50, 100, 200)").time(50));
 
-        let progress = animation.get().read().as_string();
+        let progress = animation.get().read().read();
 
         use_hook(|| {
             animation.start();
@@ -167,12 +166,12 @@ pub async fn animate_color() {
 #[tokio::test]
 pub async fn auto_start() {
     fn use_animation_app() -> Element {
-        let animation = use_animation(|ctx| {
-            ctx.auto_start(true);
-            ctx.with(AnimNum::new(10., 100.).time(50))
+        let animation = use_animation(|conf| {
+            conf.auto_start(true);
+            AnimNum::new(10., 100.).time(50)
         });
 
-        let progress = animation.get().read().as_f32();
+        let progress = animation.get().read().read();
 
         rsx!(rect {
             background: "white",
@@ -206,4 +205,67 @@ pub async fn auto_start() {
 
     let width = utils.root().get(0).area().unwrap().width();
     assert_eq!(width, 100.0);
+}
+
+#[tokio::test]
+pub async fn sequential() {
+    fn use_animation_app() -> Element {
+        let animation = use_animation(|conf| {
+            conf.auto_start(true);
+            AnimSequential::new([
+                AnimNum::new(10., 100.).time(50),
+                AnimNum::new(10., 100.).time(50),
+            ])
+        });
+
+        let progress_a = animation.get().read()[0].read();
+        let progress_b = animation.get().read()[1].read();
+
+        rsx!(
+            rect {
+                background: "white",
+                height: "100%",
+                width: "{progress_a}",
+                rect {
+                    background: "white",
+                    height: "100%",
+                    width: "{progress_b}",
+                }
+            }
+        )
+    }
+
+    let mut utils = launch_test(use_animation_app);
+
+    // Disable event loop ticker
+    utils.config().event_loop_ticker = false;
+
+    // Initial state
+    utils.wait_for_update().await;
+
+    assert_eq!(utils.root().get(0).area().unwrap().width(), 10.0);
+    assert_eq!(utils.root().get(0).get(0).area().unwrap().width(), 10.0);
+
+    // State somewhere in the middle
+    sleep(Duration::from_millis(32)).await;
+    utils.wait_for_update().await;
+
+    let width_a = utils.root().get(0).area().unwrap().width();
+    let width_b = utils.root().get(0).get(0).area().unwrap().width();
+    assert!(width_a > 10.0);
+    assert_eq!(width_b, 10.0);
+
+    // Enable event loop ticker
+    utils.config().event_loop_ticker = true;
+
+    // Finished A and B
+    utils.wait_for_update().await;
+    sleep(Duration::from_millis(50)).await;
+    utils.wait_for_update().await;
+    utils.wait_for_update().await;
+
+    let width_a = utils.root().get(0).area().unwrap().width();
+    let width_b = utils.root().get(0).get(0).area().unwrap().width();
+    assert_eq!(width_a, 100.0);
+    assert_eq!(width_b, 100.0);
 }

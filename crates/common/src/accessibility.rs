@@ -9,15 +9,23 @@ use rustc_hash::{
     FxHashSet,
 };
 
+/// Strategy focusing an Accessibility Node.
+#[derive(PartialEq, Debug, Clone)]
+pub enum AccessibilityFocusStrategy {
+    Forward,
+    Backward,
+    Node(accesskit::NodeId),
+}
+
 #[derive(Default)]
 pub struct AccessibilityDirtyNodes {
-    pub requested_focus: Option<NodeId>,
+    pub requested_focus: Option<AccessibilityFocusStrategy>,
     pub added_or_updated: FxHashSet<NodeId>,
     pub removed: FxHashMap<NodeId, NodeId>,
 }
 
 impl AccessibilityDirtyNodes {
-    pub fn request_focus(&mut self, node_id: NodeId) {
+    pub fn request_focus(&mut self, node_id: AccessibilityFocusStrategy) {
         self.requested_focus = Some(node_id);
     }
 

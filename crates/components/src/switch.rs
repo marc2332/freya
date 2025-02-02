@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::{
         KeyboardEvent,
         MouseEvent,
@@ -15,6 +15,7 @@ use freya_hooks::{
     AnimNum,
     Ease,
     Function,
+    OnDepsChange,
     SwitchThemeWith,
 };
 use winit::window::CursorIcon;
@@ -50,48 +51,86 @@ pub enum SwitchStatus {
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///     let mut enabled = use_signal(|| false);
 ///
 ///     rsx!(Switch {
-///         enabled: *enabled.read(),
+///         enabled: enabled(),
 ///         ontoggled: move |_| {
 ///             enabled.toggle();
 ///         }
 ///     })
 /// }
+/// # use freya_testing::prelude::*;
+/// # // ENABLED
+/// # use freya_testing::prelude::*;
+/// # launch_doc_with_utils(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           Switch {
+/// #               enabled: true,
+/// #               ontoggled: move |_| { }
+/// #           }
+/// #       }
+/// #   )
+/// # }, (185., 185.).into(), |mut utils| async move {
+/// #   utils.wait_for_update().await;
+/// #   tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+/// #   utils.wait_for_update().await;
+/// #   utils.save_snapshot("./images/gallery_enabled_switch.png");
+/// # });
+/// #
+/// # // DISABLED
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           Switch {
+/// #               enabled: false,
+/// #               ontoggled: move |_| { }
+/// #           }
+/// #       }
+/// #   )
+/// # }, (185., 185.).into(), "./images/gallery_not_enabled_switch.png");
 /// ```
+/// # Preview
+///
+/// | Enabled       | Not Enabled   |
+/// | ------------- | ------------- |
+/// | ![Switch Enabled Demo][gallery_enabled_switch] | ![Switch Not Enabled Demo][gallery_not_enabled_switch] |
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!(
+        "gallery_not_enabled_switch",
+        "images/gallery_not_enabled_switch.png"
+    )
+)]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("gallery_enabled_switch", "images/gallery_enabled_switch.png")
+)]
 #[allow(non_snake_case)]
 pub fn Switch(props: SwitchProps) -> Element {
     let theme = use_applied_theme!(&props.theme, switch);
-    let animation = use_animation_with_dependencies(&theme, |ctx, theme| {
+    let animation = use_animation_with_dependencies(&theme, |conf, theme| {
+        conf.on_deps_change(OnDepsChange::Finish);
         (
-            ctx.with(
-                AnimNum::new(2., 22.)
-                    .time(300)
-                    .function(Function::Expo)
-                    .ease(Ease::Out),
-            ),
-            ctx.with(
-                AnimNum::new(14., 18.)
-                    .time(300)
-                    .function(Function::Expo)
-                    .ease(Ease::Out),
-            ),
-            ctx.with(
-                AnimColor::new(&theme.background, &theme.enabled_background)
-                    .time(300)
-                    .function(Function::Expo)
-                    .ease(Ease::Out),
-            ),
-            ctx.with(
-                AnimColor::new(&theme.thumb_background, &theme.enabled_thumb_background)
-                    .time(300)
-                    .function(Function::Expo)
-                    .ease(Ease::Out),
-            ),
+            AnimNum::new(2., 22.)
+                .time(300)
+                .function(Function::Expo)
+                .ease(Ease::Out),
+            AnimNum::new(14., 18.)
+                .time(300)
+                .function(Function::Expo)
+                .ease(Ease::Out),
+            AnimColor::new(&theme.background, &theme.enabled_background)
+                .time(300)
+                .function(Function::Expo)
+                .ease(Ease::Out),
+            AnimColor::new(&theme.thumb_background, &theme.enabled_thumb_background)
+                .time(300)
+                .function(Function::Expo)
+                .ease(Ease::Out),
         )
     });
     let platform = use_platform();
@@ -128,18 +167,19 @@ pub fn Switch(props: SwitchProps) -> Element {
         props.ontoggled.call(());
     };
 
-    let onglobalkeydown = move |e: KeyboardEvent| {
-        if focus.validate_globalkeydown(&e) {
+    let onkeydown = move |e: KeyboardEvent| {
+        if focus.validate_keydown(&e) {
             props.ontoggled.call(());
         }
     };
 
-    let offset_x = animation.get().0.read().as_f32();
-    let size = animation.get().1.read().as_f32();
-    let background = animation.get().2.read().as_string();
-    let circle = animation.get().3.read().as_string();
+    let (offset_x, size, background, circle) = &*animation.get().read_unchecked();
+    let offset_x = offset_x.read();
+    let size = size.read();
+    let background = background.read();
+    let circle = circle.read();
 
-    let border = if focus.is_selected() {
+    let border = if focus.is_focused_with_keyboard() {
         if props.enabled {
             format!("2 inner {}", theme.enabled_focus_border_fill)
         } else {
@@ -169,7 +209,7 @@ pub fn Switch(props: SwitchProps) -> Element {
             onmousedown,
             onmouseenter,
             onmouseleave,
-            onglobalkeydown,
+            onkeydown,
             onclick,
             a11y_id,
             offset_x: "{offset_x}",

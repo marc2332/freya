@@ -126,12 +126,15 @@ pub(crate) const BASE_THEME: Theme = Theme {
             color: cow_borrowed!("key(color)"),
         },
         border_fill: cow_borrowed!("key(surface)"),
+        focus_border_fill: cow_borrowed!("key(focused_border)"),
         arrow_fill: cow_borrowed!("key(solid)"),
     },
     dropdown_item: DropdownItemTheme {
         background: cow_borrowed!("key(background)"),
-        select_background: cow_borrowed!("key(neutral_surface)"),
+        select_background: cow_borrowed!("key(secondary_surface)"),
         hover_background: cow_borrowed!("key(focused_surface)"),
+        border_fill: cow_borrowed!("none"),
+        select_border_fill: cow_borrowed!("key(focused_border)"),
         font_theme: FontTheme {
             color: cow_borrowed!("key(color)"),
         },
@@ -151,7 +154,6 @@ pub(crate) const BASE_THEME: Theme = Theme {
         color: cow_borrowed!("white"),
         background: cow_borrowed!("key(surface)"),
         progress_background: cow_borrowed!("key(primary)"),
-        width: cow_borrowed!("fill"),
         height: cow_borrowed!("20"),
     },
     table: TableTheme {
@@ -163,20 +165,10 @@ pub(crate) const BASE_THEME: Theme = Theme {
         row_background: cow_borrowed!("transparent"),
         alternate_row_background: cow_borrowed!("key(neutral_surface)"),
         divider_fill: cow_borrowed!("key(secondary_surface)"),
-        height: cow_borrowed!("auto"),
         corner_radius: cow_borrowed!("6"),
         shadow: cow_borrowed!("0 2 15 5 rgb(35, 35, 35, 70)"),
     },
-    canvas: CanvasTheme {
-        width: cow_borrowed!("300"),
-        height: cow_borrowed!("150"),
-        background: cow_borrowed!("white"),
-    },
     graph: GraphTheme {
-        width: cow_borrowed!("100%"),
-        height: cow_borrowed!("100%"),
-    },
-    network_image: NetworkImageTheme {
         width: cow_borrowed!("100%"),
         height: cow_borrowed!("100%"),
     },
@@ -258,5 +250,9 @@ pub(crate) const BASE_THEME: Theme = Theme {
         padding: cow_borrowed!("8 10"),
         width: cow_borrowed!("auto"),
         height: cow_borrowed!("auto"),
+    },
+    resizable_handle: ResizableHandleTheme {
+        background: cow_borrowed!("key(secondary_surface)"),
+        hover_background: cow_borrowed!("key(surface)"),
     },
 };

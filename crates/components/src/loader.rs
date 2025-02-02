@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_animation,
     use_applied_theme,
@@ -18,18 +18,43 @@ pub struct LoaderProps {
 
 /// # Styling
 /// Inherits the [`LoaderTheme`](freya_hooks::LoaderTheme) theme.
+///
+/// Use cases: showing the progress of an external task (http calls for example), etc.
+///
+/// # Example
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///     rsx!(Loader {})
+/// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           {app()}
+/// #       }
+/// #   )
+/// # }, (185., 185.).into(), "./images/gallery_loader.png");
+/// ```
+///
+/// # Preview
+/// ![Loader Preview][loader]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("loader", "images/gallery_loader.png")
+)]
 #[allow(non_snake_case)]
 pub fn Loader(props: LoaderProps) -> Element {
     let theme = use_applied_theme!(&props.theme, loader);
-    let anim = use_animation(|ctx| {
-        ctx.auto_start(true);
-        ctx.on_finish(OnFinish::Restart);
-        ctx.with(AnimNum::new(0.0, 360.0).time(650))
+    let animation = use_animation(|conf| {
+        conf.auto_start(true);
+        conf.on_finish(OnFinish::Restart);
+        AnimNum::new(0.0, 360.0).time(650)
     });
 
     let LoaderTheme { primary_color } = theme;
 
-    let degrees = anim.get().read().as_f32();
+    let degrees = animation.get().read().read();
 
     rsx!(svg {
         rotate: "{degrees}deg",

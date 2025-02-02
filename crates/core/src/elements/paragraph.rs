@@ -3,6 +3,7 @@ use std::ops::Mul;
 use freya_common::{
     CachedParagraph,
     CursorLayoutResponse,
+    ImagesCache,
 };
 use freya_engine::prelude::*;
 use freya_native_core::{
@@ -37,6 +38,7 @@ use crate::{
         create_paragraph,
         draw_cursor,
         draw_cursor_highlights,
+        ParagraphData,
     },
 };
 
@@ -120,6 +122,7 @@ impl ElementUtils for ParagraphElement {
         font_collection: &mut FontCollection,
         _font_manager: &FontMgr,
         default_fonts: &[String],
+        _images_cache: &mut ImagesCache,
         scale_factor: f32,
     ) {
         let area = layout_node.visible_area();
@@ -139,7 +142,7 @@ impl ElementUtils for ParagraphElement {
         };
 
         if node_cursor_state.position.is_some() {
-            let paragraph = create_paragraph(
+            let ParagraphData { paragraph, .. } = create_paragraph(
                 node_ref,
                 &area.size,
                 font_collection,
@@ -177,7 +180,7 @@ impl ElementUtils for ParagraphElement {
         false
     }
 
-    fn drawing_area(
+    fn element_drawing_area(
         &self,
         layout_node: &LayoutNode,
         node_ref: &DioxusNode,

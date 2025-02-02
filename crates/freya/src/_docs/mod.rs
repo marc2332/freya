@@ -1,3 +1,16 @@
+pub mod accessibility;
+pub mod async_tasks;
+pub mod components_and_props;
+pub mod development_setup;
 pub mod devtools;
-pub mod hot_reload;
+pub mod dioxus_fundamentals;
+pub mod elements;
+pub mod hooks;
+pub mod i18n;
+pub mod introduction;
+pub mod performance;
+pub mod router;
+pub mod state_management;
 pub mod theming;
+pub mod third_party_state;
+pub mod ui;

@@ -8,6 +8,7 @@ use crate::{
     prelude::{
         Content,
         Position,
+        VisibleSize,
     },
     scaled::Scaled,
     size::Size,
@@ -27,6 +28,10 @@ pub struct Node {
     // Maximum dimensions
     pub maximum_width: Size,
     pub maximum_height: Size,
+
+    // Visible dimensions
+    pub visible_width: VisibleSize,
+    pub visible_height: VisibleSize,
 
     // Axis alignments for the children
     pub main_alignment: Alignment,
@@ -87,6 +92,22 @@ impl Node {
             width,
             height,
             direction,
+            ..Default::default()
+        }
+    }
+
+    /// Construct a new Node given a size and a visible size
+    pub fn from_size_and_visible_size(
+        width: Size,
+        height: Size,
+        visible_width: VisibleSize,
+        visible_height: VisibleSize,
+    ) -> Self {
+        Self {
+            width,
+            height,
+            visible_width,
+            visible_height,
             ..Default::default()
         }
     }
@@ -239,7 +260,12 @@ impl Node {
 
     /// Has properties that depend on the inner Nodes?
     pub fn does_depend_on_inner(&self) -> bool {
-        self.width.inner_sized() || self.height.inner_sized() || self.contains_text
+        self.width.inner_sized()
+            || self.height.inner_sized()
+            || self.contains_text
+            || self.cross_alignment.is_not_start()
+            || self.main_alignment.is_not_start()
+            || self.content.is_flex()
     }
 
     /// Has properties that make its children dependant on it?

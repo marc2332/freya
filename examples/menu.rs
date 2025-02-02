@@ -21,7 +21,7 @@ fn app() -> Element {
             Button {
                 onpress: move |_| show_menu.toggle(),
                 label { "Open Menu" }
-            },
+            }
             if *show_menu.read() {
                 Menu {
                     onclose: move |_| show_menu.set(false),
@@ -62,7 +62,7 @@ fn app() -> Element {
                             SubMenu {
                                 menu: rsx!(
                                     MenuButton {
-                                        onclick: |_| println!("clicked option 4"),
+                                        onpress: |_| println!("clicked option 4"),
                                         label {
                                             "Option 4"
                                         }
@@ -80,7 +80,7 @@ fn app() -> Element {
                                                 }
                                             }
                                             MenuButton {
-                                                onclick: |_| println!("clicked option 7"),
+                                                onpress: |_| println!("clicked option 7"),
                                                 label {
                                                     "Option 7"
                                                 }

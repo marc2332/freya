@@ -1,7 +1,7 @@
 [package]
 name = "freya-testing"
 description = "Headless test runner for Freya."
-version = "0.2.1"
+version = "0.3.0-rc.0"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
@@ -21,7 +21,7 @@ skia-engine = ["freya-engine/skia-engine"]
 freya-elements = { workspace = true }
 freya-common = { workspace = true }
 freya-node-state = { workspace = true }
-freya-core = { workspace = true, features = ["shared"] }
+freya-core = { workspace = true, features = ["rc-dom"] }
 freya-hooks = { workspace = true }
 freya-components = { workspace = true }
 freya-engine = { workspace = true }
@@ -30,10 +30,12 @@ torin = { workspace = true }
 freya-native-core = { workspace = true }
 dioxus-core-macro = { workspace = true }
 dioxus-core = { workspace = true }
+dioxus-signals = { workspace = true }
 dioxus = { workspace = true }
 
 tokio = { workspace = true }
 winit = { workspace = true }
+accesskit = { workspace = true }
 
 [dev-dependencies]
 dioxus = { workspace = true }

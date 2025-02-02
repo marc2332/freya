@@ -2,15 +2,18 @@ use std::collections::HashSet;
 
 use dioxus::prelude::*;
 use dioxus_radio::prelude::*;
-use dioxus_router::prelude::{
-    use_route,
-    Outlet,
-    Routable,
-    Router,
+use dioxus_router::{
+    hooks::use_navigator,
+    prelude::{
+        use_route,
+        Outlet,
+        Routable,
+        Router,
+    },
 };
 use freya_components::*;
 use freya_core::prelude::EventMessage;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_applied_theme,
     use_init_theme,
@@ -77,24 +80,25 @@ fn AppWithDevtools(props: AppWithDevtoolsProps) -> Element {
 
     rsx!(
         NativeContainer {
-            rect {
-                width: "100%",
-                height: "100%",
+            ResizableContainer {
                 direction: "horizontal",
-                rect {
-                    overflow: "clip",
-                    height: "100%",
-                    width: "calc(100% - 350)",
-                    Root { },
+                ResizablePanel {
+                    initial_size: 75.,
+                    Root { }
                 }
-                rect {
-                    background: "rgb(40, 40, 40)",
-                    height: "100%",
-                    width: "350",
-                    ThemeProvider {
-                        DevTools {
-                            devtools_receiver,
-                            hovered_node
+                ResizableHandle { }
+                ResizablePanel {
+                    initial_size: 25.,
+                    min_size: 10.,
+                    rect {
+                        background: "rgb(40, 40, 40)",
+                        height: "fill",
+                        width: "fill",
+                        ThemeProvider {
+                            DevTools {
+                                devtools_receiver,
+                                hovered_node
+                            }
                         }
                     }
                 }
@@ -154,28 +158,29 @@ pub fn DevtoolsBar() -> Element {
                 }
             }
         }
-        Outlet::<Route> {}
+
+        NativeRouter {
+            Outlet::<Route> {}
+        }
     )
 }
 
-#[derive(Routable, Clone, PartialEq)]
+#[derive(Routable, Clone, PartialEq, Debug)]
 #[rustfmt::skip]
 pub enum Route {
     #[layout(DevtoolsBar)]
-        #[nest("/")]
-            #[layout(LayoutForDOMInspector)]
-                #[route("/")]
-                DOMInspector  {},
-                #[nest("/node/:node_id")]
-                    #[layout(LayoutForNodeInspector)]
-                        #[route("/style")]
-                        NodeInspectorStyle { node_id: String },
-                        #[route("/layout")]
-                        NodeInspectorLayout { node_id: String },
-                    #[end_layout]
-                #[end_nest]
-            #[end_layout]
-        #[end_nest]
+        #[layout(LayoutForDOMInspector)]
+            #[route("/")]
+            DOMInspector  {},
+            #[nest("/node/:node_id")]
+                #[layout(LayoutForNodeInspector)]
+                    #[route("/style")]
+                    NodeInspectorStyle { node_id: String },
+                    #[route("/layout")]
+                    NodeInspectorLayout { node_id: String },
+                #[end_layout]
+            #[end_nest]
+        #[end_layout]
     #[end_layout]
     #[route("/..route")]
     PageNotFound { },
@@ -205,32 +210,53 @@ fn PageNotFound() -> Element {
 #[allow(non_snake_case)]
 #[component]
 fn LayoutForNodeInspector(node_id: String) -> Element {
+    let navigator = use_navigator();
+
     rsx!(
         rect {
             overflow: "clip",
-            width: "100%",
-            height: "50%",
-            Tabsbar {
-                Link {
-                    to: Route::NodeInspectorStyle { node_id: node_id.clone() },
-                    ActivableRoute {
-                        route: Route::NodeInspectorStyle { node_id: node_id.clone() },
-                        Tab {
-                            label {
-                                "Style"
+            width: "fill",
+            height: "fill",
+            background: "rgb(30, 30, 30)",
+            margin: "10",
+            corner_radius: "16",
+            cross_align: "center",
+            padding: "6 0 0 0",
+            spacing: "6",
+            rect {
+                direction: "horizontal",
+                width: "fill",
+                main_align: "space-between",
+                padding: "0 2",
+                rect {
+                    direction: "horizontal",
+                    Link {
+                        to: Route::NodeInspectorStyle { node_id: node_id.clone() },
+                        ActivableRoute {
+                            route: Route::NodeInspectorStyle { node_id: node_id.clone() },
+                            BottomTab {
+                                label {
+                                    "Style"
+                                }
+                            }
+                        }
+                    }
+                    Link {
+                        to: Route::NodeInspectorLayout { node_id: node_id.clone() },
+                        ActivableRoute {
+                            route: Route::NodeInspectorLayout { node_id },
+                            BottomTab {
+                                label {
+                                    "Layout"
+                                }
                             }
                         }
                     }
                 }
-                Link {
-                    to: Route::NodeInspectorLayout { node_id: node_id.clone() },
-                    ActivableRoute {
-                        route: Route::NodeInspectorLayout { node_id },
-                        Tab {
-                            label {
-                                "Layout"
-                            }
-                        }
+                BottomTab {
+                    onpress: move |_| {navigator.replace(Route::DOMInspector {});},
+                    label {
+                        "Close"
                     }
                 }
             }
@@ -263,31 +289,51 @@ fn LayoutForDOMInspector() -> Element {
 
     let is_expanded_vertical = selected_node_id.is_some();
 
-    let height = if is_expanded_vertical {
-        "calc(50% - 35)"
-    } else {
-        "fill"
-    };
-
     rsx!(
-        NodesTree {
-            height,
-            selected_node_id,
-            onselected: move |node_id: NodeId| {
-                if let Some(hovered_node) = &radio.read().hovered_node.as_ref() {
-                    hovered_node.lock().unwrap().replace(node_id);
-                    platform.send(EventMessage::RequestFullRerender).ok();
+        rect {
+            height: "fill",
+            ResizableContainer {
+                direction: "vertical",
+                ResizablePanel {
+                    initial_size: 50.,
+                    NodesTree {
+                        height: "fill",
+                        selected_node_id,
+                        onselected: move |node_id: NodeId| {
+                            if let Some(hovered_node) = &radio.read().hovered_node.as_ref() {
+                                hovered_node.lock().unwrap().replace(node_id);
+                                platform.send(EventMessage::RequestFullRerender).ok();
+                            }
+                        }
+                    }
+                }
+                ResizableHandle { }
+                ResizablePanel {
+                    initial_size: 50.,
+                    if is_expanded_vertical {
+
+                        Outlet::<Route> {}
+                    } else {
+                        rect {
+                            main_align: "center",
+                            cross_align: "center",
+                            width: "fill",
+                            height: "fill",
+                            label {
+                                "Select an element to inspect."
+                            }
+                        }
+                    }
                 }
             }
         }
-        Outlet::<Route> {}
     )
 }
 
 #[allow(non_snake_case)]
 #[component]
 fn DOMInspector() -> Element {
-    None
+    Ok(VNode::placeholder())
 }
 
 pub trait NodeIdSerializer {

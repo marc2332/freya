@@ -1,9 +1,14 @@
 use std::sync::Arc;
 
+use accesskit::{
+    NodeBuilder,
+    Role,
+};
 use dioxus_core::{
-    Template,
+    Event,
     VirtualDom,
 };
+use freya_common::AccessibilityFocusStrategy;
 use freya_core::prelude::*;
 use freya_engine::prelude::*;
 use freya_native_core::prelude::NodeImmutableDioxusExt;
@@ -53,7 +58,8 @@ pub struct Application {
     pub(crate) font_mgr: FontMgr,
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) plugins: PluginsManager,
-    pub(crate) measure_layout_on_next_render: bool,
+    pub(crate) process_layout_on_next_render: bool,
+    pub(crate) process_accessibility_on_next_render: bool,
     pub(crate) init_accessibility_on_next_render: bool,
     pub(crate) default_fonts: Vec<String>,
 }
@@ -87,7 +93,8 @@ impl Application {
 
         let (event_emitter, event_receiver) = mpsc::unbounded_channel();
         let (platform_sender, platform_receiver) = watch::channel(NativePlatformState {
-            focused_id: ACCESSIBILITY_ROOT_ID,
+            focused_accessibility_id: ACCESSIBILITY_ROOT_ID,
+            focused_accessibility_node: NodeBuilder::new(Role::Window).build(),
             preferred_theme: window.theme().map(|theme| theme.into()).unwrap_or_default(),
             navigation_mode: NavigationMode::default(),
             information: PlatformInformation::from_winit(window),
@@ -111,7 +118,8 @@ impl Application {
             font_mgr,
             ticker_sender: broadcast::channel(5).0,
             plugins,
-            measure_layout_on_next_render: false,
+            process_layout_on_next_render: false,
+            process_accessibility_on_next_render: false,
             init_accessibility_on_next_render: false,
             default_fonts,
             compositor: Compositor::default(),
@@ -199,8 +207,10 @@ impl Application {
                             {
                                 let name = event.name.into();
                                 let data = event.data.any();
+                                let event = Event::new(data, event.bubbles);
                                 self.vdom
-                                    .handle_event(name, data, element_id, event.bubbles);
+                                    .runtime()
+                                    .handle_event(name, event, element_id);
                                 self.vdom.process_events();
                             }
                         }
@@ -221,7 +231,8 @@ impl Application {
         let (must_repaint, must_relayout) = self.render_mutations(window.scale_factor() as f32);
 
         if must_relayout {
-            self.measure_layout_on_next_render = true;
+            self.process_layout_on_next_render = true;
+            self.process_accessibility_on_next_render = true;
         }
 
         if must_relayout || must_repaint {
@@ -232,6 +243,10 @@ impl Application {
     /// Process the events queue
     pub fn process_events(&mut self, scale_factor: f64) {
         let focus_id = self.accessibility.focused_node_id();
+        self.plugins.send(
+            PluginEvent::StartedMeasuringEvents,
+            PluginHandle::new(&self.proxy),
+        );
         process_events(
             &self.sdom.get(),
             &mut self.events,
@@ -239,7 +254,11 @@ impl Application {
             &mut self.nodes_state,
             scale_factor,
             focus_id,
-        )
+        );
+        self.plugins.send(
+            PluginEvent::FinishedMeasuringEvents,
+            PluginHandle::new(&self.proxy),
+        );
     }
 
     pub fn init_accessibility(&mut self) {
@@ -271,11 +290,6 @@ impl Application {
     pub fn send_event(&mut self, event: PlatformEvent, scale_factor: f64) {
         self.events.push(event);
         self.process_events(scale_factor);
-    }
-
-    /// Replace a VirtualDOM Template
-    pub fn vdom_replace_template(&mut self, template: Template) {
-        self.vdom.replace_template(template);
     }
 
     /// Render the App into the Window Canvas
@@ -318,7 +332,8 @@ impl Application {
 
     /// Resize the Window
     pub fn resize(&mut self, window: &Window) {
-        self.measure_layout_on_next_render = true;
+        self.process_layout_on_next_render = true;
+        self.process_accessibility_on_next_render = true;
         self.init_accessibility_on_next_render = true;
         self.compositor.reset();
         self.sdom
@@ -341,19 +356,18 @@ impl Application {
             .measure_paragraphs(text_measurement, scale_factor);
     }
 
-    pub fn focus_node(&mut self, node_id: AccessibilityId, window: &Window) {
-        let fdom = self.sdom.get();
-        let layout = fdom.layout();
-        self.accessibility
-            .focus_node(node_id, &self.platform_sender, window, &layout)
-    }
+    pub fn request_focus_node(&mut self, focus_strategy: AccessibilityFocusStrategy) {
+        match focus_strategy {
+            AccessibilityFocusStrategy::Backward | AccessibilityFocusStrategy::Forward => {
+                self.set_navigation_mode(NavigationMode::Keyboard);
+            }
+            _ => {}
+        }
 
-    pub fn focus_next_node(&mut self, direction: AccessibilityFocusStrategy, window: &Window) {
         let fdom = self.sdom.get();
-        let rdom = fdom.rdom();
-        let layout = fdom.layout();
-        self.accessibility
-            .focus_next_node(rdom, direction, &self.platform_sender, window, &layout);
+        fdom.accessibility_dirty_nodes()
+            .request_focus(focus_strategy);
+        self.process_accessibility_on_next_render = true;
     }
 
     /// Notify components subscribed to event loop ticks.
@@ -374,7 +388,7 @@ impl Application {
             let fdom = self.sdom.get();
 
             self.plugins.send(
-                PluginEvent::StartedLayout(&fdom.layout()),
+                PluginEvent::StartedMeasuringLayout(&fdom.layout()),
                 PluginHandle::new(&self.proxy),
             );
 
@@ -387,7 +401,7 @@ impl Application {
             );
 
             self.plugins.send(
-                PluginEvent::FinishedLayout(&fdom.layout()),
+                PluginEvent::FinishedMeasuringLayout(&fdom.layout()),
                 PluginHandle::new(&self.proxy),
             );
         }
@@ -439,6 +453,7 @@ impl Application {
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,
             default_fonts: &self.default_fonts,
+            images_cache: &mut fdom.images_cache(),
         };
         render_pipeline.run();
     }

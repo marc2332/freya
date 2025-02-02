@@ -20,10 +20,15 @@ use tokio::sync::watch::channel;
 
 /// Subscribe to a Node layout changes.
 pub fn use_node() -> (AttributeValue, NodeReferenceLayout) {
+    use_node_from_signal(Signal::default)
+}
+
+pub fn use_node_from_signal(
+    init: impl FnOnce() -> Signal<NodeReferenceLayout>,
+) -> (AttributeValue, NodeReferenceLayout) {
     let (tx, signal) = use_hook(|| {
         let (tx, mut rx) = channel::<NodeReferenceLayout>(NodeReferenceLayout::default());
-        let mut signal = Signal::new(NodeReferenceLayout::default());
-
+        let mut signal = init();
         spawn(async move {
             while rx.changed().await.is_ok() {
                 if *signal.peek() != *rx.borrow() {
@@ -64,6 +69,54 @@ pub fn use_node_signal() -> (AttributeValue, ReadOnlySignal<NodeReferenceLayout>
     )
 }
 
+pub fn use_node_signal_with_prev() -> (
+    AttributeValue,
+    ReadOnlySignal<Option<NodeReferenceLayout>>,
+    ReadOnlySignal<Option<NodeReferenceLayout>>,
+) {
+    let (tx, curr_signal, prev_signal) = use_hook(|| {
+        let (tx, mut rx) = channel::<NodeReferenceLayout>(NodeReferenceLayout::default());
+        let mut curr_signal = Signal::new(None);
+        let mut prev_signal = Signal::new(None);
+
+        spawn(async move {
+            while rx.changed().await.is_ok() {
+                if *curr_signal.peek() != Some(rx.borrow().clone()) {
+                    prev_signal.set(curr_signal());
+                    curr_signal.set(Some(rx.borrow().clone()));
+                }
+            }
+        });
+
+        (Arc::new(tx), curr_signal, prev_signal)
+    });
+
+    (
+        AttributeValue::any_value(CustomAttributeValues::Reference(NodeReference(tx))),
+        curr_signal.into(),
+        prev_signal.into(),
+    )
+}
+
+pub fn use_node_with_reference() -> (NodeReference, ReadOnlySignal<NodeReferenceLayout>) {
+    let (tx, signal) = use_hook(|| {
+        let (tx, mut rx) = channel::<NodeReferenceLayout>(NodeReferenceLayout::default());
+        let mut signal = Signal::new(NodeReferenceLayout::default());
+
+        spawn(async move {
+            while rx.changed().await.is_ok() {
+                if *signal.peek() != *rx.borrow() {
+                    signal.set(rx.borrow().clone());
+                }
+            }
+        });
+
+        (Arc::new(tx), signal)
+    });
+
+    (NodeReference(tx), signal.into())
+}
+
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
@@ -90,7 +143,7 @@ mod test {
 
         let mut utils = launch_test_with_config(
             use_node_app,
-            TestingConfig {
+            TestingConfig::<()> {
                 size: (500.0, 800.0).into(),
                 ..TestingConfig::default()
             },

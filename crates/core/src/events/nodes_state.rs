@@ -1,10 +1,21 @@
 #![allow(clippy::type_complexity)]
 
-use freya_native_core::NodeId;
+use freya_engine::prelude::Color;
+use freya_native_core::{
+    prelude::NodeImmutable,
+    NodeId,
+};
+use freya_node_state::{
+    Fill,
+    StyleState,
+};
 use rustc_hash::FxHashMap;
 
+use super::PlatformEventData;
 use crate::{
+    dom::FreyaDOM,
     events::{
+        is_node_parent_of,
         DomEvent,
         PlatformEvent,
     },
@@ -31,16 +42,20 @@ impl NodesState {
     /// Update the node states given the new events and suggest potential collateral new events
     pub fn process_collateral(
         &mut self,
-        pontential_events: &PotentialEvents,
+        fdom: &FreyaDOM,
+        potential_events: &PotentialEvents,
         dom_events: &mut Vec<DomEvent>,
         events: &[PlatformEvent],
     ) -> PotentialEvents {
-        let mut potential_events = PotentialEvents::default();
+        let rdom = fdom.rdom();
+        let layout = fdom.layout();
+        let mut potential_collateral_events = PotentialEvents::default();
 
         // Any mouse press event at all
         let recent_mouse_press_event = any_event_of(events, |e| e.was_cursor_pressed_or_released());
 
         // Pressed Nodes
+        #[allow(unused_variables)]
         self.pressed_nodes.retain(|node_id, _| {
             // Always unmark as pressed when there has been a new mouse down or click event
             if recent_mouse_press_event.is_some() {
@@ -66,24 +81,25 @@ impl NodesState {
             if no_recently_hovered {
                 // If there has been a mouse movement but a DOM event was not emitted to this node, then we safely assume
                 // the user does no longer want to hover this Node
-                if let Some(PlatformEvent::Mouse { cursor, button, .. }) =
+                if let Some(PlatformEventData::Mouse { cursor, button, .. }) =
                     recent_mouse_movement_event
                 {
-                    let events = potential_events.entry(EventName::MouseLeave).or_default();
+                    if layout.get(*node_id).is_some() {
+                        let events = potential_collateral_events
+                            .entry(EventName::MouseLeave)
+                            .or_default();
 
-                    // Emit a MouseLeave event as the cursor was moved outside the Node bounds
-                    events.push(PotentialEvent {
-                        node_id: *node_id,
-                        layer: metadata.layer,
-                        event: PlatformEvent::Mouse {
+                        // Emit a MouseLeave event as the cursor was moved outside the Node bounds
+                        events.push(PotentialEvent {
+                            node_id: *node_id,
+                            layer: metadata.layer,
                             name: EventName::MouseLeave,
-                            cursor,
-                            button,
-                        },
-                    });
+                            data: PlatformEventData::Mouse { cursor, button },
+                        });
 
-                    #[cfg(debug_assertions)]
-                    tracing::info!("Unmarked as hovered {:?}", node_id);
+                        #[cfg(debug_assertions)]
+                        tracing::info!("Unmarked as hovered {:?}", node_id);
+                    }
 
                     // Remove the node from the list of hovered nodes
                     return false;
@@ -92,88 +108,94 @@ impl NodesState {
             true
         });
 
-        // Update the state of the noves given the new events.
+        dom_events.retain(|ev| {
+            match ev.name {
+                // Filter out enter events for nodes that were already hovered
+                _ if ev.name.is_enter() => !self.hovered_nodes.contains_key(&ev.node_id),
 
-        // We clone this here so events emitted in the same batch that mark an node
-        // as hovered or pressed will not affect the other events
-        let hovered_nodes = self.hovered_nodes.clone();
-        let pressed_nodes = self.pressed_nodes.clone();
+                // Filter out press events for nodes that were already pressed
+                _ if ev.name.is_pressed() => !self.pressed_nodes.contains_key(&ev.node_id),
 
-        for events in pontential_events.values() {
+                _ => true,
+            }
+        });
+
+        // Update the state of the nodes given the new events.
+        for events in potential_events.values() {
+            let mut child_node: Option<NodeId> = None;
+
             for PotentialEvent {
                 node_id,
-                event,
+                name,
                 layer,
-            } in events
+                ..
+            } in events.iter().rev()
             {
-                match event.get_name() {
+                if let Some(child_node) = child_node {
+                    if !is_node_parent_of(rdom, child_node, *node_id) {
+                        continue;
+                    }
+                }
+
+                let node = rdom.get(*node_id).unwrap();
+                let StyleState { background, .. } = &*node.get::<StyleState>().unwrap();
+
+                if background != &Fill::Color(Color::TRANSPARENT) && !name.does_go_through_solid() {
+                    // If the background isn't transparent,
+                    // we must make sure that next nodes are parent of it
+                    // This only matters for events that bubble up (e.g. cursor click events)
+                    child_node = Some(*node_id);
+                }
+
+                match name {
                     // Update hovered nodes state
                     name if name.can_change_hover_state() => {
-                        let is_hovered = hovered_nodes.contains_key(node_id);
-
                         // Mark the Node as hovered if it wasn't already
-                        if !is_hovered {
-                            self.hovered_nodes
-                                .insert(*node_id, NodeMetadata { layer: *layer });
-
+                        self.hovered_nodes.entry(*node_id).or_insert_with(|| {
                             #[cfg(debug_assertions)]
                             tracing::info!("Marked as hovered {:?}", node_id);
-                        }
 
-                        if name.is_enter() {
-                            // If the Node was already hovered, we don't need to emit an `enter` event again.
-                            if is_hovered {
-                                continue;
-                            }
-                        }
+                            NodeMetadata { layer: *layer }
+                        });
                     }
 
                     // Update pressed nodes state
                     name if name.can_change_press_state() => {
-                        let is_pressed = pressed_nodes.contains_key(node_id);
-
                         // Mark the Node as pressed if it wasn't already
-                        if !is_pressed {
-                            self.pressed_nodes
-                                .insert(*node_id, NodeMetadata { layer: *layer });
-
+                        self.pressed_nodes.entry(*node_id).or_insert_with(|| {
                             #[cfg(debug_assertions)]
                             tracing::info!("Marked as pressed {:?}", node_id);
-                        }
+
+                            NodeMetadata { layer: *layer }
+                        });
                     }
                     _ => {}
                 }
             }
         }
 
-        dom_events.retain(|ev| {
-            match ev.name {
-                // Filter out enter events for nodes that were already hovered
-                _ if ev.name.is_enter() => !hovered_nodes.contains_key(&ev.node_id),
-
-                // Filter out press events for nodes that were already pressed
-                _ if ev.name.is_pressed() => !pressed_nodes.contains_key(&ev.node_id),
-
-                _ => true,
-            }
-        });
-
         // Order the events by their Nodes layer
-        for events in potential_events.values_mut() {
+        for events in potential_collateral_events.values_mut() {
             events.sort_by(|left, right| left.layer.cmp(&right.layer))
         }
 
-        potential_events
+        potential_collateral_events
     }
 }
 
 fn any_event_of(
     events: &[PlatformEvent],
     filter: impl Fn(EventName) -> bool,
-) -> Option<PlatformEvent> {
+) -> Option<PlatformEventData> {
     events
         .iter()
-        .find(|event| filter(event.get_name()))
+        .find_map(|event| {
+            if filter(event.name) {
+                Some(&event.data)
+            } else {
+                None
+            }
+        })
         .cloned()
 }
 

@@ -29,7 +29,7 @@ pub async fn track_focus() {
             rect {
                 width: "100%",
                 height: "100%",
-                OtherChild {},
+                OtherChild {}
                 OtherChild {}
             }
         )
@@ -37,7 +37,7 @@ pub async fn track_focus() {
 
     let mut utils = launch_test_with_config(
         use_focus_app,
-        TestingConfig {
+        TestingConfig::<()> {
             size: (100.0, 100.0).into(),
             ..TestingConfig::default()
         },
@@ -51,6 +51,7 @@ pub async fn track_focus() {
 
     // Click on the first rect
     utils.click_cursor((5., 5.)).await;
+    utils.wait_for_update().await;
 
     // First rect is now focused
     assert_eq!(root.get(0).get(0).get(0).text(), Some("true"));
@@ -109,7 +110,7 @@ pub async fn block_focus() {
             rect {
                 width: "100%",
                 height: "100%",
-                Child {},
+                Child {}
                 BlockingChild {}
             }
         )
@@ -117,7 +118,7 @@ pub async fn block_focus() {
 
     let mut utils = launch_test_with_config(
         use_focus_app,
-        TestingConfig {
+        TestingConfig::<()> {
             size: (100.0, 100.0).into(),
             ..TestingConfig::default()
         },
@@ -130,13 +131,14 @@ pub async fn block_focus() {
 
     // Click on the first rect
     utils.click_cursor((5., 5.)).await;
+    utils.wait_for_update().await;
 
     // First rect is now focused
     assert_eq!(root.get(0).get(0).get(0).text(), Some("true"));
     assert_eq!(root.get(1).get(0).get(0).text(), Some("false"));
 
     // Navigate to the second rect
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         key: Key::Tab,
         code: Code::Tab,
@@ -150,7 +152,7 @@ pub async fn block_focus() {
     assert_eq!(root.get(1).get(0).get(0).text(), Some("true"));
 
     // Try to navigate to the first rect again
-    utils.push_event(PlatformEvent::Keyboard {
+    utils.push_event(TestEvent::Keyboard {
         name: EventName::KeyDown,
         key: Key::Tab,
         code: Code::Tab,

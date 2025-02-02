@@ -5,12 +5,16 @@
 
 use std::thread;
 
-use freya::prelude::*;
+use freya::{
+    common::AccessibilityFocusStrategy,
+    prelude::*,
+};
 use freya_core::prelude::{
     EventMessage,
     EventName,
     FreyaPlugin,
     PlatformEvent,
+    PlatformEventData,
     PluginEvent,
     PluginHandle,
 };
@@ -20,10 +24,7 @@ use gilrs::{
 };
 
 fn main() {
-    launch_cfg(
-        app,
-        LaunchConfig::<()>::new().with_plugin(GamePadPlugin::default()),
-    )
+    launch_cfg(app, LaunchConfig::<()>::new().with_plugin(GamePadPlugin))
 }
 
 #[derive(Default)]
@@ -38,32 +39,31 @@ impl GamePadPlugin {
 
             loop {
                 while let Some(ev) = gilrs_instance.next_event() {
-                    match ev.event {
-                        EventType::ButtonReleased(_, code) => {
-                            // NOTE: You might need to tweak these codes
-                            match code.into_u32() {
-                                4 => {
-                                    handle.send_event_loop_event(
-                                        EventMessage::FocusPrevAccessibilityNode,
-                                    );
-                                }
-                                6 => {
-                                    handle.send_event_loop_event(
-                                        EventMessage::FocusNextAccessibilityNode,
-                                    );
-                                }
-                                13 => {
-                                    handle.send_platform_event(PlatformEvent::Keyboard {
-                                        name: EventName::KeyDown,
+                    if let EventType::ButtonReleased(_, code) = ev.event {
+                        // NOTE: You might need to tweak these codes
+                        match code.into_u32() {
+                            4 => {
+                                handle.send_event_loop_event(EventMessage::FocusAccessibilityNode(
+                                    AccessibilityFocusStrategy::Backward,
+                                ));
+                            }
+                            6 => {
+                                handle.send_event_loop_event(EventMessage::FocusAccessibilityNode(
+                                    AccessibilityFocusStrategy::Forward,
+                                ));
+                            }
+                            13 => {
+                                handle.send_platform_event(PlatformEvent {
+                                    name: EventName::KeyDown,
+                                    data: PlatformEventData::Keyboard {
                                         key: Key::Enter,
                                         code: Code::Enter,
                                         modifiers: Modifiers::default(),
-                                    });
-                                }
-                                _ => {}
+                                    },
+                                });
                             }
+                            _ => {}
                         }
-                        _ => {}
                     }
                 }
             }
@@ -73,11 +73,8 @@ impl GamePadPlugin {
 
 impl FreyaPlugin for GamePadPlugin {
     fn on_event(&mut self, event: &PluginEvent, handle: PluginHandle) {
-        match event {
-            PluginEvent::WindowCreated(_) => {
-                Self::listen_gamepad(handle);
-            }
-            _ => {}
+        if let PluginEvent::WindowCreated(_) = event {
+            Self::listen_gamepad(handle);
         }
     }
 }

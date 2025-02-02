@@ -4,7 +4,7 @@ use std::ops::Range;
 
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::{
         keyboard::Key,
         KeyboardEvent,
@@ -129,45 +129,51 @@ fn get_render_range(
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
-/// # use std::rc::Rc;
 /// fn app() -> Element {
 ///     rsx!(VirtualScrollView {
-///         length: 5,
-///         item_size: 80.0,
+///         length: 35,
+///         item_size: 20.0,
 ///         direction: "vertical",
 ///         builder: move |i, _other_args: &Option<()>| {
 ///             rsx! {
 ///                 label {
 ///                     key: "{i}",
-///                     height: "80",
+///                     height: "20",
 ///                     "Number {i}"
 ///                 }
 ///             }
 ///         }
 ///     })
 /// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           {app()}
+/// #       }
+/// #   )
+/// # }, (185., 185.).into(), "./images/gallery_virtual_scroll_view.png");
 /// ```
 ///
 /// # With a Scroll Controller
 ///
 /// ```no_run
 /// # use freya::prelude::*;
-/// # use std::rc::Rc;
 /// fn app() -> Element {
 ///     let mut scroll_controller = use_scroll_controller(|| ScrollConfig::default());
 ///
 ///     rsx!(VirtualScrollView {
 ///         scroll_controller,
-///         length: 5,
-///         item_size: 80.0,
+///         length: 35,
+///         item_size: 20.0,
 ///         direction: "vertical",
 ///         builder: move |i, _other_args: &Option<()>| {
 ///             rsx! {
 ///                 label {
 ///                     key: "{i}",
-///                     height: "80",
+///                     height: "20",
 ///                     onclick: move |_| {
 ///                          scroll_controller.scroll_to(ScrollPosition::Start, ScrollDirection::Vertical);
 ///                     },
@@ -178,6 +184,12 @@ fn get_render_range(
 ///     })
 /// }
 /// ```
+///
+/// # Preview
+/// ![VirtualScrollView Preview][virtual_scroll_view]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("virtual_scroll_view", "images/gallery_virtual_scroll_view.png")
+)]
 #[allow(non_snake_case)]
 pub fn VirtualScrollView<
     Builder: Clone + Fn(usize, &Option<BuilderArgs>) -> Element,
@@ -254,44 +266,48 @@ pub fn VirtualScrollView<
             1.0
         };
 
-        let wheel_movement = e.get_delta_y() as f32 * speed_multiplier;
+        let invert_direction = (clicking_shift() || invert_scroll_wheel)
+            && (!clicking_shift() || !invert_scroll_wheel);
 
-        let scroll_vertically_or_not =
-            (invert_scroll_wheel && clicking_shift()) || !invert_scroll_wheel && !clicking_shift();
-
-        if scroll_vertically_or_not {
-            let scroll_position_y = get_scroll_position_from_wheel(
-                wheel_movement,
-                inner_size,
-                size.area.height(),
-                corrected_scrolled_y,
-            );
-
-            // Only scroll when there is still area to scroll
-            if *scrolled_y.peek() != scroll_position_y {
-                e.stop_propagation();
-                *scrolled_y.write() = scroll_position_y;
-            } else {
-                return;
-            }
+        let (x_movement, y_movement) = if invert_direction {
+            (
+                e.get_delta_y() as f32 * speed_multiplier,
+                e.get_delta_x() as f32 * speed_multiplier,
+            )
         } else {
-            let scroll_position_x = get_scroll_position_from_wheel(
-                wheel_movement,
-                inner_size,
-                size.area.width(),
-                corrected_scrolled_x,
-            );
+            (
+                e.get_delta_x() as f32 * speed_multiplier,
+                e.get_delta_y() as f32 * speed_multiplier,
+            )
+        };
 
-            // Only scroll when there is still area to scroll
-            if *scrolled_x.peek() != scroll_position_x {
-                e.stop_propagation();
-                *scrolled_x.write() = scroll_position_x;
-            } else {
-                return;
-            }
+        let scroll_position_y = get_scroll_position_from_wheel(
+            y_movement,
+            inner_size,
+            size.area.height(),
+            corrected_scrolled_y,
+        );
+
+        // Only scroll when there is still area to scroll
+        if *scrolled_y.peek() != scroll_position_y {
+            e.stop_propagation();
+            *scrolled_y.write() = scroll_position_y;
+            focus.focus();
         }
 
-        focus.focus();
+        let scroll_position_x = get_scroll_position_from_wheel(
+            x_movement,
+            inner_size,
+            size.area.width(),
+            corrected_scrolled_x,
+        );
+
+        // Only scroll when there is still area to scroll
+        if *scrolled_x.peek() != scroll_position_x {
+            e.stop_propagation();
+            *scrolled_x.write() = scroll_position_x;
+            focus.focus();
+        }
     };
 
     // Drag the scrollbars
@@ -550,7 +566,7 @@ mod test {
             );
         }
 
-        utils.push_event(PlatformEvent::Wheel {
+        utils.push_event(TestEvent::Wheel {
             name: EventName::Wheel,
             scroll: (0., -300.).into(),
             cursor: (5., 5.).into(),
@@ -615,22 +631,22 @@ mod test {
         }
 
         // Simulate the user dragging the scrollbar
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
             cursor: (490., 20.).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseDown,
             cursor: (490., 20.).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
             cursor: (490., 320.).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseUp,
             cursor: (490., 320.).into(),
             button: Some(MouseButton::Left),
@@ -653,7 +669,7 @@ mod test {
 
         // Scroll up with arrows
         for _ in 0..11 {
-            utils.push_event(PlatformEvent::Keyboard {
+            utils.push_event(TestEvent::Keyboard {
                 name: EventName::KeyDown,
                 key: Key::ArrowUp,
                 code: Code::ArrowUp,
@@ -674,7 +690,7 @@ mod test {
         }
 
         // Scroll to the bottom with arrows
-        utils.push_event(PlatformEvent::Keyboard {
+        utils.push_event(TestEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::End,
             code: Code::End,

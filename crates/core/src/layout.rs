@@ -22,8 +22,15 @@ pub fn process_layout(
 ) {
     {
         let rdom = fdom.rdom();
+        let mut images_cache = fdom.images_cache();
         let mut dom_adapter = DioxusDOMAdapter::new(rdom, scale_factor);
-        let skia_measurer = SkiaMeasurer::new(rdom, font_collection, default_fonts, scale_factor);
+        let skia_measurer = SkiaMeasurer::new(
+            rdom,
+            font_collection,
+            default_fonts,
+            scale_factor,
+            &mut images_cache,
+        );
 
         let mut layout = fdom.layout();
 
@@ -33,7 +40,7 @@ pub fn process_layout(
         let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
         let mut compositor_dirty_nodes = fdom.compositor_dirty_nodes();
         let mut compositor_dirty_area = fdom.compositor_dirty_area();
-        let mut buffer = layout.dirty.iter().copied().collect_vec();
+        let mut buffer = layout.dirty.keys().copied().collect_vec();
         while let Some(node_id) = buffer.pop() {
             if let Some(node) = rdom.get(node_id) {
                 if let Some(area) =

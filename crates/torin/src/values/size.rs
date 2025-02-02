@@ -19,8 +19,8 @@ pub enum Size {
     Percentage(Length),
     Pixels(Length),
     RootPercentage(Length),
-    InnerPercentage(Length),
     DynamicCalculations(Box<Vec<DynamicCalculation>>),
+    Flex(Length),
 }
 
 impl Default for Size {
@@ -30,15 +30,19 @@ impl Default for Size {
 }
 
 impl Size {
-    pub fn inner_sized(&self) -> bool {
-        matches!(
-            self,
-            Self::Inner | Self::FillMinimum | Self::InnerPercentage(_)
-        )
+    pub fn flex_grow(&self) -> Option<Length> {
+        match self {
+            Self::Flex(f) => Some(*f),
+            _ => None,
+        }
     }
 
-    pub fn inner_percentage_sized(&self) -> bool {
-        matches!(self, Self::InnerPercentage(_))
+    pub fn is_flex(&self) -> bool {
+        matches!(self, Self::Flex(_))
+    }
+
+    pub fn inner_sized(&self) -> bool {
+        matches!(self, Self::Inner | Self::FillMinimum)
     }
 
     pub fn pretty(&self) -> String {
@@ -57,7 +61,7 @@ impl Size {
             Size::Fill => "fill".to_string(),
             Size::FillMinimum => "fill-min".to_string(),
             Size::RootPercentage(p) => format!("{}% of root", p.get()),
-            Size::InnerPercentage(p) => format!("{}% of auto", p.get()),
+            Size::Flex(f) => format!("flex({})", f.get()),
         }
     }
 
@@ -76,14 +80,9 @@ impl Size {
                 run_calculations(calculations.deref(), parent_value, root_value).unwrap_or(0.0),
             ),
             Size::Fill => Some(available_parent_value),
-            Size::FillMinimum => {
-                if phase == Phase::Initial {
-                    None
-                } else {
-                    Some(available_parent_value)
-                }
-            }
+            Size::FillMinimum if phase == Phase::Final => Some(available_parent_value),
             Size::RootPercentage(per) => Some(root_value / 100.0 * per.get()),
+            Size::Flex(_) if phase == Phase::Final => Some(available_parent_value),
             _ => None,
         }
     }
@@ -147,7 +146,7 @@ impl Size {
 
     pub fn most_fitting_size<'a>(&self, size: &'a f32, available_size: &'a f32) -> &'a f32 {
         match self {
-            Self::Inner | Self::InnerPercentage(_) => available_size,
+            Self::Inner => available_size,
             _ => size,
         }
     }
@@ -171,6 +170,8 @@ pub enum DynamicCalculation {
     Mul,
     Div,
     Add,
+    OpenParenthesis,
+    ClosedParenthesis,
     Percentage(f32),
     RootPercentage(f32),
     Pixels(f32),
@@ -191,6 +192,8 @@ impl std::fmt::Display for DynamicCalculation {
             DynamicCalculation::Mul => f.write_str("*"),
             DynamicCalculation::Div => f.write_str("/"),
             DynamicCalculation::Add => f.write_str("+"),
+            DynamicCalculation::OpenParenthesis => f.write_str("("),
+            DynamicCalculation::ClosedParenthesis => f.write_str(")"),
             DynamicCalculation::Percentage(p) => f.write_fmt(format_args!("{p}%")),
             DynamicCalculation::RootPercentage(p) => f.write_fmt(format_args!("{p}v")),
             DynamicCalculation::Pixels(s) => f.write_fmt(format_args!("{s}")),
@@ -235,7 +238,7 @@ impl<'a> DynamicCalculationEvaluator<'a> {
     fn parse_expression(&mut self, min_precedence: usize) -> Option<f32> {
         // Parse left-hand side value
         self.current = self.calcs.next();
-        let mut lhs = self.parse_value()?;
+        let mut lhs = self.parse_term()?;
 
         while let Some(operator_precedence) = self.operator_precedence() {
             // Return if minimal precedence is reached.
@@ -267,27 +270,79 @@ impl<'a> DynamicCalculationEvaluator<'a> {
         Some(lhs)
     }
 
-    /// Parse and evaluate the value with the following grammar:
+    /// Parse and evaluate the term, implements implicit multiplication. only parenthesis count as
+    /// a seperator, so syntax like 50 50 isnt correct, but 50(50) is because the parenthesis act
+    /// as a seperator
+    fn parse_term(&mut self) -> Option<f32> {
+        let prefix = self.parse_prefix()?;
+        let mut lhs = None;
+        // set to true so that the first value is multiplied and counts as normal syntax
+        let mut last_is_separator = true;
+
+        while let Some((rhs, seperator)) = self.parse_value() {
+            if last_is_separator || seperator {
+                lhs = Some(lhs.unwrap_or(1.0) * rhs);
+            } else {
+                return None;
+            }
+            last_is_separator = seperator;
+        }
+        if let Some(prefix) = prefix {
+            match prefix {
+                DynamicCalculation::Add => lhs,
+                DynamicCalculation::Sub => lhs.map(|v| v * -1.0),
+                _ => unreachable!("make sure to add the prefix here"),
+            }
+        } else {
+            lhs
+        }
+    }
+    /// parse and evaluate the value with the following grammar:
     /// ```ebnf
     ///     value      = percentage | pixels ;
     ///     percentage = number, "%" ;
     ///     pixels     = number ;
-    /// ```
-    fn parse_value(&mut self) -> Option<f32> {
+    /// `
+    fn parse_value(&mut self) -> Option<(f32, bool)> {
         match self.current? {
             DynamicCalculation::Percentage(value) => {
                 self.current = self.calcs.next();
-                Some((self.parent_value / 100.0 * value).round())
+                Some(((self.parent_value / 100.0 * value).round(), false))
             }
             DynamicCalculation::RootPercentage(value) => {
                 self.current = self.calcs.next();
-                Some((self.root_value / 100.0 * value).round())
+                Some(((self.root_value / 100.0 * value).round(), false))
             }
             DynamicCalculation::Pixels(value) => {
                 self.current = self.calcs.next();
-                Some(*value)
+                Some((*value, false))
+            }
+            DynamicCalculation::OpenParenthesis => {
+                // function should return on DynamicCalculation::ClosedParenthesis because it does
+                // not have a precedence, thats how it actually works
+                let val = self.parse_expression(0);
+                if self.current != Some(&DynamicCalculation::ClosedParenthesis) {
+                    return None;
+                }
+                self.current = self.calcs.next();
+                Some((val?, true))
             }
             _ => None,
+        }
+    }
+
+    /// parses out the prefix, like a + or -
+    fn parse_prefix(&mut self) -> Option<Option<DynamicCalculation>> {
+        match self.current? {
+            DynamicCalculation::Add => {
+                self.current = self.calcs.next();
+                Some(Some(DynamicCalculation::Add))
+            }
+            DynamicCalculation::Sub => {
+                self.current = self.calcs.next();
+                Some(Some(DynamicCalculation::Sub))
+            }
+            _ => Some(None),
         }
     }
 
@@ -296,6 +351,7 @@ impl<'a> DynamicCalculationEvaluator<'a> {
         match self.current? {
             DynamicCalculation::Add | DynamicCalculation::Sub => Some(1),
             DynamicCalculation::Mul | DynamicCalculation::Div => Some(2),
+            DynamicCalculation::OpenParenthesis => Some(0),
             _ => None,
         }
     }

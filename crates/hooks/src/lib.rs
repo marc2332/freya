@@ -1,3 +1,5 @@
+#![recursion_limit = "256"]
+
 //! # Freya Hooks
 //! A collection of hooks to be used in Freya.
 
