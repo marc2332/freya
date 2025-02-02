@@ -180,9 +180,18 @@ fn Home() -> Element {
     )
 }
 
-import_svg!(IconLogo, "./freya_icon.svg", "50", "50");
-import_svg!(FreyaLogo, "./freya_logo.svg", "50", "50");
-import_svg!(BigFreyaLogo, "./freya_icon.svg", "150", "150");
+import_svg!(IconLogo, "./freya_icon.svg", {
+    width: "50", 
+    height: "50"
+});
+import_svg!(FreyaLogo, "./freya_logo.svg", {
+    width: "50", 
+    height: "50"
+});
+import_svg!(BigFreyaLogo, "./freya_icon.svg", {
+    width: "150", 
+    height: "150"
+});
 
 #[allow(non_snake_case)]
 fn Navigation() -> Element {

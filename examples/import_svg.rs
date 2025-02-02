@@ -1,7 +1,9 @@
 use freya::prelude::*;
 
-import_svg!(Ferris, "./ferris.svg", "70%", "50%");
-import_svg!(FerrisWithRequiredSize, "./ferris.svg");
+import_svg!(Ferris, "./ferris.svg", {
+    width: "70%", 
+    height: "50%"
+});
 
 fn main() {
     launch(app)
@@ -10,9 +12,5 @@ fn main() {
 fn app() -> Element {
     rsx!(
         Ferris { }
-        FerrisWithRequiredSize {
-            width: "50%",
-            height: "50%",
-        }
     )
 }

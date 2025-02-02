@@ -9,7 +9,10 @@ fn main() {
     launch_with_props(app, "Animation", (400.0, 350.0));
 }
 
-import_svg!(Ferris, "./ferris.svg", "70%", "50%");
+import_svg!(Ferris, "./ferris.svg", {
+    width: "70%",
+    height: "50%"
+});
 
 fn app() -> Element {
     rsx!(
