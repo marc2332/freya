@@ -5,7 +5,7 @@ import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout title="Freya - GUI Library for Rust">
-  {posts.map((post) => {
+  {posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime()).map((post) => {
     const formattedDate = post.data.date.toLocaleString().split(',')[0];
     return (
       <a href={`/posts/${post.data.slug}`} class="block border bg-custom-dark-gray border-stone-700 my-2 p-8 rounded-lg hover:border-stone-500 transition-colors delay-[10]">
