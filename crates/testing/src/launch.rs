@@ -22,6 +22,7 @@ use dioxus_core_macro::{
     rsx,
     Props,
 };
+#[cfg(debug_assertions)]
 use dioxus_signals::{
     GlobalSignal,
     Readable,
