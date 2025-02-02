@@ -54,7 +54,7 @@ dioxus-router = { version = "0.6.2", default-features = false }
 generational-box = { version = "0.6.2" }
 
 dioxus-clipboard = "0.2.0"
-dioxus-i18n = "0.3"
+dioxus-i18n = "0.4.1"
 
 skia-safe = { version = "0.80.0", features = ["gl", "textlayout", "svg"] }
 
