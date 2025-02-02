@@ -120,19 +120,13 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
 
     // Send an event
     fn send_event(&mut self, event: PlatformEvent) {
-        self.state
-            .created_state()
-            .app
-            .send_event(event);
+        self.state.created_state().app.send_event(event);
     }
 
     // Process queued events
     fn flush_events(&mut self) {
         let scale_factor = self.scale_factor();
-        self.state
-            .created_state()
-            .app
-            .flush_events(scale_factor);
+        self.state.created_state().app.flush_events(scale_factor);
     }
 
     /// Get the current scale factor of the Window

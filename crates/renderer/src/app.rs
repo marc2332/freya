@@ -292,7 +292,7 @@ impl Application {
     }
 
     // Process queued events
-    pub fn flush_events(&mut self, scale_factor: f64){
+    pub fn flush_events(&mut self, scale_factor: f64) {
         self.process_events(scale_factor);
     }
 
