@@ -181,16 +181,17 @@ fn Home() -> Element {
 }
 
 import_svg!(IconLogo, "./freya_icon.svg", {
-    width: "50", 
+    width: "50",
     height: "50"
 });
 import_svg!(FreyaLogo, "./freya_logo.svg", {
-    width: "50", 
+    width: "50",
     height: "50"
 });
 import_svg!(BigFreyaLogo, "./freya_icon.svg", {
-    width: "150", 
-    height: "150"
+    width: "150",
+    height: "150",
+    dasda: "1"
 });
 
 #[allow(non_snake_case)]

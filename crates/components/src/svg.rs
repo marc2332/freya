@@ -5,7 +5,7 @@
 /// ```no_run
 /// # use freya::prelude::*;
 ///
-/// import_svg!(Ferris, "../../../examples/ferris.svg",
+/// import_svg!(Ferris, "../../../examples/ferris.svg", {
 ///     width: "auto",
 ///     height: "40%",
 /// });
