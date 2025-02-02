@@ -287,8 +287,12 @@ impl Application {
     }
 
     /// Send an event
-    pub fn send_event(&mut self, event: PlatformEvent, scale_factor: f64) {
+    pub fn send_event(&mut self, event: PlatformEvent) {
         self.events.push(event);
+    }
+
+    // Process queued events
+    pub fn flush_events(&mut self, scale_factor: f64){
         self.process_events(scale_factor);
     }
 

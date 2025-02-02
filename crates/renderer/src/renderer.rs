@@ -118,13 +118,21 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
         }
     }
 
-    // Send and process an event
+    // Send an event
     fn send_event(&mut self, event: PlatformEvent) {
+        self.state
+            .created_state()
+            .app
+            .send_event(event);
+    }
+
+    // Process queued events
+    fn flush_events(&mut self) {
         let scale_factor = self.scale_factor();
         self.state
             .created_state()
             .app
-            .send_event(event, scale_factor);
+            .flush_events(scale_factor);
     }
 
     /// Get the current scale factor of the Window
@@ -495,6 +503,10 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             }
             _ => {}
         }
+    }
+
+    fn about_to_wait(&mut self, _event_loop: &winit::event_loop::ActiveEventLoop) {
+        self.flush_events();
     }
 
     fn exiting(&mut self, _event_loop: &winit::event_loop::ActiveEventLoop) {
