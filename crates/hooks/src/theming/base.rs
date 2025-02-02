@@ -90,6 +90,7 @@ pub(crate) const BASE_THEME: Theme = Theme {
             color: cow_borrowed!("key(placeholder_color)"),
         },
         border_fill: cow_borrowed!("key(surface)"),
+        focus_border_fill: cow_borrowed!("key(focused_border)"),
         width: cow_borrowed!("150"),
         margin: cow_borrowed!("0"),
         corner_radius: cow_borrowed!("10"),

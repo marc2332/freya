@@ -167,7 +167,18 @@ pub fn Input(
         || EditableConfig::new(value.to_string()),
         EditableMode::MultipleLinesSingleEditor,
     );
-    let theme = use_applied_theme!(&theme, input);
+    let InputTheme {
+        border_fill,
+        focus_border_fill,
+        width,
+        margin,
+        corner_radius,
+        font_theme,
+        placeholder_font_theme,
+        shadow,
+        background,
+        hover_background,
+    } = use_applied_theme!(&theme, input);
     let mut focus = use_focus();
 
     let is_focused = focus.is_focused();
@@ -268,22 +279,17 @@ pub fn Input(
 
     let (background, cursor_char) = if focus.is_focused() {
         (
-            theme.hover_background,
+            hover_background,
             editable.editor().read().cursor_pos().to_string(),
         )
     } else {
-        (theme.background, "none".to_string())
+        (background, "none".to_string())
     };
-    let InputTheme {
-        border_fill,
-        width,
-        margin,
-        corner_radius,
-        font_theme,
-        placeholder_font_theme,
-        shadow,
-        ..
-    } = theme;
+    let border = if focus.is_focused_with_keyboard() {
+        format!("2 inner {focus_border_fill}")
+    } else {
+        format!("1 inner {border_fill}")
+    };
 
     let color = if display_placeholder {
         placeholder_font_theme.color
@@ -303,7 +309,7 @@ pub fn Input(
             direction: "vertical",
             color: "{color}",
             background: "{background}",
-            border: "1 inner {border_fill}",
+            border,
             shadow: "{shadow}",
             corner_radius: "{corner_radius}",
             margin: "{margin}",
