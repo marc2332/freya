@@ -16,6 +16,7 @@ performance-overlay = ["freya/performance-overlay"]
 fade-cached-incremental-areas = ["freya/fade-cached-incremental-areas"]
 disable-zoom-shortcuts = ["freya/disable-zoom-shortcuts"]
 docs = ["freya/docs"]
+muda = ["freya/muda"]
 
 [patch.crates-io]
 dioxus = { git = "https://github.com/ealmloff/dioxus", rev = "17b8b22d9b6c31a9ad5a8e291627776fa3c1ec49" }
@@ -99,9 +100,14 @@ tree-sitter-highlight = "0.23.0"
 tree-sitter-rust = "0.23.0"
 rfd = "0.14.1"
 bytes = "1.5.0"
+muda = "0.15.1"
 dioxus-clipboard = { workspace = true }
 winit = { workspace = true }
 
 [profile.release]
 lto = true
 opt-level = 3
+
+[target."cfg(target_os = \"windows\")".dependencies.windows-sys]
+version = "0.59"
+features = ["Win32_UI_WindowsAndMessaging", "Win32_Foundation"]
