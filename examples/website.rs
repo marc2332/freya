@@ -190,8 +190,7 @@ import_svg!(FreyaLogo, "./freya_logo.svg", {
 });
 import_svg!(BigFreyaLogo, "./freya_icon.svg", {
     width: "150",
-    height: "150",
-    dasda: "1"
+    height: "150"
 });
 
 #[allow(non_snake_case)]
