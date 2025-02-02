@@ -166,19 +166,17 @@ impl ElementUtils for RectElement {
     }
 
     #[inline]
-    fn element_needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
-        let node_style = &*node_ref.get::<StyleState>().unwrap();
-
-        !node_style.borders.is_empty() || !node_style.shadows.is_empty()
+    fn element_needs_cached_area(&self, _node_ref: &DioxusNode, style_state: &StyleState) -> bool {
+        !style_state.borders.is_empty() || !style_state.shadows.is_empty()
     }
 
     fn element_drawing_area(
         &self,
         layout_node: &LayoutNode,
-        node_ref: &DioxusNode,
+        _node_ref: &DioxusNode,
         scale_factor: f32,
+        node_style: &StyleState,
     ) -> Area {
-        let node_style = &*node_ref.get::<StyleState>().unwrap();
         let mut area = layout_node.visible_area();
 
         if node_style.borders.is_empty() && node_style.shadows.is_empty() {

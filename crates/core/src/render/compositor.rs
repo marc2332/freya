@@ -1,6 +1,9 @@
-use std::ops::{
-    Deref,
-    DerefMut,
+use std::{
+    collections::HashSet,
+    ops::{
+        Deref,
+        DerefMut,
+    },
 };
 
 use freya_common::{
@@ -8,8 +11,18 @@ use freya_common::{
     Layers,
 };
 use freya_native_core::{
+    exports::shipyard::{
+        IntoIter,
+        View,
+    },
     prelude::NodeImmutable,
     NodeId,
+};
+use freya_node_state::{
+    LayerState,
+    StyleState,
+    TransformState,
+    ViewportState,
 };
 use rustc_hash::FxHashMap;
 use torin::prelude::{
@@ -113,10 +126,20 @@ impl Compositor {
         scale_factor: f32,
     ) -> Option<Area> {
         let layout_node = layout.get(node_id)?;
-        let node = rdom.get(node_id)?;
-        let utils = node.node_type().tag()?.utils()?;
-
-        utils.drawing_area_with_viewports(layout_node, &node, layout, scale_factor)
+        let node_ref = rdom.get(node_id)?;
+        let utils = node_ref.node_type().tag()?.utils()?;
+        let style_state = node_ref.get::<StyleState>().unwrap();
+        let viewport_state = node_ref.get::<ViewportState>().unwrap();
+        let transform_state = node_ref.get::<TransformState>().unwrap();
+        utils.drawing_area_with_viewports(
+            layout_node,
+            &node_ref,
+            layout,
+            scale_factor,
+            &style_state,
+            &viewport_state,
+            &transform_state,
+        )
     }
 
     #[inline]
@@ -153,85 +176,133 @@ impl Compositor {
         scale_factor: f32,
     ) -> &'a Layers {
         if self.full_render {
-            for nodes in layers.values() {
-                for node_id in nodes {
-                    Self::with_utils(*node_id, layout, rdom, |node_ref, utils, layout_node| {
-                        if utils.needs_cached_area(&node_ref) {
-                            let area =
-                                utils.drawing_area(layout_node, &node_ref, layout, scale_factor);
-                            // Cache the drawing area so it can be invalidated in the next frame
-                            cache.insert(*node_id, area);
-                        }
-                    });
-                }
-            }
+            rdom.raw_world().run(
+                |viewport_states: View<ViewportState>,
+                 style_states: View<StyleState>,
+                 transform_states: View<TransformState>| {
+                    for (viewport, style_state, transform_state) in
+                        (&viewport_states, &style_states, &transform_states).iter()
+                    {
+                        Self::with_utils(
+                            viewport.node_id,
+                            layout,
+                            rdom,
+                            |node_ref, utils, layout_node| {
+                                if utils.needs_cached_area(&node_ref, transform_state, style_state)
+                                {
+                                    let area = utils.drawing_area(
+                                        layout_node,
+                                        &node_ref,
+                                        layout,
+                                        scale_factor,
+                                        &style_state,
+                                        &transform_state,
+                                    );
+                                    // Cache the drawing area so it can be invalidated in the next frame
+                                    cache.insert(viewport.node_id, area);
+                                }
+                            },
+                        );
+                    }
+                },
+            );
             self.full_render = false;
             return layers;
         }
-        let mut running_layers = layers.clone();
+        let mut skipped_nodes = HashSet::<NodeId>::new();
 
         loop {
-            let mut any_marked = false;
-
-            for (layer_n, layer) in running_layers.iter_mut() {
-                layer.retain(|node_id| {
-                    Self::with_utils(*node_id, layout, rdom, |node_ref, utils, layout_node| {
-                        let Some(area) = utils.drawing_area_with_viewports(
-                            layout_node,
-                            &node_ref,
-                            layout,
-                            scale_factor,
-                        ) else {
-                            return false;
-                        };
-
-                        let is_dirty = dirty_nodes.remove(node_id);
-
-                        // Use the cached area to invalidate the previous frame area if necessary
-                        let mut invalidated_cache_area =
-                            cache.get(node_id).and_then(|cached_area| {
-                                if is_dirty || dirty_area.intersects(cached_area) {
-                                    Some(*cached_area)
-                                } else {
-                                    None
-                                }
-                            });
-
-                        let is_invalidated = is_dirty
-                            || invalidated_cache_area.is_some()
-                            || dirty_area.intersects(&area);
-
-                        if is_invalidated {
-                            // Save this node to the layer it corresponds for rendering
-                            dirty_layers.insert_node_in_layer(*node_id, *layer_n);
-
-                            // Expand the dirty area with the cached area so it gets cleaned up
-                            if let Some(invalidated_cache_area) = invalidated_cache_area.take() {
-                                if is_dirty {
-                                    dirty_area.unite_or_insert(&invalidated_cache_area);
-                                    any_marked = true;
-                                }
-                            }
-
-                            // Cache the drawing area so it can be invalidated in the next frame
-                            if utils.needs_cached_area(&node_ref) {
-                                cache.insert(*node_id, area);
-                            }
-
-                            // Expand the dirty area with only nodes who have actually changed
-                            if is_dirty {
-                                dirty_area.unite_or_insert(&area);
-                                any_marked = true;
-                            }
+            let mut any_dirty = false;
+            rdom.raw_world().run(
+                |viewport_states: View<ViewportState>,
+                 layer_states: View<LayerState>,
+                 style_states: View<StyleState>,
+                 transform_states: View<TransformState>| {
+                    for (viewport, layer_state, style_state, transform_state) in (
+                        &viewport_states,
+                        &layer_states,
+                        &style_states,
+                        &transform_states,
+                    )
+                        .iter()
+                    {
+                        if skipped_nodes.contains(&viewport.node_id) {
+                            continue;
                         }
+                        let skip = Self::with_utils(
+                            viewport.node_id,
+                            layout,
+                            rdom,
+                            |node_ref, utils, layout_node| {
+                                let Some(area) = utils.drawing_area_with_viewports(
+                                    layout_node,
+                                    &node_ref,
+                                    layout,
+                                    scale_factor,
+                                    style_state,
+                                    viewport,
+                                    transform_state,
+                                ) else {
+                                    return true;
+                                };
 
-                        !is_invalidated
-                    })
-                    .unwrap_or_default()
-                })
-            }
+                                let is_dirty = dirty_nodes.remove(&viewport.node_id);
 
-            if !any_marked {
+                                // Use the cached area to invalidate the previous frame area if necessary
+                                let mut invalidated_cache_area =
+                                    cache.get(&viewport.node_id).and_then(|cached_area| {
+                                        if is_dirty || dirty_area.intersects(cached_area) {
+                                            Some(*cached_area)
+                                        } else {
+                                            None
+                                        }
+                                    });
+
+                                let is_invalidated = is_dirty
+                                    || invalidated_cache_area.is_some()
+                                    || dirty_area.intersects(&area);
+
+                                if is_invalidated {
+                                    // Save this node to the layer it corresponds for rendering
+                                    dirty_layers
+                                        .insert_node_in_layer(viewport.node_id, layer_state.layer);
+
+                                    // Cache the drawing area so it can be invalidated in the next frame
+                                    if utils.needs_cached_area(
+                                        &node_ref,
+                                        transform_state,
+                                        style_state,
+                                    ) {
+                                        cache.insert(viewport.node_id, area);
+                                    }
+
+                                    if is_dirty {
+                                        // Expand the dirty area with the cached area so it gets cleaned up
+                                        if let Some(invalidated_cache_area) =
+                                            invalidated_cache_area.take()
+                                        {
+                                            dirty_area.unite_or_insert(&invalidated_cache_area);
+                                        }
+
+                                        // Expand the dirty area with only nodes who have actually changed
+                                        dirty_area.unite_or_insert(&area);
+                                        any_dirty = true;
+                                    }
+                                }
+
+                                is_invalidated
+                            },
+                        )
+                        .unwrap_or(true);
+
+                        if skip {
+                            skipped_nodes.insert(viewport.node_id);
+                        }
+                    }
+                },
+            );
+
+            if !any_dirty {
                 break;
             }
         }

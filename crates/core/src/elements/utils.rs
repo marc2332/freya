@@ -5,11 +5,11 @@ use freya_engine::prelude::{
     FontMgr,
 };
 use freya_native_core::{
-    prelude::NodeImmutable,
     tags::TagName,
     NodeId,
 };
 use freya_node_state::{
+    StyleState,
     TransformState,
     ViewportState,
 };
@@ -64,6 +64,7 @@ pub trait ElementUtils {
         layout_node: &LayoutNode,
         _node_ref: &DioxusNode,
         _scale_factor: f32,
+        _node_style: &StyleState,
     ) -> Area {
         // Images neither SVG elements have support for shadows or borders, so its fine so simply return the visible area.
         layout_node.visible_area()
@@ -75,9 +76,21 @@ pub trait ElementUtils {
         node_ref: &DioxusNode,
         layout: &Torin<NodeId>,
         scale_factor: f32,
+        node_style: &StyleState,
+        node_viewports: &ViewportState,
+        transform_state: &TransformState,
     ) -> Option<Area> {
-        let mut drawing_area = self.drawing_area(layout_node, node_ref, layout, scale_factor);
-        let node_viewports = node_ref.get::<ViewportState>().unwrap();
+        let mut drawing_area = self.drawing_area(
+            layout_node,
+            node_ref,
+            layout,
+            scale_factor,
+            node_style,
+            transform_state,
+        );
+        // let node_viewports = node_ref.get::<ViewportState>().unwrap();
+
+        // println!("{:?}", &*node_viewports);
 
         for viewport_id in &node_viewports.viewports {
             let viewport = layout.get(*viewport_id).unwrap().visible_area();
@@ -99,11 +112,13 @@ pub trait ElementUtils {
         node_ref: &DioxusNode,
         layout: &Torin<NodeId>,
         scale_factor: f32,
+        node_style: &StyleState,
+        transform_state: &TransformState,
     ) -> Area {
-        let mut drawing_area = self.element_drawing_area(layout_node, node_ref, scale_factor);
-        let transform = node_ref.get::<TransformState>().unwrap();
+        let mut drawing_area =
+            self.element_drawing_area(layout_node, node_ref, scale_factor, node_style);
 
-        for (id, scale_x, scale_y) in &transform.scales {
+        for (id, scale_x, scale_y) in &transform_state.scales {
             let layout_node = layout.get(*id).unwrap();
             let center = layout_node.area.center();
             drawing_area = drawing_area.translate(-center.to_vector());
@@ -111,7 +126,7 @@ pub trait ElementUtils {
             drawing_area = drawing_area.translate(center.to_vector());
         }
 
-        if !transform.rotations.is_empty() {
+        if !transform_state.rotations.is_empty() {
             let area = layout_node.visible_area();
             drawing_area.max_area_when_rotated(area.center())
         } else {
@@ -124,16 +139,20 @@ pub trait ElementUtils {
     /// See [crate::render::CompositorCache].
     /// Default to `false`.
     #[inline]
-    fn element_needs_cached_area(&self, _node_ref: &DioxusNode) -> bool {
+    fn element_needs_cached_area(&self, _node_ref: &DioxusNode, _style_state: &StyleState) -> bool {
         false
     }
 
     #[inline]
-    fn needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
-        let element_check = self.element_needs_cached_area(node_ref);
+    fn needs_cached_area(
+        &self,
+        node_ref: &DioxusNode,
+        transform_state: &TransformState,
+        style_state: &StyleState,
+    ) -> bool {
+        let element_check = self.element_needs_cached_area(node_ref, style_state);
 
-        let transform = node_ref.get::<TransformState>().unwrap();
-        let rotate_effect = !transform.rotations.is_empty();
+        let rotate_effect = !transform_state.rotations.is_empty();
 
         element_check || rotate_effect
     }
@@ -271,23 +290,65 @@ impl ElementUtils for ElementWithUtils {
         node_ref: &DioxusNode,
         layout: &Torin<NodeId>,
         scale_factor: f32,
+        node_style: &StyleState,
+        transform_state: &TransformState,
     ) -> Area {
         match self {
-            Self::Rect(el) => el.drawing_area(layout_node, node_ref, layout, scale_factor),
-            Self::Svg(el) => el.drawing_area(layout_node, node_ref, layout, scale_factor),
-            Self::Paragraph(el) => el.drawing_area(layout_node, node_ref, layout, scale_factor),
-            Self::Image(el) => el.drawing_area(layout_node, node_ref, layout, scale_factor),
-            Self::Label(el) => el.drawing_area(layout_node, node_ref, layout, scale_factor),
+            Self::Rect(el) => el.drawing_area(
+                layout_node,
+                node_ref,
+                layout,
+                scale_factor,
+                node_style,
+                transform_state,
+            ),
+            Self::Svg(el) => el.drawing_area(
+                layout_node,
+                node_ref,
+                layout,
+                scale_factor,
+                node_style,
+                transform_state,
+            ),
+            Self::Paragraph(el) => el.drawing_area(
+                layout_node,
+                node_ref,
+                layout,
+                scale_factor,
+                node_style,
+                transform_state,
+            ),
+            Self::Image(el) => el.drawing_area(
+                layout_node,
+                node_ref,
+                layout,
+                scale_factor,
+                node_style,
+                transform_state,
+            ),
+            Self::Label(el) => el.drawing_area(
+                layout_node,
+                node_ref,
+                layout,
+                scale_factor,
+                node_style,
+                transform_state,
+            ),
         }
     }
 
-    fn needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
+    fn needs_cached_area(
+        &self,
+        node_ref: &DioxusNode,
+        transform_state: &TransformState,
+        style_state: &StyleState,
+    ) -> bool {
         match self {
-            Self::Rect(el) => el.needs_cached_area(node_ref),
-            Self::Svg(el) => el.needs_cached_area(node_ref),
-            Self::Paragraph(el) => el.needs_cached_area(node_ref),
-            Self::Image(el) => el.needs_cached_area(node_ref),
-            Self::Label(el) => el.needs_cached_area(node_ref),
+            Self::Rect(el) => el.needs_cached_area(node_ref, transform_state, style_state),
+            Self::Svg(el) => el.needs_cached_area(node_ref, transform_state, style_state),
+            Self::Paragraph(el) => el.needs_cached_area(node_ref, transform_state, style_state),
+            Self::Image(el) => el.needs_cached_area(node_ref, transform_state, style_state),
+            Self::Label(el) => el.needs_cached_area(node_ref, transform_state, style_state),
         }
     }
 }
