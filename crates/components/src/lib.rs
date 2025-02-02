@@ -79,6 +79,8 @@ mod tile;
 mod tooltip;
 mod tree;
 mod window_drag_area;
+#[cfg(feature = "muda")]
+mod window_menu;
 
 pub use accordion::*;
 pub use activable_route::*;
@@ -119,3 +121,5 @@ pub use tile::*;
 pub use tooltip::*;
 pub use tree::*;
 pub use window_drag_area::*;
+#[cfg(feature = "muda")]
+pub use window_menu::*;

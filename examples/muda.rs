@@ -3,10 +3,9 @@
     windows_subsystem = "windows"
 )]
 
-use std::sync::Arc;
+use std::fmt::Display;
 
 use freya::prelude::*;
-use tokio::sync::broadcast::Receiver;
 
 fn main() {
     let menu_bar = muda::Menu::new();
@@ -37,189 +36,158 @@ fn main() {
     );
 }
 
-fn app() -> Element {
+
+#[derive(Clone, Copy, PartialEq)]
+enum MenuExample {
+    Counter,
+    FileEditor,
+    Minimal
+}
+
+impl Display for MenuExample {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Counter => f.write_str("Counter"),
+            Self::FileEditor => f.write_str("FileEditor"),
+            Self::Minimal => f.write_str("Minimal"),
+        }
+    }
+}
+
+#[component]
+fn CounterExample() -> Element {
     let mut count = use_signal(|| 0);
+
+    println!("{count:?}");
 
     rsx!(
         WindowMenu {
             menu: rsx!(
-                MenuItem {
-                    text: "+",
-                    enabled: true,
-                    onclick: move |_| count += 1
+            WindowMenuItem {
+                text: "+",
+                onclick: move |_| {
+                    println!("increased");
+                    count += 1
                 }
-                MenuItem {
-                    text: "{count}",
-                    enabled: true,
+            }
+            WindowMenuItem {
+                text: "{count}",
+                onclick: move |_| {}
+            }
+            WindowMenuItem {
+                text: "-",
+                onclick: move |_| count -= 1
+            }
+            if count() < 3 {
+                WindowMenuItem {
+                    text: "count is smaller than 3",
                     onclick: move |_| {}
                 }
-                MenuItem {
-                    text: "-",
-                    enabled: true,
-                    onclick: move |_| count -= 1
+            }
+            WindowSubMenu {
+                text: "Stuff",
+                WindowMenuItem {
+                    text: "Reset to 0",
+                    onclick: move |_| count.set(0)
                 }
-                if count() < 3 {
-                    MenuItem {
-                        text: "count is smaller than 3",
-                        enabled: true,
-                        onclick: move |_| {}
+            }
+        )
+    }
+    )
+}
+
+
+#[component]
+fn FileEditor() -> Element {
+    rsx!(
+       
+        WindowMenu {
+            menu: rsx!(
+                WindowSubMenu { 
+                    text: "File",
+                    WindowMenuItem {
+                        text: "New File",
+                    }
+                    WindowMenuItem {
+                        text: "Open",
+                    }
+                    WindowMenuItem {
+                        text: "Save",
+                    }
+                    WindowMenuItem {
+                        text: "Save As",
+                    }
+                    WindowMenuItem {
+                        text: "Close",
                     }
                 }
-                SubMenu {
-                    text: "Stuff",
-                    enabled: true,
-                    MenuItem {
-                        text: "Reset to 0",
-                        enabled: true,
-                        onclick: move |_| count.set(0)
+                WindowSubMenu {
+                    text: "Beta Features",
+                    enabled: false
+                }
+                WindowSubMenu {
+                    text: "About",
+                    WindowMenuItem {
+                        text: "Help",
+                    }
+                    WindowMenuItem {
+                        text: "Contact",
+                    }
+                    WindowMenuItem {
+                        text: "Version 0.3.0",
                     }
                 }
             )
-        }
-        label {
-            "{count}"
         }
     )
 }
 
 #[component]
-fn WindowMenu(menu: ReadOnlySignal<Element>) -> Element {
-    let platform = use_platform();
-
-    let click_receiver = use_hook(|| {
-        let menu_bar = Arc::new(SharedMenu(consume_context::<muda::Menu>()));
-        struct SharedMenu(pub muda::Menu);
-
-        unsafe impl Send for SharedMenu {}
-        unsafe impl Sync for SharedMenu {}
-
-        #[cfg(target_os = "windows")]
-        platform.with_window(move |window| {
-            use winit::raw_window_handle::*;
-            if let RawWindowHandle::Win32(handle) = window.window_handle().unwrap().as_raw() {
-                unsafe { menu_bar.0.init_for_hwnd(handle.hwnd.get()).unwrap() };
-            }
-        });
-
-        #[cfg(target_os = "macos")]
-        menu_bar.0.init_for_nsapp();
-
-        let (tx, rx) = tokio::sync::broadcast::channel::<muda::MenuEvent>(5);
-
-        muda::MenuEvent::set_event_handler(Some(move |event| {
-            tx.send(event).ok();
-        }));
-
-        MenuEventReceiver(rx)
-    });
-
-    let (creation_sender, creation_receiver) = use_hook(|| {
-        let (tx, rx) = tokio::sync::broadcast::channel::<()>(50);
-
-        (tx, MenuEventReceiver(rx))
-    });
-
-    use_effect(move || {
-        menu.read();
-
-        let menu_bar = consume_context::<muda::Menu>();
-
-        for item in menu_bar.items() {
-            if let Some(item) = item.as_menuitem() {
-                menu_bar.remove(item).expect("Failed to remove menu.");
-            } else if let Some(submenu) = item.as_submenu() {
-                menu_bar.remove(submenu).expect("Failed to remove submenu.");
-            }
-        }
-
-        creation_sender
-            .send(())
-            .expect("Failed to notify menus of an update.");
-    });
-
-    provide_context(click_receiver);
-    provide_context(creation_receiver);
-
-    menu()
-}
-
-struct MenuEventReceiver<T>(pub Receiver<T>);
-
-impl<T: Clone> Clone for MenuEventReceiver<T> {
-    fn clone(&self) -> Self {
-        Self(self.0.resubscribe())
-    }
-}
-
-#[component]
-fn SubMenu(
-    text: ReadOnlySignal<String>,
-    enabled: ReadOnlySignal<bool>,
-    children: Element,
-) -> Element {
-    let mut submenu = use_context_provider(|| Signal::new(None));
-
-    use_hook(move || {
-        let mut creation_receiver = consume_context::<MenuEventReceiver<()>>();
-
-        spawn(async move {
-            while creation_receiver.0.recv().await.is_ok() {
-                let menu_bar = consume_context::<muda::Menu>();
-                let new_submenu = muda::Submenu::new(&*text.peek(), *enabled.peek());
-
-                menu_bar.append(&new_submenu).unwrap();
-                submenu.set(Some(new_submenu));
-            }
-        });
-    });
-
-    children
-}
-
-#[component]
-fn MenuItem(
-    onclick: ReadOnlySignal<EventHandler<()>>,
-    text: ReadOnlySignal<String>,
-    enabled: ReadOnlySignal<bool>,
-) -> Element {
-    let mut menu = use_signal(|| None);
-
-    use_hook(move || {
-        let mut creation_receiver = consume_context::<MenuEventReceiver<()>>();
-
-        spawn(async move {
-            while creation_receiver.0.recv().await.is_ok() {
-                let submenu_signal = try_consume_context::<Signal<Option<muda::Submenu>>>();
-
-                let new_menu_item = muda::MenuItem::new(&*text.peek(), *enabled.peek(), None);
-
-                if let Some(submenu_signal) = submenu_signal {
-                    let submenu = submenu_signal.peek();
-                    let submenu = submenu.as_ref().unwrap();
-                    submenu.append(&new_menu_item).unwrap();
-                } else {
-                    let menu_bar = consume_context::<muda::Menu>();
-                    menu_bar.append(&new_menu_item).unwrap();
+fn Minimal() -> Element {
+    rsx!(
+        WindowMenu {
+            menu: rsx!(
+            WindowSubMenu {
+                text: "About",
+                WindowMenuItem {
+                    text: "Help",
                 }
-
-                menu.set(Some(new_menu_item));
+                WindowMenuItem {
+                    text: "Contact",
+                }
+                WindowMenuItem {
+                    text: "Version 0.3.0",
+                }
             }
-        });
-    });
+        )
+    }
+    )
+}
 
-    use_hook(move || {
-        let mut click_receiver = consume_context::<MenuEventReceiver<muda::MenuEvent>>();
+fn app() -> Element {
+    let mut example = use_signal(|| MenuExample::Counter);
 
-        spawn(async move {
-            while let Ok(event) = click_receiver.0.recv().await {
-                if let Some(menu) = &*menu.read() {
-                    if event.id == menu.id() {
-                        onclick.peek().call(());
+    rsx!(
+        match example() {
+            MenuExample::Counter => rsx!( CounterExample {} ),
+            MenuExample::FileEditor => rsx!( FileEditor {} ),
+            MenuExample::Minimal => rsx!( Minimal {} ),
+        }
+        rect {
+            main_align: "center",
+            cross_align: "center",
+            width: "fill",
+            height: "fill",
+            Dropdown {
+                value: example(),
+                for ex in [MenuExample::Counter, MenuExample::FileEditor, MenuExample::Minimal] {
+                    DropdownItem {
+                        value: ex,
+                        onpress: move |_| example.set(ex),
+                        label { "{ex}" }
                     }
                 }
             }
-        });
-    });
-
-    None
+        }
+    )
 }

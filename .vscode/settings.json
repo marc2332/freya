@@ -3,6 +3,7 @@
         "devtools",
         "tracing-subscriber",
         "use_camera",
-        "fade-cached-incremental-areas"
+        "fade-cached-incremental-areas",
+        "muda"
     ]
 }

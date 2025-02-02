@@ -16,6 +16,7 @@ performance-overlay = ["freya/performance-overlay"]
 fade-cached-incremental-areas = ["freya/fade-cached-incremental-areas"]
 disable-zoom-shortcuts = ["freya/disable-zoom-shortcuts"]
 docs = ["freya/docs"]
+muda = ["freya/muda"]
 
 [patch.crates-io]
 dioxus = { git = "https://github.com/ealmloff/dioxus", rev = "ab5ab78c3a095c6e983c6d3c998164d1932c9079" }
