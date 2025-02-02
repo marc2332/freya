@@ -56,7 +56,7 @@ generational-box = { version = "0.6.2" }
 dioxus-clipboard = "0.2.0"
 dioxus-i18n = "0.3"
 
-skia-safe = { version = "0.80.0", features = ["gl", "textlayout", "svg"] }
+skia-safe = { version = "0.81.0", features = ["gl", "textlayout", "svg"] }
 
 gl = "0.14.0"
 glutin = "0.32.0"
