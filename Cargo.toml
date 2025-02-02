@@ -18,14 +18,14 @@ disable-zoom-shortcuts = ["freya/disable-zoom-shortcuts"]
 docs = ["freya/docs"]
 
 [patch.crates-io]
-dioxus = { git = "https://github.com/ealmloff/dioxus", rev = "ab5ab78c3a095c6e983c6d3c998164d1932c9079" }
-dioxus-rsx = { git = "https://github.com/ealmloff/dioxus", rev = "ab5ab78c3a095c6e983c6d3c998164d1932c9079" }
-dioxus-core-macro = { git = "https://github.com/ealmloff/dioxus", rev = "ab5ab78c3a095c6e983c6d3c998164d1932c9079" }
-dioxus-hooks = { git = "https://github.com/ealmloff/dioxus", rev = "ab5ab78c3a095c6e983c6d3c998164d1932c9079" }
-dioxus-signals = { git = "https://github.com/ealmloff/dioxus", rev = "ab5ab78c3a095c6e983c6d3c998164d1932c9079" }
-dioxus-core = { git = "https://github.com/ealmloff/dioxus", rev = "ab5ab78c3a095c6e983c6d3c998164d1932c9079" }
-dioxus-router = { git = "https://github.com/ealmloff/dioxus", rev = "ab5ab78c3a095c6e983c6d3c998164d1932c9079" }
-generational-box  = { git = "https://github.com/ealmloff/dioxus", rev = "ab5ab78c3a095c6e983c6d3c998164d1932c9079" }
+dioxus = { git = "https://github.com/ealmloff/dioxus", rev = "17b8b22d9b6c31a9ad5a8e291627776fa3c1ec49" }
+dioxus-rsx = { git = "https://github.com/ealmloff/dioxus", rev = "17b8b22d9b6c31a9ad5a8e291627776fa3c1ec49" }
+dioxus-core-macro = { git = "https://github.com/ealmloff/dioxus", rev = "17b8b22d9b6c31a9ad5a8e291627776fa3c1ec49" }
+dioxus-hooks = { git = "https://github.com/ealmloff/dioxus", rev = "17b8b22d9b6c31a9ad5a8e291627776fa3c1ec49" }
+dioxus-signals = { git = "https://github.com/ealmloff/dioxus", rev = "17b8b22d9b6c31a9ad5a8e291627776fa3c1ec49" }
+dioxus-core = { git = "https://github.com/ealmloff/dioxus", rev = "17b8b22d9b6c31a9ad5a8e291627776fa3c1ec49" }
+dioxus-router = { git = "https://github.com/ealmloff/dioxus", rev = "17b8b22d9b6c31a9ad5a8e291627776fa3c1ec49" }
+generational-box  = { git = "https://github.com/ealmloff/dioxus", rev = "17b8b22d9b6c31a9ad5a8e291627776fa3c1ec49" }
 
 [workspace.dependencies]
 freya = { path = "crates/freya", version = "0.3.0-rc.0" }
