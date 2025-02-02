@@ -72,7 +72,10 @@ pub enum ImageState {
 ///     )
 /// }
 /// # use freya_testing::prelude::*;
-/// # import_image!(Rust, "../../../examples/rust_logo.png", "100%", "100%");
+/// # import_image!(Rust, "../../../examples/rust_logo.png", {
+/// #   width: "100%",
+/// #   height: "100%"
+/// # });
 /// # launch_doc(|| {
 /// #   rsx!(
 /// #       Preview {
