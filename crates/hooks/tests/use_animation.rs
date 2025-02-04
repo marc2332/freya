@@ -3,8 +3,8 @@ use std::time::Duration;
 use dioxus_core::use_hook;
 use freya::prelude::*;
 use freya_core::{
-    Fill,
-    Parse,
+    parsing::Parse,
+    values::Fill,
 };
 use freya_engine::prelude::Color;
 use freya_testing::prelude::*;
