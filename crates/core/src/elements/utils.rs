@@ -70,6 +70,7 @@ pub trait ElementUtils {
         layout_node.visible_area()
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn drawing_area_with_viewports(
         &self,
         layout_node: &LayoutNode,

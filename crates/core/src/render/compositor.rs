@@ -195,8 +195,8 @@ impl Compositor {
                                         &node_ref,
                                         layout,
                                         scale_factor,
-                                        &style_state,
-                                        &transform_state,
+                                        style_state,
+                                        transform_state,
                                     );
                                     // Cache the drawing area so it can be invalidated in the next frame
                                     cache.insert(viewport.node_id, area);
