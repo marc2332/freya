@@ -17,6 +17,7 @@ use freya_native_core::{
 use freya_node_state::{
     CursorState,
     FontStyleState,
+    StyleState,
 };
 use torin::{
     geometry::Area,
@@ -163,7 +164,7 @@ impl ElementUtils for ParagraphElement {
         };
     }
 
-    fn element_needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
+    fn element_needs_cached_area(&self, node_ref: &DioxusNode, _style_state: &StyleState) -> bool {
         for text_span in node_ref.children() {
             if let NodeType::Element(ElementNode {
                 tag: TagName::Text, ..
@@ -185,6 +186,7 @@ impl ElementUtils for ParagraphElement {
         layout_node: &LayoutNode,
         node_ref: &DioxusNode,
         scale_factor: f32,
+        _node_style: &StyleState,
     ) -> Area {
         let paragraph_font_height = &layout_node
             .data

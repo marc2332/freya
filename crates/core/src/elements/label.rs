@@ -4,7 +4,10 @@ use freya_common::{
 };
 use freya_engine::prelude::*;
 use freya_native_core::prelude::NodeImmutable;
-use freya_node_state::FontStyleState;
+use freya_node_state::{
+    FontStyleState,
+    StyleState,
+};
 use torin::prelude::{
     Area,
     AreaModel,
@@ -49,7 +52,7 @@ impl ElementUtils for LabelElement {
     }
 
     #[inline]
-    fn element_needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
+    fn element_needs_cached_area(&self, node_ref: &DioxusNode, _style_state: &StyleState) -> bool {
         let font_style = node_ref.get::<FontStyleState>().unwrap();
 
         !font_style.text_shadows.is_empty()
@@ -60,6 +63,7 @@ impl ElementUtils for LabelElement {
         layout_node: &LayoutNode,
         node_ref: &DioxusNode,
         scale_factor: f32,
+        _node_style: &StyleState,
     ) -> Area {
         let paragraph_font_height = &layout_node
             .data
