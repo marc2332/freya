@@ -4,7 +4,7 @@
 )]
 
 use freya::{
-    common::AccessibilityFocusStrategy,
+    core::accessibility::AccessibilityFocusStrategy,
     prelude::*,
 };
 

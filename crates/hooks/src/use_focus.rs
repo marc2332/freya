@@ -16,14 +16,15 @@ use dioxus_signals::{
     Signal,
     Writable,
 };
-use freya_common::{
-    AccessibilityFocusStrategy,
-    AccessibilityGenerator,
-};
 use freya_core::{
-    accessibility::ACCESSIBILITY_ROOT_ID,
+    accessibility::{
+        AccessibilityFocusStrategy,
+        AccessibilityGenerator,
+        ACCESSIBILITY_ROOT_ID,
+    },
+    custom_attributes::CustomAttributeValues,
+    event_loop_messages::EventLoopMessage,
     platform_state::NavigationMode,
-    prelude::EventMessage,
     types::{
         AccessibilityId,
         AccessibilityNode,
@@ -33,7 +34,6 @@ use freya_elements::events::{
     keyboard::Code,
     KeyboardEvent,
 };
-use freya_node_state::CustomAttributeValues;
 
 use crate::{
     use_platform,
@@ -98,7 +98,7 @@ impl UseFocus {
     /// Unfocus the currently focused node.
     pub fn unfocus(&mut self) {
         self.platform
-            .send(EventMessage::FocusAccessibilityNode(
+            .send(EventLoopMessage::FocusAccessibilityNode(
                 AccessibilityFocusStrategy::Node(ACCESSIBILITY_ROOT_ID),
             ))
             .ok();

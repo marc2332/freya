@@ -4,11 +4,13 @@ use freya_native_core::{
     tree::TreeRef,
     NodeId,
 };
-use freya_node_state::LayoutState;
 use rustc_hash::FxHashMap;
 use torin::prelude::*;
 
-use crate::dom::DioxusDOM;
+use crate::{
+    dom::DioxusDOM,
+    states::LayoutState,
+};
 
 /// RealDOM adapter for Torin.
 pub struct DioxusDOMAdapter<'a> {

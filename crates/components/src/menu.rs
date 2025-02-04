@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use freya_core::platform::CursorIcon;
 use freya_elements::{
     self as dioxus_elements,
     events::MouseEvent,
@@ -12,7 +13,6 @@ use freya_hooks::{
     MenuItemTheme,
     MenuItemThemeWith,
 };
-use winit::window::CursorIcon;
 
 /// Floating menu, use alongside [`MenuItem`].
 ///

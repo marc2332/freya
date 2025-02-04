@@ -14,14 +14,6 @@ use std::{
 };
 
 use dioxus_core::VirtualDom;
-use freya_common::{
-    AccessibilityDirtyNodes,
-    AccessibilityGenerator,
-    CompositorDirtyNodes,
-    ImagesCache,
-    Layers,
-    ParagraphElements,
-};
 use freya_native_core::{
     prelude::{
         DioxusState,
@@ -34,26 +26,38 @@ use freya_native_core::{
     NodeId,
     SendAnyMap,
 };
-use freya_node_state::{
-    AccessibilityNodeState,
-    CursorState,
-    CustomAttributeValues,
-    FontStyleState,
-    LayerState,
-    LayoutState,
-    ReferencesState,
-    StyleState,
-    TransformState,
-    ViewportState,
-};
 use torin::prelude::*;
 
-use super::mutations_writer::MutationsWriter;
-use crate::prelude::{
-    CompositorCache,
-    CompositorDirtyArea,
-    ParagraphElement,
-    TextGroupMeasurement,
+use super::{
+    mutations_writer::MutationsWriter,
+    CompositorDirtyNodes,
+    ImagesCache,
+    ParagraphElements,
+};
+use crate::{
+    accessibility::{
+        AccessibilityDirtyNodes,
+        AccessibilityGenerator,
+    },
+    custom_attributes::CustomAttributeValues,
+    elements::ParagraphElement,
+    event_loop_messages::TextGroupMeasurement,
+    layers::Layers,
+    render::{
+        CompositorCache,
+        CompositorDirtyArea,
+    },
+    states::{
+        AccessibilityNodeState,
+        CursorState,
+        FontStyleState,
+        LayerState,
+        LayoutState,
+        ReferencesState,
+        StyleState,
+        TransformState,
+        ViewportState,
+    },
 };
 
 pub type DioxusDOM = RealDom<CustomAttributeValues>;

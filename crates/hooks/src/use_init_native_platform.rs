@@ -12,7 +12,7 @@ use dioxus_signals::{
     Signal,
     Writable,
 };
-use freya_core::prelude::NativePlatformReceiver;
+use freya_core::types::NativePlatformReceiver;
 
 use crate::use_init_asset_cacher;
 

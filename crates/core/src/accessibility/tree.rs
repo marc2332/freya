@@ -1,6 +1,6 @@
-use std::sync::{
-    Arc,
-    Mutex,
+use std::sync::atomic::{
+    AtomicU64,
+    Ordering,
 };
 
 use accesskit::{
@@ -15,10 +15,6 @@ use accesskit::{
     Tree,
     TreeUpdate,
 };
-use freya_common::{
-    AccessibilityDirtyNodes,
-    AccessibilityFocusStrategy,
-};
 use freya_engine::prelude::{
     Color,
     Slant,
@@ -32,14 +28,6 @@ use freya_native_core::{
     tags::TagName,
     NodeId,
 };
-use freya_node_state::{
-    AccessibilityNodeState,
-    Fill,
-    FontStyleState,
-    OverflowMode,
-    StyleState,
-    TransformState,
-};
 use rustc_hash::{
     FxHashMap,
     FxHashSet,
@@ -50,14 +38,77 @@ use torin::{
 };
 
 use super::NodeAccessibility;
-use crate::dom::{
-    DioxusDOM,
-    DioxusNode,
+use crate::{
+    dom::{
+        DioxusDOM,
+        DioxusNode,
+    },
+    states::{
+        AccessibilityNodeState,
+        FontStyleState,
+        StyleState,
+        TransformState,
+    },
+    values::{
+        Fill,
+        OverflowMode,
+    },
 };
 
-pub const ACCESSIBILITY_ROOT_ID: AccessibilityId = AccessibilityId(0);
+/// Strategy focusing an Accessibility Node.
+#[derive(PartialEq, Debug, Clone)]
+pub enum AccessibilityFocusStrategy {
+    Forward,
+    Backward,
+    Node(accesskit::NodeId),
+}
 
-pub type SharedAccessibilityTree = Arc<Mutex<AccessibilityTree>>;
+#[derive(Default)]
+pub struct AccessibilityDirtyNodes {
+    pub requested_focus: Option<AccessibilityFocusStrategy>,
+    pub added_or_updated: FxHashSet<NodeId>,
+    pub removed: FxHashMap<NodeId, NodeId>,
+}
+
+impl AccessibilityDirtyNodes {
+    pub fn request_focus(&mut self, node_id: AccessibilityFocusStrategy) {
+        self.requested_focus = Some(node_id);
+    }
+
+    pub fn add_or_update(&mut self, node_id: NodeId) {
+        self.added_or_updated.insert(node_id);
+    }
+
+    pub fn remove(&mut self, node_id: NodeId, parent_id: NodeId) {
+        self.removed.insert(node_id, parent_id);
+    }
+
+    pub fn clear(&mut self) {
+        self.requested_focus.take();
+        self.added_or_updated.clear();
+        self.removed.clear();
+    }
+}
+
+pub struct AccessibilityGenerator {
+    counter: AtomicU64,
+}
+
+impl Default for AccessibilityGenerator {
+    fn default() -> Self {
+        Self {
+            counter: AtomicU64::new(1), // Must start at 1 because 0 is reserved for the Root
+        }
+    }
+}
+
+impl AccessibilityGenerator {
+    pub fn new_id(&self) -> u64 {
+        self.counter.fetch_add(1, Ordering::Relaxed)
+    }
+}
+
+pub const ACCESSIBILITY_ROOT_ID: AccessibilityId = AccessibilityId(0);
 
 pub struct AccessibilityTree {
     pub map: FxHashMap<AccessibilityId, NodeId>,

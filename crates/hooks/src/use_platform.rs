@@ -9,27 +9,27 @@ use dioxus_signals::{
     Readable,
     Signal,
 };
-use freya_common::AccessibilityFocusStrategy;
-use freya_core::prelude::EventMessage;
+use freya_core::{
+    accessibility::AccessibilityFocusStrategy,
+    event_loop_messages::EventLoopMessage,
+    platform::{
+        CursorIcon,
+        EventLoopProxy,
+        Fullscreen,
+        Window,
+    },
+};
 use tokio::sync::{
     broadcast,
     mpsc::UnboundedSender,
 };
 use torin::prelude::Area;
-use winit::{
-    event_loop::EventLoopProxy,
-    window::{
-        CursorIcon,
-        Fullscreen,
-        Window,
-    },
-};
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct UsePlatform {
     ticker: Signal<Arc<broadcast::Receiver<()>>>,
-    event_loop_proxy: Signal<Option<EventLoopProxy<EventMessage>>>,
-    platform_emitter: Signal<Option<UnboundedSender<EventMessage>>>,
+    event_loop_proxy: Signal<Option<EventLoopProxy<EventLoopMessage>>>,
+    platform_emitter: Signal<Option<UnboundedSender<EventLoopMessage>>>,
 }
 
 #[derive(PartialEq, Eq, Debug)]
@@ -42,13 +42,15 @@ impl UsePlatform {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         UsePlatform {
-            event_loop_proxy: Signal::new(try_consume_context::<EventLoopProxy<EventMessage>>()),
-            platform_emitter: Signal::new(try_consume_context::<UnboundedSender<EventMessage>>()),
+            event_loop_proxy: Signal::new(try_consume_context::<EventLoopProxy<EventLoopMessage>>()),
+            platform_emitter: Signal::new(
+                try_consume_context::<UnboundedSender<EventLoopMessage>>(),
+            ),
             ticker: Signal::new(consume_context::<Arc<broadcast::Receiver<()>>>()),
         }
     }
 
-    pub fn send(&self, event: EventMessage) -> Result<(), UsePlatformError> {
+    pub fn send(&self, event: EventLoopMessage) -> Result<(), UsePlatformError> {
         if let Some(event_loop_proxy) = &*self.event_loop_proxy.peek() {
             event_loop_proxy
                 .send_event(event)
@@ -62,7 +64,7 @@ impl UsePlatform {
     }
 
     pub fn set_cursor(&self, cursor_icon: CursorIcon) {
-        self.send(EventMessage::SetCursorIcon(cursor_icon)).ok();
+        self.send(EventLoopMessage::SetCursorIcon(cursor_icon)).ok();
     }
 
     pub fn set_title(&self, title: impl Into<String>) {
@@ -73,7 +75,7 @@ impl UsePlatform {
     }
 
     pub fn with_window(&self, cb: impl FnOnce(&Window) + 'static + Send + Sync) {
-        self.send(EventMessage::WithWindow(Box::new(cb))).ok();
+        self.send(EventLoopMessage::WithWindow(Box::new(cb))).ok();
     }
 
     pub fn drag_window(&self) {
@@ -124,15 +126,15 @@ impl UsePlatform {
     }
 
     pub fn invalidate_drawing_area(&self, area: Area) {
-        self.send(EventMessage::InvalidateArea(area)).ok();
+        self.send(EventLoopMessage::InvalidateArea(area)).ok();
     }
 
     pub fn request_animation_frame(&self) {
-        self.send(EventMessage::RequestRerender).ok();
+        self.send(EventLoopMessage::RequestRerender).ok();
     }
 
     pub fn focus(&self, strategy: AccessibilityFocusStrategy) {
-        self.send(EventMessage::FocusAccessibilityNode(strategy))
+        self.send(EventLoopMessage::FocusAccessibilityNode(strategy))
             .ok();
     }
 
@@ -144,7 +146,7 @@ impl UsePlatform {
 
     /// Closes the whole app.
     pub fn exit(&self) {
-        self.send(EventMessage::ExitApp).ok();
+        self.send(EventLoopMessage::ExitApp).ok();
     }
 }
 

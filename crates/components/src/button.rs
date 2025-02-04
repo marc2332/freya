@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use freya_core::platform::CursorIcon;
 use freya_elements::{
     self as dioxus_elements,
     events::{
@@ -6,6 +7,8 @@ use freya_elements::{
         PointerEvent,
         PointerType,
     },
+    MouseButton,
+    TouchPhase,
 };
 use freya_hooks::{
     use_applied_theme,
@@ -13,13 +16,6 @@ use freya_hooks::{
     use_platform,
     ButtonTheme,
     ButtonThemeWith,
-};
-use winit::{
-    event::{
-        MouseButton,
-        TouchPhase,
-    },
-    window::CursorIcon,
 };
 
 /// Properties for the [`Button`], [`FilledButton`] and [`OutlineButton`] components.

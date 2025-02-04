@@ -1,19 +1,23 @@
-use freya_common::ImagesCache;
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
-use freya_node_state::{
-    ImageCover,
-    SamplingMode,
-    StyleState,
-    TransformState,
-};
 
 use super::utils::ElementUtils;
 use crate::{
-    dom::DioxusNode,
+    dom::{
+        DioxusNode,
+        ImagesCache,
+    },
     render::{
         get_or_create_image,
         ImageData,
+    },
+    states::{
+        StyleState,
+        TransformState,
+    },
+    values::{
+        ImageCover,
+        SamplingMode,
     },
 };
 

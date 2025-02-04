@@ -1,10 +1,5 @@
 use std::ops::Mul;
 
-use freya_common::{
-    CachedParagraph,
-    CursorLayoutResponse,
-    ImagesCache,
-};
 use freya_engine::prelude::*;
 use freya_native_core::{
     prelude::{
@@ -13,11 +8,6 @@ use freya_native_core::{
     },
     real_dom::NodeImmutable,
     tags::TagName,
-};
-use freya_node_state::{
-    CursorState,
-    FontStyleState,
-    StyleState,
 };
 use torin::{
     geometry::Area,
@@ -32,8 +22,12 @@ use torin::{
 
 use super::utils::ElementUtils;
 use crate::{
-    dom::DioxusNode,
-    prelude::TextGroupMeasurement,
+    custom_attributes::CursorLayoutResponse,
+    dom::{
+        DioxusNode,
+        ImagesCache,
+    },
+    event_loop_messages::TextGroupMeasurement,
     render::{
         align_main_align_paragraph,
         create_paragraph,
@@ -41,7 +35,22 @@ use crate::{
         draw_cursor_highlights,
         ParagraphData,
     },
+    states::{
+        CursorState,
+        FontStyleState,
+        StyleState,
+    },
 };
+
+pub struct CachedParagraph(pub Paragraph, pub f32);
+
+/// # Safety
+/// Skia `Paragraph` are neither Sync or Send, but in order to store them in the Associated
+/// data of the Nodes in Torin (which will be used across threads when making the attributes diffing),
+/// we must manually mark the Paragraph as Send and Sync, this is fine because `Paragraph`s will only be accessed and modified
+/// In the main thread when measuring the layout and painting.
+unsafe impl Send for CachedParagraph {}
+unsafe impl Sync for CachedParagraph {}
 
 pub struct ParagraphElement;
 

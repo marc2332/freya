@@ -5,19 +5,21 @@ use freya_native_core::{
     real_dom::NodeImmutable,
     tags::TagName,
 };
-use freya_node_state::{
-    CursorState,
-    FontStyleState,
-    HighlightMode,
-    LayoutState,
-};
 use torin::prelude::{
     Alignment,
     Area,
     Size2D,
 };
 
-use crate::dom::DioxusNode;
+use crate::{
+    dom::DioxusNode,
+    states::{
+        CursorState,
+        FontStyleState,
+        LayoutState,
+    },
+    values::HighlightMode,
+};
 
 pub struct ParagraphData {
     pub paragraph: Paragraph,

@@ -5,6 +5,7 @@ use dioxus_router::prelude::{
     navigator,
     NavigationTarget,
 };
+use freya_core::platform::MouseButton;
 use freya_elements::{
     self as dioxus_elements,
     events::MouseEvent,
@@ -13,7 +14,6 @@ use freya_hooks::{
     use_applied_theme,
     LinkThemeWith,
 };
-use winit::event::MouseButton;
 
 use crate::{
     Tooltip,

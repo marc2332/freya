@@ -1,10 +1,10 @@
 use dioxus::prelude::*;
+use freya_core::platform::MouseButton;
 use freya_elements::{
     self as dioxus_elements,
     events::MouseEvent,
 };
 use freya_hooks::use_platform;
-use winit::event::MouseButton;
 
 /// Allow dragging the window when the cursor drag this component with a left mouse click.
 ///

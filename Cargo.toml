@@ -5,7 +5,7 @@ edition = "2021"
 publish = false
 
 [workspace]
-members = ["crates/renderer", "crates/state", "crates/freya", "crates/elements", "crates/components", "crates/hooks", "crates/common", "crates/core", "crates/testing", "crates/devtools", "crates/torin", "crates/engine", "./examples/installer",  "crates/native-core",  "crates/native-core-macro"]
+members = ["crates/winit", "crates/freya", "crates/elements", "crates/components", "crates/hooks", "crates/core", "crates/testing", "crates/devtools", "crates/torin", "crates/engine", "./examples/installer",  "crates/native-core",  "crates/native-core-macro"]
 
 [features]
 tracing-subscriber = ["freya/tracing-subscriber"]
@@ -31,7 +31,7 @@ generational-box  = { git = "https://github.com/ealmloff/dioxus", rev = "17b8b22
 freya = { path = "crates/freya", version = "0.3.0-rc.0" }
 freya-devtools = { path = "crates/devtools", version = "0.3.0-rc.0" }
 freya-node-state = { path = "crates/state", version = "0.3.0-rc.0" }
-freya-renderer = { path = "crates/renderer", version = "0.3.0-rc.0" }
+freya-winit = { path = "crates/winit", version = "0.3.0-rc.0" }
 freya-elements = { path = "crates/elements", version = "0.3.0-rc.0" }
 freya-common = { path = "crates/common", version = "0.3.0-rc.0" }
 freya-hooks = { path = "crates/hooks", version = "0.3.0-rc.0" }

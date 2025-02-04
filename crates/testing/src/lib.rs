@@ -163,8 +163,15 @@ pub mod test_utils;
 const SCALE_FACTOR: f64 = 1.0;
 
 pub mod prelude {
-    pub use freya_core::prelude::*;
-    pub use freya_node_state::*;
+    pub use freya_core::{
+        accessibility::*,
+        custom_attributes::*,
+        events::*,
+        parsing::*,
+        platform::*,
+        states::*,
+        values::*,
+    };
 
     pub use crate::{
         config::*,

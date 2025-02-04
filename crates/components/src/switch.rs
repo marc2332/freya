@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use freya_core::platform::CursorIcon;
 use freya_elements::{
     self as dioxus_elements,
     events::{
@@ -18,7 +19,6 @@ use freya_hooks::{
     OnDepsChange,
     SwitchThemeWith,
 };
-use winit::window::CursorIcon;
 
 /// Properties for the [`Switch`] component.
 #[derive(Props, Clone, PartialEq)]

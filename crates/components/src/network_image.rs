@@ -1,5 +1,6 @@
 use bytes::Bytes;
 use dioxus::prelude::*;
+use freya_core::custom_attributes::dynamic_bytes;
 use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_asset_cacher,
@@ -7,7 +8,6 @@ use freya_hooks::{
     AssetAge,
     AssetConfiguration,
 };
-use freya_node_state::dynamic_bytes;
 use reqwest::Url;
 
 use crate::Loader;

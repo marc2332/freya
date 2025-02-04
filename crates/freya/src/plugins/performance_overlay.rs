@@ -3,12 +3,10 @@ use std::time::{
     Instant,
 };
 
-use freya_core::{
-    plugins::{
-        FreyaPlugin,
-        PluginEvent,
-    },
-    prelude::PluginHandle,
+use freya_core::plugins::{
+    FreyaPlugin,
+    PluginEvent,
+    PluginHandle,
 };
 use freya_engine::prelude::{
     Color,

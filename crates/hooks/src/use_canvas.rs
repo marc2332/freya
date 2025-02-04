@@ -10,7 +10,7 @@ use dioxus_signals::{
     Memo,
     Readable,
 };
-use freya_node_state::{
+use freya_core::custom_attributes::{
     CanvasReference,
     CanvasRunner,
     CustomAttributeValues,

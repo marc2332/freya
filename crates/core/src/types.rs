@@ -2,6 +2,7 @@ pub use accesskit::{
     Node as AccessibilityNode,
     NodeId as AccessibilityId,
 };
+use freya_native_core::events::EventName;
 use rustc_hash::FxHashMap;
 use smallvec::SmallVec;
 use tokio::sync::{
@@ -13,13 +14,12 @@ use tokio::sync::{
 };
 
 use crate::{
-    events::DomEvent,
-    prelude::{
-        EventName,
-        NativePlatformState,
+    events::{
+        DomEvent,
         PlatformEvent,
         PotentialEvent,
     },
+    platform_state::NativePlatformState,
 };
 
 /// Send platform updates from the platform

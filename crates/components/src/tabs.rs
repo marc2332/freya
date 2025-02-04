@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use freya_core::platform::CursorIcon;
 use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_activable_route,
@@ -10,7 +11,6 @@ use freya_hooks::{
     TabTheme,
     TabThemeWith,
 };
-use winit::window::CursorIcon;
 
 /// Horizontal container for Tabs. Use in combination with [`Tab`]
 #[allow(non_snake_case)]

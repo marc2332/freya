@@ -19,8 +19,6 @@ skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
 freya-elements = { workspace = true }
-freya-common = { workspace = true }
-freya-node-state = { workspace = true }
 freya-core = { workspace = true, features = ["rc-dom"] }
 freya-hooks = { workspace = true }
 freya-components = { workspace = true }

@@ -1,13 +1,5 @@
-use freya_common::{
-    CachedParagraph,
-    ImagesCache,
-};
 use freya_engine::prelude::*;
 use freya_native_core::prelude::NodeImmutable;
-use freya_node_state::{
-    FontStyleState,
-    StyleState,
-};
 use torin::prelude::{
     Area,
     AreaModel,
@@ -18,8 +10,16 @@ use torin::prelude::{
 
 use super::utils::ElementUtils;
 use crate::{
-    prelude::DioxusNode,
+    dom::{
+        DioxusNode,
+        ImagesCache,
+    },
+    elements::paragraph::CachedParagraph,
     render::align_main_align_paragraph,
+    states::{
+        FontStyleState,
+        StyleState,
+    },
 };
 
 pub struct LabelElement;

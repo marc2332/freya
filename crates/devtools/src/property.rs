@@ -1,11 +1,11 @@
 use dioxus::prelude::*;
-use freya_elements as dioxus_elements;
-use freya_engine::prelude::*;
-use freya_node_state::{
+use freya_core::values::{
     Border,
     Fill,
     Shadow,
 };
+use freya_elements as dioxus_elements;
+use freya_engine::prelude::*;
 
 #[allow(non_snake_case)]
 #[component]

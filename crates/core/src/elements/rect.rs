@@ -1,13 +1,5 @@
-use freya_common::ImagesCache;
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
-use freya_node_state::{
-    CanvasRunnerContext,
-    Fill,
-    ReferencesState,
-    ShadowPosition,
-    StyleState,
-};
 use torin::{
     prelude::{
         Area,
@@ -21,12 +13,24 @@ use torin::{
 
 use super::utils::ElementUtils;
 use crate::{
-    dom::DioxusNode,
+    custom_attributes::CanvasRunnerContext,
+    dom::{
+        DioxusNode,
+        ImagesCache,
+    },
     render::{
         border_shape,
         render_border,
         render_shadow,
         BorderShape,
+    },
+    states::{
+        ReferencesState,
+        StyleState,
+    },
+    values::{
+        Fill,
+        ShadowPosition,
     },
 };
 

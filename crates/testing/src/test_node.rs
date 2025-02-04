@@ -1,13 +1,15 @@
-use freya_core::node::NodeState;
+use freya_core::{
+    custom_attributes::CustomAttributeValues,
+    node::NodeState,
+    states::{
+        StyleState,
+        ViewportState,
+    },
+};
 use freya_native_core::{
     node::NodeType,
     real_dom::NodeImmutable,
     NodeId,
-};
-use freya_node_state::{
-    CustomAttributeValues,
-    StyleState,
-    ViewportState,
 };
 use torin::{
     geometry::Area,

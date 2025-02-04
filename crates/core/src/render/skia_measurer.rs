@@ -1,10 +1,5 @@
 use std::sync::Arc;
 
-use freya_common::{
-    CachedParagraph,
-    ImagesCache,
-    NodeReferenceLayout,
-};
 use freya_engine::prelude::*;
 use freya_native_core::{
     prelude::{
@@ -15,7 +10,6 @@ use freya_native_core::{
     tags::TagName,
     NodeId,
 };
-use freya_node_state::LayoutState;
 use torin::prelude::{
     Area,
     LayoutMeasurer,
@@ -31,8 +25,11 @@ use super::{
     ImageData,
 };
 use crate::{
+    custom_attributes::NodeReferenceLayout,
     dom::*,
+    elements::CachedParagraph,
     render::ParagraphData,
+    states::LayoutState,
 };
 
 /// Provides Text measurements using Skia APIs like SkParagraph

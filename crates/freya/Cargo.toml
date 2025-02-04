@@ -25,15 +25,15 @@ mocked-engine-development = ["freya-engine/mocked-engine"] # This is just for th
 default = ["skia"]
 performance-overlay = []
 fade-cached-incremental-areas = ["freya-core/fade-cached-incremental-areas"]
-disable-zoom-shortcuts = ["freya-renderer/disable-zoom-shortcuts"]
+disable-zoom-shortcuts = ["freya-winit/disable-zoom-shortcuts"]
 docs = ["dep:freya-testing", "dep:dioxus-i18n", "dep:dioxus-router"]
 
 [dependencies]
 freya-devtools = { workspace = true, optional = true }
-freya-node-state = { workspace = true }
-freya-renderer = { workspace = true }
+
+freya-winit = { workspace = true }
 freya-elements = { workspace = true }
-freya-common = { workspace = true }
+
 freya-hooks = { workspace = true }
 freya-core = { workspace = true }
 freya-components = { workspace = true }

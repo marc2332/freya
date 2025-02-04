@@ -3,13 +3,6 @@ use dioxus_core::{
     Template,
     WriteMutations,
 };
-use freya_common::{
-    AccessibilityDirtyNodes,
-    CompositorDirtyNodes,
-    ImagesCache,
-    Layers,
-    ParagraphElements,
-};
 use freya_native_core::{
     prelude::{
         DioxusNativeCoreMutationWriter,
@@ -18,23 +11,34 @@ use freya_native_core::{
     tree::TreeRef,
     NodeId,
 };
-use freya_node_state::{
-    CursorState,
-    CustomAttributeValues,
-    LayerState,
-    StyleState,
-};
 use torin::torin::{
     DirtyReason,
     Torin,
 };
 
-use crate::prelude::{
-    Compositor,
-    CompositorCache,
-    CompositorDirtyArea,
+use super::{
+    CompositorDirtyNodes,
     DioxusDOMAdapter,
-    NodeAccessibility,
+    ImagesCache,
+    ParagraphElements,
+};
+use crate::{
+    accessibility::{
+        AccessibilityDirtyNodes,
+        NodeAccessibility,
+    },
+    custom_attributes::CustomAttributeValues,
+    layers::Layers,
+    render::{
+        Compositor,
+        CompositorCache,
+        CompositorDirtyArea,
+    },
+    states::{
+        CursorState,
+        LayerState,
+        StyleState,
+    },
 };
 
 pub struct MutationsWriter<'a> {

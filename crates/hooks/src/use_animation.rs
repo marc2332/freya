@@ -23,8 +23,8 @@ use dioxus_signals::{
     Writable,
 };
 use easer::functions::*;
+use freya_core::parsing::Parse;
 use freya_engine::prelude::Color;
-use freya_node_state::Parse;
 use tokio::time::Instant;
 
 use crate::{

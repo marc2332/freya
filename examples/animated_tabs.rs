@@ -8,10 +8,8 @@ use dioxus_router::prelude::{
     Routable,
     Router,
 };
-use freya::{
-    common::NodeReferenceLayout,
-    prelude::*,
-};
+use freya::prelude::*;
+use freya_core::custom_attributes::NodeReferenceLayout;
 
 fn main() {
     launch_with_props(app, "Animated Tabs Router", (650.0, 500.0));

@@ -1,14 +1,18 @@
-use freya_common::ImagesCache;
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
-use freya_node_state::{
-    FontStyleState,
-    StyleState,
-};
 use torin::prelude::LayoutNode;
 
 use super::utils::ElementUtils;
-use crate::dom::DioxusNode;
+use crate::{
+    dom::{
+        DioxusNode,
+        ImagesCache,
+    },
+    states::{
+        FontStyleState,
+        StyleState,
+    },
+};
 
 pub struct SvgElement;
 
