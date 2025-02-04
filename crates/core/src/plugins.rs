@@ -34,7 +34,7 @@ impl PluginHandle {
             .ok();
     }
 
-    /// Emit a [EventMessage].
+    /// Emit a [EventLoopMessage].
     pub fn send_event_loop_event(&self, event: EventLoopMessage) {
         self.proxy.send_event(event).ok();
     }
