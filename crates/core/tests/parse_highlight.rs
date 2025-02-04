@@ -1,4 +1,7 @@
-use freya_core::{parsing::Parse, values::HighlightMode};
+use freya_core::{
+    parsing::Parse,
+    values::HighlightMode,
+};
 
 #[test]
 fn parse_expanded_highlight_mode() {

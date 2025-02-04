@@ -89,10 +89,10 @@ impl<'a, State: Clone + 'static> WinitRenderer<'a, State> {
             .expect("Failed to create event loop.");
         let proxy = event_loop.create_proxy();
 
-        let mut desktop_renderer =
+        let mut winit_renderer =
             WinitRenderer::new(vdom, sdom, config, devtools, hovered_node, proxy);
 
-        event_loop.run_app(&mut desktop_renderer).unwrap();
+        event_loop.run_app(&mut winit_renderer).unwrap();
     }
 
     pub fn new(

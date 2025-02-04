@@ -1,4 +1,7 @@
-use freya_core::{parsing::Parse, values::CornerRadius};
+use freya_core::{
+    parsing::Parse,
+    values::CornerRadius,
+};
 
 #[test]
 fn parse_basic_corner_radius() {

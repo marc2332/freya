@@ -1,8 +1,8 @@
 use dioxus_core::Element;
 use freya_winit::{
-    WinitRenderer,
     LaunchConfig,
     WindowConfig,
+    WinitRenderer,
 };
 
 /// Launch a new window with the default config.

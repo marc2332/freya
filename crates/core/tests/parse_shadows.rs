@@ -1,10 +1,13 @@
-use freya_core::{parsing::Parse, values::{
-    Fill,
-    GradientStop,
-    LinearGradient,
-    Shadow,
-    ShadowPosition,
-}};
+use freya_core::{
+    parsing::Parse,
+    values::{
+        Fill,
+        GradientStop,
+        LinearGradient,
+        Shadow,
+        ShadowPosition,
+    },
+};
 use freya_engine::prelude::*;
 
 #[test]

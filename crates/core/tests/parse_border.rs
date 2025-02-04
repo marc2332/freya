@@ -1,11 +1,14 @@
-use freya_core::{parsing::Parse, values::{
-    Border,
-    BorderAlignment,
-    BorderWidth,
-    Fill,
-    GradientStop,
-    LinearGradient,
-}};
+use freya_core::{
+    parsing::Parse,
+    values::{
+        Border,
+        BorderAlignment,
+        BorderWidth,
+        Fill,
+        GradientStop,
+        LinearGradient,
+    },
+};
 use freya_engine::prelude::*;
 
 #[test]

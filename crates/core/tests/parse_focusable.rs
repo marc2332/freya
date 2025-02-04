@@ -1,4 +1,7 @@
-use freya_core::{parsing::Parse, values::Focusable};
+use freya_core::{
+    parsing::Parse,
+    values::Focusable,
+};
 
 #[test]
 fn parse_focusable_enabled() {

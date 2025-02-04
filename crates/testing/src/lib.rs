@@ -164,13 +164,13 @@ const SCALE_FACTOR: f64 = 1.0;
 
 pub mod prelude {
     pub use freya_core::{
-        events::*,
-        platform::*,
-        custom_attributes::*,
         accessibility::*,
+        custom_attributes::*,
+        events::*,
         parsing::*,
-        values::*,
+        platform::*,
         states::*,
+        values::*,
     };
 
     pub use crate::{

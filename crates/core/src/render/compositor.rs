@@ -321,8 +321,10 @@ impl Compositor {
 #[cfg(test)]
 mod test {
     use freya::{
-        core::render::{Compositor},
-        core::layers::Layers,
+        core::{
+            layers::Layers,
+            render::Compositor,
+        },
         prelude::*,
     };
     use freya_testing::prelude::*;

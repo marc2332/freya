@@ -1,9 +1,12 @@
-use freya_core::{parsing::Parse, values::{
-    ConicGradient,
-    GradientStop,
-    LinearGradient,
-    RadialGradient,
-}};
+use freya_core::{
+    parsing::Parse,
+    values::{
+        ConicGradient,
+        GradientStop,
+        LinearGradient,
+        RadialGradient,
+    },
+};
 use freya_engine::prelude::*;
 
 #[test]
