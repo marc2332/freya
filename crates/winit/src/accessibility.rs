@@ -89,29 +89,24 @@ impl WinitAcessibilityTree {
                 AccessibilityTree::create_node(&node_ref, layout_node, &node_accessibility)
         });
 
-        // Update the IME Cursor area
-        self.update_ime_position(node_id, window, layout);
+        // Update the Window IME Position
+        let layout_node = layout.get(node_id);
+        if let Some(layout_node) = layout_node {
+            let area = layout_node.visible_area();
+            window.set_ime_cursor_area(
+                LogicalPosition::new(area.min_x(), area.min_y()),
+                LogicalSize::new(area.width(), area.height()),
+            );
+        } else {
+            window.set_ime_cursor_area(
+                window.inner_position().unwrap_or_default(),
+                LogicalSize::<u32>::default(),
+            );
+        }
 
         if self.adapter_initialized {
             // Update the Adapter
             self.accessibility_adapter.update_if_active(|| tree);
         }
-    }
-
-    /// Update the Window IME Position with the bounds of the currently focused accessibility node
-    fn update_ime_position(&self, node_id: NodeId, window: &Window, layout: &Torin<NodeId>) {
-        let layout_node = layout.get(node_id);
-        if let Some(layout_node) = layout_node {
-            let area = layout_node.visible_area();
-            return window.set_ime_cursor_area(
-                LogicalPosition::new(area.min_x(), area.min_y()),
-                LogicalSize::new(area.width(), area.height()),
-            );
-        }
-
-        window.set_ime_cursor_area(
-            window.inner_position().unwrap_or_default(),
-            LogicalSize::<u32>::default(),
-        );
     }
 }
