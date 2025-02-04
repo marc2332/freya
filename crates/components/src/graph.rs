@@ -1,4 +1,11 @@
 use dioxus::prelude::*;
+use freya_core::{
+    custom_attributes::{
+        CanvasRunner,
+        CanvasRunnerContext,
+    },
+    parsing::Parse,
+};
 use freya_elements as dioxus_elements;
 use freya_engine::prelude::*;
 use freya_hooks::{
@@ -8,11 +15,6 @@ use freya_hooks::{
     use_platform,
     GraphTheme,
     GraphThemeWith,
-};
-use freya_node_state::{
-    CanvasRunner,
-    CanvasRunnerContext,
-    Parse,
 };
 
 /// Data line for the [`Graph`] component.

@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use freya_core::platform::CursorIcon;
 use freya_elements::{
     self as dioxus_elements,
     events::{
@@ -15,7 +16,6 @@ use freya_hooks::{
     use_platform,
     SliderThemeWith,
 };
-use winit::window::CursorIcon;
 
 /// Properties for the [`Slider`] component.
 #[derive(Props, Clone, PartialEq)]

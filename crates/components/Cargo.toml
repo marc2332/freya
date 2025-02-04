@@ -20,9 +20,9 @@ docs = []
 
 [dependencies]
 freya-elements = { workspace = true }
-freya-node-state = { workspace = true }
+
 freya-hooks = { workspace = true }
-freya-common = { workspace = true }
+
 freya-core = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
@@ -31,7 +31,6 @@ dioxus-router = { workspace = true }
 dioxus = { workspace = true }
 futures-util = { workspace = true }
 
-winit = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 

@@ -13,7 +13,7 @@ use std::{
 };
 
 use freya::prelude::*;
-use freya_testing::prelude::CanvasRunnerContext;
+use freya_core::custom_attributes::CanvasRunnerContext;
 use gl::types::*;
 use skia_safe::Image;
 fn main() {

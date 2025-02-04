@@ -1,18 +1,22 @@
-use freya_common::ImagesCache;
 use freya_engine::prelude::{
     Data,
     Image,
 };
 use freya_native_core::prelude::NodeImmutable;
-use freya_node_state::{
-    AspectRatio,
-    ReferencesState,
-    StyleState,
-    TransformState,
-};
 use torin::prelude::Size2D;
 
-use crate::dom::DioxusNode;
+use crate::{
+    dom::{
+        DioxusNode,
+        ImagesCache,
+    },
+    states::{
+        ReferencesState,
+        StyleState,
+        TransformState,
+    },
+    values::AspectRatio,
+};
 
 pub struct ImageData {
     pub image: Image,

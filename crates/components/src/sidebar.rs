@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use freya_core::platform::CursorIcon;
 use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_activable_route,
@@ -9,7 +10,6 @@ use freya_hooks::{
     SidebarTheme,
     SidebarThemeWith,
 };
-use winit::window::CursorIcon;
 
 use crate::{
     ButtonStatus,

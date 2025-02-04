@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
+use freya_core::platform::CursorIcon;
 use freya_elements as dioxus_elements;
 use freya_hooks::use_platform;
-pub use winit::window::CursorIcon;
 
 /// Properties for the [`CursorArea`] component.
 #[derive(Props, Clone, PartialEq)]
@@ -18,7 +18,7 @@ pub struct CursorAreaProps {
 ///
 /// ```no_run
 /// # use freya::prelude::*;
-/// # use winit::window::CursorIcon;
+/// # use freya_core::platform::CursorIcon;
 /// fn app() -> Element {
 ///     rsx!(
 ///         CursorArea {
@@ -65,8 +65,8 @@ pub fn CursorArea(CursorAreaProps { children, icon }: CursorAreaProps) -> Elemen
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
+    use freya_core::platform::CursorIcon;
     use freya_testing::prelude::*;
-    use winit::window::CursorIcon;
 
     #[tokio::test]
     pub async fn cursor_area() {

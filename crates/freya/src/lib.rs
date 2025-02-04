@@ -78,7 +78,7 @@ pub mod hooks {
 
 /// Common data structures and utils.
 pub mod common {
-    pub use freya_common::*;
+    pub use freya_core::*;
 }
 
 /// Core APIs.
@@ -106,21 +106,22 @@ pub mod prelude {
     pub use dioxus_hooks::*;
     pub use dioxus_signals::*;
     pub use freya_components::*;
-    pub use freya_core::prelude::{
-        AccessibilityId,
-        PreferredTheme,
+    pub use freya_core::{
+        custom_attributes::{
+            dynamic_bytes,
+            static_bytes,
+            CustomAttributeValues,
+        },
+        platform::*,
+        platform_state::*,
+        types::AccessibilityId,
     };
     pub use freya_elements::{
         self as dioxus_elements,
         events::*,
     };
     pub use freya_hooks::*;
-    pub use freya_node_state::{
-        dynamic_bytes,
-        static_bytes,
-        CustomAttributeValues,
-    };
-    pub use freya_renderer::*;
+    pub use freya_winit::*;
     pub use torin::prelude::*;
 
     pub use crate::{

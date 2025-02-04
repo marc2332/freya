@@ -14,19 +14,21 @@ use dioxus_signals::{
     Signal,
     Writable,
 };
-use freya_common::CursorLayoutResponse;
-use freya_core::prelude::{
-    EventMessage,
-    TextGroupMeasurement,
+use freya_core::{
+    custom_attributes::{
+        CursorLayoutResponse,
+        CursorReference,
+        CustomAttributeValues,
+    },
+    event_loop_messages::{
+        EventLoopMessage,
+        TextGroupMeasurement,
+    },
 };
 use freya_elements::events::{
     Code,
     KeyboardData,
     MouseData,
-};
-use freya_node_state::{
-    CursorReference,
-    CustomAttributeValues,
 };
 use tokio::sync::mpsc::unbounded_channel;
 use torin::geometry::CursorPoint;
@@ -329,7 +331,7 @@ impl UseEditable {
         if let Some((cursor_id, cursor_position, cursor_selection)) = res {
             if self.dragging.peek().has_cursor_coords() {
                 self.platform
-                    .send(EventMessage::RemeasureTextGroup(TextGroupMeasurement {
+                    .send(EventLoopMessage::RemeasureTextGroup(TextGroupMeasurement {
                         text_id: self.cursor_reference.peek().text_id,
                         cursor_id,
                         cursor_position,

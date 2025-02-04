@@ -1,8 +1,3 @@
-use freya_common::{
-    CompositorDirtyNodes,
-    ImagesCache,
-    Layers,
-};
 use freya_engine::prelude::{
     ClipOp,
     Color,
@@ -23,10 +18,6 @@ use freya_native_core::{
     tags::TagName,
     NodeId,
 };
-use freya_node_state::{
-    TransformState,
-    ViewportState,
-};
 use itertools::sorted;
 use torin::prelude::{
     Area,
@@ -36,18 +27,25 @@ use torin::prelude::{
 
 use super::{
     wireframe_renderer,
+    Compositor,
     CompositorCache,
     CompositorDirtyArea,
 };
 use crate::{
     dom::{
+        CompositorDirtyNodes,
         DioxusDOM,
         DioxusNode,
+        ImagesCache,
     },
-    prelude::{
-        Compositor,
+    elements::{
         ElementUtils,
         ElementUtilsResolver,
+    },
+    layers::Layers,
+    states::{
+        TransformState,
+        ViewportState,
     },
 };
 

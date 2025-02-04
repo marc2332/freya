@@ -4,7 +4,7 @@
 )]
 
 use freya::prelude::*;
-use freya_core::prelude::PlatformInformation;
+use freya_core::platform_state::PlatformInformation;
 
 fn main() {
     launch_with_props(app, "Counter", (400.0, 350.0));

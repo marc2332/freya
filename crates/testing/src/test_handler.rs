@@ -6,14 +6,39 @@ use std::{
     time::Duration,
 };
 
+use accesskit::NodeId as AccessibilityId;
 use dioxus_core::{
     Event,
     VirtualDom,
 };
-use freya_core::prelude::{
-    EventMessage,
-    TextGroupMeasurement,
-    *,
+use freya_core::{
+    accessibility::AccessibilityTree,
+    dom::SafeDOM,
+    event_loop_messages::{
+        EventLoopMessage,
+        TextGroupMeasurement,
+    },
+    events::{
+        process_events,
+        EventName,
+        NodesState,
+        PlatformEvent,
+        PlatformEventData,
+    },
+    layout::process_layout,
+    render::{
+        Compositor,
+        RenderPipeline,
+    },
+    states::AccessibilityNodeState,
+    style::default_fonts,
+    types::{
+        EventEmitter,
+        EventReceiver,
+        EventsQueue,
+        NativePlatformReceiver,
+        NativePlatformSender,
+    },
 };
 use freya_engine::prelude::{
     raster_n32_premul,
@@ -27,7 +52,6 @@ use freya_native_core::{
     dioxus::NodeImmutableDioxusExt,
     prelude::NodeImmutable,
 };
-use freya_node_state::AccessibilityNodeState;
 use tokio::{
     sync::{
         broadcast,
@@ -66,15 +90,15 @@ pub struct TestingHandler<T: 'static + Clone> {
     pub(crate) utils: TestUtils,
     pub(crate) event_emitter: EventEmitter,
     pub(crate) event_receiver: EventReceiver,
-    pub(crate) platform_event_emitter: UnboundedSender<EventMessage>,
-    pub(crate) platform_event_receiver: UnboundedReceiver<EventMessage>,
+    pub(crate) platform_event_emitter: UnboundedSender<EventLoopMessage>,
+    pub(crate) platform_event_receiver: UnboundedReceiver<EventLoopMessage>,
     pub(crate) events_queue: EventsQueue,
     pub(crate) nodes_state: NodesState,
     pub(crate) platform_sender: NativePlatformSender,
     pub(crate) platform_receiver: NativePlatformReceiver,
     pub(crate) font_collection: FontCollection,
     pub(crate) font_mgr: FontMgr,
-    pub(crate) accessibility_tree: SharedAccessibilityTree,
+    pub(crate) accessibility_tree: AccessibilityTree,
     pub(crate) config: TestingConfig<T>,
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) cursor_icon: CursorIcon,
@@ -136,7 +160,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
 
             if let Ok(ev) = platform_ev {
                 match ev {
-                    EventMessage::RequestRerender => {
+                    EventLoopMessage::RequestRerender => {
                         if let Some(ticker) = ticker.as_mut() {
                             ticker.tick().await;
                             self.ticker_sender.send(()).unwrap();
@@ -145,18 +169,16 @@ impl<T: 'static + Clone> TestingHandler<T> {
                                 .ok();
                         }
                     }
-                    EventMessage::FocusAccessibilityNode(strategy) => {
+                    EventLoopMessage::FocusAccessibilityNode(strategy) => {
                         let fdom = self.utils.sdom.get();
                         let rdom = fdom.rdom();
                         self.accessibility_tree
-                            .lock()
-                            .unwrap()
                             .focus_node_with_strategy(strategy, rdom);
                     }
-                    EventMessage::SetCursorIcon(icon) => {
+                    EventLoopMessage::SetCursorIcon(icon) => {
                         self.cursor_icon = icon;
                     }
-                    EventMessage::RemeasureTextGroup(text_measurement) => {
+                    EventLoopMessage::RemeasureTextGroup(text_measurement) => {
                         self.measure_text_group(text_measurement);
                     }
                     _ => {}
@@ -215,7 +237,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
             let rdom = fdom.rdom();
             let layout = fdom.layout();
             let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
-            let (tree, node_id) = self.accessibility_tree.lock().unwrap().process_updates(
+            let (tree, node_id) = self.accessibility_tree.process_updates(
                 rdom,
                 &layout,
                 &mut dirty_accessibility_tree,
@@ -238,7 +260,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
             &self.event_emitter,
             &mut self.nodes_state,
             SCALE_FACTOR,
-            self.accessibility_tree.lock().unwrap().focused_node_id(),
+            self.accessibility_tree.focused_node_id(),
         );
     }
 
@@ -283,7 +305,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
 
     /// Get the current [AccessibilityId].
     pub fn focus_id(&self) -> AccessibilityId {
-        self.accessibility_tree.lock().unwrap().focused_id
+        self.accessibility_tree.focused_id
     }
 
     /// Resize the simulated canvas.

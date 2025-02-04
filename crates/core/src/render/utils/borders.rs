@@ -1,10 +1,11 @@
 use freya_engine::prelude::*;
-use freya_node_state::{
+use torin::prelude::Area;
+
+use crate::values::{
     Border,
     BorderAlignment,
     CornerRadius,
 };
-use torin::prelude::Area;
 
 pub enum BorderShape {
     DRRect(RRect, RRect),

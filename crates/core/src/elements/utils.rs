@@ -1,4 +1,3 @@
-use freya_common::ImagesCache;
 use freya_engine::prelude::{
     Canvas,
     FontCollection,
@@ -7,11 +6,6 @@ use freya_engine::prelude::{
 use freya_native_core::{
     tags::TagName,
     NodeId,
-};
-use freya_node_state::{
-    StyleState,
-    TransformState,
-    ViewportState,
 };
 use torin::{
     prelude::{
@@ -24,7 +18,17 @@ use torin::{
 };
 
 use super::*;
-use crate::dom::DioxusNode;
+use crate::{
+    dom::{
+        DioxusNode,
+        ImagesCache,
+    },
+    states::{
+        StyleState,
+        TransformState,
+        ViewportState,
+    },
+};
 
 pub trait ElementUtils {
     fn is_point_inside_area(

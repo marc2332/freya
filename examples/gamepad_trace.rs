@@ -12,13 +12,17 @@ use std::{
 };
 
 use freya::prelude::*;
-use freya_core::prelude::{
-    EventName,
-    FreyaPlugin,
-    PlatformEvent,
-    PlatformEventData,
-    PluginEvent,
-    PluginHandle,
+use freya_core::{
+    events::{
+        EventName,
+        PlatformEvent,
+        PlatformEventData,
+    },
+    plugins::{
+        FreyaPlugin,
+        PluginEvent,
+        PluginHandle,
+    },
 };
 use gilrs::{
     Axis,

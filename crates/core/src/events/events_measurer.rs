@@ -4,21 +4,36 @@ use freya_native_core::{
     tree::TreeRef,
     NodeId,
 };
-use freya_node_state::{
-    Fill,
-    StyleState,
-    ViewportState,
-};
 use itertools::sorted;
 
+use super::{
+    PlatformEventData,
+    PotentialEvent,
+};
 pub use crate::events::{
     DomEvent,
     NodesState,
     PlatformEvent,
 };
 use crate::{
-    elements::ElementUtilsResolver,
-    prelude::*,
+    dom::{
+        DioxusDOM,
+        FreyaDOM,
+    },
+    elements::{
+        ElementUtils,
+        ElementUtilsResolver,
+    },
+    states::{
+        StyleState,
+        ViewportState,
+    },
+    types::{
+        EventEmitter,
+        EventsQueue,
+        PotentialEvents,
+    },
+    values::Fill,
 };
 
 /// Process the events and emit them to the VirtualDOM

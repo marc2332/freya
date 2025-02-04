@@ -1,11 +1,14 @@
 use freya_engine::prelude::*;
-use freya_node_state::{
-    CornerRadius,
-    Shadow,
-    ShadowPosition,
-    StyleState,
-};
 use torin::prelude::Area;
+
+use crate::{
+    states::StyleState,
+    values::{
+        CornerRadius,
+        Shadow,
+        ShadowPosition,
+    },
+};
 
 pub fn render_shadow(
     canvas: &Canvas,

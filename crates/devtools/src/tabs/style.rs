@@ -1,6 +1,9 @@
 use dioxus::prelude::*;
 use freya_components::*;
-use freya_core::prelude::*;
+use freya_core::node::{
+    AttributeType,
+    ExternalPretty,
+};
 use freya_elements::{
     self as dioxus_elements,
 };

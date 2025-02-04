@@ -1,4 +1,11 @@
-use freya_core::prelude::*;
+use freya_core::{
+    dom::{
+        DioxusDOM,
+        DioxusNode,
+        SafeDOM,
+    },
+    node::get_node_state,
+};
 use freya_native_core::{
     real_dom::NodeImmutable,
     tree::TreeRef,

@@ -6,10 +6,6 @@ use std::{
     },
 };
 
-use freya_common::{
-    CompositorDirtyNodes,
-    Layers,
-};
 use freya_native_core::{
     exports::shipyard::{
         IntoIter,
@@ -17,12 +13,6 @@ use freya_native_core::{
     },
     prelude::NodeImmutable,
     NodeId,
-};
-use freya_node_state::{
-    LayerState,
-    StyleState,
-    TransformState,
-    ViewportState,
 };
 use rustc_hash::FxHashMap;
 use torin::prelude::{
@@ -32,12 +22,22 @@ use torin::prelude::{
 };
 
 use crate::{
-    dom::DioxusNode,
-    prelude::{
+    dom::{
+        CompositorDirtyNodes,
         DioxusDOM,
+        DioxusNode,
+    },
+    elements::{
         ElementUtils,
         ElementUtilsResolver,
         ElementWithUtils,
+    },
+    layers::Layers,
+    states::{
+        LayerState,
+        StyleState,
+        TransformState,
+        ViewportState,
     },
 };
 
@@ -321,7 +321,8 @@ impl Compositor {
 #[cfg(test)]
 mod test {
     use freya::{
-        common::*,
+        core::render::{Compositor},
+        core::layers::Layers,
         prelude::*,
     };
     use freya_testing::prelude::*;

@@ -2,12 +2,9 @@
 
 use freya_engine::prelude::Color;
 use freya_native_core::{
+    events::EventName,
     prelude::NodeImmutable,
     NodeId,
-};
-use freya_node_state::{
-    Fill,
-    StyleState,
 };
 use rustc_hash::FxHashMap;
 
@@ -18,12 +15,11 @@ use crate::{
         is_node_parent_of,
         DomEvent,
         PlatformEvent,
-    },
-    prelude::{
-        EventName,
         PotentialEvent,
-        PotentialEvents,
     },
+    states::StyleState,
+    types::PotentialEvents,
+    values::Fill,
 };
 
 #[derive(Clone, Debug)]

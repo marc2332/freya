@@ -12,7 +12,7 @@ use dioxus_router::{
     },
 };
 use freya_components::*;
-use freya_core::prelude::EventMessage;
+use freya_core::event_loop_messages::EventLoopMessage;
 use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_applied_theme,
@@ -21,8 +21,8 @@ use freya_hooks::{
     DARK_THEME,
 };
 use freya_native_core::NodeId;
-use freya_renderer::{
-    devtools::DevtoolsReceiver,
+use freya_winit::devtools::{
+    DevtoolsReceiver,
     HoveredNode,
 };
 use state::{
@@ -302,7 +302,7 @@ fn LayoutForDOMInspector() -> Element {
                         onselected: move |node_id: NodeId| {
                             if let Some(hovered_node) = &radio.read().hovered_node.as_ref() {
                                 hovered_node.lock().unwrap().replace(node_id);
-                                platform.send(EventMessage::RequestFullRerender).ok();
+                                platform.send(EventLoopMessage::RequestFullRerender).ok();
                             }
                         }
                     }

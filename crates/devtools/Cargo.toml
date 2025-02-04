@@ -18,8 +18,8 @@ features = ["freya-engine/mocked-engine"]
 skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
-freya-node-state = { workspace = true }
-freya-renderer = { workspace = true }
+
+freya-winit = { workspace = true }
 freya-elements = { workspace = true }
 freya-hooks = { workspace = true }
 freya-core = { workspace = true }

@@ -1,5 +1,8 @@
 use dioxus::prelude::*;
-use freya_common::NodeReferenceLayout;
+use freya_core::{
+    custom_attributes::NodeReferenceLayout,
+    platform::CursorIcon,
+};
 use freya_elements::{
     self as dioxus_elements,
     events::MouseEvent,
@@ -11,7 +14,6 @@ use freya_hooks::{
     ResizableHandleTheme,
     ResizableHandleThemeWith,
 };
-use winit::window::CursorIcon;
 
 struct Panel {
     pub size: f32,

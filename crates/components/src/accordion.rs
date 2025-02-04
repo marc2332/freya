@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use freya_core::platform::CursorIcon;
 use freya_elements::{
     self as dioxus_elements,
     events::MouseEvent,
@@ -13,7 +14,6 @@ use freya_hooks::{
     Ease,
     Function,
 };
-use winit::window::CursorIcon;
 
 /// Indicates the current status of the accordion.
 #[derive(Debug, Default, PartialEq, Clone, Copy)]

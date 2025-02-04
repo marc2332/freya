@@ -1,6 +1,6 @@
 use dioxus_radio::prelude::use_radio;
 use freya_native_core::prelude::NodeId;
-use freya_renderer::devtools::NodeInfo;
+use freya_winit::devtools::NodeInfo;
 
 use crate::state::DevtoolsChannel;
 

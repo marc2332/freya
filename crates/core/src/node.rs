@@ -1,19 +1,5 @@
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
-use freya_node_state::{
-    AccessibilityNodeState,
-    Border,
-    CornerRadius,
-    CursorState,
-    Fill,
-    FontStyleState,
-    LayoutState,
-    ReferencesState,
-    Shadow,
-    StyleState,
-    TextOverflow,
-    TransformState,
-};
 use torin::{
     alignment::Alignment,
     direction::DirectionMode,
@@ -26,7 +12,25 @@ use torin::{
     size::Size,
 };
 
-use crate::dom::DioxusNode;
+use crate::{
+    dom::DioxusNode,
+    states::{
+        AccessibilityNodeState,
+        CursorState,
+        FontStyleState,
+        LayoutState,
+        ReferencesState,
+        StyleState,
+        TransformState,
+    },
+    values::{
+        Border,
+        CornerRadius,
+        Fill,
+        Shadow,
+        TextOverflow,
+    },
+};
 
 #[derive(Clone, PartialEq)]
 pub struct NodeState {

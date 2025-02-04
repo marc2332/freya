@@ -9,7 +9,7 @@ use dioxus_router::prelude::{
     Router,
 };
 use freya::{
-    common::NodeReferenceLayout,
+    core::custom_attributes::NodeReferenceLayout,
     prelude::*,
 };
 

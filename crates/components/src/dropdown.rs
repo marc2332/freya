@@ -1,7 +1,10 @@
 use std::fmt::Display;
 
 use dioxus::prelude::*;
-use freya_core::types::AccessibilityId;
+use freya_core::{
+    platform::CursorIcon,
+    types::AccessibilityId,
+};
 use freya_elements::{
     self as dioxus_elements,
     events::{
@@ -22,7 +25,6 @@ use freya_hooks::{
     IconThemeWith,
     UseFocus,
 };
-use winit::window::CursorIcon;
 
 use crate::icons::ArrowIcon;
 

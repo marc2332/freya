@@ -1,6 +1,6 @@
 use dioxus_core::Element;
-use freya_renderer::{
-    DesktopRenderer,
+use freya_winit::{
+    WinitRenderer,
     LaunchConfig,
     WindowConfig,
 };
@@ -181,7 +181,7 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
     #[cfg(feature = "performance-overlay")]
     let config = config.with_plugin(crate::plugins::PerformanceOverlayPlugin::default());
 
-    use freya_core::prelude::{
+    use freya_core::dom::{
         FreyaDOM,
         SafeDOM,
     };
@@ -214,7 +214,7 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
             };
 
             use freya_devtools::with_devtools;
-            use freya_renderer::devtools::Devtools;
+            use freya_winit::devtools::Devtools;
 
             let hovered_node = Some(Arc::new(Mutex::new(None)));
             let (devtools, devtools_receiver) = Devtools::new();
@@ -236,11 +236,11 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
             .unwrap();
         let _guard = rt.enter();
 
-        DesktopRenderer::launch(vdom, sdom, config, devtools, hovered_node);
+        WinitRenderer::launch(vdom, sdom, config, devtools, hovered_node);
     }
 
     #[cfg(feature = "custom-tokio-rt")]
-    DesktopRenderer::launch(vdom, sdom, config, devtools, hovered_node);
+    WinitRenderer::launch(vdom, sdom, config, devtools, hovered_node);
 }
 
 #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]

@@ -24,19 +24,17 @@ cargo +nightly fmt --all -- --error-on-unformatted --unstable-features
 Freya is split in various crates, each with it's own meaning and purpose, here is the list sorted by their importance:
 
 - `freya`: Entrypoint to the library used by end users, mainly reexports the other crates and contains the launch methods.
-- `renderer`: Provides a winit event loop based execution for the app.
-- `core`: Core logic for events, DOM processing, accessibility integration, element rendering and text layout measurement is located here.
+- `winit`: Winit eventloop-based integration with Freya.
+- `core`: DOM Tree, Nodes states, accessibility integration, elements rendering, text layout measurement, event loop messages and more  is located here.
 - `native-core`: DOM data structure to hold all the nodes with their attribute values and registered event handlers.
 - `torin`: UI layout library specifically made for Freya, although it's agnostic.
 - `hooks`: Various Dioxus hooks to be used in Freya apps (text editing, animation, theming, etc)
 - `components`: Collection of built-in Dioxus components to be used out of the box with in Freya apps (Button, Switch, Slider, Table, ScrollView, etc)
-- `state`: Contains the internal attributes states of all the DOM Nodes.
 - `elements`: The definitions of all the built-in elements and events.
 - `testing`: Headless (non-graphic) renderer to easily test components and hooks.
 - `engine`: Simple re-export and mock of all Skia APIs used in freya so Freya docs can be built on docs.rs.
 - `devtools`: The Devtools panel used to inspect the DOM and all the Nodes in real time.
 - `native-core-macro`: Just some internal macros to be used in `states` so it can be integrated with `native-core`.
-- `common`: Some simple utilities used across the different Freya crates.
 
 ![Overview](./.github/overview.png)
 

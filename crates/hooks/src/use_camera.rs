@@ -21,7 +21,7 @@ use dioxus_signals::{
     Signal,
     Writable,
 };
-use freya_node_state::{
+use freya_core::custom_attributes::{
     CustomAttributeValues,
     ImageReference,
     NodeReference,

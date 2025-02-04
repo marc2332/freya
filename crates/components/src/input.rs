@@ -7,6 +7,7 @@ use std::{
 };
 
 use dioxus::prelude::*;
+use freya_core::platform::CursorIcon;
 use freya_elements::{
     self as dioxus_elements,
     events::{
@@ -27,7 +28,6 @@ use freya_hooks::{
     InputThemeWith,
     TextEditor,
 };
-use winit::window::CursorIcon;
 
 use crate::ScrollView;
 

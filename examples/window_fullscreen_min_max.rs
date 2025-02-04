@@ -4,7 +4,7 @@
 )]
 
 use freya::prelude::*;
-use freya_core::prelude::PlatformInformation;
+use freya_core::platform_state::PlatformInformation;
 
 fn main() {
     launch(app);
