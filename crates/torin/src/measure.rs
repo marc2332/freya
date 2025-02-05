@@ -325,7 +325,7 @@ where
                     let Some(child_data) = self.dom_adapter.get_node(child_id) else {
                         return false;
                     };
-                    let is_stacked = !child_data.position.is_absolute();
+                    let is_stacked = child_data.position.is_stacked();
                     if is_stacked {
                         last_child = Some(**child_id);
 
@@ -365,7 +365,7 @@ where
 
                 // No need to consider this Node for a two-phasing
                 // measurements as it will float on its own.
-                if child_data.position.is_absolute() {
+                if !child_data.position.is_stacked() {
                     continue;
                 }
 
@@ -523,7 +523,7 @@ where
             }
 
             // Only the stacked children will be aligned
-            if parent_node.main_alignment.is_spaced() && !child_data.position.is_absolute() {
+            if parent_node.main_alignment.is_spaced() && child_data.position.is_stacked() {
                 // Align the Main axis if necessary
                 Self::align_position(
                     AlignmentDirection::Main,
@@ -568,7 +568,7 @@ where
             child_areas.area.adjust_size(&child_data);
 
             // Stack this child into the parent
-            if !child_data.position.is_absolute() {
+            if!child_data.position.is_stacked() {
                 Self::stack_child(
                     available_area,
                     parent_node,
