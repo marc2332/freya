@@ -14,7 +14,7 @@ pub struct Gaps {
 }
 
 impl Gaps {
-    pub fn new(top: f32, right: f32, bottom: f32, left: f32) -> Self {
+    pub const fn new(top: f32, right: f32, bottom: f32, left: f32) -> Self {
         Self {
             top: Length::new(top),
             right: Length::new(right),
