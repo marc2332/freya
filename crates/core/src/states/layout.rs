@@ -46,7 +46,7 @@ pub struct LayoutState {
     pub visible_height: VisibleSize,
     pub padding: Gaps,
     pub margin: Gaps,
-    pub direction: DirectionMode,
+    pub direction: Direction,
     pub offset_y: Length,
     pub offset_x: Length,
     pub main_alignment: Alignment,
@@ -117,8 +117,8 @@ impl ParseAttribute for LayoutState {
             AttributeName::Direction => {
                 if let Some(value) = attr.value.as_text() {
                     self.direction = match value {
-                        "horizontal" => DirectionMode::Horizontal,
-                        _ => DirectionMode::Vertical,
+                        "horizontal" => Direction::Horizontal,
+                        _ => Direction::Vertical,
                     }
                 }
             }

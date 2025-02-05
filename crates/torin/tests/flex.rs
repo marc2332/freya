@@ -26,7 +26,7 @@ pub fn flex_generic() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Percentage(Length::new(10.)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -36,7 +36,7 @@ pub fn flex_generic() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Flex(Length::new(1.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -46,7 +46,7 @@ pub fn flex_generic() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(50.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -56,7 +56,7 @@ pub fn flex_generic() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Flex(Length::new(3.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -112,7 +112,7 @@ pub fn flex_under_1_flex_grow() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Flex(Length::new(0.2)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -122,7 +122,7 @@ pub fn flex_under_1_flex_grow() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Flex(Length::new(0.5)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -170,7 +170,7 @@ pub fn flex_grow_balance() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Flex(Length::new(1.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -180,7 +180,7 @@ pub fn flex_grow_balance() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Flex(Length::new(2.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -190,7 +190,7 @@ pub fn flex_grow_balance() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Flex(Length::new(3.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -200,7 +200,7 @@ pub fn flex_grow_balance() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Flex(Length::new(4.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -256,7 +256,7 @@ pub fn flex_large_grow_balance() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Flex(Length::new(5.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -266,7 +266,7 @@ pub fn flex_large_grow_balance() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Flex(Length::new(65.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -276,7 +276,7 @@ pub fn flex_large_grow_balance() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Flex(Length::new(30.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -286,7 +286,7 @@ pub fn flex_large_grow_balance() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Flex(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -342,7 +342,7 @@ pub fn flex_with_inner_percentage() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Flex(Length::new(1.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -363,7 +363,7 @@ pub fn flex_with_inner_percentage() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -405,7 +405,7 @@ pub fn flex_root_candidate_resolution() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -425,7 +425,7 @@ pub fn flex_root_candidate_resolution() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Flex(Length::new(1.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -435,7 +435,7 @@ pub fn flex_root_candidate_resolution() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Flex(Length::new(1.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -469,7 +469,7 @@ pub fn flex_root_candidate_resolution() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Flex(Length::new(3.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     layout.invalidate(2);

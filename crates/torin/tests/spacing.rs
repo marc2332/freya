@@ -15,7 +15,7 @@ pub fn spacing() {
         Node::from_size_and_direction_and_spacing(
             Size::Fill,
             Size::Fill,
-            DirectionMode::Vertical,
+            Direction::Vertical,
             Length::new(40.0),
         ),
     );
@@ -26,7 +26,7 @@ pub fn spacing() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Horizontal,
+            Direction::Horizontal,
         ),
     );
     mocked_dom.add(
@@ -36,7 +36,7 @@ pub fn spacing() {
         Node::from_size_and_direction_and_spacing(
             Size::Pixels(Length::new(600.0)),
             Size::Pixels(Length::new(600.0)),
-            DirectionMode::Horizontal,
+            Direction::Horizontal,
             Length::new(50.0),
         ),
     );
@@ -47,7 +47,7 @@ pub fn spacing() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(300.0)),
             Size::Pixels(Length::new(300.0)),
-            DirectionMode::Horizontal,
+            Direction::Horizontal,
         ),
     );
     mocked_dom.add(
@@ -57,7 +57,7 @@ pub fn spacing() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Horizontal,
+            Direction::Horizontal,
         ),
     );
 

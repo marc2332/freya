@@ -1,15 +1,15 @@
-#[derive(PartialEq, Clone, Debug, Default)]
-pub enum DirectionMode {
+#[derive(PartialEq, Eq, Clone, Debug, Default)]
+pub enum Direction {
     #[default]
     Vertical,
     Horizontal,
 }
 
-impl DirectionMode {
+impl Direction {
     pub fn pretty(&self) -> String {
         match self {
-            DirectionMode::Horizontal => "horizontal".to_string(),
-            DirectionMode::Vertical => "vertical".to_string(),
+            Self::Horizontal => "horizontal".to_string(),
+            Self::Vertical => "vertical".to_string(),
         }
     }
 }
