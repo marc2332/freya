@@ -1,5 +1,3 @@
-use std::ops::Deref;
-
 use crate::{
     prelude::{
         Area,
@@ -27,7 +25,7 @@ pub enum Position {
 }
 
 impl Position {
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         match self {
             Self::Absolute(absolute_position) => {
                 let PositionSides {
@@ -35,16 +33,16 @@ impl Position {
                     right,
                     bottom,
                     left,
-                } = absolute_position.deref();
+                } = &**absolute_position;
                 top.is_some() && right.is_some() && bottom.is_some() && left.is_some()
             }
-            Self::Global(absolute_position) => {
+            Self::Global(global_position) => {
                 let PositionSides {
                     top,
                     right,
                     bottom,
                     left,
-                } = absolute_position.deref();
+                } = &**global_position;
                 top.is_some() && right.is_some() && bottom.is_some() && left.is_some()
             }
             Self::Stacked => true,
@@ -82,7 +80,7 @@ impl Position {
             *self = Self::new_absolute();
         }
         if let Self::Absolute(absolute_position) = self {
-            absolute_position.top = Some(value)
+            absolute_position.top = Some(value);
         }
     }
 
@@ -91,7 +89,7 @@ impl Position {
             *self = Self::new_absolute();
         }
         if let Self::Absolute(absolute_position) = self {
-            absolute_position.right = Some(value)
+            absolute_position.right = Some(value);
         }
     }
 
@@ -100,7 +98,7 @@ impl Position {
             *self = Self::new_absolute();
         }
         if let Self::Absolute(absolute_position) = self {
-            absolute_position.bottom = Some(value)
+            absolute_position.bottom = Some(value);
         }
     }
 
@@ -109,7 +107,7 @@ impl Position {
             *self = Self::new_absolute();
         }
         if let Self::Absolute(absolute_position) = self {
-            absolute_position.left = Some(value)
+            absolute_position.left = Some(value);
         }
     }
 
@@ -121,14 +119,14 @@ impl Position {
         root_area: &Area,
     ) -> Point2D {
         match self {
-            Position::Stacked => available_parent_area.origin,
-            Position::Absolute(absolute_position) => {
+            Self::Stacked => available_parent_area.origin,
+            Self::Absolute(absolute_position) => {
                 let PositionSides {
                     top,
                     right,
                     bottom,
                     left,
-                } = absolute_position.deref();
+                } = &**absolute_position;
                 let y = {
                     let mut y = parent_area.min_y();
                     if let Some(top) = top {
@@ -149,13 +147,13 @@ impl Position {
                 };
                 Point2D::new(x, y)
             }
-            Position::Global(global_position) => {
+            Self::Global(global_position) => {
                 let PositionSides {
                     top,
                     right,
                     bottom,
                     left,
-                } = global_position.deref();
+                } = &**global_position;
                 let y = {
                     let mut y = 0.;
                     if let Some(top) = top {
@@ -203,14 +201,7 @@ impl Position {
     pub fn pretty(&self) -> String {
         match self {
             Self::Stacked => "stacked".to_string(),
-            Self::Absolute(positions) => format!(
-                "{}, {}, {}, {}",
-                positions.top.unwrap_or_default(),
-                positions.right.unwrap_or_default(),
-                positions.bottom.unwrap_or_default(),
-                positions.left.unwrap_or_default()
-            ),
-            Self::Global(positions) => format!(
+            Self::Absolute(positions) | Self::Global(positions) => format!(
                 "{}, {}, {}, {}",
                 positions.top.unwrap_or_default(),
                 positions.right.unwrap_or_default(),

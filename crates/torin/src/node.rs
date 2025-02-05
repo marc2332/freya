@@ -2,7 +2,7 @@ pub use euclid::Rect;
 
 use crate::{
     alignment::Alignment,
-    direction::DirectionMode,
+    direction::Direction,
     gaps::Gaps,
     geometry::Length,
     prelude::{
@@ -48,7 +48,7 @@ pub struct Node {
     pub offset_y: Length,
 
     /// Direction in which it's inner Nodes will be stacked
-    pub direction: DirectionMode,
+    pub direction: Direction,
 
     /// Position config
     pub position: Position,
@@ -87,7 +87,7 @@ impl Node {
     }
 
     /// Construct a new Node given a size and a direction
-    pub fn from_size_and_direction(width: Size, height: Size, direction: DirectionMode) -> Self {
+    pub fn from_size_and_direction(width: Size, height: Size, direction: Direction) -> Self {
         Self {
             width,
             height,
@@ -144,7 +144,7 @@ impl Node {
         height: Size,
         main_alignment: Alignment,
         cross_alignment: Alignment,
-        direction: DirectionMode,
+        direction: Direction,
     ) -> Self {
         Self {
             width,
@@ -162,7 +162,7 @@ impl Node {
         height: Size,
         main_alignment: Alignment,
         cross_alignment: Alignment,
-        direction: DirectionMode,
+        direction: Direction,
         spacing: Length,
     ) -> Self {
         Self {
@@ -190,14 +190,14 @@ impl Node {
     pub fn from_size_and_direction_and_margin(
         width: Size,
         height: Size,
-        direction: DirectionMode,
+        direction: Direction,
         margin: Gaps,
     ) -> Self {
         Self {
             width,
             height,
-            direction,
             margin,
+            direction,
             ..Default::default()
         }
     }
@@ -208,7 +208,7 @@ impl Node {
         height: Size,
         main_alignment: Alignment,
         cross_alignment: Alignment,
-        direction: DirectionMode,
+        direction: Direction,
         padding: Gaps,
     ) -> Self {
         Self {
@@ -216,8 +216,8 @@ impl Node {
             height,
             main_alignment,
             cross_alignment,
-            direction,
             padding,
+            direction,
             ..Default::default()
         }
     }
@@ -246,7 +246,7 @@ impl Node {
     pub fn from_size_and_direction_and_spacing(
         width: Size,
         height: Size,
-        direction: DirectionMode,
+        direction: Direction,
         spacing: Length,
     ) -> Self {
         Self {

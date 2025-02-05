@@ -1,3 +1,5 @@
+#![allow(clippy::missing_panics_doc)]
+
 use std::collections::HashMap;
 
 use crate::prelude::*;
@@ -9,7 +11,7 @@ pub struct TestingDOM {
 
 impl TestingDOM {
     pub fn add(&mut self, node_id: usize, parent: Option<usize>, children: Vec<usize>, node: Node) {
-        let depth = parent.map(|p| self.mapper.get(&p).unwrap().2).unwrap_or(0) + 1;
+        let depth = parent.map_or(0, |p| self.mapper.get(&p).unwrap().2) + 1;
         self.mapper.insert(node_id, (parent, children, depth, node));
     }
 

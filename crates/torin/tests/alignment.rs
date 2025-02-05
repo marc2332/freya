@@ -18,7 +18,7 @@ pub fn display_horizontal() {
             Size::Pixels(Length::new(200.0)),
             Alignment::Center,
             Alignment::Center,
-            DirectionMode::Horizontal,
+            Direction::Horizontal,
         ),
     );
     mocked_dom.add(
@@ -28,7 +28,7 @@ pub fn display_horizontal() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -64,7 +64,7 @@ pub fn display_vertical_with_inner_children() {
             Size::Pixels(Length::new(200.0)),
             Alignment::Center,
             Alignment::Center,
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -84,7 +84,7 @@ pub fn display_vertical_with_inner_children() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -126,7 +126,7 @@ pub fn double_center_alignment() {
             Size::Percentage(Length::new(100.0)),
             Alignment::Center,
             Alignment::Center,
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -136,7 +136,7 @@ pub fn double_center_alignment() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -146,7 +146,7 @@ pub fn double_center_alignment() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(300.0)),
             Size::Pixels(Length::new(300.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -182,7 +182,7 @@ pub fn double_end_alignment() {
             Size::Percentage(Length::new(100.0)),
             Alignment::End,
             Alignment::End,
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -192,7 +192,7 @@ pub fn double_end_alignment() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -202,7 +202,7 @@ pub fn double_end_alignment() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(300.0)),
             Size::Pixels(Length::new(300.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -238,7 +238,7 @@ pub fn unsized_alignment() {
             Size::Inner,
             Alignment::Center,
             Alignment::End,
-            DirectionMode::Horizontal,
+            Direction::Horizontal,
             Gaps::new(15.0, 15.0, 15.0, 15.0),
         ),
     );
@@ -249,7 +249,7 @@ pub fn unsized_alignment() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(50.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -259,7 +259,7 @@ pub fn unsized_alignment() {
         Node::from_size_and_direction_and_margin(
             Size::Pixels(Length::new(150.0)),
             Size::Pixels(Length::new(80.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
             Gaps::new(10.0, 50.0, 20.0, 0.0),
         ),
     );
@@ -296,14 +296,14 @@ pub fn nested_unsized_alignment() {
             Size::Percentage(Length::new(100.)),
             Alignment::Center,
             Alignment::Center,
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
         1,
         Some(0),
         vec![2],
-        Node::from_size_and_direction(Size::Inner, Size::Inner, DirectionMode::Vertical),
+        Node::from_size_and_direction(Size::Inner, Size::Inner, Direction::Vertical),
     );
     mocked_dom.add(
         2,
@@ -312,7 +312,7 @@ pub fn nested_unsized_alignment() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -348,7 +348,7 @@ pub fn space_between_alignment() {
             Size::Percentage(Length::new(100.)),
             Alignment::SpaceBetween,
             Alignment::Start,
-            DirectionMode::Horizontal,
+            Direction::Horizontal,
         ),
     );
     mocked_dom.add(
@@ -358,7 +358,7 @@ pub fn space_between_alignment() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.)),
             Size::Pixels(Length::new(100.)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -368,7 +368,7 @@ pub fn space_between_alignment() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.)),
             Size::Pixels(Length::new(100.)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -378,7 +378,7 @@ pub fn space_between_alignment() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.)),
             Size::Pixels(Length::new(100.)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -388,7 +388,7 @@ pub fn space_between_alignment() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.)),
             Size::Pixels(Length::new(100.)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -434,7 +434,7 @@ pub fn space_around_alignment() {
             Size::Percentage(Length::new(100.)),
             Alignment::SpaceAround,
             Alignment::Start,
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -444,7 +444,7 @@ pub fn space_around_alignment() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.)),
             Size::Pixels(Length::new(100.)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -454,7 +454,7 @@ pub fn space_around_alignment() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.)),
             Size::Pixels(Length::new(100.)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -464,7 +464,7 @@ pub fn space_around_alignment() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.)),
             Size::Pixels(Length::new(100.)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -474,7 +474,7 @@ pub fn space_around_alignment() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.)),
             Size::Pixels(Length::new(100.)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -520,7 +520,7 @@ pub fn space_evenly_alignment() {
             Size::Percentage(Length::new(100.)),
             Alignment::SpaceEvenly,
             Alignment::Start,
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -530,7 +530,7 @@ pub fn space_evenly_alignment() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.)),
             Size::Pixels(Length::new(100.)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -540,7 +540,7 @@ pub fn space_evenly_alignment() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.)),
             Size::Pixels(Length::new(100.)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -550,7 +550,7 @@ pub fn space_evenly_alignment() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.)),
             Size::Pixels(Length::new(100.)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -560,7 +560,7 @@ pub fn space_evenly_alignment() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.)),
             Size::Pixels(Length::new(100.)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -606,7 +606,7 @@ pub fn alignment_with_absolute_child() {
             Size::Percentage(Length::new(100.)),
             Alignment::Center,
             Alignment::Center,
-            DirectionMode::Vertical,
+            Direction::Vertical,
             Length::new(15.0),
         ),
     );
@@ -617,7 +617,7 @@ pub fn alignment_with_absolute_child() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.)),
             Size::Pixels(Length::new(100.)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -637,7 +637,7 @@ pub fn alignment_with_absolute_child() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.)),
             Size::Pixels(Length::new(100.)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 

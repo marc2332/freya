@@ -13,7 +13,7 @@ pub fn unsized_parent_with_child_with_margin() {
         0,
         None,
         vec![1],
-        Node::from_size_and_direction(Size::Inner, Size::Inner, DirectionMode::Vertical),
+        Node::from_size_and_direction(Size::Inner, Size::Inner, Direction::Vertical),
     );
     mocked_dom.add(
         1,
@@ -62,7 +62,7 @@ pub fn unsized_parent_with_padding() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -96,7 +96,7 @@ pub fn stacked() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -106,7 +106,7 @@ pub fn stacked() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(50.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -116,7 +116,7 @@ pub fn stacked() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(50.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -142,7 +142,7 @@ pub fn stacked() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(50.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     layout.invalidate(2);
@@ -179,7 +179,7 @@ pub fn two_cols_auto() {
         Node::from_size_and_direction(
             Size::Inner,
             Size::Pixels(Length::new(400.0)),
-            DirectionMode::Horizontal,
+            Direction::Horizontal,
         ),
     );
     mocked_dom.add(
@@ -189,7 +189,7 @@ pub fn two_cols_auto() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(50.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -199,7 +199,7 @@ pub fn two_cols_auto() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(50.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -236,7 +236,7 @@ pub fn sibling_increments_area() {
         0,
         None,
         vec![1, 2],
-        Node::from_size_and_direction(Size::Inner, Size::Inner, DirectionMode::Vertical),
+        Node::from_size_and_direction(Size::Inner, Size::Inner, Direction::Vertical),
     );
     mocked_dom.add(
         1,
@@ -245,7 +245,7 @@ pub fn sibling_increments_area() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(300.0)),
             Size::Pixels(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -255,7 +255,7 @@ pub fn sibling_increments_area() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(50.0)),
             Size::Pixels(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -289,7 +289,7 @@ pub fn root_100per_children_50per50per() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -299,7 +299,7 @@ pub fn root_100per_children_50per50per() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(50.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -309,7 +309,7 @@ pub fn root_100per_children_50per50per() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(50.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -349,7 +349,7 @@ pub fn root_200px_children_50per50per() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -359,7 +359,7 @@ pub fn root_200px_children_50per50per() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(50.0)),
-            DirectionMode::Horizontal,
+            Direction::Horizontal,
         ),
     );
     mocked_dom.add(
@@ -369,7 +369,7 @@ pub fn root_200px_children_50per50per() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(50.0)),
-            DirectionMode::Horizontal,
+            Direction::Horizontal,
         ),
     );
 
@@ -409,7 +409,7 @@ pub fn direction() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -419,7 +419,7 @@ pub fn direction() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -429,7 +429,7 @@ pub fn direction() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -457,7 +457,7 @@ pub fn direction() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Horizontal,
+            Direction::Horizontal,
         ),
     );
     layout.invalidate(0);
@@ -504,7 +504,7 @@ pub fn scroll() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -514,7 +514,7 @@ pub fn scroll() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -549,7 +549,7 @@ pub fn fill_size() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -559,7 +559,7 @@ pub fn fill_size() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Pixels(Length::new(300.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -569,7 +569,7 @@ pub fn fill_size() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Fill,
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -603,7 +603,7 @@ pub fn root_percentage() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -613,7 +613,7 @@ pub fn root_percentage() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(50.0)),
             Size::Pixels(Length::new(300.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -623,7 +623,7 @@ pub fn root_percentage() {
         Node::from_size_and_direction(
             Size::RootPercentage(Length::new(75.0)),
             Size::Pixels(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -667,7 +667,7 @@ pub fn content_fit_fill_min() {
         Node::from_size_and_direction(
             Size::FillMinimum,
             Size::Percentage(Length::new(30.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -677,7 +677,7 @@ pub fn content_fit_fill_min() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Percentage(Length::new(30.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -687,7 +687,7 @@ pub fn content_fit_fill_min() {
         Node::from_size_and_direction(
             Size::FillMinimum,
             Size::Percentage(Length::new(30.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -742,7 +742,7 @@ pub fn inner_percentage() {
         Node::from_size_and_direction(
             Size::Inner,
             Size::Percentage(Length::new(30.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -752,7 +752,7 @@ pub fn inner_percentage() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 

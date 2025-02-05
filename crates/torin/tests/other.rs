@@ -26,7 +26,7 @@ pub fn caching() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -47,7 +47,7 @@ pub fn caching() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(50.0)),
             Size::Percentage(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     layout.invalidate(1);
@@ -77,7 +77,7 @@ pub fn layout_dirty_nodes() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -87,7 +87,7 @@ pub fn layout_dirty_nodes() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -97,7 +97,7 @@ pub fn layout_dirty_nodes() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(50.0)),
             Size::Pixels(Length::new(50.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -133,7 +133,7 @@ pub fn layout_dirty_nodes() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(10.0)),
             Size::Pixels(Length::new(10.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     layout.invalidate(2);
@@ -151,7 +151,7 @@ pub fn layout_dirty_nodes() {
         Node::from_size_and_direction(
             Size::Inner,
             Size::Pixels(Length::new(10.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     layout.invalidate(1);
@@ -169,7 +169,7 @@ pub fn layout_dirty_nodes() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(50.0)),
             Size::Pixels(Length::new(50.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     layout.invalidate(2);
@@ -187,7 +187,7 @@ pub fn layout_dirty_nodes() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(150.0)),
             Size::Pixels(Length::new(150.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     layout.invalidate(0);
@@ -214,14 +214,14 @@ pub fn node_removal() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
         1,
         Some(0),
         vec![2, 3],
-        Node::from_size_and_direction(Size::Inner, Size::Inner, DirectionMode::Vertical),
+        Node::from_size_and_direction(Size::Inner, Size::Inner, Direction::Vertical),
     );
     mocked_dom.add(
         2,
@@ -230,7 +230,7 @@ pub fn node_removal() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -240,7 +240,7 @@ pub fn node_removal() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -250,7 +250,7 @@ pub fn node_removal() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -326,7 +326,7 @@ pub fn deep_tree() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -336,7 +336,7 @@ pub fn deep_tree() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -346,7 +346,7 @@ pub fn deep_tree() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -356,7 +356,7 @@ pub fn deep_tree() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -366,7 +366,7 @@ pub fn deep_tree() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -376,7 +376,7 @@ pub fn deep_tree() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -393,7 +393,7 @@ pub fn deep_tree() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(200.0)),
             Size::Percentage(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     layout.invalidate(4);
@@ -423,7 +423,7 @@ pub fn node_reordering() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -433,7 +433,7 @@ pub fn node_reordering() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -443,7 +443,7 @@ pub fn node_reordering() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -479,7 +479,7 @@ pub fn node_reordering() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -512,7 +512,7 @@ pub fn node_reordering() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 

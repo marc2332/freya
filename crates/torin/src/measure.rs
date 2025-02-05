@@ -18,7 +18,7 @@ use crate::{
         Alignment,
         AlignmentDirection,
         AreaModel,
-        DirectionMode,
+        Direction,
         LayoutMetadata,
         Length,
         Torin,
@@ -53,7 +53,6 @@ where
 {
     /// Measure a Node.
     #[allow(clippy::too_many_arguments)]
-    #[inline(always)]
     pub fn measure_node(
         &mut self,
         // ID for this Node
@@ -292,7 +291,6 @@ where
 
     /// Measure the children layouts of a Node
     #[allow(clippy::too_many_arguments)]
-    #[inline(always)]
     pub fn measure_children(
         &mut self,
         parent_node_id: &Key,
@@ -332,7 +330,7 @@ where
                         last_child = Some(**child_id);
 
                         if first_child.is_none() {
-                            first_child = Some(**child_id)
+                            first_child = Some(**child_id);
                         }
                     }
                     is_stacked
@@ -342,8 +340,8 @@ where
         } else {
             (
                 children.len(),
-                children.first().cloned(),
-                children.last().cloned(),
+                children.first().copied(),
+                children.last().copied(),
             )
         };
 
@@ -360,7 +358,7 @@ where
         // non-start cross alignment, non-start main aligment of a fit-content.
         if needs_initial_phase {
             //  Measure the children
-            for child_id in children.iter() {
+            for child_id in &children {
                 let Some(child_data) = self.dom_adapter.get_node(child_id) else {
                     continue;
                 };
@@ -408,12 +406,12 @@ where
 
                 if parent_node.content.is_flex() {
                     match parent_node.direction {
-                        DirectionMode::Vertical => {
+                        Direction::Vertical => {
                             if let Some(ff) = child_data.height.flex_grow() {
                                 initial_phase_flex_grows.insert(*child_id, ff);
                             }
                         }
-                        DirectionMode::Horizontal => {
+                        Direction::Horizontal => {
                             if let Some(ff) = child_data.width.flex_grow() {
                                 initial_phase_flex_grows.insert(*child_id, ff);
                             }
@@ -427,7 +425,7 @@ where
 
         let flex_grows = initial_phase_flex_grows
             .values()
-            .cloned()
+            .copied()
             .reduce(|acc, v| acc + v)
             .unwrap_or_default()
             .max(Length::new(1.0));
@@ -473,7 +471,7 @@ where
                 Self::align_content(
                     available_area,
                     &initial_phase_inner_area,
-                    &initial_phase_inner_sizes_with_flex,
+                    initial_phase_inner_sizes_with_flex,
                     &parent_node.main_alignment,
                     &parent_node.direction,
                     AlignmentDirection::Main,
@@ -531,7 +529,7 @@ where
                     AlignmentDirection::Main,
                     &mut adapted_available_area,
                     &initial_available_area,
-                    &initial_phase_inner_sizes_with_flex,
+                    initial_phase_inner_sizes_with_flex,
                     &parent_node.main_alignment,
                     &parent_node.direction,
                     non_absolute_children_len,
@@ -547,7 +545,7 @@ where
                     Self::align_content(
                         &mut adapted_available_area,
                         available_area,
-                        initial_phase_size,
+                        *initial_phase_size,
                         &parent_node.cross_alignment,
                         &parent_node.direction,
                         AlignmentDirection::Cross,
@@ -596,9 +594,9 @@ where
     fn align_content(
         available_area: &mut Area,
         inner_area: &Area,
-        contents_size: &Size2D,
+        contents_size: Size2D,
         alignment: &Alignment,
-        direction: &DirectionMode,
+        direction: &Direction,
         alignment_direction: AlignmentDirection,
     ) {
         let axis = AlignAxis::new(direction, alignment_direction);
@@ -633,9 +631,9 @@ where
         alignment_direction: AlignmentDirection,
         available_area: &mut Area,
         initial_available_area: &Area,
-        inner_sizes: &Size2D,
+        inner_sizes: Size2D,
         alignment: &Alignment,
-        direction: &DirectionMode,
+        direction: &Direction,
         siblings_len: usize,
         is_first_sibling: bool,
     ) {
@@ -710,7 +708,7 @@ where
             .unwrap_or_default();
 
         match parent_node.direction {
-            DirectionMode::Horizontal => {
+            Direction::Horizontal => {
                 // Move the available area
                 available_area.origin.x = child_area.max_x() + spacing.get();
                 available_area.size.width -= child_area.size.width + spacing.get();
@@ -739,7 +737,7 @@ where
                     parent_area.size.width += child_area.size.width + spacing.get();
                 }
             }
-            DirectionMode::Vertical => {
+            Direction::Vertical => {
                 // Move the available area
                 available_area.origin.y = child_area.max_y() + spacing.get();
                 available_area.size.height -= child_area.size.height + spacing.get();
@@ -797,11 +795,11 @@ where
 
         let axis = AlignAxis::new(&parent_node.direction, alignment_direction);
         let (is_vertical_not_start, is_horizontal_not_start) = match parent_node.direction {
-            DirectionMode::Vertical => (
+            Direction::Vertical => (
                 parent_node.main_alignment.is_not_start(),
                 parent_node.cross_alignment.is_not_start() || parent_node.content.is_fit(),
             ),
-            DirectionMode::Horizontal => (
+            Direction::Horizontal => (
                 parent_node.cross_alignment.is_not_start() || parent_node.content.is_fit(),
                 parent_node.main_alignment.is_not_start(),
             ),

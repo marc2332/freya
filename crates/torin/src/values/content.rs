@@ -1,4 +1,4 @@
-#[derive(PartialEq, Clone, Debug, Default)]
+#[derive(PartialEq, Eq, Clone, Debug, Default)]
 pub enum Content {
     #[default]
     Normal,
