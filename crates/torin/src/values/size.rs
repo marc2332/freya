@@ -1,7 +1,4 @@
-use std::{
-    ops::Deref,
-    slice::Iter,
-};
+use std::slice::Iter;
 
 pub use euclid::Rect;
 
@@ -47,21 +44,21 @@ impl Size {
 
     pub fn pretty(&self) -> String {
         match self {
-            Size::Inner => "auto".to_string(),
-            Size::Pixels(s) => format!("{}", s.get()),
-            Size::DynamicCalculations(calcs) => format!(
+            Self::Inner => "auto".to_string(),
+            Self::Pixels(s) => format!("{}", s.get()),
+            Self::DynamicCalculations(calcs) => format!(
                 "calc({})",
                 calcs
                     .iter()
-                    .map(|c| c.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
                     .join(" ")
             ),
-            Size::Percentage(p) => format!("{}%", p.get()),
-            Size::Fill => "fill".to_string(),
-            Size::FillMinimum => "fill-min".to_string(),
-            Size::RootPercentage(p) => format!("{}% of root", p.get()),
-            Size::Flex(f) => format!("flex({})", f.get()),
+            Self::Percentage(p) => format!("{}%", p.get()),
+            Self::Fill => "fill".to_string(),
+            Self::FillMinimum => "fill-min".to_string(),
+            Self::RootPercentage(p) => format!("{}% of root", p.get()),
+            Self::Flex(f) => format!("flex({})", f.get()),
         }
     }
 
@@ -74,15 +71,16 @@ impl Size {
         phase: Phase,
     ) -> Option<f32> {
         match self {
-            Size::Pixels(px) => Some(px.get() + parent_margin),
-            Size::Percentage(per) => Some(parent_value / 100.0 * per.get()),
-            Size::DynamicCalculations(calculations) => Some(
-                run_calculations(calculations.deref(), parent_value, root_value).unwrap_or(0.0),
-            ),
-            Size::Fill => Some(available_parent_value),
-            Size::FillMinimum if phase == Phase::Final => Some(available_parent_value),
-            Size::RootPercentage(per) => Some(root_value / 100.0 * per.get()),
-            Size::Flex(_) if phase == Phase::Final => Some(available_parent_value),
+            Self::Pixels(px) => Some(px.get() + parent_margin),
+            Self::Percentage(per) => Some(parent_value / 100.0 * per.get()),
+            Self::DynamicCalculations(calculations) => {
+                Some(run_calculations(calculations, parent_value, root_value).unwrap_or(0.0))
+            }
+            Self::Fill => Some(available_parent_value),
+            Self::RootPercentage(per) => Some(root_value / 100.0 * per.get()),
+            Self::Flex(_) | Self::FillMinimum if phase == Phase::Final => {
+                Some(available_parent_value)
+            }
             _ => None,
         }
     }
@@ -137,7 +135,7 @@ impl Size {
 
         if let Some(maximum_value) = maximum_value {
             if final_value > maximum_value {
-                final_value = maximum_value
+                final_value = maximum_value;
             }
         }
 
@@ -155,8 +153,8 @@ impl Size {
 impl Scaled for Size {
     fn scale(&mut self, scale_factor: f32) {
         match self {
-            Size::Pixels(s) => *s *= scale_factor,
-            Size::DynamicCalculations(calcs) => {
+            Self::Pixels(s) => *s *= scale_factor,
+            Self::DynamicCalculations(calcs) => {
                 calcs.iter_mut().for_each(|calc| calc.scale(scale_factor));
             }
             _ => (),
@@ -179,7 +177,7 @@ pub enum DynamicCalculation {
 
 impl Scaled for DynamicCalculation {
     fn scale(&mut self, scale_factor: f32) {
-        if let DynamicCalculation::Pixels(s) = self {
+        if let Self::Pixels(s) = self {
             *s *= scale_factor;
         }
     }
@@ -188,15 +186,15 @@ impl Scaled for DynamicCalculation {
 impl std::fmt::Display for DynamicCalculation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DynamicCalculation::Sub => f.write_str("-"),
-            DynamicCalculation::Mul => f.write_str("*"),
-            DynamicCalculation::Div => f.write_str("/"),
-            DynamicCalculation::Add => f.write_str("+"),
-            DynamicCalculation::OpenParenthesis => f.write_str("("),
-            DynamicCalculation::ClosedParenthesis => f.write_str(")"),
-            DynamicCalculation::Percentage(p) => f.write_fmt(format_args!("{p}%")),
-            DynamicCalculation::RootPercentage(p) => f.write_fmt(format_args!("{p}v")),
-            DynamicCalculation::Pixels(s) => f.write_fmt(format_args!("{s}")),
+            Self::Sub => f.write_str("-"),
+            Self::Mul => f.write_str("*"),
+            Self::Div => f.write_str("/"),
+            Self::Add => f.write_str("+"),
+            Self::OpenParenthesis => f.write_str("("),
+            Self::ClosedParenthesis => f.write_str(")"),
+            Self::Percentage(p) => f.write_fmt(format_args!("{p}%")),
+            Self::RootPercentage(p) => f.write_fmt(format_args!("{p}v")),
+            Self::Pixels(s) => f.write_fmt(format_args!("{s}")),
         }
     }
 }
@@ -210,7 +208,11 @@ struct DynamicCalculationEvaluator<'a> {
 }
 
 impl<'a> DynamicCalculationEvaluator<'a> {
-    pub fn new(calcs: Iter<'a, DynamicCalculation>, parent_value: f32, root_value: f32) -> Self {
+    pub const fn new(
+        calcs: Iter<'a, DynamicCalculation>,
+        parent_value: f32,
+        root_value: f32,
+    ) -> Self {
         Self {
             calcs,
             parent_value,
@@ -287,15 +289,11 @@ impl<'a> DynamicCalculationEvaluator<'a> {
             }
             last_is_separator = seperator;
         }
-        if let Some(prefix) = prefix {
-            match prefix {
-                DynamicCalculation::Add => lhs,
-                DynamicCalculation::Sub => lhs.map(|v| v * -1.0),
-                _ => unreachable!("make sure to add the prefix here"),
-            }
-        } else {
-            lhs
-        }
+        prefix.map_or(lhs, |prefix| match prefix {
+            DynamicCalculation::Add => lhs,
+            DynamicCalculation::Sub => lhs.map(|v| v * -1.0),
+            _ => unreachable!("make sure to add the prefix here"),
+        })
     }
     /// parse and evaluate the value with the following grammar:
     /// ```ebnf

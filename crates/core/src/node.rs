@@ -2,7 +2,7 @@ use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
 use torin::{
     alignment::Alignment,
-    direction::DirectionMode,
+    direction::Direction,
     gaps::Gaps,
     prelude::{
         Content,
@@ -198,7 +198,7 @@ pub enum AttributeType<'a> {
     OptionalMeasure(Option<f32>),
     Measures(Gaps),
     CornerRadius(CornerRadius),
-    Direction(&'a DirectionMode),
+    Direction(&'a Direction),
     Position(&'a Position),
     Content(&'a Content),
     Alignment(&'a Alignment),
