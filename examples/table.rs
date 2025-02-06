@@ -90,10 +90,10 @@ fn app() -> Element {
     };
 
     rsx!(
-        rect {
+        Body {
             padding: "10",
+            spacing: "10",
             label {
-                height: "25",
                 "Ordering by {order}"
             }
             Table {

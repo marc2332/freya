@@ -106,6 +106,8 @@ pub struct InputProps {
     pub auto_focus: bool,
     /// Handler for the `onvalidate` function.
     pub onvalidate: Option<EventHandler<InputValidator>>,
+    #[props(default = "150".to_string())]
+    pub width: String,
 }
 
 /// Small box to edit text.
@@ -159,6 +161,7 @@ pub fn Input(
         placeholder,
         auto_focus,
         onvalidate,
+        width,
     }: InputProps,
 ) -> Element {
     let platform = use_platform();
@@ -170,7 +173,6 @@ pub fn Input(
     let InputTheme {
         border_fill,
         focus_border_fill,
-        width,
         margin,
         corner_radius,
         font_theme,
@@ -180,6 +182,7 @@ pub fn Input(
         hover_background,
     } = use_applied_theme!(&theme, input);
     let mut focus = use_focus();
+    let mut drag_origin = use_signal(|| None);
 
     let is_focused = focus.is_focused();
     let display_placeholder = value.is_empty() && placeholder.is_some() && !is_focused;
@@ -242,14 +245,22 @@ pub fn Input(
 
     let onmousedown = move |e: MouseEvent| {
         e.stop_propagation();
+        drag_origin.set(Some(e.get_screen_coordinates() - e.element_coordinates));
         if !display_placeholder {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         }
         focus.focus();
     };
 
-    let onmousemove = move |e: MouseEvent| {
-        editable.process_event(&EditableEvent::MouseMove(e.data, 0));
+    let onglobalmousemove = move |mut e: MouseEvent| {
+        if focus.is_focused() {
+            if let Some(drag_origin) = drag_origin() {
+                let data = Rc::get_mut(&mut e.data).unwrap();
+                data.element_coordinates.x -= drag_origin.x;
+                data.element_coordinates.y -= drag_origin.y;
+                editable.process_event(&EditableEvent::MouseMove(e.data, 0));
+            }
+        }
     };
 
     let onmouseenter = move |_| {
@@ -262,15 +273,18 @@ pub fn Input(
         *status.write() = InputStatus::default();
     };
 
-    let onglobalclick = move |_| match *status.read() {
-        InputStatus::Idle if focus.is_focused() => {
-            focus.unfocus();
-            editable.process_event(&EditableEvent::Click);
-        }
-        InputStatus::Hovering => {
-            editable.process_event(&EditableEvent::Click);
-        }
-        _ => {}
+    let onglobalclick = move |_| {
+        match *status.read() {
+            InputStatus::Idle if focus.is_focused() => {
+                focus.unfocus();
+                editable.process_event(&EditableEvent::Click);
+            }
+            InputStatus::Hovering => {
+                editable.process_event(&EditableEvent::Click);
+            }
+            _ => {}
+        };
+        drag_origin.set(None);
     };
 
     let a11y_id = focus.attribute();
@@ -305,7 +319,7 @@ pub fn Input(
 
     rsx!(
         rect {
-            width: "{width}",
+            width,
             direction: "vertical",
             color: "{color}",
             background: "{background}",
@@ -330,10 +344,10 @@ pub fn Input(
                 show_scrollbar: false,
                 paragraph {
                     min_width: "1",
-                    margin: "8 12",
+                    margin: "6 10",
                     onglobalclick,
                     onmousedown,
-                    onmousemove,
+                    onglobalmousemove,
                     cursor_id: "0",
                     cursor_index: "{cursor_char}",
                     cursor_mode: "editable",

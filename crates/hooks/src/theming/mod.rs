@@ -243,7 +243,6 @@ define_theme! {
         border_fill: str,
         focus_border_fill: str,
         shadow: str,
-        width: str,
         margin: str,
         corner_radius: str,
         %[subthemes]
@@ -292,7 +291,6 @@ define_theme! {
         %[cows]
         background: str,
         color: str,
-        padding: str,
     }
 }
 
@@ -364,7 +362,6 @@ define_theme! {
         row_background: str,
         divider_fill: str,
         corner_radius: str,
-        shadow: str,
         %[subthemes]
         font_theme: FontTheme,
     }

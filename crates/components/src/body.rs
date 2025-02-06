@@ -13,6 +13,16 @@ pub struct BodyProps {
     pub theme: Option<BodyThemeWith>,
     /// Inner children for the Body.
     pub children: Element,
+    /// Spacing for the inner children of the Body.
+    pub spacing: Option<String>,
+    /// Padding for the inner children of the Body.
+    pub padding: Option<String>,
+    /// Width of the Body.
+    #[props(default = "fill".to_string())]
+    pub width: String,
+    /// Height of the Body.
+    #[props(default = "fill".to_string())]
+    pub height: String,
 }
 
 /// Usually used to wrap the application root component.
@@ -35,22 +45,28 @@ pub struct BodyProps {
 /// }
 /// ```
 #[allow(non_snake_case)]
-pub fn Body(props: BodyProps) -> Element {
-    let theme = use_applied_theme!(&props.theme, body);
-    let BodyTheme {
-        background,
-        color,
+pub fn Body(
+    BodyProps {
+        children,
+        theme,
+        spacing,
         padding,
-    } = theme;
+        width,
+        height,
+    }: BodyProps,
+) -> Element {
+    let theme = use_applied_theme!(&theme, body);
+    let BodyTheme { background, color } = theme;
 
     rsx!(
         rect {
-            width: "fill",
-            height: "fill",
+            width,
+            height,
             color: "{color}",
             background: "{background}",
-            padding: "{padding}",
-            {&props.children}
+            spacing,
+            padding,
+            {&children}
         }
     )
 }

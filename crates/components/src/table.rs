@@ -215,7 +215,7 @@ pub fn Table(
     let TableTheme {
         background,
         corner_radius,
-        shadow,
+        divider_fill,
         font_theme: FontTheme { color },
         ..
     } = use_applied_theme!(&theme, table);
@@ -226,8 +226,8 @@ pub fn Table(
         color: "{color}",
         background: "{background}",
         corner_radius: "{corner_radius}",
-        shadow: "{shadow}",
         height: "{height}",
+        border: "1 outer {divider_fill}",
         {children}
     })
 }
