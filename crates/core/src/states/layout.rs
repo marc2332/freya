@@ -1,20 +1,37 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{
+    Arc,
+    Mutex,
+};
 
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
     node::OwnedAttributeValue,
     node_ref::NodeView,
-    prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, OwnedAttributeView, State},
-    NodeId, SendAnyMap,
+    prelude::{
+        AttributeMaskBuilder,
+        Dependancy,
+        NodeMaskBuilder,
+        OwnedAttributeView,
+        State,
+    },
+    NodeId,
+    SendAnyMap,
 };
 use freya_native_core_macro::partial_derive_state;
 use torin::prelude::*;
 
 use crate::{
-    custom_attributes::{CustomAttributeValues, NodeReference},
+    custom_attributes::{
+        CustomAttributeValues,
+        NodeReference,
+    },
     dom::CompositorDirtyNodes,
-    parsing::{Parse, ParseAttribute, ParseError},
+    parsing::{
+        Parse,
+        ParseAttribute,
+        ParseError,
+    },
 };
 
 #[derive(Default, Clone, Debug, Component, PartialEq)]
