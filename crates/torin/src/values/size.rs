@@ -93,6 +93,7 @@ impl Size {
             Self::Fill => Some(available_parent_value),
             Self::RootPercentage(per) => Some(root_value / 100.0 * per.get()),
             Self::Flex(_) | Self::Grid(..) | Self::FillMinimum if phase == Phase::Final => {
+            Self::Flex(_) | Self::FillMinimum if phase == Phase::Final => {
                 Some(available_parent_value)
             }
             _ => None,
