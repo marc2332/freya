@@ -226,7 +226,7 @@ impl ParseAttribute for LayoutState {
             AttributeName::GridColumn => {
                 if let Some(value) = attr.value.as_text() {
                     let value = value
-                        .split(",")
+                        .split("/")
                         .map(|value| value.trim().parse().map_err(|_| ParseError))
                         .collect::<Result<Vec<_>, ParseError>>()?;
 
@@ -241,7 +241,7 @@ impl ParseAttribute for LayoutState {
             AttributeName::GridRow => {
                 if let Some(value) = attr.value.as_text() {
                     let value = value
-                        .split(",")
+                        .split("/")
                         .map(|value| value.trim().parse().map_err(|_| ParseError))
                         .collect::<Result<Vec<_>, ParseError>>()?;
 
@@ -263,7 +263,7 @@ impl ParseAttribute for LayoutState {
             AttributeName::Spacing => {
                 if let Some(value) = attr.value.as_text() {
                     let value = value
-                        .split(",")
+                        .split(" ")
                         .map(|value| value.trim().parse().map_err(|_| ParseError))
                         .collect::<Result<Vec<_>, ParseError>>()?;
 
