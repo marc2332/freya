@@ -24,6 +24,7 @@ use crate::{
         LayoutMetadata,
         Length,
         Point2D,
+        Size,
         Torin,
     },
 };
@@ -341,7 +342,7 @@ where
         let mut initial_phase_row_sizes = <FxHashMap<usize, f32>>::default();
 
         for child_id in &children {
-            let Some(child_data) = self.dom_adapter.get_node(child_id) else {
+            let Some(mut child_data) = self.dom_adapter.get_node(child_id) else {
                 continue;
             };
 
@@ -358,6 +359,14 @@ where
 
             let columns = &columns[column..column + column_span];
             let rows = &rows[row..row + row_span];
+
+            if column_span == 1 && columns[0].is_inner() {
+                child_data.width = Size::Inner;
+            }
+
+            if row_span == 1 && rows[0].is_inner() {
+                child_data.height = Size::Inner;
+            }
 
             let (_, mut child_areas) = self.measure_node(
                 *child_id,
@@ -451,8 +460,8 @@ where
         }
 
         let base_size = Size2D::new(
-            available_size.width / column_weights,
-            available_size.height / row_weights,
+            available_size.width.max(0.0) / column_weights,
+            available_size.height.max(0.0) / row_weights,
         );
 
         for child_id in children {
