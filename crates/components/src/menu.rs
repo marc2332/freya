@@ -208,7 +208,6 @@ pub fn MenuItem(
     });
 
     let onmouseenter = move |_| {
-        println!("ENTER");
         platform.set_cursor(CursorIcon::Pointer);
         status.set(MenuItemStatus::Hovering);
 
@@ -218,7 +217,6 @@ pub fn MenuItem(
     };
 
     let onmouseleave = move |_| {
-        println!("LEAVE");
         platform.set_cursor(CursorIcon::default());
         status.set(MenuItemStatus::default());
     };
