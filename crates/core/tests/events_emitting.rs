@@ -1,7 +1,6 @@
 use freya::prelude::*;
 use freya_testing::prelude::*;
 
-
 #[tokio::test]
 pub async fn mouseenter_event_overlay_with_transparent_layer() {
     fn app() -> Element {
