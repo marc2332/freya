@@ -140,9 +140,7 @@ pub fn measure_potential_event_listeners(
 
     // Walk layer by layer from the bottom to the top
     for (layer, layer_nodes) in sorted(layers.iter()) {
-        // Iterate over the nodes in reversed to their declaration because
-        // the next nodes could always render in top of their previous
-        for node_id in layer_nodes.iter().rev() {
+        for node_id in layer_nodes.iter() {
             let Some(layout_node) = layout.get(*node_id) else {
                 continue;
             };
