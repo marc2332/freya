@@ -45,10 +45,10 @@ jobs:
       run: |
         export RUSTFLAGS="-Cinstrument-coverage"
         export LLVM_PROFILE_FILE='cargo-test-%p-%m.profraw'
-        cargo test --lib --tests --workspace --exclude examples
+        cargo test --lib --tests --workspace --exclude examples -- --test-threads 1
     - name: Run MacOS and Windows tests
       if: runner.os != 'Linux'
-      run: cargo test --lib --tests --workspace --exclude examples 
+      run: cargo test --lib --tests --workspace --exclude examples -- --test-threads 1
     - name: Run doctests
       run: cargo test --workspace --doc --features docs
     - name: Run coverage
