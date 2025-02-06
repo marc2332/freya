@@ -18,9 +18,12 @@ use crate::{
         Alignment,
         AlignmentDirection,
         AreaModel,
+        Content,
         DirectionMode,
+        GridSize,
         LayoutMetadata,
         Length,
+        Point2D,
         Torin,
     },
 };
@@ -31,6 +34,33 @@ use crate::{
 pub enum Phase {
     Initial,
     Final,
+}
+
+fn grid_sizes_sum(base: f32, sizes: &[(f32, bool)]) -> f32 {
+    sizes
+        .iter()
+        .map(|&(size, is_weight)| size * if is_weight { base } else { 1.0 })
+        .sum()
+}
+
+fn get_cell_size(
+    origin: Point2D,
+    base_size: Size2D,
+    spacing: f32,
+    columns: &[(f32, bool)],
+    rows: &[(f32, bool)],
+    (column, column_span): (usize, usize),
+    (row, row_span): (usize, usize),
+) -> Area {
+    let x = grid_sizes_sum(base_size.width, &columns[..column]) + (column as f32 * spacing);
+    let y = grid_sizes_sum(base_size.height, &rows[..row]) + (row as f32 * spacing);
+    let width = grid_sizes_sum(base_size.width, &columns[column..column + column_span]);
+    let height = grid_sizes_sum(base_size.height, &rows[row..row + row_span]);
+
+    Rect::new(
+        Point2D::new(origin.x + x, origin.y + y),
+        Size2D::new(width, height),
+    )
 }
 
 pub struct MeasureContext<'a, Key, L, D>
@@ -290,6 +320,183 @@ where
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
+    fn measure_grid(
+        &mut self,
+        parent_node: &Node,
+        children: Vec<Key>,
+        rows: &[GridSize],
+        columns: &[GridSize],
+        // Area available inside the Node
+        available_area: &mut Area,
+        // Whether to cache the measurements of this Node's children
+        must_cache_children: bool,
+        // Inner area of the parent.
+        inner_area: &mut Area,
+        // Parent Node is dirty.
+        parent_is_dirty: bool,
+    ) {
+        let mut measured_columns = Vec::new();
+        let mut measured_rows = Vec::new();
+        let mut initial_phase_column_sizes = <FxHashMap<usize, f32>>::default();
+        let mut initial_phase_row_sizes = <FxHashMap<usize, f32>>::default();
+
+        for child_id in children.iter() {
+            let Some(child_data) = self.dom_adapter.get_node(child_id) else {
+                continue;
+            };
+
+            // No need to consider this Node for a two-phasing
+            // measurements as it will float on its own.
+            if child_data.position.is_absolute() {
+                continue;
+            }
+
+            let inner_area = *inner_area;
+
+            let (column, column_span) = child_data.width.as_grid();
+            let (row, row_span) = child_data.height.as_grid();
+
+            let columns = &columns[column..column + column_span];
+            let rows = &rows[row..row + row_span];
+
+            let (_, mut child_areas) = self.measure_node(
+                *child_id,
+                &child_data,
+                &inner_area,
+                available_area,
+                false,
+                parent_is_dirty,
+                Phase::Initial,
+            );
+
+            child_areas.area.adjust_size(&child_data);
+
+            if column_span == 1 && columns[0].is_inner() {
+                initial_phase_column_sizes
+                    .entry(column)
+                    .and_modify(|value| *value = value.max(child_areas.area.size.width))
+                    .or_insert(child_areas.area.size.width);
+            }
+
+            if row_span == 1 && rows[0].is_inner() {
+                initial_phase_row_sizes
+                    .entry(row)
+                    .and_modify(|value| *value = value.max(child_areas.area.size.height))
+                    .or_insert(child_areas.area.size.height);
+            }
+        }
+
+        let mut column_weights = 0.;
+        let mut row_weights = 0.;
+
+        let mut available_size = available_area.size;
+
+        available_size.width -= (columns.len() - 1) as f32 * parent_node.spacing.get();
+        available_size.height -= (rows.len() - 1) as f32 * parent_node.spacing.get();
+
+        for (column, column_size) in columns.iter().enumerate() {
+            measured_columns.push((
+                match column_size {
+                    GridSize::Inner => {
+                        let value = initial_phase_column_sizes
+                            .get(&column)
+                            .copied()
+                            .unwrap_or_default();
+
+                        available_size.width -= value;
+
+                        value
+                    }
+                    GridSize::Pixels(size) => {
+                        available_size.width -= size.get();
+
+                        size.get()
+                    }
+                    GridSize::Stars(weight) => {
+                        column_weights += weight.get();
+
+                        weight.get()
+                    }
+                },
+                column_size.is_weight(),
+            ));
+        }
+
+        for (row, row_size) in rows.iter().enumerate() {
+            measured_rows.push((
+                match row_size {
+                    GridSize::Inner => {
+                        let value = initial_phase_row_sizes
+                            .get(&row)
+                            .copied()
+                            .unwrap_or_default();
+
+                        available_size.height -= value;
+
+                        value
+                    }
+                    GridSize::Pixels(size) => {
+                        available_size.height -= size.get();
+
+                        size.get()
+                    }
+                    GridSize::Stars(weight) => {
+                        row_weights += weight.get();
+
+                        weight.get()
+                    }
+                },
+                row_size.is_weight(),
+            ));
+        }
+
+        let base_size = Size2D::new(
+            available_size.width / column_weights,
+            available_size.height / row_weights,
+        );
+
+        for child_id in children {
+            let Some(child_data) = self.dom_adapter.get_node(&child_id) else {
+                continue;
+            };
+
+            // No need to consider this Node for a two-phasing
+            // measurements as it will float on its own.
+            if child_data.position.is_absolute() {
+                continue;
+            }
+
+            let adapted_available_area = get_cell_size(
+                available_area.origin,
+                base_size,
+                parent_node.spacing.get(),
+                &measured_columns,
+                &measured_rows,
+                child_data.width.as_grid(),
+                child_data.height.as_grid(),
+            );
+
+            let (child_revalidated, mut child_areas) = self.measure_node(
+                child_id,
+                &child_data,
+                inner_area,
+                &adapted_available_area,
+                must_cache_children,
+                parent_is_dirty,
+                Phase::Final,
+            );
+
+            child_areas.area.adjust_size(&child_data);
+
+            // Cache the child layout if it was mutated and children must be cached
+            if child_revalidated && must_cache_children {
+                // Finally cache this node areas into Torin
+                self.layout.cache_node(child_id, child_areas);
+            }
+        }
+    }
+
     /// Measure the children layouts of a Node
     #[allow(clippy::too_many_arguments)]
     #[inline(always)]
@@ -311,6 +518,19 @@ where
         parent_is_dirty: bool,
     ) {
         let children = self.dom_adapter.children_of(parent_node_id);
+
+        if let Content::Grid { columns, rows } = &parent_node.content {
+            return self.measure_grid(
+                parent_node,
+                children,
+                rows,
+                columns,
+                available_area,
+                must_cache_children,
+                inner_area,
+                parent_is_dirty,
+            );
+        }
 
         let mut initial_phase_flex_grows = FxHashMap::default();
         let mut initial_phase_sizes = FxHashMap::default();

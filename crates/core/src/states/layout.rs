@@ -178,6 +178,26 @@ impl ParseAttribute for LayoutState {
                     self.content = Content::parse(value)?;
                 }
             }
+            AttributeName::GridColumns => {
+                if let Some(value) = attr.value.as_text() {
+                    if let Content::Grid { columns, .. } = &mut self.content {
+                        *columns = value
+                            .split(",")
+                            .map(|value| GridSize::parse(value.trim()))
+                            .collect::<Result<_, ParseError>>()?;
+                    }
+                }
+            }
+            AttributeName::GridRows => {
+                if let Some(value) = attr.value.as_text() {
+                    if let Content::Grid { rows, .. } = &mut self.content {
+                        *rows = value
+                            .split(",")
+                            .map(|value| GridSize::parse(value.trim()))
+                            .collect::<Result<_, ParseError>>()?;
+                    }
+                }
+            }
             AttributeName::Reference => {
                 if let OwnedAttributeValue::Custom(CustomAttributeValues::Reference(reference)) =
                     attr.value
@@ -228,6 +248,8 @@ impl State<CustomAttributeValues> for LayoutState {
             AttributeName::PositionBottom,
             AttributeName::PositionLeft,
             AttributeName::Content,
+            AttributeName::GridColumns,
+            AttributeName::GridRows,
             AttributeName::Spacing,
         ]));
 

@@ -41,6 +41,8 @@ def_element!(
         // Children layout
         direction,
         content,
+        grid_columns,
+        grid_rows,
         main_align,
         cross_align,
         spacing,

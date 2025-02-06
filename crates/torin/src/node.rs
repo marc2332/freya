@@ -17,7 +17,7 @@ use crate::{
 /// Node layout configuration
 #[derive(PartialEq, Clone, Debug, Default)]
 pub struct Node {
-    /// Dimentions
+    /// Dimensions
     pub width: Size,
     pub height: Size,
 

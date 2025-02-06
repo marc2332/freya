@@ -328,6 +328,8 @@ def_attribute!(
     /// }
     /// ```
     content,
+    grid_columns,
+    grid_rows,
 
     /// ### main_align & cross_align
     ///

@@ -69,6 +69,10 @@ impl Position {
         }))
     }
 
+    pub fn is_stacked(&self) -> bool {
+        matches!(self, Self::Stacked)
+    }
+
     pub fn is_absolute(&self) -> bool {
         matches!(self, Self::Absolute { .. })
     }

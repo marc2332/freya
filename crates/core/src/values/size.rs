@@ -38,6 +38,25 @@ impl Parse for Size {
                     .parse::<f32>()
                     .map_err(|_| ParseError)?,
             )))
+        } else if value.starts_with("grid(") && value.ends_with(')') {
+            let mut value = value.replace("grid(", "").replace(')', "");
+
+            if let Some(at) = value.rfind(",") {
+                let second_value = value.split_off(at);
+
+                Ok(Size::Grid(
+                    value.trim().parse::<usize>().map_err(|_| ParseError)?,
+                    second_value[1..]
+                        .trim()
+                        .parse::<usize>()
+                        .map_err(|_| ParseError)?,
+                ))
+            } else {
+                Ok(Size::Grid(
+                    value.trim().parse::<usize>().map_err(|_| ParseError)?,
+                    1,
+                ))
+            }
         } else if value == "fill" {
             Ok(Size::Fill)
         } else if value == "fill-min" {
