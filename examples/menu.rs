@@ -15,7 +15,7 @@ fn app() -> Element {
 
     rsx!(
         Body {
-            padding: "20",
+            padding: "10",
             Button {
                 onpress: move |_| show_menu.toggle(),
                 label { "Open Menu" }

@@ -435,6 +435,8 @@ define_theme! {
         background: str,
         padding: str,
         shadow: str,
+        border_fill: str,
+        corner_radius: str,
     }
 }
 

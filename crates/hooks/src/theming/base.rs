@@ -206,7 +206,7 @@ pub(crate) const BASE_THEME: Theme = Theme {
     },
     menu_item: MenuItemTheme {
         hover_background: cow_borrowed!("key(focused_surface)"),
-        corner_radius: cow_borrowed!("8"),
+        corner_radius: cow_borrowed!("6"),
         font_theme: FontTheme {
             color: cow_borrowed!("key(color)"),
         },
@@ -215,6 +215,8 @@ pub(crate) const BASE_THEME: Theme = Theme {
         background: cow_borrowed!("key(neutral_surface)"),
         padding: cow_borrowed!("4"),
         shadow: cow_borrowed!("0 2 5 2 rgb(0, 0, 0, 0.1)"),
+        border_fill: cow_borrowed!("key(surface)"),
+        corner_radius: cow_borrowed!("6"),
     },
     snackbar: SnackBarTheme {
         background: cow_borrowed!("key(focused_surface)"),
