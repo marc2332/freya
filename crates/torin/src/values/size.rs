@@ -18,7 +18,6 @@ pub enum Size {
     RootPercentage(Length),
     DynamicCalculations(Box<Vec<DynamicCalculation>>),
     Flex(Length),
-    Grid(usize, usize),
 }
 
 impl Default for Size {
@@ -28,14 +27,6 @@ impl Default for Size {
 }
 
 impl Size {
-    pub fn as_grid(&self) -> (usize, usize) {
-        if let Self::Grid(a, b) = self {
-            (*a, *b)
-        } else {
-            (0, 1)
-        }
-    }
-
     pub fn flex_grow(&self) -> Option<Length> {
         match self {
             Self::Flex(f) => Some(*f),
@@ -45,10 +36,6 @@ impl Size {
 
     pub fn is_flex(&self) -> bool {
         matches!(self, Self::Flex(_))
-    }
-
-    pub fn is_grid(&self) -> bool {
-        matches!(self, Self::Grid(..))
     }
 
     pub fn inner_sized(&self) -> bool {
@@ -72,7 +59,6 @@ impl Size {
             Self::FillMinimum => "fill-min".to_string(),
             Self::RootPercentage(p) => format!("{}% of root", p.get()),
             Self::Flex(f) => format!("flex({})", f.get()),
-            Self::Grid(p, s) => format!("grid({p}, {s})"),
         }
     }
 
@@ -92,7 +78,7 @@ impl Size {
             }
             Self::Fill => Some(available_parent_value),
             Self::RootPercentage(per) => Some(root_value / 100.0 * per.get()),
-            Self::Flex(_) | Self::Grid(..) | Self::FillMinimum if phase == Phase::Final => {
+            Self::Flex(_) | Self::FillMinimum if phase == Phase::Final => {
                 Some(available_parent_value)
             }
             _ => None,

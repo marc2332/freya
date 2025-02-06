@@ -43,6 +43,8 @@ def_element!(
         content,
         grid_columns,
         grid_rows,
+        grid_column,
+        grid_row,
         main_align,
         cross_align,
         spacing,

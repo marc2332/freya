@@ -16,7 +16,7 @@ pub fn spacing() {
             Size::Fill,
             Size::Fill,
             Direction::Vertical,
-            Length::new(40.0),
+            Size2D::new(40.0, 40.0),
         ),
     );
     mocked_dom.add(
@@ -37,7 +37,7 @@ pub fn spacing() {
             Size::Pixels(Length::new(600.0)),
             Size::Pixels(Length::new(600.0)),
             Direction::Horizontal,
-            Length::new(50.0),
+            Size2D::new(50.0, 50.0),
         ),
     );
     mocked_dom.add(

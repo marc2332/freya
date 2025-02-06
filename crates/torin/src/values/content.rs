@@ -1,4 +1,4 @@
-use super::grid_size::GridSize;
+use super::grid::GridSize;
 
 #[derive(PartialEq, Clone, Debug, Default)]
 pub enum Content {

@@ -64,7 +64,7 @@ def_attribute!(
     /// ```
     min_width,
 
-    //// Specify a minimum width for the given element.
+    /// Specify a minimum width for the given element.
     /// This can be useful if you use it alongside a percentage for the target size.
     ///
     /// See syntax for [`Size Units`](crate::_docs::size_unit).
@@ -290,6 +290,7 @@ def_attribute!(
     /// - `normal` (default): Uses parent bounds.
     /// - `fit`: Uses parent bounds but later shrunks to the size of the biggest element inside.
     /// - `flex`: Marks the container as flex container, children of this element will be able to use `size`/`size(n)` in their `width` and `height` attributes.
+    /// - `grid`: Marks the container as grid container, children of this element will be able to use `grid_column` and `grid_row` attributes.
     ///
     ///
     /// ### `fit`
@@ -327,9 +328,74 @@ def_attribute!(
     ///     )
     /// }
     /// ```
+    ///
+    /// ### `grid`
+    ///
+    /// The `grid` mode will allow you to line up the internal elements in a grid.
+    /// Columns and rows are specified via `grid_columns` and `grid_rows` attributes.
+    /// An element in `grid` mode can also specify different `spacing` for columns
+    /// and rows.
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             spacing: "8 12",
+    ///             content: "grid",
+    ///             grid_columns: "100, 1w, 1w",
+    ///             grid_rows: "1w",
+    ///             width: "600",
+    ///             height: "600",
+    ///             rect {
+    ///                 width: "fill",
+    ///                 height: "fill",
+    ///                 grid_column: "0 / 1",  // Will have a width of 100px
+    ///                 background: "red",
+    ///             }
+    ///             rect {
+    ///                 width: "fill",
+    ///                 height: "fill",
+    ///                 grid_column: "1 / 1",  // Will have a width of 250px
+    ///                 background: "green",
+    ///             }
+    ///             rect {
+    ///                 width: "fill-min",
+    ///                 height: "fill",
+    ///                 grid_column: "2 / 1",  // Will have a width of 250px
+    ///                 background: "blue",
+    ///             }
+    ///         }
+    ///     )
+    /// }
+    /// ```
     content,
+    /// Specify a comma-separated list of column sizes.
+    ///
+    /// Accepted values:
+    ///
+    /// - `auto`: The size of the column will be based on the sizes of the elements
+    /// bound to it (however, only elements with `column_span` equal to 1 are used
+    /// in the size calculation)
+    /// - `100` (pixels): The size of the column will be a fixed number of pixels
+    /// - `1w` (weight): The size of the column will be a fraction of the remaining
+    /// free space (using the formula `weight * ((size - pixel_columns_size -
+    /// auto_columns_size) / weights_columns_sum)`)
     grid_columns,
+    /// Specify a comma-separated list of row sizes.
+    ///
+    /// Accepted values:
+    ///
+    /// - `auto`: The size of the row will be based on the sizes of the elements
+    /// bound to it (however, only elements with `row_span` equal to 1 are used
+    /// in the size calculation)
+    /// - `100` (pixels): The size of the row will be a fixed number of pixels
+    /// - `1w` (weight): The size of the row will be a fraction of the remaining
+    /// free space (using the formula `weight * ((size - pixel_rows_size -
+    /// auto_rows_size) / weights_rows_sum)`)
     grid_rows,
+    grid_column,
+    grid_row,
 
     /// ### main_align & cross_align
     ///

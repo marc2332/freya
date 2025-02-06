@@ -12,6 +12,7 @@ use crate::{
         Area,
         Size2D,
     },
+    grid::GridPosition,
     node::Node,
     prelude::{
         AlignAxis,
@@ -24,7 +25,6 @@ use crate::{
         LayoutMetadata,
         Length,
         Point2D,
-        Size,
         Torin,
     },
 };
@@ -47,16 +47,22 @@ fn grid_sizes_sum(base: f32, sizes: &[(f32, bool)]) -> f32 {
 fn get_cell_size(
     origin: Point2D,
     base_size: Size2D,
-    spacing: f32,
+    spacing: Size2D,
     columns: &[(f32, bool)],
     rows: &[(f32, bool)],
-    (column, column_span): (usize, usize),
-    (row, row_span): (usize, usize),
+    GridPosition {
+        column,
+        column_span,
+        row,
+        row_span,
+    }: GridPosition,
 ) -> Area {
-    let x = grid_sizes_sum(base_size.width, &columns[..column]) + (column as f32 * spacing);
-    let y = grid_sizes_sum(base_size.height, &rows[..row]) + (row as f32 * spacing);
-    let width = grid_sizes_sum(base_size.width, &columns[column..column + column_span]);
-    let height = grid_sizes_sum(base_size.height, &rows[row..row + row_span]);
+    let x = grid_sizes_sum(base_size.width, &columns[..column]) + (column as f32 * spacing.width);
+    let y = grid_sizes_sum(base_size.height, &rows[..row]) + (row as f32 * spacing.height);
+    let width = grid_sizes_sum(base_size.width, &columns[column..column + column_span])
+        + ((column_span - 1) as f32 * spacing.width);
+    let height = grid_sizes_sum(base_size.height, &rows[row..row + row_span])
+        + ((row_span - 1) as f32 * spacing.height);
 
     Rect::new(
         Point2D::new(origin.x + x, origin.y + y),
@@ -342,7 +348,7 @@ where
         let mut initial_phase_row_sizes = <FxHashMap<usize, f32>>::default();
 
         for child_id in &children {
-            let Some(mut child_data) = self.dom_adapter.get_node(child_id) else {
+            let Some(child_data) = self.dom_adapter.get_node(child_id) else {
                 continue;
             };
 
@@ -354,19 +360,15 @@ where
 
             let inner_area = *inner_area;
 
-            let (column, column_span) = child_data.width.as_grid();
-            let (row, row_span) = child_data.height.as_grid();
+            let GridPosition {
+                column,
+                column_span,
+                row,
+                row_span,
+            } = child_data.grid_position;
 
             let columns = &columns[column..column + column_span];
             let rows = &rows[row..row + row_span];
-
-            if column_span == 1 && columns[0].is_inner() {
-                child_data.width = Size::Inner;
-            }
-
-            if row_span == 1 && rows[0].is_inner() {
-                child_data.height = Size::Inner;
-            }
 
             let (_, mut child_areas) = self.measure_node(
                 *child_id,
@@ -400,8 +402,8 @@ where
 
         let mut available_size = available_area.size;
 
-        available_size.width -= (columns.len() - 1) as f32 * parent_node.spacing.get();
-        available_size.height -= (rows.len() - 1) as f32 * parent_node.spacing.get();
+        available_size.width -= (columns.len() - 1) as f32 * parent_node.spacing.width;
+        available_size.height -= (rows.len() - 1) as f32 * parent_node.spacing.height;
 
         for (column, column_size) in columns.iter().enumerate() {
             measured_columns.push((
@@ -421,7 +423,7 @@ where
 
                         size.get()
                     }
-                    GridSize::Stars(weight) => {
+                    GridSize::Weight(weight) => {
                         column_weights += weight.get();
 
                         weight.get()
@@ -449,7 +451,7 @@ where
 
                         size.get()
                     }
-                    GridSize::Stars(weight) => {
+                    GridSize::Weight(weight) => {
                         row_weights += weight.get();
 
                         weight.get()
@@ -478,11 +480,10 @@ where
             let adapted_available_area = get_cell_size(
                 available_area.origin,
                 base_size,
-                parent_node.spacing.get(),
+                parent_node.spacing,
                 &measured_columns,
                 &measured_rows,
-                child_data.width.as_grid(),
-                child_data.height.as_grid(),
+                child_data.grid_position,
             );
 
             let (child_revalidated, mut child_areas) = self.measure_node(
@@ -544,7 +545,7 @@ where
         let mut initial_phase_inner_sizes = Size2D::default();
 
         // Used to calculate the spacing and some alignments
-        let (non_absolute_children_len, first_child, last_child) = if parent_node.spacing.get() > 0.
+        let (non_absolute_children_len, first_child, last_child) = if parent_node.spacing.width > 0.
         {
             let mut last_child = None;
             let mut first_child = None;
@@ -939,11 +940,11 @@ where
         match parent_node.direction {
             Direction::Horizontal => {
                 // Move the available area
-                available_area.origin.x = child_area.max_x() + spacing.get();
-                available_area.size.width -= child_area.size.width + spacing.get();
+                available_area.origin.x = child_area.max_x() + spacing.width;
+                available_area.size.width -= child_area.size.width + spacing.width;
 
                 inner_sizes.height = child_area.height().max(inner_sizes.height);
-                inner_sizes.width += spacing.get();
+                inner_sizes.width += spacing.width;
                 if !child_node.width.is_flex() || phase == Phase::Final {
                     inner_sizes.width += child_area.width();
                 }
@@ -963,16 +964,16 @@ where
 
                 // Accumulate width
                 if parent_node.width.inner_sized() {
-                    parent_area.size.width += child_area.size.width + spacing.get();
+                    parent_area.size.width += child_area.size.width + spacing.width;
                 }
             }
             Direction::Vertical => {
                 // Move the available area
-                available_area.origin.y = child_area.max_y() + spacing.get();
-                available_area.size.height -= child_area.size.height + spacing.get();
+                available_area.origin.y = child_area.max_y() + spacing.height;
+                available_area.size.height -= child_area.size.height + spacing.height;
 
                 inner_sizes.width = child_area.width().max(inner_sizes.width);
-                inner_sizes.height += spacing.get();
+                inner_sizes.height += spacing.height;
                 if !child_node.height.is_flex() || phase == Phase::Final {
                     inner_sizes.height += child_area.height();
                 }
@@ -992,7 +993,7 @@ where
 
                 // Accumulate height
                 if parent_node.height.inner_sized() {
-                    parent_area.size.height += child_area.size.height + spacing.get();
+                    parent_area.size.height += child_area.size.height + spacing.height;
                 }
             }
         }

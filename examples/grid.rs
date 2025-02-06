@@ -7,30 +7,44 @@ fn main() {
 fn app() -> Element {
     rsx!(
         rect {
-            spacing: "12",
+            spacing: "12, 24",
             content: "grid",
-            grid_columns: "100, 1*, 1*",
-            grid_rows: "1*",
+            grid_columns: "100, 1w, auto",
+            grid_rows: "1w, 1w",
             width: "fill",
             height: "fill",
 
             rect {
-                width: "grid(0, 1)",
-                height: "grid(0, 1)",
+                width: "fill",
+                height: "fill",
+                grid_column: "0, 2",
                 background: "red",
                 corner_radius: "32",
             }
 
             rect {
-                width: "grid(1, 1)",
-                height: "grid(0, 1)",
+                width: "fill",
+                height: "fill",
+                grid_column: "1, 1",
                 background: "blue",
                 corner_radius: "32",
             }
 
             rect {
-                width: "grid(2, 1)",
-                height: "grid(0, 1)",
+                width: "300",
+                height: "300",
+                visible_width: "50%",
+                visible_height: "50%",
+                grid_column: "2, 1",
+                background: "green",
+                corner_radius: "32",
+            }
+
+            rect {
+                width: "fill-min",
+                height: "fill-min",
+                grid_column: "2, 1",
+                grid_row: "1, 1",
                 background: "green",
                 corner_radius: "32",
             }

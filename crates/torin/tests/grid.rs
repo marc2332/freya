@@ -19,10 +19,10 @@ pub fn grid_generic() {
             Content::Grid {
                 columns: vec![
                     GridSize::Pixels(Length::new(100.0)),
-                    GridSize::Stars(Length::new(1.0)),
-                    GridSize::Stars(Length::new(1.0)),
+                    GridSize::Weight(Length::new(1.0)),
+                    GridSize::Weight(Length::new(1.0)),
                 ],
-                rows: vec![GridSize::Stars(Length::new(1.0))],
+                rows: vec![GridSize::Weight(Length::new(1.0))],
             },
         ),
     );
@@ -30,19 +30,19 @@ pub fn grid_generic() {
         1,
         Some(0),
         vec![],
-        Node::from_size_and_direction(Size::Grid(0, 1), Size::Grid(0, 1), Direction::Vertical),
+        Node::from_size_and_grid_position(Size::Fill, Size::Fill, GridPosition::new(0, 1, 0, 1)),
     );
     mocked_dom.add(
         2,
         Some(0),
         vec![],
-        Node::from_size_and_direction(Size::Grid(1, 1), Size::Grid(0, 1), Direction::Vertical),
+        Node::from_size_and_grid_position(Size::Fill, Size::Fill, GridPosition::new(1, 1, 0, 1)),
     );
     mocked_dom.add(
         3,
         Some(0),
         vec![],
-        Node::from_size_and_direction(Size::Grid(2, 1), Size::Grid(0, 1), Direction::Vertical),
+        Node::from_size_and_grid_position(Size::Fill, Size::Fill, GridPosition::new(2, 1, 0, 1)),
     );
 
     layout.measure(
@@ -86,10 +86,10 @@ pub fn grid_with_auto_sized_column() {
             Content::Grid {
                 columns: vec![
                     GridSize::Pixels(Length::new(100.0)),
-                    GridSize::Stars(Length::new(1.0)),
+                    GridSize::Weight(Length::new(1.0)),
                     GridSize::Inner,
                 ],
-                rows: vec![GridSize::Stars(Length::new(1.0))],
+                rows: vec![GridSize::Weight(Length::new(1.0))],
             },
         ),
     );
@@ -97,19 +97,19 @@ pub fn grid_with_auto_sized_column() {
         1,
         Some(0),
         vec![],
-        Node::from_size_and_direction(Size::Grid(0, 1), Size::Grid(0, 1), Direction::Vertical),
+        Node::from_size_and_grid_position(Size::Fill, Size::Fill, GridPosition::new(0, 1, 0, 1)),
     );
     mocked_dom.add(
         2,
         Some(0),
         vec![],
-        Node::from_size_and_direction(Size::Grid(1, 1), Size::Grid(0, 1), Direction::Vertical),
+        Node::from_size_and_grid_position(Size::Fill, Size::Fill, GridPosition::new(1, 1, 0, 1)),
     );
     mocked_dom.add(
         3,
         Some(0),
         vec![4],
-        Node::from_size_and_direction(Size::Grid(2, 1), Size::Grid(0, 1), Direction::Vertical),
+        Node::from_size_and_grid_position(Size::Inner, Size::Fill, GridPosition::new(2, 1, 0, 1)),
     );
     mocked_dom.add(
         4,

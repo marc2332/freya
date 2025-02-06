@@ -4,7 +4,11 @@ use crate::{
     alignment::Alignment,
     direction::Direction,
     gaps::Gaps,
-    geometry::Length,
+    geometry::{
+        Length,
+        Size2D,
+    },
+    grid::GridPosition,
     prelude::{
         Content,
         Position,
@@ -60,7 +64,9 @@ pub struct Node {
 
     pub contains_text: bool,
 
-    pub spacing: Length,
+    pub spacing: Size2D,
+
+    pub grid_position: GridPosition,
 }
 
 impl Scaled for Node {
@@ -163,7 +169,7 @@ impl Node {
         main_alignment: Alignment,
         cross_alignment: Alignment,
         direction: Direction,
-        spacing: Length,
+        spacing: Size2D,
     ) -> Self {
         Self {
             width,
@@ -232,6 +238,20 @@ impl Node {
         }
     }
 
+    /// Construct a new Node given a size and a position
+    pub fn from_size_and_grid_position(
+        width: Size,
+        height: Size,
+        grid_position: GridPosition,
+    ) -> Self {
+        Self {
+            width,
+            height,
+            grid_position,
+            ..Default::default()
+        }
+    }
+
     /// Construct a new Node given a size and content
     pub fn from_size_and_content(width: Size, height: Size, content: Content) -> Self {
         Self {
@@ -247,7 +267,7 @@ impl Node {
         width: Size,
         height: Size,
         direction: Direction,
-        spacing: Length,
+        spacing: Size2D,
     ) -> Self {
         Self {
             width,

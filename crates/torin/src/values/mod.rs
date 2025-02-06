@@ -2,7 +2,7 @@ pub mod alignment;
 pub mod content;
 pub mod direction;
 pub mod gaps;
-pub mod grid_size;
+pub mod grid;
 pub mod position;
 pub mod size;
 pub mod visible_size;
@@ -13,7 +13,7 @@ pub mod prelude {
         content::*,
         direction::*,
         gaps::*,
-        grid_size::*,
+        grid::*,
         position::*,
         size::*,
         visible_size::*,
