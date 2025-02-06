@@ -28,6 +28,7 @@ jobs:
       uses: taiki-e/install-action@nextest
     - name: Set up cargo cache
       uses: Swatinem/rust-cache@v2
+      if: github.ref != 'refs/heads/main'
       with:
         prefix-key: "8"
     - name: Install linux dependencies
@@ -45,10 +46,10 @@ jobs:
       run: |
         export RUSTFLAGS="-Cinstrument-coverage"
         export LLVM_PROFILE_FILE='cargo-test-%p-%m.profraw'
-        cargo test --lib --tests --workspace --exclude examples
+        cargo nextest run --workspace --exclude examples
     - name: Run MacOS and Windows tests
       if: runner.os != 'Linux'
-      run: cargo test --lib --tests --workspace --exclude examples
+      run: cargo nextest run --workspace --exclude examples
     - name: Run doctests
       run: cargo test --workspace --doc --features docs
     - name: Run coverage
