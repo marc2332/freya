@@ -1,37 +1,20 @@
-use std::sync::{
-    Arc,
-    Mutex,
-};
+use std::sync::{Arc, Mutex};
 
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
     node::OwnedAttributeValue,
     node_ref::NodeView,
-    prelude::{
-        AttributeMaskBuilder,
-        Dependancy,
-        NodeMaskBuilder,
-        OwnedAttributeView,
-        State,
-    },
-    NodeId,
-    SendAnyMap,
+    prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, OwnedAttributeView, State},
+    NodeId, SendAnyMap,
 };
 use freya_native_core_macro::partial_derive_state;
 use torin::prelude::*;
 
 use crate::{
-    custom_attributes::{
-        CustomAttributeValues,
-        NodeReference,
-    },
+    custom_attributes::{CustomAttributeValues, NodeReference},
     dom::CompositorDirtyNodes,
-    parsing::{
-        Parse,
-        ParseAttribute,
-        ParseError,
-    },
+    parsing::{Parse, ParseAttribute, ParseError},
 };
 
 #[derive(Default, Clone, Debug, Component, PartialEq)]
@@ -63,6 +46,8 @@ impl ParseAttribute for LayoutState {
         &mut self,
         attr: OwnedAttributeView<CustomAttributeValues>,
     ) -> Result<(), ParseError> {
+        let (mut columns, mut rows) = (None, None);
+
         match attr.attribute {
             AttributeName::Width => {
                 if let Some(value) = attr.value.as_text() {
@@ -176,25 +161,47 @@ impl ParseAttribute for LayoutState {
             AttributeName::Content => {
                 if let Some(value) = attr.value.as_text() {
                     self.content = Content::parse(value)?;
+
+                    if let Content::Grid {
+                        columns: c,
+                        rows: r,
+                    } = &mut self.content
+                    {
+                        if let Some(columns) = columns {
+                            c.extend(columns);
+                        }
+
+                        if let Some(rows) = rows {
+                            r.extend(rows);
+                        }
+                    }
                 }
             }
             AttributeName::GridColumns => {
                 if let Some(value) = attr.value.as_text() {
+                    let value = value
+                        .split(",")
+                        .map(|value| GridSize::parse(value.trim()))
+                        .collect::<Result<_, ParseError>>()?;
+
                     if let Content::Grid { columns, .. } = &mut self.content {
-                        *columns = value
-                            .split(",")
-                            .map(|value| GridSize::parse(value.trim()))
-                            .collect::<Result<_, ParseError>>()?;
+                        *columns = value;
+                    } else {
+                        columns.replace(value);
                     }
                 }
             }
             AttributeName::GridRows => {
                 if let Some(value) = attr.value.as_text() {
+                    let value = value
+                        .split(",")
+                        .map(|value| GridSize::parse(value.trim()))
+                        .collect::<Result<_, ParseError>>()?;
+
                     if let Content::Grid { rows, .. } = &mut self.content {
-                        *rows = value
-                            .split(",")
-                            .map(|value| GridSize::parse(value.trim()))
-                            .collect::<Result<_, ParseError>>()?;
+                        *rows = value;
+                    } else {
+                        rows.replace(value);
                     }
                 }
             }

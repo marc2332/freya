@@ -340,7 +340,7 @@ where
         let mut initial_phase_column_sizes = <FxHashMap<usize, f32>>::default();
         let mut initial_phase_row_sizes = <FxHashMap<usize, f32>>::default();
 
-        for child_id in children.iter() {
+        for child_id in &children {
             let Some(child_data) = self.dom_adapter.get_node(child_id) else {
                 continue;
             };
