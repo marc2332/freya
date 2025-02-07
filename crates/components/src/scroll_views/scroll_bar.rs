@@ -16,10 +16,10 @@ pub struct ScrollBarProps {
     pub children: Element,
     #[props(into)]
     pub size: String,
-    #[props(default = "0".to_string(), into)]
-    pub offset_x: String,
-    #[props(default = "0".to_string(), into)]
-    pub offset_y: String,
+    #[props(default = 0., into)]
+    pub offset_x: f32,
+    #[props(default = 0., into)]
+    pub offset_y: f32,
     pub clicking_scrollbar: bool,
     #[props(default = false)]
     pub is_vertical: bool,
@@ -96,8 +96,8 @@ pub fn ScrollBar(
                 rect {
                     width: inner_width,
                     height: inner_height,
-                    offset_x: inner_offset_x,
-                    offset_y: inner_offset_y,
+                    offset_x: "{inner_offset_x}",
+                    offset_y: "{inner_offset_y}",
                     {children}
                 }
             }

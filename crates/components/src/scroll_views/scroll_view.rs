@@ -408,7 +408,7 @@ pub fn ScrollView(
                 if show_scrollbar && horizontal_scrollbar_is_visible {
                     ScrollBar {
                         size: &applied_scrollbar_theme.size,
-                        offset_x: "{scrollbar_x}",
+                        offset_x: scrollbar_x,
                         clicking_scrollbar: is_scrolling_x,
                         theme: scrollbar_theme.clone(),
                         ScrollThumb {
@@ -425,7 +425,7 @@ pub fn ScrollView(
                 ScrollBar {
                     is_vertical: true,
                     size: &applied_scrollbar_theme.size,
-                    offset_y: "{scrollbar_y}",
+                    offset_y: scrollbar_y,
                     clicking_scrollbar: is_scrolling_y,
                     theme: scrollbar_theme.clone(),
                     ScrollThumb {
@@ -539,22 +539,22 @@ mod test {
         // Simulate the user dragging the scrollbar
         utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
-            cursor: (490., 20.).into(),
+            cursor: (495., 20.).into(),
             button: Some(MouseButton::Left),
         });
         utils.push_event(TestEvent::Mouse {
             name: EventName::MouseDown,
-            cursor: (490., 20.).into(),
+            cursor: (495., 20.).into(),
             button: Some(MouseButton::Left),
         });
         utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
-            cursor: (490., 320.).into(),
+            cursor: (495., 320.).into(),
             button: Some(MouseButton::Left),
         });
         utils.push_event(TestEvent::Mouse {
             name: EventName::MouseUp,
-            cursor: (490., 320.).into(),
+            cursor: (495., 320.).into(),
             button: Some(MouseButton::Left),
         });
 

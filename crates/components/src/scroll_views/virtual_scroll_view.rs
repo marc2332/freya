@@ -25,6 +25,7 @@ use crate::{
     get_scroll_position_from_cursor,
     get_scroll_position_from_wheel,
     get_scrollbar_pos_and_size,
+    is_scrollbar_visible,
     manage_key_event,
     scroll_views::use_scroll_controller,
     Axis,
@@ -226,6 +227,11 @@ pub fn VirtualScrollView<
     let inner_size = item_size + (item_size * length as f32);
 
     scroll_controller.use_apply(inner_size, inner_size);
+
+    let vertical_scrollbar_is_visible = direction != "horizontal"
+        && is_scrollbar_visible(show_scrollbar, inner_size, size.area.height());
+    let horizontal_scrollbar_is_visible = direction != "vertical"
+        && is_scrollbar_visible(show_scrollbar, inner_size, size.area.width());
 
     let (container_width, content_width) =
         get_container_size(&width, direction_is_vertical, Axis::X);
@@ -460,10 +466,10 @@ pub fn VirtualScrollView<
                     onwheel: onwheel,
                     {children}
                 }
-                if show_scrollbar {
+                if show_scrollbar && horizontal_scrollbar_is_visible {
                     ScrollBar {
                         size: &applied_scrollbar_theme.size,
-                        offset_x: "{scrollbar_x}",
+                        offset_x: scrollbar_x,
                         clicking_scrollbar: is_scrolling_x,
                         theme: scrollbar_theme.clone(),
                         ScrollThumb {
@@ -477,10 +483,11 @@ pub fn VirtualScrollView<
                 }
 
             }
-            if show_scrollbar {
+            if show_scrollbar && vertical_scrollbar_is_visible {
                 ScrollBar {
+                    is_vertical: true,
                     size: &applied_scrollbar_theme.size,
-                    offset_y: "{scrollbar_y}",
+                    offset_y: scrollbar_y,
                     clicking_scrollbar: is_scrolling_y,
                     theme: scrollbar_theme.clone(),
                     ScrollThumb {
@@ -608,22 +615,22 @@ mod test {
         // Simulate the user dragging the scrollbar
         utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
-            cursor: (490., 20.).into(),
+            cursor: (495., 20.).into(),
             button: Some(MouseButton::Left),
         });
         utils.push_event(TestEvent::Mouse {
             name: EventName::MouseDown,
-            cursor: (490., 20.).into(),
+            cursor: (495., 20.).into(),
             button: Some(MouseButton::Left),
         });
         utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
-            cursor: (490., 320.).into(),
+            cursor: (495., 320.).into(),
             button: Some(MouseButton::Left),
         });
         utils.push_event(TestEvent::Mouse {
             name: EventName::MouseUp,
-            cursor: (490., 320.).into(),
+            cursor: (495., 320.).into(),
             button: Some(MouseButton::Left),
         });
 
