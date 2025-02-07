@@ -38,6 +38,7 @@ use crate::{
         ParseError,
     },
     values::{
+        parse_alpha,
         Border,
         CornerRadius,
         Fill,
@@ -50,6 +51,7 @@ use crate::{
 #[derive(Default, Debug, Clone, PartialEq, Component)]
 pub struct StyleState {
     pub background: Fill,
+    pub background_opacity: Option<u8>,
     pub svg_fill: Option<Color>,
     pub svg_stroke: Option<Color>,
     pub borders: Vec<Border>,
@@ -74,6 +76,14 @@ impl ParseAttribute for StyleState {
                         return Ok(());
                     }
                     self.background = Fill::parse(value)?;
+                }
+            }
+            AttributeName::BackgroundOpacity => {
+                if let Some(value) = attr.value.as_text() {
+                    if value == "none" {
+                        return Ok(());
+                    }
+                    self.background_opacity = Some(parse_alpha(value)?);
                 }
             }
             AttributeName::Fill => {
@@ -176,6 +186,7 @@ impl State<CustomAttributeValues> for StyleState {
     const NODE_MASK: NodeMaskBuilder<'static> =
         NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
             AttributeName::Background,
+            AttributeName::BackgroundOpacity,
             AttributeName::Fill,
             AttributeName::Stroke,
             AttributeName::Layer,
@@ -205,6 +216,10 @@ impl State<CustomAttributeValues> for StyleState {
             for attr in attributes {
                 style.parse_safe(attr)
             }
+        }
+
+        if let Some(background_opacity) = style.background_opacity {
+            style.background.set_a(background_opacity);
         }
 
         let changed = &style != self;

@@ -50,6 +50,7 @@ def_element!(
 
         // Style
         background,
+        background_opacity,
         border,
         shadow,
         corner_radius,

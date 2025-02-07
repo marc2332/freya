@@ -25,7 +25,6 @@ use crate::{
     get_scroll_position_from_cursor,
     get_scroll_position_from_wheel,
     get_scrollbar_pos_and_size,
-    is_scrollbar_visible,
     manage_key_event,
     scroll_views::use_scroll_controller,
     Axis,
@@ -228,25 +227,10 @@ pub fn VirtualScrollView<
 
     scroll_controller.use_apply(inner_size, inner_size);
 
-    let vertical_scrollbar_is_visible = direction != "horizontal"
-        && is_scrollbar_visible(show_scrollbar, inner_size, size.area.height());
-    let horizontal_scrollbar_is_visible = direction != "vertical"
-        && is_scrollbar_visible(show_scrollbar, inner_size, size.area.width());
-
-    let (container_width, content_width) = get_container_size(
-        &width,
-        direction_is_vertical,
-        Axis::X,
-        vertical_scrollbar_is_visible,
-        &applied_scrollbar_theme.size,
-    );
-    let (container_height, content_height) = get_container_size(
-        &height,
-        direction_is_vertical,
-        Axis::Y,
-        horizontal_scrollbar_is_visible,
-        &applied_scrollbar_theme.size,
-    );
+    let (container_width, content_width) =
+        get_container_size(&width, direction_is_vertical, Axis::X);
+    let (container_height, content_height) =
+        get_container_size(&height, direction_is_vertical, Axis::Y);
 
     let corrected_scrolled_y =
         get_corrected_scroll_position(inner_size, size.area.height(), *scrolled_y.read() as f32);
@@ -408,18 +392,6 @@ pub fn VirtualScrollView<
         }
     };
 
-    let horizontal_scrollbar_size = if horizontal_scrollbar_is_visible {
-        &applied_scrollbar_theme.size
-    } else {
-        "0"
-    };
-
-    let vertical_scrollbar_size = if vertical_scrollbar_is_visible {
-        &applied_scrollbar_theme.size
-    } else {
-        "0"
-    };
-
     let (viewport_size, scroll_position) = if direction == "vertical" {
         (size.area.height(), corrected_scrolled_y)
     } else {
@@ -488,33 +460,36 @@ pub fn VirtualScrollView<
                     onwheel: onwheel,
                     {children}
                 }
-                ScrollBar {
-                    width: "100%",
-                    height: "{horizontal_scrollbar_size}",
-                    offset_x: "{scrollbar_x}",
-                    clicking_scrollbar: is_scrolling_x,
-                    theme: scrollbar_theme.clone(),
-                    ScrollThumb {
+                if show_scrollbar {
+                    ScrollBar {
+                        size: &applied_scrollbar_theme.size,
+                        offset_x: "{scrollbar_x}",
                         clicking_scrollbar: is_scrolling_x,
-                        onmousedown: onmousedown_x,
-                        width: "{scrollbar_width}",
-                        height: "100%",
                         theme: scrollbar_theme.clone(),
+                        ScrollThumb {
+                            clicking_scrollbar: is_scrolling_x,
+                            onmousedown: onmousedown_x,
+                            width: "{scrollbar_width}",
+                            height: "100%",
+                            theme: scrollbar_theme.clone(),
+                        }
                     }
                 }
+
             }
-            ScrollBar {
-                width: "{vertical_scrollbar_size}",
-                height: "100%",
-                offset_y: "{scrollbar_y}",
-                clicking_scrollbar: is_scrolling_y,
-                theme: scrollbar_theme.clone(),
-                ScrollThumb {
+            if show_scrollbar {
+                ScrollBar {
+                    size: &applied_scrollbar_theme.size,
+                    offset_y: "{scrollbar_y}",
                     clicking_scrollbar: is_scrolling_y,
-                    onmousedown: onmousedown_y,
-                    width: "100%",
-                    height: "{scrollbar_height}",
-                    theme: scrollbar_theme,
+                    theme: scrollbar_theme.clone(),
+                    ScrollThumb {
+                        clicking_scrollbar: is_scrolling_y,
+                        onmousedown: onmousedown_y,
+                        width: "100%",
+                        height: "{scrollbar_height}",
+                        theme: scrollbar_theme,
+                    }
                 }
             }
         }
