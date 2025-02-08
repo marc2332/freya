@@ -598,6 +598,9 @@ mod test {
                     cross_align: "center",
                     direction: "horizontal",
                     Button {
+                        theme: theme_with!(ButtonTheme {
+                            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)".into(),
+                        }),
                         onclick: move |_| rotate += 1,
                         label { "Rotate" }
                     }
@@ -651,6 +654,9 @@ mod test {
                     cross_align: "center",
                     direction: "horizontal",
                     Button {
+                        theme: theme_with!(ButtonTheme {
+                            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)".into(),
+                        }),
                         onclick: move |_| rotate += 1,
                         label { "Rotate" }
                     }
@@ -704,10 +710,16 @@ mod test {
                     cross_align: "center",
                     direction: "horizontal",
                     Button {
+                        theme: theme_with!(ButtonTheme {
+                            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)".into(),
+                        }),
                         onclick: move |_| scale += 0.1,
                         label { "More" }
                     }
                     Button {
+                        theme: theme_with!(ButtonTheme {
+                            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)".into(),
+                        }),
                         onclick: move |_| scale -= 0.1,
                         label { "Less" }
                     }
