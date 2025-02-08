@@ -276,13 +276,6 @@ where
                     &mut inner_area,
                     false,
                 );
-
-                // In case of any layout listener, notify it with the new areas.
-                if node.has_layout_references {
-                    if let Some(measurer) = self.measurer {
-                        measurer.notify_layout_references(node_id, layout_node.area, inner_sizes);
-                    }
-                }
             }
 
             (false, layout_node)

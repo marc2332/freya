@@ -19,6 +19,23 @@ def_attribute!(
     /// ```
     background,
 
+    /// Specify the opacity of an element's background color.
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             background: "red",
+    ///             background_opacity: "0.5"
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    background_opacity,
+
     /// ### border
     ///
     /// You can add borders to an element using the `border` attribute.

@@ -263,9 +263,7 @@ impl Node {
         self.width.inner_sized()
             || self.height.inner_sized()
             || self.contains_text
-            || self.cross_alignment.is_not_start()
-            || self.main_alignment.is_not_start()
-            || self.content.is_flex()
+            || self.do_inner_depend_on_parent()
     }
 
     /// Has properties that make its children dependant on it?

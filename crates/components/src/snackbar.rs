@@ -51,7 +51,7 @@ use freya_hooks::{
 /// #           }
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), |mut utils| async move {
+/// # }, (250., 250.).into(), |mut utils| async move {
 /// #   utils.wait_for_update().await;
 /// #   utils.wait_for_update().await;
 /// #   utils.wait_for_update().await;

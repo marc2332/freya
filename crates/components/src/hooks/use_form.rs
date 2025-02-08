@@ -42,6 +42,7 @@ impl<Id: Clone + Hash + Eq + Display> UseForm<Id> {
             placeholder: Some(placeholder),
             auto_focus: false,
             onvalidate: None,
+            width: "150".to_string(),
         }
     }
 

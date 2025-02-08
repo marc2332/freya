@@ -106,18 +106,24 @@ fn parse_rgb(color: &str) -> Result<Color, ParseError> {
         return Err(ParseError);
     }
 
+    let base_color = Color::from_rgb(r, g, b);
+
     if let Some(a) = a {
-        let alpha_trimmed = a.trim();
-        if let Ok(u8_alpha) = alpha_trimmed.parse::<u8>() {
-            Ok(Color::from_argb(u8_alpha, r, g, b))
-        } else if let Ok(f32_alpha) = alpha_trimmed.parse::<f32>() {
-            let a = (255.0 * f32_alpha).clamp(0.0, 255.0).round() as u8;
-            Ok(Color::from_argb(a, r, g, b))
-        } else {
-            Err(ParseError)
-        }
+        Ok(base_color.with_a(parse_alpha(a)?))
     } else {
-        Ok(Color::from_rgb(r, g, b))
+        Ok(base_color)
+    }
+}
+
+pub fn parse_alpha(value: &str) -> Result<u8, ParseError> {
+    let value = value.trim();
+    if let Ok(u8_alpha) = value.parse::<u8>() {
+        Ok(u8_alpha)
+    } else if let Ok(f32_alpha) = value.parse::<f32>() {
+        let a = (255.0 * f32_alpha).clamp(0.0, 255.0).round() as u8;
+        Ok(a)
+    } else {
+        Err(ParseError)
     }
 }
 
