@@ -5,7 +5,6 @@ use freya_elements::{
 };
 use freya_hooks::{
     use_applied_theme,
-    use_get_theme,
     FontTheme,
     TableTheme,
     TableThemeWith,
@@ -16,8 +15,7 @@ use crate::icons::ArrowIcon;
 #[allow(non_snake_case)]
 #[component]
 fn TableArrow(order_direction: OrderDirection) -> Element {
-    let theme = use_get_theme();
-    let TableTheme { arrow_fill, .. } = theme.table;
+    let TableTheme { arrow_fill, .. } = use_applied_theme!(None, table);
     let rotate = match order_direction {
         OrderDirection::Down => "0",
         OrderDirection::Up => "180",
