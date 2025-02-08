@@ -272,7 +272,7 @@ mod test {
         assert_eq!(utils.root().get(2).get(0).text(), Some("Home"));
 
         // Go to the "Somewhere" route
-        utils.click_cursor((10., 65.)).await;
+        utils.click_cursor((10., 55.)).await;
 
         // Check route is Somewhere
         assert_eq!(utils.root().get(2).get(0).text(), Some("Somewhere"));
