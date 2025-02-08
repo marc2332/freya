@@ -93,9 +93,6 @@ fn app() -> Element {
         Body {
             padding: "10",
             spacing: "10",
-            label {
-                "Ordering by {order}"
-            }
             Table {
                 columns: 3,
                 TableHead {
@@ -117,7 +114,6 @@ fn app() -> Element {
                         for (i, items) in filtered_data.enumerate() {
                             TableRow {
                                 key: "{i}",
-                                alternate_colors: i % 2 == 0,
                                 for (n, item) in items.iter().enumerate() {
                                     TableCell {
                                         key: "{n}",

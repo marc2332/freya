@@ -57,6 +57,12 @@ pub fn TableBody(TableBodyProps { children }: TableBodyProps) -> Element {
     )
 }
 
+#[derive(PartialEq, Clone, Copy)]
+enum TableRowState {
+    Idle,
+    Hovering,
+}
+
 /// Properties for the [`TableRow`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct TableRowProps {
@@ -64,9 +70,6 @@ pub struct TableRowProps {
     pub theme: Option<TableThemeWith>,
     /// The content of this row.
     children: Element,
-    /// Show the row with a different background, this allows to have a zebra-style table.
-    #[props(default = false)]
-    alternate_colors: bool,
 }
 
 /// Table row for [`Table`]. Use [`TableCell`] inside.
@@ -74,36 +77,33 @@ pub struct TableRowProps {
 /// # Styling
 /// Inherits the [`TableTheme`](freya_hooks::TableTheme) theme.
 #[allow(non_snake_case)]
-pub fn TableRow(
-    TableRowProps {
-        theme,
-        children,
-        alternate_colors,
-    }: TableRowProps,
-) -> Element {
+pub fn TableRow(TableRowProps { theme, children }: TableRowProps) -> Element {
     let theme = use_applied_theme!(&theme, table);
+    let mut state = use_signal(|| TableRowState::Idle);
     let TableTheme {
         divider_fill,
-        alternate_row_background,
+        hover_row_background,
         row_background,
         ..
     } = theme;
-    let background = if alternate_colors {
-        alternate_row_background
+    let background = if state() == TableRowState::Hovering {
+        hover_row_background
     } else {
         row_background
     };
 
     rsx!(
         rect {
+            onmouseenter: move |_| state.set(TableRowState::Hovering),
+            onmouseleave: move |_| state.set(TableRowState::Idle),
             direction: "horizontal",
-            width: "100%",
+            width: "fill",
             background: "{background}",
             {children}
         }
         rect {
             height: "1",
-            width: "100%",
+            width: "fill",
             background: "{divider_fill}"
         }
     )

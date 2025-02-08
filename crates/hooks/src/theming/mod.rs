@@ -358,7 +358,7 @@ define_theme! {
         %[cows]
         background: str,
         arrow_fill: str,
-        alternate_row_background: str,
+        hover_row_background: str,
         row_background: str,
         divider_fill: str,
         corner_radius: str,

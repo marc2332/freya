@@ -162,7 +162,7 @@ pub(crate) const BASE_THEME: Theme = Theme {
         background: cow_borrowed!("key(neutral_surface)"),
         arrow_fill: cow_borrowed!("key(solid)"),
         row_background: cow_borrowed!("transparent"),
-        alternate_row_background: cow_borrowed!("key(secondary_surface)"),
+        hover_row_background: cow_borrowed!("key(secondary_surface)"),
         divider_fill: cow_borrowed!("key(surface)"),
         corner_radius: cow_borrowed!("6"),
     },
