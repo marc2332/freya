@@ -72,7 +72,7 @@ pub fn Tooltip(TooltipProps { text, theme }: TooltipProps) -> Element {
     rsx!(
         rect {
             padding: "4 10",
-            shadow: "0 0 4 1 rgb(0, 0, 0, 0.1)",
+            shadow: "0 1 2 1 rgb(0, 0, 0, 0.05)",
             border: "1 inner {border_fill}",
             corner_radius: "8",
             background: "{background}",
