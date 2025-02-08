@@ -71,7 +71,7 @@ impl Position {
         matches!(self, Self::Absolute { .. })
     }
 
-    pub fn is_global(&self) -> bool {
+    pub fn is_stacked(&self) -> bool {
         matches!(self, Self::Global { .. })
     }
 
