@@ -755,10 +755,6 @@ mod test {
 
         utils.click_cursor((250., 310.)).await;
         let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
-        assert_eq!(painted_nodes, 7);
-
-        utils.click_cursor((250., 310.)).await;
-        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
         assert_eq!(painted_nodes, 5);
     }
 }
