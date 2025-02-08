@@ -600,6 +600,7 @@ mod test {
                     Button {
                         theme: theme_with!(ButtonTheme {
                             shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)".into(),
+                            padding: "8 12".into(),
                         }),
                         onclick: move |_| rotate += 1,
                         label { "Rotate" }
@@ -656,6 +657,7 @@ mod test {
                     Button {
                         theme: theme_with!(ButtonTheme {
                             shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)".into(),
+                            padding: "8 12".into(),
                         }),
                         onclick: move |_| rotate += 1,
                         label { "Rotate" }
@@ -712,6 +714,7 @@ mod test {
                     Button {
                         theme: theme_with!(ButtonTheme {
                             shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)".into(),
+                            padding: "8 12".into(),
                         }),
                         onclick: move |_| scale += 0.1,
                         label { "More" }
@@ -719,6 +722,7 @@ mod test {
                     Button {
                         theme: theme_with!(ButtonTheme {
                             shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)".into(),
+                            padding: "8 12".into(),
                         }),
                         onclick: move |_| scale -= 0.1,
                         label { "Less" }
@@ -748,6 +752,10 @@ mod test {
         utils.click_cursor((250., 310.)).await;
         let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
         assert_eq!(painted_nodes, 9);
+
+        utils.click_cursor((250., 310.)).await;
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+        assert_eq!(painted_nodes, 7);
 
         utils.click_cursor((250., 310.)).await;
         let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
