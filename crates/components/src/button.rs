@@ -310,7 +310,7 @@ pub fn ButtonBase(
             a11y_role:"button",
             color: "{font_theme.color}",
             shadow: "{shadow}",
-            border: "{border}",
+            border,
             corner_radius: "{corner_radius}",
             background: "{background}",
             text_height: "disable-least-ascent",

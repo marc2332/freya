@@ -198,6 +198,12 @@ pub fn Input(
         }
     });
 
+    use_effect(move || {
+        if !focus.is_focused() {
+            editable.editor_mut().write().clear_selection();
+        }
+    });
+
     let onkeydown = move |e: Event<KeyboardData>| {
         if e.data.key != Key::Enter && e.data.key != Key::Tab {
             e.stop_propagation();
@@ -276,7 +282,6 @@ pub fn Input(
     let onglobalclick = move |_| {
         match *status.read() {
             InputStatus::Idle if focus.is_focused() => {
-                focus.unfocus();
                 editable.process_event(&EditableEvent::Click);
             }
             InputStatus::Hovering => {
@@ -284,7 +289,18 @@ pub fn Input(
             }
             _ => {}
         };
-        drag_origin.set(None);
+
+        // Unfocus input when this:
+        // + is focused
+        // + it has not just being dragged
+        // + a global click happened
+        if focus.is_focused() {
+            if drag_origin.read().is_some() {
+                drag_origin.set(None);
+            } else {
+                focus.unfocus();
+            }
+        }
     };
 
     let a11y_id = focus.attribute();
