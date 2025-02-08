@@ -16,6 +16,7 @@ features = ["freya-engine/mocked-engine"]
 
 [features]
 skia-engine = ["freya-engine/skia-engine"]
+mocked-engine-development = ["freya-engine/mocked-engine"] # This is just for the CI
 
 [dependencies]
 freya-elements = { workspace = true }
