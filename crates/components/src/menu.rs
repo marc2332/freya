@@ -89,7 +89,7 @@ use freya_hooks::{
 /// #         }
 /// #     }
 /// #  )
-/// # }, (185., 185.).into(), |mut utils| async move {
+/// # }, (250., 250.).into(), |mut utils| async move {
 /// #   utils.wait_for_update().await;
 /// #   utils.move_cursor((15., 60.)).await;
 /// #   utils.save_snapshot("./images/gallery_menu.png");

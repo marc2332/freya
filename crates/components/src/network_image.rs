@@ -82,7 +82,7 @@ pub enum ImageState {
 /// #           Rust { }
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), "./images/gallery_network_image.png");
+/// # }, (250., 250.).into(), "./images/gallery_network_image.png");
 /// ```
 ///
 /// # Preview

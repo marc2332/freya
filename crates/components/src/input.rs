@@ -144,7 +144,7 @@ pub struct InputProps {
 /// #           }
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), "./images/gallery_input.png");
+/// # }, (250., 250.).into(), "./images/gallery_input.png");
 /// ```
 /// # Preview
 /// ![Input Preview][input]

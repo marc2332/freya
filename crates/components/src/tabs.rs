@@ -102,7 +102,7 @@ pub enum TabStatus {
 /// # }
 /// # launch_doc(|| {
 /// #   rsx!(Router::<Route> {})
-/// # }, (185., 185.).into(), "./images/gallery_tab.png");
+/// # }, (250., 250.).into(), "./images/gallery_tab.png");
 /// ```
 ///
 /// # Preview
@@ -264,7 +264,7 @@ pub fn Tab(
 /// # }
 /// # launch_doc(|| {
 /// #   rsx!(Router::<Route> {})
-/// # }, (185., 185.).into(), "./images/gallery_bottom_tab.png");
+/// # }, (250., 250.).into(), "./images/gallery_bottom_tab.png");
 /// ```
 ///
 /// # Preview

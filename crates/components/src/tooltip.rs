@@ -47,9 +47,9 @@ pub struct TooltipProps {
 /// #           {app()}
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), |mut utils| async move {
+/// # }, (250., 250.).into(), |mut utils| async move {
 /// #   utils.wait_for_update().await;
-/// #   utils.move_cursor((90., 90.)).await;
+/// #   utils.move_cursor((125., 125.)).await;
 /// #   utils.wait_for_update().await;
 /// #   utils.save_snapshot("./images/gallery_tooltip.png");
 /// # });

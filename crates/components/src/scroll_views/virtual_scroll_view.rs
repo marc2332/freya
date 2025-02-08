@@ -154,7 +154,7 @@ fn get_render_range(
 /// #           {app()}
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), "./images/gallery_virtual_scroll_view.png");
+/// # }, (250., 250.).into(), "./images/gallery_virtual_scroll_view.png");
 /// ```
 ///
 /// # With a Scroll Controller

@@ -212,7 +212,7 @@ struct DropdownGroup {
 /// #           {app()}
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), "./images/gallery_dropdown.png");
+/// # }, (250., 250.).into(), "./images/gallery_dropdown.png");
 /// ```
 ///
 /// # Preview
