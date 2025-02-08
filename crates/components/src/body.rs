@@ -23,6 +23,9 @@ pub struct BodyProps {
     /// Height of the Body.
     #[props(default = "fill".to_string())]
     pub height: String,
+    /// Direction of the Body.
+    #[props(default = "vertical".to_string())]
+    pub direction: String,
 }
 
 /// Usually used to wrap the application root component.
@@ -53,6 +56,7 @@ pub fn Body(
         padding,
         width,
         height,
+        direction,
     }: BodyProps,
 ) -> Element {
     let theme = use_applied_theme!(&theme, body);
@@ -66,6 +70,7 @@ pub fn Body(
             background: "{background}",
             spacing,
             padding,
+            direction,
             {&children}
         }
     )

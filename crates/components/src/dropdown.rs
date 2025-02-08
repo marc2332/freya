@@ -139,7 +139,7 @@ where
             a11y_member_of,
             background: "{background}",
             border,
-            padding: "6 22 6 16",
+            padding: "6 10",
             corner_radius: "6",
             main_align: "center",
             onmouseenter,
@@ -321,6 +321,7 @@ where
     rsx!(
         rect {
             direction: "vertical",
+            spacing: "4",
             rect {
                 width: "{width}",
                 onmouseenter,
@@ -333,9 +334,8 @@ where
                 background: "{background}",
                 color: "{font_theme.color}",
                 corner_radius: "8",
-                padding: "8 16",
+                padding: "6 16",
                 border,
-                shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
                 direction: "horizontal",
                 main_align: "center",
                 cross_align: "center",
@@ -365,7 +365,7 @@ where
                             overflow: "clip",
                             corner_radius: "8",
                             background: "{dropdown_background}",
-                            shadow: "0 4 5 0 rgb(0, 0, 0, 0.3)",
+                            shadow: "0 2 4 0 rgb(0, 0, 0, 0.15)",
                             padding: "6",
                             content: "fit",
                             {props.children}
