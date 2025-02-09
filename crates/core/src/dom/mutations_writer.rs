@@ -36,8 +36,8 @@ use crate::{
     },
     states::{
         CursorState,
+        ImageState,
         LayerState,
-        StyleState,
     },
 };
 
@@ -120,10 +120,10 @@ impl<'a> MutationsWriter<'a> {
                 // Remove the node from the compositor cache
                 self.compositor_cache.remove(&node_id);
 
-                let style = node.get::<StyleState>().unwrap();
-
-                if let Some(image_cache_key) = &style.image_cache_key {
-                    self.images_cache.remove(image_cache_key);
+                if let Some(image_state) = node.get::<ImageState>() {
+                    if let Some(image_cache_key) = &image_state.image_cache_key {
+                        self.images_cache.remove(image_cache_key);
+                    }
                 }
             }
         }

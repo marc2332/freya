@@ -11,10 +11,7 @@ use crate::{
         get_or_create_image,
         ImageData,
     },
-    states::{
-        StyleState,
-        TransformState,
-    },
+    states::ImageState,
     values::{
         ImageCover,
         SamplingMode,
@@ -43,8 +40,7 @@ impl ElementUtils for ImageElement {
             return;
         };
 
-        let node_transform = node_ref.get::<TransformState>().unwrap();
-        let node_style = node_ref.get::<StyleState>().unwrap();
+        let image_state = node_ref.get::<ImageState>().unwrap();
 
         let mut rect = Rect::new(
             area.min_x(),
@@ -55,7 +51,7 @@ impl ElementUtils for ImageElement {
 
         let clip_rect = Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
 
-        if node_transform.image_cover == ImageCover::Center {
+        if image_state.image_cover == ImageCover::Center {
             let width_offset = (size.width - area.width()) / 2.;
             let height_offset = (size.height - area.height()) / 2.;
 
@@ -71,7 +67,7 @@ impl ElementUtils for ImageElement {
         let mut paint = Paint::default();
         paint.set_anti_alias(true);
 
-        let sampling = match node_style.image_sampling {
+        let sampling = match image_state.image_sampling {
             SamplingMode::Nearest => SamplingOptions::new(FilterMode::Nearest, MipmapMode::None),
             SamplingMode::Bilinear => SamplingOptions::new(FilterMode::Linear, MipmapMode::None),
             SamplingMode::Trilinear => SamplingOptions::new(FilterMode::Linear, MipmapMode::Linear),

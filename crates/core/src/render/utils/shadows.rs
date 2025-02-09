@@ -16,8 +16,8 @@ pub fn render_shadow(
     path: &mut Path,
     rounded_rect: RRect,
     area: Area,
-    shadow: Shadow,
-    corner_radius: CornerRadius,
+    shadow: &Shadow,
+    corner_radius: &CornerRadius,
 ) {
     let mut shadow_path = Path::new();
     let mut shadow_paint = Paint::default();

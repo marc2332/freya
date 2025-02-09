@@ -31,9 +31,9 @@ pub async fn multiple_lines_single_editor() {
                 width: "100%",
                 height: "100%",
                 background: "white",
-                cursor_reference: cursor_attr,
                 onmousedown,
                 paragraph {
+                    cursor_reference: cursor_attr,
                     height: "50%",
                     width: "100%",
                     cursor_id: "0",
@@ -206,7 +206,6 @@ pub async fn single_line_multiple_editors() {
                 width: "100%",
                 height: "100%",
                 background: "white",
-                cursor_reference: cursor_attr,
                 onglobalkeydown,
                 {editor.lines().enumerate().map(move |(i, line)| {
 
@@ -216,6 +215,7 @@ pub async fn single_line_multiple_editors() {
 
                     rsx!(
                         paragraph {
+                            cursor_reference: cursor_attr,
                             width: "100%",
                             height: "30",
                             max_lines: "1",
@@ -315,8 +315,8 @@ pub async fn highlight_multiple_lines_single_editor() {
                 width: "100%",
                 height: "100%",
                 background: "white",
-                cursor_reference,
                 paragraph {
+                    cursor_reference,
                     height: "50%",
                     width: "100%",
                     cursor_id: "0",
@@ -374,7 +374,6 @@ pub async fn highlights_single_line_multiple_editors() {
             || EditableConfig::new("Hello Rustaceans\n".repeat(2)),
             EditableMode::SingleLineMultipleEditors,
         );
-        let cursor_attr = editable.cursor_attr();
         let editor = editable.editor().read();
 
         let onglobalkeydown = move |e: Event<KeyboardData>| {
@@ -386,7 +385,6 @@ pub async fn highlights_single_line_multiple_editors() {
                 width: "100%",
                 height: "100%",
                 background: "white",
-                cursor_reference: cursor_attr,
                 onglobalkeydown,
                 direction: "vertical",
                 {editor.lines().enumerate().map(move |(i, line)| {
@@ -412,6 +410,7 @@ pub async fn highlights_single_line_multiple_editors() {
 
                     rsx!(
                         paragraph {
+                            cursor_reference: editable.cursor_attr(),
                             width: "100%",
                             height: "30",
                             max_lines: "1",
@@ -496,9 +495,9 @@ pub async fn special_text_editing() {
                 width: "100%",
                 height: "100%",
                 background: "white",
-                cursor_reference: cursor_attr,
                 onmousedown,
                 paragraph {
+                    cursor_reference: cursor_attr,
                     height: "50%",
                     width: "100%",
                     cursor_id: "0",
@@ -689,9 +688,9 @@ pub async fn backspace_remove() {
                 width: "100%",
                 height: "100%",
                 background: "white",
-                cursor_reference: cursor_attr,
                 onmousedown,
                 paragraph {
+                    cursor_reference: cursor_attr,
                     height: "50%",
                     width: "100%",
                     cursor_id: "0",
@@ -805,8 +804,8 @@ pub async fn highlight_shift_click_multiple_lines_single_editor() {
                 width: "100%",
                 height: "100%",
                 background: "white",
-                cursor_reference,
                 paragraph {
+                    cursor_reference,
                     height: "50%",
                     width: "100%",
                     cursor_id: "0",
@@ -868,7 +867,6 @@ pub async fn highlights_shift_click_single_line_multiple_editors() {
             || EditableConfig::new("Hello Rustaceans\n".repeat(2)),
             EditableMode::SingleLineMultipleEditors,
         );
-        let cursor_attr = editable.cursor_attr();
         let editor = editable.editor().read();
 
         let onglobalkeydown = move |e: Event<KeyboardData>| {
@@ -880,7 +878,6 @@ pub async fn highlights_shift_click_single_line_multiple_editors() {
                 width: "100%",
                 height: "100%",
                 background: "white",
-                cursor_reference: cursor_attr,
                 onglobalkeydown,
                 direction: "vertical",
                 {editor.lines().enumerate().map(move |(i, line)| {
@@ -910,6 +907,7 @@ pub async fn highlights_shift_click_single_line_multiple_editors() {
 
                     rsx!(
                         paragraph {
+                            cursor_reference: editable.cursor_attr(),
                             width: "100%",
                             height: "30",
                             max_lines: "1",
@@ -1004,8 +1002,8 @@ pub async fn highlight_all_text() {
                 width: "100%",
                 height: "100%",
                 background: "white",
-                cursor_reference,
                 paragraph {
+                    cursor_reference,
                     height: "50%",
                     width: "100%",
                     cursor_id: "0",
@@ -1088,10 +1086,10 @@ pub async fn replace_text() {
                 width: "100%",
                 height: "100%",
                 background: "white",
-                cursor_reference: cursor_attr,
                 onmousedown,
                 onclick,
                 paragraph {
+                    cursor_reference: cursor_attr,
                     height: "50%",
                     width: "100%",
                     cursor_id: "0",

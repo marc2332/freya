@@ -49,12 +49,14 @@ use crate::{
     },
     states::{
         AccessibilityNodeState,
+        CanvasState,
         CursorState,
         FontStyleState,
+        ImageState,
         LayerState,
         LayoutState,
-        ReferencesState,
         StyleState,
+        SvgState,
         TransformState,
         ViewportState,
     },
@@ -146,13 +148,15 @@ impl Default for FreyaDOM {
         let mut rdom = RealDom::<CustomAttributeValues>::new([
             CursorState::to_type_erased(),
             FontStyleState::to_type_erased(),
-            ReferencesState::to_type_erased(),
+            CanvasState::to_type_erased(),
             LayoutState::to_type_erased(),
             StyleState::to_type_erased(),
             TransformState::to_type_erased(),
             AccessibilityNodeState::to_type_erased(),
             ViewportState::to_type_erased(),
             LayerState::to_type_erased(),
+            SvgState::to_type_erased(),
+            ImageState::to_type_erased(),
         ]);
         let dioxus_integration_state = DioxusState::create(&mut rdom);
         Self {

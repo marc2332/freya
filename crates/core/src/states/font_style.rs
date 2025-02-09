@@ -38,8 +38,8 @@ use crate::{
 #[derive(Debug, Clone, PartialEq, Component)]
 pub struct FontStyleState {
     pub color: Color,
-    pub text_shadows: Vec<TextShadow>,
-    pub font_family: Vec<String>,
+    pub text_shadows: Arc<[TextShadow]>,
+    pub font_family: Arc<[String]>,
     pub font_size: f32,
     pub font_slant: Slant,
     pub font_weight: Weight,
@@ -62,7 +62,8 @@ impl FontStyleState {
         paragraph_text_height: TextHeightBehavior,
     ) -> TextStyle {
         let mut text_style = TextStyle::new();
-        let mut font_family = self.font_family.clone();
+
+        let mut font_family = self.font_family.to_vec();
 
         font_family.extend_from_slice(default_font_family);
 
@@ -103,8 +104,8 @@ impl Default for FontStyleState {
     fn default() -> Self {
         Self {
             color: Color::BLACK,
-            text_shadows: Vec::new(),
-            font_family: Vec::new(),
+            text_shadows: Arc::default(),
+            font_family: Arc::default(),
             font_size: 16.0,
             font_weight: Weight::NORMAL,
             font_slant: Slant::Upright,
@@ -150,10 +151,7 @@ impl ParseAttribute for FontStyleState {
             AttributeName::FontFamily => {
                 if let Some(value) = attr.value.as_text() {
                     let families = value.split(',');
-                    self.font_family = families
-                        .into_iter()
-                        .map(|f| f.trim().to_string())
-                        .collect::<Vec<String>>();
+                    self.font_family = families.into_iter().map(|f| f.trim().to_string()).collect();
                 }
             }
             AttributeName::FontSize => {

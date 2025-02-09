@@ -7,7 +7,10 @@ use freya_engine::prelude::*;
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
-    node::OwnedAttributeValue,
+    node::{
+        NodeType,
+        OwnedAttributeValue,
+    },
     node_ref::NodeView,
     prelude::{
         AttributeMaskBuilder,
@@ -149,6 +152,10 @@ impl State<CustomAttributeValues> for CursorState {
             AttributeName::CursorReference,
         ]))
         .with_tag();
+
+    fn allow_node(node_type: &NodeType<CustomAttributeValues>) -> bool {
+        node_type.tag() == Some(&TagName::Paragraph)
+    }
 
     fn update<'a>(
         &mut self,

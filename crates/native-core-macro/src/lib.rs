@@ -347,7 +347,7 @@ pub fn partial_derive_state(_: TokenStream, input: TokenStream) -> TokenStream {
                     let node_types = run_view.node_type.clone();
                     freya_native_core::prelude::run_pass(type_id, &dependants, pass_direction, run_view, |id, context, height| {
                         let node_data: &NodeType<_> = node_types.get(id).unwrap_or_else(|err| panic!("Failed to get node type {:?}", err));
-                        if node_data.is_text() {
+                        if !Self::allow_node(node_data) {
                             return false;
                         }
                         // get all of the states from the tree view

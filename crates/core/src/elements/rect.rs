@@ -25,7 +25,7 @@ use crate::{
         BorderShape,
     },
     states::{
-        ReferencesState,
+        CanvasState,
         StyleState,
     },
     values::{
@@ -45,8 +45,7 @@ impl RectElement {
     ) -> RRect {
         let area = layout_node.visible_area().to_f32();
         let node_style = &*node_ref.get::<StyleState>().unwrap();
-        let mut radius = node_style.corner_radius;
-        radius.scale(scale_factor);
+        let radius = node_style.corner_radius.with_scale(scale_factor);
 
         RRect::new_rect_radii(
             Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
@@ -106,8 +105,7 @@ impl ElementUtils for RectElement {
 
         node_style.background.apply_to_paint(&mut paint, area);
 
-        let mut corner_radius = node_style.corner_radius;
-        corner_radius.scale(scale_factor);
+        let corner_radius = node_style.corner_radius.with_scale(scale_factor);
 
         // Container
         let rounded_rect = RRect::new_rect_radii(
@@ -131,9 +129,9 @@ impl ElementUtils for RectElement {
         canvas.draw_path(&path, &paint);
 
         // Shadows
-        for mut shadow in node_style.shadows.clone().into_iter() {
+        for shadow in node_style.shadows.iter() {
             if shadow.fill != Fill::Color(Color::TRANSPARENT) {
-                shadow.scale(scale_factor);
+                let shadow = shadow.with_scale(scale_factor);
 
                 render_shadow(
                     canvas,
@@ -141,23 +139,23 @@ impl ElementUtils for RectElement {
                     &mut path,
                     rounded_rect,
                     area,
-                    shadow,
-                    corner_radius,
+                    &shadow,
+                    &corner_radius,
                 );
             }
         }
 
         // Borders
-        for mut border in node_style.borders.clone().into_iter() {
+        for border in node_style.borders.iter() {
             if border.is_visible() {
-                border.scale(scale_factor);
+                let border = border.with_scale(scale_factor);
 
-                render_border(canvas, rounded_rect, area, &border, corner_radius);
+                render_border(canvas, rounded_rect, area, &border, &corner_radius);
             }
         }
 
-        // Layout references
-        let references = node_ref.get::<ReferencesState>().unwrap();
+        // Canvas reference
+        let references = node_ref.get::<CanvasState>().unwrap();
         if let Some(canvas_ref) = &references.canvas_ref {
             let mut ctx = CanvasRunnerContext {
                 canvas,
@@ -189,8 +187,7 @@ impl ElementUtils for RectElement {
 
         let mut path = Path::new();
 
-        let mut corner_radius = node_style.corner_radius;
-        corner_radius.scale(scale_factor);
+        let corner_radius = node_style.corner_radius.with_scale(scale_factor);
 
         let rounded_rect = RRect::new_rect_radii(
             Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
@@ -213,9 +210,9 @@ impl ElementUtils for RectElement {
         }
 
         // Shadows
-        for mut shadow in node_style.shadows.clone().into_iter() {
+        for shadow in node_style.shadows.iter() {
             if shadow.fill != Fill::Color(Color::TRANSPARENT) {
-                shadow.scale(scale_factor);
+                let shadow = shadow.with_scale(scale_factor);
 
                 let mut shadow_path = Path::new();
 
@@ -234,9 +231,7 @@ impl ElementUtils for RectElement {
                     // Add either the RRect or smoothed path based on whether smoothing is used.
                     if corner_radius.smoothing > 0.0 {
                         shadow_path.add_path(
-                            &node_style
-                                .corner_radius
-                                .smoothed_path(rounded_rect.with_outset(outset)),
+                            &corner_radius.smoothed_path(rounded_rect.with_outset(outset)),
                             Point::new(area.min_x(), area.min_y()) - outset,
                             None,
                         );
@@ -261,12 +256,11 @@ impl ElementUtils for RectElement {
             }
         }
 
-        for mut border in node_style.borders.clone().into_iter() {
+        for border in node_style.borders.iter() {
             if border.is_visible() {
-                border.scale(scale_factor);
+                let border = border.with_scale(scale_factor);
 
-                let border_shape =
-                    border_shape(*rounded_rect.rect(), node_style.corner_radius, &border);
+                let border_shape = border_shape(*rounded_rect.rect(), &corner_radius, &border);
                 let border_bounds = match border_shape {
                     BorderShape::DRRect(ref outer, _) => outer.bounds(),
                     BorderShape::Path(ref path) => path.bounds(),

@@ -69,7 +69,6 @@ fn app() -> Element {
 
 #[component]
 fn ShaderEditor(editable: UseEditable) -> Element {
-    let cursor_reference = editable.cursor_attr();
     let editor = editable.editor().read();
 
     let onglobalclick = move |_: MouseEvent| {
@@ -89,7 +88,6 @@ fn ShaderEditor(editable: UseEditable) -> Element {
             onglobalkeydown,
             onglobalkeyup,
             onglobalclick,
-            cursor_reference,
             width: "50%",
             height: "fill",
             VirtualScrollView {
@@ -144,6 +142,7 @@ fn ShaderEditor(editable: UseEditable) -> Element {
                                 "{line_index + 1} "
                             }
                             paragraph {
+                                cursor_reference: editable.cursor_attr(),
                                 main_align: "center",
                                 height: "100%",
                                 width: "100%",

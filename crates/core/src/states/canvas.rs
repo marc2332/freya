@@ -1,7 +1,10 @@
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
-    node::OwnedAttributeValue,
+    node::{
+        NodeType,
+        OwnedAttributeValue,
+    },
     node_ref::NodeView,
     prelude::{
         AttributeMaskBuilder,
@@ -9,6 +12,7 @@ use freya_native_core::{
         NodeMaskBuilder,
         State,
     },
+    tags::TagName,
     SendAnyMap,
 };
 use freya_native_core_macro::partial_derive_state;
@@ -16,17 +20,15 @@ use freya_native_core_macro::partial_derive_state;
 use crate::custom_attributes::{
     CanvasReference,
     CustomAttributeValues,
-    ImageReference,
 };
 
 #[derive(Default, PartialEq, Clone, Debug, Component)]
-pub struct ReferencesState {
-    pub image_ref: Option<ImageReference>,
+pub struct CanvasState {
     pub canvas_ref: Option<CanvasReference>,
 }
 
 #[partial_derive_state]
-impl State<CustomAttributeValues> for ReferencesState {
+impl State<CustomAttributeValues> for CanvasState {
     type ParentDependencies = ();
 
     type ChildDependencies = ();
@@ -35,10 +37,13 @@ impl State<CustomAttributeValues> for ReferencesState {
 
     const NODE_MASK: NodeMaskBuilder<'static> = NodeMaskBuilder::new()
         .with_attrs(AttributeMaskBuilder::Some(&[
-            AttributeName::ImageReference,
             AttributeName::CanvasReference,
         ]))
         .with_tag();
+
+    fn allow_node(node_type: &NodeType<CustomAttributeValues>) -> bool {
+        node_type.tag() == Some(&TagName::Rect)
+    }
 
     fn update<'a>(
         &mut self,
@@ -48,25 +53,18 @@ impl State<CustomAttributeValues> for ReferencesState {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         _context: &SendAnyMap,
     ) -> bool {
-        let mut references = ReferencesState::default();
+        let mut canvas = CanvasState::default();
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
+                #[allow(clippy::single_match)]
                 match attr.attribute {
-                    AttributeName::ImageReference => {
-                        if let OwnedAttributeValue::Custom(CustomAttributeValues::ImageReference(
-                            reference,
-                        )) = attr.value
-                        {
-                            references.image_ref = Some(reference.clone());
-                        }
-                    }
                     AttributeName::CanvasReference => {
                         if let OwnedAttributeValue::Custom(CustomAttributeValues::Canvas(
                             new_canvas,
                         )) = attr.value
                         {
-                            references.canvas_ref = Some(new_canvas.clone());
+                            canvas.canvas_ref = Some(new_canvas.clone());
                         }
                     }
                     _ => {}
@@ -74,9 +72,9 @@ impl State<CustomAttributeValues> for ReferencesState {
             }
         }
 
-        let changed = &references != self;
+        let changed = &canvas != self;
 
-        *self = references;
+        *self = canvas;
         changed
     }
 }
