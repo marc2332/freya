@@ -194,7 +194,6 @@ pub async fn single_line_multiple_editors() {
             || EditableConfig::new("Hello Rustaceans\nHello World".to_string()),
             EditableMode::SingleLineMultipleEditors,
         );
-        let cursor_attr = editable.cursor_attr();
         let editor = editable.editor().read();
 
         let onglobalkeydown = move |e: Event<KeyboardData>| {
@@ -215,7 +214,7 @@ pub async fn single_line_multiple_editors() {
 
                     rsx!(
                         paragraph {
-                            cursor_reference: cursor_attr,
+                            cursor_reference: editable.cursor_attr(),
                             width: "100%",
                             height: "30",
                             max_lines: "1",
