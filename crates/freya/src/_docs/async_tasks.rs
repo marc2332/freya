@@ -9,6 +9,8 @@
 //!
 //! Important to know: Tasks spawned with `spawn` will be cancelled when the component their were created is dropped. If you want to have an async tasks not attached to the component you may use `spawn_forever`.
 //!
+//! You can learn more in [Dioxus Docs](dioxus_core::prelude::spawn).
+//!
 //! ```rust
 //! # use freya::prelude::*;
 //! fn app() -> Element {

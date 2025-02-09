@@ -6,7 +6,7 @@
 //! You simply need to wrap your `Router` content inside the `NativeRouter` component.
 //!
 //! Example (based on the example from [router](crate::_docs::router)):
-//! ```rust, ignore
+//! ```rust, no_run
 //! #[allow(non_snake_case)]
 //! fn AppSidebar() -> Element {
 //!     rsx!(

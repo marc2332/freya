@@ -1,9 +1,9 @@
 //! # Lifecycle
 //!
-//! Dioxus components can use hooks to manage certain lifecycle situations.
+//! Dioxus offers hooks to manage the different lifecycle situations of components.
 //!
-//! ## Component creation
-//! You can run certain logic when the component is created for the first time by using the `use_hook` hook.
+//! ## Component created
+//! You can run certain logic when the component is created (also known as mounted or instanciated) for the first time by using the `use_hook` hook.
 //!
 //! ```rust
 //! # use freya::prelude::*;
