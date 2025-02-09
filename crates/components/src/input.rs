@@ -359,7 +359,7 @@ pub fn Input(
                 direction: "horizontal",
                 show_scrollbar: false,
                 paragraph {
-                    min_width: "1",
+                    min_width: "calc(100% - 20)",
                     margin: "6 10",
                     onglobalclick,
                     onmousedown,
