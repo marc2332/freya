@@ -1,9 +1,9 @@
 //! # Components
 //!
-//! Freya apps will usually be composed of different components.
+//! Freya apps are composed of different components.
 //! Components are defined in the form functions that might receive some input as **Props** and return the UI as **Element**.
 //!
-//! > You can learn more about how the UI is defined in the [UI](./ui.md) chapter.
+//! > You can learn more about how the UI is defined in the [UI](crate::_docs::ui) chapter.
 //!
 //! This is how a simple root component looks like:
 //!
@@ -19,11 +19,10 @@
 //!     )
 //! }
 //! ```
+//! This is perfectly fine but we might consider splitting the app in multiple components as it grows. This would allow to have reusable components
+//! and also help maintaining and scaling the app.
 //!
-//! This is obviously fine, but the moment our app grows in size and complexity we might want to split
-//! things out in order to maintain a certain level of modularity and reusability. We can do this by spliting the UI in different components
-//!
-//! For example, lets create a reusable component:
+//! Lets create a reusable component:
 //!
 //! ```rust
 //! # use freya::prelude::*;
@@ -55,7 +54,7 @@
 //! }
 //! ```
 //!
-//! Notice how we anotate our `TextLabel` component with the macro `#[component]`, this will transform every argument of the function (just `text: String` in this case) to a component prop, so we can later use the component prop in a declarative way in the RSX.
+//! Notice how we anotate our `TextLabel` component with the macro `#[component]`, this will transform every argument of the function (just `text: String` in this case) to a component prop.
 //!
 //! For more complex components you might want to put the props in an external struct intead of using the `#[components]` macro:
 //!
@@ -77,9 +76,13 @@
 //!
 //! ## Renders
 //!
-//! Components renders are just when a component function runs, which might be because it is subscribed to a signal and that signal got mutated, or because its props changed.
+//! Components renders are just when a component function runs, this can happen in multiple scanarios:
 //!
-//! > Even though the naming might give you the impression that it means the app will effectively rerender again, it has nothing to do with it, in fact, a component might render a thousand times but it it doesn't generate a new UI Freya will not rerender it.
+//! 1. The component just got instanciated for the first time
+//! 2. A signal that this component is reading, got changed
+//! 3. The component props changed
+//!
+//! > **Note:** The naming of `render` might give you the impression that it means the app will effectively rerender again, it has nothing to do with it, in fact, a component might render (run its function) a thousand times but generate the exact same RSX, if that was the case Freya would not render it again.
 //!
 //! Consider this simple component:
 //!
@@ -89,7 +92,7 @@
 //! fn CoolComp() -> Element {
 //!     let mut count = use_signal(|| 0);
 //!
-//!     // 1 run of this function means 1 render of this component
+//!     // One run of this function means one render of this component
 //!     // So, everytime the `count` signal is mutated, the component rerenders/is recalled.
 //!
 //!     rsx!(
@@ -97,7 +100,7 @@
 //!             // Update the signal value
 //!             onclick: move |_| count += 1,
 //!
-//!             // By embedding the count in this text the component is subscried to any change in the `count` siganal
+//!             // By embedding the count in this text the component is subscribed to any change of the `count` siganal
 //!             "Increase {count}"
 //!         }
 //!     )

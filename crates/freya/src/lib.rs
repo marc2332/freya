@@ -28,28 +28,29 @@
 //! - [Theming](self::_docs::theming)
 //! - [i18n](self::_docs::i18n)
 //! - [Accessibility](self::_docs::accessibility)
-//! - [Text Editing](self::_docs)
-//! - [Animations](self::_docs)
 //! - [Router](self::_docs::router)
 //!     - [Native Router](self::_docs::router::native_router)
 //!     - [Animated transitions](self::_docs::router::animated_transitions)
-//! - [Native Menus](self::_docs)
 //! - [Third Party State Managemement](self::_docs::third_party_state)
-//! - [Unit Testing for Components](freya_testing)
 //! - [Devtools](self::_docs::devtools)
 //! - [Performance Tips](self::_docs::performance)
+//!
+//! ### Advanced
+//! - [Animations](self::hooks::use_animation)
+//! - [Text Editing](self::hooks::use_editable)
+//! - [Unit Testing of Components](freya_testing)
 //!
 //! ### API References
 //! - [Elements and attributes](self::elements#structs)
 //! - [Events](self::events#functions)
 //! - [Built-in Components](self::components)
+//! - [Built-in Components Gallery](self::components::gallery)
 //! - [Built-in Hooks](self::hooks)
 //!
 //! ## Features flags
 //!
 //! - `devtools`: enables a side panel to inspect your App tree, styles and computed layout.
 //! - `use_camera`: enables the `use_camera` hook.
-//! - `log`: enables internal logs.
 
 /// Freya docs.
 #[cfg(doc)]

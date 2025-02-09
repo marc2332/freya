@@ -1,6 +1,6 @@
 //! # Hooks
 //!
-//! Hooks are special functions to be used inside of Components that lets you handle different things like the state or lifecycle of your component. They are usually prefixed with `use`, e.g `use_signal`, `use_effect`, `use_memo`, etc.
+//! Hooks are special functions to be used inside of Components that lets you handle different things like the state or lifecycle of your component. They are usually prefixed with `use`, e.g [`use_signal`](dioxus::hooks::use_signal), [`use_effect`](dioxus::hooks::use_signal), [`use_memo`]((dioxus::hooks::use_memo)), etc.
 //!
 //! # Rules of Hooks
 //!
