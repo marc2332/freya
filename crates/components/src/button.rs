@@ -57,7 +57,7 @@ pub struct ButtonProps {
 /// #           {app()}
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), "./images/gallery_button.png");
+/// # }, (250., 250.).into(), "./images/gallery_button.png");
 /// ```
 ///
 /// # Preview
@@ -102,7 +102,7 @@ pub fn Button(props: ButtonProps) -> Element {
 /// #           {app()}
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), "./images/gallery_filled_button.png");
+/// # }, (250., 250.).into(), "./images/gallery_filled_button.png");
 /// ```
 ///
 /// # Preview
@@ -147,7 +147,7 @@ pub fn FilledButton(props: ButtonProps) -> Element {
 /// #           {app()}
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), "./images/gallery_outline_button.png");
+/// # }, (250., 250.).into(), "./images/gallery_outline_button.png");
 /// ```
 ///
 /// # Preview
@@ -310,7 +310,7 @@ pub fn ButtonBase(
             a11y_role:"button",
             color: "{font_theme.color}",
             shadow: "{shadow}",
-            border: "{border}",
+            border,
             corner_radius: "{corner_radius}",
             background: "{background}",
             text_height: "disable-least-ascent",

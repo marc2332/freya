@@ -10,21 +10,16 @@ fn main() {
 }
 
 fn app() -> Element {
+    use_init_default_theme();
     rsx!(
-        rect {
-            height: "fill",
-            width: "fill",
+        Body {
             ScrollView {
-                height: "50%",
+                spacing: "8",
+                padding: "8",
                 Card {}
                 Card {}
                 Card {}
-            }
-            ScrollView {
-                direction: "horizontal",
-                height: "50%",
-                Card {},
-                Card {},
+                Card {}
                 Card {}
             }
         }
@@ -33,14 +28,27 @@ fn app() -> Element {
 
 #[component]
 fn Card() -> Element {
+    let mut theme = use_theme();
+    let is_dark = theme.read().name == "dark";
+
     rsx!(
         rect {
-            border: "15 inner rgb(43,106,208)",
-            height: "220",
-            width: "420",
-            background: "white",
-            padding: "25",
-            label {  "Scroll..." }
+            height: "200",
+            width: "600",
+            background: "rgb(43, 106, 208)",
+            corner_radius: "16",
+            main_align: "center",
+            cross_align: "center",
+            Switch {
+                enabled: is_dark,
+                ontoggled: move |_| {
+                    if is_dark {
+                        *theme.write() = LIGHT_THEME
+                    } else {
+                        *theme.write() = DARK_THEME
+                    }
+                }
+            }
         }
     )
 }

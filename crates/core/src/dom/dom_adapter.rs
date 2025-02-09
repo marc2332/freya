@@ -70,7 +70,7 @@ impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
             grid_position: layout.grid_position,
         };
 
-        node.scale(self.scale_factor);
+        node.scale_if_needed(self.scale_factor);
 
         Some(node)
     }

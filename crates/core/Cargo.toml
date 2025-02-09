@@ -1,11 +1,11 @@
 [package]
 name = "freya-core"
 description = "Internal core funcionatilies for Freya."
-version = "0.3.0-rc.0"
+version = "0.3.0-rc.1"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
-readme = "../../readme.md"
+readme = "../../README.md"
 homepage = "https://freyaui.dev/"
 repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia", "dioxus"]

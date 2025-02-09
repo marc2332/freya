@@ -20,12 +20,18 @@ use crate::parsing::{
 #[derive(Clone, Debug, PartialEq)]
 pub enum Fill {
     Color(Color),
-    LinearGradient(LinearGradient),
-    RadialGradient(RadialGradient),
-    ConicGradient(ConicGradient),
+    LinearGradient(Box<LinearGradient>),
+    RadialGradient(Box<RadialGradient>),
+    ConicGradient(Box<ConicGradient>),
 }
 
 impl Fill {
+    pub fn set_a(&mut self, a: u8) {
+        if let Fill::Color(color) = self {
+            *color = color.with_a(a);
+        }
+    }
+
     pub fn apply_to_paint(&self, paint: &mut Paint, area: Area) {
         match &self {
             Fill::Color(color) => {
@@ -59,11 +65,17 @@ impl From<Color> for Fill {
 impl Parse for Fill {
     fn parse(value: &str) -> Result<Self, ParseError> {
         Ok(if value.starts_with("linear-gradient(") {
-            Self::LinearGradient(LinearGradient::parse(value).map_err(|_| ParseError)?)
+            Self::LinearGradient(Box::new(
+                LinearGradient::parse(value).map_err(|_| ParseError)?,
+            ))
         } else if value.starts_with("radial-gradient(") {
-            Self::RadialGradient(RadialGradient::parse(value).map_err(|_| ParseError)?)
+            Self::RadialGradient(Box::new(
+                RadialGradient::parse(value).map_err(|_| ParseError)?,
+            ))
         } else if value.starts_with("conic-gradient(") {
-            Self::ConicGradient(ConicGradient::parse(value).map_err(|_| ParseError)?)
+            Self::ConicGradient(Box::new(
+                ConicGradient::parse(value).map_err(|_| ParseError)?,
+            ))
         } else {
             Self::Color(Color::parse(value).map_err(|_| ParseError)?)
         })

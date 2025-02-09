@@ -1,11 +1,11 @@
 [package]
 name = "freya-testing"
 description = "Headless test runner for Freya."
-version = "0.3.0-rc.0"
+version = "0.3.0-rc.1"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
-readme = "../../readme.md"
+readme = "../../README.md"
 homepage = "https://freyaui.dev/"
 repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
@@ -16,6 +16,7 @@ features = ["freya-engine/mocked-engine"]
 
 [features]
 skia-engine = ["freya-engine/skia-engine"]
+mocked-engine-development = ["freya-engine/mocked-engine"] # This is just for the CI
 
 [dependencies]
 freya-elements = { workspace = true }

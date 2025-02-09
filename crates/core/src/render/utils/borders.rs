@@ -17,7 +17,7 @@ pub fn render_border(
     rounded_rect: RRect,
     area: Area,
     border: &Border,
-    corner_radius: CornerRadius,
+    corner_radius: &CornerRadius,
 ) {
     // Create a new paint
     let mut border_paint = Paint::default();
@@ -41,7 +41,7 @@ pub fn render_border(
 /// We don't use Skia's stroking API here, since we might need different widths for each side.
 pub fn border_shape(
     base_rect: Rect,
-    base_corner_radius: CornerRadius,
+    base_corner_radius: &CornerRadius,
     border: &Border,
 ) -> BorderShape {
     let border_alignment = border.alignment;

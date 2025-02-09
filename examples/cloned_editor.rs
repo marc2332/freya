@@ -29,7 +29,6 @@ fn Body() -> Element {
         },
         EditableMode::SingleLineMultipleEditors,
     );
-    let cursor_reference = editable.cursor_attr();
     let editor = editable.editor().read();
 
     let onclick = move |_: MouseEvent| {
@@ -51,7 +50,6 @@ fn Body() -> Element {
             padding: "10",
             onglobalkeydown,
             onglobalkeyup,
-            cursor_reference,
             direction: "horizontal",
             onglobalclick: onclick,
             background: "{theme.background}",
@@ -108,6 +106,7 @@ fn Body() -> Element {
                                 "{line_index + 1} "
                             }
                             paragraph {
+                                cursor_reference: editable.cursor_attr(),
                                 main_align: "center",
                                 height: "100%",
                                 width: "100%",

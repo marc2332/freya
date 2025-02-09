@@ -10,7 +10,7 @@ use crate::{
     },
     states::{
         FontStyleState,
-        StyleState,
+        SvgState,
     },
 };
 
@@ -29,12 +29,12 @@ impl ElementUtils for SvgElement {
         _scale_factor: f32,
     ) {
         let area = layout_node.visible_area();
-        let node_style = &*node_ref.get::<StyleState>().unwrap();
+        let svg_state = &*node_ref.get::<SvgState>().unwrap();
         let font_style = &*node_ref.get::<FontStyleState>().unwrap();
 
         let x = area.min_x();
         let y = area.min_y();
-        if let Some(svg_data) = &node_style.svg_data {
+        if let Some(svg_data) = &svg_state.svg_data {
             let resource_provider = LocalResourceProvider::new(font_manager);
             let svg_dom = svg::Dom::from_bytes(svg_data.as_slice(), resource_provider);
             if let Ok(mut svg_dom) = svg_dom {
@@ -45,10 +45,10 @@ impl ElementUtils for SvgElement {
                 root.set_width(svg::Length::new(100.0, svg::LengthUnit::Percentage));
                 root.set_height(svg::Length::new(100.0, svg::LengthUnit::Percentage));
                 root.set_color(font_style.color);
-                if let Some(color) = node_style.svg_stroke.as_ref() {
+                if let Some(color) = svg_state.svg_stroke.as_ref() {
                     root.set_fill(svg::Paint::from_color(*color));
                 }
-                if let Some(color) = node_style.svg_fill.as_ref() {
+                if let Some(color) = svg_state.svg_fill.as_ref() {
                     root.set_stroke(svg::Paint::from_color(*color));
                 }
                 svg_dom.render(canvas);

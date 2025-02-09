@@ -57,7 +57,7 @@ use freya_hooks::{
 /// #           }
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), "./images/gallery_radio.png");
+/// # }, (250., 250.).into(), "./images/gallery_radio.png");
 /// ```
 /// # Preview
 /// ![Radio Preview][radio]

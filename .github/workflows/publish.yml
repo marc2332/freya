@@ -1,0 +1,21 @@
+name: Cargo Publish
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  publish:
+    name: Publish to crate.io
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the nightly toolchain
+        uses: dtolnay/rust-toolchain@nightly
+      - run: cargo +nightly publish --features skia-engine --workspace -Z package-workspace --exclude "examples" --exclude "freya-installer-example"
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}

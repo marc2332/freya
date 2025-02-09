@@ -54,6 +54,7 @@ def_element!(
 
         // Style
         background,
+        background_opacity,
         border,
         shadow,
         corner_radius,
@@ -86,7 +87,6 @@ def_element!(
         // Reference
         canvas_reference,
         reference,
-        cursor_reference,
 
         // Accessibility
         a11y_id,
@@ -359,6 +359,7 @@ def_element!(
         highlights,
         highlight_color,
         highlight_mode,
+        cursor_reference,
 
         // Accessibility
         a11y_id,

@@ -35,7 +35,7 @@ pub struct LoaderProps {
 /// #           {app()}
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), "./images/gallery_loader.png");
+/// # }, (250., 250.).into(), "./images/gallery_loader.png");
 /// ```
 ///
 /// # Preview

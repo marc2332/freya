@@ -55,7 +55,7 @@ pub fn ScrollThumb(
             },
             width: "{width}",
             height: "{height}",
-            padding: "2",
+            padding: "4",
             rect {
                 width: "100%",
                 height: "100%",

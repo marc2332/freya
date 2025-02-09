@@ -43,13 +43,14 @@ fn app() -> Element {
     rsx!(
         ScrollView {
             scroll_controller,
-            spacing: "8",
-            padding: "8",
+            spacing: "12",
+            padding: "12",
             for i in 0..cards() {
                 rect {
                     key: "{i}",
-                    width: "100%",
-                    spacing: "8",
+                    width: "fill",
+                    spacing: "12",
+                    content: "flex",
                     direction: "horizontal",
                     RandomImage {}
                     RandomImage {}
@@ -65,7 +66,7 @@ fn RandomImage() -> Element {
 
     rsx!(
         rect {
-            width: "50%",
+            width: "flex",
             height: "300",
             overflow: "clip",
             corner_radius: "8",

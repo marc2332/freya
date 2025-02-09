@@ -94,8 +94,8 @@ fn Editor(mut editable: UseEditable) -> Element {
     rsx!(
         rect {
             background: "rgb(235, 235, 235)",
-            cursor_reference,
             paragraph {
+                cursor_reference,
                 a11y_id: focus.attribute(),
                 width: "100%",
                 cursor_id: "0",

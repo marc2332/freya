@@ -1335,6 +1335,15 @@ impl Image {
     pub fn height(&self) -> i32 {
         unimplemented!("This is mocked")
     }
+
+    pub fn encode<'a>(
+        &self,
+        context: impl Into<Option<&'a mut DirectContext>>,
+        format: EncodedImageFormat,
+        quality: impl Into<Option<u32>>,
+    ) -> Option<Data> {
+        unimplemented!("This is mocked")
+    }
 }
 
 pub struct Data;
@@ -1704,6 +1713,14 @@ impl Surface {
         unimplemented!("This is mocked")
     }
 
+    pub fn image_snapshot(&mut self) -> Image {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn direct_context(&self) -> Option<DirectContext> {
+        unimplemented!("This is mocked")
+    }
+
     pub fn swap_buffers(&self, _: &PossiblyCurrentContext) {
         unimplemented!("This is mocked")
     }
@@ -1950,4 +1967,8 @@ impl LocalResourceProvider {
     pub fn new(font_mgr: &FontMgr) -> Self {
         unimplemented!("This is mocked")
     }
+}
+
+pub fn raster_n32_premul(size: impl Into<ISize>) -> Option<Surface> {
+    unimplemented!("This is mocked")
 }

@@ -75,7 +75,7 @@ pub enum SwitchStatus {
 /// #           }
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), |mut utils| async move {
+/// # }, (250., 250.).into(), |mut utils| async move {
 /// #   utils.wait_for_update().await;
 /// #   tokio::time::sleep(std::time::Duration::from_millis(50)).await;
 /// #   utils.wait_for_update().await;
@@ -93,7 +93,7 @@ pub enum SwitchStatus {
 /// #           }
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), "./images/gallery_not_enabled_switch.png");
+/// # }, (250., 250.).into(), "./images/gallery_not_enabled_switch.png");
 /// ```
 /// # Preview
 ///
