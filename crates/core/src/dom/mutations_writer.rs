@@ -69,9 +69,8 @@ impl<'a> MutationsWriter<'a> {
                 }
 
                 let layer_state = node.get::<LayerState>();
-                let cursor_state = node.get::<CursorState>();
 
-                let Some((layer_state, cursor_state)) = layer_state.zip(cursor_state) else {
+                let Some(layer_state) = layer_state else {
                     // There might exist Nodes in the RealDOM with no states yet,
                     // this is mainly due to nodes being created in the same run as when this function (remove) is being called,
                     // like nodes created by loaded templates.
@@ -94,9 +93,11 @@ impl<'a> MutationsWriter<'a> {
                     .remove_node_from_layer(node_id, layer_state.layer);
 
                 // Remove from paragraph elements
-                if let Some(cursor_ref) = cursor_state.cursor_ref.as_ref() {
-                    self.paragraphs
-                        .remove_paragraph(node_id, &cursor_ref.text_id);
+                if let Some(cursor_state) = node.get::<CursorState>() {
+                    if let Some(cursor_ref) = cursor_state.cursor_ref.as_ref() {
+                        self.paragraphs
+                            .remove_paragraph(node_id, &cursor_ref.text_id);
+                    }
                 }
 
                 // Remove from the accessibility tree
