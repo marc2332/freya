@@ -55,7 +55,8 @@ pub struct LayoutState {
     pub content: Content,
     pub node_ref: Option<NodeReference>,
     pub node_id: NodeId,
-    pub spacing: Length,
+    pub spacing: Size2D,
+    pub grid_position: GridPosition,
 }
 
 impl ParseAttribute for LayoutState {
@@ -63,6 +64,8 @@ impl ParseAttribute for LayoutState {
         &mut self,
         attr: OwnedAttributeView<CustomAttributeValues>,
     ) -> Result<(), ParseError> {
+        let (mut columns, mut rows) = (None, None);
+
         match attr.attribute {
             AttributeName::Width => {
                 if let Some(value) = attr.value.as_text() {
@@ -176,6 +179,78 @@ impl ParseAttribute for LayoutState {
             AttributeName::Content => {
                 if let Some(value) = attr.value.as_text() {
                     self.content = Content::parse(value)?;
+
+                    if let Content::Grid {
+                        columns: c,
+                        rows: r,
+                    } = &mut self.content
+                    {
+                        if let Some(columns) = columns {
+                            c.extend(columns);
+                        }
+
+                        if let Some(rows) = rows {
+                            r.extend(rows);
+                        }
+                    }
+                }
+            }
+            AttributeName::GridColumns => {
+                if let Some(value) = attr.value.as_text() {
+                    let value = value
+                        .split(",")
+                        .map(|value| GridSize::parse(value.trim()))
+                        .collect::<Result<_, ParseError>>()?;
+
+                    if let Content::Grid { columns, .. } = &mut self.content {
+                        *columns = value;
+                    } else {
+                        columns.replace(value);
+                    }
+                }
+            }
+            AttributeName::GridRows => {
+                if let Some(value) = attr.value.as_text() {
+                    let value = value
+                        .split(",")
+                        .map(|value| GridSize::parse(value.trim()))
+                        .collect::<Result<_, ParseError>>()?;
+
+                    if let Content::Grid { rows, .. } = &mut self.content {
+                        *rows = value;
+                    } else {
+                        rows.replace(value);
+                    }
+                }
+            }
+            AttributeName::GridColumn => {
+                if let Some(value) = attr.value.as_text() {
+                    let value = value
+                        .split("/")
+                        .map(|value| value.trim().parse().map_err(|_| ParseError))
+                        .collect::<Result<Vec<_>, ParseError>>()?;
+
+                    if value.len() == 2 {
+                        self.grid_position.column = value[0];
+                        self.grid_position.column_span = value[1];
+                    } else if value.len() == 1 {
+                        self.grid_position.column = value[0];
+                    }
+                }
+            }
+            AttributeName::GridRow => {
+                if let Some(value) = attr.value.as_text() {
+                    let value = value
+                        .split("/")
+                        .map(|value| value.trim().parse().map_err(|_| ParseError))
+                        .collect::<Result<Vec<_>, ParseError>>()?;
+
+                    if value.len() == 2 {
+                        self.grid_position.row = value[0];
+                        self.grid_position.row_span = value[1];
+                    } else if value.len() == 1 {
+                        self.grid_position.row = value[0];
+                    }
                 }
             }
             AttributeName::Reference => {
@@ -187,7 +262,16 @@ impl ParseAttribute for LayoutState {
             }
             AttributeName::Spacing => {
                 if let Some(value) = attr.value.as_text() {
-                    self.spacing = Length::new(value.parse::<f32>().map_err(|_| ParseError)?);
+                    let value = value
+                        .split(" ")
+                        .map(|value| value.trim().parse().map_err(|_| ParseError))
+                        .collect::<Result<Vec<_>, ParseError>>()?;
+
+                    if value.len() == 2 {
+                        self.spacing = Size2D::new(value[0], value[1]);
+                    } else if value.len() == 1 {
+                        self.spacing = Size2D::new(value[0], value[0]);
+                    }
                 }
             }
             _ => {}
@@ -228,6 +312,10 @@ impl State<CustomAttributeValues> for LayoutState {
             AttributeName::PositionBottom,
             AttributeName::PositionLeft,
             AttributeName::Content,
+            AttributeName::GridColumns,
+            AttributeName::GridRows,
+            AttributeName::GridColumn,
+            AttributeName::GridRow,
             AttributeName::Spacing,
         ]));
 
