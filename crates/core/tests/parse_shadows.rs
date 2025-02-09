@@ -68,7 +68,7 @@ fn parse_gradient_shadow() {
             y: 2.0,
             blur: 50.0,
             spread: 0.0,
-            fill: Fill::LinearGradient(LinearGradient {
+            fill: Fill::LinearGradient(Box::new(LinearGradient {
                 angle: 0.0,
                 stops: vec![
                     GradientStop {
@@ -80,7 +80,7 @@ fn parse_gradient_shadow() {
                         offset: 1.0,
                     }
                 ]
-            }),
+            })),
             position: ShadowPosition::Inset
         })
     );
