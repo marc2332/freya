@@ -106,7 +106,7 @@ fn parse_gradient_border() {
                 bottom: 1.0,
                 left: 1.0,
             },
-            fill: Fill::LinearGradient(LinearGradient {
+            fill: Fill::LinearGradient(Box::new(LinearGradient {
                 angle: 0.0,
                 stops: vec![
                     GradientStop {
@@ -118,7 +118,7 @@ fn parse_gradient_border() {
                         offset: 1.0,
                     }
                 ]
-            }),
+            })),
             alignment: BorderAlignment::Inner
         })
     );

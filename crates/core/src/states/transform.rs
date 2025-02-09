@@ -22,13 +22,8 @@ use crate::{
     custom_attributes::CustomAttributeValues,
     dom::CompositorDirtyNodes,
     parsing::{
-        Parse,
         ParseAttribute,
         ParseError,
-    },
-    values::{
-        AspectRatio,
-        ImageCover,
     },
 };
 
@@ -38,8 +33,6 @@ pub struct TransformState {
     pub opacities: Vec<f32>,
     pub rotations: Vec<(NodeId, f32)>,
     pub scales: Vec<(NodeId, f32, f32)>,
-    pub aspect_ratio: AspectRatio,
-    pub image_cover: ImageCover,
 }
 
 impl ParseAttribute for TransformState {
@@ -81,16 +74,6 @@ impl ParseAttribute for TransformState {
                     };
                     self.scales
                         .push((self.node_id, scale_x.max(0.), scale_y.max(0.)))
-                }
-            }
-            AttributeName::AspectRatio => {
-                if let Some(value) = attr.value.as_text() {
-                    self.aspect_ratio = AspectRatio::parse(value).map_err(|_| ParseError)?;
-                }
-            }
-            AttributeName::ImageCover => {
-                if let Some(value) = attr.value.as_text() {
-                    self.image_cover = ImageCover::parse(value).map_err(|_| ParseError)?;
                 }
             }
             _ => {}

@@ -19,8 +19,8 @@ use crate::{
         CursorState,
         FontStyleState,
         LayoutState,
-        ReferencesState,
         StyleState,
+        SvgState,
         TransformState,
     },
     values::{
@@ -36,11 +36,11 @@ use crate::{
 pub struct NodeState {
     pub cursor: CursorState,
     pub font_style: FontStyleState,
-    pub references: ReferencesState,
     pub size: LayoutState,
     pub style: StyleState,
     pub transform: TransformState,
     pub accessibility: AccessibilityNodeState,
+    pub svg: SvgState,
 }
 
 pub fn get_node_state(node: &DioxusNode) -> NodeState {
@@ -51,11 +51,6 @@ pub fn get_node_state(node: &DioxusNode) -> NodeState {
         .unwrap_or_default();
     let font_style = node
         .get::<FontStyleState>()
-        .as_deref()
-        .cloned()
-        .unwrap_or_default();
-    let references = node
-        .get::<ReferencesState>()
         .as_deref()
         .cloned()
         .unwrap_or_default();
@@ -79,15 +74,20 @@ pub fn get_node_state(node: &DioxusNode) -> NodeState {
         .as_deref()
         .cloned()
         .unwrap_or_default();
+    let svg = node
+        .get::<SvgState>()
+        .as_deref()
+        .cloned()
+        .unwrap_or_default();
 
     NodeState {
         cursor,
         font_style,
-        references,
         size,
         style,
         transform,
         accessibility,
+        svg,
     }
 }
 
@@ -160,27 +160,27 @@ impl NodeState {
             ("content", AttributeType::Content(&self.size.content)),
             (
                 "fill",
-                AttributeType::OptionalColor(self.style.svg_fill.map(|color| color.into())),
+                AttributeType::OptionalColor(self.svg.svg_fill.map(|color| color.into())),
             ),
             (
                 "svg_stroke",
-                AttributeType::OptionalColor(self.style.svg_stroke.map(|color| color.into())),
+                AttributeType::OptionalColor(self.svg.svg_stroke.map(|color| color.into())),
             ),
         ];
 
         let shadows = &self.style.shadows;
-        for shadow in shadows {
+        for shadow in shadows.iter() {
             attributes.push(("shadow", AttributeType::Shadow(shadow)));
         }
 
         let borders = &self.style.borders;
-        for border in borders {
+        for border in borders.iter() {
             attributes.push(("border", AttributeType::Border(border)));
         }
 
         let text_shadows = &self.font_style.text_shadows;
 
-        for text_shadow in text_shadows {
+        for text_shadow in text_shadows.iter() {
             attributes.push(("text_shadow", AttributeType::TextShadow(text_shadow)));
         }
 

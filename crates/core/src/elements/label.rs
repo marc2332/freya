@@ -79,7 +79,7 @@ impl ElementUtils for LabelElement {
 
         let mut text_shadow_area = area;
 
-        for text_shadow in &font_style.text_shadows {
+        for text_shadow in font_style.text_shadows.iter() {
             text_shadow_area.move_with_offsets(
                 &Length::new(text_shadow.offset.x),
                 &Length::new(text_shadow.offset.y),

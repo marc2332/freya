@@ -10,11 +10,7 @@ use crate::{
         DioxusNode,
         ImagesCache,
     },
-    states::{
-        ReferencesState,
-        StyleState,
-        TransformState,
-    },
+    states::ImageState,
     values::AspectRatio,
 };
 
@@ -28,11 +24,10 @@ pub fn get_or_create_image(
     area_size: &Size2D,
     images_cache: &mut ImagesCache,
 ) -> Option<ImageData> {
-    let node_style = node_ref.get::<StyleState>().unwrap();
-    let node_references = node_ref.get::<ReferencesState>().unwrap();
+    let image_state = node_ref.get::<ImageState>().unwrap();
 
     let mut get_or_create_image = |bytes: &[u8]| -> Option<Image> {
-        if let Some(image_cache_key) = &node_style.image_cache_key {
+        if let Some(image_cache_key) = &image_state.image_cache_key {
             images_cache.get(image_cache_key).cloned().or_else(|| {
                 Image::from_encoded(unsafe { Data::new_bytes(bytes) }).inspect(|image| {
                     images_cache.insert(image_cache_key.clone(), image.clone());
@@ -43,20 +38,18 @@ pub fn get_or_create_image(
         }
     };
 
-    let image = if let Some(image_ref) = &node_references.image_ref {
+    let image = if let Some(image_ref) = &image_state.image_ref {
         let image_data = image_ref.0.lock().unwrap();
         if let Some(bytes) = image_data.as_ref() {
             get_or_create_image(bytes)
         } else {
             None
         }
-    } else if let Some(image_data) = &node_style.image_data {
+    } else if let Some(image_data) = &image_state.image_data {
         get_or_create_image(image_data.as_slice())
     } else {
         None
     }?;
-
-    let node_transform = node_ref.get::<TransformState>().unwrap();
 
     let image_width = image.width() as f32;
     let image_height = image.height() as f32;
@@ -64,7 +57,7 @@ pub fn get_or_create_image(
     let width_ratio = area_size.width / image.width() as f32;
     let height_ratio = area_size.height / image.height() as f32;
 
-    let size = match node_transform.aspect_ratio {
+    let size = match image_state.aspect_ratio {
         AspectRatio::Max => {
             let ratio = width_ratio.max(height_ratio);
 

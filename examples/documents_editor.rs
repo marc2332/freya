@@ -365,10 +365,10 @@ fn DocumentEditor(path: String, mut editable: UseEditable) -> Element {
         rect {
             width: "fill",
             height: "fill",
-            cursor_reference,
             ScrollView {
                 scroll_with_arrows: false,
                 paragraph {
+                    cursor_reference,
                     width: "100%",
                     cursor_id: "0",
                     cursor_index: "{cursor_char}",

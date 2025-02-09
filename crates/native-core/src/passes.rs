@@ -135,6 +135,11 @@ pub trait State<V: FromAnyValue + Send + Sync = ()>: Any + Send + Sync {
     /// Does the state traverse into the shadow dom or pass over it. This should be true for layout and false for styles
     const TRAVERSE_SHADOW_DOM: bool = false;
 
+    /// Filter out types of nodes that don't need this State
+    fn allow_node(node_type: &NodeType<V>) -> bool {
+        !node_type.is_text()
+    }
+
     /// Update this state in a node, returns if the state was updated
     fn update<'a>(
         &mut self,
