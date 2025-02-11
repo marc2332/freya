@@ -184,8 +184,7 @@ pub fn Input(
     let mut focus = use_focus();
     let mut drag_origin = use_signal(|| None);
 
-    let is_focused = focus.is_focused();
-    let display_placeholder = value.is_empty() && placeholder.is_some() && !is_focused;
+    let display_placeholder = value.is_empty() && placeholder.is_some();
 
     if &value != editable.editor().read().rope() {
         editable.editor_mut().write().set(&value);
