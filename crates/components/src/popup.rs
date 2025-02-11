@@ -31,7 +31,7 @@ pub fn PopupBackground(children: Element) -> Element {
         height: "100v",
         width: "100v",
         background: "rgb(0, 0, 0, 150)",
-        position: "absolute",
+        position: "global",
         position_top: "0",
         position_left: "0",
         layer: "-2000",

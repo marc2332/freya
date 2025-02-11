@@ -2,6 +2,7 @@ use dioxus::prelude::*;
 use freya_elements::{
     self as dioxus_elements,
     events::MouseEvent,
+    MouseButton,
 };
 use freya_hooks::use_node_signal;
 use torin::prelude::CursorPoint;
@@ -64,6 +65,9 @@ pub fn DragZone<T: 'static + Clone + PartialEq>(
     };
 
     let onmousedown = move |e: MouseEvent| {
+        if e.data.trigger_button != Some(MouseButton::Left) {
+            return;
+        }
         let size = size.read();
         let coord = e.get_screen_coordinates();
         pos.set(
