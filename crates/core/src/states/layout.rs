@@ -144,9 +144,7 @@ impl ParseAttribute for LayoutState {
             }
             AttributeName::Position => {
                 if let Some(value) = attr.value.as_text() {
-                    if self.position.is_empty() {
-                        self.position = Position::parse(value)?;
-                    }
+                    self.position.swap_for(Position::parse(value)?);
                 }
             }
             AttributeName::PositionTop => {

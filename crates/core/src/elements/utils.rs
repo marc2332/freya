@@ -129,6 +129,7 @@ pub trait ElementUtils {
             drawing_area = drawing_area.translate(-center.to_vector());
             drawing_area = drawing_area.scale(*scale_x, *scale_y);
             drawing_area = drawing_area.translate(center.to_vector());
+            drawing_area = drawing_area.inflate(1.0, 1.0);
         }
 
         if !transform_state.rotations.is_empty() {

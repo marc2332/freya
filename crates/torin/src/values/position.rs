@@ -25,27 +25,26 @@ pub enum Position {
 }
 
 impl Position {
-    pub const fn is_empty(&self) -> bool {
-        match self {
-            Self::Absolute(absolute_position) => {
-                let PositionSides {
-                    top,
-                    right,
-                    bottom,
-                    left,
-                } = &**absolute_position;
-                top.is_some() && right.is_some() && bottom.is_some() && left.is_some()
+    pub fn swap_for(&mut self, mut other: Self) {
+        let old_positions = match self {
+            Self::Global(positions) | Self::Absolute(positions) => Some(positions.clone()),
+            Self::Stacked => None,
+        };
+
+        let new_positions = match &mut other {
+            Self::Absolute(new_positions) => {
+                *self = Self::new_absolute();
+                Some(new_positions)
             }
-            Self::Global(global_position) => {
-                let PositionSides {
-                    top,
-                    right,
-                    bottom,
-                    left,
-                } = &**global_position;
-                top.is_some() && right.is_some() && bottom.is_some() && left.is_some()
+            Self::Global(new_positions) => {
+                *self = Self::new_global();
+                Some(new_positions)
             }
-            Self::Stacked => true,
+            Self::Stacked => None,
+        };
+
+        if let Some((new_positions, old_positions)) = new_positions.zip(old_positions) {
+            *new_positions = old_positions;
         }
     }
 
@@ -67,6 +66,10 @@ impl Position {
         }))
     }
 
+    pub fn is_stacked(&self) -> bool {
+        matches!(self, Self::Stacked { .. })
+    }
+
     pub fn is_absolute(&self) -> bool {
         matches!(self, Self::Absolute { .. })
     }
@@ -76,38 +79,38 @@ impl Position {
     }
 
     pub fn set_top(&mut self, value: f32) {
-        if !self.is_absolute() {
-            *self = Self::new_absolute();
-        }
-        if let Self::Absolute(absolute_position) = self {
-            absolute_position.top = Some(value);
+        match self {
+            Self::Absolute(position) | Self::Global(position) => {
+                position.top = Some(value);
+            }
+            Self::Stacked => {}
         }
     }
 
     pub fn set_right(&mut self, value: f32) {
-        if !self.is_absolute() {
-            *self = Self::new_absolute();
-        }
-        if let Self::Absolute(absolute_position) = self {
-            absolute_position.right = Some(value);
+        match self {
+            Self::Absolute(position) | Self::Global(position) => {
+                position.right = Some(value);
+            }
+            Self::Stacked => {}
         }
     }
 
     pub fn set_bottom(&mut self, value: f32) {
-        if !self.is_absolute() {
-            *self = Self::new_absolute();
-        }
-        if let Self::Absolute(absolute_position) = self {
-            absolute_position.bottom = Some(value);
+        match self {
+            Self::Absolute(position) | Self::Global(position) => {
+                position.bottom = Some(value);
+            }
+            Self::Stacked => {}
         }
     }
 
     pub fn set_left(&mut self, value: f32) {
-        if !self.is_absolute() {
-            *self = Self::new_absolute();
-        }
-        if let Self::Absolute(absolute_position) = self {
-            absolute_position.left = Some(value);
+        match self {
+            Self::Absolute(position) | Self::Global(position) => {
+                position.left = Some(value);
+            }
+            Self::Stacked => {}
         }
     }
 
