@@ -84,6 +84,7 @@ impl Task {
 }
 
 fn app() -> Element {
+    use_init_theme(|| DARK_THEME);
     let data = use_signal::<Vec<Task>>(|| {
         vec![
             Task::new(
@@ -116,28 +117,30 @@ fn app() -> Element {
     });
 
     rsx!(
-        DragProvider::<i64> {
-            ScrollView {
-                direction: "horizontal",
-                width: "fill",
-                height: "fill",
-                spacing: "20",
-                padding: "20",
-                Column {
-                    data,
-                    state: State::Todo
-                }
-                Column {
-                    data,
-                    state: State::Progress
-                }
-                Column {
-                    data,
-                    state: State::Done
-                }
-                Column {
-                    data,
-                    state: State::Discarded
+        Body {
+            DragProvider::<i64> {
+                ScrollView {
+                    direction: "horizontal",
+                    width: "fill",
+                    height: "fill",
+                    spacing: "20",
+                    padding: "20",
+                    Column {
+                        data,
+                        state: State::Todo
+                    }
+                    Column {
+                        data,
+                        state: State::Progress
+                    }
+                    Column {
+                        data,
+                        state: State::Done
+                    }
+                    Column {
+                        data,
+                        state: State::Discarded
+                    }
                 }
             }
         }
@@ -186,7 +189,7 @@ fn Column(data: Signal<Vec<Task>>, state: State) -> Element {
                 }
             }
             rect {
-                background: "rgb(235, 235, 235)",
+                background: "rgb(30, 30, 30)",
                 corner_radius: "8",
                 padding: "10",
                 spacing: "8",
@@ -240,7 +243,7 @@ fn Card(task: Task) -> Element {
         rect {
             width: "fill",
             height: "fill",
-            background: "rgb(210, 210, 210)",
+            background: "rgb(45, 45, 45)",
             corner_radius: "8",
             padding: "10",
             scale: "{scale.read()}",
@@ -348,9 +351,9 @@ fn AddTask(data: Signal<Vec<Task>>, state: State) -> Element {
 fn PriorityPill(priority: Priority) -> Element {
     rsx!(
         rect {
-            background: "rgb(235, 235, 235)",
+            background: "rgb(30, 30, 30)",
             corner_radius: "99",
-            padding: "4",
+            padding: "4 8",
             label {
                 "{priority:?}"
             }
