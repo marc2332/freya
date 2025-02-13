@@ -5,6 +5,7 @@ use freya_elements::{
         Key,
         KeyboardEvent,
     },
+    MouseEvent,
 };
 use freya_hooks::{
     theme_with,
@@ -26,18 +27,28 @@ use crate::{
 /// The background of the [`Popup`] component.
 #[allow(non_snake_case)]
 #[component]
-pub fn PopupBackground(children: Element) -> Element {
+pub fn PopupBackground(children: Element, onclick: EventHandler<MouseEvent>) -> Element {
     rsx!(rect {
-        height: "100v",
-        width: "100v",
-        background: "rgb(0, 0, 0, 150)",
-        position: "absolute",
-        position_top: "0",
-        position_left: "0",
         layer: "-2000",
-        main_align: "center",
-        cross_align: "center",
-        {children}
+        rect {
+            onclick,
+            height: "100v",
+            width: "100v",
+            background: "rgb(0, 0, 0, 150)",
+            position: "global",
+            position_top: "0",
+            position_left: "0",
+        }
+        rect {
+            height: "100v",
+            width: "100v",
+            position: "global",
+            position_top: "0",
+            position_left: "0",
+            main_align: "center",
+            cross_align: "center",
+            {children}
+        }
     })
 }
 
@@ -133,10 +144,9 @@ pub fn Popup(
         }
     };
 
-    let onpress = move |_| request_to_close();
-
     rsx!(
         PopupBackground {
+            onclick: move |_| request_to_close(),
             rect {
                 scale: "{scale.read()} {scale.read()}",
                 margin: "{margin.read()} 0 0 0",
@@ -163,10 +173,10 @@ pub fn Popup(
                                 corner_radius: "999".into(),
                                 shadow: "none".into()
                             }),
-                            onpress,
+                            onpress: move |_| request_to_close(),
                             CrossIcon {
                                 fill: cross_fill
-                             }
+                            }
                         }
                     }
                 }
@@ -254,7 +264,7 @@ mod test {
         utils.wait_for_update().await;
 
         // Check the popup is opened
-        assert_eq!(utils.sdom().get().layout().size(), 10);
+        assert_eq!(utils.sdom().get().layout().size(), 12);
 
         utils.click_cursor((395., 180.)).await;
 
@@ -273,7 +283,7 @@ mod test {
         });
         utils.wait_for_update().await;
         // Check the popup is still open
-        assert_eq!(utils.sdom().get().layout().size(), 10);
+        assert_eq!(utils.sdom().get().layout().size(), 12);
 
         // Send a ESC globalkeydown event
         utils.push_event(TestEvent::Keyboard {
