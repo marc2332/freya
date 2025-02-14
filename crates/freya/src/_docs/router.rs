@@ -93,5 +93,4 @@
 //! }
 //! ```
 
-pub mod animated_transitions;
 pub mod native_router;

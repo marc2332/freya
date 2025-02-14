@@ -12,6 +12,7 @@
 //! - [Introduction](self::_docs::introduction)
 //! - [Dioxus Fundamentals](self::_docs::dioxus_fundamentals)
 //!     - [UI](self::_docs::ui)
+//!     - [Elements Overview](self::_docs::elements)
 //!     - [Components](self::_docs::components_and_props)
 //!     - [Hooks](self::_docs::hooks)
 //!     - [State Management](self::_docs::state_management)
@@ -24,13 +25,11 @@
 //!
 //! ### Learn
 //! - [Development Setup](self::_docs::development_setup)
-//! - [Elements Overview](self::_docs::elements)
 //! - [Theming](self::_docs::theming)
 //! - [i18n](self::_docs::i18n)
 //! - [Accessibility](self::_docs::accessibility)
 //! - [Router](self::_docs::router)
 //!     - [Native Router](self::_docs::router::native_router)
-//!     - [Animated transitions](self::_docs::router::animated_transitions)
 //! - [Third Party State Managemement](self::_docs::third_party_state)
 //! - [Devtools](self::_docs::devtools)
 //! - [Performance Tips](self::_docs::performance)

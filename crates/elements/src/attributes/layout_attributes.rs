@@ -329,7 +329,7 @@ def_attribute!(
     /// ```
     content,
 
-    /// ### main_align & cross_align
+    /// ### main_align
     ///
     /// Control how the inner elements are positioned inside the element. You can combine it with the `direction` attribute to create complex flows.
     ///
