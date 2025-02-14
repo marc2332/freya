@@ -32,7 +32,8 @@
 //!         }
 //!     )
 //! }
-//! # #[rustfmt::skip]
+//!   #[rustfmt::skip]
+//!   #[derive(Routable, Clone, PartialEq)]
 //! # pub enum Route {
 //! #     #[layout(AppSidebar)]
 //! #         #[route("/")]
