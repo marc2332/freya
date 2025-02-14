@@ -10,7 +10,7 @@
 //! # use freya::prelude::*;
 //! # use dioxus_router::prelude::*;
 //! # use freya_components::Link;
-//! #[allow(non_snake_case)]
+//! # #[allow(non_snake_case)]
 //! fn AppSidebar() -> Element {
 //!     rsx!(
 //!         NativeRouter {
@@ -32,4 +32,42 @@
 //!         }
 //!     )
 //! }
+//! # #[rustfmt::skip]
+//! # pub enum Route {
+//! #     #[layout(AppSidebar)]
+//! #         #[route("/")]
+//! #         Home,
+//! #         #[route("/other")]
+//! #         Other,
+//! #     #[end_layout]
+//! #     #[route("/..route")]
+//! #     PageNotFound { }, // Handle 404 routes.
+//! # }
+//! #
+//! # #[component]
+//! # fn Home() -> Element {
+//! #     rsx!(
+//! #         label {
+//! #             "Home Page"
+//! #         }
+//! #     )
+//! # }
+//! #
+//! # #[component]
+//! # fn Other() -> Element {
+//! #     rsx!(
+//! #         label {
+//! #             "Other Page"
+//! #         }
+//! #     )
+//! # }
+//! #
+//! # #[component]
+//! # fn PageNotFound() -> Element {
+//! #     rsx!(
+//! #         label {
+//! #             "404"
+//! #         }
+//! #     )
+//! # }
 //! ```
