@@ -1,6 +1,6 @@
 //! # Accessibility
 //!
-//! Freya accessibility support works around the [`use_focus`](freya_hooks::use_hook) and the `a11y` attributes.
+//! Freya accessibility support works around the [`use_focus`](freya_hooks::use_focus) and the `a11y` attributes.
 //!
 //! ### `use_focus` hook
 //!
