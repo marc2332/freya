@@ -7,6 +7,9 @@
 //!
 //! Example (based on the example from [router](crate::_docs::router)):
 //! ```rust, no_run
+//! # use freya::prelude::*;
+//! # use dioxus_router::prelude::*;
+//! # use freya_components::Link;
 //! #[allow(non_snake_case)]
 //! fn AppSidebar() -> Element {
 //!     rsx!(
