@@ -5,6 +5,7 @@ pub use euclid::Rect;
 use crate::{
     geometry::Length,
     measure::Phase,
+    prelude::Area,
     scaled::Scaled,
 };
 
@@ -62,14 +63,25 @@ impl Size {
         }
     }
 
+    // i really do not want to make a new type just so this lint goes away
+    #[allow(clippy::too_many_arguments)]
     pub fn eval(
         &self,
-        parent_value: f32,
+        dimension: EvalDimension,
+        parent_value: &Area,
         available_parent_value: f32,
         parent_margin: f32,
-        root_value: f32,
+        root_value: &Area,
         phase: Phase,
     ) -> Option<f32> {
+        let current_parent_value = match dimension {
+            EvalDimension::Width => parent_value.width(),
+            EvalDimension::Height => parent_value.height(),
+        };
+        let current_root_value = match dimension {
+            EvalDimension::Width => root_value.width(),
+            EvalDimension::Height => root_value.height(),
+        };
         match self {
             Self::Pixels(px) => Some(px.get() + parent_margin),
             Self::Percentage(per) => Some(parent_value / 100.0 * per.get()),
@@ -81,6 +93,16 @@ impl Size {
             Self::Flex(_) | Self::FillMinimum if phase == Phase::Final => {
                 Some(available_parent_value)
             }
+            Size::Pixels(px) => Some(px.get() + parent_margin),
+            Size::Percentage(per) => Some(current_parent_value / 100.0 * per.get()),
+            Size::DynamicCalculations(calculations) => Some(
+                run_calculations(calculations.deref(), parent_value, root_value, dimension)
+                    .unwrap_or(0.0),
+            ),
+            Size::Fill => Some(available_parent_value),
+            Size::FillMinimum if phase == Phase::Final => Some(available_parent_value),
+            Size::RootPercentage(per) => Some(current_root_value / 100.0 * per.get()),
+            Size::Flex(_) if phase == Phase::Final => Some(available_parent_value),
             _ => None,
         }
     }
@@ -89,17 +111,19 @@ impl Size {
     pub fn min_max(
         &self,
         value: f32,
-        parent_value: f32,
+        dimension: EvalDimension,
+        parent_value: &Area,
         available_parent_value: f32,
         single_margin: f32,
         margin: f32,
         minimum: &Self,
         maximum: &Self,
-        root_value: f32,
+        root_value: &Area,
         phase: Phase,
     ) -> f32 {
         let value = self
             .eval(
+                dimension,
                 parent_value,
                 available_parent_value,
                 margin,
@@ -110,6 +134,7 @@ impl Size {
 
         let minimum_value = minimum
             .eval(
+                dimension,
                 parent_value,
                 available_parent_value,
                 margin,
@@ -118,6 +143,7 @@ impl Size {
             )
             .map(|v| v + single_margin);
         let maximum_value = maximum.eval(
+            dimension,
             parent_value,
             available_parent_value,
             margin,
@@ -157,6 +183,12 @@ impl Scaled for Size {
             Self::DynamicCalculations(calcs) => {
                 calcs.iter_mut().for_each(|calc| calc.scale(scale_factor));
             }
+            Size::Pixels(s) => *s *= scale_factor,
+            Size::DynamicCalculations(calcs) => calcs.iter_mut().for_each(|v| {
+                if v == &mut DynamicCalculation::ScalingFactor {
+                    *v = DynamicCalculation::Pixels(scale_factor);
+                }
+            }),
             _ => (),
         }
     }
@@ -170,9 +202,45 @@ pub enum DynamicCalculation {
     Add,
     OpenParenthesis,
     ClosedParenthesis,
-    Percentage(f32),
-    RootPercentage(f32),
+    FunctionSeparator,
+    // this one works real weird, we actually replace it with a pixel value when we run the scale
+    // function
+    ScalingFactor,
+    Parent(Dimension),
+    Root(Dimension),
     Pixels(f32),
+    Function(LexFunction),
+}
+
+// a token of a function name, not the whole function, this is a lex token not a parse tree.
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum LexFunction {
+    Min,
+    Max,
+    Clamp,
+}
+
+/// dimension as in height/width, allows for the use of the parent height and parent width inside
+/// of one side, for example:
+/// ```rust
+/// rsx! {
+///     rect {
+///         width: "200",
+///         height: "400",
+///         rect {
+///             width: "calc(min(100%, 100%'))", // the ' signifies the other side which would be
+///             // the height
+///             height: "calc(min(100%, 100%'))"
+///         }
+///     }
+/// }
+/// ```
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum Dimension {
+    Current,
+    Cross,
+    Width,
+    Height,
 }
 
 impl Scaled for DynamicCalculation {
@@ -195,6 +263,26 @@ impl std::fmt::Display for DynamicCalculation {
             Self::Percentage(p) => f.write_fmt(format_args!("{p}%")),
             Self::RootPercentage(p) => f.write_fmt(format_args!("{p}v")),
             Self::Pixels(s) => f.write_fmt(format_args!("{s}")),
+            DynamicCalculation::Sub => f.write_str("-"),
+            DynamicCalculation::Mul => f.write_str("*"),
+            DynamicCalculation::Div => f.write_str("/"),
+            DynamicCalculation::Add => f.write_str("+"),
+            DynamicCalculation::OpenParenthesis => f.write_str("("),
+            DynamicCalculation::ClosedParenthesis => f.write_str(")"),
+            DynamicCalculation::FunctionSeparator => f.write_str(","),
+            DynamicCalculation::Pixels(s) => f.write_fmt(format_args!("{s}")),
+            DynamicCalculation::Function(LexFunction::Min) => f.write_str("min"),
+            DynamicCalculation::Function(LexFunction::Max) => f.write_str("max"),
+            DynamicCalculation::Function(LexFunction::Clamp) => f.write_str("clamp"),
+            DynamicCalculation::ScalingFactor => f.write_str("scale"),
+            DynamicCalculation::Parent(Dimension::Current) => f.write_str("parent"),
+            DynamicCalculation::Parent(Dimension::Cross) => f.write_str("parent.other"),
+            DynamicCalculation::Parent(Dimension::Width) => f.write_str("parent.width"),
+            DynamicCalculation::Parent(Dimension::Height) => f.write_str("parent.height"),
+            DynamicCalculation::Root(Dimension::Current) => f.write_str("root"),
+            DynamicCalculation::Root(Dimension::Cross) => f.write_str("root.other"),
+            DynamicCalculation::Root(Dimension::Width) => f.write_str("root.width"),
+            DynamicCalculation::Root(Dimension::Height) => f.write_str("root.height"),
         }
     }
 }
@@ -202,9 +290,16 @@ impl std::fmt::Display for DynamicCalculation {
 /// [Operator-precedence parser](https://en.wikipedia.org/wiki/Operator-precedence_parser#Precedence_climbing_method)
 struct DynamicCalculationEvaluator<'a> {
     calcs: Iter<'a, DynamicCalculation>,
-    parent_value: f32,
-    root_value: f32,
+    dimension: EvalDimension,
+    parent_value: &'a Area,
+    root_value: &'a Area,
     current: Option<&'a DynamicCalculation>,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum EvalDimension {
+    Width,
+    Height,
 }
 
 impl<'a> DynamicCalculationEvaluator<'a> {
@@ -213,9 +308,16 @@ impl<'a> DynamicCalculationEvaluator<'a> {
         parent_value: f32,
         root_value: f32,
     ) -> Self {
+    pub fn new(
+        calcs: Iter<'a, DynamicCalculation>,
+        dimension: EvalDimension,
+        parent_value: &'a Area,
+        root_value: &'a Area,
+    ) -> Self {
         Self {
             calcs,
             parent_value,
+            dimension,
             root_value,
             current: None,
         }
@@ -303,13 +405,53 @@ impl<'a> DynamicCalculationEvaluator<'a> {
     /// `
     fn parse_value(&mut self) -> Option<(f32, bool)> {
         match self.current? {
-            DynamicCalculation::Percentage(value) => {
+            DynamicCalculation::Root(Dimension::Current) => {
                 self.current = self.calcs.next();
-                Some(((self.parent_value / 100.0 * value).round(), false))
+                match self.dimension {
+                    EvalDimension::Width => Some((self.root_value.width(), true)),
+                    EvalDimension::Height => Some((self.root_value.height(), true)),
+                }
             }
-            DynamicCalculation::RootPercentage(value) => {
+            DynamicCalculation::Root(Dimension::Cross) => {
                 self.current = self.calcs.next();
-                Some(((self.root_value / 100.0 * value).round(), false))
+                match self.dimension {
+                    EvalDimension::Width => Some((self.root_value.height(), true)),
+                    EvalDimension::Height => Some((self.root_value.width(), true)),
+                }
+            }
+            DynamicCalculation::Root(Dimension::Width) => {
+                self.current = self.calcs.next();
+                Some((self.root_value.width(), true))
+            }
+            DynamicCalculation::Root(Dimension::Height) => {
+                self.current = self.calcs.next();
+                Some((self.root_value.height(), true))
+            }
+            DynamicCalculation::Parent(Dimension::Current) => {
+                self.current = self.calcs.next();
+                match self.dimension {
+                    EvalDimension::Width => Some((self.parent_value.width(), true)),
+                    EvalDimension::Height => Some((self.parent_value.height(), true)),
+                }
+            }
+            DynamicCalculation::Parent(Dimension::Cross) => {
+                self.current = self.calcs.next();
+                match self.dimension {
+                    EvalDimension::Width => Some((self.parent_value.height(), true)),
+                    EvalDimension::Height => Some((self.parent_value.width(), true)),
+                }
+            }
+            DynamicCalculation::Parent(Dimension::Width) => {
+                self.current = self.calcs.next();
+                Some((self.parent_value.width(), true))
+            }
+            DynamicCalculation::Parent(Dimension::Height) => {
+                self.current = self.calcs.next();
+                Some((self.parent_value.height(), true))
+            }
+            DynamicCalculation::ScalingFactor => {
+                self.current = self.calcs.next();
+                Some((1.0, true))
             }
             DynamicCalculation::Pixels(value) => {
                 self.current = self.calcs.next();
@@ -318,15 +460,51 @@ impl<'a> DynamicCalculationEvaluator<'a> {
             DynamicCalculation::OpenParenthesis => {
                 // function should return on DynamicCalculation::ClosedParenthesis because it does
                 // not have a precedence, thats how it actually works
-                let val = self.parse_expression(0);
+                let val = self.parse_expression(0)?;
                 if self.current != Some(&DynamicCalculation::ClosedParenthesis) {
                     return None;
                 }
                 self.current = self.calcs.next();
-                Some((val?, true))
+                Some((val, true))
+            }
+            DynamicCalculation::Function(func) => {
+                // oh god here we gg
+                self.current = self.calcs.next();
+                let vals = self.parse_function_inputs()?;
+                let res = match func {
+                    LexFunction::Min => vals.into_iter().reduce(f32::min),
+                    LexFunction::Max => vals.into_iter().reduce(f32::max),
+                    LexFunction::Clamp => {
+                        if vals.len() != 3 {
+                            None
+                        } else {
+                            Some(vals[0].max(vals[1].min(vals[2])))
+                        }
+                    }
+                }?;
+
+                Some((res, true))
             }
             _ => None,
         }
+    }
+
+    fn parse_function_inputs(&mut self) -> Option<Vec<f32>> {
+        let mut res = vec![];
+        loop {
+            let val = self.parse_expression(0)?;
+            match self.current? {
+                DynamicCalculation::FunctionSeparator => {}
+                DynamicCalculation::ClosedParenthesis => {
+                    res.push(val);
+                    break;
+                }
+                _ => return None,
+            }
+            res.push(val);
+        }
+        self.current = self.calcs.next();
+        Some(res)
     }
 
     /// parses out the prefix, like a + or -
@@ -349,7 +527,6 @@ impl<'a> DynamicCalculationEvaluator<'a> {
         match self.current? {
             DynamicCalculation::Add | DynamicCalculation::Sub => Some(1),
             DynamicCalculation::Mul | DynamicCalculation::Div => Some(2),
-            DynamicCalculation::OpenParenthesis => Some(0),
             _ => None,
         }
     }
@@ -359,8 +536,9 @@ impl<'a> DynamicCalculationEvaluator<'a> {
 /// This value could be for example the width of a node's parent area.
 pub fn run_calculations(
     calcs: &[DynamicCalculation],
-    parent_value: f32,
-    root_value: f32,
+    parent_value: &Area,
+    root_value: &Area,
+    dimension: EvalDimension,
 ) -> Option<f32> {
-    DynamicCalculationEvaluator::new(calcs.iter(), parent_value, root_value).evaluate()
+    DynamicCalculationEvaluator::new(calcs.iter(), dimension, parent_value, root_value).evaluate()
 }
