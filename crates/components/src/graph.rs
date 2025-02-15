@@ -62,6 +62,7 @@ pub fn Graph(props: GraphProps) -> Element {
 
             let mut text_style = TextStyle::new();
             text_style.set_color(Color::BLACK);
+            text_style.set_font_size(16. * ctx.scale_factor);
             paragraph_style.set_text_style(&text_style);
 
             let x_labels = &props.labels;
@@ -108,7 +109,7 @@ pub fn Graph(props: GraphProps) -> Element {
                 paint.set_anti_alias(true);
                 paint.set_style(PaintStyle::Fill);
                 paint.set_color(Color::parse(&line.color).unwrap());
-                paint.set_stroke_width(3.0);
+                paint.set_stroke_width(3.0 * ctx.scale_factor);
 
                 let mut previous_x = None;
                 let mut previous_y = None;
@@ -123,7 +124,8 @@ pub fn Graph(props: GraphProps) -> Element {
                         let new_previous_y = previous_y.unwrap_or(line_y);
 
                         // Draw the line and circle
-                        ctx.canvas.draw_circle((line_x, line_y), 5.0, &paint);
+                        ctx.canvas
+                            .draw_circle((line_x, line_y), 5.0 * ctx.scale_factor, &paint);
                         ctx.canvas.draw_line(
                             (new_previous_x, new_previous_y),
                             (line_x, line_y),
