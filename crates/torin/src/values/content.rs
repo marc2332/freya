@@ -13,6 +13,23 @@ pub enum Content {
 }
 
 impl Content {
+    pub fn is_same_type(&self, other: &Self) -> bool {
+        matches!(
+            (self, other),
+            (Self::Normal, Self::Normal)
+                | (Self::Fit, Self::Fit)
+                | (Self::Flex, Self::Flex)
+                | (Self::Grid { .. }, Self::Grid { .. })
+        )
+    }
+
+    pub fn new_grid() -> Self {
+        Self::Grid {
+            columns: Vec::new(),
+            rows: Vec::new(),
+        }
+    }
+
     pub fn is_fit(&self) -> bool {
         self == &Self::Fit
     }
@@ -23,6 +40,26 @@ impl Content {
 
     pub fn is_grid(&self) -> bool {
         matches!(self, Self::Grid { .. })
+    }
+
+    pub fn set_columns(&mut self, values: Vec<GridSize>) {
+        if !self.is_grid() {
+            *self = Self::new_grid();
+        }
+
+        if let Self::Grid { rows, .. } = self {
+            *rows = values;
+        }
+    }
+
+    pub fn set_rows(&mut self, values: Vec<GridSize>) {
+        if !self.is_grid() {
+            *self = Self::new_grid();
+        }
+
+        if let Self::Grid { rows, .. } = self {
+            *rows = values;
+        }
     }
 }
 

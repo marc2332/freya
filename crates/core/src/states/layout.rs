@@ -64,8 +64,6 @@ impl ParseAttribute for LayoutState {
         &mut self,
         attr: OwnedAttributeView<CustomAttributeValues>,
     ) -> Result<(), ParseError> {
-        let (mut columns, mut rows) = (None, None);
-
         match attr.attribute {
             AttributeName::Width => {
                 if let Some(value) = attr.value.as_text() {
@@ -176,49 +174,31 @@ impl ParseAttribute for LayoutState {
             }
             AttributeName::Content => {
                 if let Some(value) = attr.value.as_text() {
-                    self.content = Content::parse(value)?;
+                    let value = Content::parse(value)?;
 
-                    if let Content::Grid {
-                        columns: c,
-                        rows: r,
-                    } = &mut self.content
-                    {
-                        if let Some(columns) = columns {
-                            c.extend(columns);
-                        }
-
-                        if let Some(rows) = rows {
-                            r.extend(rows);
-                        }
+                    if !self.content.is_same_type(&value) {
+                        self.content = value;
                     }
                 }
             }
             AttributeName::GridColumns => {
                 if let Some(value) = attr.value.as_text() {
-                    let value = value
+                    let values = value
                         .split(",")
                         .map(|value| GridSize::parse(value.trim()))
                         .collect::<Result<_, ParseError>>()?;
 
-                    if let Content::Grid { columns, .. } = &mut self.content {
-                        *columns = value;
-                    } else {
-                        columns.replace(value);
-                    }
+                    self.content.set_columns(values);
                 }
             }
             AttributeName::GridRows => {
                 if let Some(value) = attr.value.as_text() {
-                    let value = value
+                    let values = value
                         .split(",")
                         .map(|value| GridSize::parse(value.trim()))
                         .collect::<Result<_, ParseError>>()?;
 
-                    if let Content::Grid { rows, .. } = &mut self.content {
-                        *rows = value;
-                    } else {
-                        rows.replace(value);
-                    }
+                    self.content.set_rows(values);
                 }
             }
             AttributeName::GridColumn => {
