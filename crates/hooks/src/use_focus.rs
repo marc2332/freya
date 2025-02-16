@@ -84,12 +84,12 @@ impl UseFocus {
         AttributeValue::any_value(CustomAttributeValues::AccessibilityId(id))
     }
 
-    /// Check if this node is currently focused
+    /// Subscribe to focus changes where this node was involved.
     pub fn is_focused(&self) -> bool {
         *self.is_focused.read()
     }
 
-    /// Check if this node is currently selected
+    /// Subscribe to focus changes where this node was involved and the keyboard was used.
     pub fn is_focused_with_keyboard(&self) -> bool {
         *self.is_focused_with_keyboard.read()
             && *self.navigation_mode.read() == NavigationMode::Keyboard
@@ -104,7 +104,7 @@ impl UseFocus {
             .ok();
     }
 
-    /// Validate a `keydown` event.
+    /// Useful if you want to trigger an action when `Enter` or `Space` is pressed and this Node was focused with the keyboard.
     pub fn validate_keydown(&self, e: &KeyboardEvent) -> bool {
         (e.data.code == Code::Enter || e.data.code == Code::Space)
             && self.is_focused_with_keyboard()
@@ -128,13 +128,93 @@ impl UseFocus {
 }
 
 /// Create a focus manager for a node.
+///
+/// With this you can focus this node whenever you want or subscribe to any focus change,
+/// this way you can style your element based on its focus state.
+///
+/// ### Simple example
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///     // Create a focus instance
+///     let mut my_focus = use_focus();
+///
+///     rsx!(
+///         rect {
+///             // Bind the focus to this `rect`
+///             a11y_id: my_focus.attribute(),
+///             // This will focus this element and effectively cause a rerender updating the returned value of `is_focused()`
+///             onclick: move |_| my_focus.focus(),
+///             label {
+///                 "Am I focused? {my_focus.is_focused()}"
+///             }
+///         }
+///     )
+/// }
+/// ```
+///
+/// ### Style based on state
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///     let mut my_focus = use_focus();
+///
+///     let background = if my_focus.is_focused() {
+///         "red"
+///     } else {
+///         "blue"
+///     };
+///
+///     rsx!(
+///         rect {
+///             background,
+///             a11y_id: my_focus.attribute(),
+///             onclick: move |_| my_focus.focus(),
+///             label {
+///                 "Focus me!"
+///             }
+///         }
+///     )
+/// }
+/// ```
+///
+/// ### Keyboard navigation
+///
+/// Elements can also be selected with the keyboard, for those cases you can also subscribe by calling [UseFocus::is_focused_with_keyboard].
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///     let mut my_focus = use_focus();
+///
+///     let background = if my_focus.is_focused_with_keyboard() {
+///         "red"
+///     } else {
+///         "blue"
+///     };
+///
+///     rsx!(
+///         rect {
+///             background,
+///             a11y_id: my_focus.attribute(),
+///             label {
+///                 "Focus me!"
+///             }
+///         }
+///     )
+/// }
+/// ```
 pub fn use_focus() -> UseFocus {
     let id = use_hook(UseFocus::new_id);
 
     use_focus_from_id(id)
 }
 
-/// Create a focus manager for a node with the provided [AccessibilityId].
+/// Same as [use_focus] but providing a Node instead of generating a new one.
+///
+/// This is an advance hook so you probably just want to use [use_focus].
 pub fn use_focus_from_id(id: AccessibilityId) -> UseFocus {
     let focused_id = use_context::<Signal<AccessibilityId>>();
     let focused_node = use_context::<Signal<AccessibilityNode>>();

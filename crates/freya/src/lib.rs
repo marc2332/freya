@@ -27,7 +27,7 @@
 //! - [Development Setup](self::_docs::development_setup)
 //! - [Theming](self::_docs::theming)
 //! - [i18n](self::_docs::i18n)
-//! - [Accessibility](self::_docs::accessibility)
+//! - [Accessibility](self::hooks::use_focus)
 //! - [Router](self::_docs::router)
 //!     - [Native Router](self::_docs::router::native_router)
 //! - [Third Party State Managemement](self::_docs::third_party_state)
