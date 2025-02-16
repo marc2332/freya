@@ -7,8 +7,8 @@ use freya_winit::{
 
 /// Launch a new window with the default config.
 ///
-/// - Width: `600.0`
-/// - Height: `600.0`
+/// - Width: `700.0`
+/// - Height: `500.0`
 /// - Decorations enabled
 /// - Transparency disabled
 /// - Window title: `Freya`
@@ -40,7 +40,7 @@ pub fn launch(app: AppComponent) {
         app,
         LaunchConfig::<()> {
             window_config: WindowConfig {
-                size: (600.0, 600.0),
+                size: (700.0, 500.0),
                 decorations: true,
                 transparent: false,
                 title: "Freya",
@@ -53,8 +53,8 @@ pub fn launch(app: AppComponent) {
 
 /// Launch a new window with a custom title and the default config.
 ///
-/// - Width: `400`
-/// - Height: `300`
+/// - Width: `700`
+/// - Height: `500`
 /// - Decorations enabled
 /// - Transparency disabled
 /// - Window background: white
@@ -85,7 +85,7 @@ pub fn launch_with_title(app: AppComponent, title: &'static str) {
         app,
         LaunchConfig::<()> {
             window_config: WindowConfig {
-                size: (400.0, 300.0),
+                size: (700.0, 500.0),
                 decorations: true,
                 transparent: false,
                 title,
@@ -108,7 +108,7 @@ pub fn launch_with_title(app: AppComponent, title: &'static str) {
 /// # use freya::prelude::*;
 ///
 /// fn main() {
-///     launch_with_props(app, "Whoa!", (400.0, 600.0));
+///     launch_with_props(app, "Whoa!", (700.0, 500.0));
 /// }
 ///
 /// fn app() -> Element {
@@ -157,7 +157,7 @@ pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height)
 ///     launch_cfg(
 ///         app,
 ///         LaunchConfig::<()>::new()
-///             .with_size(500.0, 400.0)
+///             .with_size(700.0, 500.0)
 ///             .with_decorations(true)
 ///             .with_transparency(false)
 ///             .with_title("Freya App")

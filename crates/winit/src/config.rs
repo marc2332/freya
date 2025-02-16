@@ -58,11 +58,11 @@ pub struct WindowConfig {
 impl Default for WindowConfig {
     fn default() -> Self {
         Self {
-            size: (600.0, 600.0),
+            size: (700.0, 500.0),
             min_size: None,
             max_size: None,
             decorations: true,
-            title: "Freya app",
+            title: "Freya App",
             transparent: false,
             background: Color::WHITE,
             visible: true,

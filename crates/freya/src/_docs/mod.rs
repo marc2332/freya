@@ -1,4 +1,3 @@
-pub mod accessibility;
 pub mod async_tasks;
 pub mod components_and_props;
 pub mod development_setup;

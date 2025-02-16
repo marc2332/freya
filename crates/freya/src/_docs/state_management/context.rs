@@ -4,7 +4,9 @@
 //!
 //! ## Prop Drilling
 //!
-//! **Prop drilling** is when you want to pass a certain data from one parent component to some nested component, and you start to declare the same prop in each one of the components in between the parent and the target component. This causes a huge unnecessary boilerplate that can be used by using the Context API.
+//! **Prop drilling** is when you want to pass a certain data from one parent component to some nested component, and you start to declare the same prop in each one of the components in between the parent and the target component.
+//!
+//!  This leads to an huge unnecessary boilerplate that could be avoided by using the Context API.
 //!
 //! ```rust
 //! # use freya::prelude::*;

@@ -329,7 +329,7 @@ def_attribute!(
     /// ```
     content,
 
-    /// ### main_align & cross_align
+    /// ### main_align
     ///
     /// Control how the inner elements are positioned inside the element. You can combine it with the `direction` attribute to create complex flows.
     ///
@@ -348,10 +348,9 @@ def_attribute!(
     /// - `center`: At the center of the axis (same as in `main_align`)
     /// - `end`: At the end of the axis (same as in `main_align`)
     ///
-    /// When using the `vertical` direction, `main_align` will be the Y axis and `cross_align` will be the X axis. But when using the `horizontal` direction, the
-    /// `main_align` will be the X axis and the `cross_align` will be the Y axis.
+    /// When using the `vertical` direction it uses the Y axis and in `horizontal` direction it uses the X axis.
     ///
-    /// Example on how to center the inner elements in both axis:
+    /// Example on how to center the inner elements in the main axis:
     ///
     /// ```rust, no_run
     /// # use freya::prelude::*;
@@ -361,7 +360,6 @@ def_attribute!(
     ///             width: "100%",
     ///             height: "100%",
     ///             main_align: "center",
-    ///             cross_align: "center",
     ///             rect {
     ///                 width: "50%",
     ///                 height: "50%",
@@ -372,6 +370,38 @@ def_attribute!(
     /// }
     /// ```
     main_align,
+
+    /// ### cross_align
+    ///
+    /// Control how the inner elements are positioned inside the element in the axis perpendicular to the direction.
+    ///
+    /// Accepted values:
+    ///
+    /// - `start` (default): At the begining of the axis (same as in `main_align`)
+    /// - `center`: At the center of the axis (same as in `main_align`)
+    /// - `end`: At the end of the axis (same as in `main_align`)
+    ///
+    /// When using the `vertical` direction it uses the X axis and in `horizontal` direction it uses the Y axis.
+    ///
+    /// Example on how to center the inner elements in the cross axis:
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             width: "100%",
+    ///             height: "100%",
+    ///             cross_align: "center",
+    ///             rect {
+    ///                 width: "50%",
+    ///                 height: "50%",
+    ///                 background: "red"
+    ///             },
+    ///         }
+    ///     )
+    /// }
+    /// ```
     cross_align,
 
     /// Specify a space between the inner elements. Think it as a margin for every element but defined by its parent.
