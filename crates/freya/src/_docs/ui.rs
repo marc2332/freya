@@ -1,6 +1,6 @@
 //! # UI
 //!
-//! Freya uses a declarive model for the UI, which means that you do not use imperative APIs but instead you write in a semi-markup language (integrated with Rust) by using the `rsx!()` macro from Dioxus.
+//! Freya uses a [declarative](https://en.wikipedia.org/wiki/Declarative_programming) model for the UI, in the form a semi-markup language using the `rsx!()` macro from Dioxus, it integrates very well with normal Rust syntax too.
 //!
 //! For example, this is how a simple component would look like in Freya:
 //!
@@ -21,11 +21,11 @@
 //! ```
 //!
 //! Notice that the `app` component is returning an [`Element`](dioxus_core::Element) created by the [`rsx!()`](dioxus_core_macro::rsx!()) macro. So, in other words, the [`Element`](dioxus_core::Element) contains the UI of that component.
-//! Every time the component reruns the [`rsx!()`](dioxus_core_macro::rsx!()) will be called again and thus generate a new UI.
+//! Every time the component function reruns the [`rsx!()`](dioxus_core_macro::rsx!()) will be called again and thus generate a new UI.
 //!
 //! ### [`rsx!()`](dioxus_core_macro::rsx!())
 //!
-//! This macro is not a standalone-language or anything like that. It is simply a macro to easily declare how we want the UI to look like. You can still use normal Rust code inside.
+//! This macro is not a standalone language, it let define the structure, design and dynamism of the UI. It also integrates very well with Rust code.
 //!
 //! The structure for RSX looks like this:
 //!
@@ -36,7 +36,7 @@
 //! rect {
 //!     // Attribute for the element `rect`
 //!     background: "red",
-//!     // Attribute for the element `rect`
+//!     // Another attribute for the element `rect`
 //!     width: "100%",
 //!     // Event handler for the element `rect`, can be a function or a closure
 //!     onclick: |_| println!("Clicked!"),
@@ -78,7 +78,7 @@
 //!             "Hello, {name}!"
 //!         }
 //!         label {
-//!         "{1 + 1} is 2"
+//!             "{1 + 1} is 2"
 //!         }
 //!     }
 //! )
@@ -96,13 +96,14 @@
 //!     rect {
 //!         for i in 0..5 {
 //!             label {
-//!             // Looped elements must have an unique ID specified through
-//!                 // the `key` attribute so Dioxus is able to identify them
+//!                 // Looped elements must have an unique ID specified through
+//!                 // the `key` attribute so Dioxus is able to properly diff them
+//!                 // between multiple reruns
 //!                 key: "{i}",
 //!                 "Value -> {i}"
 //!             }
 //!         }
-//!         // When this condition is not met the inner element will simply not be rendered
+//!         // When this condition is not met the inner rsx will simply not be rendered
 //!         if show_text {
 //!             label {
 //!                 "Hello, World!"
