@@ -28,6 +28,7 @@ use crate::{
         CornerRadius,
         Fill,
         Shadow,
+        SvgPaint,
         TextOverflow,
     },
 };
@@ -159,12 +160,20 @@ impl NodeState {
             ("offset_y", AttributeType::Measure(self.size.offset_y.get())),
             ("content", AttributeType::Content(&self.size.content)),
             (
-                "fill",
-                AttributeType::OptionalColor(self.svg.svg_fill.map(|color| color.into())),
+                "svg_fill",
+                AttributeType::OptionalColor(self.svg.svg_fill.and_then(|fill| match fill {
+                    SvgPaint::None => None,
+                    SvgPaint::CurrentColor => Some(Fill::Color(self.font_style.color)),
+                    SvgPaint::Color(color) => Some(Fill::Color(color)),
+                })),
             ),
             (
                 "svg_stroke",
-                AttributeType::OptionalColor(self.svg.svg_stroke.map(|color| color.into())),
+                AttributeType::OptionalColor(self.svg.svg_stroke.and_then(|stroke| match stroke {
+                    SvgPaint::None => None,
+                    SvgPaint::CurrentColor => Some(Fill::Color(self.font_style.color)),
+                    SvgPaint::Color(color) => Some(Fill::Color(color)),
+                })),
             ),
         ];
 

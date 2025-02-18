@@ -3,7 +3,6 @@ use std::sync::{
     Mutex,
 };
 
-use freya_engine::prelude::Color;
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
@@ -34,12 +33,13 @@ use crate::{
         ParseAttribute,
         ParseError,
     },
+    values::SvgPaint,
 };
 
 #[derive(Default, Debug, Clone, PartialEq, Component)]
 pub struct SvgState {
-    pub svg_fill: Option<Color>,
-    pub svg_stroke: Option<Color>,
+    pub svg_fill: Option<SvgPaint>,
+    pub svg_stroke: Option<SvgPaint>,
     pub svg_data: Option<AttributesBytes>,
 }
 
@@ -55,13 +55,12 @@ impl ParseAttribute for SvgState {
                     self.svg_data = Some(bytes.clone());
                 }
             }
-
             AttributeName::Fill => {
                 if let Some(value) = attr.value.as_text() {
                     if value == "none" {
                         return Ok(());
                     }
-                    self.svg_fill = Some(Color::parse(value)?);
+                    self.svg_fill = Some(SvgPaint::parse(value)?);
                 }
             }
             AttributeName::Stroke => {
@@ -69,7 +68,7 @@ impl ParseAttribute for SvgState {
                     if value == "none" {
                         return Ok(());
                     }
-                    self.svg_stroke = Some(Color::parse(value)?);
+                    self.svg_stroke = Some(SvgPaint::parse(value)?);
                 }
             }
             AttributeName::SvgContent => {
