@@ -45,11 +45,11 @@ impl ElementUtils for SvgElement {
                 root.set_width(svg::Length::new(100.0, svg::LengthUnit::Percentage));
                 root.set_height(svg::Length::new(100.0, svg::LengthUnit::Percentage));
                 root.set_color(font_style.color);
-                if let Some(paint) = svg_state.svg_stroke.as_ref() {
-                    root.set_stroke((*paint).into());
-                }
                 if let Some(paint) = svg_state.svg_fill.as_ref() {
                     root.set_fill((*paint).into());
+                }
+                if let Some(paint) = svg_state.svg_stroke.as_ref() {
+                    root.set_stroke((*paint).into());
                 }
                 svg_dom.render(canvas);
                 canvas.restore();
