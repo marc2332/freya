@@ -21,3 +21,9 @@
 //! - With HSL: `hsl(28deg, 80%, 50%)`
 //! - With HSL and alpha: `hsl(28deg, 80%, 50%, 25%)`
 //! - With Hex: `#E93323`
+//!
+//! #### SVG
+//!
+//! For the `svg` element you can also use:
+//!
+//! - `current_color`: Use the inherited color from the `color` attribute.

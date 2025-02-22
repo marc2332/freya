@@ -3,7 +3,7 @@ use crate::def_attribute;
 def_attribute!(
     svg_data,
     svg_content,
-    /// The `fill` attributes allows you to specify the fill or stroke color for the `svg`.
+    /// The `fill` attributes allows you to specify the fill color for the `svg`.
     ///
     /// You can learn about the syntax of this attribute in [`Color Syntax`](crate::_docs::color_syntax).
     ///
@@ -26,7 +26,7 @@ def_attribute!(
     /// ```
     fill,
 
-    /// The `stroke` attributes allows you to specify the fill or stroke color for the `svg`.
+    /// The `stroke` attributes allows you to specify stroke color for the `svg`.
     ///
     /// You can learn about the syntax of this attribute in [`Color Syntax`](crate::_docs::color_syntax).
     ///

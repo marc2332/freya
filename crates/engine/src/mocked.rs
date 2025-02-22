@@ -1640,6 +1640,14 @@ pub mod svg {
     pub struct Paint;
 
     impl Paint {
+        pub fn none() -> Self {
+            unimplemented!("This is mocked")
+        }
+
+        pub fn current_color() -> Self {
+            unimplemented!("This is mocked")
+        }
+
         pub fn from_color(_color: Color) -> Self {
             unimplemented!("This is mocked")
         }
