@@ -19,7 +19,7 @@ fn app() -> Element {
         svg {
             fill: "red",
             width: "100%",
-            height: "100%",
+            height: "50%",
             svg_data: svg_data.clone(),
         }
         // You can achieve same effect using `fill: "current_color"` and `color` attribute.
@@ -27,7 +27,7 @@ fn app() -> Element {
             color: "red",
             fill: "current_color",
             width: "100%",
-            height: "100%",
+            height: "50%",
             svg_data,
         }
     })
