@@ -8,6 +8,7 @@ pub const DARK_THEME: Theme = Theme {
     name: "dark",
     colors: ColorsSheet {
         primary: cow_borrowed!("rgb(103, 80, 164)"),
+        focused_primary_border: cow_borrowed!("rgb(223, 180, 255)"),
         secondary: cow_borrowed!("rgb(202, 193, 227)"),
         tertiary: cow_borrowed!("rgb(79, 61, 130)"),
         surface: cow_borrowed!("rgb(60, 60, 60)"),
@@ -32,6 +33,7 @@ pub const LIGHT_THEME: Theme = Theme {
     name: "light",
     colors: ColorsSheet {
         primary: cow_borrowed!("rgb(103, 80, 164)"),
+        focused_primary_border: cow_borrowed!("rgb(50, 20, 80)"),
         secondary: cow_borrowed!("rgb(202, 193, 227)"),
         tertiary: cow_borrowed!("rgb(79, 61, 130)"),
         surface: cow_borrowed!("rgb(210, 210, 210)"),
@@ -56,6 +58,7 @@ pub const BANANA_THEME: Theme = Theme {
     name: "banana",
     colors: ColorsSheet {
         primary: cow_borrowed!("rgb(240, 200, 50)"),
+        focused_primary_border: cow_borrowed!("rgb(100, 50, 15)"),
         secondary: cow_borrowed!("rgb(255, 250, 160)"),
         tertiary: cow_borrowed!("rgb(186, 153, 37)"),
         surface: cow_borrowed!("rgb(240, 229, 189)"),
