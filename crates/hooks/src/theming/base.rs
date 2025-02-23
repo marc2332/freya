@@ -6,6 +6,7 @@ use crate::{
 pub(crate) const BASE_THEME: Theme = Theme {
     name: "base",
     colors: ColorsSheet {
+        focused_primary_border: cow_borrowed!(""),
         primary: cow_borrowed!(""),
         secondary: cow_borrowed!(""),
         tertiary: cow_borrowed!(""),
@@ -56,7 +57,7 @@ pub(crate) const BASE_THEME: Theme = Theme {
             color: cow_borrowed!("key(primary_color)"),
         },
         border_fill: cow_borrowed!("none"),
-        focus_border_fill: cow_borrowed!("key(primary_color)"),
+        focus_border_fill: cow_borrowed!("key(focused_primary_border)"),
         shadow: cow_borrowed!("none"),
         padding: cow_borrowed!("6 12"),
         margin: cow_borrowed!("0"),

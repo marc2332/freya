@@ -524,6 +524,7 @@ define_theme! {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ColorsSheet {
     pub primary: Cow<'static, str>,
+    pub focused_primary_border: Cow<'static, str>,
     pub secondary: Cow<'static, str>,
     pub tertiary: Cow<'static, str>,
     pub surface: Cow<'static, str>,
@@ -548,6 +549,7 @@ impl ColorsSheet {
             let key_val = val.replace("key(", "").replace(")", "");
             match key_val.as_str() {
                 "primary" => self.primary.clone(),
+                "focused_primary_border" => self.focused_primary_border.clone(),
                 "secondary" => self.secondary.clone(),
                 "tertiary" => self.tertiary.clone(),
                 "surface" => self.surface.clone(),
