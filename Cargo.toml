@@ -28,21 +28,21 @@ docs = ["freya/docs"]
 # generational-box  = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
 
 [workspace.dependencies]
-freya = { path = "crates/freya", version = "0.3.0-rc.1" }
-freya-devtools = { path = "crates/devtools", version = "0.3.0-rc.1" }
-freya-node-state = { path = "crates/state", version = "0.3.0-rc.1" }
-freya-winit = { path = "crates/winit", version = "0.3.0-rc.1" }
-freya-elements = { path = "crates/elements", version = "0.3.0-rc.1" }
-freya-common = { path = "crates/common", version = "0.3.0-rc.1" }
-freya-hooks = { path = "crates/hooks", version = "0.3.0-rc.1" }
-freya-core = { path = "crates/core", version = "0.3.0-rc.1" }
-freya-components = { path = "crates/components", version = "0.3.0-rc.1" }
-freya-testing = { path = "crates/testing", version = "0.3.0-rc.1" }
-freya-engine = { path = "crates/engine", version = "0.3.0-rc.1" }
-torin = { path = "crates/torin", version = "0.3.0-rc.1" }
+freya = { path = "crates/freya", version = "0.3.0-rc.2" }
+freya-devtools = { path = "crates/devtools", version = "0.3.0-rc.2" }
+freya-node-state = { path = "crates/state", version = "0.3.0-rc.2" }
+freya-winit = { path = "crates/winit", version = "0.3.0-rc.2" }
+freya-elements = { path = "crates/elements", version = "0.3.0-rc.2" }
+freya-common = { path = "crates/common", version = "0.3.0-rc.2" }
+freya-hooks = { path = "crates/hooks", version = "0.3.0-rc.2" }
+freya-core = { path = "crates/core", version = "0.3.0-rc.2" }
+freya-components = { path = "crates/components", version = "0.3.0-rc.2" }
+freya-testing = { path = "crates/testing", version = "0.3.0-rc.2" }
+freya-engine = { path = "crates/engine", version = "0.3.0-rc.2" }
+torin = { path = "crates/torin", version = "0.3.0-rc.2" }
 
-freya-native-core-macro = { path = "crates/native-core-macro", version = "0.3.0-rc.1" }
-freya-native-core = { path = "crates/native-core", version = "0.3.0-rc.1" }
+freya-native-core-macro = { path = "crates/native-core-macro", version = "0.3.0-rc.2" }
+freya-native-core = { path = "crates/native-core", version = "0.3.0-rc.2" }
 
 dioxus = { version = "0.6.3", default-features = false, features = ["macro", "signals", "hooks"] }
 dioxus-rsx = { version = "0.6.2" }
