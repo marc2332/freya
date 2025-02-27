@@ -36,7 +36,7 @@ def_attribute!(
     /// fn app() -> Element {
     ///     rsx!(
     ///         rect {
-    ///             rotation: "0.5",
+    ///             opacity: "0.5",
     ///             label {
     ///                 "Freya!"
     ///             }
