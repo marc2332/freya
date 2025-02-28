@@ -28,8 +28,7 @@
 //! Install these packages:
 //!
 //! ```sh
-//! sudo dnf install openssl-devel pkgconf cmake gtk3-devel clang-devel -y
-//! sudo dnf groupinstall "Development Tools" "C Development Tools and Libraries" -y
+//! sudo dnf install openssl-devel clang-devel systemd-devel gtk3-devel @development-tools -y
 //! ```
 //!
 //! #### NixOS
