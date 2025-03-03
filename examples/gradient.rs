@@ -33,6 +33,8 @@ fn app() -> Element {
     rsx!(rect {
         height: "100%",
         width: "100%",
+        spacing: "8",
+        padding: "8",
         background,
         Button {
             onpress: move |_| gradient.set(GradientExample::Linear),
