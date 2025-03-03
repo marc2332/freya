@@ -25,6 +25,7 @@
 //! #### Gradients
 //!
 //! Syntax is `<type>-gradient(<angle>, ...[<color> <offset>],)`
+//!
 //! And supported types are `linear`/`radial`/`conic`
 //!
 //! Examples:
