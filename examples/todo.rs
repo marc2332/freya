@@ -99,7 +99,7 @@ fn app() -> Element {
             ),
             Task::new("Improve docs".to_string(), State::Progress, Priority::High),
             Task::new(
-                "Release Freya v0.3.0-rc.2".to_string(),
+                "Release Freya v0.3.0-rc.3".to_string(),
                 State::Done,
                 Priority::High,
             ),
