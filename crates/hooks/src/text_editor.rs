@@ -429,6 +429,11 @@ pub trait TextEditor {
                     Code::KeyV if meta_or_ctrl => {
                         let copied_text = self.get_clipboard().get();
                         if let Ok(copied_text) = copied_text {
+                            let selection = self.get_selection_range();
+                            if let Some((start, end)) = selection {
+                                self.remove(start..end);
+                                self.set_cursor_pos(start);
+                            }
                             let cursor_pos = self.cursor_pos();
                             self.insert(&copied_text, cursor_pos);
                             let last_idx = copied_text.encode_utf16().count() + cursor_pos;
