@@ -12,6 +12,7 @@ mod focusable;
 mod font;
 mod gaps;
 mod gradient;
+mod grid;
 mod highlight;
 mod image_cover;
 mod overflow;
