@@ -163,7 +163,7 @@ impl ElementUtils for RectElement {
                 area,
                 scale_factor,
             };
-            (canvas_ref.runner)(&mut ctx);
+            (canvas_ref.runner.lock().unwrap())(&mut ctx);
         }
     }
 

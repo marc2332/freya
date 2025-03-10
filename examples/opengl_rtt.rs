@@ -541,7 +541,7 @@ fn app() -> Element {
         let triangle_renderer = triangle_renderer.clone();
         platform.invalidate_drawing_area(size.read().area);
         platform.request_animation_frame();
-        Box::new(move |ctx| {
+        move |ctx| {
             ctx.canvas.translate((ctx.area.min_x(), ctx.area.min_y()));
             let mut renderer_guard = triangle_renderer.lock().unwrap();
             {
@@ -555,7 +555,7 @@ fn app() -> Element {
                 None,
             );
             ctx.canvas.restore();
-        })
+        }
     });
 
     rsx!(

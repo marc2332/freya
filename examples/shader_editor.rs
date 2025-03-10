@@ -192,7 +192,7 @@ fn ShaderView(editable: UseEditable) -> Element {
         let shared_runtime_effect = Arc::new(RuntimeEffectWrapper(runtime_effect));
         let instant = Instant::now();
 
-        Box::new(move |ctx| {
+        move |ctx| {
             ctx.canvas.save();
 
             let runtime_effect = &shared_runtime_effect.0;
@@ -240,7 +240,7 @@ fn ShaderView(editable: UseEditable) -> Element {
             }
 
             ctx.canvas.restore();
-        })
+        }
     });
 
     rsx!(rect {

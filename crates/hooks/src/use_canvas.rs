@@ -1,4 +1,7 @@
-use std::sync::Arc;
+use std::sync::{
+    Arc,
+    Mutex,
+};
 
 use dioxus_core::AttributeValue;
 use dioxus_hooks::{
@@ -13,6 +16,7 @@ use dioxus_signals::{
 use freya_core::custom_attributes::{
     CanvasReference,
     CanvasRunner,
+    CanvasRunnerContext,
     CustomAttributeValues,
 };
 
@@ -23,7 +27,7 @@ pub struct UseCanvas {
 }
 
 #[derive(Clone)]
-pub struct UseCanvasRunner(pub Arc<Box<CanvasRunner>>);
+pub struct UseCanvasRunner(pub Arc<Mutex<CanvasRunner>>);
 
 impl PartialEq for UseCanvasRunner {
     fn eq(&self, other: &Self) -> bool {
@@ -54,10 +58,10 @@ impl UseCanvas {
 ///         let curr = value();
 ///         platform.invalidate_drawing_area(size.peek().area);
 ///         platform.request_animation_frame();
-///         Box::new(move |ctx| {
+///         move |ctx| {
 ///             // Draw using the canvas !
 ///             // use `curr`
-///         })
+///         }
 ///     });
 ///
 ///     rsx!(rect {
@@ -71,8 +75,10 @@ impl UseCanvas {
 ///     })
 /// }
 /// ```
-pub fn use_canvas(renderer_cb: impl Fn() -> Box<CanvasRunner> + 'static) -> UseCanvas {
-    let runner = use_memo(move || UseCanvasRunner(Arc::new(renderer_cb())));
+pub fn use_canvas<T: FnMut(&mut CanvasRunnerContext) + Sync + Send + 'static>(
+    mut renderer_cb: impl FnMut() -> T + 'static,
+) -> UseCanvas {
+    let runner = use_memo(move || UseCanvasRunner(Arc::new(Mutex::new(renderer_cb()))));
 
     UseCanvas { runner }
 }
@@ -91,10 +97,10 @@ pub fn use_canvas(renderer_cb: impl Fn() -> Box<CanvasRunner> + 'static) -> UseC
 ///     let canvas = use_canvas_with_deps(&value(), move |curr| {
 ///         platform.invalidate_drawing_area(size.peek().area);
 ///         platform.request_animation_frame();
-///         Box::new(move |ctx| {
+///         move |ctx| {
 ///             // Draw using the canvas !
 ///             // use `curr`
-///         })
+///         }
 ///     });
 ///
 ///     rsx!(rect {
@@ -108,15 +114,18 @@ pub fn use_canvas(renderer_cb: impl Fn() -> Box<CanvasRunner> + 'static) -> UseC
 ///     })
 /// }
 /// ```
-pub fn use_canvas_with_deps<D: Dependency>(
+pub fn use_canvas_with_deps<
+    D: Dependency,
+    T: FnMut(&mut CanvasRunnerContext) + Sync + Send + 'static,
+>(
     dependencies: D,
-    renderer_cb: impl Fn(D::Out) -> Box<CanvasRunner> + 'static,
+    mut renderer_cb: impl FnMut(D::Out) -> T + 'static,
 ) -> UseCanvas
 where
     D::Out: 'static,
 {
     let runner = use_memo(use_reactive(dependencies, move |dependencies| {
-        UseCanvasRunner(Arc::new(renderer_cb(dependencies)))
+        UseCanvasRunner(Arc::new(Mutex::new(renderer_cb(dependencies))))
     }));
 
     UseCanvas { runner }
