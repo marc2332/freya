@@ -45,6 +45,23 @@ fn app() -> Element {
                 position: "absolute",
                 position_bottom: "10",
                 position_left: "10",
+                padding: "20",
+
+                rect {
+                    height: "100%",
+                    width: "100%",
+                    corner_radius: "12",
+                    background: "red",
+                    position: "absolute",
+                    position_top: "0",
+                    position_left: "0",
+                }
+
+                rect {
+                    height: "20%",
+                    width: "20%",
+                    background: "blue",
+                }
             }
         }
     )
