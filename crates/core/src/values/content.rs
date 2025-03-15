@@ -10,6 +10,7 @@ impl Parse for Content {
         Ok(match value {
             "fit" => Content::Fit,
             "flex" => Content::Flex,
+            "grid" => Content::new_grid(),
             _ => Content::Normal,
         })
     }
