@@ -460,7 +460,7 @@ def_element!(
     ///     rsx!(
     ///         image {
     ///             image_data,
-    ///             width: "100%", // You must specify size otherwhise it will default to 0
+    ///             width: "100%",
     ///             height: "100%",
     ///         }
     ///     )
