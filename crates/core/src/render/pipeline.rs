@@ -152,16 +152,23 @@ impl RenderPipeline<'_> {
                         }
                     }
 
-                    let render_wireframe = Some(node_id) == self.selected_node.as_ref();
-
                     // Render the element
-                    self.render(node_ref, layout_node, render_wireframe);
+                    self.render(node_ref, layout_node);
 
                     #[cfg(debug_assertions)]
                     {
                         painted += 1;
                     }
                 }
+            }
+        }
+
+        if let Some(selected_node) = &self.selected_node {
+            if let Some(layout_node) = self.layout.get(*selected_node) {
+                wireframe_renderer::render_wireframe(
+                    self.dirty_surface.canvas(),
+                    &layout_node.visible_area(),
+                );
             }
         }
 
@@ -185,14 +192,8 @@ impl RenderPipeline<'_> {
         self.compositor_dirty_nodes.clear();
     }
 
-    pub fn render(
-        &mut self,
-        node_ref: DioxusNode,
-        layout_node: &LayoutNode,
-        render_wireframe: bool,
-    ) {
+    pub fn render(&mut self, node_ref: DioxusNode, layout_node: &LayoutNode) {
         let dirty_canvas = self.dirty_surface.canvas();
-        let area = layout_node.visible_area();
         let node_type = &*node_ref.node_type();
         if let NodeType::Element(ElementNode { tag, .. }) = node_type {
             let Some(element_utils) = tag.utils() else {
@@ -270,10 +271,6 @@ impl RenderPipeline<'_> {
                 self.images_cache,
                 self.scale_factor,
             );
-
-            if render_wireframe {
-                wireframe_renderer::render_wireframe(dirty_canvas, &area);
-            }
 
             dirty_canvas.restore_to_count(initial_layer);
         }
