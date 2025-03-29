@@ -34,6 +34,9 @@ pub struct AccordionProps {
     pub children: Element,
     /// Summary element.
     pub summary: Element,
+    /// Whether its open or not initially. Default to `false`.
+    #[props(default = false)]
+    pub initial_open: bool,
 }
 
 /// Show other elements under a collapsable box.
@@ -43,7 +46,7 @@ pub struct AccordionProps {
 #[allow(non_snake_case)]
 pub fn Accordion(props: AccordionProps) -> Element {
     let theme = use_applied_theme!(&props.theme, accordion);
-    let mut open = use_signal(|| false);
+    let mut open = use_signal(|| props.initial_open);
     let animation = use_animation(move |_conf| {
         AnimNum::new(0., 100.)
             .time(300)
