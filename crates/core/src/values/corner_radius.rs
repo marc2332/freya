@@ -15,8 +15,8 @@ use crate::parsing::{
 pub struct CornerRadius {
     pub top_left: f32,
     pub top_right: f32,
-    pub bottom_left: f32,
     pub bottom_right: f32,
+    pub bottom_left: f32,
     pub smoothing: f32,
 }
 
@@ -247,12 +247,12 @@ impl Parse for CornerRadius {
                         .ok_or(ParseError)?
                         .parse::<f32>()
                         .map_err(|_| ParseError)?,
-                    bottom_left: values
+                    bottom_right: values
                         .next()
                         .ok_or(ParseError)?
                         .parse::<f32>()
                         .map_err(|_| ParseError)?,
-                    bottom_right: values
+                    bottom_left: values
                         .next()
                         .ok_or(ParseError)?
                         .parse::<f32>()
