@@ -18,6 +18,8 @@ pub trait LayoutMeasurer<Key: NodeKey> {
         size: &Size2D,
     ) -> Option<(Size2D, Arc<SendAnyMap>)>;
 
+    fn should_measure(&mut self, node_id: Key) -> bool;
+
     fn should_measure_inner_children(&mut self, node_id: Key) -> bool;
 
     fn notify_layout_references(&self, _node_id: Key, _area: Area, _inner_sizes: Size2D) {}
@@ -34,6 +36,10 @@ impl LayoutMeasurer<usize> for NoopMeasurer {
         _size: &Size2D,
     ) -> Option<(Size2D, Arc<SendAnyMap>)> {
         None
+    }
+
+    fn should_measure(&mut self, _node_id: usize) -> bool {
+        true
     }
 
     fn should_measure_inner_children(&mut self, _node_id: usize) -> bool {

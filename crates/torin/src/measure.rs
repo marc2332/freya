@@ -23,6 +23,7 @@ use crate::{
         Length,
         Torin,
     },
+    size::Size,
 };
 
 /// Some layout strategies require two-phase measurements
@@ -108,21 +109,10 @@ where
             // This is useful when you use third-party libraries (e.g. rust-skia, cosmic-text) to measure text layouts
             // When a Node is measured by a custom measurer function the inner children will be skipped
             let (measure_inner_children, node_data) = if let Some(measurer) = self.measurer {
-                let most_fitting_width = *node
-                    .width
-                    .most_fitting_size(&area_size.width, &available_parent_area.size.width);
-                let most_fitting_height = *node
-                    .height
-                    .most_fitting_size(&area_size.height, &available_parent_area.size.height);
-
-                let most_fitting_area_size = Size2D::new(most_fitting_width, most_fitting_height);
-                let res = measurer.measure(node_id, node, &most_fitting_area_size);
-
-                // Compute the width and height again using the new custom area sizes
-                if let Some((custom_size, node_data)) = res {
-                    if node.width.inner_sized() {
-                        area_size.width = node.width.min_max(
-                            custom_size.width,
+                if measurer.should_measure(node_id) {
+                    let available_width =
+                        Size::Pixels(Length::new(available_parent_area.size.width)).min_max(
+                            area_size.width,
                             parent_area.size.width,
                             available_parent_area.size.width,
                             node.margin.left(),
@@ -132,10 +122,9 @@ where
                             self.layout_metadata.root_area.width(),
                             phase,
                         );
-                    }
-                    if node.height.inner_sized() {
-                        area_size.height = node.height.min_max(
-                            custom_size.height,
+                    let available_height =
+                        Size::Pixels(Length::new(available_parent_area.size.height)).min_max(
+                            area_size.height,
                             parent_area.size.height,
                             available_parent_area.size.height,
                             node.margin.top(),
@@ -145,10 +134,52 @@ where
                             self.layout_metadata.root_area.height(),
                             phase,
                         );
-                    }
+                    let most_fitting_width = *node
+                        .width
+                        .most_fitting_size(&area_size.width, &available_width);
+                    let most_fitting_height = *node
+                        .height
+                        .most_fitting_size(&area_size.height, &available_height);
 
-                    // Do not measure inner children
-                    (false, Some(node_data))
+                    let most_fitting_area_size =
+                        Size2D::new(most_fitting_width, most_fitting_height);
+                    let res = measurer.measure(node_id, node, &most_fitting_area_size);
+
+                    // Compute the width and height again using the new custom area sizes
+                    if let Some((custom_size, node_data)) = res {
+                        if node.width.inner_sized() {
+                            area_size.width = node.width.min_max(
+                                custom_size.width,
+                                parent_area.size.width,
+                                available_parent_area.size.width,
+                                node.margin.left(),
+                                node.margin.horizontal(),
+                                &node.minimum_width,
+                                &node.maximum_width,
+                                self.layout_metadata.root_area.width(),
+                                phase,
+                            );
+                        }
+                        if node.height.inner_sized() {
+                            area_size.height = node.height.min_max(
+                                custom_size.height,
+                                parent_area.size.height,
+                                available_parent_area.size.height,
+                                node.margin.top(),
+                                node.margin.vertical(),
+                                &node.minimum_height,
+                                &node.maximum_height,
+                                self.layout_metadata.root_area.height(),
+                                phase,
+                            );
+                        }
+                        debug_assert_eq!(custom_size, area_size);
+
+                        // Do not measure inner children
+                        (false, Some(node_data))
+                    } else {
+                        (true, None)
+                    }
                 } else {
                     (true, None)
                 }
