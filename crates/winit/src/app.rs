@@ -171,8 +171,14 @@ impl Application {
         app
     }
 
-    /// Provide the launch state and few other utilities like the EventLoopProxy
-    pub fn provide_vdom_contexts<State: 'static>(&mut self, app_state: Option<State>) {
+    /// Sync the RealDOM with the VirtualDOM
+    pub fn init_doms<State: 'static>(&mut self, scale_factor: f32, app_state: Option<State>) {
+        self.plugins.send(
+            PluginEvent::StartedUpdatingDOM,
+            PluginHandle::new(&self.proxy),
+        );
+
+        // Insert built-in VirtualDOM contexts
         if let Some(state) = app_state {
             self.vdom.insert_any_root_context(Box::new(state));
         }
@@ -184,18 +190,10 @@ impl Application {
             .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
         self.vdom
             .insert_any_root_context(Box::new(self.sdom.get().accessibility_generator().clone()));
-    }
 
-    /// Make the first build of the VirtualDOM and sync it with the RealDOM.
-    pub fn init_doms<State: 'static>(&mut self, scale_factor: f32, app_state: Option<State>) {
-        self.plugins.send(
-            PluginEvent::StartedUpdatingDOM,
-            PluginHandle::new(&self.proxy),
-        );
-
-        self.provide_vdom_contexts(app_state);
-
+        // Init the RealDOM
         self.sdom.get_mut().init_dom(&mut self.vdom, scale_factor);
+
         self.plugins.send(
             PluginEvent::FinishedUpdatingDOM,
             PluginHandle::new(&self.proxy),
