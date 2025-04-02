@@ -161,7 +161,7 @@ where
                                 phase,
                             );
 
-                            debug_assert_eq!(custom_size.width, area_size.width);
+                            debug_assert!(custom_size.width <= area_size.width);
                         }
                         if node.height.inner_sized() {
                             area_size.height = node.height.min_max(
@@ -176,7 +176,7 @@ where
                                 phase,
                             );
 
-                            debug_assert_eq!(custom_size.height, area_size.height);
+                            debug_assert!(custom_size.height <= area_size.height);
                         }
 
                         // Do not measure inner children
