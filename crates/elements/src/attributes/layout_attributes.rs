@@ -342,12 +342,6 @@ def_attribute!(
     /// - `space-around` (only for `main_align`): Distributed among the available space with small margins in the sides
     /// - `space-evenly` (only for `main_align`): Distributed among the available space with the same size of margins in the sides and in between the elements.
     ///
-    /// Accepted values for `cross_align`:
-    ///
-    /// - `start` (default): At the begining of the axis (same as in `main_align`)
-    /// - `center`: At the center of the axis (same as in `main_align`)
-    /// - `end`: At the end of the axis (same as in `main_align`)
-    ///
     /// When using the `vertical` direction it uses the Y axis and in `horizontal` direction it uses the X axis.
     ///
     /// Example on how to center the inner elements in the main axis:
