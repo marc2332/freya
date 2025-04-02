@@ -1,11 +1,21 @@
 use std::{
-    ops::{AddAssign, DivAssign, Mul, MulAssign, SubAssign},
+    ops::{
+        AddAssign,
+        DivAssign,
+        Mul,
+        MulAssign,
+        SubAssign,
+    },
     slice::Iter,
 };
 
 pub use euclid::Rect;
 
-use crate::{geometry::Length, measure::Phase, scaled::Scaled};
+use crate::{
+    geometry::Length,
+    measure::Phase,
+    scaled::Scaled,
+};
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum Size {
@@ -211,11 +221,21 @@ struct DynamicCalculationEvaluator<'a> {
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
+/// the enum representing the type of value we use for calculations. It should only be created as the Scaled or the
+/// UnScaled variant, the PartiallyScaled variant is created when doing an operation on two values of different types.
 enum Val {
+    /// represents pixels that will be scaled, eg. have itself multiplied by the scaling factor.
     Scaled(f32),
+    /// represents pixels that will not be scaled.
     UnScaled(f32),
+    /// represents a combination of scaled and unscaled pixels. It can be converted into the a number by scaling the scaled part and then adding that to the unscaled part.
+    /// This is needed in cases like `calc(50% + 10)` where when you add `50%` and `10` you want to be able to represent the values in a way where the pixels that represent
+    /// the `50%` arent scaled and the ones representing the `10` are.
     PartiallyScaled { scaled: f32, unscaled: f32 },
 }
+
+// below are the implementations of the operations used in the evaluation logic on the `Val` type.
+// they define the rules for how a `Val` with a `Val` should interract.
 
 impl SubAssign for Val {
     fn sub_assign(&mut self, rhs: Self) {
@@ -378,40 +398,6 @@ impl MulAssign for Val {
     }
 }
 
-impl Mul for Val {
-    type Output = Self;
-
-    fn mul(self, rhs: Self) -> Self::Output {
-        match self {
-            Val::Scaled(v) => match rhs {
-                Val::Scaled(r) => Val::Scaled(v * r),
-                Val::UnScaled(r) => Val::UnScaled(v * r),
-                Val::PartiallyScaled { scaled, unscaled } => Val::PartiallyScaled {
-                    scaled: v * scaled,
-                    unscaled: v * unscaled,
-                },
-            },
-            Val::UnScaled(v) => match rhs {
-                Val::UnScaled(r) | Val::Scaled(r) => Val::UnScaled(v * r),
-                Val::PartiallyScaled { scaled, unscaled } => Val::PartiallyScaled {
-                    scaled: v * scaled,
-                    unscaled: v * unscaled,
-                },
-            },
-            Val::PartiallyScaled { scaled, unscaled } => match rhs {
-                Val::UnScaled(r) | Val::Scaled(r) => Val::PartiallyScaled {
-                    scaled: scaled * r,
-                    unscaled: unscaled * r,
-                },
-                Val::PartiallyScaled {
-                    scaled: scaled_r,
-                    unscaled: unscaled_r,
-                } => Val::UnScaled((scaled + unscaled) * (scaled_r + unscaled_r)),
-            },
-        }
-    }
-}
-
 impl DivAssign for Val {
     fn div_assign(&mut self, rhs: Self) {
         match self {
@@ -452,6 +438,40 @@ impl DivAssign for Val {
                 } => {
                     *self = Self::UnScaled((*scaled + *unscaled) / (scaled_r + unscaled_r));
                 }
+            },
+        }
+    }
+}
+
+impl Mul for Val {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        match self {
+            Val::Scaled(v) => match rhs {
+                Val::Scaled(r) => Val::Scaled(v * r),
+                Val::UnScaled(r) => Val::UnScaled(v * r),
+                Val::PartiallyScaled { scaled, unscaled } => Val::PartiallyScaled {
+                    scaled: v * scaled,
+                    unscaled: v * unscaled,
+                },
+            },
+            Val::UnScaled(v) => match rhs {
+                Val::UnScaled(r) | Val::Scaled(r) => Val::UnScaled(v * r),
+                Val::PartiallyScaled { scaled, unscaled } => Val::PartiallyScaled {
+                    scaled: v * scaled,
+                    unscaled: v * unscaled,
+                },
+            },
+            Val::PartiallyScaled { scaled, unscaled } => match rhs {
+                Val::UnScaled(r) | Val::Scaled(r) => Val::PartiallyScaled {
+                    scaled: scaled * r,
+                    unscaled: unscaled * r,
+                },
+                Val::PartiallyScaled {
+                    scaled: scaled_r,
+                    unscaled: unscaled_r,
+                } => Val::UnScaled((scaled + unscaled) * (scaled_r + unscaled_r)),
             },
         }
     }
