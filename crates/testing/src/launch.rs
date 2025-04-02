@@ -141,7 +141,7 @@ pub fn launch_test_with_config<T: 'static + Clone>(
         platform_receiver,
     };
 
-    handler.init_dom();
+    handler.init_doms();
     handler.resize(handler.config.size);
 
     handler

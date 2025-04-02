@@ -51,7 +51,7 @@ pub enum WindowState<'a, State: Clone + 'static> {
 impl<'a, State: Clone + 'a> WindowState<'a, State> {
     pub fn created_state(&mut self) -> &mut CreatedState {
         let Self::Created(created) = self else {
-            panic!("Unexpected.")
+            unreachable!("Infallible, window should be created at this point.")
         };
         created
     }
@@ -72,7 +72,7 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
             mut config,
         }) = mem::replace(self, WindowState::Creating)
         else {
-            panic!("Unexpected.")
+            unreachable!("Infallible, window should not be created at this point.")
         };
 
         let mut window_attributes = Window::default_attributes()
@@ -141,7 +141,7 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
             accessibility,
         );
 
-        app.init_doms(scale_factor as f32, config.state.clone());
+        app.init_doms(scale_factor as f32, config.state);
         app.process_layout(window.inner_size(), scale_factor);
 
         *self = WindowState::Created(CreatedState {

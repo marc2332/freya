@@ -21,7 +21,7 @@ pub struct TestUtils {
 
 impl TestUtils {
     /// Get the SafeDOM.
-    pub fn sdom(&self) -> &SafeDOM {
+    pub(crate) fn sdom(&self) -> &SafeDOM {
         &self.sdom
     }
 
