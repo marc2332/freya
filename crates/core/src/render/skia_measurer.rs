@@ -108,6 +108,16 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
         }
     }
 
+    fn should_measure(&mut self, node_id: NodeId) -> bool {
+        let node = self.rdom.get(node_id).unwrap();
+        let node_type: &NodeType<_> = &node.node_type();
+
+        node_type
+            .tag()
+            .map(|tag| [TagName::Image, TagName::Label, TagName::Paragraph].contains(tag))
+            .unwrap_or_default()
+    }
+
     fn should_measure_inner_children(&mut self, node_id: NodeId) -> bool {
         let node = self.rdom.get(node_id).unwrap();
         let node_type: &NodeType<_> = &node.node_type();
