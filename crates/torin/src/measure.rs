@@ -146,6 +146,7 @@ where
                     let res = measurer.measure(node_id, node, &most_fitting_area_size);
 
                     // Compute the width and height again using the new custom area sizes
+                    #[allow(clippy::float_cmp)]
                     if let Some((custom_size, node_data)) = res {
                         if node.width.inner_sized() {
                             area_size.width = node.width.min_max(
@@ -159,6 +160,8 @@ where
                                 self.layout_metadata.root_area.width(),
                                 phase,
                             );
+
+                            debug_assert_eq!(custom_size.width, area_size.width);
                         }
                         if node.height.inner_sized() {
                             area_size.height = node.height.min_max(
@@ -172,8 +175,9 @@ where
                                 self.layout_metadata.root_area.height(),
                                 phase,
                             );
+
+                            debug_assert_eq!(custom_size.height, area_size.height);
                         }
-                        debug_assert_eq!(custom_size, area_size);
 
                         // Do not measure inner children
                         (false, Some(node_data))
