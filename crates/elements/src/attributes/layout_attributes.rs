@@ -1,26 +1,6 @@
 use crate::def_attribute;
 
 def_attribute!(
-    /// Specify the width for the given element.
-    ///
-    /// See syntax in [`Size Units`](crate::_docs::size_unit).
-    ///
-    /// ### Example
-    ///
-    /// ```rust, no_run
-    /// # use freya::prelude::*;
-    /// fn app() -> Element {
-    ///     rsx!(
-    ///         rect {
-    ///             background: "red",
-    ///             width: "15",
-    ///             height: "50",
-    ///         }
-    ///     )
-    /// }
-    /// ```
-    height,
-
     /// Specify the height for the given element.
     ///
     /// See syntax in [`Size Units`](crate::_docs::size_unit).
@@ -33,20 +13,40 @@ def_attribute!(
     ///     rsx!(
     ///         rect {
     ///             background: "red",
-    ///             width: "15",
     ///             height: "50",
+    ///             width: "15",
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    height,
+
+    /// Specify the width for the given element.
+    ///
+    /// See syntax in [`Size Units`](crate::_docs::size_unit).
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             background: "red",
+    ///             height: "50",
+    ///             width: "15",
     ///         }
     ///     )
     /// }
     /// ```
     width,
 
-    /// Specify a minimum height for the given element.
+    /// Specify a minimum width for the given element.
     /// This can be useful if you use it alongside a percentage for the target size.
     ///
     /// See syntax for [`Size Units`](crate::_docs::size_unit).
     ///
-    /// ##### Usage
+    /// ### Example
     ///
     /// ```rust, no_run
     /// # use freya::prelude::*;
@@ -64,12 +64,12 @@ def_attribute!(
     /// ```
     min_width,
 
-    //// Specify a minimum width for the given element.
+    /// Specify a minimum height for the given element.
     /// This can be useful if you use it alongside a percentage for the target size.
     ///
     /// See syntax for [`Size Units`](crate::_docs::size_unit).
     ///
-    /// ##### Usage
+    /// ### Example
     ///
     /// ```rust, no_run
     /// # use freya::prelude::*;
@@ -91,7 +91,7 @@ def_attribute!(
     ///
     /// See syntax for [`Size Units`](crate::_docs::size_unit).
     ///
-    /// ##### Usage
+    /// ### Example
     ///
     /// ```rust, no_run
     /// # use freya::prelude::*;
@@ -112,7 +112,7 @@ def_attribute!(
     ///
     /// See syntax for [`Size Units`](crate::_docs::size_unit).
     ///
-    /// ##### Usage
+    /// ### Example
     ///
     /// ```rust, no_run
     /// # use freya::prelude::*;
@@ -131,7 +131,7 @@ def_attribute!(
 
     /// Specify the percentage of width to be visible.
     ///
-    /// ##### Usage
+    /// ### Example
     ///
     /// ```rust, no_run
     /// # use freya::prelude::*;
@@ -150,7 +150,7 @@ def_attribute!(
 
     /// Specify the percentage of height to be visible.
     ///
-    /// ##### Usage
+    /// ### Example
     ///
     /// ```rust, no_run
     /// # use freya::prelude::*;
@@ -245,9 +245,109 @@ def_attribute!(
     /// }
     /// ```
     position,
+
+    /// Specify the top position of an element when using `position: "absolute"` or `position: "global"`.
+    /// This supports pixels only.
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             width: "100%",
+    ///             height: "100%",
+    ///             rect {
+    ///                 position: "absolute",
+    ///                 position_top: "15",
+    ///                 position_left: "15",
+    ///                 background: "black",
+    ///                 width: "100",
+    ///                 height: "100",
+    ///             }
+    ///         }
+    ///     )
+    /// }
+    /// ```
     position_top,
+
+    /// Specify the right position of an element when using `position: "absolute"` or `position: "global"`.
+    /// This supports pixels only.
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             width: "100%",
+    ///             height: "100%",
+    ///             rect {
+    ///                 position: "absolute",
+    ///                 position_top: "15",
+    ///                 position_right: "15",
+    ///                 background: "black",
+    ///                 width: "100",
+    ///                 height: "100",
+    ///             }
+    ///         }
+    ///     )
+    /// }
+    /// ```
     position_right,
+
+    /// Specify the bottom position of an element when using `position: "absolute"` or `position: "global"`.
+    /// This supports pixels only.
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             width: "100%",
+    ///             height: "100%",
+    ///             rect {
+    ///                 position: "absolute",
+    ///                 position_bottom: "15",
+    ///                 position_right: "15",
+    ///                 background: "black",
+    ///                 width: "100",
+    ///                 height: "100",
+    ///             }
+    ///         }
+    ///     )
+    /// }
+    /// ```
     position_bottom,
+
+    /// Specify the left position of an element when using `position: "absolute"` or `position: "global"`.
+    /// This supports pixels only.
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             width: "100%",
+    ///             height: "100%",
+    ///             rect {
+    ///                 position: "absolute",
+    ///                 position_bottom: "15",
+    ///                 position_left: "15",
+    ///                 background: "black",
+    ///                 width: "100",
+    ///                 height: "100",
+    ///             }
+    ///         }
+    ///     )
+    /// }
+    /// ```
     position_left,
 
     /// Control how the inner elements stack.
@@ -257,7 +357,7 @@ def_attribute!(
     /// - `vertical` (default)
     /// - `horizontal`
     ///
-    /// ##### Usage
+    /// ### Example
     ///
     /// ```rust, no_run
     /// # use freya::prelude::*;
@@ -295,6 +395,8 @@ def_attribute!(
     /// ### `fit`
     ///
     /// The `fit` mode will allow the inner elements using `width: fill-min` to expand to the biggest element inside this element.
+    ///
+    /// ### Example
     ///
     /// ```rust, no_run
     /// # use freya::prelude::*;
@@ -346,6 +448,8 @@ def_attribute!(
     ///
     /// Example on how to center the inner elements in the main axis:
     ///
+    /// ### Example
+    ///
     /// ```rust, no_run
     /// # use freya::prelude::*;
     /// fn app() -> Element {
@@ -378,6 +482,8 @@ def_attribute!(
     /// When using the `vertical` direction it uses the X axis and in `horizontal` direction it uses the Y axis.
     ///
     /// Example on how to center the inner elements in the cross axis:
+    ///
+    /// ### Example
     ///
     /// ```rust, no_run
     /// # use freya::prelude::*;
@@ -463,8 +569,95 @@ def_attribute!(
     /// ```
     overflow,
 
+    /// Moves the content inside of the container horizontally by the specified pixel amount.
+    /// This attribute only supports pixels.
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             width: "200",
+    ///             height: "200",
+    ///             background: "gray",
+    ///             offset_x: "20", // Shifts content 20 pixels to the right
+    ///             rect {
+    ///                 width: "100",
+    ///                 height: "100",
+    ///                 background: "red",
+    ///             }
+    ///         }
+    ///     )
+    /// }
+    /// ```
     offset_x,
+
+    /// Moves the content inside of the container vertically by the specified pixel amount.
+    /// This attribute only supports pixels.
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             width: "200",
+    ///             height: "200",
+    ///             background: "gray",
+    ///             offset_y: "30", // Shifts content 30 pixels down
+    ///             rect {
+    ///                 width: "100",
+    ///                 height: "100",
+    ///                 background: "red",
+    ///             }
+    ///         }
+    ///     )
+    /// }
+    /// ```
     offset_y,
 
+    /// Controls the stacking order of elements on the z-axis.
+    ///
+    /// In Freya, elements are stacked in the order they appear in the DOM, with later elements
+    /// appearing on top of earlier ones. The `layer` attribute allows you to explicitly control
+    /// this stacking behavior.
+    ///
+    /// Lower layer values position elements higher in the stack (visually on top), while higher
+    /// values position elements lower in the stack (visually behind).
+    ///
+    /// A value of 0 maintains the default stacking order, effectively keeping the layer the same.
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             width: "500",
+    ///             height: "500",
+    ///             // Using an image as the base element
+    ///             image {
+    ///                 width: "300",
+    ///                 height: "200",
+    ///                 image_data: static_bytes(include_bytes!("some_image.png")),
+    ///             }
+    ///             // Overlay on top of the image using absolute positioning
+    ///             rect {
+    ///                 position: "absolute",
+    ///                 position_top: "0",
+    ///                 position_left: "0",
+    ///                 width: "300",
+    ///                 height: "200",
+    ///                 background: "rgba(0, 0, 255, 0.5)", // Semi-transparent blue overlay
+    ///                 layer: "-1", // Ensures this is on top
+    ///             }
+    ///         }
+    ///     )
+    /// }
+    /// ```
     layer,
 );
