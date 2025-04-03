@@ -93,9 +93,6 @@ pub trait ElementUtils {
             node_style,
             transform_state,
         );
-        // let node_viewports = node_ref.get::<ViewportState>().unwrap();
-
-        // println!("{:?}", &*node_viewports);
 
         for viewport_id in &node_viewports.viewports {
             let viewport = layout.get(*viewport_id).unwrap().visible_area();
