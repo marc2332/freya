@@ -482,6 +482,16 @@ def_element!(
         position_left,
         layer,
 
+        // Children layout
+        direction,
+        content,
+        main_align,
+        cross_align,
+        spacing,
+        overflow,
+        offset_x,
+        offset_y,
+
         // Transform
         rotate,
         opacity,
