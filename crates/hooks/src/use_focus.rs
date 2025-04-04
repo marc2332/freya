@@ -61,7 +61,7 @@ impl UseFocus {
         AccessibilityId(accessibility_generator.new_id())
     }
 
-    /// Focus this node
+    /// Focus this accessibility node.
     pub fn focus(&mut self) {
         if !*self.is_focused.peek() {
             self.platform
@@ -69,17 +69,22 @@ impl UseFocus {
         }
     }
 
-    /// Get the node focus ID
+    /// Focus a given [AccessibilityId].
+    pub fn focus_id(id: AccessibilityId) {
+        UsePlatform::current().focus(AccessibilityFocusStrategy::Node(id));
+    }
+
+    /// Get [AccessibilityId] of this accessibility node.
     pub fn id(&self) -> AccessibilityId {
         self.id
     }
 
-    /// Create a node focus ID attribute
+    /// Create a [freya_elements::elements::rect::a11y_id] attribute value for this accessibility node.
     pub fn attribute(&self) -> AttributeValue {
         Self::attribute_for_id(self.id)
     }
 
-    /// Create a node focus ID attribute
+    /// Create a [freya_elements::elements::rect::a11y_id] attribute value for a given [AccessibilityId].
     pub fn attribute_for_id(id: AccessibilityId) -> AttributeValue {
         AttributeValue::any_value(CustomAttributeValues::AccessibilityId(id))
     }
@@ -209,13 +214,13 @@ impl UseFocus {
 pub fn use_focus() -> UseFocus {
     let id = use_hook(UseFocus::new_id);
 
-    use_focus_from_id(id)
+    use_focus_for_id(id)
 }
 
 /// Same as [use_focus] but providing a Node instead of generating a new one.
 ///
 /// This is an advance hook so you probably just want to use [use_focus].
-pub fn use_focus_from_id(id: AccessibilityId) -> UseFocus {
+pub fn use_focus_for_id(id: AccessibilityId) -> UseFocus {
     let focused_id = use_context::<Signal<AccessibilityId>>();
     let focused_node = use_context::<Signal<AccessibilityNode>>();
     let navigation_mode = use_context::<Signal<NavigationMode>>();
