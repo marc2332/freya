@@ -10,19 +10,18 @@ fn main() {
 }
 
 fn app() -> Element {
-    let mut text = use_signal(String::new);
+    let mut value = use_signal(String::new);
     let platform = use_platform();
 
     let onpress = move |_| {
-        let new_title = text.read().clone();
-        platform.set_title(new_title);
+        platform.set_title(value());
     };
 
     rsx!(
         Input {
-            value: text.read().clone(),
+            value,
             onchange: move |txt| {
-                text.set(txt);
+                value.set(txt);
             }
         }
         Button {

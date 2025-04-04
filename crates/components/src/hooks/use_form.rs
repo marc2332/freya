@@ -27,7 +27,7 @@ pub struct UseForm<Id: Hash + Eq + 'static> {
 }
 
 impl<Id: Clone + Hash + Eq + Display> UseForm<Id> {
-    /// Register an Input component
+    /// Register an [crate::Input] component.
     pub fn input(&self, id: Id) -> InputProps {
         let value = self.data.read().get(&id).cloned().unwrap_or_default();
         let placeholder = id.to_string();
@@ -38,15 +38,15 @@ impl<Id: Clone + Hash + Eq + Display> UseForm<Id> {
             }),
             theme: None,
             mode: InputMode::default(),
-            value,
-            placeholder: Some(placeholder),
+            value: dioxus_core::prelude::SuperInto::super_into(value),
+            placeholder: dioxus_core::prelude::SuperInto::super_into(Some(placeholder)),
             auto_focus: false,
             onvalidate: None,
             width: "150".to_string(),
         }
     }
 
-    /// Register a Button component
+    /// Register a [crate::Button] component.
     pub fn submit(&self) -> ButtonProps {
         let submit = self.onsubmit;
         let data = self.data;
