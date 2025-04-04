@@ -97,11 +97,11 @@ pub fn SelectableText(value: ReadOnlySignal<String>) -> Element {
         editable.process_event(&EditableEvent::Click);
     };
 
-    let onglobalkeydown = move |e: KeyboardEvent| {
+    let onkeydown = move |e: KeyboardEvent| {
         editable.process_event(&EditableEvent::KeyDown(e.data));
     };
 
-    let onglobalkeyup = move |e: KeyboardEvent| {
+    let onkeyup = move |e: KeyboardEvent| {
         editable.process_event(&EditableEvent::KeyUp(e.data));
     };
 
@@ -145,11 +145,57 @@ pub fn SelectableText(value: ReadOnlySignal<String>) -> Element {
             onmouseenter,
             onmouseleave,
             onglobalclick,
-            onglobalkeydown,
-            onglobalkeyup,
+            onkeydown,
+            onkeyup,
             text {
                 "{editable.editor()}"
             }
         }
     )
+}
+
+#[cfg(test)]
+mod test {
+    use freya::prelude::*;
+    use freya_testing::prelude::*;
+
+    #[tokio::test]
+    pub async fn selectable_text() {
+        fn selectable_text_app() -> Element {
+            rsx!(SelectableText {
+                value: "Hello, World!"
+            })
+        }
+
+        let mut utils = launch_test(selectable_text_app);
+
+        // Initial state
+        let root = utils.root().get(0);
+        assert_eq!(root.get(0).get(0).text(), Some("Hello, World!"));
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+
+        utils.push_event(TestEvent::Mouse {
+            name: EventName::MouseDown,
+            cursor: (3.0, 3.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+        utils.push_event(TestEvent::Mouse {
+            name: EventName::MouseMove,
+            cursor: (55.0, 3.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+
+        let root = utils.root().get(0);
+        let highlights = root.state().cursor.highlights.clone();
+        #[cfg(not(target_os = "macos"))]
+        assert_eq!(highlights, Some(vec![(0, 8)]));
+
+        #[cfg(target_os = "macos")]
+        assert_eq!(highlights, Some(vec![(0, 8)]));
+    }
 }
