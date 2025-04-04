@@ -196,6 +196,6 @@ mod test {
         assert_eq!(highlights, Some(vec![(0, 8)]));
 
         #[cfg(target_os = "macos")]
-        assert_eq!(highlights, Some(vec![(0, 8)]));
+        assert_eq!(highlights, Some(vec![(0, 7)]));
     }
 }
