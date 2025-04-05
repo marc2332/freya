@@ -39,9 +39,7 @@ def_attribute!(
     /// Specify borders for an element.
     ///
     /// The `border` attribute follows this syntax:
-    /// ```
     /// border: "<width(s)> <alignment> <fill>"
-    /// ```
     ///
     /// Width specification follows CSS-like patterns:
     /// - Single value: Applied to all sides
@@ -117,9 +115,7 @@ def_attribute!(
     /// Draw a shadow of the element.
     ///
     /// The `shadow` attribute follows this syntax:
-    /// ```
     /// shadow: "<x> <y> <intensity> <size> <color>"
-    /// ```
     ///
     /// - `x` and `y`: Define the offset position of the shadow
     /// - `intensity`: Controls the shadow's blur amount
@@ -143,9 +139,7 @@ def_attribute!(
     /// Round the corners of an element by a specified radius.
     ///
     /// The `corner_radius` attribute follows this syntax:
-    /// ```
     /// corner_radius: "<radius> | <tl-tr> <bl-br> | <tl> <tr> <br> <bl>"
-    /// ```
     ///
     /// - Single value: Applied to all corners
     /// - Two values: First for top-left & top-right, second for bottom-left & bottom-right

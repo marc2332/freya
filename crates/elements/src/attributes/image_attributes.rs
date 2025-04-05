@@ -28,10 +28,10 @@ def_attribute!(
     ///
     /// ```rust, no_run
     /// # use freya::prelude::*;
-    /// # use tokio::fs;
+    /// # use std::fs;
     ///
     /// #[component]
-    /// fn DynamicImage(image_data: ReadonlySignal<Vec<u8>>) -> Element {
+    /// fn DynamicImage(image_data: ReadOnlySignal<Vec<u8>>) -> Element {
     ///     rsx!(
     ///         image {
     ///             image_data: dynamic_bytes(image_data.read().clone()),
