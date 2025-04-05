@@ -607,7 +607,7 @@ pub fn alignment_with_absolute_child() {
             Alignment::Center,
             Alignment::Center,
             Direction::Vertical,
-            Length::new(15.0),
+            Size2D::new(15.0, 15.0),
         ),
     );
     mocked_dom.add(
