@@ -129,6 +129,8 @@ pub struct UseEditable {
     pub(crate) dragging: Signal<TextDragging>,
     pub(crate) platform: UsePlatform,
     pub(crate) allow_tabs: bool,
+    pub(crate) allow_changes: bool,
+    pub(crate) allow_clipboard: bool,
 }
 
 impl UseEditable {
@@ -211,6 +213,8 @@ impl UseEditable {
             dragging,
             platform,
             allow_tabs: config.allow_tabs,
+            allow_changes: config.allow_changes,
+            allow_clipboard: config.allow_clipboard,
         }
     }
 
@@ -297,14 +301,16 @@ impl UseEditable {
                             _ => {}
                         }
                     }
-                    // Do not write Tabs
-                    Code::Tab if !self.allow_tabs => {}
                     // Handle editing
                     _ => {
-                        let event = self
-                            .editor
-                            .write()
-                            .process_key(&e.key, &e.code, &e.modifiers);
+                        let event = self.editor.write().process_key(
+                            &e.key,
+                            &e.code,
+                            &e.modifiers,
+                            self.allow_tabs,
+                            self.allow_changes,
+                            self.allow_clipboard,
+                        );
                         if event.contains(TextEvent::TEXT_CHANGED) {
                             *self.dragging.write() = TextDragging::None;
                         }
@@ -349,6 +355,8 @@ pub struct EditableConfig {
     pub(crate) cursor: TextCursor,
     pub(crate) identation: u8,
     pub(crate) allow_tabs: bool,
+    pub(crate) allow_changes: bool,
+    pub(crate) allow_clipboard: bool,
 }
 
 impl EditableConfig {
@@ -359,6 +367,8 @@ impl EditableConfig {
             cursor: TextCursor::default(),
             identation: 4,
             allow_tabs: false,
+            allow_changes: true,
+            allow_clipboard: true,
         }
     }
 
@@ -379,10 +389,25 @@ impl EditableConfig {
         self.allow_tabs = allow_tabs;
         self
     }
+
+    /// Allow changes through keyboard events or not
+    pub fn with_allow_changes(mut self, allow_changes: bool) -> Self {
+        self.allow_changes = allow_changes;
+        self
+    }
+
+    /// Allow clipboard keyboard events
+    pub fn with_allow_clipboard(mut self, allow_clipboard: bool) -> Self {
+        self.allow_clipboard = allow_clipboard;
+        self
+    }
 }
 
 /// Hook to create an editable text. For manual creation use [UseEditable::new_in_hook].
-pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode) -> UseEditable {
+pub fn use_editable(
+    initializer: impl FnOnce() -> EditableConfig,
+    mode: EditableMode,
+) -> UseEditable {
     let platform = use_platform();
     let clipboard = use_clipboard();
 

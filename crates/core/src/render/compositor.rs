@@ -209,6 +209,7 @@ impl Compositor {
             self.full_render = false;
             return layers;
         }
+
         let mut skipped_nodes = HashSet::<NodeId>::new();
 
         loop {
@@ -277,15 +278,17 @@ impl Compositor {
                                     }
 
                                     if is_dirty {
-                                        // Expand the dirty area with the cached area so it gets cleaned up
+                                        // Expand the dirty area with the cached area
                                         if let Some(invalidated_cache_area) =
                                             invalidated_cache_area.take()
                                         {
                                             dirty_area.unite_or_insert(&invalidated_cache_area);
                                         }
 
-                                        // Expand the dirty area with only nodes who have actually changed
+                                        // Expand the dirty area with new area
                                         dirty_area.unite_or_insert(&area);
+
+                                        // Run again in case this affects e.g ancestors
                                         any_dirty = true;
                                     }
                                 }
