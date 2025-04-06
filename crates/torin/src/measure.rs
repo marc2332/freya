@@ -159,8 +159,6 @@ where
                                 self.layout_metadata.root_area.width(),
                                 phase,
                             );
-
-                            debug_assert!(custom_size.width <= area_size.width);
                         }
                         if node.height.inner_sized() {
                             area_size.height = node.height.min_max(
@@ -174,8 +172,6 @@ where
                                 self.layout_metadata.root_area.height(),
                                 phase,
                             );
-
-                            debug_assert!(custom_size.height <= area_size.height);
                         }
 
                         // Do not measure inner children

@@ -80,7 +80,7 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                     self.scale_factor,
                 );
                 let mut map = SendAnyMap::new();
-                map.insert(CachedParagraph(paragraph, size.height));
+                map.insert(CachedParagraph(paragraph));
                 Some((size, Arc::new(map)))
             }
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Paragraph => {
@@ -93,7 +93,7 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                     self.scale_factor,
                 );
                 let mut map = SendAnyMap::new();
-                map.insert(CachedParagraph(paragraph, size.height));
+                map.insert(CachedParagraph(paragraph));
                 Some((size, Arc::new(map)))
             }
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Image => {

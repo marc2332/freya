@@ -247,8 +247,10 @@ fn DocumentView(path: ReadOnlySignal<String>) -> Element {
 
     if let Some(Ok(text)) = &*content {
         rsx!(
-            label {
-                "{text}"
+            ScrollView {
+                label {
+                    "{text}"
+                }
             }
         )
     } else if content.is_none() {
@@ -362,27 +364,25 @@ fn DocumentEditor(path: String, mut editable: UseEditable) -> Element {
     };
 
     rsx!(
-        rect {
+        ScrollView {
             width: "fill",
             height: "fill",
-            ScrollView {
-                scroll_with_arrows: false,
-                paragraph {
-                    cursor_reference,
-                    width: "100%",
-                    cursor_id: "0",
-                    cursor_index: "{cursor_char}",
-                    cursor_mode: "editable",
-                    cursor_color: "black",
-                    highlights,
-                    onclick,
-                    onmousemove,
-                    onmousedown,
-                    onglobalkeydown,
-                    onglobalkeyup,
-                    text {
-                        "{editable.editor()}"
-                    }
+            scroll_with_arrows: false,
+            paragraph {
+                cursor_reference,
+                width: "100%",
+                cursor_id: "0",
+                cursor_index: "{cursor_char}",
+                cursor_mode: "editable",
+                cursor_color: "black",
+                highlights,
+                onclick,
+                onmousemove,
+                onmousedown,
+                onglobalkeydown,
+                onglobalkeyup,
+                text {
+                    "{editable.editor()}"
                 }
             }
         }
