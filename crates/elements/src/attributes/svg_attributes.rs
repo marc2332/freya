@@ -8,15 +8,15 @@ def_attribute!(
     /// ### Example
     ///
     /// ```rust, no_run
+    /// static SVG_ICON: &[u8] = include_bytes!("../../../../examples/settings.svg");
+    ///
     /// # use freya::prelude::*;
     /// fn app() -> Element {
-    ///     let svg_bytes = vec![]; // your SVG bytes here
-    ///
     ///     rsx!(
     ///         svg {
     ///             width: "100%",
     ///             height: "100%",
-    ///             svg_data: dynamic_bytes(svg_bytes),
+    ///             svg_data: static_bytes(SVG_ICON),
     ///         }
     ///     )
     /// }

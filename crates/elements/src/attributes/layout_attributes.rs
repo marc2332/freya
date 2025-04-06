@@ -643,7 +643,7 @@ def_attribute!(
     ///             image {
     ///                 width: "300",
     ///                 height: "200",
-    ///                 image_data: static_bytes(include_bytes!("some_image.png")),
+    ///                 image_data: static_bytes(include_bytes!("../_docs/rust_logo.png")),
     ///             }
     ///             // Overlay on top of the image using absolute positioning
     ///             rect {
