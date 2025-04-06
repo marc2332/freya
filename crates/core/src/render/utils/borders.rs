@@ -14,7 +14,7 @@ pub enum BorderShape {
 
 pub fn render_border(
     canvas: &Canvas,
-    rounded_rect: RRect,
+    rect: Rect,
     area: Area,
     border: &Border,
     corner_radius: &CornerRadius,
@@ -26,7 +26,7 @@ pub fn render_border(
 
     border.fill.apply_to_paint(&mut border_paint, area);
 
-    match border_shape(*rounded_rect.rect(), corner_radius, border) {
+    match border_shape(rect, corner_radius, border) {
         BorderShape::DRRect(outer, inner) => {
             canvas.draw_drrect(outer, inner, &border_paint);
         }

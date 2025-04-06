@@ -1312,6 +1312,10 @@ impl Rect {
     pub fn with_outset(&self, _delta: impl Into<Point>) -> Self {
         unimplemented!("This is mocked")
     }
+
+    pub fn round_in(&self) -> IRect {
+        unimplemented!("This is mocked")
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -1380,6 +1384,12 @@ pub struct IRect {
 
 impl IRect {
     pub fn new(_left: i32, _top: i32, _right: i32, _bottom: i32) -> Self {
+        unimplemented!("This is mocked")
+    }
+}
+
+impl From<IRect> for Rect {
+    fn from(irect: IRect) -> Self {
         unimplemented!("This is mocked")
     }
 }

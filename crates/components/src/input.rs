@@ -1,4 +1,5 @@
 use std::{
+    borrow::Cow,
     cell::{
         Ref,
         RefCell,
@@ -93,9 +94,9 @@ pub struct InputProps {
     /// Theme override.
     pub theme: Option<InputThemeWith>,
     /// Text to show for when there is no value
-    pub placeholder: Option<String>,
-    /// Current value of the Input
-    pub value: String,
+    pub placeholder: ReadOnlySignal<Option<String>>,
+    /// Current value of the Input.
+    pub value: ReadOnlySignal<String>,
     /// Handler for the `onchange` event.
     pub onchange: EventHandler<String>,
     /// Display mode for Input. By default, input text is shown as it is provided.
@@ -127,7 +128,7 @@ pub struct InputProps {
 ///             "Value: {value}"
 ///         }
 ///         Input {
-///             value: value.read().clone(),
+///             value,
 ///             onchange: move |e| {
 ///                  value.set(e)
 ///             }
@@ -184,9 +185,11 @@ pub fn Input(
     let mut focus = use_focus();
     let mut drag_origin = use_signal(|| None);
 
+    let value = value.read();
+    let placeholder = placeholder.read();
     let display_placeholder = value.is_empty() && placeholder.is_some();
 
-    if &value != editable.editor().read().rope() {
+    if &*value != editable.editor().read().rope() {
         editable.editor_mut().write().set(&value);
         editable.editor_mut().write().editor_history().clear();
     }
@@ -245,7 +248,7 @@ pub fn Input(
         if !display_placeholder {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         }
-        focus.focus();
+        focus.request_focus();
     };
 
     let onmousedown = move |e: MouseEvent| {
@@ -254,7 +257,7 @@ pub fn Input(
         if !display_placeholder {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         }
-        focus.focus();
+        focus.request_focus();
     };
 
     let onglobalmousemove = move |mut e: MouseEvent| {
@@ -297,7 +300,7 @@ pub fn Input(
             if drag_origin.read().is_some() {
                 drag_origin.set(None);
             } else {
-                focus.unfocus();
+                focus.request_unfocus();
             }
         }
     };
@@ -326,10 +329,10 @@ pub fn Input(
         font_theme.color
     };
 
-    let text = match (mode, placeholder) {
-        (_, Some(placeholder)) if display_placeholder => placeholder,
-        (InputMode::Hidden(ch), _) => ch.to_string().repeat(value.len()),
-        (InputMode::Shown, _) => value,
+    let text = match (mode, &*placeholder) {
+        (_, Some(placeholder)) if display_placeholder => Cow::Borrowed(placeholder.as_str()),
+        (InputMode::Hidden(ch), _) => Cow::Owned(ch.to_string().repeat(value.len())),
+        (InputMode::Shown, _) => Cow::Borrowed(value.as_str()),
     };
 
     rsx!(
@@ -370,7 +373,7 @@ pub fn Input(
                     max_lines: "1",
                     highlights,
                     text {
-                        "{text}"
+                        {text}
                     }
                 }
             }
@@ -389,7 +392,7 @@ mod test {
             let mut value = use_signal(|| "Hello, Worl".to_string());
 
             rsx!(Input {
-                value: value.read().clone(),
+                value,
                 onchange: move |new_value| {
                     value.set(new_value);
                 }
