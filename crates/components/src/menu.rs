@@ -206,7 +206,7 @@ pub fn MenuItem(
     });
 
     let onclick = move |_| {
-        focus.focus();
+        focus.request_focus();
         if let Some(onpress) = &onpress {
             onpress.call(())
         }

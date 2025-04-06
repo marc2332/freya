@@ -69,7 +69,7 @@ pub fn SelectableText(value: ReadOnlySignal<String>) -> Element {
         e.stop_propagation();
         drag_origin.set(Some(e.get_screen_coordinates() - e.element_coordinates));
         editable.process_event(&EditableEvent::MouseDown(e.data, 0));
-        focus.focus();
+        focus.request_focus();
     };
 
     let onglobalmousemove = move |mut e: MouseEvent| {
@@ -125,7 +125,7 @@ pub fn SelectableText(value: ReadOnlySignal<String>) -> Element {
                 drag_origin.set(None);
             } else {
                 editable.editor_mut().write().clear_selection();
-                focus.unfocus();
+                focus.request_unfocus();
             }
         }
     };

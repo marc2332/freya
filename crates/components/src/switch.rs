@@ -163,7 +163,7 @@ pub fn Switch(props: SwitchProps) -> Element {
 
     let onclick = move |e: MouseEvent| {
         e.stop_propagation();
-        focus.focus();
+        focus.request_focus();
         props.ontoggled.call(());
     };
 

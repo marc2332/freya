@@ -16,7 +16,7 @@ pub async fn track_focus() {
                 width: "100%",
                 height: "50%",
                 a11y_id,
-                onclick: move |_| focus_manager.focus(),
+                onclick: move |_| focus_manager.request_focus(),
                 label {
                     "{focus_manager.is_focused()}"
                 }
@@ -77,7 +77,7 @@ pub async fn block_focus() {
                 a11y_id: focus_manager.attribute(),
                 width: "100%",
                 height: "50%",
-                onclick: move |_| focus_manager.focus(),
+                onclick: move |_| focus_manager.request_focus(),
                 label {
                     "{focus_manager.is_focused()}"
                 }
@@ -97,7 +97,7 @@ pub async fn block_focus() {
                 onkeydown: move |_| {
                     focus_manager.prevent_navigation();
                 },
-                onclick: move |_| focus_manager.focus(),
+                onclick: move |_| focus_manager.request_focus(),
                 label {
                     "{focus_manager.is_focused()}"
                 }
