@@ -287,7 +287,7 @@ fn AddTask(data: Signal<Vec<Task>>, state: State) -> Element {
                     padding: "2",
                     spacing: "12",
                     Input {
-                        value:description,
+                        value: description,
                         placeholder: "Description",
                         width: "fill",
                         onchange: move |txt| {
