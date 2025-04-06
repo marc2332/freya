@@ -70,7 +70,7 @@ impl UseFocus {
     }
 
     /// Request to **unfocus** accessibility node. This will not immediately update [Self::is_focused].
-    pub fn unfocus(&mut self) {
+    pub fn request_unfocus(&mut self) {
         self.platform
             .send(EventLoopMessage::FocusAccessibilityNode(
                 AccessibilityFocusStrategy::Node(ACCESSIBILITY_ROOT_ID),
