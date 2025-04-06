@@ -42,14 +42,7 @@ impl ElementUtils for ImageElement {
 
         let image_state = node_ref.get::<ImageState>().unwrap();
 
-        let mut rect = Rect::new(
-            area.min_x(),
-            area.min_y(),
-            area.min_x() + size.width,
-            area.min_y() + size.height,
-        );
-
-        let clip_rect = Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
+        let mut rect = Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
 
         if image_state.image_cover == ImageCover::Center {
             let width_offset = (size.width - area.width()) / 2.;
@@ -60,9 +53,6 @@ impl ElementUtils for ImageElement {
             rect.top -= height_offset;
             rect.bottom -= height_offset;
         }
-
-        canvas.save();
-        canvas.clip_rect(clip_rect, ClipOp::Intersect, true);
 
         let mut paint = Paint::default();
         paint.set_anti_alias(true);
@@ -82,7 +72,23 @@ impl ElementUtils for ImageElement {
             sampling,
             &Paint::default(),
         );
-
-        canvas.restore();
+    }
+    fn clip(
+        &self,
+        layout_node: &torin::prelude::LayoutNode,
+        _node_ref: &DioxusNode,
+        canvas: &Canvas,
+        _scale_factor: f32,
+    ) {
+        canvas.clip_rect(
+            Rect::new(
+                layout_node.area.min_x(),
+                layout_node.area.min_y(),
+                layout_node.area.max_x(),
+                layout_node.area.max_y(),
+            ),
+            ClipOp::Intersect,
+            true,
+        );
     }
 }
