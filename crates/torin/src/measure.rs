@@ -107,8 +107,7 @@ where
 
             // If available, run a custom layout measure function
             // This is useful when you use third-party libraries (e.g. rust-skia, cosmic-text) to measure text layouts
-            // When a Node is measured by a custom measurer function the inner children will be skipped
-            let (measure_inner_children, node_data) = if let Some(measurer) = self.measurer {
+            let node_data = if let Some(measurer) = self.measurer {
                 if measurer.should_measure(node_id) {
                     let available_width =
                         Size::Pixels(Length::new(available_parent_area.size.width)).min_max(
@@ -180,15 +179,21 @@ where
                         }
 
                         // Do not measure inner children
-                        (false, Some(node_data))
+                        Some(node_data)
                     } else {
-                        (true, None)
+                        None
                     }
                 } else {
-                    (true, None)
+                    None
                 }
             } else {
-                (true, None)
+                None
+            };
+
+            let measure_inner_children = if let Some(measurer) = self.measurer {
+                measurer.should_measure_inner_children(node_id)
+            } else {
+                true
             };
 
             // There is no need to measure inner children in the initial phase if this Node size
