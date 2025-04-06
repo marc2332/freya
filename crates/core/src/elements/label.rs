@@ -51,6 +51,25 @@ impl ElementUtils for LabelElement {
         paragraph.paint(canvas, (x, y));
     }
 
+    fn clip(
+        &self,
+        layout_node: &LayoutNode,
+        _node_ref: &DioxusNode,
+        canvas: &Canvas,
+        _scale_factor: f32,
+    ) {
+        canvas.clip_rect(
+            Rect::new(
+                layout_node.area.min_x(),
+                layout_node.area.min_y(),
+                layout_node.area.max_x(),
+                layout_node.area.max_y(),
+            ),
+            ClipOp::Intersect,
+            true,
+        );
+    }
+
     #[inline]
     fn element_needs_cached_area(&self, node_ref: &DioxusNode, _style_state: &StyleState) -> bool {
         let font_style = node_ref.get::<FontStyleState>().unwrap();
@@ -65,15 +84,7 @@ impl ElementUtils for LabelElement {
         scale_factor: f32,
         _node_style: &StyleState,
     ) -> Area {
-        let paragraph_font_height = &layout_node
-            .data
-            .as_ref()
-            .unwrap()
-            .get::<CachedParagraph>()
-            .unwrap()
-            .1;
-        let mut area = layout_node.visible_area();
-        area.size.height = area.size.height.max(*paragraph_font_height);
+        let area = layout_node.visible_area();
 
         let font_style = node_ref.get::<FontStyleState>().unwrap();
 
