@@ -3,7 +3,7 @@ use crate::def_attribute;
 def_attribute!(
     /// The `svg_data` attribute lets you provide raw SVG data directly.
     ///
-    /// This is similar to the `image_data` attribute but specifically for SVG content.
+    /// This is similar to the `image_data` attribute but specifically for SVG data.
     ///
     /// ### Example
     ///
