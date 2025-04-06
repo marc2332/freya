@@ -139,7 +139,7 @@ def_attribute!(
     /// Round the corners of an element by a specified radius.
     ///
     /// The `corner_radius` attribute follows this syntax:
-    /// corner_radius: "<radius> | <tl-tr> <bl-br> | <tl> <tr> <br> <bl>"
+    /// corner_radius: "<all> | <tl-tr> <bl-br> | <tl> <tr> <br> <bl>"
     ///
     /// - Single value: Applied to all corners
     /// - Two values: First for top-left & top-right, second for bottom-left & bottom-right
