@@ -53,7 +53,7 @@ where
     D: DOMAdapter<Key>,
 {
     /// Measure a Node.
-    #[allow(clippy::too_many_arguments)]
+    #[allow(clippy::too_many_arguments, clippy::missing_panics_doc)]
     pub fn measure_node(
         &mut self,
         // ID for this Node
