@@ -288,7 +288,7 @@ pub fn ScrollView(
         }
 
         if clicking_scrollbar.is_some() {
-            focus.focus();
+            focus.request_focus();
         }
     };
 

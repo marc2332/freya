@@ -237,7 +237,7 @@ pub fn ButtonBase(
     let onpointerup = {
         to_owned![onpress, onclick];
         move |ev: PointerEvent| {
-            focus.focus();
+            focus.request_focus();
             if let Some(onpress) = &onpress {
                 let is_valid = match ev.data.pointer_type {
                     PointerType::Mouse {

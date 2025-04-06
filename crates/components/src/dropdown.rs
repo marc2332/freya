@@ -266,7 +266,7 @@ where
     };
 
     let onclick = move |_| {
-        focus.focus();
+        focus.request_focus();
         opened.set(true)
     };
 

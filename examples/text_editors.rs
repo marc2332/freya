@@ -71,7 +71,7 @@ fn Editor(mut editable: UseEditable) -> Element {
     let cursor_char = editor.cursor_pos();
 
     let onmousedown = move |e: MouseEvent| {
-        focus.focus();
+        focus.request_focus();
         editable.process_event(&EditableEvent::MouseDown(e.data, 0));
     };
 
