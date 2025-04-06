@@ -50,7 +50,7 @@ def_attribute!(
     /// Alignment must be one of:
     /// - `inner`: Border drawn inside the element bounds
     /// - `outer`: Border drawn outside the element bounds
-    /// - `center`: Border centered on the element bounds
+    /// - `center` (default): Border centered on the element bounds
     ///
     /// *Border alignment* determines how the border is positioned relative to the element's edge. Alignment can be `inner`, `outer`, or `center`.
     ///
