@@ -125,7 +125,7 @@ pub fn SelectableText(value: ReadOnlySignal<String>) -> Element {
                 drag_origin.set(None);
             } else {
                 editable.editor_mut().write().clear_selection();
-                focus.unfocus();
+                focus.request_unfocus();
             }
         }
     };

@@ -300,7 +300,7 @@ pub fn Input(
             if drag_origin.read().is_some() {
                 drag_origin.set(None);
             } else {
-                focus.unfocus();
+                focus.request_unfocus();
             }
         }
     };

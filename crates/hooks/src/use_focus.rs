@@ -61,12 +61,21 @@ impl UseFocus {
         AccessibilityId(accessibility_generator.new_id())
     }
 
-    /// Request to focus accessibility node. This will not immediately update [Self::is_focused].
+    /// Request to **focus** accessibility node. This will not immediately update [Self::is_focused].
     pub fn request_focus(&mut self) {
         if !*self.is_focused.peek() {
             self.platform
                 .focus(AccessibilityFocusStrategy::Node(self.id));
         }
+    }
+
+    /// Request to **unfocus** accessibility node. This will not immediately update [Self::is_focused].
+    pub fn unfocus(&mut self) {
+        self.platform
+            .send(EventLoopMessage::FocusAccessibilityNode(
+                AccessibilityFocusStrategy::Node(ACCESSIBILITY_ROOT_ID),
+            ))
+            .ok();
     }
 
     /// Focus a given [AccessibilityId].
@@ -98,15 +107,6 @@ impl UseFocus {
     pub fn is_focused_with_keyboard(&self) -> bool {
         *self.is_focused_with_keyboard.read()
             && *self.navigation_mode.read() == NavigationMode::Keyboard
-    }
-
-    /// Unfocus the currently focused node.
-    pub fn unfocus(&mut self) {
-        self.platform
-            .send(EventLoopMessage::FocusAccessibilityNode(
-                AccessibilityFocusStrategy::Node(ACCESSIBILITY_ROOT_ID),
-            ))
-            .ok();
     }
 
     /// Useful if you want to trigger an action when `Enter` or `Space` is pressed and this Node was focused with the keyboard.
@@ -150,7 +150,7 @@ impl UseFocus {
 ///             // Bind the focus to this `rect`
 ///             a11y_id: my_focus.attribute(),
 ///             // This will focus this element and effectively cause a rerender updating the returned value of `is_focused()`
-///             onclick: move |_| my_focus.focus(),
+///             onclick: move |_| my_focus.request_focus(),
 ///             label {
 ///                 "Am I focused? {my_focus.is_focused()}"
 ///             }
@@ -176,7 +176,7 @@ impl UseFocus {
 ///         rect {
 ///             background,
 ///             a11y_id: my_focus.attribute(),
-///             onclick: move |_| my_focus.focus(),
+///             onclick: move |_| my_focus.request_focus(),
 ///             label {
 ///                 "Focus me!"
 ///             }
