@@ -191,7 +191,7 @@ pub fn Slider(
         to_owned![onmoved];
         move |e: MouseEvent| {
             e.stop_propagation();
-            focus.focus();
+            focus.request_focus();
             clicking.set(true);
             let coordinates = e.get_element_coordinates();
             let percentage = if direction_is_vertical {

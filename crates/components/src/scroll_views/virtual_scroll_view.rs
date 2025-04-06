@@ -282,7 +282,7 @@ pub fn VirtualScrollView<
         if *scrolled_y.peek() != scroll_position_y {
             e.stop_propagation();
             *scrolled_y.write() = scroll_position_y;
-            focus.focus();
+            focus.request_focus();
         }
 
         let scroll_position_x = get_scroll_position_from_wheel(
@@ -296,7 +296,7 @@ pub fn VirtualScrollView<
         if *scrolled_x.peek() != scroll_position_x {
             e.stop_propagation();
             *scrolled_x.write() = scroll_position_x;
-            focus.focus();
+            focus.request_focus();
         }
     };
 
@@ -323,7 +323,7 @@ pub fn VirtualScrollView<
         }
 
         if clicking_scrollbar.is_some() {
-            focus.focus();
+            focus.request_focus();
         }
     };
 

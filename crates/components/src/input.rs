@@ -248,7 +248,7 @@ pub fn Input(
         if !display_placeholder {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         }
-        focus.focus();
+        focus.request_focus();
     };
 
     let onmousedown = move |e: MouseEvent| {
@@ -257,7 +257,7 @@ pub fn Input(
         if !display_placeholder {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         }
-        focus.focus();
+        focus.request_focus();
     };
 
     let onglobalmousemove = move |mut e: MouseEvent| {

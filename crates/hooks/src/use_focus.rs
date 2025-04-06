@@ -61,8 +61,8 @@ impl UseFocus {
         AccessibilityId(accessibility_generator.new_id())
     }
 
-    /// Focus this accessibility node.
-    pub fn focus(&mut self) {
+    /// Request to focus accessibility node. This will not immediately update [Self::is_focused].
+    pub fn request_focus(&mut self) {
         if !*self.is_focused.peek() {
             self.platform
                 .focus(AccessibilityFocusStrategy::Node(self.id));
