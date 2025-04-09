@@ -265,6 +265,29 @@ where
                     &mut inner_area,
                     true,
                 );
+
+                area.size.width = node.width.min_max(
+                    area.size.width,
+                    parent_area.size.width,
+                    available_parent_area.size.width,
+                    node.margin.left(),
+                    node.margin.horizontal(),
+                    &node.minimum_width,
+                    &node.maximum_width,
+                    self.layout_metadata.root_area.width(),
+                    phase,
+                );
+                area.size.height = node.height.min_max(
+                    area.size.height,
+                    parent_area.size.height,
+                    available_parent_area.size.height,
+                    node.margin.top(),
+                    node.margin.vertical(),
+                    &node.minimum_height,
+                    &node.maximum_height,
+                    self.layout_metadata.root_area.height(),
+                    phase,
+                );
             }
 
             inner_sizes.width += node.padding.horizontal();

@@ -17,7 +17,7 @@ use freya_hooks::{
 
 use super::use_scroll_controller::ScrollController;
 use crate::{
-    get_container_size,
+    get_container_sizes,
     get_corrected_scroll_position,
     get_scroll_position_from_cursor,
     get_scroll_position_from_wheel,
@@ -43,6 +43,14 @@ pub struct ScrollViewProps {
     /// Height of the ScrollView container. Default to `fill`.
     #[props(default = "fill".into())]
     pub height: String,
+    /// Minimum width of the ScrollView container.
+    pub min_width: Option<f32>,
+    /// Minimum height of the ScrollView container.
+    pub min_height: Option<f32>,
+    /// Maximum width of the ScrollView container.
+    pub max_width: Option<f32>,
+    /// Maximum height of the ScrollView container.
+    pub max_height: Option<f32>,
     /// Padding of the ScrollView container.
     #[props(default = "0".to_string())]
     pub padding: String,
@@ -151,6 +159,10 @@ pub fn ScrollView(
     ScrollViewProps {
         width,
         height,
+        min_width,
+        min_height,
+        max_width,
+        max_height,
         padding,
         spacing,
         scrollbar_theme,
@@ -175,8 +187,6 @@ pub fn ScrollView(
 
     scroll_controller.use_apply(size.inner.width, size.inner.height);
 
-    let direction_is_vertical = direction == "vertical";
-
     let vertical_scrollbar_is_visible = is_scrollbar_visible(
         show_scrollbar,
         size.inner.height.floor(),
@@ -188,10 +198,8 @@ pub fn ScrollView(
         size.area.width().floor(),
     );
 
-    let (container_width, content_width) =
-        get_container_size(&width, direction_is_vertical, Axis::X);
-    let (container_height, content_height) =
-        get_container_size(&height, direction_is_vertical, Axis::Y);
+    let (container_width, content_width) = get_container_sizes(&width);
+    let (container_height, content_height) = get_container_sizes(&height);
 
     let corrected_scrolled_y = get_corrected_scroll_position(
         size.inner.height,
@@ -380,8 +388,12 @@ pub fn ScrollView(
             a11y_role:"scroll-view",
             overflow: "clip",
             direction: "horizontal",
-            width: "{width}",
-            height: "{height}",
+            width: width.clone(),
+            height: height.clone(),
+            min_width: min_width.map(|x| x.to_string()),
+            min_height: min_height.map(|x| x.to_string()),
+            max_width: max_width.map(|x| x.to_string()),
+            max_height: max_height.map(|x| x.to_string()),
             onglobalclick: onclick,
             onglobalmousemove: onmousemove,
             onglobalkeydown,
@@ -390,19 +402,23 @@ pub fn ScrollView(
             a11y_focusable: "false",
             rect {
                 direction: "vertical",
-                width: "{container_width}",
-                height: "{container_height}",
+                width: container_width,
+                height: container_height,
                 rect {
                     overflow: "clip",
-                    spacing: "{spacing}",
-                    padding: "{padding}",
-                    height: "{content_height}",
-                    width: "{content_width}",
-                    direction: "{direction}",
+                    spacing,
+                    padding,
+                    width: content_width,
+                    height: content_height,
+                    min_width: min_width.map(|x| x.to_string()),
+                    min_height: min_height.map(|x| x.to_string()),
+                    max_width: max_width.map(|x| x.to_string()),
+                    max_height: max_height.map(|x| x.to_string()),
+                    direction: direction,
                     offset_y: "{corrected_scrolled_y}",
                     offset_x: "{corrected_scrolled_x}",
                     reference: node_ref,
-                    onwheel: onwheel,
+                    onwheel,
                     {children}
                 }
                 if show_scrollbar && horizontal_scrollbar_is_visible {
