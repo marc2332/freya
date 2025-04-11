@@ -163,8 +163,7 @@ impl<'a, State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'a
                 .send_event(EventLoopMessage::PollVDOM)
                 .ok();
             self.run_on_setup();
-        }
-        else{
+        } else {
             self.state.resume(event_loop);
         }
     }

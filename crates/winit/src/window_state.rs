@@ -12,7 +12,10 @@ use winit::{
         ActiveEventLoop,
         EventLoopProxy,
     },
-    window::{Window,WindowAttributes},
+    window::{
+        Window,
+        WindowAttributes,
+    },
 };
 
 use crate::{
@@ -133,10 +136,7 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
         });
     }
 
-    pub fn resume(
-        &mut self,
-        event_loop: &ActiveEventLoop
-    ) {
+    pub fn resume(&mut self, event_loop: &ActiveEventLoop) {
         let created = self.created_state();
         let window_attributes = Self::create_window_attributes(&mut created.window_config);
         let mut config: LaunchConfig<State> = LaunchConfig::default();
