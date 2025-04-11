@@ -96,6 +96,26 @@ impl Node {
         }
     }
 
+    /// Construct a new Node given some sizes
+    pub fn from_sizes(
+        width: Size,
+        height: Size,
+        minimum_width: Size,
+        minimum_height: Size,
+        maximum_width: Size,
+        maximum_height: Size,
+    ) -> Self {
+        Self {
+            width,
+            height,
+            minimum_width,
+            minimum_height,
+            maximum_width,
+            maximum_height,
+            ..Default::default()
+        }
+    }
+
     /// Construct a new Node given a size and a visible size
     pub fn from_size_and_visible_size(
         width: Size,

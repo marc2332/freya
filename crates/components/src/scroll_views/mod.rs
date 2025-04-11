@@ -26,14 +26,10 @@ pub enum Axis {
 }
 
 #[doc(hidden)]
-pub fn get_container_size(size: &str, is_vertical: bool, axis: Axis) -> (&str, &str) {
-    let is_cross_fit = if is_vertical {
-        axis == Axis::X && size == "auto"
-    } else {
-        axis == Axis::Y && size == "auto"
-    };
+pub fn get_container_sizes(size: &str) -> (&str, &str) {
+    let is_fit = size == "auto";
 
-    if is_cross_fit {
+    if is_fit {
         (size, size)
     } else {
         ("100%", "fill")

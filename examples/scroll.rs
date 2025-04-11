@@ -16,7 +16,9 @@ fn app() -> Element {
             ScrollView {
                 spacing: "8",
                 padding: "8",
-                Card {}
+                height: "auto",
+                min_height: 50.,
+                max_height: 400.,
                 Card {}
                 Card {}
                 Card {}
