@@ -24,7 +24,7 @@ skia-safe = { workspace = true, optional = true }
 glutin = { workspace = true }
 
 
-[target."cfg(target_os = \"linux\")".dependencies.skia-safe]
+[target.'cfg(any(target_os="linux", target_os="android"))'.dependencies.skia-safe]
 workspace = true
 optional = true
 features = ["gl", "textlayout", "svg", "x11", "wayland"]

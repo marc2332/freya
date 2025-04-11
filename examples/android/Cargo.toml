@@ -1,0 +1,30 @@
+[package]
+name = "droidapp"
+version = "0.1.0"
+edition = "2021"
+
+[workspace.dependencies]
+freya = { path = "../../crates/freya"}
+
+[dependencies]
+freya = { workspace = true }
+log = "0.4"
+env_logger = "0.11.6"
+
+[target.'cfg(target_os="android")'.dependencies]
+android-activity = { version = "0.6.0", features = ["native-activity"] }
+android_logger = "0.15.0"
+winit = { version = "0.30.5", features = ["android-native-activity", "rwh_06"] }
+
+[features]
+default = []
+desktop = []
+
+[lib]
+name = "droidapp"
+crate-type = ["cdylib"]
+
+[[bin]]
+path = "src/lib.rs"
+name = "droidapp"
+required-features = ["desktop"]
