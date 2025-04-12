@@ -201,7 +201,7 @@ impl ElementUtils for ParagraphElement {
 
     fn element_needs_cached_area(&self, node_ref: &DioxusNode, _style_state: &StyleState) -> bool {
         let node_cursor_state = &*node_ref.get::<CursorState>().unwrap();
-    
+
         if node_cursor_state.highlights.is_some() {
             return true;
         }
@@ -267,15 +267,18 @@ impl ElementUtils for ParagraphElement {
         }
 
         let paragraph = &layout_node
-                .data
-                .as_ref()
-                .unwrap()
-                .get::<CachedParagraph>()
-                .unwrap()
-                .0;
+            .data
+            .as_ref()
+            .unwrap()
+            .get::<CachedParagraph>()
+            .unwrap()
+            .0;
 
         run_cursor_highlights(area, paragraph, node_ref, |rect| {
-            area = area.union(&Area::new((rect.left, rect.top).into(), (rect.width(), rect.height()).into()))
+            area = area.union(&Area::new(
+                (rect.left, rect.top).into(),
+                (rect.width(), rect.height()).into(),
+            ))
         });
 
         area

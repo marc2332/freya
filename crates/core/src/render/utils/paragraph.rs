@@ -104,7 +104,7 @@ pub fn run_cursor_highlights(
     area: Area,
     paragraph: &Paragraph,
     node_ref: &DioxusNode,
-    mut run: impl FnMut(Rect)
+    mut run: impl FnMut(Rect),
 ) -> Option<()> {
     let node_cursor_state = &*node_ref.get::<CursorState>().unwrap();
 
@@ -132,7 +132,6 @@ pub fn run_cursor_highlights(
                 &cursor_rect,
                 None,
             );
-
 
             run(rect)
         }
