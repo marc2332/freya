@@ -1015,3 +1015,140 @@ fn test_calc_and_scaling() {
         ), // scaled with new logic
     );
 }
+
+#[test]
+pub fn inner_min_max_sizes() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_dom = TestingDOM::default();
+    mocked_dom.add(
+        0,
+        None,
+        vec![1],
+        Node::from_sizes(
+            Size::Inner,
+            Size::Inner,
+            Size::Inner,
+            Size::Inner,
+            Size::Pixels(Length::new(100.)),
+            Size::Pixels(Length::new(100.)),
+        ),
+    );
+    mocked_dom.add(
+        1,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(200.0)),
+            Size::Pixels(Length::new(200.0)),
+            Direction::Vertical,
+        ),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        &mut measurer,
+        &mut mocked_dom,
+    );
+
+    assert_eq!(
+        layout.get(0).unwrap().visible_area().round(),
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 100.0)),
+    );
+
+    assert_eq!(
+        layout.get(1).unwrap().visible_area().round(),
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
+    );
+}
+
+#[test]
+pub fn fixed_min_max_sizes() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_dom = TestingDOM::default();
+    mocked_dom.add(
+        0,
+        None,
+        vec![],
+        Node::from_sizes(
+            Size::Pixels(Length::new(150.)),
+            Size::Pixels(Length::new(150.)),
+            Size::Inner,
+            Size::Inner,
+            Size::Pixels(Length::new(100.)),
+            Size::Pixels(Length::new(100.)),
+        ),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        &mut measurer,
+        &mut mocked_dom,
+    );
+
+    assert_eq!(
+        layout.get(0).unwrap().visible_area().round(),
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 100.0)),
+    );
+}
+
+#[test]
+pub fn relative_min_max_sizes() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_dom = TestingDOM::default();
+    mocked_dom.add(
+        0,
+        None,
+        vec![],
+        Node::from_sizes(
+            Size::Inner,
+            Size::Pixels(Length::new(250.)),
+            Size::Inner,
+            Size::Percentage(Length::new(50.)),
+            Size::Pixels(Length::new(100.)),
+            Size::Percentage(Length::new(70.)),
+        ),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        &mut measurer,
+        &mut mocked_dom,
+    );
+
+    assert_eq!(
+        layout.get(0).unwrap().visible_area().round(),
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(0.0, 500.0)),
+    );
+
+    layout.invalidate(0);
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 400.0)),
+        &mut measurer,
+        &mut mocked_dom,
+    );
+
+    assert_eq!(
+        layout.get(0).unwrap().visible_area().round(),
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(0.0, 250.0)),
+    );
+
+    layout.invalidate(0);
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 200.0)),
+        &mut measurer,
+        &mut mocked_dom,
+    );
+
+    assert_eq!(
+        layout.get(0).unwrap().visible_area().round(),
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(0.0, 140.0)),
+    );
+}
