@@ -32,7 +32,7 @@ use crate::{
         align_main_align_paragraph,
         create_paragraph,
         draw_cursor,
-        draw_cursor_highlights,
+        run_cursor_highlights,
         ParagraphData,
     },
     states::{
@@ -142,8 +142,15 @@ impl ElementUtils for ParagraphElement {
             let x = area.min_x();
             let y = area.min_y() + align_main_align_paragraph(node_ref, &area, paragraph);
 
+            let mut highlights_paint = Paint::default();
+            highlights_paint.set_anti_alias(true);
+            highlights_paint.set_style(PaintStyle::Fill);
+            highlights_paint.set_color(node_cursor_state.highlight_color);
+
             // Draw the highlights if specified
-            draw_cursor_highlights(&area, paragraph, canvas, node_ref);
+            run_cursor_highlights(area, paragraph, node_ref, |rect| {
+                canvas.draw_rect(rect, &highlights_paint);
+            });
 
             // Draw a cursor if specified
             draw_cursor(&area, paragraph, canvas, node_ref);
@@ -193,6 +200,12 @@ impl ElementUtils for ParagraphElement {
     }
 
     fn element_needs_cached_area(&self, node_ref: &DioxusNode, _style_state: &StyleState) -> bool {
+        let node_cursor_state = &*node_ref.get::<CursorState>().unwrap();
+    
+        if node_cursor_state.highlights.is_some() {
+            return true;
+        }
+
         for text_span in node_ref.children() {
             if let NodeType::Element(ElementNode {
                 tag: TagName::Text, ..
@@ -252,6 +265,18 @@ impl ElementUtils for ParagraphElement {
                 area = area.union(&text_shadow_area);
             }
         }
+
+        let paragraph = &layout_node
+                .data
+                .as_ref()
+                .unwrap()
+                .get::<CachedParagraph>()
+                .unwrap()
+                .0;
+
+        run_cursor_highlights(area, paragraph, node_ref, |rect| {
+            area = area.union(&Area::new((rect.left, rect.top).into(), (rect.width(), rect.height()).into()))
+        });
 
         area
     }
