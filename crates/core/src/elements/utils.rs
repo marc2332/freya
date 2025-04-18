@@ -156,8 +156,9 @@ pub trait ElementUtils {
         let element_check = self.element_needs_cached_area(node_ref, style_state);
 
         let rotate_effect = !transform_state.rotations.is_empty();
+        let scales_effect = !transform_state.scales.is_empty();
 
-        element_check || rotate_effect
+        element_check || rotate_effect || scales_effect
     }
 }
 

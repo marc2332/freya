@@ -25,10 +25,13 @@ use freya_core::{
         TextGroupMeasurement,
     },
 };
-use freya_elements::events::{
-    Code,
-    KeyboardData,
-    MouseData,
+use freya_elements::{
+    events::{
+        Code,
+        KeyboardData,
+        MouseData,
+    },
+    MouseButton,
 };
 use tokio::sync::mpsc::unbounded_channel;
 use torin::geometry::CursorPoint;
@@ -249,7 +252,9 @@ impl UseEditable {
     /// Process a [`EditableEvent`] event.
     pub fn process_event(&mut self, edit_event: &EditableEvent) {
         let res = match edit_event {
-            EditableEvent::MouseDown(e, id) => {
+            EditableEvent::MouseDown(e, id)
+                if e.get_trigger_button() == Some(MouseButton::Left) =>
+            {
                 let coords = e.get_element_coordinates();
 
                 self.dragging.write().set_cursor_coords(coords);
@@ -332,6 +337,7 @@ impl UseEditable {
 
                 None
             }
+            _ => None,
         };
 
         if let Some((cursor_id, cursor_position, cursor_selection)) = res {

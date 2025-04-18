@@ -349,6 +349,7 @@ pub fn Input(
             a11y_id,
             a11y_role: "text-input",
             a11y_auto_focus: "{auto_focus}",
+            a11y_value: "{text}",
             onkeydown,
             onkeyup,
             overflow: "clip",
@@ -373,7 +374,7 @@ pub fn Input(
                     max_lines: "1",
                     highlights,
                     text {
-                        {text}
+                        "{text}"
                     }
                 }
             }

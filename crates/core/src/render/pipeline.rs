@@ -202,14 +202,8 @@ impl RenderPipeline<'_> {
 
             let initial_layer = dirty_canvas.save();
 
-            // Clip all elements with their corresponding viewports
+            let node_transform = &*node_ref.get::<TransformState>().unwrap();
             let node_viewports = node_ref.get::<ViewportState>().unwrap();
-
-            // Clip the element itself if non-children content can overflow, like an image in case of `image`
-            // or text in the case of `label` or `paragraph`
-            if *tag == TagName::Paragraph || *tag == TagName::Label || *tag == TagName::Image {
-                element_utils.clip(layout_node, &node_ref, dirty_canvas, self.scale_factor);
-            }
 
             for node_id in &node_viewports.viewports {
                 let node_ref = self.rdom.get(*node_id).unwrap();
@@ -221,7 +215,15 @@ impl RenderPipeline<'_> {
                 element_utils.clip(layout_node, &node_ref, dirty_canvas, self.scale_factor);
             }
 
-            let node_transform = &*node_ref.get::<TransformState>().unwrap();
+            // Apply inherited scale effects
+            for (id, scale_x, scale_y) in &node_transform.scales {
+                let layout_node = self.layout.get(*id).unwrap();
+                let area = layout_node.visible_area();
+                let center = area.center();
+                dirty_canvas.translate((center.x, center.y));
+                dirty_canvas.scale((*scale_x, *scale_y));
+                dirty_canvas.translate((-center.x, -center.y));
+            }
 
             // Pass rotate effect to children
             for (id, rotate_degs) in &node_transform.rotations {
@@ -251,14 +253,10 @@ impl RenderPipeline<'_> {
                 );
             }
 
-            // Apply inherited scale effects
-            for (id, scale_x, scale_y) in &node_transform.scales {
-                let layout_node = self.layout.get(*id).unwrap();
-                let area = layout_node.visible_area();
-                let center = area.center();
-                dirty_canvas.translate((center.x, center.y));
-                dirty_canvas.scale((*scale_x, *scale_y));
-                dirty_canvas.translate((-center.x, -center.y));
+            // Clip the element itself if non-children content can overflow, like an image in case of `image`
+            // or text in the case of `label` or `paragraph`
+            if *tag == TagName::Paragraph || *tag == TagName::Label || *tag == TagName::Image {
+                element_utils.clip(layout_node, &node_ref, dirty_canvas, self.scale_factor);
             }
 
             element_utils.render(
