@@ -25,6 +25,9 @@ pub fn Sidebar(
     children: Element,
     /// This is what is rendered in the sidebar.
     sidebar: Element,
+    /// Width of the sidebar.
+    #[props(default = "180".to_string())]
+    width: String,
 ) -> Element {
     let SidebarTheme {
         spacing,
@@ -39,7 +42,7 @@ pub fn Sidebar(
             direction: "horizontal",
             rect {
                 overflow: "clip",
-                width: "180",
+                width,
                 height: "100%",
                 background: "{background}",
                 color: "{font_theme.color}",
