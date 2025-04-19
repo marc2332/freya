@@ -42,7 +42,7 @@ impl<Data, Answer> UsePopup<Data, Answer> {
         self.answer.read_unchecked()
     }
 
-    /// Mark the popup as open an await for its response.
+    /// Mark the popup as open and await for its response.
     pub async fn open(
         &mut self,
         data: impl Into<Option<Data>>,
