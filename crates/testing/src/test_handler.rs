@@ -132,7 +132,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
         self.cursor_icon
     }
 
-    /// Get the [SafeDOM]
+    /// Get the [SafeDOM].
     pub fn sdom(&self) -> &SafeDOM {
         self.utils.sdom()
     }
@@ -281,13 +281,13 @@ impl<T: 'static + Clone> TestingHandler<T> {
     /// });
     /// ```
     ///
-    /// For mouse movements and clicks you can use shorcuts like [Self::move_cursor] and [Self::click_cursor].
+    /// For mouse **movements** and **clicks** you can use shorcuts like [TestingHandler::move_cursor] and [TestingHandler::click_cursor].
     pub fn push_event(&mut self, event: impl Into<PlatformEvent>) {
         self.events_queue.push(event.into());
     }
 
-    /// Get the root node
-    pub fn root(&mut self) -> TestNode {
+    /// Get the Root node.
+    pub fn root(&self) -> TestNode {
         let root_id = {
             let sdom = self.utils.sdom();
             let fdom = sdom.get();
