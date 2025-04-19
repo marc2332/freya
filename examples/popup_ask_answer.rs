@@ -10,10 +10,10 @@ fn main() {
 }
 
 fn app() -> Element {
-    let mut my_popup = use_popup::<String>();
+    let mut my_popup = use_popup::<String, String>();
 
     let onpress = move |_| async move {
-        let name = my_popup.open().await;
+        let name = my_popup.open("What's your name?".to_string()).await;
         if let Some(name) = &*name {
             println!("Name is: {name}!");
         }
@@ -34,7 +34,9 @@ fn app() -> Element {
 
 #[component]
 fn AskNamePopup() -> Element {
-    let mut popup_answer = use_popup_answer::<String>();
+    let mut popup_answer = use_popup_answer::<String, String>();
+    let data = popup_answer.data();
+    let title = data.as_ref().expect("Infallible");
 
     rsx!(
         Popup {
@@ -43,7 +45,7 @@ fn AskNamePopup() -> Element {
             },
             PopupTitle {
                 label {
-                    "Ask Name"
+                    "{title}"
                 }
             }
             PopupContent {
