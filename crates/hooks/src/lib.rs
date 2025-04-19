@@ -19,6 +19,7 @@ mod use_init_native_platform;
 mod use_node;
 mod use_platform;
 mod use_platform_information;
+mod use_popup;
 mod use_preferred_theme;
 mod use_theme;
 
@@ -42,5 +43,6 @@ pub use use_init_native_platform::*;
 pub use use_node::*;
 pub use use_platform::*;
 pub use use_platform_information::*;
+pub use use_popup::*;
 pub use use_preferred_theme::*;
 pub use use_theme::*;
