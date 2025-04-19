@@ -36,6 +36,11 @@ impl<T> UsePopup<T> {
         *self.open.read()
     }
 
+    /// Read the last answer.
+    pub fn read(&self) -> ReadableRef<Signal<Option<T>>> {
+        self.value.read_unchecked()
+    }
+
     /// Mark the popup as open an await for its response.
     pub async fn open(&mut self) -> ReadableRef<Signal<Option<T>>> {
         self.open.set(true);
@@ -84,4 +89,66 @@ impl<T> UsePopupAnswer<T> {
 /// Answer a popup created with [use_popup].
 pub fn use_popup_answer<T>() -> UsePopupAnswer<T> {
     use_context::<UsePopupAnswer<T>>()
+}
+
+#[cfg(test)]
+mod test {
+    use dioxus::prelude::component;
+    use freya::prelude::*;
+    use freya_testing::prelude::*;
+
+    #[tokio::test]
+    pub async fn popup() {
+        fn popup_app() -> Element {
+            let mut my_popup = use_popup::<String>();
+
+            let onpress = move |_| async move {
+                let _name = my_popup.open().await;
+            };
+
+            rsx!(
+                Button {
+                    onpress,
+                    label {
+                        "{my_popup.read():?}"
+                    }
+                }
+                if my_popup.is_open() {
+                    AskNamePopup {}
+                }
+            )
+        }
+
+        #[component]
+        fn AskNamePopup() -> Element {
+            let mut popup_answer = use_popup_answer::<String>();
+
+            rsx!(
+                Button {
+                    onpress: move |_| {
+                        popup_answer.answer("Marc".to_string())
+                    },
+                    label {
+                        "Answer 'Marc'"
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(popup_app);
+        let root = utils.root();
+        let label = root.get(0).get(0);
+
+        assert_eq!(label.get(0).text(), Some("None"));
+
+        // Open popup
+        utils.click_cursor((15.0, 15.0)).await;
+        utils.wait_for_update().await;
+
+        // Answer
+        utils.click_cursor((15.0, 40.0)).await;
+        utils.wait_for_update().await;
+
+        assert_eq!(label.get(0).text(), Some("Some(\"Marc\")"));
+    }
 }
