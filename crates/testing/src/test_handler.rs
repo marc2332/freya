@@ -281,7 +281,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
     /// });
     /// ```
     ///
-    /// For mouse **movements** and **clicks** you can use shorcuts like [TestingHandler::move_cursor] and [TestingHandler::click_cursor].
+    /// For mouse **movements** and **clicks** you can use shortcuts like [TestingHandler::move_cursor] and [TestingHandler::click_cursor].
     pub fn push_event(&mut self, event: impl Into<PlatformEvent>) {
         self.events_queue.push(event.into());
     }
