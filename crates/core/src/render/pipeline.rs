@@ -152,16 +152,23 @@ impl RenderPipeline<'_> {
                         }
                     }
 
-                    let render_wireframe = Some(node_id) == self.selected_node.as_ref();
-
                     // Render the element
-                    self.render(node_ref, layout_node, render_wireframe);
+                    self.render(node_ref, layout_node);
 
                     #[cfg(debug_assertions)]
                     {
                         painted += 1;
                     }
                 }
+            }
+        }
+
+        if let Some(selected_node) = &self.selected_node {
+            if let Some(layout_node) = self.layout.get(*selected_node) {
+                wireframe_renderer::render_wireframe(
+                    self.dirty_surface.canvas(),
+                    &layout_node.visible_area(),
+                );
             }
         }
 
@@ -185,14 +192,8 @@ impl RenderPipeline<'_> {
         self.compositor_dirty_nodes.clear();
     }
 
-    pub fn render(
-        &mut self,
-        node_ref: DioxusNode,
-        layout_node: &LayoutNode,
-        render_wireframe: bool,
-    ) {
+    pub fn render(&mut self, node_ref: DioxusNode, layout_node: &LayoutNode) {
         let dirty_canvas = self.dirty_surface.canvas();
-        let area = layout_node.visible_area();
         let node_type = &*node_ref.node_type();
         if let NodeType::Element(ElementNode { tag, .. }) = node_type {
             let Some(element_utils) = tag.utils() else {
@@ -201,14 +202,8 @@ impl RenderPipeline<'_> {
 
             let initial_layer = dirty_canvas.save();
 
-            // Clip all elements with their corresponding viewports
+            let node_transform = &*node_ref.get::<TransformState>().unwrap();
             let node_viewports = node_ref.get::<ViewportState>().unwrap();
-            // Only clip the element iself when it's paragraph because
-            // it will render the inner text spans on it's own, so if these spans overflow the paragraph,
-            // It is the paragraph job to make sure they are clipped
-            if !node_viewports.viewports.is_empty() && *tag == TagName::Paragraph {
-                element_utils.clip(layout_node, &node_ref, dirty_canvas, self.scale_factor);
-            }
 
             for node_id in &node_viewports.viewports {
                 let node_ref = self.rdom.get(*node_id).unwrap();
@@ -220,7 +215,15 @@ impl RenderPipeline<'_> {
                 element_utils.clip(layout_node, &node_ref, dirty_canvas, self.scale_factor);
             }
 
-            let node_transform = &*node_ref.get::<TransformState>().unwrap();
+            // Apply inherited scale effects
+            for (id, scale_x, scale_y) in &node_transform.scales {
+                let layout_node = self.layout.get(*id).unwrap();
+                let area = layout_node.visible_area();
+                let center = area.center();
+                dirty_canvas.translate((center.x, center.y));
+                dirty_canvas.scale((*scale_x, *scale_y));
+                dirty_canvas.translate((-center.x, -center.y));
+            }
 
             // Pass rotate effect to children
             for (id, rotate_degs) in &node_transform.rotations {
@@ -250,14 +253,10 @@ impl RenderPipeline<'_> {
                 );
             }
 
-            // Apply inherited scale effects
-            for (id, scale_x, scale_y) in &node_transform.scales {
-                let layout_node = self.layout.get(*id).unwrap();
-                let area = layout_node.visible_area();
-                let center = area.center();
-                dirty_canvas.translate((center.x, center.y));
-                dirty_canvas.scale((*scale_x, *scale_y));
-                dirty_canvas.translate((-center.x, -center.y));
+            // Clip the element itself if non-children content can overflow, like an image in case of `image`
+            // or text in the case of `label` or `paragraph`
+            if *tag == TagName::Paragraph || *tag == TagName::Label || *tag == TagName::Image {
+                element_utils.clip(layout_node, &node_ref, dirty_canvas, self.scale_factor);
             }
 
             element_utils.render(
@@ -270,10 +269,6 @@ impl RenderPipeline<'_> {
                 self.images_cache,
                 self.scale_factor,
             );
-
-            if render_wireframe {
-                wireframe_renderer::render_wireframe(dirty_canvas, &area);
-            }
 
             dirty_canvas.restore_to_count(initial_layer);
         }

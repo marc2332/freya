@@ -32,7 +32,7 @@ use crate::{
         align_main_align_paragraph,
         create_paragraph,
         draw_cursor,
-        draw_cursor_highlights,
+        run_cursor_highlights,
         ParagraphData,
     },
     states::{
@@ -42,7 +42,7 @@ use crate::{
     },
 };
 
-pub struct CachedParagraph(pub Paragraph, pub f32);
+pub struct CachedParagraph(pub Paragraph);
 
 /// # Safety
 /// Skia `Paragraph` are neither Sync or Send, but in order to store them in the Associated
@@ -142,8 +142,15 @@ impl ElementUtils for ParagraphElement {
             let x = area.min_x();
             let y = area.min_y() + align_main_align_paragraph(node_ref, &area, paragraph);
 
+            let mut highlights_paint = Paint::default();
+            highlights_paint.set_anti_alias(true);
+            highlights_paint.set_style(PaintStyle::Fill);
+            highlights_paint.set_color(node_cursor_state.highlight_color);
+
             // Draw the highlights if specified
-            draw_cursor_highlights(&area, paragraph, canvas, node_ref);
+            run_cursor_highlights(area, paragraph, node_ref, |rect| {
+                canvas.draw_rect(rect, &highlights_paint);
+            });
 
             // Draw a cursor if specified
             draw_cursor(&area, paragraph, canvas, node_ref);
@@ -173,7 +180,32 @@ impl ElementUtils for ParagraphElement {
         };
     }
 
+    fn clip(
+        &self,
+        layout_node: &LayoutNode,
+        _node_ref: &DioxusNode,
+        canvas: &Canvas,
+        _scale_factor: f32,
+    ) {
+        canvas.clip_rect(
+            Rect::new(
+                layout_node.area.min_x(),
+                layout_node.area.min_y(),
+                layout_node.area.max_x(),
+                layout_node.area.max_y(),
+            ),
+            ClipOp::Intersect,
+            true,
+        );
+    }
+
     fn element_needs_cached_area(&self, node_ref: &DioxusNode, _style_state: &StyleState) -> bool {
+        let node_cursor_state = &*node_ref.get::<CursorState>().unwrap();
+
+        if node_cursor_state.highlights.is_some() {
+            return true;
+        }
+
         for text_span in node_ref.children() {
             if let NodeType::Element(ElementNode {
                 tag: TagName::Text, ..
@@ -197,15 +229,7 @@ impl ElementUtils for ParagraphElement {
         scale_factor: f32,
         _node_style: &StyleState,
     ) -> Area {
-        let paragraph_font_height = &layout_node
-            .data
-            .as_ref()
-            .unwrap()
-            .get::<CachedParagraph>()
-            .unwrap()
-            .1;
         let mut area = layout_node.visible_area();
-        area.size.height = area.size.height.max(*paragraph_font_height);
 
         // Iterate over all the text spans inside this paragraph and if any of them
         // has a shadow at all, apply this shadow to the general paragraph.
@@ -241,6 +265,21 @@ impl ElementUtils for ParagraphElement {
                 area = area.union(&text_shadow_area);
             }
         }
+
+        let paragraph = &layout_node
+            .data
+            .as_ref()
+            .unwrap()
+            .get::<CachedParagraph>()
+            .unwrap()
+            .0;
+
+        run_cursor_highlights(area, paragraph, node_ref, |rect| {
+            area = area.union(&Area::new(
+                (rect.left, rect.top).into(),
+                (rect.width(), rect.height()).into(),
+            ))
+        });
 
         area
     }

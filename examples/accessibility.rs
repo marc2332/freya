@@ -29,13 +29,13 @@ fn app() -> Element {
             width: "50%",
             height: "50%",
             onclick: move |_| {
-                focus_a.focus();
+                focus_a.request_focus();
             },
             label {
                 a11y_id: focus_c.attribute(),
                 onclick: move |e| {
                     e.stop_propagation();
-                    focus_c.focus();
+                    focus_c.request_focus();
                 },
                 "What is this?"
             }
@@ -57,14 +57,14 @@ fn app() -> Element {
             a11y_role:"label",
             a11y_name: "This is a rectangle",
             onclick: move |_| {
-                focus_b.focus();
+                focus_b.request_focus();
             },
             label {
                 a11y_role:"label",
                 a11y_id: focus_d.attribute(),
                 onclick: move |e| {
                     e.stop_propagation();
-                    focus_d.focus();
+                    focus_d.request_focus();
                 },
                 color: "white",
                 "Hello, World! This is an example."

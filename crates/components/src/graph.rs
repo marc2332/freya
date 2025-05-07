@@ -1,9 +1,6 @@
 use dioxus::prelude::*;
 use freya_core::{
-    custom_attributes::{
-        CanvasRunner,
-        CanvasRunnerContext,
-    },
+    custom_attributes::CanvasRunnerContext,
     parsing::Parse,
 };
 use freya_elements as dioxus_elements;
@@ -54,7 +51,7 @@ pub fn Graph(props: GraphProps) -> Element {
     let canvas = use_canvas_with_deps(&props, move |props| {
         platform.invalidate_drawing_area(size.peek().area);
         platform.request_animation_frame();
-        Box::new(move |ctx: &mut CanvasRunnerContext| {
+        move |ctx: &mut CanvasRunnerContext| {
             ctx.canvas.translate((ctx.area.min_x(), ctx.area.min_y()));
 
             let mut paragraph_style = ParagraphStyle::default();
@@ -158,7 +155,7 @@ pub fn Graph(props: GraphProps) -> Element {
             }
 
             ctx.canvas.restore();
-        }) as Box<CanvasRunner>
+        }
     });
 
     rsx!(

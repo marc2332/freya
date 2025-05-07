@@ -48,7 +48,6 @@ impl ElementUtils for ImageElement {
             area.min_x() + size.width,
             area.min_y() + size.height,
         );
-
         let clip_rect = Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
 
         if image_state.image_cover == ImageCover::Center {
@@ -84,5 +83,23 @@ impl ElementUtils for ImageElement {
         );
 
         canvas.restore();
+    }
+    fn clip(
+        &self,
+        layout_node: &torin::prelude::LayoutNode,
+        _node_ref: &DioxusNode,
+        canvas: &Canvas,
+        _scale_factor: f32,
+    ) {
+        canvas.clip_rect(
+            Rect::new(
+                layout_node.area.min_x(),
+                layout_node.area.min_y(),
+                layout_node.area.max_x(),
+                layout_node.area.max_y(),
+            ),
+            ClipOp::Intersect,
+            true,
+        );
     }
 }

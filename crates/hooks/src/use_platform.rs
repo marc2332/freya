@@ -1,9 +1,13 @@
 use std::sync::Arc;
 
-use dioxus_core::prelude::{
-    consume_context,
-    try_consume_context,
-    use_hook,
+use dioxus_core::{
+    prelude::{
+        consume_context,
+        provide_root_context,
+        try_consume_context,
+        use_hook,
+    },
+    ScopeId,
 };
 use dioxus_signals::{
     Readable,
@@ -39,14 +43,23 @@ pub enum UsePlatformError {
 }
 
 impl UsePlatform {
-    #[allow(clippy::new_without_default)]
-    pub fn new() -> Self {
-        UsePlatform {
-            event_loop_proxy: Signal::new(try_consume_context::<EventLoopProxy<EventLoopMessage>>()),
-            platform_emitter: Signal::new(
-                try_consume_context::<UnboundedSender<EventLoopMessage>>(),
-            ),
-            ticker: Signal::new(consume_context::<Arc<broadcast::Receiver<()>>>()),
+    pub fn current() -> Self {
+        match try_consume_context() {
+            Some(p) => p,
+            None => provide_root_context(UsePlatform {
+                event_loop_proxy: Signal::new_in_scope(
+                    try_consume_context::<EventLoopProxy<EventLoopMessage>>(),
+                    ScopeId::ROOT,
+                ),
+                platform_emitter: Signal::new_in_scope(
+                    try_consume_context::<UnboundedSender<EventLoopMessage>>(),
+                    ScopeId::ROOT,
+                ),
+                ticker: Signal::new_in_scope(
+                    consume_context::<Arc<broadcast::Receiver<()>>>(),
+                    ScopeId::ROOT,
+                ),
+            }),
         }
     }
 
@@ -152,7 +165,7 @@ impl UsePlatform {
 
 /// Get access to information and features of the platform.
 pub fn use_platform() -> UsePlatform {
-    use_hook(UsePlatform::new)
+    use_hook(UsePlatform::current)
 }
 
 pub struct Ticker {

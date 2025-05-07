@@ -86,12 +86,12 @@ pub struct CanvasRunnerContext<'a> {
     pub scale_factor: f32,
 }
 
-pub type CanvasRunner = dyn Fn(&mut CanvasRunnerContext) + Sync + Send + 'static;
+pub type CanvasRunner = dyn FnMut(&mut CanvasRunnerContext) + Sync + Send + 'static;
 
 /// Canvas Reference
 #[derive(Clone)]
 pub struct CanvasReference {
-    pub runner: Arc<Box<CanvasRunner>>,
+    pub runner: Arc<Mutex<CanvasRunner>>,
 }
 
 impl PartialEq for CanvasReference {

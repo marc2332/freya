@@ -149,8 +149,8 @@ impl ElementUtils for RectElement {
         for border in node_style.borders.iter() {
             if border.is_visible() {
                 let border = border.with_scale(scale_factor);
-
-                render_border(canvas, rounded_rect, area, &border, &corner_radius);
+                let rect = rounded_rect.rect().round_in().into();
+                render_border(canvas, rect, area, &border, &corner_radius);
             }
         }
 
@@ -163,7 +163,7 @@ impl ElementUtils for RectElement {
                 area,
                 scale_factor,
             };
-            (canvas_ref.runner)(&mut ctx);
+            (canvas_ref.runner.lock().unwrap())(&mut ctx);
         }
     }
 

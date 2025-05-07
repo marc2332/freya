@@ -14,10 +14,7 @@ use dioxus_core::{
 use freya_core::{
     accessibility::AccessibilityTree,
     dom::SafeDOM,
-    event_loop_messages::{
-        EventLoopMessage,
-        TextGroupMeasurement,
-    },
+    event_loop_messages::EventLoopMessage,
     events::{
         process_events,
         EventName,
@@ -105,9 +102,21 @@ pub struct TestingHandler<T: 'static + Clone> {
 }
 
 impl<T: 'static + Clone> TestingHandler<T> {
-    /// Init the DOM.
-    pub(crate) fn init_dom(&mut self) {
-        self.provide_vdom_contexts();
+    /// Sync the RealDOM with the VirtualDOM.
+    pub(crate) fn init_doms(&mut self) {
+        if let Some(state) = self.config.state.take() {
+            self.vdom.insert_any_root_context(Box::new(state));
+        }
+        self.vdom
+            .insert_any_root_context(Box::new(self.platform_event_emitter.clone()));
+        self.vdom
+            .insert_any_root_context(Box::new(self.platform_receiver.clone()));
+        self.vdom
+            .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
+        self.vdom.insert_any_root_context(Box::new(
+            self.utils.sdom.get_mut().accessibility_generator().clone(),
+        ));
+
         let sdom = self.utils.sdom();
         let mut fdom = sdom.get_mut();
         fdom.init_dom(&mut self.vdom, SCALE_FACTOR as f32);
@@ -118,25 +127,19 @@ impl<T: 'static + Clone> TestingHandler<T> {
         &mut self.config
     }
 
-    /// Provide some values to the app
-    fn provide_vdom_contexts(&mut self) {
-        self.vdom
-            .insert_any_root_context(Box::new(self.platform_event_emitter.clone()));
-        self.vdom
-            .insert_any_root_context(Box::new(self.platform_receiver.clone()));
-        self.vdom
-            .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
-        let accessibility_generator = {
-            let sdom = self.sdom();
-            let fdom = sdom.get();
-            fdom.accessibility_generator().clone()
-        };
-        self.vdom
-            .insert_any_root_context(Box::new(accessibility_generator));
+    /// Get the current [CursorIcon].
+    pub fn cursor_icon(&self) -> CursorIcon {
+        self.cursor_icon
+    }
 
-        if let Some(state) = self.config.state.clone() {
-            self.vdom.insert_any_root_context(Box::new(state));
-        }
+    /// Get the [SafeDOM].
+    pub fn sdom(&self) -> &SafeDOM {
+        self.utils.sdom()
+    }
+
+    /// Get the current [AccessibilityId].
+    pub fn focus_id(&self) -> AccessibilityId {
+        self.accessibility_tree.focused_id
     }
 
     /// Apply the latest changes of the virtual dom.
@@ -179,7 +182,8 @@ impl<T: 'static + Clone> TestingHandler<T> {
                         self.cursor_icon = icon;
                     }
                     EventLoopMessage::RemeasureTextGroup(text_measurement) => {
-                        self.measure_text_group(text_measurement);
+                        let fdom = self.utils.sdom.get();
+                        fdom.measure_paragraphs(text_measurement, SCALE_FACTOR);
                     }
                     _ => {}
                 }
@@ -264,12 +268,6 @@ impl<T: 'static + Clone> TestingHandler<T> {
         );
     }
 
-    fn measure_text_group(&self, text_measurement: TextGroupMeasurement) {
-        let sdom = self.utils.sdom();
-        sdom.get()
-            .measure_paragraphs(text_measurement, SCALE_FACTOR);
-    }
-
     /// Push an event to the events queue
     ///
     /// ```rust, no_run
@@ -283,13 +281,13 @@ impl<T: 'static + Clone> TestingHandler<T> {
     /// });
     /// ```
     ///
-    /// For mouse movements and clicks you can use shorcuts like [Self::move_cursor] and [Self::click_cursor].
+    /// For mouse **movements** and **clicks** you can use shortcuts like [TestingHandler::move_cursor] and [TestingHandler::click_cursor].
     pub fn push_event(&mut self, event: impl Into<PlatformEvent>) {
         self.events_queue.push(event.into());
     }
 
-    /// Get the root node
-    pub fn root(&mut self) -> TestNode {
+    /// Get the Root node.
+    pub fn root(&self) -> TestNode {
         let root_id = {
             let sdom = self.utils.sdom();
             let fdom = sdom.get();
@@ -301,11 +299,6 @@ impl<T: 'static + Clone> TestingHandler<T> {
             .get_node_by_id(root_id)
             // Get get the first element because of `KeyboardNavigator`
             .get(0)
-    }
-
-    /// Get the current [AccessibilityId].
-    pub fn focus_id(&self) -> AccessibilityId {
-        self.accessibility_tree.focused_id
     }
 
     /// Resize the simulated canvas.
@@ -327,16 +320,6 @@ impl<T: 'static + Clone> TestingHandler<T> {
             .get_mut()
             .compositor_dirty_area()
             .unite_or_insert(&Area::new((0.0, 0.0).into(), size));
-    }
-
-    /// Get the current [CursorIcon].
-    pub fn cursor_icon(&self) -> CursorIcon {
-        self.cursor_icon
-    }
-
-    /// Get the [SafeDOM]
-    pub fn sdom(&self) -> &SafeDOM {
-        self.utils.sdom()
     }
 
     /// Render the app into a canvas and create a snapshot of it.

@@ -20,7 +20,7 @@ use freya_hooks::{
 };
 
 use crate::{
-    get_container_size,
+    get_container_sizes,
     get_corrected_scroll_position,
     get_scroll_position_from_cursor,
     get_scroll_position_from_wheel,
@@ -222,8 +222,6 @@ pub fn VirtualScrollView<
     let mut focus = use_focus();
     let applied_scrollbar_theme = use_applied_theme!(&scrollbar_theme, scroll_bar);
 
-    let direction_is_vertical = direction == "vertical";
-
     let inner_size = item_size + (item_size * length as f32);
 
     scroll_controller.use_apply(inner_size, inner_size);
@@ -233,10 +231,8 @@ pub fn VirtualScrollView<
     let horizontal_scrollbar_is_visible = direction != "vertical"
         && is_scrollbar_visible(show_scrollbar, inner_size, size.area.width());
 
-    let (container_width, content_width) =
-        get_container_size(&width, direction_is_vertical, Axis::X);
-    let (container_height, content_height) =
-        get_container_size(&height, direction_is_vertical, Axis::Y);
+    let (container_width, content_width) = get_container_sizes(&width);
+    let (container_height, content_height) = get_container_sizes(&height);
 
     let corrected_scrolled_y =
         get_corrected_scroll_position(inner_size, size.area.height(), *scrolled_y.read() as f32);
@@ -282,7 +278,7 @@ pub fn VirtualScrollView<
         if *scrolled_y.peek() != scroll_position_y {
             e.stop_propagation();
             *scrolled_y.write() = scroll_position_y;
-            focus.focus();
+            focus.request_focus();
         }
 
         let scroll_position_x = get_scroll_position_from_wheel(
@@ -296,7 +292,7 @@ pub fn VirtualScrollView<
         if *scrolled_x.peek() != scroll_position_x {
             e.stop_propagation();
             *scrolled_x.write() = scroll_position_x;
-            focus.focus();
+            focus.request_focus();
         }
     };
 
@@ -323,7 +319,7 @@ pub fn VirtualScrollView<
         }
 
         if clicking_scrollbar.is_some() {
-            focus.focus();
+            focus.request_focus();
         }
     };
 

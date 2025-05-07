@@ -163,7 +163,7 @@ pub fn Switch(props: SwitchProps) -> Element {
 
     let onclick = move |e: MouseEvent| {
         e.stop_propagation();
-        focus.focus();
+        focus.request_focus();
         props.ontoggled.call(());
     };
 
@@ -197,6 +197,8 @@ pub fn Switch(props: SwitchProps) -> Element {
         }
     }));
 
+    let a11y_toggled = if props.enabled { "true" } else { "false" };
+
     rsx!(
         rect {
             margin: "{theme.margin}",
@@ -211,7 +213,9 @@ pub fn Switch(props: SwitchProps) -> Element {
             onmouseleave,
             onkeydown,
             onclick,
+            a11y_role: "switch",
             a11y_id,
+            a11y_toggled,
             offset_x: "{offset_x}",
             main_align: "center",
             rect {
