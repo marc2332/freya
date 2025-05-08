@@ -77,6 +77,12 @@ use crate::{
     EmbeddedFonts,
 };
 
+pub enum AccessibilityTask {
+    None,
+    Process,
+    ProcessWithMode(NavigationMode),
+}
+
 /// Manages the Application lifecycle
 pub struct Application {
     pub(crate) sdom: SafeDOM,
@@ -97,7 +103,7 @@ pub struct Application {
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) plugins: PluginsManager,
     pub(crate) process_layout_on_next_render: bool,
-    pub(crate) process_accessibility_on_next_render: bool,
+    pub(crate) process_accessibility_task_on_next_render: AccessibilityTask,
     pub(crate) init_accessibility_on_next_render: bool,
     pub(crate) default_fonts: Vec<String>,
 }
@@ -157,7 +163,7 @@ impl Application {
             ticker_sender: broadcast::channel(5).0,
             plugins,
             process_layout_on_next_render: false,
-            process_accessibility_on_next_render: false,
+            process_accessibility_task_on_next_render: AccessibilityTask::None,
             init_accessibility_on_next_render: false,
             default_fonts,
             compositor: Compositor::default(),
@@ -268,7 +274,7 @@ impl Application {
 
         if must_relayout {
             self.process_layout_on_next_render = true;
-            self.process_accessibility_on_next_render = true;
+            self.process_accessibility_task_on_next_render = AccessibilityTask::Process;
         }
 
         if must_relayout || must_repaint {
@@ -367,7 +373,7 @@ impl Application {
     /// Resize the Window
     pub fn resize(&mut self, window: &Window) {
         self.process_layout_on_next_render = true;
-        self.process_accessibility_on_next_render = true;
+        self.process_accessibility_task_on_next_render = AccessibilityTask::Process;
         self.init_accessibility_on_next_render = true;
         self.compositor.reset();
         self.sdom
@@ -391,17 +397,17 @@ impl Application {
     }
 
     pub fn request_focus_node(&mut self, focus_strategy: AccessibilityFocusStrategy) {
-        match focus_strategy {
+        let task = match focus_strategy {
             AccessibilityFocusStrategy::Backward | AccessibilityFocusStrategy::Forward => {
-                self.set_navigation_mode(NavigationMode::Keyboard);
+                AccessibilityTask::ProcessWithMode(NavigationMode::Keyboard)
             }
-            _ => {}
-        }
+            _ => AccessibilityTask::Process,
+        };
 
         let fdom = self.sdom.get();
         fdom.accessibility_dirty_nodes()
             .request_focus(focus_strategy);
-        self.process_accessibility_on_next_render = true;
+        self.process_accessibility_task_on_next_render = task
     }
 
     /// Notify components subscribed to event loop ticks.
