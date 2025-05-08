@@ -1,6 +1,5 @@
 use std::ops::Deref;
 
-
 use super::{
     AnimDirection,
     AnimatedValue,
