@@ -1,7 +1,7 @@
 use accesskit::{
+    Action,
     AriaCurrent,
     AutoComplete,
-    DefaultActionVerb,
     HasPopup,
     Invalid,
     ListStyle,
@@ -22,7 +22,6 @@ impl Parse for Role {
     fn parse(value: &str) -> Result<Self, ParseError> {
         Ok(match value {
             "unknown" => Self::Unknown,
-            "inline-text-box" => Self::InlineTextBox,
             "cell" => Self::Cell,
             "label" => Self::Label,
             "image" => Self::Image,
@@ -245,19 +244,35 @@ impl Parse for Live {
     }
 }
 
-impl Parse for DefaultActionVerb {
+impl Parse for Action {
     fn parse(value: &str) -> Result<Self, ParseError> {
         Ok(match value {
-            "click" => DefaultActionVerb::Click,
-            "focus" => DefaultActionVerb::Focus,
-            "check" => DefaultActionVerb::Check,
-            "uncheck" => DefaultActionVerb::Uncheck,
-            "click-ancestor" => DefaultActionVerb::ClickAncestor,
-            "jump" => DefaultActionVerb::Jump,
-            "open" => DefaultActionVerb::Open,
-            "press" => DefaultActionVerb::Press,
-            "select" => DefaultActionVerb::Select,
-            "unselect" => DefaultActionVerb::Unselect,
+            "click" => Action::Click,
+            "focus" => Action::Focus,
+            "blur" => Action::Blur,
+            "collapse" => Action::Collapse,
+            "expand" => Action::Expand,
+            "custom-action" => Action::CustomAction,
+            "decrement" => Action::Decrement,
+            "increment" => Action::Increment,
+            "hide-tooltip" => Action::HideTooltip,
+            "show-tooltip" => Action::ShowTooltip,
+            "replace-selected-text" => Action::ReplaceSelectedText,
+            "scroll-backward" => Action::ScrollBackward,
+            "scroll-down" => Action::ScrollDown,
+            "scroll-forward" => Action::ScrollForward,
+            "scroll-left" => Action::ScrollLeft,
+            "scroll-right" => Action::ScrollRight,
+            "scroll-up" => Action::ScrollUp,
+            "scroll-into-view" => Action::ScrollIntoView,
+            "scroll-to-point" => Action::ScrollToPoint,
+            "set-scroll-offset" => Action::SetScrollOffset,
+            "set-text-selection" => Action::SetTextSelection,
+            "set-sequential-focus-navigation-starting-point" => {
+                Action::SetSequentialFocusNavigationStartingPoint
+            }
+            "set-value" => Action::SetValue,
+            "show-context-menu" => Action::ShowContextMenu,
             _ => Err(ParseError)?,
         })
     }
@@ -313,7 +328,6 @@ impl Parse for AutoComplete {
 impl Parse for HasPopup {
     fn parse(value: &str) -> Result<Self, ParseError> {
         Ok(match value {
-            "true" => HasPopup::True,
             "menu" => HasPopup::Menu,
             "listbox" => HasPopup::Listbox,
             "tree" => HasPopup::Tree,

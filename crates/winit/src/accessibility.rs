@@ -21,7 +21,10 @@ use winit::{
         LogicalSize,
     },
     event::WindowEvent,
-    event_loop::EventLoopProxy,
+    event_loop::{
+        ActiveEventLoop,
+        EventLoopProxy,
+    },
     window::Window,
 };
 
@@ -33,9 +36,13 @@ pub struct WinitAcessibilityTree {
 }
 
 impl WinitAcessibilityTree {
-    pub fn new(window: &Window, proxy: EventLoopProxy<EventLoopMessage>) -> Self {
+    pub fn new(
+        event_loop: &ActiveEventLoop,
+        window: &Window,
+        proxy: EventLoopProxy<EventLoopMessage>,
+    ) -> Self {
         let accessibility_tree = AccessibilityTree::new(ACCESSIBILITY_ROOT_ID);
-        let accessibility_adapter = Adapter::with_event_loop_proxy(window, proxy);
+        let accessibility_adapter = Adapter::with_event_loop_proxy(event_loop, window, proxy);
         Self {
             accessibility_tree,
             accessibility_adapter,
