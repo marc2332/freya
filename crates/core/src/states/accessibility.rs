@@ -4,14 +4,14 @@ use std::sync::{
 };
 
 use accesskit::{
+    Action,
     AriaCurrent,
     AutoComplete,
-    DefaultActionVerb,
     HasPopup,
     Invalid,
     ListStyle,
     Live,
-    NodeBuilder,
+    Node,
     NodeId as AccessibilityId,
     Orientation,
     Role,
@@ -58,7 +58,7 @@ pub struct AccessibilityNodeState {
     pub a11y_id: Option<AccessibilityId>,
     pub a11y_auto_focus: bool,
     pub a11y_focusable: Focusable,
-    pub builder: Option<NodeBuilder>,
+    pub builder: Option<Node>,
 }
 
 impl ParseAttribute for AccessibilityNodeState {
@@ -101,7 +101,7 @@ impl ParseAttribute for AccessibilityNodeState {
                 if let OwnedAttributeValue::Text(attr) = attr.value {
                     if let Some(builder) = self.builder.as_mut() {
                         match a11y_attr {
-                            AttributeName::A11yName => builder.set_name(attr.clone()),
+                            AttributeName::A11yName => builder.set_class_name(attr.clone()),
                             AttributeName::A11yDescription => builder.set_description(attr.clone()),
                             AttributeName::A11yValue => builder.set_value(attr.clone()),
                             AttributeName::A11yAccessKey => builder.set_access_key(attr.clone()),
@@ -197,19 +197,9 @@ impl ParseAttribute for AccessibilityNodeState {
                             AttributeName::A11ySelected => {
                                 builder.set_selected(attr.parse::<bool>().map_err(|_| ParseError)?);
                             }
-                            AttributeName::A11yHovered => {
-                                if attr.parse::<bool>().map_err(|_| ParseError)? {
-                                    builder.set_hovered();
-                                }
-                            }
                             AttributeName::A11yHidden => {
                                 if attr.parse::<bool>().map_err(|_| ParseError)? {
                                     builder.set_hidden();
-                                }
-                            }
-                            AttributeName::A11yLinked => {
-                                if attr.parse::<bool>().map_err(|_| ParseError)? {
-                                    builder.set_linked();
                                 }
                             }
                             AttributeName::A11yMultiselectable => {
@@ -290,7 +280,7 @@ impl ParseAttribute for AccessibilityNodeState {
                                 builder.set_live(Live::parse(attr)?);
                             }
                             AttributeName::A11yDefaultActionVerb => {
-                                builder.set_default_action_verb(DefaultActionVerb::parse(attr)?);
+                                builder.add_action(Action::parse(attr)?);
                             }
                             AttributeName::A11yOrientation => {
                                 builder.set_orientation(Orientation::parse(attr)?);
@@ -375,9 +365,7 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
             AttributeName::A11yColorValue,
             AttributeName::A11yExpanded,
             AttributeName::A11ySelected,
-            AttributeName::A11yHovered,
             AttributeName::A11yHidden,
-            AttributeName::A11yLinked,
             AttributeName::A11yMultiselectable,
             AttributeName::A11yRequired,
             AttributeName::A11yVisited,
@@ -424,12 +412,12 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
             a11y_id: self.a11y_id,
             builder: node_view.tag().and_then(|tag| {
                 match tag {
-                    TagName::Image => Some(NodeBuilder::new(Role::Image)),
-                    TagName::Label => Some(NodeBuilder::new(Role::Label)),
-                    TagName::Paragraph => Some(NodeBuilder::new(Role::Paragraph)),
-                    TagName::Rect => Some(NodeBuilder::new(Role::GenericContainer)),
-                    TagName::Svg => Some(NodeBuilder::new(Role::GraphicsObject)),
-                    TagName::Root => Some(NodeBuilder::new(Role::Window)),
+                    TagName::Image => Some(Node::new(Role::Image)),
+                    TagName::Label => Some(Node::new(Role::Label)),
+                    TagName::Paragraph => Some(Node::new(Role::Paragraph)),
+                    TagName::Rect => Some(Node::new(Role::GenericContainer)),
+                    TagName::Svg => Some(Node::new(Role::GraphicsObject)),
+                    TagName::Root => Some(Node::new(Role::Window)),
                     // TODO: make this InlineTextBox and supply computed text span properties
                     TagName::Text => None,
                 }
