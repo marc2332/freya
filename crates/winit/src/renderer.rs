@@ -38,6 +38,7 @@ use winit::{
 };
 
 use crate::{
+    app::AccessibilityTask,
     devtools::{
         Devtools,
         HoveredNode,
@@ -275,8 +276,15 @@ impl<'a, State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'a
                     app.process_layout_on_next_render = false;
                 }
 
-                if app.process_accessibility_on_next_render {
-                    app.process_accessibility(window);
+                match app.process_accessibility_task_on_next_render {
+                    AccessibilityTask::ProcessWithMode(navigation_mode) => {
+                        app.process_accessibility(window);
+                        app.set_navigation_mode(navigation_mode);
+                    }
+                    AccessibilityTask::Process => {
+                        app.process_accessibility(window);
+                    }
+                    AccessibilityTask::None => {}
                 }
 
                 if app.init_accessibility_on_next_render {
