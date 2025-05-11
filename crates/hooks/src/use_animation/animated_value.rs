@@ -39,9 +39,12 @@ pub fn apply_value(
         destination - origin,
         time.as_millis() as f32,
     );
+
+    // We can skip the easing if we have reached the last index
     if t == d {
         return destination;
     }
+    
     match function {
         Function::Back => match ease {
             Ease::In => Back::ease_in(t, b, c, d),
