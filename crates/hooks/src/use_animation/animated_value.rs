@@ -41,7 +41,7 @@ pub fn apply_value(
     );
 
     // We can skip the easing if we have reached the last index
-    if t == d {
+    if t >= d {
         return destination;
     }
 
