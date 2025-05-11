@@ -82,9 +82,9 @@ impl AnimatedValue for AnimNum {
     fn is_finished(&self, index: u128, direction: AnimDirection) -> bool {
         match direction {
             AnimDirection::Forward => {
-                index > self.time.as_millis() && self.value == self.destination
+                index >= self.time.as_millis() && self.value == self.destination
             }
-            AnimDirection::Reverse => index > self.time.as_millis() && self.value == self.origin,
+            AnimDirection::Reverse => index >= self.time.as_millis() && self.value == self.origin,
         }
     }
 

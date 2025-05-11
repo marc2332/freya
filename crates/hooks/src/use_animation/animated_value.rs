@@ -39,7 +39,10 @@ pub fn apply_value(
         destination - origin,
         time.as_millis() as f32,
     );
-    let v = match function {
+    if t == d {
+        return destination;
+    }
+    match function {
         Function::Back => match ease {
             Ease::In => Back::ease_in(t, b, c, d),
             Ease::InOut => Back::ease_in_out(t, b, c, d),
@@ -90,10 +93,7 @@ pub fn apply_value(
             Ease::InOut => Sine::ease_in_out(t, b, c, d),
             Ease::Out => Sine::ease_out(t, b, c, d),
         },
-    };
-
-    // Round up to 3 decimals
-    (v * 1000.).round() / 1000.
+    }
 }
 
 #[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
