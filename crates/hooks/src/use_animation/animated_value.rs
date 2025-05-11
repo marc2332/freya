@@ -44,7 +44,7 @@ pub fn apply_value(
     if t == d {
         return destination;
     }
-    
+
     match function {
         Function::Back => match ease {
             Ease::In => Back::ease_in(t, b, c, d),
