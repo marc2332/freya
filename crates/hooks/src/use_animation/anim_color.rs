@@ -85,14 +85,14 @@ impl AnimatedValue for AnimColor {
     fn is_finished(&self, index: u128, direction: AnimDirection) -> bool {
         match direction {
             AnimDirection::Forward => {
-                index > self.time.as_millis()
+                index >= self.time.as_millis()
                     && self.value.r() == self.destination.r()
                     && self.value.g() == self.destination.g()
                     && self.value.b() == self.destination.b()
                     && self.value.a() == self.destination.a()
             }
             AnimDirection::Reverse => {
-                index > self.time.as_millis()
+                index >= self.time.as_millis()
                     && self.value.r() == self.origin.r()
                     && self.value.g() == self.origin.g()
                     && self.value.b() == self.origin.b()
