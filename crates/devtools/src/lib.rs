@@ -221,13 +221,12 @@ fn LayoutForNodeInspector(node_id: String) -> Element {
             margin: "10",
             corner_radius: "16",
             cross_align: "center",
-            padding: "6 0 0 0",
+            padding: "6",
             spacing: "6",
             rect {
                 direction: "horizontal",
                 width: "fill",
                 main_align: "space-between",
-                padding: "0 2",
                 rect {
                     direction: "horizontal",
                     Link {
