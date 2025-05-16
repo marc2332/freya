@@ -175,7 +175,7 @@ impl Position {
                     if let Some(top) = top {
                         y = *top;
                     } else if let Some(bottom) = bottom {
-                        y = root_area.max_y() - bottom;
+                        y = root_area.max_y() - bottom - area_size.height;
                     }
                     y
                 };
@@ -184,7 +184,7 @@ impl Position {
                     if let Some(left) = left {
                         x = *left;
                     } else if let Some(right) = right {
-                        x = root_area.max_x() - right;
+                        x = root_area.max_x() - right - area_size.width;
                     }
                     x
                 };
@@ -196,19 +196,22 @@ impl Position {
 
 impl Scaled for Position {
     fn scale(&mut self, scale_factor: f32) {
-        if let Self::Absolute(absolute_postion) = self {
-            if let Some(top) = &mut absolute_postion.top {
-                *top *= scale_factor;
+        match self {
+            Self::Absolute(position) | Self::Global(position) => {
+                if let Some(top) = &mut position.top {
+                    *top *= scale_factor;
+                }
+                if let Some(right) = &mut position.right {
+                    *right *= scale_factor;
+                }
+                if let Some(bottom) = &mut position.bottom {
+                    *bottom *= scale_factor;
+                }
+                if let Some(left) = &mut position.left {
+                    *left *= scale_factor;
+                }
             }
-            if let Some(right) = &mut absolute_postion.right {
-                *right *= scale_factor;
-            }
-            if let Some(bottom) = &mut absolute_postion.bottom {
-                *bottom *= scale_factor;
-            }
-            if let Some(left) = &mut absolute_postion.left {
-                *left *= scale_factor;
-            }
+            _ => {}
         }
     }
 }
