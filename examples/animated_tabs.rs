@@ -64,26 +64,26 @@ fn FromRouteToCurrent(
             )
         });
 
-    // Only render the destination route once the animation has finished
-    use_memo(move || {
-        if !animations.is_running() && animations.has_run_yet() {
-            animated_router.write().settle();
-        }
-    });
-
     // Run the animation when any prop changes
     use_memo(use_reactive((&left_to_right, &from), move |_| {
         animations.run(AnimDirection::Forward)
     }));
 
-    let animations = animations.get();
-    let offset = animations.read().0.read();
+    // Only render the destination route once the animation has finished
+    use_effect(move || {
+        if !animations.is_running() && animations.has_run_yet() {
+            animated_router.write().settle();
+        }
+    });
+
+    let animations = animations.get()();
+    let offset = animations.0.read();
     let (scale_out, scale_in) = if left_to_right {
-        (animations.read().1.read(), animations.read().2.read())
+        (animations.1.read(), animations.2.read())
     } else {
-        (animations.read().2.read(), animations.read().1.read())
+        (animations.2.read(), animations.1.read())
     };
-    let corner_radius = animations.read().3.read();
+    let corner_radius = animations.3.read();
     let width = node_size.read().area.width();
 
     let offset = width - (offset * width);
@@ -163,32 +163,33 @@ fn AppSidebar() -> Element {
         NativeRouter {
             AnimatedRouter::<Route> {
                 rect {
-                    height: "calc(100% - 50)",
-                    width: "fill",
+                    content: "flex",
                     Body {
+                        height: "flex(1)",
                         AnimatedOutlet { }
                     }
+                    rect {
+                        direction: "horizontal",
+                        main_align: "center",
+                        cross_align: "center",
+                        width: "fill",
+                        padding: "8",
+                        spacing: "8",
+                        BottomTab {
+                            route: Route::Home,
+                            exact: true,
+                            "Go to Hey ! 👋"
+                        }
+                        BottomTab {
+                            route: Route::Wow,
+                            "Go to Wow! 👈"
+                        }
+                        BottomTab {
+                            route: Route::Crab,
+                            "Go to Crab! 🦀"
+                        }
+                    }
                 }
-                rect {
-                    direction: "horizontal",
-                    main_align: "center",
-                    cross_align: "center",
-                    width: "fill",
-                    BottomTab {
-                        route: Route::Home,
-                        exact: true,
-                        "Go to Hey ! 👋"
-                    }
-                    BottomTab {
-                        route: Route::Wow,
-                        "Go to Wow! 👈"
-                    }
-                    BottomTab {
-                        route: Route::Crab,
-                        "Go to Crab! 🦀"
-                    }
-                }
-
             }
         }
     )
