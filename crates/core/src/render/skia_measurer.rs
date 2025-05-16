@@ -59,7 +59,7 @@ impl<'a> SkiaMeasurer<'a> {
     }
 }
 
-impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
+impl LayoutMeasurer<NodeId> for SkiaMeasurer<'_> {
     fn measure(
         &mut self,
         node_id: NodeId,
