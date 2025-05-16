@@ -157,7 +157,7 @@ impl<'a, State: Clone + 'static> WinitRenderer<'a, State> {
     }
 }
 
-impl<'a, State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'a, State> {
+impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, State> {
     fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
         if !self.state.has_been_created() {
             self.state.create(event_loop, &self.event_loop_proxy);

@@ -7,7 +7,6 @@ use accesskit::{
     Action,
     Affine,
     Node,
-    NodeBuilder,
     NodeId as AccessibilityId,
     Rect,
     Role,
@@ -345,7 +344,7 @@ impl AccessibilityTree {
 
         let mut builder = match node_type.tag() {
             // Make the root accessibility node.
-            Some(&TagName::Root) => NodeBuilder::new(Role::Window),
+            Some(&TagName::Root) => Node::new(Role::Window),
 
             // All other node types will either don't have a builder (but don't support
             // accessibility attributes like with `text`) or have their builder made for
@@ -370,9 +369,10 @@ impl AccessibilityTree {
         });
 
         if let NodeType::Element(node) = &*node_type {
-            if matches!(node.tag, TagName::Label | TagName::Paragraph) && builder.name().is_none() {
+            if matches!(node.tag, TagName::Label | TagName::Paragraph) && builder.value().is_none()
+            {
                 if let Some(inner_text) = node_ref.get_inner_texts() {
-                    builder.set_name(inner_text);
+                    builder.set_value(inner_text);
                 }
             }
         }
@@ -390,7 +390,9 @@ impl AccessibilityTree {
             .iter()
             .find(|(id, _)| id == &node_ref.id())
         {
-            builder.set_transform(Affine::rotate(rotation.to_radians() as _));
+            let rotation = rotation.to_radians() as f64;
+            let (s, c) = rotation.sin_cos();
+            builder.set_transform(Affine::new([c, s, -s, c, 0.0, 0.0]));
         }
 
         // Clipping overflow
@@ -483,7 +485,7 @@ impl AccessibilityTree {
             ));
         }
 
-        builder.build()
+        builder
     }
 }
 

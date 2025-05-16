@@ -187,9 +187,7 @@ pub enum AttributeName {
     // TODO: This might be able to be determined automatically,
     //       but i'm not sure what ARIA property it corresponds to
     //       or its actual purpose.
-    A11yHovered,
     A11yHidden,
-    A11yLinked,
     A11yMultiselectable,
     A11yRequired,
     A11yVisited,
@@ -345,9 +343,7 @@ impl FromStr for AttributeName {
             "a11y_color_value" => Ok(AttributeName::A11yColorValue),
             "a11y_expanded" => Ok(AttributeName::A11yExpanded),
             "a11y_selected" => Ok(AttributeName::A11ySelected),
-            "a11y_hovered" => Ok(AttributeName::A11yHovered),
             "a11y_hidden" => Ok(AttributeName::A11yHidden),
-            "a11y_linked" => Ok(AttributeName::A11yLinked),
             "a11y_multiselectable" => Ok(AttributeName::A11yMultiselectable),
             "a11y_required" => Ok(AttributeName::A11yRequired),
             "a11y_visited" => Ok(AttributeName::A11yVisited),

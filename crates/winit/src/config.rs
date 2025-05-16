@@ -84,7 +84,7 @@ pub struct LaunchConfig<'a, T: Clone = ()> {
     pub default_fonts: Vec<String>,
 }
 
-impl<'a, T: Clone> Default for LaunchConfig<'a, T> {
+impl<T: Clone> Default for LaunchConfig<'_, T> {
     fn default() -> Self {
         Self {
             state: None,
