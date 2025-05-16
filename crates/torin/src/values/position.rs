@@ -211,7 +211,7 @@ impl Scaled for Position {
                     *left *= scale_factor;
                 }
             }
-            _ => {}
+            Self::Stacked(_) => {}
         }
     }
 }
