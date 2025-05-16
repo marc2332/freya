@@ -112,7 +112,7 @@ pub trait TreeMut: TreeRef {
     fn remove_subtree(&mut self, id: NodeId);
 }
 
-impl<'a> TreeRef for TreeRefView<'a> {
+impl TreeRef for TreeRefView<'_> {
     fn parent_id(&self, id: NodeId) -> Option<NodeId> {
         self.get(id).ok()?.parent
     }
@@ -144,7 +144,7 @@ impl<'a> TreeRef for TreeRefView<'a> {
     }
 }
 
-impl<'a> TreeMut for TreeMutView<'a> {
+impl TreeMut for TreeMutView<'_> {
     fn remove(&mut self, id: NodeId) {
         fn recurse(tree: &mut TreeMutView<'_>, id: NodeId) {
             let (light_tree, children) = {
@@ -399,7 +399,7 @@ fn set_height(tree: &mut TreeMutView<'_>, node: NodeId, height: u16) {
     }
 }
 
-impl<'a> TreeRef for TreeMutView<'a> {
+impl TreeRef for TreeMutView<'_> {
     fn parent_id(&self, id: NodeId) -> Option<NodeId> {
         let node_data = &self.1;
         node_data.get(id).unwrap().parent
