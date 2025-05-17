@@ -247,7 +247,7 @@ impl EventName {
     pub fn is_released(&self) -> bool {
         matches!(
             &self,
-            Self::Click | Self::PointerUp | Self::TouchEnd | Self::MouseUp
+            Self::Click | Self::PointerUp | Self::TouchEnd
         )
     }
 }
