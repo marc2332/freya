@@ -53,9 +53,8 @@ impl NodesState {
         // Pressed Nodes
         #[allow(unused_variables)]
         self.pressed_nodes.retain(|node_id, _| {
-             // Check if a DOM event that presses this Node will get emitted
-             let no_desire_to_press =
-                filter_dom_events_by(dom_events, node_id, |e| e.is_pressed());
+            // Check if a DOM event that presses this Node will get emitted
+            let no_desire_to_press = filter_dom_events_by(dom_events, node_id, |e| e.is_pressed());
 
             // If there has been a mouse press but a DOM event was not emitted to this node, then we safely assume
             // the user does no longer want to press this Node
@@ -76,8 +75,7 @@ impl NodesState {
         // Hovered Nodes
         self.hovered_nodes.retain(|node_id, metadata| {
             // Check if a DOM event that moves the cursor in this Node will get emitted
-            let no_desire_to_hover =
-                filter_dom_events_by(dom_events, node_id, |e| e.is_moved());
+            let no_desire_to_hover = filter_dom_events_by(dom_events, node_id, |e| e.is_moved());
 
             if no_desire_to_hover {
                 // If there has been a mouse movement but a DOM event was not emitted to this node, then we safely assume
@@ -114,7 +112,7 @@ impl NodesState {
                 // Only let through enter events when the node was not hovered
                 _ if ev.name.is_enter() => !self.hovered_nodes.contains_key(&ev.node_id),
 
-                // Only let through release events when the node was already pressed 
+                // Only let through release events when the node was already pressed
                 _ if ev.name.is_released() => self.pressed_nodes.contains_key(&ev.node_id),
 
                 _ => true,
