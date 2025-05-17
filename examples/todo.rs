@@ -99,9 +99,9 @@ fn app() -> Element {
             ),
             Task::new("Improve docs".to_string(), State::Progress, Priority::High),
             Task::new(
-                "Release Freya v0.3.0-rc.3".to_string(),
-                State::Done,
-                Priority::High,
+                "Release Freya v0.3.0".to_string(),
+                State::Progress,
+                Priority::Urgent,
             ),
             Task::new(
                 "Release Freya v0.3.0-rc.0".to_string(),
@@ -112,6 +112,11 @@ fn app() -> Element {
                 "Rewrite Freya in Java".to_string(),
                 State::Discarded,
                 Priority::Low,
+            ),
+            Task::new(
+                "Pet my dog".to_string(),
+                State::Todo,
+                Priority::High,
             ),
         ]
     });
