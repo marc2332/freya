@@ -243,8 +243,8 @@ impl EventName {
         matches!(self, Self::MouseDown | Self::TouchStart | Self::PointerDown)
     }
 
-    /// Check if this event canr release the press state of a Node.
+    /// Check if this event can release the press state of a Node.
     pub fn is_released(&self) -> bool {
-        matches!(&self, Self::Click | Self::PointerUp | Self::TouchEnd)
+        matches!(&self, Self::Click | Self::PointerUp)
     }
 }
