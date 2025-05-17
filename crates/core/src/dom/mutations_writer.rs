@@ -54,7 +54,7 @@ pub struct MutationsWriter<'a> {
     pub images_cache: &'a mut ImagesCache,
 }
 
-impl<'a> MutationsWriter<'a> {
+impl MutationsWriter<'_> {
     pub fn remove(&mut self, id: ElementId) {
         let node_id = self.native_writer.state.element_to_node_id(id);
         let mut dom_adapter = DioxusDOMAdapter::new(self.native_writer.rdom, self.scale_factor);
@@ -134,7 +134,7 @@ impl<'a> MutationsWriter<'a> {
     }
 }
 
-impl<'a> WriteMutations for MutationsWriter<'a> {
+impl WriteMutations for MutationsWriter<'_> {
     fn append_children(&mut self, id: dioxus_core::ElementId, m: usize) {
         self.native_writer.append_children(id, m);
     }

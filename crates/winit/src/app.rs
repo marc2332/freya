@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use accesskit::{
-    NodeBuilder,
+    Node,
     Role,
 };
 use dioxus_core::{
@@ -138,7 +138,7 @@ impl Application {
         let (event_emitter, event_receiver) = mpsc::unbounded_channel();
         let (platform_sender, platform_receiver) = watch::channel(NativePlatformState {
             focused_accessibility_id: ACCESSIBILITY_ROOT_ID,
-            focused_accessibility_node: NodeBuilder::new(Role::Window).build(),
+            focused_accessibility_node: Node::new(Role::Window),
             preferred_theme: window.theme().map(|theme| theme.into()).unwrap_or_default(),
             navigation_mode: NavigationMode::default(),
             information: PlatformInformation::from_winit(window),
