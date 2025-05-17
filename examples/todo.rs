@@ -113,11 +113,7 @@ fn app() -> Element {
                 State::Discarded,
                 Priority::Low,
             ),
-            Task::new(
-                "Pet my dog".to_string(),
-                State::Todo,
-                Priority::High,
-            ),
+            Task::new("Pet my dog".to_string(), State::Todo, Priority::High),
         ]
     });
 
