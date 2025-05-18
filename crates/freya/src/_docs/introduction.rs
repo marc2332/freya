@@ -40,4 +40,4 @@
 //! }
 //! ```
 //!
-//! You can continue to learn more in [UI](self::_docs::ui).
+//! You can continue to learn more in [UI](crate::_docs::ui).
