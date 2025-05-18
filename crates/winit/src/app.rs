@@ -223,12 +223,6 @@ impl Application {
             PluginHandle::new(&self.proxy),
         );
 
-        if repaint {
-            if let Some(devtools) = &self.devtools {
-                devtools.update(&self.sdom.get());
-            }
-        }
-
         (repaint, relayout)
     }
 
@@ -275,6 +269,12 @@ impl Application {
         if must_relayout {
             self.process_layout_on_next_render = true;
             self.process_accessibility_task_on_next_render = AccessibilityTask::Process;
+        } else if must_repaint {
+            // If there was no relayout but there was a repaint then we can update the devtools now,
+            // otherwise if there was a relayout the devtools will get updated on next render
+            if let Some(devtools) = &self.devtools {
+                devtools.update(&self.sdom.get());
+            }
         }
 
         if must_relayout || must_repaint {
@@ -424,35 +424,32 @@ impl Application {
 
     /// Measure the layout
     pub fn process_layout(&mut self, window_size: PhysicalSize<u32>, scale_factor: f64) {
-        {
-            let fdom = self.sdom.get();
+        let fdom = self.sdom.get();
 
-            self.plugins.send(
-                PluginEvent::StartedMeasuringLayout(&fdom.layout()),
-                PluginHandle::new(&self.proxy),
-            );
+        self.plugins.send(
+            PluginEvent::StartedMeasuringLayout(&fdom.layout()),
+            PluginHandle::new(&self.proxy),
+        );
 
-            process_layout(
-                &fdom,
-                Area::from_size(window_size.to_torin()),
-                &mut self.font_collection,
-                scale_factor as f32,
-                &self.default_fonts,
-            );
+        process_layout(
+            &fdom,
+            Area::from_size(window_size.to_torin()),
+            &mut self.font_collection,
+            scale_factor as f32,
+            &self.default_fonts,
+        );
 
-            self.plugins.send(
-                PluginEvent::FinishedMeasuringLayout(&fdom.layout()),
-                PluginHandle::new(&self.proxy),
-            );
-        }
+        self.plugins.send(
+            PluginEvent::FinishedMeasuringLayout(&fdom.layout()),
+            PluginHandle::new(&self.proxy),
+        );
 
         if let Some(devtools) = &self.devtools {
-            devtools.update(&self.sdom.get())
+            devtools.update(&fdom)
         }
 
         #[cfg(debug_assertions)]
         {
-            let fdom = self.sdom.get();
             tracing::info!(
                 "Processed {} layers and {} group of paragraph elements",
                 fdom.layers().len(),

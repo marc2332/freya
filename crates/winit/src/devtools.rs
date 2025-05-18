@@ -55,8 +55,8 @@ impl Devtools {
             }
 
             if !devtools_found && root_found {
-                let has_layout = layout.get(node.id()).is_some();
-                if has_layout {
+                let layout_node = layout.get(node.id()).cloned();
+                if let Some(layout_node) = layout_node {
                     let node_type = node.node_type();
                     new_nodes.push(NodeInfo {
                         id: node.id(),
@@ -69,7 +69,7 @@ impl Devtools {
                         tag: *node_type.tag().unwrap(),
                         height: node.height(),
                         state: get_node_state(&node),
-                        layout_node: layout.get(node.id()).unwrap().clone(),
+                        layout_node,
                     });
                 }
             }
