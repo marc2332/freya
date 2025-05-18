@@ -200,8 +200,8 @@ impl EventName {
         )
     }
 
-    /// Check if the event means the cursor was moved
-    pub fn was_cursor_moved(&self) -> bool {
+    /// Check if the event means the cursor was moved.
+    pub fn is_moved(&self) -> bool {
         matches!(
             &self,
             Self::MouseMove | Self::MouseEnter | Self::PointerEnter | Self::PointerOver
@@ -231,34 +231,20 @@ impl EventName {
     }
 
     /// Check if this event can change the hover state of a Node.
-    pub fn can_change_hover_state(&self) -> bool {
+    pub fn is_hovered(&self) -> bool {
         matches!(
             self,
             Self::MouseMove | Self::MouseEnter | Self::PointerOver | Self::PointerEnter
         )
     }
 
-    /// Check if this event can change the press state of a Node.
-    pub fn can_change_press_state(&self) -> bool {
+    /// Check if this event can press state of a Node.
+    pub fn is_pressed(&self) -> bool {
         matches!(self, Self::MouseDown | Self::TouchStart | Self::PointerDown)
     }
 
-    /// Check if the event means the cursor started or released a click
-    pub fn was_cursor_pressed_or_released(&self) -> bool {
-        matches!(
-            &self,
-            Self::MouseDown
-                | Self::PointerDown
-                | Self::MouseUp
-                | Self::Click
-                | Self::PointerUp
-                | Self::TouchStart
-                | Self::TouchEnd
-        )
-    }
-
-    /// Check if the event was pressed
-    pub fn is_pressed(&self) -> bool {
-        matches!(&self, Self::Click)
+    /// Check if this event can release the press state of a Node.
+    pub fn is_released(&self) -> bool {
+        matches!(&self, Self::Click | Self::PointerUp)
     }
 }

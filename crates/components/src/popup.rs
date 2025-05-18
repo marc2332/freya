@@ -266,7 +266,7 @@ mod test {
         // Check the popup is opened
         assert_eq!(utils.sdom().get().layout().size(), 12);
 
-        utils.click_cursor((395., 180.)).await;
+        utils.click_cursor((25., 25.)).await;
 
         // Check the popup is closed
         assert_eq!(utils.sdom().get().layout().size(), 4);
