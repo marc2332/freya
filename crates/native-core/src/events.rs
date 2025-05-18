@@ -160,7 +160,7 @@ impl EventName {
     /// Some events might cause other events, like for example:
     /// A `mousemove` might also trigger a `mouseenter`
     /// A `mousedown` or a `touchdown` might also trigger a `pointerdown`
-    pub fn get_collateral_events(&self) -> SmallVec<[Self; 4]> {
+    pub fn get_derived_events(&self) -> SmallVec<[Self; 4]> {
         let mut events = SmallVec::new();
 
         events.push(*self);
