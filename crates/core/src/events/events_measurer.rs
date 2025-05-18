@@ -60,7 +60,7 @@ pub fn process_events(
     let collateral_events_to_emit =
         measure_dom_events(&potential_collateral_events, fdom, scale_factor);
 
-    // Get the global events created by the colateral events
+    // Get the global events created by the collateral events
     let collateral_global_events = measure_dom_global_events(&collateral_events_to_emit);
 
     // Get the global events created by the events
