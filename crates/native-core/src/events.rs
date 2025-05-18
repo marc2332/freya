@@ -128,7 +128,10 @@ impl PartialOrd for EventName {
 impl Ord for EventName {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match self {
-            // Always prioritize leave events before anything else
+            // Global should always come first
+            _ if self.is_global() && !other.is_global() => std::cmp::Ordering::Less,
+
+            // Leave events come first, but after global events
             Self::MouseLeave | Self::PointerLeave => {
                 if self == other {
                     std::cmp::Ordering::Equal
@@ -136,6 +139,7 @@ impl Ord for EventName {
                     std::cmp::Ordering::Less
                 }
             }
+
             _ => std::cmp::Ordering::Greater,
         }
     }
@@ -185,6 +189,18 @@ impl EventName {
     /// Check if the event means that the pointer (e.g. cursor) just entered a Node
     pub fn is_enter(&self) -> bool {
         matches!(&self, Self::MouseEnter | Self::PointerEnter)
+    }
+
+    pub fn is_global(&self) -> bool {
+        matches!(
+            &self,
+            Self::GlobalClick
+                | Self::GlobalPointerUp
+                | Self::GlobalMouseDown
+                | Self::GlobalMouseMove
+                | Self::GlobalFileHover
+                | Self::GlobalFileHoverCancelled
+        )
     }
 
     /// Check if it's one of the Pointer variants
