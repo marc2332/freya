@@ -84,7 +84,7 @@ An animated drag and drop.
 
 https://github.com/user-attachments/assets/b21d97f5-9f0b-42b1-9b5c-f19b83601288
 
-#### Animatied router example
+#### Animated router example
 
 Animated transition between router pages.
 
