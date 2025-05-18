@@ -429,27 +429,22 @@ pub async fn pointer_events_from_mouse() {
     utils.wait_for_update().await;
     assert_eq!(
         label.get(0).text(),
-        Some(format!("{:?}", vec!["enter", "move", "move", "down", "up"]).as_str())
+        Some(
+            format!(
+                "{:?}",
+                vec!["enter", "move", "move", "down", "up", "globalup"]
+            )
+            .as_str()
+        )
     );
 
     utils.move_cursor((0., 0.)).await;
     assert_eq!(
         label.get(0).text(),
-        Some(format!("{:?}", vec!["enter", "move", "move", "down", "up", "leave"]).as_str())
-    );
-
-    utils.push_event(TestEvent::Mouse {
-        name: EventName::PointerUp,
-        cursor: CursorPoint::new(0.0, 0.0),
-        button: Some(MouseButton::Left),
-    });
-    utils.wait_for_update().await;
-    assert_eq!(
-        label.get(0).text(),
         Some(
             format!(
                 "{:?}",
-                vec!["enter", "move", "move", "down", "up", "leave", "globalup"]
+                vec!["enter", "move", "move", "down", "up", "globalup", "leave"]
             )
             .as_str()
         )
