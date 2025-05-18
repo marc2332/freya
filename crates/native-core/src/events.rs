@@ -224,21 +224,16 @@ impl EventName {
         )
     }
 
+    /// Check if the event means the cursor has left.
+    pub fn is_left(&self) -> bool {
+        matches!(&self, Self::MouseLeave | Self::PointerLeave)
+    }
+
     // Bubble all events except:
-    // - Global Keyboard events
+    // - Global events
     // - Mouse movements events
     pub fn does_bubble(&self) -> bool {
-        !matches!(
-            self,
-            Self::GlobalKeyDown
-                | Self::GlobalKeyUp
-                | Self::MouseLeave
-                | Self::PointerLeave
-                | Self::MouseEnter
-                | Self::PointerEnter
-                | Self::MouseMove
-                | Self::PointerOver
-        )
+        !self.is_moved() && !self.is_left() && !self.is_global()
     }
 
     /// Only let events that do not move the mouse, go through solid nodes

@@ -61,10 +61,10 @@ pub fn process_events(
         measure_dom_events(&potential_collateral_events, fdom, scale_factor);
 
     // Get the global events created by the collateral events
-    let collateral_global_events = measure_dom_global_events(&collateral_events_to_emit);
+    let collateral_global_events = measure_dom_global_events(fdom, &collateral_events_to_emit);
 
     // Get the global events created by the events
-    let global_events = measure_dom_global_events(&dom_events);
+    let global_events = measure_dom_global_events(fdom, &dom_events);
 
     // Get the global events
     measure_platform_global_events(fdom, events, &mut dom_events, scale_factor);
@@ -83,18 +83,21 @@ pub fn process_events(
 }
 
 /// Create a global event for every event
-pub fn measure_dom_global_events(events: &[DomEvent]) -> Vec<DomEvent> {
+pub fn measure_dom_global_events(fdom: &FreyaDOM, events: &[DomEvent]) -> Vec<DomEvent> {
     let mut global_events = Vec::default();
+    let rdom = fdom.rdom();
     for event in events {
         let Some(event_name) = event.name.get_global_event() else {
             continue;
         };
-        global_events.push(DomEvent {
-            name: event_name,
-            node_id: event.node_id,
-            data: event.data.clone(),
-            bubbles: event.bubbles,
-        });
+        if rdom.is_node_listening(&event.node_id, &event_name) {
+            global_events.push(DomEvent {
+                name: event_name,
+                node_id: event.node_id,
+                data: event.data.clone(),
+                bubbles: false,
+            });
+        }
     }
     global_events
 }
@@ -106,12 +109,13 @@ pub fn measure_platform_global_events(
     dom_events: &mut Vec<DomEvent>,
     scale_factor: f64,
 ) {
+    let rdom = fdom.rdom();
     for PlatformEvent { name, data } in events {
         let Some(global_name) = name.get_global_event() else {
             continue;
         };
 
-        let listeners = fdom.rdom().get_listeners(&global_name);
+        let listeners = rdom.get_listeners(&global_name);
 
         for listener in listeners {
             let event = DomEvent::new(
