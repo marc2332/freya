@@ -123,7 +123,7 @@ https://github.com/user-attachments/assets/39b403f8-56e1-46ea-91d9-b2b10612fa3a
 
 ### Want to try it? 🤔
 
-👋 Make sure to check the [Setup guide](https://book.freyaui.dev/setup.html) first.
+Make sure to have [Development Setup](https://docs.rs/freya/0.3.0-rc.5/freya/_docs/development_setup/index.html) ready.
 
 > ⚠️ If you happen to be on Windows using `windows-gnu` and get compile errors, maybe go check this [issue](https://github.com/marc2332/freya/issues/794).
 
