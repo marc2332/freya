@@ -128,8 +128,8 @@ impl PartialOrd for EventName {
 impl Ord for EventName {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match self {
-            // Global should always come first
-            _ if self.is_global() && !other.is_global() => std::cmp::Ordering::Less,
+            // Global should always come later
+            _ if self.is_global() && !other.is_global() => std::cmp::Ordering::Greater,
 
             // Leave events come first, but after global events
             Self::MouseLeave | Self::PointerLeave => {
