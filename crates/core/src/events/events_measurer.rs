@@ -57,22 +57,14 @@ pub fn process_events(
         nodes_state.process_collateral(fdom, &potential_events, &mut dom_events, events);
 
     // Get what collateral events can actually be emitted
-    let collateral_events_to_emit =
+    let collateral_dom_events =
         measure_dom_events(&potential_collateral_events, fdom, scale_factor);
-
-    // Get the global events created by the collateral events
-    let collateral_global_events = measure_dom_global_events(fdom, &collateral_events_to_emit);
-
-    // Get the global events created by the events
-    let global_events = measure_dom_global_events(fdom, &dom_events);
 
     // Get the global events
     measure_platform_global_events(fdom, events, &mut dom_events, scale_factor);
 
     // Join all the dom events and sort them
-    dom_events.extend(collateral_events_to_emit);
-    dom_events.extend(collateral_global_events);
-    dom_events.extend(global_events);
+    dom_events.extend(collateral_dom_events);
     dom_events.sort_unstable();
 
     // Send all the events
@@ -80,26 +72,6 @@ pub fn process_events(
 
     // Clear the events queue
     events.clear();
-}
-
-/// Create a global event for every event
-pub fn measure_dom_global_events(fdom: &FreyaDOM, events: &[DomEvent]) -> Vec<DomEvent> {
-    let mut global_events = Vec::default();
-    let rdom = fdom.rdom();
-    for event in events {
-        let Some(event_name) = event.name.get_global_event() else {
-            continue;
-        };
-        if rdom.is_node_listening(&event.node_id, &event_name) {
-            global_events.push(DomEvent {
-                name: event_name,
-                node_id: event.node_id,
-                data: event.data.clone(),
-                bubbles: false,
-            });
-        }
-    }
-    global_events
 }
 
 /// For every event in the queue, a global event is created
@@ -111,24 +83,28 @@ pub fn measure_platform_global_events(
 ) {
     let rdom = fdom.rdom();
     for PlatformEvent { name, data } in events {
-        let Some(global_name) = name.get_global_event() else {
-            continue;
-        };
+        let derived_events_names = name.get_derived_events();
 
-        let listeners = rdom.get_listeners(&global_name);
+        for derived_event_name in derived_events_names {
+            let Some(global_name) = derived_event_name.get_global_event() else {
+                continue;
+            };
 
-        for listener in listeners {
-            let event = DomEvent::new(
-                PotentialEvent {
-                    node_id: listener.id(),
-                    layer: None,
-                    name: global_name,
-                    data: data.clone(),
-                },
-                None,
-                scale_factor,
-            );
-            dom_events.push(event)
+            let listeners = rdom.get_listeners(&global_name);
+
+            for listener in listeners {
+                let event = DomEvent::new(
+                    PotentialEvent {
+                        node_id: listener.id(),
+                        layer: None,
+                        name: global_name,
+                        data: data.clone(),
+                    },
+                    None,
+                    scale_factor,
+                );
+                dom_events.push(event)
+            }
         }
     }
 }
