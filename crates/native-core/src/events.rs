@@ -136,6 +136,7 @@ impl Ord for EventName {
                     std::cmp::Ordering::Less
                 }
             }
+
             _ => std::cmp::Ordering::Greater,
         }
     }
@@ -160,7 +161,7 @@ impl EventName {
     /// Some events might cause other events, like for example:
     /// A `mousemove` might also trigger a `mouseenter`
     /// A `mousedown` or a `touchdown` might also trigger a `pointerdown`
-    pub fn get_collateral_events(&self) -> SmallVec<[Self; 4]> {
+    pub fn get_derived_events(&self) -> SmallVec<[Self; 4]> {
         let mut events = SmallVec::new();
 
         events.push(*self);
@@ -187,6 +188,18 @@ impl EventName {
         matches!(&self, Self::MouseEnter | Self::PointerEnter)
     }
 
+    pub fn is_global(&self) -> bool {
+        matches!(
+            &self,
+            Self::GlobalClick
+                | Self::GlobalPointerUp
+                | Self::GlobalMouseDown
+                | Self::GlobalMouseMove
+                | Self::GlobalFileHover
+                | Self::GlobalFileHoverCancelled
+        )
+    }
+
     /// Check if it's one of the Pointer variants
     pub fn is_pointer(&self) -> bool {
         matches!(
@@ -208,21 +221,16 @@ impl EventName {
         )
     }
 
+    /// Check if the event means the cursor has left.
+    pub fn is_left(&self) -> bool {
+        matches!(&self, Self::MouseLeave | Self::PointerLeave)
+    }
+
     // Bubble all events except:
-    // - Global Keyboard events
+    // - Global events
     // - Mouse movements events
     pub fn does_bubble(&self) -> bool {
-        !matches!(
-            self,
-            Self::GlobalKeyDown
-                | Self::GlobalKeyUp
-                | Self::MouseLeave
-                | Self::PointerLeave
-                | Self::MouseEnter
-                | Self::PointerEnter
-                | Self::MouseMove
-                | Self::PointerOver
-        )
+        !self.is_moved() && !self.is_left() && !self.is_global()
     }
 
     /// Only let events that do not move the mouse, go through solid nodes

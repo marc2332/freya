@@ -60,16 +60,20 @@ pub fn process_events(
     let collateral_events_to_emit =
         measure_dom_events(&potential_collateral_events, fdom, scale_factor);
 
-    // Get the collateral events created by the global events
-    let collateral_global_events = measure_collateral_global_events(&collateral_events_to_emit);
+    // Get the global events created by the collateral events
+    let collateral_global_events = measure_dom_global_events(fdom, &collateral_events_to_emit);
 
-    // Join both the `dom_events` and their collateral events
-    dom_events.extend(collateral_events_to_emit);
-    dom_events.sort_unstable();
+    // Get the global events created by the events
+    let global_events = measure_dom_global_events(fdom, &dom_events);
 
     // Get the global events
-    measure_global_events(fdom, events, &mut dom_events, scale_factor);
+    measure_platform_global_events(fdom, events, &mut dom_events, scale_factor);
+
+    // Join all the dom events and sort them
+    dom_events.extend(collateral_events_to_emit);
     dom_events.extend(collateral_global_events);
+    dom_events.extend(global_events);
+    dom_events.sort_unstable();
 
     // Send all the events
     event_emitter.send(dom_events).unwrap();
@@ -78,36 +82,40 @@ pub fn process_events(
     events.clear();
 }
 
-/// Create a global event for every collateral event
-pub fn measure_collateral_global_events(events: &[DomEvent]) -> Vec<DomEvent> {
+/// Create a global event for every event
+pub fn measure_dom_global_events(fdom: &FreyaDOM, events: &[DomEvent]) -> Vec<DomEvent> {
     let mut global_events = Vec::default();
+    let rdom = fdom.rdom();
     for event in events {
         let Some(event_name) = event.name.get_global_event() else {
             continue;
         };
-        global_events.push(DomEvent {
-            name: event_name,
-            node_id: event.node_id,
-            data: event.data.clone(),
-            bubbles: event.bubbles,
-        });
+        if rdom.is_node_listening(&event.node_id, &event_name) {
+            global_events.push(DomEvent {
+                name: event_name,
+                node_id: event.node_id,
+                data: event.data.clone(),
+                bubbles: false,
+            });
+        }
     }
     global_events
 }
 
 /// For every event in the queue, a global event is created
-pub fn measure_global_events(
+pub fn measure_platform_global_events(
     fdom: &FreyaDOM,
     events: &EventsQueue,
     dom_events: &mut Vec<DomEvent>,
     scale_factor: f64,
 ) {
+    let rdom = fdom.rdom();
     for PlatformEvent { name, data } in events {
         let Some(global_name) = name.get_global_event() else {
             continue;
         };
 
-        let listeners = fdom.rdom().get_listeners(&global_name);
+        let listeners = rdom.get_listeners(&global_name);
 
         for listener in listeners {
             let event = DomEvent::new(
@@ -248,10 +256,10 @@ fn measure_dom_events(
     let layout = fdom.layout();
 
     for (event_name, event_nodes) in potential_events {
-        let collateral_events = event_name.get_collateral_events();
+        let derived_events = event_name.get_derived_events();
 
-        // Iterate over the collateral events (including the source)
-        'event: for collateral_event in collateral_events {
+        // Iterate over the derived events (including the source)
+        'event: for derived_event in derived_events {
             let mut child_node: Option<NodeId> = None;
 
             // Iterate over the potential events in reverse so the ones in higher layers appeat first
@@ -272,10 +280,10 @@ fn measure_dom_events(
                     }
                 }
 
-                if rdom.is_node_listening(node_id, &collateral_event) {
+                if rdom.is_node_listening(node_id, &derived_event) {
                     let potential_event = PotentialEvent {
                         node_id: *node_id,
-                        name: collateral_event,
+                        name: derived_event,
                         data: data.clone(),
                         layer: *layer,
                     };
