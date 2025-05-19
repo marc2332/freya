@@ -176,7 +176,6 @@ impl EventName {
                 events.extend([Self::Click, Self::PointerUp])
             }
             Self::MouseLeave => events.push(Self::PointerLeave),
-            Self::GlobalFileHover | Self::GlobalFileHoverCancelled => events.clear(),
             _ => {}
         }
 

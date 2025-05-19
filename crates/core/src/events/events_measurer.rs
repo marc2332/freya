@@ -232,7 +232,11 @@ fn measure_dom_events(
     let layout = fdom.layout();
 
     for (event_name, event_nodes) in potential_events {
-        let derived_events = event_name.get_derived_events();
+        // Get the derived events, but exclude globals like some file events
+        let derived_events = event_name
+            .get_derived_events()
+            .into_iter()
+            .filter(|event| !event.is_global());
 
         // Iterate over the derived events (including the source)
         'event: for derived_event in derived_events {
