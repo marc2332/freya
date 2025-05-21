@@ -266,12 +266,13 @@ where
                     true,
                 );
 
+                // Margins are set to 0 because area.size already contains the margins
                 area.size.width = node.width.min_max(
                     area.size.width,
                     parent_area.size.width,
                     available_parent_area.size.width,
-                    node.margin.left(),
-                    node.margin.horizontal(),
+                    0.,
+                    0.,
                     &node.minimum_width,
                     &node.maximum_width,
                     self.layout_metadata.root_area.width(),
@@ -281,8 +282,8 @@ where
                     area.size.height,
                     parent_area.size.height,
                     available_parent_area.size.height,
-                    node.margin.top(),
-                    node.margin.vertical(),
+                    0.,
+                    0.,
                     &node.minimum_height,
                     &node.maximum_height,
                     self.layout_metadata.root_area.height(),
