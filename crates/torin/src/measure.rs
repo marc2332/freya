@@ -266,29 +266,34 @@ where
                     true,
                 );
 
+                // Re apply min max values after measurin with inner sized
                 // Margins are set to 0 because area.size already contains the margins
-                area.size.width = node.width.min_max(
-                    area.size.width,
-                    parent_area.size.width,
-                    available_parent_area.size.width,
-                    0.,
-                    0.,
-                    &node.minimum_width,
-                    &node.maximum_width,
-                    self.layout_metadata.root_area.width(),
-                    phase,
-                );
-                area.size.height = node.height.min_max(
-                    area.size.height,
-                    parent_area.size.height,
-                    available_parent_area.size.height,
-                    0.,
-                    0.,
-                    &node.minimum_height,
-                    &node.maximum_height,
-                    self.layout_metadata.root_area.height(),
-                    phase,
-                );
+                if node.width.inner_sized() {
+                    area.size.width = node.width.min_max(
+                        area.size.width,
+                        parent_area.size.width,
+                        available_parent_area.size.width,
+                        0.,
+                        0.,
+                        &node.minimum_width,
+                        &node.maximum_width,
+                        self.layout_metadata.root_area.width(),
+                        phase,
+                    );
+                }
+                if node.height.inner_sized() {
+                    area.size.height = node.height.min_max(
+                        area.size.height,
+                        parent_area.size.height,
+                        available_parent_area.size.height,
+                        0.,
+                        0.,
+                        &node.minimum_height,
+                        &node.maximum_height,
+                        self.layout_metadata.root_area.height(),
+                        phase,
+                    );
+                }
             }
 
             inner_sizes.width += node.padding.horizontal();
