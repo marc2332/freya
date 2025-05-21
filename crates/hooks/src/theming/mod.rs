@@ -476,7 +476,6 @@ define_theme! {
         %[cows]
         background: str,
         color: str,
-        cross_fill: str,
         width: str,
         height: str,
     }
