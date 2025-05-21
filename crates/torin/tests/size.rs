@@ -44,7 +44,6 @@ pub fn unsized_parent_with_child_with_margin() {
     );
 }
 
-
 #[test]
 pub fn unsized_parent_with_margin_with_child() {
     let (mut layout, mut measurer) = test_utils();
@@ -54,17 +53,17 @@ pub fn unsized_parent_with_margin_with_child() {
         0,
         None,
         vec![1],
-        Node::from_size_and_margin(
-            Size::Inner,
-            Size::Inner,
-            Gaps::new(10.0, 20.0, 30.0, 40.0),
-        ),
+        Node::from_size_and_margin(Size::Inner, Size::Inner, Gaps::new(10.0, 20.0, 30.0, 40.0)),
     );
     mocked_dom.add(
         1,
         Some(0),
         vec![],
-        Node::from_size_and_direction(Size::Pixels(Length::new(100.)), Size::Pixels(Length::new(100.)), Direction::Vertical),
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(100.)),
+            Size::Pixels(Length::new(100.)),
+            Direction::Vertical,
+        ),
     );
 
     layout.measure(
@@ -84,7 +83,6 @@ pub fn unsized_parent_with_margin_with_child() {
         Rect::new(Point2D::new(40.0, 10.0), Size2D::new(100.0, 100.0)),
     );
 }
-
 
 #[test]
 pub fn unsized_parent_with_padding() {
