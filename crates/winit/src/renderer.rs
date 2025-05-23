@@ -25,7 +25,6 @@ use winit::{
         KeyEvent,
         MouseButton,
         MouseScrollDelta,
-        StartCause,
         Touch,
         TouchPhase,
         WindowEvent,
@@ -161,19 +160,12 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
     fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
         if !self.state.has_been_created() {
             self.state.create(event_loop, &self.event_loop_proxy);
-            self.run_on_setup();
-        }
-    }
-
-    fn new_events(
-        &mut self,
-        _event_loop: &winit::event_loop::ActiveEventLoop,
-        cause: winit::event::StartCause,
-    ) {
-        if cause == StartCause::Init {
             self.event_loop_proxy
                 .send_event(EventLoopMessage::PollVDOM)
                 .ok();
+            self.run_on_setup();
+        } else {
+            self.state.resume(event_loop);
         }
     }
 
