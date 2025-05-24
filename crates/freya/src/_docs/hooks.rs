@@ -49,7 +49,7 @@
 //! ```rust
 //! # use freya::prelude::*;
 //! #[component]
-//! fn MyComponent(value: bool) -> Element {
+//! fn MyComponent(is_enabled: bool) -> Element {
 //!     rsx!( label { "{is_enabled}" } )
 //! }
 //! ```
@@ -109,7 +109,7 @@
 //!         let state = use_signal(|| i);
 //!     }
 //!
-//!     rsx!( p { "hi" } )
+//!     rsx!( label { "hi" } )
 //! }
 //! ```
 //!
@@ -120,7 +120,7 @@
 //! fn MyComponent() -> Element {
 //!     let state = use_signal(|| (0..5).into_iter().collect::<Vec<_>>());
 //!
-//!     rsx!( p { "hi" } )
+//!     rsx!( label { "hi" } )
 //! }
 //! ```
 //!
