@@ -1,7 +1,7 @@
 [package]
 name = "freya-hooks"
 description = "Hooks library designed for Freya."
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
@@ -34,7 +34,7 @@ dioxus-clipboard = { workspace = true }
 tokio = { workspace = true }
 
 uuid = { workspace = true }
-easer = "0.3.0"
+easer = "0.3.1"
 ropey = "1.6.0"
 nokhwa = { version = "0.10.7", features = ["input-native"], optional = true }
 paste = "1.0.14"
