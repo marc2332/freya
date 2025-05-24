@@ -272,8 +272,11 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 /// [`use_animation`] takes an callback to initialize the animated values and related configuration.
 ///
 /// To animate a group of values at once you can just return a tuple of them.
-/// Currently supports animating numeric values (e.g width, padding, rotation, offsets) or also colors, you need specify the duration,
-/// and optionally an ease function or what type of easing you want as well.
+///
+/// Currently supports animating numeric values (e.g width, padding, rotation, offsets) using [crate::AnimNum] or colors using [crate::AnimColor].
+/// For each animated value you will need specify the duration, optionally an ease function or what type of easing you want.
+///
+/// For animations where you want to animate a value after one another you may use [crate::AnimSequential].
 ///
 /// # Example
 ///

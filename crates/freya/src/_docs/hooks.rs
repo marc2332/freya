@@ -1,6 +1,10 @@
 //! # Hooks
 //!
-//! Hooks are special functions to be used inside of Components that lets you handle different things like the state or lifecycle of your component. They are usually prefixed with `use`, e.g [`use_signal`](dioxus::hooks::use_signal), [`use_effect`](dioxus::hooks::use_signal), [`use_memo`]((dioxus::hooks::use_memo)), etc.
+//! Hooks are special functions that must be called inside of Components.
+//!
+//! These let you manage things like state or lifecycle of your component.
+//!
+//! They are usually prefixed with `use`, e.g [`use_animation`](crate::hooks::use_animation), [`use_signal`](dioxus::hooks::use_signal), [`use_effect`](dioxus::hooks::use_signal), [`use_memo`]((dioxus::hooks::use_memo)), etc.
 //!
 //! # Rules of Hooks
 //!
@@ -8,7 +12,9 @@
 //!
 //! ## 1. They cannot be called conditionally
 //!
-//! You cannot do the following because hooks need to maintain their order. So, if one component is calling 3 different hooks in one render, and then in another render if just calls 2, it would be breaking this rule.
+//! You cannot do the following because hooks need to maintain their order between multiple renders.
+//!
+//! So, if the same component is calling 3 different hooks in the first render, and then in the next render if just calls 2, it would be breaking this rule.
 //!
 //! ❌:
 //! ```rust
@@ -35,7 +41,16 @@
 //! fn MyComponent(initial_value: bool) -> Element {
 //!     let is_enabled = use_signal(move || initial_value);
 //!
-//!     Ok(VNode::placeholder())
+//!     rsx!( label { "{is_enabled}" } )
+//! }
+//! ```
+//!
+//! Or even better, move the state up ✅:
+//! ```rust
+//! # use freya::prelude::*;
+//! #[component]
+//! fn MyComponent(value: bool) -> Element {
+//!     rsx!( label { "{is_enabled}" } )
 //! }
 //! ```
 //!
@@ -94,7 +109,7 @@
 //!         let state = use_signal(|| i);
 //!     }
 //!
-//!     Ok(VNode::placeholder())
+//!     rsx!( p { "hi" } )
 //! }
 //! ```
 //!
@@ -105,6 +120,8 @@
 //! fn MyComponent() -> Element {
 //!     let state = use_signal(|| (0..5).into_iter().collect::<Vec<_>>());
 //!
-//!     Ok(VNode::placeholder())
+//!     rsx!( p { "hi" } )
 //! }
 //! ```
+//!
+//! #### You can learn more in depth now about [State Management](crate::_docs::state_management).
