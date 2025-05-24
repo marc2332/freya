@@ -2,13 +2,13 @@
 //!
 //! This is an overview of the elements supported in Freya.
 //!
-//! > For more info check the [API Reference](freya_elements::elements#structs).
+//! > **Note**: For more info check the [API Reference](freya_elements::elements#structs).
 //!
 //! ### `rect`
 //!
 //! [`rect`](freya_elements::elements::rect) is a generic element that acts as a container for other elements.
 //!
-//! You can specify things like **width**, **padding** or even in what **direction** the inner elements are stacked.
+//! You can specify things like [width](freya_elements::elements::rect::width), [padding](freya_elements::elements::rect::padding) or even in what [direction](freya_elements::elements::rect::direction) the inner elements are stacked.
 //!
 //! Example:
 //!
@@ -98,11 +98,13 @@
 //! static FERRIS: &[u8] = include_bytes!("./ferris.svg");
 //!
 //! fn app() -> Element {
-//!     let ferris = static_bytes(FERRIS);
+//!     let svg_data = static_bytes(FERRIS);
 //!     rsx!(svg {
-//!         svg_data: ferris,
+//!         svg_data,
 //!         width: "100%",
 //!         height: "100%",
 //!     })
 //! }
 //! ```
+//!
+//! #### Learn now about [Components and Props](crate::_docs::components_and_props).

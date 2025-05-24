@@ -57,23 +57,22 @@
 //!
 //! ```rust
 //! # use freya::prelude::*;
-//! fn app() -> Element {
+//! fn Comp(data: u8) -> Element {
 //!     let mut signal = use_signal(|| 1);
-//!     let mut other_signal = use_signal(|| 1);
 //!
 //!     // Manually specify non-signal values that we might want to react to
-//!     use_effect(use_reactive(&signal, |value| {
-//!         println!("Value of signal is {value}");
+//!     // Such as props
+//!     use_effect(use_reactive(&data, |data| {
+//!         println!("The data is {data}");
 //!     }));
 //!
 //!     // When you need multiple values you can pass a tuple
-//!     use_effect(use_reactive(
-//!         &(signal, other_signal),
-//!         |(value, other_signal)| {
-//!             println!("Value of signals are {value} and {other_signal}");
-//!         },
-//!     ));
+//!     use_effect(use_reactive(&(signal(), data), |(value, data)| {
+//!         println!("Values are {value} and {data}");
+//!     }));
 //!
 //!     Ok(VNode::placeholder())
 //! }
 //! ```
+//!
+//! #### You can now learn about [Memoization](crate::_docs::state_management::memoization).

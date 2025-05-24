@@ -41,9 +41,6 @@ Freya is split in various crates, each with it's own meaning and purpose, here i
 ## Examples
 All important examples are located in the  `./examples` folder although you might also find some in the form of docs comments in the code itself.
 
-## Book
-The book you find under https://book.freyaui.dev/ is located in `./book` and is written with [mdBook](https://github.com/rust-lang/mdBook).
-
 ## Website
 The https://freyaui.dev  source code is located inside the `./website` folder and is made with [Astro](https://astro.build/).
 

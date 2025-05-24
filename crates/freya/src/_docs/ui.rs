@@ -25,9 +25,9 @@
 //!
 //! ### [`rsx!()`](dioxus_core_macro::rsx!())
 //!
-//! This macro is not a standalone language, it let define the structure, design and dynamism of the UI. It also integrates very well with Rust code.
+//! This macro is not a standalone language, it let's you declare the structure and design of the UI. It also integrates very well with Rust code.
 //!
-//! The structure for RSX looks like this:
+//! The syntax of RSX looks like this:
 //!
 //! ```rust, no_run
 //! # use freya::prelude::*;
@@ -113,3 +113,5 @@
 //! )
 //! # };
 //! ```
+//!
+//! #### Learn about the elements in [Elements](crate::_docs::elements).
