@@ -18,8 +18,6 @@
 - [Support Development](#support-)
 
 #### Counter example
-<br/>
-
 <table>
 <tr>
 <td style="border:hidden;">
@@ -83,7 +81,8 @@ An animated drag and drop.
 
 [Source code](/examples/drag_drop.rs).
 
-https://github.com/user-attachments/assets/b21d97f5-9f0b-42b1-9b5c-f19b83601288
+![drag](https://github.com/user-attachments/assets/32d6bd50-32b9-4159-b669-f10de03ed17b)
+
 
 #### Animated router example
 
@@ -91,7 +90,7 @@ Animated transition between router pages.
 
 [Source code](/examples/animated_tabs.rs.rs).
 
-https://github.com/user-attachments/assets/324e9702-4c5a-4648-ad4a-e90075881f9b
+![animated_router](https://github.com/user-attachments/assets/9218e053-1cc0-48ca-a7c3-8f09b2281b92)
 
 <details>
   <summary>More Examples</summary>
@@ -112,13 +111,14 @@ https://github.com/user-attachments/assets/324e9702-4c5a-4648-ad4a-e90075881f9b
 
 [Source code](/examples/todo.rs.rs).
 
-https://github.com/user-attachments/assets/0f6a56f9-58c7-4f43-8f5e-7c70efcf6d2c
+![todo](https://github.com/user-attachments/assets/e450f514-ad10-4fb5-8b35-909c51d5d539)
 
 #### Resizable containers example
 
 [Source code](/examples/resizable_containers.rs.rs).
 
-https://github.com/user-attachments/assets/39b403f8-56e1-46ea-91d9-b2b10612fa3a
+![resizable](https://github.com/user-attachments/assets/3d3f4718-a0d6-4e4d-a0ad-0c750fb0c67e)
+
 
 </details>
 
