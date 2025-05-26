@@ -190,7 +190,9 @@ impl EventName {
     pub fn is_global(&self) -> bool {
         matches!(
             &self,
-            Self::GlobalClick
+            Self::GlobalKeyDown
+                | Self::GlobalKeyUp
+                | Self::GlobalClick
                 | Self::GlobalPointerUp
                 | Self::GlobalMouseDown
                 | Self::GlobalMouseMove
