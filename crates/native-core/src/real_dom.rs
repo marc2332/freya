@@ -18,7 +18,6 @@ use shipyard::{
     track::Untracked,
     Component,
     Get,
-    IntoBorrow,
     ScheduledWorkload,
     SystemModificator,
     Unique,
@@ -206,7 +205,7 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
         });
         let root_id = world.add_entity(root_node);
         {
-            let mut tree: TreeMutView = world.borrow().unwrap();
+            let mut tree: TreeMutView = world.borrow::<TreeMutView>().unwrap();
             tree.create_node(root_id);
         }
 
@@ -241,12 +240,12 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
 
     /// Get a reference to the tree.
     pub fn tree_ref(&self) -> TreeRefView {
-        self.world.borrow().unwrap()
+        self.world.borrow::<TreeRefView>().unwrap()
     }
 
     /// Get a mutable reference to the tree.
     pub fn tree_mut(&self) -> TreeMutView {
-        self.world.borrow().unwrap()
+        self.world.borrow::<TreeMutView>().unwrap()
     }
 
     /// Create a new node of the given type in the dom and return a mutable reference to it.
@@ -309,16 +308,16 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
 
     /// Borrow a component from the world without updating the dirty nodes.
     #[inline(always)]
-    fn borrow_raw<'a, B: IntoBorrow>(&'a self) -> Result<B, GetStorage>
+    fn borrow_raw<'a, B: shipyard::Borrow>(&'a self) -> Result<B, GetStorage>
     where
-        B::Borrow: shipyard::Borrow<'a, View = B>,
+        B::View<'a>: shipyard::Borrow<View<'a> = B>,
     {
-        self.world.borrow()
+        self.world.borrow::<B::View<'a>>()
     }
 
     /// Borrow a component from the world without updating the dirty nodes.
     fn borrow_node_type_mut(&self) -> Result<ViewMut<NodeType<V>>, GetStorage> {
-        self.world.borrow()
+        self.world.borrow::<ViewMut<NodeType<V>>>()
     }
 
     /// Update the state of the dom, after appling some mutations. This will keep the nodes in the dom up to date with their VNode counterparts.
@@ -426,7 +425,7 @@ impl<V: Component<Tracking = Untracked> + Send + Sync> Deref for ViewEntryMut<'_
 
 impl<V: Component<Tracking = Untracked> + Send + Sync> DerefMut for ViewEntryMut<'_, V> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        (&mut self.view).get(self.id).unwrap()
+        &mut self.view[self.id]
     }
 }
 
@@ -448,7 +447,7 @@ pub trait NodeImmutable<V: FromAnyValue + Send + Sync = ()>: Sized {
     #[inline(always)]
     fn get<'a, T: Component + Sync + Send>(&'a self) -> Option<ViewEntry<'a, T>> {
         // self.real_dom().tree.get(self.id())
-        let view: View<'a, T> = self.real_dom().borrow_raw().ok()?;
+        let view = self.real_dom().world.borrow::<View<'a, T>>().ok()?;
         view.contains(self.id())
             .then(|| ViewEntry::new(view, self.id()))
     }
@@ -634,8 +633,8 @@ impl<V: FromAnyValue + Send + Sync> NodeMut<'_, V> {
                 nodes_listening,
                 ..
             } = &mut self.dom;
-            let mut view: ViewMut<NodeType<V>> = world.borrow().unwrap();
-            if let NodeType::Element(ElementNode { listeners, .. }) = (&mut view).get(id).unwrap() {
+            let mut view = world.borrow::<ViewMut<NodeType<V>>>().unwrap();
+            if let NodeType::Element(ElementNode { listeners, .. }) = &mut view[id] {
                 let listeners = std::mem::take(listeners);
                 for event in listeners {
                     nodes_listening.get_mut(&event).unwrap().remove(&id);
@@ -666,8 +665,8 @@ impl<V: FromAnyValue + Send + Sync> NodeMut<'_, V> {
             nodes_listening,
             ..
         } = &mut self.dom;
-        let mut view: ViewMut<NodeType<V>> = world.borrow().unwrap();
-        let node_type: &mut NodeType<V> = (&mut view).get(self.id).unwrap();
+        let mut view = world.borrow::<ViewMut<NodeType<V>>>().unwrap();
+        let node_type: &mut NodeType<V> = &mut view[id];
         if let NodeType::Element(ElementNode { listeners, .. }) = node_type {
             dirty_nodes.mark_dirty(self.id, NodeMaskBuilder::new().with_listeners().build());
             listeners.insert(event);
@@ -694,8 +693,8 @@ impl<V: FromAnyValue + Send + Sync> NodeMut<'_, V> {
             nodes_listening,
             ..
         } = &mut self.dom;
-        let mut view: ViewMut<NodeType<V>> = world.borrow().unwrap();
-        let node_type: &mut NodeType<V> = (&mut view).get(self.id).unwrap();
+        let mut view = world.borrow::<ViewMut<NodeType<V>>>().unwrap();
+        let node_type: &mut NodeType<V> = &mut view[id];
         if let NodeType::Element(ElementNode { listeners, .. }) = node_type {
             dirty_nodes.mark_dirty(self.id, NodeMaskBuilder::new().with_listeners().build());
             listeners.remove(event);
@@ -710,7 +709,7 @@ impl<V: FromAnyValue + Send + Sync> NodeMut<'_, V> {
         let RealDom {
             world, dirty_nodes, ..
         } = &mut self.dom;
-        let view: ViewMut<NodeType<V>> = world.borrow().unwrap();
+        let view = world.borrow::<ViewMut<NodeType<V>>>().unwrap();
         let node_type = ViewEntryMut::new(view, id);
         match &*node_type {
             NodeType::Element(_) => NodeTypeMut::Element(ElementNodeMut {
@@ -731,7 +730,7 @@ impl<V: FromAnyValue + Send + Sync> NodeMut<'_, V> {
     pub fn set_type(&mut self, new: NodeType<V>) {
         {
             let mut view: ViewMut<NodeType<V>> = self.dom.borrow_node_type_mut().unwrap();
-            *(&mut view).get(self.id).unwrap() = new;
+            view[self.id] = new;
         }
         self.dom
             .dirty_nodes

@@ -352,7 +352,14 @@ pub fn partial_derive_state(_: TokenStream, input: TokenStream) -> TokenStream {
                         }
                         // get all of the states from the tree view
                         // Safety: No node has itself as a parent or child.
-                        let raw_myself: Option<*mut Self> = (&mut #this_view).get(id).ok().map(|c| c as *mut _);
+                        let raw_myself: Option<*mut Self> = (&mut #this_view)
+                            .get(id)
+                            .ok()
+                            .map(|mut c| {
+                                let mut_ref: &mut Self = &mut *c;
+                                mut_ref as *mut Self
+                            });
+
                         #get_node_view
                         #get_parent_view
                         #get_child_view
