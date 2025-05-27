@@ -14,11 +14,12 @@ use rustc_hash::{
     FxHashSet,
 };
 use shipyard::{
+    borrow::Borrow,
     error::GetStorage,
+    scheduler::ScheduledWorkload,
     track::Untracked,
     Component,
     Get,
-    ScheduledWorkload,
     SystemModificator,
     Unique,
     View,
@@ -308,9 +309,9 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
 
     /// Borrow a component from the world without updating the dirty nodes.
     #[inline(always)]
-    fn borrow_raw<'a, B: shipyard::Borrow>(&'a self) -> Result<B, GetStorage>
+    fn borrow_raw<'a, B: Borrow>(&'a self) -> Result<B, GetStorage>
     where
-        B::View<'a>: shipyard::Borrow<View<'a> = B>,
+        B::View<'a>: Borrow<View<'a> = B>,
     {
         self.world.borrow::<B::View<'a>>()
     }

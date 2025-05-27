@@ -334,7 +334,7 @@ pub fn partial_derive_state(_: TokenStream, input: TokenStream) -> TokenStream {
 
             #(#items)*
 
-            fn workload_system(type_id: std::any::TypeId, dependants: std::sync::Arc<freya_native_core::prelude::Dependants>, pass_direction: freya_native_core::prelude::PassDirection) -> freya_native_core::exports::shipyard::WorkloadSystem {
+            fn workload_system(type_id: std::any::TypeId, dependants: std::sync::Arc<freya_native_core::prelude::Dependants>, pass_direction: freya_native_core::prelude::PassDirection) -> freya_native_core::exports::shipyard::scheduler::WorkloadSystem {
                 use freya_native_core::exports::shipyard::{IntoWorkloadSystem, Get, AddComponent};
                 use freya_native_core::tree::TreeRef;
                 use freya_native_core::prelude::{NodeType, NodeView};
