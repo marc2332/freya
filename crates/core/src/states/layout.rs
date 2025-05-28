@@ -101,10 +101,22 @@ impl ParseAttribute for LayoutState {
                 };
             }
             AttributeName::OffsetY => {
-                self.offset_y = Length::new(attr.value.as_text().ok_or(ParseError)?.parse::<f32>().map_err(|_| ParseError)?);
+                self.offset_y = Length::new(
+                    attr.value
+                        .as_text()
+                        .ok_or(ParseError)?
+                        .parse::<f32>()
+                        .map_err(|_| ParseError)?,
+                );
             }
             AttributeName::OffsetX => {
-                self.offset_x = Length::new(attr.value.as_text().ok_or(ParseError)?.parse::<f32>().map_err(|_| ParseError)?);
+                self.offset_x = Length::new(
+                    attr.value
+                        .as_text()
+                        .ok_or(ParseError)?
+                        .parse::<f32>()
+                        .map_err(|_| ParseError)?,
+                );
             }
             AttributeName::MainAlign => {
                 self.main_alignment = Alignment::parse(attr.value.as_text().ok_or(ParseError)?)?;
@@ -113,30 +125,63 @@ impl ParseAttribute for LayoutState {
                 self.cross_alignment = Alignment::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::Position => {
-                self.position.swap_for(Position::parse(attr.value.as_text().ok_or(ParseError)?)?);
+                self.position
+                    .swap_for(Position::parse(attr.value.as_text().ok_or(ParseError)?)?);
             }
             AttributeName::PositionTop => {
-                self.position.set_top(attr.value.as_text().ok_or(ParseError)?.parse::<f32>().map_err(|_| ParseError)?);
+                self.position.set_top(
+                    attr.value
+                        .as_text()
+                        .ok_or(ParseError)?
+                        .parse::<f32>()
+                        .map_err(|_| ParseError)?,
+                );
             }
             AttributeName::PositionRight => {
-                self.position.set_right(attr.value.as_text().ok_or(ParseError)?.parse::<f32>().map_err(|_| ParseError)?);
+                self.position.set_right(
+                    attr.value
+                        .as_text()
+                        .ok_or(ParseError)?
+                        .parse::<f32>()
+                        .map_err(|_| ParseError)?,
+                );
             }
             AttributeName::PositionBottom => {
-                self.position.set_bottom(attr.value.as_text().ok_or(ParseError)?.parse::<f32>().map_err(|_| ParseError)?);
+                self.position.set_bottom(
+                    attr.value
+                        .as_text()
+                        .ok_or(ParseError)?
+                        .parse::<f32>()
+                        .map_err(|_| ParseError)?,
+                );
             }
             AttributeName::PositionLeft => {
-                self.position.set_left(attr.value.as_text().ok_or(ParseError)?.parse::<f32>().map_err(|_| ParseError)?);
+                self.position.set_left(
+                    attr.value
+                        .as_text()
+                        .ok_or(ParseError)?
+                        .parse::<f32>()
+                        .map_err(|_| ParseError)?,
+                );
             }
             AttributeName::Content => {
                 self.content = Content::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::Reference => {
-                if let OwnedAttributeValue::Custom(CustomAttributeValues::Reference(reference)) = attr.value {
+                if let OwnedAttributeValue::Custom(CustomAttributeValues::Reference(reference)) =
+                    attr.value
+                {
                     self.node_ref = Some(reference.clone());
                 }
             }
             AttributeName::Spacing => {
-                self.spacing = Length::new(attr.value.as_text().ok_or(ParseError)?.parse::<f32>().map_err(|_| ParseError)?);
+                self.spacing = Length::new(
+                    attr.value
+                        .as_text()
+                        .ok_or(ParseError)?
+                        .parse::<f32>()
+                        .map_err(|_| ParseError)?,
+                );
             }
             _ => {}
         }
