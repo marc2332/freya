@@ -164,13 +164,13 @@ pub fn Popup(
 /// Optionally use a styled title inside a [`Popup`].
 #[allow(non_snake_case)]
 #[component]
-pub fn PopupTitle(text: String) -> Element {
+pub fn PopupTitle(text: ReadOnlySignal<String>) -> Element {
     rsx!(
         rect {
             font_size: "18",
             font_weight: "bold",
             text_align: "center",
-            padding: "16 0 0 0",
+            padding: "20 0 0 0",
             label {
                 width: "fill",
                 {text}
