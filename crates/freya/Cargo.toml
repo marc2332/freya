@@ -1,6 +1,6 @@
 [package]
 name = "freya"
-description = "Cross-platform GUI Library powered by Dioxus and Skia."
+description = "Cross-platform and non-web GUI Library powered by Skia."
 version = "0.3.3"
 edition = "2021"
 license = "MIT"

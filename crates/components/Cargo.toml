@@ -16,7 +16,7 @@ features = ["freya-engine/mocked-engine", "docs"]
 
 [features]
 skia-engine = ["freya-engine/skia-engine"]
-docs = ["network-image"]
+docs = ["network-image", "dep:embed-doc-image"]
 network-image = ["dep:reqwest", "dep:bytes"]
 
 [dependencies]
@@ -36,7 +36,7 @@ tracing = { workspace = true }
 open = "5"
 reqwest = { version = "0.12.0", optional = true }
 bytes = { version = "1.5.0", optional = true }
-embed-doc-image = "0.1.4"
+embed-doc-image = { version = "0.1.4", optional = true }
 
 [dev-dependencies]
 freya = { path = "../freya" }
