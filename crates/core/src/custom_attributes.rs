@@ -24,7 +24,6 @@ use torin::geometry::{
     Area,
     Size2D,
 };
-use uuid::Uuid;
 
 /// Image Reference
 #[derive(Clone, Debug)]
@@ -109,7 +108,7 @@ impl Debug for CanvasReference {
 /// Cursor reference
 #[derive(Clone, Debug)]
 pub struct CursorReference {
-    pub text_id: Uuid,
+    pub text_id: usize,
     pub cursor_sender: UnboundedSender<CursorLayoutResponse>,
 }
 

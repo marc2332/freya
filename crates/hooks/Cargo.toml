@@ -33,7 +33,6 @@ dioxus-clipboard = { workspace = true }
 
 tokio = { workspace = true }
 
-uuid = { workspace = true }
 easer = "0.3.0"
 ropey = "1.6.0"
 nokhwa = { version = "0.10.7", features = ["input-native"], optional = true }
