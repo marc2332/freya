@@ -50,7 +50,6 @@ use freya_engine::prelude::*;
 use freya_native_core::prelude::NodeImmutableDioxusExt;
 use futures_task::Waker;
 use futures_util::Future;
-use pin_utils::pin_mut;
 use tokio::{
     select,
     sync::{
@@ -231,7 +230,7 @@ impl Application {
         let mut cx = std::task::Context::from_waker(&self.vdom_waker);
 
         {
-            let fut = async {
+            let fut = std::pin::pin!(async {
                 select! {
                     Some(events) = self.event_receiver.recv() => {
                         let fdom = self.sdom.get();
@@ -253,8 +252,7 @@ impl Application {
                     },
                     _ = self.vdom.wait_for_work() => {},
                 }
-            };
-            pin_mut!(fut);
+            });
 
             match fut.poll(&mut cx) {
                 std::task::Poll::Ready(_) => {

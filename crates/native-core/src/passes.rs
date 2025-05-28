@@ -15,13 +15,13 @@ use rustc_hash::{
     FxHashSet,
 };
 use shipyard::{
+    scheduler::WorkloadSystem,
     Borrow,
     BorrowInfo,
     Component,
     Unique,
     UniqueView,
     View,
-    WorkloadSystem,
 };
 
 use crate::{

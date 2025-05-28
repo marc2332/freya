@@ -222,7 +222,7 @@ pub fn VirtualScrollView<
     let mut focus = use_focus();
     let applied_scrollbar_theme = use_applied_theme!(&scrollbar_theme, scroll_bar);
 
-    let inner_size = item_size + (item_size * length as f32);
+    let inner_size = item_size * length as f32;
 
     scroll_controller.use_apply(inner_size, inner_size);
 
@@ -678,9 +678,9 @@ mod test {
         utils.wait_for_update().await;
 
         let content = root.get(0).get(0).get(0);
-        assert_eq!(content.children_ids().len(), 9);
+        assert_eq!(content.children_ids().len(), 10);
 
-        for (n, i) in (21..30).enumerate() {
+        for (n, i) in (20..30).enumerate() {
             let child = content.get(n);
             assert_eq!(
                 child.get(0).text(),

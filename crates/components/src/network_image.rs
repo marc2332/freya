@@ -57,6 +57,8 @@ pub enum ImageState {
 
 /// Image component that automatically fetches and caches remote (HTTP) images.
 ///
+/// Requires the `network_image` feature.
+///
 /// # Example
 ///
 /// ```rust

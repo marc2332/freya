@@ -11,19 +11,18 @@ use rustc_hash::{
     FxHashMap,
     FxHashSet,
 };
-use uuid::Uuid;
 
 #[derive(Default, Clone)]
-pub struct ParagraphElements(FxHashMap<Uuid, FxHashSet<NodeId>>);
+pub struct ParagraphElements(FxHashMap<usize, FxHashSet<NodeId>>);
 
 impl ParagraphElements {
-    pub fn insert_paragraph(&mut self, node_id: NodeId, text_id: Uuid) {
+    pub fn insert_paragraph(&mut self, node_id: NodeId, text_id: usize) {
         let text_group = self.0.entry(text_id).or_default();
 
         text_group.insert(node_id);
     }
 
-    pub fn remove_paragraph(&mut self, node_id: NodeId, text_id: &Uuid) {
+    pub fn remove_paragraph(&mut self, node_id: NodeId, text_id: &usize) {
         let text_group = self.0.get_mut(text_id);
 
         if let Some(text_group) = text_group {
@@ -37,7 +36,7 @@ impl ParagraphElements {
 }
 
 impl Deref for ParagraphElements {
-    type Target = FxHashMap<Uuid, FxHashSet<NodeId>>;
+    type Target = FxHashMap<usize, FxHashSet<NodeId>>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
