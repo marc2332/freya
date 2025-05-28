@@ -148,7 +148,7 @@ impl<V: FromAnyValue> From<V> for OwnedAttributeValue<V> {
 }
 
 /// Something that can be converted from a borrowed [Any] value.
-pub trait FromAnyValue: Clone + 'static {
+pub trait FromAnyValue: Clone + 'static + Send + Sync {
     /// Convert from an [Any] value.
     fn from_any_value(value: &dyn Any) -> Self;
 }
