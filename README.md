@@ -171,7 +171,7 @@ If you are interested in contributing please make sure to have read the [Contrib
 
 **Freya** uses some of the **core** crates from Dioxus. This means that you will effectively be creating Dioxus components using RSX and hooks.
 
-However, thanks to Dioxus being a renderer-agnostic library, you or your app will **NOT** be using Webviews, JavaScript, HTML, CSS, or any other abstraction that ends up using one of those or other web technologies.
+However, thanks to Dioxus being a renderer-agnostic library, you and your app will **NOT** be using Webviews, JavaScript, HTML, CSS, or any other abstraction that ends up using one of those or other web technologies.
 
 Freya does everything on its own when it comes to:
 - Elements
