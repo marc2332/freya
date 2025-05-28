@@ -35,7 +35,6 @@ use freya_elements::{
 };
 use tokio::sync::mpsc::unbounded_channel;
 use torin::geometry::CursorPoint;
-use uuid::Uuid;
 
 use crate::{
     use_platform,
@@ -44,6 +43,7 @@ use crate::{
     TextCursor,
     TextEditor,
     TextEvent,
+    UseId,
     UsePlatform,
 };
 
@@ -144,7 +144,7 @@ impl UseEditable {
         config: EditableConfig,
         mode: EditableMode,
     ) -> Self {
-        let text_id = Uuid::new_v4();
+        let text_id = UseId::<UseEditable>::get_in_hook();
         let mut editor = Signal::new(RopeEditor::new(
             config.content,
             config.cursor,

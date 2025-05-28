@@ -2,7 +2,6 @@ use torin::prelude::{
     Area,
     CursorPoint,
 };
-use uuid::Uuid;
 use winit::window::{
     CursorIcon,
     Window,
@@ -14,7 +13,7 @@ use crate::{
 };
 
 pub struct TextGroupMeasurement {
-    pub text_id: Uuid,
+    pub text_id: usize,
     pub cursor_id: usize,
     pub cursor_position: Option<CursorPoint>,
     pub cursor_selection: Option<(CursorPoint, CursorPoint)>,

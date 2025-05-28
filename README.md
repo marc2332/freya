@@ -8,7 +8,7 @@
 
 [Website](https://freyaui.dev) | [Documentation](https://docs.rs/freya/0.3/freya) | [Discord](https://discord.gg/sYejxCdewG) | [Main branch Docs](https://docs.freyaui.dev/freya) 
 
-**Freya** is a cross-platform GUI library for Rust powered by 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/). 
+**Freya** is a cross-platform GUI library for Rust powered by 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/).
 
 - [Introduction](https://docs.rs/freya/0.3/freya/_docs/introduction/index.html)
 - [Development Setup](https://docs.rs/freya/0.3/freya/_docs/development_setup/index.html)
