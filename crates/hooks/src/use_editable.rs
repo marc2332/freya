@@ -37,7 +37,14 @@ use tokio::sync::mpsc::unbounded_channel;
 use torin::geometry::CursorPoint;
 
 use crate::{
-    use_platform, EditorHistory, RopeEditor, TextCursor, TextEditor, TextEvent, UseId, UsePlatform
+    use_platform,
+    EditorHistory,
+    RopeEditor,
+    TextCursor,
+    TextEditor,
+    TextEvent,
+    UseId,
+    UsePlatform,
 };
 
 /// Events emitted to the [`UseEditable`].

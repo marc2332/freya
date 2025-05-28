@@ -15,6 +15,7 @@ mod use_asset_cacher;
 mod use_canvas;
 mod use_editable;
 mod use_focus;
+mod use_id;
 mod use_init_native_platform;
 mod use_node;
 mod use_platform;
@@ -22,7 +23,6 @@ mod use_platform_information;
 mod use_popup;
 mod use_preferred_theme;
 mod use_theme;
-mod use_id;
 
 #[cfg(feature = "use_camera")]
 mod use_camera;
@@ -40,6 +40,7 @@ pub use use_camera::*;
 pub use use_canvas::*;
 pub use use_editable::*;
 pub use use_focus::*;
+pub use use_id::*;
 pub use use_init_native_platform::*;
 pub use use_node::*;
 pub use use_platform::*;
@@ -47,4 +48,3 @@ pub use use_platform_information::*;
 pub use use_popup::*;
 pub use use_preferred_theme::*;
 pub use use_theme::*;
-pub use use_id::*;
