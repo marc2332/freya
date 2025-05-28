@@ -22,6 +22,7 @@ mod use_platform_information;
 mod use_popup;
 mod use_preferred_theme;
 mod use_theme;
+mod use_id;
 
 #[cfg(feature = "use_camera")]
 mod use_camera;
@@ -46,3 +47,4 @@ pub use use_platform_information::*;
 pub use use_popup::*;
 pub use use_preferred_theme::*;
 pub use use_theme::*;
+pub use use_id::*;
