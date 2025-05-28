@@ -5,35 +5,15 @@ use std::ops::Range;
 use dioxus::prelude::*;
 use freya_elements::{
     self as dioxus_elements,
-    events::{
-        keyboard::Key,
-        KeyboardEvent,
-        MouseEvent,
-        WheelEvent,
-    },
+    events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent},
 };
-use freya_hooks::{
-    use_applied_theme,
-    use_focus,
-    use_node,
-    ScrollBarThemeWith,
-};
+use freya_hooks::{use_applied_theme, use_focus, use_node, ScrollBarThemeWith};
 
 use crate::{
-    get_container_sizes,
-    get_corrected_scroll_position,
-    get_scroll_position_from_cursor,
-    get_scroll_position_from_wheel,
-    get_scrollbar_pos_and_size,
-    is_scrollbar_visible,
-    manage_key_event,
-    scroll_views::use_scroll_controller,
-    Axis,
-    ScrollBar,
-    ScrollConfig,
-    ScrollController,
-    ScrollThumb,
-    SCROLL_SPEED_MULTIPLIER,
+    get_container_sizes, get_corrected_scroll_position, get_scroll_position_from_cursor,
+    get_scroll_position_from_wheel, get_scrollbar_pos_and_size, is_scrollbar_visible,
+    manage_key_event, scroll_views::use_scroll_controller, Axis, ScrollBar, ScrollConfig,
+    ScrollController, ScrollThumb, SCROLL_SPEED_MULTIPLIER,
 };
 
 /// Properties for the [`VirtualScrollView`] component.
@@ -222,7 +202,7 @@ pub fn VirtualScrollView<
     let mut focus = use_focus();
     let applied_scrollbar_theme = use_applied_theme!(&scrollbar_theme, scroll_bar);
 
-    let inner_size = item_size + (item_size * length as f32);
+    let inner_size = item_size * length as f32;
 
     scroll_controller.use_apply(inner_size, inner_size);
 
