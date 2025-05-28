@@ -396,7 +396,7 @@ impl<'a, V: Component + Send + Sync> ViewEntry<'a, V> {
     }
 }
 
-impl<'a, V: Component + Send + Sync> Deref for ViewEntry<'a, V> {
+impl<V: Component + Send + Sync> Deref for ViewEntry<'_, V> {
     type Target = V;
 
     fn deref(&self) -> &Self::Target {
@@ -416,7 +416,7 @@ impl<'a, V: Component<Tracking = Untracked> + Send + Sync> ViewEntryMut<'a, V> {
     }
 }
 
-impl<'a, V: Component<Tracking = Untracked> + Send + Sync> Deref for ViewEntryMut<'a, V> {
+impl<V: Component<Tracking = Untracked> + Send + Sync> Deref for ViewEntryMut<'_, V> {
     type Target = V;
 
     fn deref(&self) -> &Self::Target {
@@ -424,7 +424,7 @@ impl<'a, V: Component<Tracking = Untracked> + Send + Sync> Deref for ViewEntryMu
     }
 }
 
-impl<'a, V: Component<Tracking = Untracked> + Send + Sync> DerefMut for ViewEntryMut<'a, V> {
+impl<V: Component<Tracking = Untracked> + Send + Sync> DerefMut for ViewEntryMut<'_, V> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         (&mut self.view).get(self.id).unwrap()
     }
@@ -507,15 +507,15 @@ pub struct NodeRef<'a, V: FromAnyValue + Send + Sync = ()> {
     dom: &'a RealDom<V>,
 }
 
-impl<'a, V: FromAnyValue + Send + Sync> Clone for NodeRef<'a, V> {
+impl<V: FromAnyValue + Send + Sync> Clone for NodeRef<'_, V> {
     fn clone(&self) -> Self {
         *self
     }
 }
 
-impl<'a, V: FromAnyValue + Send + Sync> Copy for NodeRef<'a, V> {}
+impl<V: FromAnyValue + Send + Sync> Copy for NodeRef<'_, V> {}
 
-impl<'a, V: FromAnyValue + Send + Sync> NodeImmutable<V> for NodeRef<'a, V> {
+impl<V: FromAnyValue + Send + Sync> NodeImmutable<V> for NodeRef<'_, V> {
     #[inline(always)]
     fn real_dom(&self) -> &RealDom<V> {
         self.dom
@@ -540,7 +540,7 @@ impl<'a, V: FromAnyValue + Send + Sync> NodeMut<'a, V> {
     }
 }
 
-impl<'a, V: FromAnyValue + Send + Sync> NodeImmutable<V> for NodeMut<'a, V> {
+impl<V: FromAnyValue + Send + Sync> NodeImmutable<V> for NodeMut<'_, V> {
     #[inline(always)]
     fn real_dom(&self) -> &RealDom<V> {
         self.dom
@@ -552,7 +552,7 @@ impl<'a, V: FromAnyValue + Send + Sync> NodeImmutable<V> for NodeMut<'a, V> {
     }
 }
 
-impl<'a, V: FromAnyValue + Send + Sync> NodeMut<'a, V> {
+impl<V: FromAnyValue + Send + Sync> NodeMut<'_, V> {
     /// Get the real dom this node was created in mutably
     #[inline(always)]
     pub fn real_dom_mut(&mut self) -> &mut RealDom<V> {

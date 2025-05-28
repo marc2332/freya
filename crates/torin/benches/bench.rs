@@ -1,7 +1,6 @@
 use std::{
     collections::HashMap,
     fmt::Display,
-    sync::Arc,
 };
 
 use criterion::{
@@ -10,23 +9,6 @@ use criterion::{
     Criterion,
 };
 use torin::prelude::*;
-
-struct TestingMeasurer;
-
-impl LayoutMeasurer<usize> for TestingMeasurer {
-    fn measure(
-        &mut self,
-        _node_id: usize,
-        _node: &Node,
-        _size: &Size2D,
-    ) -> Option<(Size2D, Arc<SendAnyMap>)> {
-        None
-    }
-
-    fn should_measure_inner_children(&mut self, _node_id: usize) -> bool {
-        true
-    }
-}
 
 #[derive(Default)]
 struct TestingDOM {
@@ -272,7 +254,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             let root_area = Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0));
             b.iter_batched(
                 || {
-                    let mut measurer = Some(TestingMeasurer);
+                    let mut measurer = Some(NoopMeasurer);
                     let mut mocked_dom = TestingDOM::default();
 
                     mocked_dom.add(

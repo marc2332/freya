@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use accesskit::{
-    NodeBuilder,
+    Node,
     Role,
 };
 use dioxus_core::{
@@ -50,7 +50,6 @@ use freya_engine::prelude::*;
 use freya_native_core::prelude::NodeImmutableDioxusExt;
 use futures_task::Waker;
 use futures_util::Future;
-use pin_utils::pin_mut;
 use tokio::{
     select,
     sync::{
@@ -77,6 +76,12 @@ use crate::{
     EmbeddedFonts,
 };
 
+pub enum AccessibilityTask {
+    None,
+    Process,
+    ProcessWithMode(NavigationMode),
+}
+
 /// Manages the Application lifecycle
 pub struct Application {
     pub(crate) sdom: SafeDOM,
@@ -97,7 +102,7 @@ pub struct Application {
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) plugins: PluginsManager,
     pub(crate) process_layout_on_next_render: bool,
-    pub(crate) process_accessibility_on_next_render: bool,
+    pub(crate) process_accessibility_task_on_next_render: AccessibilityTask,
     pub(crate) init_accessibility_on_next_render: bool,
     pub(crate) default_fonts: Vec<String>,
 }
@@ -132,7 +137,7 @@ impl Application {
         let (event_emitter, event_receiver) = mpsc::unbounded_channel();
         let (platform_sender, platform_receiver) = watch::channel(NativePlatformState {
             focused_accessibility_id: ACCESSIBILITY_ROOT_ID,
-            focused_accessibility_node: NodeBuilder::new(Role::Window).build(),
+            focused_accessibility_node: Node::new(Role::Window),
             preferred_theme: window.theme().map(|theme| theme.into()).unwrap_or_default(),
             navigation_mode: NavigationMode::default(),
             information: PlatformInformation::from_winit(window),
@@ -157,7 +162,7 @@ impl Application {
             ticker_sender: broadcast::channel(5).0,
             plugins,
             process_layout_on_next_render: false,
-            process_accessibility_on_next_render: false,
+            process_accessibility_task_on_next_render: AccessibilityTask::None,
             init_accessibility_on_next_render: false,
             default_fonts,
             compositor: Compositor::default(),
@@ -171,8 +176,14 @@ impl Application {
         app
     }
 
-    /// Provide the launch state and few other utilities like the EventLoopProxy
-    pub fn provide_vdom_contexts<State: 'static>(&mut self, app_state: Option<State>) {
+    /// Sync the RealDOM with the VirtualDOM
+    pub fn init_doms<State: 'static>(&mut self, scale_factor: f32, app_state: Option<State>) {
+        self.plugins.send(
+            PluginEvent::StartedUpdatingDOM,
+            PluginHandle::new(&self.proxy),
+        );
+
+        // Insert built-in VirtualDOM contexts
         if let Some(state) = app_state {
             self.vdom.insert_any_root_context(Box::new(state));
         }
@@ -184,18 +195,10 @@ impl Application {
             .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
         self.vdom
             .insert_any_root_context(Box::new(self.sdom.get().accessibility_generator().clone()));
-    }
 
-    /// Make the first build of the VirtualDOM and sync it with the RealDOM.
-    pub fn init_doms<State: 'static>(&mut self, scale_factor: f32, app_state: Option<State>) {
-        self.plugins.send(
-            PluginEvent::StartedUpdatingDOM,
-            PluginHandle::new(&self.proxy),
-        );
-
-        self.provide_vdom_contexts(app_state);
-
+        // Init the RealDOM
         self.sdom.get_mut().init_dom(&mut self.vdom, scale_factor);
+
         self.plugins.send(
             PluginEvent::FinishedUpdatingDOM,
             PluginHandle::new(&self.proxy),
@@ -219,12 +222,6 @@ impl Application {
             PluginHandle::new(&self.proxy),
         );
 
-        if repaint {
-            if let Some(devtools) = &self.devtools {
-                devtools.update(&self.sdom.get());
-            }
-        }
-
         (repaint, relayout)
     }
 
@@ -233,7 +230,7 @@ impl Application {
         let mut cx = std::task::Context::from_waker(&self.vdom_waker);
 
         {
-            let fut = async {
+            let fut = std::pin::pin!(async {
                 select! {
                     Some(events) = self.event_receiver.recv() => {
                         let fdom = self.sdom.get();
@@ -255,8 +252,7 @@ impl Application {
                     },
                     _ = self.vdom.wait_for_work() => {},
                 }
-            };
-            pin_mut!(fut);
+            });
 
             match fut.poll(&mut cx) {
                 std::task::Poll::Ready(_) => {
@@ -270,7 +266,13 @@ impl Application {
 
         if must_relayout {
             self.process_layout_on_next_render = true;
-            self.process_accessibility_on_next_render = true;
+            self.process_accessibility_task_on_next_render = AccessibilityTask::Process;
+        } else if must_repaint {
+            // If there was no relayout but there was a repaint then we can update the devtools now,
+            // otherwise if there was a relayout the devtools will get updated on next render
+            if let Some(devtools) = &self.devtools {
+                devtools.update(&self.sdom.get());
+            }
         }
 
         if must_relayout || must_repaint {
@@ -369,7 +371,7 @@ impl Application {
     /// Resize the Window
     pub fn resize(&mut self, window: &Window) {
         self.process_layout_on_next_render = true;
-        self.process_accessibility_on_next_render = true;
+        self.process_accessibility_task_on_next_render = AccessibilityTask::Process;
         self.init_accessibility_on_next_render = true;
         self.compositor.reset();
         self.sdom
@@ -393,17 +395,17 @@ impl Application {
     }
 
     pub fn request_focus_node(&mut self, focus_strategy: AccessibilityFocusStrategy) {
-        match focus_strategy {
+        let task = match focus_strategy {
             AccessibilityFocusStrategy::Backward | AccessibilityFocusStrategy::Forward => {
-                self.set_navigation_mode(NavigationMode::Keyboard);
+                AccessibilityTask::ProcessWithMode(NavigationMode::Keyboard)
             }
-            _ => {}
-        }
+            _ => AccessibilityTask::Process,
+        };
 
         let fdom = self.sdom.get();
         fdom.accessibility_dirty_nodes()
             .request_focus(focus_strategy);
-        self.process_accessibility_on_next_render = true;
+        self.process_accessibility_task_on_next_render = task
     }
 
     /// Notify components subscribed to event loop ticks.
@@ -420,35 +422,32 @@ impl Application {
 
     /// Measure the layout
     pub fn process_layout(&mut self, window_size: PhysicalSize<u32>, scale_factor: f64) {
-        {
-            let fdom = self.sdom.get();
+        let fdom = self.sdom.get();
 
-            self.plugins.send(
-                PluginEvent::StartedMeasuringLayout(&fdom.layout()),
-                PluginHandle::new(&self.proxy),
-            );
+        self.plugins.send(
+            PluginEvent::StartedMeasuringLayout(&fdom.layout()),
+            PluginHandle::new(&self.proxy),
+        );
 
-            process_layout(
-                &fdom,
-                Area::from_size(window_size.to_torin()),
-                &mut self.font_collection,
-                scale_factor as f32,
-                &self.default_fonts,
-            );
+        process_layout(
+            &fdom,
+            Area::from_size(window_size.to_torin()),
+            &mut self.font_collection,
+            scale_factor as f32,
+            &self.default_fonts,
+        );
 
-            self.plugins.send(
-                PluginEvent::FinishedMeasuringLayout(&fdom.layout()),
-                PluginHandle::new(&self.proxy),
-            );
-        }
+        self.plugins.send(
+            PluginEvent::FinishedMeasuringLayout(&fdom.layout()),
+            PluginHandle::new(&self.proxy),
+        );
 
         if let Some(devtools) = &self.devtools {
-            devtools.update(&self.sdom.get())
+            devtools.update(&fdom)
         }
 
         #[cfg(debug_assertions)]
         {
-            let fdom = self.sdom.get();
             tracing::info!(
                 "Processed {} layers and {} group of paragraph elements",
                 fdom.layers().len(),

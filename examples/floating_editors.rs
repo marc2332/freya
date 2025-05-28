@@ -171,7 +171,7 @@ fn Editor() -> Element {
 
     let onclick = move |_: MouseEvent| {
         if !focus_manager.is_focused() {
-            focus_manager.focus();
+            focus_manager.request_focus();
         }
     };
 

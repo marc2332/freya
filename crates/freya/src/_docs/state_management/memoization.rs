@@ -13,6 +13,7 @@
 //!         // Just like `use_effect`, whenever a signal that is read in here is changed, the memo will rerun.
 //!         state() * 2
 //!     });
+//!     // This is really only useful for actual expensive values and not simple numbers.
 //!
 //!     rsx!(
 //!         label {
@@ -22,3 +23,5 @@
 //!     )
 //! }
 //! ```
+//!
+//! #### You can now learn about [Async Tasks](crate::_docs::async_tasks).

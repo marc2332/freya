@@ -1,7 +1,6 @@
 //! # Components
 //!
-//! Freya apps are composed of different components.
-//! Components are defined in the form functions that might receive some input as **Props** and return the UI as **Element**.
+//! Freya apps are composed of components, these are functions that might or not receive some input as **Props** and return the UI as **Element**.
 //!
 //! > You can learn more about how the UI is defined in the [UI](crate::_docs::ui) chapter.
 //!
@@ -26,10 +25,21 @@
 //!
 //! ```rust
 //! # use freya::prelude::*;
+//!
+//! // Reusable component that we might call as many times we want
+//! #[component]
+//! fn TextLabel(text: String) -> Element {
+//!     rsx!(
+//!         label {
+//!             "{text}"
+//!         }
+//!     )
+//! }
+//!
 //! fn app() -> Element {
 //!     rsx!(
 //!         // By declaring this element using `TextLabel`
-//!         // we are creating an instance of that component
+//!         // we are declaring an instance of the component
 //!         TextLabel {
 //!             text: "Number 1"
 //!         }
@@ -39,16 +49,6 @@
 //!         // Another instance of the same component
 //!         TextLabel {
 //!             text: "Number 3"
-//!         }
-//!     )
-//! }
-//!
-//! // Reusable component that we might call as many times we want
-//! #[component]
-//! fn TextLabel(text: String) -> Element {
-//!     rsx!(
-//!         label {
-//!             "{text}"
 //!         }
 //!     )
 //! }
@@ -76,10 +76,10 @@
 //!
 //! ## Renders
 //!
-//! Components renders are just when a component function runs, this can happen in multiple scanarios:
+//! Components renders are just when component function runs, this can happen in multiple scanarios:
 //!
 //! 1. The component just got instanciated for the first time
-//! 2. A signal that this component is reading, got changed
+//! 2. A signal that this component is reading, got written
 //! 3. The component props changed
 //!
 //! > **Note:** The naming of `render` might give you the impression that it means the app will effectively rerender again, it has nothing to do with it, in fact, a component might render (run its function) a thousand times but generate the exact same RSX, if that was the case Freya would not render it again.
@@ -92,8 +92,7 @@
 //! fn CoolComp() -> Element {
 //!     let mut count = use_signal(|| 0);
 //!
-//!     // One run of this function means one render of this component
-//!     // So, everytime the `count` signal is mutated, the component rerenders/is recalled.
+//!     // One run of this function is the same as one render of this component
 //!
 //!     rsx!(
 //!         label {
@@ -102,7 +101,10 @@
 //!
 //!             // By embedding the count in this text the component is subscribed to any change of the `count` siganal
 //!             "Increase {count}"
+//!             // So, everytime the `count` signal is written, the component rerenders.
 //!         }
 //!     )
 //! }
 //! ```
+//!
+//! #### You can now learn about [Hooks](crate::_docs::hooks).

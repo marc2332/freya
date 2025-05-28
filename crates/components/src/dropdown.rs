@@ -74,7 +74,6 @@ where
 
     let a11y_id = focus.attribute();
     let a11y_member_of = UseFocus::attribute_for_id(dropdown_group.group_id);
-    let is_focused = focus.is_focused();
     let is_selected = *selected.read() == value;
 
     let DropdownItemTheme {
@@ -113,10 +112,10 @@ where
         status.set(DropdownItemStatus::default());
     };
 
-    let onglobalkeydown = {
+    let onkeydown = {
         to_owned![onpress];
         move |ev: KeyboardEvent| {
-            if ev.key == Key::Enter && is_focused {
+            if ev.key == Key::Enter {
                 if let Some(onpress) = &onpress {
                     onpress.call(())
                 }
@@ -145,7 +144,7 @@ where
             onmouseenter,
             onmouseleave,
             onclick,
-            onglobalkeydown,
+            onkeydown,
             {children}
         }
     )
@@ -266,7 +265,7 @@ where
     };
 
     let onclick = move |_| {
-        focus.focus();
+        focus.request_focus();
         opened.set(true)
     };
 

@@ -3,7 +3,7 @@ use crate::def_element;
 def_element!(
     /// `rect` is a generic element that acts as a container for other elements.
     ///
-    /// You can specify things like [`width`](#width-and-height), [`padding`](#padding) or even in what [`direction`](#direction) the inner elements are stacked.
+    /// You can specify things like `width`, `padding` or even in what `direction` the inner elements are stacked.
     ///
     /// ### Example
     ///
@@ -481,6 +481,16 @@ def_element!(
         position_bottom,
         position_left,
         layer,
+
+        // Children layout
+        direction,
+        content,
+        main_align,
+        cross_align,
+        spacing,
+        overflow,
+        offset_x,
+        offset_y,
 
         // Transform
         rotate,

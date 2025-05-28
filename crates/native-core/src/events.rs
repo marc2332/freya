@@ -136,6 +136,7 @@ impl Ord for EventName {
                     std::cmp::Ordering::Less
                 }
             }
+
             _ => std::cmp::Ordering::Greater,
         }
     }
@@ -160,7 +161,7 @@ impl EventName {
     /// Some events might cause other events, like for example:
     /// A `mousemove` might also trigger a `mouseenter`
     /// A `mousedown` or a `touchdown` might also trigger a `pointerdown`
-    pub fn get_collateral_events(&self) -> SmallVec<[Self; 4]> {
+    pub fn get_derived_events(&self) -> SmallVec<[Self; 4]> {
         let mut events = SmallVec::new();
 
         events.push(*self);
@@ -175,7 +176,6 @@ impl EventName {
                 events.extend([Self::Click, Self::PointerUp])
             }
             Self::MouseLeave => events.push(Self::PointerLeave),
-            Self::GlobalFileHover | Self::GlobalFileHoverCancelled => events.clear(),
             _ => {}
         }
 
@@ -185,6 +185,20 @@ impl EventName {
     /// Check if the event means that the pointer (e.g. cursor) just entered a Node
     pub fn is_enter(&self) -> bool {
         matches!(&self, Self::MouseEnter | Self::PointerEnter)
+    }
+
+    pub fn is_global(&self) -> bool {
+        matches!(
+            &self,
+            Self::GlobalKeyDown
+                | Self::GlobalKeyUp
+                | Self::GlobalClick
+                | Self::GlobalPointerUp
+                | Self::GlobalMouseDown
+                | Self::GlobalMouseMove
+                | Self::GlobalFileHover
+                | Self::GlobalFileHoverCancelled
+        )
     }
 
     /// Check if it's one of the Pointer variants
@@ -200,29 +214,24 @@ impl EventName {
         )
     }
 
-    /// Check if the event means the cursor was moved
-    pub fn was_cursor_moved(&self) -> bool {
+    /// Check if the event means the cursor was moved.
+    pub fn is_moved(&self) -> bool {
         matches!(
             &self,
             Self::MouseMove | Self::MouseEnter | Self::PointerEnter | Self::PointerOver
         )
     }
 
+    /// Check if the event means the cursor has left.
+    pub fn is_left(&self) -> bool {
+        matches!(&self, Self::MouseLeave | Self::PointerLeave)
+    }
+
     // Bubble all events except:
-    // - Global Keyboard events
+    // - Global events
     // - Mouse movements events
     pub fn does_bubble(&self) -> bool {
-        !matches!(
-            self,
-            Self::GlobalKeyDown
-                | Self::GlobalKeyUp
-                | Self::MouseLeave
-                | Self::PointerLeave
-                | Self::MouseEnter
-                | Self::PointerEnter
-                | Self::MouseMove
-                | Self::PointerOver
-        )
+        !self.is_moved() && !self.is_left() && !self.is_global()
     }
 
     /// Only let events that do not move the mouse, go through solid nodes
@@ -231,34 +240,20 @@ impl EventName {
     }
 
     /// Check if this event can change the hover state of a Node.
-    pub fn can_change_hover_state(&self) -> bool {
+    pub fn is_hovered(&self) -> bool {
         matches!(
             self,
             Self::MouseMove | Self::MouseEnter | Self::PointerOver | Self::PointerEnter
         )
     }
 
-    /// Check if this event can change the press state of a Node.
-    pub fn can_change_press_state(&self) -> bool {
+    /// Check if this event can press state of a Node.
+    pub fn is_pressed(&self) -> bool {
         matches!(self, Self::MouseDown | Self::TouchStart | Self::PointerDown)
     }
 
-    /// Check if the event means the cursor started or released a click
-    pub fn was_cursor_pressed_or_released(&self) -> bool {
-        matches!(
-            &self,
-            Self::MouseDown
-                | Self::PointerDown
-                | Self::MouseUp
-                | Self::Click
-                | Self::PointerUp
-                | Self::TouchStart
-                | Self::TouchEnd
-        )
-    }
-
-    /// Check if the event was pressed
-    pub fn is_pressed(&self) -> bool {
-        matches!(&self, Self::Click)
+    /// Check if this event can release the press state of a Node.
+    pub fn is_released(&self) -> bool {
+        matches!(&self, Self::Click | Self::PointerUp)
     }
 }

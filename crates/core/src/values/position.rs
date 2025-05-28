@@ -10,7 +10,7 @@ impl Parse for Position {
         Ok(match value {
             "absolute" => Position::new_absolute(),
             "global" => Position::new_global(),
-            _ => Position::Stacked,
+            _ => Position::new_stacked(),
         })
     }
 }

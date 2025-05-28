@@ -84,7 +84,7 @@ impl TestNode {
     }
 
     /// Get a mutable reference to the test utils.
-    pub fn utils(&self) -> &TestUtils {
+    pub(crate) fn utils(&self) -> &TestUtils {
         &self.utils
     }
 
@@ -147,7 +147,7 @@ impl TestNode {
         self.node_type.is_placeholder()
     }
 
-    /// Get a Node by a matching text.
+    /// Get a descendant Node of this Node that matches a certain text.
     pub fn get_by_text(&self, matching_text: &str) -> Option<Self> {
         self.utils()
             .get_node_matching_inside_id(self.node_id, |node| {

@@ -4,7 +4,7 @@ use std::{
 };
 
 use accesskit::{
-    NodeBuilder,
+    Node,
     Role,
 };
 use dioxus_core::{
@@ -111,7 +111,7 @@ pub fn launch_test_with_config<T: 'static + Clone>(
     let (platform_event_emitter, platform_event_receiver) = unbounded_channel::<EventLoopMessage>();
     let (platform_sender, platform_receiver) = watch::channel(NativePlatformState {
         focused_accessibility_id: ACCESSIBILITY_ROOT_ID,
-        focused_accessibility_node: NodeBuilder::new(Role::Window).build(),
+        focused_accessibility_node: Node::new(Role::Window),
         preferred_theme: PreferredTheme::default(),
         navigation_mode: NavigationMode::default(),
         information: PlatformInformation::new(config.size, false, false, false),
@@ -141,7 +141,7 @@ pub fn launch_test_with_config<T: 'static + Clone>(
         platform_receiver,
     };
 
-    handler.init_dom();
+    handler.init_doms();
     handler.resize(handler.config.size);
 
     handler

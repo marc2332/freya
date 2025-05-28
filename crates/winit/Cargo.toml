@@ -1,7 +1,7 @@
 [package]
 name = "freya-winit"
 description = "Winit renderer for Freya."
-version = "0.3.0-rc.3"
+version = "0.3.3"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
@@ -38,10 +38,8 @@ winit = { workspace = true }
 accesskit = { workspace = true }
 accesskit_winit = { workspace = true }
 tracing = { workspace = true }
-futures-task ={ workspace = true }
+futures-task = { workspace = true }
 futures-util = { workspace = true }
 
 itertools = "0.13.0"
-uuid = { workspace = true }
-image = "0.25.0"
-pin-utils = "0.1.0"
+image = { version = "0.25.0", default-features = false, features = [ "ico", "png", "jpeg"]}
