@@ -42,6 +42,4 @@ futures-task = { workspace = true }
 futures-util = { workspace = true }
 
 itertools = "0.13.0"
-uuid = { workspace = true }
 image = { version = "0.25.0", default-features = false, features = [ "ico", "png", "jpeg"]}
-pin-utils = "0.1.0"
