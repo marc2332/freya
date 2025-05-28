@@ -15,13 +15,12 @@ categories = ["gui", "asynchronous"]
 features = ["freya-engine/mocked-engine"]
 
 [features]
-use_camera = ["dep:nokhwa"]
 skia-engine = ["freya-engine/skia-engine"]
+docs = ["use_camera"]
+use_camera = ["dep:nokhwa"]
 
 [dependencies]
 freya-elements = { workspace = true }
-
-
 freya-core = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }

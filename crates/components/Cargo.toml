@@ -16,27 +16,26 @@ features = ["freya-engine/mocked-engine", "docs"]
 
 [features]
 skia-engine = ["freya-engine/skia-engine"]
-docs = []
+docs = ["network-image"]
+network-image = ["dep:reqwest", "dep:bytes"]
 
 [dependencies]
 freya-elements = { workspace = true }
-
 freya-hooks = { workspace = true }
-
 freya-core = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
 
-dioxus-router = { workspace = true }
+dioxus-router = { workspace = true, default-features = false }
 dioxus = { workspace = true }
-futures-util = { workspace = true }
 
+futures-util = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 
 open = "5"
-reqwest = "0.12.0"
-bytes = "1.5.0"
+reqwest = { version = "0.12.0", optional = true }
+bytes = { version = "1.5.0", optional = true }
 embed-doc-image = "0.1.4"
 
 [dev-dependencies]
