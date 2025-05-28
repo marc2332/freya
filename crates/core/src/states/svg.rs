@@ -56,25 +56,24 @@ impl ParseAttribute for SvgState {
                 }
             }
             AttributeName::Fill => {
-                if let Some(value) = attr.value.as_text() {
-                    if value == "none" {
-                        return Ok(());
-                    }
-                    self.svg_fill = Some(SvgPaint::parse(value)?);
+                let value = attr.value.as_text().ok_or(ParseError)?;
+                if value == "none" {
+                    return Ok(());
                 }
+                self.svg_fill = Some(SvgPaint::parse(value)?);
             }
             AttributeName::Stroke => {
-                if let Some(value) = attr.value.as_text() {
-                    if value == "none" {
-                        return Ok(());
-                    }
-                    self.svg_stroke = Some(SvgPaint::parse(value)?);
+                let value = attr.value.as_text().ok_or(ParseError)?;
+                if value == "none" {
+                    return Ok(());
                 }
+                self.svg_stroke = Some(SvgPaint::parse(value)?);
             }
             AttributeName::SvgContent => {
-                let text = attr.value.as_text();
-                self.svg_data =
-                    text.map(|v| AttributesBytes::Dynamic(v.as_bytes().to_vec().into()));
+                self.svg_data = attr
+                    .value
+                    .as_text()
+                    .map(|v| AttributesBytes::Dynamic(v.as_bytes().to_vec().into()));
             }
             _ => {}
         }

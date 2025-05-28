@@ -53,62 +53,55 @@ impl ParseAttribute for StyleState {
     ) -> Result<(), ParseError> {
         match attr.attribute {
             AttributeName::Background => {
-                if let Some(value) = attr.value.as_text() {
-                    if value == "none" {
-                        return Ok(());
-                    }
-                    self.background = Fill::parse(value)?;
+                let value = attr.value.as_text().ok_or(ParseError)?;
+                if value == "none" {
+                    return Ok(());
                 }
+                self.background = Fill::parse(value)?;
             }
             AttributeName::BackgroundOpacity => {
-                if let Some(value) = attr.value.as_text() {
-                    if value == "none" {
-                        return Ok(());
-                    }
-                    self.background_opacity = Some(parse_alpha(value)?);
+                let value = attr.value.as_text().ok_or(ParseError)?;
+                if value == "none" {
+                    return Ok(());
                 }
+                self.background_opacity = Some(parse_alpha(value)?);
             }
             AttributeName::Border => {
-                if let Some(value) = attr.value.as_text() {
-                    self.borders = value
-                        .split_excluding_group(',', '(', ')')
-                        .map(|chunk| Border::parse(chunk).unwrap_or_default())
-                        .collect();
-                }
+                self.borders = attr
+                    .value
+                    .as_text()
+                    .ok_or(ParseError)?
+                    .split_excluding_group(',', '(', ')')
+                    .map(|chunk| Border::parse(chunk).unwrap_or_default())
+                    .collect();
             }
             AttributeName::Shadow => {
-                if let Some(value) = attr.value.as_text() {
-                    self.shadows = value
-                        .split_excluding_group(',', '(', ')')
-                        .map(|chunk| Shadow::parse(chunk).unwrap_or_default())
-                        .collect();
-                }
+                self.shadows = attr
+                    .value
+                    .as_text()
+                    .ok_or(ParseError)?
+                    .split_excluding_group(',', '(', ')')
+                    .map(|chunk| Shadow::parse(chunk).unwrap_or_default())
+                    .collect();
             }
             AttributeName::CornerRadius => {
-                if let Some(value) = attr.value.as_text() {
-                    let mut radius = CornerRadius::parse(value)?;
-                    radius.smoothing = self.corner_radius.smoothing;
-                    self.corner_radius = radius;
-                }
+                let mut radius = CornerRadius::parse(attr.value.as_text().ok_or(ParseError)?)?;
+                radius.smoothing = self.corner_radius.smoothing;
+                self.corner_radius = radius;
             }
             AttributeName::CornerSmoothing => {
-                if let Some(value) = attr.value.as_text() {
-                    if value.ends_with('%') {
-                        let smoothing = value
-                            .replacen('%', "", 1)
-                            .parse::<f32>()
-                            .map_err(|_| ParseError)?;
-                        self.corner_radius.smoothing = (smoothing / 100.0).clamp(0.0, 1.0);
-                    }
+                let value = attr.value.as_text().ok_or(ParseError)?;
+                if value.ends_with('%') {
+                    let smoothing = value
+                        .trim_end_matches('%')
+                        .parse::<f32>()
+                        .map_err(|_| ParseError)?;
+                    self.corner_radius.smoothing = (smoothing / 100.0).clamp(0.0, 1.0);
                 }
             }
-
             AttributeName::Overflow => {
-                if let Some(value) = attr.value.as_text() {
-                    self.overflow = OverflowMode::parse(value)?;
-                }
+                self.overflow = OverflowMode::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
-
             _ => {}
         }
 
