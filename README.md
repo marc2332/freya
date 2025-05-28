@@ -8,7 +8,7 @@
 
 [Website](https://freyaui.dev) | [Documentation](https://docs.rs/freya/0.3/freya) | [Discord](https://discord.gg/sYejxCdewG) | [Main branch Docs](https://docs.freyaui.dev/freya) 
 
-**Freya** is a cross-platform GUI library for Rust powered by 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/).
+**Freya** is a **cross-platform and non-web** GUI library for Rust powered by 🎨 [Skia](https://skia.org/).
 
 - [Introduction](https://docs.rs/freya/0.3/freya/_docs/introduction/index.html)
 - [Development Setup](https://docs.rs/freya/0.3/freya/_docs/development_setup/index.html)
@@ -171,7 +171,7 @@ If you are interested in contributing please make sure to have read the [Contrib
 
 **Freya** uses some of the **core** crates from Dioxus. This means that you will effectively be creating Dioxus components using RSX and hooks.
 
-However, thanks to Dioxus being a renderer-agnostic library, you will **NOT** be using JavaScript, HTML, CSS, or any other abstraction that ends up using one of those or other web technologies.
+However, thanks to Dioxus being a renderer-agnostic library, you and your app will **NOT** be using Webviews, JavaScript, HTML, CSS, or any other abstraction that ends up using one of those or other web technologies.
 
 Freya does everything on its own when it comes to:
 - Elements
