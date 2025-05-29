@@ -14,6 +14,7 @@ use freya_hooks::{
 pub struct LoaderProps {
     /// Theme override.
     pub theme: Option<LoaderThemeWith>,
+    #[props(default = "48".to_string())]
     pub size: Option<String>,
 }
 
