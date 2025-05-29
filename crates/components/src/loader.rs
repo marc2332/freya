@@ -15,7 +15,7 @@ pub struct LoaderProps {
     /// Theme override.
     pub theme: Option<LoaderThemeWith>,
     #[props(default = "48".to_string())]
-    pub size: Option<String>,
+    pub size: String,
 }
 
 /// # Styling
