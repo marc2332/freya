@@ -207,13 +207,11 @@ fn AppSidebar() -> Element {
                     }
                 ),
                 Body {
-                    rect {
-                        main_align: "center",
-                        cross_align: "center",
-                        width: "100%",
-                        height: "100%",
-                        Outlet::<Route> {  }
-                    }
+                    main_align: "center",
+                    cross_align: "center",
+                    width: "100%",
+                    height: "100%",
+                    Outlet::<Route> {  }
                 }
             }
         }
