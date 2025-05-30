@@ -196,14 +196,18 @@ impl EventName {
         events.push(*self);
 
         match self {
-            Self::PointerUp => events.extend([Self::Click, Self::MiddleClick, Self::PointerUp]),
-            Self::PointerDown => events.extend([Self::MouseDown, Self::PointerDown]),
-            Self::GlobalMouseMove => events.extend([
-                Self::MouseMove,
-                Self::MouseEnter,
-                Self::MouseLeave,
-                Self::GlobalMouseMove,
-            ]),
+            Self::PointerUp => events.extend([Self::Click, Self::MiddleClick]),
+            Self::PointerDown => events.extend([Self::MouseDown]),
+            Self::PointerEnter => events.extend([Self::MouseEnter]),
+            Self::PointerOver => events.extend([Self::MouseMove]),
+            Self::PointerLeave => events.extend([Self::MouseLeave]),
+            Self::GlobalClick => events.extend([Self::Click, Self::MiddleClick]),
+            Self::GlobalPointerUp => {
+                events.extend([Self::PointerUp, Self::Click, Self::MiddleClick])
+            }
+            Self::GlobalMouseMove => {
+                events.extend([Self::MouseMove, Self::MouseEnter, Self::MouseLeave])
+            }
             _ => {}
         }
 

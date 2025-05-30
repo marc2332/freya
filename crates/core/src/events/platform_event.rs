@@ -16,9 +16,19 @@ use winit::event::{
 /// Events emitted by a Freya platform, such as desktop or freya-testing.
 #[derive(Clone, Debug, PartialEq)]
 pub struct PlatformEvent {
-    pub name: EventName,
+    pub name: EventName, // TODO: Use PlatformEventName
     pub data: PlatformEventData,
 }
+
+// /// Name for [PlatformEvent].
+// #[derive(Clone, Debug, PartialEq)]
+// pub enum PlatformEventName {
+//     MouseDown,
+//     MouseUp,
+//     Wheel,
+//     KeyboardDown,
+//     KeyboardUp
+// }
 
 /// Data for [PlatformEvent].
 #[derive(Clone, Debug, PartialEq)]

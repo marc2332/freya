@@ -7,15 +7,13 @@ use std::{
 };
 
 use accesskit::NodeId as AccessibilityId;
-use dioxus_core::{
-    Event,
-    VirtualDom,
-};
+use dioxus_core::VirtualDom;
 use freya_core::{
     accessibility::AccessibilityTree,
     dom::SafeDOM,
     event_loop_messages::EventLoopMessage,
     events::{
+        handle_processed_events,
         process_events,
         EventName,
         NodesState,
@@ -45,10 +43,7 @@ use freya_engine::prelude::{
     FontCollection,
     FontMgr,
 };
-use freya_native_core::{
-    dioxus::NodeImmutableDioxusExt,
-    prelude::NodeImmutable,
-};
+use freya_native_core::prelude::NodeImmutable;
 use tokio::{
     sync::{
         broadcast,
@@ -189,20 +184,15 @@ impl<T: 'static + Clone> TestingHandler<T> {
                 }
             }
 
-            if let Ok((events, _)) = vdom_events {
-                let fdom = self.utils.sdom().get();
-                let rdom = fdom.rdom();
-                for event in events {
-                    if let Some(element_id) =
-                        rdom.get(event.node_id).and_then(|node| node.mounted_id())
-                    {
-                        let name = event.name.into();
-                        let data = event.data.any();
-                        let event = Event::new(data, event.bubbles);
-                        self.vdom.runtime().handle_event(name, event, element_id);
-                        self.vdom.process_events();
-                    }
-                }
+            if let Ok((dom_events, flattened_potential_events)) = vdom_events {
+                let sdom = self.utils.sdom();
+                handle_processed_events(
+                    sdom,
+                    &mut self.vdom,
+                    &mut self.nodes_state,
+                    dom_events,
+                    flattened_potential_events,
+                )
             }
         }
 

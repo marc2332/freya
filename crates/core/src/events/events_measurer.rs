@@ -50,18 +50,15 @@ pub fn process_events(
     focus_id: Option<NodeId>,
 ) {
     // Get potential events that could be emitted based on the elements layout and viewports
-    let potential_events = measure_potential_event_listeners(events, fdom, scale_factor, focus_id);
+    let potential_events = measure_potential_events(events, fdom, scale_factor, focus_id);
 
     // Get what events can be actually emitted based on what elements are listening
     let mut dom_events = measure_dom_events(&potential_events, fdom, scale_factor);
 
-    // Get potential collateral events, e.g. mousemove -> mouseenter
-    let potential_collateral_events =
-        nodes_state.process_collateral(fdom, &potential_events, &mut dom_events, events);
-
-    // Get what collateral events can actually be emitted
-    let collateral_dom_events =
-        measure_dom_events(&potential_collateral_events, fdom, scale_factor);
+    // Get dom ollateral events, e.g. mousemove -> mouseenter
+    let collateral_dom_events = nodes_state.retain_states(fdom, &dom_events, events, scale_factor);
+    nodes_state.filter_dom_events(&mut dom_events);
+    nodes_state.create_states(fdom, &potential_events);
 
     // Get the global events
     measure_platform_global_events(fdom, events, &mut dom_events, scale_factor);
@@ -116,7 +113,7 @@ pub fn measure_platform_global_events(
 }
 
 /// Measure what event listeners could potentially be triggered
-pub fn measure_potential_event_listeners(
+pub fn measure_potential_events(
     events: &EventsQueue,
     fdom: &FreyaDOM,
     scale_factor: f64,
@@ -143,7 +140,7 @@ pub fn measure_potential_event_listeners(
                     PlatformEventData::Keyboard { .. } if focus_id == Some(*node_id) => {
                         let potential_event = PotentialEvent {
                             node_id: *node_id,
-                            layer: Some(*layer),
+                            layer: *layer,
                             name: *name,
                             data: data.clone(),
                         };
@@ -196,7 +193,7 @@ pub fn measure_potential_event_listeners(
 
                 let potential_event = PotentialEvent {
                     node_id: *node_id,
-                    layer: Some(*layer),
+                    layer: *layer,
                     name: *name,
                     data: data.clone(),
                 };

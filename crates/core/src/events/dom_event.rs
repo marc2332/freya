@@ -25,7 +25,7 @@ use super::{
 #[derive(Debug, Clone, PartialEq)]
 pub struct DomEvent {
     pub name: EventName,
-    pub source_name: EventName,
+    pub platform_name: EventName,
     pub node_id: NodeId,
     pub data: DomEventData,
     pub bubbles: bool,
@@ -49,7 +49,7 @@ impl DomEvent {
     pub fn new(
         node_id: NodeId,
         name: EventName,
-        source_name: EventName,
+        platform_name: EventName,
         platform_data: PlatformEventData,
         node_area: Option<Area>,
         scale_factor: f64,
@@ -83,7 +83,7 @@ impl DomEvent {
                 Self {
                     node_id,
                     name,
-                    source_name,
+                    platform_name,
                     data: event_data,
                     bubbles,
                 }
@@ -91,7 +91,7 @@ impl DomEvent {
             PlatformEventData::Wheel { scroll, .. } => Self {
                 node_id,
                 name,
-                source_name,
+                platform_name,
                 data: DomEventData::Wheel(WheelData::new(scroll.x, scroll.y)),
                 bubbles,
             },
@@ -103,7 +103,7 @@ impl DomEvent {
             } => Self {
                 node_id,
                 name,
-                source_name,
+                platform_name,
                 data: DomEventData::Keyboard(KeyboardData::new(key.clone(), code, modifiers)),
                 bubbles,
             },
@@ -140,7 +140,7 @@ impl DomEvent {
                 Self {
                     node_id,
                     name,
-                    source_name,
+                    platform_name,
                     data: event_data,
                     bubbles,
                 }
@@ -151,7 +151,7 @@ impl DomEvent {
                 Self {
                     node_id,
                     name,
-                    source_name,
+                    platform_name,
                     data: event_data,
                     bubbles,
                 }

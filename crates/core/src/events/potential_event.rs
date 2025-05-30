@@ -1,5 +1,3 @@
-use std::cmp::Ordering;
-
 use freya_native_core::{
     events::EventName,
     NodeId,
@@ -13,7 +11,7 @@ pub struct PotentialEvent {
     pub node_id: NodeId,
     pub name: EventName,
     pub data: PlatformEventData,
-    pub layer: Option<i16>,
+    pub layer: i16,
 }
 
 impl Eq for PotentialEvent {}

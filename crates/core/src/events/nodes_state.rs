@@ -6,9 +6,8 @@ use freya_native_core::{
     prelude::NodeImmutable,
     NodeId,
 };
-use rustc_hash::FxHashMap;
+use rustc_hash::FxHashSet;
 
-use super::PlatformEventData;
 use crate::{
     dom::FreyaDOM,
     events::{
@@ -22,37 +21,32 @@ use crate::{
     values::Fill,
 };
 
-#[derive(Clone, Debug)]
-struct NodeMetadata {
-    layer: Option<i16>,
-}
-
 /// [`NodesState`] stores the nodes states given incoming events.
 #[derive(Default)]
 pub struct NodesState {
-    pressed_nodes: FxHashMap<NodeId, NodeMetadata>,
-    hovered_nodes: FxHashMap<NodeId, NodeMetadata>,
+    pressed_nodes: FxHashSet<NodeId>,
+    hovered_nodes: FxHashSet<NodeId>,
 }
 
 impl NodesState {
-    /// Update the node states given the new events and suggest potential collateral new events
-    pub fn process_collateral(
+    /// Retain or not the states of the nodes given the [DomEvent]s and based on the sideffects of these removals
+    /// a set of [PotentialEvent]s are returned.
+    pub fn retain_states(
         &mut self,
         fdom: &FreyaDOM,
-        potential_events: &PotentialEvents,
-        dom_events: &mut Vec<DomEvent>,
+        dom_events: &[DomEvent],
         events: &[PlatformEvent],
-    ) -> PotentialEvents {
-        let rdom = fdom.rdom();
+        scale_factor: f64,
+    ) -> Vec<DomEvent> {
         let layout = fdom.layout();
-        let mut potential_collateral_events = PotentialEvents::default();
+        let mut collateral_dom_events = Vec::default();
 
         // Any mouse press event at all
         let recent_mouse_press_event = any_event_of(events, |e| e.is_pressed());
 
         // Pressed Nodes
         #[allow(unused_variables)]
-        self.pressed_nodes.retain(|node_id, _| {
+        self.pressed_nodes.retain(|node_id| {
             // Check if a DOM event that presses this Node will get emitted
             let no_desire_to_press = filter_dom_events_by(dom_events, node_id, |e| e.is_pressed());
 
@@ -73,28 +67,24 @@ impl NodesState {
         let recent_mouse_movement_event = any_event_of(events, |e| e.is_moved());
 
         // Hovered Nodes
-        self.hovered_nodes.retain(|node_id, metadata| {
+        self.hovered_nodes.retain(|node_id| {
             // Check if a DOM event that moves the cursor in this Node will get emitted
             let no_desire_to_hover = filter_dom_events_by(dom_events, node_id, |e| e.is_moved());
 
             if no_desire_to_hover {
                 // If there has been a mouse movement but a DOM event was not emitted to this node, then we safely assume
                 // the user does no longer want to hover this Node
-                if let Some(PlatformEventData::Mouse { cursor, button, .. }) =
-                    recent_mouse_movement_event
-                {
-                    if layout.get(*node_id).is_some() {
-                        let events = potential_collateral_events
-                            .entry(EventName::MouseLeave)
-                            .or_default();
-
+                if let Some(PlatformEvent { name, data }) = &recent_mouse_movement_event {
+                    if let Some(layout_node) = layout.get(*node_id) {
                         // Emit a MouseLeave event as the cursor was moved outside the Node bounds
-                        events.push(PotentialEvent {
-                            node_id: *node_id,
-                            layer: metadata.layer,
-                            name: EventName::MouseLeave,
-                            data: PlatformEventData::Mouse { cursor, button },
-                        });
+                        collateral_dom_events.push(DomEvent::new(
+                            *node_id,
+                            EventName::MouseLeave,
+                            *name,
+                            data.clone(),
+                            Some(layout_node.area),
+                            scale_factor,
+                        ));
 
                         #[cfg(debug_assertions)]
                         tracing::info!("Unmarked as hovered {:?}", node_id);
@@ -107,29 +97,32 @@ impl NodesState {
             true
         });
 
+        collateral_dom_events
+    }
+
+    pub fn filter_dom_events(&self, dom_events: &mut Vec<DomEvent>) {
         dom_events.retain(|ev| {
             match ev.name {
                 // Only let through enter events when the node was not hovered
-                _ if ev.name.is_enter() => !self.hovered_nodes.contains_key(&ev.node_id),
+                _ if ev.name.is_enter() => !self.hovered_nodes.contains(&ev.node_id),
 
                 // Only let through release events when the node was already pressed
-                _ if ev.name.is_released() => self.pressed_nodes.contains_key(&ev.node_id),
+                _ if ev.name.is_released() => self.pressed_nodes.contains(&ev.node_id),
 
                 _ => true,
             }
         });
+    }
+
+    /// Create the nodes states given the [PotentialEvent]s.
+    pub fn create_states(&mut self, fdom: &FreyaDOM, potential_events: &PotentialEvents) {
+        let rdom = fdom.rdom();
 
         // Update the state of the nodes given the new events.
         for events in potential_events.values() {
             let mut child_node: Option<NodeId> = None;
 
-            for PotentialEvent {
-                node_id,
-                name,
-                layer,
-                ..
-            } in events.iter().rev()
-            {
+            for PotentialEvent { node_id, name, .. } in events.iter().rev() {
                 if let Some(child_node) = child_node {
                     if !is_node_parent_of(rdom, child_node, *node_id) {
                         continue;
@@ -150,37 +143,27 @@ impl NodesState {
                     // Update hovered nodes state
                     name if name.is_hovered() => {
                         // Mark the Node as hovered if it wasn't already
-                        self.hovered_nodes.entry(*node_id).or_insert_with(|| {
-                            #[cfg(debug_assertions)]
-                            tracing::info!("Marked as hovered {:?}", node_id);
+                        self.hovered_nodes.insert(*node_id);
 
-                            NodeMetadata { layer: *layer }
-                        });
+                        #[cfg(debug_assertions)]
+                        tracing::info!("Marked as hovered {:?}", node_id);
                     }
 
                     // Update pressed nodes state
                     name if name.is_pressed() => {
                         // Mark the Node as pressed if it wasn't already
-                        self.pressed_nodes.entry(*node_id).or_insert_with(|| {
-                            #[cfg(debug_assertions)]
-                            tracing::info!("Marked as pressed {:?}", node_id);
+                        self.pressed_nodes.insert(*node_id);
 
-                            NodeMetadata { layer: *layer }
-                        });
+                        #[cfg(debug_assertions)]
+                        tracing::info!("Marked as pressed {:?}", node_id);
                     }
                     _ => {}
                 }
             }
         }
-
-        // Order the events by their Nodes layer
-        for events in potential_collateral_events.values_mut() {
-            events.sort_by(|left, right| left.layer.cmp(&right.layer))
-        }
-
-        potential_collateral_events
     }
 
+    /// Clear the state of a given [NodeId] and a [EventName].
     pub fn clear_state(&mut self, name: &EventName, node_id: &NodeId) {
         match name {
             _ if name.is_hovered() => {
@@ -197,25 +180,16 @@ impl NodesState {
 fn any_event_of(
     events: &[PlatformEvent],
     filter: impl Fn(EventName) -> bool,
-) -> Option<PlatformEventData> {
-    events
-        .iter()
-        .find_map(|event| {
-            if filter(event.name) {
-                Some(&event.data)
-            } else {
-                None
-            }
-        })
-        .cloned()
+) -> Option<&PlatformEvent> {
+    events.iter().find(|event| filter(event.name))
 }
 
 fn filter_dom_events_by(
-    events_to_emit: &[DomEvent],
+    dom_events: &[DomEvent],
     node_id: &NodeId,
     filter: impl Fn(EventName) -> bool,
 ) -> bool {
-    events_to_emit
+    dom_events
         .iter()
         .find_map(|event| {
             if filter(event.name) && &event.node_id == node_id {

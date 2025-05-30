@@ -4,10 +4,7 @@ use accesskit::{
     Node,
     Role,
 };
-use dioxus_core::{
-    Event,
-    VirtualDom,
-};
+use dioxus_core::VirtualDom;
 use freya_core::{
     accessibility::{
         AccessibilityFocusStrategy,
@@ -19,8 +16,8 @@ use freya_core::{
         TextGroupMeasurement,
     },
     events::{
+        handle_processed_events,
         process_events,
-        DomEvent,
         NodesState,
         PlatformEvent,
     },
@@ -48,7 +45,6 @@ use freya_core::{
     },
 };
 use freya_engine::prelude::*;
-use freya_native_core::prelude::NodeImmutableDioxusExt;
 use futures_task::Waker;
 use futures_util::Future;
 use tokio::{
@@ -233,51 +229,8 @@ impl Application {
         {
             let fut = std::pin::pin!(async {
                 select! {
-                    Some((mut dom_events, flattened_potential_events)) = self.event_receiver.recv() => {
-                        let fdom = self.sdom.get();
-                        let rdom = fdom.rdom();
-                        let mut processed_events = Vec::<DomEvent>::new();
-
-                        while !dom_events.is_empty() {
-                            let dom_event = dom_events.remove(0);
-
-                            let Some(element_id) = rdom
-                                .get(dom_event.node_id)
-                                .and_then(|node| node.mounted_id()) else {
-                                    continue;
-                                };
-                            let event_name = dom_event.name;
-                            let event = Event::new(dom_event.data.clone().any(), dom_event.bubbles);
-                            let event_clone = event.clone();
-                            self.vdom
-                                .runtime()
-                                .handle_event(event_name.into(), event, element_id);
-
-                            if !event_clone.default_action_enabled() {
-
-                                let cancellable_events = dom_event.name.get_cancellable_events();
-
-                                // Remove the rest of dom events that are cancellable
-                                dom_events.retain(|event| {
-                                    !cancellable_events.contains(&event.name)
-                                });
-
-                                // Discard all the potential events that don't match the processed events
-                                // And that can be cancelled
-                                // This should include this event itself
-                                for potential_event in &flattened_potential_events {
-                                    let is_cancellable = cancellable_events.contains(&potential_event.name);
-                                    if is_cancellable {
-                                        let processed_event = processed_events.iter().find(|event| potential_event.name == event.source_name && potential_event.node_id == event.node_id);
-                                        if processed_event.is_none() {
-                                            self.nodes_state.clear_state(&potential_event.name, &potential_event.node_id);
-                                        }
-                                    }
-                                }
-                            }
-                            processed_events.push(dom_event);
-                            self.vdom.process_events();
-                        }
+                    Some((dom_events, flattened_potential_events)) = self.event_receiver.recv() => {
+                        handle_processed_events(&self.sdom, &mut self.vdom, &mut self.nodes_state, dom_events, flattened_potential_events)
                     },
                     _ = self.vdom.wait_for_work() => {},
                 }

@@ -28,6 +28,13 @@ fn app() -> Element {
                     println!("clicked 2");
                 },
             }
+            Button {
+                Button {
+                    label {
+                        "hi"
+                    }
+                }
+            }
         }
     )
 }
