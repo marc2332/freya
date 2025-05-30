@@ -19,13 +19,13 @@ use torin::prelude::*;
 use super::{
     EventName,
     PlatformEventData,
-    PotentialEvent,
 };
 
 /// Event emitted to the DOM.
 #[derive(Debug, Clone, PartialEq)]
 pub struct DomEvent {
     pub name: EventName,
+    pub source_name: EventName,
     pub node_id: NodeId,
     pub data: DomEventData,
     pub bubbles: bool,
@@ -47,18 +47,16 @@ impl Ord for DomEvent {
 
 impl DomEvent {
     pub fn new(
-        PotentialEvent {
-            node_id,
-            name,
-            data,
-            ..
-        }: PotentialEvent,
+        node_id: NodeId,
+        name: EventName,
+        source_name: EventName,
+        platform_data: PlatformEventData,
         node_area: Option<Area>,
         scale_factor: f64,
     ) -> Self {
         let bubbles = name.does_bubble();
 
-        match data {
+        match platform_data {
             PlatformEventData::Mouse { cursor, button, .. } => {
                 let screen_coordinates = cursor / scale_factor;
                 let element_x =
@@ -85,6 +83,7 @@ impl DomEvent {
                 Self {
                     node_id,
                     name,
+                    source_name,
                     data: event_data,
                     bubbles,
                 }
@@ -92,6 +91,7 @@ impl DomEvent {
             PlatformEventData::Wheel { scroll, .. } => Self {
                 node_id,
                 name,
+                source_name,
                 data: DomEventData::Wheel(WheelData::new(scroll.x, scroll.y)),
                 bubbles,
             },
@@ -103,6 +103,7 @@ impl DomEvent {
             } => Self {
                 node_id,
                 name,
+                source_name,
                 data: DomEventData::Keyboard(KeyboardData::new(key.clone(), code, modifiers)),
                 bubbles,
             },
@@ -139,6 +140,7 @@ impl DomEvent {
                 Self {
                     node_id,
                     name,
+                    source_name,
                     data: event_data,
                     bubbles,
                 }
@@ -149,6 +151,7 @@ impl DomEvent {
                 Self {
                     node_id,
                     name,
+                    source_name,
                     data: event_data,
                     bubbles,
                 }

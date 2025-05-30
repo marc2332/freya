@@ -4,7 +4,10 @@ use freya_native_core::{
     tree::TreeRef,
     NodeId,
 };
-use itertools::sorted;
+use itertools::{
+    sorted,
+    Itertools,
+};
 
 use super::{
     PlatformEventData,
@@ -67,8 +70,13 @@ pub fn process_events(
     dom_events.extend(collateral_dom_events);
     dom_events.sort_unstable();
 
+    let mut flattened_potential_events = potential_events.into_values().flatten().collect_vec();
+    flattened_potential_events.sort_unstable();
+
     // Send all the events
-    event_emitter.send(dom_events).unwrap();
+    event_emitter
+        .send((dom_events, flattened_potential_events))
+        .unwrap();
 
     // Clear the events queue
     events.clear();
@@ -94,12 +102,10 @@ pub fn measure_platform_global_events(
 
             for listener in listeners {
                 let event = DomEvent::new(
-                    PotentialEvent {
-                        node_id: listener.id(),
-                        layer: None,
-                        name: global_name,
-                        data: data.clone(),
-                    },
+                    listener.id(),
+                    global_name,
+                    *name,
+                    data.clone(),
                     None,
                     scale_factor,
                 );
@@ -233,13 +239,13 @@ fn measure_dom_events(
 
     for (event_name, event_nodes) in potential_events {
         // Get the derived events, but exclude globals like some file events
-        let derived_events = event_name
+        let derived_events_names = event_name
             .get_derived_events()
             .into_iter()
             .filter(|event| !event.is_global());
 
         // Iterate over the derived events (including the source)
-        'event: for derived_event in derived_events {
+        'event: for derived_event_name in derived_events_names {
             let mut child_node: Option<NodeId> = None;
 
             // Iterate over the potential events in reverse so the ones in higher layers appeat first
@@ -247,7 +253,7 @@ fn measure_dom_events(
                 node_id,
                 data,
                 name,
-                layer,
+                ..
             } in event_nodes.iter().rev()
             {
                 let Some(node) = rdom.get(*node_id) else {
@@ -260,17 +266,13 @@ fn measure_dom_events(
                     }
                 }
 
-                if rdom.is_node_listening(node_id, &derived_event) {
-                    let potential_event = PotentialEvent {
-                        node_id: *node_id,
-                        name: derived_event,
-                        data: data.clone(),
-                        layer: *layer,
-                    };
-
+                if rdom.is_node_listening(node_id, &derived_event_name) {
                     let layout_node = layout.get(*node_id).unwrap();
                     let dom_event = DomEvent::new(
-                        potential_event,
+                        *node_id,
+                        derived_event_name,
+                        *event_name,
+                        data.clone(),
                         Some(layout_node.visible_area()),
                         scale_factor,
                     );

@@ -14,14 +14,14 @@ use winit::event::{
 };
 
 /// Events emitted by a Freya platform, such as desktop or freya-testing.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct PlatformEvent {
     pub name: EventName,
     pub data: PlatformEventData,
 }
 
 /// Data for [PlatformEvent].
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum PlatformEventData {
     /// A Mouse Event.
     Mouse {

@@ -180,6 +180,18 @@ impl NodesState {
 
         potential_collateral_events
     }
+
+    pub fn clear_state(&mut self, name: &EventName, node_id: &NodeId) {
+        match name {
+            _ if name.is_hovered() => {
+                self.hovered_nodes.remove(node_id);
+            }
+            _ if name.is_pressed() => {
+                self.pressed_nodes.remove(node_id);
+            }
+            _ => {}
+        }
+    }
 }
 
 fn any_event_of(

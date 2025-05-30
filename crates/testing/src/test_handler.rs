@@ -189,7 +189,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
                 }
             }
 
-            if let Ok(events) = vdom_events {
+            if let Ok((events, _)) = vdom_events {
                 let fdom = self.utils.sdom().get();
                 let rdom = fdom.rdom();
                 for event in events {

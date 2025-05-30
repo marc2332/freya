@@ -128,16 +128,23 @@ impl PartialOrd for EventName {
 impl Ord for EventName {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match self {
-            // Always prioritize leave events before anything else
-            Self::MouseLeave | Self::PointerLeave => {
-                if self == other {
+            // Pointer globals have more priority over other globals
+            e if e.is_global() && e.is_pointer() && other.is_global() && !e.is_pointer() => {
+                std::cmp::Ordering::Less
+            }
+            // Globals have more priority over non-globals
+            e if e.is_global() && !other.is_global() => std::cmp::Ordering::Less,
+            // Pointer have more priority over non-pointer
+            e if e.is_pointer() && !other.is_pointer() => std::cmp::Ordering::Less,
+            // Left have more priority over non-left
+            e if e.is_left() => std::cmp::Ordering::Less,
+            e => {
+                if e == other {
                     std::cmp::Ordering::Equal
                 } else {
-                    std::cmp::Ordering::Less
+                    std::cmp::Ordering::Greater
                 }
             }
-
-            _ => std::cmp::Ordering::Greater,
         }
     }
 }
@@ -182,6 +189,27 @@ impl EventName {
         events
     }
 
+    /// Get what events should be cancelled by this [EventName].
+    pub fn get_cancellable_events(&self) -> SmallVec<[Self; 4]> {
+        let mut events = SmallVec::new();
+
+        events.push(*self);
+
+        match self {
+            Self::PointerUp => events.extend([Self::Click, Self::MiddleClick, Self::PointerUp]),
+            Self::PointerDown => events.extend([Self::MouseDown, Self::PointerDown]),
+            Self::GlobalMouseMove => events.extend([
+                Self::MouseMove,
+                Self::MouseEnter,
+                Self::MouseLeave,
+                Self::GlobalMouseMove,
+            ]),
+            _ => {}
+        }
+
+        events
+    }
+
     /// Check if the event means that the pointer (e.g. cursor) just entered a Node
     pub fn is_enter(&self) -> bool {
         matches!(&self, Self::MouseEnter | Self::PointerEnter)
@@ -211,6 +239,21 @@ impl EventName {
                 | Self::PointerDown
                 | Self::PointerUp
                 | Self::GlobalPointerUp
+        )
+    }
+
+    /// Check if it's one of the Mouse variants
+    pub fn is_mouse(&self) -> bool {
+        matches!(
+            &self,
+            Self::Click
+                | Self::MouseDown
+                | Self::MouseMove
+                | Self::MouseEnter
+                | Self::MiddleClick
+                | Self::GlobalClick
+                | Self::GlobalMouseDown
+                | Self::GlobalMouseMove
         )
     }
 

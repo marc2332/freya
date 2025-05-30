@@ -695,3 +695,38 @@ pub async fn does_not_bubble_global_events() {
 
     assert_eq!(root.get(0).get(1).get(0).text(), Some("2"));
 }
+
+#[tokio::test]
+pub async fn prevent_default_pointer() {
+    fn prevent_default_app() -> Element {
+        let mut clicks = use_signal(|| 0);
+
+        rsx!(
+            rect {
+                onclick: move |_| clicks += 1,
+                width: "200",
+                height: "200",
+                background: "blue",
+                rect {
+                    width: "100",
+                    height: "100",
+                    background: "red",
+                    onpointerup: move |e| e.prevent_default(),
+                }
+                label {
+                    "{clicks}"
+                }
+            }
+        )
+    }
+
+    let mut utils = launch_test(prevent_default_app);
+
+    let root = utils.root();
+
+    assert_eq!(root.get(0).get(1).get(0).text(), Some("0"));
+
+    utils.click_cursor((5., 5.)).await;
+
+    assert_eq!(root.get(0).get(1).get(0).text(), Some("0"));
+}
