@@ -37,6 +37,12 @@ fn parse_hex_color() {
 }
 
 #[test]
+fn parse_hex_transparent_color() {
+    let color = Color::parse("#5b7b3980");
+    assert_eq!(color, Ok(Color::from_argb(128, 91, 123, 57)));
+}
+
+#[test]
 fn invalid_colors() {
     let incorrect_name = Color::parse("wow(0, 0, 0)");
     let extra_lparen = Color::parse("rgb((0, 0, 0)");
