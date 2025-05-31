@@ -1,4 +1,7 @@
-use dioxus_core::prelude::try_consume_context;
+use dioxus_core::{
+    prelude::try_consume_context,
+    use_hook,
+};
 use dioxus_hooks::{
     use_context,
     use_context_provider,
@@ -32,6 +35,26 @@ pub fn use_get_theme() -> Theme {
     try_consume_context::<Signal<Theme>>()
         .map(|v| v.read().clone())
         .unwrap_or_default()
+}
+
+/// Indicates what type of surface to use.
+#[derive(Clone, Copy, PartialEq, Debug, Default)]
+pub enum SurfaceThemeIndicator {
+    #[default]
+    Primary,
+    Opposite,
+}
+
+/// Provide a [SurfaceThemeIndicator] down to the components.
+pub fn use_init_surface_theme_indicator(
+    theme: impl FnOnce() -> SurfaceThemeIndicator,
+) -> SurfaceThemeIndicator {
+    use_context_provider(theme)
+}
+
+/// Get the inherited [SurfaceThemeIndicator].
+pub fn use_surface_theme_indicator() -> SurfaceThemeIndicator {
+    use_hook(|| try_consume_context().unwrap_or_default())
 }
 
 /// This macro has three arguments separator by commas.
