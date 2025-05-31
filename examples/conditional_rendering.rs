@@ -38,6 +38,12 @@ fn app() -> Element {
     )
 }
 
+#[derive(Copy, Clone)]
+enum Components {
+    Component1,
+    Component2,
+}
+
 #[component]
 fn ConditionalComponent() -> Element {
     let visible_component = *VISIBLE_COMPONENT.read();
@@ -45,12 +51,6 @@ fn ConditionalComponent() -> Element {
         Components::Component1 => rsx!(Component1 {}),
         Components::Component2 => rsx!(Component2 {}),
     }
-}
-
-#[derive(Copy, PartialEq, Clone)]
-pub enum Components {
-    Component1,
-    Component2,
 }
 
 #[component]
