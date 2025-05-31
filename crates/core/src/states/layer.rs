@@ -41,11 +41,14 @@ impl ParseAttribute for LayerState {
         #[allow(clippy::single_match)]
         match attr.attribute {
             AttributeName::Layer => {
-                if let Some(value) = attr.value.as_text() {
-                    let layer = value.parse::<i16>().map_err(|_| ParseError)?;
-                    self.layer -= layer;
-                    self.layer_for_children += layer;
-                }
+                let layer = attr
+                    .value
+                    .as_text()
+                    .ok_or(ParseError)?
+                    .parse::<i16>()
+                    .map_err(|_| ParseError)?;
+                self.layer -= layer;
+                self.layer_for_children += layer;
             }
             _ => {}
         }

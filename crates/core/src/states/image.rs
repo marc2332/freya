@@ -64,9 +64,7 @@ impl ParseAttribute for ImageState {
     ) -> Result<(), ParseError> {
         match attr.attribute {
             AttributeName::Sampling => {
-                if let Some(value) = attr.value.as_text() {
-                    self.image_sampling = SamplingMode::parse(value)?;
-                }
+                self.image_sampling = SamplingMode::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::ImageData => {
                 if let OwnedAttributeValue::Custom(CustomAttributeValues::Bytes(bytes)) = attr.value
@@ -80,14 +78,12 @@ impl ParseAttribute for ImageState {
                 }
             }
             AttributeName::AspectRatio => {
-                if let Some(value) = attr.value.as_text() {
-                    self.aspect_ratio = AspectRatio::parse(value).map_err(|_| ParseError)?;
-                }
+                self.aspect_ratio = AspectRatio::parse(attr.value.as_text().ok_or(ParseError)?)
+                    .map_err(|_| ParseError)?;
             }
             AttributeName::ImageCover => {
-                if let Some(value) = attr.value.as_text() {
-                    self.image_cover = ImageCover::parse(value).map_err(|_| ParseError)?;
-                }
+                self.image_cover = ImageCover::parse(attr.value.as_text().ok_or(ParseError)?)
+                    .map_err(|_| ParseError)?;
             }
             AttributeName::ImageReference => {
                 if let OwnedAttributeValue::Custom(CustomAttributeValues::ImageReference(

@@ -65,116 +65,107 @@ impl ParseAttribute for LayoutState {
     ) -> Result<(), ParseError> {
         match attr.attribute {
             AttributeName::Width => {
-                if let Some(value) = attr.value.as_text() {
-                    self.width = Size::parse(value)?;
-                }
+                self.width = Size::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::Height => {
-                if let Some(value) = attr.value.as_text() {
-                    self.height = Size::parse(value)?;
-                }
+                self.height = Size::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::MinHeight => {
-                if let Some(value) = attr.value.as_text() {
-                    self.minimum_height = Size::parse(value)?;
-                }
+                self.minimum_height = Size::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::MinWidth => {
-                if let Some(value) = attr.value.as_text() {
-                    self.minimum_width = Size::parse(value)?;
-                }
+                self.minimum_width = Size::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::MaxHeight => {
-                if let Some(value) = attr.value.as_text() {
-                    self.maximum_height = Size::parse(value)?;
-                }
+                self.maximum_height = Size::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::MaxWidth => {
-                if let Some(value) = attr.value.as_text() {
-                    self.maximum_width = Size::parse(value)?;
-                }
+                self.maximum_width = Size::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::VisibleWidth => {
-                if let Some(value) = attr.value.as_text() {
-                    self.visible_width = VisibleSize::parse(value)?;
-                }
+                self.visible_width = VisibleSize::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::VisibleHeight => {
-                if let Some(value) = attr.value.as_text() {
-                    self.visible_height = VisibleSize::parse(value)?;
-                }
+                self.visible_height = VisibleSize::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::Padding => {
-                if let Some(value) = attr.value.as_text() {
-                    self.padding = Gaps::parse(value)?;
-                }
+                self.padding = Gaps::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::Margin => {
-                if let Some(value) = attr.value.as_text() {
-                    self.margin = Gaps::parse(value)?;
-                }
+                self.margin = Gaps::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::Direction => {
-                if let Some(value) = attr.value.as_text() {
-                    self.direction = match value {
-                        "horizontal" => Direction::Horizontal,
-                        _ => Direction::Vertical,
-                    }
-                }
+                self.direction = match attr.value.as_text().ok_or(ParseError)? {
+                    "horizontal" => Direction::Horizontal,
+                    _ => Direction::Vertical,
+                };
             }
             AttributeName::OffsetY => {
-                if let Some(value) = attr.value.as_text() {
-                    self.offset_y = Length::new(value.parse::<f32>().map_err(|_| ParseError)?);
-                }
+                self.offset_y = Length::new(
+                    attr.value
+                        .as_text()
+                        .ok_or(ParseError)?
+                        .parse::<f32>()
+                        .map_err(|_| ParseError)?,
+                );
             }
             AttributeName::OffsetX => {
-                if let Some(value) = attr.value.as_text() {
-                    self.offset_x = Length::new(value.parse::<f32>().map_err(|_| ParseError)?);
-                }
+                self.offset_x = Length::new(
+                    attr.value
+                        .as_text()
+                        .ok_or(ParseError)?
+                        .parse::<f32>()
+                        .map_err(|_| ParseError)?,
+                );
             }
             AttributeName::MainAlign => {
-                if let Some(value) = attr.value.as_text() {
-                    self.main_alignment = Alignment::parse(value)?;
-                }
+                self.main_alignment = Alignment::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::CrossAlign => {
-                if let Some(value) = attr.value.as_text() {
-                    self.cross_alignment = Alignment::parse(value)?;
-                }
+                self.cross_alignment = Alignment::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::Position => {
-                if let Some(value) = attr.value.as_text() {
-                    self.position.swap_for(Position::parse(value)?);
-                }
+                self.position
+                    .swap_for(Position::parse(attr.value.as_text().ok_or(ParseError)?)?);
             }
             AttributeName::PositionTop => {
-                if let Some(value) = attr.value.as_text() {
-                    self.position
-                        .set_top(value.parse::<f32>().map_err(|_| ParseError)?);
-                }
+                self.position.set_top(
+                    attr.value
+                        .as_text()
+                        .ok_or(ParseError)?
+                        .parse::<f32>()
+                        .map_err(|_| ParseError)?,
+                );
             }
             AttributeName::PositionRight => {
-                if let Some(value) = attr.value.as_text() {
-                    self.position
-                        .set_right(value.parse::<f32>().map_err(|_| ParseError)?);
-                }
+                self.position.set_right(
+                    attr.value
+                        .as_text()
+                        .ok_or(ParseError)?
+                        .parse::<f32>()
+                        .map_err(|_| ParseError)?,
+                );
             }
             AttributeName::PositionBottom => {
-                if let Some(value) = attr.value.as_text() {
-                    self.position
-                        .set_bottom(value.parse::<f32>().map_err(|_| ParseError)?);
-                }
+                self.position.set_bottom(
+                    attr.value
+                        .as_text()
+                        .ok_or(ParseError)?
+                        .parse::<f32>()
+                        .map_err(|_| ParseError)?,
+                );
             }
             AttributeName::PositionLeft => {
-                if let Some(value) = attr.value.as_text() {
-                    self.position
-                        .set_left(value.parse::<f32>().map_err(|_| ParseError)?);
-                }
+                self.position.set_left(
+                    attr.value
+                        .as_text()
+                        .ok_or(ParseError)?
+                        .parse::<f32>()
+                        .map_err(|_| ParseError)?,
+                );
             }
             AttributeName::Content => {
-                if let Some(value) = attr.value.as_text() {
-                    self.content = Content::parse(value)?;
-                }
+                self.content = Content::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::Reference => {
                 if let OwnedAttributeValue::Custom(CustomAttributeValues::Reference(reference)) =
@@ -184,9 +175,13 @@ impl ParseAttribute for LayoutState {
                 }
             }
             AttributeName::Spacing => {
-                if let Some(value) = attr.value.as_text() {
-                    self.spacing = Length::new(value.parse::<f32>().map_err(|_| ParseError)?);
-                }
+                self.spacing = Length::new(
+                    attr.value
+                        .as_text()
+                        .ok_or(ParseError)?
+                        .parse::<f32>()
+                        .map_err(|_| ParseError)?,
+                );
             }
             _ => {}
         }
