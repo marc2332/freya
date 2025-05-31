@@ -8,6 +8,7 @@ use dioxus_hooks::{
 };
 use dioxus_signals::{
     CopyValue,
+    MappedSignal,
     Readable,
     ReadableRef,
     Signal,
@@ -98,8 +99,8 @@ impl<Data, Answer> UsePopupAnswer<Data, Answer> {
     }
 
     /// Read the data provided to this popup, if any.
-    pub fn data(&self) -> ReadableRef<Signal<Option<Data>>> {
-        self.data.read_unchecked()
+    pub fn data(&self) -> MappedSignal<Data> {
+        self.data.map(|data| data.as_ref().unwrap())
     }
 }
 
