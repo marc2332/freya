@@ -12,7 +12,10 @@ use winit::{
         ActiveEventLoop,
         EventLoopProxy,
     },
-    window::Window,
+    window::{
+        Window,
+        WindowAttributes,
+    },
 };
 
 use crate::{
@@ -75,29 +78,7 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
             unreachable!("Infallible, window should not be created at this point.")
         };
 
-        let mut window_attributes = Window::default_attributes()
-            .with_visible(false)
-            .with_title(config.window_config.title)
-            .with_decorations(config.window_config.decorations)
-            .with_transparent(config.window_config.transparent)
-            .with_window_icon(config.window_config.icon.take())
-            .with_inner_size(LogicalSize::<f64>::from(config.window_config.size));
-
-        set_resource_cache_total_bytes_limit(1000000); // 1MB
-        set_resource_cache_single_allocation_byte_limit(Some(500000)); // 0.5MB
-
-        if let Some(min_size) = config.window_config.min_size {
-            window_attributes =
-                window_attributes.with_min_inner_size(LogicalSize::<f64>::from(min_size));
-        }
-        if let Some(max_size) = config.window_config.max_size {
-            window_attributes =
-                window_attributes.with_max_inner_size(LogicalSize::<f64>::from(max_size));
-        }
-
-        if let Some(with_window_attributes) = config.window_config.window_attributes_hook.take() {
-            window_attributes = (with_window_attributes)(window_attributes);
-        }
+        let window_attributes = Self::create_window_attributes(&mut config.window_config);
 
         let (graphics_driver, window, mut surface) =
             GraphicsDriver::new(event_loop, window_attributes, &config);
@@ -154,5 +135,47 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
             window_config: config.window_config,
             is_window_focused: false,
         });
+    }
+
+    pub fn resume(&mut self, event_loop: &ActiveEventLoop) {
+        let created = self.created_state();
+        let window_attributes = Self::create_window_attributes(&mut created.window_config);
+        let mut config: LaunchConfig<State> = LaunchConfig::default();
+        config.window_config.transparent = created.window_config.transparent;
+
+        let (graphics_driver, window, surface) =
+            GraphicsDriver::new(event_loop, window_attributes, &config);
+
+        created.window = window;
+        created.surface = surface;
+        created.graphics_driver = graphics_driver;
+    }
+
+    fn create_window_attributes(window_config: &mut WindowConfig) -> WindowAttributes {
+        let mut window_attributes = Window::default_attributes()
+            .with_visible(false)
+            .with_title(window_config.title)
+            .with_decorations(window_config.decorations)
+            .with_transparent(window_config.transparent)
+            .with_window_icon(window_config.icon.take())
+            .with_inner_size(LogicalSize::<f64>::from(window_config.size));
+
+        set_resource_cache_total_bytes_limit(1000000); // 1MB
+        set_resource_cache_single_allocation_byte_limit(Some(500000)); // 0.5MB
+
+        if let Some(min_size) = window_config.min_size {
+            window_attributes =
+                window_attributes.with_min_inner_size(LogicalSize::<f64>::from(min_size));
+        }
+        if let Some(max_size) = window_config.max_size {
+            window_attributes =
+                window_attributes.with_max_inner_size(LogicalSize::<f64>::from(max_size));
+        }
+
+        if let Some(with_window_attributes) = window_config.window_attributes_hook.take() {
+            window_attributes = (with_window_attributes)(window_attributes);
+        }
+
+        window_attributes
     }
 }
