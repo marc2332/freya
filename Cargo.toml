@@ -56,7 +56,7 @@ generational-box = { version = "0.6.2" }
 dioxus-clipboard = "0.2.0"
 dioxus-i18n = "0.4.1"
 
-skia-safe = { version = "0.82.0", features = ["gl", "textlayout", "svg"] }
+skia-safe = { version = "0.86.0", features = ["gl", "textlayout", "svg"] }
 
 gl = "0.14.0"
 glutin = "0.32.0"
@@ -87,15 +87,15 @@ freya-testing = { workspace = true }
 reqwest = { version = "0.12.0", features = ["json"] }
 serde = "1.0.189"
 dioxus-i18n = { workspace = true }
-rand = "0.8.5"
+rand = "0.9.0"
 dioxus-router = { workspace = true }
-itertools = "0.13.0"
+itertools = "0.14.0"
 home = "0.5.9"
 dioxus-query = "0.7.0"
-gilrs = "0.10.8"
+gilrs = "0.11.0"
 gl = { workspace = true }
-tree-sitter-highlight = "0.23.0"
-tree-sitter-rust = "0.23.0"
+tree-sitter-highlight = "0.25.0"
+tree-sitter-rust = "0.24.0"
 rfd = "0.15.3"
 bytes = "1.5.0"
 dioxus-clipboard = { workspace = true }

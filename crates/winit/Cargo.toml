@@ -27,7 +27,7 @@ torin = { workspace = true }
 
 freya-native-core = { workspace = true }
 dioxus-core = { workspace = true }
-keyboard-types = "0.7.0"
+keyboard-types = "0.8.0"
 
 tokio = { workspace = true }
 gl = { workspace = true }
@@ -41,5 +41,5 @@ tracing = { workspace = true }
 futures-task = { workspace = true }
 futures-util = { workspace = true }
 
-itertools = "0.13.0"
+itertools = "0.14.0"
 image = { version = "0.25.0", default-features = false, features = [ "ico", "png", "jpeg"]}

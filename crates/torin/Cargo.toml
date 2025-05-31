@@ -22,7 +22,7 @@ rustc-hash = { workspace = true }
 freya-native-core = { workspace = true, optional = true }
 
 [dev-dependencies]
-criterion = "0.5.1"
+criterion = "0.6.0"
 
 [lib]
 bench = false
