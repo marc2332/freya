@@ -54,14 +54,12 @@ fn app() -> Element {
 
     rsx!(
         Body {
-            rect {
-                direction: "horizontal",
-                ShaderEditor {
-                    editable
-                }
-                ShaderView {
-                    editable
-                }
+            direction: "horizontal",
+            ShaderEditor {
+                editable
+            }
+            ShaderView {
+                editable
             }
         }
     )

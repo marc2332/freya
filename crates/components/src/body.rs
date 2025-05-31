@@ -13,14 +13,18 @@ pub struct BodyProps {
     pub theme: Option<BodyThemeWith>,
     /// Inner children for the Body.
     pub children: Element,
+    /// Main alignment of the Body.
+    pub main_align: Option<String>,
+    /// Cross alignment of the Body.
+    pub cross_align: Option<String>,
     /// Spacing for the inner children of the Body.
     pub spacing: Option<String>,
     /// Padding for the inner children of the Body.
     pub padding: Option<String>,
-    /// Width of the Body.
+    /// Width of the Body. Defaults to `fill`.
     #[props(default = "fill".to_string())]
     pub width: String,
-    /// Height of the Body.
+    /// Height of the Body. Defaults to `fill`.
     #[props(default = "fill".to_string())]
     pub height: String,
     /// Direction of the Body.
@@ -52,6 +56,8 @@ pub fn Body(
     BodyProps {
         children,
         theme,
+        main_align,
+        cross_align,
         spacing,
         padding,
         width,
@@ -71,6 +77,8 @@ pub fn Body(
             spacing,
             padding,
             direction,
+            main_align,
+            cross_align,
             {&children}
         }
     )

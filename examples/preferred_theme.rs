@@ -31,18 +31,14 @@ fn app() -> Element {
 
     rsx!(
         Body {
-            rect {
-                width: "fill",
-                height: "fill",
-                main_align: "center",
-                cross_align: "center",
-                Switch {
-                    enabled: is_dark,
-                    ontoggled: move |_| { }
-                }
-                label {
-                    "Current Theme: {current_theme.read().name}"
-                }
+            main_align: "center",
+            cross_align: "center",
+            Switch {
+                enabled: is_dark,
+                ontoggled: move |_| { }
+            }
+            label {
+                "Current Theme: {current_theme.read().name}"
             }
         }
     )
