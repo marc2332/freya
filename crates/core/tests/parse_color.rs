@@ -37,6 +37,12 @@ fn parse_hex_color() {
 }
 
 #[test]
+fn parse_3_char_hex_color() {
+    let color = Color::parse("#F42");
+    assert_eq!(color, Ok(Color::from_rgb(255, 68, 34)));
+}
+
+#[test]
 fn invalid_colors() {
     let incorrect_name = Color::parse("wow(0, 0, 0)");
     let extra_lparen = Color::parse("rgb((0, 0, 0)");
