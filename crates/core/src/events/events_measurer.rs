@@ -1,5 +1,6 @@
 use freya_engine::prelude::*;
 use freya_native_core::{
+    events::EventName,
     real_dom::NodeImmutable,
     tree::TreeRef,
     NodeId,
@@ -55,14 +56,13 @@ pub fn process_events(
     // Get what events can be actually emitted based on what elements are listening
     let mut dom_events = measure_dom_events(&potential_events, fdom, scale_factor);
 
-    // Get dom ollateral events, e.g. mousemove -> mouseenter
+    // Get potential collateral events, e.g. mousemove -> mouseenter
     let collateral_dom_events = nodes_state.retain_states(fdom, &dom_events, events, scale_factor);
     nodes_state.filter_dom_events(&mut dom_events);
     nodes_state.create_states(fdom, &potential_events);
 
     // Get the global events
     measure_platform_global_events(fdom, events, &mut dom_events, scale_factor);
-
     // Join all the dom events and sort them
     dom_events.extend(collateral_dom_events);
     dom_events.sort_unstable();
@@ -87,8 +87,13 @@ pub fn measure_platform_global_events(
     scale_factor: f64,
 ) {
     let rdom = fdom.rdom();
-    for PlatformEvent { name, data } in events {
-        let derived_events_names = name.get_derived_events();
+    for PlatformEvent {
+        platform_name,
+        platform_data,
+    } in events
+    {
+        let event: EventName = (*platform_name).into();
+        let derived_events_names = event.get_derived_events();
 
         for derived_event_name in derived_events_names {
             let Some(global_name) = derived_event_name.get_global_event() else {
@@ -101,8 +106,8 @@ pub fn measure_platform_global_events(
                 let event = DomEvent::new(
                     listener.id(),
                     global_name,
-                    *name,
-                    data.clone(),
+                    *platform_name,
+                    platform_data.clone(),
                     None,
                     scale_factor,
                 );
@@ -131,8 +136,12 @@ pub fn measure_potential_events(
             let Some(layout_node) = layout.get(*node_id) else {
                 continue;
             };
-            'events: for PlatformEvent { name, data } in events {
-                let cursor = match data {
+            'events: for PlatformEvent {
+                platform_name,
+                platform_data,
+            } in events
+            {
+                let cursor = match platform_data {
                     PlatformEventData::Mouse { cursor, .. } => cursor,
                     PlatformEventData::Wheel { cursor, .. } => cursor,
                     PlatformEventData::Touch { location, .. } => location,
@@ -141,11 +150,12 @@ pub fn measure_potential_events(
                         let potential_event = PotentialEvent {
                             node_id: *node_id,
                             layer: *layer,
-                            name: *name,
-                            data: data.clone(),
+                            name: (*platform_name).into(),
+                            plarform_event: *platform_name,
+                            platform_data: platform_data.clone(),
                         };
                         potential_events
-                            .entry(*name)
+                            .entry(*platform_name)
                             .or_default()
                             .push(potential_event);
                         continue;
@@ -194,12 +204,13 @@ pub fn measure_potential_events(
                 let potential_event = PotentialEvent {
                     node_id: *node_id,
                     layer: *layer,
-                    name: *name,
-                    data: data.clone(),
+                    name: (*platform_name).into(),
+                    plarform_event: *platform_name,
+                    platform_data: platform_data.clone(),
                 };
 
                 potential_events
-                    .entry(*name)
+                    .entry(*platform_name)
                     .or_insert_with(Vec::new)
                     .push(potential_event);
             }
@@ -234,9 +245,10 @@ fn measure_dom_events(
     let rdom = fdom.rdom();
     let layout = fdom.layout();
 
-    for (event_name, event_nodes) in potential_events {
+    for (platform_name, potential_events) in potential_events {
         // Get the derived events, but exclude globals like some file events
-        let derived_events_names = event_name
+        let event: EventName = (*platform_name).into();
+        let derived_events_names = event
             .get_derived_events()
             .into_iter()
             .filter(|event| !event.is_global());
@@ -248,10 +260,11 @@ fn measure_dom_events(
             // Iterate over the potential events in reverse so the ones in higher layers appeat first
             for PotentialEvent {
                 node_id,
-                data,
+                platform_data,
                 name,
+                plarform_event,
                 ..
-            } in event_nodes.iter().rev()
+            } in potential_events.iter().rev()
             {
                 let Some(node) = rdom.get(*node_id) else {
                     continue;
@@ -268,8 +281,8 @@ fn measure_dom_events(
                     let dom_event = DomEvent::new(
                         *node_id,
                         derived_event_name,
-                        *event_name,
-                        data.clone(),
+                        *plarform_event,
+                        platform_data.clone(),
                         Some(layout_node.visible_area()),
                         scale_factor,
                     );

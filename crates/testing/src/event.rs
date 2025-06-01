@@ -1,9 +1,9 @@
 use std::path::PathBuf;
 
 use freya_core::events::{
-    EventName,
     PlatformEvent,
     PlatformEventData,
+    PlatformEventName,
 };
 use freya_elements::events::{
     Code,
@@ -18,26 +18,26 @@ use torin::prelude::CursorPoint;
 pub enum TestEvent {
     /// A Mouse Event.
     Mouse {
-        name: EventName,
+        name: PlatformEventName,
         cursor: CursorPoint,
         button: Option<MouseButton>,
     },
     /// A Wheel event.
     Wheel {
-        name: EventName,
+        name: PlatformEventName,
         scroll: CursorPoint,
         cursor: CursorPoint,
     },
     /// A Keyboard event.
     Keyboard {
-        name: EventName,
+        name: PlatformEventName,
         key: Key,
         code: Code,
         modifiers: Modifiers,
     },
     /// A Touch event.
     Touch {
-        name: EventName,
+        name: PlatformEventName,
         location: CursorPoint,
         finger_id: u64,
         phase: TouchPhase,
@@ -45,7 +45,7 @@ pub enum TestEvent {
     },
     /// A File event.
     File {
-        name: EventName,
+        name: PlatformEventName,
         cursor: CursorPoint,
         file_path: Option<PathBuf>,
     },
@@ -99,6 +99,9 @@ impl From<TestEvent> for PlatformEvent {
             ),
         };
 
-        PlatformEvent { name, data }
+        PlatformEvent {
+            platform_name: name,
+            platform_data: data,
+        }
     }
 }

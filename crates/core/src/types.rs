@@ -2,7 +2,6 @@ pub use accesskit::{
     Node as AccessibilityNode,
     NodeId as AccessibilityId,
 };
-use freya_native_core::events::EventName;
 use rustc_hash::FxHashMap;
 use smallvec::SmallVec;
 use tokio::sync::{
@@ -17,6 +16,7 @@ use crate::{
     events::{
         DomEvent,
         PlatformEvent,
+        PlatformEventName,
         PotentialEvent,
     },
     platform_state::NativePlatformState,
@@ -38,6 +38,6 @@ pub type EventReceiver = UnboundedReceiver<(Vec<DomEvent>, FlattenedPotentialEve
 pub type EventsQueue = SmallVec<[PlatformEvent; 2]>;
 
 /// Potential events that might be emitted.
-pub type PotentialEvents = FxHashMap<EventName, Vec<PotentialEvent>>;
+pub type PotentialEvents = FxHashMap<PlatformEventName, Vec<PotentialEvent>>;
 
 pub type FlattenedPotentialEvents = Vec<PotentialEvent>;

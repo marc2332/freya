@@ -10,8 +10,6 @@ fn main() {
 }
 
 fn app() -> Element {
-    let mut count = use_signal(|| 0);
-
     rsx!(
 
         rect {

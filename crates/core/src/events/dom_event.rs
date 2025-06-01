@@ -19,13 +19,14 @@ use torin::prelude::*;
 use super::{
     EventName,
     PlatformEventData,
+    PlatformEventName,
 };
 
 /// Event emitted to the DOM.
 #[derive(Debug, Clone, PartialEq)]
 pub struct DomEvent {
     pub name: EventName,
-    pub platform_name: EventName,
+    pub platform_name: PlatformEventName,
     pub node_id: NodeId,
     pub data: DomEventData,
     pub bubbles: bool,
@@ -49,7 +50,7 @@ impl DomEvent {
     pub fn new(
         node_id: NodeId,
         name: EventName,
-        platform_name: EventName,
+        platform_name: PlatformEventName,
         platform_data: PlatformEventData,
         node_area: Option<Area>,
         scale_factor: f64,

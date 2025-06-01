@@ -8,6 +8,7 @@ use freya_native_core::{
 };
 use rustc_hash::FxHashSet;
 
+use super::PlatformEventName;
 use crate::{
     dom::FreyaDOM,
     events::{
@@ -39,6 +40,7 @@ impl NodesState {
         scale_factor: f64,
     ) -> Vec<DomEvent> {
         let layout = fdom.layout();
+        let rdom = fdom.rdom();
         let mut collateral_dom_events = Vec::default();
 
         // Any mouse press event at all
@@ -74,17 +76,27 @@ impl NodesState {
             if no_desire_to_hover {
                 // If there has been a mouse movement but a DOM event was not emitted to this node, then we safely assume
                 // the user does no longer want to hover this Node
-                if let Some(PlatformEvent { name, data }) = &recent_mouse_movement_event {
+                if let Some(PlatformEvent {
+                    platform_name,
+                    platform_data,
+                }) = &recent_mouse_movement_event
+                {
                     if let Some(layout_node) = layout.get(*node_id) {
                         // Emit a MouseLeave event as the cursor was moved outside the Node bounds
-                        collateral_dom_events.push(DomEvent::new(
-                            *node_id,
-                            EventName::MouseLeave,
-                            *name,
-                            data.clone(),
-                            Some(layout_node.area),
-                            scale_factor,
-                        ));
+                        let event = EventName::MouseLeave;
+                        for derived_event in event.get_derived_events() {
+                            let is_node_listening = rdom.is_node_listening(node_id, &derived_event);
+                            if is_node_listening {
+                                collateral_dom_events.push(DomEvent::new(
+                                    *node_id,
+                                    derived_event,
+                                    *platform_name,
+                                    platform_data.clone(),
+                                    Some(layout_node.area),
+                                    scale_factor,
+                                ));
+                            }
+                        }
 
                         #[cfg(debug_assertions)]
                         tracing::info!("Unmarked as hovered {:?}", node_id);
@@ -179,9 +191,9 @@ impl NodesState {
 
 fn any_event_of(
     events: &[PlatformEvent],
-    filter: impl Fn(EventName) -> bool,
+    filter: impl Fn(PlatformEventName) -> bool,
 ) -> Option<&PlatformEvent> {
-    events.iter().find(|event| filter(event.name))
+    events.iter().find(|event| filter(event.platform_name))
 }
 
 fn filter_dom_events_by(

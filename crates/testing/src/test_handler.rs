@@ -15,10 +15,10 @@ use freya_core::{
     events::{
         handle_processed_events,
         process_events,
-        EventName,
         NodesState,
         PlatformEvent,
         PlatformEventData,
+        PlatformEventName,
     },
     layout::process_layout,
     render::{
@@ -265,7 +265,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
     /// # use freya::prelude::*;
     /// # let mut utils = launch_test(|| rsx!( rect { } ));
     /// utils.push_event(TestEvent::Mouse {
-    ///     name: EventName::MouseDown,
+    ///     name: PlatformEventName::MouseDown,
     ///     cursor: (490., 20.).into(),
     ///     button: Some(MouseButton::Left),
     /// });
@@ -395,8 +395,8 @@ impl<T: 'static + Clone> TestingHandler<T> {
     /// ```
     pub async fn move_cursor(&mut self, cursor: impl Into<CursorPoint>) {
         self.push_event(PlatformEvent {
-            name: EventName::MouseMove,
-            data: PlatformEventData::Mouse {
+            platform_name: PlatformEventName::MouseMove,
+            platform_data: PlatformEventData::Mouse {
                 cursor: cursor.into(),
                 button: Some(MouseButton::Left),
             },
@@ -414,16 +414,16 @@ impl<T: 'static + Clone> TestingHandler<T> {
     /// ```
     pub async fn click_cursor(&mut self, cursor: impl Into<CursorPoint> + Clone) {
         self.push_event(PlatformEvent {
-            name: EventName::MouseDown,
-            data: PlatformEventData::Mouse {
+            platform_name: PlatformEventName::MouseDown,
+            platform_data: PlatformEventData::Mouse {
                 cursor: cursor.clone().into(),
                 button: Some(MouseButton::Left),
             },
         });
         self.wait_for_update().await;
         self.push_event(PlatformEvent {
-            name: EventName::MouseUp,
-            data: PlatformEventData::Mouse {
+            platform_name: PlatformEventName::MouseUp,
+            platform_data: PlatformEventData::Mouse {
                 cursor: cursor.into(),
                 button: Some(MouseButton::Left),
             },
