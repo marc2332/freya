@@ -83,9 +83,6 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
             .with_window_icon(config.window_config.icon.take())
             .with_inner_size(LogicalSize::<f64>::from(config.window_config.size));
 
-        set_resource_cache_total_bytes_limit(1000000); // 1MB
-        set_resource_cache_single_allocation_byte_limit(Some(500000)); // 0.5MB
-
         if let Some(min_size) = config.window_config.min_size {
             window_attributes =
                 window_attributes.with_min_inner_size(LogicalSize::<f64>::from(min_size));
