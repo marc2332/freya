@@ -200,6 +200,13 @@ fn parse_hex_color(color: &str) -> Result<Color, ParseError> {
             let b = u8::from_str_radix(&color[3..4].repeat(2), 16).map_err(|_| ParseError)?;
             Ok(Color::from_rgb(r, g, b))
         }
+        5 => {
+            let r = u8::from_str_radix(&color[1..2].repeat(2), 16).map_err(|_| ParseError)?;
+            let g = u8::from_str_radix(&color[2..3].repeat(2), 16).map_err(|_| ParseError)?;
+            let b = u8::from_str_radix(&color[3..4].repeat(2), 16).map_err(|_| ParseError)?;
+            let a = u8::from_str_radix(&color[4..5].repeat(2), 16).map_err(|_| ParseError)?;
+            Ok(Color::from_rgb(r, g, b).with_a(a))
+        }
         7 => {
             let r = u8::from_str_radix(&color[1..3], 16).map_err(|_| ParseError)?;
             let g = u8::from_str_radix(&color[3..5], 16).map_err(|_| ParseError)?;
