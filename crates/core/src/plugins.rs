@@ -65,7 +65,6 @@ pub enum PluginEvent<'a> {
 
     /// Before starting to render the app to the Canvas.
     BeforeRender {
-        canvas: &'a Canvas,
         font_collection: &'a FontCollection,
         freya_dom: &'a FreyaDOM,
     },

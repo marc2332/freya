@@ -70,6 +70,8 @@ pub struct OpenGLDriver {
     pub(crate) fb_info: FramebufferInfo,
     pub(crate) num_samples: usize,
     pub(crate) stencil_size: usize,
+    pub(crate) surface: SkiaSurface,
+    pub(crate) dirty_surface: SkiaSurface,
 }
 
 impl Drop for OpenGLDriver {
@@ -86,7 +88,7 @@ impl OpenGLDriver {
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
         config: &LaunchConfig<State>,
-    ) -> (Self, Window, SkiaSurface) {
+    ) -> (Self, Window) {
         let template = ConfigTemplateBuilder::new()
             .with_alpha_size(8)
             .with_transparency(config.window_config.transparent);
@@ -193,7 +195,7 @@ impl OpenGLDriver {
 
         let render_target =
             backend_render_targets::make_gl(size.to_skia(), num_samples, stencil_size, fb_info);
-        let skia_surface = wrap_backend_render_target(
+        let mut surface = wrap_backend_render_target(
             &mut gr_context,
             &render_target,
             SurfaceOrigin::BottomLeft,
@@ -203,6 +205,8 @@ impl OpenGLDriver {
         )
         .expect("Could not create skia surface");
 
+        let dirty_surface = surface.new_surface_with_dimensions(size.to_skia()).unwrap();
+
         let driver = OpenGLDriver {
             gl_context,
             gl_surface,
@@ -210,16 +214,25 @@ impl OpenGLDriver {
             num_samples,
             stencil_size,
             fb_info,
+            surface,
+            dirty_surface,
         };
 
-        (driver, window, skia_surface)
+        (driver, window)
     }
 
-    pub fn make_current(&mut self) {
-        self.gl_context.make_current(&self.gl_surface).unwrap();
+    pub fn present(&mut self, render: impl FnOnce(&mut SkiaSurface, &mut SkiaSurface)) {
+        if !self.gl_context.is_current() {
+            self.gl_context.make_current(&self.gl_surface).unwrap();
+        }
+
+        render(&mut self.surface, &mut self.dirty_surface);
+
+        self.gr_context.flush_and_submit();
+        self.gl_surface.swap_buffers(&self.gl_context).unwrap();
     }
 
-    pub fn resize(&mut self, size: PhysicalSize<u32>) -> (SkiaSurface, SkiaSurface) {
+    pub fn resize(&mut self, size: PhysicalSize<u32>) {
         let render_target = backend_render_targets::make_gl(
             size.to_skia(),
             self.num_samples,
@@ -241,6 +254,7 @@ impl OpenGLDriver {
         self.gl_surface
             .resize(&self.gl_context, size.as_gl_width(), size.as_gl_height());
 
-        (surface, dirty_surface)
+        self.surface = surface;
+        self.dirty_surface = dirty_surface;
     }
 }

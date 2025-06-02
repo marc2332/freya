@@ -21,7 +21,6 @@ use crate::{
     config::WindowConfig,
     devtools::Devtools,
     drivers::GraphicsDriver,
-    size::WinitSize,
     LaunchConfig,
 };
 
@@ -34,8 +33,6 @@ pub struct NotCreatedState<'a, State: Clone + 'static> {
 
 pub struct CreatedState {
     pub(crate) app: Application,
-    pub(crate) surface: Surface,
-    pub(crate) dirty_surface: Surface,
     pub(crate) graphics_driver: GraphicsDriver,
     pub(crate) window: Window,
     pub(crate) window_config: WindowConfig,
@@ -99,8 +96,7 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
             window_attributes = (with_window_attributes)(window_attributes);
         }
 
-        let (graphics_driver, window, mut surface) =
-            GraphicsDriver::new(event_loop, window_attributes, &config);
+        let (graphics_driver, window) = GraphicsDriver::new(event_loop, window_attributes, &config);
 
         let accessibility =
             WinitAcessibilityTree::new(event_loop, &window, event_loop_proxy.clone());
@@ -111,24 +107,7 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
 
         // Allow IME
         window.set_ime_allowed(true);
-
-        let mut dirty_surface = surface
-            .new_surface_with_dimensions(window.inner_size().to_skia())
-            .unwrap();
-
         let scale_factor = window.scale_factor();
-
-        surface
-            .canvas()
-            .scale((scale_factor as f32, scale_factor as f32));
-        surface.canvas().clear(config.window_config.background);
-
-        dirty_surface
-            .canvas()
-            .scale((scale_factor as f32, scale_factor as f32));
-        dirty_surface
-            .canvas()
-            .clear(config.window_config.background);
 
         let mut app = Application::new(
             sdom,
@@ -146,8 +125,6 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
         app.process_layout(window.inner_size(), scale_factor);
 
         *self = WindowState::Created(CreatedState {
-            surface,
-            dirty_surface,
             graphics_driver,
             window,
             app,

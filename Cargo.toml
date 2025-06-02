@@ -17,6 +17,9 @@ fade-cached-incremental-areas = ["freya/fade-cached-incremental-areas"]
 disable-zoom-shortcuts = ["freya/disable-zoom-shortcuts"]
 docs = ["freya/docs"]
 
+gl = ["freya/gl"]
+vulkan = ["freya/vulkan"]
+
 [patch.crates-io]
 # dioxus = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
 # dioxus-rsx = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
@@ -30,10 +33,8 @@ docs = ["freya/docs"]
 [workspace.dependencies]
 freya = { path = "crates/freya", version = "0.3.3" }
 freya-devtools = { path = "crates/devtools", version = "0.3.3" }
-freya-node-state = { path = "crates/state", version = "0.3.3" }
 freya-winit = { path = "crates/winit", version = "0.3.3" }
 freya-elements = { path = "crates/elements", version = "0.3.3" }
-freya-common = { path = "crates/common", version = "0.3.3" }
 freya-hooks = { path = "crates/hooks", version = "0.3.3" }
 freya-core = { path = "crates/core", version = "0.3.3" }
 freya-components = { path = "crates/components", version = "0.3.3" }
@@ -56,7 +57,7 @@ generational-box = { version = "0.6.2" }
 dioxus-clipboard = "0.2.0"
 dioxus-i18n = "0.4.1"
 
-skia-safe = { version = "0.82.0", features = ["gl", "textlayout", "svg"] }
+skia-safe = { version = "0.82.0", features = ["gl", "vulkan", "textlayout", "svg"] }
 
 gl = "0.14.0"
 glutin = "0.32.0"
