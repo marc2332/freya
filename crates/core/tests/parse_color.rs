@@ -49,6 +49,12 @@ fn parse_3_char_hex_color() {
 }
 
 #[test]
+fn parse_4_char_hex_color() {
+    let color = Color::parse("#4F69");
+    assert_eq!(color, Ok(Color::from_argb(153, 68, 255, 102)));
+}
+
+#[test]
 fn invalid_colors() {
     let incorrect_name = Color::parse("wow(0, 0, 0)");
     let extra_lparen = Color::parse("rgb((0, 0, 0)");
@@ -61,7 +67,7 @@ fn invalid_colors() {
     let extra_ending_commas = Color::parse("rgb(0, 0, 0, 0,)");
     let bad_unit = Color::parse("hsl(28in, 0.4, 0.25, 50%)");
     let missing_number_sign = Color::parse("FFA500");
-    let incorrect_hex_length = Color::parse("#FFA0");
+    let incorrect_hex_length = Color::parse("#FFA0F");
 
     assert!(incorrect_name.is_err());
     assert!(extra_lparen.is_err());
