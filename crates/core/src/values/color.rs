@@ -2,7 +2,10 @@ use std::fmt;
 
 use freya_engine::prelude::*;
 
-use crate::parsing::{Parse, ParseError};
+use crate::parsing::{
+    Parse,
+    ParseError,
+};
 
 pub trait DisplayColor {
     fn fmt_rgb(&self, f: &mut fmt::Formatter) -> fmt::Result;
