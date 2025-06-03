@@ -57,6 +57,7 @@ impl<Id: Clone + Hash + Eq + Display> UseForm<Id> {
             })),
             children: Ok(VNode::placeholder()),
             onclick: None,
+            enabled: true,
         }
     }
 }
