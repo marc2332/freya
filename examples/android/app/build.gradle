@@ -1,0 +1,18 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.example.native_activity'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId = 'com.example.native_activity'
+        minSdkVersion 24
+
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+    }
+    ndkVersion '27.0.12077973'
+}
