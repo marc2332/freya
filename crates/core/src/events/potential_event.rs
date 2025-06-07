@@ -3,18 +3,14 @@ use freya_native_core::{
     NodeId,
 };
 
-use super::{
-    PlatformEventData,
-    PlatformEventName,
-};
+use crate::events::PlatformEvent;
 
 /// Potential events are events that might get emitted or not.
 #[derive(Clone, Debug, PartialEq)]
 pub struct PotentialEvent {
     pub node_id: NodeId,
     pub name: EventName,
-    pub plarform_event: PlatformEventName,
-    pub platform_data: PlatformEventData,
+    pub plarform_event: PlatformEvent,
     pub layer: i16,
 }
 

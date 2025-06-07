@@ -1,5 +1,8 @@
 use freya::prelude::*;
-use freya_testing::prelude::*;
+use freya_testing::{
+    event::MouseEvent,
+    prelude::*,
+};
 
 use crate::{
     use_editable,
@@ -1121,6 +1124,7 @@ pub async fn replace_text() {
     assert_eq!(content.text(), Some("Hello Rustaceans\nHello Rustaceans"));
 
     // Move cursor
+    //  utils.push_event(MouseEvent::builder().name(PlatformEventName::));
     utils.push_event(TestEvent::Mouse {
         name: EventName::MouseDown,
         cursor: (35.0, 3.0).into(),

@@ -8,7 +8,6 @@ use freya_native_core::{
 };
 use rustc_hash::FxHashSet;
 
-use super::PlatformEventName;
 use crate::{
     dom::FreyaDOM,
     events::{
@@ -76,25 +75,20 @@ impl NodesState {
             if no_desire_to_hover {
                 // If there has been a mouse movement but a DOM event was not emitted to this node, then we safely assume
                 // the user does no longer want to hover this Node
-                if let Some(PlatformEvent {
-                    platform_name,
-                    platform_data,
-                }) = &recent_mouse_movement_event
-                {
+                if let Some(platform_event) = &recent_mouse_movement_event {
                     if let Some(layout_node) = layout.get(*node_id) {
                         // Emit a MouseLeave event as the cursor was moved outside the Node bounds
                         let event = EventName::MouseLeave;
                         for derived_event in event.get_derived_events() {
                             let is_node_listening = rdom.is_node_listening(node_id, &derived_event);
                             if is_node_listening {
-                                collateral_dom_events.push(DomEvent::new(
-                                    *node_id,
-                                    derived_event,
-                                    *platform_name,
-                                    platform_data.clone(),
-                                    Some(layout_node.area),
-                                    scale_factor,
-                                ));
+                                // collateral_dom_events.push(DomEvent::new(
+                                //     *node_id,
+                                //     derived_event,
+                                //     platform_event.clone(),
+                                //     Some(layout_node.area),
+                                //     scale_factor,
+                                // ));
                             }
                         }
 
@@ -191,9 +185,9 @@ impl NodesState {
 
 fn any_event_of(
     events: &[PlatformEvent],
-    filter: impl Fn(PlatformEventName) -> bool,
+    filter: impl Fn(&PlatformEvent) -> bool,
 ) -> Option<&PlatformEvent> {
-    events.iter().find(|event| filter(event.platform_name))
+    events.iter().find(|event| filter(&event))
 }
 
 fn filter_dom_events_by(

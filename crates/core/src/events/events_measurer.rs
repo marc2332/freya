@@ -10,10 +10,7 @@ use itertools::{
     Itertools,
 };
 
-use super::{
-    PlatformEventData,
-    PotentialEvent,
-};
+use super::PotentialEvent;
 pub use crate::events::{
     DomEvent,
     NodesState,
@@ -87,12 +84,8 @@ pub fn measure_platform_global_events(
     scale_factor: f64,
 ) {
     let rdom = fdom.rdom();
-    for PlatformEvent {
-        platform_name,
-        platform_data,
-    } in events
-    {
-        let event: EventName = (*platform_name).into();
+    for platform_event in events {
+        let event = platform_event.event_name();
         let derived_events_names = event.get_derived_events();
 
         for derived_event_name in derived_events_names {
@@ -106,8 +99,7 @@ pub fn measure_platform_global_events(
                 let event = DomEvent::new(
                     listener.id(),
                     global_name,
-                    *platform_name,
-                    platform_data.clone(),
+                    platform_event.clone(),
                     None,
                     scale_factor,
                 );
@@ -136,26 +128,21 @@ pub fn measure_potential_events(
             let Some(layout_node) = layout.get(*node_id) else {
                 continue;
             };
-            'events: for PlatformEvent {
-                platform_name,
-                platform_data,
-            } in events
-            {
-                let cursor = match platform_data {
-                    PlatformEventData::Mouse { cursor, .. } => cursor,
-                    PlatformEventData::Wheel { cursor, .. } => cursor,
-                    PlatformEventData::Touch { location, .. } => location,
-                    PlatformEventData::File { cursor, .. } => cursor,
-                    PlatformEventData::Keyboard { .. } if focus_id == Some(*node_id) => {
+            'events: for platform_event in events {
+                let cursor = match platform_event {
+                    PlatformEvent::Mouse { cursor, .. } => cursor,
+                    PlatformEvent::Wheel { cursor, .. } => cursor,
+                    PlatformEvent::Touch { location, .. } => location,
+                    PlatformEvent::File { cursor, .. } => cursor,
+                    PlatformEvent::Keyboard { .. } if focus_id == Some(*node_id) => {
                         let potential_event = PotentialEvent {
                             node_id: *node_id,
                             layer: *layer,
-                            name: (*platform_name).into(),
-                            plarform_event: *platform_name,
-                            platform_data: platform_data.clone(),
+                            name: platform_event.event_name(),
+                            plarform_event: platform_event.clone(),
                         };
                         potential_events
-                            .entry(*platform_name)
+                            .entry(platform_event.event_name())
                             .or_default()
                             .push(potential_event);
                         continue;
@@ -204,13 +191,12 @@ pub fn measure_potential_events(
                 let potential_event = PotentialEvent {
                     node_id: *node_id,
                     layer: *layer,
-                    name: (*platform_name).into(),
-                    plarform_event: *platform_name,
-                    platform_data: platform_data.clone(),
+                    name: platform_event.event_name(),
+                    plarform_event: platform_event.clone(),
                 };
 
                 potential_events
-                    .entry(*platform_name)
+                    .entry(platform_event.event_name())
                     .or_insert_with(Vec::new)
                     .push(potential_event);
             }
@@ -260,7 +246,6 @@ fn measure_dom_events(
             // Iterate over the potential events in reverse so the ones in higher layers appeat first
             for PotentialEvent {
                 node_id,
-                platform_data,
                 name,
                 plarform_event,
                 ..
@@ -281,8 +266,7 @@ fn measure_dom_events(
                     let dom_event = DomEvent::new(
                         *node_id,
                         derived_event_name,
-                        *plarform_event,
-                        platform_data.clone(),
+                        plarform_event.clone(),
                         Some(layout_node.visible_area()),
                         scale_factor,
                     );

@@ -6,9 +6,12 @@ use freya_core::{
     dom::SafeDOM,
     event_loop_messages::EventLoopMessage,
     events::{
+        FileEventName,
+        KeyboardEventName,
+        MouseEventName,
         PlatformEvent,
-        PlatformEventData,
-        PlatformEventName,
+        TouchEventName,
+        WheelEventName,
     },
     platform_state::NavigationMode,
 };
@@ -254,13 +257,11 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
             }
             WindowEvent::CloseRequested => event_loop.exit(),
             WindowEvent::Ime(Ime::Commit(text)) => {
-                self.send_event(PlatformEvent {
-                    platform_name: PlatformEventName::KeyDown,
-                    platform_data: PlatformEventData::Keyboard {
-                        key: Key::Character(text),
-                        code: Code::Unidentified,
-                        modifiers: map_winit_modifiers(self.modifiers_state),
-                    },
+                self.send_event(PlatformEvent::Keyboard {
+                    name: KeyboardEventName::KeyDown,
+                    key: Key::Character(text),
+                    code: Code::Unidentified,
+                    modifiers: map_winit_modifiers(self.modifiers_state),
                 });
             }
             WindowEvent::RedrawRequested => {
@@ -313,20 +314,18 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
                 self.mouse_state = state;
 
                 let name = match state {
-                    ElementState::Pressed => PlatformEventName::MouseDown,
+                    ElementState::Pressed => MouseEventName::MouseDown,
                     ElementState::Released => match button {
-                        MouseButton::Middle => PlatformEventName::MiddleClick,
-                        MouseButton::Right => PlatformEventName::RightClick,
-                        _ => PlatformEventName::MouseUp,
+                        MouseButton::Middle => MouseEventName::MiddleClick,
+                        MouseButton::Right => MouseEventName::RightClick,
+                        _ => MouseEventName::MouseUp,
                     },
                 };
 
-                self.send_event(PlatformEvent {
-                    platform_name: name,
-                    platform_data: PlatformEventData::Mouse {
-                        cursor: self.cursor_pos,
-                        button: Some(button),
-                    },
+                self.send_event(PlatformEvent::Mouse {
+                    name,
+                    cursor: self.cursor_pos,
+                    button: Some(button),
                 });
             }
             WindowEvent::MouseWheel { delta, phase, .. } => {
@@ -344,12 +343,10 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
                         }
                     };
 
-                    self.send_event(PlatformEvent {
-                        platform_name: PlatformEventName::Wheel,
-                        platform_data: PlatformEventData::Wheel {
-                            scroll: CursorPoint::from(scroll_data),
-                            cursor: self.cursor_pos,
-                        },
+                    self.send_event(PlatformEvent::Wheel {
+                        name: WheelEventName::Wheel,
+                        scroll: CursorPoint::from(scroll_data),
+                        cursor: self.cursor_pos,
                     });
                 }
             }
@@ -402,49 +399,41 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
                 }
 
                 let name = match state {
-                    ElementState::Pressed => PlatformEventName::KeyDown,
-                    ElementState::Released => PlatformEventName::KeyUp,
+                    ElementState::Pressed => KeyboardEventName::KeyDown,
+                    ElementState::Released => KeyboardEventName::KeyUp,
                 };
-                self.send_event(PlatformEvent {
-                    platform_name: name,
-                    platform_data: PlatformEventData::Keyboard {
-                        key: map_winit_key(&logical_key),
-                        code: map_winit_physical_key(&physical_key),
-                        modifiers: map_winit_modifiers(self.modifiers_state),
-                    },
+                self.send_event(PlatformEvent::Keyboard {
+                    name,
+                    key: map_winit_key(&logical_key),
+                    code: map_winit_physical_key(&physical_key),
+                    modifiers: map_winit_modifiers(self.modifiers_state),
                 })
             }
             WindowEvent::CursorLeft { .. } => {
                 if self.mouse_state == ElementState::Released {
                     self.cursor_pos = CursorPoint::new(-1.0, -1.0);
 
-                    self.send_event(PlatformEvent {
-                        platform_name: PlatformEventName::MouseMove,
-                        platform_data: PlatformEventData::Mouse {
-                            cursor: self.cursor_pos,
-                            button: None,
-                        },
+                    self.send_event(PlatformEvent::Mouse {
+                        name: MouseEventName::MouseMove,
+                        cursor: self.cursor_pos,
+                        button: None,
                     });
                 }
             }
             WindowEvent::CursorMoved { position, .. } => {
                 self.cursor_pos = CursorPoint::from((position.x, position.y));
 
-                self.send_event(PlatformEvent {
-                    platform_name: PlatformEventName::MouseMove,
-                    platform_data: PlatformEventData::Mouse {
-                        cursor: self.cursor_pos,
-                        button: None,
-                    },
+                self.send_event(PlatformEvent::Mouse {
+                    name: MouseEventName::MouseMove,
+                    cursor: self.cursor_pos,
+                    button: None,
                 });
 
                 if let Some(dropped_file_path) = self.dropped_file_path.take() {
-                    self.send_event(PlatformEvent {
-                        platform_name: PlatformEventName::FileDrop,
-                        platform_data: PlatformEventData::File {
-                            file_path: Some(dropped_file_path),
-                            cursor: self.cursor_pos,
-                        },
+                    self.send_event(PlatformEvent::File {
+                        name: FileEventName::FileDrop,
+                        file_path: Some(dropped_file_path),
+                        cursor: self.cursor_pos,
                     });
                 }
             }
@@ -458,20 +447,18 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
                 self.cursor_pos = CursorPoint::from((location.x, location.y));
 
                 let name = match phase {
-                    TouchPhase::Cancelled => PlatformEventName::TouchCancel,
-                    TouchPhase::Ended => PlatformEventName::TouchEnd,
-                    TouchPhase::Moved => PlatformEventName::TouchMove,
-                    TouchPhase::Started => PlatformEventName::TouchStart,
+                    TouchPhase::Cancelled => TouchEventName::TouchCancel,
+                    TouchPhase::Ended => TouchEventName::TouchEnd,
+                    TouchPhase::Moved => TouchEventName::TouchMove,
+                    TouchPhase::Started => TouchEventName::TouchStart,
                 };
 
-                self.send_event(PlatformEvent {
-                    platform_name: name,
-                    platform_data: PlatformEventData::Touch {
-                        location: self.cursor_pos,
-                        finger_id: id,
-                        phase,
-                        force,
-                    },
+                self.send_event(PlatformEvent::Touch {
+                    name,
+                    location: self.cursor_pos,
+                    finger_id: id,
+                    phase,
+                    force,
                 });
             }
             WindowEvent::Resized(size) => {
@@ -488,21 +475,17 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
                 self.dropped_file_path = Some(file_path);
             }
             WindowEvent::HoveredFile(file_path) => {
-                self.send_event(PlatformEvent {
-                    platform_name: PlatformEventName::FileHover,
-                    platform_data: PlatformEventData::File {
-                        file_path: Some(file_path),
-                        cursor: self.cursor_pos,
-                    },
+                self.send_event(PlatformEvent::File {
+                    name: FileEventName::FileHover,
+                    file_path: Some(file_path),
+                    cursor: self.cursor_pos,
                 });
             }
             WindowEvent::HoveredFileCancelled => {
-                self.send_event(PlatformEvent {
-                    platform_name: PlatformEventName::FileHoverCancelled,
-                    platform_data: PlatformEventData::File {
-                        file_path: None,
-                        cursor: self.cursor_pos,
-                    },
+                self.send_event(PlatformEvent::File {
+                    name: FileEventName::FileHoverCancelled,
+                    file_path: None,
+                    cursor: self.cursor_pos,
                 });
             }
             WindowEvent::Focused(is_focused) => {

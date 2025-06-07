@@ -16,17 +16,14 @@ use freya_elements::events::{
 use freya_native_core::NodeId;
 use torin::prelude::*;
 
-use super::{
-    EventName,
-    PlatformEventData,
-    PlatformEventName,
-};
+use super::EventName;
+use crate::events::PlatformEvent;
 
 /// Event emitted to the DOM.
 #[derive(Debug, Clone, PartialEq)]
 pub struct DomEvent {
     pub name: EventName,
-    pub platform_name: PlatformEventName,
+    pub source_event: EventName,
     pub node_id: NodeId,
     pub data: DomEventData,
     pub bubbles: bool,
@@ -50,15 +47,19 @@ impl DomEvent {
     pub fn new(
         node_id: NodeId,
         name: EventName,
-        platform_name: PlatformEventName,
-        platform_data: PlatformEventData,
+        platform_event: PlatformEvent,
         node_area: Option<Area>,
         scale_factor: f64,
     ) -> Self {
         let bubbles = name.does_bubble();
 
-        match platform_data {
-            PlatformEventData::Mouse { cursor, button, .. } => {
+        match platform_event {
+            PlatformEvent::Mouse {
+                name: platform_event_name,
+                cursor,
+                button,
+                ..
+            } => {
                 let screen_coordinates = cursor / scale_factor;
                 let element_x =
                     (cursor.x - node_area.unwrap_or_default().min_x() as f64) / scale_factor;
@@ -84,19 +85,24 @@ impl DomEvent {
                 Self {
                     node_id,
                     name,
-                    platform_name,
+                    source_event: platform_event_name.into(),
                     data: event_data,
                     bubbles,
                 }
             }
-            PlatformEventData::Wheel { scroll, .. } => Self {
+            PlatformEvent::Wheel {
+                name: platform_event_name,
+                scroll,
+                ..
+            } => Self {
                 node_id,
                 name,
-                platform_name,
+                source_event: platform_event_name.into(),
                 data: DomEventData::Wheel(WheelData::new(scroll.x, scroll.y)),
                 bubbles,
             },
-            PlatformEventData::Keyboard {
+            PlatformEvent::Keyboard {
+                name: platform_event_name,
                 ref key,
                 code,
                 modifiers,
@@ -104,11 +110,13 @@ impl DomEvent {
             } => Self {
                 node_id,
                 name,
-                platform_name,
+
+                source_event: platform_event_name.into(),
                 data: DomEventData::Keyboard(KeyboardData::new(key.clone(), code, modifiers)),
                 bubbles,
             },
-            PlatformEventData::Touch {
+            PlatformEvent::Touch {
+                name: platform_event_name,
                 location,
                 finger_id,
                 phase,
@@ -141,18 +149,22 @@ impl DomEvent {
                 Self {
                     node_id,
                     name,
-                    platform_name,
+                    source_event: platform_event_name.into(),
                     data: event_data,
                     bubbles,
                 }
             }
-            PlatformEventData::File { file_path, .. } => {
+            PlatformEvent::File {
+                name: platform_event_name,
+                file_path,
+                ..
+            } => {
                 let event_data = DomEventData::File(FileData { file_path });
 
                 Self {
                     node_id,
                     name,
-                    platform_name,
+                    source_event: platform_event_name.into(),
                     data: event_data,
                     bubbles,
                 }

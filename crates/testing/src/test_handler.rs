@@ -15,10 +15,9 @@ use freya_core::{
     events::{
         handle_processed_events,
         process_events,
+        MouseEventName,
         NodesState,
         PlatformEvent,
-        PlatformEventData,
-        PlatformEventName,
     },
     layout::process_layout,
     render::{
@@ -394,12 +393,10 @@ impl<T: 'static + Clone> TestingHandler<T> {
     /// utils.move_cursor((5., 5.));
     /// ```
     pub async fn move_cursor(&mut self, cursor: impl Into<CursorPoint>) {
-        self.push_event(PlatformEvent {
-            platform_name: PlatformEventName::MouseMove,
-            platform_data: PlatformEventData::Mouse {
-                cursor: cursor.into(),
-                button: Some(MouseButton::Left),
-            },
+        self.push_event(PlatformEvent::Mouse {
+            name: MouseEventName::MouseMove,
+            cursor: cursor.into(),
+            button: Some(MouseButton::Left),
         });
         self.wait_for_update().await;
     }
@@ -413,20 +410,16 @@ impl<T: 'static + Clone> TestingHandler<T> {
     /// utils.click_cursor((5., 5.));
     /// ```
     pub async fn click_cursor(&mut self, cursor: impl Into<CursorPoint> + Clone) {
-        self.push_event(PlatformEvent {
-            platform_name: PlatformEventName::MouseDown,
-            platform_data: PlatformEventData::Mouse {
-                cursor: cursor.clone().into(),
-                button: Some(MouseButton::Left),
-            },
+        self.push_event(PlatformEvent::Mouse {
+            name: MouseEventName::MouseDown,
+            cursor: cursor.clone().into(),
+            button: Some(MouseButton::Left),
         });
         self.wait_for_update().await;
-        self.push_event(PlatformEvent {
-            platform_name: PlatformEventName::MouseUp,
-            platform_data: PlatformEventData::Mouse {
-                cursor: cursor.into(),
-                button: Some(MouseButton::Left),
-            },
+        self.push_event(PlatformEvent::Mouse {
+            name: MouseEventName::MouseUp,
+            cursor: cursor.into(),
+            button: Some(MouseButton::Left),
         });
         self.wait_for_update().await;
     }

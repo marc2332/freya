@@ -1,10 +1,6 @@
 use std::path::PathBuf;
 
-use freya_core::events::{
-    PlatformEvent,
-    PlatformEventData,
-    PlatformEventName,
-};
+use freya_core::events::PlatformEvent;
 use freya_elements::events::{
     Code,
     Force,
@@ -14,94 +10,6 @@ use freya_elements::events::{
     TouchPhase,
 };
 use torin::prelude::CursorPoint;
+use typed_builder::TypedBuilder;
 
-pub enum TestEvent {
-    /// A Mouse Event.
-    Mouse {
-        name: PlatformEventName,
-        cursor: CursorPoint,
-        button: Option<MouseButton>,
-    },
-    /// A Wheel event.
-    Wheel {
-        name: PlatformEventName,
-        scroll: CursorPoint,
-        cursor: CursorPoint,
-    },
-    /// A Keyboard event.
-    Keyboard {
-        name: PlatformEventName,
-        key: Key,
-        code: Code,
-        modifiers: Modifiers,
-    },
-    /// A Touch event.
-    Touch {
-        name: PlatformEventName,
-        location: CursorPoint,
-        finger_id: u64,
-        phase: TouchPhase,
-        force: Option<Force>,
-    },
-    /// A File event.
-    File {
-        name: PlatformEventName,
-        cursor: CursorPoint,
-        file_path: Option<PathBuf>,
-    },
-}
-
-impl From<TestEvent> for PlatformEvent {
-    fn from(val: TestEvent) -> Self {
-        let (name, data) = match val {
-            TestEvent::File {
-                name,
-                cursor,
-                file_path,
-            } => (name, PlatformEventData::File { cursor, file_path }),
-            TestEvent::Keyboard {
-                name,
-                key,
-                code,
-                modifiers,
-            } => (
-                name,
-                PlatformEventData::Keyboard {
-                    key,
-                    code,
-                    modifiers,
-                },
-            ),
-            TestEvent::Mouse {
-                name,
-                cursor,
-                button,
-            } => (name, PlatformEventData::Mouse { cursor, button }),
-            TestEvent::Wheel {
-                name,
-                scroll,
-                cursor,
-            } => (name, PlatformEventData::Wheel { scroll, cursor }),
-            TestEvent::Touch {
-                name,
-                location,
-                finger_id,
-                phase,
-                force,
-            } => (
-                name,
-                PlatformEventData::Touch {
-                    location,
-                    finger_id,
-                    phase,
-                    force,
-                },
-            ),
-        };
-
-        PlatformEvent {
-            platform_name: name,
-            platform_data: data,
-        }
-    }
-}
+pub type TestEvent = PlatformEvent;

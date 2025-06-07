@@ -53,7 +53,7 @@ pub fn handle_processed_events(
                 let is_cancellable = cancellable_events.contains(&potential_event.name);
                 if is_cancellable {
                     let processed_event = processed_events.iter().find(|event| {
-                        potential_event.name == event.platform_name.into()
+                        potential_event.name == event.source_event
                             && potential_event.node_id == event.node_id
                     });
                     if processed_event.is_none() {
