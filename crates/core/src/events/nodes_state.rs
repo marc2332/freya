@@ -43,7 +43,7 @@ impl NodesState {
         let mut collateral_dom_events = Vec::default();
 
         // Any mouse press event at all
-        let recent_mouse_press_event = any_event_of(events, |e| e.is_pressed());
+        let recent_mouse_press_event = events.iter().find(|e| e.is_pressed());
 
         // Pressed Nodes
         #[allow(unused_variables)]
@@ -65,7 +65,7 @@ impl NodesState {
         });
 
         // Any mouse movement event at all
-        let recent_mouse_movement_event = any_event_of(events, |e| e.is_moved());
+        let recent_mouse_movement_event = events.iter().find(|e| e.is_moved());
 
         // Hovered Nodes
         self.hovered_nodes.retain(|node_id| {
@@ -181,13 +181,6 @@ impl NodesState {
             _ => {}
         }
     }
-}
-
-fn any_event_of(
-    events: &[PlatformEvent],
-    filter: impl Fn(&PlatformEvent) -> bool,
-) -> Option<&PlatformEvent> {
-    events.iter().find(|event| filter(&event))
 }
 
 fn filter_dom_events_by(
