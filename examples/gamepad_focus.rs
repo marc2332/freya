@@ -12,10 +12,8 @@ use freya::{
 use freya_core::{
     event_loop_messages::EventLoopMessage,
     events::{
-        EventName,
         KeyboardEventName,
         PlatformEvent,
-        PlatformEventData,
     },
     plugins::{
         FreyaPlugin,

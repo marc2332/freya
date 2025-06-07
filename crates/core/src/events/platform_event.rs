@@ -1,11 +1,9 @@
 use std::path::PathBuf;
 
-use freya_elements::{
-    events::keyboard::{
-        Code,
-        Key,
-        Modifiers,
-    },
+use freya_elements::events::keyboard::{
+    Code,
+    Key,
+    Modifiers,
 };
 use freya_native_core::events::EventName;
 use torin::prelude::*;
