@@ -1,8 +1,5 @@
 use freya::prelude::*;
-use freya_testing::{
-    event::MouseEvent,
-    prelude::*,
-};
+use freya_testing::prelude::*;
 
 use crate::{
     use_editable,
