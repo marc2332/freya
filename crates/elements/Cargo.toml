@@ -19,7 +19,7 @@ dioxus-rsx = { workspace = true }
 dioxus-core = { workspace = true }
 
 winit = { workspace = true }
-keyboard-types = "0.7.0"
+keyboard-types = "0.8.0"
 
 [dev-dependencies]
 freya = { path = "../freya" }
