@@ -235,8 +235,6 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
     ) {
         let scale_factor = self.scale_factor();
         let CreatedState {
-            surface,
-            dirty_surface,
             window,
             window_config,
             app,
@@ -292,20 +290,15 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
                     app.init_accessibility_on_next_render = false;
                 }
 
-                graphics_driver.make_current();
-
                 app.render(
                     &self.hovered_node,
                     window_config.background,
-                    surface,
-                    dirty_surface,
+                    graphics_driver,
                     window,
                     scale_factor,
                 );
 
                 app.event_loop_tick();
-                window.pre_present_notify();
-                graphics_driver.flush_and_submit();
             }
             WindowEvent::MouseInput { state, button, .. } => {
                 app.set_navigation_mode(NavigationMode::NotKeyboard);
@@ -476,10 +469,7 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
                 });
             }
             WindowEvent::Resized(size) => {
-                let (new_surface, new_dirty_surface) = graphics_driver.resize(size);
-
-                *surface = new_surface;
-                *dirty_surface = new_dirty_surface;
+                graphics_driver.resize(size);
 
                 window.request_redraw();
 
