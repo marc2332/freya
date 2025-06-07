@@ -35,7 +35,6 @@ dioxus = { workspace = true }
 tokio = { workspace = true }
 winit = { workspace = true }
 accesskit = { workspace = true }
-typed-builder = "0.21.0"
 
 [dev-dependencies]
 dioxus = { workspace = true }

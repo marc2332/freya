@@ -6,7 +6,6 @@ use freya_elements::{
         Key,
         Modifiers,
     },
-    TouchEvent,
 };
 use freya_native_core::events::EventName;
 use torin::prelude::*;
