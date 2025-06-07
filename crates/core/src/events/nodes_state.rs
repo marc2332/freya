@@ -75,20 +75,20 @@ impl NodesState {
             if no_desire_to_hover {
                 // If there has been a mouse movement but a DOM event was not emitted to this node, then we safely assume
                 // the user does no longer want to hover this Node
-                if let Some(platform_event) = &recent_mouse_movement_event {
+                if let Some(platform_event) = recent_mouse_movement_event {
                     if let Some(layout_node) = layout.get(*node_id) {
                         // Emit a MouseLeave event as the cursor was moved outside the Node bounds
                         let event = EventName::MouseLeave;
                         for derived_event in event.get_derived_events() {
                             let is_node_listening = rdom.is_node_listening(node_id, &derived_event);
                             if is_node_listening {
-                                // collateral_dom_events.push(DomEvent::new(
-                                //     *node_id,
-                                //     derived_event,
-                                //     platform_event.clone(),
-                                //     Some(layout_node.area),
-                                //     scale_factor,
-                                // ));
+                                collateral_dom_events.push(DomEvent::new(
+                                    *node_id,
+                                    derived_event,
+                                    platform_event.clone(),
+                                    Some(layout_node.area),
+                                    scale_factor,
+                                ));
                             }
                         }
 

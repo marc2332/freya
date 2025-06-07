@@ -34,6 +34,7 @@ pub enum EventName {
 
     GlobalClick,
     GlobalPointerUp,
+    CaptureGlobalMouseMove,
     GlobalMouseDown,
     GlobalMouseMove,
     GlobalFileHover,
@@ -72,6 +73,7 @@ impl FromStr for EventName {
             "globalclick" => Ok(EventName::GlobalClick),
             "globalpointerup" => Ok(EventName::GlobalPointerUp),
             "globalmousedown" => Ok(EventName::GlobalMouseDown),
+            "captureglobalmousemove" => Ok(EventName::CaptureGlobalMouseMove),
             "globalmousemove" => Ok(EventName::GlobalMouseMove),
             "filedrop" => Ok(EventName::FileDrop),
             "globalfilehover" => Ok(EventName::GlobalFileHover),
@@ -107,6 +109,7 @@ impl From<EventName> for &str {
             EventName::TouchMove => "touchmove",
             EventName::TouchEnd => "touchend",
             EventName::GlobalClick => "globalclick",
+            EventName::CaptureGlobalMouseMove => "captureglobalmousemove",
             EventName::GlobalPointerUp => "globalpointerup",
             EventName::GlobalMouseDown => "globalmousedown",
             EventName::GlobalMouseMove => "globalmousemove",
@@ -128,14 +131,8 @@ impl PartialOrd for EventName {
 impl Ord for EventName {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match self {
-            // Pointer globals have more priority over other globals
-            e if e.is_global() && e.is_pointer() && other.is_global() && !e.is_pointer() => {
-                std::cmp::Ordering::Less
-            }
-            // Globals have more priority over non-globals
-            e if e.is_global() && !other.is_global() => std::cmp::Ordering::Less,
-            // Pointer have more priority over non-pointer
-            e if e.is_pointer() && !other.is_pointer() => std::cmp::Ordering::Less,
+            // Capture events have max priority
+            e if e.is_capture() => std::cmp::Ordering::Less,
             // Left have more priority over non-left
             e if e.is_left() => std::cmp::Ordering::Less,
             e => {
@@ -150,19 +147,21 @@ impl Ord for EventName {
 }
 
 impl EventName {
-    /// Get the equivalent to a global event
-    pub fn get_global_event(&self) -> Option<Self> {
+    /// Get what global events are triggered by this [EventName].
+    pub fn get_global_events(&self) -> SmallVec<[Self; 2]> {
+        let mut events = SmallVec::new();
         match self {
-            Self::MouseUp => Some(Self::GlobalClick),
-            Self::PointerUp => Some(Self::GlobalPointerUp),
-            Self::MouseDown => Some(Self::GlobalMouseDown),
-            Self::MouseMove => Some(Self::GlobalMouseMove),
-            Self::GlobalFileHover => Some(Self::GlobalFileHover),
-            Self::GlobalFileHoverCancelled => Some(Self::GlobalFileHoverCancelled),
-            Self::KeyDown => Some(EventName::GlobalKeyDown),
-            Self::KeyUp => Some(EventName::GlobalKeyUp),
-            _ => None,
+            Self::MouseUp => events.push(Self::GlobalClick),
+            Self::PointerUp => events.push(Self::GlobalPointerUp),
+            Self::MouseDown => events.push(Self::GlobalMouseDown),
+            Self::MouseMove => events.extend([Self::GlobalMouseMove, Self::CaptureGlobalMouseMove]),
+            Self::GlobalFileHover => events.push(Self::GlobalFileHover),
+            Self::GlobalFileHoverCancelled => events.push(Self::GlobalFileHoverCancelled),
+            Self::KeyDown => events.push(Self::GlobalKeyDown),
+            Self::KeyUp => events.push(Self::GlobalKeyUp),
+            _ => {}
         }
+        events
     }
 
     /// Some events might cause other events, like for example:
@@ -208,6 +207,12 @@ impl EventName {
             Self::GlobalMouseMove => {
                 events.extend([Self::MouseMove, Self::MouseEnter, Self::MouseLeave])
             }
+            Self::CaptureGlobalMouseMove => events.extend([
+                Self::MouseMove,
+                Self::MouseEnter,
+                Self::MouseLeave,
+                Self::GlobalMouseMove,
+            ]),
             _ => {}
         }
 
@@ -231,6 +236,11 @@ impl EventName {
                 | Self::GlobalFileHover
                 | Self::GlobalFileHoverCancelled
         )
+    }
+
+    /// Check if it's one of the Pointer variants
+    pub fn is_capture(&self) -> bool {
+        matches!(&self, Self::CaptureGlobalMouseMove)
     }
 
     /// Check if it's one of the Pointer variants
@@ -258,6 +268,7 @@ impl EventName {
                 | Self::GlobalClick
                 | Self::GlobalMouseDown
                 | Self::GlobalMouseMove
+                | Self::CaptureGlobalMouseMove
         )
     }
 
@@ -274,11 +285,13 @@ impl EventName {
         matches!(&self, Self::MouseLeave | Self::PointerLeave)
     }
 
-    // Bubble all events except:
-    // - Global events
-    // - Mouse movements events
+    /// Bubble all events except:
+    /// - Mouse movements events
+    /// - Mouse left events
+    /// - Global events
+    /// - Capture events
     pub fn does_bubble(&self) -> bool {
-        !self.is_moved() && !self.is_left() && !self.is_global()
+        !self.is_moved() && !self.is_left() && !self.is_global() && !self.is_capture()
     }
 
     /// Only let events that do not move the mouse, go through solid nodes

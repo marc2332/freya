@@ -139,7 +139,7 @@ pub async fn block_focus() {
 
     // Navigate to the second rect
     utils.push_event(TestEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: KeyboardEventName::KeyDown,
         key: Key::Tab,
         code: Code::Tab,
         modifiers: Modifiers::default(),
@@ -153,7 +153,7 @@ pub async fn block_focus() {
 
     // Try to navigate to the first rect again
     utils.push_event(TestEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: KeyboardEventName::KeyDown,
         key: Key::Tab,
         code: Code::Tab,
         modifiers: Modifiers::default(),

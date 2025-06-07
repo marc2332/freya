@@ -255,6 +255,35 @@ impl_event! [
     /// }
     /// ```
     onmouseenter
+
+    /// The `oncaptureglobalmousemove` event fires when the user moves the mouse anywhere in the app, just like `onglobalmousemove`, the difference though is that this event has more priority.
+    ///
+    /// This is specially useful for when you want to call `e.prevent_default()` to cancel other events. This was originally added for the `ScrollBar` component so it could block any other mouse move event.
+    ///
+    /// Event Data: [`MouseData`](crate::events::MouseData)
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             oncaptureglobalmousemove: |e| {
+    ///                 println!("Moving the mouse somewhere!");
+    ///                 e.prevent_default();
+    ///             }
+    ///         }
+    ///         rect {
+    ///             width: "100",
+    ///             height: "100",
+    ///             background: "red",
+    ///             onmousemove: |_| println!("This wont print :(")
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    oncaptureglobalmousemove
 ];
 
 /// Data of a Mouse event.

@@ -116,7 +116,7 @@ mod test {
         assert_eq!(utils.root().get(0).get(1).get(0).text(), Some("B"));
 
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseUp,
+            name: MouseEventName::MouseUp,
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Back),
         });
@@ -125,7 +125,7 @@ mod test {
         assert_eq!(utils.root().get(0).get(1).get(0).text(), Some("A"));
 
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseUp,
+            name: MouseEventName::MouseUp,
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Forward),
         });

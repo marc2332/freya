@@ -1,6 +1,5 @@
 use freya_engine::prelude::*;
 use freya_native_core::{
-    events::EventName,
     real_dom::NodeImmutable,
     tree::TreeRef,
     NodeId,
@@ -89,21 +88,19 @@ pub fn measure_platform_global_events(
         let derived_events_names = event.get_derived_events();
 
         for derived_event_name in derived_events_names {
-            let Some(global_name) = derived_event_name.get_global_event() else {
-                continue;
-            };
+            for global_event_name in derived_event_name.get_global_events() {
+                let listeners = rdom.get_listeners(&global_event_name);
 
-            let listeners = rdom.get_listeners(&global_name);
-
-            for listener in listeners {
-                let event = DomEvent::new(
-                    listener.id(),
-                    global_name,
-                    platform_event.clone(),
-                    None,
-                    scale_factor,
-                );
-                dom_events.push(event)
+                for listener in listeners {
+                    let event = DomEvent::new(
+                        listener.id(),
+                        global_event_name,
+                        platform_event.clone(),
+                        None,
+                        scale_factor,
+                    );
+                    dom_events.push(event)
+                }
             }
         }
     }
@@ -231,9 +228,8 @@ fn measure_dom_events(
     let rdom = fdom.rdom();
     let layout = fdom.layout();
 
-    for (platform_name, potential_events) in potential_events {
+    for (event, potential_events) in potential_events {
         // Get the derived events, but exclude globals like some file events
-        let event: EventName = (*platform_name).into();
         let derived_events_names = event
             .get_derived_events()
             .into_iter()

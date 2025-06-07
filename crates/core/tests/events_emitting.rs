@@ -411,7 +411,7 @@ pub async fn pointer_events_from_mouse() {
     );
 
     utils.push_event(TestEvent::Mouse {
-        name: EventName::MouseDown,
+        name: MouseEventName::MouseDown,
         cursor: CursorPoint::new(100.0, 100.0),
         button: Some(MouseButton::Left),
     });
@@ -422,7 +422,7 @@ pub async fn pointer_events_from_mouse() {
     );
 
     utils.push_event(TestEvent::Mouse {
-        name: EventName::MouseUp,
+        name: MouseEventName::MouseUp,
         cursor: CursorPoint::new(100.0, 100.0),
         button: Some(MouseButton::Left),
     });
@@ -491,7 +491,7 @@ pub async fn pointer_events_from_touch() {
     assert_eq!(label.get(0).text(), Some("[]"));
 
     utils.push_event(TestEvent::Touch {
-        name: EventName::TouchMove,
+        name: TouchEventName::TouchMove,
         location: CursorPoint::new(100.0, 100.0),
         finger_id: 1,
         phase: TouchPhase::Moved,
@@ -504,7 +504,7 @@ pub async fn pointer_events_from_touch() {
     );
 
     utils.push_event(TestEvent::Touch {
-        name: EventName::TouchStart,
+        name: TouchEventName::TouchStart,
         location: CursorPoint::new(100.0, 100.0),
         finger_id: 1,
         phase: TouchPhase::Started,
@@ -517,7 +517,7 @@ pub async fn pointer_events_from_touch() {
     );
 
     utils.push_event(TestEvent::Touch {
-        name: EventName::TouchEnd,
+        name: TouchEventName::TouchEnd,
         location: CursorPoint::new(100.0, 100.0),
         finger_id: 1,
         phase: TouchPhase::Ended,
@@ -586,7 +586,7 @@ pub async fn filedrop_events() {
     assert_eq!(root.get(0).style().background, Fill::Color(Color::RED));
 
     utils.push_event(TestEvent::File {
-        name: EventName::FileDrop,
+        name: FileEventName::FileDrop,
         cursor: (5., 5.).into(),
         file_path: Some(PathBuf::from_str("/nice/path/right.rs").unwrap()),
     });

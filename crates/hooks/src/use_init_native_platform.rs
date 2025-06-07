@@ -191,7 +191,7 @@ mod test {
 
         // Navigate to the first rect
         utils.push_event(TestEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: KeyboardEventName::KeyDown,
             key: Key::Tab,
             code: Code::Tab,
             modifiers: Modifiers::default(),
@@ -206,7 +206,7 @@ mod test {
 
         // Navigate to the second rect
         utils.push_event(TestEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: KeyboardEventName::KeyDown,
             key: Key::Tab,
             code: Code::Tab,
             modifiers: Modifiers::default(),

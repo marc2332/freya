@@ -13,6 +13,7 @@ use freya_core::{
     event_loop_messages::EventLoopMessage,
     events::{
         EventName,
+        KeyboardEventName,
         PlatformEvent,
         PlatformEventData,
     },
@@ -61,13 +62,11 @@ impl GamePadPlugin {
                                 );
                             }
                             13 => {
-                                handle.send_platform_event(PlatformEvent {
-                                    platform_name: EventName::KeyDown,
-                                    platform_data: PlatformEventData::Keyboard {
-                                        key: Key::Enter,
-                                        code: Code::Enter,
-                                        modifiers: Modifiers::default(),
-                                    },
+                                handle.send_platform_event(PlatformEvent::Keyboard {
+                                    name: KeyboardEventName::KeyDown,
+                                    key: Key::Enter,
+                                    code: Code::Enter,
+                                    modifiers: Modifiers::default(),
                                 });
                             }
                             _ => {}

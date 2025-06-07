@@ -491,7 +491,7 @@ mod test {
 
         // Open the dropdown
         utils.push_event(TestEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: KeyboardEventName::KeyDown,
             key: Key::Tab,
             code: Code::Tab,
             modifiers: Modifiers::default(),
@@ -499,7 +499,7 @@ mod test {
         utils.wait_for_update().await;
         utils.wait_for_update().await;
         utils.push_event(TestEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: KeyboardEventName::KeyDown,
             key: Key::Enter,
             code: Code::Enter,
             modifiers: Modifiers::default(),
@@ -513,7 +513,7 @@ mod test {
 
         // Close the dropdown by pressinc Esc
         utils.push_event(TestEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: KeyboardEventName::KeyDown,
             key: Key::Escape,
             code: Code::Escape,
             modifiers: Modifiers::default(),
@@ -525,7 +525,7 @@ mod test {
 
         // Open the dropdown again
         utils.push_event(TestEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: KeyboardEventName::KeyDown,
             key: Key::Enter,
             code: Code::Enter,
             modifiers: Modifiers::default(),
@@ -534,7 +534,7 @@ mod test {
 
         // Click on the second option
         utils.push_event(TestEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: KeyboardEventName::KeyDown,
             key: Key::Tab,
             code: Code::Tab,
             modifiers: Modifiers::default(),
@@ -542,7 +542,7 @@ mod test {
         utils.wait_for_update().await;
         utils.wait_for_update().await;
         utils.push_event(TestEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: KeyboardEventName::KeyDown,
             key: Key::Tab,
             code: Code::Tab,
             modifiers: Modifiers::default(),
@@ -550,7 +550,7 @@ mod test {
         utils.wait_for_update().await;
         utils.wait_for_update().await;
         utils.push_event(TestEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: KeyboardEventName::KeyDown,
             key: Key::Enter,
             code: Code::Enter,
             modifiers: Modifiers::default(),
@@ -560,7 +560,7 @@ mod test {
 
         // Close with Escape
         utils.push_event(TestEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: KeyboardEventName::KeyDown,
             key: Key::Escape,
             code: Code::Escape,
             modifiers: Modifiers::default(),
