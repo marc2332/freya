@@ -264,7 +264,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
     /// # use freya::prelude::*;
     /// # let mut utils = launch_test(|| rsx!( rect { } ));
     /// utils.push_event(TestEvent::Mouse {
-    ///     name: PlatformEventName::MouseDown,
+    ///     name: MouseEventName::MouseDown,
     ///     cursor: (490., 20.).into(),
     ///     button: Some(MouseButton::Left),
     /// });

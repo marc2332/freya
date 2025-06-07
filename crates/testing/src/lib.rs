@@ -112,7 +112,7 @@
 //!
 //! // Push a click event to the events queue
 //! utils.push_event(TestEvent::Mouse {
-//!     name: EventName::Click,
+//!     name: MouseEventName::Click,
 //!     cursor: (5.0, 5.0).into(),
 //!     button: Some(MouseButton::Left),
 //! });
