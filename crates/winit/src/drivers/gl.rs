@@ -191,6 +191,10 @@ impl OpenGLDriver {
         let mut gr_context =
             direct_contexts::make_gl(interface, None).expect("Could not create direct context");
 
+        if let Some(max_gpu_resources_bytes) = config.window_config.max_gpu_resources_bytes {
+            gr_context.set_resource_cache_limit(max_gpu_resources_bytes);
+        }
+
         let render_target =
             backend_render_targets::make_gl(size.to_skia(), num_samples, stencil_size, fb_info);
         let skia_surface = wrap_backend_render_target(

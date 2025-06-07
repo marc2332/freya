@@ -79,43 +79,41 @@ impl ParseAttribute for CursorState {
     ) -> Result<(), ParseError> {
         match attr.attribute {
             AttributeName::CursorIndex => {
-                if let Some(value) = attr.value.as_text() {
-                    if value != "none" {
-                        self.position = Some(value.parse().map_err(|_| ParseError)?);
-                    }
+                let value = attr.value.as_text().ok_or(ParseError)?;
+                if value != "none" {
+                    self.position = Some(value.parse().map_err(|_| ParseError)?);
                 }
             }
             AttributeName::CursorColor => {
-                if let Some(value) = attr.value.as_text() {
-                    self.color = Color::parse(value)?;
-                }
+                self.color = Color::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::CursorMode => {
-                if let Some(value) = attr.value.as_text() {
-                    self.mode = CursorMode::parse(value)?;
-                }
+                self.mode = CursorMode::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::CursorId => {
-                if let Some(value) = attr.value.as_text() {
-                    self.cursor_id = Some(value.parse().map_err(|_| ParseError)?);
-                }
+                self.cursor_id = Some(
+                    attr.value
+                        .as_text()
+                        .ok_or(ParseError)?
+                        .parse()
+                        .map_err(|_| ParseError)?,
+                );
             }
             AttributeName::Highlights => {
                 if let Some(CustomAttributeValues::TextHighlights(highlights)) =
                     attr.value.as_custom()
                 {
                     self.highlights = Some(highlights.clone());
+                } else {
+                    return Err(ParseError);
                 }
             }
             AttributeName::HighlightColor => {
-                if let Some(value) = attr.value.as_text() {
-                    self.highlight_color = Color::parse(value)?;
-                }
+                self.highlight_color = Color::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::HighlightMode => {
-                if let Some(value) = attr.value.as_text() {
-                    self.highlight_mode = HighlightMode::parse(value)?;
-                }
+                self.highlight_mode =
+                    HighlightMode::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::CursorReference => {
                 if let OwnedAttributeValue::Custom(CustomAttributeValues::CursorReference(
@@ -123,6 +121,8 @@ impl ParseAttribute for CursorState {
                 )) = attr.value
                 {
                     self.cursor_ref = Some(reference.clone());
+                } else {
+                    return Err(ParseError);
                 }
             }
             _ => {}

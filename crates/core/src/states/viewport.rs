@@ -38,9 +38,8 @@ impl ParseAttribute for ViewportState {
         #[allow(clippy::single_match)]
         match attr.attribute {
             AttributeName::Overflow => {
-                if let Some(value) = attr.value.as_text() {
-                    self.overflow = OverflowMode::parse(value).map_err(|_| ParseError)?;
-                }
+                self.overflow = OverflowMode::parse(attr.value.as_text().ok_or(ParseError)?)
+                    .map_err(|_| ParseError)?;
             }
             _ => {}
         }
