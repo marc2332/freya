@@ -133,6 +133,8 @@ impl Ord for EventName {
         match self {
             // Capture events have max priority
             e if e.is_capture() => std::cmp::Ordering::Less,
+            // Pointer events more priority over non-pointer
+            e if e.is_pointer() && !other.is_pointer() => std::cmp::Ordering::Less,
             // Left have more priority over non-left
             e if e.is_left() => std::cmp::Ordering::Less,
             e => {

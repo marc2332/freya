@@ -576,7 +576,7 @@ pub async fn filedrop_events() {
     assert_eq!(root.get(0).style().background, Fill::Color(Color::BLUE));
 
     utils.push_event(TestEvent::File {
-        name: EventName::GlobalFileHover,
+        name: FileEventName::FileHover,
         cursor: (5., 5.).into(),
         file_path: None,
     });
