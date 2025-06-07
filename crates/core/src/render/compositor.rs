@@ -1,17 +1,19 @@
-use std::ops::{
-    Deref,
-    DerefMut,
+use std::{
+    collections::HashSet,
+    ops::{
+        Deref,
+        DerefMut,
+    },
 };
 
-use freya_common::{
-    CompositorDirtyNodes,
-    Layers,
-};
 use freya_native_core::{
+    exports::shipyard::{
+        IntoIter,
+        View,
+    },
     prelude::NodeImmutable,
     NodeId,
 };
-use itertools::sorted;
 use rustc_hash::FxHashMap;
 use torin::prelude::{
     Area,
@@ -20,12 +22,22 @@ use torin::prelude::{
 };
 
 use crate::{
-    dom::DioxusNode,
-    prelude::{
+    dom::{
+        CompositorDirtyNodes,
         DioxusDOM,
+        DioxusNode,
+    },
+    elements::{
         ElementUtils,
         ElementUtilsResolver,
         ElementWithUtils,
+    },
+    layers::Layers,
+    states::{
+        LayerState,
+        StyleState,
+        TransformState,
+        ViewportState,
     },
 };
 
@@ -114,10 +126,20 @@ impl Compositor {
         scale_factor: f32,
     ) -> Option<Area> {
         let layout_node = layout.get(node_id)?;
-        let node = rdom.get(node_id)?;
-        let utils = node.node_type().tag()?.utils()?;
-
-        utils.drawing_area_with_viewports(layout_node, &node, layout, scale_factor)
+        let node_ref = rdom.get(node_id)?;
+        let utils = node_ref.node_type().tag()?.utils()?;
+        let style_state = node_ref.get::<StyleState>().unwrap();
+        let viewport_state = node_ref.get::<ViewportState>().unwrap();
+        let transform_state = node_ref.get::<TransformState>().unwrap();
+        utils.drawing_area_with_viewports(
+            layout_node,
+            &node_ref,
+            layout,
+            scale_factor,
+            &style_state,
+            &viewport_state,
+            &transform_state,
+        )
     }
 
     #[inline]
@@ -154,84 +176,136 @@ impl Compositor {
         scale_factor: f32,
     ) -> &'a Layers {
         if self.full_render {
-            for nodes in layers.values() {
-                for node_id in nodes {
-                    Self::with_utils(*node_id, layout, rdom, |node_ref, utils, layout_node| {
-                        if utils.needs_cached_area(&node_ref) {
-                            let area = utils.drawing_area(layout_node, &node_ref, scale_factor);
-                            // Cache the drawing area so it can be invalidated in the next frame
-                            cache.insert(*node_id, area);
-                        }
-                    });
-                }
-            }
+            rdom.raw_world().run(
+                |viewport_states: View<ViewportState>,
+                 style_states: View<StyleState>,
+                 transform_states: View<TransformState>| {
+                    for (viewport, style_state, transform_state) in
+                        (&viewport_states, &style_states, &transform_states).iter()
+                    {
+                        Self::with_utils(
+                            viewport.node_id,
+                            layout,
+                            rdom,
+                            |node_ref, utils, layout_node| {
+                                if utils.needs_cached_area(&node_ref, transform_state, style_state)
+                                {
+                                    let area = utils.drawing_area(
+                                        layout_node,
+                                        &node_ref,
+                                        layout,
+                                        scale_factor,
+                                        style_state,
+                                        transform_state,
+                                    );
+                                    // Cache the drawing area so it can be invalidated in the next frame
+                                    cache.insert(viewport.node_id, area);
+                                }
+                            },
+                        );
+                    }
+                },
+            );
             self.full_render = false;
             return layers;
         }
-        let mut running_layers = layers.clone();
+
+        let mut skipped_nodes = HashSet::<NodeId>::new();
 
         loop {
-            let mut any_marked = false;
-
-            for (layer_n, layer) in sorted(running_layers.iter_mut()).rev() {
-                layer.retain(|node_id| {
-                    Self::with_utils(*node_id, layout, rdom, |node_ref, utils, layout_node| {
-                        // Use the cached area to invalidate the previous frame area if necessary
-                        let cached_area = cache.get(node_id);
-                        let needs_cached_area = utils.needs_cached_area(&node_ref);
-
-                        let Some(area) = utils.drawing_area_with_viewports(
-                            layout_node,
-                            &node_ref,
-                            layout,
-                            scale_factor,
-                        ) else {
-                            return false;
-                        };
-
-                        let is_dirty = dirty_nodes.remove(node_id);
-                        let cached_area_is_invalidated = cached_area
-                            .map(|cached_area| {
-                                if is_dirty {
-                                    true
-                                } else {
-                                    dirty_area.intersects(cached_area)
-                                }
-                            })
-                            .unwrap_or_default();
-
-                        let is_invalidated =
-                            is_dirty || cached_area_is_invalidated || dirty_area.intersects(&area);
-
-                        if is_invalidated {
-                            // Save this node to the layer it corresponds for rendering
-                            dirty_layers.insert_node_in_layer(*node_id, *layer_n);
-
-                            // Expand the dirty area with the cached area so it gets cleaned up
-                            if is_dirty && cached_area_is_invalidated {
-                                dirty_area.unite_or_insert(cached_area.unwrap());
-                                any_marked = true;
-                            }
-
-                            // Cache the drawing area so it can be invalidated in the next frame
-                            if needs_cached_area {
-                                cache.insert(*node_id, area);
-                            }
-
-                            // Expand the dirty area with only nodes who have actually changed
-                            if is_dirty {
-                                dirty_area.unite_or_insert(&area);
-                                any_marked = true;
-                            }
+            let mut any_dirty = false;
+            rdom.raw_world().run(
+                |viewport_states: View<ViewportState>,
+                 layer_states: View<LayerState>,
+                 style_states: View<StyleState>,
+                 transform_states: View<TransformState>| {
+                    for (viewport, layer_state, style_state, transform_state) in (
+                        &viewport_states,
+                        &layer_states,
+                        &style_states,
+                        &transform_states,
+                    )
+                        .iter()
+                    {
+                        if skipped_nodes.contains(&viewport.node_id) {
+                            continue;
                         }
+                        let skip = Self::with_utils(
+                            viewport.node_id,
+                            layout,
+                            rdom,
+                            |node_ref, utils, layout_node| {
+                                let Some(area) = utils.drawing_area_with_viewports(
+                                    layout_node,
+                                    &node_ref,
+                                    layout,
+                                    scale_factor,
+                                    style_state,
+                                    viewport,
+                                    transform_state,
+                                ) else {
+                                    return true;
+                                };
 
-                        !is_invalidated
-                    })
-                    .unwrap_or_default()
-                })
-            }
+                                let is_dirty = dirty_nodes.remove(&viewport.node_id);
 
-            if !any_marked {
+                                // Use the cached area to invalidate the previous frame area if necessary
+                                let mut invalidated_cache_area =
+                                    cache.get(&viewport.node_id).and_then(|cached_area| {
+                                        if is_dirty || dirty_area.intersects(cached_area) {
+                                            Some(*cached_area)
+                                        } else {
+                                            None
+                                        }
+                                    });
+
+                                let is_invalidated = is_dirty
+                                    || invalidated_cache_area.is_some()
+                                    || dirty_area.intersects(&area);
+
+                                if is_invalidated {
+                                    // Save this node to the layer it corresponds for rendering
+                                    dirty_layers
+                                        .insert_node_in_layer(viewport.node_id, layer_state.layer);
+
+                                    // Cache the drawing area so it can be invalidated in the next frame
+                                    if utils.needs_cached_area(
+                                        &node_ref,
+                                        transform_state,
+                                        style_state,
+                                    ) {
+                                        cache.insert(viewport.node_id, area);
+                                    }
+
+                                    if is_dirty {
+                                        // Expand the dirty area with the cached area
+                                        if let Some(invalidated_cache_area) =
+                                            invalidated_cache_area.take()
+                                        {
+                                            dirty_area.unite_or_insert(&invalidated_cache_area);
+                                        }
+
+                                        // Expand the dirty area with new area
+                                        dirty_area.unite_or_insert(&area);
+
+                                        // Run again in case this affects e.g ancestors
+                                        any_dirty = true;
+                                    }
+                                }
+
+                                is_invalidated
+                            },
+                        )
+                        .unwrap_or(true);
+
+                        if skip {
+                            skipped_nodes.insert(viewport.node_id);
+                        }
+                    }
+                },
+            );
+
+            if !any_dirty {
                 break;
             }
         }
@@ -250,14 +324,17 @@ impl Compositor {
 #[cfg(test)]
 mod test {
     use freya::{
-        common::*,
+        core::{
+            layers::Layers,
+            render::Compositor,
+        },
         prelude::*,
     };
     use freya_testing::prelude::*;
     use itertools::sorted;
 
     fn run_compositor(
-        utils: &TestingHandler,
+        utils: &TestingHandler<()>,
         compositor: &mut Compositor,
     ) -> (Layers, Layers, usize) {
         let sdom = utils.sdom();
@@ -273,10 +350,10 @@ mod test {
 
         // Process what nodes need to be rendered
         let rendering_layers = compositor.run(
-            &mut *compositor_dirty_nodes,
-            &mut *compositor_dirty_area,
+            &mut compositor_dirty_nodes,
+            &mut compositor_dirty_area,
             &mut compositor_cache,
-            &*layers,
+            &layers,
             &mut dirty_layers,
             &layout,
             rdom,
@@ -367,13 +444,15 @@ mod test {
                     height: "100",
                     width: "200",
                     background: "red",
+                    margin: "0 0 2 0",
                     onclick: move |_| height += 10,
                 }
                 rect {
                     height: "{height}",
                     width: "200",
                     background: "green",
-                    shadow: "0 {shadow} 8 0 rgb(0, 0, 0, 0.5)",
+                    shadow: "0 {shadow} 1 0 rgb(0, 0, 0, 0.5)",
+                    margin: "0 0 2 0",
                     onclick: move |_| height -= 10,
                 }
                 rect {
@@ -418,7 +497,7 @@ mod test {
 
         let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
 
-        // Root + First + Second rect + Third rect
+        // Root + First rect + Second rect + Third Rect
         assert_eq!(painted_nodes, 4);
     }
 
@@ -440,6 +519,7 @@ mod test {
                     height: "200",
                     width: "200",
                     direction: "horizontal",
+                    spacing: "2",
                     rect {
                         onclick: move |_| msg_state.toggle(),
                         height: "200",
@@ -521,6 +601,10 @@ mod test {
                     cross_align: "center",
                     direction: "horizontal",
                     Button {
+                        theme: theme_with!(ButtonTheme {
+                            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)".into(),
+                            padding: "8 12".into(),
+                        }),
                         onclick: move |_| rotate += 1,
                         label { "Rotate" }
                     }
@@ -574,6 +658,10 @@ mod test {
                     cross_align: "center",
                     direction: "horizontal",
                     Button {
+                        theme: theme_with!(ButtonTheme {
+                            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)".into(),
+                            padding: "8 12".into(),
+                        }),
                         onclick: move |_| rotate += 1,
                         label { "Rotate" }
                     }
@@ -595,5 +683,89 @@ mod test {
 
         // Everything
         assert_eq!(painted_nodes, 7);
+    }
+
+    #[tokio::test]
+    pub async fn scale_drawing() {
+        fn compositor_app() -> Element {
+            let mut scale = use_signal(|| 1.);
+
+            rsx!(
+                rect {
+                    scale: "{scale()} {scale()}",
+                    height: "50%",
+                    width: "100%",
+                    main_align: "center",
+                    cross_align: "center",
+                    background: "rgb(0, 119, 182)",
+                    color: "white",
+                    shadow: "0 4 20 5 rgb(0, 0, 0, 80)",
+                    label {
+                        text_shadow: "0 180 12 rgb(0, 0, 0, 240)",
+                        "Hello"
+                    }
+                    label {
+                        "World"
+                    }
+                }
+                rect {
+                    height: "50%",
+                    width: "100%",
+                    main_align: "center",
+                    cross_align: "center",
+                    direction: "horizontal",
+                    Button {
+                        theme: theme_with!(ButtonTheme {
+                            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)".into(),
+                            padding: "8 12".into(),
+                        }),
+                        onclick: move |_| scale += 0.1,
+                        label { "More" }
+                    }
+                    Button {
+                        theme: theme_with!(ButtonTheme {
+                            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)".into(),
+                            padding: "8 12".into(),
+                        }),
+                        onclick: move |_| scale -= 0.1,
+                        label { "Less" }
+                    }
+                }
+            )
+        }
+
+        let mut compositor = Compositor::default();
+        let mut utils = launch_test_with_config(
+            compositor_app,
+            TestingConfig::<()> {
+                size: (400.0, 400.0).into(),
+                ..TestingConfig::default()
+            },
+        );
+        utils.wait_for_update().await;
+
+        let (layers, rendering_layers, _) = run_compositor(&utils, &mut compositor);
+        // First render is always a full render
+        assert_eq!(layers, rendering_layers);
+
+        utils.click_cursor((180., 310.)).await;
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+        assert_eq!(painted_nodes, 9);
+
+        utils.click_cursor((250., 310.)).await;
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+        assert_eq!(painted_nodes, 9);
+
+        utils.click_cursor((250., 310.)).await;
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+        assert_eq!(painted_nodes, 7);
+
+        utils.click_cursor((250., 310.)).await;
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+        assert_eq!(painted_nodes, 7);
+
+        utils.click_cursor((250., 310.)).await;
+        let (_, _, painted_nodes) = run_compositor(&utils, &mut compositor);
+        assert_eq!(painted_nodes, 5);
     }
 }

@@ -4,7 +4,7 @@ use std::ops::Range;
 
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::{
         keyboard::Key,
         KeyboardEvent,
@@ -20,7 +20,7 @@ use freya_hooks::{
 };
 
 use crate::{
-    get_container_size,
+    get_container_sizes,
     get_corrected_scroll_position,
     get_scroll_position_from_cursor,
     get_scroll_position_from_wheel,
@@ -129,45 +129,51 @@ fn get_render_range(
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
-/// # use std::rc::Rc;
 /// fn app() -> Element {
 ///     rsx!(VirtualScrollView {
-///         length: 5,
-///         item_size: 80.0,
+///         length: 35,
+///         item_size: 20.0,
 ///         direction: "vertical",
 ///         builder: move |i, _other_args: &Option<()>| {
 ///             rsx! {
 ///                 label {
 ///                     key: "{i}",
-///                     height: "80",
+///                     height: "20",
 ///                     "Number {i}"
 ///                 }
 ///             }
 ///         }
 ///     })
 /// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           {app()}
+/// #       }
+/// #   )
+/// # }, (250., 250.).into(), "./images/gallery_virtual_scroll_view.png");
 /// ```
 ///
 /// # With a Scroll Controller
 ///
 /// ```no_run
 /// # use freya::prelude::*;
-/// # use std::rc::Rc;
 /// fn app() -> Element {
 ///     let mut scroll_controller = use_scroll_controller(|| ScrollConfig::default());
 ///
 ///     rsx!(VirtualScrollView {
 ///         scroll_controller,
-///         length: 5,
-///         item_size: 80.0,
+///         length: 35,
+///         item_size: 20.0,
 ///         direction: "vertical",
 ///         builder: move |i, _other_args: &Option<()>| {
 ///             rsx! {
 ///                 label {
 ///                     key: "{i}",
-///                     height: "80",
+///                     height: "20",
 ///                     onclick: move |_| {
 ///                          scroll_controller.scroll_to(ScrollPosition::Start, ScrollDirection::Vertical);
 ///                     },
@@ -178,6 +184,12 @@ fn get_render_range(
 ///     })
 /// }
 /// ```
+///
+/// # Preview
+/// ![VirtualScrollView Preview][virtual_scroll_view]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("virtual_scroll_view", "images/gallery_virtual_scroll_view.png")
+)]
 #[allow(non_snake_case)]
 pub fn VirtualScrollView<
     Builder: Clone + Fn(usize, &Option<BuilderArgs>) -> Element,
@@ -210,9 +222,7 @@ pub fn VirtualScrollView<
     let mut focus = use_focus();
     let applied_scrollbar_theme = use_applied_theme!(&scrollbar_theme, scroll_bar);
 
-    let direction_is_vertical = direction == "vertical";
-
-    let inner_size = item_size + (item_size * length as f32);
+    let inner_size = item_size * length as f32;
 
     scroll_controller.use_apply(inner_size, inner_size);
 
@@ -221,20 +231,8 @@ pub fn VirtualScrollView<
     let horizontal_scrollbar_is_visible = direction != "vertical"
         && is_scrollbar_visible(show_scrollbar, inner_size, size.area.width());
 
-    let (container_width, content_width) = get_container_size(
-        &width,
-        direction_is_vertical,
-        Axis::X,
-        vertical_scrollbar_is_visible,
-        &applied_scrollbar_theme.size,
-    );
-    let (container_height, content_height) = get_container_size(
-        &height,
-        direction_is_vertical,
-        Axis::Y,
-        horizontal_scrollbar_is_visible,
-        &applied_scrollbar_theme.size,
-    );
+    let (container_width, content_width) = get_container_sizes(&width);
+    let (container_height, content_height) = get_container_sizes(&height);
 
     let corrected_scrolled_y =
         get_corrected_scroll_position(inner_size, size.area.height(), *scrolled_y.read() as f32);
@@ -254,44 +252,48 @@ pub fn VirtualScrollView<
             1.0
         };
 
-        let wheel_movement = e.get_delta_y() as f32 * speed_multiplier;
+        let invert_direction = (clicking_shift() || invert_scroll_wheel)
+            && (!clicking_shift() || !invert_scroll_wheel);
 
-        let scroll_vertically_or_not =
-            (invert_scroll_wheel && clicking_shift()) || !invert_scroll_wheel && !clicking_shift();
-
-        if scroll_vertically_or_not {
-            let scroll_position_y = get_scroll_position_from_wheel(
-                wheel_movement,
-                inner_size,
-                size.area.height(),
-                corrected_scrolled_y,
-            );
-
-            // Only scroll when there is still area to scroll
-            if *scrolled_y.peek() != scroll_position_y {
-                e.stop_propagation();
-                *scrolled_y.write() = scroll_position_y;
-            } else {
-                return;
-            }
+        let (x_movement, y_movement) = if invert_direction {
+            (
+                e.get_delta_y() as f32 * speed_multiplier,
+                e.get_delta_x() as f32 * speed_multiplier,
+            )
         } else {
-            let scroll_position_x = get_scroll_position_from_wheel(
-                wheel_movement,
-                inner_size,
-                size.area.width(),
-                corrected_scrolled_x,
-            );
+            (
+                e.get_delta_x() as f32 * speed_multiplier,
+                e.get_delta_y() as f32 * speed_multiplier,
+            )
+        };
 
-            // Only scroll when there is still area to scroll
-            if *scrolled_x.peek() != scroll_position_x {
-                e.stop_propagation();
-                *scrolled_x.write() = scroll_position_x;
-            } else {
-                return;
-            }
+        let scroll_position_y = get_scroll_position_from_wheel(
+            y_movement,
+            inner_size,
+            size.area.height(),
+            corrected_scrolled_y,
+        );
+
+        // Only scroll when there is still area to scroll
+        if *scrolled_y.peek() != scroll_position_y {
+            e.stop_propagation();
+            *scrolled_y.write() = scroll_position_y;
+            focus.request_focus();
         }
 
-        focus.focus();
+        let scroll_position_x = get_scroll_position_from_wheel(
+            x_movement,
+            inner_size,
+            size.area.width(),
+            corrected_scrolled_x,
+        );
+
+        // Only scroll when there is still area to scroll
+        if *scrolled_x.peek() != scroll_position_x {
+            e.stop_propagation();
+            *scrolled_x.write() = scroll_position_x;
+            focus.request_focus();
+        }
     };
 
     // Drag the scrollbars
@@ -317,7 +319,7 @@ pub fn VirtualScrollView<
         }
 
         if clicking_scrollbar.is_some() {
-            focus.focus();
+            focus.request_focus();
         }
     };
 
@@ -392,18 +394,6 @@ pub fn VirtualScrollView<
         }
     };
 
-    let horizontal_scrollbar_size = if horizontal_scrollbar_is_visible {
-        &applied_scrollbar_theme.size
-    } else {
-        "0"
-    };
-
-    let vertical_scrollbar_size = if vertical_scrollbar_is_visible {
-        &applied_scrollbar_theme.size
-    } else {
-        "0"
-    };
-
     let (viewport_size, scroll_position) = if direction == "vertical" {
         (size.area.height(), corrected_scrolled_y)
     } else {
@@ -447,7 +437,7 @@ pub fn VirtualScrollView<
 
     rsx!(
         rect {
-            a11y_role:"scrollView",
+            a11y_role: "scroll-view",
             overflow: "clip",
             direction: "horizontal",
             width: "{width}",
@@ -472,33 +462,37 @@ pub fn VirtualScrollView<
                     onwheel: onwheel,
                     {children}
                 }
-                ScrollBar {
-                    width: "100%",
-                    height: "{horizontal_scrollbar_size}",
-                    offset_x: "{scrollbar_x}",
-                    clicking_scrollbar: is_scrolling_x,
-                    theme: scrollbar_theme.clone(),
-                    ScrollThumb {
+                if show_scrollbar && horizontal_scrollbar_is_visible {
+                    ScrollBar {
+                        size: &applied_scrollbar_theme.size,
+                        offset_x: scrollbar_x,
                         clicking_scrollbar: is_scrolling_x,
-                        onmousedown: onmousedown_x,
-                        width: "{scrollbar_width}",
-                        height: "100%",
                         theme: scrollbar_theme.clone(),
+                        ScrollThumb {
+                            clicking_scrollbar: is_scrolling_x,
+                            onmousedown: onmousedown_x,
+                            width: "{scrollbar_width}",
+                            height: "100%",
+                            theme: scrollbar_theme.clone(),
+                        }
                     }
                 }
+
             }
-            ScrollBar {
-                width: "{vertical_scrollbar_size}",
-                height: "100%",
-                offset_y: "{scrollbar_y}",
-                clicking_scrollbar: is_scrolling_y,
-                theme: scrollbar_theme.clone(),
-                ScrollThumb {
+            if show_scrollbar && vertical_scrollbar_is_visible {
+                ScrollBar {
+                    is_vertical: true,
+                    size: &applied_scrollbar_theme.size,
+                    offset_y: scrollbar_y,
                     clicking_scrollbar: is_scrolling_y,
-                    onmousedown: onmousedown_y,
-                    width: "100%",
-                    height: "{scrollbar_height}",
-                    theme: scrollbar_theme,
+                    theme: scrollbar_theme.clone(),
+                    ScrollThumb {
+                        clicking_scrollbar: is_scrolling_y,
+                        onmousedown: onmousedown_y,
+                        width: "100%",
+                        height: "{scrollbar_height}",
+                        theme: scrollbar_theme,
+                    }
                 }
             }
         }
@@ -550,7 +544,7 @@ mod test {
             );
         }
 
-        utils.push_event(PlatformEvent::Wheel {
+        utils.push_event(TestEvent::Wheel {
             name: EventName::Wheel,
             scroll: (0., -300.).into(),
             cursor: (5., 5.).into(),
@@ -615,24 +609,24 @@ mod test {
         }
 
         // Simulate the user dragging the scrollbar
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
-            cursor: (490., 20.).into(),
+            cursor: (495., 20.).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseDown,
-            cursor: (490., 20.).into(),
+            cursor: (495., 20.).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
-            cursor: (490., 320.).into(),
+            cursor: (495., 320.).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseUp,
-            cursor: (490., 320.).into(),
+            cursor: (495., 320.).into(),
             button: Some(MouseButton::Left),
         });
 
@@ -653,7 +647,7 @@ mod test {
 
         // Scroll up with arrows
         for _ in 0..11 {
-            utils.push_event(PlatformEvent::Keyboard {
+            utils.push_event(TestEvent::Keyboard {
                 name: EventName::KeyDown,
                 key: Key::ArrowUp,
                 code: Code::ArrowUp,
@@ -674,7 +668,7 @@ mod test {
         }
 
         // Scroll to the bottom with arrows
-        utils.push_event(PlatformEvent::Keyboard {
+        utils.push_event(TestEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::End,
             code: Code::End,
@@ -684,9 +678,9 @@ mod test {
         utils.wait_for_update().await;
 
         let content = root.get(0).get(0).get(0);
-        assert_eq!(content.children_ids().len(), 9);
+        assert_eq!(content.children_ids().len(), 10);
 
-        for (n, i) in (21..30).enumerate() {
+        for (n, i) in (20..30).enumerate() {
             let child = content.get(n);
             assert_eq!(
                 child.get(0).text(),

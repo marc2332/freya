@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_router::prelude::use_navigator;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::{
         MouseButton,
         PointerEvent,
@@ -44,10 +44,7 @@ mod test {
         Router,
     };
     use freya::prelude::*;
-    use freya_core::events::{
-        EventName,
-        PlatformEvent,
-    };
+    use freya_core::events::EventName;
     use freya_testing::prelude::*;
 
     #[tokio::test]
@@ -104,7 +101,7 @@ mod test {
                         label {
                             "Got to B"
                         }
-                    },
+                    }
                     Outlet::<Route> {  }
                 }
             )
@@ -118,7 +115,7 @@ mod test {
 
         assert_eq!(utils.root().get(0).get(1).get(0).text(), Some("B"));
 
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseUp,
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Back),
@@ -127,7 +124,7 @@ mod test {
 
         assert_eq!(utils.root().get(0).get(1).get(0).text(), Some("A"));
 
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseUp,
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Forward),

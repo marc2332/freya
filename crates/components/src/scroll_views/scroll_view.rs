@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::{
         keyboard::Key,
         KeyboardEvent,
@@ -11,13 +11,13 @@ use freya_elements::{
 use freya_hooks::{
     use_applied_theme,
     use_focus,
-    use_node,
+    use_node_from_signal,
     ScrollBarThemeWith,
 };
 
 use super::use_scroll_controller::ScrollController;
 use crate::{
-    get_container_size,
+    get_container_sizes,
     get_corrected_scroll_position,
     get_scroll_position_from_cursor,
     get_scroll_position_from_wheel,
@@ -43,6 +43,14 @@ pub struct ScrollViewProps {
     /// Height of the ScrollView container. Default to `fill`.
     #[props(default = "fill".into())]
     pub height: String,
+    /// Minimum width of the ScrollView container.
+    pub min_width: Option<f32>,
+    /// Minimum height of the ScrollView container.
+    pub min_height: Option<f32>,
+    /// Maximum width of the ScrollView container.
+    pub max_width: Option<f32>,
+    /// Maximum height of the ScrollView container.
+    pub max_height: Option<f32>,
     /// Padding of the ScrollView container.
     #[props(default = "0".to_string())]
     pub padding: String,
@@ -96,7 +104,7 @@ pub struct ScrollViewProps {
 ///
 /// # With a Scroll Controller
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///     let mut scroll_controller = use_scroll_controller(|| ScrollConfig::default());
@@ -110,10 +118,10 @@ pub struct ScrollViewProps {
 ///                 width: "100%"
 ///             }
 ///             Button {
+///                 onpress: move |_| {
+///                    scroll_controller.scroll_to(ScrollPosition::Start, ScrollDirection::Vertical);
+///                 },
 ///                 label {
-///                     onclick: move |_| {
-///                          scroll_controller.scroll_to(ScrollPosition::Start, ScrollDirection::Vertical);
-///                     },
 ///                     label {
 ///                         "Scroll up"
 ///                     }
@@ -127,12 +135,34 @@ pub struct ScrollViewProps {
 ///         }
 ///     )
 /// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           ScrollView {
+/// #               label {
+/// #                   "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum laoreet tristique diam, ut gravida enim. Phasellus viverra vitae risus sit amet iaculis. Morbi porttitor quis nisl eu vulputate. Etiam vitae ligula a purus suscipit iaculis non ac risus. Suspendisse potenti. Aenean orci massa, ornare ut elit id, tristique commodo dui. Vestibulum laoreet tristique diam, ut gravida enim. Phasellus viverra vitae risus sit amet iaculis. Vestibulum laoreet tristique diam, ut gravida enim. Phasellus viverra vitae risus sit amet iaculis. Vestibulum laoreet tristique diam, ut gravida enim. Phasellus viverra vitae risus sit amet iaculis."
+/// #               }
+/// #           }
+/// #       }
+/// #   )
+/// # }, (250., 250.).into(), "./images/gallery_scroll_view.png");
 /// ```
+///
+/// # Preview
+/// ![ScrollView Preview][scroll_view]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("scroll_view", "images/gallery_scroll_view.png")
+)]
 #[allow(non_snake_case)]
 pub fn ScrollView(
     ScrollViewProps {
         width,
         height,
+        min_width,
+        min_height,
+        max_width,
+        max_height,
         padding,
         spacing,
         scrollbar_theme,
@@ -150,34 +180,26 @@ pub fn ScrollView(
     let mut scroll_controller =
         scroll_controller.unwrap_or_else(|| use_scroll_controller(ScrollConfig::default));
     let (mut scrolled_x, mut scrolled_y) = scroll_controller.into();
-    let (node_ref, size) = use_node();
+    let (node_ref, size) = use_node_from_signal(|| scroll_controller.layout());
 
     let mut focus = use_focus();
     let applied_scrollbar_theme = use_applied_theme!(&scrollbar_theme, scroll_bar);
 
     scroll_controller.use_apply(size.inner.width, size.inner.height);
 
-    let direction_is_vertical = direction == "vertical";
-
-    let vertical_scrollbar_is_visible =
-        is_scrollbar_visible(show_scrollbar, size.inner.height, size.area.height());
-    let horizontal_scrollbar_is_visible =
-        is_scrollbar_visible(show_scrollbar, size.inner.width, size.area.width());
-
-    let (container_width, content_width) = get_container_size(
-        &width,
-        direction_is_vertical,
-        Axis::X,
-        vertical_scrollbar_is_visible,
-        &applied_scrollbar_theme.size,
+    let vertical_scrollbar_is_visible = is_scrollbar_visible(
+        show_scrollbar,
+        size.inner.height.floor(),
+        size.area.height().floor(),
     );
-    let (container_height, content_height) = get_container_size(
-        &height,
-        direction_is_vertical,
-        Axis::Y,
-        horizontal_scrollbar_is_visible,
-        &applied_scrollbar_theme.size,
+    let horizontal_scrollbar_is_visible = is_scrollbar_visible(
+        show_scrollbar,
+        size.inner.width.floor(),
+        size.area.width().floor(),
     );
+
+    let (container_width, content_width) = get_container_sizes(&width);
+    let (container_height, content_height) = get_container_sizes(&height);
 
     let corrected_scrolled_y = get_corrected_scroll_position(
         size.inner.height,
@@ -195,7 +217,7 @@ pub fn ScrollView(
     let (scrollbar_x, scrollbar_width) =
         get_scrollbar_pos_and_size(size.inner.width, size.area.width(), corrected_scrolled_x);
 
-    // Moves the Y axis when the user scrolls in the container
+    // Moves the axis when the user scrolls in the container
     let onwheel = move |e: WheelEvent| {
         let speed_multiplier = if *clicking_alt.peek() {
             SCROLL_SPEED_MULTIPLIER
@@ -203,44 +225,46 @@ pub fn ScrollView(
             1.0
         };
 
-        let wheel_movement = e.get_delta_y() as f32 * speed_multiplier;
+        let invert_direction = (clicking_shift() || invert_scroll_wheel)
+            && (!clicking_shift() || !invert_scroll_wheel);
 
-        let scroll_vertically_or_not =
-            (invert_scroll_wheel && clicking_shift()) || !invert_scroll_wheel && !clicking_shift();
-
-        if scroll_vertically_or_not {
-            let scroll_position_y = get_scroll_position_from_wheel(
-                wheel_movement,
-                size.inner.height,
-                size.area.height(),
-                corrected_scrolled_y,
-            );
-
-            // Only scroll when there is still area to scroll
-            if *scrolled_y.peek() != scroll_position_y {
-                e.stop_propagation();
-                *scrolled_y.write() = scroll_position_y;
-            } else {
-                return;
-            }
+        let (x_movement, y_movement) = if invert_direction {
+            (
+                e.get_delta_y() as f32 * speed_multiplier,
+                e.get_delta_x() as f32 * speed_multiplier,
+            )
         } else {
-            let scroll_position_x = get_scroll_position_from_wheel(
-                wheel_movement,
-                size.inner.width,
-                size.area.width(),
-                corrected_scrolled_x,
-            );
+            (
+                e.get_delta_x() as f32 * speed_multiplier,
+                e.get_delta_y() as f32 * speed_multiplier,
+            )
+        };
 
-            // Only scroll when there is still area to scroll
-            if *scrolled_x.peek() != scroll_position_x {
-                e.stop_propagation();
-                *scrolled_x.write() = scroll_position_x;
-            } else {
-                return;
-            }
+        let scroll_position_y = get_scroll_position_from_wheel(
+            y_movement,
+            size.inner.height,
+            size.area.height(),
+            corrected_scrolled_y,
+        );
+
+        // Only scroll when there is still area to scroll
+        if *scrolled_y.peek() != scroll_position_y {
+            e.stop_propagation();
+            *scrolled_y.write() = scroll_position_y;
         }
 
-        focus.focus();
+        let scroll_position_x = get_scroll_position_from_wheel(
+            x_movement,
+            size.inner.width,
+            size.area.width(),
+            corrected_scrolled_x,
+        );
+
+        // Only scroll when there is still area to scroll
+        if *scrolled_x.peek() != scroll_position_x {
+            e.stop_propagation();
+            *scrolled_x.write() = scroll_position_x;
+        }
     };
 
     // Drag the scrollbars
@@ -272,7 +296,7 @@ pub fn ScrollView(
         }
 
         if clicking_scrollbar.is_some() {
-            focus.focus();
+            focus.request_focus();
         }
     };
 
@@ -346,17 +370,6 @@ pub fn ScrollView(
         }
     };
 
-    let horizontal_scrollbar_size = if horizontal_scrollbar_is_visible {
-        &applied_scrollbar_theme.size
-    } else {
-        "0"
-    };
-    let vertical_scrollbar_size = if vertical_scrollbar_is_visible {
-        &applied_scrollbar_theme.size
-    } else {
-        "0"
-    };
-
     let is_scrolling_x = clicking_scrollbar
         .read()
         .as_ref()
@@ -372,60 +385,72 @@ pub fn ScrollView(
 
     rsx!(
         rect {
-            a11y_role:"scrollView",
+            a11y_role:"scroll-view",
             overflow: "clip",
             direction: "horizontal",
-            width,
-            height,
+            width: width.clone(),
+            height: height.clone(),
+            min_width: min_width.map(|x| x.to_string()),
+            min_height: min_height.map(|x| x.to_string()),
+            max_width: max_width.map(|x| x.to_string()),
+            max_height: max_height.map(|x| x.to_string()),
             onglobalclick: onclick,
             onglobalmousemove: onmousemove,
             onglobalkeydown,
             onglobalkeyup,
             a11y_id,
+            a11y_focusable: "false",
             rect {
                 direction: "vertical",
-                width: "{container_width}",
-                height: "{container_height}",
+                width: container_width,
+                height: container_height,
                 rect {
                     overflow: "clip",
-                    spacing: "{spacing}",
-                    padding: "{padding}",
-                    height: "{content_height}",
-                    width: "{content_width}",
-                    direction: "{direction}",
+                    spacing,
+                    padding,
+                    width: content_width,
+                    height: content_height,
+                    min_width: min_width.map(|x| x.to_string()),
+                    min_height: min_height.map(|x| x.to_string()),
+                    max_width: max_width.map(|x| x.to_string()),
+                    max_height: max_height.map(|x| x.to_string()),
+                    direction: direction,
                     offset_y: "{corrected_scrolled_y}",
                     offset_x: "{corrected_scrolled_x}",
                     reference: node_ref,
-                    onwheel: onwheel,
+                    onwheel,
                     {children}
                 }
-                ScrollBar {
-                    width: "100%",
-                    height: "{horizontal_scrollbar_size}",
-                    offset_x: "{scrollbar_x}",
-                    clicking_scrollbar: is_scrolling_x,
-                    theme: scrollbar_theme.clone(),
-                    ScrollThumb {
+                if show_scrollbar && horizontal_scrollbar_is_visible {
+                    ScrollBar {
+                        size: &applied_scrollbar_theme.size,
+                        offset_x: scrollbar_x,
                         clicking_scrollbar: is_scrolling_x,
-                        onmousedown: onmousedown_x,
-                        width: "{scrollbar_width}",
-                        height: "100%",
-                        theme: scrollbar_theme.clone()
+                        theme: scrollbar_theme.clone(),
+                        ScrollThumb {
+                            clicking_scrollbar: is_scrolling_x,
+                            onmousedown: onmousedown_x,
+                            width: "{scrollbar_width}",
+                            height: "100%",
+                            theme: scrollbar_theme.clone()
+                        }
                     }
                 }
             }
-            ScrollBar {
-                width: "{vertical_scrollbar_size}",
-                height: "100%",
-                offset_y: "{scrollbar_y}",
-                clicking_scrollbar: is_scrolling_y,
-                theme: scrollbar_theme.clone(),
-                ScrollThumb {
+            if show_scrollbar && vertical_scrollbar_is_visible {
+                ScrollBar {
+                    is_vertical: true,
+                    size: &applied_scrollbar_theme.size,
+                    offset_y: scrollbar_y,
                     clicking_scrollbar: is_scrolling_y,
-                    onmousedown: onmousedown_y,
-                    width: "100%",
-                    height: "{scrollbar_height}",
-                    theme: scrollbar_theme
+                    theme: scrollbar_theme.clone(),
+                    ScrollThumb {
+                        clicking_scrollbar: is_scrolling_y,
+                        onmousedown: onmousedown_y,
+                        width: "100%",
+                        height: "{scrollbar_height}",
+                        theme: scrollbar_theme
+                    }
                 }
             }
         }
@@ -445,11 +470,11 @@ mod test {
                     rect {
                         height: "200",
                         width: "200",
-                    },
+                    }
                     rect {
                         height: "200",
                         width: "200",
-                    },
+                    }
                     rect {
                         height: "200",
                         width: "200",
@@ -474,7 +499,7 @@ mod test {
         assert!(content.get(2).is_visible()); // 3. 400 -> 600, 400 < 500
         assert!(!content.get(3).is_visible()); // 4. 600 -> 800, 600 is NOT < 500, which means it is not visible.
 
-        utils.push_event(PlatformEvent::Wheel {
+        utils.push_event(TestEvent::Wheel {
             name: EventName::Wheel,
             scroll: (0., -300.).into(),
             cursor: (5., 5.).into(),
@@ -498,11 +523,11 @@ mod test {
                     rect {
                         height: "200",
                         width: "200",
-                    },
+                    }
                     rect {
                         height: "200",
                         width: "200",
-                    },
+                    }
                     rect {
                         height: "200",
                         width: "200",
@@ -528,24 +553,24 @@ mod test {
         assert!(!content.get(3).is_visible()); // 4. 600 -> 800, 600 is NOT < 500, which means it is not visible.
 
         // Simulate the user dragging the scrollbar
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
-            cursor: (490., 20.).into(),
+            cursor: (495., 20.).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseDown,
-            cursor: (490., 20.).into(),
+            cursor: (495., 20.).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
-            cursor: (490., 320.).into(),
+            cursor: (495., 320.).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseUp,
-            cursor: (490., 320.).into(),
+            cursor: (495., 320.).into(),
             button: Some(MouseButton::Left),
         });
 
@@ -560,7 +585,7 @@ mod test {
 
         // Scroll up with arrows
         for _ in 0..5 {
-            utils.push_event(PlatformEvent::Keyboard {
+            utils.push_event(TestEvent::Keyboard {
                 name: EventName::KeyDown,
                 key: Key::ArrowUp,
                 code: Code::ArrowUp,
@@ -575,7 +600,7 @@ mod test {
         assert!(!content.get(3).is_visible());
 
         // Scroll to the bottom with arrows
-        utils.push_event(PlatformEvent::Keyboard {
+        utils.push_event(TestEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::End,
             code: Code::End,

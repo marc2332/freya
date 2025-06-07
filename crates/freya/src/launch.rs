@@ -1,14 +1,14 @@
 use dioxus_core::Element;
-use freya_renderer::{
-    DesktopRenderer,
+use freya_winit::{
     LaunchConfig,
     WindowConfig,
+    WinitRenderer,
 };
 
 /// Launch a new window with the default config.
 ///
-/// - Width: `600.0`
-/// - Height: `600.0`
+/// - Width: `700.0`
+/// - Height: `500.0`
 /// - Decorations enabled
 /// - Transparency disabled
 /// - Window title: `Freya`
@@ -40,7 +40,7 @@ pub fn launch(app: AppComponent) {
         app,
         LaunchConfig::<()> {
             window_config: WindowConfig {
-                size: (600.0, 600.0),
+                size: (700.0, 500.0),
                 decorations: true,
                 transparent: false,
                 title: "Freya",
@@ -53,8 +53,8 @@ pub fn launch(app: AppComponent) {
 
 /// Launch a new window with a custom title and the default config.
 ///
-/// - Width: `400`
-/// - Height: `300`
+/// - Width: `700`
+/// - Height: `500`
 /// - Decorations enabled
 /// - Transparency disabled
 /// - Window background: white
@@ -85,7 +85,7 @@ pub fn launch_with_title(app: AppComponent, title: &'static str) {
         app,
         LaunchConfig::<()> {
             window_config: WindowConfig {
-                size: (400.0, 300.0),
+                size: (700.0, 500.0),
                 decorations: true,
                 transparent: false,
                 title,
@@ -108,7 +108,7 @@ pub fn launch_with_title(app: AppComponent, title: &'static str) {
 /// # use freya::prelude::*;
 ///
 /// fn main() {
-///     launch_with_props(app, "Whoa!", (400.0, 600.0));
+///     launch_with_props(app, "Whoa!", (700.0, 500.0));
 /// }
 ///
 /// fn app() -> Element {
@@ -157,7 +157,7 @@ pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height)
 ///     launch_cfg(
 ///         app,
 ///         LaunchConfig::<()>::new()
-///             .with_size(500.0, 400.0)
+///             .with_size(700.0, 500.0)
 ///             .with_decorations(true)
 ///             .with_transparency(false)
 ///             .with_title("Freya App")
@@ -181,7 +181,7 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
     #[cfg(feature = "performance-overlay")]
     let config = config.with_plugin(crate::plugins::PerformanceOverlayPlugin::default());
 
-    use freya_core::prelude::{
+    use freya_core::dom::{
         FreyaDOM,
         SafeDOM,
     };
@@ -214,7 +214,7 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
             };
 
             use freya_devtools::with_devtools;
-            use freya_renderer::devtools::Devtools;
+            use freya_winit::devtools::Devtools;
 
             let hovered_node = Some(Arc::new(Mutex::new(None)));
             let (devtools, devtools_receiver) = Devtools::new();
@@ -236,11 +236,11 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
             .unwrap();
         let _guard = rt.enter();
 
-        DesktopRenderer::launch(vdom, sdom, config, devtools, hovered_node);
+        WinitRenderer::launch(vdom, sdom, config, devtools, hovered_node);
     }
 
     #[cfg(feature = "custom-tokio-rt")]
-    DesktopRenderer::launch(vdom, sdom, config, devtools, hovered_node);
+    WinitRenderer::launch(vdom, sdom, config, devtools, hovered_node);
 }
 
 #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
@@ -250,6 +250,11 @@ fn with_accessibility(app: AppComponent) -> VirtualDom {
     use dioxus::prelude::Props;
     use dioxus_core::fc_to_builder;
     use dioxus_core_macro::rsx;
+    #[cfg(debug_assertions)]
+    use dioxus_signals::{
+        GlobalSignal,
+        Readable,
+    };
     use freya_components::NativeContainer;
 
     #[derive(Props, Clone, PartialEq)]

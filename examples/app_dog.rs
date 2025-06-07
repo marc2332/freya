@@ -39,24 +39,28 @@ fn app() -> Element {
     rsx!(
         rect {
             background: "rgb(15, 15, 15)",
-            width: "100%",
-            height: "100%",
+            width: "fill",
+            height: "fill",
+            content: "flex",
             rect {
-                overflow: "clip",
                 width: "100%",
-                height: "calc(100% - 60)",
-                {dog_url.read().as_ref().map(|dog_url| rsx!(
-                    NetworkImage {
-                        url: dog_url.clone()
-                    }
-               ))}
-            }
-            rect {
-                overflow: "clip",
-                height: "60",
-                width: "100%",
+                height: "flex(1)",
                 main_align: "center",
                 cross_align: "center",
+                overflow: "clip",
+                if let Some(url) = dog_url() {
+                    NetworkImage {
+                        url,
+                        min_width: "300",
+                        min_height: "300",
+                    }
+                }
+            }
+            rect {
+                width: "fill",
+                main_align: "center",
+                cross_align: "center",
+                padding: "10 0",
                 Button {
                     onpress,
                     label {

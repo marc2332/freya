@@ -13,6 +13,7 @@ impl ActivableRouteContext {
     }
 }
 
+/// Consume an activable Route, use in combination with `ActivableRoute`.
 pub fn use_activable_route() -> bool {
     let ctx = try_use_context::<ActivableRouteContext>();
 

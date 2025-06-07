@@ -1,4 +1,4 @@
-#[derive(PartialEq, Clone, Debug, Default)]
+#[derive(PartialEq, Eq, Clone, Debug, Default)]
 pub enum Alignment {
     #[default]
     Start,
@@ -10,11 +10,11 @@ pub enum Alignment {
 }
 
 impl Alignment {
-    pub fn is_not_start(&self) -> bool {
-        *self != Self::Start
+    pub const fn is_not_start(&self) -> bool {
+        !matches!(self, Self::Start)
     }
 
-    pub fn is_spaced(&self) -> bool {
+    pub const fn is_spaced(&self) -> bool {
         matches!(
             self,
             Self::SpaceBetween | Self::SpaceAround | Self::SpaceEvenly
@@ -23,12 +23,12 @@ impl Alignment {
 
     pub fn pretty(&self) -> String {
         match self {
-            Alignment::Start => "start".to_string(),
-            Alignment::Center => "center".to_string(),
-            Alignment::End => "end".to_string(),
-            Alignment::SpaceBetween => "space-between".to_string(),
-            Alignment::SpaceEvenly => "space-evenly".to_string(),
-            Alignment::SpaceAround => "space-around".to_string(),
+            Self::Start => "start".to_string(),
+            Self::Center => "center".to_string(),
+            Self::End => "end".to_string(),
+            Self::SpaceBetween => "space-between".to_string(),
+            Self::SpaceEvenly => "space-evenly".to_string(),
+            Self::SpaceAround => "space-around".to_string(),
         }
     }
 }

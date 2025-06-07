@@ -1,39 +1,47 @@
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
-use freya_node_state::{
-    Border,
-    CornerRadius,
-    CursorState,
-    Fill,
-    FontStyleState,
-    LayoutState,
-    ReferencesState,
-    Shadow,
-    StyleState,
-    TextOverflow,
-    TransformState,
-};
 use torin::{
     alignment::Alignment,
-    direction::DirectionMode,
+    direction::Direction,
     gaps::Gaps,
     prelude::{
         Content,
         Position,
+        VisibleSize,
     },
     size::Size,
 };
 
-use crate::dom::DioxusNode;
+use crate::{
+    dom::DioxusNode,
+    states::{
+        AccessibilityNodeState,
+        CursorState,
+        FontStyleState,
+        LayoutState,
+        StyleState,
+        SvgState,
+        TransformState,
+    },
+    values::{
+        Border,
+        CornerRadius,
+        Fill,
+        Shadow,
+        SvgPaint,
+        TextOverflow,
+    },
+};
 
 #[derive(Clone, PartialEq)]
 pub struct NodeState {
     pub cursor: CursorState,
     pub font_style: FontStyleState,
-    pub references: ReferencesState,
     pub size: LayoutState,
     pub style: StyleState,
     pub transform: TransformState,
+    pub accessibility: AccessibilityNodeState,
+    pub svg: SvgState,
 }
 
 pub fn get_node_state(node: &DioxusNode) -> NodeState {
@@ -44,11 +52,6 @@ pub fn get_node_state(node: &DioxusNode) -> NodeState {
         .unwrap_or_default();
     let font_style = node
         .get::<FontStyleState>()
-        .as_deref()
-        .cloned()
-        .unwrap_or_default();
-    let references = node
-        .get::<ReferencesState>()
         .as_deref()
         .cloned()
         .unwrap_or_default();
@@ -67,14 +70,25 @@ pub fn get_node_state(node: &DioxusNode) -> NodeState {
         .as_deref()
         .cloned()
         .unwrap_or_default();
+    let accessibility = node
+        .get::<AccessibilityNodeState>()
+        .as_deref()
+        .cloned()
+        .unwrap_or_default();
+    let svg = node
+        .get::<SvgState>()
+        .as_deref()
+        .cloned()
+        .unwrap_or_default();
 
     NodeState {
         cursor,
         font_style,
-        references,
         size,
         style,
         transform,
+        accessibility,
+        svg,
     }
 }
 
@@ -87,6 +101,14 @@ impl NodeState {
             ("min_height", AttributeType::Size(&self.size.minimum_height)),
             ("max_width", AttributeType::Size(&self.size.maximum_width)),
             ("max_height", AttributeType::Size(&self.size.maximum_height)),
+            (
+                "visible_width",
+                AttributeType::VisibleSize(&self.size.visible_width),
+            ),
+            (
+                "visible_height",
+                AttributeType::VisibleSize(&self.size.visible_height),
+            ),
             ("direction", AttributeType::Direction(&self.size.direction)),
             ("padding", AttributeType::Measures(self.size.padding)),
             ("margin", AttributeType::Measures(self.size.margin)),
@@ -137,21 +159,37 @@ impl NodeState {
             ("offset_x", AttributeType::Measure(self.size.offset_x.get())),
             ("offset_y", AttributeType::Measure(self.size.offset_y.get())),
             ("content", AttributeType::Content(&self.size.content)),
+            (
+                "svg_fill",
+                AttributeType::OptionalColor(self.svg.svg_fill.and_then(|fill| match fill {
+                    SvgPaint::None => None,
+                    SvgPaint::CurrentColor => Some(Fill::Color(self.font_style.color)),
+                    SvgPaint::Color(color) => Some(Fill::Color(color)),
+                })),
+            ),
+            (
+                "svg_stroke",
+                AttributeType::OptionalColor(self.svg.svg_stroke.and_then(|stroke| match stroke {
+                    SvgPaint::None => None,
+                    SvgPaint::CurrentColor => Some(Fill::Color(self.font_style.color)),
+                    SvgPaint::Color(color) => Some(Fill::Color(color)),
+                })),
+            ),
         ];
 
         let shadows = &self.style.shadows;
-        for shadow in shadows {
+        for shadow in shadows.iter() {
             attributes.push(("shadow", AttributeType::Shadow(shadow)));
         }
 
         let borders = &self.style.borders;
-        for border in borders {
+        for border in borders.iter() {
             attributes.push(("border", AttributeType::Border(border)));
         }
 
         let text_shadows = &self.font_style.text_shadows;
 
-        for text_shadow in text_shadows {
+        for text_shadow in text_shadows.iter() {
             attributes.push(("text_shadow", AttributeType::TextShadow(text_shadow)));
         }
 
@@ -161,13 +199,15 @@ impl NodeState {
 
 pub enum AttributeType<'a> {
     Color(Fill),
+    OptionalColor(Option<Fill>),
     Gradient(Fill),
     Size(&'a Size),
+    VisibleSize(&'a VisibleSize),
     Measure(f32),
     OptionalMeasure(Option<f32>),
     Measures(Gaps),
     CornerRadius(CornerRadius),
-    Direction(&'a DirectionMode),
+    Direction(&'a Direction),
     Position(&'a Position),
     Content(&'a Content),
     Alignment(&'a Alignment),

@@ -3,24 +3,24 @@ use std::borrow::Cow;
 use dioxus::prelude::*;
 use dioxus_router::prelude::{
     navigator,
-    IntoRoutable,
+    NavigationTarget,
 };
+use freya_core::platform::MouseButton;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::MouseEvent,
 };
 use freya_hooks::{
     use_applied_theme,
     LinkThemeWith,
 };
-use winit::event::MouseButton;
 
 use crate::{
     Tooltip,
     TooltipContainer,
 };
 
-/// Tooltip configuration for the [`Link`] component.
+/// Tooltip configuration for the [`Link()`] component.
 #[derive(Clone, PartialEq)]
 pub enum LinkTooltip {
     /// No tooltip at all.
@@ -34,7 +34,7 @@ pub enum LinkTooltip {
     Custom(String),
 }
 
-/// Similar to [`Link`](dioxus_router::components::Link), but you can use it in Freya.
+/// Similar to [`Link`](dioxus_router::components::Link()), but you can use it in Freya.
 /// Both internal routes (dioxus-router) and external links are supported. When using internal routes
 /// make sure the Link is descendant of a [`Router`](dioxus_router::components::Router) component.
 ///
@@ -49,7 +49,7 @@ pub enum LinkTooltip {
 /// ```rust
 /// # use dioxus::prelude::*;
 /// # use dioxus_router::prelude::*;
-/// # use freya_elements::elements as dioxus_elements;
+/// # use freya_elements as dioxus_elements;
 /// # use freya_components::Link;
 /// # #[derive(Routable, Clone)]
 /// # #[rustfmt::skip]
@@ -77,7 +77,7 @@ pub enum LinkTooltip {
 ///
 /// ```rust
 /// # use dioxus::prelude::*;
-/// # use freya_elements::elements as dioxus_elements;
+/// # use freya_elements as dioxus_elements;
 /// # use freya_components::Link;
 /// # fn link_example_good() -> Element {
 /// rsx! {
@@ -96,7 +96,7 @@ pub fn Link(
     theme: Option<LinkThemeWith>,
     /// The route or external URL string to navigate to.
     #[props(into)]
-    to: IntoRoutable,
+    to: NavigationTarget,
     /// Inner children for the Link.
     children: Element,
     /// This event will be fired if opening an external link fails.
@@ -112,7 +112,7 @@ pub fn Link(
     let theme = use_applied_theme!(&theme, link);
     let mut is_hovering = use_signal(|| false);
 
-    let url = if let IntoRoutable::FromStr(ref url) = to {
+    let url = if let NavigationTarget::External(ref url) = to {
         Some(url.clone())
     } else {
         None
@@ -179,7 +179,7 @@ pub fn Link(
                     Tooltip {
                         text: tooltip
                     }
-                )
+                ),
                 {link}
             }
         )
@@ -272,13 +272,13 @@ mod test {
         assert_eq!(utils.root().get(2).get(0).text(), Some("Home"));
 
         // Go to the "Somewhere" route
-        utils.click_cursor((5., 60.)).await;
+        utils.click_cursor((10., 55.)).await;
 
         // Check route is Somewhere
         assert_eq!(utils.root().get(2).get(0).text(), Some("Somewhere"));
 
         // Go to the "Home" route again
-        utils.click_cursor((5., 5.)).await;
+        utils.click_cursor((10., 10.)).await;
 
         // Check route is Home
         assert_eq!(utils.root().get(2).get(0).text(), Some("Home"));

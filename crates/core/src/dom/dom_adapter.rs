@@ -4,11 +4,13 @@ use freya_native_core::{
     tree::TreeRef,
     NodeId,
 };
-use freya_node_state::LayoutState;
 use rustc_hash::FxHashMap;
 use torin::prelude::*;
 
-use crate::dom::DioxusDOM;
+use crate::{
+    dom::DioxusDOM,
+    states::LayoutState,
+};
 
 /// RealDOM adapter for Torin.
 pub struct DioxusDOMAdapter<'a> {
@@ -51,6 +53,8 @@ impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
             minimum_height: layout.minimum_height,
             maximum_width: layout.maximum_width,
             maximum_height: layout.maximum_height,
+            visible_width: layout.visible_width,
+            visible_height: layout.visible_height,
             direction: layout.direction,
             padding: layout.padding,
             margin: layout.margin,
@@ -65,7 +69,7 @@ impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
             spacing: layout.spacing,
         };
 
-        node.scale(self.scale_factor);
+        node.scale_if_needed(self.scale_factor);
 
         Some(node)
     }

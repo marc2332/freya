@@ -1,13 +1,15 @@
-use freya_core::node::NodeState;
+use freya_core::{
+    custom_attributes::CustomAttributeValues,
+    node::NodeState,
+    states::{
+        StyleState,
+        ViewportState,
+    },
+};
 use freya_native_core::{
     node::NodeType,
     real_dom::NodeImmutable,
     NodeId,
-};
-use freya_node_state::{
-    CustomAttributeValues,
-    StyleState,
-    ViewportState,
 };
 use torin::{
     geometry::Area,
@@ -28,15 +30,16 @@ pub struct TestNode {
 }
 
 impl TestNode {
-    /// Quickly get a child of the Node by the given index, if the child is not found it will panic
+    /// Get a node by its position in this node children list. Will panic if not found.
     #[track_caller]
     pub fn get(&self, child_index: usize) -> Self {
-        self.child(child_index)
+        self.try_get(child_index)
             .unwrap_or_else(|| panic!("Child by index {child_index} not found"))
     }
 
-    /// Get a child of the Node by the given index
-    pub fn child(&self, child_index: usize) -> Option<Self> {
+    /// Get a node by its position in this node children list.
+    #[track_caller]
+    pub fn try_get(&self, child_index: usize) -> Option<Self> {
         let child_id = self.children_ids.get(child_index)?;
         let child: TestNode = self.utils.get_node_by_id(*child_id);
         Some(child)
@@ -81,7 +84,7 @@ impl TestNode {
     }
 
     /// Get a mutable reference to the test utils.
-    pub fn utils(&self) -> &TestUtils {
+    pub(crate) fn utils(&self) -> &TestUtils {
         &self.utils
     }
 
@@ -144,7 +147,7 @@ impl TestNode {
         self.node_type.is_placeholder()
     }
 
-    /// Get a Node by a matching text.
+    /// Get a descendant Node of this Node that matches a certain text.
     pub fn get_by_text(&self, matching_text: &str) -> Option<Self> {
         self.utils()
             .get_node_matching_inside_id(self.node_id, |node| {

@@ -1,6 +1,12 @@
 use dioxus::prelude::*;
 use freya_components::*;
-use freya_core::prelude::*;
+use freya_core::node::{
+    AttributeType,
+    ExternalPretty,
+};
+use freya_elements::{
+    self as dioxus_elements,
+};
 use freya_native_core::NodeId;
 
 use crate::{
@@ -20,15 +26,23 @@ use crate::{
 #[component]
 pub fn NodeInspectorStyle(node_id: String) -> Element {
     let node_id = NodeId::deserialize(&node_id);
-    let node = use_node_info(node_id)?;
+    let Some(node) = use_node_info(node_id) else {
+        return Ok(VNode::placeholder());
+    };
 
     rsx!(
         ScrollView {
             show_scrollbar: true,
-            height : "calc(100% - 35)",
-            width: "100%",
-            {node.state.attributes().into_iter().enumerate().map(|(i, (name, attr))| {
-                match attr {
+            height : "fill",
+            width: "fill",
+            {node.state.attributes().into_iter().enumerate().filter_map(|(i, (name, attr))| {
+                let background = if i % 2 == 0 {
+                    "rgb(255, 255, 255, 0.1)"
+                } else {
+                    "transparent"
+                };
+
+                let el = match attr {
                     AttributeType::Measure(measure) => {
                         rsx!{
                             Property {
@@ -74,6 +88,15 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
                             }
                         }
                     }
+                    AttributeType::VisibleSize(visible_size) => {
+                        rsx!{
+                            Property {
+                                key: "{i}",
+                                name: "{name}",
+                                value: visible_size.pretty()
+                            }
+                        }
+                    }
                     AttributeType::Color(fill) => {
                         rsx!{
                             ColorProperty {
@@ -81,6 +104,19 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
                                 name: "{name}",
                                 fill: fill.clone()
                             }
+                        }
+                    }
+                    AttributeType::OptionalColor(fill) => {
+                        if let Some(fill) = fill {
+                            rsx!{
+                                ColorProperty {
+                                    key: "{i}",
+                                    name: "{name}",
+                                    fill: fill.clone()
+                                }
+                            }
+                        } else {
+                            return None;
                         }
                     }
                     AttributeType::Gradient(fill) => {
@@ -182,7 +218,17 @@ pub fn NodeInspectorStyle(node_id: String) -> Element {
                             }
                         }
                     }
-                }
+                };
+
+
+
+                Some(rsx!(
+                    rect {
+                        background,
+                        padding: "5 16",
+                        {el}
+                    }
+                ))
             })}
         }
     )

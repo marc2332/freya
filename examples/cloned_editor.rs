@@ -21,8 +21,7 @@ fn app() -> Element {
 
 #[allow(non_snake_case)]
 fn Body() -> Element {
-    let theme = use_theme();
-    let theme = theme.read();
+    let theme = use_applied_theme!(None, body);
 
     let mut editable = use_editable(
         || {
@@ -30,7 +29,6 @@ fn Body() -> Element {
         },
         EditableMode::SingleLineMultipleEditors,
     );
-    let cursor_reference = editable.cursor_attr();
     let editor = editable.editor().read();
 
     let onclick = move |_: MouseEvent| {
@@ -52,10 +50,9 @@ fn Body() -> Element {
             padding: "10",
             onglobalkeydown,
             onglobalkeyup,
-            cursor_reference,
             direction: "horizontal",
             onglobalclick: onclick,
-            background: "{theme.body.background}",
+            background: "{theme.background}",
             VirtualScrollView {
                 width: "50%",
                 length: editor.len_lines(),
@@ -109,6 +106,7 @@ fn Body() -> Element {
                                 "{line_index + 1} "
                             }
                             paragraph {
+                                cursor_reference: editable.cursor_attr(),
                                 main_align: "center",
                                 height: "100%",
                                 width: "100%",

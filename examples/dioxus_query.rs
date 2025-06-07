@@ -40,11 +40,11 @@ fn app() -> Element {
     use_init_query_client::<QueryValue, (), QueryKey>();
     let client = use_query_client::<QueryValue, (), QueryKey>();
     let joke_query = use_get_query([QueryKey::RandomJoke], |_| async {
-        get_random_joke().await.ok_or(()).into()
+        get_random_joke().await.ok_or(())
     });
 
     let new_joke = move |_| {
-        client.invalidate_query(QueryKey::RandomJoke);
+        client.invalidate_queries(&[QueryKey::RandomJoke]);
     };
 
     rsx!(
@@ -54,27 +54,31 @@ fn app() -> Element {
             main_align: "center",
             cross_align: "center",
             match joke_query.result().value() {
-                QueryResult::Ok(QueryValue::Joke(joke)) => {
-                    rsx!(
-                        label {
-                            "{joke.setup}"
+                QueryState::Settled(settled) => {
+                    match settled {
+                        QueryResult::Ok(QueryValue::Joke(joke)) => {
+                            rsx!(
+                                label {
+                                    "{joke.setup}"
+                                }
+                                label {
+                                    "{joke.punchline}"
+                                }
+                            )
                         }
-                        label {
-                            "{joke.punchline}"
+                        QueryResult::Err(_) => {
+                            rsx!(
+                                label {
+                                    "An error ocurred."
+                                }
+                            )
                         }
-                    )
+                    }
                 }
-                QueryResult::Loading(_) => {
+                QueryState::Loading(_) => {
                     rsx!(
                         label {
                             "Loading"
-                        }
-                    )
-                }
-                QueryResult::Err(_) => {
-                    rsx!(
-                        label {
-                            "An error ocurred."
                         }
                     )
                 }
@@ -87,7 +91,7 @@ fn app() -> Element {
             cross_align: "center",
             direction: "horizontal",
             Button {
-                onclick: new_joke,
+                onpress: new_joke,
                 label { "New joke" }
             }
         }

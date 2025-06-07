@@ -3,21 +3,14 @@ use freya_native_core::{
     node::NodeType,
     real_dom::NodeImmutable,
 };
-use freya_node_state::AccessibilityNodeState;
+use itertools::Itertools;
 pub use tree::*;
 
 use crate::{
     dom::DioxusNode,
+    states::AccessibilityNodeState,
     types::AccessibilityId,
 };
-
-/// Strategy for the next Accessibility Node to be focused.
-#[derive(PartialEq)]
-pub enum AccessibilityFocusStrategy {
-    Forward,
-    Backward,
-    // We could add more strategies in the future
-}
 
 /// Shortcut functions to retrieve Acessibility info from a Dioxus Node
 pub trait NodeAccessibility {
@@ -54,7 +47,9 @@ impl NodeAccessibility for DioxusNode<'_> {
 
     /// Collect all descendant accessibility node ids
     fn get_accessibility_children(&self) -> Vec<AccessibilityId> {
-        let node_accessibility = &*self.get::<AccessibilityNodeState>().unwrap();
-        node_accessibility.descencent_accessibility_ids.clone()
+        self.children()
+            .into_iter()
+            .filter_map(|child| child.get_accessibility_id())
+            .collect_vec()
     }
 }

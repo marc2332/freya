@@ -52,7 +52,6 @@ fn app() -> Element {
         rect {
             width: "100%",
             height: "100%",
-            cursor_reference,
             ScrollView {
                 width: "100%",
                 height: "calc(100% - 30)",
@@ -66,6 +65,7 @@ fn app() -> Element {
                     cursor_mode: "editable",
                     cursor_color: "black",
                     highlights,
+                    cursor_reference,
                     onclick,
                     onmousemove,
                     onmousedown,

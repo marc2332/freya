@@ -33,7 +33,7 @@ fn app() -> Element {
             leading: rsx!(
                 Checkbox {
                     selected: selected.read().contains(&Choice::First),
-                },
+                }
             ),
             label { "First choice" }
         }
@@ -48,7 +48,7 @@ fn app() -> Element {
             leading: rsx!(
                 Checkbox {
                     selected: selected.read().contains(&Choice::Second),
-                },
+                }
             ),
             label { "Second choice" }
         }
@@ -63,7 +63,7 @@ fn app() -> Element {
             leading: rsx!(
                 Checkbox {
                     selected: selected.read().contains(&Choice::Third),
-                },
+                }
             ),
             label { "Third choice" }
         }

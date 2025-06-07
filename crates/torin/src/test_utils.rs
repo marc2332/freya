@@ -1,28 +1,8 @@
-use std::{
-    collections::HashMap,
-    sync::Arc,
-};
+#![allow(clippy::missing_panics_doc)]
 
-use freya_native_core::SendAnyMap;
+use std::collections::HashMap;
 
 use crate::prelude::*;
-
-pub struct TestingMeasurer;
-
-impl LayoutMeasurer<usize> for TestingMeasurer {
-    fn measure(
-        &mut self,
-        _node_id: usize,
-        _node: &Node,
-        _area_size: &Size2D,
-    ) -> Option<(Size2D, Arc<SendAnyMap>)> {
-        None
-    }
-
-    fn should_measure_inner_children(&mut self, _node_id: usize) -> bool {
-        true
-    }
-}
 
 #[derive(Default)]
 pub struct TestingDOM {
@@ -31,7 +11,7 @@ pub struct TestingDOM {
 
 impl TestingDOM {
     pub fn add(&mut self, node_id: usize, parent: Option<usize>, children: Vec<usize>, node: Node) {
-        let depth = parent.map(|p| self.mapper.get(&p).unwrap().2).unwrap_or(0) + 1;
+        let depth = parent.map_or(0, |p| self.mapper.get(&p).unwrap().2) + 1;
         self.mapper.insert(node_id, (parent, children, depth, node));
     }
 
@@ -40,13 +20,11 @@ impl TestingDOM {
     }
 
     pub fn remove(&mut self, node_id: usize) {
-        let node = self.mapper.get(&node_id).unwrap().clone();
+        let node = self.mapper.remove(&node_id).unwrap();
 
         if let Some((_, parent_children, _, _)) = node.0.and_then(|p| self.mapper.get_mut(&p)) {
             parent_children.retain(|c| *c != node_id);
         }
-
-        self.mapper.remove(&node_id);
 
         for child in node.1 {
             self.remove(child);
@@ -83,9 +61,9 @@ impl DOMAdapter<usize> for TestingDOM {
     }
 }
 
-pub fn test_utils() -> (Torin<usize>, Option<TestingMeasurer>) {
+pub fn test_utils() -> (Torin<usize>, Option<NoopMeasurer>) {
     let layout = Torin::<usize>::new();
-    let measurer = Some(TestingMeasurer);
+    let measurer = None::<NoopMeasurer>;
 
     (layout, measurer)
 }

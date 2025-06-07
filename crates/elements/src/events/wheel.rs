@@ -1,4 +1,32 @@
-use crate::definitions::PlatformEventData;
+use crate::{
+    events::ErasedEventData,
+    impl_event,
+};
+
+impl_event! [
+    WheelData;
+
+    /// The `wheel` event fires when the user scrolls the mouse wheel while hovering over the element.
+    ///
+    /// Event Data: [`WheelData`](crate::events::WheelData)
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             width: "100",
+    ///             height: "100",
+    ///             background: "red",
+    ///             onwheel: |_| println!("Scrolling with the wheel!")
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    onwheel
+];
 
 /// Data of a Wheel event.
 #[derive(Debug, Clone, PartialEq)]
@@ -26,8 +54,8 @@ impl WheelData {
     }
 }
 
-impl From<&PlatformEventData> for WheelData {
-    fn from(val: &PlatformEventData) -> Self {
+impl From<&ErasedEventData> for WheelData {
+    fn from(val: &ErasedEventData) -> Self {
         val.downcast::<WheelData>().cloned().unwrap()
     }
 }

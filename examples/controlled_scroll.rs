@@ -32,7 +32,7 @@ fn app() -> Element {
                 scroll_controller,
                 width: "50%",
                 Button {
-                    onclick: scroll_to_bottom,
+                    onpress: scroll_to_bottom,
                     label {
                         "Scroll to Bottom"
                     }
@@ -48,7 +48,7 @@ fn app() -> Element {
                 Card {}
                 Card {}
                 Button {
-                    onclick: scroll_to_top,
+                    onpress: scroll_to_top,
                     label {
                         "Scroll to Top"
                     }

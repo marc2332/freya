@@ -1,11 +1,14 @@
 use dioxus::prelude::*;
+use freya_core::platform::CursorIcon;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::{
         KeyboardEvent,
         PointerEvent,
         PointerType,
     },
+    MouseButton,
+    TouchPhase,
 };
 use freya_hooks::{
     use_applied_theme,
@@ -14,13 +17,154 @@ use freya_hooks::{
     ButtonTheme,
     ButtonThemeWith,
 };
-use winit::{
-    event::{
-        MouseButton,
-        TouchPhase,
-    },
-    window::CursorIcon,
-};
+
+/// Properties for the [`Button`], [`FilledButton`] and [`OutlineButton`] components.
+#[derive(Props, Clone, PartialEq)]
+pub struct ButtonProps {
+    /// Theme override.
+    pub theme: Option<ButtonThemeWith>,
+    /// Inner children for the button.
+    pub children: Element,
+    /// Event handler for when the button is pressed.
+    pub onpress: Option<EventHandler<PressEvent>>,
+    /// Event handler for when the button is clicked. Not recommended, use `onpress` instead.
+    pub onclick: Option<EventHandler<()>>,
+}
+
+/// Clickable button.
+///
+/// # Styling
+/// Inherits the [`ButtonTheme`](freya_hooks::ButtonTheme) theme.
+///
+/// # Example
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///     rsx!(
+///         Button {
+///             onpress: |_| println!("clicked"),
+///             label {
+///                 "Click this"
+///             }
+///         }
+///     )
+/// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           {app()}
+/// #       }
+/// #   )
+/// # }, (250., 250.).into(), "./images/gallery_button.png");
+/// ```
+///
+/// # Preview
+/// ![Button Preview][button]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("button", "images/gallery_button.png")
+)]
+#[allow(non_snake_case)]
+pub fn Button(props: ButtonProps) -> Element {
+    let theme = use_applied_theme!(&props.theme, button);
+    ButtonBase(BaseButtonProps {
+        theme,
+        children: props.children,
+        onpress: props.onpress,
+        onclick: props.onclick,
+    })
+}
+
+/// Clickable button with a solid fill color.
+///
+/// # Styling
+/// Inherits the filled [`ButtonTheme`](freya_hooks::ButtonTheme) theme.
+///
+/// # Example
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///     rsx!(
+///         FilledButton {
+///             onpress: |_| println!("clicked"),
+///             label {
+///                 "Click this"
+///             }
+///         }
+///     )
+/// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           {app()}
+/// #       }
+/// #   )
+/// # }, (250., 250.).into(), "./images/gallery_filled_button.png");
+/// ```
+///
+/// # Preview
+/// ![FilledButton Preview][filled_button]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("filled_button", "images/gallery_filled_button.png")
+)]
+#[allow(non_snake_case)]
+pub fn FilledButton(props: ButtonProps) -> Element {
+    let theme = use_applied_theme!(&props.theme, filled_button);
+    ButtonBase(BaseButtonProps {
+        theme,
+        children: props.children,
+        onpress: props.onpress,
+        onclick: props.onclick,
+    })
+}
+
+/// Clickable button with an outline style.
+///
+/// # Styling
+/// Inherits the outline [`ButtonTheme`](freya_hooks::ButtonTheme) theme.
+///
+/// # Example
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///     rsx!(
+///         OutlineButton {
+///             onpress: |_| println!("clicked"),
+///             label {
+///                 "Click this"
+///             }
+///         }
+///     )
+/// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           {app()}
+/// #       }
+/// #   )
+/// # }, (250., 250.).into(), "./images/gallery_outline_button.png");
+/// ```
+///
+/// # Preview
+/// ![OutlineButton Preview][outline_button]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("outline_button", "images/gallery_outline_button.png")
+)]
+#[allow(non_snake_case)]
+pub fn OutlineButton(props: ButtonProps) -> Element {
+    let theme = use_applied_theme!(&props.theme, outline_button);
+    ButtonBase(BaseButtonProps {
+        theme,
+        children: props.children,
+        onpress: props.onpress,
+        onclick: props.onclick,
+    })
+}
 
 pub enum PressEvent {
     Pointer(PointerEvent),
@@ -38,12 +182,14 @@ impl PressEvent {
 
 /// Properties for the [`Button`] component.
 #[derive(Props, Clone, PartialEq)]
-pub struct ButtonProps {
-    /// Theme override.
-    pub theme: Option<ButtonThemeWith>,
-    /// Inner children for the Button.
+pub struct BaseButtonProps {
+    /// Theme.
+    pub theme: ButtonTheme,
+    /// Inner children for the button.
     pub children: Element,
     /// Event handler for when the button is pressed.
+    ///
+    /// This will fire upon **mouse click** or pressing the **enter key**.
     pub onpress: Option<EventHandler<PressEvent>>,
     /// Event handler for when the button is clicked. Not recommended, use `onpress` instead.
     pub onclick: Option<EventHandler<()>>,
@@ -59,34 +205,14 @@ pub enum ButtonStatus {
     Hovering,
 }
 
-/// Clickable button.
-///
-/// # Styling
-/// Inherits the [`ButtonTheme`](freya_hooks::ButtonTheme) theme.
-///
-/// # Example
-///
-/// ```no_run
-/// # use freya::prelude::*;
-/// fn app() -> Element {
-///     rsx!(
-///         Button {
-///             onpress: |_| println!("clicked"),
-///             label {
-///                 "Click this"
-///             }
-///         }
-///     )
-/// }
-/// ```
 #[allow(non_snake_case)]
-pub fn Button(
-    ButtonProps {
+pub fn ButtonBase(
+    BaseButtonProps {
         onpress,
         children,
         theme,
         onclick,
-    }: ButtonProps,
+    }: BaseButtonProps,
 ) -> Element {
     let mut focus = use_focus();
     let mut status = use_signal(ButtonStatus::default);
@@ -106,12 +232,12 @@ pub fn Button(
         height,
         font_theme,
         shadow,
-    } = use_applied_theme!(&theme, button);
+    } = theme;
 
     let onpointerup = {
         to_owned![onpress, onclick];
         move |ev: PointerEvent| {
-            focus.focus();
+            focus.request_focus();
             if let Some(onpress) = &onpress {
                 let is_valid = match ev.data.pointer_type {
                     PointerType::Mouse {
@@ -151,8 +277,8 @@ pub fn Button(
         status.set(ButtonStatus::default());
     };
 
-    let onglobalkeydown = move |ev: KeyboardEvent| {
-        if focus.validate_globalkeydown(&ev) {
+    let onkeydown = move |ev: KeyboardEvent| {
+        if focus.validate_keydown(&ev) {
             if let Some(onpress) = &onpress {
                 onpress.call(PressEvent::Key(ev))
             }
@@ -163,7 +289,7 @@ pub fn Button(
         ButtonStatus::Hovering => hover_background,
         ButtonStatus::Idle => background,
     };
-    let border = if focus.is_selected() {
+    let border = if focus.is_focused_with_keyboard() {
         format!("2 inner {focus_border_fill}")
     } else {
         format!("1 inner {border_fill}")
@@ -174,7 +300,7 @@ pub fn Button(
             onpointerup,
             onmouseenter,
             onmouseleave,
-            onglobalkeydown,
+            onkeydown,
             a11y_id,
             width: "{width}",
             height: "{height}",
@@ -184,10 +310,10 @@ pub fn Button(
             a11y_role:"button",
             color: "{font_theme.color}",
             shadow: "{shadow}",
-            border: "{border}",
+            border,
             corner_radius: "{corner_radius}",
             background: "{background}",
-            text_align: "center",
+            text_height: "disable-least-ascent",
             main_align: "center",
             cross_align: "center",
             {&children}
@@ -226,7 +352,7 @@ mod test {
 
         assert_eq!(label.get(0).text(), Some("true"));
 
-        utils.push_event(PlatformEvent::Touch {
+        utils.push_event(TestEvent::Touch {
             name: EventName::TouchStart,
             location: (15.0, 15.0).into(),
             finger_id: 1,
@@ -235,7 +361,7 @@ mod test {
         });
         utils.wait_for_update().await;
 
-        utils.push_event(PlatformEvent::Touch {
+        utils.push_event(TestEvent::Touch {
             name: EventName::TouchEnd,
             location: (15.0, 15.0).into(),
             finger_id: 1,

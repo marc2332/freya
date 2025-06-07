@@ -3,7 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus_sdk::clipboard::use_clipboard;
+use dioxus_clipboard::prelude::use_clipboard;
 use freya::prelude::*;
 
 fn main() {
@@ -53,7 +53,7 @@ fn app() -> Element {
         rect {
             spacing: "10",
             for (i, editable) in text_editors.into_iter().enumerate() {
-                TextEditor {
+                Editor {
                     key: "{i}",
                     editable
                 }
@@ -63,7 +63,7 @@ fn app() -> Element {
 }
 
 #[component]
-fn TextEditor(mut editable: UseEditable) -> Element {
+fn Editor(mut editable: UseEditable) -> Element {
     let mut focus = use_focus();
     let cursor_reference = editable.cursor_attr();
     let highlights = editable.highlights_attr(0);
@@ -71,7 +71,7 @@ fn TextEditor(mut editable: UseEditable) -> Element {
     let cursor_char = editor.cursor_pos();
 
     let onmousedown = move |e: MouseEvent| {
-        focus.focus();
+        focus.request_focus();
         editable.process_event(&EditableEvent::MouseDown(e.data, 0));
     };
 
@@ -94,8 +94,8 @@ fn TextEditor(mut editable: UseEditable) -> Element {
     rsx!(
         rect {
             background: "rgb(235, 235, 235)",
-            cursor_reference,
             paragraph {
+                cursor_reference,
                 a11y_id: focus.attribute(),
                 width: "100%",
                 cursor_id: "0",

@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_core::platform::CursorIcon;
+use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_activable_route,
     use_applied_theme,
@@ -9,7 +10,6 @@ use freya_hooks::{
     SidebarTheme,
     SidebarThemeWith,
 };
-use winit::window::CursorIcon;
 
 use crate::{
     ButtonStatus,
@@ -25,6 +25,9 @@ pub fn Sidebar(
     children: Element,
     /// This is what is rendered in the sidebar.
     sidebar: Element,
+    /// Width of the sidebar.
+    #[props(default = "180".to_string())]
+    width: String,
 ) -> Element {
     let SidebarTheme {
         spacing,
@@ -39,7 +42,7 @@ pub fn Sidebar(
             direction: "horizontal",
             rect {
                 overflow: "clip",
-                width: "180",
+                width,
                 height: "100%",
                 background: "{background}",
                 color: "{font_theme.color}",
@@ -68,8 +71,8 @@ pub fn SidebarItem(
     theme: Option<SidebarItemThemeWith>,
     /// Inner content for the SidebarItem.
     children: Element,
-    /// Optionally handle the `onclick` event in the SidebarItem.
-    onclick: Option<EventHandler<()>>,
+    /// Optionally handle the `onpress` event in the SidebarItem.
+    onpress: Option<EventHandler<()>>,
 ) -> Element {
     let SidebarItemTheme {
         margin,
@@ -88,8 +91,8 @@ pub fn SidebarItem(
     });
 
     let onclick = move |_| {
-        if let Some(onclick) = &onclick {
-            onclick.call(());
+        if let Some(onpress) = &onpress {
+            onpress.call(());
         }
     };
 

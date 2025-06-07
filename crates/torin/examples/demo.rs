@@ -1,28 +1,6 @@
-use std::{
-    collections::HashMap,
-    sync::Arc,
-};
+use std::collections::HashMap;
 
-use freya_native_core::prelude::SendAnyMap;
 use torin::prelude::*;
-
-// Custom measurer, useful to measure certain elements such as text with other libraries
-pub struct CustomMeasurer;
-
-impl LayoutMeasurer<usize> for CustomMeasurer {
-    fn measure(
-        &mut self,
-        _node_id: usize,
-        _node: &Node,
-        _size: &Size2D,
-    ) -> Option<(Size2D, Arc<SendAnyMap>)> {
-        None
-    }
-
-    fn should_measure_inner_children(&mut self, _node_id: usize) -> bool {
-        true
-    }
-}
 
 #[derive(Clone)]
 struct DemoNode {
@@ -66,13 +44,11 @@ impl DemoDOM {
 
     // Recursively remove a Node from the DOM
     pub fn remove(&mut self, node_id: usize) {
-        let node = self.nodes.get(&node_id).unwrap().clone();
+        let node = self.nodes.remove(&node_id).unwrap();
 
         if let Some(DemoNode { children, .. }) = node.parent.and_then(|p| self.nodes.get_mut(&p)) {
             children.retain(|c| *c != node_id);
         }
-
-        self.nodes.remove(&node_id);
 
         for child in node.children {
             self.remove(child);
@@ -114,7 +90,6 @@ impl DOMAdapter<usize> for DemoDOM {
 
 fn main() {
     let mut layout = Torin::<usize>::new();
-    let mut measurer = Some(CustomMeasurer);
 
     let mut demo_dom = DemoDOM::default();
 
@@ -128,7 +103,7 @@ fn main() {
             Size::Pixels(Length::new(200.0)),
             Alignment::Center,
             Alignment::Center,
-            DirectionMode::Horizontal,
+            Direction::Horizontal,
         ),
     );
 
@@ -140,7 +115,7 @@ fn main() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -152,7 +127,7 @@ fn main() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(50.0)),
             Size::Percentage(Length::new(50.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -160,7 +135,7 @@ fn main() {
     layout.measure(
         0,                                                              // Root ID
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)), // Available Area
-        &mut measurer,
+        &mut None::<NoopMeasurer>,
         &mut demo_dom,
     );
 
@@ -170,7 +145,7 @@ fn main() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(80.0)), // We change this from 50% to 80%
             Size::Percentage(Length::new(80.0)), // We change this from 50% to 80%
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     layout.invalidate(1);
@@ -187,7 +162,7 @@ fn main() {
     layout.measure(
         0,                                                              // Fallback Root ID
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)), // Available Area
-        &mut measurer,
+        &mut None::<NoopMeasurer>,
         &mut demo_dom,
     );
 

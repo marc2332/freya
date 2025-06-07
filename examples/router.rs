@@ -46,9 +46,9 @@ fn AppSidebar() -> Element {
                                 label {
                                     "Go to Hey ! 👋"
                                 }
-                            },
+                            }
                         }
-                    },
+                    }
                     Link {
                         to: Route::Wow,
                         ActivableRoute {
@@ -57,24 +57,22 @@ fn AppSidebar() -> Element {
                                 label {
                                     "Go to Wow! 👈"
                                 }
-                            },
+                            }
                         }
-                    },
+                    }
                     SidebarItem {
-                        onclick: |_| println!("Hello!"),
+                        onpress: |_| println!("Hello!"),
                         label {
                             "Print Hello! 👀"
                         }
-                    },
+                    }
                 ),
                 Body {
-                    rect {
-                        main_align: "center",
-                        cross_align: "center",
-                        width: "100%",
-                        height: "100%",
-                        Outlet::<Route> {  }
-                    }
+                    main_align: "center",
+                    cross_align: "center",
+                    width: "100%",
+                    height: "100%",
+                    Outlet::<Route> {  }
                 }
             }
         }

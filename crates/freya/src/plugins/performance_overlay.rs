@@ -3,12 +3,10 @@ use std::time::{
     Instant,
 };
 
-use freya_core::{
-    plugins::{
-        FreyaPlugin,
-        PluginEvent,
-    },
-    prelude::PluginHandle,
+use freya_core::plugins::{
+    FreyaPlugin,
+    PluginEvent,
+    PluginHandle,
 };
 use freya_engine::prelude::{
     Color,
@@ -28,21 +26,31 @@ use freya_engine::prelude::{
 #[derive(Default)]
 pub struct PerformanceOverlayPlugin {
     frames: Vec<Instant>,
-    started_render: Option<Instant>,
-    started_layout: Option<Instant>,
-    finished_layout: Option<Duration>,
-    started_dom_updates: Option<Instant>,
-    finished_dom_updates: Option<Duration>,
     fps_historic: Vec<usize>,
     max_fps: usize,
+
+    started_render: Option<Instant>,
+
+    started_layout: Option<Instant>,
+    finished_layout: Option<Duration>,
+
+    started_dom_updates: Option<Instant>,
+    finished_dom_updates: Option<Duration>,
+
+    started_events: Option<Instant>,
+    finished_events: Option<Duration>,
 }
 
 impl FreyaPlugin for PerformanceOverlayPlugin {
     fn on_event(&mut self, event: &PluginEvent, _handle: PluginHandle) {
         match event {
-            PluginEvent::StartedLayout(_) => self.started_layout = Some(Instant::now()),
-            PluginEvent::FinishedLayout(_) => {
+            PluginEvent::StartedMeasuringLayout(_) => self.started_layout = Some(Instant::now()),
+            PluginEvent::FinishedMeasuringLayout(_) => {
                 self.finished_layout = Some(self.started_layout.unwrap().elapsed())
+            }
+            PluginEvent::StartedMeasuringEvents => self.started_events = Some(Instant::now()),
+            PluginEvent::FinishedMeasuringEvents => {
+                self.finished_events = Some(self.started_events.unwrap().elapsed())
             }
             PluginEvent::StartedUpdatingDOM => self.started_dom_updates = Some(Instant::now()),
             PluginEvent::FinishedUpdatingDOM => {
@@ -56,7 +64,9 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
             } => {
                 let started_render = self.started_render.take().unwrap();
                 let finished_layout = self.finished_layout.unwrap();
+                let finished_events = self.finished_events.unwrap_or_default();
                 let finished_dom_updates = self.finished_dom_updates.unwrap();
+
                 let rdom = freya_dom.rdom();
                 let layout = freya_dom.layout();
 
@@ -82,7 +92,7 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 // FPS
                 add_text(
                     &mut paragraph_builder,
-                    format!("{} \n", self.frames.len()),
+                    format!("{} FPS\n", self.frames.len()),
                     30.0,
                 );
 
@@ -102,6 +112,13 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 add_text(
                     &mut paragraph_builder,
                     format!("Layout: {}ms \n", finished_layout.as_millis()),
+                    18.0,
+                );
+
+                // Events time
+                add_text(
+                    &mut paragraph_builder,
+                    format!("Events: {}ms \n", finished_events.as_millis()),
                     18.0,
                 );
 
@@ -139,7 +156,7 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                     .max_fps
                     .max(self.fps_historic.iter().max().copied().unwrap_or_default());
                 let start_x = 5.0;
-                let start_y = 150.0 + self.max_fps.max(60) as f32;
+                let start_y = 170.0 + self.max_fps.max(60) as f32;
 
                 canvas.draw_rect(Rect::new(5., 150., 200., start_y), &paint);
 

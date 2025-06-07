@@ -1,26 +1,60 @@
-use std::sync::{
-    Arc,
-    Mutex,
+use std::{
+    future::Future,
+    path::PathBuf,
 };
 
+use accesskit::{
+    Node,
+    Role,
+};
 use dioxus_core::{
     fc_to_builder,
     Element,
+    IntoDynNode,
     VirtualDom,
 };
-use dioxus_core_macro::rsx;
+use dioxus_core_macro::{
+    component,
+    rsx,
+    Props,
+};
+#[cfg(debug_assertions)]
+use dioxus_signals::{
+    GlobalSignal,
+    Readable,
+};
 use freya_components::NativeContainer;
-use freya_core::prelude::{
-    EventMessage,
-    *,
+use freya_core::{
+    accessibility::{
+        AccessibilityTree,
+        ACCESSIBILITY_ROOT_ID,
+    },
+    dom::{
+        FreyaDOM,
+        SafeDOM,
+    },
+    event_loop_messages::EventLoopMessage,
+    events::NodesState,
+    platform::CursorIcon,
+    platform_state::{
+        NativePlatformState,
+        NavigationMode,
+        PlatformInformation,
+        PreferredTheme,
+    },
+    types::EventsQueue,
 };
+use freya_elements as dioxus_elements;
 use freya_engine::prelude::*;
-use tokio::sync::{
-    broadcast,
-    mpsc::unbounded_channel,
-    watch,
+use tokio::{
+    runtime::Runtime,
+    sync::{
+        broadcast,
+        mpsc::unbounded_channel,
+        watch,
+    },
 };
-use winit::window::CursorIcon;
+use torin::prelude::Size2D;
 
 use crate::{
     config::TestingConfig,
@@ -31,21 +65,53 @@ use crate::{
 
 /// Run a Component in a headless testing environment.
 ///
-/// Default size is `500x500`.
-pub fn launch_test(root: AppComponent) -> TestingHandler {
+/// ```rust
+/// # use freya_testing::prelude::*;
+/// # use freya::prelude::*;
+/// # let rt = tokio::runtime::Builder::new_current_thread()
+/// # .enable_all()
+/// # .build()
+/// # .unwrap();
+/// # let _guard = rt.enter();
+/// fn app() -> Element {
+///     rsx!(
+///         rect {
+///             label {
+///                 "Hello, World!"
+///             }
+///         }
+///     )
+/// }
+///
+/// # rt.block_on(async move {
+/// let mut utils = launch_test(app);
+///
+/// let root = utils.root();
+/// let rect = root.get(0);
+/// let label = rect.get(0);
+/// let text = label.get(0);
+///
+/// assert_eq!(text.text(), Some("Hello, World!"));
+/// # });
+/// ```
+pub fn launch_test(root: AppComponent) -> TestingHandler<()> {
     launch_test_with_config(root, TestingConfig::default())
 }
 
 /// Run a Component in a headless testing environment
-pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> TestingHandler {
+pub fn launch_test_with_config<T: 'static + Clone>(
+    root: AppComponent,
+    config: TestingConfig<T>,
+) -> TestingHandler<T> {
     let vdom = with_accessibility(root);
     let fdom = FreyaDOM::default();
     let sdom = SafeDOM::new(fdom);
 
     let (event_emitter, event_receiver) = unbounded_channel();
-    let (platform_event_emitter, platform_event_receiver) = unbounded_channel::<EventMessage>();
+    let (platform_event_emitter, platform_event_receiver) = unbounded_channel::<EventLoopMessage>();
     let (platform_sender, platform_receiver) = watch::channel(NativePlatformState {
-        focused_id: ACCESSIBILITY_ROOT_ID,
+        focused_accessibility_id: ACCESSIBILITY_ROOT_ID,
+        focused_accessibility_node: Node::new(Role::Window),
         preferred_theme: PreferredTheme::default(),
         navigation_mode: NavigationMode::default(),
         information: PlatformInformation::new(config.size, false, false, false),
@@ -68,14 +134,15 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
         config,
         platform_event_emitter,
         platform_event_receiver,
-        accessibility_tree: Arc::new(Mutex::new(AccessibilityTree::new(ACCESSIBILITY_ROOT_ID))),
+        accessibility_tree: AccessibilityTree::new(ACCESSIBILITY_ROOT_ID),
         ticker_sender: broadcast::channel(5).0,
         cursor_icon: CursorIcon::default(),
         platform_sender,
         platform_receiver,
     };
 
-    handler.init_dom();
+    handler.init_doms();
+    handler.resize(handler.config.size);
 
     handler
 }
@@ -100,3 +167,38 @@ fn with_accessibility(app: AppComponent) -> VirtualDom {
 }
 
 type AppComponent = fn() -> Element;
+
+#[component]
+pub fn Preview(children: Element) -> Element {
+    rsx!(
+        rect {
+            main_align: "center",
+            cross_align: "center",
+            width: "fill",
+            height: "fill",
+            spacing: "8",
+            {children}
+        }
+    )
+}
+
+pub fn launch_doc(root: AppComponent, size: Size2D, path: impl Into<PathBuf>) {
+    let path: PathBuf = path.into();
+    launch_doc_with_utils(root, size, move |mut utils| async move {
+        utils.wait_for_update().await;
+        utils.save_snapshot(&path);
+    });
+}
+
+pub fn launch_doc_with_utils<F: Future<Output = ()>>(
+    root: AppComponent,
+    size: Size2D,
+    cb: impl FnOnce(TestingHandler<()>) -> F,
+) {
+    let mut utils = launch_test(root);
+    utils.resize(size);
+    let rt = Runtime::new().unwrap();
+    rt.block_on(async move {
+        cb(utils).await;
+    });
+}

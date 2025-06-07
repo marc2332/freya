@@ -90,12 +90,9 @@ fn app() -> Element {
     };
 
     rsx!(
-        rect {
+        Body {
             padding: "10",
-            label {
-                height: "25",
-                "Ordering by {order}"
-            }
+            spacing: "10",
             Table {
                 columns: 3,
                 TableHead {
@@ -104,7 +101,7 @@ fn app() -> Element {
                             TableCell {
                                 key: "{n}",
                                 order_direction: if *order.read() == order_by { Some(*order_direction.read()) } else { None },
-                                onclick: move |_| on_column_head_click(&order_by),
+                                onpress: move |_| on_column_head_click(&order_by),
                                 label {
                                     "{text}"
                                 }
@@ -117,7 +114,6 @@ fn app() -> Element {
                         for (i, items) in filtered_data.enumerate() {
                             TableRow {
                                 key: "{i}",
-                                alternate_colors: i % 2 == 0,
                                 for (n, item) in items.iter().enumerate() {
                                     TableCell {
                                         key: "{n}",

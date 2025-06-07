@@ -9,10 +9,10 @@ pub async fn compatible_elements() {
                 height: "100%",
                 width: "100%",
                 padding: "10",
-                "test",
+                "test"
                 label {
                     rect { "test" }
-                },
+                }
                 paragraph {
                     rect { }
                     label { }

@@ -11,19 +11,17 @@ use winit::{
 
 use crate::{
     dom::FreyaDOM,
-    prelude::{
-        EventMessage,
-        PlatformEvent,
-    },
+    event_loop_messages::EventLoopMessage,
+    events::PlatformEvent,
 };
 
 #[derive(Clone)]
 pub struct PluginHandle {
-    pub proxy: EventLoopProxy<EventMessage>,
+    pub proxy: EventLoopProxy<EventLoopMessage>,
 }
 
 impl PluginHandle {
-    pub fn new(proxy: &EventLoopProxy<EventMessage>) -> Self {
+    pub fn new(proxy: &EventLoopProxy<EventLoopMessage>) -> Self {
         Self {
             proxy: proxy.clone(),
         }
@@ -32,12 +30,12 @@ impl PluginHandle {
     /// Emit a [PlatformEvent]. Useful to simulate certain events.
     pub fn send_platform_event(&self, event: PlatformEvent) {
         self.proxy
-            .send_event(EventMessage::PlatformEvent(event))
+            .send_event(EventLoopMessage::PlatformEvent(event))
             .ok();
     }
 
-    /// Emit a [EventMessage].
-    pub fn send_event_loop_event(&self, event: EventMessage) {
+    /// Emit a [EventLoopMessage].
+    pub fn send_event_loop_event(&self, event: EventLoopMessage) {
         self.proxy.send_event(event).ok();
     }
 }
@@ -80,10 +78,16 @@ pub enum PluginEvent<'a> {
     },
 
     /// Before starting to measure the layout.
-    StartedLayout(&'a Torin<NodeId>),
+    StartedMeasuringLayout(&'a Torin<NodeId>),
 
     /// After measuring the layout.
-    FinishedLayout(&'a Torin<NodeId>),
+    FinishedMeasuringLayout(&'a Torin<NodeId>),
+
+    /// Before starting to process the queued events.
+    StartedMeasuringEvents,
+
+    /// After processing the queued events.
+    FinishedMeasuringEvents,
 
     StartedUpdatingDOM,
 

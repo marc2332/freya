@@ -20,8 +20,10 @@ fn app() -> Element {
     let mut selected_dropdown = use_signal(|| "First Option".to_string());
 
     rsx!(
-        rect {
+        Body {
             direction: "horizontal",
+            padding: "4",
+            spacing: "4",
             Dropdown {
                 theme: theme_with!(DropdownTheme {
                     width: "200".into(),
@@ -31,7 +33,7 @@ fn app() -> Element {
                 for ch in values.iter() {
                     DropdownItem {
                         value: ch.clone(),
-                        onclick: {
+                        onpress: {
                             to_owned![ch];
                             move |_| selected_dropdown.set(ch.clone())
                         },
@@ -44,7 +46,7 @@ fn app() -> Element {
                 for ch in values {
                     DropdownItem {
                         value: ch.clone(),
-                        onclick: {
+                        onpress: {
                             to_owned![ch];
                             move |_| selected_dropdown.set(ch.clone())
                         },

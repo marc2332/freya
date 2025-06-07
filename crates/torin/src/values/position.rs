@@ -1,5 +1,3 @@
-use std::ops::Deref;
-
 use crate::{
     prelude::{
         Area,
@@ -10,39 +8,56 @@ use crate::{
 };
 
 #[derive(Default, PartialEq, Clone, Debug)]
-pub struct AbsolutePosition {
+pub struct PositionSides {
     pub top: Option<f32>,
     pub right: Option<f32>,
     pub bottom: Option<f32>,
     pub left: Option<f32>,
 }
 
-#[derive(Default, PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum Position {
-    #[default]
-    Stacked,
+    Stacked(Box<PositionSides>),
 
-    Absolute(Box<AbsolutePosition>),
+    Absolute(Box<PositionSides>),
+    Global(Box<PositionSides>),
+}
+
+impl Default for Position {
+    fn default() -> Self {
+        Self::new_stacked()
+    }
 }
 
 impl Position {
-    pub fn is_empty(&self) -> bool {
-        match self {
-            Self::Absolute(absolute_position) => {
-                let AbsolutePosition {
-                    top,
-                    right,
-                    bottom,
-                    left,
-                } = absolute_position.deref();
-                top.is_some() && right.is_some() && bottom.is_some() && left.is_some()
+    pub fn swap_for(&mut self, mut other: Self) {
+        let old_positions = match self {
+            Self::Global(positions) | Self::Absolute(positions) | Self::Stacked(positions) => {
+                positions.clone()
             }
-            Self::Stacked => true,
-        }
+        };
+
+        match &mut other {
+            Self::Absolute(_) => {
+                *self = Self::new_absolute();
+            }
+            Self::Global(_) => {
+                *self = Self::new_global();
+            }
+            Self::Stacked(_) => {
+                *self = Self::new_stacked();
+            }
+        };
+
+        match self {
+            Self::Absolute(positions) | Self::Global(positions) | Self::Stacked(positions) => {
+                *positions = old_positions;
+            }
+        };
     }
 
     pub fn new_absolute() -> Self {
-        Self::Absolute(Box::new(AbsolutePosition {
+        Self::Absolute(Box::new(PositionSides {
             top: None,
             right: None,
             bottom: None,
@@ -50,43 +65,65 @@ impl Position {
         }))
     }
 
+    pub fn new_global() -> Self {
+        Self::Global(Box::new(PositionSides {
+            top: None,
+            right: None,
+            bottom: None,
+            left: None,
+        }))
+    }
+
+    pub fn new_stacked() -> Self {
+        Self::Stacked(Box::new(PositionSides {
+            top: None,
+            right: None,
+            bottom: None,
+            left: None,
+        }))
+    }
+
+    pub fn is_stacked(&self) -> bool {
+        matches!(self, Self::Stacked { .. })
+    }
+
     pub fn is_absolute(&self) -> bool {
         matches!(self, Self::Absolute { .. })
     }
 
+    pub fn is_global(&self) -> bool {
+        matches!(self, Self::Global { .. })
+    }
+
     pub fn set_top(&mut self, value: f32) {
-        if !self.is_absolute() {
-            *self = Self::new_absolute();
-        }
-        if let Self::Absolute(absolute_position) = self {
-            absolute_position.top = Some(value)
+        match self {
+            Self::Absolute(position) | Self::Global(position) | Self::Stacked(position) => {
+                position.top = Some(value);
+            }
         }
     }
 
     pub fn set_right(&mut self, value: f32) {
-        if !self.is_absolute() {
-            *self = Self::new_absolute();
-        }
-        if let Self::Absolute(absolute_position) = self {
-            absolute_position.right = Some(value)
+        match self {
+            Self::Absolute(position) | Self::Global(position) | Self::Stacked(position) => {
+                position.right = Some(value);
+            }
         }
     }
 
     pub fn set_bottom(&mut self, value: f32) {
-        if !self.is_absolute() {
-            *self = Self::new_absolute();
-        }
-        if let Self::Absolute(absolute_position) = self {
-            absolute_position.bottom = Some(value)
+        match self {
+            Self::Absolute(position) | Self::Global(position) | Self::Stacked(position) => {
+                position.bottom = Some(value);
+            }
         }
     }
 
     pub fn set_left(&mut self, value: f32) {
-        if !self.is_absolute() {
-            *self = Self::new_absolute();
-        }
-        if let Self::Absolute(absolute_position) = self {
-            absolute_position.left = Some(value)
+        match self {
+            Self::Absolute(position) | Self::Global(position) | Self::Stacked(position) => {
+                position.left = Some(value);
+            }
         }
     }
 
@@ -95,16 +132,17 @@ impl Position {
         available_parent_area: &Area,
         parent_area: &Area,
         area_size: &Size2D,
+        root_area: &Area,
     ) -> Point2D {
         match self {
-            Position::Stacked => available_parent_area.origin,
-            Position::Absolute(absolute_position) => {
-                let AbsolutePosition {
+            Self::Stacked(_) => available_parent_area.origin,
+            Self::Absolute(absolute_position) => {
+                let PositionSides {
                     top,
                     right,
                     bottom,
                     left,
-                } = absolute_position.deref();
+                } = &**absolute_position;
                 let y = {
                     let mut y = parent_area.min_y();
                     if let Some(top) = top {
@@ -125,25 +163,55 @@ impl Position {
                 };
                 Point2D::new(x, y)
             }
+            Self::Global(global_position) => {
+                let PositionSides {
+                    top,
+                    right,
+                    bottom,
+                    left,
+                } = &**global_position;
+                let y = {
+                    let mut y = 0.;
+                    if let Some(top) = top {
+                        y = *top;
+                    } else if let Some(bottom) = bottom {
+                        y = root_area.max_y() - bottom - area_size.height;
+                    }
+                    y
+                };
+                let x = {
+                    let mut x = 0.;
+                    if let Some(left) = left {
+                        x = *left;
+                    } else if let Some(right) = right {
+                        x = root_area.max_x() - right - area_size.width;
+                    }
+                    x
+                };
+                Point2D::new(x, y)
+            }
         }
     }
 }
 
 impl Scaled for Position {
     fn scale(&mut self, scale_factor: f32) {
-        if let Self::Absolute(absolute_postion) = self {
-            if let Some(top) = &mut absolute_postion.top {
-                *top *= scale_factor;
+        match self {
+            Self::Absolute(position) | Self::Global(position) => {
+                if let Some(top) = &mut position.top {
+                    *top *= scale_factor;
+                }
+                if let Some(right) = &mut position.right {
+                    *right *= scale_factor;
+                }
+                if let Some(bottom) = &mut position.bottom {
+                    *bottom *= scale_factor;
+                }
+                if let Some(left) = &mut position.left {
+                    *left *= scale_factor;
+                }
             }
-            if let Some(right) = &mut absolute_postion.right {
-                *right *= scale_factor;
-            }
-            if let Some(bottom) = &mut absolute_postion.bottom {
-                *bottom *= scale_factor;
-            }
-            if let Some(left) = &mut absolute_postion.left {
-                *left *= scale_factor;
-            }
+            Self::Stacked(_) => {}
         }
     }
 }
@@ -151,8 +219,8 @@ impl Scaled for Position {
 impl Position {
     pub fn pretty(&self) -> String {
         match self {
-            Self::Stacked => "stacked".to_string(),
-            Self::Absolute(positions) => format!(
+            Self::Stacked(_) => "stacked".to_string(),
+            Self::Absolute(positions) | Self::Global(positions) => format!(
                 "{}, {}, {}, {}",
                 positions.top.unwrap_or_default(),
                 positions.right.unwrap_or_default(),

@@ -32,13 +32,13 @@ fn Body() -> Element {
                 direction: "horizontal",
                 spacing: "10",
                 Button {
-                    onclick: change_to_english,
+                    onpress: change_to_english,
                     label {
                         "English"
                     }
                 }
                 Button {
-                    onclick: change_to_spanish,
+                    onpress: change_to_spanish,
                     label {
                         "Spanish"
                     }

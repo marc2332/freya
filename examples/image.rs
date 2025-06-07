@@ -2,9 +2,7 @@
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
 )]
-
 use freya::prelude::*;
-
 fn main() {
     launch(app);
 }
@@ -31,9 +29,9 @@ fn app() -> Element {
             padding: "50",
             main_align: "center",
             cross_align: "center",
-            onwheel: onwheel,
+            onwheel,
             image {
-                image_data: image_data,
+                image_data,
                 width: "{size}",
                 height: "{size}",
             }

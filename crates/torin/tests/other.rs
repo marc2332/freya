@@ -1,5 +1,4 @@
-use rustc_hash::FxHashSet;
-#[cfg(test)]
+use rustc_hash::FxHashMap;
 use torin::{
     prelude::*,
     test_utils::*,
@@ -27,7 +26,7 @@ pub fn caching() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -48,7 +47,7 @@ pub fn caching() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(50.0)),
             Size::Percentage(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     layout.invalidate(1);
@@ -78,7 +77,7 @@ pub fn layout_dirty_nodes() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -88,7 +87,7 @@ pub fn layout_dirty_nodes() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -98,7 +97,7 @@ pub fn layout_dirty_nodes() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(50.0)),
             Size::Pixels(Length::new(50.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -134,12 +133,15 @@ pub fn layout_dirty_nodes() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(10.0)),
             Size::Pixels(Length::new(10.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     layout.invalidate(2);
 
-    assert_eq!(layout.get_dirty_nodes(), &FxHashSet::from_iter([2]));
+    assert_eq!(
+        layout.get_dirty_nodes(),
+        &FxHashMap::from_iter([(2, DirtyReason::None)])
+    );
 
     // CASE 2
     // Same as Case 1 but we make Child A depend on Child A[0]'s size
@@ -149,12 +151,15 @@ pub fn layout_dirty_nodes() {
         Node::from_size_and_direction(
             Size::Inner,
             Size::Pixels(Length::new(10.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     layout.invalidate(1);
 
-    assert_eq!(layout.get_dirty_nodes(), &FxHashSet::from_iter([2, 1]));
+    assert_eq!(
+        layout.get_dirty_nodes(),
+        &FxHashMap::from_iter([(2, DirtyReason::None), (1, DirtyReason::None)])
+    );
 
     // CASE 3
     // Same as Case 2, but triggers a change in Child A[0]
@@ -164,12 +169,15 @@ pub fn layout_dirty_nodes() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(50.0)),
             Size::Pixels(Length::new(50.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     layout.invalidate(2);
 
-    assert_eq!(layout.get_dirty_nodes(), &FxHashSet::from_iter([2, 1]));
+    assert_eq!(
+        layout.get_dirty_nodes(),
+        &FxHashMap::from_iter([(2, DirtyReason::None), (1, DirtyReason::None)])
+    );
 
     // CASE 4
     // Same as Case 3, but triggers a change in the root
@@ -179,12 +187,19 @@ pub fn layout_dirty_nodes() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(150.0)),
             Size::Pixels(Length::new(150.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     layout.invalidate(0);
 
-    assert_eq!(layout.get_dirty_nodes(), &FxHashSet::from_iter([2, 1, 0]));
+    assert_eq!(
+        layout.get_dirty_nodes(),
+        &FxHashMap::from_iter([
+            (2, DirtyReason::None),
+            (1, DirtyReason::None),
+            (0, DirtyReason::None)
+        ])
+    );
 }
 
 #[test]
@@ -199,14 +214,14 @@ pub fn node_removal() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
         1,
         Some(0),
         vec![2, 3],
-        Node::from_size_and_direction(Size::Inner, Size::Inner, DirectionMode::Vertical),
+        Node::from_size_and_direction(Size::Inner, Size::Inner, Direction::Vertical),
     );
     mocked_dom.add(
         2,
@@ -215,7 +230,7 @@ pub fn node_removal() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -225,7 +240,7 @@ pub fn node_removal() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -235,7 +250,7 @@ pub fn node_removal() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -269,7 +284,10 @@ pub fn node_removal() {
 
     layout.find_best_root(&mut mocked_dom);
 
-    assert_eq!(layout.get_dirty_nodes(), &FxHashSet::from_iter([1]));
+    assert_eq!(
+        layout.get_dirty_nodes(),
+        &FxHashMap::from_iter([(1, DirtyReason::None)])
+    );
 
     assert_eq!(layout.size(), 3);
 
@@ -308,7 +326,7 @@ pub fn deep_tree() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -318,7 +336,7 @@ pub fn deep_tree() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -328,7 +346,7 @@ pub fn deep_tree() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -338,7 +356,7 @@ pub fn deep_tree() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -348,7 +366,7 @@ pub fn deep_tree() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(
@@ -358,7 +376,7 @@ pub fn deep_tree() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -375,7 +393,7 @@ pub fn deep_tree() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(200.0)),
             Size::Percentage(Length::new(200.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     layout.invalidate(4);
@@ -391,4 +409,124 @@ pub fn deep_tree() {
     );
 
     assert_eq!(layout.get_root_candidate(), RootNodeCandidate::None);
+}
+
+#[test]
+pub fn node_reordering() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_dom = TestingDOM::default();
+    mocked_dom.add(
+        0,
+        None,
+        vec![1, 2],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(200.0)),
+            Size::Pixels(Length::new(200.0)),
+            Direction::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        1,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(200.0)),
+            Size::Pixels(Length::new(100.0)),
+            Direction::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        2,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(200.0)),
+            Size::Pixels(Length::new(100.0)),
+            Direction::Vertical,
+        ),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        &mut measurer,
+        &mut mocked_dom,
+    );
+
+    assert_eq!(
+        layout.get(0).unwrap().area,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
+    );
+
+    assert_eq!(
+        layout.get(1).unwrap().area,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 100.0)),
+    );
+
+    assert_eq!(
+        layout.get(2).unwrap().area,
+        Rect::new(Point2D::new(0.0, 100.0), Size2D::new(200.0, 100.0)),
+    );
+
+    layout.invalidate_with_reason(1, DirtyReason::Reorder);
+    layout.invalidate_with_reason(2, DirtyReason::Reorder);
+
+    mocked_dom.add(
+        0,
+        None,
+        vec![2, 1],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(200.0)),
+            Size::Pixels(Length::new(200.0)),
+            Direction::Vertical,
+        ),
+    );
+
+    layout.find_best_root(&mut mocked_dom);
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        &mut measurer,
+        &mut mocked_dom,
+    );
+
+    assert_eq!(
+        layout.get(2).unwrap().area,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 100.0)),
+    );
+
+    assert_eq!(
+        layout.get(1).unwrap().area,
+        Rect::new(Point2D::new(0.0, 100.0), Size2D::new(200.0, 100.0)),
+    );
+
+    // This will not cause the desired output expected by the user as we are not properly invalidating those reordered nodes
+    layout.invalidate_with_reason(1, DirtyReason::None);
+
+    mocked_dom.add(
+        0,
+        None,
+        vec![1, 2],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(200.0)),
+            Size::Pixels(Length::new(200.0)),
+            Direction::Vertical,
+        ),
+    );
+
+    layout.find_best_root(&mut mocked_dom);
+
+    // That is why these nodes still have the same positions as before
+
+    assert_eq!(
+        layout.get(2).unwrap().area,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 100.0)),
+    );
+
+    assert_eq!(
+        layout.get(1).unwrap().area,
+        Rect::new(Point2D::new(0.0, 100.0), Size2D::new(200.0, 100.0)),
+    );
 }

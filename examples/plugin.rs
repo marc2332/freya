@@ -4,12 +4,10 @@
 )]
 
 use freya::prelude::*;
-use freya_core::{
-    plugins::{
-        FreyaPlugin,
-        PluginEvent,
-    },
-    prelude::PluginHandle,
+use freya_core::plugins::{
+    FreyaPlugin,
+    PluginEvent,
+    PluginHandle,
 };
 
 struct DummyPlugin;

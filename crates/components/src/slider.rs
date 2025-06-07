@@ -1,7 +1,9 @@
 use dioxus::prelude::*;
+use freya_core::platform::CursorIcon;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::{
+        keyboard::Key,
         KeyboardEvent,
         MouseEvent,
         WheelEvent,
@@ -14,7 +16,6 @@ use freya_hooks::{
     use_platform,
     SliderThemeWith,
 };
-use winit::window::CursorIcon;
 
 /// Properties for the [`Slider`] component.
 #[derive(Props, Clone, PartialEq)]
@@ -66,7 +67,7 @@ pub enum SliderStatus {
 /// Inherits a [`SliderTheme`](freya_hooks::SliderTheme) theme.
 ///
 /// # Example
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///     let mut percentage = use_signal(|| 20.0);
@@ -84,7 +85,25 @@ pub enum SliderStatus {
 ///         }
 ///     )
 /// }
+///
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           Slider {
+/// #               size: "50%",
+/// #               value: 50.0,
+/// #               onmoved: move |p| { }
+/// #           }
+/// #       }
+/// #   )
+/// # }, (250., 250.).into(), "./images/gallery_slider.png");
 /// ```
+/// # Preview
+/// ![Slider Preview][slider]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("slider", "images/gallery_slider.png")
+)]
 #[allow(non_snake_case)]
 pub fn Slider(
     SliderProps {
@@ -172,7 +191,7 @@ pub fn Slider(
         to_owned![onmoved];
         move |e: MouseEvent| {
             e.stop_propagation();
-            focus.focus();
+            focus.request_focus();
             clicking.set(true);
             let coordinates = e.get_element_coordinates();
             let percentage = if direction_is_vertical {
@@ -201,7 +220,7 @@ pub fn Slider(
         onmoved.call(percentage);
     };
 
-    let border = if focus.is_selected() {
+    let border = if focus.is_focused_with_keyboard() {
         format!("2 inner {}", theme.border_fill)
     } else {
         "none".to_string()
@@ -340,17 +359,17 @@ mod test {
 
         assert_eq!(label.get(0).text(), Some("50"));
 
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
             cursor: (250.0, 7.0).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseDown,
             cursor: (250.0, 7.0).into(),
             button: Some(MouseButton::Left),
         });
-        utils.push_event(PlatformEvent::Mouse {
+        utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
             cursor: (500.0, 7.0).into(),
             button: Some(MouseButton::Left),

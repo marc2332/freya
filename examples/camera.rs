@@ -17,14 +17,14 @@ fn main() {
 }
 #[cfg(feature = "use_camera")]
 fn app() -> Element {
-    let (image_reference, camera_error) = use_camera(CameraSettings::default());
+    let image = use_camera(CameraSettings::default());
 
     rsx!(
         rect {
             width: "100%",
             height: "100%",
             padding: "50",
-            if let Some(err) = &*camera_error.read() {
+            if let Some(err) = &*image.error().read() {
                 label {
                     color: "black",
                     "{err}"
@@ -33,7 +33,9 @@ fn app() -> Element {
                 image {
                     width: "100%",
                     height: "100%",
-                    image_reference
+                    aspect_ratio: "none",
+                    reference: image.attribute(),
+                    image_reference: image.image_attribute()
                 }
             }
         }

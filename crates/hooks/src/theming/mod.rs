@@ -173,10 +173,12 @@ macro_rules! theme_with {
         ),* $(,)?
     }) => {
         $crate::paste! {
-            #[allow(clippy::needless_update)]
-            [<$theme_name With>] {
-                $($theme_field_name: Some($theme_field_val),)*
-                ..$crate::Default::default()
+            {
+                #[allow(clippy::needless_update)]
+                [<$theme_name With>] {
+                    $($theme_field_name: Some($theme_field_val),)*
+                    ..$crate::Default::default()
+                }
             }
         }
     };
@@ -192,6 +194,7 @@ define_theme! {
         background_button: str,
         hover_background: str,
         border_fill: str,
+        focus_border_fill: str,
         arrow_fill: str,
         %[subthemes]
         font_theme: FontTheme,
@@ -205,6 +208,8 @@ define_theme! {
         background: str,
         select_background: str,
         hover_background: str,
+        border_fill: str,
+        select_border_fill: str,
         %[subthemes]
         font_theme: FontTheme,
     }
@@ -236,8 +241,8 @@ define_theme! {
         background: str,
         hover_background: str,
         border_fill: str,
+        focus_border_fill: str,
         shadow: str,
-        width: str,
         margin: str,
         corner_radius: str,
         %[subthemes]
@@ -286,7 +291,6 @@ define_theme! {
         %[cows]
         background: str,
         color: str,
-        padding: str,
     }
 }
 
@@ -344,7 +348,6 @@ define_theme! {
         color: str,
         background: str,
         progress_background: str,
-        width: str,
         height: str,
     }
 }
@@ -355,12 +358,10 @@ define_theme! {
         %[cows]
         background: str,
         arrow_fill: str,
-        alternate_row_background: str,
+        hover_row_background: str,
         row_background: str,
         divider_fill: str,
-        height: str,
         corner_radius: str,
-        shadow: str,
         %[subthemes]
         font_theme: FontTheme,
     }
@@ -368,26 +369,7 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub Canvas {
-        %[cows]
-        width: str,
-        height: str,
-        background: str,
-    }
-}
-
-define_theme! {
-    %[component]
     pub Graph {
-        %[cows]
-        width: str,
-        height: str,
-    }
-}
-
-define_theme! {
-    %[component]
-    pub NetworkImage {
         %[cows]
         width: str,
         height: str,
@@ -453,6 +435,8 @@ define_theme! {
         background: str,
         padding: str,
         shadow: str,
+        border_fill: str,
+        corner_radius: str,
     }
 }
 
@@ -528,9 +512,19 @@ define_theme! {
     }
 }
 
+define_theme! {
+    %[component]
+    pub ResizableHandle {
+        %[cows]
+        background: str,
+        hover_background: str,
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ColorsSheet {
     pub primary: Cow<'static, str>,
+    pub focused_primary_border: Cow<'static, str>,
     pub secondary: Cow<'static, str>,
     pub tertiary: Cow<'static, str>,
     pub surface: Cow<'static, str>,
@@ -544,6 +538,7 @@ pub struct ColorsSheet {
     pub focused_border: Cow<'static, str>,
     pub solid: Cow<'static, str>,
     pub color: Cow<'static, str>,
+    pub primary_color: Cow<'static, str>,
     pub placeholder_color: Cow<'static, str>,
     pub highlight_color: Cow<'static, str>,
 }
@@ -554,6 +549,7 @@ impl ColorsSheet {
             let key_val = val.replace("key(", "").replace(")", "");
             match key_val.as_str() {
                 "primary" => self.primary.clone(),
+                "focused_primary_border" => self.focused_primary_border.clone(),
                 "secondary" => self.secondary.clone(),
                 "tertiary" => self.tertiary.clone(),
                 "surface" => self.surface.clone(),
@@ -567,6 +563,7 @@ impl ColorsSheet {
                 "focused_border" => self.focused_border.clone(),
                 "solid" => self.solid.clone(),
                 "color" => self.color.clone(),
+                "primary_color" => self.primary_color.clone(),
                 "placeholder_color" => self.placeholder_color.clone(),
                 "highlight_color" => self.highlight_color.clone(),
                 _ => self.primary.clone(),
@@ -583,6 +580,8 @@ pub struct Theme {
     pub colors: ColorsSheet,
     pub body: BodyTheme,
     pub button: ButtonTheme,
+    pub filled_button: ButtonTheme,
+    pub outline_button: ButtonTheme,
     pub switch: SwitchTheme,
     pub scroll_bar: ScrollBarTheme,
     pub slider: SliderTheme,
@@ -595,9 +594,7 @@ pub struct Theme {
     pub progress_bar: ProgressBarTheme,
     pub table: TableTheme,
     pub input: InputTheme,
-    pub canvas: CanvasTheme,
     pub graph: GraphTheme,
-    pub network_image: NetworkImageTheme,
     pub icon: IconTheme,
     pub sidebar: SidebarTheme,
     pub sidebar_item: SidebarItemTheme,
@@ -610,6 +607,7 @@ pub struct Theme {
     pub popup: PopupTheme,
     pub tab: TabTheme,
     pub bottom_tab: BottomTabTheme,
+    pub resizable_handle: ResizableHandleTheme,
 }
 
 impl Default for Theme {

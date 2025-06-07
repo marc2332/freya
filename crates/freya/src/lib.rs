@@ -4,50 +4,56 @@
 )]
 //! # Freya
 //!
-//! Build native & cross-platform GUI applications using 🦀 Rust.
+//! **Freya** is a declarative, cross-platform GUI Rust library, powered by 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/).
 //!
-//! Powered by [🧬 Dioxus](https://dioxuslabs.com) and [🎨 Skia](https://skia.org/).
+//! **It does not use any web tech**, check the [Differences with Dioxus](https://github.com/marc2332/freya/tree/main?tab=readme-ov-file#differences-with-dioxus).
 //!
-//! - [Elements API reference](freya_elements::elements#structs)
-//! - [Events API reference](freya_elements::elements#functions)
-//! - [Elements guides](freya_elements::_docs)
-//! - [Components](freya_components)
-//! - [Hooks](freya_hooks)
+//! ### Basics
+//! - [Introduction](self::_docs::introduction)
+//! - [Dioxus Fundamentals](self::_docs::dioxus_fundamentals)
+//!     - [UI](self::_docs::ui)
+//!     - [Elements Overview](self::_docs::elements)
+//!     - [Components](self::_docs::components_and_props)
+//!     - [Hooks](self::_docs::hooks)
+//!     - [State Management](self::_docs::state_management)
+//!         - [Signals](self::_docs::state_management::signals)
+//!         - [Global Signals](self::_docs::state_management::global_signals)
+//!         - [Lifecycle](self::_docs::state_management::lifecycle)
+//!         - [Context](self::_docs::state_management::context)
+//!         - [Memoization](self::_docs::state_management::memoization)
+//!     - [Async Tasks](self::_docs::async_tasks)
+//!
+//! ### Learn
+//! - [Development Setup](self::_docs::development_setup)
 //! - [Theming](self::_docs::theming)
-//! - [Hot reload](self::_docs::hot_reload)
-//! - [Testing](freya_testing)
-//! - [Animating](freya_hooks::use_animation)
+//! - [i18n](self::_docs::i18n)
+//! - [Accessibility](self::hooks::use_focus)
+//! - [Router](self::_docs::router)
+//!     - [Native Router](self::_docs::router::native_router)
+//! - [Third Party State Managemement](self::_docs::third_party_state)
 //! - [Devtools](self::_docs::devtools)
+//! - [Performance Tips](self::_docs::performance)
 //!
-//! ```rust,no_run
-//! use freya::prelude::*;
+//! ### Advanced
+//! - [Animations](self::hooks::use_animation)
+//! - [Text Editing](self::hooks::use_editable)
+//! - [Unit Testing of Components](freya_testing)
 //!
-//! fn main(){
-//!     launch(app);
-//! }
-//!
-//! fn app() -> Element {
-//!    let mut count = use_signal(|| 0);
-//!
-//!    rsx!(
-//!        rect {
-//!            height: "100%",
-//!            width: "100%",
-//!            background: "rgb(35, 35, 35)",
-//!            color: "white",
-//!            padding: "12",
-//!            onclick: move |_| count += 1,
-//!            label { "Click to increase -> {count}" }
-//!        }
-//!    )
-//! }
-//! ```
+//! ### API References
+//! - [Elements and attributes](self::elements#structs)
+//! - [Events](self::events#functions)
+//! - [Built-in Components](self::components)
+//! - [Built-in Components Gallery](self::components::gallery)
+//! - [Built-in Hooks](self::hooks)
 //!
 //! ## Features flags
 //!
 //! - `devtools`: enables a side panel to inspect your App tree, styles and computed layout.
-//! - `use_camera`: enables the `use_camera` hook.
-//! - `log`: enables internal logs.
+//! - `use_camera`: enables the [use_camera](self::hooks::use_camera) hook.
+//! - `network-image`: enables the [NetworkImage](self::components::NetworkImage) component.
+//! - `custom-tokio-rt`: disables the default Tokio runtime created by Freya.
+//! - `performance-overlay`: enables the performance overlay plugin.
+//! - `disable-zoom-shortcuts`: disables the default zoom shortcuts.
 
 /// Freya docs.
 #[cfg(doc)]
@@ -62,7 +68,9 @@ pub use freya_elements::_docs as elements_docs;
 /// Launch your app.
 pub mod launch;
 
-/// Collection of basic components.
+/// Collection of components.
+///
+/// Go to [Gallery](freya_components::gallery) to see previews of the components.
 pub mod components {
     pub use freya_components::*;
 }
@@ -74,7 +82,7 @@ pub mod hooks {
 
 /// Common data structures and utils.
 pub mod common {
-    pub use freya_common::*;
+    pub use freya_core::*;
 }
 
 /// Core APIs.
@@ -86,12 +94,6 @@ pub mod core {
 pub use freya_elements::elements;
 /// Events data.
 pub use freya_elements::events;
-
-/// Hot reload configuration.
-pub mod hotreload {
-    pub use freya_elements::elements::FreyaCtx;
-}
-
 pub use torin;
 
 pub mod plugins;
@@ -106,25 +108,24 @@ pub mod prelude {
     };
     pub use dioxus_core_macro::*;
     pub use dioxus_hooks::*;
-    pub use dioxus_hot_reload::{
-        self,
-        hot_reload_init,
-        Config,
-    };
     pub use dioxus_signals::*;
     pub use freya_components::*;
-    pub use freya_core::prelude::PreferredTheme;
+    pub use freya_core::{
+        custom_attributes::{
+            dynamic_bytes,
+            static_bytes,
+            CustomAttributeValues,
+        },
+        platform::*,
+        platform_state::*,
+        types::AccessibilityId,
+    };
     pub use freya_elements::{
-        elements as dioxus_elements,
+        self as dioxus_elements,
         events::*,
     };
     pub use freya_hooks::*;
-    pub use freya_node_state::{
-        dynamic_bytes,
-        static_bytes,
-        CustomAttributeValues,
-    };
-    pub use freya_renderer::*;
+    pub use freya_winit::*;
     pub use torin::prelude::*;
 
     pub use crate::{

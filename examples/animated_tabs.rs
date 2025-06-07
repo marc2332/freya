@@ -8,10 +8,8 @@ use dioxus_router::prelude::{
     Routable,
     Router,
 };
-use freya::{
-    common::NodeReferenceLayout,
-    prelude::*,
-};
+use freya::prelude::*;
+use freya_core::custom_attributes::NodeReferenceLayout;
 
 fn main() {
     launch_with_props(app, "Animated Tabs Router", (650.0, 500.0));
@@ -43,29 +41,49 @@ fn FromRouteToCurrent(
     node_size: ReadOnlySignal<NodeReferenceLayout>,
 ) -> Element {
     let mut animated_router = use_animated_router::<Route>();
-    let animations = use_animation_with_dependencies(&left_to_right, move |ctx, left_to_right| {
-        let (start, end) = if left_to_right { (1., 0.) } else { (0., 1.) };
-        ctx.with(
-            AnimNum::new(start, end)
-                .time(400)
-                .ease(Ease::Out)
-                .function(Function::Expo),
-        )
-    });
-
-    // Only render the destination route once the animation has finished
-    use_memo(move || {
-        if !animations.is_running() && animations.has_run_yet() {
-            animated_router.write().settle();
-        }
-    });
+    let animations =
+        use_animation_with_dependencies(&left_to_right, move |_conf, left_to_right| {
+            let (start, end) = if left_to_right { (1., 0.) } else { (0., 1.) };
+            (
+                AnimNum::new(start, end)
+                    .time(1000)
+                    .ease(Ease::Out)
+                    .function(Function::Expo),
+                AnimNum::new(1., 0.2)
+                    .time(1000)
+                    .ease(Ease::Out)
+                    .function(Function::Expo),
+                AnimNum::new(0.2, 1.)
+                    .time(1000)
+                    .ease(Ease::Out)
+                    .function(Function::Expo),
+                AnimNum::new(100., 0.)
+                    .time(1000)
+                    .ease(Ease::Out)
+                    .function(Function::Expo),
+            )
+        });
 
     // Run the animation when any prop changes
     use_memo(use_reactive((&left_to_right, &from), move |_| {
         animations.run(AnimDirection::Forward)
     }));
 
-    let offset = animations.get().read().as_f32();
+    // Only render the destination route once the animation has finished
+    use_effect(move || {
+        if !animations.is_running() && animations.has_run_yet() {
+            animated_router.write().settle();
+        }
+    });
+
+    let animations = animations.get()();
+    let offset = animations.0.read();
+    let (scale_out, scale_in) = if left_to_right {
+        (animations.1.read(), animations.2.read())
+    } else {
+        (animations.2.read(), animations.1.read())
+    };
+    let corner_radius = animations.3.read();
     let width = node_size.read().area.width();
 
     let offset = width - (offset * width);
@@ -82,20 +100,23 @@ fn FromRouteToCurrent(
             width: "fill",
             offset_x: "-{offset}",
             direction: "horizontal",
-            Expand { {left} }
-            Expand { {right} }
+            Expand { scale: scale_out, corner_radius, {left} }
+            Expand { scale: scale_in, corner_radius, {right} }
         }
     )
 }
 
 #[component]
-fn Expand(children: Element) -> Element {
+fn Expand(children: Element, scale: f32, corner_radius: f32) -> Element {
     rsx!(
         rect {
             height: "100%",
             width: "100%",
             main_align: "center",
             cross_align: "center",
+            background: "rgb(225, 225, 225)",
+            corner_radius: "{corner_radius}",
+            scale: "{scale}",
             {children}
         }
     )
@@ -127,7 +148,9 @@ fn AnimatedOutlet(children: Element) -> Element {
                 }
             } else {
                 Expand {
-                    Outlet::<Route> {}
+                    scale: 1.0,
+                    corner_radius: 0.,
+                    Outlet::<Route> {},
                 }
             }
         }
@@ -140,32 +163,33 @@ fn AppSidebar() -> Element {
         NativeRouter {
             AnimatedRouter::<Route> {
                 rect {
-                    height: "calc(100% - 50)",
-                    width: "fill",
+                    content: "flex",
                     Body {
+                        height: "flex(1)",
                         AnimatedOutlet { }
                     }
+                    rect {
+                        direction: "horizontal",
+                        main_align: "center",
+                        cross_align: "center",
+                        width: "fill",
+                        padding: "8",
+                        spacing: "8",
+                        BottomTab {
+                            route: Route::Home,
+                            exact: true,
+                            "Go to Hey ! 👋"
+                        }
+                        BottomTab {
+                            route: Route::Wow,
+                            "Go to Wow! 👈"
+                        }
+                        BottomTab {
+                            route: Route::Crab,
+                            "Go to Crab! 🦀"
+                        }
+                    }
                 }
-                rect {
-                    direction: "horizontal",
-                    main_align: "center",
-                    cross_align: "center",
-                    width: "fill",
-                    BottomTab {
-                        route: Route::Home,
-                        exact: true,
-                        "Go to Hey ! 👋"
-                    },
-                    BottomTab {
-                        route: Route::Wow,
-                        "Go to Wow! 👈"
-                    },
-                    BottomTab {
-                        route: Route::Crab,
-                        "Go to Crab! 🦀"
-                    },
-                }
-
             }
         }
     )
@@ -198,7 +222,7 @@ fn BottomTab<R: Routable + PartialEq>(
                         main_align: "center",
                         {children}
                     }
-                },
+                }
             }
         }
     )

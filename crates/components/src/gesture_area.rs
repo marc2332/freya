@@ -5,7 +5,7 @@ use std::{
 
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::{
         touch::TouchPhase,
         TouchEvent,
@@ -65,7 +65,7 @@ type EventsQueue = VecDeque<(Instant, TouchEvent)>;
 #[allow(non_snake_case)]
 pub fn GestureArea(props: GestureAreaProps) -> Element {
     let event_emitter = use_coroutine(
-        |mut rx: UnboundedReceiver<(Instant, TouchEvent)>| async move {
+        move |mut rx: UnboundedReceiver<(Instant, TouchEvent)>| async move {
             let mut touch_events = VecDeque::<(Instant, TouchEvent)>::new();
 
             while let Some(new_event) = rx.next().await {
@@ -216,7 +216,7 @@ mod test {
 
         assert_eq!(utils.root().get(1).get(0).text(), Some("EMPTY"));
 
-        utils.push_event(PlatformEvent::Touch {
+        utils.push_event(TestEvent::Touch {
             name: EventName::TouchStart,
             location: (1.0, 1.0).into(),
             phase: TouchPhase::Started,
@@ -224,7 +224,7 @@ mod test {
             force: None,
         });
 
-        utils.push_event(PlatformEvent::Touch {
+        utils.push_event(TestEvent::Touch {
             name: EventName::TouchEnd,
             location: (1.0, 1.0).into(),
             phase: TouchPhase::Ended,
@@ -237,7 +237,7 @@ mod test {
 
         sleep(Duration::from_millis(DOUBLE_TAP_MIN as u64)).await;
 
-        utils.push_event(PlatformEvent::Touch {
+        utils.push_event(TestEvent::Touch {
             name: EventName::TouchStart,
             location: (1.0, 1.0).into(),
             phase: TouchPhase::Started,
@@ -283,7 +283,7 @@ mod test {
 
         assert_eq!(utils.root().get(1).get(0).text(), Some("EMPTY"));
 
-        utils.push_event(PlatformEvent::Touch {
+        utils.push_event(TestEvent::Touch {
             name: EventName::TouchStart,
             location: (1.0, 1.0).into(),
             phase: TouchPhase::Started,
@@ -296,7 +296,7 @@ mod test {
 
         assert_eq!(utils.root().get(1).get(0).text(), Some("TapDown"));
 
-        utils.push_event(PlatformEvent::Touch {
+        utils.push_event(TestEvent::Touch {
             name: EventName::TouchEnd,
             location: (1.0, 1.0).into(),
             phase: TouchPhase::Ended,

@@ -3,15 +3,17 @@ use std::sync::{
     Mutex,
     MutexGuard,
 };
+#[cfg(feature = "rc-dom")]
+use std::{
+    cell::{
+        Ref,
+        RefCell,
+        RefMut,
+    },
+    rc::Rc,
+};
 
 use dioxus_core::VirtualDom;
-use freya_common::{
-    AccessibilityDirtyNodes,
-    AccessibilityGenerator,
-    CompositorDirtyNodes,
-    Layers,
-    ParagraphElements,
-};
 use freya_native_core::{
     prelude::{
         DioxusState,
@@ -24,26 +26,40 @@ use freya_native_core::{
     NodeId,
     SendAnyMap,
 };
-use freya_node_state::{
-    AccessibilityNodeState,
-    CursorState,
-    CustomAttributeValues,
-    FontStyleState,
-    LayerState,
-    LayoutState,
-    ReferencesState,
-    StyleState,
-    TransformState,
-    ViewportState,
-};
 use torin::prelude::*;
 
-use super::mutations_writer::MutationsWriter;
-use crate::prelude::{
-    CompositorCache,
-    CompositorDirtyArea,
-    ParagraphElement,
-    TextGroupMeasurement,
+use super::{
+    mutations_writer::MutationsWriter,
+    CompositorDirtyNodes,
+    ImagesCache,
+    ParagraphElements,
+};
+use crate::{
+    accessibility::{
+        AccessibilityDirtyNodes,
+        AccessibilityGenerator,
+    },
+    custom_attributes::CustomAttributeValues,
+    elements::ParagraphElement,
+    event_loop_messages::TextGroupMeasurement,
+    layers::Layers,
+    render::{
+        CompositorCache,
+        CompositorDirtyArea,
+    },
+    states::{
+        AccessibilityNodeState,
+        CanvasState,
+        CursorState,
+        FontStyleState,
+        ImageState,
+        LayerState,
+        LayoutState,
+        StyleState,
+        SvgState,
+        TransformState,
+        ViewportState,
+    },
 };
 
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
@@ -52,14 +68,14 @@ pub type DioxusNode<'a> = NodeRef<'a, CustomAttributeValues>;
 /// Tiny wrapper over [FreyaDOM] to make it thread-safe if desired.
 /// This is primarily used by the Devtools and Testing renderer.
 pub struct SafeDOM {
-    #[cfg(not(feature = "shared"))]
+    #[cfg(not(feature = "rc-dom"))]
     pub fdom: FreyaDOM,
 
-    #[cfg(feature = "shared")]
-    pub fdom: Arc<Mutex<FreyaDOM>>,
+    #[cfg(feature = "rc-dom")]
+    pub fdom: Rc<RefCell<FreyaDOM>>,
 }
 
-#[cfg(feature = "shared")]
+#[cfg(feature = "rc-dom")]
 impl Clone for SafeDOM {
     fn clone(&self) -> Self {
         Self {
@@ -69,52 +85,46 @@ impl Clone for SafeDOM {
 }
 
 impl SafeDOM {
-    #[cfg(not(feature = "shared"))]
+    #[cfg(not(feature = "rc-dom"))]
     pub fn new(fdom: FreyaDOM) -> Self {
         Self { fdom }
     }
 
-    #[cfg(feature = "shared")]
+    #[cfg(feature = "rc-dom")]
     pub fn new(fdom: FreyaDOM) -> Self {
         Self {
-            fdom: Arc::new(Mutex::new(fdom)),
+            fdom: Rc::new(RefCell::new(fdom)),
         }
     }
 
     /// Get a reference to the DOM.
-    #[cfg(not(feature = "shared"))]
+    #[cfg(not(feature = "rc-dom"))]
     pub fn get(&self) -> &FreyaDOM {
         &self.fdom
     }
 
     /// Get a reference to the DOM.
-    #[cfg(not(feature = "shared"))]
+    #[cfg(not(feature = "rc-dom"))]
     pub fn try_get(&self) -> Option<&FreyaDOM> {
         Some(&self.fdom)
     }
 
     /// Get a mutable reference to the DOM.
-    #[cfg(not(feature = "shared"))]
+    #[cfg(not(feature = "rc-dom"))]
     pub fn get_mut(&mut self) -> &mut FreyaDOM {
         &mut self.fdom
     }
 
     /// Get a reference to the DOM.
-    #[cfg(feature = "shared")]
-    pub fn get(&self) -> MutexGuard<FreyaDOM> {
-        return self.fdom.lock().unwrap();
-    }
-
-    /// Get a reference to the DOM.
-    #[cfg(feature = "shared")]
-    pub fn try_get(&self) -> Option<MutexGuard<FreyaDOM>> {
-        return self.fdom.try_lock().ok();
+    #[cfg(feature = "rc-dom")]
+    pub fn get(&self) -> Ref<FreyaDOM> {
+        self.fdom.borrow()
     }
 
     /// Get a mutable reference to the dom.
-    #[cfg(feature = "shared")]
-    pub fn get_mut(&self) -> MutexGuard<FreyaDOM> {
-        return self.fdom.lock().unwrap();
+    #[cfg(feature = "rc-dom")]
+    pub fn get_mut(&self) -> RefMut<FreyaDOM> {
+        self.fdom.borrow_mut()
     }
 }
 
@@ -130,6 +140,7 @@ pub struct FreyaDOM {
     compositor_cache: Arc<Mutex<CompositorCache>>,
     accessibility_dirty_nodes: Arc<Mutex<AccessibilityDirtyNodes>>,
     accessibility_generator: Arc<AccessibilityGenerator>,
+    images_cache: Arc<Mutex<ImagesCache>>,
 }
 
 impl Default for FreyaDOM {
@@ -137,13 +148,15 @@ impl Default for FreyaDOM {
         let mut rdom = RealDom::<CustomAttributeValues>::new([
             CursorState::to_type_erased(),
             FontStyleState::to_type_erased(),
-            ReferencesState::to_type_erased(),
+            CanvasState::to_type_erased(),
             LayoutState::to_type_erased(),
             StyleState::to_type_erased(),
             TransformState::to_type_erased(),
             AccessibilityNodeState::to_type_erased(),
             ViewportState::to_type_erased(),
             LayerState::to_type_erased(),
+            SvgState::to_type_erased(),
+            ImageState::to_type_erased(),
         ]);
         let dioxus_integration_state = DioxusState::create(&mut rdom);
         Self {
@@ -157,6 +170,7 @@ impl Default for FreyaDOM {
             compositor_cache: Arc::default(),
             accessibility_dirty_nodes: Arc::default(),
             accessibility_generator: Arc::default(),
+            images_cache: Arc::default(),
         }
     }
 }
@@ -194,6 +208,10 @@ impl FreyaDOM {
         &self.accessibility_generator
     }
 
+    pub fn images_cache(&self) -> MutexGuard<ImagesCache> {
+        self.images_cache.lock().unwrap()
+    }
+
     /// Create the initial DOM from the given Mutations
     pub fn init_dom(&mut self, vdom: &mut VirtualDom, scale_factor: f32) {
         // Build the RealDOM
@@ -209,6 +227,7 @@ impl FreyaDOM {
             compositor_dirty_area: &mut self.compositor_dirty_area.lock().unwrap(),
             compositor_cache: &mut self.compositor_cache.lock().unwrap(),
             accessibility_dirty_nodes: &mut self.accessibility_dirty_nodes.lock().unwrap(),
+            images_cache: &mut self.images_cache.lock().unwrap(),
         });
 
         let mut ctx = SendAnyMap::new();
@@ -219,6 +238,7 @@ impl FreyaDOM {
         ctx.insert(self.accessibility_dirty_nodes.clone());
         ctx.insert(self.rdom.root_id());
         ctx.insert(self.accessibility_generator.clone());
+        ctx.insert(self.images_cache.clone());
 
         self.rdom.update_state(ctx);
     }
@@ -238,6 +258,7 @@ impl FreyaDOM {
             compositor_dirty_area: &mut self.compositor_dirty_area.lock().unwrap(),
             compositor_cache: &mut self.compositor_cache.lock().unwrap(),
             accessibility_dirty_nodes: &mut self.accessibility_dirty_nodes.lock().unwrap(),
+            images_cache: &mut self.images_cache.lock().unwrap(),
         });
 
         // Update the Nodes states
@@ -249,9 +270,10 @@ impl FreyaDOM {
         ctx.insert(self.accessibility_dirty_nodes.clone());
         ctx.insert(self.rdom.root_id());
         ctx.insert(self.accessibility_generator.clone());
+        ctx.insert(self.images_cache.clone());
 
         // Update the Node's states
-        let (_, diff) = self.rdom.update_state(ctx);
+        let diff = self.rdom.update_state(ctx);
 
         let must_repaint = !diff.is_empty();
         let must_relayout = !self.layout().get_dirty_nodes().is_empty();

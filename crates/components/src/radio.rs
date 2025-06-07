@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::KeyboardEvent,
 };
 use freya_hooks::{
@@ -17,7 +17,7 @@ use freya_hooks::{
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
 /// #[derive(PartialEq)]
 /// enum Choice {
@@ -48,7 +48,22 @@ use freya_hooks::{
 ///         }
 ///     )
 /// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           Radio {
+/// #               selected: true
+/// #           }
+/// #       }
+/// #   )
+/// # }, (250., 250.).into(), "./images/gallery_radio.png");
 /// ```
+/// # Preview
+/// ![Radio Preview][radio]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("radio", "images/gallery_radio.png")
+)]
 #[allow(non_snake_case)]
 #[component]
 pub fn Radio(
@@ -68,35 +83,35 @@ pub fn Radio(
     } else {
         unselected_fill
     };
-    let border = if focus.is_selected() {
-        format!("4 outer {}", border_fill)
+    let border = if focus.is_focused_with_keyboard() {
+        format!("2 inner {fill}, 4 outer {border_fill}")
     } else {
-        "none".to_string()
+        format!("2 inner {fill}")
     };
 
-    let onkeydown = move |_: KeyboardEvent| {};
+    let onkeydown = move |e: KeyboardEvent| {
+        if !focus.validate_keydown(&e) {
+            e.stop_propagation();
+        }
+    };
 
     rsx!(
         rect {
+            a11y_id: focus.attribute(),
+            width: "18",
+            height: "18",
             border,
+            padding: "4",
+            main_align: "center",
+            cross_align: "center",
             corner_radius: "99",
-            rect {
-                a11y_id: focus.attribute(),
-                width: "18",
-                height: "18",
-                border: "2 inner {fill}",
-                padding: "4",
-                main_align: "center",
-                cross_align: "center",
-                corner_radius: "99",
-                onkeydown,
-                if selected {
-                    rect {
-                        width: "10",
-                        height: "10",
-                        background: "{fill}",
-                        corner_radius: "99",
-                    }
+            onkeydown,
+            if selected {
+                rect {
+                    width: "10",
+                    height: "10",
+                    background: "{fill}",
+                    corner_radius: "99",
                 }
             }
         }
@@ -127,7 +142,7 @@ mod test {
                     leading: rsx!(
                         Radio {
                             selected: *selected.read() == Choice::First,
-                        },
+                        }
                     ),
                     label { "First choice" }
                 }
@@ -136,7 +151,7 @@ mod test {
                     leading: rsx!(
                         Radio {
                             selected: *selected.read() == Choice::Second,
-                        },
+                        }
                     ),
                     label { "Second choice" }
                 }
@@ -145,7 +160,7 @@ mod test {
                     leading: rsx!(
                         Radio {
                             selected: *selected.read() == Choice::Third,
-                        },
+                        }
                     ),
                     label { "Third choice" }
                 }
@@ -157,26 +172,26 @@ mod test {
         utils.wait_for_update().await;
 
         // If the inner circle exists it means that the Radio is activated, otherwise it isn't
-        assert!(root.get(0).get(0).get(0).get(0).get(0).is_element());
-        assert!(root.get(1).get(0).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(2).get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(0).get(0).get(0).get(0).is_element());
+        assert!(root.get(1).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(2).get(0).get(0).get(0).is_placeholder());
 
         utils.click_cursor((20., 50.)).await;
 
-        assert!(root.get(0).get(0).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(1).get(0).get(0).get(0).get(0).is_element());
-        assert!(root.get(2).get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(1).get(0).get(0).get(0).is_element());
+        assert!(root.get(2).get(0).get(0).get(0).is_placeholder());
 
         utils.click_cursor((10., 90.)).await;
 
-        assert!(root.get(0).get(0).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(1).get(0).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(2).get(0).get(0).get(0).get(0).is_element());
+        assert!(root.get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(1).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(2).get(0).get(0).get(0).is_element());
 
         utils.click_cursor((10., 10.)).await;
 
-        assert!(root.get(0).get(0).get(0).get(0).get(0).is_element());
-        assert!(root.get(1).get(0).get(0).get(0).get(0).is_placeholder());
-        assert!(root.get(2).get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(0).get(0).get(0).get(0).is_element());
+        assert!(root.get(1).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(2).get(0).get(0).get(0).is_placeholder());
     }
 }

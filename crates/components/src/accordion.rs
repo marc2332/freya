@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
+use freya_core::platform::CursorIcon;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::MouseEvent,
 };
 use freya_hooks::{
@@ -13,7 +14,6 @@ use freya_hooks::{
     Ease,
     Function,
 };
-use winit::window::CursorIcon;
 
 /// Indicates the current status of the accordion.
 #[derive(Debug, Default, PartialEq, Clone, Copy)]
@@ -34,6 +34,9 @@ pub struct AccordionProps {
     pub children: Element,
     /// Summary element.
     pub summary: Element,
+    /// Whether its open or not initially. Default to `false`.
+    #[props(default = false)]
+    pub initial_open: bool,
 }
 
 /// Show other elements under a collapsable box.
@@ -43,19 +46,17 @@ pub struct AccordionProps {
 #[allow(non_snake_case)]
 pub fn Accordion(props: AccordionProps) -> Element {
     let theme = use_applied_theme!(&props.theme, accordion);
-    let mut open = use_signal(|| false);
-    let animation = use_animation(move |ctx| {
-        ctx.with(
-            AnimNum::new(0., 100.)
-                .time(300)
-                .function(Function::Expo)
-                .ease(Ease::Out),
-        )
+    let mut open = use_signal(|| props.initial_open);
+    let animation = use_animation(move |_conf| {
+        AnimNum::new(0., 100.)
+            .time(300)
+            .function(Function::Expo)
+            .ease(Ease::Out)
     });
     let mut status = use_signal(AccordionStatus::default);
     let platform = use_platform();
 
-    let animation_value = animation.get().read().as_f32();
+    let animation_value = animation.get().read().read();
     let AccordionTheme {
         background,
         color,
@@ -105,7 +106,7 @@ pub fn Accordion(props: AccordionProps) -> Element {
             rect {
                 overflow: "clip",
                 width: "100%",
-                height: "{animation_value}a",
+                visible_height: "{animation_value}%",
                 {&props.children}
             }
         }

@@ -30,16 +30,23 @@ fn app() -> Element {
 
     rsx!(
         rect {
+            height: "0",
+            label {
+                "dasdadasdasdasdadsadsad"
+            }
+        }
+        rect {
             background: "rgb(35, 35, 35)",
             width: "100%",
             height: "100%",
             offset_x: "{positions.read().0}",
             offset_y: "{positions.read().1}",
             rect {
-                background: "rgb(0, 119, 182)",
+                background: "white",
+                backdrop_blur: "500",
+                opacity: "0.3",
                 width: "120",
                 height: "120",
-                corner_radius: "999",
                 shadow: "0 4 20 5 rgb(0, 0, 0, 80)",
                 onglobalclick,
                 onglobalmousemove,

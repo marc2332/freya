@@ -1,7 +1,9 @@
 use dioxus::prelude::*;
+use freya_core::platform::CursorIcon;
 use freya_elements::{
-    elements as dioxus_elements,
-    events::MouseEvent,
+    self as dioxus_elements,
+    Code,
+    KeyboardEvent,
 };
 use freya_hooks::{
     use_applied_theme,
@@ -12,13 +14,12 @@ use freya_hooks::{
     MenuItemTheme,
     MenuItemThemeWith,
 };
-use winit::window::CursorIcon;
 
 /// Floating menu, use alongside [`MenuItem`].
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///    let mut show_menu = use_signal(|| false);
@@ -64,8 +65,42 @@ use winit::window::CursorIcon;
 ///        }
 ///    )
 /// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc_with_utils(|| {
+/// #   rsx!(
+/// #      Menu {
+/// #         onclose: move |_| {},
+/// #         MenuButton {
+/// #             label {
+/// #                 "Open"
+/// #             }
+/// #         }
+/// #         SubMenu {
+/// #             menu: rsx!(
+/// #                 MenuButton {
+/// #                     label {
+/// #                         "Whatever"
+/// #                     }
+/// #                 }
+/// #             ),
+/// #             label {
+/// #                 "Options"
+/// #             }
+/// #         }
+/// #     }
+/// #  )
+/// # }, (250., 250.).into(), |mut utils| async move {
+/// #   utils.wait_for_update().await;
+/// #   utils.move_cursor((15., 60.)).await;
+/// #   utils.save_snapshot("./images/gallery_menu.png");
+/// # });
 /// ```
-#[allow(non_snake_case)]
+///
+/// # Preview
+/// ![Menu Preview][menu]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("menu", "images/gallery_menu.png")
+)]
 #[component]
 pub fn Menu(children: Element, onclose: Option<EventHandler<()>>) -> Element {
     // Provide the menus ID generator
@@ -77,9 +112,17 @@ pub fn Menu(children: Element, onclose: Option<EventHandler<()>>) -> Element {
 
     rsx!(
         rect {
+            margin: "2 0",
             onglobalclick: move |_| {
                 if let Some(onclose) = &onclose {
                     onclose.call(());
+                }
+            },
+            onglobalkeydown: move |ev| {
+                if ev.data.code == Code::Escape {
+                    if let Some(onclose) = &onclose {
+                        onclose.call(());
+                    }
                 }
             },
             MenuContainer {
@@ -139,8 +182,8 @@ pub fn MenuItem(
     children: Element,
     /// Theme override for the MenuItem.
     theme: Option<MenuItemThemeWith>,
-    /// Handler for the `onclick` event.
-    onclick: Option<EventHandler<Option<MouseEvent>>>,
+    /// Handler for the `onpress` event.
+    onpress: Option<EventHandler<()>>,
     /// Handler for the `onmouseenter` event.
     onmouseenter: Option<EventHandler<()>>,
 ) -> Element {
@@ -149,7 +192,6 @@ pub fn MenuItem(
     let platform = use_platform();
 
     let a11y_id = focus.attribute();
-    let click = &onclick;
 
     let MenuItemTheme {
         hover_background,
@@ -157,21 +199,26 @@ pub fn MenuItem(
         font_theme,
     } = use_applied_theme!(&theme, menu_item);
 
-    let onclick = {
-        to_owned![click];
-        move |ev| {
-            focus.focus();
-            if let Some(onclick) = &click {
-                onclick.call(Some(ev))
-            }
-        }
-    };
-
     use_drop(move || {
         if *status.read() == MenuItemStatus::Hovering {
             platform.set_cursor(CursorIcon::default());
         }
     });
+
+    let onclick = move |_| {
+        focus.request_focus();
+        if let Some(onpress) = &onpress {
+            onpress.call(())
+        }
+    };
+
+    let onkeydown = move |ev: KeyboardEvent| {
+        if focus.validate_keydown(&ev) {
+            if let Some(onpress) = &onpress {
+                onpress.call(())
+            }
+        }
+    };
 
     let onmouseenter = move |_| {
         platform.set_cursor(CursorIcon::Pointer);
@@ -188,6 +235,7 @@ pub fn MenuItem(
     };
 
     let background = match *status.read() {
+        _ if focus.is_focused_with_keyboard() => &hover_background,
         MenuItemStatus::Hovering => &hover_background,
         MenuItemStatus::Idle => "transparent",
     };
@@ -195,13 +243,15 @@ pub fn MenuItem(
     rsx!(
         rect {
             onclick,
+            onkeydown,
             onmouseenter,
             onmouseleave,
             a11y_id,
+            min_width: "110",
             width: "fill-min",
-            padding: "6",
+            padding: "6 12",
             margin: "2",
-            a11y_role:"button",
+            a11y_role: "button",
             color: "{font_theme.color}",
             corner_radius: "{corner_radius}",
             background: "{background}",
@@ -237,11 +287,15 @@ pub fn SubMenu(
                 close_menus_until(&mut menus, parent_menu_id);
                 push_menu(&mut menus, submenu_id);
             },
-            {children},
+            onpress: move |_| {
+                close_menus_until(&mut menus, parent_menu_id);
+                push_menu(&mut menus, submenu_id);
+            },
+            {children}
             if show_submenu {
                 rect {
                     position_top: "-12",
-                    position_right: "-16",
+                    position_right: "-20",
                     position: "absolute",
                     width: "0",
                     height: "0",
@@ -263,19 +317,19 @@ pub fn SubMenu(
 pub fn MenuButton(
     /// Inner children for the MenuButton
     children: Element,
-    /// Handler for the `onclick` event.
-    onclick: Option<EventHandler<Option<MouseEvent>>>,
+    /// Handler for the `onpress` event.
+    onpress: Option<EventHandler<()>>,
 ) -> Element {
     let mut menus = use_context::<Signal<Vec<MenuId>>>();
     let parent_menu_id = use_context::<MenuId>();
     rsx!(
         MenuItem {
             onmouseenter: move |_| close_menus_until(&mut menus, parent_menu_id),
-            onclick: move |e| {
-                if let Some(onclick) = &onclick {
-                    onclick.call(e)
+            onpress: move |_| {
+                if let Some(onpress) = &onpress {
+                    onpress.call(())
                 }
-            }
+            },
             {children}
         }
     )
@@ -294,14 +348,17 @@ pub fn MenuContainer(
         background,
         padding,
         shadow,
+        border_fill,
+        corner_radius,
     } = use_applied_theme!(&theme, menu_container);
     rsx!(
         rect {
             background: "{background}",
-            corner_radius: "12",
+            corner_radius: "{corner_radius}",
             shadow: "{shadow}",
             padding: "{padding}",
             content: "fit",
+            border: "1 inner {border_fill}",
             {children}
         }
     )
@@ -323,7 +380,7 @@ mod test {
                     Button {
                         onpress: move |_| show_menu.toggle(),
                         label { "Open Menu" }
-                    },
+                    }
                     if *show_menu.read() {
                         Menu {
                             onclose: move |_| show_menu.set(false),

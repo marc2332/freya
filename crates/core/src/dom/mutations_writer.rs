@@ -1,12 +1,7 @@
 use dioxus_core::{
     ElementId,
+    Template,
     WriteMutations,
-};
-use freya_common::{
-    AccessibilityDirtyNodes,
-    CompositorDirtyNodes,
-    Layers,
-    ParagraphElements,
 };
 use freya_native_core::{
     prelude::{
@@ -16,20 +11,34 @@ use freya_native_core::{
     tree::TreeRef,
     NodeId,
 };
-use freya_node_state::{
-    AccessibilityNodeState,
-    CursorState,
-    CustomAttributeValues,
-    LayerState,
+use torin::torin::{
+    DirtyReason,
+    Torin,
 };
-use torin::torin::Torin;
 
-use crate::prelude::{
-    Compositor,
-    CompositorCache,
-    CompositorDirtyArea,
+use super::{
+    CompositorDirtyNodes,
     DioxusDOMAdapter,
-    NodeAccessibility,
+    ImagesCache,
+    ParagraphElements,
+};
+use crate::{
+    accessibility::{
+        AccessibilityDirtyNodes,
+        NodeAccessibility,
+    },
+    custom_attributes::CustomAttributeValues,
+    layers::Layers,
+    render::{
+        Compositor,
+        CompositorCache,
+        CompositorDirtyArea,
+    },
+    states::{
+        CursorState,
+        ImageState,
+        LayerState,
+    },
 };
 
 pub struct MutationsWriter<'a> {
@@ -42,9 +51,10 @@ pub struct MutationsWriter<'a> {
     pub compositor_dirty_area: &'a mut CompositorDirtyArea,
     pub compositor_cache: &'a mut CompositorCache,
     pub accessibility_dirty_nodes: &'a mut AccessibilityDirtyNodes,
+    pub images_cache: &'a mut ImagesCache,
 }
 
-impl<'a> MutationsWriter<'a> {
+impl MutationsWriter<'_> {
     pub fn remove(&mut self, id: ElementId) {
         let node_id = self.native_writer.state.element_to_node_id(id);
         let mut dom_adapter = DioxusDOMAdapter::new(self.native_writer.rdom, self.scale_factor);
@@ -59,9 +69,8 @@ impl<'a> MutationsWriter<'a> {
                 }
 
                 let layer_state = node.get::<LayerState>();
-                let cursor_state = node.get::<CursorState>();
 
-                let Some((layer_state, cursor_state)) = layer_state.zip(cursor_state) else {
+                let Some(layer_state) = layer_state else {
                     // There might exist Nodes in the RealDOM with no states yet,
                     // this is mainly due to nodes being created in the same run as when this function (remove) is being called,
                     // like nodes created by loaded templates.
@@ -84,19 +93,19 @@ impl<'a> MutationsWriter<'a> {
                     .remove_node_from_layer(node_id, layer_state.layer);
 
                 // Remove from paragraph elements
-                if let Some(cursor_ref) = cursor_state.cursor_ref.as_ref() {
-                    self.paragraphs
-                        .remove_paragraph(node_id, &cursor_ref.text_id);
+                if let Some(cursor_state) = node.get::<CursorState>() {
+                    if let Some(cursor_ref) = cursor_state.cursor_ref.as_ref() {
+                        self.paragraphs
+                            .remove_paragraph(node_id, &cursor_ref.text_id);
+                    }
                 }
 
                 // Remove from the accessibility tree
                 if node.get_accessibility_id().is_some() {
-                    let node_accessibility_state = node.get::<AccessibilityNodeState>().unwrap();
-                    let closed_accessibility_node_id = node_accessibility_state
-                        .closest_accessibility_node_id
+                    let parent_id = node
+                        .parent_id()
                         .unwrap_or(self.native_writer.rdom.root_id());
-                    self.accessibility_dirty_nodes
-                        .remove(node.id(), closed_accessibility_node_id);
+                    self.accessibility_dirty_nodes.remove(node.id(), parent_id);
                 }
 
                 // Unite the removed area with the dirty area
@@ -111,6 +120,12 @@ impl<'a> MutationsWriter<'a> {
 
                 // Remove the node from the compositor cache
                 self.compositor_cache.remove(&node_id);
+
+                if let Some(image_state) = node.get::<ImageState>() {
+                    if let Some(image_cache_key) = &image_state.image_cache_key {
+                        self.images_cache.remove(image_cache_key);
+                    }
+                }
             }
         }
 
@@ -119,11 +134,7 @@ impl<'a> MutationsWriter<'a> {
     }
 }
 
-impl<'a> WriteMutations for MutationsWriter<'a> {
-    fn register_template(&mut self, template: dioxus_core::prelude::Template) {
-        self.native_writer.register_template(template);
-    }
-
+impl WriteMutations for MutationsWriter<'_> {
     fn append_children(&mut self, id: dioxus_core::ElementId, m: usize) {
         self.native_writer.append_children(id, m);
     }
@@ -140,12 +151,8 @@ impl<'a> WriteMutations for MutationsWriter<'a> {
         self.native_writer.create_text_node(value, id);
     }
 
-    fn hydrate_text_node(&mut self, path: &'static [u8], value: &str, id: dioxus_core::ElementId) {
-        self.native_writer.hydrate_text_node(path, value, id);
-    }
-
-    fn load_template(&mut self, name: &'static str, index: usize, id: dioxus_core::ElementId) {
-        self.native_writer.load_template(name, index, id);
+    fn load_template(&mut self, template: Template, index: usize, id: dioxus_core::ElementId) {
+        self.native_writer.load_template(template, index, id);
     }
 
     fn replace_node_with(&mut self, id: dioxus_core::ElementId, m: usize) {
@@ -163,12 +170,34 @@ impl<'a> WriteMutations for MutationsWriter<'a> {
 
     fn insert_nodes_after(&mut self, id: dioxus_core::ElementId, m: usize) {
         if m > 0 {
+            self.layout.invalidate_with_reason(
+                self.native_writer.state.element_to_node_id(id),
+                DirtyReason::Reorder,
+            );
+            let new_nodes =
+                &self.native_writer.state.stack[self.native_writer.state.stack.len() - m..];
+            for new in new_nodes {
+                self.layout
+                    .invalidate_with_reason(*new, DirtyReason::Reorder);
+            }
+
             self.native_writer.insert_nodes_after(id, m);
         }
     }
 
     fn insert_nodes_before(&mut self, id: dioxus_core::ElementId, m: usize) {
         if m > 0 {
+            self.layout.invalidate_with_reason(
+                self.native_writer.state.element_to_node_id(id),
+                DirtyReason::Reorder,
+            );
+            let new_nodes =
+                &self.native_writer.state.stack[self.native_writer.state.stack.len() - m..];
+            for new in new_nodes {
+                self.layout
+                    .invalidate_with_reason(*new, DirtyReason::Reorder);
+            }
+
             self.native_writer.insert_nodes_before(id, m);
         }
     }

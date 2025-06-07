@@ -1,5 +1,9 @@
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_core::platform::CursorIcon;
+use freya_elements::{
+    self as dioxus_elements,
+    KeyboardEvent,
+};
 use freya_hooks::{
     use_activable_route,
     use_applied_theme,
@@ -10,7 +14,6 @@ use freya_hooks::{
     TabTheme,
     TabThemeWith,
 };
-use winit::window::CursorIcon;
 
 /// Horizontal container for Tabs. Use in combination with [`Tab`]
 #[allow(non_snake_case)]
@@ -34,25 +37,27 @@ pub enum TabStatus {
     Hovering,
 }
 
-///  Clickable Tab. Usually used in combination with [`Tabsbar`], [`Link`] and [`ActivableRoute`].
+///  Clickable Tab. Usually used in combination with [`Tabsbar`], [`crate::Link`] and [`crate::ActivableRoute`].
 ///
 /// # Styling
 /// Inherits the [`TabTheme`](freya_hooks::TabTheme) theme.
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
-/// # use dioxus_router::prelude::Routable;
+/// # use dioxus_router::prelude::{Routable, Router};
 /// # #[allow(non_snake_case)]
-/// # fn PageNotFound() -> Element { None }
+/// # fn PageNotFound() -> Element { VNode::empty() }
 /// # #[allow(non_snake_case)]
-/// # fn Settings() -> Element { None }
+/// # fn Settings() -> Element { VNode::empty() }
 /// # #[derive(Routable, Clone, PartialEq)]
 /// # #[rustfmt::skip]
 /// # pub enum Route {
-/// #     #[route("/settings")]
-/// #     Settings,
+/// #     #[layout(Bar)]
+/// #       #[route("/")]
+/// #       Settings,
+/// #     #[end_layout]
 /// #     #[route("/..route")]
 /// #     PageNotFound { },
 /// # }
@@ -68,21 +73,52 @@ pub enum TabStatus {
 ///                 to: Route::Settings,
 ///                 Tab {
 ///                     label {
-///                         "Go to Settings"
+///                         "Settings"
 ///                     }
 ///                 }
 ///             }
 ///         }
 ///     )
 /// }
+/// # use freya_testing::prelude::*;
+/// # #[component]
+/// # fn Bar() -> Element {
+/// #   rsx!(
+/// #       Preview {
+/// #          Tabsbar {
+/// #              Tab {
+/// #                  label {
+/// #                      "Home"
+/// #                  }
+/// #              }
+/// #              ActivableRoute {
+/// #                  route: Route::Settings,
+/// #                  Tab {
+/// #                      label {
+/// #                          "Settings"
+/// #                      }
+/// #                  }
+/// #              }
+/// #          }
+/// #       }
+/// #   )
+/// # }
+/// # launch_doc(|| {
+/// #   rsx!(Router::<Route> {})
+/// # }, (250., 250.).into(), "./images/gallery_tab.png");
 /// ```
-#[allow(non_snake_case)]
+///
+/// # Preview
+/// ![Tab Preview][tab]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("tab", "images/gallery_tab.png")
+)]
 #[component]
 pub fn Tab(
     children: Element,
     theme: Option<TabThemeWith>,
     /// Optionally handle the `onclick` event in the SidebarItem.
-    onclick: Option<EventHandler<()>>,
+    onpress: Option<EventHandler<()>>,
 ) -> Element {
     let focus = use_focus();
     let mut status = use_signal(TabStatus::default);
@@ -109,8 +145,8 @@ pub fn Tab(
     });
 
     let onclick = move |_| {
-        if let Some(onclick) = &onclick {
-            onclick.call(());
+        if let Some(onpress) = &onpress {
+            onpress.call(());
         }
     };
 
@@ -128,7 +164,7 @@ pub fn Tab(
         TabStatus::Hovering => hover_background,
         TabStatus::Idle => background,
     };
-    let border = if focus.is_selected() || is_active {
+    let border = if focus.is_focused_with_keyboard() || is_active {
         focus_border_fill
     } else {
         border_fill
@@ -146,13 +182,12 @@ pub fn Tab(
             a11y_role:"tab",
             color: "{font_theme.color}",
             background: "{background}",
-            text_align: "center",
             content: "fit",
             rect {
                 padding: "{padding}",
                 main_align: "center",
                 cross_align: "center",
-                {children},
+                {children}
             }
             rect {
                 height: "2",
@@ -164,25 +199,27 @@ pub fn Tab(
 }
 
 ///  Clickable BottomTab. Same thing as Tab but designed to be placed in the bottom of your app,
-///  usually used in combination with [`Tabsbar`], [`Link`] and [`ActivableRoute`].
+///  usually used in combination with [`Tabsbar`], [`crate::Link`] and [`crate::ActivableRoute`].
 ///
 /// # Styling
 /// Inherits the [`BottomTabTheme`](freya_hooks::BottomTabTheme) theme.
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```rust
 /// # use freya::prelude::*;
-/// # use dioxus_router::prelude::Routable;
+/// # use dioxus_router::prelude::{Routable, Router};
 /// # #[allow(non_snake_case)]
-/// # fn PageNotFound() -> Element { None }
+/// # fn PageNotFound() -> Element { VNode::empty() }
 /// # #[allow(non_snake_case)]
-/// # fn Settings() -> Element { None }
+/// # fn Settings() -> Element { VNode::empty() }
 /// # #[derive(Routable, Clone, PartialEq)]
 /// # #[rustfmt::skip]
 /// # pub enum Route {
-/// #     #[route("/settings")]
-/// #     Settings,
+/// #     #[layout(Bar)]
+/// #       #[route("/")]
+/// #       Settings,
+/// #     #[end_layout]
 /// #     #[route("/..route")]
 /// #     PageNotFound { },
 /// # }
@@ -198,17 +235,53 @@ pub fn Tab(
 ///                 to: Route::Settings,
 ///                 BottomTab {
 ///                     label {
-///                         "Go to Settings"
+///                         "Settings"
 ///                     }
 ///                 }
 ///             }
 ///         }
 ///     )
 /// }
+/// # use freya_testing::prelude::*;
+/// # #[component]
+/// # fn Bar() -> Element {
+/// #   rsx!(
+/// #       Preview {
+/// #          Tabsbar {
+/// #              BottomTab {
+/// #                  label {
+/// #                      "Home"
+/// #                  }
+/// #              }
+/// #              ActivableRoute {
+/// #                  route: Route::Settings,
+/// #                  BottomTab {
+/// #                      label {
+/// #                          "Settings"
+/// #                      }
+/// #                  }
+/// #              }
+/// #          }
+/// #       }
+/// #   )
+/// # }
+/// # launch_doc(|| {
+/// #   rsx!(Router::<Route> {})
+/// # }, (250., 250.).into(), "./images/gallery_bottom_tab.png");
 /// ```
-#[allow(non_snake_case)]
+///
+/// # Preview
+/// ![Bottom Tab Preview][bottom_tab]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("bottom_tab", "images/gallery_bottom_tab.png")
+)]
 #[component]
-pub fn BottomTab(children: Element, theme: Option<BottomTabThemeWith>) -> Element {
+pub fn BottomTab(
+    children: Element,
+    theme: Option<BottomTabThemeWith>,
+    /// Optionally handle the `onclick` event in the SidebarItem.
+    onpress: Option<EventHandler<()>>,
+) -> Element {
     let focus = use_focus();
     let mut status = use_signal(TabStatus::default);
     let platform = use_platform();
@@ -231,6 +304,12 @@ pub fn BottomTab(children: Element, theme: Option<BottomTabThemeWith>) -> Elemen
         }
     });
 
+    let onclick = move |_| {
+        if let Some(onpress) = &onpress {
+            onpress.call(());
+        }
+    };
+
     let onmouseenter = move |_| {
         platform.set_cursor(CursorIcon::Pointer);
         status.set(TabStatus::Hovering);
@@ -241,15 +320,26 @@ pub fn BottomTab(children: Element, theme: Option<BottomTabThemeWith>) -> Elemen
         status.set(TabStatus::default());
     };
 
+    let onkeydown = move |ev: KeyboardEvent| {
+        if focus.validate_keydown(&ev) {
+            if let Some(onpress) = &onpress {
+                onpress.call(());
+            }
+        }
+    };
+
     let background = match *status.read() {
-        _ if focus.is_selected() || is_active => hover_background,
+        _ if focus.is_focused_with_keyboard() || is_active => hover_background,
         TabStatus::Hovering => hover_background,
         TabStatus::Idle => background,
     };
+
     rsx!(
         rect {
+            onclick,
             onmouseenter,
             onmouseleave,
+            onkeydown,
             a11y_id,
             width: "{width}",
             height: "{height}",
@@ -257,13 +347,12 @@ pub fn BottomTab(children: Element, theme: Option<BottomTabThemeWith>) -> Elemen
             a11y_role:"tab",
             color: "{font_theme.color}",
             background: "{background}",
-            text_align: "center",
             padding: "{padding}",
             main_align: "center",
             cross_align: "center",
             corner_radius: "99",
-            margin: "2 4",
-            {children},
+            text_height: "disable-least-ascent",
+            {children}
         }
     )
 }

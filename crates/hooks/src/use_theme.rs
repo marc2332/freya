@@ -60,7 +60,7 @@ pub fn use_get_theme() -> Theme {
 ///     } = use_applied_theme!(&props.theme, button);
 ///     // ...
 ///
-///     # None
+///     # VNode::empty()
 /// }
 /// ```
 #[macro_export]

@@ -1,6 +1,6 @@
 use ropey::Rope;
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum HistoryChange {
     InsertChar {
         idx: usize,
@@ -124,6 +124,18 @@ impl EditorHistory {
         } else {
             None
         }
+    }
+
+    pub fn clear_redos(&mut self) {
+        if self.can_redo() {
+            self.changes.drain(self.current_change..);
+        }
+    }
+
+    pub fn clear(&mut self) {
+        self.changes.clear();
+        self.current_change = 0;
+        self.version = 0;
     }
 }
 

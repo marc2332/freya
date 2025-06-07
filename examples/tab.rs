@@ -49,7 +49,7 @@ fn AppSidebar() -> Element {
                             }
                         }
                     }
-                },
+                }
                 Link {
                     to: Route::Wow,
                     ActivableRoute {
@@ -60,7 +60,7 @@ fn AppSidebar() -> Element {
                             }
                         }
                     }
-                },
+                }
                 Link {
                     to: Route::Settings,
                     ActivableRoute {
@@ -69,18 +69,16 @@ fn AppSidebar() -> Element {
                             label {
                                 "Go to Settings! 🧰"
                             }
-                        },
+                        }
                     }
-                },
+                }
             }
             Body {
-                rect {
-                    main_align: "center",
-                    cross_align: "center",
-                    width: "100%",
-                    height: "100%",
-                    Outlet::<Route> {  }
-                }
+                main_align: "center",
+                cross_align: "center",
+                width: "100%",
+                height: "100%",
+                Outlet::<Route> {  }
             }
         }
     )

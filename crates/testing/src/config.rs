@@ -3,24 +3,26 @@ use std::time::Duration;
 use torin::geometry::Size2D;
 
 /// Configuration for [`crate::test_handler::TestingHandler`].
-#[derive(Clone, Copy)]
-pub struct TestingConfig {
+#[derive(Clone)]
+pub struct TestingConfig<T: 'static + Clone> {
     pub vdom_timeout: Duration,
     pub size: Size2D,
     pub event_loop_ticker: bool,
+    pub state: Option<T>,
 }
 
-impl Default for TestingConfig {
+impl<T: 'static + Clone> Default for TestingConfig<T> {
     fn default() -> Self {
         Self {
             vdom_timeout: Duration::from_millis(16),
             size: Size2D::from((500.0, 500.0)),
             event_loop_ticker: true,
+            state: None,
         }
     }
 }
 
-impl TestingConfig {
+impl<T: 'static + Clone> TestingConfig<T> {
     pub fn new() -> Self {
         TestingConfig::default()
     }

@@ -1,13 +1,12 @@
-use std::sync::{
-    Arc,
-    Mutex,
+use std::sync::atomic::{
+    AtomicU64,
+    Ordering,
 };
 
 use accesskit::{
     Action,
     Affine,
     Node,
-    NodeBuilder,
     NodeId as AccessibilityId,
     Rect,
     Role,
@@ -15,7 +14,6 @@ use accesskit::{
     Tree,
     TreeUpdate,
 };
-use freya_common::AccessibilityDirtyNodes;
 use freya_engine::prelude::{
     Color,
     Slant,
@@ -29,14 +27,6 @@ use freya_native_core::{
     tags::TagName,
     NodeId,
 };
-use freya_node_state::{
-    AccessibilityNodeState,
-    Fill,
-    FontStyleState,
-    OverflowMode,
-    StyleState,
-    TransformState,
-};
 use rustc_hash::{
     FxHashMap,
     FxHashSet,
@@ -46,18 +36,78 @@ use torin::{
     torin::Torin,
 };
 
-use super::{
-    AccessibilityFocusStrategy,
-    NodeAccessibility,
+use super::NodeAccessibility;
+use crate::{
+    dom::{
+        DioxusDOM,
+        DioxusNode,
+    },
+    states::{
+        AccessibilityNodeState,
+        FontStyleState,
+        StyleState,
+        TransformState,
+    },
+    values::{
+        Fill,
+        OverflowMode,
+    },
 };
-use crate::dom::{
-    DioxusDOM,
-    DioxusNode,
-};
+
+/// Strategy focusing an Accessibility Node.
+#[derive(PartialEq, Debug, Clone)]
+pub enum AccessibilityFocusStrategy {
+    Forward,
+    Backward,
+    Node(accesskit::NodeId),
+}
+
+#[derive(Default)]
+pub struct AccessibilityDirtyNodes {
+    pub requested_focus: Option<AccessibilityFocusStrategy>,
+    pub added_or_updated: FxHashSet<NodeId>,
+    pub removed: FxHashMap<NodeId, NodeId>,
+}
+
+impl AccessibilityDirtyNodes {
+    pub fn request_focus(&mut self, node_id: AccessibilityFocusStrategy) {
+        self.requested_focus = Some(node_id);
+    }
+
+    pub fn add_or_update(&mut self, node_id: NodeId) {
+        self.added_or_updated.insert(node_id);
+    }
+
+    pub fn remove(&mut self, node_id: NodeId, parent_id: NodeId) {
+        self.removed.insert(node_id, parent_id);
+    }
+
+    pub fn clear(&mut self) {
+        self.requested_focus.take();
+        self.added_or_updated.clear();
+        self.removed.clear();
+    }
+}
+
+pub struct AccessibilityGenerator {
+    counter: AtomicU64,
+}
+
+impl Default for AccessibilityGenerator {
+    fn default() -> Self {
+        Self {
+            counter: AtomicU64::new(1), // Must start at 1 because 0 is reserved for the Root
+        }
+    }
+}
+
+impl AccessibilityGenerator {
+    pub fn new_id(&self) -> u64 {
+        self.counter.fetch_add(1, Ordering::Relaxed)
+    }
+}
 
 pub const ACCESSIBILITY_ROOT_ID: AccessibilityId = AccessibilityId(0);
-
-pub type SharedAccessibilityTree = Arc<Mutex<AccessibilityTree>>;
 
 pub struct AccessibilityTree {
     pub map: FxHashMap<AccessibilityId, NodeId>,
@@ -133,7 +183,7 @@ impl AccessibilityTree {
         layout: &Torin<NodeId>,
         dirty_nodes: &mut AccessibilityDirtyNodes,
     ) -> (TreeUpdate, NodeId) {
-        let requested_focus_id = dirty_nodes.requested_focus.take();
+        let requested_focus = dirty_nodes.requested_focus.take();
         let removed_ids = dirty_nodes.removed.drain().collect::<FxHashMap<_, _>>();
         let mut added_or_updated_ids = dirty_nodes
             .added_or_updated
@@ -149,28 +199,26 @@ impl AccessibilityTree {
             );
         }
 
+        // Remove all the removed nodes from the update list
+        for (node_id, _) in removed_ids.iter() {
+            added_or_updated_ids.remove(node_id);
+            self.map.retain(|_, id| id != node_id);
+        }
+
+        // Mark the parent of the removed nodes as updated
+        for (_, parent_id) in removed_ids.iter() {
+            if !removed_ids.contains_key(parent_id) {
+                added_or_updated_ids.insert(*parent_id);
+            }
+        }
+
         // Mark the ancestors as modified
         for node_id in added_or_updated_ids.clone() {
             let node_ref = rdom.get(node_id).unwrap();
-            let node_accessibility_state = node_ref.get::<AccessibilityNodeState>().unwrap();
-            added_or_updated_ids.insert(
-                node_accessibility_state
-                    .closest_accessibility_node_id
-                    .unwrap_or(rdom.root_id()),
-            );
+            let node_ref_parent = node_ref.parent_id().unwrap_or(rdom.root_id());
+            added_or_updated_ids.insert(node_ref_parent);
             self.map
                 .insert(node_ref.get_accessibility_id().unwrap(), node_id);
-        }
-
-        // Mark the still existing ancenstors as modified
-        for (_, ancestor_node_id) in removed_ids.iter() {
-            added_or_updated_ids.insert(*ancestor_node_id);
-        }
-
-        // Remove all the deleted noeds from the added_or_update list
-        for (node_id, _) in removed_ids {
-            added_or_updated_ids.remove(&node_id);
-            self.map.retain(|_, id| *id != node_id);
         }
 
         // Create the updated nodes
@@ -185,23 +233,15 @@ impl AccessibilityTree {
             {
                 let accessibility_node =
                     Self::create_node(&node_ref, layout_node, node_accessibility_state);
-
                 let accessibility_id = node_ref.get_accessibility_id().unwrap();
 
                 nodes.push((accessibility_id, accessibility_node));
             }
         }
 
-        // Try to focus the requested node id
-        if let Some(node_id) = requested_focus_id {
-            let node_ref = rdom.get(node_id).unwrap();
-            let node_accessibility_state = node_ref.get::<AccessibilityNodeState>();
-            if let Some(focused_id) = node_accessibility_state
-                .as_ref()
-                .and_then(|state| state.a11y_id)
-            {
-                self.focused_id = focused_id;
-            }
+        // Focus the requested node id if there is one
+        if let Some(requested_focus) = requested_focus {
+            self.focus_node_with_strategy(requested_focus, rdom);
         }
 
         // Fallback the focused id to the root if the focused node no longer exists
@@ -221,37 +261,17 @@ impl AccessibilityTree {
         )
     }
 
-    /// Update the focused Node ID and generate a TreeUpdate if necessary.
-    pub fn set_focus_with_update(
-        &mut self,
-        new_focus_id: AccessibilityId,
-    ) -> Option<(TreeUpdate, NodeId)> {
-        self.focused_id = new_focus_id;
-
-        // Only focus the element if it exists
-        if let Some(node_id) = self.map.get(&new_focus_id).copied() {
-            #[cfg(debug_assertions)]
-            tracing::info!("Focused {new_focus_id:?} node.");
-
-            Some((
-                TreeUpdate {
-                    nodes: Vec::new(),
-                    tree: Some(Tree::new(ACCESSIBILITY_ROOT_ID)),
-                    focus: self.focused_id,
-                },
-                node_id,
-            ))
-        } else {
-            None
-        }
-    }
-
     /// Focus a Node given the strategy.
-    pub fn set_focus_on_next_node(
+    pub fn focus_node_with_strategy(
         &mut self,
         stragegy: AccessibilityFocusStrategy,
         rdom: &DioxusDOM,
-    ) -> (TreeUpdate, NodeId) {
+    ) {
+        if let AccessibilityFocusStrategy::Node(id) = stragegy {
+            self.focused_id = id;
+            return;
+        }
+
         let mut nodes = Vec::new();
 
         rdom.traverse_depth_first_advanced(|node_ref| {
@@ -264,7 +284,7 @@ impl AccessibilityTree {
             if let Some(accessibility_id) = accessibility_id {
                 let accessibility_state = node_ref.get::<AccessibilityNodeState>().unwrap();
                 if accessibility_state.a11y_focusable.is_enabled() {
-                    nodes.push((accessibility_id, node_ref.id()))
+                    nodes.push(accessibility_id)
                 }
             }
 
@@ -279,9 +299,7 @@ impl AccessibilityTree {
 
         let node_index = nodes
             .iter()
-            .enumerate()
-            .find(|(_, (accessibility_id, _))| *accessibility_id == self.focused_id)
-            .map(|(i, _)| i);
+            .position(|accessibility_id| *accessibility_id == self.focused_id);
 
         let target_node = if stragegy == AccessibilityFocusStrategy::Forward {
             // Find the next Node
@@ -307,23 +325,10 @@ impl AccessibilityTree {
             }
         };
 
-        let (accessibility_id, node_id) = target_node
-            .copied()
-            .unwrap_or((ACCESSIBILITY_ROOT_ID, rdom.root_id()));
-
-        self.focused_id = accessibility_id;
+        self.focused_id = target_node.copied().unwrap_or(ACCESSIBILITY_ROOT_ID);
 
         #[cfg(debug_assertions)]
-        tracing::info!("Focused {accessibility_id:?} node.");
-
-        (
-            TreeUpdate {
-                nodes: Vec::new(),
-                tree: Some(Tree::new(ACCESSIBILITY_ROOT_ID)),
-                focus: self.focused_id,
-            },
-            node_id,
-        )
+        tracing::info!("Focused {:?} node.", self.focused_id);
     }
 
     /// Create an accessibility node
@@ -337,7 +342,18 @@ impl AccessibilityTree {
         let transform_state = &*node_ref.get::<TransformState>().unwrap();
         let node_type = node_ref.node_type();
 
-        let mut builder = NodeBuilder::new(Role::default());
+        let mut builder = match node_type.tag() {
+            // Make the root accessibility node.
+            Some(&TagName::Root) => Node::new(Role::Window),
+
+            // All other node types will either don't have a builder (but don't support
+            // accessibility attributes like with `text`) or have their builder made for
+            // them already.
+            Some(_) => node_accessibility.builder.clone().unwrap(),
+
+            // Tag-less nodes can't have accessibility state
+            None => unreachable!(),
+        };
 
         // Set children
         let children = node_ref.get_accessibility_children();
@@ -352,6 +368,15 @@ impl AccessibilityTree {
             y1: area.max_y(),
         });
 
+        if let NodeType::Element(node) = &*node_type {
+            if matches!(node.tag, TagName::Label | TagName::Paragraph) && builder.value().is_none()
+            {
+                if let Some(inner_text) = node_ref.get_inner_texts() {
+                    builder.set_value(inner_text);
+                }
+            }
+        }
+
         // Set focusable action
         // This will cause assistive technology to offer the user an option
         // to focus the current element if it supports it.
@@ -365,7 +390,9 @@ impl AccessibilityTree {
             .iter()
             .find(|(id, _)| id == &node_ref.id())
         {
-            builder.set_transform(Affine::rotate(rotation.to_radians() as _));
+            let rotation = rotation.to_radians() as f64;
+            let (s, c) = rotation.sin_cos();
+            builder.set_transform(Affine::new([c, s, -s, c, 0.0, 0.0]));
         }
 
         // Clipping overflow
@@ -458,29 +485,7 @@ impl AccessibilityTree {
             ));
         }
 
-        // Set text value
-        if let Some(alt) = &node_accessibility.a11y_alt {
-            builder.set_value(alt.to_owned());
-        } else if let Some(value) = node_ref.get_inner_texts() {
-            builder.set_value(value);
-            builder.set_role(Role::Label);
-        }
-
-        // Set name
-        if let Some(name) = &node_accessibility.a11y_name {
-            builder.set_name(name.to_owned());
-        }
-
-        // Set role
-        if let Some(role) = node_accessibility.a11y_role {
-            builder.set_role(role);
-        }
-        // Set root role
-        if node_ref.id() == node_ref.real_dom().root_id() {
-            builder.set_role(Role::Window);
-        }
-
-        builder.build()
+        builder
     }
 }
 

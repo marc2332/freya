@@ -35,7 +35,7 @@ fn app() -> Element {
                     onchange: move |e| {
                         password.set(e)
                     }
-                },
+                }
                 Button {
                     onpress: move |_| is_hidden.toggle(),
                     label {

@@ -179,7 +179,7 @@ fn AppSidebar() -> Element {
                         }
                     },
                     SidebarItem {
-                        onclick: move |_| {
+                        onpress: move |_| {
                             spawn(async move {
                                 load_documents(documents).await;
                             });
@@ -207,13 +207,11 @@ fn AppSidebar() -> Element {
                     }
                 ),
                 Body {
-                    rect {
-                        main_align: "center",
-                        cross_align: "center",
-                        width: "100%",
-                        height: "100%",
-                        Outlet::<Route> {  }
-                    }
+                    main_align: "center",
+                    cross_align: "center",
+                    width: "100%",
+                    height: "100%",
+                    Outlet::<Route> {  }
                 }
             }
         }
@@ -232,7 +230,7 @@ fn Home() -> Element {
 
     rsx!(
         Button {
-            onclick: edit_blank,
+            onpress: edit_blank,
             label {
                 "Blank Document"
             }
@@ -247,8 +245,10 @@ fn DocumentView(path: ReadOnlySignal<String>) -> Element {
 
     if let Some(Ok(text)) = &*content {
         rsx!(
-            label {
-                "{text}"
+            ScrollView {
+                label {
+                    "{text}"
+                }
             }
         )
     } else if content.is_none() {
@@ -266,7 +266,7 @@ fn DocumentView(path: ReadOnlySignal<String>) -> Element {
     }
 }
 
-static LOREM_IPSUM: &'static str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+static LOREM_IPSUM: &str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
 
 #[component]
 fn DocumentEdit(path: String) -> Element {
@@ -313,7 +313,7 @@ fn DocumentEdit(path: String) -> Element {
                         width: "fill".into(),
                         padding: "10".into()
                     }),
-                    onclick: save_file,
+                    onpress: save_file,
                     label {
                         width: "100%",
                         "Save"
@@ -362,27 +362,25 @@ fn DocumentEditor(path: String, mut editable: UseEditable) -> Element {
     };
 
     rsx!(
-        rect {
+        ScrollView {
             width: "fill",
             height: "fill",
-            cursor_reference,
-            ScrollView {
-                scroll_with_arrows: false,
-                paragraph {
-                    width: "100%",
-                    cursor_id: "0",
-                    cursor_index: "{cursor_char}",
-                    cursor_mode: "editable",
-                    cursor_color: "black",
-                    highlights,
-                    onclick,
-                    onmousemove,
-                    onmousedown,
-                    onglobalkeydown,
-                    onglobalkeyup,
-                    text {
-                        "{editable.editor()}"
-                    }
+            scroll_with_arrows: false,
+            paragraph {
+                cursor_reference,
+                width: "100%",
+                cursor_id: "0",
+                cursor_index: "{cursor_char}",
+                cursor_mode: "editable",
+                cursor_color: "black",
+                highlights,
+                onclick,
+                onmousemove,
+                onmousedown,
+                onglobalkeydown,
+                onglobalkeyup,
+                text {
+                    "{editable.editor()}"
                 }
             }
         }

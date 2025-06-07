@@ -4,7 +4,7 @@ use std::{
     ops::Range,
 };
 
-use dioxus_sdk::clipboard::UseClipboard;
+use dioxus_clipboard::prelude::UseClipboard;
 use ropey::iter::Lines;
 pub use ropey::Rope;
 
@@ -320,6 +320,10 @@ impl TextEditor for RopeEditor {
 
     fn redo(&mut self) -> Option<usize> {
         self.history.redo(&mut self.rope)
+    }
+
+    fn editor_history(&mut self) -> &mut EditorHistory {
+        &mut self.history
     }
 
     fn get_identation(&self) -> u8 {

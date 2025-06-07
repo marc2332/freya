@@ -1,14 +1,17 @@
 ---
-import { getEntry } from "astro:content";
+import { getEntry, render } from "astro:content";
+import BlogPostLayout from "../../layouts/BlogPostLayout.astro";
 
 const { slug = "" } = Astro.params;
 
 const entry = await getEntry("blog", slug);
 
 if (entry === undefined) {
-    return Astro.redirect("/404");
+  return Astro.redirect("/404");
 }
 
-let { Content } = await entry.render();
+const { Content, remarkPluginFrontmatter, headings } = await render(entry);
 ---
-<Content/>
+<BlogPostLayout frontmatter={remarkPluginFrontmatter} headings={headings}>
+    <Content/>
+</BlogPostLayout>

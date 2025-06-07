@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
+    self as dioxus_elements,
     events::MouseEvent,
 };
 use freya_hooks::{
@@ -47,7 +47,7 @@ pub fn ScrollThumb(
 
     rsx!(
         rect {
-            onmouseenter: move |_| { state.set(ScrollThumbState::Hovering) },
+            onmouseenter: move |_: MouseEvent| { state.set(ScrollThumbState::Hovering) },
             onmouseleave: move |_| { state.set(ScrollThumbState::Idle) },
             onmousedown: move |e| {
                 e.stop_propagation();
@@ -55,7 +55,7 @@ pub fn ScrollThumb(
             },
             width: "{width}",
             height: "{height}",
-            padding: "2",
+            padding: "4",
             rect {
                 width: "100%",
                 height: "100%",

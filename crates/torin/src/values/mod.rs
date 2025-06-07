@@ -4,6 +4,7 @@ pub mod direction;
 pub mod gaps;
 pub mod position;
 pub mod size;
+pub mod visible_size;
 
 pub mod prelude {
     pub use crate::{
@@ -13,5 +14,6 @@ pub mod prelude {
         gaps::*,
         position::*,
         size::*,
+        visible_size::*,
     };
 }

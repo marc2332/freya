@@ -1,9 +1,5 @@
 use std::ops::Mul;
 
-use freya_common::{
-    CachedParagraph,
-    CursorLayoutResponse,
-};
 use freya_engine::prelude::*;
 use freya_native_core::{
     prelude::{
@@ -12,10 +8,6 @@ use freya_native_core::{
     },
     real_dom::NodeImmutable,
     tags::TagName,
-};
-use freya_node_state::{
-    CursorState,
-    FontStyleState,
 };
 use torin::{
     geometry::Area,
@@ -30,14 +22,35 @@ use torin::{
 
 use super::utils::ElementUtils;
 use crate::{
-    dom::DioxusNode,
-    prelude::{
-        align_highlights_and_cursor_paragraph,
-        align_main_align_paragraph,
-        TextGroupMeasurement,
+    custom_attributes::CursorLayoutResponse,
+    dom::{
+        DioxusNode,
+        ImagesCache,
     },
-    render::create_paragraph,
+    event_loop_messages::TextGroupMeasurement,
+    render::{
+        align_main_align_paragraph,
+        create_paragraph,
+        draw_cursor,
+        run_cursor_highlights,
+        ParagraphData,
+    },
+    states::{
+        CursorState,
+        FontStyleState,
+        StyleState,
+    },
 };
+
+pub struct CachedParagraph(pub Paragraph);
+
+/// # Safety
+/// Skia `Paragraph` are neither Sync or Send, but in order to store them in the Associated
+/// data of the Nodes in Torin (which will be used across threads when making the attributes diffing),
+/// we must manually mark the Paragraph as Send and Sync, this is fine because `Paragraph`s will only be accessed and modified
+/// In the main thread when measuring the layout and painting.
+unsafe impl Send for CachedParagraph {}
+unsafe impl Sync for CachedParagraph {}
 
 pub struct ParagraphElement;
 
@@ -119,6 +132,7 @@ impl ElementUtils for ParagraphElement {
         font_collection: &mut FontCollection,
         _font_manager: &FontMgr,
         default_fonts: &[String],
+        _images_cache: &mut ImagesCache,
         scale_factor: f32,
     ) {
         let area = layout_node.visible_area();
@@ -128,8 +142,15 @@ impl ElementUtils for ParagraphElement {
             let x = area.min_x();
             let y = area.min_y() + align_main_align_paragraph(node_ref, &area, paragraph);
 
+            let mut highlights_paint = Paint::default();
+            highlights_paint.set_anti_alias(true);
+            highlights_paint.set_style(PaintStyle::Fill);
+            highlights_paint.set_color(node_cursor_state.highlight_color);
+
             // Draw the highlights if specified
-            draw_cursor_highlights(&area, paragraph, canvas, node_ref);
+            run_cursor_highlights(area, paragraph, node_ref, |rect| {
+                canvas.draw_rect(rect, &highlights_paint);
+            });
 
             // Draw a cursor if specified
             draw_cursor(&area, paragraph, canvas, node_ref);
@@ -138,7 +159,7 @@ impl ElementUtils for ParagraphElement {
         };
 
         if node_cursor_state.position.is_some() {
-            let paragraph = create_paragraph(
+            let ParagraphData { paragraph, .. } = create_paragraph(
                 node_ref,
                 &area.size,
                 font_collection,
@@ -159,7 +180,32 @@ impl ElementUtils for ParagraphElement {
         };
     }
 
-    fn element_needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
+    fn clip(
+        &self,
+        layout_node: &LayoutNode,
+        _node_ref: &DioxusNode,
+        canvas: &Canvas,
+        _scale_factor: f32,
+    ) {
+        canvas.clip_rect(
+            Rect::new(
+                layout_node.area.min_x(),
+                layout_node.area.min_y(),
+                layout_node.area.max_x(),
+                layout_node.area.max_y(),
+            ),
+            ClipOp::Intersect,
+            true,
+        );
+    }
+
+    fn element_needs_cached_area(&self, node_ref: &DioxusNode, _style_state: &StyleState) -> bool {
+        let node_cursor_state = &*node_ref.get::<CursorState>().unwrap();
+
+        if node_cursor_state.highlights.is_some() {
+            return true;
+        }
+
         for text_span in node_ref.children() {
             if let NodeType::Element(ElementNode {
                 tag: TagName::Text, ..
@@ -176,21 +222,14 @@ impl ElementUtils for ParagraphElement {
         false
     }
 
-    fn drawing_area(
+    fn element_drawing_area(
         &self,
         layout_node: &LayoutNode,
         node_ref: &DioxusNode,
         scale_factor: f32,
+        _node_style: &StyleState,
     ) -> Area {
-        let paragraph_font_height = &layout_node
-            .data
-            .as_ref()
-            .unwrap()
-            .get::<CachedParagraph>()
-            .unwrap()
-            .1;
         let mut area = layout_node.visible_area();
-        area.size.height = area.size.height.max(*paragraph_font_height);
 
         // Iterate over all the text spans inside this paragraph and if any of them
         // has a shadow at all, apply this shadow to the general paragraph.
@@ -210,7 +249,7 @@ impl ElementUtils for ParagraphElement {
 
                 let mut text_shadow_area = area;
 
-                for text_shadow in &font_style.text_shadows {
+                for text_shadow in font_style.text_shadows.iter() {
                     if text_shadow.color != Color::TRANSPARENT {
                         text_shadow_area.move_with_offsets(
                             &Length::new(text_shadow.offset.x),
@@ -227,83 +266,21 @@ impl ElementUtils for ParagraphElement {
             }
         }
 
+        let paragraph = &layout_node
+            .data
+            .as_ref()
+            .unwrap()
+            .get::<CachedParagraph>()
+            .unwrap()
+            .0;
+
+        run_cursor_highlights(area, paragraph, node_ref, |rect| {
+            area = area.union(&Area::new(
+                (rect.left, rect.top).into(),
+                (rect.width(), rect.height()).into(),
+            ))
+        });
+
         area
     }
-}
-
-fn draw_cursor_highlights(
-    area: &Area,
-    paragraph: &Paragraph,
-    canvas: &Canvas,
-    node_ref: &DioxusNode,
-) -> Option<()> {
-    let node_cursor_state = &*node_ref.get::<CursorState>().unwrap();
-
-    let highlights = node_cursor_state.highlights.as_ref()?;
-    let highlight_color = node_cursor_state.highlight_color;
-
-    for (from, to) in highlights.iter() {
-        let (from, to) = {
-            if from < to {
-                (from, to)
-            } else {
-                (to, from)
-            }
-        };
-        let cursor_rects = paragraph.get_rects_for_range(
-            *from..*to,
-            RectHeightStyle::Tight,
-            RectWidthStyle::Tight,
-        );
-        for cursor_rect in cursor_rects {
-            let rect = align_highlights_and_cursor_paragraph(
-                node_ref,
-                area,
-                paragraph,
-                &cursor_rect,
-                None,
-            );
-
-            let mut paint = Paint::default();
-            paint.set_anti_alias(true);
-            paint.set_style(PaintStyle::Fill);
-            paint.set_color(highlight_color);
-
-            canvas.draw_rect(rect, &paint);
-        }
-    }
-
-    Some(())
-}
-
-fn draw_cursor(
-    area: &Area,
-    paragraph: &Paragraph,
-    canvas: &Canvas,
-    node_ref: &DioxusNode,
-) -> Option<()> {
-    let node_cursor_state = &*node_ref.get::<CursorState>().unwrap();
-
-    let cursor = node_cursor_state.position?;
-    let cursor_color = node_cursor_state.color;
-    let cursor_position = cursor as usize;
-
-    let cursor_rects = paragraph.get_rects_for_range(
-        cursor_position..cursor_position + 1,
-        RectHeightStyle::Tight,
-        RectWidthStyle::Tight,
-    );
-    let cursor_rect = cursor_rects.first()?;
-
-    let rect =
-        align_highlights_and_cursor_paragraph(node_ref, area, paragraph, cursor_rect, Some(1.0));
-
-    let mut paint = Paint::default();
-    paint.set_anti_alias(true);
-    paint.set_style(PaintStyle::Fill);
-    paint.set_color(cursor_color);
-
-    canvas.draw_rect(rect, &paint);
-
-    Some(())
 }

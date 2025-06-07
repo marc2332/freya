@@ -1,12 +1,20 @@
 use dioxus::prelude::*;
 use freya_elements::{
-    elements as dioxus_elements,
-    events::KeyboardEvent,
+    self as dioxus_elements,
+    events::{
+        Key,
+        KeyboardEvent,
+    },
+    MouseEvent,
 };
 use freya_hooks::{
     theme_with,
+    use_animation,
     use_applied_theme,
+    AnimNum,
     ButtonThemeWith,
+    Ease,
+    Function,
     PopupTheme,
     PopupThemeWith,
 };
@@ -19,18 +27,28 @@ use crate::{
 /// The background of the [`Popup`] component.
 #[allow(non_snake_case)]
 #[component]
-pub fn PopupBackground(children: Element) -> Element {
+pub fn PopupBackground(children: Element, onclick: EventHandler<MouseEvent>) -> Element {
     rsx!(rect {
-        height: "100v",
-        width: "100v",
-        background: "rgb(0, 0, 0, 150)",
-        position: "absolute",
-        position_top: "0",
-        position_left: "0",
         layer: "-2000",
-        main_align: "center",
-        cross_align: "center",
-        {children}
+        rect {
+            onclick,
+            height: "100v",
+            width: "100v",
+            background: "rgb(0, 0, 0, 150)",
+            position: "global",
+            position_top: "0",
+            position_left: "0",
+        }
+        rect {
+            height: "100v",
+            width: "100v",
+            position: "global",
+            position_top: "0",
+            position_left: "0",
+            main_align: "center",
+            cross_align: "center",
+            {children}
+        }
     })
 }
 
@@ -86,6 +104,23 @@ pub fn Popup(
     #[props(default = true)]
     close_on_escape_key: bool,
 ) -> Element {
+    let animations = use_animation(|conf| {
+        conf.auto_start(true);
+        (
+            AnimNum::new(0.85, 1.)
+                .time(150)
+                .ease(Ease::Out)
+                .function(Function::Quad),
+            AnimNum::new(40., 1.)
+                .time(150)
+                .ease(Ease::Out)
+                .function(Function::Quad),
+            AnimNum::new(0.2, 1.)
+                .time(150)
+                .ease(Ease::Out)
+                .function(Function::Quad),
+        )
+    });
     let PopupTheme {
         background,
         color,
@@ -93,6 +128,9 @@ pub fn Popup(
         width,
         height,
     } = use_applied_theme!(&theme, popup);
+
+    let scale = animations.get();
+    let (scale, margin, opacity) = &*scale.read();
 
     let request_to_close = move || {
         if let Some(oncloserequest) = &oncloserequest {
@@ -106,11 +144,13 @@ pub fn Popup(
         }
     };
 
-    let onpress = move |_| request_to_close();
-
     rsx!(
         PopupBackground {
+            onclick: move |_| request_to_close(),
             rect {
+                scale: "{scale.read()} {scale.read()}",
+                margin: "{margin.read()} 0 0 0",
+                opacity: "{opacity.read()}",
                 padding: "14",
                 corner_radius: "8",
                 background: "{background}",
@@ -133,10 +173,10 @@ pub fn Popup(
                                 corner_radius: "999".into(),
                                 shadow: "none".into()
                             }),
-                            onpress,
+                            onpress: move |_| request_to_close(),
                             CrossIcon {
                                 fill: cross_fill
-                             }
+                            }
                         }
                     }
                 }
@@ -175,6 +215,8 @@ pub fn PopupContent(children: Element) -> Element {
 
 #[cfg(test)]
 mod test {
+    use std::time::Duration;
+
     use dioxus::prelude::use_signal;
     use freya::prelude::*;
     use freya_elements::events::keyboard::{
@@ -183,6 +225,7 @@ mod test {
         Modifiers,
     };
     use freya_testing::prelude::*;
+    use tokio::time::sleep;
 
     #[tokio::test]
     pub async fn popup() {
@@ -217,11 +260,13 @@ mod test {
 
         // Open the popup
         utils.click_cursor((15., 15.)).await;
+        sleep(Duration::from_millis(150)).await;
+        utils.wait_for_update().await;
 
         // Check the popup is opened
-        assert_eq!(utils.sdom().get().layout().size(), 10);
+        assert_eq!(utils.sdom().get().layout().size(), 12);
 
-        utils.click_cursor((395., 180.)).await;
+        utils.click_cursor((25., 25.)).await;
 
         // Check the popup is closed
         assert_eq!(utils.sdom().get().layout().size(), 4);
@@ -230,7 +275,7 @@ mod test {
         utils.click_cursor((15., 15.)).await;
 
         // Send a random globalkeydown event
-        utils.push_event(PlatformEvent::Keyboard {
+        utils.push_event(TestEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::ArrowDown,
             code: Code::ArrowDown,
@@ -238,10 +283,10 @@ mod test {
         });
         utils.wait_for_update().await;
         // Check the popup is still open
-        assert_eq!(utils.sdom().get().layout().size(), 10);
+        assert_eq!(utils.sdom().get().layout().size(), 12);
 
         // Send a ESC globalkeydown event
-        utils.push_event(PlatformEvent::Keyboard {
+        utils.push_event(TestEvent::Keyboard {
             name: EventName::KeyDown,
             key: Key::Escape,
             code: Code::Escape,

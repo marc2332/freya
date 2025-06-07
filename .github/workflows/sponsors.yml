@@ -5,6 +5,7 @@ on:
     - cron: 30 15 * * 0-6
 jobs:
   deploy:
+    if: github.repository == 'marc2332/freya'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️

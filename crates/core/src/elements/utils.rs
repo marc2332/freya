@@ -4,13 +4,8 @@ use freya_engine::prelude::{
     FontMgr,
 };
 use freya_native_core::{
-    prelude::NodeImmutable,
     tags::TagName,
     NodeId,
-};
-use freya_node_state::{
-    TransformState,
-    ViewportState,
 };
 use torin::{
     prelude::{
@@ -23,7 +18,17 @@ use torin::{
 };
 
 use super::*;
-use crate::dom::DioxusNode;
+use crate::{
+    dom::{
+        DioxusNode,
+        ImagesCache,
+    },
+    states::{
+        StyleState,
+        TransformState,
+        ViewportState,
+    },
+};
 
 pub trait ElementUtils {
     fn is_point_inside_area(
@@ -54,6 +59,7 @@ pub trait ElementUtils {
         font_collection: &mut FontCollection,
         font_manager: &FontMgr,
         default_fonts: &[String],
+        images_cache: &mut ImagesCache,
         scale_factor: f32,
     );
 
@@ -62,20 +68,31 @@ pub trait ElementUtils {
         layout_node: &LayoutNode,
         _node_ref: &DioxusNode,
         _scale_factor: f32,
+        _node_style: &StyleState,
     ) -> Area {
         // Images neither SVG elements have support for shadows or borders, so its fine so simply return the visible area.
         layout_node.visible_area()
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn drawing_area_with_viewports(
         &self,
         layout_node: &LayoutNode,
         node_ref: &DioxusNode,
         layout: &Torin<NodeId>,
         scale_factor: f32,
+        node_style: &StyleState,
+        node_viewports: &ViewportState,
+        transform_state: &TransformState,
     ) -> Option<Area> {
-        let mut drawing_area = self.drawing_area(layout_node, node_ref, scale_factor);
-        let node_viewports = node_ref.get::<ViewportState>().unwrap();
+        let mut drawing_area = self.drawing_area(
+            layout_node,
+            node_ref,
+            layout,
+            scale_factor,
+            node_style,
+            transform_state,
+        );
 
         for viewport_id in &node_viewports.viewports {
             let viewport = layout.get(*viewport_id).unwrap().visible_area();
@@ -85,7 +102,8 @@ pub trait ElementUtils {
             }
         }
 
-        Some(drawing_area)
+        // Inflate the area by 1px in each side to cover potential off-bounds rendering caused by antialising
+        Some(drawing_area.inflate(1.0, 1.0))
     }
 
     /// Measure the area for this element considering other
@@ -94,12 +112,24 @@ pub trait ElementUtils {
         &self,
         layout_node: &LayoutNode,
         node_ref: &DioxusNode,
+        layout: &Torin<NodeId>,
         scale_factor: f32,
+        node_style: &StyleState,
+        transform_state: &TransformState,
     ) -> Area {
-        let drawing_area = self.element_drawing_area(layout_node, node_ref, scale_factor);
-        let transform = node_ref.get::<TransformState>().unwrap();
+        let mut drawing_area =
+            self.element_drawing_area(layout_node, node_ref, scale_factor, node_style);
 
-        if !transform.rotations.is_empty() {
+        for (id, scale_x, scale_y) in &transform_state.scales {
+            let layout_node = layout.get(*id).unwrap();
+            let center = layout_node.area.center();
+            drawing_area = drawing_area.translate(-center.to_vector());
+            drawing_area = drawing_area.scale(*scale_x, *scale_y);
+            drawing_area = drawing_area.translate(center.to_vector());
+            drawing_area = drawing_area.inflate(1.0, 1.0);
+        }
+
+        if !transform_state.rotations.is_empty() {
             let area = layout_node.visible_area();
             drawing_area.max_area_when_rotated(area.center())
         } else {
@@ -109,21 +139,26 @@ pub trait ElementUtils {
 
     /// Check if this element requires any kind of special caching.
     /// Mainly used for text-like elements with shadows.
-    /// See [crate::compositor::CompositorCache].
+    /// See [crate::render::CompositorCache].
     /// Default to `false`.
     #[inline]
-    fn element_needs_cached_area(&self, _node_ref: &DioxusNode) -> bool {
+    fn element_needs_cached_area(&self, _node_ref: &DioxusNode, _style_state: &StyleState) -> bool {
         false
     }
 
     #[inline]
-    fn needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
-        let element_check = self.element_needs_cached_area(node_ref);
+    fn needs_cached_area(
+        &self,
+        node_ref: &DioxusNode,
+        transform_state: &TransformState,
+        style_state: &StyleState,
+    ) -> bool {
+        let element_check = self.element_needs_cached_area(node_ref, style_state);
 
-        let transform = node_ref.get::<TransformState>().unwrap();
-        let rotate_effect = !transform.rotations.is_empty();
+        let rotate_effect = !transform_state.rotations.is_empty();
+        let scales_effect = !transform_state.scales.is_empty();
 
-        element_check || rotate_effect
+        element_check || rotate_effect || scales_effect
     }
 }
 
@@ -196,6 +231,7 @@ impl ElementUtils for ElementWithUtils {
         font_collection: &mut FontCollection,
         font_manager: &FontMgr,
         default_fonts: &[String],
+        images_cache: &mut ImagesCache,
         scale_factor: f32,
     ) {
         match self {
@@ -206,6 +242,7 @@ impl ElementUtils for ElementWithUtils {
                 font_collection,
                 font_manager,
                 default_fonts,
+                images_cache,
                 scale_factor,
             ),
             Self::Svg(el) => el.render(
@@ -215,6 +252,7 @@ impl ElementUtils for ElementWithUtils {
                 font_collection,
                 font_manager,
                 default_fonts,
+                images_cache,
                 scale_factor,
             ),
             Self::Paragraph(el) => el.render(
@@ -224,6 +262,7 @@ impl ElementUtils for ElementWithUtils {
                 font_collection,
                 font_manager,
                 default_fonts,
+                images_cache,
                 scale_factor,
             ),
             Self::Image(el) => el.render(
@@ -233,6 +272,7 @@ impl ElementUtils for ElementWithUtils {
                 font_collection,
                 font_manager,
                 default_fonts,
+                images_cache,
                 scale_factor,
             ),
             Self::Label(el) => el.render(
@@ -242,6 +282,7 @@ impl ElementUtils for ElementWithUtils {
                 font_collection,
                 font_manager,
                 default_fonts,
+                images_cache,
                 scale_factor,
             ),
         }
@@ -251,24 +292,67 @@ impl ElementUtils for ElementWithUtils {
         &self,
         layout_node: &LayoutNode,
         node_ref: &DioxusNode,
+        layout: &Torin<NodeId>,
         scale_factor: f32,
+        node_style: &StyleState,
+        transform_state: &TransformState,
     ) -> Area {
         match self {
-            Self::Rect(el) => el.drawing_area(layout_node, node_ref, scale_factor),
-            Self::Svg(el) => el.drawing_area(layout_node, node_ref, scale_factor),
-            Self::Paragraph(el) => el.drawing_area(layout_node, node_ref, scale_factor),
-            Self::Image(el) => el.drawing_area(layout_node, node_ref, scale_factor),
-            Self::Label(el) => el.drawing_area(layout_node, node_ref, scale_factor),
+            Self::Rect(el) => el.drawing_area(
+                layout_node,
+                node_ref,
+                layout,
+                scale_factor,
+                node_style,
+                transform_state,
+            ),
+            Self::Svg(el) => el.drawing_area(
+                layout_node,
+                node_ref,
+                layout,
+                scale_factor,
+                node_style,
+                transform_state,
+            ),
+            Self::Paragraph(el) => el.drawing_area(
+                layout_node,
+                node_ref,
+                layout,
+                scale_factor,
+                node_style,
+                transform_state,
+            ),
+            Self::Image(el) => el.drawing_area(
+                layout_node,
+                node_ref,
+                layout,
+                scale_factor,
+                node_style,
+                transform_state,
+            ),
+            Self::Label(el) => el.drawing_area(
+                layout_node,
+                node_ref,
+                layout,
+                scale_factor,
+                node_style,
+                transform_state,
+            ),
         }
     }
 
-    fn needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
+    fn needs_cached_area(
+        &self,
+        node_ref: &DioxusNode,
+        transform_state: &TransformState,
+        style_state: &StyleState,
+    ) -> bool {
         match self {
-            Self::Rect(el) => el.needs_cached_area(node_ref),
-            Self::Svg(el) => el.needs_cached_area(node_ref),
-            Self::Paragraph(el) => el.needs_cached_area(node_ref),
-            Self::Image(el) => el.needs_cached_area(node_ref),
-            Self::Label(el) => el.needs_cached_area(node_ref),
+            Self::Rect(el) => el.needs_cached_area(node_ref, transform_state, style_state),
+            Self::Svg(el) => el.needs_cached_area(node_ref, transform_state, style_state),
+            Self::Paragraph(el) => el.needs_cached_area(node_ref, transform_state, style_state),
+            Self::Image(el) => el.needs_cached_area(node_ref, transform_state, style_state),
+            Self::Label(el) => el.needs_cached_area(node_ref, transform_state, style_state),
         }
     }
 }

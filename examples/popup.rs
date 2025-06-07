@@ -42,7 +42,7 @@ fn app() -> Element {
                                 }
                             }
                             Button {
-                                onclick: move |_| {
+                                onpress: move |_| {
                                     show_popup.set(false)
                                 },
                                 label {

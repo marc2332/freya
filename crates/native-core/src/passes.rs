@@ -15,13 +15,13 @@ use rustc_hash::{
     FxHashSet,
 };
 use shipyard::{
+    scheduler::WorkloadSystem,
     Borrow,
     BorrowInfo,
     Component,
     Unique,
     UniqueView,
     View,
-    WorkloadSystem,
 };
 
 use crate::{
@@ -33,10 +33,7 @@ use crate::{
         NodeMaskBuilder,
         NodeView,
     },
-    real_dom::{
-        DirtyNodesResult,
-        SendAnyMapWrapper,
-    },
+    real_dom::SendAnyMapWrapper,
     tree::{
         TreeRef,
         TreeRefView,
@@ -61,9 +58,8 @@ impl DirtyNodes {
     }
 
     pub fn pop(&mut self) -> Option<NodeId> {
-        self.nodes_dirty.iter().next().copied().map(|id| {
-            self.nodes_dirty.remove(&id);
-            id
+        self.nodes_dirty.iter().next().copied().inspect(|id| {
+            self.nodes_dirty.remove(id);
         })
     }
 }
@@ -139,6 +135,11 @@ pub trait State<V: FromAnyValue + Send + Sync = ()>: Any + Send + Sync {
     /// Does the state traverse into the shadow dom or pass over it. This should be true for layout and false for styles
     const TRAVERSE_SHADOW_DOM: bool = false;
 
+    /// Filter out types of nodes that don't need this State
+    fn allow_node(node_type: &NodeType<V>) -> bool {
+        !node_type.is_text()
+    }
+
     /// Update this state in a node, returns if the state was updated
     fn update<'a>(
         &mut self,
@@ -213,7 +214,6 @@ fn pass_direction<V: FromAnyValue + Send + Sync, S: State<V>>() -> PassDirection
 pub struct RunPassView<'a, V: FromAnyValue + Send + Sync = ()> {
     pub tree: TreeRefView<'a>,
     pub node_type: View<'a, NodeType<V>>,
-    dirty_nodes_result: UniqueView<'a, DirtyNodesResult>,
     node_states: UniqueView<'a, DirtyNodeStates>,
     any_map: UniqueView<'a, SendAnyMapWrapper>,
 }
@@ -223,14 +223,13 @@ pub struct RunPassView<'a, V: FromAnyValue + Send + Sync = ()> {
 #[doc(hidden)]
 pub fn run_pass<V: FromAnyValue + Send + Sync>(
     type_id: TypeId,
-    dependants: Arc<Dependants>,
+    dependants: &Dependants,
     pass_direction: PassDirection,
     view: RunPassView<V>,
     mut update_node: impl FnMut(NodeId, &SendAnyMap, u16) -> bool,
 ) {
     let RunPassView {
         tree,
-        dirty_nodes_result: nodes_updated,
         node_states: dirty,
         any_map: ctx,
         ..
@@ -240,7 +239,6 @@ pub fn run_pass<V: FromAnyValue + Send + Sync>(
         PassDirection::ParentToChild => {
             while let Some((height, id)) = dirty.pop_front(type_id) {
                 if (update_node)(id, ctx, height) {
-                    nodes_updated.insert(id);
                     dependants.mark_dirty(&dirty, id, &tree, height);
                 }
             }
@@ -248,7 +246,6 @@ pub fn run_pass<V: FromAnyValue + Send + Sync>(
         PassDirection::ChildToParent => {
             while let Some((height, id)) = dirty.pop_back(type_id) {
                 if (update_node)(id, ctx, height) {
-                    nodes_updated.insert(id);
                     dependants.mark_dirty(&dirty, id, &tree, height);
                 }
             }
@@ -256,7 +253,6 @@ pub fn run_pass<V: FromAnyValue + Send + Sync>(
         PassDirection::AnyOrder => {
             while let Some((height, id)) = dirty.pop_back(type_id) {
                 if (update_node)(id, ctx, height) {
-                    nodes_updated.insert(id);
                     dependants.mark_dirty(&dirty, id, &tree, height);
                 }
             }
@@ -390,7 +386,7 @@ impl<'a, T> DependancyView<'a, T> {
     }
 }
 
-impl<'a, T> Deref for DependancyView<'a, T> {
+impl<T> Deref for DependancyView<'_, T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
