@@ -296,6 +296,7 @@ pub fn ScrollView(
         }
 
         if clicking_scrollbar.is_some() {
+            e.prevent_default();
             focus.request_focus();
         }
     };
