@@ -1849,6 +1849,10 @@ impl DirectContext {
     pub fn abandon(&self) {
         unimplemented!("This is mocked")
     }
+
+    pub fn set_resource_cache_limit(&mut self, max_resource_bytes: usize) {
+        unimplemented!("This is mocked")
+    }
 }
 
 use std::ffi::c_void;
