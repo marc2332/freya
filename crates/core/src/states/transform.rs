@@ -43,38 +43,33 @@ impl ParseAttribute for TransformState {
         #[allow(clippy::single_match)]
         match attr.attribute {
             AttributeName::Rotate => {
-                if let Some(value) = attr.value.as_text() {
-                    if value.ends_with("deg") {
-                        let rotation = value
-                            .replacen("deg", "", 1)
-                            .parse::<f32>()
-                            .map_err(|_| ParseError)?;
-                        self.rotations.push((self.node_id, rotation));
-                    }
+                let value = attr.value.as_text().ok_or(ParseError)?;
+                if value.ends_with("deg") {
+                    let rotation = value
+                        .trim_end_matches("deg")
+                        .parse::<f32>()
+                        .map_err(|_| ParseError)?;
+                    self.rotations.push((self.node_id, rotation));
                 }
             }
             AttributeName::Opacity => {
-                if let Some(value) = attr.value.as_text() {
-                    let opacity = value.parse::<f32>().map_err(|_| ParseError)?;
-                    self.opacities.push(opacity)
-                }
+                let value = attr.value.as_text().ok_or(ParseError)?;
+                let opacity = value.parse::<f32>().map_err(|_| ParseError)?;
+                self.opacities.push(opacity);
             }
             AttributeName::Scale => {
-                if let Some(value) = attr.value.as_text() {
-                    let (scale_x, scale_y) = if !value.trim().contains(' ') {
-                        let scale = value.parse::<f32>().map_err(|_| ParseError)?;
-                        (scale, scale)
-                    } else {
-                        let Some((scale_x, scale_y)) = value.split_once(' ') else {
-                            return Err(ParseError);
-                        };
-                        let scale_x = scale_x.parse::<f32>().map_err(|_| ParseError)?;
-                        let scale_y = scale_y.parse::<f32>().map_err(|_| ParseError)?;
-                        (scale_x, scale_y)
-                    };
-                    self.scales
-                        .push((self.node_id, scale_x.max(0.), scale_y.max(0.)))
-                }
+                let value = attr.value.as_text().ok_or(ParseError)?;
+                let (scale_x, scale_y) = if !value.trim().contains(' ') {
+                    let scale = value.parse::<f32>().map_err(|_| ParseError)?;
+                    (scale, scale)
+                } else {
+                    let (x, y) = value.split_once(' ').ok_or(ParseError)?;
+                    let scale_x = x.parse::<f32>().map_err(|_| ParseError)?;
+                    let scale_y = y.parse::<f32>().map_err(|_| ParseError)?;
+                    (scale_x, scale_y)
+                };
+                self.scales
+                    .push((self.node_id, scale_x.max(0.0), scale_y.max(0.0)));
             }
             _ => {}
         }
