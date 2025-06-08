@@ -22,10 +22,7 @@ pub struct CornerRadius {
 
 impl CornerRadius {
     pub fn is_round(&self) -> bool {
-        self.top_left == 0.
-            && self.top_right == 0.
-            && self.bottom_right == 0.
-            && self.bottom_left == 0.
+        self.top_left > 0. || self.top_right > 0. || self.bottom_right > 0. || self.bottom_left > 0.
     }
 }
 

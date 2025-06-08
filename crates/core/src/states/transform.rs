@@ -126,6 +126,8 @@ impl State<CustomAttributeValues> for TransformState {
 
         let mut transform_state = TransformState {
             node_id: node_view.node_id(),
+            blend_mode: None,
+            backdrop_blur: 0.,
             ..inherited_transform
         };
 

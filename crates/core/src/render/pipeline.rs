@@ -196,8 +196,6 @@ impl RenderPipeline<'_> {
 
     pub fn render(&mut self, node_ref: DioxusNode, layout_node: &LayoutNode) {
         let dirty_canvas = self.dirty_surface.canvas();
-        let area = layout_node.visible_area();
-        let rect = Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
         let node_type = &*node_ref.node_type();
         if let NodeType::Element(ElementNode { tag, .. }) = node_type {
             let Some(element_utils) = tag.utils() else {
@@ -205,6 +203,9 @@ impl RenderPipeline<'_> {
             };
 
             let initial_layer = dirty_canvas.save();
+
+            let area = layout_node.visible_area();
+            let rect = Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
 
             let node_transform = &*node_ref.get::<TransformState>().unwrap();
             let node_viewports = node_ref.get::<ViewportState>().unwrap();
