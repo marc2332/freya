@@ -3,6 +3,7 @@ use std::sync::{
     Mutex,
 };
 
+use freya_engine::prelude::BlendMode;
 use freya_native_core::{
     exports::shipyard::Component,
     node_ref::NodeView,
@@ -22,6 +23,7 @@ use crate::{
     custom_attributes::CustomAttributeValues,
     dom::CompositorDirtyNodes,
     parsing::{
+        Parse,
         ParseAttribute,
         ParseError,
     },
@@ -33,6 +35,8 @@ pub struct TransformState {
     pub opacities: Vec<f32>,
     pub rotations: Vec<(NodeId, f32)>,
     pub scales: Vec<(NodeId, f32, f32)>,
+    pub blend_mode: Option<BlendMode>,
+    pub backdrop_blur: f32,
 }
 
 impl ParseAttribute for TransformState {
@@ -40,7 +44,6 @@ impl ParseAttribute for TransformState {
         &mut self,
         attr: freya_native_core::prelude::OwnedAttributeView<CustomAttributeValues>,
     ) -> Result<(), ParseError> {
-        #[allow(clippy::single_match)]
         match attr.attribute {
             AttributeName::Rotate => {
                 let value = attr.value.as_text().ok_or(ParseError)?;
@@ -71,6 +74,18 @@ impl ParseAttribute for TransformState {
                 self.scales
                     .push((self.node_id, scale_x.max(0.0), scale_y.max(0.0)));
             }
+
+            AttributeName::BlendMode => {
+                self.blend_mode = Some(BlendMode::parse(attr.value.as_text().ok_or(ParseError)?)?);
+            }
+            AttributeName::BackdropBlur => {
+                self.backdrop_blur = attr
+                    .value
+                    .as_text()
+                    .ok_or(ParseError)?
+                    .parse::<f32>()
+                    .map_err(|_| ParseError)?;
+            }
             _ => {}
         }
 
@@ -93,6 +108,8 @@ impl State<CustomAttributeValues> for TransformState {
             AttributeName::Scale,
             AttributeName::AspectRatio,
             AttributeName::ImageCover,
+            AttributeName::BlendMode,
+            AttributeName::BackdropBlur,
         ]));
 
     fn update<'a>(

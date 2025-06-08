@@ -3,7 +3,6 @@ use std::sync::{
     Mutex,
 };
 
-use freya_engine::prelude::BlendMode;
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
@@ -45,8 +44,6 @@ pub struct StyleState {
     pub shadows: Arc<[Shadow]>,
     pub corner_radius: CornerRadius,
     pub overflow: OverflowMode,
-    pub blend_mode: Option<BlendMode>,
-    pub backdrop_blur: f32,
 }
 
 impl ParseAttribute for StyleState {
@@ -105,18 +102,6 @@ impl ParseAttribute for StyleState {
             AttributeName::Overflow => {
                 self.overflow = OverflowMode::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
-
-            AttributeName::BlendMode => {
-                self.blend_mode = Some(BlendMode::parse(attr.value.as_text().ok_or(ParseError)?)?);
-            }
-            AttributeName::BackdropBlur => {
-                self.backdrop_blur = attr
-                    .value
-                    .as_text()
-                    .ok_or(ParseError)?
-                    .parse::<f32>()
-                    .map_err(|_| ParseError)?;
-            }
             _ => {}
         }
 
@@ -145,8 +130,6 @@ impl State<CustomAttributeValues> for StyleState {
             AttributeName::ImageData,
             AttributeName::Overflow,
             AttributeName::ImageCacheKey,
-            AttributeName::BlendMode,
-            AttributeName::BackdropBlur,
         ]));
 
     fn update<'a>(

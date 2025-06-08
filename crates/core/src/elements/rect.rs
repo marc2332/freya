@@ -10,6 +10,7 @@ use torin::{
     },
     scaled::Scaled,
 };
+use tracing::error;
 
 use super::utils::ElementUtils;
 use crate::{
@@ -97,6 +98,7 @@ impl ElementUtils for RectElement {
         scale_factor: f32,
     ) {
         let node_style = &*node_ref.get::<StyleState>().unwrap();
+        let node_transform = &*node_ref.get::<TransformState>().unwrap();
 
         let area = layout_node.visible_area().to_f32();
         let mut path = Path::new();
@@ -131,7 +133,7 @@ impl ElementUtils for RectElement {
         // If we have a backdrop blur applied, we need to draw that by creating a new
         // layer, clipping it to the rect's roundness, then blurring behind it before
         // drawing the rect's initial background box.
-        if node_style.backdrop_blur != 0.0 {
+        if node_transform.backdrop_blur != 0.0 {
             // If we can guarantee that the node entirely draws over it's backdrop,
             // we can avoid this whole (possibly intense) process, since the node's
             // backdrop is never visible.
@@ -144,51 +146,43 @@ impl ElementUtils for RectElement {
             // - The background has 100% opacity.
             // - The node has no parents with the `opacity` attribute applied.
             let is_possibly_translucent = if let Fill::Color(color) = node_style.background {
-                let node_transform = &*node_ref.get::<TransformState>().unwrap();
-
-                // color.a() != u8::MAX
-                //     || node_style.blend_mode.is_some()
-                //     || !node_transform.opacities.is_empty();
-
-                true
+                color.a() != u8::MAX
+                    || node_transform.blend_mode.is_some()
+                    || !node_transform.opacities.is_empty()
             } else {
                 true
             };
 
             if is_possibly_translucent {
-                // This is only done to dupe the borrow checker since [`SaveLayerRec::backdrop`]
-                // takes an [`ImageFilter`] by reference and it'd be otherwise dropped in the
-                // if-statement below.
                 let blur_filter = blur(
                     (
-                        node_style.backdrop_blur * scale_factor,
-                        node_style.backdrop_blur * scale_factor,
+                        node_transform.backdrop_blur * scale_factor,
+                        node_transform.backdrop_blur * scale_factor,
                     ),
                     None,
                     None,
                     rounded_rect.rect(),
-                )
-                .unwrap();
+                );
 
-                let layer_rec = SaveLayerRec::default()
-                    .bounds(rounded_rect.rect())
-                    .backdrop(&blur_filter);
+                if let Some(blur_filter) = blur_filter {
+                    let layer_rec = SaveLayerRec::default()
+                        .bounds(rounded_rect.rect())
+                        .backdrop(&blur_filter);
 
-                // Depending on if the rect is rounded or not, we might need to clip the blur
-                // layer to the shape of the rounded rect.
-                if corner_radius.bottom_left == 0.0
-                    && corner_radius.bottom_right == 0.0
-                    && corner_radius.top_left == 0.0
-                    && corner_radius.top_right == 0.0
-                {
-                    canvas.save_layer(&layer_rec);
-                    canvas.restore();
+                    // Depending on if the rect is rounded or not, we might need to clip the blur
+                    // layer to the shape of the rounded rect.
+                    if corner_radius.is_round() {
+                        canvas.save();
+                        canvas.clip_rrect(rounded_rect, ClipOp::Intersect, true);
+                        canvas.save_layer(&layer_rec);
+                        canvas.restore();
+                        canvas.restore();
+                    } else {
+                        canvas.save_layer(&layer_rec);
+                        canvas.restore();
+                    }
                 } else {
-                    canvas.save();
-                    canvas.clip_rrect(rounded_rect, ClipOp::Intersect, true);
-                    canvas.save_layer(&layer_rec);
-                    canvas.restore();
-                    canvas.restore();
+                    error!("Unable to create blur filter.");
                 }
             }
         }

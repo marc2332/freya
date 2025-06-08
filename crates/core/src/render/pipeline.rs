@@ -46,7 +46,6 @@ use crate::{
     },
     layers::Layers,
     states::{
-        StyleState,
         TransformState,
         ViewportState,
     },
@@ -208,7 +207,6 @@ impl RenderPipeline<'_> {
             let initial_layer = dirty_canvas.save();
 
             let node_transform = &*node_ref.get::<TransformState>().unwrap();
-            let node_style = &*node_ref.get::<StyleState>().unwrap();
             let node_viewports = node_ref.get::<ViewportState>().unwrap();
 
             for node_id in &node_viewports.viewports {
@@ -247,7 +245,7 @@ impl RenderPipeline<'_> {
             }
 
             // Apply blend mode
-            if let Some(blend) = node_style.blend_mode {
+            if let Some(blend) = node_transform.blend_mode {
                 let mut paint = Paint::default();
                 paint.set_blend_mode(blend);
 
