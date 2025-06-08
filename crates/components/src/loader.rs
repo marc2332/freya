@@ -14,6 +14,8 @@ use freya_hooks::{
 pub struct LoaderProps {
     /// Theme override.
     pub theme: Option<LoaderThemeWith>,
+    #[props(default = "48".to_string())]
+    pub size: String,
 }
 
 /// # Styling
@@ -58,8 +60,8 @@ pub fn Loader(props: LoaderProps) -> Element {
 
     rsx!(svg {
         rotate: "{degrees}deg",
-        width: "48",
-        height: "48",
+        width: "{props.size}",
+        height: "{props.size}",
         svg_content: r#"
             <svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
                 <circle class="spin" cx="300" cy="300" fill="none"
