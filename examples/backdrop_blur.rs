@@ -50,26 +50,11 @@ fn Notification(title: String, description: String, time: String) -> Element {
                             "{title}"
                         }
 
-                        rect {
-                            rect {
-                                position: "absolute",
-                                position_top: "0",
-                                position_left: "0",
+                        label {
+                            font_weight: "normal",
+                            color: "#000000",
 
-                                label {
-                                    font_weight: "normal",
-                                    color: "hsl(0deg, 0%, 50%, 50%)",
-
-                                    "{time}"
-                                }
-                            }
-
-                            label {
-                                font_weight: "normal",
-                                color: "#000000",
-
-                                "{time}"
-                            }
+                            "{time}"
                         }
                     }
 
