@@ -9,9 +9,6 @@ use std::ops::*;
 use bitflags::bitflags;
 use glutin::context::PossiblyCurrentContext;
 
-#[derive(Default, Debug)]
-pub struct SaveLayerRec;
-
 #[derive(Clone, Debug, PartialEq, Copy, Eq)]
 pub struct Color(u32);
 
@@ -1142,28 +1139,37 @@ pub enum SrcRectConstraint {
 #[derive(Default)]
 pub struct SamplingOptions;
 
+
+pub struct ImageFilter;
+
+pub fn blur(
+    (sigma_x, sigma_y): (f32, f32),
+    tile_mode: impl Into<Option<()>>,
+    input: impl Into<Option<()>>,
+    crop_rect: &Rect,
+) -> Option<ImageFilter> {
+    unimplemented!("This is mocked")
+}
+
+
 #[repr(C)]
 #[derive(Default)]
-pub struct SaveLayerRec<'_>;
+pub struct SaveLayerRec;
 
-impl<'a> SaveLayerRec<'a> {
-    pub fn bounds(mut self, bounds: &'a Rect) -> Self {
+impl<'a> SaveLayerRec {
+    pub fn bounds(self, bounds: &'a Rect) -> Self {
         unimplemented!("This is mocked")
     }
 
-    pub fn paint(mut self, paint: &'a Paint) -> Self {
+    pub fn paint(self, paint: &'a Paint) -> Self {
         unimplemented!("This is mocked")
     }
 
-    pub fn backdrop(mut self, backdrop: &'a ImageFilter) -> Self {
+    pub fn backdrop(self, backdrop: &'a ImageFilter) -> Self {
         unimplemented!("This is mocked")
     }
 
-    pub fn color_space(mut self, color_space: &'a ColorSpace) -> Self {
-        unimplemented!("This is mocked")
-    }
-
-    pub fn flags(mut self, flags: SaveLayerFlags) -> Self {
+    pub fn color_space(self, color_space: &'a ColorSpace) -> Self {
         unimplemented!("This is mocked")
     }
 }
@@ -1174,14 +1180,6 @@ impl SamplingOptions {
     }
 }
 
-bitflags! {
-    #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-    pub struct SaveLayerFlags: u32 {
-        const PRESERVE_LCD_TEXT = sb::SkCanvas_SaveLayerFlagsSet_kPreserveLCDText_SaveLayerFlag as _;
-        const INIT_WITH_PREVIOUS = sb::SkCanvas_SaveLayerFlagsSet_kInitWithPrevious_SaveLayerFlag as _;
-        const F16_COLOR_TYPE = sb::SkCanvas_SaveLayerFlagsSet_kF16ColorType as _;
-    }
-}
 
 pub struct CubicResampler;
 
@@ -2016,40 +2014,6 @@ pub enum EncodedImageFormat {
     HEIF = 11,
     AVIF = 12,
     JPEGXL = 13,
-}
-
-#[repr(i32)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub enum BlendMode {
-    Clear = 0,
-    Src = 1,
-    Dst = 2,
-    SrcOver = 3,
-    DstOver = 4,
-    SrcIn = 5,
-    DstIn = 6,
-    SrcOut = 7,
-    DstOut = 8,
-    SrcATop = 9,
-    DstATop = 10,
-    Xor = 11,
-    Plus = 12,
-    Modulate = 13,
-    Screen = 14,
-    Overlay = 15,
-    Darken = 16,
-    Lighten = 17,
-    ColorDodge = 18,
-    ColorBurn = 19,
-    HardLight = 20,
-    SoftLight = 21,
-    Difference = 22,
-    Exclusion = 23,
-    Multiply = 24,
-    Hue = 25,
-    Saturation = 26,
-    Color = 27,
-    Luminosity = 28,
 }
 
 pub struct LocalResourceProvider;
