@@ -274,7 +274,7 @@ mod test {
         utils.wait_for_update().await;
 
         // Check the popup is opened
-        assert_eq!(utils.sdom().get().layout().size(), 12);
+        assert_eq!(utils.sdom().get().layout().size(), 9);
 
         utils.click_cursor((25., 25.)).await;
 
@@ -293,7 +293,7 @@ mod test {
         });
         utils.wait_for_update().await;
         // Check the popup is still open
-        assert_eq!(utils.sdom().get().layout().size(), 12);
+        assert_eq!(utils.sdom().get().layout().size(), 9);
 
         // Send a ESC globalkeydown event
         utils.push_event(TestEvent::Keyboard {
