@@ -1139,7 +1139,6 @@ pub enum SrcRectConstraint {
 #[derive(Default)]
 pub struct SamplingOptions;
 
-
 pub struct ImageFilter;
 
 pub fn blur(
@@ -1150,7 +1149,6 @@ pub fn blur(
 ) -> Option<ImageFilter> {
     unimplemented!("This is mocked")
 }
-
 
 #[repr(C)]
 #[derive(Default)]
@@ -1179,7 +1177,6 @@ impl SamplingOptions {
         unimplemented!("This is mocked")
     }
 }
-
 
 pub struct CubicResampler;
 
