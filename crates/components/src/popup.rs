@@ -69,9 +69,7 @@ pub fn PopupBackground(children: Element, onclick: EventHandler<MouseEvent>) -> 
 ///                      show_popup.set(false)
 ///                  },
 ///                  PopupTitle {
-///                      label {
-///                          "Awesome Popup"
-///                      }
+///                      text: "Awesome Popup"
 ///                  }
 ///                  PopupContent {
 ///                      label {
