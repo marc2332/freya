@@ -10,28 +10,37 @@ fn main() {
 }
 
 fn app() -> Element {
-    rsx!(
+    let mut count = use_signal(|| 0);
 
+    rsx!(
         rect {
-            height: "100%",
+            height: "50%",
             width: "100%",
-            background: "red",
-            onclick: |_| println!("clicked 1"),
-            rect {
-                height: "100",
-                width: "100",
-                background: "rgb(0, 119, 182)",
-                onpointerdown: |e| {
-                    e.prevent_default();
-                    println!("clicked 2");
-                },
+            main_align: "center",
+            cross_align: "center",
+            background: "rgb(0, 119, 182)",
+            color: "white",
+            shadow: "0 4 20 5 rgb(0, 0, 0, 80)",
+            label {
+                font_size: "75",
+                font_weight: "bold",
+                "{count}"
+            }
+        }
+        rect {
+            height: "50%",
+            width: "100%",
+            main_align: "center",
+            cross_align: "center",
+            direction: "horizontal",
+            spacing: "8",
+            Button {
+                onpress: move |_| count += 1,
+                label { "Increase" }
             }
             Button {
-                Button {
-                    label {
-                        "hi"
-                    }
-                }
+                onpress: move |_| count -= 1,
+                label { "Decrease" }
             }
         }
     )
