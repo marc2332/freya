@@ -6,7 +6,7 @@
 [![Github Sponsors](https://img.shields.io/github/sponsors/marc2332?style=social)](https://github.com/sponsors/marc2332)
 [![codecov](https://codecov.io/github/marc2332/freya/branch/main/graph/badge.svg?token=APSGEC84B8)](https://codecov.io/github/marc2332/freya)
 
-[Website](https://freyaui.dev) | [Documentation](https://docs.rs/freya/0.3/freya) | [Discord](https://discord.gg/sYejxCdewG) | [Main branch Docs](https://docs.freyaui.dev/freya) 
+[Website](https://freyaui.dev) | [Documentation](https://docs.rs/freya/0.3/freya) | [Discord](https://discord.gg/sYejxCdewG)
 
 **Freya** is a **cross-platform and non-web** GUI library for Rust powered by 🎨 [Skia](https://skia.org/).
 
@@ -207,7 +207,7 @@ If you are interested in supporting the development of this project feel free to
 
 Thanks to my sponsors for supporting this project! 😄 
 
-<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;github.com&#x2F;piny4man.png" width="60px" alt="User avatar: " /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;github.com&#x2F;gqf2008.png" width="60px" alt="User avatar: 高庆丰" /></a><a href="https://github.com/lino-levan"><img src="https:&#x2F;&#x2F;github.com&#x2F;lino-levan.png" width="60px" alt="User avatar: Lino Le Van" /></a><!-- sponsors -->
+<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;github.com&#x2F;piny4man.png" width="60px" alt="User avatar: " /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;github.com&#x2F;gqf2008.png" width="60px" alt="User avatar: 高庆丰" /></a><a href="https://github.com/lino-levan"><img src="https:&#x2F;&#x2F;github.com&#x2F;lino-levan.png" width="60px" alt="User avatar: Lino Le Van" /></a><a href="https://github.com/SpikeHD"><img src="https:&#x2F;&#x2F;github.com&#x2F;SpikeHD.png" width="60px" alt="User avatar: SpikeHD" /></a><!-- sponsors -->
 
 ### Special thanks 💪
 

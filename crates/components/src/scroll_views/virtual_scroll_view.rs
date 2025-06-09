@@ -428,9 +428,20 @@ pub fn VirtualScrollView<
         .map(|f| f.0 == Axis::Y)
         .unwrap_or_default();
 
-    let offset_y_min = (-corrected_scrolled_y / item_size).floor() * item_size;
-    let offset_y = -corrected_scrolled_y - offset_y_min;
+    let (offset_x, offset_y) = match direction.as_str() {
+        "vertical" => {
+            let min = (-corrected_scrolled_y / item_size).floor() * item_size;
+            let offset = -(-corrected_scrolled_y - min);
 
+            (None, Some(offset.to_string()))
+        }
+        _ => {
+            let min = (-corrected_scrolled_x / item_size).floor() * item_size;
+            let offset = -(-corrected_scrolled_x - min);
+
+            (Some(offset.to_string()), None)
+        }
+    };
     let a11y_id = focus.attribute();
 
     rsx!(
@@ -455,7 +466,8 @@ pub fn VirtualScrollView<
                     height: "{content_height}",
                     width: "{content_width}",
                     direction: "{direction}",
-                    offset_y: "{-offset_y}",
+                    offset_x,
+                    offset_y,
                     reference: node_ref,
                     onwheel: onwheel,
                     {children}
