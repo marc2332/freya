@@ -17,7 +17,7 @@ no-default-features = true
 
 [features]
 # Internal features
-default = ["skia"]
+default = ["skia", "gl", "vulkan"]
 skia = ["freya-engine/skia-engine"]
 tracing-subscriber = ["dep:tracing-subscriber"]
 mocked-engine-development = ["freya-engine/mocked-engine"] # This is just for the CI
@@ -31,6 +31,8 @@ performance-overlay = []
 disable-zoom-shortcuts = ["freya-winit/disable-zoom-shortcuts"]
 devtools = ["dep:freya-devtools"]
 custom-tokio-rt = []
+gl = ["freya-winit/gl"]
+vulkan = ["freya-winit/vulkan"]
 
 
 [dependencies]
