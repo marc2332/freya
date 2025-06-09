@@ -148,7 +148,7 @@ pub(crate) const BASE_THEME: Theme = Theme {
         border_fill: cow_borrowed!("key(primary_surface)"),
     },
     loader: LoaderTheme {
-        primary_color: cow_borrowed!("key(primary_surface)"),
+        primary_color: cow_borrowed!("key(secondary_accent)"),
         opposite_color: cow_borrowed!("key(opposite_surface)"),
     },
     link: LinkTheme {

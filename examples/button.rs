@@ -13,6 +13,37 @@ fn main() {
 }
 
 #[component]
+fn EnabledButtons() -> Element {
+    let mut theme = use_theme();
+    rsx!(
+        rect {
+            width: "flex(1)",
+            height: "100%",
+            main_align: "center",
+            cross_align: "center",
+            spacing: "10",
+                Button {
+                onclick: move |_| {
+                    if *theme.read() == DARK_THEME {
+                        theme.set(LIGHT_THEME)
+                    } else {
+                        theme.set(DARK_THEME)
+                    }
+                },
+                label { "Change Theme" }
+            }
+            FilledButton {
+                onpress: move |_| println!("Button Pressed!"),
+                label { "Button B" }
+            }
+            OutlineButton {
+                label { "Button C" }
+            }
+        }
+    )
+}
+
+#[component]
 fn DisabledButtons() -> Element {
     rsx!(
         rect {
@@ -33,30 +64,6 @@ fn DisabledButtons() -> Element {
             }
             OutlineButton {
                 enabled: false,
-                label { "Button C" }
-            }
-        }
-    )
-}
-
-#[component]
-fn EnabledButtons() -> Element {
-    rsx!(
-        rect {
-            width: "flex(1)",
-            height: "100%",
-            main_align: "center",
-            cross_align: "center",
-            spacing: "10",
-            Button {
-                onclick: move |_| println!("Button Clicked!"),
-                label { "Button A" }
-            }
-            FilledButton {
-                onpress: move |_| println!("Button Pressed!"),
-                label { "Button B" }
-            }
-            OutlineButton {
                 label { "Button C" }
             }
         }
@@ -126,6 +133,7 @@ fn LoadingButtons() -> Element {
 }
 
 fn app() -> Element {
+    use_init_default_theme();
     rsx!(
         Body {
             rect {

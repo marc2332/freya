@@ -298,10 +298,8 @@ pub fn ButtonBase(
     };
 
     let onmouseleave = move |_| {
-        if enabled {
-            platform.set_cursor(CursorIcon::default());
-            status.set(ButtonStatus::default());
-        }
+        platform.set_cursor(CursorIcon::default());
+        status.set(ButtonStatus::default());
     };
 
     let onkeydown = move |ev: KeyboardEvent| {
@@ -312,6 +310,7 @@ pub fn ButtonBase(
         }
     };
 
+    let a11y_focusable = if enabled { "true" } else { "false" };
     let background = match *status.read() {
         _ if !enabled => disabled_background,
         ButtonStatus::Hovering => hover_background,
@@ -336,6 +335,7 @@ pub fn ButtonBase(
             margin: "{margin}",
             overflow: "clip",
             a11y_role:"button",
+            a11y_focusable,
             color: "{font_theme.color}",
             shadow: "{shadow}",
             border,
