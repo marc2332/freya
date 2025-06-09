@@ -1,7 +1,12 @@
 use dioxus::prelude::*;
 use freya_elements as dioxus_elements;
 use freya_hooks::{
-    use_animation, use_applied_theme, AnimNum, LoaderTheme, LoaderThemeWith, OnFinish,
+    use_animation,
+    use_applied_theme,
+    AnimNum,
+    LoaderTheme,
+    LoaderThemeWith,
+    OnFinish,
 };
 
 use crate::ScrollView;
