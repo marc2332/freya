@@ -431,7 +431,7 @@ pub fn VirtualScrollView<
 
     let (offset_x, offset_y) = match direction.as_str() {
         "vertical" => {
-            let offset_y_min = (-corrected_scrolled_y / item_size).floor() * item_size;
+          let offset_y_min = (-corrected_scrolled_y / item_size).floor() * item_size;
             let offset_y = -corrected_scrolled_y - offset_y_min;
 
             let offset_x = -corrected_scrolled_x;
@@ -447,7 +447,6 @@ pub fn VirtualScrollView<
             (offset_x, offset_y)
         }
     };
-
     let a11y_id = focus.attribute();
 
     rsx!(
