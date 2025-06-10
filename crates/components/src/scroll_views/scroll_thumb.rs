@@ -26,6 +26,17 @@ enum ScrollThumbState {
     Hovering,
 }
 
+/// parse the n% string to n and return n% if n is greater than min
+/// returns min% if min is greater than n
+fn min_size(percentile_string: &str, min: i32) -> String {
+    let parsed_int = percentile_string
+        .trim_end_matches('%')
+        .parse::<i32>()
+        .unwrap_or(min);
+
+    format!("{}%", parsed_int.max(min))
+}
+
 /// Scroll thumb used for [`crate::ScrollView`] and [`crate::VirtualScrollView`].
 #[allow(non_snake_case)]
 pub fn ScrollThumb(
@@ -44,6 +55,9 @@ pub fn ScrollThumb(
         ScrollThumbState::Idle => theme.thumb_background,
         ScrollThumbState::Hovering => theme.hover_thumb_background,
     };
+
+    let width = min_size(&width, 5);
+    let height = min_size(&height, 5);
 
     rsx!(
         rect {
