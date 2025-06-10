@@ -88,7 +88,7 @@ An animated drag and drop.
 
 Animated transition between router pages.
 
-[Source code](/examples/animated_tabs.rs.rs).
+[Source code](/examples/animated_tabs.rs).
 
 ![animated_router](https://github.com/user-attachments/assets/9218e053-1cc0-48ca-a7c3-8f09b2281b92)
 
