@@ -103,19 +103,19 @@ Animated transition between router pages.
 
 #### Switch Theme example
 
-[Source code](/examples/switch_theme.rs.rs).
+[Source code](/examples/switch_theme.rs).
 
 ![Switch Theme Screenshot](/website/public/blog/0.3/refreshed_components.png)
 
 #### Todo example
 
-[Source code](/examples/todo.rs.rs).
+[Source code](/examples/todo.rs).
 
 ![todo](https://github.com/user-attachments/assets/e450f514-ad10-4fb5-8b35-909c51d5d539)
 
 #### Resizable containers example
 
-[Source code](/examples/resizable_containers.rs.rs).
+[Source code](/examples/resizable_containers.rs).
 
 ![resizable](https://github.com/user-attachments/assets/3d3f4718-a0d6-4e4d-a0ad-0c750fb0c67e)
 
