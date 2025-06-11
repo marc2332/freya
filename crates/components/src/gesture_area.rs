@@ -217,7 +217,7 @@ mod test {
         assert_eq!(utils.root().get(1).get(0).text(), Some("EMPTY"));
 
         utils.push_event(TestEvent::Touch {
-            name: EventName::TouchStart,
+            name: TouchEventName::TouchStart,
             location: (1.0, 1.0).into(),
             phase: TouchPhase::Started,
             finger_id: 0,
@@ -225,7 +225,7 @@ mod test {
         });
 
         utils.push_event(TestEvent::Touch {
-            name: EventName::TouchEnd,
+            name: TouchEventName::TouchEnd,
             location: (1.0, 1.0).into(),
             phase: TouchPhase::Ended,
             finger_id: 0,
@@ -238,7 +238,7 @@ mod test {
         sleep(Duration::from_millis(DOUBLE_TAP_MIN as u64)).await;
 
         utils.push_event(TestEvent::Touch {
-            name: EventName::TouchStart,
+            name: TouchEventName::TouchStart,
             location: (1.0, 1.0).into(),
             phase: TouchPhase::Started,
             finger_id: 0,
@@ -284,7 +284,7 @@ mod test {
         assert_eq!(utils.root().get(1).get(0).text(), Some("EMPTY"));
 
         utils.push_event(TestEvent::Touch {
-            name: EventName::TouchStart,
+            name: TouchEventName::TouchStart,
             location: (1.0, 1.0).into(),
             phase: TouchPhase::Started,
             finger_id: 0,
@@ -297,7 +297,7 @@ mod test {
         assert_eq!(utils.root().get(1).get(0).text(), Some("TapDown"));
 
         utils.push_event(TestEvent::Touch {
-            name: EventName::TouchEnd,
+            name: TouchEventName::TouchEnd,
             location: (1.0, 1.0).into(),
             phase: TouchPhase::Ended,
             finger_id: 0,

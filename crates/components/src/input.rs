@@ -412,7 +412,7 @@ mod test {
 
         // Focus the input in the end of the text
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseDown,
+            name: MouseEventName::MouseDown,
             cursor: (115., 25.).into(),
             button: Some(MouseButton::Left),
         });
@@ -424,7 +424,7 @@ mod test {
 
         // Write "d"
         utils.push_event(TestEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: KeyboardEventName::KeyDown,
             key: Key::Character("d".to_string()),
             code: Code::KeyD,
             modifiers: Modifiers::default(),
@@ -463,7 +463,7 @@ mod test {
 
         // Focus the input in the end of the text
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseDown,
+            name: MouseEventName::MouseDown,
             cursor: (115., 25.).into(),
             button: Some(MouseButton::Left),
         });
@@ -476,7 +476,7 @@ mod test {
         // Try to write "BCDEFG"
         for c in ['B', 'C', 'D', 'E', 'F', 'G'] {
             utils.push_event(TestEvent::Keyboard {
-                name: EventName::KeyDown,
+                name: KeyboardEventName::KeyDown,
                 key: Key::Character(c.to_string()),
                 code: Code::Unidentified,
                 modifiers: Modifiers::default(),

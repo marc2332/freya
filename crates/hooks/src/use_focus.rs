@@ -14,7 +14,6 @@ use dioxus_signals::{
     ReadOnlySignal,
     Readable,
     Signal,
-    Writable,
 };
 use freya_core::{
     accessibility::{
@@ -37,7 +36,6 @@ use freya_elements::events::{
 
 use crate::{
     use_platform,
-    NavigationMark,
     UsePlatform,
 };
 
@@ -48,7 +46,6 @@ pub struct UseFocus {
     is_focused_with_keyboard: Memo<bool>,
     is_focused: Memo<bool>,
     navigation_mode: Signal<NavigationMode>,
-    navigation_mark: Signal<NavigationMark>,
     platform: UsePlatform,
     focused_id: Signal<AccessibilityId>,
     focused_node: Signal<AccessibilityNode>,
@@ -113,12 +110,6 @@ impl UseFocus {
     pub fn validate_keydown(&self, e: &KeyboardEvent) -> bool {
         (e.data.code == Code::Enter || e.data.code == Code::Space)
             && self.is_focused_with_keyboard()
-    }
-
-    /// Prevent navigating the accessible nodes with the keyboard.
-    /// You must use this this inside of a `onglobalkeydown` event handler.
-    pub fn prevent_navigation(&mut self) {
-        self.navigation_mark.write().set_allowed(false);
     }
 
     /// Get a readable of the currently focused Node Id.
@@ -224,7 +215,6 @@ pub fn use_focus_for_id(id: AccessibilityId) -> UseFocus {
     let focused_id = use_context::<Signal<AccessibilityId>>();
     let focused_node = use_context::<Signal<AccessibilityNode>>();
     let navigation_mode = use_context::<Signal<NavigationMode>>();
-    let navigation_mark = use_context::<Signal<NavigationMark>>();
     let platform = use_platform();
 
     let is_focused = use_memo(move || id == *focused_id.read());
@@ -237,7 +227,6 @@ pub fn use_focus_for_id(id: AccessibilityId) -> UseFocus {
         is_focused,
         is_focused_with_keyboard,
         navigation_mode,
-        navigation_mark,
         platform,
         focused_id,
         focused_node,
