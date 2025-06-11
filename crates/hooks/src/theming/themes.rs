@@ -7,18 +7,22 @@ use crate::{
 pub const DARK_THEME: Theme = Theme {
     name: "dark",
     colors: ColorsSheet {
-        primary: cow_borrowed!("rgb(103, 80, 164)"),
+        primary_accent: cow_borrowed!("rgb(103, 80, 164)"),
+        secondary_accent: cow_borrowed!("rgb(202, 193, 227)"),
+        tertiary_accent: cow_borrowed!("rgb(79, 61, 130)"),
+
         focused_primary_border: cow_borrowed!("rgb(223, 180, 255)"),
-        secondary: cow_borrowed!("rgb(202, 193, 227)"),
-        tertiary: cow_borrowed!("rgb(79, 61, 130)"),
-        surface: cow_borrowed!("rgb(60, 60, 60)"),
+
+        primary_surface: cow_borrowed!("rgb(60, 60, 60)"),
         secondary_surface: cow_borrowed!("rgb(45, 45, 45)"),
         neutral_surface: cow_borrowed!("rgb(25, 25, 25)"),
         focused_surface: cow_borrowed!("rgb(15, 15, 15)"),
         opposite_surface: cow_borrowed!("rgb(125, 125, 125)"),
         secondary_opposite_surface: cow_borrowed!("rgb(150, 150, 150)"),
         tertiary_opposite_surface: cow_borrowed!("rgb(170, 170, 170)"),
+
         background: cow_borrowed!("rgb(20, 20, 20)"),
+
         focused_border: cow_borrowed!("rgb(110, 110, 110)"),
         solid: cow_borrowed!("rgb(240, 240, 240)"),
         color: cow_borrowed!("rgb(250, 250, 250)"),
@@ -32,17 +36,20 @@ pub const DARK_THEME: Theme = Theme {
 pub const LIGHT_THEME: Theme = Theme {
     name: "light",
     colors: ColorsSheet {
-        primary: cow_borrowed!("rgb(103, 80, 164)"),
+        primary_accent: cow_borrowed!("rgb(103, 80, 164)"),
+        secondary_accent: cow_borrowed!("rgb(202, 193, 227)"),
+        tertiary_accent: cow_borrowed!("rgb(79, 61, 130)"),
+
         focused_primary_border: cow_borrowed!("rgb(50, 20, 80)"),
-        secondary: cow_borrowed!("rgb(202, 193, 227)"),
-        tertiary: cow_borrowed!("rgb(79, 61, 130)"),
-        surface: cow_borrowed!("rgb(210, 210, 210)"),
+
+        primary_surface: cow_borrowed!("rgb(210, 210, 210)"),
         secondary_surface: cow_borrowed!("rgb(225, 225, 225)"),
         neutral_surface: cow_borrowed!("rgb(245, 245, 245)"),
         focused_surface: cow_borrowed!("rgb(235, 235, 235)"),
         opposite_surface: cow_borrowed!("rgb(135, 135, 135)"),
         secondary_opposite_surface: cow_borrowed!("rgb(110, 110, 110)"),
         tertiary_opposite_surface: cow_borrowed!("rgb(90, 90, 90)"),
+
         background: cow_borrowed!("rgb(250, 250, 250)"),
         solid: cow_borrowed!("rgb(35, 35, 35)"),
         focused_border: cow_borrowed!("rgb(180, 180, 180)"),
@@ -57,17 +64,20 @@ pub const LIGHT_THEME: Theme = Theme {
 pub const BANANA_THEME: Theme = Theme {
     name: "banana",
     colors: ColorsSheet {
-        primary: cow_borrowed!("rgb(240, 200, 50)"),
+        primary_accent: cow_borrowed!("rgb(240, 200, 50)"),
+        secondary_accent: cow_borrowed!("rgb(255, 250, 160)"),
+        tertiary_accent: cow_borrowed!("rgb(186, 153, 37)"),
+
         focused_primary_border: cow_borrowed!("rgb(100, 50, 15)"),
-        secondary: cow_borrowed!("rgb(255, 250, 160)"),
-        tertiary: cow_borrowed!("rgb(186, 153, 37)"),
-        surface: cow_borrowed!("rgb(240, 229, 189)"),
+
+        primary_surface: cow_borrowed!("rgb(240, 229, 189)"),
         secondary_surface: cow_borrowed!("rgb(250, 240, 210)"),
         neutral_surface: cow_borrowed!("rgb(255, 245, 220)"),
         focused_surface: cow_borrowed!("rgb(255, 238, 170)"),
         opposite_surface: cow_borrowed!("rgb(139, 69, 19)"),
         secondary_opposite_surface: cow_borrowed!("rgb(120, 80, 20)"),
         tertiary_opposite_surface: cow_borrowed!("rgb(90, 60, 10)"),
+
         background: cow_borrowed!("rgb(255, 255, 224)"),
         solid: cow_borrowed!("rgb(110, 70, 10)"),
         focused_border: cow_borrowed!("rgb(255, 239, 151)"),
