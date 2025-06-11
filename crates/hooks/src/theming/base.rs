@@ -7,10 +7,10 @@ pub(crate) const BASE_THEME: Theme = Theme {
     name: "base",
     colors: ColorsSheet {
         focused_primary_border: cow_borrowed!(""),
-        primary: cow_borrowed!(""),
-        secondary: cow_borrowed!(""),
-        tertiary: cow_borrowed!(""),
-        surface: cow_borrowed!(""),
+        primary_accent: cow_borrowed!(""),
+        secondary_accent: cow_borrowed!(""),
+        tertiary_accent: cow_borrowed!(""),
+        primary_surface: cow_borrowed!(""),
         secondary_surface: cow_borrowed!(""),
         neutral_surface: cow_borrowed!(""),
         focused_surface: cow_borrowed!(""),
@@ -30,18 +30,19 @@ pub(crate) const BASE_THEME: Theme = Theme {
         color: cow_borrowed!("key(color)"),
     },
     slider: SliderTheme {
-        background: cow_borrowed!("key(surface)"),
-        thumb_background: cow_borrowed!("key(secondary)"),
-        thumb_inner_background: cow_borrowed!("key(primary)"),
-        border_fill: cow_borrowed!("key(surface)"),
+        background: cow_borrowed!("key(primary_surface)"),
+        thumb_background: cow_borrowed!("key(secondary_accent)"),
+        thumb_inner_background: cow_borrowed!("key(primary_accent)"),
+        border_fill: cow_borrowed!("key(primary_surface)"),
     },
     button: ButtonTheme {
         background: cow_borrowed!("key(neutral_surface)"),
         hover_background: cow_borrowed!("key(focused_surface)"),
+        disabled_background: cow_borrowed!("key(secondary_surface)"),
         font_theme: FontTheme {
             color: cow_borrowed!("key(color)"),
         },
-        border_fill: cow_borrowed!("key(surface)"),
+        border_fill: cow_borrowed!("key(primary_surface)"),
         focus_border_fill: cow_borrowed!("key(focused_border)"),
         shadow: cow_borrowed!("none"),
         padding: cow_borrowed!("6 12"),
@@ -51,8 +52,9 @@ pub(crate) const BASE_THEME: Theme = Theme {
         height: cow_borrowed!("auto"),
     },
     filled_button: ButtonTheme {
-        background: cow_borrowed!("key(primary)"),
-        hover_background: cow_borrowed!("key(tertiary)"),
+        background: cow_borrowed!("key(primary_accent)"),
+        hover_background: cow_borrowed!("key(tertiary_accent)"),
+        disabled_background: cow_borrowed!("key(tertiary_accent)"),
         font_theme: FontTheme {
             color: cow_borrowed!("key(primary_color)"),
         },
@@ -68,10 +70,11 @@ pub(crate) const BASE_THEME: Theme = Theme {
     outline_button: ButtonTheme {
         background: cow_borrowed!("key(background)"),
         hover_background: cow_borrowed!("key(neutral_surface)"),
+        disabled_background: cow_borrowed!("key(secondary_surface)"),
         font_theme: FontTheme {
-            color: cow_borrowed!("key(primary)"),
+            color: cow_borrowed!("key(primary_accent)"),
         },
-        border_fill: cow_borrowed!("key(surface)"),
+        border_fill: cow_borrowed!("key(primary_surface)"),
         focus_border_fill: cow_borrowed!("key(secondary_opposite_surface)"),
         shadow: cow_borrowed!("none"),
         padding: cow_borrowed!("6 12"),
@@ -89,7 +92,7 @@ pub(crate) const BASE_THEME: Theme = Theme {
         placeholder_font_theme: FontTheme {
             color: cow_borrowed!("key(placeholder_color)"),
         },
-        border_fill: cow_borrowed!("key(surface)"),
+        border_fill: cow_borrowed!("key(primary_surface)"),
         focus_border_fill: cow_borrowed!("key(focused_border)"),
         margin: cow_borrowed!("0"),
         corner_radius: cow_borrowed!("6"),
@@ -99,8 +102,8 @@ pub(crate) const BASE_THEME: Theme = Theme {
         margin: cow_borrowed!("0"),
         background: cow_borrowed!("key(secondary_surface)"),
         thumb_background: cow_borrowed!("key(opposite_surface)"),
-        enabled_background: cow_borrowed!("key(secondary)"),
-        enabled_thumb_background: cow_borrowed!("key(primary)"),
+        enabled_background: cow_borrowed!("key(secondary_accent)"),
+        enabled_thumb_background: cow_borrowed!("key(primary_accent)"),
         focus_border_fill: cow_borrowed!("key(focused_border)"),
         enabled_focus_border_fill: cow_borrowed!("key(focused_border)"),
     },
@@ -114,7 +117,7 @@ pub(crate) const BASE_THEME: Theme = Theme {
     tooltip: TooltipTheme {
         background: cow_borrowed!("key(neutral_surface)"),
         color: cow_borrowed!("key(color)"),
-        border_fill: cow_borrowed!("key(surface)"),
+        border_fill: cow_borrowed!("key(primary_surface)"),
     },
     dropdown: DropdownTheme {
         width: cow_borrowed!("auto"),
@@ -125,7 +128,7 @@ pub(crate) const BASE_THEME: Theme = Theme {
         font_theme: FontTheme {
             color: cow_borrowed!("key(color)"),
         },
-        border_fill: cow_borrowed!("key(surface)"),
+        border_fill: cow_borrowed!("key(primary_surface)"),
         focus_border_fill: cow_borrowed!("key(focused_border)"),
         arrow_fill: cow_borrowed!("key(solid)"),
     },
@@ -142,18 +145,19 @@ pub(crate) const BASE_THEME: Theme = Theme {
     accordion: AccordionTheme {
         color: cow_borrowed!("key(color)"),
         background: cow_borrowed!("key(neutral_surface)"),
-        border_fill: cow_borrowed!("key(surface)"),
+        border_fill: cow_borrowed!("key(primary_surface)"),
     },
     loader: LoaderTheme {
-        primary_color: cow_borrowed!("key(tertiary_opposite_surface)"),
+        primary_color: cow_borrowed!("key(secondary_accent)"),
+        opposite_color: cow_borrowed!("key(opposite_surface)"),
     },
     link: LinkTheme {
         highlight_color: cow_borrowed!("key(highlight_color)"),
     },
     progress_bar: ProgressBarTheme {
         color: cow_borrowed!("white"),
-        background: cow_borrowed!("key(surface)"),
-        progress_background: cow_borrowed!("key(primary)"),
+        background: cow_borrowed!("key(primary_surface)"),
+        progress_background: cow_borrowed!("key(primary_accent)"),
         height: cow_borrowed!("20"),
     },
     table: TableTheme {
@@ -164,7 +168,7 @@ pub(crate) const BASE_THEME: Theme = Theme {
         arrow_fill: cow_borrowed!("key(solid)"),
         row_background: cow_borrowed!("transparent"),
         hover_row_background: cow_borrowed!("key(secondary_surface)"),
-        divider_fill: cow_borrowed!("key(surface)"),
+        divider_fill: cow_borrowed!("key(primary_surface)"),
         corner_radius: cow_borrowed!("6"),
     },
     graph: GraphTheme {
@@ -196,14 +200,14 @@ pub(crate) const BASE_THEME: Theme = Theme {
     },
     radio: RadioTheme {
         unselected_fill: cow_borrowed!("key(solid)"),
-        selected_fill: cow_borrowed!("key(primary)"),
-        border_fill: cow_borrowed!("key(surface)"),
+        selected_fill: cow_borrowed!("key(primary_accent)"),
+        border_fill: cow_borrowed!("key(primary_surface)"),
     },
     checkbox: CheckboxTheme {
         unselected_fill: cow_borrowed!("key(solid)"),
-        selected_fill: cow_borrowed!("key(primary)"),
-        selected_icon_fill: cow_borrowed!("key(secondary)"),
-        border_fill: cow_borrowed!("key(surface)"),
+        selected_fill: cow_borrowed!("key(primary_accent)"),
+        selected_icon_fill: cow_borrowed!("key(secondary_accent)"),
+        border_fill: cow_borrowed!("key(primary_surface)"),
     },
     menu_item: MenuItemTheme {
         hover_background: cow_borrowed!("key(focused_surface)"),
@@ -216,7 +220,7 @@ pub(crate) const BASE_THEME: Theme = Theme {
         background: cow_borrowed!("key(neutral_surface)"),
         padding: cow_borrowed!("4"),
         shadow: cow_borrowed!("0 2 5 2 rgb(0, 0, 0, 0.1)"),
-        border_fill: cow_borrowed!("key(surface)"),
+        border_fill: cow_borrowed!("key(primary_surface)"),
         corner_radius: cow_borrowed!("6"),
     },
     snackbar: SnackBarTheme {
@@ -253,6 +257,6 @@ pub(crate) const BASE_THEME: Theme = Theme {
     },
     resizable_handle: ResizableHandleTheme {
         background: cow_borrowed!("key(secondary_surface)"),
-        hover_background: cow_borrowed!("key(surface)"),
+        hover_background: cow_borrowed!("key(primary_surface)"),
     },
 };
