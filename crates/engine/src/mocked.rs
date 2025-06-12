@@ -33,6 +33,9 @@ impl Color {
     pub const DARK_GRAY: Self = Color(4282664004);
     pub const GRAY: Self = Color(4287137928);
     pub const LIGHT_GRAY: Self = Color(4291611852);
+    pub const DARK_GREY: Self = Color(4282664004);
+    pub const GREY: Self = Color(4287137928);
+    pub const LIGHT_GREY: Self = Color(4291611852);
     pub const WHITE: Self = Color(4294967295);
     pub const RED: Self = Color(4294901760);
     pub const GREEN: Self = Color(4278255360);
