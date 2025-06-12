@@ -218,6 +218,7 @@ pub fn PopupButton(props: ButtonProps) -> Element {
         children: props.children,
         onpress: props.onpress,
         onclick: props.onclick,
+        enabled: props.enabled,
     })
 }
 
