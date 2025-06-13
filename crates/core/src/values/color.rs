@@ -20,7 +20,7 @@ impl Parse for Color {
             "blue" => Ok(Color::BLUE),
             "yellow" => Ok(Color::YELLOW),
             "black" => Ok(Color::BLACK),
-            "gray" => Ok(Color::GRAY),
+            "gray" | "grey" => Ok(Color::GRAY),
             "white" => Ok(Color::WHITE),
             "orange" => Ok(Color::from_rgb(255, 165, 0)),
             "transparent" | "none" => Ok(Color::TRANSPARENT),
