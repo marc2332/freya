@@ -214,7 +214,8 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
                 }
             }
             EventLoopMessage::Accessibility(accesskit_winit::WindowEvent::InitialTreeRequested) => {
-                app.init_accessibility_on_next_render = true;
+                app.accessibility_tasks_for_next_render
+                    .insert(AccessibilityTask::Init);
             }
             EventLoopMessage::SetCursorIcon(icon) => window.set_cursor(icon),
             EventLoopMessage::WithWindow(use_window) => (use_window)(window),
@@ -276,20 +277,23 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
                     app.process_layout_on_next_render = false;
                 }
 
-                match app.process_accessibility_task_on_next_render {
-                    AccessibilityTask::ProcessWithMode(navigation_mode) => {
-                        app.process_accessibility(window);
-                        app.set_navigation_mode(navigation_mode);
+                for task in app
+                    .accessibility_tasks_for_next_render
+                    .drain()
+                    .collect::<Vec<_>>()
+                {
+                    match task {
+                        AccessibilityTask::Init => {
+                            app.init_accessibility();
+                        }
+                        AccessibilityTask::ProcessWithMode(navigation_mode) => {
+                            app.process_accessibility(window);
+                            app.set_navigation_mode(navigation_mode);
+                        }
+                        AccessibilityTask::ProcessUpdate => {
+                            app.process_accessibility(window);
+                        }
                     }
-                    AccessibilityTask::Process => {
-                        app.process_accessibility(window);
-                    }
-                    AccessibilityTask::None => {}
-                }
-
-                if app.init_accessibility_on_next_render {
-                    app.init_accessibility();
-                    app.init_accessibility_on_next_render = false;
                 }
 
                 graphics_driver.make_current();
