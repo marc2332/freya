@@ -1,6 +1,7 @@
 mod accessibility;
 mod alignment;
 mod aspect_ratio;
+mod blend_mode;
 mod border;
 mod color;
 mod content;
