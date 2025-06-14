@@ -205,6 +205,7 @@ pub struct TableProps {
 /// # Example
 ///
 /// ```rust
+/// # use freya::prelude::*;
 /// fn app() -> Element {
 ///    let data = use_signal(|| {
 ///        vec![
