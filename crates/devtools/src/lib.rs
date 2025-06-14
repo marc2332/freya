@@ -295,13 +295,15 @@ fn LayoutForDOMInspector() -> Element {
                 direction: "vertical",
                 ResizablePanel {
                     initial_size: 50.,
-                    NodesTree {
-                        height: "fill",
-                        selected_node_id,
-                        onselected: move |node_id: NodeId| {
-                            if let Some(hovered_node) = &radio.read().hovered_node.as_ref() {
-                                hovered_node.lock().unwrap().replace(node_id);
-                                platform.send(EventLoopMessage::RequestFullRerender).ok();
+                    rect {
+                        padding: "15",
+                        NodesTree {
+                            selected_node_id,
+                            onselected: move |node_id: NodeId| {
+                                if let Some(hovered_node) = &radio.read().hovered_node.as_ref() {
+                                    hovered_node.lock().unwrap().replace(node_id);
+                                    platform.send(EventLoopMessage::RequestFullRerender).ok();
+                                }
                             }
                         }
                     }
@@ -310,7 +312,6 @@ fn LayoutForDOMInspector() -> Element {
                 ResizablePanel {
                     initial_size: 50.,
                     if is_expanded_vertical {
-
                         Outlet::<Route> {}
                     } else {
                         rect {
