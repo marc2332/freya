@@ -23,9 +23,9 @@ pub fn NativeContainer(children: Element) -> Element {
         let allowed_to_navigate = native_platform.navigation_mark.peek().allowed();
         if e.key == Key::Tab && allowed_to_navigate {
             if e.modifiers.contains(Modifiers::SHIFT) {
-                platform.focus(AccessibilityFocusStrategy::Backward);
+                platform.request_focus(AccessibilityFocusStrategy::Backward);
             } else {
-                platform.focus(AccessibilityFocusStrategy::Forward);
+                platform.request_focus(AccessibilityFocusStrategy::Forward);
             }
         } else {
             native_platform.navigation_mark.write().set_allowed(true)
