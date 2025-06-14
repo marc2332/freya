@@ -24,11 +24,7 @@ struct NodeTreeItem {
 
 #[allow(non_snake_case)]
 #[component]
-pub fn NodesTree(
-    height: String,
-    selected_node_id: Option<NodeId>,
-    onselected: EventHandler<NodeId>,
-) -> Element {
+pub fn NodesTree(selected_node_id: Option<NodeId>, onselected: EventHandler<NodeId>) -> Element {
     let navigator = use_navigator();
     let mut radio = use_radio(DevtoolsChannel::UpdatedDOM);
 
@@ -64,8 +60,6 @@ pub fn NodesTree(
         show_scrollbar: true,
         length: items.len(),
         item_size: 27.0,
-        height,
-        padding: "15",
         builder_args: (selected_node_id, items),
         builder: move |i, options: &Option<(Option<NodeId>, Vec<NodeTreeItem>)>| {
             let (selected_node_id, items) = options.as_ref().unwrap();
