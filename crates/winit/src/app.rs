@@ -1,7 +1,4 @@
-use std::{
-    collections::HashSet,
-    sync::Arc,
-};
+use std::sync::Arc;
 
 use accesskit::{
     Node,
@@ -81,7 +78,6 @@ use crate::{
 
 #[derive(Hash, PartialEq, Eq)]
 pub enum AccessibilityTask {
-    Init,
     ProcessUpdate,
     ProcessWithMode(NavigationMode),
 }
@@ -106,7 +102,8 @@ pub struct Application {
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) plugins: PluginsManager,
     pub(crate) process_layout_on_next_render: bool,
-    pub(crate) accessibility_tasks_for_next_render: HashSet<AccessibilityTask>,
+    pub(crate) accessibility_tasks_for_next_render: Option<AccessibilityTask>,
+    pub(crate) init_accessibility_on_next_render: bool,
     pub(crate) default_fonts: Vec<String>,
 }
 
@@ -165,7 +162,8 @@ impl Application {
             ticker_sender: broadcast::channel(5).0,
             plugins,
             process_layout_on_next_render: false,
-            accessibility_tasks_for_next_render: HashSet::default(),
+            accessibility_tasks_for_next_render: None,
+            init_accessibility_on_next_render: false,
             default_fonts,
             compositor: Compositor::default(),
         };
@@ -269,7 +267,7 @@ impl Application {
         if must_relayout {
             self.process_layout_on_next_render = true;
             self.accessibility_tasks_for_next_render
-                .insert(AccessibilityTask::ProcessUpdate);
+                .replace(AccessibilityTask::ProcessUpdate);
         } else if must_repaint {
             // If there was no relayout but there was a repaint then we can update the devtools now,
             // otherwise if there was a relayout the devtools will get updated on next render
@@ -375,9 +373,8 @@ impl Application {
     pub fn resize(&mut self, window: &Window) {
         self.process_layout_on_next_render = true;
         self.accessibility_tasks_for_next_render
-            .insert(AccessibilityTask::Init);
-        self.accessibility_tasks_for_next_render
-            .insert(AccessibilityTask::ProcessUpdate);
+            .replace(AccessibilityTask::ProcessUpdate);
+        self.init_accessibility_on_next_render = true;
         self.compositor.reset();
         self.sdom
             .get()
@@ -410,7 +407,7 @@ impl Application {
         let fdom = self.sdom.get();
         fdom.accessibility_dirty_nodes()
             .request_focus(focus_strategy);
-        self.accessibility_tasks_for_next_render.insert(task);
+        self.accessibility_tasks_for_next_render.replace(task);
     }
 
     /// Notify components subscribed to event loop ticks.
