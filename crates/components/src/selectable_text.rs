@@ -83,6 +83,10 @@ pub fn SelectableText(value: ReadOnlySignal<String>) -> Element {
         }
     };
 
+    let onglobalmousedown = move |_| {
+        editable.editor_mut().write().clear_selection();
+    };
+
     let onmouseenter = move |_| {
         platform.set_cursor(CursorIcon::Text);
         *status.write() = SelectableTextStatus::Hovering;
@@ -116,17 +120,12 @@ pub fn SelectableText(value: ReadOnlySignal<String>) -> Element {
             _ => {}
         };
 
-        // Unfocus text when this:
-        // + is focused
-        // + it has not just being dragged
-        // + a global click happened
-        if focus.is_focused() {
-            if drag_origin.read().is_some() {
-                drag_origin.set(None);
-            } else {
-                editable.editor_mut().write().clear_selection();
-                focus.request_unfocus();
-            }
+        if drag_origin.read().is_some() {
+            // Finish the drag
+            drag_origin.set(None);
+        } else if focus.is_focused() {
+            // Was not being dragged + focused + click event
+            focus.request_unfocus();
         }
     };
 
@@ -141,6 +140,7 @@ pub fn SelectableText(value: ReadOnlySignal<String>) -> Element {
             cursor_reference,
             onclick,
             onglobalmousemove,
+            onglobalmousedown,
             onmousedown,
             onmouseenter,
             onmouseleave,

@@ -24,6 +24,9 @@ fn app() -> Element {
                 SelectableText {
                     value: "You can select this looooooooooong text"
                 }
+                SelectableText {
+                    value: "Or this short text :)"
+                }
             }
         }
     )
