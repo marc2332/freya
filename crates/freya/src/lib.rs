@@ -6,7 +6,7 @@
 //!
 //! **Freya** is a declarative, cross-platform GUI Rust library, powered by 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/).
 //!
-//! **It does not use any web tech**, check the [Differences with Dioxus](https://book.freyaui.dev/differences_with_dioxus.html).
+//! **It does not use any web tech**, check the [Differences with Dioxus](https://github.com/marc2332/freya/tree/main?tab=readme-ov-file#differences-with-dioxus).
 //!
 //! ### Basics
 //! - [Introduction](self::_docs::introduction)
@@ -49,7 +49,11 @@
 //! ## Features flags
 //!
 //! - `devtools`: enables a side panel to inspect your App tree, styles and computed layout.
-//! - `use_camera`: enables the `use_camera` hook.
+//! - `use_camera`: enables the [use_camera](self::hooks::use_camera) hook.
+//! - `network-image`: enables the [NetworkImage](self::components::NetworkImage) component.
+//! - `custom-tokio-rt`: disables the default Tokio runtime created by Freya.
+//! - `performance-overlay`: enables the performance overlay plugin.
+//! - `disable-zoom-shortcuts`: disables the default zoom shortcuts.
 
 /// Freya docs.
 #[cfg(doc)]

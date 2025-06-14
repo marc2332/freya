@@ -60,6 +60,7 @@ mod loader;
 mod menu;
 mod native_container;
 mod native_router;
+#[cfg(feature = "network-image")]
 mod network_image;
 mod overflowed_content;
 mod popup;
@@ -102,6 +103,7 @@ pub use loader::*;
 pub use menu::*;
 pub use native_container::*;
 pub use native_router::*;
+#[cfg(feature = "network-image")]
 pub use network_image::*;
 pub use overflowed_content::*;
 pub use popup::*;

@@ -13,7 +13,7 @@ pub struct DevtoolsState {
     pub(crate) devtools_tree: HashSet<NodeId>,
 }
 
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, Hash)]
 pub enum DevtoolsChannel {
     Global,
     UpdatedDOM,

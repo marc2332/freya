@@ -4,27 +4,34 @@
 )]
 
 use freya::prelude::*;
-use reqwest::Url;
+use reqwest::{
+    Client,
+    Url,
+};
 use serde::Deserialize;
 
 fn main() {
     launch_with_props(app, "Infinite List of Dogs", (500.0, 800.0));
 }
 
-async fn fetch_random_dog() -> Option<Url> {
+async fn fetch_random_dog(client: &Client) -> Option<Url> {
     #[derive(Deserialize)]
     struct DogApiResponse {
         message: String,
     }
 
-    let res = reqwest::get("https://dog.ceo/api/breeds/image/random")
+    let res = client
+        .get("https://dog.ceo/api/breeds/image/random")
+        .send()
         .await
         .ok()?;
+
     let data = res.json::<DogApiResponse>().await.ok()?;
     data.message.parse().ok()
 }
 
 fn app() -> Element {
+    let client = use_signal(Client::new);
     let scroll_controller = use_scroll_controller(ScrollConfig::default);
     let mut cards = use_signal(|| 5);
 
@@ -52,8 +59,8 @@ fn app() -> Element {
                     spacing: "12",
                     content: "flex",
                     direction: "horizontal",
-                    RandomImage {}
-                    RandomImage {}
+                    RandomImage { client }
+                    RandomImage { client }
                 }
             }
         }
@@ -61,8 +68,8 @@ fn app() -> Element {
 }
 
 #[component]
-fn RandomImage() -> Element {
-    let url = use_resource(|| async move { fetch_random_dog().await });
+fn RandomImage(client: ReadOnlySignal<Client>) -> Element {
+    let url = use_resource(move || async move { fetch_random_dog(&client.read()).await });
 
     rsx!(
         rect {

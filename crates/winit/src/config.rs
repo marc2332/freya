@@ -53,6 +53,8 @@ pub struct WindowConfig {
     pub window_attributes_hook: Option<WindowBuilderHook>,
     /// Hook function called with the Event Loop Builder.
     pub event_loop_builder_hook: Option<EventLoopBuilderHook>,
+    /// Max resource in bytes to be used by the GPU. Defaults to automatic.
+    pub max_gpu_resources_bytes: Option<usize>,
 }
 
 impl Default for WindowConfig {
@@ -71,6 +73,7 @@ impl Default for WindowConfig {
             on_exit: None,
             window_attributes_hook: None,
             event_loop_builder_hook: None,
+            max_gpu_resources_bytes: None,
         }
     }
 }
@@ -84,7 +87,7 @@ pub struct LaunchConfig<'a, T: Clone = ()> {
     pub default_fonts: Vec<String>,
 }
 
-impl<'a, T: Clone> Default for LaunchConfig<'a, T> {
+impl<T: Clone> Default for LaunchConfig<'_, T> {
     fn default() -> Self {
         Self {
             state: None,

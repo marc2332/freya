@@ -15,13 +15,13 @@ use rustc_hash::{
     FxHashSet,
 };
 use shipyard::{
+    scheduler::WorkloadSystem,
     Borrow,
     BorrowInfo,
     Component,
     Unique,
     UniqueView,
     View,
-    WorkloadSystem,
 };
 
 use crate::{
@@ -386,7 +386,7 @@ impl<'a, T> DependancyView<'a, T> {
     }
 }
 
-impl<'a, T> Deref for DependancyView<'a, T> {
+impl<T> Deref for DependancyView<'_, T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {

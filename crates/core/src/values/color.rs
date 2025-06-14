@@ -20,7 +20,7 @@ impl Parse for Color {
             "blue" => Ok(Color::BLUE),
             "yellow" => Ok(Color::YELLOW),
             "black" => Ok(Color::BLACK),
-            "gray" => Ok(Color::GRAY),
+            "gray" | "grey" => Ok(Color::GRAY),
             "white" => Ok(Color::WHITE),
             "orange" => Ok(Color::from_rgb(255, 165, 0)),
             "transparent" | "none" => Ok(Color::TRANSPARENT),
@@ -193,12 +193,33 @@ fn parse_hsl(color: &str) -> Result<Color, ParseError> {
 }
 
 fn parse_hex_color(color: &str) -> Result<Color, ParseError> {
-    if color.len() == 7 {
-        let r = u8::from_str_radix(&color[1..3], 16).map_err(|_| ParseError)?;
-        let g = u8::from_str_radix(&color[3..5], 16).map_err(|_| ParseError)?;
-        let b = u8::from_str_radix(&color[5..7], 16).map_err(|_| ParseError)?;
-        Ok(Color::from_rgb(r, g, b))
-    } else {
-        Err(ParseError)
+    match color.len() {
+        4 => {
+            let r = u8::from_str_radix(&color[1..2].repeat(2), 16).map_err(|_| ParseError)?;
+            let g = u8::from_str_radix(&color[2..3].repeat(2), 16).map_err(|_| ParseError)?;
+            let b = u8::from_str_radix(&color[3..4].repeat(2), 16).map_err(|_| ParseError)?;
+            Ok(Color::from_rgb(r, g, b))
+        }
+        5 => {
+            let r = u8::from_str_radix(&color[1..2].repeat(2), 16).map_err(|_| ParseError)?;
+            let g = u8::from_str_radix(&color[2..3].repeat(2), 16).map_err(|_| ParseError)?;
+            let b = u8::from_str_radix(&color[3..4].repeat(2), 16).map_err(|_| ParseError)?;
+            let a = u8::from_str_radix(&color[4..5].repeat(2), 16).map_err(|_| ParseError)?;
+            Ok(Color::from_rgb(r, g, b).with_a(a))
+        }
+        7 => {
+            let r = u8::from_str_radix(&color[1..3], 16).map_err(|_| ParseError)?;
+            let g = u8::from_str_radix(&color[3..5], 16).map_err(|_| ParseError)?;
+            let b = u8::from_str_radix(&color[5..7], 16).map_err(|_| ParseError)?;
+            Ok(Color::from_rgb(r, g, b))
+        }
+        9 => {
+            let r = u8::from_str_radix(&color[1..3], 16).map_err(|_| ParseError)?;
+            let g = u8::from_str_radix(&color[3..5], 16).map_err(|_| ParseError)?;
+            let b = u8::from_str_radix(&color[5..7], 16).map_err(|_| ParseError)?;
+            let a = u8::from_str_radix(&color[7..9], 16).map_err(|_| ParseError)?;
+            Ok(Color::from_rgb(r, g, b).with_a(a))
+        }
+        _ => Err(ParseError),
     }
 }

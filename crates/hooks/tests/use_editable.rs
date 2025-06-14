@@ -1176,3 +1176,112 @@ pub async fn replace_text() {
         assert_eq!(cursor.text(), Some("0:7"));
     }
 }
+
+#[tokio::test]
+pub async fn navigate_empty_lines() {
+    fn replace_text_app() -> Element {
+        let mut editable = use_editable(
+            || EditableConfig::new("".to_string()),
+            EditableMode::MultipleLinesSingleEditor,
+        );
+        let cursor_attr = editable.cursor_attr();
+        let editor = editable.editor().read();
+        let cursor_pos = editor.cursor_pos();
+        let highlights = editable.highlights_attr(0);
+
+        let onmousedown = move |e: MouseEvent| {
+            editable.process_event(&EditableEvent::MouseDown(e.data, 0));
+        };
+
+        let onglobalkeydown = move |e: Event<KeyboardData>| {
+            editable.process_event(&EditableEvent::KeyDown(e.data));
+        };
+
+        let onclick = move |_: MouseEvent| {
+            editable.process_event(&EditableEvent::Click);
+        };
+
+        rsx!(
+            rect {
+                width: "100%",
+                height: "100%",
+                background: "white",
+                onmousedown,
+                onclick,
+                paragraph {
+                    cursor_reference: cursor_attr,
+                    height: "50%",
+                    width: "100%",
+                    cursor_id: "0",
+                    cursor_index: "{cursor_pos}",
+                    cursor_color: "black",
+                    cursor_mode: "editable",
+                    onglobalkeydown,
+                    highlights,
+                    text {
+                        color: "black",
+                        "{editor}"
+                    }
+                }
+                label {
+                    color: "black",
+                    height: "50%",
+                    "{editor.cursor_row()}:{editor.cursor_col()}"
+                }
+            }
+        )
+    }
+
+    let mut utils = launch_test(replace_text_app);
+
+    // Initial state
+    let root = utils.root().get(0);
+    let cursor = root.get(1).get(0);
+    let content = root.get(0).get(0).get(0);
+    assert_eq!(cursor.text(), Some("0:0"));
+    assert_eq!(content.text(), Some(""));
+
+    // Press Enter
+    utils.push_event(TestEvent::Keyboard {
+        name: EventName::KeyDown,
+        key: Key::Enter,
+        code: Code::Enter,
+        modifiers: Modifiers::default(),
+    });
+    utils.wait_for_update().await;
+
+    // Content has been edited
+    let content = root.get(0).get(0).get(0);
+    assert_eq!(content.text(), Some("\n"));
+
+    // Cursor has been moved
+    let root = utils.root().get(0);
+    let cursor = root.get(1).get(0);
+    assert_eq!(cursor.text(), Some("1:0"));
+
+    // Press ArrowUp
+    utils.push_event(TestEvent::Keyboard {
+        name: EventName::KeyDown,
+        key: Key::ArrowUp,
+        code: Code::ArrowUp,
+        modifiers: Modifiers::default(),
+    });
+    utils.wait_for_update().await;
+
+    // Cursor has been moved
+    let cursor = root.get(1).get(0);
+    assert_eq!(cursor.text(), Some("0:0"));
+
+    // Press ArrowDown
+    utils.push_event(TestEvent::Keyboard {
+        name: EventName::KeyDown,
+        key: Key::ArrowDown,
+        code: Code::ArrowDown,
+        modifiers: Modifiers::default(),
+    });
+    utils.wait_for_update().await;
+
+    // Cursor has been moved
+    let cursor = root.get(1).get(0);
+    assert_eq!(cursor.text(), Some("1:0"));
+}

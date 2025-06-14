@@ -12,38 +12,13 @@ fn main() {
 fn app() -> Element {
     rsx!(
         rect {
-            direction: "horizontal",
-            main_align: "center",
-            cross_align: "center",
-            spacing: "5",
-            rect {
-                direction: "vertical",
-                cross_align: "center",
-                spacing: "20",
+            spacing: "10",
+            for i in 0..6 {
                 rect {
-                    background: "red",
-                    width: "100",
-                    height: "100"
-                }
-                rect {
-                    background: "green",
-                    width: "100",
-                    height: "100"
-                }
-            }
-            rect {
-                direction: "vertical",
-                main_align: "center",
-                spacing: "50",
-                rect {
-                    background: "blue",
-                    width: "100",
-                    height: "100"
-                }
-                rect {
-                    background: "black",
-                    width: "100",
-                    height: "100"
+                    key: "{i}",
+                    background: "rgb(25, 35, 45)",
+                    width: "100%",
+                    height: "50"
                 }
             }
         }

@@ -1,7 +1,7 @@
 [package]
 name = "freya-hooks"
 description = "Hooks library designed for Freya."
-version = "0.3.0-rc.4"
+version = "0.3.3"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
@@ -15,13 +15,12 @@ categories = ["gui", "asynchronous"]
 features = ["freya-engine/mocked-engine"]
 
 [features]
-use_camera = ["dep:nokhwa"]
 skia-engine = ["freya-engine/skia-engine"]
+docs = ["use_camera"]
+use_camera = ["dep:nokhwa"]
 
 [dependencies]
 freya-elements = { workspace = true }
-
-
 freya-core = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
@@ -33,7 +32,6 @@ dioxus-clipboard = { workspace = true }
 
 tokio = { workspace = true }
 
-uuid = { workspace = true }
 easer = "0.3.0"
 ropey = "1.6.0"
 nokhwa = { version = "0.10.7", features = ["input-native"], optional = true }

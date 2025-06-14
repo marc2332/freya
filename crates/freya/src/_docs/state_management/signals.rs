@@ -1,6 +1,10 @@
 //! # Signals
 //!
-//! Signals are a state management solution built-in into Dioxus. They allow us to store values so that components can read and subscribe to any change done to the stored value. Signals can even be read and mutated from multiple components.
+//! [Signals](dioxus::prelude::Signal) are a state management solution built-in into Dioxus.
+//!
+//! They allow us to store values so that components can **read and subscribe** to any change done to the stored value.
+//!
+//! Signals can even be read and mutated from multiple components.
 //!
 //! They are usually created by using the [`use_signal`](dioxus::prelude::use_signal) hook.
 //!
@@ -31,8 +35,10 @@
 //!             onclick,
 //!             "{count}"
 //!             // By embedding the `count` signal in here, we are effectively
-//!             // creating a read subscription. It is the same as if was doing`"{count.read()}"`.
+//!             // creating a read subscription. It is the same as if was doing `"{count.read()}"`.
 //!         }
 //!     )
 //! }
 //! ```
+//!
+//! #### You can now learn about [Global Signals](crate::_docs::state_management::global_signals).

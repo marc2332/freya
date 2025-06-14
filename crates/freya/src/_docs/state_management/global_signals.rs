@@ -1,7 +1,8 @@
 //! # Global Signals
 //!
-//! Global Signals behave like Signals but you declare them statitically and you don't need to pass them through props or context as you can just import it.
-//! Main use case is for apps, not libraries.
+//! [Global Signals](dioxus::prelude::GlobalSignal) are like [Signals](dioxus::prelude::Signal) but you declare them statically and you don't need to pass them through props or context as you can just import it.
+//!
+//! **Main use case is for apps, not libraries.**
 //!
 //! ### Example
 //!
@@ -32,3 +33,5 @@
 //!     )
 //! }
 //! ```
+//!
+//! #### You can now learn about [Lifecycle](crate::_docs::state_management::lifecycle).

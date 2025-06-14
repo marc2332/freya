@@ -118,13 +118,13 @@ impl SafeDOM {
     /// Get a reference to the DOM.
     #[cfg(feature = "rc-dom")]
     pub fn get(&self) -> Ref<FreyaDOM> {
-        return self.fdom.borrow();
+        self.fdom.borrow()
     }
 
     /// Get a mutable reference to the dom.
     #[cfg(feature = "rc-dom")]
     pub fn get_mut(&self) -> RefMut<FreyaDOM> {
-        return self.fdom.borrow_mut();
+        self.fdom.borrow_mut()
     }
 }
 

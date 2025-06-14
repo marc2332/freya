@@ -109,6 +109,8 @@ pub struct InputProps {
     pub onvalidate: Option<EventHandler<InputValidator>>,
     #[props(default = "150".to_string())]
     pub width: String,
+    /// Handler for the `onfocuschange` function.
+    pub onfocuschange: Option<EventHandler<bool>>,
 }
 
 /// Small box to edit text.
@@ -163,6 +165,7 @@ pub fn Input(
         auto_focus,
         onvalidate,
         width,
+        onfocuschange,
     }: InputProps,
 ) -> Element {
     let platform = use_platform();
@@ -203,6 +206,10 @@ pub fn Input(
     use_effect(move || {
         if !focus.is_focused() {
             editable.editor_mut().write().clear_selection();
+        }
+
+        if let Some(onfocuschange) = onfocuschange {
+            onfocuschange.call(focus.is_focused())
         }
     });
 

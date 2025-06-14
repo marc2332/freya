@@ -1,7 +1,6 @@
 use std::{
     collections::HashMap,
     fmt::Display,
-    sync::Arc,
 };
 
 use criterion::{

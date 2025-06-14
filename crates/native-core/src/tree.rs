@@ -112,7 +112,7 @@ pub trait TreeMut: TreeRef {
     fn remove_subtree(&mut self, id: NodeId);
 }
 
-impl<'a> TreeRef for TreeRefView<'a> {
+impl TreeRef for TreeRefView<'_> {
     fn parent_id(&self, id: NodeId) -> Option<NodeId> {
         self.get(id).ok()?.parent
     }
@@ -144,11 +144,11 @@ impl<'a> TreeRef for TreeRefView<'a> {
     }
 }
 
-impl<'a> TreeMut for TreeMutView<'a> {
+impl TreeMut for TreeMutView<'_> {
     fn remove(&mut self, id: NodeId) {
         fn recurse(tree: &mut TreeMutView<'_>, id: NodeId) {
             let (light_tree, children) = {
-                let node = (&mut tree.1).get(id).unwrap();
+                let node = &mut tree.1[id];
                 (node.slot_for_light_tree, std::mem::take(&mut node.children))
             };
 
@@ -158,7 +158,7 @@ impl<'a> TreeMut for TreeMutView<'a> {
 
             // If this node is a slot in a shadow_tree, remove it from the shadow_tree.
             if let Some(light_tree) = light_tree {
-                let root_for_light_tree = (&mut tree.1).get(light_tree).unwrap();
+                let root_for_light_tree = &mut tree.1[light_tree];
 
                 if let Some(shadow_tree) = &mut root_for_light_tree.child_subtree {
                     shadow_tree.slot = None;
@@ -174,7 +174,7 @@ impl<'a> TreeMut for TreeMutView<'a> {
         {
             let mut node_data_mut = &mut self.1;
             if let Some(parent) = node_data_mut.get(id).unwrap().parent {
-                let parent = (&mut node_data_mut).get(parent).unwrap();
+                let mut parent = (&mut node_data_mut).get(parent).unwrap();
                 parent.children.retain(|&child| child != id);
             }
         }
@@ -202,7 +202,7 @@ impl<'a> TreeMut for TreeMutView<'a> {
         {
             let mut node_state = &mut self.1;
             (&mut node_state).get(new).unwrap().parent = Some(parent);
-            let parent = (&mut node_state).get(parent).unwrap();
+            let mut parent = (&mut node_state).get(parent).unwrap();
             parent.children.push(new);
         }
         let height = child_height((&self.1).get(parent).unwrap(), self);
@@ -214,7 +214,7 @@ impl<'a> TreeMut for TreeMutView<'a> {
             let mut node_state = &mut self.1;
             // update the parent's link to the child
             if let Some(parent_id) = node_state.get(old_id).unwrap().parent {
-                let parent = (&mut node_state).get(parent_id).unwrap();
+                let mut parent = (&mut node_state).get(parent_id).unwrap();
                 for id in &mut parent.children {
                     if *id == old_id {
                         *id = new_id;
@@ -247,7 +247,7 @@ impl<'a> TreeMut for TreeMutView<'a> {
         };
         (&mut self.1).get(new_id).unwrap().parent = Some(parent_id);
 
-        let parent = (&mut self.1).get(parent_id).unwrap();
+        let mut parent = (&mut self.1).get(parent_id).unwrap();
         let index = parent
             .children
             .iter()
@@ -275,7 +275,7 @@ impl<'a> TreeMut for TreeMutView<'a> {
         let old_node = node_state.get(old_id).unwrap();
         let parent_id = old_node.parent.expect("tried to insert after root");
         (&mut node_state).get(new_id).unwrap().parent = Some(parent_id);
-        let parent = (&mut node_state).get(parent_id).unwrap();
+        let mut parent = (&mut node_state).get(parent_id).unwrap();
         let index = parent
             .children
             .iter()
@@ -296,7 +296,7 @@ impl<'a> TreeMut for TreeMutView<'a> {
                 slot,
             };
 
-            let light_root = node_data_mut
+            let mut light_root = node_data_mut
                 .get(id)
                 .expect("tried to create shadow_tree with non-existent id");
 
@@ -304,7 +304,7 @@ impl<'a> TreeMut for TreeMutView<'a> {
             light_root_height = light_root.height;
 
             if let Some(slot) = slot {
-                let slot = node_data_mut
+                let mut slot = node_data_mut
                     .get(slot)
                     .expect("tried to create shadow_tree with non-existent slot");
                 slot.slot_for_light_tree = Some(id);
@@ -321,11 +321,11 @@ impl<'a> TreeMut for TreeMutView<'a> {
     fn remove_subtree(&mut self, id: NodeId) {
         let (_, node_data_mut) = self;
 
-        if let Ok(node) = node_data_mut.get(id) {
+        if let Ok(mut node) = node_data_mut.get(id) {
             if let Some(shadow_tree) = node.child_subtree.take() {
                 // Remove the slot's link to the shadow_tree
                 if let Some(slot) = shadow_tree.slot {
-                    let slot = node_data_mut
+                    let mut slot = node_data_mut
                         .get(slot)
                         .expect("tried to remove shadow_tree with non-existent slot");
                     slot.slot_for_light_tree = None;
@@ -367,7 +367,7 @@ fn child_height(parent: &Node, tree: &impl TreeRef) -> u16 {
 fn set_height(tree: &mut TreeMutView<'_>, node: NodeId, height: u16) {
     let (shadow_tree, light_tree, children) = {
         let mut node_data_mut = &mut tree.1;
-        let node = (&mut node_data_mut).get(node).unwrap();
+        let mut node = (&mut node_data_mut).get(node).unwrap();
         node.height = height;
 
         (
@@ -399,7 +399,7 @@ fn set_height(tree: &mut TreeMutView<'_>, node: NodeId, height: u16) {
     }
 }
 
-impl<'a> TreeRef for TreeMutView<'a> {
+impl TreeRef for TreeMutView<'_> {
     fn parent_id(&self, id: NodeId) -> Option<NodeId> {
         let node_data = &self.1;
         node_data.get(id).unwrap().parent

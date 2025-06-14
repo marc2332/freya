@@ -22,7 +22,7 @@ fn app() -> Element {
 
     let is_dark = current_theme.read().name == "dark";
 
-    use_memo(move || {
+    use_effect(move || {
         let theme = get_theme(preferred_theme());
         if theme != *current_theme.peek() {
             current_theme.set(theme);
@@ -31,15 +31,11 @@ fn app() -> Element {
 
     rsx!(
         Body {
+            main_align: "center",
+            cross_align: "center",
             Switch {
                 enabled: is_dark,
-                ontoggled: move |_| {
-                    if is_dark {
-                        *current_theme.write() = LIGHT_THEME
-                    } else {
-                        *current_theme.write() = DARK_THEME
-                    }
-                }
+                ontoggled: move |_| { }
             }
             label {
                 "Current Theme: {current_theme.read().name}"
