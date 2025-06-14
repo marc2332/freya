@@ -35,7 +35,7 @@ impl From<winit::window::Theme> for PreferredTheme {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Default, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Default, Debug, Hash)]
 pub enum NavigationMode {
     #[default]
     NotKeyboard,
