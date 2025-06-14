@@ -44,6 +44,7 @@ impl UseMultipleClicks {
 /// ### Example:
 ///
 /// ```rust
+/// # use freya::prelude::*;
 /// fn app() -> Element {
 ///     let mut clicks = use_multiple_clicks(Duration::from_secs(1), 3);
 ///
