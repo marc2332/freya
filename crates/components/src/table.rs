@@ -201,6 +201,55 @@ pub struct TableProps {
 ///
 /// # Styling
 /// Inherits the [`TableTheme`](freya_hooks::TableTheme) theme.
+///
+/// # Example
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///    let data = use_signal(|| {
+///        vec![
+///            ("Marc".to_owned(), 169),
+///            ("Marc Clone 1".to_owned(), 113),
+///            ("Marc Clone 2".to_owned(), 157),
+///            ("Marc Clone 3 ".to_owned(), 182),
+///        ]
+///    });
+///
+///    rsx!(
+///        Table {
+///            columns: 2,
+///            TableHead {
+///                TableRow {
+///                    TableCell {
+///                        label { "Name" }
+///                    }
+///                    TableCell {
+///                        label { "Age" }
+///                    }
+///                }
+///            }
+///            TableBody {
+///                ScrollView {
+///                    for (i, (name, age)) in data.read().iter().enumerate() {
+///                        TableRow {
+///                            key: "{i}",
+///                            TableCell {
+///                                label { "{name}" }
+///                            }
+///                            TableCell {
+///                                label { "{age}" }
+///                            }
+///                        }
+///                    }
+///                }
+///            }
+///        }
+///    )
+/// }
+/// ```
+///
+/// For a more advance example (e.g filtering) you can have a look at the [`table.rs`](https://github.com/marc2332/freya/blob/main/examples/table.rs) example in the repo.
 #[allow(non_snake_case)]
 pub fn Table(
     TableProps {
