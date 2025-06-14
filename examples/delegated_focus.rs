@@ -32,7 +32,7 @@ fn app() -> Element {
     };
 
     use_effect(move || {
-        platform.focus(AccessibilityFocusStrategy::Node(nodes[current()]));
+        platform.request_focus(AccessibilityFocusStrategy::Node(nodes[current()]));
     });
 
     rsx!(
