@@ -22,7 +22,8 @@ skia = ["freya-engine/skia-engine"]
 tracing-subscriber = ["dep:tracing-subscriber"]
 mocked-engine-development = ["freya-engine/mocked-engine"] # This is just for the CI
 fade-cached-incremental-areas = ["freya-core/fade-cached-incremental-areas"]
-docs = ["dep:freya-testing", "dep:dioxus-i18n", "dep:dioxus-router", "freya-components/docs", "freya-hooks/docs"]
+disable-zoom-shortcuts = ["freya-renderer/disable-zoom-shortcuts"]
+docs = ["dep:freya-testing", "dep:dioxus-i18n", "dep:dioxus-router"]
 
 # User features
 network-image = ["freya-components/network-image"]
@@ -31,7 +32,7 @@ performance-overlay = []
 disable-zoom-shortcuts = ["freya-winit/disable-zoom-shortcuts"]
 devtools = ["dep:freya-devtools"]
 custom-tokio-rt = []
-
+muda = ["freya-components/muda"]
 
 [dependencies]
 freya-devtools = { workspace = true, optional = true }
