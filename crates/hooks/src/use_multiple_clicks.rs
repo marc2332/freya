@@ -45,6 +45,7 @@ impl UseMultipleClicks {
 ///
 /// ```rust
 /// # use freya::prelude::*;
+/// use std::time::Duration;
 /// fn app() -> Element {
 ///     let mut clicks = use_multiple_clicks(Duration::from_secs(1), 3);
 ///
