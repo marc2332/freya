@@ -1,6 +1,8 @@
 //! # Router
 //!
-//! Freya supports the official [Dioxus Router](https://docs.rs/dioxus-router/latest/dioxus_router/), which means you can declare different pages for your app. The only difference is that you will need to use Freya's custom `Link` component.
+//! Freya supports the official [Dioxus Router](https://docs.rs/dioxus-router/latest/dioxus_router/), which means you can declare different pages for your app.
+//!
+//! The only difference is that you will need to use Freya's custom [`Link`](crate::components::Link) component.
 //!
 //! ### Example
 //!
@@ -93,5 +95,4 @@
 //! }
 //! ```
 
-pub mod animated_transitions;
 pub mod native_router;

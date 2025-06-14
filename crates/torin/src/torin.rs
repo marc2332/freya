@@ -39,6 +39,7 @@ pub enum RootNodeCandidate<Key: NodeKey> {
 }
 
 impl<Key: NodeKey> RootNodeCandidate<Key> {
+    #[must_use]
     pub fn take(&mut self) -> Self {
         mem::replace(self, Self::None)
     }
@@ -59,12 +60,12 @@ impl<Key: NodeKey> RootNodeCandidate<Key> {
                 }
             }
         } else {
-            *self = RootNodeCandidate::Valid(*proposed_candidate)
+            *self = RootNodeCandidate::Valid(*proposed_candidate);
         }
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum DirtyReason {
     None,
     /// Node was moved from one position to another in its parent' children list.
@@ -120,12 +121,14 @@ impl<Key: NodeKey> Torin<Key> {
         self.dirty.remove(&node_id);
         if let RootNodeCandidate::Valid(id) = self.root_node_candidate {
             if id == node_id {
-                self.root_node_candidate = RootNodeCandidate::None
+                self.root_node_candidate = RootNodeCandidate::None;
             }
         }
     }
 
     /// Remove a Node from the layout
+    /// # Panics
+    /// Might panic if the parent is not found.
     pub fn remove(
         &mut self,
         node_id: Key,
@@ -235,6 +238,8 @@ impl<Key: NodeKey> Torin<Key> {
     }
 
     /// Measure dirty Nodes
+    /// # Panics
+    /// Might panic if the final root node is not found.
     pub fn measure(
         &mut self,
         suggested_root_id: Key,

@@ -16,7 +16,7 @@ pub fn margin() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     mocked_dom.add(

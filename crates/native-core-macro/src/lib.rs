@@ -334,7 +334,7 @@ pub fn partial_derive_state(_: TokenStream, input: TokenStream) -> TokenStream {
 
             #(#items)*
 
-            fn workload_system(type_id: std::any::TypeId, dependants: std::sync::Arc<freya_native_core::prelude::Dependants>, pass_direction: freya_native_core::prelude::PassDirection) -> freya_native_core::exports::shipyard::WorkloadSystem {
+            fn workload_system(type_id: std::any::TypeId, dependants: std::sync::Arc<freya_native_core::prelude::Dependants>, pass_direction: freya_native_core::prelude::PassDirection) -> freya_native_core::exports::shipyard::scheduler::WorkloadSystem {
                 use freya_native_core::exports::shipyard::{IntoWorkloadSystem, Get, AddComponent};
                 use freya_native_core::tree::TreeRef;
                 use freya_native_core::prelude::{NodeType, NodeView};
@@ -347,12 +347,19 @@ pub fn partial_derive_state(_: TokenStream, input: TokenStream) -> TokenStream {
                     let node_types = run_view.node_type.clone();
                     freya_native_core::prelude::run_pass(type_id, &dependants, pass_direction, run_view, |id, context, height| {
                         let node_data: &NodeType<_> = node_types.get(id).unwrap_or_else(|err| panic!("Failed to get node type {:?}", err));
-                        if node_data.is_text() {
+                        if !Self::allow_node(node_data) {
                             return false;
                         }
                         // get all of the states from the tree view
                         // Safety: No node has itself as a parent or child.
-                        let raw_myself: Option<*mut Self> = (&mut #this_view).get(id).ok().map(|c| c as *mut _);
+                        let raw_myself: Option<*mut Self> = (&mut #this_view)
+                            .get(id)
+                            .ok()
+                            .map(|mut c| {
+                                let mut_ref: &mut Self = &mut *c;
+                                mut_ref as *mut Self
+                            });
+
                         #get_node_view
                         #get_parent_view
                         #get_child_view

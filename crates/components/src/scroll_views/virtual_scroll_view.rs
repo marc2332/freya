@@ -20,7 +20,7 @@ use freya_hooks::{
 };
 
 use crate::{
-    get_container_size,
+    get_container_sizes,
     get_corrected_scroll_position,
     get_scroll_position_from_cursor,
     get_scroll_position_from_wheel,
@@ -154,7 +154,7 @@ fn get_render_range(
 /// #           {app()}
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), "./images/gallery_virtual_scroll_view.png");
+/// # }, (250., 250.).into(), "./images/gallery_virtual_scroll_view.png");
 /// ```
 ///
 /// # With a Scroll Controller
@@ -222,41 +222,30 @@ pub fn VirtualScrollView<
     let mut focus = use_focus();
     let applied_scrollbar_theme = use_applied_theme!(&scrollbar_theme, scroll_bar);
 
-    let direction_is_vertical = direction == "vertical";
+    let (inner_width, inner_height) = match direction.as_str() {
+        "vertical" => (size.inner.width, item_size * length as f32),
+        _ => (item_size * length as f32, size.inner.height),
+    };
 
-    let inner_size = item_size + (item_size * length as f32);
+    scroll_controller.use_apply(inner_width, inner_height);
 
-    scroll_controller.use_apply(inner_size, inner_size);
+    let vertical_scrollbar_is_visible =
+        is_scrollbar_visible(show_scrollbar, inner_height, size.area.height());
+    let horizontal_scrollbar_is_visible =
+        is_scrollbar_visible(show_scrollbar, inner_width, size.area.width());
 
-    let vertical_scrollbar_is_visible = direction != "horizontal"
-        && is_scrollbar_visible(show_scrollbar, inner_size, size.area.height());
-    let horizontal_scrollbar_is_visible = direction != "vertical"
-        && is_scrollbar_visible(show_scrollbar, inner_size, size.area.width());
-
-    let (container_width, content_width) = get_container_size(
-        &width,
-        direction_is_vertical,
-        Axis::X,
-        vertical_scrollbar_is_visible,
-        &applied_scrollbar_theme.size,
-    );
-    let (container_height, content_height) = get_container_size(
-        &height,
-        direction_is_vertical,
-        Axis::Y,
-        horizontal_scrollbar_is_visible,
-        &applied_scrollbar_theme.size,
-    );
+    let (container_width, content_width) = get_container_sizes(&width);
+    let (container_height, content_height) = get_container_sizes(&height);
 
     let corrected_scrolled_y =
-        get_corrected_scroll_position(inner_size, size.area.height(), *scrolled_y.read() as f32);
+        get_corrected_scroll_position(inner_height, size.area.height(), *scrolled_y.read() as f32);
     let corrected_scrolled_x =
-        get_corrected_scroll_position(inner_size, size.area.width(), *scrolled_x.read() as f32);
+        get_corrected_scroll_position(inner_width, size.area.width(), *scrolled_x.read() as f32);
 
     let (scrollbar_y, scrollbar_height) =
-        get_scrollbar_pos_and_size(inner_size, size.area.height(), corrected_scrolled_y);
+        get_scrollbar_pos_and_size(inner_height, size.area.height(), corrected_scrolled_y);
     let (scrollbar_x, scrollbar_width) =
-        get_scrollbar_pos_and_size(inner_size, size.area.width(), corrected_scrolled_x);
+        get_scrollbar_pos_and_size(inner_width, size.area.width(), corrected_scrolled_x);
 
     // Moves the Y axis when the user scrolls in the container
     let onwheel = move |e: WheelEvent| {
@@ -283,7 +272,7 @@ pub fn VirtualScrollView<
 
         let scroll_position_y = get_scroll_position_from_wheel(
             y_movement,
-            inner_size,
+            inner_height,
             size.area.height(),
             corrected_scrolled_y,
         );
@@ -292,12 +281,11 @@ pub fn VirtualScrollView<
         if *scrolled_y.peek() != scroll_position_y {
             e.stop_propagation();
             *scrolled_y.write() = scroll_position_y;
-            focus.focus();
         }
 
         let scroll_position_x = get_scroll_position_from_wheel(
             x_movement,
-            inner_size,
+            inner_width,
             size.area.width(),
             corrected_scrolled_x,
         );
@@ -306,7 +294,6 @@ pub fn VirtualScrollView<
         if *scrolled_x.peek() != scroll_position_x {
             e.stop_propagation();
             *scrolled_x.write() = scroll_position_x;
-            focus.focus();
         }
     };
 
@@ -319,7 +306,7 @@ pub fn VirtualScrollView<
             let cursor_y = coordinates.y - y - size.area.min_y() as f64;
 
             let scroll_position =
-                get_scroll_position_from_cursor(cursor_y as f32, inner_size, size.area.height());
+                get_scroll_position_from_cursor(cursor_y as f32, inner_height, size.area.height());
 
             *scrolled_y.write() = scroll_position;
         } else if let Some((Axis::X, x)) = *clicking_scrollbar {
@@ -327,13 +314,13 @@ pub fn VirtualScrollView<
             let cursor_x = coordinates.x - x - size.area.min_x() as f64;
 
             let scroll_position =
-                get_scroll_position_from_cursor(cursor_x as f32, inner_size, size.area.width());
+                get_scroll_position_from_cursor(cursor_x as f32, inner_width, size.area.width());
 
             *scrolled_x.write() = scroll_position;
         }
 
         if clicking_scrollbar.is_some() {
-            focus.focus();
+            focus.request_focus();
         }
     };
 
@@ -361,8 +348,6 @@ pub fn VirtualScrollView<
 
                 let x = corrected_scrolled_x;
                 let y = corrected_scrolled_y;
-                let inner_height = inner_size;
-                let inner_width = inner_size;
                 let viewport_height = size.area.height();
                 let viewport_width = size.area.width();
 
@@ -408,18 +393,6 @@ pub fn VirtualScrollView<
         }
     };
 
-    let horizontal_scrollbar_size = if horizontal_scrollbar_is_visible {
-        &applied_scrollbar_theme.size
-    } else {
-        "0"
-    };
-
-    let vertical_scrollbar_size = if vertical_scrollbar_is_visible {
-        &applied_scrollbar_theme.size
-    } else {
-        "0"
-    };
-
     let (viewport_size, scroll_position) = if direction == "vertical" {
         (size.area.height(), corrected_scrolled_y)
     } else {
@@ -456,9 +429,20 @@ pub fn VirtualScrollView<
         .map(|f| f.0 == Axis::Y)
         .unwrap_or_default();
 
-    let offset_y_min = (-corrected_scrolled_y / item_size).floor() * item_size;
-    let offset_y = -corrected_scrolled_y - offset_y_min;
+    let (offset_x, offset_y) = match direction.as_str() {
+        "vertical" => {
+            let offset_y_min = (-corrected_scrolled_y / item_size).floor() * item_size;
+            let offset_y = -(-corrected_scrolled_y - offset_y_min);
 
+            (corrected_scrolled_x, offset_y)
+        }
+        _ => {
+            let offset_x_min = (-corrected_scrolled_x / item_size).floor() * item_size;
+            let offset_x = -(-corrected_scrolled_x - offset_x_min);
+
+            (offset_x, corrected_scrolled_y)
+        }
+    };
     let a11y_id = focus.attribute();
 
     rsx!(
@@ -483,38 +467,43 @@ pub fn VirtualScrollView<
                     height: "{content_height}",
                     width: "{content_width}",
                     direction: "{direction}",
-                    offset_y: "{-offset_y}",
+                    offset_x: "{offset_x}",
+                    offset_y: "{offset_y}",
                     reference: node_ref,
                     onwheel: onwheel,
                     {children}
                 }
-                ScrollBar {
-                    width: "100%",
-                    height: "{horizontal_scrollbar_size}",
-                    offset_x: "{scrollbar_x}",
-                    clicking_scrollbar: is_scrolling_x,
-                    theme: scrollbar_theme.clone(),
-                    ScrollThumb {
+                if show_scrollbar && horizontal_scrollbar_is_visible {
+                    ScrollBar {
+                        size: &applied_scrollbar_theme.size,
+                        offset_x: scrollbar_x,
                         clicking_scrollbar: is_scrolling_x,
-                        onmousedown: onmousedown_x,
-                        width: "{scrollbar_width}",
-                        height: "100%",
                         theme: scrollbar_theme.clone(),
+                        ScrollThumb {
+                            clicking_scrollbar: is_scrolling_x,
+                            onmousedown: onmousedown_x,
+                            width: "{scrollbar_width}",
+                            height: "100%",
+                            theme: scrollbar_theme.clone(),
+                        }
                     }
                 }
+
             }
-            ScrollBar {
-                width: "{vertical_scrollbar_size}",
-                height: "100%",
-                offset_y: "{scrollbar_y}",
-                clicking_scrollbar: is_scrolling_y,
-                theme: scrollbar_theme.clone(),
-                ScrollThumb {
+            if show_scrollbar && vertical_scrollbar_is_visible {
+                ScrollBar {
+                    is_vertical: true,
+                    size: &applied_scrollbar_theme.size,
+                    offset_y: scrollbar_y,
                     clicking_scrollbar: is_scrolling_y,
-                    onmousedown: onmousedown_y,
-                    width: "100%",
-                    height: "{scrollbar_height}",
-                    theme: scrollbar_theme,
+                    theme: scrollbar_theme.clone(),
+                    ScrollThumb {
+                        clicking_scrollbar: is_scrolling_y,
+                        onmousedown: onmousedown_y,
+                        width: "100%",
+                        height: "{scrollbar_height}",
+                        theme: scrollbar_theme,
+                    }
                 }
             }
         }
@@ -633,22 +622,22 @@ mod test {
         // Simulate the user dragging the scrollbar
         utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
-            cursor: (490., 20.).into(),
+            cursor: (495., 20.).into(),
             button: Some(MouseButton::Left),
         });
         utils.push_event(TestEvent::Mouse {
             name: EventName::MouseDown,
-            cursor: (490., 20.).into(),
+            cursor: (495., 20.).into(),
             button: Some(MouseButton::Left),
         });
         utils.push_event(TestEvent::Mouse {
             name: EventName::MouseMove,
-            cursor: (490., 320.).into(),
+            cursor: (495., 320.).into(),
             button: Some(MouseButton::Left),
         });
         utils.push_event(TestEvent::Mouse {
             name: EventName::MouseUp,
-            cursor: (490., 320.).into(),
+            cursor: (495., 320.).into(),
             button: Some(MouseButton::Left),
         });
 
@@ -700,9 +689,9 @@ mod test {
         utils.wait_for_update().await;
 
         let content = root.get(0).get(0).get(0);
-        assert_eq!(content.children_ids().len(), 9);
+        assert_eq!(content.children_ids().len(), 10);
 
-        for (n, i) in (21..30).enumerate() {
+        for (n, i) in (20..30).enumerate() {
             let child = content.get(n);
             assert_eq!(
                 child.get(0).text(),

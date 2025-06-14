@@ -1,6 +1,6 @@
 use ropey::Rope;
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum HistoryChange {
     InsertChar {
         idx: usize,

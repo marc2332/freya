@@ -20,8 +20,10 @@ fn app() -> Element {
     let mut selected_dropdown = use_signal(|| "First Option".to_string());
 
     rsx!(
-        rect {
+        Body {
             direction: "horizontal",
+            padding: "4",
+            spacing: "4",
             Dropdown {
                 theme: theme_with!(DropdownTheme {
                     width: "200".into(),

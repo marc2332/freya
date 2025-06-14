@@ -5,19 +5,21 @@ use freya_native_core::{
     real_dom::NodeImmutable,
     tags::TagName,
 };
-use freya_node_state::{
-    CursorState,
-    FontStyleState,
-    HighlightMode,
-    LayoutState,
-};
 use torin::prelude::{
     Alignment,
     Area,
     Size2D,
 };
 
-use crate::dom::DioxusNode;
+use crate::{
+    dom::DioxusNode,
+    states::{
+        CursorState,
+        FontStyleState,
+        LayoutState,
+    },
+    values::HighlightMode,
+};
 
 pub struct ParagraphData {
     pub paragraph: Paragraph,
@@ -98,16 +100,15 @@ pub fn create_paragraph(
     }
 }
 
-pub fn draw_cursor_highlights(
-    area: &Area,
+pub fn run_cursor_highlights(
+    area: Area,
     paragraph: &Paragraph,
-    canvas: &Canvas,
     node_ref: &DioxusNode,
+    mut run: impl FnMut(Rect),
 ) -> Option<()> {
     let node_cursor_state = &*node_ref.get::<CursorState>().unwrap();
 
     let highlights = node_cursor_state.highlights.as_ref()?;
-    let highlight_color = node_cursor_state.highlight_color;
 
     for (from, to) in highlights.iter() {
         let (from, to) = {
@@ -122,21 +123,17 @@ pub fn draw_cursor_highlights(
             RectHeightStyle::Tight,
             RectWidthStyle::Tight,
         );
+
         for cursor_rect in cursor_rects {
             let rect = align_highlights_and_cursor_paragraph(
                 node_ref,
-                area,
+                &area,
                 paragraph,
                 &cursor_rect,
                 None,
             );
 
-            let mut paint = Paint::default();
-            paint.set_anti_alias(true);
-            paint.set_style(PaintStyle::Fill);
-            paint.set_color(highlight_color);
-
-            canvas.draw_rect(rect, &paint);
+            run(rect)
         }
     }
 

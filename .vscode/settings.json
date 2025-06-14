@@ -2,7 +2,7 @@
     "rust-analyzer.cargo.features": [
         "devtools",
         "tracing-subscriber",
-        "use_camera",
+        "docs",
         "fade-cached-incremental-areas",
         "muda"
     ]

@@ -1,11 +1,11 @@
 [package]
 name = "freya-engine"
 description = "Abstract Freya's graphics APIs"
-version = "0.3.0-rc.0"
+version = "0.3.3"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
-readme = "../../readme.md"
+readme = "../../README.md"
 homepage = "https://freyaui.dev/"
 repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia", "graphics"]

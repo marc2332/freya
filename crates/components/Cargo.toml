@@ -1,11 +1,11 @@
 [package]
 name = "freya-components"
 description = "Components library desgined for Freya."
-version = "0.3.0-rc.0"
+version = "0.3.3"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
-readme = "../../readme.md"
+readme = "../../README.md"
 homepage = "https://freyaui.dev/"
 repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
@@ -17,30 +17,28 @@ features = ["freya-engine/mocked-engine", "docs"]
 [features]
 muda = ["dep:muda"]
 skia-engine = ["freya-engine/skia-engine"]
-docs = []
+docs = ["network-image", "dep:embed-doc-image"]
+network-image = ["dep:reqwest", "dep:bytes"]
 
 [dependencies]
 freya-elements = { workspace = true }
-freya-node-state = { workspace = true }
 freya-hooks = { workspace = true }
-freya-common = { workspace = true }
 freya-core = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
 
-dioxus-router = { workspace = true }
+dioxus-router = { workspace = true, default-features = false }
 dioxus = { workspace = true }
-futures-util = { workspace = true }
 
-winit = { workspace = true }
+futures-util = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 
 muda = { version = "0.15.1", optional = true }
 open = "5"
-reqwest = "0.12.0"
-bytes = "1.5.0"
-embed-doc-image = "*"
+reqwest = { version = "0.12.0", optional = true }
+bytes = { version = "1.5.0", optional = true }
+embed-doc-image = { version = "0.1.4", optional = true }
 
 [dev-dependencies]
 freya = { path = "../freya" }

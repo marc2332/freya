@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use freya_common::AccessibilityFocusStrategy;
+use freya_core::accessibility::AccessibilityFocusStrategy;
 use freya_elements::{
     self as dioxus_elements,
     events::{

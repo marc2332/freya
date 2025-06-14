@@ -19,8 +19,8 @@ use torin::prelude::*;
 use super::{
     EventName,
     PlatformEventData,
+    PotentialEvent,
 };
-use crate::prelude::PotentialEvent;
 
 /// Event emitted to the DOM.
 #[derive(Debug, Clone, PartialEq)]

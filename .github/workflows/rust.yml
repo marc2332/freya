@@ -28,6 +28,7 @@ jobs:
       uses: taiki-e/install-action@nextest
     - name: Set up cargo cache
       uses: Swatinem/rust-cache@v2
+      if: github.ref != 'refs/heads/main'
       with:
         prefix-key: "8"
     - name: Install linux dependencies
@@ -63,4 +64,4 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
     - name: Make sure the mocked Skia bindings are on sync
       if: runner.os == 'Linux'
-      run: cargo build --package freya --features mocked-engine-development --no-default-features
+      run: cargo build --package freya --package freya-testing --features mocked-engine-development --no-default-features \

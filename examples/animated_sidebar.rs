@@ -9,7 +9,7 @@ use dioxus_router::prelude::{
     Router,
 };
 use freya::{
-    common::NodeReferenceLayout,
+    core::custom_attributes::NodeReferenceLayout,
     prelude::*,
 };
 
@@ -51,17 +51,17 @@ fn FromRouteToCurrent(
             .function(Function::Expo)
     });
 
-    // Only render the destination route once the animation has finished
-    use_memo(move || {
-        if !animations.is_running() && animations.has_run_yet() {
-            animated_router.write().settle();
-        }
-    });
-
     // Run the animation when any prop changes
     use_memo(use_reactive((&upwards, &from), move |_| {
         animations.run(AnimDirection::Forward)
     }));
+
+    // Only render the destination route once the animation has finished
+    use_effect(move || {
+        if !animations.is_running() && animations.has_run_yet() {
+            animated_router.write().settle();
+        }
+    });
 
     let offset = animations.get().read().read();
     let height = node_size.read().area.height();

@@ -1,14 +1,10 @@
 use std::{
     future::Future,
     path::PathBuf,
-    sync::{
-        Arc,
-        Mutex,
-    },
 };
 
 use accesskit::{
-    NodeBuilder,
+    Node,
     Role,
 };
 use dioxus_core::{
@@ -22,14 +18,31 @@ use dioxus_core_macro::{
     rsx,
     Props,
 };
+#[cfg(debug_assertions)]
 use dioxus_signals::{
     GlobalSignal,
     Readable,
 };
 use freya_components::NativeContainer;
-use freya_core::prelude::{
-    EventMessage,
-    *,
+use freya_core::{
+    accessibility::{
+        AccessibilityTree,
+        ACCESSIBILITY_ROOT_ID,
+    },
+    dom::{
+        FreyaDOM,
+        SafeDOM,
+    },
+    event_loop_messages::EventLoopMessage,
+    events::NodesState,
+    platform::CursorIcon,
+    platform_state::{
+        NativePlatformState,
+        NavigationMode,
+        PlatformInformation,
+        PreferredTheme,
+    },
+    types::EventsQueue,
 };
 use freya_elements as dioxus_elements;
 use freya_engine::prelude::*;
@@ -42,7 +55,6 @@ use tokio::{
     },
 };
 use torin::prelude::Size2D;
-use winit::window::CursorIcon;
 
 use crate::{
     config::TestingConfig,
@@ -96,10 +108,10 @@ pub fn launch_test_with_config<T: 'static + Clone>(
     let sdom = SafeDOM::new(fdom);
 
     let (event_emitter, event_receiver) = unbounded_channel();
-    let (platform_event_emitter, platform_event_receiver) = unbounded_channel::<EventMessage>();
+    let (platform_event_emitter, platform_event_receiver) = unbounded_channel::<EventLoopMessage>();
     let (platform_sender, platform_receiver) = watch::channel(NativePlatformState {
         focused_accessibility_id: ACCESSIBILITY_ROOT_ID,
-        focused_accessibility_node: NodeBuilder::new(Role::Window).build(),
+        focused_accessibility_node: Node::new(Role::Window),
         preferred_theme: PreferredTheme::default(),
         navigation_mode: NavigationMode::default(),
         information: PlatformInformation::new(config.size, false, false, false),
@@ -122,14 +134,14 @@ pub fn launch_test_with_config<T: 'static + Clone>(
         config,
         platform_event_emitter,
         platform_event_receiver,
-        accessibility_tree: Arc::new(Mutex::new(AccessibilityTree::new(ACCESSIBILITY_ROOT_ID))),
+        accessibility_tree: AccessibilityTree::new(ACCESSIBILITY_ROOT_ID),
         ticker_sender: broadcast::channel(5).0,
         cursor_icon: CursorIcon::default(),
         platform_sender,
         platform_receiver,
     };
 
-    handler.init_dom();
+    handler.init_doms();
     handler.resize(handler.config.size);
 
     handler

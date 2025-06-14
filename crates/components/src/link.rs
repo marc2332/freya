@@ -5,6 +5,7 @@ use dioxus_router::prelude::{
     navigator,
     NavigationTarget,
 };
+use freya_core::platform::MouseButton;
 use freya_elements::{
     self as dioxus_elements,
     events::MouseEvent,
@@ -13,7 +14,6 @@ use freya_hooks::{
     use_applied_theme,
     LinkThemeWith,
 };
-use winit::event::MouseButton;
 
 use crate::{
     Tooltip,
@@ -272,13 +272,13 @@ mod test {
         assert_eq!(utils.root().get(2).get(0).text(), Some("Home"));
 
         // Go to the "Somewhere" route
-        utils.click_cursor((5., 60.)).await;
+        utils.click_cursor((10., 55.)).await;
 
         // Check route is Somewhere
         assert_eq!(utils.root().get(2).get(0).text(), Some("Somewhere"));
 
         // Go to the "Home" route again
-        utils.click_cursor((5., 5.)).await;
+        utils.click_cursor((10., 10.)).await;
 
         // Check route is Home
         assert_eq!(utils.root().get(2).get(0).text(), Some("Home"));

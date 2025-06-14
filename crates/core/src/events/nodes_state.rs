@@ -2,12 +2,9 @@
 
 use freya_engine::prelude::Color;
 use freya_native_core::{
+    events::EventName,
     prelude::NodeImmutable,
     NodeId,
-};
-use freya_node_state::{
-    Fill,
-    StyleState,
 };
 use rustc_hash::FxHashMap;
 
@@ -18,12 +15,11 @@ use crate::{
         is_node_parent_of,
         DomEvent,
         PlatformEvent,
-    },
-    prelude::{
-        EventName,
         PotentialEvent,
-        PotentialEvents,
     },
+    states::StyleState,
+    types::PotentialEvents,
+    values::Fill,
 };
 
 #[derive(Clone, Debug)]
@@ -52,13 +48,17 @@ impl NodesState {
         let mut potential_collateral_events = PotentialEvents::default();
 
         // Any mouse press event at all
-        let recent_mouse_press_event = any_event_of(events, |e| e.was_cursor_pressed_or_released());
+        let recent_mouse_press_event = any_event_of(events, |e| e.is_pressed());
 
         // Pressed Nodes
         #[allow(unused_variables)]
         self.pressed_nodes.retain(|node_id, _| {
-            // Always unmark as pressed when there has been a new mouse down or click event
-            if recent_mouse_press_event.is_some() {
+            // Check if a DOM event that presses this Node will get emitted
+            let no_desire_to_press = filter_dom_events_by(dom_events, node_id, |e| e.is_pressed());
+
+            // If there has been a mouse press but a DOM event was not emitted to this node, then we safely assume
+            // the user does no longer want to press this Node
+            if no_desire_to_press && recent_mouse_press_event.is_some() {
                 #[cfg(debug_assertions)]
                 tracing::info!("Unmarked as pressed {:?}", node_id);
 
@@ -70,15 +70,14 @@ impl NodesState {
         });
 
         // Any mouse movement event at all
-        let recent_mouse_movement_event = any_event_of(events, |e| e.was_cursor_moved());
+        let recent_mouse_movement_event = any_event_of(events, |e| e.is_moved());
 
         // Hovered Nodes
         self.hovered_nodes.retain(|node_id, metadata| {
             // Check if a DOM event that moves the cursor in this Node will get emitted
-            let no_recently_hovered =
-                filter_dom_events_by(dom_events, node_id, |e| e.was_cursor_moved());
+            let no_desire_to_hover = filter_dom_events_by(dom_events, node_id, |e| e.is_moved());
 
-            if no_recently_hovered {
+            if no_desire_to_hover {
                 // If there has been a mouse movement but a DOM event was not emitted to this node, then we safely assume
                 // the user does no longer want to hover this Node
                 if let Some(PlatformEventData::Mouse { cursor, button, .. }) =
@@ -110,11 +109,11 @@ impl NodesState {
 
         dom_events.retain(|ev| {
             match ev.name {
-                // Filter out enter events for nodes that were already hovered
+                // Only let through enter events when the node was not hovered
                 _ if ev.name.is_enter() => !self.hovered_nodes.contains_key(&ev.node_id),
 
-                // Filter out press events for nodes that were already pressed
-                _ if ev.name.is_pressed() => !self.pressed_nodes.contains_key(&ev.node_id),
+                // Only let through release events when the node was already pressed
+                _ if ev.name.is_released() => self.pressed_nodes.contains_key(&ev.node_id),
 
                 _ => true,
             }
@@ -149,7 +148,7 @@ impl NodesState {
 
                 match name {
                     // Update hovered nodes state
-                    name if name.can_change_hover_state() => {
+                    name if name.is_hovered() => {
                         // Mark the Node as hovered if it wasn't already
                         self.hovered_nodes.entry(*node_id).or_insert_with(|| {
                             #[cfg(debug_assertions)]
@@ -160,7 +159,7 @@ impl NodesState {
                     }
 
                     // Update pressed nodes state
-                    name if name.can_change_press_state() => {
+                    name if name.is_pressed() => {
                         // Mark the Node as pressed if it wasn't already
                         self.pressed_nodes.entry(*node_id).or_insert_with(|| {
                             #[cfg(debug_assertions)]

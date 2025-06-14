@@ -21,7 +21,7 @@ use dioxus_signals::{
     Signal,
     Writable,
 };
-use freya_node_state::{
+use freya_core::custom_attributes::{
     CustomAttributeValues,
     ImageReference,
     NodeReference,
@@ -110,6 +110,8 @@ impl UseCamera {
 }
 
 /// Connect to a given camera and render its frames into an image element
+///
+/// Requires the `use_camera` feature.
 pub fn use_camera(camera_settings: CameraSettings) -> UseCamera {
     let platform = use_platform();
     let mut error = use_signal(|| None);

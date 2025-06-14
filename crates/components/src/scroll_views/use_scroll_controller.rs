@@ -11,7 +11,7 @@ use dioxus::prelude::{
     Writable,
     WritableVecExt,
 };
-use freya_common::NodeReferenceLayout;
+use freya_core::custom_attributes::NodeReferenceLayout;
 
 #[derive(Default, PartialEq, Eq)]
 pub enum ScrollPosition {

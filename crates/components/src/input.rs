@@ -1,4 +1,5 @@
 use std::{
+    borrow::Cow,
     cell::{
         Ref,
         RefCell,
@@ -7,6 +8,7 @@ use std::{
 };
 
 use dioxus::prelude::*;
+use freya_core::platform::CursorIcon;
 use freya_elements::{
     self as dioxus_elements,
     events::{
@@ -27,7 +29,6 @@ use freya_hooks::{
     InputThemeWith,
     TextEditor,
 };
-use winit::window::CursorIcon;
 
 use crate::ScrollView;
 
@@ -93,9 +94,9 @@ pub struct InputProps {
     /// Theme override.
     pub theme: Option<InputThemeWith>,
     /// Text to show for when there is no value
-    pub placeholder: Option<String>,
-    /// Current value of the Input
-    pub value: String,
+    pub placeholder: ReadOnlySignal<Option<String>>,
+    /// Current value of the Input.
+    pub value: ReadOnlySignal<String>,
     /// Handler for the `onchange` event.
     pub onchange: EventHandler<String>,
     /// Display mode for Input. By default, input text is shown as it is provided.
@@ -106,6 +107,10 @@ pub struct InputProps {
     pub auto_focus: bool,
     /// Handler for the `onvalidate` function.
     pub onvalidate: Option<EventHandler<InputValidator>>,
+    #[props(default = "150".to_string())]
+    pub width: String,
+    /// Handler for the `onfocuschange` function.
+    pub onfocuschange: Option<EventHandler<bool>>,
 }
 
 /// Small box to edit text.
@@ -125,7 +130,7 @@ pub struct InputProps {
 ///             "Value: {value}"
 ///         }
 ///         Input {
-///             value: value.read().clone(),
+///             value,
 ///             onchange: move |e| {
 ///                  value.set(e)
 ///             }
@@ -142,7 +147,7 @@ pub struct InputProps {
 /// #           }
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), "./images/gallery_input.png");
+/// # }, (250., 250.).into(), "./images/gallery_input.png");
 /// ```
 /// # Preview
 /// ![Input Preview][input]
@@ -159,6 +164,8 @@ pub fn Input(
         placeholder,
         auto_focus,
         onvalidate,
+        width,
+        onfocuschange,
     }: InputProps,
 ) -> Element {
     let platform = use_platform();
@@ -167,13 +174,25 @@ pub fn Input(
         || EditableConfig::new(value.to_string()),
         EditableMode::MultipleLinesSingleEditor,
     );
-    let theme = use_applied_theme!(&theme, input);
+    let InputTheme {
+        border_fill,
+        focus_border_fill,
+        margin,
+        corner_radius,
+        font_theme,
+        placeholder_font_theme,
+        shadow,
+        background,
+        hover_background,
+    } = use_applied_theme!(&theme, input);
     let mut focus = use_focus();
+    let mut drag_origin = use_signal(|| None);
 
-    let is_focused = focus.is_focused();
-    let display_placeholder = value.is_empty() && placeholder.is_some() && !is_focused;
+    let value = value.read();
+    let placeholder = placeholder.read();
+    let display_placeholder = value.is_empty() && placeholder.is_some();
 
-    if &value != editable.editor().read().rope() {
+    if &*value != editable.editor().read().rope() {
         editable.editor_mut().write().set(&value);
         editable.editor_mut().write().editor_history().clear();
     }
@@ -181,6 +200,16 @@ pub fn Input(
     use_drop(move || {
         if *status.peek() == InputStatus::Hovering {
             platform.set_cursor(CursorIcon::default());
+        }
+    });
+
+    use_effect(move || {
+        if !focus.is_focused() {
+            editable.editor_mut().write().clear_selection();
+        }
+
+        if let Some(onfocuschange) = onfocuschange {
+            onfocuschange.call(focus.is_focused())
         }
     });
 
@@ -226,19 +255,27 @@ pub fn Input(
         if !display_placeholder {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         }
-        focus.focus();
+        focus.request_focus();
     };
 
     let onmousedown = move |e: MouseEvent| {
         e.stop_propagation();
+        drag_origin.set(Some(e.get_screen_coordinates() - e.element_coordinates));
         if !display_placeholder {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         }
-        focus.focus();
+        focus.request_focus();
     };
 
-    let onmousemove = move |e: MouseEvent| {
-        editable.process_event(&EditableEvent::MouseMove(e.data, 0));
+    let onglobalmousemove = move |mut e: MouseEvent| {
+        if focus.is_focused() {
+            if let Some(drag_origin) = drag_origin() {
+                let data = Rc::get_mut(&mut e.data).unwrap();
+                data.element_coordinates.x -= drag_origin.x;
+                data.element_coordinates.y -= drag_origin.y;
+                editable.process_event(&EditableEvent::MouseMove(e.data, 0));
+            }
+        }
     };
 
     let onmouseenter = move |_| {
@@ -251,15 +288,28 @@ pub fn Input(
         *status.write() = InputStatus::default();
     };
 
-    let onglobalclick = move |_| match *status.read() {
-        InputStatus::Idle if focus.is_focused() => {
-            focus.unfocus();
-            editable.process_event(&EditableEvent::Click);
+    let onglobalclick = move |_| {
+        match *status.read() {
+            InputStatus::Idle if focus.is_focused() => {
+                editable.process_event(&EditableEvent::Click);
+            }
+            InputStatus::Hovering => {
+                editable.process_event(&EditableEvent::Click);
+            }
+            _ => {}
+        };
+
+        // Unfocus input when this:
+        // + is focused
+        // + it has not just being dragged
+        // + a global click happened
+        if focus.is_focused() {
+            if drag_origin.read().is_some() {
+                drag_origin.set(None);
+            } else {
+                focus.request_unfocus();
+            }
         }
-        InputStatus::Hovering => {
-            editable.process_event(&EditableEvent::Click);
-        }
-        _ => {}
     };
 
     let a11y_id = focus.attribute();
@@ -268,22 +318,17 @@ pub fn Input(
 
     let (background, cursor_char) = if focus.is_focused() {
         (
-            theme.hover_background,
+            hover_background,
             editable.editor().read().cursor_pos().to_string(),
         )
     } else {
-        (theme.background, "none".to_string())
+        (background, "none".to_string())
     };
-    let InputTheme {
-        border_fill,
-        width,
-        margin,
-        corner_radius,
-        font_theme,
-        placeholder_font_theme,
-        shadow,
-        ..
-    } = theme;
+    let border = if focus.is_focused_with_keyboard() {
+        format!("2 inner {focus_border_fill}")
+    } else {
+        format!("1 inner {border_fill}")
+    };
 
     let color = if display_placeholder {
         placeholder_font_theme.color
@@ -291,27 +336,27 @@ pub fn Input(
         font_theme.color
     };
 
-    let text = match (mode, placeholder) {
-        (_, Some(placeholder)) if display_placeholder => placeholder,
-        (InputMode::Hidden(ch), _) => ch.to_string().repeat(value.len()),
-        (InputMode::Shown, _) => value,
+    let text = match (mode, &*placeholder) {
+        (_, Some(placeholder)) if display_placeholder => Cow::Borrowed(placeholder.as_str()),
+        (InputMode::Hidden(ch), _) => Cow::Owned(ch.to_string().repeat(value.len())),
+        (InputMode::Shown, _) => Cow::Borrowed(value.as_str()),
     };
 
     rsx!(
         rect {
-            width: "{width}",
+            width,
             direction: "vertical",
             color: "{color}",
             background: "{background}",
-            border: "1 inner {border_fill}",
+            border,
             shadow: "{shadow}",
             corner_radius: "{corner_radius}",
             margin: "{margin}",
             main_align: "center",
-            cursor_reference,
             a11y_id,
             a11y_role: "text-input",
             a11y_auto_focus: "{auto_focus}",
+            a11y_value: "{text}",
             onkeydown,
             onkeyup,
             overflow: "clip",
@@ -323,11 +368,12 @@ pub fn Input(
                 direction: "horizontal",
                 show_scrollbar: false,
                 paragraph {
-                    min_width: "1",
-                    margin: "8 12",
+                    min_width: "calc(100% - 20)",
+                    margin: "6 10",
                     onglobalclick,
                     onmousedown,
-                    onmousemove,
+                    onglobalmousemove,
+                    cursor_reference,
                     cursor_id: "0",
                     cursor_index: "{cursor_char}",
                     cursor_mode: "editable",
@@ -354,7 +400,7 @@ mod test {
             let mut value = use_signal(|| "Hello, Worl".to_string());
 
             rsx!(Input {
-                value: value.read().clone(),
+                value,
                 onchange: move |new_value| {
                     value.set(new_value);
                 }

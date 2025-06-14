@@ -47,7 +47,7 @@ pub struct ProgressBarProps {
 /// #           }
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), "./images/gallery_progress_bar.png");
+/// # }, (250., 250.).into(), "./images/gallery_progress_bar.png");
 /// ```
 ///
 /// # Preview

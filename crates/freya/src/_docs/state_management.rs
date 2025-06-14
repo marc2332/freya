@@ -1,8 +1,6 @@
 //! # State Management
 //!
-//! Dioxus and Freya apps, have multiple ways of state management.
-//!
-//! See the different features:
+//! Here are the multiple built-in ways of state management you can use in Freya:
 //!
 //! - [Signals](crate::_docs::state_management::signals)
 //! - [Global Signals](crate::_docs::state_management::global_signals)

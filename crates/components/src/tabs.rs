@@ -1,5 +1,9 @@
 use dioxus::prelude::*;
-use freya_elements as dioxus_elements;
+use freya_core::platform::CursorIcon;
+use freya_elements::{
+    self as dioxus_elements,
+    KeyboardEvent,
+};
 use freya_hooks::{
     use_activable_route,
     use_applied_theme,
@@ -10,7 +14,6 @@ use freya_hooks::{
     TabTheme,
     TabThemeWith,
 };
-use winit::window::CursorIcon;
 
 /// Horizontal container for Tabs. Use in combination with [`Tab`]
 #[allow(non_snake_case)]
@@ -102,7 +105,7 @@ pub enum TabStatus {
 /// # }
 /// # launch_doc(|| {
 /// #   rsx!(Router::<Route> {})
-/// # }, (185., 185.).into(), "./images/gallery_tab.png");
+/// # }, (250., 250.).into(), "./images/gallery_tab.png");
 /// ```
 ///
 /// # Preview
@@ -264,7 +267,7 @@ pub fn Tab(
 /// # }
 /// # launch_doc(|| {
 /// #   rsx!(Router::<Route> {})
-/// # }, (185., 185.).into(), "./images/gallery_bottom_tab.png");
+/// # }, (250., 250.).into(), "./images/gallery_bottom_tab.png");
 /// ```
 ///
 /// # Preview
@@ -317,6 +320,14 @@ pub fn BottomTab(
         status.set(TabStatus::default());
     };
 
+    let onkeydown = move |ev: KeyboardEvent| {
+        if focus.validate_keydown(&ev) {
+            if let Some(onpress) = &onpress {
+                onpress.call(());
+            }
+        }
+    };
+
     let background = match *status.read() {
         _ if focus.is_focused_with_keyboard() || is_active => hover_background,
         TabStatus::Hovering => hover_background,
@@ -328,6 +339,7 @@ pub fn BottomTab(
             onclick,
             onmouseenter,
             onmouseleave,
+            onkeydown,
             a11y_id,
             width: "{width}",
             height: "{height}",
@@ -339,7 +351,7 @@ pub fn BottomTab(
             main_align: "center",
             cross_align: "center",
             corner_radius: "99",
-            margin: "2 4",
+            text_height: "disable-least-ascent",
             {children}
         }
     )

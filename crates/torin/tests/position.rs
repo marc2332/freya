@@ -214,14 +214,14 @@ pub fn global() {
     );
     assert_eq!(
         layout.get(3).unwrap().area.round(),
-        Rect::new(Point2D::new(950.0, 100.0), Size2D::new(200.0, 200.0)),
+        Rect::new(Point2D::new(750.0, 100.0), Size2D::new(200.0, 200.0)),
     );
     assert_eq!(
         layout.get(4).unwrap().area.round(),
-        Rect::new(Point2D::new(950.0, 900.0), Size2D::new(200.0, 200.0)),
+        Rect::new(Point2D::new(750.0, 700.0), Size2D::new(200.0, 200.0)),
     );
     assert_eq!(
         layout.get(5).unwrap().area.round(),
-        Rect::new(Point2D::new(50.0, 900.0), Size2D::new(200.0, 200.0)),
+        Rect::new(Point2D::new(50.0, 700.0), Size2D::new(200.0, 200.0)),
     );
 }

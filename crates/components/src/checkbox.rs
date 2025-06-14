@@ -74,7 +74,7 @@ use crate::TickIcon;
 /// #           },
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), "./images/gallery_checkbox.png");
+/// # }, (250., 250.).into(), "./images/gallery_checkbox.png");
 /// ```
 ///
 /// # Preview

@@ -1,5 +1,11 @@
 use std::{
-    ops::Deref,
+    ops::{
+        AddAssign,
+        DivAssign,
+        Mul,
+        MulAssign,
+        SubAssign,
+    },
     slice::Iter,
 };
 
@@ -19,7 +25,7 @@ pub enum Size {
     Percentage(Length),
     Pixels(Length),
     RootPercentage(Length),
-    DynamicCalculations(Box<Vec<DynamicCalculation>>),
+    DynamicCalculations(f32, Box<Vec<DynamicCalculation>>),
     Flex(Length),
 }
 
@@ -47,21 +53,21 @@ impl Size {
 
     pub fn pretty(&self) -> String {
         match self {
-            Size::Inner => "auto".to_string(),
-            Size::Pixels(s) => format!("{}", s.get()),
-            Size::DynamicCalculations(calcs) => format!(
-                "calc({})",
+            Self::Inner => "auto".to_string(),
+            Self::Pixels(s) => format!("{}", s.get()),
+            Self::DynamicCalculations(scaling_factor, calcs) => format!(
+                "calc({}) with scale {scaling_factor}",
                 calcs
                     .iter()
-                    .map(|c| c.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect::<Vec<String>>()
                     .join(" ")
             ),
-            Size::Percentage(p) => format!("{}%", p.get()),
-            Size::Fill => "fill".to_string(),
-            Size::FillMinimum => "fill-min".to_string(),
-            Size::RootPercentage(p) => format!("{}% of root", p.get()),
-            Size::Flex(f) => format!("flex({})", f.get()),
+            Self::Percentage(p) => format!("{}%", p.get()),
+            Self::Fill => "fill".to_string(),
+            Self::FillMinimum => "fill-min".to_string(),
+            Self::RootPercentage(p) => format!("{}% of root", p.get()),
+            Self::Flex(f) => format!("flex({})", f.get()),
         }
     }
 
@@ -74,15 +80,17 @@ impl Size {
         phase: Phase,
     ) -> Option<f32> {
         match self {
-            Size::Pixels(px) => Some(px.get() + parent_margin),
-            Size::Percentage(per) => Some(parent_value / 100.0 * per.get()),
-            Size::DynamicCalculations(calculations) => Some(
-                run_calculations(calculations.deref(), parent_value, root_value).unwrap_or(0.0),
+            Self::Pixels(px) => Some(px.get() + parent_margin),
+            Self::Percentage(per) => Some(parent_value / 100.0 * per.get()),
+            Self::DynamicCalculations(scaling_factor, calculations) => Some(
+                run_calculations(calculations, *scaling_factor, parent_value, root_value)
+                    .unwrap_or(0.0),
             ),
-            Size::Fill => Some(available_parent_value),
-            Size::FillMinimum if phase == Phase::Final => Some(available_parent_value),
-            Size::RootPercentage(per) => Some(root_value / 100.0 * per.get()),
-            Size::Flex(_) if phase == Phase::Final => Some(available_parent_value),
+            Self::Fill => Some(available_parent_value),
+            Self::RootPercentage(per) => Some(root_value / 100.0 * per.get()),
+            Self::Flex(_) | Self::FillMinimum if phase == Phase::Final => {
+                Some(available_parent_value)
+            }
             _ => None,
         }
     }
@@ -137,7 +145,7 @@ impl Size {
 
         if let Some(maximum_value) = maximum_value {
             if final_value > maximum_value {
-                final_value = maximum_value
+                final_value = maximum_value;
             }
         }
 
@@ -155,9 +163,9 @@ impl Size {
 impl Scaled for Size {
     fn scale(&mut self, scale_factor: f32) {
         match self {
-            Size::Pixels(s) => *s *= scale_factor,
-            Size::DynamicCalculations(calcs) => {
-                calcs.iter_mut().for_each(|calc| calc.scale(scale_factor));
+            Self::Pixels(s) => *s *= scale_factor,
+            Self::DynamicCalculations(scaling_factor, _) => {
+                *scaling_factor = scale_factor;
             }
             _ => (),
         }
@@ -172,6 +180,7 @@ pub enum DynamicCalculation {
     Add,
     OpenParenthesis,
     ClosedParenthesis,
+    ScalingFactor(f32),
     Percentage(f32),
     RootPercentage(f32),
     Pixels(f32),
@@ -179,7 +188,7 @@ pub enum DynamicCalculation {
 
 impl Scaled for DynamicCalculation {
     fn scale(&mut self, scale_factor: f32) {
-        if let DynamicCalculation::Pixels(s) = self {
+        if let Self::Pixels(s) = self {
             *s *= scale_factor;
         }
     }
@@ -188,15 +197,16 @@ impl Scaled for DynamicCalculation {
 impl std::fmt::Display for DynamicCalculation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DynamicCalculation::Sub => f.write_str("-"),
-            DynamicCalculation::Mul => f.write_str("*"),
-            DynamicCalculation::Div => f.write_str("/"),
-            DynamicCalculation::Add => f.write_str("+"),
-            DynamicCalculation::OpenParenthesis => f.write_str("("),
-            DynamicCalculation::ClosedParenthesis => f.write_str(")"),
-            DynamicCalculation::Percentage(p) => f.write_fmt(format_args!("{p}%")),
-            DynamicCalculation::RootPercentage(p) => f.write_fmt(format_args!("{p}v")),
-            DynamicCalculation::Pixels(s) => f.write_fmt(format_args!("{s}")),
+            Self::Sub => f.write_str("-"),
+            Self::Mul => f.write_str("*"),
+            Self::Div => f.write_str("/"),
+            Self::Add => f.write_str("+"),
+            Self::OpenParenthesis => f.write_str("("),
+            Self::ClosedParenthesis => f.write_str(")"),
+            Self::Percentage(p) => f.write_fmt(format_args!("{p}%")),
+            Self::RootPercentage(p) => f.write_fmt(format_args!("{p}v")),
+            Self::Pixels(s) => f.write_fmt(format_args!("{s}")),
+            Self::ScalingFactor(s) => f.write_fmt(format_args!("scaling_factor({s})")),
         }
     }
 }
@@ -205,14 +215,278 @@ impl std::fmt::Display for DynamicCalculation {
 struct DynamicCalculationEvaluator<'a> {
     calcs: Iter<'a, DynamicCalculation>,
     parent_value: f32,
+    scaling_factor: f32,
     root_value: f32,
     current: Option<&'a DynamicCalculation>,
 }
 
+#[derive(Debug, PartialEq, Clone, Copy)]
+/// the enum representing the type of value we use for calculations. It should only be created as the Scaled or the
+/// UnScaled variant, the PartiallyScaled variant is created when doing an operation on two values of different types.
+enum Val {
+    /// represents pixels that will be scaled, eg. have itself multiplied by the scaling factor.
+    Scaled(f32),
+    /// represents pixels that will not be scaled.
+    UnScaled(f32),
+    /// represents a combination of scaled and unscaled pixels. It can be converted into the a number by scaling the scaled part and then adding that to the unscaled part.
+    /// This is needed in cases like `calc(50% + 10)` where when you add `50%` and `10` you want to be able to represent the values in a way where the pixels that represent
+    /// the `50%` arent scaled and the ones representing the `10` are.
+    PartiallyScaled { scaled: f32, unscaled: f32 },
+}
+
+// below are the implementations of the operations used in the evaluation logic on the `Val` type.
+// they define the rules for how a `Val` with a `Val` should interract.
+
+impl SubAssign for Val {
+    fn sub_assign(&mut self, rhs: Self) {
+        match self {
+            Val::Scaled(v) => match rhs {
+                Val::Scaled(r) => v.sub_assign(r),
+                Val::UnScaled(r) => {
+                    *self = Self::PartiallyScaled {
+                        scaled: *v,
+                        unscaled: -r,
+                    }
+                }
+                Val::PartiallyScaled { scaled, unscaled } => {
+                    *self = Self::PartiallyScaled {
+                        scaled: *v - scaled,
+                        unscaled: -unscaled,
+                    }
+                }
+            },
+            Val::UnScaled(v) => match rhs {
+                Val::Scaled(r) => {
+                    *self = Self::PartiallyScaled {
+                        scaled: -r,
+                        unscaled: *v,
+                    }
+                }
+                Val::UnScaled(r) => v.sub_assign(r),
+                Val::PartiallyScaled { scaled, unscaled } => {
+                    *self = Self::PartiallyScaled {
+                        scaled: -scaled,
+                        unscaled: *v - unscaled,
+                    }
+                }
+            },
+            Val::PartiallyScaled { scaled, unscaled } => match rhs {
+                Val::Scaled(r) => {
+                    *self = Self::PartiallyScaled {
+                        scaled: *scaled - r,
+                        unscaled: *unscaled,
+                    }
+                }
+                Val::UnScaled(r) => {
+                    *self = Self::PartiallyScaled {
+                        scaled: *scaled,
+                        unscaled: *unscaled - r,
+                    }
+                }
+                Val::PartiallyScaled {
+                    scaled: scaled_r,
+                    unscaled: unscaled_r,
+                } => {
+                    scaled.sub_assign(scaled_r);
+                    unscaled.sub_assign(unscaled_r);
+                }
+            },
+        }
+    }
+}
+
+impl AddAssign for Val {
+    fn add_assign(&mut self, rhs: Self) {
+        match self {
+            Val::Scaled(v) => match rhs {
+                Val::Scaled(r) => v.add_assign(r),
+                Val::UnScaled(r) => {
+                    *self = Self::PartiallyScaled {
+                        scaled: *v,
+                        unscaled: r,
+                    }
+                }
+                Val::PartiallyScaled { scaled, unscaled } => {
+                    *self = Self::PartiallyScaled {
+                        scaled: *v + scaled,
+                        unscaled,
+                    }
+                }
+            },
+            Val::UnScaled(v) => match rhs {
+                Val::Scaled(r) => {
+                    *self = Self::PartiallyScaled {
+                        scaled: r,
+                        unscaled: *v,
+                    }
+                }
+                Val::UnScaled(r) => v.add_assign(r),
+                Val::PartiallyScaled { scaled, unscaled } => {
+                    *self = Self::PartiallyScaled {
+                        scaled,
+                        unscaled: *v + unscaled,
+                    }
+                }
+            },
+            Val::PartiallyScaled { scaled, unscaled } => match rhs {
+                Val::Scaled(r) => {
+                    *self = Self::PartiallyScaled {
+                        scaled: r + *scaled,
+                        unscaled: *unscaled,
+                    }
+                }
+                Val::UnScaled(r) => {
+                    *self = Self::PartiallyScaled {
+                        scaled: *scaled,
+                        unscaled: r + *unscaled,
+                    }
+                }
+                Val::PartiallyScaled {
+                    scaled: scaled_r,
+                    unscaled: unscaled_r,
+                } => {
+                    scaled.add_assign(scaled_r);
+                    unscaled.add_assign(unscaled_r);
+                }
+            },
+        }
+    }
+}
+
+impl MulAssign for Val {
+    fn mul_assign(&mut self, rhs: Self) {
+        match self {
+            Val::Scaled(v) => match rhs {
+                Val::Scaled(r) => v.mul_assign(r),
+                Val::UnScaled(r) => {
+                    *self = Self::UnScaled(*v * r);
+                }
+                Val::PartiallyScaled { scaled, unscaled } => {
+                    *self = Self::PartiallyScaled {
+                        scaled: *v * scaled,
+                        unscaled: *v * unscaled,
+                    }
+                }
+            },
+            Val::UnScaled(v) => match rhs {
+                Val::Scaled(r) => {
+                    *self = Self::UnScaled(*v * r);
+                }
+                Val::UnScaled(r) => v.mul_assign(r),
+                Val::PartiallyScaled { scaled, unscaled } => {
+                    *self = Self::PartiallyScaled {
+                        scaled: *v * scaled,
+                        unscaled: *v * unscaled,
+                    }
+                }
+            },
+            Val::PartiallyScaled { scaled, unscaled } => match rhs {
+                Val::UnScaled(r) | Val::Scaled(r) => {
+                    *self = Self::PartiallyScaled {
+                        scaled: *scaled * r,
+                        unscaled: *unscaled * r,
+                    }
+                }
+                Val::PartiallyScaled {
+                    scaled: scaled_r,
+                    unscaled: unscaled_r,
+                } => {
+                    *self = Self::UnScaled((*scaled + *unscaled) * (scaled_r + unscaled_r));
+                }
+            },
+        }
+    }
+}
+
+impl DivAssign for Val {
+    fn div_assign(&mut self, rhs: Self) {
+        match self {
+            Val::Scaled(v) => match rhs {
+                Val::Scaled(r) => v.div_assign(r),
+                Val::UnScaled(r) => {
+                    *self = Self::UnScaled(*v / r);
+                }
+                Val::PartiallyScaled { scaled, unscaled } => {
+                    *self = Self::PartiallyScaled {
+                        scaled: *v / scaled,
+                        unscaled: *v / unscaled,
+                    }
+                }
+            },
+            Val::UnScaled(v) => match rhs {
+                Val::Scaled(r) => {
+                    *self = Self::UnScaled(*v / r);
+                }
+                Val::UnScaled(r) => v.div_assign(r),
+                Val::PartiallyScaled { scaled, unscaled } => {
+                    *self = Self::PartiallyScaled {
+                        scaled: *v / scaled,
+                        unscaled: *v / unscaled,
+                    }
+                }
+            },
+            Val::PartiallyScaled { scaled, unscaled } => match rhs {
+                Val::UnScaled(r) | Val::Scaled(r) => {
+                    *self = Self::PartiallyScaled {
+                        scaled: *scaled / r,
+                        unscaled: *unscaled / r,
+                    }
+                }
+                Val::PartiallyScaled {
+                    scaled: scaled_r,
+                    unscaled: unscaled_r,
+                } => {
+                    *self = Self::UnScaled((*scaled + *unscaled) / (scaled_r + unscaled_r));
+                }
+            },
+        }
+    }
+}
+
+impl Mul for Val {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        match self {
+            Val::Scaled(v) => match rhs {
+                Val::Scaled(r) => Val::Scaled(v * r),
+                Val::UnScaled(r) => Val::UnScaled(v * r),
+                Val::PartiallyScaled { scaled, unscaled } => Val::PartiallyScaled {
+                    scaled: v * scaled,
+                    unscaled: v * unscaled,
+                },
+            },
+            Val::UnScaled(v) => match rhs {
+                Val::UnScaled(r) | Val::Scaled(r) => Val::UnScaled(v * r),
+                Val::PartiallyScaled { scaled, unscaled } => Val::PartiallyScaled {
+                    scaled: v * scaled,
+                    unscaled: v * unscaled,
+                },
+            },
+            Val::PartiallyScaled { scaled, unscaled } => match rhs {
+                Val::UnScaled(r) | Val::Scaled(r) => Val::PartiallyScaled {
+                    scaled: scaled * r,
+                    unscaled: unscaled * r,
+                },
+                Val::PartiallyScaled {
+                    scaled: scaled_r,
+                    unscaled: unscaled_r,
+                } => Val::UnScaled((scaled + unscaled) * (scaled_r + unscaled_r)),
+            },
+        }
+    }
+}
+
 impl<'a> DynamicCalculationEvaluator<'a> {
-    pub fn new(calcs: Iter<'a, DynamicCalculation>, parent_value: f32, root_value: f32) -> Self {
+    pub fn new(
+        calcs: Iter<'a, DynamicCalculation>,
+        parent_value: f32,
+        root_value: f32,
+        scaling_factor: f32,
+    ) -> Self {
         Self {
             calcs,
+            scaling_factor,
             parent_value,
             root_value,
             current: None,
@@ -220,8 +494,13 @@ impl<'a> DynamicCalculationEvaluator<'a> {
     }
 
     pub fn evaluate(&mut self) -> Option<f32> {
-        // Parse and evaluate the expression
         let value = self.parse_expression(0);
+
+        let value = value.map(|v| match v {
+            Val::Scaled(v) => v * self.scaling_factor,
+            Val::UnScaled(v) => v,
+            Val::PartiallyScaled { scaled, unscaled } => scaled * self.scaling_factor + unscaled,
+        });
 
         // Return the result if there are no more tokens
         match self.current {
@@ -235,7 +514,7 @@ impl<'a> DynamicCalculationEvaluator<'a> {
     ///     expression = value, { operator, value } ;
     ///     operator   = "+" | "-" | "*" | "/" ;
     /// ```
-    fn parse_expression(&mut self, min_precedence: usize) -> Option<f32> {
+    fn parse_expression(&mut self, min_precedence: usize) -> Option<Val> {
         // Parse left-hand side value
         self.current = self.calcs.next();
         let mut lhs = self.parse_term()?;
@@ -273,7 +552,7 @@ impl<'a> DynamicCalculationEvaluator<'a> {
     /// Parse and evaluate the term, implements implicit multiplication. only parenthesis count as
     /// a seperator, so syntax like 50 50 isnt correct, but 50(50) is because the parenthesis act
     /// as a seperator
-    fn parse_term(&mut self) -> Option<f32> {
+    fn parse_term(&mut self) -> Option<Val> {
         let prefix = self.parse_prefix()?;
         let mut lhs = None;
         // set to true so that the first value is multiplied and counts as normal syntax
@@ -281,21 +560,17 @@ impl<'a> DynamicCalculationEvaluator<'a> {
 
         while let Some((rhs, seperator)) = self.parse_value() {
             if last_is_separator || seperator {
-                lhs = Some(lhs.unwrap_or(1.0) * rhs);
+                lhs = Some(lhs.unwrap_or(Val::Scaled(1.0)) * rhs);
             } else {
                 return None;
             }
             last_is_separator = seperator;
         }
-        if let Some(prefix) = prefix {
-            match prefix {
-                DynamicCalculation::Add => lhs,
-                DynamicCalculation::Sub => lhs.map(|v| v * -1.0),
-                _ => unreachable!("make sure to add the prefix here"),
-            }
-        } else {
-            lhs
-        }
+        prefix.map_or(lhs, |prefix| match prefix {
+            DynamicCalculation::Add => lhs,
+            DynamicCalculation::Sub => lhs.map(|v| v * Val::Scaled(-1.0)),
+            _ => unreachable!("make sure to add the prefix here"),
+        })
     }
     /// parse and evaluate the value with the following grammar:
     /// ```ebnf
@@ -303,19 +578,19 @@ impl<'a> DynamicCalculationEvaluator<'a> {
     ///     percentage = number, "%" ;
     ///     pixels     = number ;
     /// `
-    fn parse_value(&mut self) -> Option<(f32, bool)> {
+    fn parse_value(&mut self) -> Option<(Val, bool)> {
         match self.current? {
             DynamicCalculation::Percentage(value) => {
                 self.current = self.calcs.next();
-                Some(((self.parent_value / 100.0 * value).round(), false))
+                Some((Val::UnScaled(value / 100.0 * self.parent_value), false))
             }
             DynamicCalculation::RootPercentage(value) => {
                 self.current = self.calcs.next();
-                Some(((self.root_value / 100.0 * value).round(), false))
+                Some((Val::UnScaled(value / 100.0 * self.root_value), false))
             }
             DynamicCalculation::Pixels(value) => {
                 self.current = self.calcs.next();
-                Some((*value, false))
+                Some((Val::Scaled(*value), false))
             }
             DynamicCalculation::OpenParenthesis => {
                 // function should return on DynamicCalculation::ClosedParenthesis because it does
@@ -361,8 +636,10 @@ impl<'a> DynamicCalculationEvaluator<'a> {
 /// This value could be for example the width of a node's parent area.
 pub fn run_calculations(
     calcs: &[DynamicCalculation],
+    scaling_factor: f32,
     parent_value: f32,
     root_value: f32,
 ) -> Option<f32> {
-    DynamicCalculationEvaluator::new(calcs.iter(), parent_value, root_value).evaluate()
+    DynamicCalculationEvaluator::new(calcs.iter(), parent_value, root_value, scaling_factor)
+        .evaluate()
 }

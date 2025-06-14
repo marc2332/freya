@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use freya_core::platform::CursorIcon;
 use freya_elements::{
     self as dioxus_elements,
     events::{
@@ -12,7 +13,6 @@ use freya_hooks::{
     TileTheme,
     TileThemeWith,
 };
-use winit::window::CursorIcon;
 
 /// Indicates the current status of the Tile.
 #[derive(Debug, Default, PartialEq, Clone, Copy)]

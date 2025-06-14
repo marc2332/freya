@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use freya_core::platform::CursorIcon;
 use freya_elements::{
     self as dioxus_elements,
     events::{
@@ -15,7 +16,6 @@ use freya_hooks::{
     use_platform,
     SliderThemeWith,
 };
-use winit::window::CursorIcon;
 
 /// Properties for the [`Slider`] component.
 #[derive(Props, Clone, PartialEq)]
@@ -97,7 +97,7 @@ pub enum SliderStatus {
 /// #           }
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), "./images/gallery_slider.png");
+/// # }, (250., 250.).into(), "./images/gallery_slider.png");
 /// ```
 /// # Preview
 /// ![Slider Preview][slider]
@@ -191,7 +191,7 @@ pub fn Slider(
         to_owned![onmoved];
         move |e: MouseEvent| {
             e.stop_propagation();
-            focus.focus();
+            focus.request_focus();
             clicking.set(true);
             let coordinates = e.get_element_coordinates();
             let percentage = if direction_is_vertical {

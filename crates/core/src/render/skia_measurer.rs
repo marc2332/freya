@@ -1,10 +1,5 @@
 use std::sync::Arc;
 
-use freya_common::{
-    CachedParagraph,
-    ImagesCache,
-    NodeReferenceLayout,
-};
 use freya_engine::prelude::*;
 use freya_native_core::{
     prelude::{
@@ -15,7 +10,6 @@ use freya_native_core::{
     tags::TagName,
     NodeId,
 };
-use freya_node_state::LayoutState;
 use torin::prelude::{
     Area,
     LayoutMeasurer,
@@ -31,8 +25,11 @@ use super::{
     ImageData,
 };
 use crate::{
+    custom_attributes::NodeReferenceLayout,
     dom::*,
+    elements::CachedParagraph,
     render::ParagraphData,
+    states::LayoutState,
 };
 
 /// Provides Text measurements using Skia APIs like SkParagraph
@@ -62,7 +59,7 @@ impl<'a> SkiaMeasurer<'a> {
     }
 }
 
-impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
+impl LayoutMeasurer<NodeId> for SkiaMeasurer<'_> {
     fn measure(
         &mut self,
         node_id: NodeId,
@@ -83,7 +80,7 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                     self.scale_factor,
                 );
                 let mut map = SendAnyMap::new();
-                map.insert(CachedParagraph(paragraph, size.height));
+                map.insert(CachedParagraph(paragraph));
                 Some((size, Arc::new(map)))
             }
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Paragraph => {
@@ -96,7 +93,7 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                     self.scale_factor,
                 );
                 let mut map = SendAnyMap::new();
-                map.insert(CachedParagraph(paragraph, size.height));
+                map.insert(CachedParagraph(paragraph));
                 Some((size, Arc::new(map)))
             }
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Image => {
@@ -109,6 +106,16 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
             }
             _ => None,
         }
+    }
+
+    fn should_measure(&mut self, node_id: NodeId) -> bool {
+        let node = self.rdom.get(node_id).unwrap();
+        let node_type: &NodeType<_> = &node.node_type();
+
+        node_type
+            .tag()
+            .map(|tag| [TagName::Image, TagName::Label, TagName::Paragraph].contains(tag))
+            .unwrap_or_default()
     }
 
     fn should_measure_inner_children(&mut self, node_id: NodeId) -> bool {

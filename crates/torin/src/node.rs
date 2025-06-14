@@ -2,7 +2,7 @@ pub use euclid::Rect;
 
 use crate::{
     alignment::Alignment,
-    direction::DirectionMode,
+    direction::Direction,
     gaps::Gaps,
     geometry::Length,
     prelude::{
@@ -48,7 +48,7 @@ pub struct Node {
     pub offset_y: Length,
 
     /// Direction in which it's inner Nodes will be stacked
-    pub direction: DirectionMode,
+    pub direction: Direction,
 
     /// Position config
     pub position: Position,
@@ -87,11 +87,31 @@ impl Node {
     }
 
     /// Construct a new Node given a size and a direction
-    pub fn from_size_and_direction(width: Size, height: Size, direction: DirectionMode) -> Self {
+    pub fn from_size_and_direction(width: Size, height: Size, direction: Direction) -> Self {
         Self {
             width,
             height,
             direction,
+            ..Default::default()
+        }
+    }
+
+    /// Construct a new Node given some sizes
+    pub fn from_sizes(
+        width: Size,
+        height: Size,
+        minimum_width: Size,
+        minimum_height: Size,
+        maximum_width: Size,
+        maximum_height: Size,
+    ) -> Self {
+        Self {
+            width,
+            height,
+            minimum_width,
+            minimum_height,
+            maximum_width,
+            maximum_height,
             ..Default::default()
         }
     }
@@ -144,7 +164,7 @@ impl Node {
         height: Size,
         main_alignment: Alignment,
         cross_alignment: Alignment,
-        direction: DirectionMode,
+        direction: Direction,
     ) -> Self {
         Self {
             width,
@@ -162,7 +182,7 @@ impl Node {
         height: Size,
         main_alignment: Alignment,
         cross_alignment: Alignment,
-        direction: DirectionMode,
+        direction: Direction,
         spacing: Length,
     ) -> Self {
         Self {
@@ -190,14 +210,14 @@ impl Node {
     pub fn from_size_and_direction_and_margin(
         width: Size,
         height: Size,
-        direction: DirectionMode,
+        direction: Direction,
         margin: Gaps,
     ) -> Self {
         Self {
             width,
             height,
-            direction,
             margin,
+            direction,
             ..Default::default()
         }
     }
@@ -208,7 +228,7 @@ impl Node {
         height: Size,
         main_alignment: Alignment,
         cross_alignment: Alignment,
-        direction: DirectionMode,
+        direction: Direction,
         padding: Gaps,
     ) -> Self {
         Self {
@@ -216,8 +236,8 @@ impl Node {
             height,
             main_alignment,
             cross_alignment,
-            direction,
             padding,
+            direction,
             ..Default::default()
         }
     }
@@ -246,7 +266,7 @@ impl Node {
     pub fn from_size_and_direction_and_spacing(
         width: Size,
         height: Size,
-        direction: DirectionMode,
+        direction: Direction,
         spacing: Length,
     ) -> Self {
         Self {
@@ -263,9 +283,7 @@ impl Node {
         self.width.inner_sized()
             || self.height.inner_sized()
             || self.contains_text
-            || self.cross_alignment.is_not_start()
-            || self.main_alignment.is_not_start()
-            || self.content.is_flex()
+            || self.do_inner_depend_on_parent()
     }
 
     /// Has properties that make its children dependant on it?

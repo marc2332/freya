@@ -5,14 +5,13 @@ use freya_elements::events::keyboard::{
     Key,
     Modifiers,
 };
+use freya_native_core::events::EventName;
 use torin::prelude::*;
 use winit::event::{
     Force,
     MouseButton,
     TouchPhase,
 };
-
-use crate::prelude::EventName;
 
 /// Events emitted by a Freya platform, such as desktop or freya-testing.
 #[derive(Clone, Debug)]

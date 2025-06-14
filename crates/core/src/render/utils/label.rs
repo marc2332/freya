@@ -3,14 +3,16 @@ use freya_native_core::{
     prelude::NodeType,
     real_dom::NodeImmutable,
 };
-use freya_node_state::FontStyleState;
 use torin::{
     node::Node,
     prelude::Size2D,
 };
 
 use super::ParagraphData;
-use crate::dom::*;
+use crate::{
+    dom::*,
+    states::FontStyleState,
+};
 
 pub fn create_label(
     node: &DioxusNode,

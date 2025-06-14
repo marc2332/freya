@@ -3,12 +3,12 @@ use freya_native_core::{
     node::NodeType,
     real_dom::NodeImmutable,
 };
-use freya_node_state::AccessibilityNodeState;
 use itertools::Itertools;
 pub use tree::*;
 
 use crate::{
     dom::DioxusNode,
+    states::AccessibilityNodeState,
     types::AccessibilityId,
 };
 

@@ -4,21 +4,36 @@ use freya_native_core::{
     tree::TreeRef,
     NodeId,
 };
-use freya_node_state::{
-    Fill,
-    StyleState,
-    ViewportState,
-};
 use itertools::sorted;
 
+use super::{
+    PlatformEventData,
+    PotentialEvent,
+};
 pub use crate::events::{
     DomEvent,
     NodesState,
     PlatformEvent,
 };
 use crate::{
-    elements::ElementUtilsResolver,
-    prelude::*,
+    dom::{
+        DioxusDOM,
+        FreyaDOM,
+    },
+    elements::{
+        ElementUtils,
+        ElementUtilsResolver,
+    },
+    states::{
+        StyleState,
+        ViewportState,
+    },
+    types::{
+        EventEmitter,
+        EventsQueue,
+        PotentialEvents,
+    },
+    values::Fill,
 };
 
 /// Process the events and emit them to the VirtualDOM
@@ -42,19 +57,15 @@ pub fn process_events(
         nodes_state.process_collateral(fdom, &potential_events, &mut dom_events, events);
 
     // Get what collateral events can actually be emitted
-    let collateral_events_to_emit =
+    let collateral_dom_events =
         measure_dom_events(&potential_collateral_events, fdom, scale_factor);
 
-    // Get the collateral events created by the global events
-    let collateral_global_events = measure_collateral_global_events(&collateral_events_to_emit);
-
-    // Join both the `dom_events` and their collateral events
-    dom_events.extend(collateral_events_to_emit);
-    dom_events.sort_unstable();
-
     // Get the global events
-    measure_global_events(fdom, events, &mut dom_events, scale_factor);
-    dom_events.extend(collateral_global_events);
+    measure_platform_global_events(fdom, events, &mut dom_events, scale_factor);
+
+    // Join all the dom events and sort them
+    dom_events.extend(collateral_dom_events);
+    dom_events.sort_unstable();
 
     // Send all the events
     event_emitter.send(dom_events).unwrap();
@@ -63,49 +74,37 @@ pub fn process_events(
     events.clear();
 }
 
-/// Create a global event for every collateral event
-pub fn measure_collateral_global_events(events: &[DomEvent]) -> Vec<DomEvent> {
-    let mut global_events = Vec::default();
-    for event in events {
-        let Some(event_name) = event.name.get_global_event() else {
-            continue;
-        };
-        global_events.push(DomEvent {
-            name: event_name,
-            node_id: event.node_id,
-            data: event.data.clone(),
-            bubbles: event.bubbles,
-        });
-    }
-    global_events
-}
-
 /// For every event in the queue, a global event is created
-pub fn measure_global_events(
+pub fn measure_platform_global_events(
     fdom: &FreyaDOM,
     events: &EventsQueue,
     dom_events: &mut Vec<DomEvent>,
     scale_factor: f64,
 ) {
+    let rdom = fdom.rdom();
     for PlatformEvent { name, data } in events {
-        let Some(global_name) = name.get_global_event() else {
-            continue;
-        };
+        let derived_events_names = name.get_derived_events();
 
-        let listeners = fdom.rdom().get_listeners(&global_name);
+        for derived_event_name in derived_events_names {
+            let Some(global_name) = derived_event_name.get_global_event() else {
+                continue;
+            };
 
-        for listener in listeners {
-            let event = DomEvent::new(
-                PotentialEvent {
-                    node_id: listener.id(),
-                    layer: None,
-                    name: global_name,
-                    data: data.clone(),
-                },
-                None,
-                scale_factor,
-            );
-            dom_events.push(event)
+            let listeners = rdom.get_listeners(&global_name);
+
+            for listener in listeners {
+                let event = DomEvent::new(
+                    PotentialEvent {
+                        node_id: listener.id(),
+                        layer: None,
+                        name: global_name,
+                        data: data.clone(),
+                    },
+                    None,
+                    scale_factor,
+                );
+                dom_events.push(event)
+            }
         }
     }
 }
@@ -125,9 +124,7 @@ pub fn measure_potential_event_listeners(
 
     // Walk layer by layer from the bottom to the top
     for (layer, layer_nodes) in sorted(layers.iter()) {
-        // Iterate over the nodes in reversed to their declaration because
-        // the next nodes could always render in top of their previous
-        for node_id in layer_nodes.iter().rev() {
+        for node_id in layer_nodes.iter() {
             let Some(layout_node) = layout.get(*node_id) else {
                 continue;
             };
@@ -235,10 +232,14 @@ fn measure_dom_events(
     let layout = fdom.layout();
 
     for (event_name, event_nodes) in potential_events {
-        let collateral_events = event_name.get_collateral_events();
+        // Get the derived events, but exclude globals like some file events
+        let derived_events = event_name
+            .get_derived_events()
+            .into_iter()
+            .filter(|event| !event.is_global());
 
-        // Iterate over the collateral events (including the source)
-        'event: for collateral_event in collateral_events {
+        // Iterate over the derived events (including the source)
+        'event: for derived_event in derived_events {
             let mut child_node: Option<NodeId> = None;
 
             // Iterate over the potential events in reverse so the ones in higher layers appeat first
@@ -259,10 +260,10 @@ fn measure_dom_events(
                     }
                 }
 
-                if rdom.is_node_listening(node_id, &collateral_event) {
+                if rdom.is_node_listening(node_id, &derived_event) {
                     let potential_event = PotentialEvent {
                         node_id: *node_id,
-                        name: collateral_event,
+                        name: derived_event,
                         data: data.clone(),
                         layer: *layer,
                     };

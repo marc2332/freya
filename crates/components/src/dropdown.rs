@@ -1,7 +1,10 @@
 use std::fmt::Display;
 
 use dioxus::prelude::*;
-use freya_core::types::AccessibilityId;
+use freya_core::{
+    platform::CursorIcon,
+    types::AccessibilityId,
+};
 use freya_elements::{
     self as dioxus_elements,
     events::{
@@ -22,7 +25,6 @@ use freya_hooks::{
     IconThemeWith,
     UseFocus,
 };
-use winit::window::CursorIcon;
 
 use crate::icons::ArrowIcon;
 
@@ -72,7 +74,6 @@ where
 
     let a11y_id = focus.attribute();
     let a11y_member_of = UseFocus::attribute_for_id(dropdown_group.group_id);
-    let is_focused = focus.is_focused();
     let is_selected = *selected.read() == value;
 
     let DropdownItemTheme {
@@ -111,10 +112,10 @@ where
         status.set(DropdownItemStatus::default());
     };
 
-    let onglobalkeydown = {
+    let onkeydown = {
         to_owned![onpress];
         move |ev: KeyboardEvent| {
-            if ev.key == Key::Enter && is_focused {
+            if ev.key == Key::Enter {
                 if let Some(onpress) = &onpress {
                     onpress.call(())
                 }
@@ -137,13 +138,13 @@ where
             a11y_member_of,
             background: "{background}",
             border,
-            padding: "6 22 6 16",
+            padding: "6 10",
             corner_radius: "6",
             main_align: "center",
             onmouseenter,
             onmouseleave,
             onclick,
-            onglobalkeydown,
+            onkeydown,
             {children}
         }
     )
@@ -210,7 +211,7 @@ struct DropdownGroup {
 /// #           {app()}
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), "./images/gallery_dropdown.png");
+/// # }, (250., 250.).into(), "./images/gallery_dropdown.png");
 /// ```
 ///
 /// # Preview
@@ -264,7 +265,7 @@ where
     };
 
     let onclick = move |_| {
-        focus.focus();
+        focus.request_focus();
         opened.set(true)
     };
 
@@ -319,6 +320,7 @@ where
     rsx!(
         rect {
             direction: "vertical",
+            spacing: "4",
             rect {
                 width: "{width}",
                 onmouseenter,
@@ -331,9 +333,8 @@ where
                 background: "{background}",
                 color: "{font_theme.color}",
                 corner_radius: "8",
-                padding: "8 16",
+                padding: "6 16",
                 border,
-                shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
                 direction: "horizontal",
                 main_align: "center",
                 cross_align: "center",
@@ -363,7 +364,7 @@ where
                             overflow: "clip",
                             corner_radius: "8",
                             background: "{dropdown_background}",
-                            shadow: "0 4 5 0 rgb(0, 0, 0, 0.3)",
+                            shadow: "0 2 4 0 rgb(0, 0, 0, 0.15)",
                             padding: "6",
                             content: "fit",
                             {props.children}

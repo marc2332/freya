@@ -150,7 +150,6 @@ fn Editor() -> Element {
         },
         EditableMode::SingleLineMultipleEditors,
     );
-    let cursor_reference = editable.cursor_attr();
     let editor = editable.editor().read();
     let (cursor_row, cursor_col) = editor.cursor_row_and_col();
 
@@ -172,7 +171,7 @@ fn Editor() -> Element {
 
     let onclick = move |_: MouseEvent| {
         if !focus_manager.is_focused() {
-            focus_manager.focus();
+            focus_manager.request_focus();
         }
     };
 
@@ -258,7 +257,6 @@ fn Editor() -> Element {
             rect {
                 width: "fill",
                 height: "fill",
-                cursor_reference,
                 ScrollView {
                     scroll_with_arrows: false,
                     for l in editor.lines() {
@@ -326,6 +324,7 @@ fn Editor() -> Element {
                                         onmousedown,
                                         onmousemove,
                                         onglobalclick,
+                                        cursor_reference: editable.cursor_attr(),
                                         highlights: highlights,
                                         text {
                                             color: "rgb(240, 240, 240)",

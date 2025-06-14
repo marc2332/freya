@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use freya_core::platform::CursorIcon;
 use freya_elements::{
     self as dioxus_elements,
     events::{
@@ -6,20 +7,17 @@ use freya_elements::{
         PointerEvent,
         PointerType,
     },
+    MouseButton,
+    TouchPhase,
 };
 use freya_hooks::{
     use_applied_theme,
     use_focus,
+    use_init_surface_theme_indicator,
     use_platform,
     ButtonTheme,
     ButtonThemeWith,
-};
-use winit::{
-    event::{
-        MouseButton,
-        TouchPhase,
-    },
-    window::CursorIcon,
+    SurfaceThemeIndicator,
 };
 
 /// Properties for the [`Button`], [`FilledButton`] and [`OutlineButton`] components.
@@ -33,6 +31,9 @@ pub struct ButtonProps {
     pub onpress: Option<EventHandler<PressEvent>>,
     /// Event handler for when the button is clicked. Not recommended, use `onpress` instead.
     pub onclick: Option<EventHandler<()>>,
+
+    #[props(default = true)]
+    pub enabled: bool,
 }
 
 /// Clickable button.
@@ -61,7 +62,7 @@ pub struct ButtonProps {
 /// #           {app()}
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), "./images/gallery_button.png");
+/// # }, (250., 250.).into(), "./images/gallery_button.png");
 /// ```
 ///
 /// # Preview
@@ -77,6 +78,7 @@ pub fn Button(props: ButtonProps) -> Element {
         children: props.children,
         onpress: props.onpress,
         onclick: props.onclick,
+        enabled: props.enabled,
     })
 }
 
@@ -106,7 +108,7 @@ pub fn Button(props: ButtonProps) -> Element {
 /// #           {app()}
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), "./images/gallery_filled_button.png");
+/// # }, (250., 250.).into(), "./images/gallery_filled_button.png");
 /// ```
 ///
 /// # Preview
@@ -117,11 +119,13 @@ pub fn Button(props: ButtonProps) -> Element {
 #[allow(non_snake_case)]
 pub fn FilledButton(props: ButtonProps) -> Element {
     let theme = use_applied_theme!(&props.theme, filled_button);
+    use_init_surface_theme_indicator(|| SurfaceThemeIndicator::Opposite);
     ButtonBase(BaseButtonProps {
         theme,
         children: props.children,
         onpress: props.onpress,
         onclick: props.onclick,
+        enabled: props.enabled,
     })
 }
 
@@ -151,7 +155,7 @@ pub fn FilledButton(props: ButtonProps) -> Element {
 /// #           {app()}
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), "./images/gallery_outline_button.png");
+/// # }, (250., 250.).into(), "./images/gallery_outline_button.png");
 /// ```
 ///
 /// # Preview
@@ -167,6 +171,7 @@ pub fn OutlineButton(props: ButtonProps) -> Element {
         children: props.children,
         onpress: props.onpress,
         onclick: props.onclick,
+        enabled: props.enabled,
     })
 }
 
@@ -197,6 +202,9 @@ pub struct BaseButtonProps {
     pub onpress: Option<EventHandler<PressEvent>>,
     /// Event handler for when the button is clicked. Not recommended, use `onpress` instead.
     pub onclick: Option<EventHandler<()>>,
+
+    #[props(default = true)]
+    pub enabled: bool,
 }
 
 /// Identifies the current status of the Button.
@@ -216,6 +224,7 @@ pub fn ButtonBase(
         children,
         theme,
         onclick,
+        enabled,
     }: BaseButtonProps,
 ) -> Element {
     let mut focus = use_focus();
@@ -227,6 +236,7 @@ pub fn ButtonBase(
     let ButtonTheme {
         background,
         hover_background,
+        disabled_background,
         border_fill,
         focus_border_fill,
         padding,
@@ -241,7 +251,10 @@ pub fn ButtonBase(
     let onpointerup = {
         to_owned![onpress, onclick];
         move |ev: PointerEvent| {
-            focus.focus();
+            if !enabled {
+                return;
+            }
+            focus.request_focus();
             if let Some(onpress) = &onpress {
                 let is_valid = match ev.data.pointer_type {
                     PointerType::Mouse {
@@ -265,15 +278,23 @@ pub fn ButtonBase(
         }
     };
 
+    use_effect(use_reactive!(|enabled| {
+        if *status.peek() == ButtonStatus::Hovering && !enabled {
+            platform.set_cursor(CursorIcon::default());
+        }
+    }));
+
     use_drop(move || {
-        if *status.read() == ButtonStatus::Hovering {
+        if *status.read() == ButtonStatus::Hovering && enabled {
             platform.set_cursor(CursorIcon::default());
         }
     });
 
     let onmouseenter = move |_| {
-        platform.set_cursor(CursorIcon::Pointer);
-        status.set(ButtonStatus::Hovering);
+        if enabled {
+            platform.set_cursor(CursorIcon::Pointer);
+            status.set(ButtonStatus::Hovering);
+        }
     };
 
     let onmouseleave = move |_| {
@@ -282,14 +303,16 @@ pub fn ButtonBase(
     };
 
     let onkeydown = move |ev: KeyboardEvent| {
-        if focus.validate_keydown(&ev) {
+        if focus.validate_keydown(&ev) && !enabled {
             if let Some(onpress) = &onpress {
                 onpress.call(PressEvent::Key(ev))
             }
         }
     };
 
+    let a11y_focusable = if enabled { "true" } else { "false" };
     let background = match *status.read() {
+        _ if !enabled => disabled_background,
         ButtonStatus::Hovering => hover_background,
         ButtonStatus::Idle => background,
     };
@@ -312,9 +335,10 @@ pub fn ButtonBase(
             margin: "{margin}",
             overflow: "clip",
             a11y_role:"button",
+            a11y_focusable,
             color: "{font_theme.color}",
             shadow: "{shadow}",
-            border: "{border}",
+            border,
             corner_radius: "{corner_radius}",
             background: "{background}",
             text_height: "disable-least-ascent",

@@ -16,14 +16,15 @@ use dioxus_signals::{
     Signal,
     Writable,
 };
-use freya_common::{
-    AccessibilityFocusStrategy,
-    AccessibilityGenerator,
-};
 use freya_core::{
-    accessibility::ACCESSIBILITY_ROOT_ID,
+    accessibility::{
+        AccessibilityFocusStrategy,
+        AccessibilityGenerator,
+        ACCESSIBILITY_ROOT_ID,
+    },
+    custom_attributes::CustomAttributeValues,
+    event_loop_messages::EventLoopMessage,
     platform_state::NavigationMode,
-    prelude::EventMessage,
     types::{
         AccessibilityId,
         AccessibilityNode,
@@ -33,7 +34,6 @@ use freya_elements::events::{
     keyboard::Code,
     KeyboardEvent,
 };
-use freya_node_state::CustomAttributeValues;
 
 use crate::{
     use_platform,
@@ -61,50 +61,55 @@ impl UseFocus {
         AccessibilityId(accessibility_generator.new_id())
     }
 
-    /// Focus this node
-    pub fn focus(&mut self) {
+    /// Request to **focus** accessibility node. This will not immediately update [Self::is_focused].
+    pub fn request_focus(&mut self) {
         if !*self.is_focused.peek() {
             self.platform
                 .focus(AccessibilityFocusStrategy::Node(self.id));
         }
     }
 
-    /// Get the node focus ID
-    pub fn id(&self) -> AccessibilityId {
-        self.id
-    }
-
-    /// Create a node focus ID attribute
-    pub fn attribute(&self) -> AttributeValue {
-        Self::attribute_for_id(self.id)
-    }
-
-    /// Create a node focus ID attribute
-    pub fn attribute_for_id(id: AccessibilityId) -> AttributeValue {
-        AttributeValue::any_value(CustomAttributeValues::AccessibilityId(id))
-    }
-
-    /// Check if this node is currently focused
-    pub fn is_focused(&self) -> bool {
-        *self.is_focused.read()
-    }
-
-    /// Check if this node is currently selected
-    pub fn is_focused_with_keyboard(&self) -> bool {
-        *self.is_focused_with_keyboard.read()
-            && *self.navigation_mode.read() == NavigationMode::Keyboard
-    }
-
-    /// Unfocus the currently focused node.
-    pub fn unfocus(&mut self) {
+    /// Request to **unfocus** accessibility node. This will not immediately update [Self::is_focused].
+    pub fn request_unfocus(&mut self) {
         self.platform
-            .send(EventMessage::FocusAccessibilityNode(
+            .send(EventLoopMessage::FocusAccessibilityNode(
                 AccessibilityFocusStrategy::Node(ACCESSIBILITY_ROOT_ID),
             ))
             .ok();
     }
 
-    /// Validate a `keydown` event.
+    /// Focus a given [AccessibilityId].
+    pub fn focus_id(id: AccessibilityId) {
+        UsePlatform::current().focus(AccessibilityFocusStrategy::Node(id));
+    }
+
+    /// Get [AccessibilityId] of this accessibility node.
+    pub fn id(&self) -> AccessibilityId {
+        self.id
+    }
+
+    /// Create a [freya_elements::elements::rect::a11y_id] attribute value for this accessibility node.
+    pub fn attribute(&self) -> AttributeValue {
+        Self::attribute_for_id(self.id)
+    }
+
+    /// Create a [freya_elements::elements::rect::a11y_id] attribute value for a given [AccessibilityId].
+    pub fn attribute_for_id(id: AccessibilityId) -> AttributeValue {
+        AttributeValue::any_value(CustomAttributeValues::AccessibilityId(id))
+    }
+
+    /// Subscribe to focus changes where this node was involved.
+    pub fn is_focused(&self) -> bool {
+        *self.is_focused.read()
+    }
+
+    /// Subscribe to focus changes where this node was involved and the keyboard was used.
+    pub fn is_focused_with_keyboard(&self) -> bool {
+        *self.is_focused_with_keyboard.read()
+            && *self.navigation_mode.read() == NavigationMode::Keyboard
+    }
+
+    /// Useful if you want to trigger an action when `Enter` or `Space` is pressed and this Node was focused with the keyboard.
     pub fn validate_keydown(&self, e: &KeyboardEvent) -> bool {
         (e.data.code == Code::Enter || e.data.code == Code::Space)
             && self.is_focused_with_keyboard()
@@ -128,14 +133,94 @@ impl UseFocus {
 }
 
 /// Create a focus manager for a node.
+///
+/// With this you can focus this node whenever you want or subscribe to any focus change,
+/// this way you can style your element based on its focus state.
+///
+/// ### Simple example
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///     // Create a focus instance
+///     let mut my_focus = use_focus();
+///
+///     rsx!(
+///         rect {
+///             // Bind the focus to this `rect`
+///             a11y_id: my_focus.attribute(),
+///             // This will focus this element and effectively cause a rerender updating the returned value of `is_focused()`
+///             onclick: move |_| my_focus.request_focus(),
+///             label {
+///                 "Am I focused? {my_focus.is_focused()}"
+///             }
+///         }
+///     )
+/// }
+/// ```
+///
+/// ### Style based on state
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///     let mut my_focus = use_focus();
+///
+///     let background = if my_focus.is_focused() {
+///         "red"
+///     } else {
+///         "blue"
+///     };
+///
+///     rsx!(
+///         rect {
+///             background,
+///             a11y_id: my_focus.attribute(),
+///             onclick: move |_| my_focus.request_focus(),
+///             label {
+///                 "Focus me!"
+///             }
+///         }
+///     )
+/// }
+/// ```
+///
+/// ### Keyboard navigation
+///
+/// Elements can also be selected with the keyboard, for those cases you can also subscribe by calling [UseFocus::is_focused_with_keyboard].
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///     let mut my_focus = use_focus();
+///
+///     let background = if my_focus.is_focused_with_keyboard() {
+///         "red"
+///     } else {
+///         "blue"
+///     };
+///
+///     rsx!(
+///         rect {
+///             background,
+///             a11y_id: my_focus.attribute(),
+///             label {
+///                 "Focus me!"
+///             }
+///         }
+///     )
+/// }
+/// ```
 pub fn use_focus() -> UseFocus {
     let id = use_hook(UseFocus::new_id);
 
-    use_focus_from_id(id)
+    use_focus_for_id(id)
 }
 
-/// Create a focus manager for a node with the provided [AccessibilityId].
-pub fn use_focus_from_id(id: AccessibilityId) -> UseFocus {
+/// Same as [use_focus] but providing a Node instead of generating a new one.
+///
+/// This is an advance hook so you probably just want to use [use_focus].
+pub fn use_focus_for_id(id: AccessibilityId) -> UseFocus {
     let focused_id = use_context::<Signal<AccessibilityId>>();
     let focused_node = use_context::<Signal<AccessibilityNode>>();
     let navigation_mode = use_context::<Signal<NavigationMode>>();

@@ -6,17 +6,21 @@
 use std::thread;
 
 use freya::{
-    common::AccessibilityFocusStrategy,
+    core::accessibility::AccessibilityFocusStrategy,
     prelude::*,
 };
-use freya_core::prelude::{
-    EventMessage,
-    EventName,
-    FreyaPlugin,
-    PlatformEvent,
-    PlatformEventData,
-    PluginEvent,
-    PluginHandle,
+use freya_core::{
+    event_loop_messages::EventLoopMessage,
+    events::{
+        EventName,
+        PlatformEvent,
+        PlatformEventData,
+    },
+    plugins::{
+        FreyaPlugin,
+        PluginEvent,
+        PluginHandle,
+    },
 };
 use gilrs::{
     EventType,
@@ -43,14 +47,18 @@ impl GamePadPlugin {
                         // NOTE: You might need to tweak these codes
                         match code.into_u32() {
                             4 => {
-                                handle.send_event_loop_event(EventMessage::FocusAccessibilityNode(
-                                    AccessibilityFocusStrategy::Backward,
-                                ));
+                                handle.send_event_loop_event(
+                                    EventLoopMessage::FocusAccessibilityNode(
+                                        AccessibilityFocusStrategy::Backward,
+                                    ),
+                                );
                             }
                             6 => {
-                                handle.send_event_loop_event(EventMessage::FocusAccessibilityNode(
-                                    AccessibilityFocusStrategy::Forward,
-                                ));
+                                handle.send_event_loop_event(
+                                    EventLoopMessage::FocusAccessibilityNode(
+                                        AccessibilityFocusStrategy::Forward,
+                                    ),
+                                );
                             }
                             13 => {
                                 handle.send_platform_event(PlatformEvent {

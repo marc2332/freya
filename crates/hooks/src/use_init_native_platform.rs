@@ -12,7 +12,7 @@ use dioxus_signals::{
     Signal,
     Writable,
 };
-use freya_core::prelude::NativePlatformReceiver;
+use freya_core::types::NativePlatformReceiver;
 
 use crate::use_init_asset_cacher;
 
@@ -107,7 +107,7 @@ mod test {
                 a11y_id: focus_manager.attribute(),
                 width: "100%",
                 height: "50%",
-                onclick: move |_| focus_manager.focus(),
+                onclick: move |_| focus_manager.request_focus(),
             })
         }
 

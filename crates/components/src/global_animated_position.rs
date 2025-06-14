@@ -7,7 +7,11 @@ use std::{
 
 use dioxus::prelude::*;
 use dioxus_core::AttributeValue;
-use freya_common::NodeReferenceLayout;
+use freya_core::custom_attributes::{
+    CustomAttributeValues,
+    NodeReference,
+    NodeReferenceLayout,
+};
 use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_animation_with_dependencies,
@@ -15,10 +19,6 @@ use freya_hooks::{
     AnimNum,
     Ease,
     Function,
-};
-use freya_node_state::{
-    CustomAttributeValues,
-    NodeReference,
 };
 use tokio::sync::watch::channel;
 use torin::prelude::Area;

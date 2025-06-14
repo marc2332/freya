@@ -1,13 +1,14 @@
 //! # Introduction
 //!
-//! **Freya** is a Rust 🦀 library to make GUI applications that are **cross-platform**, which means they will run the same way in Windows, macOS and Linux.
+//! **Freya** is a Rust 🦀 library to make GUI applications that are [**cross-platform**](https://en.wikipedia.org/wiki/Cross-platform_software), targeting Windows, macOS and Linux.
 //!
-//! It uses a model where you compose the app by splitting the UI in different components that return pieces of UI or call other components, this is because
-//! Freya runs on 🧬 [Dioxus](https://dioxuslabs.com), a renderer-agnostic UI library inspired by ReactJS.
+//! Freya uses a [declarative](https://en.wikipedia.org/wiki/Declarative_programming) model for the UI, and components to encapculate the UI in reusable pieces of code. This is because
+//! Freya uses the core crates 🧬 [Dioxus](https://dioxuslabs.com), a renderer-agnostic components-based and declarative UI library inspired by ReactJS.
 //!
-//! Even though you might have seen that Dioxus render to HTML, use CSS/JavaScript/WASM/WebView/WGPU. this does not apply to Freya. In fact, Freya only uses some of the core
-//! crates of Dioxus, which means that you will be writing Dioxus components and using some of its APIs but, the elements, attributes, styling, layout, events, and more things
-//! will be provided by Freya.
+//! You might have seen that Dioxus renders to HTML, uses CSS/JavaScript/WASM/WebView/WGPU, but this does not apply to Freya.
+//!
+//! As Freya only uses some of the core crates of Dioxus, you will be writing Dioxus components and using some of its APIs but, the elements, attributes, styling, layout, events,
+//! rendering and the rest of things will be provided by Freya.
 //!
 //! Freya uses 🎨 [Skia](https://skia.org/) as rendering engine because its a very battle tested library and has great support for a lot of features.
 //!
@@ -16,7 +17,7 @@
 //! ```rust, no_run
 //! # use freya::prelude::*;
 //! fn main() {
-//!     // **Start** your app by specifying the root component and some config parameters
+//!     // **Start** your app by specifying the root component, title and size
 //!     launch_with_props(app, "Counter", (400.0, 350.0));
 //! }
 //!
@@ -38,3 +39,5 @@
 //!    )
 //! }
 //! ```
+//!
+//! #### You can continue to learn more in [UI](crate::_docs::ui).

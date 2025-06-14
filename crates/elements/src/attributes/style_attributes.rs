@@ -19,18 +19,43 @@ def_attribute!(
     /// ```
     background,
 
-    /// ### border
+    /// Specify the opacity of an element's background color.
     ///
-    /// You can add borders to an element using the `border` attribute.
-    /// - `border` syntax: `[width] [width?] [width?] [width?] <inner | outer | center> [fill]`.
+    /// ### Example
     ///
-    /// 1-4 width values should be provided with the `border` attribute. Widths will be applied to different sides of a `rect` depending on the number of values provided:
-    /// - One value: `all`
-    /// - Two values: `vertical`, `horizontal`
-    /// - Three values: `top` `horizontal` `bottom`
-    /// - Four values: `top` `right` `bottom` `left`
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             background: "red",
+    ///             background_opacity: "0.5"
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    background_opacity,
+
+    /// Specify borders for an element.
+    ///
+    /// The `border` attribute follows this syntax:
+    /// border: `<width(s)> <alignment> <fill>`
+    ///
+    /// Width specification follows CSS-like patterns:
+    /// - Single value: Applied to all sides
+    /// - Two values: First for top/bottom, second for left/right
+    /// - Three values: First for top, second for left/right, third for bottom
+    /// - Four values: Top, right, bottom, left (clockwise from top)
+    ///
+    /// Alignment must be one of:
+    /// - `inner`: Border drawn inside the element bounds
+    /// - `outer`: Border drawn outside the element bounds
+    /// - `center` (default): Border centered on the element bounds
     ///
     /// *Border alignment* determines how the border is positioned relative to the element's edge. Alignment can be `inner`, `outer`, or `center`.
+    ///
+    /// Note: Borders exist outside the layout system, which means they will be drawn underneath child elements and may overlap with adjacent elements.
+    /// Add appropriate padding or margin to prevent border overlap with other content.
     ///
     /// ### Examples
     ///
@@ -89,7 +114,13 @@ def_attribute!(
 
     /// Draw a shadow of the element.
     ///
-    /// Syntax: `<x> <y> <intensity> <size> <color>`
+    /// The `shadow` attribute follows this syntax:
+    /// shadow: `<x> <y> <intensity> <size> <color>`
+    ///
+    /// - `x` and `y`: Define the offset position of the shadow
+    /// - `intensity`: Controls the shadow's blur amount
+    /// - `size`: Specifies the shadow's size/spread
+    /// - `color`: Any valid color value for the shadow
     ///
     /// ### Example
     ///
@@ -105,9 +136,16 @@ def_attribute!(
     /// ```
     shadow,
 
-    /// ### corner_radius & corner_smoothing
+    /// Round the corners of an element by a specified radius.
     ///
-    /// The `corner_radius` attribute lets you smooth the corners of the element, with `corner_smoothing` you can give a "squircle" effect.
+    /// The `corner_radius` attribute follows this syntax:
+    /// corner_radius: `<all> | <tl-tr> <bl-br> | <tl> <tr> <br> <bl>`
+    ///
+    /// - Single value: Applied to all corners
+    /// - Two values: First for top-left & top-right, second for bottom-left & bottom-right
+    /// - Four values: Top-left, top-right, bottom-right, bottom-left (clockwise from top-left)
+    ///
+    /// This creates rounded corners on rectangular elements like rects or buttons.
     ///
     /// ### Example
     ///
@@ -116,17 +154,39 @@ def_attribute!(
     /// fn app() -> Element {
     ///     rsx!(
     ///         rect {
-    ///             corner_radius: "10",
-    ///             corner_smoothing: "75%"
+    ///             corner_radius: "10" // All corners
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             corner_radius: "10 5" // 10 for top corners, 5 for bottom corners
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             corner_radius: "10 20 30 40" // Different radius for each corner
     ///         }
     ///     )
     /// }
     /// ```
     corner_radius,
 
-    /// ### corner_radius & corner_smoothing
+    /// Control the smoothing effect for rounded corners to create a "squircle" effect.
     ///
-    /// The `corner_radius` attribute lets you smooth the corners of the element, with `corner_smoothing` you can give a "squircle" effect.
+    /// Higher values create more of a squircle shape (rounded square), while lower values
+    /// result in a more traditionally rounded corner.
     ///
     /// ### Example
     ///
@@ -142,4 +202,59 @@ def_attribute!(
     /// }
     /// ```
     corner_smoothing,
+
+    /// Control the blend mode of this element.
+    ///
+    /// Possible values:
+    /// - `clear`
+    /// - `src`
+    /// - `dst`
+    /// - `src-over`
+    /// - `dst-over`
+    /// - `src-in`
+    /// - `dst-in`
+    /// - `src-out`
+    /// - `dst-out`
+    /// - `src-a-top`
+    /// - `dst-a-top`
+    /// - `xor`
+    /// - `plus`
+    /// - `modulate`
+    /// - `screen`
+    /// - `overlay`
+    /// - `darken`
+    /// - `lighten`
+    /// - `color-dodge`
+    /// - `color-burn`
+    /// - `hard-light`
+    /// - `soft-light`
+    /// - `difference`
+    /// - `exclusion`
+    /// - `multiply`
+    /// - `hue`
+    /// - `saturation`
+    /// - `color`
+    /// - `luminosity`
+    blend_mode,
+
+    /// Control the blur effect on this element's background.
+    ///
+    /// A higher value makes it more blurry.
+    ///
+    /// It is important to note that the element's background must be at least a bit transparent to appreciate the blur effect.
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             backdrop_blur: "10",
+    ///             background: "rgb(255, 255, 255, 0.4)"
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    backdrop_blur,
 );

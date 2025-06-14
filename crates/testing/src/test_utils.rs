@@ -1,4 +1,11 @@
-use freya_core::prelude::*;
+use freya_core::{
+    dom::{
+        DioxusDOM,
+        DioxusNode,
+        SafeDOM,
+    },
+    node::get_node_state,
+};
 use freya_native_core::{
     real_dom::NodeImmutable,
     tree::TreeRef,
@@ -14,7 +21,7 @@ pub struct TestUtils {
 
 impl TestUtils {
     /// Get the SafeDOM.
-    pub fn sdom(&self) -> &SafeDOM {
+    pub(crate) fn sdom(&self) -> &SafeDOM {
         &self.sdom
     }
 

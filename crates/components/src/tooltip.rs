@@ -47,9 +47,9 @@ pub struct TooltipProps {
 /// #           {app()}
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), |mut utils| async move {
+/// # }, (250., 250.).into(), |mut utils| async move {
 /// #   utils.wait_for_update().await;
-/// #   utils.move_cursor((90., 90.)).await;
+/// #   utils.move_cursor((125., 125.)).await;
 /// #   utils.wait_for_update().await;
 /// #   utils.save_snapshot("./images/gallery_tooltip.png");
 /// # });
@@ -72,7 +72,7 @@ pub fn Tooltip(TooltipProps { text, theme }: TooltipProps) -> Element {
     rsx!(
         rect {
             padding: "4 10",
-            shadow: "0 0 4 1 rgb(0, 0, 0, 0.1)",
+            shadow: "0 1 2 1 rgb(0, 0, 0, 0.05)",
             border: "1 inner {border_fill}",
             corner_radius: "8",
             background: "{background}",
