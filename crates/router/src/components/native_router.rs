@@ -40,12 +40,7 @@ pub fn NativeRouter(children: Element) -> Element {
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
-    use freya_core::events::EventName;
-    use freya_router::prelude::{
-        Outlet,
-        Routable,
-        Router,
-    };
+    use freya_router::prelude::*;
     use freya_testing::prelude::*;
 
     #[tokio::test]

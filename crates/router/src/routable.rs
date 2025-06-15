@@ -33,7 +33,8 @@ impl<E: Display> Display for RouteParseError<E> {
 /// **This trait is automatically implemented for any types that implement `From<&str>`.**
 ///
 /// ```rust
-/// use dioxus::prelude::*;
+/// use freya::prelude::*;
+/// use freya_router::prelude::*;
 ///
 /// #[derive(Routable, Clone, PartialEq, Debug)]
 /// enum Route {
@@ -94,7 +95,8 @@ impl<T: for<'a> From<&'a str>> FromQuery for T {
 /// **This trait is automatically implemented for any types that implement `FromStr` and `Default`.**
 ///
 /// ```rust
-/// use dioxus::prelude::*;
+/// use freya::prelude::*;
+/// use freya_router::prelude::*;
 ///
 /// #[derive(Routable, Clone, PartialEq, Debug)]
 /// enum Route {
@@ -179,7 +181,8 @@ where
 /// # Example
 ///
 /// ```rust
-/// use dioxus::prelude::*;
+/// use freya::prelude::*;
+/// use freya_router::prelude::*;
 ///
 /// #[derive(Routable, Clone)]
 /// #[rustfmt::skip]
@@ -263,7 +266,8 @@ where
 /// **This trait is automatically implemented for any types that implement `FromStr` and `Default`.**
 ///
 /// ```rust
-/// use dioxus::prelude::*;
+/// use freya::prelude::*;
+/// use freya_router::prelude::*;
 ///
 /// #[derive(Routable, Clone, PartialEq, Debug)]
 /// enum Route {
@@ -346,7 +350,8 @@ fn full_circle() {
 /// **This trait is automatically implemented for any types that implement `IntoIterator<Item=impl Display>`.**
 ///
 /// ```rust
-/// use dioxus::prelude::*;
+/// use freya::prelude::*;
+/// use freya_router::prelude::*;
 ///
 /// #[derive(Routable, Clone, PartialEq, Debug)]
 /// enum Route {
@@ -435,7 +440,8 @@ fn to_route_segments() {
 /// **This trait is automatically implemented for any types that implement `FromIterator<impl Display>`.**
 ///
 /// ```rust
-/// use dioxus::prelude::*;
+/// use freya::prelude::*;
+/// use freya_router::prelude::*;
 ///
 /// #[derive(Routable, Clone, PartialEq, Debug)]
 /// enum Route {
@@ -531,7 +537,8 @@ type SiteMapFlattened<'a> = FlatMap<
 ///
 /// ## Example
 /// ```rust
-/// use dioxus::prelude::*;
+/// use freya::prelude::*;
+/// use freya_router::prelude::*;
 ///
 /// fn App() -> Element {
 ///     rsx!(
@@ -605,7 +612,7 @@ pub trait Routable: FromStr<Err: Display> + Display + Clone + 'static {
     ///
     /// # Example
     /// ```rust
-    /// use dioxus::prelude::*;
+    /// use freya::prelude::*;
     /// use freya_router::prelude::*;
     ///
     /// #[component]
@@ -677,7 +684,7 @@ pub trait Routable: FromStr<Err: Display> + Display + Clone + 'static {
     ///
     /// # Example
     /// ```rust
-    /// use dioxus::prelude::*;
+    /// use freya::prelude::*;
     /// use freya_router::prelude::*;
     ///
     /// #[component]

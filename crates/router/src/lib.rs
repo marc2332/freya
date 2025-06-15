@@ -71,6 +71,7 @@ pub mod prelude {
         },
         contexts::*,
         hooks::*,
+        memory::MemoryHistory,
         navigation::*,
         routable::*,
         router_cfg::RouterConfig,

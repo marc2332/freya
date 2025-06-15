@@ -5,7 +5,7 @@ use crate::prelude::Routable;
 /// This implements [`Default`] and follows the builder pattern, so you can use it like this:
 /// ```rust,no_run
 /// # use freya_router::prelude::*;
-/// # use dioxus::prelude::*;
+/// # use freya::prelude::*;
 /// # #[component]
 /// # fn Index() -> Element {
 /// #     VNode::empty()
@@ -16,15 +16,7 @@ use crate::prelude::Routable;
 ///     Index {},
 /// }
 ///
-/// fn ExternalNavigationFailure() -> Element {
-///     rsx!(
-///         label {
-///             "Failed to navigate to external URL"
-///         }
-///     )
-/// }
-///
-/// let cfg = RouterConfig::<Route>::default().failure_external_navigation(ExternalNavigationFailure);
+/// let cfg = RouterConfig::<Route>::default().with_initial_path(Route::Index {});
 /// ```
 pub struct RouterConfig<R: Routable> {
     pub(crate) initial_path: Option<R>,

@@ -12,7 +12,7 @@ use crate::prelude::{
 ///
 /// # Example
 /// ```rust
-/// # use dioxus::prelude::*;
+/// # use freya::prelude::*;
 /// # use freya_router::prelude::*;
 /// #[derive(Clone, Routable)]
 /// #[rustfmt::skip]
