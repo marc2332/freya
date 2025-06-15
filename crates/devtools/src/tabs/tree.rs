@@ -2,12 +2,12 @@ use std::collections::HashSet;
 
 use dioxus::prelude::*;
 use dioxus_radio::prelude::use_radio;
-use dioxus_router::prelude::{
+use freya_components::*;
+use freya_native_core::NodeId;
+use freya_router::prelude::{
     router,
     use_navigator,
 };
-use freya_components::*;
-use freya_native_core::NodeId;
 
 use crate::{
     node::NodeElement,

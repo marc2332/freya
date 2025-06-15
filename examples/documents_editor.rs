@@ -9,7 +9,8 @@ use std::{
     path::PathBuf,
 };
 
-use dioxus_router::{
+use freya::prelude::*;
+use freya_router::{
     hooks::{
         use_navigator,
         use_route,
@@ -20,7 +21,6 @@ use dioxus_router::{
         Router,
     },
 };
-use freya::prelude::*;
 use rand::Rng;
 
 fn main() {

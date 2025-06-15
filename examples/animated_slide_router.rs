@@ -3,13 +3,13 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus_router::prelude::{
+use freya::prelude::*;
+use freya_core::custom_attributes::NodeReferenceLayout;
+use freya_router::prelude::{
     Outlet,
     Routable,
     Router,
 };
-use freya::prelude::*;
-use freya_core::custom_attributes::NodeReferenceLayout;
 
 fn main() {
     launch_with_props(app, "Animated Slide Router", (650.0, 500.0));

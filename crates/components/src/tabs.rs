@@ -46,7 +46,7 @@ pub enum TabStatus {
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// # use dioxus_router::prelude::{Routable, Router};
+/// # use freya_router::prelude::{Routable, Router};
 /// # #[allow(non_snake_case)]
 /// # fn PageNotFound() -> Element { VNode::empty() }
 /// # #[allow(non_snake_case)]
@@ -208,7 +208,7 @@ pub fn Tab(
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// # use dioxus_router::prelude::{Routable, Router};
+/// # use freya_router::prelude::{Routable, Router};
 /// # #[allow(non_snake_case)]
 /// # fn PageNotFound() -> Element { VNode::empty() }
 /// # #[allow(non_snake_case)]

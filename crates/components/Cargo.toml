@@ -26,7 +26,7 @@ freya-core = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
 
-dioxus-router = { workspace = true, default-features = false }
+freya-router = { workspace = true }
 dioxus = { workspace = true }
 
 futures-util = { workspace = true }
