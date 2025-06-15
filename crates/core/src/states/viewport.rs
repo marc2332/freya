@@ -20,7 +20,10 @@ use crate::{
         ParseAttribute,
         ParseError,
     },
-    values::OverflowMode,
+    values::{
+        LayerMode,
+        OverflowMode,
+    },
 };
 
 #[derive(Default, PartialEq, Clone, Debug, Component)]
@@ -35,11 +38,16 @@ impl ParseAttribute for ViewportState {
         &mut self,
         attr: freya_native_core::prelude::OwnedAttributeView<CustomAttributeValues>,
     ) -> Result<(), ParseError> {
-        #[allow(clippy::single_match)]
         match attr.attribute {
             AttributeName::Overflow => {
                 self.overflow = OverflowMode::parse(attr.value.as_text().ok_or(ParseError)?)
                     .map_err(|_| ParseError)?;
+            }
+            AttributeName::Layer => {
+                let layer = LayerMode::parse(attr.value.as_text().ok_or(ParseError)?)?;
+                if layer == LayerMode::Overlay {
+                    self.viewports.clear();
+                }
             }
             _ => {}
         }
@@ -57,7 +65,10 @@ impl State<CustomAttributeValues> for ViewportState {
     type NodeDependencies = ();
 
     const NODE_MASK: NodeMaskBuilder<'static> = NodeMaskBuilder::new()
-        .with_attrs(AttributeMaskBuilder::Some(&[AttributeName::Overflow]))
+        .with_attrs(AttributeMaskBuilder::Some(&[
+            AttributeName::Overflow,
+            AttributeName::Layer,
+        ]))
         .with_tag();
 
     fn update<'a>(
@@ -77,16 +88,16 @@ impl State<CustomAttributeValues> for ViewportState {
             ..Default::default()
         };
 
-        if let Some(attributes) = node_view.attributes() {
-            for attr in attributes {
-                viewports_state.parse_safe(attr)
-            }
-        }
-
         if let Some((parent,)) = parent {
             viewports_state.viewports.extend(parent.viewports.clone());
             if parent.overflow == OverflowMode::Clip {
                 viewports_state.viewports.push(parent.node_id);
+            }
+        }
+
+        if let Some(attributes) = node_view.attributes() {
+            for attr in attributes {
+                viewports_state.parse_safe(attr)
             }
         }
 
