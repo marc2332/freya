@@ -176,14 +176,14 @@ mod test {
         utils.wait_for_update().await;
 
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseDown,
+            name: MouseEventName::MouseDown,
             cursor: (3.0, 3.0).into(),
             button: Some(MouseButton::Left),
         });
         utils.wait_for_update().await;
         utils.wait_for_update().await;
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseMove,
+            name: MouseEventName::MouseMove,
             cursor: (55.0, 3.0).into(),
             button: Some(MouseButton::Left),
         });

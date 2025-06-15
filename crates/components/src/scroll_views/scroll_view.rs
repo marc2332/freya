@@ -268,7 +268,7 @@ pub fn ScrollView(
     };
 
     // Drag the scrollbars
-    let onmousemove = move |e: MouseEvent| {
+    let oncaptureglobalmousemove = move |e: MouseEvent| {
         let clicking_scrollbar = clicking_scrollbar.peek();
 
         if let Some((Axis::Y, y)) = *clicking_scrollbar {
@@ -296,6 +296,7 @@ pub fn ScrollView(
         }
 
         if clicking_scrollbar.is_some() {
+            e.prevent_default();
             focus.request_focus();
         }
     };
@@ -364,7 +365,7 @@ pub fn ScrollView(
     };
 
     // Unmark any scrollbar
-    let onclick = move |_: MouseEvent| {
+    let onglobalclick = move |_: MouseEvent| {
         if clicking_scrollbar.peek().is_some() {
             *clicking_scrollbar.write() = None;
         }
@@ -394,8 +395,8 @@ pub fn ScrollView(
             min_height: min_height.map(|x| x.to_string()),
             max_width: max_width.map(|x| x.to_string()),
             max_height: max_height.map(|x| x.to_string()),
-            onglobalclick: onclick,
-            onglobalmousemove: onmousemove,
+            onglobalclick,
+            oncaptureglobalmousemove,
             onglobalkeydown,
             onglobalkeyup,
             a11y_id,
@@ -500,7 +501,7 @@ mod test {
         assert!(!content.get(3).is_visible()); // 4. 600 -> 800, 600 is NOT < 500, which means it is not visible.
 
         utils.push_event(TestEvent::Wheel {
-            name: EventName::Wheel,
+            name: WheelEventName::Wheel,
             scroll: (0., -300.).into(),
             cursor: (5., 5.).into(),
         });
@@ -554,26 +555,28 @@ mod test {
 
         // Simulate the user dragging the scrollbar
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseMove,
+            name: MouseEventName::MouseMove,
             cursor: (495., 20.).into(),
             button: Some(MouseButton::Left),
         });
+        utils.wait_for_update().await;
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseDown,
+            name: MouseEventName::MouseDown,
             cursor: (495., 20.).into(),
             button: Some(MouseButton::Left),
         });
+        utils.wait_for_update().await;
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseMove,
+            name: MouseEventName::MouseMove,
             cursor: (495., 320.).into(),
             button: Some(MouseButton::Left),
         });
+        utils.wait_for_update().await;
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseUp,
+            name: MouseEventName::MouseUp,
             cursor: (495., 320.).into(),
             button: Some(MouseButton::Left),
         });
-
         utils.wait_for_update().await;
 
         // Only the last three items are visible
@@ -586,7 +589,7 @@ mod test {
         // Scroll up with arrows
         for _ in 0..5 {
             utils.push_event(TestEvent::Keyboard {
-                name: EventName::KeyDown,
+                name: KeyboardEventName::KeyDown,
                 key: Key::ArrowUp,
                 code: Code::ArrowUp,
                 modifiers: Modifiers::default(),
@@ -601,7 +604,7 @@ mod test {
 
         // Scroll to the bottom with arrows
         utils.push_event(TestEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: KeyboardEventName::KeyDown,
             key: Key::End,
             code: Code::End,
             modifiers: Modifiers::default(),
