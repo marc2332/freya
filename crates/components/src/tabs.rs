@@ -46,7 +46,7 @@ pub enum TabStatus {
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// # use freya_router::prelude::{Routable, Router};
+/// # use freya_router::prelude::*;
 /// # #[allow(non_snake_case)]
 /// # fn PageNotFound() -> Element { VNode::empty() }
 /// # #[allow(non_snake_case)]
