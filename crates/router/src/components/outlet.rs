@@ -12,10 +12,6 @@ use crate::prelude::{
 /// The [`Outlet`] is aware of how many [`Outlet`]s it is nested within. It will render the content
 /// of the active route that is __exactly as deep__.
 ///
-/// # Panic
-/// - When the [`Outlet`] is not nested a [`Link`] component,
-///   but only in debug builds.
-///
 /// # Example
 /// ```rust
 /// # use dioxus::prelude::*;
