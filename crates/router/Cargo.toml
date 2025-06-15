@@ -5,11 +5,13 @@ version = "0.3.0"
 edition = "2021"
 description = "Router management for Freya apps"
 license = "MIT"
+readme = "./README.md"
 repository = "https://github.com/marc2332/freya/"
 keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
 
 [dependencies]
 dioxus-lib = { workspace = true }
+
 freya-router-macro = { workspace = true }
 freya-hooks = { workspace = true }
 freya-elements = { workspace = true }
