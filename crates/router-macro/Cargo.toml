@@ -19,3 +19,7 @@ slab = "0.4.10"
 base16 = "0.2.1"
 digest = "0.10.7"
 sha2 = "0.10.9"
+
+[dev-dependencies]
+freya = { workspace = true }
+freya-router = { workspace = true }

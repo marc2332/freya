@@ -63,7 +63,8 @@ mod segment;
 ///
 /// All features:
 /// ```rust
-/// use dioxus::prelude::*;
+/// use freya::prelude::*;
+/// use freya_router::prelude::*;
 ///
 /// #[rustfmt::skip]
 /// #[derive(Clone, Debug, PartialEq, Routable)]
@@ -120,7 +121,8 @@ mod segment;
 /// The next variant will be tied to the component. If you link to that variant, the component will be rendered.
 ///
 /// ```rust
-/// use dioxus::prelude::*;
+/// use freya::prelude::*;
+/// use freya_router::prelude::*;
 ///
 /// #[derive(Clone, Debug, PartialEq, Routable)]
 /// enum Route {
@@ -140,7 +142,8 @@ mod segment;
 /// - `function`: A function that takes the parameters from the path and returns a new route
 ///
 /// ```rust
-/// use dioxus::prelude::*;
+/// use freya::prelude::*;
+/// use freya_router::prelude::*;
 ///
 /// #[derive(Clone, Debug, PartialEq, Routable)]
 /// enum Route {
@@ -163,7 +166,8 @@ mod segment;
 /// Nests effect all nests, routes and redirects defined until the next `#[end_nest]` attribute. All children of nests are relative to the nest route and must include all dynamic parameters of the nest.
 ///
 /// ```rust
-/// use dioxus::prelude::*;
+/// use freya::prelude::*;
+/// use freya_router::prelude::*;
 ///
 /// #[derive(Clone, Debug, PartialEq, Routable)]
 /// enum Route {
@@ -184,7 +188,8 @@ mod segment;
 /// The `#[end_nest]` attribute is used to end a nest. It takes no parameters.
 ///
 /// ```rust
-/// use dioxus::prelude::*;
+/// use freya::prelude::*;
+/// use freya_router::prelude::*;
 ///
 /// #[derive(Clone, Debug, PartialEq, Routable)]
 /// enum Route {
@@ -214,7 +219,8 @@ mod segment;
 /// The layout component allows you to wrap all children of the layout in a component. The child routes are rendered in the Outlet of the layout component. The layout component must take all dynamic parameters of the nests it is nested in.
 ///
 /// ```rust
-/// use dioxus::prelude::*;
+/// use freya::prelude::*;
+/// use freya_router::prelude::*;
 ///
 /// #[derive(Clone, Debug, PartialEq, Routable)]
 /// enum Route {
@@ -235,7 +241,8 @@ mod segment;
 /// The `#[end_layout]` attribute is used to end a layout. It takes no parameters.
 ///
 /// ```rust
-/// use dioxus::prelude::*;
+/// use freya::prelude::*;
+/// use freya_router::prelude::*;
 ///
 /// #[derive(Clone, Debug, PartialEq, Routable)]
 /// enum Route {
