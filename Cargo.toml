@@ -23,8 +23,7 @@ docs = ["freya/docs"]
 # dioxus-core-macro = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
 # dioxus-hooks = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
 # dioxus-signals = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
-# dioxus-core = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
-# freya-router = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
+# dioxus-core = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }# freya-router = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
 # generational-box  = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
 
 [workspace.dependencies]
