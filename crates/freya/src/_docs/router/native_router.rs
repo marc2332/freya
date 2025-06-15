@@ -1,14 +1,14 @@
 //! # Native Router
 //!
-//! Even though Freya supports [Dioxus Router](dioxus_router), there are certain integrations that it does not provide, such as as back and forward navigation with the mouse buttons.
-//! For things like this exists [`NativeRouter`](crate::components::NativeRouter), a thin wrapper component that adds these missing integrations.
+//! By default, [Freya Router](freya_router) is pretty simple, so there are certain integrations that are not provided by default, such as as back and forward navigation with the mouse buttons.
+//! For things like this exists [`NativeRouter`](freya_router::components::NativeRouter), a thin wrapper component that adds these missing integrations.
 //!
-//! You simply need to wrap your `Router` content inside the [`NativeRouter`](crate::components::NativeRouter) component.
+//! You simply need to wrap your `Router` content inside the [`NativeRouter`](freya_router::components::NativeRouter) component.
 //!
 //! Example (based on the example from [router](crate::_docs::router)):
 //! ```rust, no_run
 //! # use freya::prelude::*;
-//! # use dioxus_router::prelude::*;
+//! # use freya_router::prelude::*;
 //! # use freya_components::Link;
 //! # #[allow(non_snake_case)]
 //! fn AppSidebar() -> Element {

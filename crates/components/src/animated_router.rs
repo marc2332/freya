@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use dioxus_router::prelude::{
+use freya_router::prelude::{
     use_route,
     Routable,
 };
