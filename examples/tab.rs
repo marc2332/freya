@@ -4,11 +4,7 @@
 )]
 
 use freya::prelude::*;
-use freya_router::prelude::{
-    Outlet,
-    Routable,
-    Router,
-};
+use freya_router::prelude::*;
 
 fn main() {
     launch_with_props(app, "Tabs", (500.0, 350.0));

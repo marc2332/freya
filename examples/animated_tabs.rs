@@ -5,11 +5,7 @@
 
 use freya::prelude::*;
 use freya_core::custom_attributes::NodeReferenceLayout;
-use freya_router::prelude::{
-    Outlet,
-    Routable,
-    Router,
-};
+use freya_router::prelude::*;
 
 fn main() {
     launch_with_props(app, "Animated Tabs Router", (650.0, 500.0));

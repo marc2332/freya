@@ -10,17 +10,7 @@ use std::{
 };
 
 use freya::prelude::*;
-use freya_router::{
-    hooks::{
-        use_navigator,
-        use_route,
-    },
-    prelude::{
-        Outlet,
-        Routable,
-        Router,
-    },
-};
+use freya_router::prelude::*;
 use rand::Rng;
 
 fn main() {

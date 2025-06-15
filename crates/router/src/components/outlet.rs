@@ -7,8 +7,6 @@ use crate::prelude::{
 
 /// An outlet for the current content.
 ///
-/// Only works as descendant of a [`Link`] component, otherwise it will be inactive.
-///
 /// The [`Outlet`] is aware of how many [`Outlet`]s it is nested within. It will render the content
 /// of the active route that is __exactly as deep__.
 ///
