@@ -31,7 +31,7 @@ performance-overlay = []
 disable-zoom-shortcuts = ["freya-winit/disable-zoom-shortcuts"]
 devtools = ["dep:freya-devtools"]
 custom-tokio-rt = []
-winit = ["freya-core/winit", "freya-hooks/winit", "dep:freya-winit"]
+winit = ["freya-core/winit", "freya-hooks/winit", "freya-components/winit", "dep:freya-winit"]
 
 [dependencies]
 freya-devtools = { workspace = true, optional = true }
