@@ -3,10 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use std::time::Duration;
-
 use freya::prelude::*;
-use tokio::time::sleep;
 
 fn main() {
     launch_with_props(app, "Chip", (450.0, 450.0));
