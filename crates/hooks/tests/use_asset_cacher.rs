@@ -8,13 +8,12 @@ use tokio::time::sleep;
 async fn asset_cacher() {
     #[allow(non_snake_case)]
     fn Consumer() -> Element {
-        let mut cacher = use_asset_cacher();
-        let asset = cacher.use_asset(AssetConfiguration {
+        let asset = use_asset(AssetConfiguration {
             age: Duration::from_millis(1).into(),
             id: "test-asset".to_string(),
         });
 
-        let bytes = asset.read().unwrap().try_as_bytes().unwrap().clone();
+        let bytes = asset.try_as_bytes().unwrap().clone();
 
         rsx!(label { "{bytes[2]}" })
     }
