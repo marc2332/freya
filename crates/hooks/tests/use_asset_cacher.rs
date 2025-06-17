@@ -9,24 +9,14 @@ async fn asset_cacher() {
     #[allow(non_snake_case)]
     fn Consumer() -> Element {
         let mut cacher = use_asset_cacher();
-
-        let asset = use_hook(move || {
-            let asset_config = AssetConfiguration {
-                age: Duration::from_millis(1).into(),
-                id: "test-asset".to_string(),
-            };
-            cacher.use_asset(&asset_config).unwrap()
+        let asset = cacher.use_asset(AssetConfiguration {
+            age: Duration::from_millis(1).into(),
+            id: "test-asset".to_string(),
         });
 
-        use_drop(move || {
-            let asset_config = AssetConfiguration {
-                age: Duration::from_millis(1).into(),
-                id: "test-asset".to_string(),
-            };
-            cacher.unuse_asset(asset_config.clone());
-        });
+        let bytes = asset.read().unwrap().try_as_bytes().unwrap().clone();
 
-        rsx!(label { "{asset[2]}" })
+        rsx!(label { "{bytes[2]}" })
     }
 
     fn asset_cacher_app() -> Element {
@@ -39,7 +29,7 @@ async fn asset_cacher() {
                 id: "test-asset".to_string(),
             };
 
-            cacher.cache_asset(asset_config.clone(), vec![9, 8, 7, 6].into(), false);
+            cacher.update_asset(asset_config, AssetBytes::Cached(vec![9, 8, 7, 6].into()));
         });
 
         rsx!(
