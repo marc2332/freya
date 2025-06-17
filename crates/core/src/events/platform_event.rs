@@ -1,17 +1,17 @@
 use std::path::PathBuf;
 
-use freya_elements::events::keyboard::{
-    Code,
-    Key,
-    Modifiers,
-};
-use freya_native_core::events::EventName;
-use torin::prelude::*;
-use winit::event::{
+use freya_elements::{
+    events::keyboard::{
+        Code,
+        Key,
+        Modifiers,
+    },
     Force,
     MouseButton,
     TouchPhase,
 };
+use freya_native_core::events::EventName;
+use torin::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, Copy, Eq, Hash)]
 pub enum MouseEventName {

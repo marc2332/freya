@@ -46,6 +46,11 @@ use crate::{
         Devtools,
         HoveredNode,
     },
+    events::{
+        map_winit_mouse_button,
+        map_winit_touch_force,
+        map_winit_touch_phase,
+    },
     keyboard::{
         map_winit_key,
         map_winit_modifiers,
@@ -325,7 +330,7 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
                 self.send_event(PlatformEvent::Mouse {
                     name,
                     cursor: self.cursor_pos,
-                    button: Some(button),
+                    button: Some(map_winit_mouse_button(button)),
                 });
             }
             WindowEvent::MouseWheel { delta, phase, .. } => {
@@ -457,8 +462,8 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
                     name,
                     location: self.cursor_pos,
                     finger_id: id,
-                    phase,
-                    force,
+                    phase: map_winit_touch_phase(phase),
+                    force: force.map(map_winit_touch_force),
                 });
             }
             WindowEvent::Resized(size) => {

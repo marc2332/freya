@@ -80,6 +80,7 @@ mod theme;
 mod tile;
 mod tooltip;
 mod tree;
+#[cfg(feature = "winit")]
 mod window_drag_area;
 
 pub use accordion::*;
@@ -122,4 +123,5 @@ pub use theme::*;
 pub use tile::*;
 pub use tooltip::*;
 pub use tree::*;
+#[cfg(feature = "winit")]
 pub use window_drag_area::*;

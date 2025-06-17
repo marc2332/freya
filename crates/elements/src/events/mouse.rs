@@ -1,5 +1,4 @@
 use torin::geometry::CursorPoint;
-pub use winit::event::MouseButton;
 
 use crate::{
     events::ErasedEventData,
@@ -285,6 +284,16 @@ impl_event! [
     /// ```
     oncaptureglobalmousemove
 ];
+
+#[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+pub enum MouseButton {
+    Left,
+    Right,
+    Middle,
+    Back,
+    Forward,
+    Other(u16),
+}
 
 /// Data of a Mouse event.
 #[derive(Debug, Clone, PartialEq)]
