@@ -237,6 +237,26 @@ define_theme! {
 
 define_theme! {
     %[component]
+    pub Chip {
+        %[cows]
+        background: str,
+        hover_background: str,
+        disabled_background: str,
+        border_fill: str,
+        focus_border_fill: str,
+        shadow: str,
+        margin: str,
+        corner_radius: str,
+        width: str,
+        height: str,
+        padding: str,
+        %[subthemes]
+        font_theme: FontTheme,
+    }
+}
+
+define_theme! {
+    %[component]
     pub Input {
         %[cows]
         background: str,
@@ -589,6 +609,7 @@ pub struct Theme {
     pub button: ButtonTheme,
     pub filled_button: ButtonTheme,
     pub outline_button: ButtonTheme,
+    pub chip: ChipTheme,
     pub switch: SwitchTheme,
     pub scroll_bar: ScrollBarTheme,
     pub slider: SliderTheme,

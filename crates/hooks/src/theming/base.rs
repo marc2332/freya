@@ -51,6 +51,22 @@ pub(crate) const BASE_THEME: Theme = Theme {
         width: cow_borrowed!("auto"),
         height: cow_borrowed!("auto"),
     },
+    chip: ChipTheme {
+        background: cow_borrowed!("key(primary_accent)"),
+        hover_background: cow_borrowed!("key(tertiary_accent)"),
+        disabled_background: cow_borrowed!("key(tertiary_accent)"),
+        font_theme: FontTheme {
+            color: cow_borrowed!("key(primary_color)"),
+        },
+        border_fill: cow_borrowed!("none"),
+        focus_border_fill: cow_borrowed!("key(focused_primary_border)"),
+        shadow: cow_borrowed!("none"),
+        padding: cow_borrowed!("8 14"),
+        margin: cow_borrowed!("0"),
+        corner_radius: cow_borrowed!("999"),
+        width: cow_borrowed!("auto"),
+        height: cow_borrowed!("auto"),
+    },
     filled_button: ButtonTheme {
         background: cow_borrowed!("key(primary_accent)"),
         hover_background: cow_borrowed!("key(tertiary_accent)"),
