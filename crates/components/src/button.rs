@@ -234,7 +234,7 @@ pub fn ButtonBase(
         shadow,
     } = theme;
 
-    let onpointerup = {
+    let onpointerpress = {
         to_owned![onpress, onclick];
         move |ev: PointerEvent| {
             focus.request_focus();
@@ -267,12 +267,12 @@ pub fn ButtonBase(
         }
     });
 
-    let onmouseenter = move |_| {
+    let onpointerenter = move |_| {
         platform.set_cursor(CursorIcon::Pointer);
         status.set(ButtonStatus::Hovering);
     };
 
-    let onmouseleave = move |_| {
+    let onpointerleave = move |_| {
         platform.set_cursor(CursorIcon::default());
         status.set(ButtonStatus::default());
     };
@@ -297,9 +297,9 @@ pub fn ButtonBase(
 
     rsx!(
         rect {
-            onpointerup,
-            onmouseenter,
-            onmouseleave,
+            onpointerpress,
+            onpointerenter,
+            onpointerleave,
             onkeydown,
             a11y_id,
             width: "{width}",
