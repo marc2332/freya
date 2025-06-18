@@ -18,14 +18,14 @@ disable-zoom-shortcuts = ["freya/disable-zoom-shortcuts"]
 docs = ["freya/docs"]
 
 [patch.crates-io]
-# dioxus = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
-# dioxus-rsx = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
-# dioxus-core-macro = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
-# dioxus-hooks = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
-# dioxus-signals = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
-# dioxus-core = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
-# dioxus-router = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
-# generational-box  = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "662cf0d90261b8540796225b78913b620ea34a8f" }
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev = "662cf0d90261b8540796225b78913b620ea34a8f" }
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "662cf0d90261b8540796225b78913b620ea34a8f" }
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev = "662cf0d90261b8540796225b78913b620ea34a8f" }
+dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus", rev = "662cf0d90261b8540796225b78913b620ea34a8f" }
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "662cf0d90261b8540796225b78913b620ea34a8f" }
+dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev = "662cf0d90261b8540796225b78913b620ea34a8f" }
+generational-box  = { git = "https://github.com/DioxusLabs/dioxus", rev = "662cf0d90261b8540796225b78913b620ea34a8f" }
 
 [workspace.dependencies]
 freya = { path = "crates/freya", version = "0.3.3" }
