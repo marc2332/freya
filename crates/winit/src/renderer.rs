@@ -385,7 +385,7 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
                     && self.modifiers_state.alt_key()
                     && state == ElementState::Pressed;
 
-                #[cfg(not(feature = "disable-animation-shortcuts"))]
+                #[cfg(debug_assertions)]
                 if change_animation_clock {
                     let ch = logical_key.to_text();
                     let render = if ch == Some("+") {
