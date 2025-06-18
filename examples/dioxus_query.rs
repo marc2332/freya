@@ -16,35 +16,50 @@ enum QueryKey {
     RandomJoke,
 }
 
-#[derive(PartialEq)]
-enum QueryValue {
-    Joke(Joke),
-}
-
 #[derive(Deserialize, PartialEq)]
 struct Joke {
     setup: String,
     punchline: String,
 }
 
-async fn get_random_joke() -> Option<QueryValue> {
-    let res = reqwest::get("https://official-joke-api.appspot.com/random_joke")
-        .await
-        .ok()?;
-    let data = res.json::<Joke>().await.ok()?;
+#[derive(Clone)]
+struct JokeClient;
 
-    Some(QueryValue::Joke(data))
+impl JokeClient {
+    async fn get_random_joke(&self) -> Option<Joke> {
+        let res = reqwest::get("https://official-joke-api.appspot.com/random_joke")
+            .await
+            .ok()?;
+        let joke_data = res.json::<Joke>().await.ok()?;
+
+        Some(joke_data)
+    }
+}
+
+#[derive(Clone, PartialEq, Hash, Eq)]
+struct GetRandomJoke(Captured<JokeClient>);
+
+impl QueryCapability for GetRandomJoke {
+    type Ok = Joke;
+    type Err = ();
+    type Keys = QueryKey;
+
+    async fn run(&self, _random_joke: &Self::Keys) -> Result<Self::Ok, Self::Err> {
+        match self.0.get_random_joke().await {
+            Some(joke) => Ok(joke),
+            None => Err(()),
+        }
+    }
 }
 
 fn app() -> Element {
-    use_init_query_client::<QueryValue, (), QueryKey>();
-    let client = use_query_client::<QueryValue, (), QueryKey>();
-    let joke_query = use_get_query([QueryKey::RandomJoke], |_| async {
-        get_random_joke().await.ok_or(())
-    });
+    let joke_query = use_query(Query::new(
+        QueryKey::RandomJoke,
+        GetRandomJoke(Captured(JokeClient)),
+    ));
 
-    let new_joke = move |_| {
-        client.invalidate_queries(&[QueryKey::RandomJoke]);
+    let new_joke = move |_| async move {
+        QueriesStorage::<GetRandomJoke>::invalidate_matching(QueryKey::RandomJoke).await;
     };
 
     rsx!(
@@ -53,10 +68,10 @@ fn app() -> Element {
             width: "100%",
             main_align: "center",
             cross_align: "center",
-            match joke_query.result().value() {
-                QueryState::Settled(settled) => {
-                    match settled {
-                        QueryResult::Ok(QueryValue::Joke(joke)) => {
+            match &*joke_query.read().state() {
+                QueryStateData::Settled { res, .. } => {
+                    match res {
+                        Ok(joke) => {
                             rsx!(
                                 label {
                                     "{joke.setup}"
@@ -66,7 +81,7 @@ fn app() -> Element {
                                 }
                             )
                         }
-                        QueryResult::Err(_) => {
+                        Err(_) => {
                             rsx!(
                                 label {
                                     "An error ocurred."
@@ -75,10 +90,17 @@ fn app() -> Element {
                         }
                     }
                 }
-                QueryState::Loading(_) => {
+                QueryStateData::Loading { .. } => {
                     rsx!(
                         label {
                             "Loading"
+                        }
+                    )
+                }
+                QueryStateData::Pending { .. } => {
+                    rsx!(
+                        label {
+                            "Pending..."
                         }
                     )
                 }
