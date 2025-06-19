@@ -31,13 +31,13 @@ fn app() -> Element {
                 }),
                 selected_item: rsx!(
                     label {
-                        "Selected: {values[selected_dropdown()]}"
+                        ":) {values[selected_dropdown()]}"
                     }
                 ),
                 for (i, ch) in values.iter().enumerate() {
                     DropdownItem {
                         onpress: move |_| selected_dropdown.set(i),
-                        label { "Custom {ch}" }
+                        label { "-> {ch}" }
                     }
                 }
             }
@@ -50,7 +50,7 @@ fn app() -> Element {
                 for (i, ch) in values.iter().enumerate() {
                     DropdownItem {
                         onpress: move |_| selected_dropdown.set(i),
-                        label { "Custom {ch}" }
+                        label { "{ch}" }
                     }
                 }
             }
