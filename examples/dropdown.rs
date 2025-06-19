@@ -17,7 +17,7 @@ fn app() -> Element {
             "Rust".to_string(),
         ]
     });
-    let mut selected_dropdown = use_signal(|| "First Option".to_string());
+    let mut selected_dropdown = use_signal(|| 0);
 
     rsx!(
         Body {
@@ -29,28 +29,28 @@ fn app() -> Element {
                     width: "200".into(),
                     arrow_fill: "rgb(0, 119, 182)".into()
                 }),
-                value: selected_dropdown.read().clone(),
-                for ch in values.iter() {
+                selected_item: rsx!(
+                    label {
+                        "Selected: {values[selected_dropdown()]}"
+                    }
+                ),
+                for (i, ch) in values.iter().enumerate() {
                     DropdownItem {
-                        value: ch.clone(),
-                        onpress: {
-                            to_owned![ch];
-                            move |_| selected_dropdown.set(ch.clone())
-                        },
+                        onpress: move |_| selected_dropdown.set(i),
                         label { "Custom {ch}" }
                     }
                 }
             }
             Dropdown {
-                value: selected_dropdown.read().clone(),
-                for ch in values {
+                selected_item: rsx!(
+                    label {
+                        "{values[selected_dropdown()]}"
+                     }
+                ),
+                for (i, ch) in values.iter().enumerate() {
                     DropdownItem {
-                        value: ch.clone(),
-                        onpress: {
-                            to_owned![ch];
-                            move |_| selected_dropdown.set(ch.clone())
-                        },
-                        label { "{ch}" }
+                        onpress: move |_| selected_dropdown.set(i),
+                        label { "Custom {ch}" }
                     }
                 }
             }

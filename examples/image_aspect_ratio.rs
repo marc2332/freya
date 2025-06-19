@@ -42,10 +42,9 @@ fn app() -> Element {
             main_align: "center",
             cross_align: "center",
             Dropdown {
-                value: aspect_ratio(),
+                selected_item: rsx!( label { "{aspect_ratio}" } ),
                 for ar in [AspectRatio::Max, AspectRatio::Min, AspectRatio::None, AspectRatio::Fit] {
                     DropdownItem {
-                        value: ar,
                         onpress: move |_| aspect_ratio.set(ar),
                         label { "{ar}" }
                     }

@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 use dioxus::prelude::*;
 use freya_core::{
     platform::CursorIcon,
@@ -30,13 +28,11 @@ use crate::icons::ArrowIcon;
 
 /// Properties for the [`DropdownItem`] component.
 #[derive(Props, Clone, PartialEq)]
-pub struct DropdownItemProps<T: 'static + Clone + PartialEq> {
+pub struct DropdownItemProps {
     /// Theme override.
     pub theme: Option<DropdownItemThemeWith>,
     /// Selectable items, like [`DropdownItem`]
     pub children: Element,
-    /// Selected value.
-    pub value: T,
     /// Handler for the `onpress` event.
     pub onpress: Option<EventHandler<()>>,
 }
@@ -54,18 +50,13 @@ pub enum DropdownItemStatus {
 /// # Styling
 /// Inherits the [`DropdownItemTheme`](freya_hooks::DropdownItemTheme) theme.
 #[allow(non_snake_case)]
-pub fn DropdownItem<T>(
+pub fn DropdownItem(
     DropdownItemProps {
         theme,
         children,
-        value,
         onpress,
-    }: DropdownItemProps<T>,
-) -> Element
-where
-    T: Clone + PartialEq + 'static,
-{
-    let selected = use_context::<Signal<T>>();
+    }: DropdownItemProps,
+) -> Element {
     let theme = use_applied_theme!(&theme, dropdown_item);
     let focus = use_focus();
     let mut status = use_signal(DropdownItemStatus::default);
@@ -74,7 +65,6 @@ where
 
     let a11y_id = focus.attribute();
     let a11y_member_of = UseFocus::attribute_for_id(dropdown_group.group_id);
-    let is_selected = *selected.read() == value;
 
     let DropdownItemTheme {
         font_theme,
@@ -86,7 +76,7 @@ where
     } = &theme;
 
     let background = match *status.read() {
-        _ if is_selected => select_background,
+        _ if false => select_background,
         DropdownItemStatus::Hovering => hover_background,
         DropdownItemStatus::Idle => background,
     };
@@ -102,12 +92,12 @@ where
         }
     });
 
-    let onmouseenter = move |_| {
+    let onpointerenter = move |_| {
         platform.set_cursor(CursorIcon::Pointer);
         status.set(DropdownItemStatus::Hovering);
     };
 
-    let onmouseleave = move |_| {
+    let onpointerleave = move |_| {
         platform.set_cursor(CursorIcon::default());
         status.set(DropdownItemStatus::default());
     };
@@ -141,8 +131,8 @@ where
             padding: "6 10",
             corner_radius: "6",
             main_align: "center",
-            onmouseenter,
-            onmouseleave,
+            onpointerenter,
+            onpointerleave,
             onclick,
             onkeydown,
             {children}
@@ -152,13 +142,11 @@ where
 
 /// Properties for the [`Dropdown`] component.
 #[derive(Props, Clone, PartialEq)]
-pub struct DropdownProps<T: 'static + Clone + PartialEq> {
+pub struct DropdownProps {
     /// Theme override.
     pub theme: Option<DropdownThemeWith>,
-    /// Selectable items, like [`DropdownItem`]
+    pub selected_item: Element,
     pub children: Element,
-    /// Selected value.
-    pub value: T,
 }
 
 /// Current status of the Dropdown.
@@ -186,18 +174,14 @@ struct DropdownGroup {
 /// # use freya::prelude::*;
 ///
 /// fn app() -> Element {
-///     let values = use_hook(|| vec!["Value A".to_string(), "Value B".to_string(), "Value C".to_string()]);
-///     let mut selected_dropdown = use_signal(|| "Value A".to_string());
+///     let values = use_signal(|| vec!["Value A".to_string(), "Value B".to_string(), "Value C".to_string()]);
+///     let mut selected_dropdown = use_signal(|| 0);
 ///     rsx!(
 ///         Dropdown {
-///             value: selected_dropdown.read().clone(),
-///             for ch in values {
+///             selected_item: rsx!( label { "{values.read()[selected_dropdown()]}" } ),
+///             for (i, ch) in values.iter().enumerate() {
 ///                 DropdownItem {
-///                     value: ch.to_string(),
-///                     onpress: {
-///                         to_owned![ch];
-///                         move |_| selected_dropdown.set(ch.clone())
-///                     },
+///                     onpress: move |_| selected_dropdown.set(i),
 ///                     label { "{ch}" }
 ///                 }
 ///             }
@@ -220,12 +204,14 @@ struct DropdownGroup {
     doc = embed_doc_image::embed_image!("dropdown", "images/gallery_dropdown.png")
 )]
 #[allow(non_snake_case)]
-pub fn Dropdown<T>(props: DropdownProps<T>) -> Element
-where
-    T: PartialEq + Clone + Display + 'static,
-{
-    let mut selected = use_context_provider(|| Signal::new(props.value.clone()));
-    let theme = use_applied_theme!(&props.theme, dropdown);
+pub fn Dropdown(
+    DropdownProps {
+        selected_item,
+        theme,
+        children,
+    }: DropdownProps,
+) -> Element {
+    let theme = use_applied_theme!(&theme, dropdown);
     let mut focus = use_focus();
     let mut status = use_signal(DropdownStatus::default);
     let mut opened = use_signal(|| false);
@@ -239,10 +225,6 @@ where
     let is_focused = focus.is_focused();
     let a11y_id = focus.attribute();
     let a11y_member_of = focus.attribute();
-
-    if *selected.peek() != props.value {
-        *selected.write() = props.value;
-    }
 
     // Close if the focused node is not part of the Dropdown
     use_effect(move || {
@@ -260,7 +242,7 @@ where
     });
 
     // Close the dropdown if clicked anywhere
-    let onglobalclick = move |_: MouseEvent| {
+    let onglobalpointerup = move |_| {
         opened.set(false);
     };
 
@@ -283,12 +265,12 @@ where
         }
     };
 
-    let onmouseenter = move |_| {
+    let onpointerenter = move |_| {
         platform.set_cursor(CursorIcon::Pointer);
         status.set(DropdownStatus::Hovering);
     };
 
-    let onmouseleave = move |_| {
+    let onpointerleave = move |_| {
         platform.set_cursor(CursorIcon::default());
         status.set(DropdownStatus::default());
     };
@@ -315,16 +297,13 @@ where
         format!("1 inner {border_fill}")
     };
 
-    let selected = selected.read().to_string();
-
     rsx!(
         rect {
             direction: "vertical",
-            spacing: "4",
             rect {
                 width: "{width}",
-                onmouseenter,
-                onmouseleave,
+                onpointerenter,
+                onpointerleave,
                 onclick,
                 onglobalkeydown,
                 margin: "{margin}",
@@ -338,9 +317,7 @@ where
                 direction: "horizontal",
                 main_align: "center",
                 cross_align: "center",
-                label {
-                    "{selected}"
-                }
+                {selected_item}
                 ArrowIcon {
                     rotate: "0",
                     fill: "{arrow_fill}",
@@ -355,8 +332,9 @@ where
                     width: "0",
                     rect {
                         width: "100v",
+                        margin: "4 0 0 0",
                         rect {
-                            onglobalclick,
+                            onglobalpointerup,
                             onglobalkeydown,
                             layer: "-1000",
                             margin: "{margin}",
@@ -367,7 +345,7 @@ where
                             shadow: "0 2 4 0 rgb(0, 0, 0, 0.15)",
                             padding: "6",
                             content: "fit",
-                            {props.children}
+                            {children}
                         }
                     }
                 }
@@ -391,18 +369,14 @@ mod test {
                     "Value C".to_string(),
                 ]
             });
-            let mut selected_dropdown = use_signal(|| "Value A".to_string());
+            let mut selected_dropdown = use_signal(|| 0);
 
             rsx!(
                 Dropdown {
-                    value: selected_dropdown.read().clone(),
-                    for ch in values {
+                    selected_item: rsx!( label { "{values[selected_dropdown()]}" } ),
+                    for (i, ch) in values.iter().enumerate() {
                         DropdownItem {
-                            value: ch.clone(),
-                            onpress: {
-                                to_owned![ch];
-                                move |_| selected_dropdown.set(ch.clone())
-                            },
+                            onpress: move |_| selected_dropdown.set(i),
                             label { "{ch}" }
                         }
                     }
@@ -459,18 +433,14 @@ mod test {
                     "Value C".to_string(),
                 ]
             });
-            let mut selected_dropdown = use_signal(|| "Value A".to_string());
+            let mut selected_dropdown = use_signal(|| 0);
 
             rsx!(
                 Dropdown {
-                    value: selected_dropdown.read().clone(),
-                    for ch in values {
+                    selected_item: rsx!( label { "{values[selected_dropdown()]}" } ),
+                    for (i, ch) in values.iter().enumerate() {
                         DropdownItem {
-                            value: ch.clone(),
-                            onpress: {
-                                to_owned![ch];
-                                move |_| selected_dropdown.set(ch.clone())
-                            },
+                            onpress: move |_| selected_dropdown.set(i),
                             label { "{ch}" }
                         }
                     }
