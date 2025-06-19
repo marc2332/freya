@@ -36,6 +36,7 @@ fn app() -> Element {
                 ),
                 for (i, ch) in values.iter().enumerate() {
                     DropdownItem {
+                        selected: selected_dropdown() == i,
                         onpress: move |_| selected_dropdown.set(i),
                         label { "-> {ch}" }
                     }

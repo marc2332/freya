@@ -35,6 +35,9 @@ pub struct DropdownItemProps {
     pub children: Element,
     /// Handler for the `onpress` event.
     pub onpress: Option<EventHandler<()>>,
+    /// Render this item as selected.
+    #[props(default = false)]
+    pub selected: bool,
 }
 
 /// Current status of the DropdownItem.
@@ -55,6 +58,7 @@ pub fn DropdownItem(
         theme,
         children,
         onpress,
+        selected,
     }: DropdownItemProps,
 ) -> Element {
     let theme = use_applied_theme!(&theme, dropdown_item);
@@ -76,7 +80,7 @@ pub fn DropdownItem(
     } = &theme;
 
     let background = match *status.read() {
-        _ if false => select_background,
+        _ if selected => select_background,
         DropdownItemStatus::Hovering => hover_background,
         DropdownItemStatus::Idle => background,
     };
@@ -145,7 +149,9 @@ pub fn DropdownItem(
 pub struct DropdownProps {
     /// Theme override.
     pub theme: Option<DropdownThemeWith>,
+    /// The selected item element.
     pub selected_item: Element,
+    /// Selectable items elements, like [`DropdownItem`].
     pub children: Element,
 }
 
@@ -181,6 +187,7 @@ struct DropdownGroup {
 ///             selected_item: rsx!( label { "{values.read()[selected_dropdown()]}" } ),
 ///             for (i, ch) in values.iter().enumerate() {
 ///                 DropdownItem {
+///                     selected: selected_dropdown() == i,
 ///                     onpress: move |_| selected_dropdown.set(i),
 ///                     label { "{ch}" }
 ///                 }
