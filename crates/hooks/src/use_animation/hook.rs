@@ -90,14 +90,16 @@ pub enum OnFinish {
     Restart,
 }
 
-///  hat to do once the animation gets created.
+/// What to do once the animation gets created.
+///
+/// By default it is [OnCreation::Nothing]
 #[derive(PartialEq, Clone, Copy, Default)]
 pub enum OnCreation {
-    /// Runs the animation.
-    #[default]
-    Run,
     /// Does nothing at all.
+    #[default]
     Nothing,
+    /// Runs the animation.
+    Run,
     /// Set the values to the end of the animation. As if it had actually run.
     Finish,
 }
