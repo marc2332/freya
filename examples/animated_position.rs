@@ -107,7 +107,7 @@ fn app() -> Element {
 #[component]
 fn Card(children: Element) -> Element {
     let animation = use_animation(move |conf| {
-        conf.auto_start(true);
+        conf.on_creation(OnCreation::Run);
         AnimNum::new(0.9, 1.)
             .time(300)
             .function(Function::Elastic)

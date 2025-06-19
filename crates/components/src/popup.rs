@@ -15,6 +15,7 @@ use freya_hooks::{
     ButtonThemeWith,
     Ease,
     Function,
+    OnCreation,
     PopupTheme,
     PopupThemeWith,
 };
@@ -104,7 +105,7 @@ pub fn Popup(
     close_on_escape_key: bool,
 ) -> Element {
     let animations = use_animation(|conf| {
-        conf.auto_start(true);
+        conf.on_creation(OnCreation::Run);
         (
             AnimNum::new(0.85, 1.)
                 .time(250)
