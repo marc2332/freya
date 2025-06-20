@@ -4,14 +4,14 @@ use dioxus_core::prelude::{
     Task,
 };
 use dioxus_hooks::{
+    use_effect,
     use_memo,
     use_reactive,
     use_signal,
     Dependency,
 };
 use dioxus_signals::{
-    Memo,
-    ReadOnlySignal,
+    MappedSignal,
     Readable,
     Signal,
     Writable,
@@ -50,14 +50,8 @@ impl AnimConfiguration {
 
 #[derive(Clone)]
 pub struct AnimationContext<Animated: AnimatedValue> {
-    value: Signal<Animated>,
+    value: Animated,
     conf: AnimConfiguration,
-}
-
-impl<Animated: AnimatedValue> PartialEq for AnimationContext<Animated> {
-    fn eq(&self, other: &Self) -> bool {
-        self.value.eq(&other.value) && self.conf.eq(&other.conf)
-    }
 }
 
 /// Controls the direction of the animation.
@@ -119,33 +113,21 @@ pub enum OnDepsChange {
 }
 
 /// Animate your elements. Use [`use_animation`] to use this.
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct UseAnimation<Animated: AnimatedValue> {
-    pub(crate) context: Memo<AnimationContext<Animated>>,
+    pub(crate) context: Signal<Option<AnimationContext<Animated>>>,
     pub(crate) platform: UsePlatform,
     pub(crate) is_running: Signal<bool>,
     pub(crate) has_run_yet: Signal<bool>,
     pub(crate) task: Signal<Option<Task>>,
     pub(crate) last_direction: Signal<AnimDirection>,
 }
-
-impl<T: AnimatedValue> PartialEq for UseAnimation<T> {
-    fn eq(&self, other: &Self) -> bool {
-        self.context.eq(&other.context)
-            && self.platform.eq(&other.platform)
-            && self.is_running.eq(&other.is_running)
-            && self.has_run_yet.eq(&other.has_run_yet)
-            && self.task.eq(&other.task)
-            && self.last_direction.eq(&other.last_direction)
-    }
-}
-
 impl<T: AnimatedValue> Copy for UseAnimation<T> {}
 
 impl<Animated: AnimatedValue> UseAnimation<Animated> {
     /// Get the animated value.
-    pub fn get(&self) -> ReadOnlySignal<Animated> {
-        self.context.read().value.into()
+    pub fn get(&self) -> MappedSignal<Animated> {
+        self.context.map(|a| &a.as_ref().unwrap().value)
     }
 
     /// Reset the animation to the default state.
@@ -160,9 +142,10 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
         }
 
         self.context
-            .peek()
-            .value
             .write_unchecked()
+            .as_mut()
+            .unwrap()
+            .value
             .prepare(AnimDirection::Forward);
     }
 
@@ -175,9 +158,10 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
         }
 
         self.context
-            .peek()
-            .value
             .write_unchecked()
+            .as_mut()
+            .unwrap()
+            .value
             .finish(*self.last_direction.peek());
 
         *self.has_run_yet.write_unchecked() = true;
@@ -210,15 +194,14 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 
     /// Run the animation with a given [`AnimDirection`]
     pub fn run(&self, mut direction: AnimDirection) {
-        let context = &self.context.peek();
         let platform = self.platform;
         let mut is_running = self.is_running;
         let mut has_run_yet = self.has_run_yet;
         let mut task = self.task;
         let mut last_direction = self.last_direction;
 
-        let on_finish = context.conf.on_finish;
-        let mut value = context.value;
+        let on_finish = self.context.peek().as_ref().unwrap().conf.on_finish;
+        let mut context = self.context;
 
         last_direction.set(direction);
 
@@ -237,7 +220,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
             let mut prev_frame = Instant::now();
 
             // Prepare the animations with the the proper direction
-            value.write().prepare(direction);
+            context.write().as_mut().unwrap().value.prepare(direction);
 
             if !peek_has_run_yet {
                 *has_run_yet.write() = true;
@@ -248,19 +231,20 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
                 // Wait for the event loop to tick
                 ticker.tick().await;
 
-                // Its okay to stop this animation if the value has been dropped
-                if value.try_peek().is_err() {
+                let Ok(mut context) = context.try_write() else {
+                    // Its okay to stop this animation if the context has been dropped
                     break;
-                }
+                };
+                let context = context.as_mut().unwrap();
 
                 platform.request_animation_frame();
 
                 index += prev_frame.elapsed().as_millis();
 
-                let is_finished = value.peek().is_finished(index, direction);
+                let is_finished = context.value.is_finished(index, direction);
 
                 // Advance the animations
-                value.write().advance(index, direction);
+                context.value.advance(index, direction);
 
                 prev_frame = Instant::now();
 
@@ -274,7 +258,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
                             index = 0;
 
                             // Restart the animation
-                            value.write().prepare(direction);
+                            context.value.prepare(direction);
                         }
                         OnFinish::Nothing => {
                             // Stop if all the animations are finished
@@ -383,17 +367,12 @@ pub fn use_animation<Animated: AnimatedValue>(
     let has_run_yet = use_signal(|| false);
     let task = use_signal(|| None);
     let last_direction = use_signal(|| AnimDirection::Reverse);
-    let mut prev_value = use_signal::<Option<Signal<Animated>>>(|| None);
+    let mut context = use_signal(|| None);
 
-    let context = use_memo(move || {
-        if let Some(prev_value) = prev_value.take() {
-            prev_value.manually_drop();
-        }
+    use_memo(move || {
         let mut conf = AnimConfiguration::default();
         let value = run(&mut conf);
-        let value = Signal::new(value);
-        prev_value.set(Some(value));
-        AnimationContext { value, conf }
+        context.replace(Some(AnimationContext { value, conf }));
     });
 
     let animation = UseAnimation {
@@ -405,10 +384,9 @@ pub fn use_animation<Animated: AnimatedValue>(
         last_direction,
     };
 
-    use_memo(move || {
-        let context = context.read();
+    use_effect(move || {
         if *has_run_yet.peek() {
-            match context.conf.on_deps_change {
+            match context.read().as_ref().unwrap().conf.on_deps_change {
                 OnDepsChange::Finish => animation.finish(),
                 OnDepsChange::Rerun => {
                     let last_direction = *animation.last_direction.peek();
@@ -419,15 +397,17 @@ pub fn use_animation<Animated: AnimatedValue>(
         }
     });
 
-    use_hook(move || match animation.context.read().conf.on_creation {
-        OnCreation::Run => {
-            animation.run(AnimDirection::Forward);
-        }
-        OnCreation::Finish => {
-            animation.finish();
-        }
-        _ => {}
-    });
+    use_hook(
+        move || match animation.context.read().as_ref().unwrap().conf.on_creation {
+            OnCreation::Run => {
+                animation.run(AnimDirection::Forward);
+            }
+            OnCreation::Finish => {
+                animation.finish();
+            }
+            _ => {}
+        },
+    );
 
     animation
 }
@@ -444,17 +424,13 @@ where
     let has_run_yet = use_signal(|| false);
     let task = use_signal(|| None);
     let last_direction = use_signal(|| AnimDirection::Reverse);
-    let mut prev_value = use_signal::<Option<Signal<Animated>>>(|| None);
 
-    let context = use_memo(use_reactive(deps, move |deps| {
-        if let Some(prev_value) = prev_value.take() {
-            prev_value.manually_drop();
-        }
+    let mut context = use_signal(|| None);
+
+    use_memo(use_reactive(deps, move |deps| {
         let mut conf = AnimConfiguration::default();
         let value = run(&mut conf, deps);
-        let value = Signal::new(value);
-        prev_value.set(Some(value));
-        AnimationContext { value, conf }
+        context.replace(Some(AnimationContext { value, conf }));
     }));
 
     let animation = UseAnimation {
@@ -466,24 +442,30 @@ where
         last_direction,
     };
 
-    use_memo(move || {
-        let context = context.read();
+    use_effect(move || {
         if *has_run_yet.peek() {
-            match context.conf.on_deps_change {
+            match context.read().as_ref().unwrap().conf.on_deps_change {
                 OnDepsChange::Finish => animation.finish(),
                 OnDepsChange::Rerun => {
-                    animation.run(*animation.last_direction.peek());
+                    let last_direction = *animation.last_direction.peek();
+                    animation.run(last_direction);
                 }
                 _ => {}
             }
         }
     });
 
-    use_hook(move || {
-        if animation.context.read().conf.on_creation == OnCreation::Run {
-            animation.run(AnimDirection::Forward);
-        }
-    });
+    use_hook(
+        move || match animation.context.peek().as_ref().unwrap().conf.on_creation {
+            OnCreation::Run => {
+                animation.run(AnimDirection::Forward);
+            }
+            OnCreation::Finish => {
+                animation.finish();
+            }
+            _ => {}
+        },
+    );
 
     animation
 }
