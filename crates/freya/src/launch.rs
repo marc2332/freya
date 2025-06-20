@@ -265,16 +265,12 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
         )
     }
 
-    let devtools: Option<(Devtools, DevtoolsReceiver, HighlightedNode)> = {
-        #[cfg(feature = "devtools")]
-        #[cfg(debug_assertions)]
-        {
-            Some(Devtools::new())
-        }
+    #[cfg(feature = "devtools")]
+    #[cfg(debug_assertions)]
+    let devtools = Some(Devtools::new());
 
-        #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
-        None
-    };
+    #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
+    let devtools: Option<(Devtools, DevtoolsReceiver, HighlightedNode)> = None;
 
     let vdom = VirtualDom::new_with_props(
         Root,
