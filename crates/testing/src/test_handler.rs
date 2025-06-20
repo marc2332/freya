@@ -361,7 +361,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
             dirty_surface: &mut dirty_surface,
             compositor: &mut compositor,
             scale_factor: SCALE_FACTOR as f32,
-            selected_node: None,
+            highlighted_node: None,
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,
             default_fonts: &["Fira Sans".to_string()],

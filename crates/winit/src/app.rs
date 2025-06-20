@@ -67,10 +67,7 @@ use winit::{
 
 use crate::{
     accessibility::WinitAcessibilityTree,
-    devtools::{
-        Devtools,
-        HoveredNode,
-    },
+    devtools::Devtools,
     size::WinitSize,
     winit_waker::winit_waker,
     EmbeddedFonts,
@@ -333,7 +330,6 @@ impl Application {
     /// Render the App into the Window Canvas
     pub fn render(
         &mut self,
-        hovered_node: &HoveredNode,
         background: Color,
         surface: &mut Surface,
         dirty_surface: &mut Surface,
@@ -350,7 +346,6 @@ impl Application {
         );
 
         self.start_render(
-            hovered_node,
             background,
             surface,
             dirty_surface,
@@ -459,7 +454,6 @@ impl Application {
     /// Start rendering the RealDOM to Window
     pub fn start_render(
         &mut self,
-        hovered_node: &HoveredNode,
         background: Color,
         surface: &mut Surface,
         dirty_surface: &mut Surface,
@@ -467,9 +461,10 @@ impl Application {
         scale_factor: f32,
     ) {
         let fdom = self.sdom.get();
-        let hovered_node = hovered_node
+        let highlighted_node = self
+            .devtools
             .as_ref()
-            .and_then(|hovered_node| *hovered_node.lock().unwrap());
+            .and_then(|devtools| *devtools.highlighted_node.lock().unwrap());
 
         let mut render_pipeline = RenderPipeline {
             canvas_area: Area::from_size(window_size.to_torin()),
@@ -484,7 +479,7 @@ impl Application {
             dirty_surface,
             compositor: &mut self.compositor,
             scale_factor,
-            selected_node: hovered_node,
+            highlighted_node,
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,
             default_fonts: &self.default_fonts,
