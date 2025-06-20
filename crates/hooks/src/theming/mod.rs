@@ -237,6 +237,23 @@ define_theme! {
 
 define_theme! {
     %[component]
+    pub ButtonSegment {
+        %[cows]
+        background: str,
+        hover_background: str,
+        disabled_background: str,
+        shadow: str,
+        width: str,
+        height: str,
+        padding: str,
+
+        %[subthemes]
+        font_theme: FontTheme,
+    }
+}
+
+define_theme! {
+    %[component]
     pub Input {
         %[cows]
         background: str,
@@ -589,6 +606,7 @@ pub struct Theme {
     pub button: ButtonTheme,
     pub filled_button: ButtonTheme,
     pub outline_button: ButtonTheme,
+    pub button_segment: ButtonSegmentTheme,
     pub switch: SwitchTheme,
     pub scroll_bar: ScrollBarTheme,
     pub slider: SliderTheme,
