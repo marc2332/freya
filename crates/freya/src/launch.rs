@@ -245,8 +245,7 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
         rsx!(
             NativeContainer {
                 {
-                    #[cfg(feature = "devtools")]
-                    #[cfg(debug_assertions)]
+                    #[cfg(all(feature = "devtools", debug_assertions))]
                     rsx!(
                         freya_devtools::DevtoolsView {
                             highlighted_node: props.highlighted_node.unwrap(),
@@ -265,8 +264,7 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
         )
     }
 
-    #[cfg(feature = "devtools")]
-    #[cfg(debug_assertions)]
+    #[cfg(all(feature = "devtools", debug_assertions))]
     let devtools = Some(Devtools::new());
 
     #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
@@ -293,7 +291,7 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
     }
 
     #[cfg(feature = "custom-tokio-rt")]
-    WinitRenderer::launch(vdom, sdom, config, devtools, hovered_node);
+    WinitRenderer::launch(vdom, sdom, config, devtools.map(|d| d.0), hovered_node);
 }
 
 type AppComponent = fn() -> Element;
