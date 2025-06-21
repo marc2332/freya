@@ -273,7 +273,6 @@ fn LayoutForDOMInspector() -> Element {
                     rect {
                         padding: "15",
                         NodesTree {
-                            height: "fill",
                             selected_node_id,
                             onselected: move |node_id: NodeId| {
                                 radio.read().hovered_node.lock().unwrap().replace(node_id);
