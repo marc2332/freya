@@ -65,7 +65,7 @@ impl UseFocus {
     pub fn request_focus(&mut self) {
         if !*self.is_focused.peek() {
             self.platform
-                .focus(AccessibilityFocusStrategy::Node(self.id));
+                .request_focus(AccessibilityFocusStrategy::Node(self.id));
         }
     }
 
@@ -80,7 +80,7 @@ impl UseFocus {
 
     /// Focus a given [AccessibilityId].
     pub fn focus_id(id: AccessibilityId) {
-        UsePlatform::current().focus(AccessibilityFocusStrategy::Node(id));
+        UsePlatform::current().request_focus(AccessibilityFocusStrategy::Node(id));
     }
 
     /// Get [AccessibilityId] of this accessibility node.
