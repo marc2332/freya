@@ -78,6 +78,8 @@ pub fn SidebarItem(
         margin,
         hover_background,
         background,
+        corner_radius,
+        padding,
         font_theme,
     } = use_applied_theme!(&theme, sidebar_item);
     let mut status = use_signal(ButtonStatus::default);
@@ -122,8 +124,8 @@ pub fn SidebarItem(
             width: "100%",
             height: "auto",
             color: "{font_theme.color}",
-            corner_radius: "99",
-            padding: "8 10",
+            corner_radius: "{corner_radius}",
+            padding: "{padding}",
             background: "{background}",
             {children}
         }
