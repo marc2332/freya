@@ -94,7 +94,7 @@
 //!                 width: "100%",
 //!             }
 //!             rect {              // This element will not be visible
-//!                 height: "200"
+//!                 height: "200",
 //!                 width: "100%",
 //!             }
 //!         }
