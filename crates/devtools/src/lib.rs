@@ -2,15 +2,6 @@ use std::collections::HashSet;
 
 use dioxus::prelude::*;
 use dioxus_radio::prelude::*;
-use dioxus_router::{
-    hooks::use_navigator,
-    prelude::{
-        use_route,
-        Outlet,
-        Routable,
-        Router,
-    },
-};
 use freya_components::*;
 use freya_core::event_loop_messages::EventLoopMessage;
 use freya_elements as dioxus_elements;
@@ -21,6 +12,7 @@ use freya_hooks::{
     DARK_THEME,
 };
 use freya_native_core::NodeId;
+use freya_router::prelude::*;
 use freya_winit::devtools::{
     DevtoolsReceiver,
     HighlightedNode,

@@ -22,7 +22,7 @@ skia = ["freya-engine/skia-engine"]
 tracing-subscriber = ["dep:tracing-subscriber"]
 mocked-engine-development = ["freya-engine/mocked-engine"] # This is just for the CI
 fade-cached-incremental-areas = ["freya-core/fade-cached-incremental-areas"]
-docs = ["dep:freya-testing", "dep:dioxus-i18n", "dep:dioxus-router", "freya-components/docs", "freya-hooks/docs"]
+docs = ["dep:freya-testing", "dep:dioxus-i18n", "dep:freya-router", "freya-components/docs", "freya-hooks/docs"]
 
 # User features
 network-image = ["freya-components/network-image"]
@@ -48,7 +48,7 @@ torin = { workspace = true }
 
 freya-testing = { workspace = true, optional = true }
 dioxus-i18n = { workspace = true, optional = true }
-dioxus-router = { workspace = true, optional = true }
+freya-router = { workspace = true, optional = true }
 
 dioxus = { workspace = true }
 dioxus-core-macro = { workspace = true }

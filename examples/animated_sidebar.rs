@@ -3,15 +3,11 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus_router::prelude::{
-    Outlet,
-    Routable,
-    Router,
-};
 use freya::{
     core::custom_attributes::NodeReferenceLayout,
     prelude::*,
 };
+use freya_router::prelude::*;
 
 fn main() {
     launch_with_props(app, "Animated Sidebar", (650.0, 500.0));
