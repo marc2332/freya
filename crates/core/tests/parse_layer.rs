@@ -2,7 +2,6 @@ use freya_core::{
     parsing::Parse,
     values::LayerMode,
 };
-use freya_engine::prelude::*;
 
 #[test]
 fn parse_overlay() {
