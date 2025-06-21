@@ -290,7 +290,7 @@ pub fn ButtonBase(
         }
     });
 
-    let onmouseenter = move |_| {
+    let onpointerenter = move |_| {
         if enabled {
             platform.set_cursor(CursorIcon::Pointer);
             status.set(ButtonStatus::Hovering);
