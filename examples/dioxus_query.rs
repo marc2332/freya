@@ -11,11 +11,6 @@ fn main() {
     launch_with_props(app, "dioxus-query", (400.0, 350.0));
 }
 
-#[derive(PartialEq, Eq, Clone, Hash)]
-enum QueryKey {
-    RandomJoke,
-}
-
 #[derive(Deserialize, PartialEq)]
 struct Joke {
     setup: String,
@@ -42,9 +37,9 @@ struct GetRandomJoke(Captured<JokeClient>);
 impl QueryCapability for GetRandomJoke {
     type Ok = Joke;
     type Err = ();
-    type Keys = QueryKey;
+    type Keys = ();
 
-    async fn run(&self, _random_joke: &Self::Keys) -> Result<Self::Ok, Self::Err> {
+    async fn run(&self, _: &Self::Keys) -> Result<Self::Ok, Self::Err> {
         match self.0.get_random_joke().await {
             Some(joke) => Ok(joke),
             None => Err(()),
@@ -53,13 +48,10 @@ impl QueryCapability for GetRandomJoke {
 }
 
 fn app() -> Element {
-    let joke_query = use_query(Query::new(
-        QueryKey::RandomJoke,
-        GetRandomJoke(Captured(JokeClient)),
-    ));
+    let joke_query = use_query(Query::new((), GetRandomJoke(Captured(JokeClient))));
 
     let new_joke = move |_| async move {
-        QueriesStorage::<GetRandomJoke>::invalidate_matching(QueryKey::RandomJoke).await;
+        QueriesStorage::<GetRandomJoke>::invalidate_matching(()).await;
     };
 
     rsx!(
