@@ -6,6 +6,7 @@ use freya_hooks::{
     use_surface_theme_indicator,
     AnimNum,
     LoaderThemeWith,
+    OnCreation,
     OnFinish,
     SurfaceThemeIndicator,
 };
@@ -50,7 +51,7 @@ pub struct LoaderProps {
 pub fn Loader(props: LoaderProps) -> Element {
     let theme = use_applied_theme!(&props.theme, loader);
     let animation = use_animation(|conf| {
-        conf.auto_start(true);
+        conf.on_creation(OnCreation::Run);
         conf.on_finish(OnFinish::Restart);
         AnimNum::new(0.0, 360.0).time(650)
     });
