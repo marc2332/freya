@@ -17,7 +17,7 @@ use crate::use_init_asset_cacher;
 
 /// Keep some native features (focused element, preferred theme, etc) on sync between the platform and the components
 pub fn use_init_native_platform() {
-    // Inithe global asset cacher
+    // Init the global asset cacher
     use_init_asset_cacher();
 
     // Init the signals with platform values

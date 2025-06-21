@@ -26,6 +26,14 @@ fn app() -> Element {
                 width: "fill",
                 onchange: move |txt| {
                     values.write().0 = txt;
+                },
+                onfocuschange: move |focused| {
+                    let name = &values.peek().0;
+                    if focused && name.is_empty() {
+                        println!("Time to write your name!")
+                    } else if !focused && !name.is_empty() {
+                        println!("Don't forget your age")
+                    }
                 }
             }
             label {

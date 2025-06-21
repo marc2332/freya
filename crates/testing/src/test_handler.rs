@@ -110,6 +110,9 @@ impl<T: 'static + Clone> TestingHandler<T> {
         self.vdom.insert_any_root_context(Box::new(
             self.utils.sdom.get_mut().accessibility_generator().clone(),
         ));
+        self.vdom.insert_any_root_context(Box::new(
+            self.utils.sdom.get_mut().animation_clock().clone(),
+        ));
 
         let sdom = self.utils.sdom();
         let mut fdom = sdom.get_mut();
@@ -350,7 +353,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
             dirty_surface: &mut dirty_surface,
             compositor: &mut compositor,
             scale_factor: SCALE_FACTOR as f32,
-            selected_node: None,
+            highlighted_node: None,
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,
             default_fonts: &["Fira Sans".to_string()],

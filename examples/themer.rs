@@ -20,7 +20,7 @@ fn app() -> Element {
         let r = (255. / 100. * *r.read()).round() as u8;
         let g = (255. / 100. * *g.read()).round() as u8;
         let b = (255. / 100. * *b.read()).round() as u8;
-        theme.write().colors.primary = format!("rgb({r}, {g}, {b})").into();
+        theme.write().colors.primary_accent = format!("rgb({r}, {g}, {b})").into();
     });
 
     rsx!(

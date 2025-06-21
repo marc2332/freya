@@ -11,43 +11,38 @@ fn main() {
 
 fn app() -> Element {
     use_init_theme(|| DARK_THEME);
-    let mut value = use_signal(|| "Default text".to_string());
     let mut show_popup = use_signal(|| false);
 
     rsx!(
         Body {
-            label {
-                "Value is: {value}"
-            }
             if *show_popup.read() {
                 Popup {
                     oncloserequest: move |_| {
                         show_popup.set(false)
                     },
                     PopupTitle {
-                        label {
-                            "Awesome Popup"
-                        }
+                        text: "Release New Version"
                     }
                     PopupContent {
-                        rect {
-                            spacing: "10",
+                        label {
+                            "Do you want to release a new version?"
+                        }
+                    }
+                    PopupButtons {
+                        PopupButton {
+                            onpress: move |_| {
+                                show_popup.set(false)
+                            },
                             label {
-                                "Change the input value:"
+                                "Cancel"
                             }
-                            Input {
-                                value,
-                                onchange: move |text| {
-                                    value.set(text);
-                                }
-                            }
-                            Button {
-                                onpress: move |_| {
-                                    show_popup.set(false)
-                                },
-                                label {
-                                    "Submit"
-                                }
+                        }
+                        PopupButton {
+                            onpress: move |_| {
+                                show_popup.set(false)
+                            },
+                            label {
+                                "Submit"
                             }
                         }
                     }

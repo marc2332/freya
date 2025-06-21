@@ -69,6 +69,7 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
 
                 let rdom = freya_dom.rdom();
                 let layout = freya_dom.layout();
+                let animation_clock = freya_dom.animation_clock();
 
                 let now = Instant::now();
 
@@ -143,6 +144,13 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                     14.0,
                 );
 
+                // Animation clock speed
+                add_text(
+                    &mut paragraph_builder,
+                    format!("Animation clock speed: {}x \n", animation_clock.speed()),
+                    14.0,
+                );
+
                 let mut paragraph = paragraph_builder.build();
                 paragraph.layout(f32::MAX);
                 paragraph.paint(canvas, (5.0, 0.0));
@@ -156,9 +164,9 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                     .max_fps
                     .max(self.fps_historic.iter().max().copied().unwrap_or_default());
                 let start_x = 5.0;
-                let start_y = 170.0 + self.max_fps.max(60) as f32;
+                let start_y = 250.0 + self.max_fps.max(60) as f32;
 
-                canvas.draw_rect(Rect::new(5., 150., 200., start_y), &paint);
+                canvas.draw_rect(Rect::new(5., 200., 200., start_y), &paint);
 
                 for (i, fps) in self.fps_historic.iter().enumerate() {
                     let mut paint = Paint::default();

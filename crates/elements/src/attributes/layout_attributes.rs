@@ -625,10 +625,11 @@ def_attribute!(
     /// appearing on top of earlier ones. The `layer` attribute allows you to explicitly control
     /// this stacking behavior.
     ///
-    /// Lower layer values position elements higher in the stack (visually on top), while higher
-    /// values position elements lower in the stack (visually behind).
-    ///
-    /// A value of 0 maintains the default stacking order, effectively keeping the layer the same.
+    /// There are two modes:
+    /// - `overlay`: Always on top
+    /// - Numeric: A lower value positions the element higher in the stack (visually on top), while higher
+    ///   values position elements lower in the stack (visually behind), `0` makes the element maintain its default behavior.
+    ///   Like with distance, 0 is right on front of you and 1000km away you can't even see it.
     ///
     /// ### Example
     ///
@@ -653,7 +654,7 @@ def_attribute!(
     ///                 width: "300",
     ///                 height: "200",
     ///                 background: "rgba(0, 0, 255, 0.5)", // Semi-transparent blue overlay
-    ///                 layer: "-1", // Ensures this is on top
+    ///                 layer: "-1", // Positions the element in the same layer as its parent, effectively on top of `image`
     ///             }
     ///         }
     ///     )
