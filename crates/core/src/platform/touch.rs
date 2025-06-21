@@ -1,5 +1,4 @@
-#[allow(unused_imports)]
-pub use winit::event::{
+pub use freya_elements::events::{
     Force,
     TouchPhase,
 };

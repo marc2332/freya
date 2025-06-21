@@ -1,13 +1,11 @@
 use torin::geometry::CursorPoint;
-pub use winit::event::MouseButton;
-use winit::event::{
-    Force,
-    TouchPhase,
-};
 
 use crate::{
     events::ErasedEventData,
     impl_event,
+    Force,
+    MouseButton,
+    TouchPhase,
 };
 impl_event! [
     PointerData;

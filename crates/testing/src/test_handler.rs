@@ -20,6 +20,7 @@ use freya_core::{
         PlatformEvent,
     },
     layout::process_layout,
+    platform::CursorIcon,
     render::{
         Compositor,
         RenderPipeline,
@@ -34,6 +35,7 @@ use freya_core::{
         NativePlatformSender,
     },
 };
+use freya_elements::MouseButton;
 use freya_engine::prelude::{
     raster_n32_premul,
     Color,
@@ -62,10 +64,6 @@ use torin::{
         Size2D,
     },
     prelude::CursorPoint,
-};
-use winit::{
-    event::MouseButton,
-    window::CursorIcon,
 };
 
 use crate::{

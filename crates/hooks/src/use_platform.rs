@@ -16,22 +16,26 @@ use dioxus_signals::{
 use freya_core::{
     accessibility::AccessibilityFocusStrategy,
     event_loop_messages::EventLoopMessage,
-    platform::{
-        CursorIcon,
-        EventLoopProxy,
-        Fullscreen,
-        Window,
-    },
+    platform::CursorIcon,
 };
 use tokio::sync::{
     broadcast,
     mpsc::UnboundedSender,
 };
 use torin::prelude::Area;
+#[cfg(feature = "winit")]
+pub use winit::{
+    event_loop::EventLoopProxy,
+    window::{
+        Fullscreen,
+        Window,
+    },
+};
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct UsePlatform {
     ticker: Signal<Arc<broadcast::Receiver<()>>>,
+    #[cfg(feature = "winit")]
     event_loop_proxy: Signal<Option<EventLoopProxy<EventLoopMessage>>>,
     platform_emitter: Signal<Option<UnboundedSender<EventLoopMessage>>>,
 }
@@ -48,6 +52,7 @@ impl UsePlatform {
         match try_consume_context() {
             Some(p) => p,
             None => provide_root_context(UsePlatform {
+                #[cfg(feature = "winit")]
                 event_loop_proxy: Signal::new_in_scope(
                     try_consume_context::<EventLoopProxy<EventLoopMessage>>(),
                     ScopeId::ROOT,
@@ -66,11 +71,13 @@ impl UsePlatform {
 
     /// You most likely dont want to use this method. Check the other methods in [UsePlatform].
     pub fn send(&self, event: EventLoopMessage) -> Result<(), UsePlatformError> {
+        #[cfg(feature = "winit")]
         if let Some(event_loop_proxy) = &*self.event_loop_proxy.peek() {
-            event_loop_proxy
+            return event_loop_proxy
                 .send_event(event)
-                .map_err(|_| UsePlatformError::EventLoopProxyFailed)?;
-        } else if let Some(platform_emitter) = &*self.platform_emitter.peek() {
+                .map_err(|_| UsePlatformError::EventLoopProxyFailed);
+        }
+        if let Some(platform_emitter) = &*self.platform_emitter.peek() {
             platform_emitter
                 .send(event)
                 .map_err(|_| UsePlatformError::PlatformEmitterFailed)?;
@@ -83,6 +90,7 @@ impl UsePlatform {
         self.send(EventLoopMessage::SetCursorIcon(cursor_icon)).ok();
     }
 
+    #[cfg(feature = "winit")]
     /// Update the title of the app/window.
     pub fn set_title(&self, title: impl Into<String>) {
         let title = title.into();
@@ -91,6 +99,7 @@ impl UsePlatform {
         });
     }
 
+    #[cfg(feature = "winit")]
     /// Send a callback that will be called with the [Window] once this is available to get read.
     ///
     /// For a `Sync` + `Send` version of this method you can use [UsePlatform::sender].
@@ -98,6 +107,7 @@ impl UsePlatform {
         self.send(EventLoopMessage::WithWindow(Box::new(cb))).ok();
     }
 
+    #[cfg(feature = "winit")]
     /// Shortcut for [Window::drag_window].
     pub fn drag_window(&self) {
         self.with_window(|window| {
@@ -105,6 +115,7 @@ impl UsePlatform {
         });
     }
 
+    #[cfg(feature = "winit")]
     /// Shortcut for [Window::set_maximized].
     pub fn set_maximize_window(&self, maximize: bool) {
         self.with_window(move |window| {
@@ -112,6 +123,7 @@ impl UsePlatform {
         });
     }
 
+    #[cfg(feature = "winit")]
     /// Shortcut for [Window::set_maximized].
     ///
     /// Toggles the maximized state of the [Window].
@@ -121,6 +133,7 @@ impl UsePlatform {
         });
     }
 
+    #[cfg(feature = "winit")]
     /// Shortcut for [Window::set_minimized].
     pub fn set_minimize_window(&self, minimize: bool) {
         self.with_window(move |window| {
@@ -128,6 +141,7 @@ impl UsePlatform {
         });
     }
 
+    #[cfg(feature = "winit")]
     /// Shortcut for [Window::set_minimized].
     ///
     /// Toggles the minimized state of the [Window].
@@ -137,6 +151,7 @@ impl UsePlatform {
         });
     }
 
+    #[cfg(feature = "winit")]
     /// Shortcut for [Window::set_fullscreen].
     pub fn set_fullscreen_window(&self, fullscreen: bool) {
         self.with_window(move |window| {
@@ -148,6 +163,7 @@ impl UsePlatform {
         });
     }
 
+    #[cfg(feature = "winit")]
     /// Shortcut for [Window::set_fullscreen].
     ///
     /// Toggles the fullscreen state of the [Window].

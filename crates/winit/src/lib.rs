@@ -9,6 +9,7 @@ mod app;
 mod config;
 pub mod devtools;
 mod drivers;
+mod events;
 mod keyboard;
 mod renderer;
 mod size;

@@ -18,6 +18,7 @@ features = ["freya-engine/mocked-engine"]
 skia-engine = ["freya-engine/skia-engine"]
 docs = ["use_camera"]
 use_camera = ["dep:nokhwa"]
+winit = ["dep:winit"]
 
 [dependencies]
 freya-elements = { workspace = true }
@@ -31,6 +32,7 @@ dioxus-core = { workspace = true }
 dioxus-clipboard = { workspace = true }
 
 tokio = { workspace = true }
+winit = { workspace = true, optional = true }
 
 easer = "0.3.0"
 ropey = "1.6.0"

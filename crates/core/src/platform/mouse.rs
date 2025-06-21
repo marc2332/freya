@@ -1,1 +1,1 @@
-pub use winit::event::MouseButton;
+pub use freya_elements::events::MouseButton;
