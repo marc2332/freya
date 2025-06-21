@@ -195,6 +195,8 @@ impl Application {
             .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
         self.vdom
             .insert_any_root_context(Box::new(self.sdom.get().accessibility_generator().clone()));
+        self.vdom
+            .insert_any_root_context(Box::new(self.sdom.get().animation_clock().clone()));
 
         // Init the RealDOM
         self.sdom.get_mut().init_dom(&mut self.vdom, scale_factor);

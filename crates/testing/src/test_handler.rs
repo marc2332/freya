@@ -116,6 +116,9 @@ impl<T: 'static + Clone> TestingHandler<T> {
         self.vdom.insert_any_root_context(Box::new(
             self.utils.sdom.get_mut().accessibility_generator().clone(),
         ));
+        self.vdom.insert_any_root_context(Box::new(
+            self.utils.sdom.get_mut().animation_clock().clone(),
+        ));
 
         let sdom = self.utils.sdom();
         let mut fdom = sdom.get_mut();
