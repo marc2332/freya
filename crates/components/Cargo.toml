@@ -28,6 +28,7 @@ torin = { workspace = true }
 
 dioxus-router = { workspace = true, default-features = false }
 dioxus = { workspace = true }
+warnings = "0.2.1"
 
 futures-util = { workspace = true }
 tokio = { workspace = true }
