@@ -14,7 +14,7 @@ fn main() {
 fn Card(selected: ReadOnlySignal<bool>, children: Element) -> Element {
     let animations = use_animation(move |conf| {
         conf.on_deps_change(OnDepsChange::Rerun);
-        conf.auto_start(true);
+        conf.on_creation(OnCreation::Run);
         let (from, to) = if selected() { (1.0, 3.0) } else { (3.0, 1.0) };
         AnimNum::new(from, to)
             .time(250)

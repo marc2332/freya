@@ -167,7 +167,7 @@ pub async fn animate_color() {
 pub async fn auto_start() {
     fn use_animation_app() -> Element {
         let animation = use_animation(|conf| {
-            conf.auto_start(true);
+            conf.on_creation(OnCreation::Run);
             AnimNum::new(10., 100.).time(50)
         });
 
@@ -211,7 +211,7 @@ pub async fn auto_start() {
 pub async fn sequential() {
     fn use_animation_app() -> Element {
         let animation = use_animation(|conf| {
-            conf.auto_start(true);
+            conf.on_creation(OnCreation::Run);
             AnimSequential::new([
                 AnimNum::new(10., 100.).time(50),
                 AnimNum::new(10., 100.).time(50),

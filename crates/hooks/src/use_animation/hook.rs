@@ -30,7 +30,7 @@ use crate::{
 #[derive(Default, PartialEq, Clone)]
 pub struct AnimConfiguration {
     on_finish: OnFinish,
-    auto_start: bool,
+    on_creation: OnCreation,
     on_deps_change: OnDepsChange,
 }
 
@@ -40,8 +40,8 @@ impl AnimConfiguration {
         self
     }
 
-    pub fn auto_start(&mut self, auto_start: bool) -> &mut Self {
-        self.auto_start = auto_start;
+    pub fn on_creation(&mut self, on_creation: OnCreation) -> &mut Self {
+        self.on_creation = on_creation;
         self
     }
 
@@ -79,21 +79,45 @@ impl AnimDirection {
     }
 }
 
-/// What to do once the animation finishes. By default it is [`Stop`](OnFinish::Stop)
+/// What to do once the animation finishes.
+///
+/// By default it is [OnFinish::Nothing].
 #[derive(PartialEq, Clone, Copy, Default)]
 pub enum OnFinish {
+    /// Does nothing at all.
     #[default]
-    Stop,
+    Nothing,
+    /// Runs the animation in reverse direction.
     Reverse,
+    /// Runs the animation in the same direction again.
     Restart,
 }
 
-/// What to do once the animation dependencies change. By default it is [`Reset`](OnDepsChange::Reset)
+/// What to do once the animation gets created.
+///
+/// By default it is [OnCreation::Nothing]
+#[derive(PartialEq, Clone, Copy, Default)]
+pub enum OnCreation {
+    /// Does nothing at all.
+    #[default]
+    Nothing,
+    /// Runs the animation.
+    Run,
+    /// Set the values to the end of the animation. As if it had actually run.
+    Finish,
+}
+
+/// What to do once the animation dependencies change.
+///
+/// By default it is [OnDepsChange::Reset]
 #[derive(PartialEq, Clone, Copy, Default)]
 pub enum OnDepsChange {
+    /// Reset to the initial state.
     #[default]
     Reset,
+    /// Set the values to the end of the animation.
     Finish,
+    /// Reruns the animation.
     Rerun,
 }
 
@@ -159,6 +183,8 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
             .value
             .write_unchecked()
             .finish(*self.last_direction.peek());
+
+        *self.has_run_yet.write_unchecked() = true;
     }
 
     /// Checks if there is any animation running.
@@ -259,7 +285,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
                             // Restart the animation
                             value.write().prepare(direction);
                         }
-                        OnFinish::Stop => {
+                        OnFinish::Nothing => {
                             // Stop if all the animations are finished
                             break;
                         }
@@ -299,7 +325,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 ///
 /// fn app() -> Element {
 ///     let animation = use_animation(|conf| {
-///         conf.auto_start(true);
+///         conf.on_creation(OnCreation::Run);
 ///         AnimNum::new(0., 100.).time(50)
 ///     });
 ///
@@ -319,7 +345,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///     let animation = use_animation(|conf| {
-///         conf.auto_start(true);
+///         conf.on_creation(OnCreation::Run);
 ///         (
 ///             AnimNum::new(0., 100.).time(50),
 ///             AnimColor::new("red", "blue").time(50),
@@ -390,12 +416,6 @@ pub fn use_animation<Animated: AnimatedValue>(
         animation_clock,
     };
 
-    use_hook(move || {
-        if animation.context.read().conf.auto_start {
-            animation.run(AnimDirection::Forward);
-        }
-    });
-
     use_memo(move || {
         let context = context.read();
         if *has_run_yet.peek() {
@@ -408,6 +428,16 @@ pub fn use_animation<Animated: AnimatedValue>(
                 _ => {}
             }
         }
+    });
+
+    use_hook(move || match animation.context.read().conf.on_creation {
+        OnCreation::Run => {
+            animation.run(AnimDirection::Forward);
+        }
+        OnCreation::Finish => {
+            animation.finish();
+        }
+        _ => {}
     });
 
     animation
@@ -463,7 +493,7 @@ where
     });
 
     use_hook(move || {
-        if animation.context.read().conf.auto_start {
+        if animation.context.read().conf.on_creation == OnCreation::Run {
             animation.run(AnimDirection::Forward);
         }
     });
