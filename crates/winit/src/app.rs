@@ -4,10 +4,7 @@ use accesskit::{
     Node,
     Role,
 };
-use dioxus_core::{
-    Event,
-    VirtualDom,
-};
+use dioxus_core::VirtualDom;
 use freya_core::{
     accessibility::{
         AccessibilityFocusStrategy,
@@ -19,6 +16,7 @@ use freya_core::{
         TextGroupMeasurement,
     },
     events::{
+        handle_processed_events,
         process_events,
         NodesState,
         PlatformEvent,
@@ -47,7 +45,6 @@ use freya_core::{
     },
 };
 use freya_engine::prelude::*;
-use freya_native_core::prelude::NodeImmutableDioxusExt;
 use futures_task::Waker;
 use futures_util::Future;
 use tokio::{
@@ -231,23 +228,8 @@ impl Application {
         {
             let fut = std::pin::pin!(async {
                 select! {
-                    Some(events) = self.event_receiver.recv() => {
-                        let fdom = self.sdom.get();
-                        let rdom = fdom.rdom();
-                        for event in events {
-                            if let Some(element_id) = rdom
-                                .get(event.node_id)
-                                .and_then(|node| node.mounted_id())
-                            {
-                                let name = event.name.into();
-                                let data = event.data.any();
-                                let event = Event::new(data, event.bubbles);
-                                self.vdom
-                                    .runtime()
-                                    .handle_event(name, event, element_id);
-                                self.vdom.process_events();
-                            }
-                        }
+                    Some((dom_events, flattened_potential_events)) = self.event_receiver.recv() => {
+                        handle_processed_events(&self.sdom, &mut self.vdom, &mut self.nodes_state, dom_events, flattened_potential_events)
                     },
                     _ = self.vdom.wait_for_work() => {},
                 }

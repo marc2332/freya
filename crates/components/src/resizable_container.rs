@@ -423,17 +423,17 @@ mod test {
 
         // Vertical
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseDown,
+            name: MouseEventName::MouseDown,
             cursor: (100.0, 250.0).into(),
             button: Some(MouseButton::Left),
         });
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseMove,
+            name: MouseEventName::MouseMove,
             cursor: (100.0, 200.0).into(),
             button: Some(MouseButton::Left),
         });
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseUp,
+            name: MouseEventName::MouseUp,
             cursor: (0.0, 0.0).into(),
             button: Some(MouseButton::Left),
         });
@@ -444,17 +444,17 @@ mod test {
 
         // Horizontal
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseDown,
+            name: MouseEventName::MouseDown,
             cursor: (167.0, 300.0).into(),
             button: Some(MouseButton::Left),
         });
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseMove,
+            name: MouseEventName::MouseMove,
             cursor: (187.0, 300.0).into(),
             button: Some(MouseButton::Left),
         });
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseUp,
+            name: MouseEventName::MouseUp,
             cursor: (0.0, 0.0).into(),
             button: Some(MouseButton::Left),
         });

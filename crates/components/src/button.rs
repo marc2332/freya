@@ -381,7 +381,7 @@ mod test {
         assert_eq!(label.get(0).text(), Some("true"));
 
         utils.push_event(TestEvent::Touch {
-            name: EventName::TouchStart,
+            name: TouchEventName::TouchStart,
             location: (15.0, 15.0).into(),
             finger_id: 1,
             phase: TouchPhase::Started,
@@ -390,7 +390,7 @@ mod test {
         utils.wait_for_update().await;
 
         utils.push_event(TestEvent::Touch {
-            name: EventName::TouchEnd,
+            name: TouchEventName::TouchEnd,
             location: (15.0, 15.0).into(),
             finger_id: 1,
             phase: TouchPhase::Ended,

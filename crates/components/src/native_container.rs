@@ -16,19 +16,16 @@ use freya_hooks::{
 #[allow(non_snake_case)]
 #[component]
 pub fn NativeContainer(children: Element) -> Element {
-    let mut native_platform = use_init_native_platform();
+    use_init_native_platform();
     let platform = use_platform();
 
     let onglobalkeydown = move |e: KeyboardEvent| {
-        let allowed_to_navigate = native_platform.navigation_mark.peek().allowed();
-        if e.key == Key::Tab && allowed_to_navigate {
+        if e.key == Key::Tab {
             if e.modifiers.contains(Modifiers::SHIFT) {
                 platform.request_focus(AccessibilityFocusStrategy::Backward);
             } else {
                 platform.request_focus(AccessibilityFocusStrategy::Forward);
             }
-        } else {
-            native_platform.navigation_mark.write().set_allowed(true)
         }
     };
 

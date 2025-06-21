@@ -201,7 +201,7 @@ mod test {
         utils.wait_for_update().await;
 
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseDown,
+            name: MouseEventName::MouseDown,
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Left),
         });
@@ -219,7 +219,7 @@ mod test {
         assert_eq!(root.get(0).get(0).get(1).get(0).text(), Some("Move"));
 
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseUp,
+            name: MouseEventName::MouseUp,
             cursor: (5.0, 300.0).into(),
             button: Some(MouseButton::Left),
         });
@@ -277,7 +277,7 @@ mod test {
         utils.wait_for_update().await;
 
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseDown,
+            name: MouseEventName::MouseDown,
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Left),
         });
@@ -295,7 +295,7 @@ mod test {
         assert!(!root.get(0).get(0).get(1).is_visible());
 
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseUp,
+            name: MouseEventName::MouseUp,
             cursor: (5.0, 300.0).into(),
             button: Some(MouseButton::Left),
         });

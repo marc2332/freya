@@ -7,20 +7,17 @@ use std::{
 };
 
 use accesskit::NodeId as AccessibilityId;
-use dioxus_core::{
-    Event,
-    VirtualDom,
-};
+use dioxus_core::VirtualDom;
 use freya_core::{
     accessibility::AccessibilityTree,
     dom::SafeDOM,
     event_loop_messages::EventLoopMessage,
     events::{
+        handle_processed_events,
         process_events,
-        EventName,
+        MouseEventName,
         NodesState,
         PlatformEvent,
-        PlatformEventData,
     },
     layout::process_layout,
     render::{
@@ -45,10 +42,7 @@ use freya_engine::prelude::{
     FontCollection,
     FontMgr,
 };
-use freya_native_core::{
-    dioxus::NodeImmutableDioxusExt,
-    prelude::NodeImmutable,
-};
+use freya_native_core::prelude::NodeImmutable;
 use tokio::{
     sync::{
         broadcast,
@@ -192,20 +186,15 @@ impl<T: 'static + Clone> TestingHandler<T> {
                 }
             }
 
-            if let Ok(events) = vdom_events {
-                let fdom = self.utils.sdom().get();
-                let rdom = fdom.rdom();
-                for event in events {
-                    if let Some(element_id) =
-                        rdom.get(event.node_id).and_then(|node| node.mounted_id())
-                    {
-                        let name = event.name.into();
-                        let data = event.data.any();
-                        let event = Event::new(data, event.bubbles);
-                        self.vdom.runtime().handle_event(name, event, element_id);
-                        self.vdom.process_events();
-                    }
-                }
+            if let Ok((dom_events, flattened_potential_events)) = vdom_events {
+                let sdom = self.utils.sdom();
+                handle_processed_events(
+                    sdom,
+                    &mut self.vdom,
+                    &mut self.nodes_state,
+                    dom_events,
+                    flattened_potential_events,
+                )
             }
         }
 
@@ -278,7 +267,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
     /// # use freya::prelude::*;
     /// # let mut utils = launch_test(|| rsx!( rect { } ));
     /// utils.push_event(TestEvent::Mouse {
-    ///     name: EventName::MouseDown,
+    ///     name: MouseEventName::MouseDown,
     ///     cursor: (490., 20.).into(),
     ///     button: Some(MouseButton::Left),
     /// });
@@ -407,12 +396,10 @@ impl<T: 'static + Clone> TestingHandler<T> {
     /// utils.move_cursor((5., 5.));
     /// ```
     pub async fn move_cursor(&mut self, cursor: impl Into<CursorPoint>) {
-        self.push_event(PlatformEvent {
-            name: EventName::MouseMove,
-            data: PlatformEventData::Mouse {
-                cursor: cursor.into(),
-                button: Some(MouseButton::Left),
-            },
+        self.push_event(PlatformEvent::Mouse {
+            name: MouseEventName::MouseMove,
+            cursor: cursor.into(),
+            button: Some(MouseButton::Left),
         });
         self.wait_for_update().await;
     }
@@ -426,20 +413,16 @@ impl<T: 'static + Clone> TestingHandler<T> {
     /// utils.click_cursor((5., 5.));
     /// ```
     pub async fn click_cursor(&mut self, cursor: impl Into<CursorPoint> + Clone) {
-        self.push_event(PlatformEvent {
-            name: EventName::MouseDown,
-            data: PlatformEventData::Mouse {
-                cursor: cursor.clone().into(),
-                button: Some(MouseButton::Left),
-            },
+        self.push_event(PlatformEvent::Mouse {
+            name: MouseEventName::MouseDown,
+            cursor: cursor.clone().into(),
+            button: Some(MouseButton::Left),
         });
         self.wait_for_update().await;
-        self.push_event(PlatformEvent {
-            name: EventName::MouseUp,
-            data: PlatformEventData::Mouse {
-                cursor: cursor.into(),
-                button: Some(MouseButton::Left),
-            },
+        self.push_event(PlatformEvent::Mouse {
+            name: MouseEventName::MouseUp,
+            cursor: cursor.into(),
+            button: Some(MouseButton::Left),
         });
         self.wait_for_update().await;
     }

@@ -286,7 +286,7 @@ mod test {
 
         // Send a random globalkeydown event
         utils.push_event(TestEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: KeyboardEventName::KeyDown,
             key: Key::ArrowDown,
             code: Code::ArrowDown,
             modifiers: Modifiers::empty(),
@@ -297,7 +297,7 @@ mod test {
 
         // Send a ESC globalkeydown event
         utils.push_event(TestEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: KeyboardEventName::KeyDown,
             key: Key::Escape,
             code: Code::Escape,
             modifiers: Modifiers::empty(),

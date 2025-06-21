@@ -14,9 +14,8 @@ use std::{
 use freya::prelude::*;
 use freya_core::{
     events::{
-        EventName,
+        MouseEventName,
         PlatformEvent,
-        PlatformEventData,
     },
     plugins::{
         FreyaPlugin,
@@ -64,23 +63,19 @@ impl GamePadPlugin {
 
                         if diff_x != 0.0 {
                             x += diff_x * 10.;
-                            handle.send_platform_event(PlatformEvent {
-                                name: EventName::MouseMove,
-                                data: PlatformEventData::Mouse {
-                                    cursor: (x, y).into(),
-                                    button: None,
-                                },
+                            handle.send_platform_event(PlatformEvent::Mouse {
+                                name: MouseEventName::MouseMove,
+                                cursor: (x, y).into(),
+                                button: None,
                             });
                         }
 
                         if diff_x != 0.0 {
                             y -= diff_y * 10.;
-                            handle.send_platform_event(PlatformEvent {
-                                name: EventName::MouseMove,
-                                data: PlatformEventData::Mouse {
-                                    cursor: (x, y).into(),
-                                    button: None,
-                                },
+                            handle.send_platform_event(PlatformEvent::Mouse {
+                                name: MouseEventName::MouseMove,
+                                cursor: (x, y).into(),
+                                button: None,
                             });
                         }
 
