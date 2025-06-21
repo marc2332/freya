@@ -48,7 +48,6 @@ impl MemoryHistory {
                 history: Vec::new(),
                 future: Vec::new(),
             }.into(),
-            // base_path: None,
         }
     }
 }
