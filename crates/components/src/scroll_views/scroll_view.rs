@@ -7,6 +7,7 @@ use freya_elements::{
         MouseEvent,
         WheelEvent,
     },
+    WheelSource,
 };
 use freya_hooks::{
     use_applied_theme,
@@ -225,7 +226,9 @@ pub fn ScrollView(
             1.0
         };
 
-        let invert_direction = (clicking_shift() || invert_scroll_wheel)
+        // Only invert direction on deviced-sourced wheel events
+        let invert_direction = e.data.get_source() == WheelSource::Device
+            && (clicking_shift() || invert_scroll_wheel)
             && (!clicking_shift() || !invert_scroll_wheel);
 
         let (x_movement, y_movement) = if invert_direction {
@@ -386,7 +389,9 @@ pub fn ScrollView(
 
     rsx!(
         rect {
-            a11y_role:"scroll-view",
+            a11y_role: "scroll-view",
+            a11y_scroll_y: "{corrected_scrolled_y}",
+            a11y_scroll_x: "{corrected_scrolled_x}",
             overflow: "clip",
             direction: "horizontal",
             width: width.clone(),
@@ -399,6 +404,7 @@ pub fn ScrollView(
             oncaptureglobalmousemove,
             onglobalkeydown,
             onglobalkeyup,
+            onwheel,
             a11y_id,
             a11y_focusable: "false",
             rect {
@@ -419,7 +425,6 @@ pub fn ScrollView(
                     offset_y: "{corrected_scrolled_y}",
                     offset_x: "{corrected_scrolled_x}",
                     reference: node_ref,
-                    onwheel,
                     {children}
                 }
                 if show_scrollbar && horizontal_scrollbar_is_visible {

@@ -12,6 +12,10 @@ use freya_native_core::{
     SendAnyMap,
 };
 use freya_native_core_macro::partial_derive_state;
+use torin::{
+    prelude::Area,
+    torin::Torin,
+};
 
 use crate::{
     custom_attributes::CustomAttributeValues,
@@ -31,6 +35,19 @@ pub struct ViewportState {
     pub viewports: Vec<NodeId>,
     pub node_id: NodeId,
     pub overflow: OverflowMode,
+}
+
+impl ViewportState {
+    pub fn is_visible(&self, layout: &Torin<NodeId>, area: &Area) -> bool {
+        // Skip elements that are completely out of any their parent's viewport
+        for viewport_id in &self.viewports {
+            let viewport = layout.get(*viewport_id).unwrap().visible_area();
+            if !viewport.intersects(area) {
+                return false;
+            }
+        }
+        true
+    }
 }
 
 impl ParseAttribute for ViewportState {

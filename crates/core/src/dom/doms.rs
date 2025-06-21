@@ -56,6 +56,7 @@ use crate::{
         ImageState,
         LayerState,
         LayoutState,
+        ScrollableState,
         StyleState,
         SvgState,
         TransformState,
@@ -159,6 +160,7 @@ impl Default for FreyaDOM {
             LayerState::to_type_erased(),
             SvgState::to_type_erased(),
             ImageState::to_type_erased(),
+            ScrollableState::to_type_erased(),
         ]);
         let dioxus_integration_state = DioxusState::create(&mut rdom);
         Self {
