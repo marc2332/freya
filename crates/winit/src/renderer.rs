@@ -276,15 +276,16 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
                     app.process_layout_on_next_render = false;
                 }
 
-                match app.process_accessibility_task_on_next_render {
-                    AccessibilityTask::ProcessWithMode(navigation_mode) => {
-                        app.process_accessibility(window);
-                        app.set_navigation_mode(navigation_mode);
+                if let Some(task) = app.accessibility_tasks_for_next_render.take() {
+                    match task {
+                        AccessibilityTask::ProcessWithMode(navigation_mode) => {
+                            app.process_accessibility(window);
+                            app.set_navigation_mode(navigation_mode);
+                        }
+                        AccessibilityTask::ProcessUpdate => {
+                            app.process_accessibility(window);
+                        }
                     }
-                    AccessibilityTask::Process => {
-                        app.process_accessibility(window);
-                    }
-                    AccessibilityTask::None => {}
                 }
 
                 if app.init_accessibility_on_next_render {
@@ -371,34 +372,57 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
                     return;
                 }
 
-                #[cfg(not(feature = "disable-zoom-shortcuts"))]
-                {
-                    let is_control_pressed = {
-                        if cfg!(target_os = "macos") {
-                            self.modifiers_state.super_key()
-                        } else {
-                            self.modifiers_state.control_key()
-                        }
+                #[allow(dead_code)]
+                let is_control_pressed = {
+                    if cfg!(target_os = "macos") {
+                        self.modifiers_state.super_key()
+                    } else {
+                        self.modifiers_state.control_key()
+                    }
+                };
+
+                #[allow(dead_code)]
+                let change_animation_clock = is_control_pressed
+                    && self.modifiers_state.alt_key()
+                    && state == ElementState::Pressed;
+
+                #[cfg(debug_assertions)]
+                if change_animation_clock {
+                    let ch = logical_key.to_text();
+                    let render = if ch == Some("+") {
+                        app.sdom.get().animation_clock().increase_by(0.2);
+                        true
+                    } else if ch == Some("-") {
+                        app.sdom.get().animation_clock().decrease_by(0.2);
+                        true
+                    } else {
+                        false
                     };
 
-                    if is_control_pressed && state == ElementState::Pressed {
-                        let ch = logical_key.to_text();
-                        let render_with_new_scale_factor = if ch == Some("+") {
-                            self.custom_scale_factor =
-                                (self.custom_scale_factor + 0.10).clamp(-1.0, 5.0);
-                            true
-                        } else if ch == Some("-") {
-                            self.custom_scale_factor =
-                                (self.custom_scale_factor - 0.10).clamp(-1.0, 5.0);
-                            true
-                        } else {
-                            false
-                        };
+                    if render {
+                        app.resize(window);
+                        window.request_redraw();
+                    }
+                }
 
-                        if render_with_new_scale_factor {
-                            app.resize(window);
-                            window.request_redraw();
-                        }
+                #[cfg(not(feature = "disable-zoom-shortcuts"))]
+                if !change_animation_clock && is_control_pressed && state == ElementState::Pressed {
+                    let ch = logical_key.to_text();
+                    let render = if ch == Some("+") {
+                        self.custom_scale_factor =
+                            (self.custom_scale_factor + 0.10).clamp(-1.0, 5.0);
+                        true
+                    } else if ch == Some("-") {
+                        self.custom_scale_factor =
+                            (self.custom_scale_factor - 0.10).clamp(-1.0, 5.0);
+                        true
+                    } else {
+                        false
+                    };
+
+                    if render {
+                        app.resize(window);
+                        window.request_redraw();
                     }
                 }
 

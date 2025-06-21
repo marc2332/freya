@@ -61,13 +61,12 @@ fn app() -> Element {
             rect {
                 position: "absolute",
                 Dropdown {
-                    value: time_zone(),
+                    selected_item: rsx!( label { "{time_zone}" } ),
                     ScrollView {
                         width: "200",
                         height: "300",
                         for i in -12..=14 {
                             DropdownItem {
-                                value: i,
                                 onpress: move |_| time_zone.set(i),
                                 label { "UTC {negative_add_zero(i as i64)}:00" }
                             }

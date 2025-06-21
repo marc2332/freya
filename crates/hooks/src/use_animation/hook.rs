@@ -1,4 +1,5 @@
 use dioxus_core::prelude::{
+    consume_context,
     spawn,
     use_hook,
     Task,
@@ -11,11 +12,13 @@ use dioxus_hooks::{
     Dependency,
 };
 use dioxus_signals::{
+    CopyValue,
     MappedSignal,
     Readable,
     Signal,
     Writable,
 };
+use freya_core::animation_clock::AnimationClock;
 use tokio::time::Instant;
 
 use super::AnimatedValue;
@@ -117,6 +120,7 @@ pub enum OnDepsChange {
 pub struct UseAnimation<Animated: AnimatedValue> {
     pub(crate) context: Signal<Option<AnimationContext<Animated>>>,
     pub(crate) platform: UsePlatform,
+    pub(crate) animation_clock: CopyValue<AnimationClock>,
     pub(crate) is_running: Signal<bool>,
     pub(crate) has_run_yet: Signal<bool>,
     pub(crate) task: Signal<Option<Task>>,
@@ -199,6 +203,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
         let mut has_run_yet = self.has_run_yet;
         let mut task = self.task;
         let mut last_direction = self.last_direction;
+        let animation_clock = self.animation_clock;
 
         let on_finish = self.context.peek().as_ref().unwrap().conf.on_finish;
         let mut context = self.context;
@@ -239,7 +244,11 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 
                 platform.request_animation_frame();
 
-                index += prev_frame.elapsed().as_millis();
+                let elapsed = animation_clock
+                    .peek()
+                    .correct_elapsed_duration(prev_frame.elapsed());
+
+                index += elapsed.as_millis();
 
                 let is_finished = context.value.is_finished(index, direction);
 
@@ -363,6 +372,7 @@ pub fn use_animation<Animated: AnimatedValue>(
     run: impl 'static + Fn(&mut AnimConfiguration) -> Animated,
 ) -> UseAnimation<Animated> {
     let platform = use_platform();
+    let animation_clock = use_animation_clock();
     let is_running = use_signal(|| false);
     let has_run_yet = use_signal(|| false);
     let task = use_signal(|| None);
@@ -382,6 +392,7 @@ pub fn use_animation<Animated: AnimatedValue>(
         has_run_yet,
         task,
         last_direction,
+        animation_clock,
     };
 
     use_effect(move || {
@@ -420,6 +431,7 @@ where
     D::Out: 'static + Clone,
 {
     let platform = use_platform();
+    let animation_clock = use_animation_clock();
     let is_running = use_signal(|| false);
     let has_run_yet = use_signal(|| false);
     let task = use_signal(|| None);
@@ -440,6 +452,7 @@ where
         has_run_yet,
         task,
         last_direction,
+        animation_clock,
     };
 
     use_effect(move || {
@@ -468,6 +481,10 @@ where
     );
 
     animation
+}
+
+pub fn use_animation_clock() -> CopyValue<AnimationClock> {
+    use_hook(|| CopyValue::new(consume_context()))
 }
 
 macro_rules! impl_tuple_call {
