@@ -20,7 +20,6 @@ pub fn AnimatedPosition(
     #[props(default = Duration::from_millis(250))] duration: Duration,
     #[props(default = Ease::default())] ease: Ease,
 ) -> Element {
-    let mut render_element = use_signal(|| false);
     let (reference, size, old_size) = use_node_signal_with_prev();
 
     let animation = use_animation_with_dependencies(
@@ -42,18 +41,10 @@ pub fn AnimatedPosition(
     );
 
     use_effect(move || {
-        if animation.is_running() {
-            render_element.set(true);
-        }
-    });
-
-    use_effect(move || {
         let has_size = size.read().is_some();
         let has_old_size = old_size.read().is_some();
         if has_size && has_old_size {
             animation.run(AnimDirection::Reverse);
-        } else if has_size {
-            render_element.set(true);
         }
     });
 
@@ -72,10 +63,10 @@ pub fn AnimatedPosition(
                 offset_x: "{offset_x}",
                 offset_y: "{offset_y}",
                 position: "global",
-                if render_element() {
+                if let Some(size) = &*size.read() {
                     rect {
-                        width: "{size.read().as_ref().unwrap().area.width()}",
-                        height: "{size.read().as_ref().unwrap().area.height()}",
+                        width: "{size.area.width()}",
+                        height: "{size.area.height()}",
                         {children}
                     }
                 }
