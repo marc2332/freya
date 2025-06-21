@@ -142,6 +142,27 @@ impl_event! [
     /// }
     /// ```
     onpointerleave
+
+    /// The `pointerpress` event fires when the user starts and ends a click with their mouse button or starts and stops touching the element.
+    ///
+    /// Event Data: [`PointerData`](crate::events::PointerData)
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             width: "100",
+    ///             height: "100",
+    ///             background: "red",
+    ///             onpointerpress: |_| println!("Started and released mouse button or stopped touching!")
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    onpointerpress
 ];
 
 /// The type of device that triggered a Pointer event.

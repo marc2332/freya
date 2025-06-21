@@ -361,6 +361,8 @@ pub async fn pointer_events_from_mouse() {
 
         let onpointerup = move |_| state.push("up".to_string());
 
+        let onpointerpress = move |_| state.push("press".to_string());
+
         let onpointermove = move |_| state.push("move".to_string());
 
         let onpointerenter = move |_| state.push("enter".to_string());
@@ -379,6 +381,7 @@ pub async fn pointer_events_from_mouse() {
                     width: "100%",
                     onpointerdown,
                     onpointerup,
+                    onpointerpress,
                     onpointermove,
                     onpointerenter,
                     onpointerleave,
@@ -432,7 +435,7 @@ pub async fn pointer_events_from_mouse() {
         Some(
             format!(
                 "{:?}",
-                vec!["enter", "move", "move", "down", "up", "globalup"]
+                vec!["enter", "move", "move", "down", "up", "press", "globalup"]
             )
             .as_str()
         )
@@ -444,7 +447,7 @@ pub async fn pointer_events_from_mouse() {
         Some(
             format!(
                 "{:?}",
-                vec!["enter", "move", "move", "down", "up", "globalup", "leave"]
+                vec!["enter", "move", "move", "down", "up", "press", "globalup", "leave"]
             )
             .as_str()
         )
