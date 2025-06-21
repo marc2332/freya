@@ -21,18 +21,27 @@ use tokio::sync::watch;
 use torin::prelude::LayoutNode;
 
 pub type DevtoolsReceiver = watch::Receiver<Vec<NodeInfo>>;
-pub type HoveredNode = Option<Arc<Mutex<Option<NodeId>>>>;
+pub type HighlightedNode = Arc<Mutex<Option<NodeId>>>;
 
 #[derive(Clone)]
 pub struct Devtools {
     sender: watch::Sender<Vec<NodeInfo>>,
+    pub highlighted_node: HighlightedNode,
 }
 
 impl Devtools {
-    pub fn new() -> (Self, DevtoolsReceiver) {
+    pub fn new() -> (Self, DevtoolsReceiver, HighlightedNode) {
         let (sender, receiver) = watch::channel(Vec::new());
+        let highlighted_node = HighlightedNode::default();
 
-        (Self { sender }, receiver)
+        (
+            Self {
+                sender,
+                highlighted_node: highlighted_node.clone(),
+            },
+            receiver,
+            highlighted_node,
+        )
     }
 
     pub fn update(&self, fdom: &FreyaDOM) {

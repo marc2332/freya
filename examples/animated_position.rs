@@ -64,14 +64,10 @@ fn app() -> Element {
                     }
                 }
                 Dropdown {
-                    value: function(),
+                    selected_item: rsx!( label { "{function}" } ),
                     for func in &[Function::Quad, Function::Elastic, Function::Quart, Function::Linear, Function::Circ] {
                         DropdownItem {
-                            value: *func,
-                            onpress: {
-                                to_owned![func];
-                                move |_| function.set(func)
-                            },
+                            onpress: move |_| function.set(*func),
                             label { "{func:?}" }
                         }
                     }
@@ -107,7 +103,7 @@ fn app() -> Element {
 #[component]
 fn Card(children: Element) -> Element {
     let animation = use_animation(move |conf| {
-        conf.auto_start(true);
+        conf.on_creation(OnCreation::Run);
         AnimNum::new(0.9, 1.)
             .time(300)
             .function(Function::Elastic)

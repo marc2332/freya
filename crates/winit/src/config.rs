@@ -234,4 +234,10 @@ impl<'a, T: Clone> LaunchConfig<'a, T> {
         self.window_config.event_loop_builder_hook = Some(Box::new(event_loop_builder_hook));
         self
     }
+
+    /// Specify the max resources to be cached for the GPU, in bytes.
+    pub fn with_max_gpu_resources_bytes(mut self, max_gpu_resources_bytes: usize) -> Self {
+        self.window_config.max_gpu_resources_bytes = Some(max_gpu_resources_bytes);
+        self
+    }
 }

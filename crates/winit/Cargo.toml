@@ -17,6 +17,7 @@ features = ["freya-engine/mocked-engine"]
 [features]
 skia-engine = ["freya-engine/skia-engine"]
 disable-zoom-shortcuts = []
+disable-animation-shortcuts = []
 
 [dependencies]
 freya-elements = { workspace = true }

@@ -202,4 +202,59 @@ def_attribute!(
     /// }
     /// ```
     corner_smoothing,
+
+    /// Control the blend mode of this element.
+    ///
+    /// Possible values:
+    /// - `clear`
+    /// - `src`
+    /// - `dst`
+    /// - `src-over`
+    /// - `dst-over`
+    /// - `src-in`
+    /// - `dst-in`
+    /// - `src-out`
+    /// - `dst-out`
+    /// - `src-a-top`
+    /// - `dst-a-top`
+    /// - `xor`
+    /// - `plus`
+    /// - `modulate`
+    /// - `screen`
+    /// - `overlay`
+    /// - `darken`
+    /// - `lighten`
+    /// - `color-dodge`
+    /// - `color-burn`
+    /// - `hard-light`
+    /// - `soft-light`
+    /// - `difference`
+    /// - `exclusion`
+    /// - `multiply`
+    /// - `hue`
+    /// - `saturation`
+    /// - `color`
+    /// - `luminosity`
+    blend_mode,
+
+    /// Control the blur effect on this element's background.
+    ///
+    /// A higher value makes it more blurry.
+    ///
+    /// It is important to note that the element's background must be at least a bit transparent to appreciate the blur effect.
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             backdrop_blur: "10",
+    ///             background: "rgb(255, 255, 255, 0.4)"
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    backdrop_blur,
 );

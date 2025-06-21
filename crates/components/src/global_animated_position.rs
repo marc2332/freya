@@ -118,7 +118,6 @@ pub fn GlobalAnimatedPosition<T: Clone + PartialEq + Hash + Eq + 'static>(
     #[props(default = Duration::from_millis(250))] duration: Duration,
     #[props(default = Ease::default())] ease: Ease,
 ) -> Element {
-    let mut render_element = use_signal(|| false);
     let (reference, mut init_size, size, old_size) = use_node_init_curr_prev(id);
 
     let animations = use_animation_with_dependencies(
@@ -140,19 +139,11 @@ pub fn GlobalAnimatedPosition<T: Clone + PartialEq + Hash + Eq + 'static>(
     );
 
     use_effect(move || {
-        if animations.is_running() {
-            render_element.set(true);
-        }
-    });
-
-    use_effect(move || {
         let has_size = size.read().is_some();
         let has_init_size = init_size.read().is_some();
         let has_old_size = old_size.read().is_some();
         if has_size && (has_old_size || has_init_size) {
             animations.run(AnimDirection::Reverse);
-        } else if has_size {
-            render_element.set(true);
         }
     });
 
@@ -180,10 +171,10 @@ pub fn GlobalAnimatedPosition<T: Clone + PartialEq + Hash + Eq + 'static>(
                 offset_x: "{offset_x}",
                 offset_y: "{offset_y}",
                 position: "global",
-                if render_element() {
+                 if let Some(size) = size.read().as_ref() {
                     rect {
-                        width: "{size.read().as_ref().unwrap().width()}",
-                        height: "{size.read().as_ref().unwrap().height()}",
+                        width: "{size.width()}",
+                        height: "{size.height()}",
                         {children}
                     }
                 }

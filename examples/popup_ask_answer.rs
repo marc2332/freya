@@ -36,7 +36,6 @@ fn app() -> Element {
 fn AskNamePopup() -> Element {
     let mut popup_answer = use_popup_answer::<String, String>();
     let data = popup_answer.data();
-    let title = data.as_ref().expect("Infallible");
 
     rsx!(
         Popup {
@@ -44,12 +43,10 @@ fn AskNamePopup() -> Element {
                 popup_answer.answer(None);
             },
             PopupTitle {
-                label {
-                    "{title}"
-                }
+                text: "{data}"
             }
-            PopupContent {
-                Button {
+            PopupButtons {
+                PopupButton {
                     onpress: move |_| {
                         popup_answer.answer("Marc".to_string())
                     },

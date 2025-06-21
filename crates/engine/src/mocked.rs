@@ -9,9 +9,6 @@ use std::ops::*;
 use bitflags::bitflags;
 use glutin::context::PossiblyCurrentContext;
 
-#[derive(Default, Debug)]
-pub struct SaveLayerRec;
-
 #[derive(Clone, Debug, PartialEq, Copy, Eq)]
 pub struct Color(u32);
 
@@ -33,6 +30,9 @@ impl Color {
     pub const DARK_GRAY: Self = Color(4282664004);
     pub const GRAY: Self = Color(4287137928);
     pub const LIGHT_GRAY: Self = Color(4291611852);
+    pub const DARK_GREY: Self = Color(4282664004);
+    pub const GREY: Self = Color(4287137928);
+    pub const LIGHT_GREY: Self = Color(4291611852);
     pub const WHITE: Self = Color(4294967295);
     pub const RED: Self = Color(4294901760);
     pub const GREEN: Self = Color(4278255360);
@@ -1141,6 +1141,39 @@ pub enum SrcRectConstraint {
 
 #[derive(Default)]
 pub struct SamplingOptions;
+
+pub struct ImageFilter;
+
+pub fn blur(
+    (sigma_x, sigma_y): (f32, f32),
+    tile_mode: impl Into<Option<()>>,
+    input: impl Into<Option<()>>,
+    crop_rect: &Rect,
+) -> Option<ImageFilter> {
+    unimplemented!("This is mocked")
+}
+
+#[repr(C)]
+#[derive(Default)]
+pub struct SaveLayerRec;
+
+impl<'a> SaveLayerRec {
+    pub fn bounds(self, bounds: &'a Rect) -> Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn paint(self, paint: &'a Paint) -> Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn backdrop(self, backdrop: &'a ImageFilter) -> Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn color_space(self, color_space: &'a ColorSpace) -> Self {
+        unimplemented!("This is mocked")
+    }
+}
 
 impl SamplingOptions {
     pub fn new(filter_mode: FilterMode, mm: MipmapMode) -> Self {

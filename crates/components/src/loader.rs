@@ -3,10 +3,12 @@ use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_animation,
     use_applied_theme,
+    use_surface_theme_indicator,
     AnimNum,
-    LoaderTheme,
     LoaderThemeWith,
+    OnCreation,
     OnFinish,
+    SurfaceThemeIndicator,
 };
 
 /// Properties for the [`Loader`] component.
@@ -49,12 +51,16 @@ pub struct LoaderProps {
 pub fn Loader(props: LoaderProps) -> Element {
     let theme = use_applied_theme!(&props.theme, loader);
     let animation = use_animation(|conf| {
-        conf.auto_start(true);
+        conf.on_creation(OnCreation::Run);
         conf.on_finish(OnFinish::Restart);
         AnimNum::new(0.0, 360.0).time(650)
     });
+    let contextual_theme = use_surface_theme_indicator();
 
-    let LoaderTheme { primary_color } = theme;
+    let color = match contextual_theme {
+        SurfaceThemeIndicator::Primary => theme.opposite_color,
+        SurfaceThemeIndicator::Opposite => theme.primary_color,
+    };
 
     let degrees = animation.get().read().read();
 
@@ -65,7 +71,7 @@ pub fn Loader(props: LoaderProps) -> Element {
         svg_content: r#"
             <svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
                 <circle class="spin" cx="300" cy="300" fill="none"
-                r="250" stroke-width="64" stroke="{primary_color}"
+                r="250" stroke-width="64" stroke="{color}"
                 stroke-dasharray="256 1400"
                 stroke-linecap="round" />
             </svg>
