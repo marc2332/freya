@@ -76,9 +76,9 @@ use crate::{
     EmbeddedFonts,
 };
 
+#[derive(Hash, PartialEq, Eq)]
 pub enum AccessibilityTask {
-    None,
-    Process,
+    ProcessUpdate,
     ProcessWithMode(NavigationMode),
 }
 
@@ -102,7 +102,7 @@ pub struct Application {
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) plugins: PluginsManager,
     pub(crate) process_layout_on_next_render: bool,
-    pub(crate) process_accessibility_task_on_next_render: AccessibilityTask,
+    pub(crate) accessibility_tasks_for_next_render: Option<AccessibilityTask>,
     pub(crate) init_accessibility_on_next_render: bool,
     pub(crate) default_fonts: Vec<String>,
 }
@@ -162,7 +162,7 @@ impl Application {
             ticker_sender: broadcast::channel(5).0,
             plugins,
             process_layout_on_next_render: false,
-            process_accessibility_task_on_next_render: AccessibilityTask::None,
+            accessibility_tasks_for_next_render: None,
             init_accessibility_on_next_render: false,
             default_fonts,
             compositor: Compositor::default(),
@@ -266,7 +266,8 @@ impl Application {
 
         if must_relayout {
             self.process_layout_on_next_render = true;
-            self.process_accessibility_task_on_next_render = AccessibilityTask::Process;
+            self.accessibility_tasks_for_next_render
+                .replace(AccessibilityTask::ProcessUpdate);
         } else if must_repaint {
             // If there was no relayout but there was a repaint then we can update the devtools now,
             // otherwise if there was a relayout the devtools will get updated on next render
@@ -371,7 +372,8 @@ impl Application {
     /// Resize the Window
     pub fn resize(&mut self, window: &Window) {
         self.process_layout_on_next_render = true;
-        self.process_accessibility_task_on_next_render = AccessibilityTask::Process;
+        self.accessibility_tasks_for_next_render
+            .replace(AccessibilityTask::ProcessUpdate);
         self.init_accessibility_on_next_render = true;
         self.compositor.reset();
         self.sdom
@@ -399,13 +401,13 @@ impl Application {
             AccessibilityFocusStrategy::Backward | AccessibilityFocusStrategy::Forward => {
                 AccessibilityTask::ProcessWithMode(NavigationMode::Keyboard)
             }
-            _ => AccessibilityTask::Process,
+            _ => AccessibilityTask::ProcessUpdate,
         };
 
         let fdom = self.sdom.get();
         fdom.accessibility_dirty_nodes()
             .request_focus(focus_strategy);
-        self.process_accessibility_task_on_next_render = task
+        self.accessibility_tasks_for_next_render.replace(task);
     }
 
     /// Notify components subscribed to event loop ticks.

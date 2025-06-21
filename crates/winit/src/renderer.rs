@@ -276,15 +276,16 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
                     app.process_layout_on_next_render = false;
                 }
 
-                match app.process_accessibility_task_on_next_render {
-                    AccessibilityTask::ProcessWithMode(navigation_mode) => {
-                        app.process_accessibility(window);
-                        app.set_navigation_mode(navigation_mode);
+                if let Some(task) = app.accessibility_tasks_for_next_render.take() {
+                    match task {
+                        AccessibilityTask::ProcessWithMode(navigation_mode) => {
+                            app.process_accessibility(window);
+                            app.set_navigation_mode(navigation_mode);
+                        }
+                        AccessibilityTask::ProcessUpdate => {
+                            app.process_accessibility(window);
+                        }
                     }
-                    AccessibilityTask::Process => {
-                        app.process_accessibility(window);
-                    }
-                    AccessibilityTask::None => {}
                 }
 
                 if app.init_accessibility_on_next_render {
