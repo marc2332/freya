@@ -142,6 +142,17 @@ impl<T: 'static + Clone> TestingHandler<T> {
         self.accessibility_tree.focused_id
     }
 
+    /// Get the current [AccessibilityId] but as a [TestNode].
+    pub fn focus_node(&self) -> TestNode {
+        let node_id = self
+            .accessibility_tree
+            .map
+            .get(&self.accessibility_tree.focused_id)
+            .unwrap();
+
+        self.utils.get_node_by_id(*node_id)
+    }
+
     /// Apply the latest changes of the virtual dom.
     pub async fn wait_for_update(&mut self) -> (bool, bool) {
         self.wait_for_work(self.config.size());
@@ -174,9 +185,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
                     }
                     EventLoopMessage::FocusAccessibilityNode(strategy) => {
                         let fdom = self.utils.sdom.get();
-                        let rdom = fdom.rdom();
-                        self.accessibility_tree
-                            .focus_node_with_strategy(strategy, rdom);
+                        fdom.accessibility_dirty_nodes().request_focus(strategy);
                     }
                     EventLoopMessage::SetCursorIcon(icon) => {
                         self.cursor_icon = icon;
@@ -245,6 +254,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
                 rdom,
                 &layout,
                 &mut dirty_accessibility_tree,
+                &self.event_emitter,
             );
 
             // Notify the components

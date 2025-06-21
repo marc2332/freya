@@ -3,15 +3,18 @@ use std::{
     rc::Rc,
 };
 
-use freya_elements::events::{
-    pointer::PointerType,
-    ErasedEventData,
-    FileData,
-    KeyboardData,
-    MouseData,
-    PointerData,
-    TouchData,
-    WheelData,
+use freya_elements::{
+    events::{
+        pointer::PointerType,
+        ErasedEventData,
+        FileData,
+        KeyboardData,
+        MouseData,
+        PointerData,
+        TouchData,
+        WheelData,
+    },
+    WheelSource,
 };
 use freya_native_core::NodeId;
 use torin::prelude::*;
@@ -92,7 +95,7 @@ impl DomEvent {
             PlatformEventData::Wheel { scroll, .. } => Self {
                 node_id,
                 name,
-                data: DomEventData::Wheel(WheelData::new(scroll.x, scroll.y)),
+                data: DomEventData::Wheel(WheelData::new(WheelSource::Device, scroll.x, scroll.y)),
                 bubbles,
             },
             PlatformEventData::Keyboard {
