@@ -406,6 +406,8 @@ define_theme! {
         margin: str,
         background: str,
         hover_background: str,
+        corner_radius: str,
+        padding: str,
         %[subthemes]
         font_theme: FontTheme,
     }
@@ -478,7 +480,6 @@ define_theme! {
         %[cows]
         background: str,
         color: str,
-        cross_fill: str,
         width: str,
         height: str,
     }

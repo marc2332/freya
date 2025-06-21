@@ -6,7 +6,6 @@ use dioxus_core::{
     },
     use_hook,
 };
-use dioxus_hooks::use_context_provider;
 use dioxus_signals::{
     Readable,
     Signal,
@@ -16,31 +15,10 @@ use freya_core::types::NativePlatformReceiver;
 
 use crate::use_init_asset_cacher;
 
-#[derive(Clone)]
-pub struct NavigationMark(bool);
-
-impl NavigationMark {
-    pub fn allowed(&self) -> bool {
-        self.0
-    }
-
-    pub fn set_allowed(&mut self, allowed: bool) {
-        self.0 = allowed;
-    }
-}
-
-#[derive(Clone, Copy)]
-pub struct UsePlatformEvents {
-    pub navigation_mark: Signal<NavigationMark>,
-}
-
 /// Keep some native features (focused element, preferred theme, etc) on sync between the platform and the components
-pub fn use_init_native_platform() -> UsePlatformEvents {
-    // Inithe global asset cacher
+pub fn use_init_native_platform() {
+    // Init the global asset cacher
     use_init_asset_cacher();
-
-    // Init the NavigationMark signal
-    let navigation_mark = use_context_provider(|| Signal::new(NavigationMark(true)));
 
     // Init the signals with platform values
     use_hook(|| {
@@ -87,8 +65,6 @@ pub fn use_init_native_platform() -> UsePlatformEvents {
         provide_context(focused_id);
         provide_context(focused_node);
     });
-
-    UsePlatformEvents { navigation_mark }
 }
 
 #[cfg(test)]
@@ -191,7 +167,7 @@ mod test {
 
         // Navigate to the first rect
         utils.push_event(TestEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: KeyboardEventName::KeyDown,
             key: Key::Tab,
             code: Code::Tab,
             modifiers: Modifiers::default(),
@@ -206,7 +182,7 @@ mod test {
 
         // Navigate to the second rect
         utils.push_event(TestEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: KeyboardEventName::KeyDown,
             key: Key::Tab,
             code: Code::Tab,
             modifiers: Modifiers::default(),

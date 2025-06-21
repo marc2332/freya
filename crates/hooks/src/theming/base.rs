@@ -191,6 +191,8 @@ pub(crate) const BASE_THEME: Theme = Theme {
         margin: cow_borrowed!("0"),
         background: cow_borrowed!("transparent"),
         hover_background: cow_borrowed!("key(focused_surface)"),
+        corner_radius: cow_borrowed!("99"),
+        padding: cow_borrowed!("8 10"),
         font_theme: FontTheme {
             color: cow_borrowed!("key(color)"),
         },
@@ -230,9 +232,8 @@ pub(crate) const BASE_THEME: Theme = Theme {
     popup: PopupTheme {
         background: cow_borrowed!("key(background)"),
         color: cow_borrowed!("key(color)"),
-        cross_fill: cow_borrowed!("key(solid)"),
         width: cow_borrowed!("350"),
-        height: cow_borrowed!("200"),
+        height: cow_borrowed!("auto"),
     },
     tab: TabTheme {
         background: cow_borrowed!("key(neutral_surface)"),

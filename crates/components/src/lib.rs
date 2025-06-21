@@ -39,7 +39,6 @@
 pub fn gallery() {}
 
 mod accordion;
-mod activable_route;
 mod animated_position;
 mod animated_router;
 mod body;
@@ -59,7 +58,6 @@ mod link;
 mod loader;
 mod menu;
 mod native_container;
-mod native_router;
 #[cfg(feature = "network-image")]
 mod network_image;
 mod overflowed_content;
@@ -80,10 +78,10 @@ mod theme;
 mod tile;
 mod tooltip;
 mod tree;
+#[cfg(feature = "winit")]
 mod window_drag_area;
 
 pub use accordion::*;
-pub use activable_route::*;
 pub use animated_position::*;
 pub use animated_router::*;
 pub use body::*;
@@ -102,7 +100,6 @@ pub use link::*;
 pub use loader::*;
 pub use menu::*;
 pub use native_container::*;
-pub use native_router::*;
 #[cfg(feature = "network-image")]
 pub use network_image::*;
 pub use overflowed_content::*;
@@ -122,4 +119,5 @@ pub use theme::*;
 pub use tile::*;
 pub use tooltip::*;
 pub use tree::*;
+#[cfg(feature = "winit")]
 pub use window_drag_area::*;

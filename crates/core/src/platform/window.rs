@@ -1,9 +1,2 @@
-pub use winit::{
-    event_loop::EventLoopProxy,
-    window::{
-        CursorIcon,
-        Fullscreen,
-        Window,
-        WindowAttributes,
-    },
-};
+#[allow(unused_imports)]
+pub use cursor_icon::CursorIcon;

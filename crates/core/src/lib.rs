@@ -1,4 +1,5 @@
 pub mod accessibility;
+pub mod animation_clock;
 pub mod custom_attributes;
 pub mod dom;
 pub mod elements;

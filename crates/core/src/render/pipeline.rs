@@ -4,9 +4,11 @@ use freya_engine::prelude::{
     FontCollection,
     FontMgr,
     Matrix,
+    Paint,
     Point,
     Rect,
     SamplingOptions,
+    SaveLayerRec,
     Surface,
 };
 use freya_native_core::{
@@ -66,7 +68,7 @@ pub struct RenderPipeline<'a> {
     pub canvas_area: Area,
     pub background: Color,
     pub scale_factor: f32,
-    pub selected_node: Option<NodeId>,
+    pub highlighted_node: Option<NodeId>,
     pub default_fonts: &'a [String],
 }
 
@@ -163,8 +165,8 @@ impl RenderPipeline<'_> {
             }
         }
 
-        if let Some(selected_node) = &self.selected_node {
-            if let Some(layout_node) = self.layout.get(*selected_node) {
+        if let Some(highlighted_node) = &self.highlighted_node {
+            if let Some(layout_node) = self.layout.get(*highlighted_node) {
                 wireframe_renderer::render_wireframe(
                     self.dirty_surface.canvas(),
                     &layout_node.visible_area(),
@@ -201,6 +203,9 @@ impl RenderPipeline<'_> {
             };
 
             let initial_layer = dirty_canvas.save();
+
+            let area = layout_node.visible_area();
+            let rect = Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
 
             let node_transform = &*node_ref.get::<TransformState>().unwrap();
             let node_viewports = node_ref.get::<ViewportState>().unwrap();
@@ -240,17 +245,18 @@ impl RenderPipeline<'_> {
                 dirty_canvas.concat(&matrix);
             }
 
+            // Apply blend mode
+            if let Some(blend) = node_transform.blend_mode {
+                let mut paint = Paint::default();
+                paint.set_blend_mode(blend);
+
+                let layer_rec = SaveLayerRec::default().bounds(&rect).paint(&paint);
+                dirty_canvas.save_layer(&layer_rec);
+            }
+
             // Apply inherited opacity effects
             for opacity in &node_transform.opacities {
-                dirty_canvas.save_layer_alpha_f(
-                    Rect::new(
-                        self.canvas_area.min_x(),
-                        self.canvas_area.min_y(),
-                        self.canvas_area.max_x(),
-                        self.canvas_area.max_y(),
-                    ),
-                    *opacity,
-                );
+                dirty_canvas.save_layer_alpha_f(rect, *opacity);
             }
 
             // Clip the element itself if non-children content can overflow, like an image in case of `image`

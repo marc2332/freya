@@ -325,6 +325,7 @@ impl AccessibilityTree {
 
                 events.push(DomEvent {
                     name: EventName::Wheel,
+                    source_event: EventName::Wheel,
                     node_id: *closest_scrollable,
                     data: DomEventData::Wheel(WheelData::new(
                         WheelSource::Custom,
@@ -339,7 +340,7 @@ impl AccessibilityTree {
             }
         }
 
-        event_emitter.send(events).unwrap();
+        event_emitter.send((events, Vec::default())).unwrap();
     }
 
     /// Focus a Node given the strategy.

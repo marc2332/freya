@@ -51,7 +51,7 @@ pub async fn scroll_to_focused() {
     // The "repeat(2)" makes sure that only these 6 elements defined above are being focused
     for id in [3, 12, 4, 6, 13, 7].repeat(2) {
         utils.push_event(TestEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: KeyboardEventName::KeyDown,
             key: Key::Tab,
             code: Code::Tab,
             modifiers: Modifiers::default(),

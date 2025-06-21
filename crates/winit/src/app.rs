@@ -4,10 +4,7 @@ use accesskit::{
     Node,
     Role,
 };
-use dioxus_core::{
-    Event,
-    VirtualDom,
-};
+use dioxus_core::VirtualDom;
 use freya_core::{
     accessibility::{
         AccessibilityFocusStrategy,
@@ -19,6 +16,7 @@ use freya_core::{
         TextGroupMeasurement,
     },
     events::{
+        handle_processed_events,
         process_events,
         NodesState,
         PlatformEvent,
@@ -47,7 +45,6 @@ use freya_core::{
     },
 };
 use freya_engine::prelude::*;
-use freya_native_core::prelude::NodeImmutableDioxusExt;
 use futures_task::Waker;
 use futures_util::Future;
 use tokio::{
@@ -67,10 +64,7 @@ use winit::{
 
 use crate::{
     accessibility::WinitAcessibilityTree,
-    devtools::{
-        Devtools,
-        HoveredNode,
-    },
+    devtools::Devtools,
     size::WinitSize,
     winit_waker::winit_waker,
     EmbeddedFonts,
@@ -195,6 +189,8 @@ impl Application {
             .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
         self.vdom
             .insert_any_root_context(Box::new(self.sdom.get().accessibility_generator().clone()));
+        self.vdom
+            .insert_any_root_context(Box::new(self.sdom.get().animation_clock().clone()));
 
         // Init the RealDOM
         self.sdom.get_mut().init_dom(&mut self.vdom, scale_factor);
@@ -232,23 +228,8 @@ impl Application {
         {
             let fut = std::pin::pin!(async {
                 select! {
-                    Some(events) = self.event_receiver.recv() => {
-                        let fdom = self.sdom.get();
-                        let rdom = fdom.rdom();
-                        for event in events {
-                            if let Some(element_id) = rdom
-                                .get(event.node_id)
-                                .and_then(|node| node.mounted_id())
-                            {
-                                let name = event.name.into();
-                                let data = event.data.any();
-                                let event = Event::new(data, event.bubbles);
-                                self.vdom
-                                    .runtime()
-                                    .handle_event(name, event, element_id);
-                                self.vdom.process_events();
-                            }
-                        }
+                    Some((dom_events, flattened_potential_events)) = self.event_receiver.recv() => {
+                        handle_processed_events(&self.sdom, &mut self.vdom, &mut self.nodes_state, dom_events, flattened_potential_events)
                     },
                     _ = self.vdom.wait_for_work() => {},
                 }
@@ -335,7 +316,6 @@ impl Application {
     /// Render the App into the Window Canvas
     pub fn render(
         &mut self,
-        hovered_node: &HoveredNode,
         background: Color,
         surface: &mut Surface,
         dirty_surface: &mut Surface,
@@ -352,7 +332,6 @@ impl Application {
         );
 
         self.start_render(
-            hovered_node,
             background,
             surface,
             dirty_surface,
@@ -462,7 +441,6 @@ impl Application {
     /// Start rendering the RealDOM to Window
     pub fn start_render(
         &mut self,
-        hovered_node: &HoveredNode,
         background: Color,
         surface: &mut Surface,
         dirty_surface: &mut Surface,
@@ -470,9 +448,10 @@ impl Application {
         scale_factor: f32,
     ) {
         let fdom = self.sdom.get();
-        let hovered_node = hovered_node
+        let highlighted_node = self
+            .devtools
             .as_ref()
-            .and_then(|hovered_node| *hovered_node.lock().unwrap());
+            .and_then(|devtools| *devtools.highlighted_node.lock().unwrap());
 
         let mut render_pipeline = RenderPipeline {
             canvas_area: Area::from_size(window_size.to_torin()),
@@ -487,7 +466,7 @@ impl Application {
             dirty_surface,
             compositor: &mut self.compositor,
             scale_factor,
-            selected_node: hovered_node,
+            highlighted_node,
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,
             default_fonts: &self.default_fonts,
