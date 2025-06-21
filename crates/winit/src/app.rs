@@ -64,18 +64,15 @@ use winit::{
 
 use crate::{
     accessibility::WinitAcessibilityTree,
-    devtools::{
-        Devtools,
-        HoveredNode,
-    },
+    devtools::Devtools,
     size::WinitSize,
     winit_waker::winit_waker,
     EmbeddedFonts,
 };
 
+#[derive(Hash, PartialEq, Eq)]
 pub enum AccessibilityTask {
-    None,
-    Process,
+    ProcessUpdate,
     ProcessWithMode(NavigationMode),
 }
 
@@ -99,7 +96,7 @@ pub struct Application {
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) plugins: PluginsManager,
     pub(crate) process_layout_on_next_render: bool,
-    pub(crate) process_accessibility_task_on_next_render: AccessibilityTask,
+    pub(crate) accessibility_tasks_for_next_render: Option<AccessibilityTask>,
     pub(crate) init_accessibility_on_next_render: bool,
     pub(crate) default_fonts: Vec<String>,
 }
@@ -159,7 +156,7 @@ impl Application {
             ticker_sender: broadcast::channel(5).0,
             plugins,
             process_layout_on_next_render: false,
-            process_accessibility_task_on_next_render: AccessibilityTask::None,
+            accessibility_tasks_for_next_render: None,
             init_accessibility_on_next_render: false,
             default_fonts,
             compositor: Compositor::default(),
@@ -192,6 +189,8 @@ impl Application {
             .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
         self.vdom
             .insert_any_root_context(Box::new(self.sdom.get().accessibility_generator().clone()));
+        self.vdom
+            .insert_any_root_context(Box::new(self.sdom.get().animation_clock().clone()));
 
         // Init the RealDOM
         self.sdom.get_mut().init_dom(&mut self.vdom, scale_factor);
@@ -248,7 +247,8 @@ impl Application {
 
         if must_relayout {
             self.process_layout_on_next_render = true;
-            self.process_accessibility_task_on_next_render = AccessibilityTask::Process;
+            self.accessibility_tasks_for_next_render
+                .replace(AccessibilityTask::ProcessUpdate);
         } else if must_repaint {
             // If there was no relayout but there was a repaint then we can update the devtools now,
             // otherwise if there was a relayout the devtools will get updated on next render
@@ -315,7 +315,6 @@ impl Application {
     /// Render the App into the Window Canvas
     pub fn render(
         &mut self,
-        hovered_node: &HoveredNode,
         background: Color,
         surface: &mut Surface,
         dirty_surface: &mut Surface,
@@ -332,7 +331,6 @@ impl Application {
         );
 
         self.start_render(
-            hovered_node,
             background,
             surface,
             dirty_surface,
@@ -353,7 +351,8 @@ impl Application {
     /// Resize the Window
     pub fn resize(&mut self, window: &Window) {
         self.process_layout_on_next_render = true;
-        self.process_accessibility_task_on_next_render = AccessibilityTask::Process;
+        self.accessibility_tasks_for_next_render
+            .replace(AccessibilityTask::ProcessUpdate);
         self.init_accessibility_on_next_render = true;
         self.compositor.reset();
         self.sdom
@@ -381,13 +380,13 @@ impl Application {
             AccessibilityFocusStrategy::Backward | AccessibilityFocusStrategy::Forward => {
                 AccessibilityTask::ProcessWithMode(NavigationMode::Keyboard)
             }
-            _ => AccessibilityTask::Process,
+            _ => AccessibilityTask::ProcessUpdate,
         };
 
         let fdom = self.sdom.get();
         fdom.accessibility_dirty_nodes()
             .request_focus(focus_strategy);
-        self.process_accessibility_task_on_next_render = task
+        self.accessibility_tasks_for_next_render.replace(task);
     }
 
     /// Notify components subscribed to event loop ticks.
@@ -441,7 +440,6 @@ impl Application {
     /// Start rendering the RealDOM to Window
     pub fn start_render(
         &mut self,
-        hovered_node: &HoveredNode,
         background: Color,
         surface: &mut Surface,
         dirty_surface: &mut Surface,
@@ -449,9 +447,10 @@ impl Application {
         scale_factor: f32,
     ) {
         let fdom = self.sdom.get();
-        let hovered_node = hovered_node
+        let highlighted_node = self
+            .devtools
             .as_ref()
-            .and_then(|hovered_node| *hovered_node.lock().unwrap());
+            .and_then(|devtools| *devtools.highlighted_node.lock().unwrap());
 
         let mut render_pipeline = RenderPipeline {
             canvas_area: Area::from_size(window_size.to_torin()),
@@ -466,7 +465,7 @@ impl Application {
             dirty_surface,
             compositor: &mut self.compositor,
             scale_factor,
-            selected_node: hovered_node,
+            highlighted_node,
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,
             default_fonts: &self.default_fonts,

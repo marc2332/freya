@@ -31,6 +31,6 @@ accesskit = { workspace = true }
 
 dioxus = { workspace = true }
 freya-native-core = { workspace = true }
-dioxus-router = { workspace = true }
+freya-router = { workspace = true }
 
 tokio = { workspace = true }

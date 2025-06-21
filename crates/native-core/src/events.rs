@@ -21,6 +21,7 @@ pub enum EventName {
     PointerEnter,
     PointerLeave,
     PointerUp,
+    PointerPress,
 
     KeyDown,
     KeyUp,
@@ -62,6 +63,7 @@ impl FromStr for EventName {
             "pointerenter" => Ok(EventName::PointerEnter),
             "pointerleave" => Ok(EventName::PointerLeave),
             "pointerup" => Ok(EventName::PointerUp),
+            "pointerpress" => Ok(EventName::PointerPress),
             "keydown" => Ok(EventName::KeyDown),
             "keyup" => Ok(EventName::KeyUp),
             "globalkeydown" => Ok(EventName::GlobalKeyDown),
@@ -100,6 +102,7 @@ impl From<EventName> for &str {
             EventName::PointerEnter => "pointerenter",
             EventName::PointerLeave => "pointerleave",
             EventName::PointerUp => "pointerup",
+            EventName::PointerPress => "pointerpress",
             EventName::KeyUp => "keyup",
             EventName::KeyDown => "keydown",
             EventName::GlobalKeyDown => "globalkeydown",
@@ -181,7 +184,7 @@ impl EventName {
             Self::TouchMove => events.extend([Self::PointerEnter, Self::PointerOver]),
             Self::MouseDown | Self::TouchStart => events.push(Self::PointerDown),
             Self::MouseUp | Self::MiddleClick | Self::RightClick | Self::TouchEnd => {
-                events.extend([Self::Click, Self::PointerUp])
+                events.extend([Self::Click, Self::PointerUp, Self::PointerPress])
             }
             Self::MouseLeave => events.push(Self::PointerLeave),
             _ => {}
@@ -261,6 +264,7 @@ impl EventName {
                 | Self::PointerOver
                 | Self::PointerDown
                 | Self::PointerUp
+                | Self::PointerPress
                 | Self::GlobalPointerUp
         )
     }
@@ -323,6 +327,6 @@ impl EventName {
 
     /// Check if this event can release the press state of a Node.
     pub fn is_released(&self) -> bool {
-        matches!(&self, Self::Click | Self::PointerUp)
+        matches!(&self, Self::Click | Self::PointerPress)
     }
 }

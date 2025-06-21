@@ -42,10 +42,7 @@ use winit::{
 
 use crate::{
     app::AccessibilityTask,
-    devtools::{
-        Devtools,
-        HoveredNode,
-    },
+    devtools::Devtools,
     events::{
         map_winit_mouse_button,
         map_winit_touch_force,
@@ -71,7 +68,6 @@ const TOUCHPAD_SPEED_MODIFIER: f64 = 2.0;
 pub struct WinitRenderer<'a, State: Clone + 'static> {
     pub(crate) event_loop_proxy: EventLoopProxy<EventLoopMessage>,
     pub(crate) state: WindowState<'a, State>,
-    pub(crate) hovered_node: HoveredNode,
     pub(crate) cursor_pos: CursorPoint,
     pub(crate) mouse_state: ElementState,
     pub(crate) modifiers_state: ModifiersState,
@@ -86,7 +82,6 @@ impl<'a, State: Clone + 'static> WinitRenderer<'a, State> {
         sdom: SafeDOM,
         mut config: LaunchConfig<State>,
         devtools: Option<Devtools>,
-        hovered_node: HoveredNode,
     ) {
         let mut event_loop_builder = EventLoop::<EventLoopMessage>::with_user_event();
         let event_loop_builder_hook = config.window_config.event_loop_builder_hook.take();
@@ -98,8 +93,7 @@ impl<'a, State: Clone + 'static> WinitRenderer<'a, State> {
             .expect("Failed to create event loop.");
         let proxy = event_loop.create_proxy();
 
-        let mut winit_renderer =
-            WinitRenderer::new(vdom, sdom, config, devtools, hovered_node, proxy);
+        let mut winit_renderer = WinitRenderer::new(vdom, sdom, config, devtools, proxy);
 
         event_loop.run_app(&mut winit_renderer).unwrap();
     }
@@ -109,7 +103,6 @@ impl<'a, State: Clone + 'static> WinitRenderer<'a, State> {
         sdom: SafeDOM,
         config: LaunchConfig<'a, State>,
         devtools: Option<Devtools>,
-        hovered_node: HoveredNode,
         proxy: EventLoopProxy<EventLoopMessage>,
     ) -> Self {
         WinitRenderer {
@@ -119,7 +112,6 @@ impl<'a, State: Clone + 'static> WinitRenderer<'a, State> {
                 vdom,
                 config,
             }),
-            hovered_node,
             event_loop_proxy: proxy,
             cursor_pos: CursorPoint::default(),
             mouse_state: ElementState::Released,
@@ -282,15 +274,16 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
                     app.process_layout_on_next_render = false;
                 }
 
-                match app.process_accessibility_task_on_next_render {
-                    AccessibilityTask::ProcessWithMode(navigation_mode) => {
-                        app.process_accessibility(window);
-                        app.set_navigation_mode(navigation_mode);
+                if let Some(task) = app.accessibility_tasks_for_next_render.take() {
+                    match task {
+                        AccessibilityTask::ProcessWithMode(navigation_mode) => {
+                            app.process_accessibility(window);
+                            app.set_navigation_mode(navigation_mode);
+                        }
+                        AccessibilityTask::ProcessUpdate => {
+                            app.process_accessibility(window);
+                        }
                     }
-                    AccessibilityTask::Process => {
-                        app.process_accessibility(window);
-                    }
-                    AccessibilityTask::None => {}
                 }
 
                 if app.init_accessibility_on_next_render {
@@ -301,7 +294,6 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
                 graphics_driver.make_current();
 
                 app.render(
-                    &self.hovered_node,
                     window_config.background,
                     surface,
                     dirty_surface,
@@ -372,34 +364,57 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
                     return;
                 }
 
-                #[cfg(not(feature = "disable-zoom-shortcuts"))]
-                {
-                    let is_control_pressed = {
-                        if cfg!(target_os = "macos") {
-                            self.modifiers_state.super_key()
-                        } else {
-                            self.modifiers_state.control_key()
-                        }
+                #[allow(dead_code)]
+                let is_control_pressed = {
+                    if cfg!(target_os = "macos") {
+                        self.modifiers_state.super_key()
+                    } else {
+                        self.modifiers_state.control_key()
+                    }
+                };
+
+                #[allow(dead_code)]
+                let change_animation_clock = is_control_pressed
+                    && self.modifiers_state.alt_key()
+                    && state == ElementState::Pressed;
+
+                #[cfg(debug_assertions)]
+                if change_animation_clock {
+                    let ch = logical_key.to_text();
+                    let render = if ch == Some("+") {
+                        app.sdom.get().animation_clock().increase_by(0.2);
+                        true
+                    } else if ch == Some("-") {
+                        app.sdom.get().animation_clock().decrease_by(0.2);
+                        true
+                    } else {
+                        false
                     };
 
-                    if is_control_pressed && state == ElementState::Pressed {
-                        let ch = logical_key.to_text();
-                        let render_with_new_scale_factor = if ch == Some("+") {
-                            self.custom_scale_factor =
-                                (self.custom_scale_factor + 0.10).clamp(-1.0, 5.0);
-                            true
-                        } else if ch == Some("-") {
-                            self.custom_scale_factor =
-                                (self.custom_scale_factor - 0.10).clamp(-1.0, 5.0);
-                            true
-                        } else {
-                            false
-                        };
+                    if render {
+                        app.resize(window);
+                        window.request_redraw();
+                    }
+                }
 
-                        if render_with_new_scale_factor {
-                            app.resize(window);
-                            window.request_redraw();
-                        }
+                #[cfg(not(feature = "disable-zoom-shortcuts"))]
+                if !change_animation_clock && is_control_pressed && state == ElementState::Pressed {
+                    let ch = logical_key.to_text();
+                    let render = if ch == Some("+") {
+                        self.custom_scale_factor =
+                            (self.custom_scale_factor + 0.10).clamp(-1.0, 5.0);
+                        true
+                    } else if ch == Some("-") {
+                        self.custom_scale_factor =
+                            (self.custom_scale_factor - 0.10).clamp(-1.0, 5.0);
+                        true
+                    } else {
+                        false
+                    };
+
+                    if render {
+                        app.resize(window);
+                        window.request_redraw();
                     }
                 }
 

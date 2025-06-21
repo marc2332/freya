@@ -8,7 +8,7 @@
 //! - `green`
 //! - `yellow`
 //! - `black` (default for `color` attribute)
-//! - `gray`
+//! - `gray` or `grey`
 //! - `white` (default for `background` attribute)
 //! - `orange`
 //! - `transparent`

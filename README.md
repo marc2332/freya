@@ -6,7 +6,7 @@
 [![Github Sponsors](https://img.shields.io/github/sponsors/marc2332?style=social)](https://github.com/sponsors/marc2332)
 [![codecov](https://codecov.io/github/marc2332/freya/branch/main/graph/badge.svg?token=APSGEC84B8)](https://codecov.io/github/marc2332/freya)
 
-[Website](https://freyaui.dev) | [Documentation](https://docs.rs/freya/0.3/freya) | [Discord](https://discord.gg/sYejxCdewG) | [Main branch Docs](https://docs.freyaui.dev/freya) 
+[Website](https://freyaui.dev) | [Documentation](https://docs.rs/freya/0.3/freya) | [Discord](https://discord.gg/sYejxCdewG)
 
 **Freya** is a **cross-platform and non-web** GUI library for Rust powered by 🎨 [Skia](https://skia.org/).
 
@@ -88,7 +88,7 @@ An animated drag and drop.
 
 Animated transition between router pages.
 
-[Source code](/examples/animated_tabs.rs.rs).
+[Source code](/examples/animated_tabs.rs).
 
 ![animated_router](https://github.com/user-attachments/assets/9218e053-1cc0-48ca-a7c3-8f09b2281b92)
 
@@ -103,19 +103,19 @@ Animated transition between router pages.
 
 #### Switch Theme example
 
-[Source code](/examples/switch_theme.rs.rs).
+[Source code](/examples/switch_theme.rs).
 
 ![Switch Theme Screenshot](/website/public/blog/0.3/refreshed_components.png)
 
 #### Todo example
 
-[Source code](/examples/todo.rs.rs).
+[Source code](/examples/todo.rs).
 
 ![todo](https://github.com/user-attachments/assets/e450f514-ad10-4fb5-8b35-909c51d5d539)
 
 #### Resizable containers example
 
-[Source code](/examples/resizable_containers.rs.rs).
+[Source code](/examples/resizable_containers.rs).
 
 ![resizable](https://github.com/user-attachments/assets/3d3f4718-a0d6-4e4d-a0ad-0c750fb0c67e)
 
@@ -207,7 +207,7 @@ If you are interested in supporting the development of this project feel free to
 
 Thanks to my sponsors for supporting this project! 😄 
 
-<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;github.com&#x2F;piny4man.png" width="60px" alt="User avatar: " /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;github.com&#x2F;gqf2008.png" width="60px" alt="User avatar: 高庆丰" /></a><a href="https://github.com/lino-levan"><img src="https:&#x2F;&#x2F;github.com&#x2F;lino-levan.png" width="60px" alt="User avatar: Lino Le Van" /></a><!-- sponsors -->
+<!-- sponsors --><a href="https://github.com/piny4man"><img src="https:&#x2F;&#x2F;github.com&#x2F;piny4man.png" width="60px" alt="User avatar: " /></a><a href="https://github.com/gqf2008"><img src="https:&#x2F;&#x2F;github.com&#x2F;gqf2008.png" width="60px" alt="User avatar: 高庆丰" /></a><a href="https://github.com/lino-levan"><img src="https:&#x2F;&#x2F;github.com&#x2F;lino-levan.png" width="60px" alt="User avatar: Lino Le Van" /></a><a href="https://github.com/SpikeHD"><img src="https:&#x2F;&#x2F;github.com&#x2F;SpikeHD.png" width="60px" alt="User avatar: SpikeHD" /></a><!-- sponsors -->
 
 ### Special thanks 💪
 

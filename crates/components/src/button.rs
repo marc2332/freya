@@ -13,9 +13,11 @@ use freya_elements::{
 use freya_hooks::{
     use_applied_theme,
     use_focus,
+    use_init_surface_theme_indicator,
     use_platform,
     ButtonTheme,
     ButtonThemeWith,
+    SurfaceThemeIndicator,
 };
 
 /// Properties for the [`Button`], [`FilledButton`] and [`OutlineButton`] components.
@@ -29,6 +31,9 @@ pub struct ButtonProps {
     pub onpress: Option<EventHandler<PressEvent>>,
     /// Event handler for when the button is clicked. Not recommended, use `onpress` instead.
     pub onclick: Option<EventHandler<()>>,
+
+    #[props(default = true)]
+    pub enabled: bool,
 }
 
 /// Clickable button.
@@ -73,6 +78,7 @@ pub fn Button(props: ButtonProps) -> Element {
         children: props.children,
         onpress: props.onpress,
         onclick: props.onclick,
+        enabled: props.enabled,
     })
 }
 
@@ -113,11 +119,13 @@ pub fn Button(props: ButtonProps) -> Element {
 #[allow(non_snake_case)]
 pub fn FilledButton(props: ButtonProps) -> Element {
     let theme = use_applied_theme!(&props.theme, filled_button);
+    use_init_surface_theme_indicator(|| SurfaceThemeIndicator::Opposite);
     ButtonBase(BaseButtonProps {
         theme,
         children: props.children,
         onpress: props.onpress,
         onclick: props.onclick,
+        enabled: props.enabled,
     })
 }
 
@@ -163,6 +171,7 @@ pub fn OutlineButton(props: ButtonProps) -> Element {
         children: props.children,
         onpress: props.onpress,
         onclick: props.onclick,
+        enabled: props.enabled,
     })
 }
 
@@ -193,6 +202,9 @@ pub struct BaseButtonProps {
     pub onpress: Option<EventHandler<PressEvent>>,
     /// Event handler for when the button is clicked. Not recommended, use `onpress` instead.
     pub onclick: Option<EventHandler<()>>,
+
+    #[props(default = true)]
+    pub enabled: bool,
 }
 
 /// Identifies the current status of the Button.
@@ -212,6 +224,7 @@ pub fn ButtonBase(
         children,
         theme,
         onclick,
+        enabled,
     }: BaseButtonProps,
 ) -> Element {
     let mut focus = use_focus();
@@ -223,6 +236,7 @@ pub fn ButtonBase(
     let ButtonTheme {
         background,
         hover_background,
+        disabled_background,
         border_fill,
         focus_border_fill,
         padding,
@@ -234,9 +248,12 @@ pub fn ButtonBase(
         shadow,
     } = theme;
 
-    let onpointerup = {
+    let onpointerpress = {
         to_owned![onpress, onclick];
         move |ev: PointerEvent| {
+            if !enabled {
+                return;
+            }
             focus.request_focus();
             if let Some(onpress) = &onpress {
                 let is_valid = match ev.data.pointer_type {
@@ -261,31 +278,41 @@ pub fn ButtonBase(
         }
     };
 
+    use_effect(use_reactive!(|enabled| {
+        if *status.peek() == ButtonStatus::Hovering && !enabled {
+            platform.set_cursor(CursorIcon::default());
+        }
+    }));
+
     use_drop(move || {
-        if *status.read() == ButtonStatus::Hovering {
+        if *status.read() == ButtonStatus::Hovering && enabled {
             platform.set_cursor(CursorIcon::default());
         }
     });
 
     let onmouseenter = move |_| {
-        platform.set_cursor(CursorIcon::Pointer);
-        status.set(ButtonStatus::Hovering);
+        if enabled {
+            platform.set_cursor(CursorIcon::Pointer);
+            status.set(ButtonStatus::Hovering);
+        }
     };
 
-    let onmouseleave = move |_| {
+    let onpointerleave = move |_| {
         platform.set_cursor(CursorIcon::default());
         status.set(ButtonStatus::default());
     };
 
     let onkeydown = move |ev: KeyboardEvent| {
-        if focus.validate_keydown(&ev) {
+        if focus.validate_keydown(&ev) && !enabled {
             if let Some(onpress) = &onpress {
                 onpress.call(PressEvent::Key(ev))
             }
         }
     };
 
+    let a11y_focusable = if enabled { "true" } else { "false" };
     let background = match *status.read() {
+        _ if !enabled => disabled_background,
         ButtonStatus::Hovering => hover_background,
         ButtonStatus::Idle => background,
     };
@@ -297,9 +324,9 @@ pub fn ButtonBase(
 
     rsx!(
         rect {
-            onpointerup,
-            onmouseenter,
-            onmouseleave,
+            onpointerpress,
+            onpointerenter,
+            onpointerleave,
             onkeydown,
             a11y_id,
             width: "{width}",
@@ -308,6 +335,7 @@ pub fn ButtonBase(
             margin: "{margin}",
             overflow: "clip",
             a11y_role:"button",
+            a11y_focusable,
             color: "{font_theme.color}",
             shadow: "{shadow}",
             border,

@@ -7,6 +7,7 @@ use std::{
     rc::Rc,
 };
 
+use ::warnings::Warning;
 use dioxus::prelude::*;
 use freya_core::platform::CursorIcon;
 use freya_elements::{
@@ -109,6 +110,8 @@ pub struct InputProps {
     pub onvalidate: Option<EventHandler<InputValidator>>,
     #[props(default = "150".to_string())]
     pub width: String,
+    /// Handler for the `onfocuschange` function.
+    pub onfocuschange: Option<EventHandler<bool>>,
 }
 
 /// Small box to edit text.
@@ -163,6 +166,7 @@ pub fn Input(
         auto_focus,
         onvalidate,
         width,
+        onfocuschange,
     }: InputProps,
 ) -> Element {
     let platform = use_platform();
@@ -189,6 +193,11 @@ pub fn Input(
     let placeholder = placeholder.read();
     let display_placeholder = value.is_empty() && placeholder.is_some();
 
+    let _allow_write_in_component_body =
+        ::warnings::Allow::new(warnings::signal_write_in_component_body::ID);
+    let _allow_read_and_write_in_reactive_scope =
+        ::warnings::Allow::new(warnings::signal_read_and_write_in_reactive_scope::ID);
+
     if &*value != editable.editor().read().rope() {
         editable.editor_mut().write().set(&value);
         editable.editor_mut().write().editor_history().clear();
@@ -203,6 +212,10 @@ pub fn Input(
     use_effect(move || {
         if !focus.is_focused() {
             editable.editor_mut().write().clear_selection();
+        }
+
+        if let Some(onfocuschange) = onfocuschange {
+            onfocuschange.call(focus.is_focused())
         }
     });
 

@@ -22,9 +22,9 @@ pub fn NativeContainer(children: Element) -> Element {
     let onglobalkeydown = move |e: KeyboardEvent| {
         if e.key == Key::Tab {
             if e.modifiers.contains(Modifiers::SHIFT) {
-                platform.focus(AccessibilityFocusStrategy::Backward);
+                platform.request_focus(AccessibilityFocusStrategy::Backward);
             } else {
-                platform.focus(AccessibilityFocusStrategy::Forward);
+                platform.request_focus(AccessibilityFocusStrategy::Forward);
             }
         }
     };

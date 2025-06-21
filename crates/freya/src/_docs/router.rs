@@ -1,6 +1,6 @@
 //! # Router
 //!
-//! Freya supports the official [Dioxus Router](https://docs.rs/dioxus-router/latest/dioxus_router/), which means you can declare different pages for your app.
+//! Freya has support for routing through [Freya Router](https://docs.rs/freya-router/latest/freya_router/) (fork of [Dioxus Router](https://docs.rs/dioxus-router/latest/freya_router/)), which means you can declare different pages for your app.
 //!
 //! The only difference is that you will need to use Freya's custom [`Link`](crate::components::Link) component.
 //!
@@ -8,7 +8,7 @@
 //!
 //! ```rust
 //! # use freya::prelude::*;
-//! # use dioxus_router::prelude::{
+//! # use freya_router::prelude::{
 //! #    Outlet,
 //! #    Routable,
 //! #    Router,
