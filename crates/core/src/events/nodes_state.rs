@@ -35,25 +35,27 @@ impl NodesState {
         &mut self,
         fdom: &FreyaDOM,
         dom_events: &[DomEvent],
-        events: &[PlatformEvent],
+        platform_events: &[PlatformEvent],
         scale_factor: f64,
     ) -> Vec<DomEvent> {
         let layout = fdom.layout();
         let rdom = fdom.rdom();
         let mut collateral_dom_events = Vec::default();
 
-        // Any mouse press event at all
-        let recent_mouse_press_event = events.iter().find(|e| e.is_pressed());
+        // Any press event at all
+        let platform_press_event = platform_events.iter().any(|e| e.is_pressed());
 
         // Pressed Nodes
         #[allow(unused_variables)]
         self.pressed_nodes.retain(|node_id| {
             // Check if a DOM event that presses this Node will get emitted
-            let no_desire_to_press = filter_dom_events_by(dom_events, node_id, |e| e.is_pressed());
+            let dom_press_event = dom_events
+                .iter()
+                .any(|event| event.name.is_pressed() && &event.node_id == node_id);
 
             // If there has been a mouse press but a DOM event was not emitted to this node, then we safely assume
             // the user does no longer want to press this Node
-            if no_desire_to_press && recent_mouse_press_event.is_some() {
+            if !dom_press_event && platform_press_event {
                 #[cfg(debug_assertions)]
                 tracing::info!("Unmarked as pressed {:?}", node_id);
 
@@ -64,18 +66,20 @@ impl NodesState {
             true
         });
 
-        // Any mouse movement event at all
-        let recent_mouse_movement_event = events.iter().find(|e| e.is_moved());
+        // Any movement event at all
+        let platform_movement_event = platform_events.iter().find(|e| e.is_moved());
 
         // Hovered Nodes
         self.hovered_nodes.retain(|node_id| {
             // Check if a DOM event that moves the cursor in this Node will get emitted
-            let no_desire_to_hover = filter_dom_events_by(dom_events, node_id, |e| e.is_moved());
+            let dom_movement_event = dom_events
+                .iter()
+                .any(|event| event.name.is_moved() && &event.node_id == node_id);
 
-            if no_desire_to_hover {
+            if !dom_movement_event {
                 // If there has been a mouse movement but a DOM event was not emitted to this node, then we safely assume
                 // the user does no longer want to hover this Node
-                if let Some(platform_event) = recent_mouse_movement_event {
+                if let Some(platform_event) = platform_movement_event {
                     if let Some(layout_node) = layout.get(*node_id) {
                         // Emit a MouseLeave event as the cursor was moved outside the Node bounds
                         let event = EventName::MouseLeave;
@@ -121,8 +125,15 @@ impl NodesState {
     }
 
     /// Create the nodes states given the [PotentialEvent]s.
-    pub fn create_states(&mut self, fdom: &FreyaDOM, potential_events: &PotentialEvents) {
+    pub fn create_update(
+        &self,
+        fdom: &FreyaDOM,
+        potential_events: &PotentialEvents,
+    ) -> NodesStatesUpdate {
         let rdom = fdom.rdom();
+
+        let mut hovered_nodes = FxHashSet::default();
+        let mut pressed_nodes = FxHashSet::default();
 
         // Update the state of the nodes given the new events.
         for events in potential_events.values() {
@@ -147,9 +158,9 @@ impl NodesState {
 
                 match name {
                     // Update hovered nodes state
-                    name if name.is_hovered() => {
+                    name if name.is_moved() => {
                         // Mark the Node as hovered if it wasn't already
-                        self.hovered_nodes.insert(*node_id);
+                        hovered_nodes.insert(*node_id);
 
                         #[cfg(debug_assertions)]
                         tracing::info!("Marked as hovered {:?}", node_id);
@@ -158,7 +169,7 @@ impl NodesState {
                     // Update pressed nodes state
                     name if name.is_pressed() => {
                         // Mark the Node as pressed if it wasn't already
-                        self.pressed_nodes.insert(*node_id);
+                        pressed_nodes.insert(*node_id);
 
                         #[cfg(debug_assertions)]
                         tracing::info!("Marked as pressed {:?}", node_id);
@@ -167,12 +178,31 @@ impl NodesState {
                 }
             }
         }
+        NodesStatesUpdate {
+            pressed_nodes,
+            hovered_nodes,
+        }
     }
 
-    /// Clear the state of a given [NodeId] and a [EventName].
-    pub fn clear_state(&mut self, name: &EventName, node_id: &NodeId) {
+    /// Apply the given [NodesStatesUpdate] in a way so that only newly hovered/pressed nodes are cached.
+    /// Any discard of nodes in the [NodesStatesUpdate] wont matter here.
+    pub fn apply_update(&mut self, update: NodesStatesUpdate) {
+        self.hovered_nodes.extend(update.hovered_nodes);
+        self.pressed_nodes.extend(update.pressed_nodes);
+    }
+}
+
+pub struct NodesStatesUpdate {
+    pressed_nodes: FxHashSet<NodeId>,
+    hovered_nodes: FxHashSet<NodeId>,
+}
+
+impl NodesStatesUpdate {
+    /// Discard the state of a given [NodeId] and a [EventName] in this [NodesStatesUpdate].
+    pub fn discard(&mut self, name: &EventName, node_id: &NodeId) {
         match name {
-            _ if name.is_hovered() => {
+            // Just like a movement makes the node hover, a discard movement also unhovers it
+            _ if name.is_moved() => {
                 self.hovered_nodes.remove(node_id);
             }
             _ if name.is_pressed() => {
@@ -181,21 +211,4 @@ impl NodesState {
             _ => {}
         }
     }
-}
-
-fn filter_dom_events_by(
-    dom_events: &[DomEvent],
-    node_id: &NodeId,
-    filter: impl Fn(EventName) -> bool,
-) -> bool {
-    dom_events
-        .iter()
-        .find_map(|event| {
-            if filter(event.name) && &event.node_id == node_id {
-                Some(false)
-            } else {
-                None
-            }
-        })
-        .unwrap_or(true)
 }
