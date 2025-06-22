@@ -65,9 +65,10 @@ pub fn handle_processed_events(
             // Remove the rest of dom events that are cancellable
             dom_events.retain(|event| !cancellable_events.contains(&event.name));
 
-            // Discarda the potential events that dont find a matching dom event
-            // So for instance, a cancelled mousemove event wont be discarded if a mousenter was processed just before
-            // At the same time, a cancelled mouse event that actually gets discarded will only discard this node state update
+            // Discard the potential events that dont find a matching dom event
+            // So for instance, a cancelled potential mousemove event wont be discarded if a dom mousenter was processed before
+            // At the same time, a cancelled potential mousemove event that actually gets discarded will only discard the node state
+            // made in this run, but will not change what was already before this run
             // So if the affected node was already being hovered from the last events run, it will continue to be as so
             for potential_event in &flattened_potential_events {
                 let is_cancellable = cancellable_events.contains(&potential_event.name);
