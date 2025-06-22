@@ -316,7 +316,6 @@ pub fn ResizableHandle(
             if changed_panels {
                 allow_resizing.set(false);
             }
-            println!("prevented");
             e.prevent_default();
         }
     };
