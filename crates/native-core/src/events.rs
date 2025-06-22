@@ -300,7 +300,11 @@ impl EventName {
     /// - Global events
     /// - Capture events
     pub fn does_bubble(&self) -> bool {
-        !self.is_moved() && !self.is_left() && !self.is_global() && !self.is_capture()
+        !self.is_moved()
+            && !self.is_enter()
+            && !self.is_left()
+            && !self.is_global()
+            && !self.is_capture()
     }
 
     /// Only let events that do not move the mouse, go through solid nodes

@@ -72,9 +72,9 @@ impl NodesState {
         // Hovered Nodes
         self.hovered_nodes.retain(|node_id| {
             // Check if a DOM event that moves the cursor in this Node will get emitted
-            let dom_movement_event = dom_events
-                .iter()
-                .any(|event| event.name.is_moved() && &event.node_id == node_id);
+            let dom_movement_event = dom_events.iter().any(|event| {
+                (event.name.is_moved() || event.name.is_enter()) && &event.node_id == node_id
+            });
 
             if !dom_movement_event {
                 // If there has been a mouse movement but a DOM event was not emitted to this node, then we safely assume
