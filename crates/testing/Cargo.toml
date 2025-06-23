@@ -25,6 +25,7 @@ freya-hooks = { workspace = true }
 freya-components = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
+ragnarok = { workspace = true }
 
 freya-native-core = { workspace = true }
 dioxus-core-macro = { workspace = true }

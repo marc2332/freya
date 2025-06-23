@@ -1,0 +1,18 @@
+[package]
+name = "ragnarok"
+description = "UI Events processor. Originally made for Freya but works for other libraries."
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "ui"]
+categories = ["gui"]
+
+[dependencies]
+euclid = { workspace = true }
+itertools = "0.13.0"
+tracing = { workspace = true }
+rustc-hash = { workspace = true }

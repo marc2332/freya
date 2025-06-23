@@ -1,14 +1,10 @@
 pub mod dom_event;
-pub mod events_measurer;
-pub mod handler;
-pub mod nodes_state;
+pub mod executor;
+pub mod measurer;
 pub mod platform_event;
-pub mod potential_event;
 
 pub use dom_event::*;
-pub use events_measurer::*;
+pub use executor::*;
 pub use freya_native_core::events::*;
-pub use handler::*;
-pub use nodes_state::*;
+pub use measurer::*;
 pub use platform_event::*;
-pub use potential_event::*;
