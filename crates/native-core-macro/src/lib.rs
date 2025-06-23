@@ -207,7 +207,7 @@ pub fn partial_derive_state(_: TokenStream, input: TokenStream) -> TokenStream {
                 .collect::<Vec<_>>();
             quote! {
                 let raw_node: (#(*const #node_dependencies,)*) = {
-                    let (#(#temps,)*) = (#(&#node_view,)*).get(id).unwrap_or_else(|err| panic!("Failed to get node view {:?}", err));
+                    let (#(#temps,)*) = (#(&#node_view,)*).get(id.into()).unwrap_or_else(|err| panic!("Failed to get node view {:?}", err));
                     (#(#temps as *const _,)*)
                 };
             }
@@ -241,7 +241,7 @@ pub fn partial_derive_state(_: TokenStream, input: TokenStream) -> TokenStream {
                 .collect::<Vec<_>>();
             quote! {
                 let raw_parent = tree.parent_id_advanced(id, Self::TRAVERSE_SHADOW_DOM).and_then(|parent_id| {
-                    let raw_parent: Option<(#(*const #parent_dependencies,)*)> = (#(&#parent_view,)*).get(parent_id).ok().map(|c| {
+                    let raw_parent: Option<(#(*const #parent_dependencies,)*)> = (#(&#parent_view,)*).get(parent_id.into()).ok().map(|c| {
                         let (#(#temps,)*) = c;
                         (#(#temps as *const _,)*)
                     });
@@ -278,7 +278,7 @@ pub fn partial_derive_state(_: TokenStream, input: TokenStream) -> TokenStream {
                 .collect::<Vec<_>>();
             quote! {
                 let raw_children: Vec<_> = tree.children_ids_advanced(id, Self::TRAVERSE_SHADOW_DOM).into_iter().filter_map(|id| {
-                    let raw_children: Option<(#(*const #child_dependencies,)*)> = (#(&#child_view,)*).get(id).ok().map(|c| {
+                    let raw_children: Option<(#(*const #child_dependencies,)*)> = (#(&#child_view,)*).get(id.into()).ok().map(|c| {
                         let (#(#temps,)*) = c;
                         (#(#temps as *const _,)*)
                     });
@@ -346,14 +346,14 @@ pub fn partial_derive_state(_: TokenStream, input: TokenStream) -> TokenStream {
                     let tree = run_view.tree.clone();
                     let node_types = run_view.node_type.clone();
                     freya_native_core::prelude::run_pass(type_id, &dependants, pass_direction, run_view, |id, context, height| {
-                        let node_data: &NodeType<_> = node_types.get(id).unwrap_or_else(|err| panic!("Failed to get node type {:?}", err));
+                        let node_data: &NodeType<_> = node_types.get(id.into()).unwrap_or_else(|err| panic!("Failed to get node type {:?}", err));
                         if !Self::allow_node(node_data) {
                             return false;
                         }
                         // get all of the states from the tree view
                         // Safety: No node has itself as a parent or child.
                         let raw_myself: Option<*mut Self> = (&mut #this_view)
-                            .get(id)
+                            .get(id.into())
                             .ok()
                             .map(|mut c| {
                                 let mut_ref: &mut Self = &mut *c;
@@ -369,14 +369,14 @@ pub fn partial_derive_state(_: TokenStream, input: TokenStream) -> TokenStream {
                         #deref_parent_view
                         #deref_child_view
 
-                        let view = NodeView::new(id, node_data, &node_mask, height);
+                        let view = NodeView::new(id.into(), node_data, &node_mask, height);
                         if let Some(myself) = myself {
                             myself
                                 .update(view, node, parent, children, context)
                         }
                         else {
                             (&mut #this_view).add_component_unchecked(
-                                id,
+                                id.into(),
                                 Self::create(view, node, parent, children, context));
                             true
                         }

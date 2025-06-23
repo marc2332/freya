@@ -11,15 +11,10 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
 categories = ["gui", "caching"]
 
-[features]
-dioxus = ["dep:freya-native-core"]
-default = ["dioxus"]
-
 [dependencies]
 tracing = { workspace = true }
 euclid = { workspace = true }
 rustc-hash = { workspace = true }
-freya-native-core = { workspace = true, optional = true }
 
 [dev-dependencies]
 criterion = "0.5.1"
@@ -29,4 +24,4 @@ bench = false
 
 [[bench]]
 name = "bench"
-harness = false 
+harness = false
