@@ -226,7 +226,7 @@ impl<Key: NodeKey> Default for NodesStatesUpdate<Key> {
 }
 
 impl<Key: NodeKey> NodesStatesUpdate<Key> {
-    /// Discard the state of a given [Self::Key] and a [Self::EventName] in this [NodesStatesUpdate].
+    /// Discard the state of a given [NodeKey] and a [NameOfEvent] in this [NodesStatesUpdate].
     pub fn discard<Name: NameOfEvent>(&mut self, name: &Name, node_key: &Key) {
         match name {
             // Just like a movement makes the node hover, a discard movement also unhovers it

@@ -17,7 +17,8 @@ use tokio::sync::{
 
 use crate::{
     events::{
-        DomEvent, PlatformEvent
+        DomEvent,
+        PlatformEvent,
     },
     platform_state::NativePlatformState,
 };
