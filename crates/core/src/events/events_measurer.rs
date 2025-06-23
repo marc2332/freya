@@ -24,6 +24,7 @@ use crate::{
         ElementUtils,
         ElementUtilsResolver,
     },
+    events::ProcessedEvents,
     states::{
         StyleState,
         ViewportState,
@@ -55,7 +56,7 @@ pub fn process_events(
     // Get potential collateral events, e.g. mousemove -> mouseenter
     let collateral_dom_events = nodes_state.retain_states(fdom, &dom_events, events, scale_factor);
     nodes_state.filter_dom_events(&mut dom_events);
-    nodes_state.create_states(fdom, &potential_events);
+    let nodes_states_update = nodes_state.create_update(fdom, &potential_events);
 
     // Get the global events
     measure_platform_global_events(fdom, events, &mut dom_events, scale_factor);
@@ -68,7 +69,11 @@ pub fn process_events(
 
     // Send all the events
     event_emitter
-        .send((dom_events, flattened_potential_events))
+        .send(ProcessedEvents {
+            dom_events,
+            flattened_potential_events,
+            nodes_states_update,
+        })
         .unwrap();
 
     // Clear the events queue

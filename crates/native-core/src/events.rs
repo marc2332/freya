@@ -217,13 +217,12 @@ impl EventName {
             Self::PointerOver => events.extend([Self::MouseMove, Self::GlobalMouseMove]),
 
             Self::PointerEnter => events.extend([Self::MouseEnter]),
-            Self::PointerLeave => events.extend([Self::MouseLeave]),
 
             Self::CaptureGlobalMouseMove => events.extend([
                 Self::MouseMove,
                 Self::MouseEnter,
-                Self::MouseLeave,
                 Self::GlobalMouseMove,
+                Self::PointerEnter,
             ]),
             _ => {}
         }
@@ -287,10 +286,7 @@ impl EventName {
 
     /// Check if the event means the cursor was moved.
     pub fn is_moved(&self) -> bool {
-        matches!(
-            &self,
-            Self::MouseMove | Self::MouseEnter | Self::PointerEnter | Self::PointerOver
-        )
+        matches!(&self, Self::MouseMove | Self::PointerEnter)
     }
 
     /// Check if the event means the cursor has left.
@@ -304,20 +300,16 @@ impl EventName {
     /// - Global events
     /// - Capture events
     pub fn does_bubble(&self) -> bool {
-        !self.is_moved() && !self.is_left() && !self.is_global() && !self.is_capture()
+        !self.is_moved()
+            && !self.is_enter()
+            && !self.is_left()
+            && !self.is_global()
+            && !self.is_capture()
     }
 
     /// Only let events that do not move the mouse, go through solid nodes
     pub fn does_go_through_solid(&self) -> bool {
         matches!(self, Self::GlobalKeyDown | Self::GlobalKeyUp)
-    }
-
-    /// Check if this event can change the hover state of a Node.
-    pub fn is_hovered(&self) -> bool {
-        matches!(
-            self,
-            Self::MouseMove | Self::MouseEnter | Self::PointerOver | Self::PointerEnter
-        )
     }
 
     /// Check if this event can press state of a Node.

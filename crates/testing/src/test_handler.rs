@@ -184,14 +184,13 @@ impl<T: 'static + Clone> TestingHandler<T> {
                 }
             }
 
-            if let Ok((dom_events, flattened_potential_events)) = vdom_events {
+            if let Ok(processed_events) = vdom_events {
                 let sdom = self.utils.sdom();
                 handle_processed_events(
                     sdom,
                     &mut self.vdom,
                     &mut self.nodes_state,
-                    dom_events,
-                    flattened_potential_events,
+                    processed_events,
                 )
             }
         }
