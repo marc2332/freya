@@ -12,7 +12,6 @@ use freya_router::prelude::{
 use crate::{
     node::NodeElement,
     state::DevtoolsChannel,
-    NodeIdSerializer,
     Route,
 };
 

@@ -3,10 +3,7 @@ use freya_components::*;
 use freya_elements as dioxus_elements;
 use freya_native_core::NodeId;
 
-use crate::{
-    hooks::use_node_info,
-    NodeIdSerializer,
-};
+use crate::hooks::use_node_info;
 
 #[allow(non_snake_case)]
 #[component]
