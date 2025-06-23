@@ -228,8 +228,8 @@ impl Application {
         {
             let fut = std::pin::pin!(async {
                 select! {
-                    Some((dom_events, flattened_potential_events)) = self.event_receiver.recv() => {
-                        handle_processed_events(&self.sdom, &mut self.vdom, &mut self.nodes_state, dom_events, flattened_potential_events)
+                    Some(processed_events) = self.event_receiver.recv() => {
+                        handle_processed_events(&self.sdom, &mut self.vdom, &mut self.nodes_state, processed_events)
                     },
                     _ = self.vdom.wait_for_work() => {},
                 }
