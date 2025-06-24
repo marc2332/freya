@@ -48,8 +48,8 @@ use freya_native_core::NodeId;
 use futures_task::Waker;
 use futures_util::Future;
 use ragnarok::{
-    EventsExecutor,
-    EventsMeasurer,
+    EventsExecutorRunner,
+    EventsMeasurerRunner,
     NodesState,
 };
 use tokio::{
@@ -294,7 +294,7 @@ impl Application {
             scale_factor,
         };
         let processed_events =
-            events_measurer_adapter.measure(&mut self.events, &mut self.nodes_state, focus_id);
+            events_measurer_adapter.run(&mut self.events, &mut self.nodes_state, focus_id);
         self.event_emitter.send(processed_events).unwrap();
 
         self.plugins.send(

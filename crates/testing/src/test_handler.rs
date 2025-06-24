@@ -48,8 +48,8 @@ use freya_native_core::{
     NodeId,
 };
 use ragnarok::{
-    EventsExecutor,
-    EventsMeasurer,
+    EventsExecutorRunner,
+    EventsMeasurerRunner,
     NodesState,
 };
 use tokio::{
@@ -271,7 +271,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
             vdom: &mut self.vdom,
             scale_factor: SCALE_FACTOR,
         };
-        let processed_events = events_measurer_adapter.measure(
+        let processed_events = events_measurer_adapter.run(
             &mut self.events_queue,
             &mut self.nodes_state,
             self.accessibility_tree.focused_node_id(),

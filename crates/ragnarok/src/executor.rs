@@ -46,7 +46,15 @@ where
 
     // All events have been emitted
     fn emitted_events(&mut self) {}
+}
 
+impl<T: EventsExecutor> private::Sealed for T {}
+
+impl<T: EventsExecutor + private::Sealed> EventsExecutorRunner for T {
+    type Name = T::Name;
+    type Key = T::Key;
+    type Emmitable = T::Emmitable;
+    type Source = T::Source;
     fn run(
         mut self,
         nodes_state: &mut NodesState<Self::Key>,
@@ -100,4 +108,25 @@ where
 
         nodes_state.apply_update(nodes_states_update);
     }
+}
+
+pub trait EventsExecutorRunner: private::Sealed
+where
+    Self: std::marker::Sized,
+{
+    type Name: NameOfEvent;
+    type Key: NodeKey;
+    type Emmitable: EmmitableEvent<Key = Self::Key, Name = Self::Name>;
+    type Source: SourceEvent;
+
+    fn run(
+        self,
+        nodes_state: &mut NodesState<Self::Key>,
+        processed_events: ProcessedEvents<Self::Key, Self::Name, Self::Emmitable, Self::Source>,
+    );
+}
+
+#[doc(hidden)]
+mod private {
+    pub trait Sealed {}
 }

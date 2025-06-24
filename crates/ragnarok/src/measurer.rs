@@ -25,7 +25,33 @@ where
     type Emmitable: EmmitableEvent<Key = Self::Key, Name = Self::Name>;
     type Source: SourceEvent<Name = Self::Name>;
 
-    fn measure(
+    fn get_layers(&self) -> Iter<'_, i16, Vec<Self::Key>>;
+    fn get_listeners_of(&self, name: &Self::Name) -> Vec<Self::Key>;
+
+    fn is_point_inside(&self, key: Self::Key, cursor: CursorPoint) -> bool;
+    fn is_node_parent_of(&self, key: Self::Key, parent: Self::Key) -> bool;
+    fn is_listening_to(&self, key: Self::Key, name: &Self::Name) -> bool;
+    fn is_node_transparent(&self, key: Self::Key) -> bool;
+
+    fn try_area_of(&self, key: Self::Key) -> Option<Area>;
+
+    fn new_emmitable_event(
+        &self,
+        key: Self::Key,
+        name: Self::Name,
+        source: Self::Source,
+        area: Option<Area>,
+    ) -> Self::Emmitable;
+}
+
+impl<T: EventsMeasurer> private::Sealed for T {}
+
+impl<T: EventsMeasurer + private::Sealed> EventsMeasurerRunner for T {
+    type Name = T::Name;
+    type Key = T::Key;
+    type Emmitable = T::Emmitable;
+    type Source = T::Source;
+    fn run(
         &mut self,
         source_events: &mut Vec<Self::Source>,
         nodes_state: &mut NodesState<Self::Key>,
@@ -75,22 +101,26 @@ where
             nodes_states_update,
         }
     }
+}
 
-    fn get_layers(&self) -> Iter<'_, i16, Vec<Self::Key>>;
-    fn get_listeners_of(&self, name: &Self::Name) -> Vec<Self::Key>;
+pub trait EventsMeasurerRunner
+where
+    Self: std::marker::Sized,
+{
+    type Name: NameOfEvent;
+    type Key: NodeKey;
+    type Emmitable: EmmitableEvent<Key = Self::Key, Name = Self::Name>;
+    type Source: SourceEvent<Name = Self::Name>;
 
-    fn is_point_inside(&self, key: Self::Key, cursor: CursorPoint) -> bool;
-    fn is_node_parent_of(&self, key: Self::Key, parent: Self::Key) -> bool;
-    fn is_listening_to(&self, key: Self::Key, name: &Self::Name) -> bool;
-    fn is_node_transparent(&self, key: Self::Key) -> bool;
+    fn run(
+        &mut self,
+        source_events: &mut Vec<Self::Source>,
+        nodes_state: &mut NodesState<Self::Key>,
+        focus_id: Option<Self::Key>,
+    ) -> ProcessedEvents<Self::Key, Self::Name, Self::Emmitable, Self::Source>;
+}
 
-    fn try_area_of(&self, key: Self::Key) -> Option<Area>;
-
-    fn new_emmitable_event(
-        &self,
-        key: Self::Key,
-        name: Self::Name,
-        source: Self::Source,
-        area: Option<Area>,
-    ) -> Self::Emmitable;
+#[doc(hidden)]
+mod private {
+    pub trait Sealed {}
 }
