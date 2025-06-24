@@ -237,6 +237,17 @@ define_theme! {
 
 define_theme! {
     %[component]
+    pub SegmentedButton {
+        %[cows]
+        background: str,
+        shadow: str,
+        border_fill: str,
+        corner_radius: str,
+    }
+}
+
+define_theme! {
+    %[component]
     pub ButtonSegment {
         %[cows]
         background: str,
@@ -246,6 +257,9 @@ define_theme! {
         width: str,
         height: str,
         padding: str,
+
+        selected_padding: str,
+        selected_icon_fill: str,
 
         %[subthemes]
         font_theme: FontTheme,
@@ -608,6 +622,7 @@ pub struct Theme {
     pub button: ButtonTheme,
     pub filled_button: ButtonTheme,
     pub outline_button: ButtonTheme,
+    pub segmented_button: SegmentedButtonTheme,
     pub button_segment: ButtonSegmentTheme,
     pub switch: SwitchTheme,
     pub scroll_bar: ScrollBarTheme,

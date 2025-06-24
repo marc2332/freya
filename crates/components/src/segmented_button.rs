@@ -16,9 +16,14 @@ use freya_hooks::{
     use_platform,
     ButtonSegmentTheme,
     ButtonSegmentThemeWith,
+    SegmentedButtonTheme,
+    SegmentedButtonThemeWith,
 };
 
-use crate::PressEvent;
+use crate::{
+    PressEvent,
+    TickIcon,
+};
 
 /// Properties for the [`ButtonSegment`].
 #[derive(Props, Clone, PartialEq)]
@@ -30,6 +35,9 @@ pub struct ButtonSegmentProps {
 
     #[props(default = true)]
     pub enabled: bool,
+
+    #[props(default = false)]
+    pub selected: bool,
 }
 
 /// Properties for the [`ButtonSegment`] component.
@@ -45,6 +53,9 @@ pub struct BaseButtonSegmentProps {
 
     #[props(default = true)]
     pub enabled: bool,
+
+    #[props(default = false)]
+    pub selected: bool,
 }
 
 /// Identifies the current status of the [`ButtonSegment`s].
@@ -57,6 +68,10 @@ enum ButtonSegmentStatus {
     Hovering,
 }
 
+/// [ButtonSegment] are buttons grouped under a [SegmentedButton].
+///
+/// # Styling
+/// Inherits the outline [`ButtonSegmentTheme`](freya_hooks::ButtonSegmentTheme) theme.
 #[allow(non_snake_case)]
 pub fn ButtonSegment(
     BaseButtonSegmentProps {
@@ -64,6 +79,26 @@ pub fn ButtonSegment(
         onpress,
         children,
         enabled,
+        selected,
+    }: BaseButtonSegmentProps,
+) -> Element {
+    BaseButtonSegment(BaseButtonSegmentProps {
+        theme,
+        children,
+        onpress,
+        enabled,
+        selected,
+    })
+}
+
+#[allow(non_snake_case)]
+pub fn BaseButtonSegment(
+    BaseButtonSegmentProps {
+        theme,
+        onpress,
+        children,
+        enabled,
+        selected,
     }: BaseButtonSegmentProps,
 ) -> Element {
     let theme = use_applied_theme!(&theme, button_segment);
@@ -82,6 +117,8 @@ pub fn ButtonSegment(
         height,
         font_theme,
         shadow,
+        selected_padding,
+        selected_icon_fill,
     } = theme;
 
     let onpointerup = move |ev: PointerEvent| {
@@ -138,9 +175,11 @@ pub fn ButtonSegment(
     let a11y_focusable = if enabled { "true" } else { "false" };
     let background = match *status.read() {
         _ if !enabled => disabled_background,
+        _ if selected => hover_background,
         ButtonSegmentStatus::Hovering => hover_background,
         ButtonSegmentStatus::Idle => background,
     };
+    let padding = if selected { selected_padding } else { padding };
 
     rsx!(
         rect {
@@ -149,6 +188,7 @@ pub fn ButtonSegment(
             onmouseleave,
             onkeydown,
             a11y_id,
+            direction: "horizontal",
             width: "{width}",
             height: "{height}",
             padding: "{padding}",
@@ -161,6 +201,98 @@ pub fn ButtonSegment(
             text_height: "disable-least-ascent",
             main_align: "center",
             cross_align: "center",
+            max_lines: "1",
+            spacing: "4",
+            if selected {
+                TickIcon {
+                    fill: "{selected_icon_fill}"
+                }
+            }
+            {&children}
+        }
+    )
+}
+
+/// Properties for the [`SegmentedButton`].
+#[derive(Props, Clone, PartialEq)]
+pub struct SegmentedButtonProps {
+    pub theme: Option<SegmentedButtonThemeWith>,
+    /// Inner children for the button.
+    pub children: Element,
+}
+
+/// [SegmentedButton] is used to group a set of [ButtonSegment]s together.
+///
+/// # Styling
+/// Inherits the outline [`SegmentedButtonTheme`](freya_hooks::SegmentedButtonTheme) theme.
+///
+/// # Example
+///
+/// ```rust
+/// fn app() -> Element {
+///     let mut selected = use_signal(HashSet::new);
+///     rsx!(
+///         rect {
+///             padding: "8",
+///             spacing: "8",
+///             SegmentedButton {
+///                 for i in 0..5 {
+///                     ButtonSegment {
+///                         key: "{i}",
+///                         selected: selected.read().contains(&i),
+///                         onpress: move |_| {
+///                             if selected.read().contains(&i) {
+///                                 selected.write().remove(&i);
+///                             } else {
+///                                 selected.write().insert(i);
+///                             }
+///                         },
+///                         label {
+///                             "Option {i}"
+///                         }
+///                     }
+///                 }
+///             }
+///         }
+///     )
+/// }
+/// ```
+#[allow(non_snake_case)]
+pub fn SegmentedButton(
+    BaseSegmentedButtonProps { theme, children }: BaseSegmentedButtonProps,
+) -> Element {
+    BaseSegmentedButton(BaseSegmentedButtonProps { theme, children })
+}
+
+/// Properties for the [`BaseSegmentedButton`] component.
+#[derive(Props, Clone, PartialEq)]
+pub struct BaseSegmentedButtonProps {
+    pub theme: Option<SegmentedButtonThemeWith>,
+    /// Inner children for the button.
+    pub children: Element,
+}
+
+#[allow(non_snake_case)]
+pub fn BaseSegmentedButton(
+    BaseSegmentedButtonProps { theme, children }: BaseSegmentedButtonProps,
+) -> Element {
+    let theme = use_applied_theme!(&theme, segmented_button);
+
+    let SegmentedButtonTheme {
+        background,
+        shadow,
+        border_fill,
+        corner_radius,
+    } = theme;
+
+    rsx!(
+        rect {
+            overflow: "clip",
+            background: "{background}",
+            shadow: "{shadow}",
+            border: "2 outer {border_fill}",
+            corner_radius: "{corner_radius}",
+            direction: "horizontal",
             {&children}
         }
     )

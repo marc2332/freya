@@ -83,6 +83,12 @@ pub(crate) const BASE_THEME: Theme = Theme {
         width: cow_borrowed!("auto"),
         height: cow_borrowed!("auto"),
     },
+    segmented_button: SegmentedButtonTheme {
+        background: cow_borrowed!("key(neutral_surface)"),
+        shadow: cow_borrowed!("none"),
+        border_fill: cow_borrowed!("key(primary_surface)"),
+        corner_radius: cow_borrowed!("99"),
+    },
     button_segment: ButtonSegmentTheme {
         background: cow_borrowed!("key(neutral_surface)"),
         hover_background: cow_borrowed!("key(focused_surface)"),
@@ -91,9 +97,12 @@ pub(crate) const BASE_THEME: Theme = Theme {
             color: cow_borrowed!("key(color)"),
         },
         shadow: cow_borrowed!("none"),
-        padding: cow_borrowed!("6 12"),
+        padding: cow_borrowed!("6 15"),
         width: cow_borrowed!("auto"),
         height: cow_borrowed!("auto"),
+
+        selected_padding: cow_borrowed!("6 8"),
+        selected_icon_fill: cow_borrowed!("key(color)"),
     },
     input: InputTheme {
         background: cow_borrowed!("key(neutral_surface)"),
