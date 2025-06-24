@@ -24,7 +24,7 @@ fn app() -> Element {
         platform.invalidate_drawing_area(size.peek().area);
         platform.request_animation_frame();
         let state = *state.read();
-        Box::new(move |ctx| {
+        move |ctx| {
             ctx.canvas.translate((ctx.area.min_x(), ctx.area.min_y()));
 
             let mut text_paint = Paint::default();
@@ -48,7 +48,7 @@ fn app() -> Element {
             );
 
             ctx.canvas.restore();
-        })
+        }
     });
 
     rsx!(rect {

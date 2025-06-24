@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use freya_core::platform::CursorIcon;
 use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_activable_route,
@@ -9,7 +10,6 @@ use freya_hooks::{
     SidebarTheme,
     SidebarThemeWith,
 };
-use winit::window::CursorIcon;
 
 use crate::{
     ButtonStatus,
@@ -25,6 +25,9 @@ pub fn Sidebar(
     children: Element,
     /// This is what is rendered in the sidebar.
     sidebar: Element,
+    /// Width of the sidebar.
+    #[props(default = "180".to_string())]
+    width: String,
 ) -> Element {
     let SidebarTheme {
         spacing,
@@ -39,7 +42,7 @@ pub fn Sidebar(
             direction: "horizontal",
             rect {
                 overflow: "clip",
-                width: "180",
+                width,
                 height: "100%",
                 background: "{background}",
                 color: "{font_theme.color}",
@@ -75,6 +78,8 @@ pub fn SidebarItem(
         margin,
         hover_background,
         background,
+        corner_radius,
+        padding,
         font_theme,
     } = use_applied_theme!(&theme, sidebar_item);
     let mut status = use_signal(ButtonStatus::default);
@@ -119,8 +124,8 @@ pub fn SidebarItem(
             width: "100%",
             height: "auto",
             color: "{font_theme.color}",
-            corner_radius: "99",
-            padding: "8 10",
+            corner_radius: "{corner_radius}",
+            padding: "{padding}",
             background: "{background}",
             {children}
         }

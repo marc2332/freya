@@ -3,7 +3,7 @@ use crate::def_element;
 def_element!(
     /// `rect` is a generic element that acts as a container for other elements.
     ///
-    /// You can specify things like [`width`](#width-and-height), [`padding`](#padding) or even in what [`direction`](#direction) the inner elements are stacked.
+    /// You can specify things like `width`, `padding` or even in what `direction` the inner elements are stacked.
     ///
     /// ### Example
     ///
@@ -50,10 +50,13 @@ def_element!(
 
         // Style
         background,
+        background_opacity,
         border,
         shadow,
         corner_radius,
         corner_smoothing,
+        blend_mode,
+        backdrop_blur,
 
         // Font style
         color,
@@ -82,7 +85,6 @@ def_element!(
         // Reference
         canvas_reference,
         reference,
-        cursor_reference,
 
         // Accessibility
         a11y_id,
@@ -206,6 +208,11 @@ def_element!(
         letter_spacing,
         word_spacing,
         text_height,
+
+        // Style
+        blend_mode,
+        backdrop_blur,
+
 
         // Transform
         rotate,
@@ -355,6 +362,7 @@ def_element!(
         highlights,
         highlight_color,
         highlight_mode,
+        cursor_reference,
 
         // Accessibility
         a11y_id,
@@ -459,7 +467,7 @@ def_element!(
     ///     rsx!(
     ///         image {
     ///             image_data,
-    ///             width: "100%", // You must specify size otherwhise it will default to 0
+    ///             width: "100%",
     ///             height: "100%",
     ///         }
     ///     )
@@ -480,6 +488,16 @@ def_element!(
         position_bottom,
         position_left,
         layer,
+
+        // Children layout
+        direction,
+        content,
+        main_align,
+        cross_align,
+        spacing,
+        overflow,
+        offset_x,
+        offset_y,
 
         // Transform
         rotate,

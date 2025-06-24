@@ -3,10 +3,7 @@ use freya_components::*;
 use freya_elements as dioxus_elements;
 use freya_native_core::NodeId;
 
-use crate::{
-    hooks::use_node_info,
-    NodeIdSerializer,
-};
+use crate::hooks::use_node_info;
 
 #[allow(non_snake_case)]
 #[component]
@@ -97,7 +94,7 @@ pub fn NodeInspectorLayout(node_id: String) -> Element {
                                 TooltipContainer {
                                     tooltip: rsx!(
                                         Tooltip {
-                                            text: "Top margin"
+                                            text: "Top padding"
                                         }
                                     ),
                                     label {
@@ -105,7 +102,7 @@ pub fn NodeInspectorLayout(node_id: String) -> Element {
                                         text_align: "center",
                                         width: "100%",
                                         height: "25",
-                                        "{margins.top()}"
+                                        "{paddings.top()}"
                                     }
                                 }
                                 rect {
@@ -181,7 +178,7 @@ pub fn NodeInspectorLayout(node_id: String) -> Element {
                             TooltipContainer {
                                 tooltip: rsx!(
                                     Tooltip {
-                                        text: "Right padding"
+                                        text: "Right margin"
                                     }
                                 ),
                                 label {
@@ -189,7 +186,7 @@ pub fn NodeInspectorLayout(node_id: String) -> Element {
                                     text_align: "center",
                                     width: "25",
                                     height: "25",
-                                    "{paddings.right()}"
+                                    "{margins.right()}"
                                 }
                             }
 
@@ -197,7 +194,7 @@ pub fn NodeInspectorLayout(node_id: String) -> Element {
                         TooltipContainer {
                             tooltip: rsx!(
                                 Tooltip {
-                                    text: "Bottom padding"
+                                    text: "Bottom margin"
                                 }
                             ),
                             label {
@@ -205,7 +202,7 @@ pub fn NodeInspectorLayout(node_id: String) -> Element {
                                 text_align: "center",
                                 width: "100%",
                                 height: "25",
-                                "{paddings.bottom()}"
+                                "{margins.bottom()}"
                             }
                         }
 

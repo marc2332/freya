@@ -1,13 +1,15 @@
 //! # Async
 //!
-//! You may run asynchronous code through the different APIs Dioxus provide. You can use other libraries such as tokio to spawn tasks but it's not always the recommended approach as these will not work with the lifecycling of the components.
+//! You may run asynchronous code through the different APIs Dioxus provide.
 //!
+//! Using third-party libraries such as tokio to spawn tasks could work but it's not recommended, these will not work with the lifecycling of the components.
 //!
 //! ### `spawn`
 //!
-//! Simple function to spawn an **async task**, this is primarily targeted for custom hooks or when you wanted to run some async code dynamically from an event listener.
+//! With [`spawn`](dioxus_core::prelude::spawn) you can spawn an **async task** (Also known as green threads), this is primarily targeted for custom hooks or when you want to run some async code dynamically such as from an event listener.
 //!
-//! Important to know: Tasks spawned with `spawn` will be cancelled when the component their were created is dropped. If you want to have an async tasks not attached to the component you may use `spawn_forever`.
+//! **Important:** Tasks spawned with `spawn` will be cancelled when the component their were created is dropped.
+//! If you want to have an async tasks not attached to the component you may use [`spawn_forever`](dioxus_core::prelude::spawn_forever).
 //!
 //! ```rust
 //! # use freya::prelude::*;
@@ -24,10 +26,4 @@
 //! }
 //! ```
 //!
-//! ### `use_future`
-//!
-//! TODO
-//!
-//! ### `use_resource`
-//!
-//! TODO
+//! You can also use hooks like [`use_future`](dioxus::prelude::use_future) or [`use_resource`](dioxus::prelude::use_resource).

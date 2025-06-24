@@ -1,5 +1,8 @@
 use dioxus::prelude::*;
-use freya_common::NodeReferenceLayout;
+use freya_core::{
+    custom_attributes::NodeReferenceLayout,
+    platform::CursorIcon,
+};
 use freya_elements::{
     self as dioxus_elements,
     events::MouseEvent,
@@ -11,7 +14,6 @@ use freya_hooks::{
     ResizableHandleTheme,
     ResizableHandleThemeWith,
 };
-use winit::window::CursorIcon;
 
 struct Panel {
     pub size: f32,
@@ -211,7 +213,7 @@ pub fn ResizableHandle(
         platform.set_cursor(cursor);
     };
 
-    let onmousemove = move |e: MouseEvent| {
+    let oncaptureglobalmousemove = move |e: MouseEvent| {
         if clicking() {
             if !allow_resizing() {
                 return;
@@ -314,6 +316,7 @@ pub fn ResizableHandle(
             if changed_panels {
                 allow_resizing.set(false);
             }
+            e.prevent_default();
         }
     };
 
@@ -350,7 +353,7 @@ pub fn ResizableHandle(
         onmousedown,
         onglobalclick: onclick,
         onmouseenter,
-        onglobalmousemove: onmousemove,
+        oncaptureglobalmousemove,
         onmouseleave,
     })
 }
@@ -421,17 +424,18 @@ mod test {
 
         // Vertical
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseDown,
+            name: MouseEventName::MouseDown,
             cursor: (100.0, 250.0).into(),
             button: Some(MouseButton::Left),
         });
+        utils.wait_for_update().await;
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseMove,
+            name: MouseEventName::MouseMove,
             cursor: (100.0, 200.0).into(),
             button: Some(MouseButton::Left),
         });
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseUp,
+            name: MouseEventName::MouseUp,
             cursor: (0.0, 0.0).into(),
             button: Some(MouseButton::Left),
         });
@@ -442,17 +446,18 @@ mod test {
 
         // Horizontal
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseDown,
+            name: MouseEventName::MouseDown,
             cursor: (167.0, 300.0).into(),
             button: Some(MouseButton::Left),
         });
+        utils.wait_for_update().await;
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseMove,
+            name: MouseEventName::MouseMove,
             cursor: (187.0, 300.0).into(),
             button: Some(MouseButton::Left),
         });
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseUp,
+            name: MouseEventName::MouseUp,
             cursor: (0.0, 0.0).into(),
             button: Some(MouseButton::Left),
         });

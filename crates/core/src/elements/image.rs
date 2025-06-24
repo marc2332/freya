@@ -1,19 +1,20 @@
-use freya_common::ImagesCache;
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
-use freya_node_state::{
-    ImageCover,
-    SamplingMode,
-    StyleState,
-    TransformState,
-};
 
 use super::utils::ElementUtils;
 use crate::{
-    dom::DioxusNode,
+    dom::{
+        DioxusNode,
+        ImagesCache,
+    },
     render::{
         get_or_create_image,
         ImageData,
+    },
+    states::ImageState,
+    values::{
+        ImageCover,
+        SamplingMode,
     },
 };
 
@@ -39,8 +40,7 @@ impl ElementUtils for ImageElement {
             return;
         };
 
-        let node_transform = node_ref.get::<TransformState>().unwrap();
-        let node_style = node_ref.get::<StyleState>().unwrap();
+        let image_state = node_ref.get::<ImageState>().unwrap();
 
         let mut rect = Rect::new(
             area.min_x(),
@@ -48,10 +48,9 @@ impl ElementUtils for ImageElement {
             area.min_x() + size.width,
             area.min_y() + size.height,
         );
-
         let clip_rect = Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
 
-        if node_transform.image_cover == ImageCover::Center {
+        if image_state.image_cover == ImageCover::Center {
             let width_offset = (size.width - area.width()) / 2.;
             let height_offset = (size.height - area.height()) / 2.;
 
@@ -67,7 +66,7 @@ impl ElementUtils for ImageElement {
         let mut paint = Paint::default();
         paint.set_anti_alias(true);
 
-        let sampling = match node_style.image_sampling {
+        let sampling = match image_state.image_sampling {
             SamplingMode::Nearest => SamplingOptions::new(FilterMode::Nearest, MipmapMode::None),
             SamplingMode::Bilinear => SamplingOptions::new(FilterMode::Linear, MipmapMode::None),
             SamplingMode::Trilinear => SamplingOptions::new(FilterMode::Linear, MipmapMode::Linear),
@@ -84,5 +83,23 @@ impl ElementUtils for ImageElement {
         );
 
         canvas.restore();
+    }
+    fn clip(
+        &self,
+        layout_node: &torin::prelude::LayoutNode,
+        _node_ref: &DioxusNode,
+        canvas: &Canvas,
+        _scale_factor: f32,
+    ) {
+        canvas.clip_rect(
+            Rect::new(
+                layout_node.area.min_x(),
+                layout_node.area.min_y(),
+                layout_node.area.max_x(),
+                layout_node.area.max_y(),
+            ),
+            ClipOp::Intersect,
+            true,
+        );
     }
 }

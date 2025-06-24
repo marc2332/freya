@@ -9,9 +9,6 @@ use std::ops::*;
 use bitflags::bitflags;
 use glutin::context::PossiblyCurrentContext;
 
-#[derive(Default, Debug)]
-pub struct SaveLayerRec;
-
 #[derive(Clone, Debug, PartialEq, Copy, Eq)]
 pub struct Color(u32);
 
@@ -33,6 +30,9 @@ impl Color {
     pub const DARK_GRAY: Self = Color(4282664004);
     pub const GRAY: Self = Color(4287137928);
     pub const LIGHT_GRAY: Self = Color(4291611852);
+    pub const DARK_GREY: Self = Color(4282664004);
+    pub const GREY: Self = Color(4287137928);
+    pub const LIGHT_GREY: Self = Color(4291611852);
     pub const WHITE: Self = Color(4294967295);
     pub const RED: Self = Color(4294901760);
     pub const GREEN: Self = Color(4278255360);
@@ -1142,6 +1142,39 @@ pub enum SrcRectConstraint {
 #[derive(Default)]
 pub struct SamplingOptions;
 
+pub struct ImageFilter;
+
+pub fn blur(
+    (sigma_x, sigma_y): (f32, f32),
+    tile_mode: impl Into<Option<()>>,
+    input: impl Into<Option<()>>,
+    crop_rect: &Rect,
+) -> Option<ImageFilter> {
+    unimplemented!("This is mocked")
+}
+
+#[repr(C)]
+#[derive(Default)]
+pub struct SaveLayerRec;
+
+impl<'a> SaveLayerRec {
+    pub fn bounds(self, bounds: &'a Rect) -> Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn paint(self, paint: &'a Paint) -> Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn backdrop(self, backdrop: &'a ImageFilter) -> Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn color_space(self, color_space: &'a ColorSpace) -> Self {
+        unimplemented!("This is mocked")
+    }
+}
+
 impl SamplingOptions {
     pub fn new(filter_mode: FilterMode, mm: MipmapMode) -> Self {
         unimplemented!("This is mocked")
@@ -1312,6 +1345,10 @@ impl Rect {
     pub fn with_outset(&self, _delta: impl Into<Point>) -> Self {
         unimplemented!("This is mocked")
     }
+
+    pub fn round_in(&self) -> IRect {
+        unimplemented!("This is mocked")
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -1333,6 +1370,15 @@ impl Image {
     }
 
     pub fn height(&self) -> i32 {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn encode<'a>(
+        &self,
+        context: impl Into<Option<&'a mut DirectContext>>,
+        format: EncodedImageFormat,
+        quality: impl Into<Option<u32>>,
+    ) -> Option<Data> {
         unimplemented!("This is mocked")
     }
 }
@@ -1371,6 +1417,12 @@ pub struct IRect {
 
 impl IRect {
     pub fn new(_left: i32, _top: i32, _right: i32, _bottom: i32) -> Self {
+        unimplemented!("This is mocked")
+    }
+}
+
+impl From<IRect> for Rect {
+    fn from(irect: IRect) -> Self {
         unimplemented!("This is mocked")
     }
 }
@@ -1631,6 +1683,14 @@ pub mod svg {
     pub struct Paint;
 
     impl Paint {
+        pub fn none() -> Self {
+            unimplemented!("This is mocked")
+        }
+
+        pub fn current_color() -> Self {
+            unimplemented!("This is mocked")
+        }
+
         pub fn from_color(_color: Color) -> Self {
             unimplemented!("This is mocked")
         }
@@ -1701,6 +1761,14 @@ pub struct Surface;
 
 impl Surface {
     pub fn canvas(&mut self) -> &Canvas {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn image_snapshot(&mut self) -> Image {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn direct_context(&self) -> Option<DirectContext> {
         unimplemented!("This is mocked")
     }
 
@@ -1812,6 +1880,10 @@ impl DirectContext {
     }
 
     pub fn abandon(&self) {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn set_resource_cache_limit(&mut self, max_resource_bytes: usize) {
         unimplemented!("This is mocked")
     }
 }
@@ -1950,4 +2022,8 @@ impl LocalResourceProvider {
     pub fn new(font_mgr: &FontMgr) -> Self {
         unimplemented!("This is mocked")
     }
+}
+
+pub fn raster_n32_premul(size: impl Into<ISize>) -> Option<Surface> {
+    unimplemented!("This is mocked")
 }

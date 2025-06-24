@@ -3,13 +3,6 @@ use dioxus_core::{
     Template,
     WriteMutations,
 };
-use freya_common::{
-    AccessibilityDirtyNodes,
-    CompositorDirtyNodes,
-    ImagesCache,
-    Layers,
-    ParagraphElements,
-};
 use freya_native_core::{
     prelude::{
         DioxusNativeCoreMutationWriter,
@@ -18,23 +11,34 @@ use freya_native_core::{
     tree::TreeRef,
     NodeId,
 };
-use freya_node_state::{
-    CursorState,
-    CustomAttributeValues,
-    LayerState,
-    StyleState,
-};
 use torin::torin::{
     DirtyReason,
     Torin,
 };
 
-use crate::prelude::{
-    Compositor,
-    CompositorCache,
-    CompositorDirtyArea,
+use super::{
+    CompositorDirtyNodes,
     DioxusDOMAdapter,
-    NodeAccessibility,
+    ImagesCache,
+    ParagraphElements,
+};
+use crate::{
+    accessibility::{
+        AccessibilityDirtyNodes,
+        NodeAccessibility,
+    },
+    custom_attributes::CustomAttributeValues,
+    layers::Layers,
+    render::{
+        Compositor,
+        CompositorCache,
+        CompositorDirtyArea,
+    },
+    states::{
+        CursorState,
+        ImageState,
+        LayerState,
+    },
 };
 
 pub struct MutationsWriter<'a> {
@@ -50,7 +54,7 @@ pub struct MutationsWriter<'a> {
     pub images_cache: &'a mut ImagesCache,
 }
 
-impl<'a> MutationsWriter<'a> {
+impl MutationsWriter<'_> {
     pub fn remove(&mut self, id: ElementId) {
         let node_id = self.native_writer.state.element_to_node_id(id);
         let mut dom_adapter = DioxusDOMAdapter::new(self.native_writer.rdom, self.scale_factor);
@@ -65,9 +69,8 @@ impl<'a> MutationsWriter<'a> {
                 }
 
                 let layer_state = node.get::<LayerState>();
-                let cursor_state = node.get::<CursorState>();
 
-                let Some((layer_state, cursor_state)) = layer_state.zip(cursor_state) else {
+                let Some(layer_state) = layer_state else {
                     // There might exist Nodes in the RealDOM with no states yet,
                     // this is mainly due to nodes being created in the same run as when this function (remove) is being called,
                     // like nodes created by loaded templates.
@@ -90,9 +93,11 @@ impl<'a> MutationsWriter<'a> {
                     .remove_node_from_layer(node_id, layer_state.layer);
 
                 // Remove from paragraph elements
-                if let Some(cursor_ref) = cursor_state.cursor_ref.as_ref() {
-                    self.paragraphs
-                        .remove_paragraph(node_id, &cursor_ref.text_id);
+                if let Some(cursor_state) = node.get::<CursorState>() {
+                    if let Some(cursor_ref) = cursor_state.cursor_ref.as_ref() {
+                        self.paragraphs
+                            .remove_paragraph(node_id, &cursor_ref.text_id);
+                    }
                 }
 
                 // Remove from the accessibility tree
@@ -116,10 +121,10 @@ impl<'a> MutationsWriter<'a> {
                 // Remove the node from the compositor cache
                 self.compositor_cache.remove(&node_id);
 
-                let style = node.get::<StyleState>().unwrap();
-
-                if let Some(image_cache_key) = &style.image_cache_key {
-                    self.images_cache.remove(image_cache_key);
+                if let Some(image_state) = node.get::<ImageState>() {
+                    if let Some(image_cache_key) = &image_state.image_cache_key {
+                        self.images_cache.remove(image_cache_key);
+                    }
                 }
             }
         }
@@ -129,7 +134,7 @@ impl<'a> MutationsWriter<'a> {
     }
 }
 
-impl<'a> WriteMutations for MutationsWriter<'a> {
+impl WriteMutations for MutationsWriter<'_> {
     fn append_children(&mut self, id: dioxus_core::ElementId, m: usize) {
         self.native_writer.append_children(id, m);
     }

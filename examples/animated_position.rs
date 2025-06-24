@@ -37,17 +37,14 @@ fn app() -> Element {
 
     rsx!(
         rect {
-            cross_align: "center",
-            width: "100%",
-            height: "100%",
-            spacing: "4",
-            padding: "4",
             background: "rgb(20, 20, 20)",
             rect {
                 direction: "horizontal",
                 main_align: "center",
                 width: "100%",
+                height: "100",
                 spacing: "4",
+                padding: "4",
                 Button {
                     onpress: add,
                     label {
@@ -67,14 +64,10 @@ fn app() -> Element {
                     }
                 }
                 Dropdown {
-                    value: function(),
+                    selected_item: rsx!( label { "{function}" } ),
                     for func in &[Function::Quad, Function::Elastic, Function::Quart, Function::Linear, Function::Circ] {
                         DropdownItem {
-                            value: *func,
-                            onpress: {
-                                to_owned![func];
-                                move |_| function.set(func)
-                            },
+                            onpress: move |_| function.set(*func),
                             label { "{func:?}" }
                         }
                     }
@@ -85,7 +78,7 @@ fn app() -> Element {
                 spacing: "4",
                 main_align: "center",
                 cross_align: "center",
-                height: "100%",
+                height: "fill",
                 width: "100%",
                 {elements.read().iter().map(|e: &usize| rsx!(
                     AnimatedPosition {
@@ -110,7 +103,7 @@ fn app() -> Element {
 #[component]
 fn Card(children: Element) -> Element {
     let animation = use_animation(move |conf| {
-        conf.auto_start(true);
+        conf.on_creation(OnCreation::Run);
         AnimNum::new(0.9, 1.)
             .time(300)
             .function(Function::Elastic)

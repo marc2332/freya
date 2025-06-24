@@ -11,39 +11,70 @@ fn main() {
 
 fn app() -> Element {
     let mut values = use_signal(|| (String::new(), String::new()));
+    use_init_theme(|| DARK_THEME);
 
     rsx!(
-        rect {
-            overflow: "clip",
-            padding: "7",
-            width: "100%",
-            height: "100%",
-            spacing: "4",
+        Body {
+            padding: "10",
+            spacing: "10",
             label {
-                color: "black",
                 "Your name:"
             }
             Input {
                 value: values().0,
-                placeholder: "Name",
+                placeholder: "Enter your name...",
+                width: "fill",
                 onchange: move |txt| {
                     values.write().0 = txt;
+                },
+                onfocuschange: move |focused| {
+                    let name = &values.peek().0;
+                    if focused && name.is_empty() {
+                        println!("Time to write your name!")
+                    } else if !focused && !name.is_empty() {
+                        println!("Don't forget your age")
+                    }
                 }
             }
             label {
-                color: "black",
                 "Your age:"
             }
             Input {
                 value: values().1,
-                placeholder: "Age",
+                placeholder: "Enter your age...",
+                width: "fill",
                 onvalidate: |validator: InputValidator| {
-                    validator.set_valid(validator.text().parse::<u8>().is_err())
+                    validator.set_valid(validator.text().parse::<u8>().is_ok())
                 },
                 onchange: move |txt| {
                     values.write().1 = txt;
                 }
             },
+            rect {
+                width: "fill",
+                content: "flex",
+                direction: "horizontal",
+                spacing: "10",
+                Button {
+                    theme: theme_with!(ButtonTheme {
+                        width: "flex(1)".into(),
+                    }),
+                    onpress: move |_| {
+                        *values.write() = (String::new(), String::new());
+                    },
+                    label {
+                        "Clear"
+                    }
+                }
+                FilledButton {
+                    theme: theme_with!(ButtonTheme {
+                        width: "flex(1)".into(),
+                    }),
+                    label {
+                        "Submit"
+                    }
+                }
+            }
         }
     )
 }

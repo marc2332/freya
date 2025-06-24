@@ -1,10 +1,5 @@
-use freya_common::{
-    CachedParagraph,
-    ImagesCache,
-};
 use freya_engine::prelude::*;
 use freya_native_core::prelude::NodeImmutable;
-use freya_node_state::FontStyleState;
 use torin::prelude::{
     Area,
     AreaModel,
@@ -15,8 +10,16 @@ use torin::prelude::{
 
 use super::utils::ElementUtils;
 use crate::{
-    prelude::DioxusNode,
+    dom::{
+        DioxusNode,
+        ImagesCache,
+    },
+    elements::paragraph::CachedParagraph,
     render::align_main_align_paragraph,
+    states::{
+        FontStyleState,
+        StyleState,
+    },
 };
 
 pub struct LabelElement;
@@ -48,8 +51,27 @@ impl ElementUtils for LabelElement {
         paragraph.paint(canvas, (x, y));
     }
 
+    fn clip(
+        &self,
+        layout_node: &LayoutNode,
+        _node_ref: &DioxusNode,
+        canvas: &Canvas,
+        _scale_factor: f32,
+    ) {
+        canvas.clip_rect(
+            Rect::new(
+                layout_node.area.min_x(),
+                layout_node.area.min_y(),
+                layout_node.area.max_x(),
+                layout_node.area.max_y(),
+            ),
+            ClipOp::Intersect,
+            true,
+        );
+    }
+
     #[inline]
-    fn element_needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
+    fn element_needs_cached_area(&self, node_ref: &DioxusNode, _style_state: &StyleState) -> bool {
         let font_style = node_ref.get::<FontStyleState>().unwrap();
 
         !font_style.text_shadows.is_empty()
@@ -60,22 +82,15 @@ impl ElementUtils for LabelElement {
         layout_node: &LayoutNode,
         node_ref: &DioxusNode,
         scale_factor: f32,
+        _node_style: &StyleState,
     ) -> Area {
-        let paragraph_font_height = &layout_node
-            .data
-            .as_ref()
-            .unwrap()
-            .get::<CachedParagraph>()
-            .unwrap()
-            .1;
-        let mut area = layout_node.visible_area();
-        area.size.height = area.size.height.max(*paragraph_font_height);
+        let area = layout_node.visible_area();
 
         let font_style = node_ref.get::<FontStyleState>().unwrap();
 
         let mut text_shadow_area = area;
 
-        for text_shadow in &font_style.text_shadows {
+        for text_shadow in font_style.text_shadows.iter() {
             text_shadow_area.move_with_offsets(
                 &Length::new(text_shadow.offset.x),
                 &Length::new(text_shadow.offset.y),

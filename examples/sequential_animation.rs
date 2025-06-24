@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Counter", (600.0, 350.0));
+    launch_with_props(app, "Sequential Animation", (600.0, 350.0));
 }
 
 fn app() -> Element {

@@ -361,6 +361,8 @@ pub async fn pointer_events_from_mouse() {
 
         let onpointerup = move |_| state.push("up".to_string());
 
+        let onpointerpress = move |_| state.push("press".to_string());
+
         let onpointermove = move |_| state.push("move".to_string());
 
         let onpointerenter = move |_| state.push("enter".to_string());
@@ -379,6 +381,7 @@ pub async fn pointer_events_from_mouse() {
                     width: "100%",
                     onpointerdown,
                     onpointerup,
+                    onpointerpress,
                     onpointermove,
                     onpointerenter,
                     onpointerleave,
@@ -411,7 +414,7 @@ pub async fn pointer_events_from_mouse() {
     );
 
     utils.push_event(TestEvent::Mouse {
-        name: EventName::MouseDown,
+        name: MouseEventName::MouseDown,
         cursor: CursorPoint::new(100.0, 100.0),
         button: Some(MouseButton::Left),
     });
@@ -422,25 +425,8 @@ pub async fn pointer_events_from_mouse() {
     );
 
     utils.push_event(TestEvent::Mouse {
-        name: EventName::MouseUp,
+        name: MouseEventName::MouseUp,
         cursor: CursorPoint::new(100.0, 100.0),
-        button: Some(MouseButton::Left),
-    });
-    utils.wait_for_update().await;
-    assert_eq!(
-        label.get(0).text(),
-        Some(format!("{:?}", vec!["enter", "move", "move", "down", "up"]).as_str())
-    );
-
-    utils.move_cursor((0., 0.)).await;
-    assert_eq!(
-        label.get(0).text(),
-        Some(format!("{:?}", vec!["enter", "move", "move", "down", "up", "leave"]).as_str())
-    );
-
-    utils.push_event(TestEvent::Mouse {
-        name: EventName::PointerUp,
-        cursor: CursorPoint::new(0.0, 0.0),
         button: Some(MouseButton::Left),
     });
     utils.wait_for_update().await;
@@ -449,7 +435,19 @@ pub async fn pointer_events_from_mouse() {
         Some(
             format!(
                 "{:?}",
-                vec!["enter", "move", "move", "down", "up", "leave", "globalup"]
+                vec!["enter", "move", "move", "down", "up", "press", "globalup"]
+            )
+            .as_str()
+        )
+    );
+
+    utils.move_cursor((0., 0.)).await;
+    assert_eq!(
+        label.get(0).text(),
+        Some(
+            format!(
+                "{:?}",
+                vec!["enter", "move", "move", "down", "up", "press", "globalup", "leave"]
             )
             .as_str()
         )
@@ -496,7 +494,7 @@ pub async fn pointer_events_from_touch() {
     assert_eq!(label.get(0).text(), Some("[]"));
 
     utils.push_event(TestEvent::Touch {
-        name: EventName::TouchMove,
+        name: TouchEventName::TouchMove,
         location: CursorPoint::new(100.0, 100.0),
         finger_id: 1,
         phase: TouchPhase::Moved,
@@ -509,7 +507,7 @@ pub async fn pointer_events_from_touch() {
     );
 
     utils.push_event(TestEvent::Touch {
-        name: EventName::TouchStart,
+        name: TouchEventName::TouchStart,
         location: CursorPoint::new(100.0, 100.0),
         finger_id: 1,
         phase: TouchPhase::Started,
@@ -522,7 +520,7 @@ pub async fn pointer_events_from_touch() {
     );
 
     utils.push_event(TestEvent::Touch {
-        name: EventName::TouchEnd,
+        name: TouchEventName::TouchEnd,
         location: CursorPoint::new(100.0, 100.0),
         finger_id: 1,
         phase: TouchPhase::Ended,
@@ -581,7 +579,7 @@ pub async fn filedrop_events() {
     assert_eq!(root.get(0).style().background, Fill::Color(Color::BLUE));
 
     utils.push_event(TestEvent::File {
-        name: EventName::GlobalFileHover,
+        name: FileEventName::FileHover,
         cursor: (5., 5.).into(),
         file_path: None,
     });
@@ -591,7 +589,7 @@ pub async fn filedrop_events() {
     assert_eq!(root.get(0).style().background, Fill::Color(Color::RED));
 
     utils.push_event(TestEvent::File {
-        name: EventName::FileDrop,
+        name: FileEventName::FileDrop,
         cursor: (5., 5.).into(),
         file_path: Some(PathBuf::from_str("/nice/path/right.rs").unwrap()),
     });
@@ -603,4 +601,135 @@ pub async fn filedrop_events() {
         Some("/nice/path/right.rs")
     );
     assert_eq!(root.get(0).style().background, Fill::Color(Color::BLUE));
+}
+
+#[tokio::test]
+pub async fn does_bubble_events() {
+    fn does_bubble_app() -> Element {
+        let mut clicked = use_signal(|| false);
+
+        rsx!(
+            rect {
+                onclick: move |_| clicked.set(true),
+                rect {
+                    width: "100",
+                    height: "100",
+                    background: "red",
+                    onclick: move |_| {},
+                }
+                label {
+                    "{clicked}"
+                }
+            }
+        )
+    }
+
+    let mut utils = launch_test(does_bubble_app);
+
+    let root = utils.root();
+
+    assert_eq!(root.get(0).get(1).get(0).text(), Some("false"));
+
+    utils.click_cursor((5., 5.)).await;
+
+    assert_eq!(root.get(0).get(1).get(0).text(), Some("true"));
+}
+
+#[tokio::test]
+pub async fn does_not_bubble_events() {
+    fn does_not_bubble_app() -> Element {
+        let mut clicked = use_signal(|| false);
+
+        rsx!(
+            rect {
+                onclick: move |_| clicked.set(true),
+                rect {
+                    width: "100",
+                    height: "100",
+                    background: "red",
+                    onclick: move |e| e.stop_propagation(),
+                }
+                label {
+                    "{clicked}"
+                }
+            }
+        )
+    }
+
+    let mut utils = launch_test(does_not_bubble_app);
+
+    let root = utils.root();
+
+    assert_eq!(root.get(0).get(1).get(0).text(), Some("false"));
+
+    utils.click_cursor((5., 5.)).await;
+
+    assert_eq!(root.get(0).get(1).get(0).text(), Some("false"));
+}
+
+#[tokio::test]
+pub async fn does_not_bubble_global_events() {
+    fn does_not_bubble_global_events_app() -> Element {
+        let mut clicks = use_signal(|| 0);
+
+        rsx!(
+            rect {
+                onglobalclick: move |_| clicks += 1,
+                rect {
+                    width: "100",
+                    height: "100",
+                    background: "red",
+                    onglobalclick: move |_| clicks += 1,
+                }
+                label {
+                    "{clicks}"
+                }
+            }
+        )
+    }
+
+    let mut utils = launch_test(does_not_bubble_global_events_app);
+
+    let root = utils.root();
+
+    assert_eq!(root.get(0).get(1).get(0).text(), Some("0"));
+
+    utils.click_cursor((5., 5.)).await;
+
+    assert_eq!(root.get(0).get(1).get(0).text(), Some("2"));
+}
+
+#[tokio::test]
+pub async fn prevent_default_pointer() {
+    fn prevent_default_app() -> Element {
+        let mut clicks = use_signal(|| 0);
+
+        rsx!(
+            rect {
+                onclick: move |_| clicks += 1,
+                width: "200",
+                height: "200",
+                background: "blue",
+                rect {
+                    width: "100",
+                    height: "100",
+                    background: "red",
+                    onpointerup: move |e| e.prevent_default(),
+                }
+                label {
+                    "{clicks}"
+                }
+            }
+        )
+    }
+
+    let mut utils = launch_test(prevent_default_app);
+
+    let root = utils.root();
+
+    assert_eq!(root.get(0).get(1).get(0).text(), Some("0"));
+
+    utils.click_cursor((5., 5.)).await;
+
+    assert_eq!(root.get(0).get(1).get(0).text(), Some("0"));
 }

@@ -1,10 +1,11 @@
 use freya_engine::prelude::*;
-use freya_node_state::{
+use torin::prelude::Area;
+
+use crate::values::{
     Border,
     BorderAlignment,
     CornerRadius,
 };
-use torin::prelude::Area;
 
 pub enum BorderShape {
     DRRect(RRect, RRect),
@@ -13,10 +14,10 @@ pub enum BorderShape {
 
 pub fn render_border(
     canvas: &Canvas,
-    rounded_rect: RRect,
+    rect: Rect,
     area: Area,
     border: &Border,
-    corner_radius: CornerRadius,
+    corner_radius: &CornerRadius,
 ) {
     // Create a new paint
     let mut border_paint = Paint::default();
@@ -25,7 +26,7 @@ pub fn render_border(
 
     border.fill.apply_to_paint(&mut border_paint, area);
 
-    match border_shape(*rounded_rect.rect(), corner_radius, border) {
+    match border_shape(rect, corner_radius, border) {
         BorderShape::DRRect(outer, inner) => {
             canvas.draw_drrect(outer, inner, &border_paint);
         }
@@ -40,7 +41,7 @@ pub fn render_border(
 /// We don't use Skia's stroking API here, since we might need different widths for each side.
 pub fn border_shape(
     base_rect: Rect,
-    base_corner_radius: CornerRadius,
+    base_corner_radius: &CornerRadius,
     border: &Border,
 ) -> BorderShape {
     let border_alignment = border.alignment;

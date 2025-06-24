@@ -83,13 +83,13 @@ fn Speedometer(speed: ReadOnlySignal<u8>, width: f32, height: f32) -> Element {
         platform.invalidate_drawing_area(size.peek().area);
         platform.request_animation_frame();
         let speed = speed();
-        Box::new(move |ctx| {
+        move |ctx| {
             ctx.canvas.translate((ctx.area.min_x(), ctx.area.min_y()));
 
             draw_speedometer(ctx.canvas, &ctx.area, ctx.font_collection, speed);
 
             ctx.canvas.restore();
-        })
+        }
     });
 
     rsx!(rect {

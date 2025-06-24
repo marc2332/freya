@@ -11,10 +11,10 @@ use dioxus_signals::{
     Signal,
     Writable,
 };
-use freya_common::NodeReferenceLayout;
-use freya_node_state::{
+use freya_core::custom_attributes::{
     CustomAttributeValues,
     NodeReference,
+    NodeReferenceLayout,
 };
 use tokio::sync::watch::channel;
 

@@ -11,7 +11,7 @@ async fn no_state() {
         )
     }
 
-    let mut utils = launch_test(no_state_app);
+    let utils = launch_test(no_state_app);
 
     assert_eq!(utils.root().get(0).get(0).text(), Some("Hello"));
 }
@@ -116,7 +116,7 @@ async fn match_by_text() {
         )
     }
 
-    let mut utils = launch_test(app);
+    let utils = launch_test(app);
 
     assert_eq!(
         utils.root().get_by_text("Hello, World!").unwrap().text(),

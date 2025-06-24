@@ -4,7 +4,7 @@
 )]
 
 use freya::{
-    common::AccessibilityFocusStrategy,
+    core::accessibility::AccessibilityFocusStrategy,
     prelude::*,
 };
 
@@ -21,6 +21,7 @@ fn app() -> Element {
             UseFocus::new_id(),
         ]
     });
+    let platform = use_platform();
     let mut current = use_signal(|| 0);
 
     let onwheel = move |_| {
@@ -31,8 +32,7 @@ fn app() -> Element {
     };
 
     use_effect(move || {
-        let platform = UsePlatform::new();
-        platform.focus(AccessibilityFocusStrategy::Node(nodes[current()]));
+        platform.request_focus(AccessibilityFocusStrategy::Node(nodes[current()]));
     });
 
     rsx!(
@@ -58,7 +58,7 @@ fn app() -> Element {
 
 #[component]
 fn Card(index: usize, id: AccessibilityId) -> Element {
-    let focus = use_focus_from_id(id);
+    let focus = use_focus_for_id(id);
     let background = if focus.is_focused() {
         "rgb(0, 119, 182)"
     } else {

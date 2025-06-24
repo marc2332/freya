@@ -3,13 +3,13 @@ use std::f32::consts::PI;
 use crate::{
     node::Node,
     prelude::{
-        DirectionMode,
+        Direction,
         Gaps,
         VisibleSize,
     },
 };
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 pub struct Measure;
 
 pub type Area = euclid::Rect<f32, Measure>;
@@ -89,6 +89,7 @@ impl AreaModel for Area {
     }
 }
 
+#[derive(Clone, Copy)]
 pub enum AlignmentDirection {
     Main,
     Cross,
@@ -133,31 +134,31 @@ fn calculate_extreme_corners(area: &Area, center: Point2D) -> (Point2D, Point2D)
     let min_x = rotated_corners
         .iter()
         .map(|p| p.x)
-        .fold(f32::INFINITY, |a, b| a.min(b));
+        .fold(f32::INFINITY, f32::min);
     let min_y = rotated_corners
         .iter()
         .map(|p| p.y)
-        .fold(f32::INFINITY, |a, b| a.min(b));
+        .fold(f32::INFINITY, f32::min);
     let max_x = rotated_corners
         .iter()
         .map(|p| p.x)
-        .fold(f32::NEG_INFINITY, |a, b| a.max(b));
+        .fold(f32::NEG_INFINITY, f32::max);
     let max_y = rotated_corners
         .iter()
         .map(|p| p.y)
-        .fold(f32::NEG_INFINITY, |a, b| a.max(b));
+        .fold(f32::NEG_INFINITY, f32::max);
 
     (Point2D::new(min_x, min_y), Point2D::new(max_x, max_y))
 }
 
 impl AlignAxis {
-    pub fn new(direction: &DirectionMode, alignment_direction: AlignmentDirection) -> Self {
+    pub fn new(direction: &Direction, alignment_direction: AlignmentDirection) -> Self {
         match direction {
-            DirectionMode::Vertical => match alignment_direction {
+            Direction::Vertical => match alignment_direction {
                 AlignmentDirection::Main => AlignAxis::Height,
                 AlignmentDirection::Cross => AlignAxis::Width,
             },
-            DirectionMode::Horizontal => match alignment_direction {
+            Direction::Horizontal => match alignment_direction {
                 AlignmentDirection::Main => AlignAxis::Width,
                 AlignmentDirection::Cross => AlignAxis::Height,
             },

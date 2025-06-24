@@ -2,11 +2,11 @@ use std::time::Duration;
 
 use dioxus_core::use_hook;
 use freya::prelude::*;
-use freya_engine::prelude::Color;
-use freya_node_state::{
-    Fill,
-    Parse,
+use freya_core::{
+    parsing::Parse,
+    values::Fill,
 };
+use freya_engine::prelude::Color;
 use freya_testing::prelude::*;
 use tokio::time::sleep;
 
@@ -167,7 +167,7 @@ pub async fn animate_color() {
 pub async fn auto_start() {
     fn use_animation_app() -> Element {
         let animation = use_animation(|conf| {
-            conf.auto_start(true);
+            conf.on_creation(OnCreation::Run);
             AnimNum::new(10., 100.).time(50)
         });
 
@@ -211,7 +211,7 @@ pub async fn auto_start() {
 pub async fn sequential() {
     fn use_animation_app() -> Element {
         let animation = use_animation(|conf| {
-            conf.auto_start(true);
+            conf.on_creation(OnCreation::Run);
             AnimSequential::new([
                 AnimNum::new(10., 100.).time(50),
                 AnimNum::new(10., 100.).time(50),

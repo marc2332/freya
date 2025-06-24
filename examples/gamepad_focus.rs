@@ -6,17 +6,20 @@
 use std::thread;
 
 use freya::{
-    common::AccessibilityFocusStrategy,
+    core::accessibility::AccessibilityFocusStrategy,
     prelude::*,
 };
-use freya_core::prelude::{
-    EventMessage,
-    EventName,
-    FreyaPlugin,
-    PlatformEvent,
-    PlatformEventData,
-    PluginEvent,
-    PluginHandle,
+use freya_core::{
+    event_loop_messages::EventLoopMessage,
+    events::{
+        KeyboardEventName,
+        PlatformEvent,
+    },
+    plugins::{
+        FreyaPlugin,
+        PluginEvent,
+        PluginHandle,
+    },
 };
 use gilrs::{
     EventType,
@@ -39,31 +42,26 @@ impl GamePadPlugin {
 
             loop {
                 while let Some(ev) = gilrs_instance.next_event() {
-                    if let EventType::ButtonReleased(_, code) = ev.event {
-                        // NOTE: You might need to tweak these codes
-                        match code.into_u32() {
-                            4 => {
-                                handle.send_event_loop_event(EventMessage::FocusAccessibilityNode(
-                                    AccessibilityFocusStrategy::Backward,
-                                ));
-                            }
-                            6 => {
-                                handle.send_event_loop_event(EventMessage::FocusAccessibilityNode(
-                                    AccessibilityFocusStrategy::Forward,
-                                ));
-                            }
-                            13 => {
-                                handle.send_platform_event(PlatformEvent {
-                                    name: EventName::KeyDown,
-                                    data: PlatformEventData::Keyboard {
-                                        key: Key::Enter,
-                                        code: Code::Enter,
-                                        modifiers: Modifiers::default(),
-                                    },
-                                });
-                            }
-                            _ => {}
+                    match ev.event {
+                        EventType::ButtonReleased(gilrs::Button::DPadLeft, _) => {
+                            handle.send_event_loop_event(EventLoopMessage::FocusAccessibilityNode(
+                                AccessibilityFocusStrategy::Backward,
+                            ));
                         }
+                        EventType::ButtonReleased(gilrs::Button::DPadRight, _) => {
+                            handle.send_event_loop_event(EventLoopMessage::FocusAccessibilityNode(
+                                AccessibilityFocusStrategy::Forward,
+                            ));
+                        }
+                        EventType::ButtonReleased(gilrs::Button::East, _) => {
+                            handle.send_platform_event(PlatformEvent::Keyboard {
+                                name: KeyboardEventName::KeyDown,
+                                key: Key::Enter,
+                                code: Code::Enter,
+                                modifiers: Modifiers::default(),
+                            });
+                        }
+                        _ => {}
                     }
                 }
             }

@@ -26,25 +26,13 @@ pub enum Axis {
 }
 
 #[doc(hidden)]
-pub fn get_container_size(
-    size: &str,
-    is_vertical: bool,
-    axis: Axis,
-    is_scrollbar_visible: bool,
-    scrollbar_size: &str,
-) -> (String, String) {
-    let is_cross_fit = if is_vertical {
-        axis == Axis::X && size == "auto"
-    } else {
-        axis == Axis::Y && size == "auto"
-    };
+pub fn get_container_sizes(size: &str) -> (&str, &str) {
+    let is_fit = size == "auto";
 
-    if is_cross_fit {
-        (size.to_string(), size.to_string())
-    } else if is_scrollbar_visible {
-        (format!("calc(100% - {scrollbar_size})"), "fill".to_string())
+    if is_fit {
+        (size, size)
     } else {
-        ("100%".to_string(), "fill".to_string())
+        ("100%", "fill")
     }
 }
 

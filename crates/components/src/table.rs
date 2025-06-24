@@ -5,7 +5,6 @@ use freya_elements::{
 };
 use freya_hooks::{
     use_applied_theme,
-    use_get_theme,
     FontTheme,
     TableTheme,
     TableThemeWith,
@@ -16,8 +15,7 @@ use crate::icons::ArrowIcon;
 #[allow(non_snake_case)]
 #[component]
 fn TableArrow(order_direction: OrderDirection) -> Element {
-    let theme = use_get_theme();
-    let TableTheme { arrow_fill, .. } = theme.table;
+    let TableTheme { arrow_fill, .. } = use_applied_theme!(None, table);
     let rotate = match order_direction {
         OrderDirection::Down => "0",
         OrderDirection::Up => "180",
@@ -59,6 +57,12 @@ pub fn TableBody(TableBodyProps { children }: TableBodyProps) -> Element {
     )
 }
 
+#[derive(PartialEq, Clone, Copy)]
+enum TableRowState {
+    Idle,
+    Hovering,
+}
+
 /// Properties for the [`TableRow`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct TableRowProps {
@@ -66,9 +70,6 @@ pub struct TableRowProps {
     pub theme: Option<TableThemeWith>,
     /// The content of this row.
     children: Element,
-    /// Show the row with a different background, this allows to have a zebra-style table.
-    #[props(default = false)]
-    alternate_colors: bool,
 }
 
 /// Table row for [`Table`]. Use [`TableCell`] inside.
@@ -76,36 +77,33 @@ pub struct TableRowProps {
 /// # Styling
 /// Inherits the [`TableTheme`](freya_hooks::TableTheme) theme.
 #[allow(non_snake_case)]
-pub fn TableRow(
-    TableRowProps {
-        theme,
-        children,
-        alternate_colors,
-    }: TableRowProps,
-) -> Element {
+pub fn TableRow(TableRowProps { theme, children }: TableRowProps) -> Element {
     let theme = use_applied_theme!(&theme, table);
+    let mut state = use_signal(|| TableRowState::Idle);
     let TableTheme {
         divider_fill,
-        alternate_row_background,
+        hover_row_background,
         row_background,
         ..
     } = theme;
-    let background = if alternate_colors {
-        alternate_row_background
+    let background = if state() == TableRowState::Hovering {
+        hover_row_background
     } else {
         row_background
     };
 
     rsx!(
         rect {
+            onmouseenter: move |_| state.set(TableRowState::Hovering),
+            onmouseleave: move |_| state.set(TableRowState::Idle),
             direction: "horizontal",
-            width: "100%",
+            width: "fill",
             background: "{background}",
             {children}
         }
         rect {
             height: "1",
-            width: "100%",
+            width: "fill",
             background: "{divider_fill}"
         }
     )
@@ -203,6 +201,55 @@ pub struct TableProps {
 ///
 /// # Styling
 /// Inherits the [`TableTheme`](freya_hooks::TableTheme) theme.
+///
+/// # Example
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///    let data = use_signal(|| {
+///        vec![
+///            ("Marc".to_owned(), 169),
+///            ("Marc Clone 1".to_owned(), 113),
+///            ("Marc Clone 2".to_owned(), 157),
+///            ("Marc Clone 3 ".to_owned(), 182),
+///        ]
+///    });
+///
+///    rsx!(
+///        Table {
+///            columns: 2,
+///            TableHead {
+///                TableRow {
+///                    TableCell {
+///                        label { "Name" }
+///                    }
+///                    TableCell {
+///                        label { "Age" }
+///                    }
+///                }
+///            }
+///            TableBody {
+///                ScrollView {
+///                    for (i, (name, age)) in data.read().iter().enumerate() {
+///                        TableRow {
+///                            key: "{i}",
+///                            TableCell {
+///                                label { "{name}" }
+///                            }
+///                            TableCell {
+///                                label { "{age}" }
+///                            }
+///                        }
+///                    }
+///                }
+///            }
+///        }
+///    )
+/// }
+/// ```
+///
+/// For a more advance example (e.g filtering) you can have a look at the [`table.rs`](https://github.com/marc2332/freya/blob/main/examples/table.rs) example in the repo.
 #[allow(non_snake_case)]
 pub fn Table(
     TableProps {
@@ -215,7 +262,7 @@ pub fn Table(
     let TableTheme {
         background,
         corner_radius,
-        shadow,
+        divider_fill,
         font_theme: FontTheme { color },
         ..
     } = use_applied_theme!(&theme, table);
@@ -226,8 +273,8 @@ pub fn Table(
         color: "{color}",
         background: "{background}",
         corner_radius: "{corner_radius}",
-        shadow: "{shadow}",
         height: "{height}",
+        border: "1 outer {divider_fill}",
         {children}
     })
 }

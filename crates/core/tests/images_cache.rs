@@ -1,5 +1,5 @@
 use freya::prelude::*;
-use freya_common::ImageCacheKey;
+use freya_core::dom::ImageCacheKey;
 use freya_testing::prelude::*;
 
 static FREYA_LOGO: &[u8] = include_bytes!("./freya.png");

@@ -1,6 +1,11 @@
+use std::time::{
+    Duration,
+    Instant,
+};
+
 use ropey::Rope;
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum HistoryChange {
     InsertChar {
         idx: usize,
@@ -19,44 +24,71 @@ pub enum HistoryChange {
     },
 }
 
-#[derive(Default, Clone)]
-pub struct EditorHistory {
+#[derive(Clone, Debug, PartialEq)]
+pub struct HistoryTransaction {
+    pub timestamp: Instant,
     pub changes: Vec<HistoryChange>,
-    pub current_change: usize,
-    // Incremental counter for every change.
+}
+
+#[derive(Clone)]
+pub struct EditorHistory {
+    pub transactions: Vec<HistoryTransaction>,
+    pub current_transaction: usize,
+    // Incremental counter for every transaction.
     pub version: usize,
+    /// After how many seconds since the last transaction a change should be grouped with the last transaction.
+    transaction_treshold_groping: Duration,
 }
 
 impl EditorHistory {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(transaction_treshold_groping: Duration) -> Self {
+        Self {
+            transactions: Vec::default(),
+            current_transaction: 0,
+            version: 0,
+            transaction_treshold_groping,
+        }
     }
 
     pub fn push_change(&mut self, change: HistoryChange) {
         if self.can_redo() {
-            self.changes.drain(self.current_change..);
+            self.transactions.drain(self.current_transaction..);
         }
 
-        self.changes.push(change);
-        self.current_change = self.changes.len();
+        let last_transaction = self
+            .transactions
+            .get_mut(self.current_transaction.saturating_sub(1));
+        if let Some(last_transaction) = last_transaction {
+            if last_transaction.timestamp.elapsed() <= self.transaction_treshold_groping {
+                last_transaction.changes.push(change);
+                last_transaction.timestamp = Instant::now();
+                return;
+            }
+        }
 
+        self.transactions.push(HistoryTransaction {
+            timestamp: Instant::now(),
+            changes: vec![change],
+        });
+
+        self.current_transaction = self.transactions.len();
         self.version += 1;
     }
 
     pub fn current_change(&self) -> usize {
-        self.current_change
+        self.current_transaction
     }
 
     pub fn any_pending_changes(&self) -> usize {
-        self.changes.len() - self.current_change
+        self.transactions.len() - self.current_transaction
     }
 
     pub fn can_undo(&self) -> bool {
-        self.current_change > 0
+        self.current_transaction > 0
     }
 
     pub fn can_redo(&self) -> bool {
-        self.current_change < self.changes.len()
+        self.current_transaction < self.transactions.len()
     }
 
     pub fn undo(&mut self, rope: &mut Rope) -> Option<usize> {
@@ -64,30 +96,34 @@ impl EditorHistory {
             return None;
         }
 
-        let last_change = self.changes.get(self.current_change - 1);
-        if let Some(last_change) = last_change {
-            let idx_end = match last_change {
-                HistoryChange::Remove { idx, text, len } => {
-                    let start = rope.utf16_cu_to_char(*idx);
-                    rope.insert(start, text);
-                    *idx + len
-                }
-                HistoryChange::InsertChar { idx, len, .. } => {
-                    let start = rope.utf16_cu_to_char(*idx);
-                    let end = rope.utf16_cu_to_char(*idx + len);
-                    rope.remove(start..end);
-                    *idx
-                }
-                HistoryChange::InsertText { idx, len, .. } => {
-                    let start = rope.utf16_cu_to_char(*idx);
-                    let end = rope.utf16_cu_to_char(*idx + len);
-                    rope.remove(start..end);
-                    *idx
-                }
-            };
-            self.current_change -= 1;
+        let last_transaction = self.transactions.get(self.current_transaction - 1);
+        if let Some(last_transaction) = last_transaction {
+            let mut idx_end = None;
+            for change in last_transaction.changes.iter().rev() {
+                idx_end.replace(match change {
+                    HistoryChange::Remove { idx, text, len } => {
+                        let start = rope.utf16_cu_to_char(*idx);
+                        rope.insert(start, text);
+                        *idx + len
+                    }
+                    HistoryChange::InsertChar { idx, len, .. } => {
+                        let start = rope.utf16_cu_to_char(*idx);
+                        let end = rope.utf16_cu_to_char(*idx + len);
+                        rope.remove(start..end);
+                        *idx
+                    }
+                    HistoryChange::InsertText { idx, len, .. } => {
+                        let start = rope.utf16_cu_to_char(*idx);
+                        let end = rope.utf16_cu_to_char(*idx + len);
+                        rope.remove(start..end);
+                        *idx
+                    }
+                });
+            }
+
+            self.current_transaction -= 1;
             self.version += 1;
-            Some(idx_end)
+            idx_end
         } else {
             None
         }
@@ -98,29 +134,32 @@ impl EditorHistory {
             return None;
         }
 
-        let next_change = self.changes.get(self.current_change);
-        if let Some(next_change) = next_change {
-            let idx_end = match next_change {
-                HistoryChange::Remove { idx, len, .. } => {
-                    let start = rope.utf16_cu_to_char(*idx);
-                    let end = rope.utf16_cu_to_char(*idx + len);
-                    rope.remove(start..end);
-                    *idx
-                }
-                HistoryChange::InsertChar { idx, ch, len } => {
-                    let start = rope.utf16_cu_to_char(*idx);
-                    rope.insert_char(start, *ch);
-                    *idx + len
-                }
-                HistoryChange::InsertText { idx, text, len } => {
-                    let start = rope.utf16_cu_to_char(*idx);
-                    rope.insert(start, text);
-                    *idx + len
-                }
-            };
-            self.current_change += 1;
+        let last_transaction = self.transactions.get(self.current_transaction);
+        if let Some(last_transaction) = last_transaction {
+            let mut idx_end = None;
+            for change in &last_transaction.changes {
+                idx_end.replace(match change {
+                    HistoryChange::Remove { idx, len, .. } => {
+                        let start = rope.utf16_cu_to_char(*idx);
+                        let end = rope.utf16_cu_to_char(*idx + len);
+                        rope.remove(start..end);
+                        *idx
+                    }
+                    HistoryChange::InsertChar { idx, ch, len } => {
+                        let start = rope.utf16_cu_to_char(*idx);
+                        rope.insert_char(start, *ch);
+                        *idx + len
+                    }
+                    HistoryChange::InsertText { idx, text, len } => {
+                        let start = rope.utf16_cu_to_char(*idx);
+                        rope.insert(start, text);
+                        *idx + len
+                    }
+                });
+            }
+            self.current_transaction += 1;
             self.version += 1;
-            Some(idx_end)
+            idx_end
         } else {
             None
         }
@@ -128,19 +167,21 @@ impl EditorHistory {
 
     pub fn clear_redos(&mut self) {
         if self.can_redo() {
-            self.changes.drain(self.current_change..);
+            self.transactions.drain(self.current_transaction..);
         }
     }
 
     pub fn clear(&mut self) {
-        self.changes.clear();
-        self.current_change = 0;
+        self.transactions.clear();
+        self.current_transaction = 0;
         self.version = 0;
     }
 }
 
 #[cfg(test)]
 mod test {
+    use std::time::Duration;
+
     use ropey::Rope;
 
     use super::{
@@ -151,7 +192,7 @@ mod test {
     #[test]
     fn test() {
         let mut rope = Rope::new();
-        let mut history = EditorHistory::new();
+        let mut history = EditorHistory::new(Duration::ZERO);
 
         // Initial text
         rope.insert(0, "Hello World");

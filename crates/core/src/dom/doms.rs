@@ -14,14 +14,6 @@ use std::{
 };
 
 use dioxus_core::VirtualDom;
-use freya_common::{
-    AccessibilityDirtyNodes,
-    AccessibilityGenerator,
-    CompositorDirtyNodes,
-    ImagesCache,
-    Layers,
-    ParagraphElements,
-};
 use freya_native_core::{
     prelude::{
         DioxusState,
@@ -34,26 +26,41 @@ use freya_native_core::{
     NodeId,
     SendAnyMap,
 };
-use freya_node_state::{
-    AccessibilityNodeState,
-    CursorState,
-    CustomAttributeValues,
-    FontStyleState,
-    LayerState,
-    LayoutState,
-    ReferencesState,
-    StyleState,
-    TransformState,
-    ViewportState,
-};
 use torin::prelude::*;
 
-use super::mutations_writer::MutationsWriter;
-use crate::prelude::{
-    CompositorCache,
-    CompositorDirtyArea,
-    ParagraphElement,
-    TextGroupMeasurement,
+use super::{
+    mutations_writer::MutationsWriter,
+    CompositorDirtyNodes,
+    ImagesCache,
+    ParagraphElements,
+};
+use crate::{
+    accessibility::{
+        AccessibilityDirtyNodes,
+        AccessibilityGenerator,
+    },
+    animation_clock::AnimationClock,
+    custom_attributes::CustomAttributeValues,
+    elements::ParagraphElement,
+    event_loop_messages::TextGroupMeasurement,
+    layers::Layers,
+    render::{
+        CompositorCache,
+        CompositorDirtyArea,
+    },
+    states::{
+        AccessibilityNodeState,
+        CanvasState,
+        CursorState,
+        FontStyleState,
+        ImageState,
+        LayerState,
+        LayoutState,
+        StyleState,
+        SvgState,
+        TransformState,
+        ViewportState,
+    },
 };
 
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
@@ -112,13 +119,13 @@ impl SafeDOM {
     /// Get a reference to the DOM.
     #[cfg(feature = "rc-dom")]
     pub fn get(&self) -> Ref<FreyaDOM> {
-        return self.fdom.borrow();
+        self.fdom.borrow()
     }
 
     /// Get a mutable reference to the dom.
     #[cfg(feature = "rc-dom")]
     pub fn get_mut(&self) -> RefMut<FreyaDOM> {
-        return self.fdom.borrow_mut();
+        self.fdom.borrow_mut()
     }
 }
 
@@ -135,6 +142,7 @@ pub struct FreyaDOM {
     accessibility_dirty_nodes: Arc<Mutex<AccessibilityDirtyNodes>>,
     accessibility_generator: Arc<AccessibilityGenerator>,
     images_cache: Arc<Mutex<ImagesCache>>,
+    animation_clock: AnimationClock,
 }
 
 impl Default for FreyaDOM {
@@ -142,13 +150,15 @@ impl Default for FreyaDOM {
         let mut rdom = RealDom::<CustomAttributeValues>::new([
             CursorState::to_type_erased(),
             FontStyleState::to_type_erased(),
-            ReferencesState::to_type_erased(),
+            CanvasState::to_type_erased(),
             LayoutState::to_type_erased(),
             StyleState::to_type_erased(),
             TransformState::to_type_erased(),
             AccessibilityNodeState::to_type_erased(),
             ViewportState::to_type_erased(),
             LayerState::to_type_erased(),
+            SvgState::to_type_erased(),
+            ImageState::to_type_erased(),
         ]);
         let dioxus_integration_state = DioxusState::create(&mut rdom);
         Self {
@@ -163,6 +173,7 @@ impl Default for FreyaDOM {
             accessibility_dirty_nodes: Arc::default(),
             accessibility_generator: Arc::default(),
             images_cache: Arc::default(),
+            animation_clock: AnimationClock::default(),
         }
     }
 }
@@ -202,6 +213,10 @@ impl FreyaDOM {
 
     pub fn images_cache(&self) -> MutexGuard<ImagesCache> {
         self.images_cache.lock().unwrap()
+    }
+
+    pub fn animation_clock(&self) -> &AnimationClock {
+        &self.animation_clock
     }
 
     /// Create the initial DOM from the given Mutations

@@ -6,12 +6,13 @@
 //!
 //! **Freya** is a declarative, cross-platform GUI Rust library, powered by 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/).
 //!
-//! **It does not use any web tech**, check the [Differences with Dioxus](https://book.freyaui.dev/differences_with_dioxus.html).
+//! **It does not use any web tech**, check the [Differences with Dioxus](https://github.com/marc2332/freya/tree/main?tab=readme-ov-file#differences-with-dioxus).
 //!
 //! ### Basics
 //! - [Introduction](self::_docs::introduction)
 //! - [Dioxus Fundamentals](self::_docs::dioxus_fundamentals)
 //!     - [UI](self::_docs::ui)
+//!     - [Elements Overview](self::_docs::elements)
 //!     - [Components](self::_docs::components_and_props)
 //!     - [Hooks](self::_docs::hooks)
 //!     - [State Management](self::_docs::state_management)
@@ -24,32 +25,36 @@
 //!
 //! ### Learn
 //! - [Development Setup](self::_docs::development_setup)
-//! - [Elements Overview](self::_docs::elements)
 //! - [Theming](self::_docs::theming)
 //! - [i18n](self::_docs::i18n)
-//! - [Accessibility](self::_docs::accessibility)
-//! - [Text Editing](self::_docs)
-//! - [Animations](self::_docs)
+//! - [Accessibility](self::hooks::use_focus)
 //! - [Router](self::_docs::router)
 //!     - [Native Router](self::_docs::router::native_router)
-//!     - [Animated transitions](self::_docs::router::animated_transitions)
-//! - [Native Menus](self::_docs)
 //! - [Third Party State Managemement](self::_docs::third_party_state)
-//! - [Unit Testing for Components](freya_testing)
 //! - [Devtools](self::_docs::devtools)
 //! - [Performance Tips](self::_docs::performance)
+//!
+//! ### Advanced
+//! - [Animations](self::hooks::use_animation)
+//! - [Text Editing](self::hooks::use_editable)
+//! - [Unit Testing of Components](freya_testing)
 //!
 //! ### API References
 //! - [Elements and attributes](self::elements#structs)
 //! - [Events](self::events#functions)
 //! - [Built-in Components](self::components)
+//! - [Built-in Components Gallery](self::components::gallery)
 //! - [Built-in Hooks](self::hooks)
 //!
 //! ## Features flags
 //!
 //! - `devtools`: enables a side panel to inspect your App tree, styles and computed layout.
-//! - `use_camera`: enables the `use_camera` hook.
-//! - `log`: enables internal logs.
+//! - `use_camera`: enables the [use_camera](self::hooks::use_camera) hook.
+//! - `network-image`: enables the [NetworkImage](self::components::NetworkImage) component.
+//! - `custom-tokio-rt`: disables the default Tokio runtime created by Freya.
+//! - `performance-overlay`: enables the performance overlay plugin.
+//! - `disable-zoom-shortcuts`: disables the default zoom shortcuts.
+//! - `disable-animation-shortcuts`: disables the default animation clock shortcuts.
 
 /// Freya docs.
 #[cfg(doc)]
@@ -78,7 +83,7 @@ pub mod hooks {
 
 /// Common data structures and utils.
 pub mod common {
-    pub use freya_common::*;
+    pub use freya_core::*;
 }
 
 /// Core APIs.
@@ -96,6 +101,7 @@ pub mod plugins;
 
 /// Useful imports.
 pub mod prelude {
+    pub use dioxus;
     pub use dioxus_core::{
         prelude::*,
         {
@@ -106,21 +112,22 @@ pub mod prelude {
     pub use dioxus_hooks::*;
     pub use dioxus_signals::*;
     pub use freya_components::*;
-    pub use freya_core::prelude::{
-        AccessibilityId,
-        PreferredTheme,
+    pub use freya_core::{
+        custom_attributes::{
+            dynamic_bytes,
+            static_bytes,
+            CustomAttributeValues,
+        },
+        platform::*,
+        platform_state::*,
+        types::AccessibilityId,
     };
     pub use freya_elements::{
         self as dioxus_elements,
         events::*,
     };
     pub use freya_hooks::*;
-    pub use freya_node_state::{
-        dynamic_bytes,
-        static_bytes,
-        CustomAttributeValues,
-    };
-    pub use freya_renderer::*;
+    pub use freya_winit::*;
     pub use torin::prelude::*;
 
     pub use crate::{

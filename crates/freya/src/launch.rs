@@ -1,14 +1,25 @@
-use dioxus_core::Element;
-use freya_renderer::{
-    DesktopRenderer,
+use dioxus::prelude::{
+    ErrorBoundary,
+    ErrorContext,
+};
+use dioxus_core::{
+    Element,
+    VirtualDom,
+};
+use freya_winit::{
+    devtools::{
+        DevtoolsReceiver,
+        HighlightedNode,
+    },
     LaunchConfig,
     WindowConfig,
+    WinitRenderer,
 };
 
 /// Launch a new window with the default config.
 ///
-/// - Width: `600.0`
-/// - Height: `600.0`
+/// - Width: `700.0`
+/// - Height: `500.0`
 /// - Decorations enabled
 /// - Transparency disabled
 /// - Window title: `Freya`
@@ -40,7 +51,7 @@ pub fn launch(app: AppComponent) {
         app,
         LaunchConfig::<()> {
             window_config: WindowConfig {
-                size: (600.0, 600.0),
+                size: (700.0, 500.0),
                 decorations: true,
                 transparent: false,
                 title: "Freya",
@@ -53,8 +64,8 @@ pub fn launch(app: AppComponent) {
 
 /// Launch a new window with a custom title and the default config.
 ///
-/// - Width: `400`
-/// - Height: `300`
+/// - Width: `700`
+/// - Height: `500`
 /// - Decorations enabled
 /// - Transparency disabled
 /// - Window background: white
@@ -85,7 +96,7 @@ pub fn launch_with_title(app: AppComponent, title: &'static str) {
         app,
         LaunchConfig::<()> {
             window_config: WindowConfig {
-                size: (400.0, 300.0),
+                size: (700.0, 500.0),
                 decorations: true,
                 transparent: false,
                 title,
@@ -108,7 +119,7 @@ pub fn launch_with_title(app: AppComponent, title: &'static str) {
 /// # use freya::prelude::*;
 ///
 /// fn main() {
-///     launch_with_props(app, "Whoa!", (400.0, 600.0));
+///     launch_with_props(app, "Whoa!", (700.0, 500.0));
 /// }
 ///
 /// fn app() -> Element {
@@ -157,7 +168,7 @@ pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height)
 ///     launch_cfg(
 ///         app,
 ///         LaunchConfig::<()>::new()
-///             .with_size(500.0, 400.0)
+///             .with_size(700.0, 500.0)
 ///             .with_decorations(true)
 ///             .with_transparency(false)
 ///             .with_title("Freya App")
@@ -181,7 +192,7 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
     #[cfg(feature = "performance-overlay")]
     let config = config.with_plugin(crate::plugins::PerformanceOverlayPlugin::default());
 
-    use freya_core::prelude::{
+    use freya_core::dom::{
         FreyaDOM,
         SafeDOM,
     };
@@ -204,30 +215,103 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
             .init();
     }
 
-    let (vdom, devtools, hovered_node) = {
-        #[cfg(feature = "devtools")]
-        #[cfg(debug_assertions)]
-        {
-            use std::sync::{
-                Arc,
-                Mutex,
-            };
-
-            use freya_devtools::with_devtools;
-            use freya_renderer::devtools::Devtools;
-
-            let hovered_node = Some(Arc::new(Mutex::new(None)));
-            let (devtools, devtools_receiver) = Devtools::new();
-            let vdom = with_devtools(app, devtools_receiver.clone(), hovered_node.clone());
-            (vdom, Some(devtools), hovered_node)
-        }
-
-        #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
-        {
-            let vdom = with_accessibility(app);
-            (vdom, None, None)
-        }
+    use dioxus::prelude::Props;
+    use dioxus_core::{
+        fc_to_builder,
+        IntoDynNode,
     };
+    use dioxus_core_macro::rsx;
+    #[cfg(debug_assertions)]
+    use dioxus_signals::{
+        GlobalSignal,
+        Readable,
+    };
+    use freya_components::NativeContainer;
+    use freya_elements as dioxus_elements;
+    use freya_winit::devtools::Devtools;
+
+    #[derive(Props, Clone)]
+    struct RootProps {
+        app: AppComponent,
+        highlighted_node: Option<HighlightedNode>,
+        devtools_receiver: Option<DevtoolsReceiver>,
+    }
+    impl PartialEq for RootProps {
+        fn eq(&self, _other: &Self) -> bool {
+            true
+        }
+    }
+
+    #[allow(non_snake_case)]
+    fn Root(props: RootProps) -> Element {
+        #[allow(non_snake_case)]
+        let App = props.app;
+
+        let handle_error = |e: ErrorContext| {
+            #[cfg(not(debug_assertions))]
+            panic!("{e:?}");
+
+            #[cfg(debug_assertions)]
+            for error in e.errors().iter() {
+                println!("{:?}", error);
+            }
+
+            #[cfg(debug_assertions)]
+            rsx!(
+                rect {
+                    width: "fill",
+                    height: "fill",
+                    background: "rgb(138, 0, 0)",
+                    color: "white",
+                    main_align: "center",
+                    cross_align: "center",
+                    label {
+                        "An unhandled error was thrown, check your logs."
+                    }
+                }
+            )
+        };
+
+        rsx!(
+            NativeContainer {
+                ErrorBoundary {
+                    handle_error,
+                    {
+                        #[cfg(all(feature = "devtools", debug_assertions))]
+                        rsx!(
+                            freya_devtools::DevtoolsView {
+                                highlighted_node: props.highlighted_node.unwrap(),
+                                devtools_receiver: props.devtools_receiver.unwrap(),
+                                App {}
+                            }
+                        )
+                    }
+                    {
+                        #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
+                        rsx!(
+                            App {}
+                        )
+                    }
+                }
+            }
+        )
+    }
+
+    #[cfg(all(feature = "devtools", debug_assertions))]
+    let devtools = Some(Devtools::new());
+
+    #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
+    let devtools: Option<(Devtools, DevtoolsReceiver, HighlightedNode)> = None;
+
+    let vdom = VirtualDom::new_with_props(
+        Root,
+        RootProps {
+            app,
+            devtools_receiver: devtools.as_ref().map(|d| d.1.clone()),
+            highlighted_node: devtools.as_ref().map(|d| d.2.clone()),
+        },
+    );
+
     #[cfg(not(feature = "custom-tokio-rt"))]
     {
         let rt = tokio::runtime::Builder::new_multi_thread()
@@ -236,42 +320,11 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
             .unwrap();
         let _guard = rt.enter();
 
-        DesktopRenderer::launch(vdom, sdom, config, devtools, hovered_node);
+        WinitRenderer::launch(vdom, sdom, config, devtools.map(|d| d.0));
     }
 
     #[cfg(feature = "custom-tokio-rt")]
-    DesktopRenderer::launch(vdom, sdom, config, devtools, hovered_node);
-}
-
-#[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
-use dioxus_core::VirtualDom;
-#[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
-fn with_accessibility(app: AppComponent) -> VirtualDom {
-    use dioxus::prelude::Props;
-    use dioxus_core::fc_to_builder;
-    use dioxus_core_macro::rsx;
-    use dioxus_signals::{
-        GlobalSignal,
-        Readable,
-    };
-    use freya_components::NativeContainer;
-
-    #[derive(Props, Clone, PartialEq)]
-    struct RootProps {
-        app: AppComponent,
-    }
-
-    #[allow(non_snake_case)]
-    fn Root(props: RootProps) -> Element {
-        #[allow(non_snake_case)]
-        let App = props.app;
-
-        rsx!(NativeContainer {
-            App {}
-        })
-    }
-
-    VirtualDom::new_with_props(Root, RootProps { app })
+    WinitRenderer::launch(vdom, sdom, config, devtools.map(|d| d.0), hovered_node);
 }
 
 type AppComponent = fn() -> Element;

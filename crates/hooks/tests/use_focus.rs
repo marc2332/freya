@@ -16,7 +16,7 @@ pub async fn track_focus() {
                 width: "100%",
                 height: "50%",
                 a11y_id,
-                onclick: move |_| focus_manager.focus(),
+                onclick: move |_| focus_manager.request_focus(),
                 label {
                     "{focus_manager.is_focused()}"
                 }
@@ -77,7 +77,7 @@ pub async fn block_focus() {
                 a11y_id: focus_manager.attribute(),
                 width: "100%",
                 height: "50%",
-                onclick: move |_| focus_manager.focus(),
+                onclick: move |_| focus_manager.request_focus(),
                 label {
                     "{focus_manager.is_focused()}"
                 }
@@ -94,10 +94,10 @@ pub async fn block_focus() {
                 a11y_id: focus_manager.attribute(),
                 width: "100%",
                 height: "50%",
-                onkeydown: move |_| {
-                    focus_manager.prevent_navigation();
+                onkeydown: move |e| {
+                    e.prevent_default();
                 },
-                onclick: move |_| focus_manager.focus(),
+                onclick: move |_| focus_manager.request_focus(),
                 label {
                     "{focus_manager.is_focused()}"
                 }
@@ -139,7 +139,7 @@ pub async fn block_focus() {
 
     // Navigate to the second rect
     utils.push_event(TestEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: KeyboardEventName::KeyDown,
         key: Key::Tab,
         code: Code::Tab,
         modifiers: Modifiers::default(),
@@ -153,7 +153,7 @@ pub async fn block_focus() {
 
     // Try to navigate to the first rect again
     utils.push_event(TestEvent::Keyboard {
-        name: EventName::KeyDown,
+        name: KeyboardEventName::KeyDown,
         key: Key::Tab,
         code: Code::Tab,
         modifiers: Modifiers::default(),

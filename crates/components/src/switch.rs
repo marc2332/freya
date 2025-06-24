@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use freya_core::platform::CursorIcon;
 use freya_elements::{
     self as dioxus_elements,
     events::{
@@ -18,7 +19,6 @@ use freya_hooks::{
     OnDepsChange,
     SwitchThemeWith,
 };
-use winit::window::CursorIcon;
 
 /// Properties for the [`Switch`] component.
 #[derive(Props, Clone, PartialEq)]
@@ -75,7 +75,7 @@ pub enum SwitchStatus {
 /// #           }
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), |mut utils| async move {
+/// # }, (250., 250.).into(), |mut utils| async move {
 /// #   utils.wait_for_update().await;
 /// #   tokio::time::sleep(std::time::Duration::from_millis(50)).await;
 /// #   utils.wait_for_update().await;
@@ -93,7 +93,7 @@ pub enum SwitchStatus {
 /// #           }
 /// #       }
 /// #   )
-/// # }, (185., 185.).into(), "./images/gallery_not_enabled_switch.png");
+/// # }, (250., 250.).into(), "./images/gallery_not_enabled_switch.png");
 /// ```
 /// # Preview
 ///
@@ -163,7 +163,7 @@ pub fn Switch(props: SwitchProps) -> Element {
 
     let onclick = move |e: MouseEvent| {
         e.stop_propagation();
-        focus.focus();
+        focus.request_focus();
         props.ontoggled.call(());
     };
 
@@ -197,6 +197,8 @@ pub fn Switch(props: SwitchProps) -> Element {
         }
     }));
 
+    let a11y_toggled = if props.enabled { "true" } else { "false" };
+
     rsx!(
         rect {
             margin: "{theme.margin}",
@@ -211,7 +213,9 @@ pub fn Switch(props: SwitchProps) -> Element {
             onmouseleave,
             onkeydown,
             onclick,
+            a11y_role: "switch",
             a11y_id,
+            a11y_toggled,
             offset_x: "{offset_x}",
             main_align: "center",
             rect {

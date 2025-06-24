@@ -3,12 +3,8 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus_router::prelude::{
-    Outlet,
-    Routable,
-    Router,
-};
 use freya::prelude::*;
+use freya_router::prelude::*;
 
 fn main() {
     launch_with_props(app, "Tabs", (500.0, 350.0));
@@ -74,13 +70,11 @@ fn AppSidebar() -> Element {
                 }
             }
             Body {
-                rect {
-                    main_align: "center",
-                    cross_align: "center",
-                    width: "100%",
-                    height: "100%",
-                    Outlet::<Route> {  }
-                }
+                main_align: "center",
+                cross_align: "center",
+                width: "100%",
+                height: "100%",
+                Outlet::<Route> {  }
             }
         }
     )

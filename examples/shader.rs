@@ -59,7 +59,7 @@ fn app() -> Element {
         let shader_wrapper = Arc::new(ShaderWrapper(shader));
         let instant = Instant::now();
 
-        Box::new(move |ctx| {
+        move |ctx| {
             let mut builder = UniformsBuilder::default();
             builder.set(
                 "u_resolution",
@@ -88,7 +88,7 @@ fn app() -> Element {
                 ),
                 &paint,
             );
-        })
+        }
     });
 
     rsx!(rect {

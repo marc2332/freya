@@ -60,34 +60,31 @@ fn app() -> Element {
             cross_align: "center",
             rect {
                 position: "absolute",
-                position_left: "0",
-                position_top: "0",
                 Dropdown {
-                    value: time_zone(),
+                    selected_item: rsx!( label { "{time_zone}" } ),
                     ScrollView {
                         width: "200",
                         height: "300",
                         for i in -12..=14 {
                             DropdownItem {
-                                value: i,
                                 onpress: move |_| time_zone.set(i),
-                                label {"UTC {negative_add_zero(i as i64)}:00"}
+                                label { "UTC {negative_add_zero(i as i64)}:00" }
                             }
                         }
                     }
                 }
             }
             rect {
-                corner_radius: "10",
-                main_align: "center",
+                corner_radius: "16",
+                padding: "12",
                 background: "rgb(10, 90, 255)",
-                min_width: "500",
-                width: "90%",
-                height: "200",
+                main_align: "center",
+                cross_align: "center",
                 label {
                     font_family: "Consolas",
                     text_align: "center",
                     font_size: "100",
+                    color: "white",
                     "{time}"
                 }
             }

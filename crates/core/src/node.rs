@@ -1,22 +1,8 @@
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
-use freya_node_state::{
-    AccessibilityNodeState,
-    Border,
-    CornerRadius,
-    CursorState,
-    Fill,
-    FontStyleState,
-    LayoutState,
-    ReferencesState,
-    Shadow,
-    StyleState,
-    TextOverflow,
-    TransformState,
-};
 use torin::{
     alignment::Alignment,
-    direction::DirectionMode,
+    direction::Direction,
     gaps::Gaps,
     prelude::{
         Content,
@@ -26,17 +12,36 @@ use torin::{
     size::Size,
 };
 
-use crate::dom::DioxusNode;
+use crate::{
+    dom::DioxusNode,
+    states::{
+        AccessibilityNodeState,
+        CursorState,
+        FontStyleState,
+        LayoutState,
+        StyleState,
+        SvgState,
+        TransformState,
+    },
+    values::{
+        Border,
+        CornerRadius,
+        Fill,
+        Shadow,
+        SvgPaint,
+        TextOverflow,
+    },
+};
 
 #[derive(Clone, PartialEq)]
 pub struct NodeState {
     pub cursor: CursorState,
     pub font_style: FontStyleState,
-    pub references: ReferencesState,
     pub size: LayoutState,
     pub style: StyleState,
     pub transform: TransformState,
     pub accessibility: AccessibilityNodeState,
+    pub svg: SvgState,
 }
 
 pub fn get_node_state(node: &DioxusNode) -> NodeState {
@@ -47,11 +52,6 @@ pub fn get_node_state(node: &DioxusNode) -> NodeState {
         .unwrap_or_default();
     let font_style = node
         .get::<FontStyleState>()
-        .as_deref()
-        .cloned()
-        .unwrap_or_default();
-    let references = node
-        .get::<ReferencesState>()
         .as_deref()
         .cloned()
         .unwrap_or_default();
@@ -75,15 +75,20 @@ pub fn get_node_state(node: &DioxusNode) -> NodeState {
         .as_deref()
         .cloned()
         .unwrap_or_default();
+    let svg = node
+        .get::<SvgState>()
+        .as_deref()
+        .cloned()
+        .unwrap_or_default();
 
     NodeState {
         cursor,
         font_style,
-        references,
         size,
         style,
         transform,
         accessibility,
+        svg,
     }
 }
 
@@ -155,28 +160,36 @@ impl NodeState {
             ("offset_y", AttributeType::Measure(self.size.offset_y.get())),
             ("content", AttributeType::Content(&self.size.content)),
             (
-                "fill",
-                AttributeType::OptionalColor(self.style.svg_fill.map(|color| color.into())),
+                "svg_fill",
+                AttributeType::OptionalColor(self.svg.svg_fill.and_then(|fill| match fill {
+                    SvgPaint::None => None,
+                    SvgPaint::CurrentColor => Some(Fill::Color(self.font_style.color)),
+                    SvgPaint::Color(color) => Some(Fill::Color(color)),
+                })),
             ),
             (
                 "svg_stroke",
-                AttributeType::OptionalColor(self.style.svg_stroke.map(|color| color.into())),
+                AttributeType::OptionalColor(self.svg.svg_stroke.and_then(|stroke| match stroke {
+                    SvgPaint::None => None,
+                    SvgPaint::CurrentColor => Some(Fill::Color(self.font_style.color)),
+                    SvgPaint::Color(color) => Some(Fill::Color(color)),
+                })),
             ),
         ];
 
         let shadows = &self.style.shadows;
-        for shadow in shadows {
+        for shadow in shadows.iter() {
             attributes.push(("shadow", AttributeType::Shadow(shadow)));
         }
 
         let borders = &self.style.borders;
-        for border in borders {
+        for border in borders.iter() {
             attributes.push(("border", AttributeType::Border(border)));
         }
 
         let text_shadows = &self.font_style.text_shadows;
 
-        for text_shadow in text_shadows {
+        for text_shadow in text_shadows.iter() {
             attributes.push(("text_shadow", AttributeType::TextShadow(text_shadow)));
         }
 
@@ -194,7 +207,7 @@ pub enum AttributeType<'a> {
     OptionalMeasure(Option<f32>),
     Measures(Gaps),
     CornerRadius(CornerRadius),
-    Direction(&'a DirectionMode),
+    Direction(&'a Direction),
     Position(&'a Position),
     Content(&'a Content),
     Alignment(&'a Alignment),

@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use freya_core::platform::CursorIcon;
 use freya_elements::{
     self as dioxus_elements,
     events::MouseEvent,
@@ -13,7 +14,6 @@ use freya_hooks::{
     Ease,
     Function,
 };
-use winit::window::CursorIcon;
 
 /// Indicates the current status of the accordion.
 #[derive(Debug, Default, PartialEq, Clone, Copy)]
@@ -34,6 +34,9 @@ pub struct AccordionProps {
     pub children: Element,
     /// Summary element.
     pub summary: Element,
+    /// Whether its open or not initially. Default to `false`.
+    #[props(default = false)]
+    pub initial_open: bool,
 }
 
 /// Show other elements under a collapsable box.
@@ -43,7 +46,7 @@ pub struct AccordionProps {
 #[allow(non_snake_case)]
 pub fn Accordion(props: AccordionProps) -> Element {
     let theme = use_applied_theme!(&props.theme, accordion);
-    let mut open = use_signal(|| false);
+    let mut open = use_signal(|| props.initial_open);
     let animation = use_animation(move |_conf| {
         AnimNum::new(0., 100.)
             .time(300)
@@ -89,21 +92,24 @@ pub fn Accordion(props: AccordionProps) -> Element {
         rect {
             onmouseenter,
             onmouseleave,
-            overflow: "clip",
             color: "{color}",
-            padding: "10",
-            margin: "2 4",
             corner_radius: "6",
-            width: "100%",
+            width: "fill",
             height: "auto",
             background: "{background}",
-            onclick,
             border: "1 inner {border_fill}",
-            {&props.summary}
+            rect {
+                width: "fill",
+                overflow: "clip",
+                padding: "10",
+                onclick,
+                {&props.summary}
+            }
             rect {
                 overflow: "clip",
-                width: "100%",
+                width: "fill",
                 visible_height: "{animation_value}%",
+                padding: "10",
                 {&props.children}
             }
         }

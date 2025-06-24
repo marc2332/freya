@@ -103,7 +103,7 @@ fn main() {
             Size::Pixels(Length::new(200.0)),
             Alignment::Center,
             Alignment::Center,
-            DirectionMode::Horizontal,
+            Direction::Horizontal,
         ),
     );
 
@@ -115,7 +115,7 @@ fn main() {
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -127,7 +127,7 @@ fn main() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(50.0)),
             Size::Percentage(Length::new(50.0)),
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
 
@@ -145,7 +145,7 @@ fn main() {
         Node::from_size_and_direction(
             Size::Percentage(Length::new(80.0)), // We change this from 50% to 80%
             Size::Percentage(Length::new(80.0)), // We change this from 50% to 80%
-            DirectionMode::Vertical,
+            Direction::Vertical,
         ),
     );
     layout.invalidate(1);

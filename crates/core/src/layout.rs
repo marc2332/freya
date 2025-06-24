@@ -4,12 +4,12 @@ use itertools::Itertools;
 use torin::geometry::Area;
 
 use crate::{
+    accessibility::NodeAccessibility,
     dom::*,
-    prelude::{
+    render::{
         Compositor,
-        NodeAccessibility,
+        SkiaMeasurer,
     },
-    render::SkiaMeasurer,
 };
 
 /// Process the layout of the DOM

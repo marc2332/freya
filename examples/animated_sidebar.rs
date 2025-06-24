@@ -3,15 +3,11 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus_router::prelude::{
-    Outlet,
-    Routable,
-    Router,
-};
 use freya::{
-    common::NodeReferenceLayout,
+    core::custom_attributes::NodeReferenceLayout,
     prelude::*,
 };
+use freya_router::prelude::*;
 
 fn main() {
     launch_with_props(app, "Animated Sidebar", (650.0, 500.0));
@@ -51,17 +47,17 @@ fn FromRouteToCurrent(
             .function(Function::Expo)
     });
 
-    // Only render the destination route once the animation has finished
-    use_memo(move || {
-        if !animations.is_running() && animations.has_run_yet() {
-            animated_router.write().settle();
-        }
-    });
-
     // Run the animation when any prop changes
     use_memo(use_reactive((&upwards, &from), move |_| {
         animations.run(AnimDirection::Forward)
     }));
+
+    // Only render the destination route once the animation has finished
+    use_effect(move || {
+        if !animations.is_running() && animations.has_run_yet() {
+            animated_router.write().settle();
+        }
+    });
 
     let offset = animations.get().read().read();
     let height = node_size.read().area.height();

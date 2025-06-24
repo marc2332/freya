@@ -1,13 +1,5 @@
-use freya_common::ImagesCache;
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
-use freya_node_state::{
-    CanvasRunnerContext,
-    Fill,
-    ReferencesState,
-    ShadowPosition,
-    StyleState,
-};
 use torin::{
     prelude::{
         Area,
@@ -18,15 +10,29 @@ use torin::{
     },
     scaled::Scaled,
 };
+use tracing::error;
 
 use super::utils::ElementUtils;
 use crate::{
-    dom::DioxusNode,
+    custom_attributes::CanvasRunnerContext,
+    dom::{
+        DioxusNode,
+        ImagesCache,
+    },
     render::{
         border_shape,
         render_border,
         render_shadow,
         BorderShape,
+    },
+    states::{
+        CanvasState,
+        StyleState,
+        TransformState,
+    },
+    values::{
+        Fill,
+        ShadowPosition,
     },
 };
 
@@ -41,8 +47,7 @@ impl RectElement {
     ) -> RRect {
         let area = layout_node.visible_area().to_f32();
         let node_style = &*node_ref.get::<StyleState>().unwrap();
-        let mut radius = node_style.corner_radius;
-        radius.scale(scale_factor);
+        let radius = node_style.corner_radius.with_scale(scale_factor);
 
         RRect::new_rect_radii(
             Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
@@ -93,6 +98,7 @@ impl ElementUtils for RectElement {
         scale_factor: f32,
     ) {
         let node_style = &*node_ref.get::<StyleState>().unwrap();
+        let node_transform = &*node_ref.get::<TransformState>().unwrap();
 
         let area = layout_node.visible_area().to_f32();
         let mut path = Path::new();
@@ -102,8 +108,7 @@ impl ElementUtils for RectElement {
 
         node_style.background.apply_to_paint(&mut paint, area);
 
-        let mut corner_radius = node_style.corner_radius;
-        corner_radius.scale(scale_factor);
+        let corner_radius = node_style.corner_radius.with_scale(scale_factor);
 
         // Container
         let rounded_rect = RRect::new_rect_radii(
@@ -124,12 +129,71 @@ impl ElementUtils for RectElement {
         } else {
             path.add_rrect(rounded_rect, None);
         }
+
+        // If we have a backdrop blur applied, we need to draw that by creating a new
+        // layer, clipping it to the rect's roundness, then blurring behind it before
+        // drawing the rect's initial background box.
+        if node_transform.backdrop_blur != 0.0 {
+            // If we can guarantee that the node entirely draws over it's backdrop,
+            // we can avoid this whole (possibly intense) process, since the node's
+            // backdrop is never visible.
+            //
+            // There's probably more that can be done in this area, like checking individual gradient
+            // stops but I'm not completely sure of the diminishing returns here.
+            //
+            // Currently we verify the following:
+            // - Node has a single solid color background.
+            // - The background has 100% opacity.
+            // - The node has no parents with the `opacity` attribute applied.
+            let is_possibly_translucent = if let Fill::Color(color) = node_style.background {
+                color.a() != u8::MAX
+                    || node_transform.blend_mode.is_some()
+                    || !node_transform.opacities.is_empty()
+            } else {
+                true
+            };
+
+            if is_possibly_translucent {
+                let blur_filter = blur(
+                    (
+                        node_transform.backdrop_blur * scale_factor,
+                        node_transform.backdrop_blur * scale_factor,
+                    ),
+                    None,
+                    None,
+                    rounded_rect.rect(),
+                );
+
+                if let Some(blur_filter) = blur_filter {
+                    let layer_rec = SaveLayerRec::default()
+                        .bounds(rounded_rect.rect())
+                        .backdrop(&blur_filter);
+
+                    // Depending on if the rect is rounded or not, we might need to clip the blur
+                    // layer to the shape of the rounded rect.
+                    if corner_radius.is_round() {
+                        canvas.save();
+                        canvas.clip_rrect(rounded_rect, ClipOp::Intersect, true);
+                        canvas.save_layer(&layer_rec);
+                        canvas.restore();
+                        canvas.restore();
+                    } else {
+                        canvas.save_layer(&layer_rec);
+                        canvas.restore();
+                    }
+                } else {
+                    error!("Unable to create blur filter.");
+                }
+            }
+        }
+
+        // Paint the rect's background.
         canvas.draw_path(&path, &paint);
 
         // Shadows
-        for mut shadow in node_style.shadows.clone().into_iter() {
+        for shadow in node_style.shadows.iter() {
             if shadow.fill != Fill::Color(Color::TRANSPARENT) {
-                shadow.scale(scale_factor);
+                let shadow = shadow.with_scale(scale_factor);
 
                 render_shadow(
                     canvas,
@@ -137,23 +201,23 @@ impl ElementUtils for RectElement {
                     &mut path,
                     rounded_rect,
                     area,
-                    shadow,
-                    corner_radius,
+                    &shadow,
+                    &corner_radius,
                 );
             }
         }
 
         // Borders
-        for mut border in node_style.borders.clone().into_iter() {
+        for border in node_style.borders.iter() {
             if border.is_visible() {
-                border.scale(scale_factor);
-
-                render_border(canvas, rounded_rect, area, &border, corner_radius);
+                let border = border.with_scale(scale_factor);
+                let rect = rounded_rect.rect().round_in().into();
+                render_border(canvas, rect, area, &border, &corner_radius);
             }
         }
 
-        // Layout references
-        let references = node_ref.get::<ReferencesState>().unwrap();
+        // Canvas reference
+        let references = node_ref.get::<CanvasState>().unwrap();
         if let Some(canvas_ref) = &references.canvas_ref {
             let mut ctx = CanvasRunnerContext {
                 canvas,
@@ -161,24 +225,22 @@ impl ElementUtils for RectElement {
                 area,
                 scale_factor,
             };
-            (canvas_ref.runner)(&mut ctx);
+            (canvas_ref.runner.lock().unwrap())(&mut ctx);
         }
     }
 
     #[inline]
-    fn element_needs_cached_area(&self, node_ref: &DioxusNode) -> bool {
-        let node_style = &*node_ref.get::<StyleState>().unwrap();
-
-        !node_style.borders.is_empty() || !node_style.shadows.is_empty()
+    fn element_needs_cached_area(&self, _node_ref: &DioxusNode, style_state: &StyleState) -> bool {
+        !style_state.borders.is_empty() || !style_state.shadows.is_empty()
     }
 
     fn element_drawing_area(
         &self,
         layout_node: &LayoutNode,
-        node_ref: &DioxusNode,
+        _node_ref: &DioxusNode,
         scale_factor: f32,
+        node_style: &StyleState,
     ) -> Area {
-        let node_style = &*node_ref.get::<StyleState>().unwrap();
         let mut area = layout_node.visible_area();
 
         if node_style.borders.is_empty() && node_style.shadows.is_empty() {
@@ -187,8 +249,7 @@ impl ElementUtils for RectElement {
 
         let mut path = Path::new();
 
-        let mut corner_radius = node_style.corner_radius;
-        corner_radius.scale(scale_factor);
+        let corner_radius = node_style.corner_radius.with_scale(scale_factor);
 
         let rounded_rect = RRect::new_rect_radii(
             Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
@@ -211,9 +272,9 @@ impl ElementUtils for RectElement {
         }
 
         // Shadows
-        for mut shadow in node_style.shadows.clone().into_iter() {
+        for shadow in node_style.shadows.iter() {
             if shadow.fill != Fill::Color(Color::TRANSPARENT) {
-                shadow.scale(scale_factor);
+                let shadow = shadow.with_scale(scale_factor);
 
                 let mut shadow_path = Path::new();
 
@@ -232,9 +293,7 @@ impl ElementUtils for RectElement {
                     // Add either the RRect or smoothed path based on whether smoothing is used.
                     if corner_radius.smoothing > 0.0 {
                         shadow_path.add_path(
-                            &node_style
-                                .corner_radius
-                                .smoothed_path(rounded_rect.with_outset(outset)),
+                            &corner_radius.smoothed_path(rounded_rect.with_outset(outset)),
                             Point::new(area.min_x(), area.min_y()) - outset,
                             None,
                         );
@@ -259,12 +318,11 @@ impl ElementUtils for RectElement {
             }
         }
 
-        for mut border in node_style.borders.clone().into_iter() {
+        for border in node_style.borders.iter() {
             if border.is_visible() {
-                border.scale(scale_factor);
+                let border = border.with_scale(scale_factor);
 
-                let border_shape =
-                    border_shape(*rounded_rect.rect(), node_style.corner_radius, &border);
+                let border_shape = border_shape(*rounded_rect.rect(), &corner_radius, &border);
                 let border_bounds = match border_shape {
                     BorderShape::DRRect(ref outer, _) => outer.bounds(),
                     BorderShape::Path(ref path) => path.bounds(),

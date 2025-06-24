@@ -1,11 +1,14 @@
 use freya_engine::prelude::*;
-use freya_node_state::{
-    CornerRadius,
-    Shadow,
-    ShadowPosition,
-    StyleState,
-};
 use torin::prelude::Area;
+
+use crate::{
+    states::StyleState,
+    values::{
+        CornerRadius,
+        Shadow,
+        ShadowPosition,
+    },
+};
 
 pub fn render_shadow(
     canvas: &Canvas,
@@ -13,8 +16,8 @@ pub fn render_shadow(
     path: &mut Path,
     rounded_rect: RRect,
     area: Area,
-    shadow: Shadow,
-    corner_radius: CornerRadius,
+    shadow: &Shadow,
+    corner_radius: &CornerRadius,
 ) {
     let mut shadow_path = Path::new();
     let mut shadow_paint = Paint::default();

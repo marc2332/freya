@@ -1,10 +1,7 @@
 use std::borrow::Cow;
 
 use dioxus::prelude::*;
-use dioxus_router::prelude::{
-    navigator,
-    NavigationTarget,
-};
+use freya_core::platform::MouseButton;
 use freya_elements::{
     self as dioxus_elements,
     events::MouseEvent,
@@ -13,7 +10,10 @@ use freya_hooks::{
     use_applied_theme,
     LinkThemeWith,
 };
-use winit::event::MouseButton;
+use freya_router::prelude::{
+    navigator,
+    NavigationTarget,
+};
 
 use crate::{
     Tooltip,
@@ -34,9 +34,8 @@ pub enum LinkTooltip {
     Custom(String),
 }
 
-/// Similar to [`Link`](dioxus_router::components::Link()), but you can use it in Freya.
-/// Both internal routes (dioxus-router) and external links are supported. When using internal routes
-/// make sure the Link is descendant of a [`Router`](dioxus_router::components::Router) component.
+/// Navigate to [freya-router] routes or external URLs using [`Link`](freya_router::components::Link()).
+/// When using internal routes make sure the Link is descendant of a [`Router`](freya_router::components::Router) component.
 ///
 /// # Styling
 ///
@@ -44,11 +43,11 @@ pub enum LinkTooltip {
 ///
 /// # Example
 ///
-/// With Dioxus Router:
+/// With Freya Router:
 ///
 /// ```rust
 /// # use dioxus::prelude::*;
-/// # use dioxus_router::prelude::*;
+/// # use freya_router::prelude::*;
 /// # use freya_elements as dioxus_elements;
 /// # use freya_components::Link;
 /// # #[derive(Routable, Clone)]
@@ -134,7 +133,7 @@ pub fn Link(
             }
 
             // Open the url if there is any
-            // otherwise change the dioxus router route
+            // otherwise change the freya router route
             if let Some(url) = &url {
                 let res = open::that(url);
 
@@ -190,12 +189,12 @@ pub fn Link(
 
 #[cfg(test)]
 mod test {
-    use dioxus_router::prelude::{
+    use freya::prelude::*;
+    use freya_router::prelude::{
         Outlet,
         Routable,
         Router,
     };
-    use freya::prelude::*;
     use freya_testing::prelude::*;
 
     #[tokio::test]
@@ -272,13 +271,13 @@ mod test {
         assert_eq!(utils.root().get(2).get(0).text(), Some("Home"));
 
         // Go to the "Somewhere" route
-        utils.click_cursor((5., 60.)).await;
+        utils.click_cursor((10., 55.)).await;
 
         // Check route is Somewhere
         assert_eq!(utils.root().get(2).get(0).text(), Some("Somewhere"));
 
         // Go to the "Home" route again
-        utils.click_cursor((5., 5.)).await;
+        utils.click_cursor((10., 10.)).await;
 
         // Check route is Home
         assert_eq!(utils.root().get(2).get(0).text(), Some("Home"));

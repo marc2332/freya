@@ -154,7 +154,7 @@ pub trait TextEditor {
                 let new_row = old_row + 1;
                 let new_row_char = self.char_to_utf16_cu(self.line_to_char(new_row));
                 let new_row_len = self.line(new_row).unwrap().utf16_len();
-                let new_col = old_col.min(new_row_len);
+                let new_col = old_col.min(new_row_len.saturating_sub(1));
                 self.cursor_mut().set(new_row_char + new_col);
 
                 true
@@ -186,9 +186,9 @@ pub trait TextEditor {
                 self.cursor_mut().set(0);
             } else {
                 let new_row = old_row - 1;
-                let new_row_char = self.line_to_char(new_row);
+                let new_row_char = self.char_to_utf16_cu(self.line_to_char(new_row));
                 let new_row_len = self.line(new_row).unwrap().utf16_len();
-                let new_col = old_col.min(new_row_len);
+                let new_col = old_col.min(new_row_len.saturating_sub(1));
                 self.cursor_mut().set(new_row_char + new_col);
             }
 
@@ -257,7 +257,15 @@ pub trait TextEditor {
     fn get_clipboard(&mut self) -> &mut UseClipboard;
 
     // Process a Keyboard event
-    fn process_key(&mut self, key: &Key, code: &Code, modifiers: &Modifiers) -> TextEvent {
+    fn process_key(
+        &mut self,
+        key: &Key,
+        code: &Code,
+        modifiers: &Modifiers,
+        allow_tabs: bool,
+        allow_changes: bool,
+        allow_clipboard: bool,
+    ) -> TextEvent {
         let mut event = if self.has_any_selection() {
             TextEvent::SELECTION_CHANGED
         } else {
@@ -333,7 +341,7 @@ pub trait TextEditor {
                     self.expand_selection_to_cursor();
                 }
             }
-            Key::Backspace => {
+            Key::Backspace if allow_changes => {
                 let cursor_pos = self.cursor_pos();
                 let selection = self.get_selection_range();
 
@@ -348,7 +356,7 @@ pub trait TextEditor {
                     event.insert(TextEvent::TEXT_CHANGED);
                 }
             }
-            Key::Delete => {
+            Key::Delete if allow_changes => {
                 let cursor_pos = self.cursor_pos();
                 let selection = self.get_selection_range();
 
@@ -362,7 +370,7 @@ pub trait TextEditor {
                     event.insert(TextEvent::TEXT_CHANGED);
                 }
             }
-            Key::Enter => {
+            Key::Enter if allow_changes => {
                 // Breaks the line
                 let cursor_pos = self.cursor_pos();
                 self.insert_char('\n', cursor_pos);
@@ -370,7 +378,7 @@ pub trait TextEditor {
 
                 event.insert(TextEvent::TEXT_CHANGED);
             }
-            Key::Tab => {
+            Key::Tab if allow_tabs && allow_changes => {
                 // Inserts a tab
                 let text = " ".repeat(self.get_identation().into());
                 let cursor_pos = self.cursor_pos();
@@ -387,8 +395,8 @@ pub trait TextEditor {
                 };
 
                 match code {
-                    Code::Delete => {}
-                    Code::Space => {
+                    Code::Delete if allow_changes => {}
+                    Code::Space if allow_changes => {
                         // Simply adds an space
                         let cursor_pos = self.cursor_pos();
                         self.insert_char(' ', cursor_pos);
@@ -405,7 +413,7 @@ pub trait TextEditor {
                     }
 
                     // Copy selected text
-                    Code::KeyC if meta_or_ctrl => {
+                    Code::KeyC if meta_or_ctrl && allow_clipboard => {
                         let selected = self.get_selected_text();
                         if let Some(selected) = selected {
                             self.get_clipboard().set(selected).ok();
@@ -414,7 +422,7 @@ pub trait TextEditor {
                     }
 
                     // Cut selected text
-                    Code::KeyX if meta_or_ctrl => {
+                    Code::KeyX if meta_or_ctrl && allow_changes && allow_clipboard => {
                         let selection = self.get_selection_range();
                         if let Some((start, end)) = selection {
                             let text = self.get_selected_text().unwrap();
@@ -426,9 +434,14 @@ pub trait TextEditor {
                     }
 
                     // Paste copied text
-                    Code::KeyV if meta_or_ctrl => {
+                    Code::KeyV if meta_or_ctrl && allow_changes && allow_clipboard => {
                         let copied_text = self.get_clipboard().get();
                         if let Ok(copied_text) = copied_text {
+                            let selection = self.get_selection_range();
+                            if let Some((start, end)) = selection {
+                                self.remove(start..end);
+                                self.set_cursor_pos(start);
+                            }
                             let cursor_pos = self.cursor_pos();
                             self.insert(&copied_text, cursor_pos);
                             let last_idx = copied_text.encode_utf16().count() + cursor_pos;
@@ -438,7 +451,7 @@ pub trait TextEditor {
                     }
 
                     // Undo last change
-                    Code::KeyZ if meta_or_ctrl => {
+                    Code::KeyZ if meta_or_ctrl && allow_changes => {
                         let undo_result = self.undo();
 
                         if let Some(idx) = undo_result {
@@ -448,7 +461,7 @@ pub trait TextEditor {
                     }
 
                     // Redo last change
-                    Code::KeyY if meta_or_ctrl => {
+                    Code::KeyY if meta_or_ctrl && allow_changes => {
                         let redo_result = self.redo();
 
                         if let Some(idx) = redo_result {
@@ -457,7 +470,7 @@ pub trait TextEditor {
                         }
                     }
 
-                    _ => {
+                    _ if allow_changes => {
                         // Remove selected text
                         let selection = self.get_selection_range();
                         if let Some((start, end)) = selection {
@@ -482,6 +495,7 @@ pub trait TextEditor {
                             event.insert(TextEvent::TEXT_CHANGED);
                         }
                     }
+                    _ => {}
                 }
             }
             _ => {}
