@@ -47,9 +47,6 @@ pub trait NodeKey: Clone + PartialEq + Eq + std::hash::Hash + Copy + std::fmt::D
 
 impl NodeKey for usize {}
 
-#[cfg(feature = "dioxus")]
-impl NodeKey for freya_native_core::NodeId {}
-
 pub trait DOMAdapter<Key: NodeKey> {
     fn root_id(&self) -> Key;
 
