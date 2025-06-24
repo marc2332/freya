@@ -229,6 +229,8 @@ pub struct SegmentedButtonProps {
 /// # Example
 ///
 /// ```rust
+/// # use freya::prelude::*;
+/// # use std::collections::HashSet;
 /// fn app() -> Element {
 ///     let mut selected = use_signal(HashSet::new);
 ///     rsx!(
