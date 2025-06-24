@@ -27,7 +27,7 @@ impl ragnarok::EventsExecutor for EventsExecutorAdapter<'_> {
     type Source = PlatformEvent;
     type Emmitable = DomEvent;
 
-    fn emit_event(&self, event: Self::Emmitable) -> bool {
+    fn emit_event(&mut self, event: Self::Emmitable) -> bool {
         let Some(element_id) = self
             .rdom
             .get(event.node_id)

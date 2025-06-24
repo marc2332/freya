@@ -28,6 +28,6 @@ pub trait NameOfEvent:
     }
     /// Get a set of events that will be discarded once this event is cancelled.
     fn get_cancellable_events(&self) -> Vec<Self> {
-        Vec::new()
+        vec![*self]
     }
 }

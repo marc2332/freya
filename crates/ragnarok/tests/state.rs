@@ -16,7 +16,7 @@ use ragnarok::{
     SourceEvent,
 };
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 enum EventName {
     MouseEnter,
     MouseMove,
@@ -25,11 +25,47 @@ enum EventName {
     MouseUp,
 
     KeyboardDown,
+
+    CaptureGlobalMouseMove,
+}
+
+impl PartialOrd for EventName {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for EventName {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        match self {
+            // Capture events have max priority
+            e if e.is_capture() => std::cmp::Ordering::Less,
+            // Left events have more priority over non-left
+            e if e.is_left() => std::cmp::Ordering::Less,
+            e => {
+                if e == other {
+                    std::cmp::Ordering::Equal
+                } else {
+                    std::cmp::Ordering::Greater
+                }
+            }
+        }
+    }
+}
+
+impl EventName {
+    pub fn is_capture(&self) -> bool {
+        matches!(self, Self::CaptureGlobalMouseMove)
+    }
+
+    pub fn is_left(&self) -> bool {
+        matches!(self, Self::MouseLeave)
+    }
 }
 
 impl NameOfEvent for EventName {
     fn is_moved(&self) -> bool {
-        matches!(self, Self::MouseMove)
+        matches!(self, Self::MouseMove | Self::CaptureGlobalMouseMove)
     }
 
     fn is_enter(&self) -> bool {
@@ -45,7 +81,7 @@ impl NameOfEvent for EventName {
     }
 
     fn is_global(&self) -> bool {
-        false
+        matches!(self, Self::CaptureGlobalMouseMove)
     }
 
     fn does_bubble(&self) -> bool {
@@ -68,6 +104,23 @@ impl NameOfEvent for EventName {
             _ => {}
         }
 
+        events
+    }
+
+    fn get_global_events(&self) -> Vec<Self> {
+        match self {
+            Self::MouseMove => vec![Self::CaptureGlobalMouseMove],
+            _ => Vec::new(),
+        }
+    }
+
+    fn get_cancellable_events(&self) -> Vec<Self> {
+        let mut events = vec![*self];
+        #[allow(clippy::single_match)]
+        match self {
+            Self::CaptureGlobalMouseMove => events.extend([Self::MouseMove, Self::MouseEnter]),
+            _ => {}
+        }
         events
     }
 }
@@ -146,6 +199,43 @@ impl EmmitableEvent for TestEmmitableEvent {
     }
 }
 
+struct TestExecutor {
+    emmited: Vec<TestEmmitableEvent>,
+    handler: fn(&TestEmmitableEvent) -> bool,
+}
+
+impl TestExecutor {
+    pub fn new(handler: fn(&TestEmmitableEvent) -> bool) -> Self {
+        Self {
+            emmited: Vec::default(),
+            handler,
+        }
+    }
+
+    pub fn empty() -> Self {
+        Self {
+            emmited: Vec::default(),
+            handler: |_| true,
+        }
+    }
+}
+
+impl EventsExecutor for TestExecutor {
+    type Name = EventName;
+
+    type Key = usize;
+
+    type Emmitable = TestEmmitableEvent;
+
+    type Source = TestSourceEvent;
+
+    fn emit_event(&mut self, event: Self::Emmitable) -> bool {
+        let allowed = (self.handler)(&event);
+        self.emmited.push(event);
+        allowed
+    }
+}
+
 #[derive(Default)]
 struct TestMeasurer {
     layers: HashMap<i16, Vec<usize>>,
@@ -182,7 +272,7 @@ impl EventsMeasurer for TestMeasurer {
     }
 
     fn get_listeners_of(&self, name: &Self::Name) -> Vec<Self::Key> {
-        self.listeners.get(name).unwrap().clone()
+        self.listeners.get(name).cloned().unwrap_or_default()
     }
 
     fn is_point_inside(&self, key: Self::Key, cursor: ragnarok::CursorPoint) -> bool {
@@ -223,20 +313,6 @@ impl EventsMeasurer for TestMeasurer {
     }
 }
 
-#[derive(Default)]
-struct TestExecutor;
-
-impl EventsExecutor for TestExecutor {
-    type Emmitable = TestEmmitableEvent;
-    type Key = usize;
-    type Name = EventName;
-    type Source = TestSourceEvent;
-
-    fn emit_event(&self, _event: Self::Emmitable) -> bool {
-        true
-    }
-}
-
 #[test]
 fn enter_leave_events() {
     let mut test_measurer = TestMeasurer::default();
@@ -273,7 +349,7 @@ fn enter_leave_events() {
             }
         }
         // Apply the processed events
-        TestExecutor.run(&mut nodes_state, processed_events);
+        TestExecutor::empty().run(&mut nodes_state, processed_events);
         // Assert that the node is indeed being hovered
         assert!(nodes_state.is_hovered(0));
     }
@@ -297,7 +373,7 @@ fn enter_leave_events() {
         })
     );
     // Apply the processed events
-    TestExecutor.run(&mut nodes_state, processed_events);
+    TestExecutor::empty().run(&mut nodes_state, processed_events);
     // Assert that the node is indeed not being hovered anymore
     assert!(!nodes_state.is_hovered(0));
 }
@@ -329,7 +405,7 @@ fn accurate_down_up_event() {
         })
     );
     // Apply the processed events
-    TestExecutor.run(&mut nodes_state, processed_events);
+    TestExecutor::empty().run(&mut nodes_state, processed_events);
     // Assert that the node is indeed being pressed
     assert!(nodes_state.is_pressed(0));
 
@@ -352,7 +428,7 @@ fn accurate_down_up_event() {
         })
     );
     // Apply the processed events
-    TestExecutor.run(&mut nodes_state, processed_events);
+    TestExecutor::empty().run(&mut nodes_state, processed_events);
     // Assert that the node is indeed not being pressed anymore
     assert!(nodes_state.is_pressed(0));
 }
@@ -384,7 +460,7 @@ fn missed_up_event() {
         })
     );
     // Apply the processed events
-    TestExecutor.run(&mut nodes_state, processed_events);
+    TestExecutor::empty().run(&mut nodes_state, processed_events);
     // Assert that the node is indeed being pressed
     assert!(nodes_state.is_pressed(0));
 
@@ -397,7 +473,90 @@ fn missed_up_event() {
         None,
     );
     // Apply the processed events
-    TestExecutor.run(&mut nodes_state, processed_events);
+    TestExecutor::empty().run(&mut nodes_state, processed_events);
     // Assert that the node is indeed not being pressed anymore
     assert!(nodes_state.is_pressed(0));
+}
+
+#[test]
+fn state_updates_without_listeners() {
+    let mut test_measurer = TestMeasurer::default();
+    let mut nodes_state = NodesState::default();
+
+    test_measurer.add(0, None, 0, Area::new((0., 0.).into(), (100., 100.).into()));
+
+    let processed_events = test_measurer.measure(
+        &mut vec![TestSourceEvent::MouseDown {
+            cursor: (25., 25.).into(),
+        }],
+        &mut nodes_state,
+        None,
+    );
+
+    // Assert no event is to be emitted
+    assert!(processed_events.emmitable_events.is_empty());
+    // Apply the processed events
+    TestExecutor::empty().run(&mut nodes_state, processed_events);
+    // Assert that the node is indeed being pressed
+    assert!(nodes_state.is_pressed(0));
+
+    // Click outside the node
+    let processed_events = test_measurer.measure(
+        &mut vec![TestSourceEvent::MouseUp {
+            cursor: (600., 700.).into(),
+        }],
+        &mut nodes_state,
+        None,
+    );
+    assert!(processed_events.emmitable_events.is_empty());
+    // Apply the processed events
+    TestExecutor::empty().run(&mut nodes_state, processed_events);
+    // Assert that the node is indeed not being pressed anymore
+    assert!(nodes_state.is_pressed(0));
+}
+
+#[test]
+fn cancel_emmited_events_on_capture() {
+    let mut test_measurer = TestMeasurer::default();
+    let mut nodes_state = NodesState::default();
+
+    test_measurer.add(0, None, 0, Area::new((0., 0.).into(), (100., 100.).into()));
+    test_measurer.listen_to(0, EventName::MouseEnter);
+
+    test_measurer.add(
+        1,
+        None,
+        0,
+        Area::new((200., 200.).into(), (100., 100.).into()),
+    );
+    test_measurer.listen_to(1, EventName::CaptureGlobalMouseMove);
+
+    let processed_events = test_measurer.measure(
+        &mut vec![TestSourceEvent::MouseMove {
+            cursor: (25., 25.).into(),
+        }],
+        &mut nodes_state,
+        None,
+    );
+
+    // Assert an enter event is to be emitted
+    assert_eq!(
+        processed_events.emmitable_events,
+        vec![
+            TestEmmitableEvent {
+                key: 1,
+                name: EventName::CaptureGlobalMouseMove,
+                source: EventName::MouseMove
+            },
+            TestEmmitableEvent {
+                key: 0,
+                name: EventName::MouseEnter,
+                source: EventName::MouseMove
+            },
+        ]
+    );
+    // Apply the processed events
+    TestExecutor::new(|_| false).run(&mut nodes_state, processed_events);
+    // Assert that the node is not being hovvered as the event was can cancelled
+    assert!(!nodes_state.is_hovered(0));
 }

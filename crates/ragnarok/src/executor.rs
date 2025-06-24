@@ -42,7 +42,7 @@ where
     type Source: SourceEvent;
 
     /// Call the event handler of the given [Self::Emmitable].
-    fn emit_event(&self, event: Self::Emmitable) -> bool;
+    fn emit_event(&mut self, event: Self::Emmitable) -> bool;
 
     // All events have been emitted
     fn emitted_events(&mut self) {}
