@@ -10,7 +10,9 @@ use ragnarok::{
     CursorPoint,
     EmmitableEvent,
     EventsExecutor,
+    EventsExecutorRunner,
     EventsMeasurer,
+    EventsMeasurerRunner,
     NameOfEvent,
     NodesState,
     SourceEvent,
@@ -212,7 +214,7 @@ impl TestExecutor {
         }
     }
 
-    pub fn empty() -> Self {
+    pub fn without_handler() -> Self {
         Self {
             emmited: Vec::default(),
             handler: |_| true,
@@ -324,7 +326,7 @@ fn enter_leave_events() {
 
     // Move the mouse over the node a few times
     for i in 0..25 {
-        let processed_events = test_measurer.measure(
+        let processed_events = test_measurer.run(
             &mut vec![TestSourceEvent::MouseMove {
                 cursor: (5. + i as f64, 5. + i as f64).into(),
             }],
@@ -349,13 +351,13 @@ fn enter_leave_events() {
             }
         }
         // Apply the processed events
-        TestExecutor::empty().run(&mut nodes_state, processed_events);
+        TestExecutor::without_handler().run(&mut nodes_state, processed_events);
         // Assert that the node is indeed being hovered
         assert!(nodes_state.is_hovered(0));
     }
 
     // Put the mouse outside the node
-    let processed_events = test_measurer.measure(
+    let processed_events = test_measurer.run(
         &mut vec![TestSourceEvent::MouseMove {
             cursor: (600., 700.).into(),
         }],
@@ -373,7 +375,7 @@ fn enter_leave_events() {
         })
     );
     // Apply the processed events
-    TestExecutor::empty().run(&mut nodes_state, processed_events);
+    TestExecutor::without_handler().run(&mut nodes_state, processed_events);
     // Assert that the node is indeed not being hovered anymore
     assert!(!nodes_state.is_hovered(0));
 }
@@ -387,7 +389,7 @@ fn accurate_down_up_event() {
     test_measurer.listen_to(0, EventName::MouseDown);
     test_measurer.listen_to(0, EventName::MouseUp);
 
-    let processed_events = test_measurer.measure(
+    let processed_events = test_measurer.run(
         &mut vec![TestSourceEvent::MouseDown {
             cursor: (25., 25.).into(),
         }],
@@ -405,12 +407,12 @@ fn accurate_down_up_event() {
         })
     );
     // Apply the processed events
-    TestExecutor::empty().run(&mut nodes_state, processed_events);
+    TestExecutor::without_handler().run(&mut nodes_state, processed_events);
     // Assert that the node is indeed being pressed
     assert!(nodes_state.is_pressed(0));
 
     // Click outside the node
-    let processed_events = test_measurer.measure(
+    let processed_events = test_measurer.run(
         &mut vec![TestSourceEvent::MouseUp {
             cursor: (25., 25.).into(),
         }],
@@ -428,7 +430,7 @@ fn accurate_down_up_event() {
         })
     );
     // Apply the processed events
-    TestExecutor::empty().run(&mut nodes_state, processed_events);
+    TestExecutor::without_handler().run(&mut nodes_state, processed_events);
     // Assert that the node is indeed not being pressed anymore
     assert!(nodes_state.is_pressed(0));
 }
@@ -442,7 +444,7 @@ fn missed_up_event() {
     test_measurer.listen_to(0, EventName::MouseDown);
     test_measurer.listen_to(0, EventName::MouseUp);
 
-    let processed_events = test_measurer.measure(
+    let processed_events = test_measurer.run(
         &mut vec![TestSourceEvent::MouseDown {
             cursor: (25., 25.).into(),
         }],
@@ -460,12 +462,12 @@ fn missed_up_event() {
         })
     );
     // Apply the processed events
-    TestExecutor::empty().run(&mut nodes_state, processed_events);
+    TestExecutor::without_handler().run(&mut nodes_state, processed_events);
     // Assert that the node is indeed being pressed
     assert!(nodes_state.is_pressed(0));
 
     // Click outside the node
-    let processed_events = test_measurer.measure(
+    let processed_events = test_measurer.run(
         &mut vec![TestSourceEvent::MouseUp {
             cursor: (600., 700.).into(),
         }],
@@ -473,7 +475,7 @@ fn missed_up_event() {
         None,
     );
     // Apply the processed events
-    TestExecutor::empty().run(&mut nodes_state, processed_events);
+    TestExecutor::without_handler().run(&mut nodes_state, processed_events);
     // Assert that the node is indeed not being pressed anymore
     assert!(nodes_state.is_pressed(0));
 }
@@ -485,7 +487,7 @@ fn state_updates_without_listeners() {
 
     test_measurer.add(0, None, 0, Area::new((0., 0.).into(), (100., 100.).into()));
 
-    let processed_events = test_measurer.measure(
+    let processed_events = test_measurer.run(
         &mut vec![TestSourceEvent::MouseDown {
             cursor: (25., 25.).into(),
         }],
@@ -496,12 +498,12 @@ fn state_updates_without_listeners() {
     // Assert no event is to be emitted
     assert!(processed_events.emmitable_events.is_empty());
     // Apply the processed events
-    TestExecutor::empty().run(&mut nodes_state, processed_events);
+    TestExecutor::without_handler().run(&mut nodes_state, processed_events);
     // Assert that the node is indeed being pressed
     assert!(nodes_state.is_pressed(0));
 
     // Click outside the node
-    let processed_events = test_measurer.measure(
+    let processed_events = test_measurer.run(
         &mut vec![TestSourceEvent::MouseUp {
             cursor: (600., 700.).into(),
         }],
@@ -510,7 +512,7 @@ fn state_updates_without_listeners() {
     );
     assert!(processed_events.emmitable_events.is_empty());
     // Apply the processed events
-    TestExecutor::empty().run(&mut nodes_state, processed_events);
+    TestExecutor::without_handler().run(&mut nodes_state, processed_events);
     // Assert that the node is indeed not being pressed anymore
     assert!(nodes_state.is_pressed(0));
 }
@@ -531,7 +533,7 @@ fn cancel_emmited_events_on_capture() {
     );
     test_measurer.listen_to(1, EventName::CaptureGlobalMouseMove);
 
-    let processed_events = test_measurer.measure(
+    let processed_events = test_measurer.run(
         &mut vec![TestSourceEvent::MouseMove {
             cursor: (25., 25.).into(),
         }],
