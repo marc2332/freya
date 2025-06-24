@@ -423,6 +423,8 @@ define_theme! {
         margin: str,
         background: str,
         hover_background: str,
+        corner_radius: str,
+        padding: str,
         %[subthemes]
         font_theme: FontTheme,
     }

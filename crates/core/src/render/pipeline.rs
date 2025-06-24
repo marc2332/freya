@@ -68,7 +68,7 @@ pub struct RenderPipeline<'a> {
     pub canvas_area: Area,
     pub background: Color,
     pub scale_factor: f32,
-    pub selected_node: Option<NodeId>,
+    pub highlighted_node: Option<NodeId>,
     pub default_fonts: &'a [String],
 }
 
@@ -165,8 +165,8 @@ impl RenderPipeline<'_> {
             }
         }
 
-        if let Some(selected_node) = &self.selected_node {
-            if let Some(layout_node) = self.layout.get(*selected_node) {
+        if let Some(highlighted_node) = &self.highlighted_node {
+            if let Some(layout_node) = self.layout.get(*highlighted_node) {
                 wireframe_renderer::render_wireframe(
                     self.dirty_surface.canvas(),
                     &layout_node.visible_area(),

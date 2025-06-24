@@ -1,8 +1,4 @@
 use torin::geometry::CursorPoint;
-pub use winit::event::{
-    Force,
-    TouchPhase,
-};
 
 use crate::{
     events::ErasedEventData,
@@ -97,6 +93,24 @@ impl_event! [
     /// ```
     ontouchstart
 ];
+
+#[derive(Debug, Hash, PartialEq, Eq, Clone, Copy)]
+pub enum TouchPhase {
+    Started,
+    Moved,
+    Ended,
+    Cancelled,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Force {
+    Calibrated {
+        force: f64,
+        max_possible_force: f64,
+        altitude_angle: Option<f64>,
+    },
+    Normalized(f64),
+}
 
 /// Data of a Touch event.
 #[derive(Debug, Clone, PartialEq)]

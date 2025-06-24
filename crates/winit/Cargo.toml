@@ -17,10 +17,11 @@ features = ["freya-engine/mocked-engine"]
 [features]
 skia-engine = ["freya-engine/skia-engine"]
 disable-zoom-shortcuts = []
+disable-animation-shortcuts = []
 
 [dependencies]
 freya-elements = { workspace = true }
-freya-core = { workspace = true }
+freya-core = { workspace = true, features = ["winit"] }
 freya-engine = { workspace = true }
 freya-hooks = { workspace = true }
 torin = { workspace = true }

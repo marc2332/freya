@@ -14,6 +14,7 @@ fn app() -> Element {
         ScrollView {
             show_scrollbar: true,
             padding: "5",
+            spacing: "4",
             Accordion {
                 summary: rsx!(AccordionSummary {
                     label {
@@ -42,7 +43,6 @@ fn app() -> Element {
                     label {
                         "This is the body"
                     }
-
                 }
             }
             Accordion {

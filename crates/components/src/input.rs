@@ -7,6 +7,7 @@ use std::{
     rc::Rc,
 };
 
+use ::warnings::Warning;
 use dioxus::prelude::*;
 use freya_core::platform::CursorIcon;
 use freya_elements::{
@@ -191,6 +192,11 @@ pub fn Input(
     let value = value.read();
     let placeholder = placeholder.read();
     let display_placeholder = value.is_empty() && placeholder.is_some();
+
+    let _allow_write_in_component_body =
+        ::warnings::Allow::new(warnings::signal_write_in_component_body::ID);
+    let _allow_read_and_write_in_reactive_scope =
+        ::warnings::Allow::new(warnings::signal_read_and_write_in_reactive_scope::ID);
 
     if &*value != editable.editor().read().rope() {
         editable.editor_mut().write().set(&value);
@@ -419,7 +425,7 @@ mod test {
 
         // Focus the input in the end of the text
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseDown,
+            name: MouseEventName::MouseDown,
             cursor: (115., 25.).into(),
             button: Some(MouseButton::Left),
         });
@@ -431,7 +437,7 @@ mod test {
 
         // Write "d"
         utils.push_event(TestEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: KeyboardEventName::KeyDown,
             key: Key::Character("d".to_string()),
             code: Code::KeyD,
             modifiers: Modifiers::default(),
@@ -470,7 +476,7 @@ mod test {
 
         // Focus the input in the end of the text
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseDown,
+            name: MouseEventName::MouseDown,
             cursor: (115., 25.).into(),
             button: Some(MouseButton::Left),
         });
@@ -483,7 +489,7 @@ mod test {
         // Try to write "BCDEFG"
         for c in ['B', 'C', 'D', 'E', 'F', 'G'] {
             utils.push_event(TestEvent::Keyboard {
-                name: EventName::KeyDown,
+                name: KeyboardEventName::KeyDown,
                 key: Key::Character(c.to_string()),
                 code: Code::Unidentified,
                 modifiers: Modifiers::default(),

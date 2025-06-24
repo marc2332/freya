@@ -33,7 +33,6 @@ dioxus-signals = { workspace = true }
 dioxus = { workspace = true }
 
 tokio = { workspace = true }
-winit = { workspace = true }
 accesskit = { workspace = true }
 
 [dev-dependencies]

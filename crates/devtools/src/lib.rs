@@ -2,15 +2,6 @@ use std::collections::HashSet;
 
 use dioxus::prelude::*;
 use dioxus_radio::prelude::*;
-use dioxus_router::{
-    hooks::use_navigator,
-    prelude::{
-        use_route,
-        Outlet,
-        Routable,
-        Router,
-    },
-};
 use freya_components::*;
 use freya_core::event_loop_messages::EventLoopMessage;
 use freya_elements as dioxus_elements;
@@ -21,9 +12,10 @@ use freya_hooks::{
     DARK_THEME,
 };
 use freya_native_core::NodeId;
+use freya_router::prelude::*;
 use freya_winit::devtools::{
     DevtoolsReceiver,
-    HoveredNode,
+    HighlightedNode,
 };
 use state::{
     DevtoolsChannel,
@@ -42,63 +34,46 @@ use tabs::{
     tree::*,
 };
 
-/// Run the [`VirtualDom`] with a sidepanel where the devtools are located.
-pub fn with_devtools(
-    root: fn() -> Element,
-    devtools_receiver: DevtoolsReceiver,
-    hovered_node: HoveredNode,
-) -> VirtualDom {
-    VirtualDom::new_with_props(
-        AppWithDevtools,
-        AppWithDevtoolsProps {
-            root,
-            devtools_receiver,
-            hovered_node,
-        },
-    )
-}
-
 #[derive(Props, Clone)]
-struct AppWithDevtoolsProps {
-    root: fn() -> Element,
+pub struct DevtoolsProps {
+    children: Element,
     devtools_receiver: DevtoolsReceiver,
-    hovered_node: HoveredNode,
+    highlighted_node: HighlightedNode,
 }
 
-impl PartialEq for AppWithDevtoolsProps {
+impl PartialEq for DevtoolsProps {
     fn eq(&self, _other: &Self) -> bool {
         true
     }
 }
 
 #[allow(non_snake_case)]
-fn AppWithDevtools(props: AppWithDevtoolsProps) -> Element {
-    #[allow(non_snake_case)]
-    let Root = props.root;
-    let devtools_receiver = props.devtools_receiver;
-    let hovered_node = props.hovered_node;
-
+pub fn DevtoolsView(
+    DevtoolsProps {
+        children,
+        devtools_receiver,
+        highlighted_node: hovered_node,
+    }: DevtoolsProps,
+) -> Element {
     rsx!(
-        NativeContainer {
-            ResizableContainer {
-                direction: "horizontal",
-                ResizablePanel {
-                    initial_size: 75.,
-                    Root { }
-                }
-                ResizableHandle { }
-                ResizablePanel {
-                    initial_size: 25.,
-                    min_size: 10.,
-                    rect {
-                        background: "rgb(40, 40, 40)",
-                        height: "fill",
-                        width: "fill",
-                        ThemeProvider {
-                            DevTools {
-                                devtools_receiver,
-                                hovered_node
-                            }
+        ResizableContainer {
+            direction: "horizontal",
+            ResizablePanel {
+                initial_size: 75.,
+                {children}
+            }
+            ResizableHandle { }
+            ResizablePanel {
+                initial_size: 25.,
+                min_size: 10.,
+                rect {
+                    background: "rgb(40, 40, 40)",
+                    height: "fill",
+                    width: "fill",
+                    ThemeProvider {
+                        DevTools {
+                            devtools_receiver,
+                            hovered_node
                         }
                     }
                 }
@@ -110,7 +85,7 @@ fn AppWithDevtools(props: AppWithDevtoolsProps) -> Element {
 #[derive(Props, Clone)]
 pub struct DevToolsProps {
     devtools_receiver: DevtoolsReceiver,
-    hovered_node: HoveredNode,
+    hovered_node: HighlightedNode,
 }
 
 impl PartialEq for DevToolsProps {
@@ -295,12 +270,12 @@ fn LayoutForDOMInspector() -> Element {
                 direction: "vertical",
                 ResizablePanel {
                     initial_size: 50.,
-                    NodesTree {
-                        height: "fill",
-                        selected_node_id,
-                        onselected: move |node_id: NodeId| {
-                            if let Some(hovered_node) = &radio.read().hovered_node.as_ref() {
-                                hovered_node.lock().unwrap().replace(node_id);
+                    rect {
+                        padding: "15",
+                        NodesTree {
+                            selected_node_id,
+                            onselected: move |node_id: NodeId| {
+                                radio.read().hovered_node.lock().unwrap().replace(node_id);
                                 platform.send(EventLoopMessage::RequestFullRerender).ok();
                             }
                         }
@@ -310,7 +285,6 @@ fn LayoutForDOMInspector() -> Element {
                 ResizablePanel {
                     initial_size: 50.,
                     if is_expanded_vertical {
-
                         Outlet::<Route> {}
                     } else {
                         rect {
@@ -333,21 +307,4 @@ fn LayoutForDOMInspector() -> Element {
 #[component]
 fn DOMInspector() -> Element {
     Ok(VNode::placeholder())
-}
-
-pub trait NodeIdSerializer {
-    fn serialize(&self) -> String;
-
-    fn deserialize(node_id: &str) -> Self;
-}
-
-impl NodeIdSerializer for NodeId {
-    fn serialize(&self) -> String {
-        format!("{}-{}", self.index(), self.gen())
-    }
-
-    fn deserialize(node_id: &str) -> Self {
-        let (index, gen) = node_id.split_once('-').unwrap();
-        NodeId::new_from_index_and_gen(index.parse().unwrap(), gen.parse().unwrap())
-    }
 }

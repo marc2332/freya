@@ -1,9 +1,10 @@
-use dioxus::prelude::*;
-use dioxus_router::{
+use dioxus_lib::prelude::*;
+use freya_hooks::ActivableRouteContext;
+
+use crate::{
     hooks::use_route,
     prelude::Routable,
 };
-use freya_hooks::ActivableRouteContext;
 
 /// Sometimes you might want to know if a route is selected so you can style a specific UI element in a different way,
 /// like a button with a different color.

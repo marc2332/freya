@@ -80,6 +80,28 @@
 //! }
 //! ```
 //!
+//! If you place other elements after one that uses fill, they may be hidden because the element with `fill` will expand to occupy all available space:
+//!
+//! ```rust, no_run
+//! # use freya::prelude::*;
+//! fn app() -> Element {
+//!     rsx!(
+//!         rect {
+//!             width: "100%",
+//!             height: "100%",
+//!             rect {
+//!                 height: "fill", // This is the same as 100%
+//!                 width: "100%",
+//!             }
+//!             rect {              // This element will not be visible
+//!                 height: "200",
+//!                 width: "100%",
+//!             }
+//!         }
+//!     )
+//! }
+//! ```
+//!
 //! #### fill-min
 //! Will have the same size of the biggest sibling element inside a container who has `content: fit`.
 //! For an example, see `content`.

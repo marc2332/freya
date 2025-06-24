@@ -230,7 +230,7 @@ fn Column(data: Signal<Vec<Task>>, state: State) -> Element {
 #[component]
 fn Card(task: Task) -> Element {
     let animation = use_animation(move |conf| {
-        conf.auto_start(true);
+        conf.on_creation(OnCreation::Run);
         AnimNum::new(0.7, 1.)
             .time(1000)
             .function(Function::Elastic)

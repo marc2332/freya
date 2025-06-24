@@ -22,9 +22,11 @@ use crate::{
     custom_attributes::CustomAttributeValues,
     layers::Layers,
     parsing::{
+        Parse,
         ParseAttribute,
         ParseError,
     },
+    values::LayerMode,
 };
 
 #[derive(Default, PartialEq, Clone, Debug, Component)]
@@ -41,14 +43,18 @@ impl ParseAttribute for LayerState {
         #[allow(clippy::single_match)]
         match attr.attribute {
             AttributeName::Layer => {
-                let layer = attr
-                    .value
-                    .as_text()
-                    .ok_or(ParseError)?
-                    .parse::<i16>()
-                    .map_err(|_| ParseError)?;
-                self.layer -= layer;
-                self.layer_for_children += layer;
+                let layer = LayerMode::parse(attr.value.as_text().ok_or(ParseError)?)?;
+                match layer {
+                    LayerMode::Relative(relative_layer) => {
+                        self.layer -= relative_layer;
+                        self.layer_for_children += relative_layer;
+                    }
+                    LayerMode::Overlay => {
+                        self.layer = i16::MAX / 2;
+                        self.layer_for_children = i16::MIN / 2;
+                    }
+                    _ => {}
+                }
             }
             _ => {}
         }

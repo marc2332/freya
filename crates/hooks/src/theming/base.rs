@@ -203,6 +203,8 @@ pub(crate) const BASE_THEME: Theme = Theme {
         margin: cow_borrowed!("0"),
         background: cow_borrowed!("transparent"),
         hover_background: cow_borrowed!("key(focused_surface)"),
+        corner_radius: cow_borrowed!("99"),
+        padding: cow_borrowed!("8 10"),
         font_theme: FontTheme {
             color: cow_borrowed!("key(color)"),
         },

@@ -4,12 +4,12 @@ use freya_native_core::{
     tree::TreeRef,
     NodeId,
 };
-use itertools::sorted;
-
-use super::{
-    PlatformEventData,
-    PotentialEvent,
+use itertools::{
+    sorted,
+    Itertools,
 };
+
+use super::PotentialEvent;
 pub use crate::events::{
     DomEvent,
     NodesState,
@@ -24,6 +24,7 @@ use crate::{
         ElementUtils,
         ElementUtilsResolver,
     },
+    events::ProcessedEvents,
     states::{
         StyleState,
         ViewportState,
@@ -47,28 +48,33 @@ pub fn process_events(
     focus_id: Option<NodeId>,
 ) {
     // Get potential events that could be emitted based on the elements layout and viewports
-    let potential_events = measure_potential_event_listeners(events, fdom, scale_factor, focus_id);
+    let potential_events = measure_potential_events(events, fdom, scale_factor, focus_id);
 
     // Get what events can be actually emitted based on what elements are listening
     let mut dom_events = measure_dom_events(&potential_events, fdom, scale_factor);
 
     // Get potential collateral events, e.g. mousemove -> mouseenter
-    let potential_collateral_events =
-        nodes_state.process_collateral(fdom, &potential_events, &mut dom_events, events);
-
-    // Get what collateral events can actually be emitted
-    let collateral_dom_events =
-        measure_dom_events(&potential_collateral_events, fdom, scale_factor);
+    let collateral_dom_events = nodes_state.retain_states(fdom, &dom_events, events, scale_factor);
+    nodes_state.filter_dom_events(&mut dom_events);
+    let nodes_states_update = nodes_state.create_update(fdom, &potential_events);
 
     // Get the global events
     measure_platform_global_events(fdom, events, &mut dom_events, scale_factor);
-
     // Join all the dom events and sort them
     dom_events.extend(collateral_dom_events);
     dom_events.sort_unstable();
 
+    let mut flattened_potential_events = potential_events.into_values().flatten().collect_vec();
+    flattened_potential_events.sort_unstable();
+
     // Send all the events
-    event_emitter.send(dom_events).unwrap();
+    event_emitter
+        .send(ProcessedEvents {
+            dom_events,
+            flattened_potential_events,
+            nodes_states_update,
+        })
+        .unwrap();
 
     // Clear the events queue
     events.clear();
@@ -82,35 +88,31 @@ pub fn measure_platform_global_events(
     scale_factor: f64,
 ) {
     let rdom = fdom.rdom();
-    for PlatformEvent { name, data } in events {
-        let derived_events_names = name.get_derived_events();
+    for platform_event in events {
+        let event = platform_event.event_name();
+        let derived_events_names = event.get_derived_events();
 
         for derived_event_name in derived_events_names {
-            let Some(global_name) = derived_event_name.get_global_event() else {
-                continue;
-            };
+            for global_event_name in derived_event_name.get_global_events() {
+                let listeners = rdom.get_listeners(&global_event_name);
 
-            let listeners = rdom.get_listeners(&global_name);
-
-            for listener in listeners {
-                let event = DomEvent::new(
-                    PotentialEvent {
-                        node_id: listener.id(),
-                        layer: None,
-                        name: global_name,
-                        data: data.clone(),
-                    },
-                    None,
-                    scale_factor,
-                );
-                dom_events.push(event)
+                for listener in listeners {
+                    let event = DomEvent::new(
+                        listener.id(),
+                        global_event_name,
+                        platform_event.clone(),
+                        None,
+                        scale_factor,
+                    );
+                    dom_events.push(event)
+                }
             }
         }
     }
 }
 
 /// Measure what event listeners could potentially be triggered
-pub fn measure_potential_event_listeners(
+pub fn measure_potential_events(
     events: &EventsQueue,
     fdom: &FreyaDOM,
     scale_factor: f64,
@@ -128,21 +130,21 @@ pub fn measure_potential_event_listeners(
             let Some(layout_node) = layout.get(*node_id) else {
                 continue;
             };
-            'events: for PlatformEvent { name, data } in events {
-                let cursor = match data {
-                    PlatformEventData::Mouse { cursor, .. } => cursor,
-                    PlatformEventData::Wheel { cursor, .. } => cursor,
-                    PlatformEventData::Touch { location, .. } => location,
-                    PlatformEventData::File { cursor, .. } => cursor,
-                    PlatformEventData::Keyboard { .. } if focus_id == Some(*node_id) => {
+            'events: for platform_event in events {
+                let cursor = match platform_event {
+                    PlatformEvent::Mouse { cursor, .. } => cursor,
+                    PlatformEvent::Wheel { cursor, .. } => cursor,
+                    PlatformEvent::Touch { location, .. } => location,
+                    PlatformEvent::File { cursor, .. } => cursor,
+                    PlatformEvent::Keyboard { .. } if focus_id == Some(*node_id) => {
                         let potential_event = PotentialEvent {
                             node_id: *node_id,
-                            layer: Some(*layer),
-                            name: *name,
-                            data: data.clone(),
+                            layer: *layer,
+                            name: platform_event.event_name(),
+                            plarform_event: platform_event.clone(),
                         };
                         potential_events
-                            .entry(*name)
+                            .entry(platform_event.event_name())
                             .or_default()
                             .push(potential_event);
                         continue;
@@ -190,13 +192,13 @@ pub fn measure_potential_event_listeners(
 
                 let potential_event = PotentialEvent {
                     node_id: *node_id,
-                    layer: Some(*layer),
-                    name: *name,
-                    data: data.clone(),
+                    layer: *layer,
+                    name: platform_event.event_name(),
+                    plarform_event: platform_event.clone(),
                 };
 
                 potential_events
-                    .entry(*name)
+                    .entry(platform_event.event_name())
                     .or_insert_with(Vec::new)
                     .push(potential_event);
             }
@@ -231,24 +233,24 @@ fn measure_dom_events(
     let rdom = fdom.rdom();
     let layout = fdom.layout();
 
-    for (event_name, event_nodes) in potential_events {
+    for (event, potential_events) in potential_events {
         // Get the derived events, but exclude globals like some file events
-        let derived_events = event_name
+        let derived_events_names = event
             .get_derived_events()
             .into_iter()
             .filter(|event| !event.is_global());
 
         // Iterate over the derived events (including the source)
-        'event: for derived_event in derived_events {
+        'event: for derived_event_name in derived_events_names {
             let mut child_node: Option<NodeId> = None;
 
             // Iterate over the potential events in reverse so the ones in higher layers appeat first
             for PotentialEvent {
                 node_id,
-                data,
                 name,
-                layer,
-            } in event_nodes.iter().rev()
+                plarform_event,
+                ..
+            } in potential_events.iter().rev()
             {
                 let Some(node) = rdom.get(*node_id) else {
                     continue;
@@ -260,17 +262,12 @@ fn measure_dom_events(
                     }
                 }
 
-                if rdom.is_node_listening(node_id, &derived_event) {
-                    let potential_event = PotentialEvent {
-                        node_id: *node_id,
-                        name: derived_event,
-                        data: data.clone(),
-                        layer: *layer,
-                    };
-
+                if rdom.is_node_listening(node_id, &derived_event_name) {
                     let layout_node = layout.get(*node_id).unwrap();
                     let dom_event = DomEvent::new(
-                        potential_event,
+                        *node_id,
+                        derived_event_name,
+                        plarform_event.clone(),
                         Some(layout_node.visible_area()),
                         scale_factor,
                     );

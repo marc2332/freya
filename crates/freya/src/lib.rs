@@ -54,6 +54,7 @@
 //! - `custom-tokio-rt`: disables the default Tokio runtime created by Freya.
 //! - `performance-overlay`: enables the performance overlay plugin.
 //! - `disable-zoom-shortcuts`: disables the default zoom shortcuts.
+//! - `disable-animation-shortcuts`: disables the default animation clock shortcuts.
 
 /// Freya docs.
 #[cfg(doc)]
@@ -100,6 +101,7 @@ pub mod plugins;
 
 /// Useful imports.
 pub mod prelude {
+    pub use dioxus;
     pub use dioxus_core::{
         prelude::*,
         {
