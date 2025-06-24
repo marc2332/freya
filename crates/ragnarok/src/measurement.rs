@@ -140,7 +140,7 @@ pub fn measure_emmitable_events<
             for PotentialEvent {
                 node_key: node_id,
                 name,
-                source_event: plarform_event,
+                source_event,
                 ..
             } in potential_events.iter().rev()
             {
@@ -155,7 +155,7 @@ pub fn measure_emmitable_events<
                     let emmitable_event = events_measurer.new_emmitable_event(
                         *node_id,
                         derived_event_name,
-                        plarform_event.clone(),
+                        source_event.clone(),
                         Some(layout_node),
                     );
                     emmitable_events.push(emmitable_event);
