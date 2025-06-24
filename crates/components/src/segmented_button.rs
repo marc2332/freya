@@ -152,14 +152,14 @@ pub fn BaseButtonSegment(
         }
     });
 
-    let onmouseenter = move |_| {
+    let onpointerenter = move |_| {
         if enabled {
             platform.set_cursor(CursorIcon::Pointer);
             status.set(ButtonSegmentStatus::Hovering);
         }
     };
 
-    let onmouseleave = move |_| {
+    let onpointerleave = move |_| {
         platform.set_cursor(CursorIcon::default());
         status.set(ButtonSegmentStatus::default());
     };
@@ -184,8 +184,8 @@ pub fn BaseButtonSegment(
     rsx!(
         rect {
             onpointerup,
-            onmouseenter,
-            onmouseleave,
+            onpointerenter,
+            onpointerleave,
             onkeydown,
             a11y_id,
             direction: "horizontal",
