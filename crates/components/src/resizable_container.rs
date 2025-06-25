@@ -6,6 +6,7 @@ use freya_core::{
 use freya_elements::{
     self as dioxus_elements,
     events::MouseEvent,
+    PointerEvent,
 };
 use freya_hooks::{
     use_applied_theme,
@@ -13,43 +14,23 @@ use freya_hooks::{
     use_platform,
     ResizableHandleTheme,
     ResizableHandleThemeWith,
+    UseId,
 };
 
+#[derive(Clone, Copy, Debug)]
 struct Panel {
     pub size: f32,
     pub min_size: f32,
-}
-
-enum ResizableItem {
-    Panel(Panel),
-    Handle,
-}
-
-impl ResizableItem {
-    /// Get the [Panel] of the [ResizableItem]. Will panic if called in a [ResizableItem::Handle].
-    fn panel(&self) -> &Panel {
-        match self {
-            Self::Panel(panel) => panel,
-            Self::Handle => panic!("Not a Panel"),
-        }
-    }
-
-    /// Try to get the mutable [Panel] of the [ResizableItem]. Will return [None] if called in a [ResizableItem::Handle].
-    fn try_panel_mut(&mut self) -> Option<&mut Panel> {
-        match self {
-            Self::Panel(panel) => Some(panel),
-            Self::Handle => None,
-        }
-    }
+    pub id: usize,
 }
 
 #[derive(Default)]
 struct ResizableContext {
-    pub registry: Vec<ResizableItem>,
+    pub panels: Vec<Panel>,
     pub direction: String,
 }
 
-/// Resizable container, used in combination with [ResizablePanel()] and [ResizableHandle()].
+/// Resizable container, used in combination with [ResizablePanel()].
 ///
 /// Example:
 ///
@@ -65,7 +46,6 @@ struct ResizableContext {
 ///                     "Panel 1"
 ///                 }
 ///             }
-///             ResizableHandle { }
 ///             ResizablePanel {
 ///                 initial_size: 50.0,
 ///                 min_size: 30.0,
@@ -108,31 +88,53 @@ pub fn ResizableContainer(
     )
 }
 
-/// Resizable panel to be used in combination with [ResizableContainer()] and [ResizableHandle()].
+/// Resizable panel to be used in combination with [ResizableContainer()].
 #[component]
 pub fn ResizablePanel(
-    /// Initial size in % for this panel. Default to `10`.
-    #[props(default = 10.)]
-    initial_size: f32, // TODO: Automatically assign the remaining space in the last element with unspecified size?
-    /// Minimum size in % for this panel. Default to `4`.
-    #[props(default = 4.)]
-    min_size: f32,
+    /// Initial size in factors (e.g, 1 for 25% if the total is 4, or 25 for 25% if total is 100) for this panel.
+    #[props(default = 50.)]
+    initial_size: f32,
+    /// Minimum size in factors for this panel. Default to 25% of the `initial_size`.
+    min_size: Option<f32>,
     /// Inner children for the [ResizablePanel()].
     children: Element,
+    /// Numeric order of this panel, only use if this panel will be render conditionally.
+    order: Option<usize>,
 ) -> Element {
     let mut registry = use_context::<Signal<ResizableContext>>();
 
-    let index = use_hook(move || {
-        registry.write().registry.push(ResizableItem::Panel(Panel {
+    let id = use_hook(move || {
+        let mut registry = registry.write();
+        let id = UseId::<ResizableContext>::get_in_hook();
+
+        let created_panel = Panel {
             size: initial_size,
-            min_size,
-        }));
-        registry.peek().registry.len() - 1
+            min_size: min_size.unwrap_or(initial_size * 0.25),
+            id,
+        };
+
+        if let Some(order) = order {
+            registry.panels.insert(order, created_panel);
+        } else {
+            registry.panels.push(created_panel);
+        }
+
+        id
+    });
+
+    use_drop(move || {
+        let mut registry = registry.write();
+        registry.panels.retain(|e| e.id != id);
     });
 
     let registry = registry.read();
+    let index = registry
+        .panels
+        .iter()
+        .position(|e| e.id == id)
+        .unwrap_or_default();
 
-    let Panel { size, .. } = registry.registry[index].panel();
+    let Panel { size, .. } = registry.panels[index];
 
     let (width, height) = match registry.direction.as_str() {
         "horizontal" => (format!("flex({size})"), "fill".to_owned()),
@@ -140,6 +142,11 @@ pub fn ResizablePanel(
     };
 
     rsx!(
+        if index > 0 {
+            ResizableHandle {
+                panel_index: index
+             }
+        }
         rect {
             width: "{width}",
             height: "{height}",
@@ -159,9 +166,9 @@ pub enum HandleStatus {
     Hovering,
 }
 
-/// Resizable panel to be used in combination with [ResizableContainer()] and [ResizablePanel()].
 #[component]
-pub fn ResizableHandle(
+fn ResizableHandle(
+    panel_index: usize,
     /// Theme override.
     theme: Option<ResizableHandleThemeWith>,
 ) -> Element {
@@ -177,11 +184,10 @@ pub fn ResizableHandle(
     let platform = use_platform();
     let mut allow_resizing = use_signal(|| false);
 
-    use_memo(move || {
+    // Only allow more resizing after the node layout has updated
+    use_effect(move || {
         size.read();
         allow_resizing.set(true);
-
-        // Only allow more resizing after the node layout has updated
     });
 
     use_drop(move || {
@@ -190,24 +196,19 @@ pub fn ResizableHandle(
         }
     });
 
-    let index = use_hook(move || {
-        registry.write().registry.push(ResizableItem::Handle);
-        registry.peek().registry.len() - 1
-    });
-
     let cursor = match registry.read().direction.as_str() {
         "horizontal" => CursorIcon::ColResize,
         _ => CursorIcon::RowResize,
     };
 
-    let onmouseleave = move |_: MouseEvent| {
+    let onpointerleave = move |_: PointerEvent| {
         *status.write() = HandleStatus::Idle;
         if !clicking() {
             platform.set_cursor(CursorIcon::default());
         }
     };
 
-    let onmouseenter = move |e: MouseEvent| {
+    let onpointerenter = move |e: PointerEvent| {
         e.stop_propagation();
         *status.write() = HandleStatus::Hovering;
         platform.set_cursor(cursor);
@@ -222,16 +223,18 @@ pub fn ResizableHandle(
             let coordinates = e.get_screen_coordinates();
             let mut registry = registry.write();
 
+            let total_size = registry.panels.iter().fold(0., |acc, p| acc + p.size);
+
             let displacement_per: f32 = match registry.direction.as_str() {
                 "horizontal" => {
                     let container_width = container_size.read().area.width();
                     let displacement = coordinates.x as f32 - size.read().area.min_x();
-                    100. / container_width * displacement
+                    total_size / container_width * displacement
                 }
                 _ => {
                     let container_height = container_size.read().area.height();
                     let displacement = coordinates.y as f32 - size.read().area.min_y();
-                    100. / container_height * displacement
+                    total_size / container_height * displacement
                 }
             };
 
@@ -243,36 +246,31 @@ pub fn ResizableHandle(
                 let mut acc_per = 0.0;
 
                 // Resize panels to the right
-                for next_item in &mut registry.registry[index..].iter_mut() {
-                    if let Some(panel) = next_item.try_panel_mut() {
-                        let old_size = panel.size;
-                        let new_size = (panel.size - displacement_per).clamp(panel.min_size, 100.);
+                for panel in &mut registry.panels[panel_index..].iter_mut() {
+                    let old_size = panel.size;
+                    let new_size = (panel.size - displacement_per).clamp(panel.min_size, 100.);
 
-                        if panel.size != new_size {
-                            changed_panels = true
-                        }
+                    if panel.size != new_size {
+                        changed_panels = true
+                    }
 
-                        panel.size = new_size;
-                        acc_per -= new_size - old_size;
+                    panel.size = new_size;
+                    acc_per -= new_size - old_size;
 
-                        if old_size > panel.min_size {
-                            break;
-                        }
+                    if old_size > panel.min_size {
+                        break;
                     }
                 }
 
                 // Resize panels to the left
-                for prev_item in &mut registry.registry[0..index].iter_mut().rev() {
-                    if let Some(panel) = prev_item.try_panel_mut() {
-                        let new_size = (panel.size + acc_per).clamp(panel.min_size, 100.);
+                if let Some(panel) = &mut registry.panels[0..panel_index].iter_mut().next_back() {
+                    let new_size = (panel.size + acc_per).clamp(panel.min_size, 100.);
 
-                        if panel.size != new_size {
-                            changed_panels = true
-                        }
-
-                        panel.size = new_size;
-                        break;
+                    if panel.size != new_size {
+                        changed_panels = true
                     }
+
+                    panel.size = new_size;
                 }
             } else {
                 // Resizing to the left
@@ -280,36 +278,31 @@ pub fn ResizableHandle(
                 let mut acc_per = 0.0;
 
                 // Resize panels to the left
-                for prev_item in &mut registry.registry[0..index].iter_mut().rev() {
-                    if let Some(panel) = prev_item.try_panel_mut() {
-                        let old_size = panel.size;
-                        let new_size = (panel.size + displacement_per).clamp(panel.min_size, 100.);
+                for panel in &mut registry.panels[0..panel_index].iter_mut().rev() {
+                    let old_size = panel.size;
+                    let new_size = (panel.size + displacement_per).clamp(panel.min_size, 100.);
 
-                        if panel.size != new_size {
-                            changed_panels = true
-                        }
+                    if panel.size != new_size {
+                        changed_panels = true
+                    }
 
-                        panel.size = new_size;
-                        acc_per += new_size - old_size;
+                    panel.size = new_size;
+                    acc_per += new_size - old_size;
 
-                        if old_size > panel.min_size {
-                            break;
-                        }
+                    if old_size > panel.min_size {
+                        break;
                     }
                 }
 
                 // Resize panels to the right
-                for next_item in &mut registry.registry[index..].iter_mut() {
-                    if let Some(panel) = next_item.try_panel_mut() {
-                        let new_size = (panel.size - acc_per).clamp(panel.min_size, 100.);
+                if let Some(panel) = &mut registry.panels[panel_index..].iter_mut().next() {
+                    let new_size = (panel.size - acc_per).clamp(panel.min_size, 100.);
 
-                        if panel.size != new_size {
-                            changed_panels = true
-                        }
-
-                        panel.size = new_size;
-                        break;
+                    if panel.size != new_size {
+                        changed_panels = true
                     }
+
+                    panel.size = new_size;
                 }
             }
 
@@ -320,12 +313,13 @@ pub fn ResizableHandle(
         }
     };
 
-    let onmousedown = move |e: MouseEvent| {
+    let onpointerdown = move |e: PointerEvent| {
         e.stop_propagation();
+        e.prevent_default();
         clicking.set(true);
     };
 
-    let onclick = move |_: MouseEvent| {
+    let onglobalpointerup = move |_| {
         if clicking() {
             if *status.peek() != HandleStatus::Hovering {
                 platform.set_cursor(CursorIcon::default());
@@ -350,11 +344,11 @@ pub fn ResizableHandle(
         width: "{width}",
         height: "{height}",
         background: "{background}",
-        onmousedown,
-        onglobalclick: onclick,
-        onmouseenter,
+        onpointerdown,
+        onglobalpointerup,
+        onpointerenter,
         oncaptureglobalmousemove,
-        onmouseleave,
+        onpointerleave,
     })
 }
 
@@ -369,32 +363,29 @@ mod test {
             rsx!(
                 ResizableContainer {
                     ResizablePanel {
-                        initial_size: 50.,
+                        min_size: 4.,
                         label {
                             "Panel 0"
                         }
                     }
-                    ResizableHandle { }
-                    ResizablePanel { // Panel 1
-                        initial_size: 50.,
+                    ResizablePanel {
+                        min_size: 4.,
                         ResizableContainer {
                             direction: "horizontal",
                             ResizablePanel {
-                                initial_size: 33.33,
+                                min_size: 4.,
                                 label {
                                     "Panel 2"
                                 }
                             }
-                            ResizableHandle { }
                             ResizablePanel {
-                                initial_size: 33.33,
+                                min_size: 4.,
                                 label {
                                     "Panel 3"
                                 }
                             }
-                            ResizableHandle { }
                             ResizablePanel {
-                                initial_size: 33.33,
+                                min_size: 4.,
                                 label {
                                     "Panel 4"
                                 }
@@ -410,11 +401,11 @@ mod test {
         let root = utils.root();
 
         let container = root.get(0);
-        let panel_0 = container.get(0);
-        let panel_1 = container.get(2);
-        let panel_2 = panel_1.get(0).get(0);
-        let panel_3 = panel_1.get(0).get(2);
-        let panel_4 = panel_1.get(0).get(4);
+        let panel_0 = container.get(1);
+        let panel_1 = container.get(3);
+        let panel_2 = panel_1.get(0).get(1);
+        let panel_3 = panel_1.get(0).get(3);
+        let panel_4 = panel_1.get(0).get(5);
 
         assert_eq!(panel_0.layout().unwrap().area.height().round(), 248.0);
         assert_eq!(panel_1.layout().unwrap().area.height().round(), 248.0);
@@ -434,6 +425,7 @@ mod test {
             cursor: (100.0, 200.0).into(),
             button: Some(MouseButton::Left),
         });
+        utils.wait_for_update().await;
         utils.push_event(TestEvent::Mouse {
             name: MouseEventName::MouseUp,
             cursor: (0.0, 0.0).into(),
@@ -456,6 +448,7 @@ mod test {
             cursor: (187.0, 300.0).into(),
             button: Some(MouseButton::Left),
         });
+        utils.wait_for_update().await;
         utils.push_event(TestEvent::Mouse {
             name: MouseEventName::MouseUp,
             cursor: (0.0, 0.0).into(),

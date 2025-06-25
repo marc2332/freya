@@ -62,7 +62,6 @@ pub fn DevtoolsView(
                 initial_size: 75.,
                 {children}
             }
-            ResizableHandle { }
             ResizablePanel {
                 initial_size: 25.,
                 min_size: 10.,
@@ -269,7 +268,7 @@ fn LayoutForDOMInspector() -> Element {
             ResizableContainer {
                 direction: "vertical",
                 ResizablePanel {
-                    initial_size: 50.,
+                    initial_size: 40.,
                     rect {
                         padding: "15",
                         NodesTree {
@@ -281,21 +280,10 @@ fn LayoutForDOMInspector() -> Element {
                         }
                     }
                 }
-                ResizableHandle { }
-                ResizablePanel {
-                    initial_size: 50.,
-                    if is_expanded_vertical {
+                if is_expanded_vertical {
+                    ResizablePanel {
+                        initial_size: 60.,
                         Outlet::<Route> {}
-                    } else {
-                        rect {
-                            main_align: "center",
-                            cross_align: "center",
-                            width: "fill",
-                            height: "fill",
-                            label {
-                                "Select an element to inspect."
-                            }
-                        }
                     }
                 }
             }
