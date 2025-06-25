@@ -131,7 +131,7 @@ impl ElementUtils for ParagraphElement {
         canvas: &Canvas,
         font_collection: &mut FontCollection,
         _font_manager: &FontMgr,
-        default_fonts: &[String],
+        fallback_fonts: &[String],
         _images_cache: &mut ImagesCache,
         scale_factor: f32,
     ) {
@@ -164,7 +164,7 @@ impl ElementUtils for ParagraphElement {
                 &area.size,
                 font_collection,
                 true,
-                default_fonts,
+                fallback_fonts,
                 scale_factor,
             );
             paint(&paragraph);

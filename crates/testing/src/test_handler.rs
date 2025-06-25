@@ -26,7 +26,7 @@ use freya_core::{
         RenderPipeline,
     },
     states::AccessibilityNodeState,
-    style::default_fonts,
+    style::fallback_fonts,
     types::{
         EventEmitter,
         EventReceiver,
@@ -222,7 +222,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
             },
             &mut self.font_collection,
             SCALE_FACTOR as f32,
-            &default_fonts(),
+            &fallback_fonts(),
         );
 
         let fdom = &self.utils.sdom().get_mut();
@@ -353,7 +353,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
             highlighted_node: None,
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,
-            default_fonts: &["Fira Sans".to_string()],
+            fallback_fonts: &["Fira Sans".to_string()],
             images_cache: &mut fdom.images_cache(),
         };
         render_pipeline.run();

@@ -28,7 +28,7 @@ impl ElementUtils for ImageElement {
         canvas: &Canvas,
         _font_collection: &mut FontCollection,
         _font_manager: &FontMgr,
-        _default_fonts: &[String],
+        _fallback_fonts: &[String],
         images_cache: &mut ImagesCache,
         _scale_factor: f32,
     ) {

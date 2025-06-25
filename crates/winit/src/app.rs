@@ -98,7 +98,7 @@ pub struct Application {
     pub(crate) process_layout_on_next_render: bool,
     pub(crate) accessibility_tasks_for_next_render: Option<AccessibilityTask>,
     pub(crate) init_accessibility_on_next_render: bool,
-    pub(crate) default_fonts: Vec<String>,
+    pub(crate) fallback_fonts: Vec<String>,
 }
 
 impl Application {
@@ -111,7 +111,7 @@ impl Application {
         window: &Window,
         fonts_config: EmbeddedFonts,
         plugins: PluginsManager,
-        default_fonts: Vec<String>,
+        fallback_fonts: Vec<String>,
         accessibility: WinitAcessibilityTree,
     ) -> Self {
         let mut font_collection = FontCollection::new();
@@ -158,7 +158,7 @@ impl Application {
             process_layout_on_next_render: false,
             accessibility_tasks_for_next_render: None,
             init_accessibility_on_next_render: false,
-            default_fonts,
+            fallback_fonts,
             compositor: Compositor::default(),
         };
 
@@ -415,7 +415,7 @@ impl Application {
             Area::from_size(window_size.to_torin()),
             &mut self.font_collection,
             scale_factor as f32,
-            &self.default_fonts,
+            &self.fallback_fonts,
         );
 
         self.plugins.send(
@@ -468,7 +468,7 @@ impl Application {
             highlighted_node,
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,
-            default_fonts: &self.default_fonts,
+            fallback_fonts: &self.fallback_fonts,
             images_cache: &mut fdom.images_cache(),
         };
         render_pipeline.run();

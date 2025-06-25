@@ -7,7 +7,7 @@ use freya_core::{
         FreyaPlugin,
         PluginsManager,
     },
-    style::default_fonts,
+    style::fallback_fonts,
 };
 use freya_engine::prelude::Color;
 use image::ImageReader;
@@ -84,7 +84,7 @@ pub struct LaunchConfig<'a, T: Clone = ()> {
     pub window_config: WindowConfig,
     pub embedded_fonts: EmbeddedFonts<'a>,
     pub plugins: PluginsManager,
-    pub default_fonts: Vec<String>,
+    pub fallback_fonts: Vec<String>,
 }
 
 impl<T: Clone> Default for LaunchConfig<'_, T> {
@@ -94,7 +94,7 @@ impl<T: Clone> Default for LaunchConfig<'_, T> {
             window_config: Default::default(),
             embedded_fonts: Default::default(),
             plugins: Default::default(),
-            default_fonts: default_fonts(),
+            fallback_fonts: fallback_fonts(),
         }
     }
 }
@@ -181,15 +181,15 @@ impl<'a, T: Clone> LaunchConfig<'a, T> {
         self
     }
 
-    /// Clear default fonts.
-    pub fn without_default_fonts(mut self) -> Self {
-        self.default_fonts.clear();
+    /// Register a fallback font. Will be used if the default fonts are not available.
+    pub fn with_fallback_font(mut self, font_name: &str) -> Self {
+        self.fallback_fonts.push(font_name.to_string());
         self
     }
 
-    /// Regiter a default font.
+    /// Register a default font. Will be used if found.
     pub fn with_default_font(mut self, font_name: &str) -> Self {
-        self.default_fonts.push(font_name.to_string());
+        self.fallback_fonts.insert(0, font_name.to_string());
         self
     }
 

@@ -18,7 +18,7 @@ pub fn process_layout(
     area: Area,
     font_collection: &mut FontCollection,
     scale_factor: f32,
-    default_fonts: &[String],
+    fallback_fonts: &[String],
 ) {
     {
         let rdom = fdom.rdom();
@@ -27,7 +27,7 @@ pub fn process_layout(
         let skia_measurer = SkiaMeasurer::new(
             rdom,
             font_collection,
-            default_fonts,
+            fallback_fonts,
             scale_factor,
             &mut images_cache,
         );
