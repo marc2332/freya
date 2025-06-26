@@ -20,6 +20,7 @@ use freya_hooks::{
 #[derive(Clone, Copy, Debug)]
 struct Panel {
     pub size: f32,
+    pub initial_size: f32,
     pub min_size: f32,
     pub id: usize,
 }
@@ -108,10 +109,21 @@ pub fn ResizablePanel(
         let id = UseId::<ResizableContext>::get_in_hook();
 
         let created_panel = Panel {
+            initial_size,
             size: initial_size,
             min_size: min_size.unwrap_or(initial_size * 0.25),
             id,
         };
+
+         let mut buffer = created_panel.size;
+
+        for panel in &mut registry.panels.iter_mut() {
+            let resized_sized = (panel.initial_size - panel.size).min(buffer);
+
+            panel.size = (panel.size - resized_sized).max(panel.min_size);
+            let new_resized_sized = panel.initial_size - panel.size;
+            buffer -= new_resized_sized;
+        }
 
         if let Some(order) = order {
             registry.panels.insert(order, created_panel);
@@ -124,7 +136,18 @@ pub fn ResizablePanel(
 
     use_drop(move || {
         let mut registry = registry.write();
+        let removed_panel = registry.panels.iter().find(|p| p.id == id).cloned().unwrap();
         registry.panels.retain(|e| e.id != id);
+
+        let mut buffer = removed_panel.size;
+
+        for panel in &mut registry.panels.iter_mut() {
+            let resized_sized = (panel.initial_size - panel.size).min(buffer);
+
+            panel.size = (panel.size + resized_sized).max(panel.min_size);
+            let new_resized_sized = panel.initial_size - panel.size;
+            buffer -= new_resized_sized;
+        }
     });
 
     let registry = registry.read();

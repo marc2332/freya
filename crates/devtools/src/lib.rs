@@ -6,11 +6,9 @@ use freya_components::*;
 use freya_core::event_loop_messages::EventLoopMessage;
 use freya_elements as dioxus_elements;
 use freya_hooks::{
-    use_applied_theme,
-    use_init_theme,
-    use_platform,
-    DARK_THEME,
+    use_applied_theme, use_init_theme, use_platform, UseFocus, DARK_THEME
 };
+use freya_core::types::AccessibilityId;
 use freya_native_core::NodeId;
 use freya_router::prelude::*;
 use freya_winit::devtools::{
@@ -60,7 +58,10 @@ pub fn DevtoolsView(
             direction: "horizontal",
             ResizablePanel {
                 initial_size: 75.,
-                {children}
+                rect {
+                    a11y_id: UseFocus::attribute_for_id(AccessibilityId(u64::MAX)),
+                    {children}
+                }
             }
             ResizablePanel {
                 initial_size: 25.,

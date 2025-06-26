@@ -1,14 +1,13 @@
-use std::sync::{
+use std::{sync::{
     Arc,
     Mutex,
-};
+}, u64};
 
 use freya_core::{
-    dom::FreyaDOM,
-    node::{
+    accessibility::NodeAccessibility, dom::FreyaDOM, node::{
         get_node_state,
         NodeState,
-    },
+    }
 };
 use freya_native_core::{
     prelude::{
@@ -19,6 +18,9 @@ use freya_native_core::{
 };
 use tokio::sync::watch;
 use torin::prelude::LayoutNode;
+use freya_core::{
+    types::AccessibilityId,
+};
 
 pub type DevtoolsReceiver = watch::Receiver<Vec<NodeInfo>>;
 pub type HighlightedNode = Arc<Mutex<Option<NodeId>>>;
@@ -50,20 +52,15 @@ impl Devtools {
 
         let mut new_nodes = Vec::new();
 
-        let mut root_found = false;
         let mut devtools_found = false;
 
         rdom.traverse_depth_first(|node| {
-            let height = node.height();
-            if height == 3 {
-                if !root_found {
-                    root_found = true;
-                } else {
-                    devtools_found = true;
-                }
+            let accessibility_id = node.get_accessibility_id();
+            if matches!(accessibility_id, Some(AccessibilityId(u64::MAX))) {
+                devtools_found = true;
             }
 
-            if !devtools_found && root_found {
+            if devtools_found {
                 let layout_node = layout.get(node.id()).cloned();
                 if let Some(layout_node) = layout_node {
                     let node_type = node.node_type();
@@ -90,7 +87,7 @@ impl Devtools {
     }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct NodeInfo {
     pub id: NodeId,
     pub parent_id: Option<NodeId>,

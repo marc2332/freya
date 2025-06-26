@@ -142,7 +142,6 @@ fn Column(data: Signal<Vec<Food>>, state: FoodState) -> Element {
                                 width: "200",
                                 height: "70",
                                 background: "rgb(210, 210, 210)",
-                                corner_radius: "8",
                                 padding: "10",
                                 layer: "-999",
                                 shadow: "0 2 7 1 rgb(0,0,0,0.15)",
