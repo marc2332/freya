@@ -115,7 +115,7 @@ pub fn ResizablePanel(
             id,
         };
 
-         let mut buffer = created_panel.size;
+        let mut buffer = created_panel.size;
 
         for panel in &mut registry.panels.iter_mut() {
             let resized_sized = (panel.initial_size - panel.size).min(buffer);
@@ -136,7 +136,12 @@ pub fn ResizablePanel(
 
     use_drop(move || {
         let mut registry = registry.write();
-        let removed_panel = registry.panels.iter().find(|p| p.id == id).cloned().unwrap();
+        let removed_panel = registry
+            .panels
+            .iter()
+            .find(|p| p.id == id)
+            .cloned()
+            .unwrap();
         registry.panels.retain(|e| e.id != id);
 
         let mut buffer = removed_panel.size;

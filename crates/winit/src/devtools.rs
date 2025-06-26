@@ -1,13 +1,16 @@
-use std::{sync::{
+use std::sync::{
     Arc,
     Mutex,
-}, u64};
+};
 
 use freya_core::{
-    accessibility::NodeAccessibility, dom::FreyaDOM, node::{
+    accessibility::NodeAccessibility,
+    dom::FreyaDOM,
+    node::{
         get_node_state,
         NodeState,
-    }
+    },
+    types::AccessibilityId,
 };
 use freya_native_core::{
     prelude::{
@@ -18,9 +21,6 @@ use freya_native_core::{
 };
 use tokio::sync::watch;
 use torin::prelude::LayoutNode;
-use freya_core::{
-    types::AccessibilityId,
-};
 
 pub type DevtoolsReceiver = watch::Receiver<Vec<NodeInfo>>;
 pub type HighlightedNode = Arc<Mutex<Option<NodeId>>>;

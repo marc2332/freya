@@ -3,12 +3,18 @@ use std::collections::HashSet;
 use dioxus::prelude::*;
 use dioxus_radio::prelude::*;
 use freya_components::*;
-use freya_core::event_loop_messages::EventLoopMessage;
+use freya_core::{
+    event_loop_messages::EventLoopMessage,
+    types::AccessibilityId,
+};
 use freya_elements as dioxus_elements;
 use freya_hooks::{
-    use_applied_theme, use_init_theme, use_platform, UseFocus, DARK_THEME
+    use_applied_theme,
+    use_init_theme,
+    use_platform,
+    UseFocus,
+    DARK_THEME,
 };
-use freya_core::types::AccessibilityId;
 use freya_native_core::NodeId;
 use freya_router::prelude::*;
 use freya_winit::devtools::{
