@@ -11,33 +11,60 @@ fn main() {
 
 fn app() -> Element {
     let mut panels = use_signal(|| 5);
+
     rsx!(
         ResizableContainer {
-                    ResizablePanel {
+            ResizablePanel {
+                initial_size: 50.,
+                rect {
+                    width: "fill",
+                    height: "fill",
+                    main_align: "center",
+                    cross_align: "center",
+                    label {
+                        "Panel 1"
+                    }
+                    Button {
+                        onpress: move|_| panels += 1,
                         label {
-                            "Panel 0"
+                            "Push"
                         }
                     }
-                    ResizablePanel {
-                        ResizableContainer {
-                            direction: "horizontal",
-                            ResizablePanel {
+                    Button {
+                        onpress: move|_| panels -= 1,
+                        label {
+                            "Remove"
+                        }
+                    }
+                }
+            }
+            ResizablePanel {
+                initial_size: 50.,
+                ResizableContainer {
+                    direction: "horizontal",
+                    for panel in 1..panels() {
+                        ResizablePanel {
+                            key: "{panel}",
+                            initial_size: panel as f32 * 15.,
+                            min_size: panel as f32 * 5.,
+                            order: panel,
+                            rect {
+                                width: "fill",
+                                height: "fill",
+                                main_align: "center",
+                                cross_align: "center",
+                                corner_radius: "6",
+                                color: "white",
+                                background:
+                                "linear-gradient(250deg, orange 15%, rgb(255, 0, 0) 50%, rgb(255, 192, 203) 80%)",
                                 label {
-                                    "Panel 2"
-                                }
-                            }
-                            ResizablePanel {
-                                label {
-                                    "Panel 3"
-                                }
-                            }
-                            ResizablePanel {
-                                label {
-                                    "Panel 4"
+                                    "Panel {panel}"
                                 }
                             }
                         }
                     }
                 }
+            }
+        }
     )
 }

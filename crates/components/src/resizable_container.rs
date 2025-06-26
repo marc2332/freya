@@ -18,7 +18,7 @@ use freya_hooks::{
 };
 
 #[derive(Clone, Copy, Debug)]
-struct Panel {
+pub struct Panel {
     pub size: f32,
     pub initial_size: f32,
     pub min_size: f32,
@@ -26,9 +26,100 @@ struct Panel {
 }
 
 #[derive(Default)]
-struct ResizableContext {
+pub struct ResizableContext {
     pub panels: Vec<Panel>,
     pub direction: String,
+}
+
+impl ResizableContext {
+    pub fn direction(&self) -> &str {
+        &self.direction
+    }
+
+    pub fn panels(&mut self) -> &mut Vec<Panel> {
+        &mut self.panels
+    }
+
+    pub fn push_panel(&mut self, panel: Panel, order: Option<usize>) {
+        let mut buffer = panel.size;
+
+        for panel in &mut self.panels.iter_mut() {
+            let resized_sized = (panel.initial_size - panel.size).min(buffer);
+
+            if resized_sized >= 0. {
+                panel.size = (panel.size - resized_sized).max(panel.min_size);
+                let new_resized_sized = panel.initial_size - panel.size;
+                buffer -= new_resized_sized;
+            }
+        }
+
+        if let Some(order) = order {
+            if self.panels.len() <= order {
+                self.panels.push(panel);
+            } else {
+                self.panels.insert(order, panel);
+            }
+        } else {
+            self.panels.push(panel);
+        }
+    }
+
+    pub fn remove_panel(&mut self, id: usize) {
+        let removed_panel = self.panels.iter().find(|p| p.id == id).cloned().unwrap();
+        self.panels.retain(|e| e.id != id);
+
+        let mut buffer = removed_panel.size;
+
+        for panel in &mut self.panels.iter_mut() {
+            let resized_sized = (panel.initial_size - panel.size).min(buffer);
+
+            panel.size = (panel.size + resized_sized).max(panel.min_size);
+            let new_resized_sized = panel.initial_size - panel.size;
+            buffer -= new_resized_sized;
+        }
+    }
+
+    pub fn apply_resize(&mut self, panel_index: usize, distance: f32) -> bool {
+        let mut changed_panels = false;
+
+        let (corrected_distance, behind_range, forward_range) = if distance >= 0. {
+            (distance, 0..panel_index, panel_index..self.panels.len())
+        } else {
+            (-distance, panel_index..self.panels.len(), 0..panel_index)
+        };
+
+        let mut acc_per = 0.0;
+
+        // Resize panels to the right
+        for panel in &mut self.panels[forward_range].iter_mut() {
+            let old_size = panel.size;
+            let new_size = (panel.size - corrected_distance).clamp(panel.min_size, 100.);
+
+            if panel.size != new_size {
+                changed_panels = true
+            }
+
+            panel.size = new_size;
+            acc_per -= new_size - old_size;
+
+            if old_size > panel.min_size {
+                break;
+            }
+        }
+
+        // Resize panels to the left
+        if let Some(panel) = &mut self.panels[behind_range].iter_mut().next_back() {
+            let new_size = (panel.size + acc_per).clamp(panel.min_size, 100.);
+
+            if panel.size != new_size {
+                changed_panels = true
+            }
+
+            panel.size = new_size;
+        }
+
+        changed_panels
+    }
 }
 
 /// Resizable container, used in combination with [ResizablePanel()].
@@ -80,7 +171,7 @@ pub fn ResizableContainer(
     rsx!(
         rect {
             reference: node_reference,
-            direction: "{direction}",
+            direction,
             width: "fill",
             height: "fill",
             content: "flex",
@@ -105,54 +196,22 @@ pub fn ResizablePanel(
     let mut registry = use_context::<Signal<ResizableContext>>();
 
     let id = use_hook(move || {
-        let mut registry = registry.write();
         let id = UseId::<ResizableContext>::get_in_hook();
 
-        let created_panel = Panel {
+        let panel = Panel {
             initial_size,
             size: initial_size,
             min_size: min_size.unwrap_or(initial_size * 0.25),
             id,
         };
 
-        let mut buffer = created_panel.size;
-
-        for panel in &mut registry.panels.iter_mut() {
-            let resized_sized = (panel.initial_size - panel.size).min(buffer);
-
-            panel.size = (panel.size - resized_sized).max(panel.min_size);
-            let new_resized_sized = panel.initial_size - panel.size;
-            buffer -= new_resized_sized;
-        }
-
-        if let Some(order) = order {
-            registry.panels.insert(order, created_panel);
-        } else {
-            registry.panels.push(created_panel);
-        }
+        registry.write().push_panel(panel, order);
 
         id
     });
 
     use_drop(move || {
-        let mut registry = registry.write();
-        let removed_panel = registry
-            .panels
-            .iter()
-            .find(|p| p.id == id)
-            .cloned()
-            .unwrap();
-        registry.panels.retain(|e| e.id != id);
-
-        let mut buffer = removed_panel.size;
-
-        for panel in &mut registry.panels.iter_mut() {
-            let resized_sized = (panel.initial_size - panel.size).min(buffer);
-
-            panel.size = (panel.size + resized_sized).max(panel.min_size);
-            let new_resized_sized = panel.initial_size - panel.size;
-            buffer -= new_resized_sized;
-        }
+        registry.write().remove_panel(id);
     });
 
     let registry = registry.read();
@@ -253,7 +312,7 @@ fn ResizableHandle(
 
             let total_size = registry.panels.iter().fold(0., |acc, p| acc + p.size);
 
-            let displacement_per: f32 = match registry.direction.as_str() {
+            let distance = match registry.direction.as_str() {
                 "horizontal" => {
                     let container_width = container_size.read().area.width();
                     let displacement = coordinates.x as f32 - size.read().area.min_x();
@@ -266,73 +325,7 @@ fn ResizableHandle(
                 }
             };
 
-            let mut changed_panels = false;
-
-            if displacement_per >= 0. {
-                // Resizing to the right
-
-                let mut acc_per = 0.0;
-
-                // Resize panels to the right
-                for panel in &mut registry.panels[panel_index..].iter_mut() {
-                    let old_size = panel.size;
-                    let new_size = (panel.size - displacement_per).clamp(panel.min_size, 100.);
-
-                    if panel.size != new_size {
-                        changed_panels = true
-                    }
-
-                    panel.size = new_size;
-                    acc_per -= new_size - old_size;
-
-                    if old_size > panel.min_size {
-                        break;
-                    }
-                }
-
-                // Resize panels to the left
-                if let Some(panel) = &mut registry.panels[0..panel_index].iter_mut().next_back() {
-                    let new_size = (panel.size + acc_per).clamp(panel.min_size, 100.);
-
-                    if panel.size != new_size {
-                        changed_panels = true
-                    }
-
-                    panel.size = new_size;
-                }
-            } else {
-                // Resizing to the left
-
-                let mut acc_per = 0.0;
-
-                // Resize panels to the left
-                for panel in &mut registry.panels[0..panel_index].iter_mut().rev() {
-                    let old_size = panel.size;
-                    let new_size = (panel.size + displacement_per).clamp(panel.min_size, 100.);
-
-                    if panel.size != new_size {
-                        changed_panels = true
-                    }
-
-                    panel.size = new_size;
-                    acc_per += new_size - old_size;
-
-                    if old_size > panel.min_size {
-                        break;
-                    }
-                }
-
-                // Resize panels to the right
-                if let Some(panel) = &mut registry.panels[panel_index..].iter_mut().next() {
-                    let new_size = (panel.size - acc_per).clamp(panel.min_size, 100.);
-
-                    if panel.size != new_size {
-                        changed_panels = true
-                    }
-
-                    panel.size = new_size;
-                }
-            }
+            let changed_panels = registry.apply_resize(panel_index, distance);
 
             if changed_panels {
                 allow_resizing.set(false);
