@@ -4,10 +4,7 @@ use std::{
 };
 
 use freya_engine::prelude::*;
-use torin::{
-    prelude::Measure,
-    size::Rect,
-};
+use torin::prelude::Area;
 
 use crate::{
     parsing::{
@@ -61,7 +58,7 @@ pub struct LinearGradient {
 }
 
 impl LinearGradient {
-    pub fn into_shader(&self, bounds: Rect<f32, Measure>) -> Option<Shader> {
+    pub fn into_shader(&self, bounds: Area) -> Option<Shader> {
         let colors: Vec<Color> = self.stops.iter().map(|stop| stop.color).collect();
         let offsets: Vec<f32> = self.stops.iter().map(|stop| stop.offset).collect();
 
@@ -142,7 +139,7 @@ pub struct RadialGradient {
 }
 
 impl RadialGradient {
-    pub fn into_shader(&self, bounds: Rect<f32, Measure>) -> Option<Shader> {
+    pub fn into_shader(&self, bounds: Area) -> Option<Shader> {
         let colors: Vec<Color> = self.stops.iter().map(|stop| stop.color).collect();
         let offsets: Vec<f32> = self.stops.iter().map(|stop| stop.offset).collect();
 
@@ -201,7 +198,7 @@ pub struct ConicGradient {
 }
 
 impl ConicGradient {
-    pub fn into_shader(&self, bounds: Rect<f32, Measure>) -> Option<Shader> {
+    pub fn into_shader(&self, bounds: Area) -> Option<Shader> {
         let colors: Vec<Color> = self.stops.iter().map(|stop| stop.color).collect();
         let offsets: Vec<f32> = self.stops.iter().map(|stop| stop.offset).collect();
 

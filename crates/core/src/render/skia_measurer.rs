@@ -36,7 +36,7 @@ use crate::{
 pub struct SkiaMeasurer<'a> {
     pub font_collection: &'a FontCollection,
     pub rdom: &'a DioxusDOM,
-    pub default_fonts: &'a [String],
+    pub fallback_fonts: &'a [String],
     pub scale_factor: f32,
     pub images_cache: &'a mut ImagesCache,
 }
@@ -45,14 +45,14 @@ impl<'a> SkiaMeasurer<'a> {
     pub fn new(
         rdom: &'a DioxusDOM,
         font_collection: &'a FontCollection,
-        default_fonts: &'a [String],
+        fallback_fonts: &'a [String],
         scale_factor: f32,
         images_cache: &'a mut ImagesCache,
     ) -> Self {
         Self {
             font_collection,
             rdom,
-            default_fonts,
+            fallback_fonts,
             scale_factor,
             images_cache,
         }
@@ -76,7 +76,7 @@ impl LayoutMeasurer<NodeId> for SkiaMeasurer<'_> {
                     torin_node,
                     area_size,
                     self.font_collection,
-                    self.default_fonts,
+                    self.fallback_fonts,
                     self.scale_factor,
                 );
                 let mut map = SendAnyMap::new();
@@ -89,7 +89,7 @@ impl LayoutMeasurer<NodeId> for SkiaMeasurer<'_> {
                     area_size,
                     self.font_collection,
                     false,
-                    self.default_fonts,
+                    self.fallback_fonts,
                     self.scale_factor,
                 );
                 let mut map = SendAnyMap::new();

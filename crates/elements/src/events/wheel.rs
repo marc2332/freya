@@ -28,21 +28,36 @@ impl_event! [
     onwheel
 ];
 
+#[derive(Debug, Clone, PartialEq, Copy)]
+pub enum WheelSource {
+    Device,
+    Custom,
+}
+
 /// Data of a Wheel event.
 #[derive(Debug, Clone, PartialEq)]
 pub struct WheelData {
-    #[allow(dead_code)]
+    source: WheelSource,
     delta_x: f64,
     delta_y: f64,
 }
 
 impl WheelData {
-    pub fn new(delta_x: f64, delta_y: f64) -> Self {
-        Self { delta_x, delta_y }
+    pub fn new(source: WheelSource, delta_x: f64, delta_y: f64) -> Self {
+        Self {
+            source,
+            delta_x,
+            delta_y,
+        }
     }
 }
 
 impl WheelData {
+    /// Get the source of the wheel event.
+    pub fn get_source(&self) -> WheelSource {
+        self.source
+    }
+
     /// Get the X delta.
     pub fn get_delta_x(&self) -> f64 {
         self.delta_x
