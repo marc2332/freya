@@ -38,3 +38,5 @@ impl NodeId {
 }
 
 impl torin::prelude::NodeKey for NodeId {}
+
+impl ragnarok::NodeKey for NodeId {}

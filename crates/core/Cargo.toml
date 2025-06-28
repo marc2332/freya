@@ -26,6 +26,7 @@ freya-engine = { workspace = true }
 torin = { workspace = true }
 freya-native-core = { workspace = true }
 freya-native-core-macro = { workspace = true }
+ragnarok = { workspace = true }
 
 dioxus-core = { workspace = true }
 shipyard = { workspace = true }

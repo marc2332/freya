@@ -100,43 +100,6 @@ impl From<FileEventName> for EventName {
     }
 }
 
-impl PlatformEvent {
-    /// Check if the event means the cursor was moved.
-    pub fn is_moved(&self) -> bool {
-        matches!(
-            &self,
-            Self::Mouse {
-                name: MouseEventName::MouseMove,
-                ..
-            }
-        )
-    }
-
-    /// Check if this event can press state of a Node.
-    pub fn is_pressed(&self) -> bool {
-        matches!(
-            &self,
-            Self::Mouse {
-                name: MouseEventName::MouseDown,
-                ..
-            } | Self::Touch {
-                name: TouchEventName::TouchStart,
-                ..
-            }
-        )
-    }
-
-    pub fn event_name(&self) -> EventName {
-        match self {
-            Self::Mouse { name, .. } => (*name).into(),
-            Self::Wheel { name, .. } => (*name).into(),
-            Self::Keyboard { name, .. } => (*name).into(),
-            Self::Touch { name, .. } => (*name).into(),
-            Self::File { name, .. } => (*name).into(),
-        }
-    }
-}
-
 /// Data for [PlatformEvent].
 #[derive(Clone, Debug, PartialEq)]
 pub enum PlatformEvent {
@@ -173,4 +136,53 @@ pub enum PlatformEvent {
         cursor: CursorPoint,
         file_path: Option<PathBuf>,
     },
+}
+
+impl ragnarok::SourceEvent for PlatformEvent {
+    type Name = EventName;
+
+    /// Check if the event means the cursor was moved.
+    fn is_moved(&self) -> bool {
+        matches!(
+            &self,
+            Self::Mouse {
+                name: MouseEventName::MouseMove,
+                ..
+            }
+        )
+    }
+
+    /// Check if this event can press state of a Node.
+    fn is_pressed(&self) -> bool {
+        matches!(
+            &self,
+            Self::Mouse {
+                name: MouseEventName::MouseDown,
+                ..
+            } | Self::Touch {
+                name: TouchEventName::TouchStart,
+                ..
+            }
+        )
+    }
+
+    fn as_event_name(&self) -> EventName {
+        match self {
+            Self::Mouse { name, .. } => (*name).into(),
+            Self::Wheel { name, .. } => (*name).into(),
+            Self::Keyboard { name, .. } => (*name).into(),
+            Self::Touch { name, .. } => (*name).into(),
+            Self::File { name, .. } => (*name).into(),
+        }
+    }
+
+    fn try_cursor(&self) -> Option<ragnarok::CursorPoint> {
+        match self {
+            PlatformEvent::File { cursor, .. } => Some(*cursor),
+            PlatformEvent::Mouse { cursor, .. } => Some(*cursor),
+            PlatformEvent::Wheel { cursor, .. } => Some(*cursor),
+            PlatformEvent::Keyboard { .. } => None,
+            PlatformEvent::Touch { location, .. } => Some(*location),
+        }
+    }
 }

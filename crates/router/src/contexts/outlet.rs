@@ -69,6 +69,7 @@ impl<R> OutletContext<R> {
 /// # Examples
 ///
 /// ```rust, no_run
+/// # use freya_elements as dioxus_elements;
 /// # use dioxus_lib::prelude::*;
 /// # use freya_router::prelude::{use_outlet_context,Routable};
 /// # #[derive(Routable,Clone,PartialEq)]

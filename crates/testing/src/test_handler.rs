@@ -13,10 +13,9 @@ use freya_core::{
     dom::SafeDOM,
     event_loop_messages::EventLoopMessage,
     events::{
-        handle_processed_events,
-        process_events,
+        EventsExecutorAdapter,
+        EventsMeasurerAdapter,
         MouseEventName,
-        NodesState,
         PlatformEvent,
     },
     layout::process_layout,
@@ -44,7 +43,15 @@ use freya_engine::prelude::{
     FontCollection,
     FontMgr,
 };
-use freya_native_core::prelude::NodeImmutable;
+use freya_native_core::{
+    prelude::NodeImmutable,
+    NodeId,
+};
+use ragnarok::{
+    EventsExecutorRunner,
+    EventsMeasurerRunner,
+    NodesState,
+};
 use tokio::{
     sync::{
         broadcast,
@@ -82,7 +89,7 @@ pub struct TestingHandler<T: 'static + Clone> {
     pub(crate) platform_event_emitter: UnboundedSender<EventLoopMessage>,
     pub(crate) platform_event_receiver: UnboundedReceiver<EventLoopMessage>,
     pub(crate) events_queue: EventsQueue,
-    pub(crate) nodes_state: NodesState,
+    pub(crate) nodes_state: NodesState<NodeId>,
     pub(crate) platform_sender: NativePlatformSender,
     pub(crate) platform_receiver: NativePlatformReceiver,
     pub(crate) font_collection: FontCollection,
@@ -186,12 +193,13 @@ impl<T: 'static + Clone> TestingHandler<T> {
 
             if let Ok(processed_events) = vdom_events {
                 let sdom = self.utils.sdom();
-                handle_processed_events(
-                    sdom,
-                    &mut self.vdom,
-                    &mut self.nodes_state,
-                    processed_events,
-                )
+                let fdom = sdom.get();
+                let rdom = fdom.rdom();
+                let events_executor_adapter = EventsExecutorAdapter {
+                    rdom,
+                    vdom: &mut self.vdom,
+                };
+                events_executor_adapter.run(&mut self.nodes_state, processed_events);
             }
         }
 
@@ -214,8 +222,24 @@ impl<T: 'static + Clone> TestingHandler<T> {
 
     /// Wait for layout and events to be processed
     fn wait_for_work(&mut self, size: Size2D) {
+        let sdom = &self.utils.sdom();
+        let fdom = sdom.get_mut();
+        let rdom = fdom.rdom();
+        let mut layout = fdom.layout();
+        let layers = fdom.layers();
+        let mut images_cache = fdom.images_cache();
+        let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
+        let mut compositor_dirty_nodes = fdom.compositor_dirty_nodes();
+        let mut compositor_dirty_area = fdom.compositor_dirty_area();
+
+        // Process layout
         process_layout(
-            &self.utils.sdom().get(),
+            rdom,
+            &mut layout,
+            &mut images_cache,
+            &mut dirty_accessibility_tree,
+            &mut compositor_dirty_nodes,
+            &mut compositor_dirty_area,
             Area {
                 origin: (0.0, 0.0).into(),
                 size,
@@ -225,36 +249,34 @@ impl<T: 'static + Clone> TestingHandler<T> {
             &fallback_fonts(),
         );
 
-        let fdom = &self.utils.sdom().get_mut();
-        {
-            let rdom = fdom.rdom();
-            let layout = fdom.layout();
-            let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
-            let (tree, node_id) = self.accessibility_tree.process_updates(
-                rdom,
-                &layout,
-                &mut dirty_accessibility_tree,
-            );
+        // Process accessibility updates
+        let (tree, node_id) =
+            self.accessibility_tree
+                .process_updates(rdom, &layout, &mut dirty_accessibility_tree);
+        // Notify the components
+        self.platform_sender.send_modify(|state| {
+            state.focused_accessibility_id = tree.focus;
+            let node_ref = rdom.get(node_id).unwrap();
+            let node_accessibility = node_ref.get::<AccessibilityNodeState>().unwrap();
+            let layout_node = layout.get(node_id).unwrap();
+            state.focused_accessibility_node =
+                AccessibilityTree::create_node(&node_ref, layout_node, &node_accessibility)
+        });
 
-            // Notify the components
-            self.platform_sender.send_modify(|state| {
-                state.focused_accessibility_id = tree.focus;
-                let node_ref = rdom.get(node_id).unwrap();
-                let node_accessibility = node_ref.get::<AccessibilityNodeState>().unwrap();
-                let layout_node = layout.get(node_id).unwrap();
-                state.focused_accessibility_node =
-                    AccessibilityTree::create_node(&node_ref, layout_node, &node_accessibility)
-            });
-        }
-
-        process_events(
-            fdom,
+        // Process events
+        let mut events_measurer_adapter = EventsMeasurerAdapter {
+            rdom,
+            layers: &layers,
+            layout: &layout,
+            vdom: &mut self.vdom,
+            scale_factor: SCALE_FACTOR,
+        };
+        let processed_events = events_measurer_adapter.run(
             &mut self.events_queue,
-            &self.event_emitter,
             &mut self.nodes_state,
-            SCALE_FACTOR,
             self.accessibility_tree.focused_node_id(),
         );
+        self.event_emitter.send(processed_events).unwrap();
     }
 
     /// Push an event to the events queue
