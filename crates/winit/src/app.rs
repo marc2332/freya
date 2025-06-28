@@ -323,6 +323,7 @@ impl Application {
             &self.platform_sender,
             window,
             &mut dirty_accessibility_tree,
+            &self.event_emitter,
         );
     }
 

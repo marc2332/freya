@@ -3,15 +3,18 @@ use std::{
     rc::Rc,
 };
 
-use freya_elements::events::{
-    pointer::PointerType,
-    ErasedEventData,
-    FileData,
-    KeyboardData,
-    MouseData,
-    PointerData,
-    TouchData,
-    WheelData,
+use freya_elements::{
+    events::{
+        pointer::PointerType,
+        ErasedEventData,
+        FileData,
+        KeyboardData,
+        MouseData,
+        PointerData,
+        TouchData,
+        WheelData,
+    },
+    WheelSource,
 };
 use freya_native_core::NodeId;
 use ragnarok::NameOfEvent;
@@ -116,7 +119,7 @@ impl DomEvent {
                 node_id,
                 name,
                 source_event: platform_event_name.into(),
-                data: DomEventData::Wheel(WheelData::new(scroll.x, scroll.y)),
+                data: DomEventData::Wheel(WheelData::new(WheelSource::Device, scroll.x, scroll.y)),
                 bubbles,
             },
             PlatformEvent::Keyboard {
