@@ -227,6 +227,7 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
         Readable,
     };
     use freya_components::NativeContainer;
+    #[cfg(debug_assertions)]
     use freya_elements as dioxus_elements;
     use freya_winit::devtools::Devtools;
 
