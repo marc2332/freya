@@ -3,12 +3,16 @@ use std::collections::HashSet;
 use dioxus::prelude::*;
 use dioxus_radio::prelude::*;
 use freya_components::*;
-use freya_core::event_loop_messages::EventLoopMessage;
+use freya_core::{
+    event_loop_messages::EventLoopMessage,
+    types::AccessibilityId,
+};
 use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_applied_theme,
     use_init_theme,
     use_platform,
+    UseFocus,
     DARK_THEME,
 };
 use freya_native_core::NodeId;
@@ -60,9 +64,11 @@ pub fn DevtoolsView(
             direction: "horizontal",
             ResizablePanel {
                 initial_size: 75.,
-                {children}
+                rect {
+                    a11y_id: UseFocus::attribute_for_id(AccessibilityId(u64::MAX)),
+                    {children}
+                }
             }
-            ResizableHandle { }
             ResizablePanel {
                 initial_size: 25.,
                 min_size: 10.,
@@ -269,7 +275,7 @@ fn LayoutForDOMInspector() -> Element {
             ResizableContainer {
                 direction: "vertical",
                 ResizablePanel {
-                    initial_size: 50.,
+                    initial_size: 40.,
                     rect {
                         padding: "15",
                         NodesTree {
@@ -281,21 +287,10 @@ fn LayoutForDOMInspector() -> Element {
                         }
                     }
                 }
-                ResizableHandle { }
-                ResizablePanel {
-                    initial_size: 50.,
-                    if is_expanded_vertical {
+                if is_expanded_vertical {
+                    ResizablePanel {
+                        initial_size: 60.,
                         Outlet::<Route> {}
-                    } else {
-                        rect {
-                            main_align: "center",
-                            cross_align: "center",
-                            width: "fill",
-                            height: "fill",
-                            label {
-                                "Select an element to inspect."
-                            }
-                        }
                     }
                 }
             }
