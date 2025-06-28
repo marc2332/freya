@@ -151,19 +151,21 @@ pub fn measure_emmitable_events<
                 }
 
                 if events_measurer.is_listening_to(*node_id, &derived_event_name) {
-                    let layout_node = events_measurer.try_area_of(*node_id).unwrap();
-                    let emmitable_event = events_measurer.new_emmitable_event(
-                        *node_id,
-                        derived_event_name,
-                        source_event.clone(),
-                        Some(layout_node),
-                    );
-                    emmitable_events.push(emmitable_event);
+                    let area = events_measurer.try_area_of(*node_id);
+                    if let Some(area) = area {
+                        let emmitable_event = events_measurer.new_emmitable_event(
+                            *node_id,
+                            derived_event_name,
+                            source_event.clone(),
+                            Some(area),
+                        );
+                        emmitable_events.push(emmitable_event);
 
-                    // Events that bubble will only be emitted once
-                    // Those that don't will be stacked
-                    if name.does_bubble() {
-                        continue 'event;
+                        // Events that bubble will only be emitted once
+                        // Those that don't will be stacked
+                        if name.does_bubble() {
+                            continue 'event;
+                        }
                     }
                 }
 
