@@ -232,13 +232,13 @@ pub struct SegmentedButtonProps {
 /// # use freya::prelude::*;
 /// # use std::collections::HashSet;
 /// fn app() -> Element {
-///     let mut selected = use_signal(HashSet::new);
+///     let mut selected = use_signal(|| HashSet::from([1]));
 ///     rsx!(
 ///         rect {
 ///             padding: "8",
 ///             spacing: "8",
 ///             SegmentedButton {
-///                 for i in 0..5 {
+///                 for i in 0..2 {
 ///                     ButtonSegment {
 ///                         key: "{i}",
 ///                         selected: selected.read().contains(&i),
@@ -258,7 +258,22 @@ pub struct SegmentedButtonProps {
 ///         }
 ///     )
 /// }
+///
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rsx!(
+/// #       Preview {
+/// #           {app()}
+/// #       }
+/// #   )
+/// # }, (250., 250.).into(), "./images/gallery_segmented_button.png");
 /// ```
+///
+/// # Preview
+/// ![SegmentedButton Preview][segmented_button]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("segmented_button", "images/gallery_segmented_button.png")
+)]
 #[allow(non_snake_case)]
 pub fn SegmentedButton(
     BaseSegmentedButtonProps { theme, children }: BaseSegmentedButtonProps,
