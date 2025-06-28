@@ -299,3 +299,65 @@ pub fn BaseSegmentedButton(
         }
     )
 }
+
+#[cfg(test)]
+mod test {
+    use std::collections::HashSet;
+
+    use freya::prelude::*;
+    use freya_testing::prelude::*;
+
+    #[tokio::test]
+    pub async fn segmented_button() {
+        fn segmented_button_app() -> Element {
+            let mut selected = use_signal(HashSet::new);
+            rsx!(
+                SegmentedButton {
+                    for i in 0..5 {
+                        ButtonSegment {
+                            key: "{i}",
+                            selected: selected.read().contains(&i),
+                            onpress: move |_| {
+                                if selected.read().contains(&i) {
+                                    selected.write().remove(&i);
+                                } else {
+                                    selected.write().insert(i);
+                                }
+                            },
+                            label {
+                                "Option {i}"
+                            }
+                        }
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(segmented_button_app);
+        let root = utils.root();
+        utils.wait_for_update().await;
+
+        assert!(root.get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(0).get(1).get(0).is_placeholder());
+        assert!(root.get(0).get(2).get(0).is_placeholder());
+
+        utils.click_cursor((115.0, 15.0)).await;
+
+        assert!(root.get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(0).get(1).get(0).is_element());
+        assert!(root.get(0).get(2).get(0).is_placeholder());
+
+        utils.click_cursor((115.0, 15.0)).await;
+
+        assert!(root.get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(0).get(1).get(0).is_placeholder());
+        assert!(root.get(0).get(2).get(0).is_placeholder());
+
+        utils.click_cursor((15.0, 15.0)).await;
+        utils.click_cursor((215.0, 15.0)).await;
+
+        assert!(root.get(0).get(0).get(0).is_element());
+        assert!(root.get(0).get(1).get(0).is_placeholder());
+        assert!(root.get(0).get(2).get(0).is_element());
+    }
+}
