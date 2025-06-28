@@ -58,7 +58,7 @@ pub struct BaseButtonSegmentProps {
     pub selected: bool,
 }
 
-/// Identifies the current status of the [`ButtonSegment`s].
+/// Identifies the current status of the [`ButtonSegment`]s.
 #[derive(Debug, Default, PartialEq, Clone, Copy)]
 enum ButtonSegmentStatus {
     /// Default state.
