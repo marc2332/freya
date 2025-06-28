@@ -213,7 +213,7 @@ pub fn ResizableHandle(
         platform.set_cursor(cursor);
     };
 
-    let onmousemove = move |e: MouseEvent| {
+    let oncaptureglobalmousemove = move |e: MouseEvent| {
         if clicking() {
             if !allow_resizing() {
                 return;
@@ -316,6 +316,7 @@ pub fn ResizableHandle(
             if changed_panels {
                 allow_resizing.set(false);
             }
+            e.prevent_default();
         }
     };
 
@@ -352,7 +353,7 @@ pub fn ResizableHandle(
         onmousedown,
         onglobalclick: onclick,
         onmouseenter,
-        onglobalmousemove: onmousemove,
+        oncaptureglobalmousemove,
         onmouseleave,
     })
 }
@@ -427,6 +428,7 @@ mod test {
             cursor: (100.0, 250.0).into(),
             button: Some(MouseButton::Left),
         });
+        utils.wait_for_update().await;
         utils.push_event(TestEvent::Mouse {
             name: MouseEventName::MouseMove,
             cursor: (100.0, 200.0).into(),
@@ -448,6 +450,7 @@ mod test {
             cursor: (167.0, 300.0).into(),
             button: Some(MouseButton::Left),
         });
+        utils.wait_for_update().await;
         utils.push_event(TestEvent::Mouse {
             name: MouseEventName::MouseMove,
             cursor: (187.0, 300.0).into(),

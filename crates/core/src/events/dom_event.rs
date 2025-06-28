@@ -17,6 +17,7 @@ use freya_elements::{
     WheelSource,
 };
 use freya_native_core::NodeId;
+use ragnarok::NameOfEvent;
 use torin::prelude::*;
 
 use super::EventName;
@@ -43,6 +44,23 @@ impl PartialOrd for DomEvent {
 impl Ord for DomEvent {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.name.cmp(&other.name)
+    }
+}
+
+impl ragnarok::EmmitableEvent for DomEvent {
+    type Key = NodeId;
+    type Name = EventName;
+
+    fn key(&self) -> Self::Key {
+        self.node_id
+    }
+
+    fn name(&self) -> Self::Name {
+        self.name
+    }
+
+    fn source(&self) -> Self::Name {
+        self.source_event
     }
 }
 

@@ -204,7 +204,7 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
             attributes: FxHashMap::default(),
             listeners: FxHashSet::default(),
         });
-        let root_id = world.add_entity(root_node);
+        let root_id: NodeId = world.add_entity(root_node).into();
         {
             let mut tree: TreeMutView = world.borrow::<TreeMutView>().unwrap();
             tree.create_node(root_id);
@@ -253,7 +253,7 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
     pub fn create_node(&mut self, node: impl Into<NodeType<V>>) -> NodeMut<'_, V> {
         let node = node.into();
 
-        let id = self.world.add_entity(node);
+        let id = self.world.add_entity(node).into();
         self.tree_mut().create_node(id);
 
         self.dirty_nodes
@@ -400,7 +400,7 @@ impl<V: Component + Send + Sync> Deref for ViewEntry<'_, V> {
     type Target = V;
 
     fn deref(&self) -> &Self::Target {
-        &self.view[self.id]
+        &self.view[*self.id]
     }
 }
 
@@ -420,13 +420,13 @@ impl<V: Component<Tracking = Untracked> + Send + Sync> Deref for ViewEntryMut<'_
     type Target = V;
 
     fn deref(&self) -> &Self::Target {
-        self.view.get(self.id).unwrap()
+        self.view.get(*self.id).unwrap()
     }
 }
 
 impl<V: Component<Tracking = Untracked> + Send + Sync> DerefMut for ViewEntryMut<'_, V> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.view[self.id]
+        &mut self.view[*self.id]
     }
 }
 
@@ -449,7 +449,7 @@ pub trait NodeImmutable<V: FromAnyValue + Send + Sync = ()>: Sized {
     fn get<'a, T: Component + Sync + Send>(&'a self) -> Option<ViewEntry<'a, T>> {
         // self.real_dom().tree.get(self.id())
         let view = self.real_dom().world.borrow::<View<'a, T>>().ok()?;
-        view.contains(self.id())
+        view.contains(self.id().into())
             .then(|| ViewEntry::new(view, self.id()))
     }
 
@@ -573,7 +573,7 @@ impl<V: FromAnyValue + Send + Sync> NodeMut<'_, V> {
             .insert(TypeId::of::<T>());
         let view_mut: ViewMut<T> = self.dom.borrow_raw().ok()?;
         view_mut
-            .contains(self.id)
+            .contains(self.id.into())
             .then_some(ViewEntryMut::new(view_mut, self.id))
     }
 
@@ -589,7 +589,7 @@ impl<V: FromAnyValue + Send + Sync> NodeMut<'_, V> {
             .entry(self.id)
             .or_default()
             .insert(TypeId::of::<T>());
-        self.dom.world.add_component(self.id, value);
+        self.dom.world.add_component(self.id.into(), value);
     }
 
     /// Add the given node to the end of this nodes children
@@ -635,7 +635,7 @@ impl<V: FromAnyValue + Send + Sync> NodeMut<'_, V> {
                 ..
             } = &mut self.dom;
             let mut view = world.borrow::<ViewMut<NodeType<V>>>().unwrap();
-            if let NodeType::Element(ElementNode { listeners, .. }) = &mut view[id] {
+            if let NodeType::Element(ElementNode { listeners, .. }) = &mut view[id.into()] {
                 let listeners = std::mem::take(listeners);
                 for event in listeners {
                     nodes_listening.get_mut(&event).unwrap().remove(&id);
@@ -653,7 +653,7 @@ impl<V: FromAnyValue + Send + Sync> NodeMut<'_, V> {
             self.dom.get_mut(child).unwrap().remove();
         }
         self.dom.tree_mut().remove(id);
-        self.real_dom_mut().raw_world_mut().delete_entity(id);
+        self.real_dom_mut().raw_world_mut().delete_entity(id.into());
     }
 
     /// Add an event listener
@@ -667,7 +667,7 @@ impl<V: FromAnyValue + Send + Sync> NodeMut<'_, V> {
             ..
         } = &mut self.dom;
         let mut view = world.borrow::<ViewMut<NodeType<V>>>().unwrap();
-        let node_type: &mut NodeType<V> = &mut view[id];
+        let node_type: &mut NodeType<V> = &mut view[id.into()];
         if let NodeType::Element(ElementNode { listeners, .. }) = node_type {
             dirty_nodes.mark_dirty(self.id, NodeMaskBuilder::new().with_listeners().build());
             listeners.insert(event);
@@ -695,7 +695,7 @@ impl<V: FromAnyValue + Send + Sync> NodeMut<'_, V> {
             ..
         } = &mut self.dom;
         let mut view = world.borrow::<ViewMut<NodeType<V>>>().unwrap();
-        let node_type: &mut NodeType<V> = &mut view[id];
+        let node_type: &mut NodeType<V> = &mut view[id.into()];
         if let NodeType::Element(ElementNode { listeners, .. }) = node_type {
             dirty_nodes.mark_dirty(self.id, NodeMaskBuilder::new().with_listeners().build());
             listeners.remove(event);
@@ -731,7 +731,7 @@ impl<V: FromAnyValue + Send + Sync> NodeMut<'_, V> {
     pub fn set_type(&mut self, new: NodeType<V>) {
         {
             let mut view: ViewMut<NodeType<V>> = self.dom.borrow_node_type_mut().unwrap();
-            view[self.id] = new;
+            view[self.id.into()] = new;
         }
         self.dom
             .dirty_nodes

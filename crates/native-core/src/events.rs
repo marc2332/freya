@@ -1,7 +1,5 @@
 use std::str::FromStr;
 
-use smallvec::SmallVec;
-
 #[derive(Clone, Copy, PartialEq, Debug, Hash)]
 pub enum EventName {
     Click,
@@ -138,7 +136,7 @@ impl Ord for EventName {
             e if e.is_capture() => std::cmp::Ordering::Less,
             // Pointer events more priority over non-pointer
             e if e.is_pointer() && !other.is_pointer() => std::cmp::Ordering::Less,
-            // Left have more priority over non-left
+            // Left events have more priority over non-left
             e if e.is_left() => std::cmp::Ordering::Less,
             e => {
                 if e == other {
@@ -152,9 +150,34 @@ impl Ord for EventName {
 }
 
 impl EventName {
-    /// Get what global events are triggered by this [EventName].
-    pub fn get_global_events(&self) -> SmallVec<[Self; 2]> {
-        let mut events = SmallVec::new();
+    /// Check if it's one of the Pointer variants
+    pub fn is_capture(&self) -> bool {
+        matches!(&self, Self::CaptureGlobalMouseMove)
+    }
+
+    /// Check if it's one of the Pointer variants
+    pub fn is_pointer(&self) -> bool {
+        matches!(
+            &self,
+            Self::PointerEnter
+                | Self::PointerLeave
+                | Self::PointerOver
+                | Self::PointerDown
+                | Self::PointerUp
+                | Self::PointerPress
+                | Self::GlobalPointerUp
+        )
+    }
+
+    /// Check if the event means the cursor has left.
+    pub fn is_left(&self) -> bool {
+        matches!(&self, Self::MouseLeave | Self::PointerLeave)
+    }
+}
+
+impl ragnarok::NameOfEvent for EventName {
+    fn get_global_events(&self) -> Vec<Self> {
+        let mut events = Vec::new();
         match self {
             Self::MouseUp => events.push(Self::GlobalClick),
             Self::PointerUp => events.push(Self::GlobalPointerUp),
@@ -169,11 +192,8 @@ impl EventName {
         events
     }
 
-    /// Some events might cause other events, like for example:
-    /// A `mousemove` might also trigger a `mouseenter`
-    /// A `mousedown` or a `touchdown` might also trigger a `pointerdown`
-    pub fn get_derived_events(&self) -> SmallVec<[Self; 4]> {
-        let mut events = SmallVec::new();
+    fn get_derived_events(&self) -> Vec<Self> {
+        let mut events = Vec::new();
 
         events.push(*self);
 
@@ -193,9 +213,8 @@ impl EventName {
         events
     }
 
-    /// Get what events should be cancelled by this [EventName].
-    pub fn get_cancellable_events(&self) -> SmallVec<[Self; 4]> {
-        let mut events = SmallVec::new();
+    fn get_cancellable_events(&self) -> Vec<Self> {
+        let mut events = Vec::new();
 
         events.push(*self);
 
@@ -217,13 +236,12 @@ impl EventName {
             Self::PointerOver => events.extend([Self::MouseMove, Self::GlobalMouseMove]),
 
             Self::PointerEnter => events.extend([Self::MouseEnter]),
-            Self::PointerLeave => events.extend([Self::MouseLeave]),
 
             Self::CaptureGlobalMouseMove => events.extend([
                 Self::MouseMove,
                 Self::MouseEnter,
-                Self::MouseLeave,
                 Self::GlobalMouseMove,
+                Self::PointerEnter,
             ]),
             _ => {}
         }
@@ -231,12 +249,11 @@ impl EventName {
         events
     }
 
-    /// Check if the event means that the pointer (e.g. cursor) just entered a Node
-    pub fn is_enter(&self) -> bool {
+    fn is_enter(&self) -> bool {
         matches!(&self, Self::MouseEnter | Self::PointerEnter)
     }
 
-    pub fn is_global(&self) -> bool {
+    fn is_global(&self) -> bool {
         matches!(
             &self,
             Self::GlobalKeyDown
@@ -250,83 +267,34 @@ impl EventName {
         )
     }
 
-    /// Check if it's one of the Pointer variants
-    pub fn is_capture(&self) -> bool {
-        matches!(&self, Self::CaptureGlobalMouseMove)
+    fn is_moved(&self) -> bool {
+        matches!(&self, Self::MouseMove | Self::PointerEnter)
     }
 
-    /// Check if it's one of the Pointer variants
-    pub fn is_pointer(&self) -> bool {
-        matches!(
-            &self,
-            Self::PointerEnter
-                | Self::PointerLeave
-                | Self::PointerOver
-                | Self::PointerDown
-                | Self::PointerUp
-                | Self::PointerPress
-                | Self::GlobalPointerUp
-        )
+    fn does_bubble(&self) -> bool {
+        !self.is_moved()
+            && !self.is_enter()
+            && !self.is_left()
+            && !self.is_global()
+            && !self.is_capture()
     }
 
-    /// Check if it's one of the Mouse variants
-    pub fn is_mouse(&self) -> bool {
-        matches!(
-            &self,
-            Self::Click
-                | Self::MouseDown
-                | Self::MouseMove
-                | Self::MouseEnter
-                | Self::MiddleClick
-                | Self::GlobalClick
-                | Self::GlobalMouseDown
-                | Self::GlobalMouseMove
-                | Self::CaptureGlobalMouseMove
-        )
-    }
-
-    /// Check if the event means the cursor was moved.
-    pub fn is_moved(&self) -> bool {
-        matches!(
-            &self,
-            Self::MouseMove | Self::MouseEnter | Self::PointerEnter | Self::PointerOver
-        )
-    }
-
-    /// Check if the event means the cursor has left.
-    pub fn is_left(&self) -> bool {
-        matches!(&self, Self::MouseLeave | Self::PointerLeave)
-    }
-
-    /// Bubble all events except:
-    /// - Mouse movements events
-    /// - Mouse left events
-    /// - Global events
-    /// - Capture events
-    pub fn does_bubble(&self) -> bool {
-        !self.is_moved() && !self.is_left() && !self.is_global() && !self.is_capture()
-    }
-
-    /// Only let events that do not move the mouse, go through solid nodes
-    pub fn does_go_through_solid(&self) -> bool {
-        matches!(self, Self::GlobalKeyDown | Self::GlobalKeyUp)
-    }
-
-    /// Check if this event can change the hover state of a Node.
-    pub fn is_hovered(&self) -> bool {
+    fn does_go_through_solid(&self) -> bool {
         matches!(
             self,
-            Self::MouseMove | Self::MouseEnter | Self::PointerOver | Self::PointerEnter
+            Self::KeyDown | Self::KeyUp | Self::GlobalKeyDown | Self::GlobalKeyUp
         )
     }
 
-    /// Check if this event can press state of a Node.
-    pub fn is_pressed(&self) -> bool {
+    fn is_pressed(&self) -> bool {
         matches!(self, Self::MouseDown | Self::TouchStart | Self::PointerDown)
     }
 
-    /// Check if this event can release the press state of a Node.
-    pub fn is_released(&self) -> bool {
+    fn is_released(&self) -> bool {
         matches!(&self, Self::Click | Self::PointerPress)
+    }
+
+    fn new_leave() -> Self {
+        Self::MouseLeave
     }
 }

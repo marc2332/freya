@@ -13,8 +13,9 @@ categories = ["gui"]
 
 [dependencies]
 dioxus-core = { workspace = true}
+torin = { workspace = true }
+ragnarok = { workspace = true }
 
-smallvec = { workspace = true }
 rustc-hash = { workspace = true }
 parking_lot = { version = "0.12.1", features = ["send_guard"] }
 shipyard = { workspace = true }

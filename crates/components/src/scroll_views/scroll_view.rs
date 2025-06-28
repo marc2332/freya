@@ -368,7 +368,7 @@ pub fn ScrollView(
     };
 
     // Unmark any scrollbar
-    let onglobalclick = move |_: MouseEvent| {
+    let onglobalpointerup = move |_| {
         if clicking_scrollbar.peek().is_some() {
             *clicking_scrollbar.write() = None;
         }
@@ -400,7 +400,7 @@ pub fn ScrollView(
             min_height: min_height.map(|x| x.to_string()),
             max_width: max_width.map(|x| x.to_string()),
             max_height: max_height.map(|x| x.to_string()),
-            onglobalclick,
+            onglobalpointerup,
             oncaptureglobalmousemove,
             onglobalkeydown,
             onglobalkeyup,

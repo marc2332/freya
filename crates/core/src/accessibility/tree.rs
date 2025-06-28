@@ -32,6 +32,7 @@ use freya_native_core::{
     tags::TagName,
     NodeId,
 };
+use ragnarok::ProcessedEvents;
 use rustc_hash::{
     FxHashMap,
     FxHashSet,
@@ -292,7 +293,7 @@ impl AccessibilityTree {
         let scrollable_state = &*node_ref.get::<ScrollableState>().unwrap();
 
         let mut target_node = node_id;
-        let mut events = Vec::new();
+        let mut emmitable_events = Vec::new();
 
         // Iterate over the inherited scrollables from the closes to the farest
         for closest_scrollable in scrollable_state.scrollables.iter().rev() {
@@ -323,7 +324,7 @@ impl AccessibilityTree {
                 let delta_y = -(closest_scrollable_state.scroll_y + diff_y);
                 let delta_x = -(closest_scrollable_state.scroll_x + diff_x);
 
-                events.push(DomEvent {
+                emmitable_events.push(DomEvent {
                     name: EventName::Wheel,
                     source_event: EventName::Wheel,
                     node_id: *closest_scrollable,
@@ -340,7 +341,12 @@ impl AccessibilityTree {
             }
         }
 
-        event_emitter.send((events, Vec::default())).unwrap();
+        event_emitter
+            .send(ProcessedEvents {
+                emmitable_events,
+                ..Default::default()
+            })
+            .unwrap();
     }
 
     /// Focus a Node given the strategy.

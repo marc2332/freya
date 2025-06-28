@@ -308,20 +308,3 @@ fn LayoutForDOMInspector() -> Element {
 fn DOMInspector() -> Element {
     Ok(VNode::placeholder())
 }
-
-pub trait NodeIdSerializer {
-    fn serialize(&self) -> String;
-
-    fn deserialize(node_id: &str) -> Self;
-}
-
-impl NodeIdSerializer for NodeId {
-    fn serialize(&self) -> String {
-        format!("{}-{}", self.index(), self.gen())
-    }
-
-    fn deserialize(node_id: &str) -> Self {
-        let (index, gen) = node_id.split_once('-').unwrap();
-        NodeId::new_from_index_and_gen(index.parse().unwrap(), gen.parse().unwrap())
-    }
-}
