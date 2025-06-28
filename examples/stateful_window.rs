@@ -11,7 +11,6 @@ fn main() {
         LaunchConfig::new()
             .with_title("Window with state")
             .with_state(10)
-            .without_default_fonts()
             .with_default_font("Impact"),
     );
 }

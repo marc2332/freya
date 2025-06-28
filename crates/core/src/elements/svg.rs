@@ -24,7 +24,7 @@ impl ElementUtils for SvgElement {
         canvas: &Canvas,
         _font_collection: &mut FontCollection,
         font_manager: &FontMgr,
-        _default_fonts: &[String],
+        _fallback_fonts: &[String],
         _images_cache: &mut ImagesCache,
         _scale_factor: f32,
     ) {

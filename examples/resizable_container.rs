@@ -10,6 +10,8 @@ fn main() {
 }
 
 fn app() -> Element {
+    let mut panels = use_signal(|| 5);
+
     rsx!(
         ResizableContainer {
             ResizablePanel {
@@ -22,96 +24,42 @@ fn app() -> Element {
                     label {
                         "Panel 1"
                     }
+                    Button {
+                        onpress: move|_| panels += 1,
+                        label {
+                            "Push"
+                        }
+                    }
+                    Button {
+                        onpress: move|_| panels -= 1,
+                        label {
+                            "Remove"
+                        }
+                    }
                 }
             }
-            ResizableHandle { }
-            ResizablePanel { // Panel 1
+            ResizablePanel {
                 initial_size: 50.,
                 ResizableContainer {
                     direction: "horizontal",
-                    ResizablePanel {
-                        initial_size: 35.,
-                        rect {
-                            width: "fill",
-                            height: "fill",
-                            main_align: "center",
-                            cross_align: "center",
-                            corner_radius: "6",
-                            color: "white",
-                            background:
-                            "linear-gradient(250deg, orange 15%, rgb(255, 0, 0) 50%, rgb(255, 192, 203) 80%)",
-                            label {
-                                "Panel 1"
-                            }
-                        }
-                    }
-                    ResizableHandle { }
-                    ResizablePanel {
-                        initial_size: 20.,
-                        min_size: 20.,
-                        rect {
-                            width: "fill",
-                            height: "fill",
-                            main_align: "center",
-                            cross_align: "center",
-                            corner_radius: "6",
-                            color: "white",
-                            background:
-                            "linear-gradient(250deg, orange 15%, rgb(255, 0, 0) 50%, rgb(255, 192, 203) 80%)",
-                            label {
-                                "Panel 2"
-                            }
-                        }
-                    }
-                    ResizableHandle { }
-                    ResizablePanel {
-                        initial_size: 20.,
-                        rect {
-                            width: "fill",
-                            height: "fill",
-                            main_align: "center",
-                            cross_align: "center",
-                            corner_radius: "6",
-                            color: "white",
-                            background:
-                            "linear-gradient(250deg, orange 15%, rgb(255, 0, 0) 50%, rgb(255, 192, 203) 80%)",
-                            label {
-                                "Panel 3"
-                            }
-                        }
-                    }
-                    ResizableHandle { }
-                    ResizablePanel {
-                        initial_size: 15.,
-                        min_size: 10.,
-                        rect {
-                            width: "fill",
-                            height: "fill",
-                            main_align: "center",
-                            cross_align: "center",
-                            corner_radius: "6",
-                            color: "white",
-                            background:
-                            "linear-gradient(250deg, orange 15%, rgb(255, 0, 0) 50%, rgb(255, 192, 203) 80%)",
-                            label {
-                                "Panel 4"
-                            }
-                        }
-                    }
-                    ResizableHandle { }
-                    ResizablePanel {
-                        initial_size: 10.,
-                        rect {
-                            width: "fill",
-                            height: "fill",
-                            main_align: "center",
-                            cross_align: "center",
-                            corner_radius: "6",
-                            color: "white",
-                            background:
-                            "linear-gradient(250deg, orange 15%, rgb(255, 0, 0) 50%, rgb(255, 192, 203) 80%)",
-                            label {
-                                "Panel 5"
+                    for panel in 1..panels() {
+                        ResizablePanel {
+                            key: "{panel}",
+                            initial_size: panel as f32 * 15.,
+                            min_size: panel as f32 * 5.,
+                            order: panel,
+                            rect {
+                                width: "fill",
+                                height: "fill",
+                                main_align: "center",
+                                cross_align: "center",
+                                corner_radius: "6",
+                                color: "white",
+                                background:
+                                "linear-gradient(250deg, orange 15%, rgb(255, 0, 0) 50%, rgb(255, 192, 203) 80%)",
+                                label {
+                                    "Panel {panel}"
+                                }
                             }
                         }
                     }

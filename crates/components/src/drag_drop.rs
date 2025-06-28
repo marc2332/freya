@@ -89,6 +89,10 @@ pub fn DragZone<T: 'static + Clone + PartialEq>(
         }
     };
 
+    // Extend by 1. so that the cursor click can reach the drop zone
+    let x = pos.read().x + 1.;
+    let y = pos.read().y + 1.;
+
     rsx!(
         rect {
             reference: node_reference,
@@ -100,8 +104,8 @@ pub fn DragZone<T: 'static + Clone + PartialEq>(
                     position: "absolute",
                     width: "0",
                     height: "0",
-                    offset_x: "{pos.read().x}",
-                    offset_y: "{pos.read().y}",
+                    offset_x: "{x}",
+                    offset_y: "{y}",
                     {drag_element}
                 }
             }

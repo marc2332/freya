@@ -1,4 +1,4 @@
-pub fn default_fonts() -> Vec<String> {
+pub fn fallback_fonts() -> Vec<String> {
     let mut fonts = vec!["Noto Sans".to_string(), "Arial".to_string()];
     if cfg!(target_os = "windows") {
         fonts.insert(0, "Segoe UI".to_string());
