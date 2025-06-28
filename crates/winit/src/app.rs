@@ -16,9 +16,8 @@ use freya_core::{
         TextGroupMeasurement,
     },
     events::{
-        handle_processed_events,
-        process_events,
-        NodesState,
+        EventsExecutorAdapter,
+        EventsMeasurerAdapter,
         PlatformEvent,
     },
     layout::process_layout,
@@ -45,8 +44,14 @@ use freya_core::{
     },
 };
 use freya_engine::prelude::*;
+use freya_native_core::NodeId;
 use futures_task::Waker;
 use futures_util::Future;
+use ragnarok::{
+    EventsExecutorRunner,
+    EventsMeasurerRunner,
+    NodesState,
+};
 use tokio::{
     select,
     sync::{
@@ -87,7 +92,7 @@ pub struct Application {
     pub(crate) devtools: Option<Devtools>,
     pub(crate) event_emitter: EventEmitter,
     pub(crate) event_receiver: EventReceiver,
-    pub(crate) nodes_state: NodesState,
+    pub(crate) nodes_state: NodesState<NodeId>,
     pub(crate) platform_sender: NativePlatformSender,
     pub(crate) platform_receiver: NativePlatformReceiver,
     pub(crate) accessibility: WinitAcessibilityTree,
@@ -229,7 +234,14 @@ impl Application {
             let fut = std::pin::pin!(async {
                 select! {
                     Some(processed_events) = self.event_receiver.recv() => {
-                        handle_processed_events(&self.sdom, &mut self.vdom, &mut self.nodes_state, processed_events)
+                        let fdom = self.sdom.get();
+                        let rdom = fdom.rdom();
+                        let events_executor_adapter = EventsExecutorAdapter {
+                            rdom,
+                            vdom: &mut self.vdom,
+                        };
+                        events_executor_adapter.run(&mut self.nodes_state,
+                            processed_events);
                     },
                     _ = self.vdom.wait_for_work() => {},
                 }
@@ -264,19 +276,27 @@ impl Application {
 
     /// Process the events queue
     pub fn process_events(&mut self, scale_factor: f64) {
+        let sdom = self.sdom.get();
+        let rdom = sdom.rdom();
+        let layout = sdom.layout();
+        let layers = sdom.layers();
+
         let focus_id = self.accessibility.focused_node_id();
         self.plugins.send(
             PluginEvent::StartedMeasuringEvents,
             PluginHandle::new(&self.proxy),
         );
-        process_events(
-            &self.sdom.get(),
-            &mut self.events,
-            &self.event_emitter,
-            &mut self.nodes_state,
+        let mut events_measurer_adapter = EventsMeasurerAdapter {
+            rdom,
+            layers: &layers,
+            layout: &layout,
+            vdom: &mut self.vdom,
             scale_factor,
-            focus_id,
-        );
+        };
+        let processed_events =
+            events_measurer_adapter.run(&mut self.events, &mut self.nodes_state, focus_id);
+        self.event_emitter.send(processed_events).unwrap();
+
         self.plugins.send(
             PluginEvent::FinishedMeasuringEvents,
             PluginHandle::new(&self.proxy),
@@ -404,14 +424,25 @@ impl Application {
     /// Measure the layout
     pub fn process_layout(&mut self, window_size: PhysicalSize<u32>, scale_factor: f64) {
         let fdom = self.sdom.get();
+        let rdom = fdom.rdom();
+        let mut layout = fdom.layout();
+        let mut images_cache = fdom.images_cache();
+        let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
+        let mut compositor_dirty_nodes = fdom.compositor_dirty_nodes();
+        let mut compositor_dirty_area = fdom.compositor_dirty_area();
 
         self.plugins.send(
-            PluginEvent::StartedMeasuringLayout(&fdom.layout()),
+            PluginEvent::StartedMeasuringLayout(&layout),
             PluginHandle::new(&self.proxy),
         );
 
         process_layout(
-            &fdom,
+            rdom,
+            &mut layout,
+            &mut images_cache,
+            &mut dirty_accessibility_tree,
+            &mut compositor_dirty_nodes,
+            &mut compositor_dirty_area,
             Area::from_size(window_size.to_torin()),
             &mut self.font_collection,
             scale_factor as f32,
@@ -419,7 +450,7 @@ impl Application {
         );
 
         self.plugins.send(
-            PluginEvent::FinishedMeasuringLayout(&fdom.layout()),
+            PluginEvent::FinishedMeasuringLayout(&layout),
             PluginHandle::new(&self.proxy),
         );
 
