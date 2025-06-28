@@ -51,7 +51,7 @@ dioxus-core-macro = { version = "0.6.3" }
 dioxus-hooks = { version = "0.6.2" }
 dioxus-signals = { version = "0.6.3" }
 dioxus-core = { version = "0.6.3" }
-dioxus-lib = { version = "0.6.2", features = ["macro", "signals", "hooks"] }
+dioxus-lib = { version = "0.6.2", default-features = false, features = ["macro", "signals", "hooks"] }
 generational-box = { version = "0.6.2" }
 
 dioxus-clipboard = "0.2.0"
