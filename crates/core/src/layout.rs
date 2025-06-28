@@ -34,13 +34,13 @@ pub fn process_layout(
     area: Area,
     font_collection: &mut FontCollection,
     scale_factor: f32,
-    default_fonts: &[String],
+    fallback_fonts: &[String],
 ) {
     let mut dom_adapter = DioxusDOMAdapter::new(rdom, scale_factor);
     let skia_measurer = SkiaMeasurer::new(
         rdom,
         font_collection,
-        default_fonts,
+        fallback_fonts,
         scale_factor,
         images_cache,
     );

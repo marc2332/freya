@@ -135,7 +135,7 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
             &window,
             config.embedded_fonts,
             config.plugins,
-            config.default_fonts,
+            config.fallback_fonts,
             accessibility,
         );
 

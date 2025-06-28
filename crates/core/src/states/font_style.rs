@@ -57,7 +57,7 @@ pub struct FontStyleState {
 impl FontStyleState {
     pub fn text_style(
         &self,
-        default_font_family: &[String],
+        fallback_fonts: &[String],
         scale_factor: f32,
         paragraph_text_height: TextHeightBehavior,
     ) -> TextStyle {
@@ -65,7 +65,7 @@ impl FontStyleState {
 
         let mut font_family = self.font_family.to_vec();
 
-        font_family.extend_from_slice(default_font_family);
+        font_family.extend_from_slice(fallback_fonts);
 
         text_style
             .set_color(self.color)

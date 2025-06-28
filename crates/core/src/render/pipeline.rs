@@ -69,7 +69,7 @@ pub struct RenderPipeline<'a> {
     pub background: Color,
     pub scale_factor: f32,
     pub highlighted_node: Option<NodeId>,
-    pub default_fonts: &'a [String],
+    pub fallback_fonts: &'a [String],
 }
 
 impl RenderPipeline<'_> {
@@ -271,7 +271,7 @@ impl RenderPipeline<'_> {
                 dirty_canvas,
                 self.font_collection,
                 self.font_manager,
-                self.default_fonts,
+                self.fallback_fonts,
                 self.images_cache,
                 self.scale_factor,
             );
