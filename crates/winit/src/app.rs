@@ -70,6 +70,7 @@ use winit::{
 use crate::{
     accessibility::WinitAcessibilityTree,
     devtools::Devtools,
+    drivers::GraphicsDriver,
     size::WinitSize,
     winit_waker::winit_waker,
     EmbeddedFonts,
@@ -337,31 +338,41 @@ impl Application {
     pub fn render(
         &mut self,
         background: Color,
-        surface: &mut Surface,
-        dirty_surface: &mut Surface,
+        graphics_driver: &mut GraphicsDriver,
         window: &Window,
         scale_factor: f64,
     ) {
-        self.plugins.send(
-            PluginEvent::BeforeRender {
-                canvas: surface.canvas(),
-                font_collection: &self.font_collection,
-                freya_dom: &self.sdom.get(),
+        graphics_driver.present(
+            window.inner_size().cast(),
+            window,
+            |surface, dirty_surface| {
+                self.plugins.send(
+                    PluginEvent::BeforeRender {
+                        font_collection: &self.font_collection,
+                        freya_dom: &self.sdom.get(),
+                    },
+                    PluginHandle::new(&self.proxy),
+                );
+                self.start_render(
+                    background,
+                    surface,
+                    dirty_surface,
+                    window.inner_size(),
+                    scale_factor as f32,
+                );
+                self.plugins.send(
+                    PluginEvent::AfterRender {
+                        canvas: surface.canvas(),
+                        font_collection: &self.font_collection,
+                        freya_dom: &self.sdom.get(),
+                    },
+                    PluginHandle::new(&self.proxy),
+                );
             },
-            PluginHandle::new(&self.proxy),
-        );
-
-        self.start_render(
-            background,
-            surface,
-            dirty_surface,
-            window.inner_size(),
-            scale_factor as f32,
         );
 
         self.plugins.send(
-            PluginEvent::AfterRender {
-                canvas: surface.canvas(),
+            PluginEvent::AfterPresenting {
                 font_collection: &self.font_collection,
                 freya_dom: &self.sdom.get(),
             },

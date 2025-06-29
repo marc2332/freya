@@ -63,9 +63,14 @@ pub enum PluginEvent<'a> {
     /// The Window just got created.
     WindowCreated(&'a Window),
 
+    /// After presenting the canvas to the window.
+    AfterPresenting {
+        font_collection: &'a FontCollection,
+        freya_dom: &'a FreyaDOM,
+    },
+
     /// Before starting to render the app to the Canvas.
     BeforeRender {
-        canvas: &'a Canvas,
         font_collection: &'a FontCollection,
         freya_dom: &'a FreyaDOM,
     },
