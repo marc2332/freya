@@ -340,18 +340,17 @@ impl Application {
         window: &Window,
         scale_factor: f64,
     ) {
-        self.plugins.send(
-            PluginEvent::BeforeRender {
-                font_collection: &self.font_collection,
-                freya_dom: &self.sdom.get(),
-            },
-            PluginHandle::new(&self.proxy),
-        );
-
         graphics_driver.present(
             window.inner_size().cast(),
             window,
             |surface, dirty_surface| {
+                self.plugins.send(
+                    PluginEvent::BeforeRender {
+                        font_collection: &self.font_collection,
+                        freya_dom: &self.sdom.get(),
+                    },
+                    PluginHandle::new(&self.proxy),
+                );
                 self.start_render(
                     hovered_node,
                     background,
@@ -360,7 +359,6 @@ impl Application {
                     window.inner_size(),
                     scale_factor as f32,
                 );
-
                 self.plugins.send(
                     PluginEvent::AfterRender {
                         canvas: surface.canvas(),
@@ -370,6 +368,14 @@ impl Application {
                     PluginHandle::new(&self.proxy),
                 );
             },
+        );
+
+        self.plugins.send(
+            PluginEvent::AfterPresenting {
+                font_collection: &self.font_collection,
+                freya_dom: &self.sdom.get(),
+            },
+            PluginHandle::new(&self.proxy),
         );
     }
 

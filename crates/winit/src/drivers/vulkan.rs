@@ -395,9 +395,6 @@ impl VulkanDriver {
             surface.canvas().scale((scale_factor, scale_factor));
             surface.canvas().clear(self.background);
 
-            surface.canvas().scale((scale_factor, scale_factor));
-            surface.canvas().clear(self.background);
-
             self.dirty_surface
                 .draw(surface.canvas(), (0, 0), SamplingOptions::default(), None);
 

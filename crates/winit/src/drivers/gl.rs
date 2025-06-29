@@ -1,6 +1,7 @@
 use std::{
     ffi::CString,
     num::NonZeroU32,
+    time::Instant,
 };
 
 use freya_engine::prelude::{
@@ -228,7 +229,7 @@ impl OpenGLDriver {
 
         render(&mut self.surface, &mut self.dirty_surface);
 
-        self.gr_context.flush_and_submit();
+        self.gr_context.flush_submit_and_sync_cpu();
         self.gl_surface.swap_buffers(&self.gl_context).unwrap();
     }
 

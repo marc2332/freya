@@ -30,6 +30,9 @@ pub struct PerformanceOverlayPlugin {
     max_fps: usize,
 
     started_render: Option<Instant>,
+    finished_render: Option<Instant>,
+
+    finished_presenting: Option<Duration>,
 
     started_layout: Option<Instant>,
     finished_layout: Option<Duration>,
@@ -56,6 +59,9 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
             PluginEvent::FinishedUpdatingDOM => {
                 self.finished_dom_updates = Some(self.started_dom_updates.unwrap().elapsed())
             }
+            PluginEvent::AfterPresenting { .. } => {
+                self.finished_presenting = Some(self.finished_render.unwrap().elapsed())
+            }
             PluginEvent::BeforeRender { .. } => self.started_render = Some(Instant::now()),
             PluginEvent::AfterRender {
                 canvas,
@@ -63,6 +69,7 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 freya_dom,
             } => {
                 let started_render = self.started_render.take().unwrap();
+                let finished_presenting = self.finished_presenting.unwrap_or_default();
                 let finished_layout = self.finished_layout.unwrap();
                 let finished_events = self.finished_events.unwrap_or_default();
                 let finished_dom_updates = self.finished_dom_updates.unwrap();
@@ -76,6 +83,8 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                     .retain(|frame| now.duration_since(*frame).as_millis() < 1000);
 
                 self.frames.push(now);
+
+                self.finished_render = Some(Instant::now());
 
                 // Render the texts
                 let mut paragraph_builder =
@@ -108,6 +117,13 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                     18.0,
                 );
 
+                // Presenting time
+                add_text(
+                    &mut paragraph_builder,
+                    format!("Presenting: {}ms \n", finished_presenting.as_millis()),
+                    18.0,
+                );
+
                 // Layout time
                 add_text(
                     &mut paragraph_builder,
@@ -122,17 +138,17 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                     18.0,
                 );
 
-                // DOM updates time
+                // Tree updates time
                 add_text(
                     &mut paragraph_builder,
-                    format!("DOM Updates: {}ms \n", finished_dom_updates.as_millis()),
+                    format!("Tree Updates: {}ms \n", finished_dom_updates.as_millis()),
                     18.0,
                 );
 
-                // DOM size
+                // Tree size
                 add_text(
                     &mut paragraph_builder,
-                    format!("{} DOM Nodes \n", rdom.tree_ref().len()),
+                    format!("{} Tree Nodes \n", rdom.tree_ref().len()),
                     14.0,
                 );
 
@@ -156,9 +172,9 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                     .max_fps
                     .max(self.fps_historic.iter().max().copied().unwrap_or_default());
                 let start_x = 5.0;
-                let start_y = 170.0 + self.max_fps.max(60) as f32;
+                let start_y = 230.0 + self.max_fps.max(60) as f32;
 
-                canvas.draw_rect(Rect::new(5., 150., 200., start_y), &paint);
+                canvas.draw_rect(Rect::new(5., 210., 200., start_y), &paint);
 
                 for (i, fps) in self.fps_historic.iter().enumerate() {
                     let mut paint = Paint::default();
