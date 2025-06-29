@@ -121,13 +121,15 @@ impl<'a, State: Clone + 'static> WinitRenderer<'a, State> {
         }
     }
 
-    // Send and process an event
+    // Send an event
     fn send_event(&mut self, event: PlatformEvent) {
+        self.state.created_state().app.send_event(event);
+    }
+
+    // Process queued events
+    fn flush_events(&mut self) {
         let scale_factor = self.scale_factor();
-        self.state
-            .created_state()
-            .app
-            .send_event(event, scale_factor);
+        self.state.created_state().app.flush_events(scale_factor);
     }
 
     /// Get the current scale factor of the Window
@@ -513,6 +515,10 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
             }
             _ => {}
         }
+    }
+
+    fn about_to_wait(&mut self, _event_loop: &winit::event_loop::ActiveEventLoop) {
+        self.flush_events();
     }
 
     fn exiting(&mut self, _event_loop: &winit::event_loop::ActiveEventLoop) {
