@@ -2,17 +2,16 @@ use std::collections::HashSet;
 
 use dioxus::prelude::*;
 use dioxus_radio::prelude::use_radio;
-use dioxus_router::prelude::{
+use freya_components::*;
+use freya_native_core::NodeId;
+use freya_router::prelude::{
     router,
     use_navigator,
 };
-use freya_components::*;
-use freya_native_core::NodeId;
 
 use crate::{
     node::NodeElement,
     state::DevtoolsChannel,
-    NodeIdSerializer,
     Route,
 };
 
@@ -24,11 +23,7 @@ struct NodeTreeItem {
 
 #[allow(non_snake_case)]
 #[component]
-pub fn NodesTree(
-    height: String,
-    selected_node_id: Option<NodeId>,
-    onselected: EventHandler<NodeId>,
-) -> Element {
+pub fn NodesTree(selected_node_id: Option<NodeId>, onselected: EventHandler<NodeId>) -> Element {
     let navigator = use_navigator();
     let mut radio = use_radio(DevtoolsChannel::UpdatedDOM);
 
@@ -64,8 +59,6 @@ pub fn NodesTree(
         show_scrollbar: true,
         length: items.len(),
         item_size: 27.0,
-        height,
-        padding: "15",
         builder_args: (selected_node_id, items),
         builder: move |i, options: &Option<(Option<NodeId>, Vec<NodeTreeItem>)>| {
             let (selected_node_id, items) = options.as_ref().unwrap();

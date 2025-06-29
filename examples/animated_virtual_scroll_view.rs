@@ -45,7 +45,7 @@ fn app() -> Element {
 #[component]
 fn AnimatedContainer(height: f32, children: Element) -> Element {
     let animation = use_animation(|conf| {
-        conf.auto_start(true);
+        conf.on_creation(OnCreation::Run);
         AnimNum::new(350., 0.)
             .time(500)
             .ease(Ease::InOut)

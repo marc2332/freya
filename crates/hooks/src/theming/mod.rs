@@ -221,6 +221,7 @@ define_theme! {
         %[cows]
         background: str,
         hover_background: str,
+        disabled_background: str,
         border_fill: str,
         focus_border_fill: str,
         shadow: str,
@@ -229,6 +230,37 @@ define_theme! {
         width: str,
         height: str,
         padding: str,
+        %[subthemes]
+        font_theme: FontTheme,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub SegmentedButton {
+        %[cows]
+        background: str,
+        shadow: str,
+        border_fill: str,
+        corner_radius: str,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub ButtonSegment {
+        %[cows]
+        background: str,
+        hover_background: str,
+        disabled_background: str,
+        shadow: str,
+        width: str,
+        height: str,
+        padding: str,
+
+        selected_padding: str,
+        selected_icon_fill: str,
+
         %[subthemes]
         font_theme: FontTheme,
     }
@@ -330,6 +362,7 @@ define_theme! {
     pub Loader {
         %[cows]
         primary_color: str,
+        opposite_color: str,
     }
 }
 
@@ -404,6 +437,8 @@ define_theme! {
         margin: str,
         background: str,
         hover_background: str,
+        corner_radius: str,
+        padding: str,
         %[subthemes]
         font_theme: FontTheme,
     }
@@ -476,7 +511,6 @@ define_theme! {
         %[cows]
         background: str,
         color: str,
-        cross_fill: str,
         width: str,
         height: str,
     }
@@ -523,17 +557,20 @@ define_theme! {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ColorsSheet {
-    pub primary: Cow<'static, str>,
+    pub primary_accent: Cow<'static, str>,
+    pub secondary_accent: Cow<'static, str>,
+    pub tertiary_accent: Cow<'static, str>,
+
     pub focused_primary_border: Cow<'static, str>,
-    pub secondary: Cow<'static, str>,
-    pub tertiary: Cow<'static, str>,
-    pub surface: Cow<'static, str>,
+
+    pub primary_surface: Cow<'static, str>,
     pub secondary_surface: Cow<'static, str>,
     pub neutral_surface: Cow<'static, str>,
     pub focused_surface: Cow<'static, str>,
     pub opposite_surface: Cow<'static, str>,
     pub secondary_opposite_surface: Cow<'static, str>,
     pub tertiary_opposite_surface: Cow<'static, str>,
+
     pub background: Cow<'static, str>,
     pub focused_border: Cow<'static, str>,
     pub solid: Cow<'static, str>,
@@ -548,17 +585,20 @@ impl ColorsSheet {
         if val.starts_with("key") {
             let key_val = val.replace("key(", "").replace(")", "");
             match key_val.as_str() {
-                "primary" => self.primary.clone(),
+                "primary_accent" => self.primary_accent.clone(),
+                "secondary_accent" => self.secondary_accent.clone(),
+                "tertiary_accent" => self.tertiary_accent.clone(),
+
                 "focused_primary_border" => self.focused_primary_border.clone(),
-                "secondary" => self.secondary.clone(),
-                "tertiary" => self.tertiary.clone(),
-                "surface" => self.surface.clone(),
+
+                "primary_surface" => self.primary_surface.clone(),
                 "secondary_surface" => self.secondary_surface.clone(),
                 "neutral_surface" => self.neutral_surface.clone(),
                 "focused_surface" => self.focused_surface.clone(),
                 "opposite_surface" => self.opposite_surface.clone(),
                 "secondary_opposite_surface" => self.secondary_opposite_surface.clone(),
                 "tertiary_opposite_surface" => self.tertiary_opposite_surface.clone(),
+
                 "background" => self.background.clone(),
                 "focused_border" => self.focused_border.clone(),
                 "solid" => self.solid.clone(),
@@ -566,7 +606,7 @@ impl ColorsSheet {
                 "primary_color" => self.primary_color.clone(),
                 "placeholder_color" => self.placeholder_color.clone(),
                 "highlight_color" => self.highlight_color.clone(),
-                _ => self.primary.clone(),
+                _ => self.primary_accent.clone(),
             }
         } else {
             val
@@ -582,6 +622,8 @@ pub struct Theme {
     pub button: ButtonTheme,
     pub filled_button: ButtonTheme,
     pub outline_button: ButtonTheme,
+    pub segmented_button: SegmentedButtonTheme,
+    pub button_segment: ButtonSegmentTheme,
     pub switch: SwitchTheme,
     pub scroll_bar: ScrollBarTheme,
     pub slider: SliderTheme,

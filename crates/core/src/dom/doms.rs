@@ -39,6 +39,7 @@ use crate::{
         AccessibilityDirtyNodes,
         AccessibilityGenerator,
     },
+    animation_clock::AnimationClock,
     custom_attributes::CustomAttributeValues,
     elements::ParagraphElement,
     event_loop_messages::TextGroupMeasurement,
@@ -55,6 +56,7 @@ use crate::{
         ImageState,
         LayerState,
         LayoutState,
+        ScrollableState,
         StyleState,
         SvgState,
         TransformState,
@@ -141,6 +143,7 @@ pub struct FreyaDOM {
     accessibility_dirty_nodes: Arc<Mutex<AccessibilityDirtyNodes>>,
     accessibility_generator: Arc<AccessibilityGenerator>,
     images_cache: Arc<Mutex<ImagesCache>>,
+    animation_clock: AnimationClock,
 }
 
 impl Default for FreyaDOM {
@@ -157,6 +160,7 @@ impl Default for FreyaDOM {
             LayerState::to_type_erased(),
             SvgState::to_type_erased(),
             ImageState::to_type_erased(),
+            ScrollableState::to_type_erased(),
         ]);
         let dioxus_integration_state = DioxusState::create(&mut rdom);
         Self {
@@ -171,6 +175,7 @@ impl Default for FreyaDOM {
             accessibility_dirty_nodes: Arc::default(),
             accessibility_generator: Arc::default(),
             images_cache: Arc::default(),
+            animation_clock: AnimationClock::default(),
         }
     }
 }
@@ -210,6 +215,10 @@ impl FreyaDOM {
 
     pub fn images_cache(&self) -> MutexGuard<ImagesCache> {
         self.images_cache.lock().unwrap()
+    }
+
+    pub fn animation_clock(&self) -> &AnimationClock {
+        &self.animation_clock
     }
 
     /// Create the initial DOM from the given Mutations

@@ -3,6 +3,7 @@ use std::sync::{
     Mutex,
 };
 
+use freya_engine::prelude::BlendMode;
 use freya_native_core::{
     exports::shipyard::Component,
     node_ref::NodeView,
@@ -22,6 +23,7 @@ use crate::{
     custom_attributes::CustomAttributeValues,
     dom::CompositorDirtyNodes,
     parsing::{
+        Parse,
         ParseAttribute,
         ParseError,
     },
@@ -33,6 +35,8 @@ pub struct TransformState {
     pub opacities: Vec<f32>,
     pub rotations: Vec<(NodeId, f32)>,
     pub scales: Vec<(NodeId, f32, f32)>,
+    pub blend_mode: Option<BlendMode>,
+    pub backdrop_blur: f32,
 }
 
 impl ParseAttribute for TransformState {
@@ -40,41 +44,47 @@ impl ParseAttribute for TransformState {
         &mut self,
         attr: freya_native_core::prelude::OwnedAttributeView<CustomAttributeValues>,
     ) -> Result<(), ParseError> {
-        #[allow(clippy::single_match)]
         match attr.attribute {
             AttributeName::Rotate => {
-                if let Some(value) = attr.value.as_text() {
-                    if value.ends_with("deg") {
-                        let rotation = value
-                            .replacen("deg", "", 1)
-                            .parse::<f32>()
-                            .map_err(|_| ParseError)?;
-                        self.rotations.push((self.node_id, rotation));
-                    }
+                let value = attr.value.as_text().ok_or(ParseError)?;
+                if value.ends_with("deg") {
+                    let rotation = value
+                        .trim_end_matches("deg")
+                        .parse::<f32>()
+                        .map_err(|_| ParseError)?;
+                    self.rotations.push((self.node_id, rotation));
                 }
             }
             AttributeName::Opacity => {
-                if let Some(value) = attr.value.as_text() {
-                    let opacity = value.parse::<f32>().map_err(|_| ParseError)?;
-                    self.opacities.push(opacity)
-                }
+                let value = attr.value.as_text().ok_or(ParseError)?;
+                let opacity = value.parse::<f32>().map_err(|_| ParseError)?;
+                self.opacities.push(opacity);
             }
             AttributeName::Scale => {
-                if let Some(value) = attr.value.as_text() {
-                    let (scale_x, scale_y) = if !value.trim().contains(' ') {
-                        let scale = value.parse::<f32>().map_err(|_| ParseError)?;
-                        (scale, scale)
-                    } else {
-                        let Some((scale_x, scale_y)) = value.split_once(' ') else {
-                            return Err(ParseError);
-                        };
-                        let scale_x = scale_x.parse::<f32>().map_err(|_| ParseError)?;
-                        let scale_y = scale_y.parse::<f32>().map_err(|_| ParseError)?;
-                        (scale_x, scale_y)
-                    };
-                    self.scales
-                        .push((self.node_id, scale_x.max(0.), scale_y.max(0.)))
-                }
+                let value = attr.value.as_text().ok_or(ParseError)?;
+                let (scale_x, scale_y) = if !value.trim().contains(' ') {
+                    let scale = value.parse::<f32>().map_err(|_| ParseError)?;
+                    (scale, scale)
+                } else {
+                    let (x, y) = value.split_once(' ').ok_or(ParseError)?;
+                    let scale_x = x.parse::<f32>().map_err(|_| ParseError)?;
+                    let scale_y = y.parse::<f32>().map_err(|_| ParseError)?;
+                    (scale_x, scale_y)
+                };
+                self.scales
+                    .push((self.node_id, scale_x.max(0.0), scale_y.max(0.0)));
+            }
+
+            AttributeName::BlendMode => {
+                self.blend_mode = Some(BlendMode::parse(attr.value.as_text().ok_or(ParseError)?)?);
+            }
+            AttributeName::BackdropBlur => {
+                self.backdrop_blur = attr
+                    .value
+                    .as_text()
+                    .ok_or(ParseError)?
+                    .parse::<f32>()
+                    .map_err(|_| ParseError)?;
             }
             _ => {}
         }
@@ -98,6 +108,8 @@ impl State<CustomAttributeValues> for TransformState {
             AttributeName::Scale,
             AttributeName::AspectRatio,
             AttributeName::ImageCover,
+            AttributeName::BlendMode,
+            AttributeName::BackdropBlur,
         ]));
 
     fn update<'a>(
@@ -114,6 +126,8 @@ impl State<CustomAttributeValues> for TransformState {
 
         let mut transform_state = TransformState {
             node_id: node_view.node_id(),
+            blend_mode: None,
+            backdrop_blur: 0.,
             ..inherited_transform
         };
 

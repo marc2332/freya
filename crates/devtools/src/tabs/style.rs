@@ -19,7 +19,6 @@ use crate::{
         ShadowProperty,
         TextShadowProperty,
     },
-    NodeIdSerializer,
 };
 
 #[allow(non_snake_case)]

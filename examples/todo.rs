@@ -230,7 +230,7 @@ fn Column(data: Signal<Vec<Task>>, state: State) -> Element {
 #[component]
 fn Card(task: Task) -> Element {
     let animation = use_animation(move |conf| {
-        conf.auto_start(true);
+        conf.on_creation(OnCreation::Run);
         AnimNum::new(0.7, 1.)
             .time(1000)
             .function(Function::Elastic)
@@ -280,60 +280,60 @@ fn AddTask(data: Signal<Vec<Task>>, state: State) -> Element {
                     show_popup.set(false)
                 },
                 PopupTitle {
-                    label {
-                        "Add New Task to '{state:?}'"
-                    }
+                    text: "Add New Task to '{state:?}'"
                 }
-                rect {
-                    padding: "2",
-                    spacing: "12",
-                    Input {
-                        value: description,
-                        placeholder: "Description",
-                        width: "fill",
-                        onchange: move |txt| {
-                            description.set(txt);
-                        }
-                    }
-                    for p in [Priority::Low, Priority::Mid, Priority::High, Priority::Urgent] {
-                        Tile {
-                            onselect: move |_| priority.set(p),
-                            leading: rsx!(
-                                Radio {
-                                    selected: *priority.read() == p,
-                                }
-                            ),
-                            label { "{p:?}" }
-                        }
-                    }
-                    Button {
-                        theme: theme_with!(ButtonTheme {
-                            width: "fill".into()
-                        }),
-                        onpress: move |_| {
-                            description.write().clear();
-                            show_popup.set(false);
-                        },
-                        label {
-                            "Discard"
-                        }
-                    }
-                    FilledButton {
-                        theme: theme_with!(ButtonTheme {
-                            width: "fill".into()
-                        }),
-                        onpress: move |_| {
-                            let add_description = description();
-                            if add_description.trim().is_empty() {
-                                return;
+                PopupContent {
+                    rect {
+                        padding: "0 0 20 0",
+                        spacing: "10",
+                        Input {
+                            value: description,
+                            placeholder: "Description",
+                            width: "fill",
+                            onchange: move |txt| {
+                                description.set(txt);
                             }
-                            data.write().push(Task::new(add_description, state, priority()));
-                            description.write().clear();
-                            priority.set(Priority::Low);
-                            show_popup.set(false);
-                        },
-                        label {
-                            "Add"
+                        }
+                        for p in [Priority::Low, Priority::Mid, Priority::High, Priority::Urgent] {
+                            Tile {
+                                onselect: move |_| priority.set(p),
+                                leading: rsx!(
+                                    Radio {
+                                        selected: *priority.read() == p,
+                                    }
+                                ),
+                                label { "{p:?}" }
+                            }
+                        }
+                        Button {
+                            theme: theme_with!(ButtonTheme {
+                                width: "fill".into()
+                            }),
+                            onpress: move |_| {
+                                description.write().clear();
+                                show_popup.set(false);
+                            },
+                            label {
+                                "Discard"
+                            }
+                        }
+                        FilledButton {
+                            theme: theme_with!(ButtonTheme {
+                                width: "fill".into()
+                            }),
+                            onpress: move |_| {
+                                let add_description = description();
+                                if add_description.trim().is_empty() {
+                                    return;
+                                }
+                                data.write().push(Task::new(add_description, state, priority()));
+                                description.write().clear();
+                                priority.set(Priority::Low);
+                                show_popup.set(false);
+                            },
+                            label {
+                                "Add"
+                            }
                         }
                     }
                 }

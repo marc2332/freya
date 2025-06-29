@@ -10,6 +10,7 @@ use torin::{
     },
     scaled::Scaled,
 };
+use tracing::error;
 
 use super::utils::ElementUtils;
 use crate::{
@@ -27,6 +28,7 @@ use crate::{
     states::{
         CanvasState,
         StyleState,
+        TransformState,
     },
     values::{
         Fill,
@@ -91,11 +93,12 @@ impl ElementUtils for RectElement {
         canvas: &Canvas,
         font_collection: &mut FontCollection,
         _font_manager: &FontMgr,
-        _default_fonts: &[String],
+        _fallback_fonts: &[String],
         _images_cache: &mut ImagesCache,
         scale_factor: f32,
     ) {
         let node_style = &*node_ref.get::<StyleState>().unwrap();
+        let node_transform = &*node_ref.get::<TransformState>().unwrap();
 
         let area = layout_node.visible_area().to_f32();
         let mut path = Path::new();
@@ -126,6 +129,65 @@ impl ElementUtils for RectElement {
         } else {
             path.add_rrect(rounded_rect, None);
         }
+
+        // If we have a backdrop blur applied, we need to draw that by creating a new
+        // layer, clipping it to the rect's roundness, then blurring behind it before
+        // drawing the rect's initial background box.
+        if node_transform.backdrop_blur != 0.0 {
+            // If we can guarantee that the node entirely draws over it's backdrop,
+            // we can avoid this whole (possibly intense) process, since the node's
+            // backdrop is never visible.
+            //
+            // There's probably more that can be done in this area, like checking individual gradient
+            // stops but I'm not completely sure of the diminishing returns here.
+            //
+            // Currently we verify the following:
+            // - Node has a single solid color background.
+            // - The background has 100% opacity.
+            // - The node has no parents with the `opacity` attribute applied.
+            let is_possibly_translucent = if let Fill::Color(color) = node_style.background {
+                color.a() != u8::MAX
+                    || node_transform.blend_mode.is_some()
+                    || !node_transform.opacities.is_empty()
+            } else {
+                true
+            };
+
+            if is_possibly_translucent {
+                let blur_filter = blur(
+                    (
+                        node_transform.backdrop_blur * scale_factor,
+                        node_transform.backdrop_blur * scale_factor,
+                    ),
+                    None,
+                    None,
+                    rounded_rect.rect(),
+                );
+
+                if let Some(blur_filter) = blur_filter {
+                    let layer_rec = SaveLayerRec::default()
+                        .bounds(rounded_rect.rect())
+                        .backdrop(&blur_filter);
+
+                    // Depending on if the rect is rounded or not, we might need to clip the blur
+                    // layer to the shape of the rounded rect.
+                    if corner_radius.is_round() {
+                        canvas.save();
+                        canvas.clip_rrect(rounded_rect, ClipOp::Intersect, true);
+                        canvas.save_layer(&layer_rec);
+                        canvas.restore();
+                        canvas.restore();
+                    } else {
+                        canvas.save_layer(&layer_rec);
+                        canvas.restore();
+                    }
+                } else {
+                    error!("Unable to create blur filter.");
+                }
+            }
+        }
+
+        // Paint the rect's background.
         canvas.draw_path(&path, &paint);
 
         // Shadows

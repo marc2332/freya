@@ -19,7 +19,7 @@ pub fn create_label(
     torin_node: &Node,
     area_size: &Size2D,
     font_collection: &FontCollection,
-    default_font_family: &[String],
+    fallback_fonts: &[String],
     scale_factor: f32,
 ) -> ParagraphData {
     let font_style = &*node.get::<FontStyleState>().unwrap();
@@ -34,8 +34,7 @@ pub fn create_label(
         paragraph_style.set_ellipsis(ellipsis);
     }
 
-    let text_style =
-        font_style.text_style(default_font_family, scale_factor, font_style.text_height);
+    let text_style = font_style.text_style(fallback_fonts, scale_factor, font_style.text_height);
     paragraph_style.set_text_style(&text_style);
 
     let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);

@@ -9,18 +9,8 @@ use std::{
     path::PathBuf,
 };
 
-use dioxus_router::{
-    hooks::{
-        use_navigator,
-        use_route,
-    },
-    prelude::{
-        Outlet,
-        Routable,
-        Router,
-    },
-};
 use freya::prelude::*;
+use freya_router::prelude::*;
 use rand::Rng;
 
 fn main() {
@@ -207,13 +197,11 @@ fn AppSidebar() -> Element {
                     }
                 ),
                 Body {
-                    rect {
-                        main_align: "center",
-                        cross_align: "center",
-                        width: "100%",
-                        height: "100%",
-                        Outlet::<Route> {  }
-                    }
+                    main_align: "center",
+                    cross_align: "center",
+                    width: "100%",
+                    height: "100%",
+                    Outlet::<Route> {  }
                 }
             }
         }

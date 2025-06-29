@@ -57,7 +57,7 @@ pub struct FontStyleState {
 impl FontStyleState {
     pub fn text_style(
         &self,
-        default_font_family: &[String],
+        fallback_fonts: &[String],
         scale_factor: f32,
         paragraph_text_height: TextHeightBehavior,
     ) -> TextStyle {
@@ -65,7 +65,7 @@ impl FontStyleState {
 
         let mut font_family = self.font_family.to_vec();
 
-        font_family.extend_from_slice(default_font_family);
+        font_family.extend_from_slice(fallback_fonts);
 
         text_style
             .set_color(self.color)
@@ -132,131 +132,105 @@ impl ParseAttribute for FontStyleState {
     ) -> Result<(), ParseError> {
         match attr.attribute {
             AttributeName::Color => {
-                if let Some(value) = attr.value.as_text() {
-                    // Make an exception for the "inherit" as in this case we don't want to pass
-                    //  a color at all but use the inherited one.
-                    if value != "inherit" {
-                        self.color = Color::parse(value)?;
-                    }
+                let value = attr.value.as_text().ok_or(ParseError)?;
+                // Make an exception for the "inherit" as in this case we don't want to pass
+                //  a color at all but use the inherited one.
+                if value != "inherit" {
+                    self.color = Color::parse(value)?;
                 }
             }
             AttributeName::TextShadow => {
-                if let Some(value) = attr.value.as_text() {
-                    self.text_shadows = value
-                        .split_excluding_group(',', '(', ')')
-                        .map(|chunk| TextShadow::parse(chunk).unwrap_or_default())
-                        .collect();
-                }
+                self.text_shadows = attr
+                    .value
+                    .as_text()
+                    .ok_or(ParseError)?
+                    .split_excluding_group(',', '(', ')')
+                    .map(|chunk| TextShadow::parse(chunk).unwrap_or_default())
+                    .collect();
             }
             AttributeName::FontFamily => {
-                if let Some(value) = attr.value.as_text() {
-                    let families = value.split(',');
-                    self.font_family = families.into_iter().map(|f| f.trim().to_string()).collect();
-                }
+                self.font_family = attr
+                    .value
+                    .as_text()
+                    .ok_or(ParseError)?
+                    .split(',')
+                    .map(|f| f.trim().to_string())
+                    .collect();
             }
             AttributeName::FontSize => {
-                if let Some(value) = attr.value.as_text() {
-                    if let Ok(font_size) = value.parse::<f32>() {
-                        self.font_size = font_size;
-                    }
-                }
+                self.font_size = attr
+                    .value
+                    .as_text()
+                    .ok_or(ParseError)?
+                    .parse()
+                    .map_err(|_| ParseError)?;
             }
             AttributeName::LineHeight => {
-                if let Some(value) = attr.value.as_text() {
-                    if let Ok(line_height) = value.parse::<f32>() {
-                        self.line_height = Some(line_height);
-                    }
-                }
+                self.line_height = Some(
+                    attr.value
+                        .as_text()
+                        .ok_or(ParseError)?
+                        .parse()
+                        .map_err(|_| ParseError)?,
+                );
             }
             AttributeName::TextAlign => {
-                if let Some(value) = attr.value.as_text() {
-                    if let Ok(text_align) = TextAlign::parse(value) {
-                        self.text_align = text_align;
-                    }
-                }
+                self.text_align = TextAlign::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::MaxLines => {
-                if let Some(value) = attr.value.as_text() {
-                    if let Ok(max_lines) = value.parse() {
-                        self.max_lines = Some(max_lines);
-                    }
-                }
+                self.max_lines = Some(
+                    attr.value
+                        .as_text()
+                        .ok_or(ParseError)?
+                        .parse()
+                        .map_err(|_| ParseError)?,
+                );
             }
             AttributeName::TextOverflow => {
-                let value = attr.value.as_text();
-                if let Some(value) = value {
-                    if let Ok(text_overflow) = TextOverflow::parse(value) {
-                        self.text_overflow = text_overflow;
-                    }
-                }
+                self.text_overflow = TextOverflow::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::FontStyle => {
-                if let Some(value) = attr.value.as_text() {
-                    if let Ok(font_slant) = Slant::parse(value) {
-                        self.font_slant = font_slant;
-                    }
-                }
+                self.font_slant = Slant::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::FontWeight => {
-                if let Some(value) = attr.value.as_text() {
-                    if let Ok(font_weight) = Weight::parse(value) {
-                        self.font_weight = font_weight;
-                    }
-                }
+                self.font_weight = Weight::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::FontWidth => {
-                if let Some(value) = attr.value.as_text() {
-                    if let Ok(font_width) = Width::parse(value) {
-                        self.font_width = font_width;
-                    }
-                }
+                self.font_width = Width::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::Decoration => {
-                if let Some(value) = attr.value.as_text() {
-                    if let Ok(decoration) = TextDecoration::parse(value) {
-                        self.decoration.ty = decoration;
-                    }
-                }
+                self.decoration.ty =
+                    TextDecoration::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::DecorationStyle => {
-                if let Some(value) = attr.value.as_text() {
-                    if let Ok(style) = TextDecorationStyle::parse(value) {
-                        self.decoration.style = style;
-                    }
-                }
+                self.decoration.style =
+                    TextDecorationStyle::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::DecorationColor => {
-                if let Some(value) = attr.value.as_text() {
-                    if let Ok(new_decoration_color) = Color::parse(value) {
-                        self.decoration.color = new_decoration_color;
-                    }
-                } else {
-                    self.decoration.color = self.color;
-                }
+                self.decoration.color = match attr.value.as_text() {
+                    Some(v) => Color::parse(v)?,
+                    None => self.color,
+                };
             }
             AttributeName::WordSpacing => {
-                let value = attr.value.as_text();
-                if let Some(value) = value {
-                    if let Ok(word_spacing) = value.parse() {
-                        self.word_spacing = word_spacing;
-                    }
-                }
+                self.word_spacing = attr
+                    .value
+                    .as_text()
+                    .ok_or(ParseError)?
+                    .parse()
+                    .map_err(|_| ParseError)?;
             }
             AttributeName::LetterSpacing => {
-                let value = attr.value.as_text();
-                if let Some(value) = value {
-                    if let Ok(letter_spacing) = value.parse() {
-                        self.letter_spacing = letter_spacing;
-                    }
-                }
+                self.letter_spacing = attr
+                    .value
+                    .as_text()
+                    .ok_or(ParseError)?
+                    .parse()
+                    .map_err(|_| ParseError)?;
             }
             AttributeName::TextHeight => {
-                let value = attr.value.as_text();
-                if let Some(value) = value {
-                    if let Ok(text_height) = TextHeightBehavior::parse(value) {
-                        self.text_height = text_height;
-                    }
-                }
+                self.text_height =
+                    TextHeightBehavior::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             _ => {}
         }

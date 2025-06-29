@@ -12,6 +12,10 @@ use freya_native_core::{
     SendAnyMap,
 };
 use freya_native_core_macro::partial_derive_state;
+use torin::{
+    prelude::Area,
+    torin::Torin,
+};
 
 use crate::{
     custom_attributes::CustomAttributeValues,
@@ -20,7 +24,10 @@ use crate::{
         ParseAttribute,
         ParseError,
     },
-    values::OverflowMode,
+    values::{
+        LayerMode,
+        OverflowMode,
+    },
 };
 
 #[derive(Default, PartialEq, Clone, Debug, Component)]
@@ -30,16 +37,33 @@ pub struct ViewportState {
     pub overflow: OverflowMode,
 }
 
+impl ViewportState {
+    pub fn is_visible(&self, layout: &Torin<NodeId>, area: &Area) -> bool {
+        // Skip elements that are completely out of any their parent's viewport
+        for viewport_id in &self.viewports {
+            let viewport = layout.get(*viewport_id).unwrap().visible_area();
+            if !viewport.intersects(area) {
+                return false;
+            }
+        }
+        true
+    }
+}
+
 impl ParseAttribute for ViewportState {
     fn parse_attribute(
         &mut self,
         attr: freya_native_core::prelude::OwnedAttributeView<CustomAttributeValues>,
     ) -> Result<(), ParseError> {
-        #[allow(clippy::single_match)]
         match attr.attribute {
             AttributeName::Overflow => {
-                if let Some(value) = attr.value.as_text() {
-                    self.overflow = OverflowMode::parse(value).map_err(|_| ParseError)?;
+                self.overflow = OverflowMode::parse(attr.value.as_text().ok_or(ParseError)?)
+                    .map_err(|_| ParseError)?;
+            }
+            AttributeName::Layer => {
+                let layer = LayerMode::parse(attr.value.as_text().ok_or(ParseError)?)?;
+                if layer == LayerMode::Overlay {
+                    self.viewports.clear();
                 }
             }
             _ => {}
@@ -58,7 +82,10 @@ impl State<CustomAttributeValues> for ViewportState {
     type NodeDependencies = ();
 
     const NODE_MASK: NodeMaskBuilder<'static> = NodeMaskBuilder::new()
-        .with_attrs(AttributeMaskBuilder::Some(&[AttributeName::Overflow]))
+        .with_attrs(AttributeMaskBuilder::Some(&[
+            AttributeName::Overflow,
+            AttributeName::Layer,
+        ]))
         .with_tag();
 
     fn update<'a>(
@@ -78,16 +105,16 @@ impl State<CustomAttributeValues> for ViewportState {
             ..Default::default()
         };
 
-        if let Some(attributes) = node_view.attributes() {
-            for attr in attributes {
-                viewports_state.parse_safe(attr)
-            }
-        }
-
         if let Some((parent,)) = parent {
             viewports_state.viewports.extend(parent.viewports.clone());
             if parent.overflow == OverflowMode::Clip {
                 viewports_state.viewports.push(parent.node_id);
+            }
+        }
+
+        if let Some(attributes) = node_view.attributes() {
+            for attr in attributes {
+                viewports_state.parse_safe(attr)
             }
         }
 

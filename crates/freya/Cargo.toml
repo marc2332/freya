@@ -1,7 +1,7 @@
 [package]
 name = "freya"
 description = "Cross-platform and non-web GUI Library powered by Skia."
-version = "0.3.3"
+version = "0.4.0"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
@@ -12,17 +12,17 @@ keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
 categories = ["gui", "asynchronous"]
 
 [package.metadata.docs.rs]
-features = ["freya-engine/mocked-engine", "docs"]
+features = ["freya-engine/mocked-engine", "docs", "winit"]
 no-default-features = true
 
 [features]
 # Internal features
-default = ["skia", "gl", "vulkan"]
+default = ["skia", "winit", "gl", "vulkan"]
 skia = ["freya-engine/skia-engine"]
 tracing-subscriber = ["dep:tracing-subscriber"]
 mocked-engine-development = ["freya-engine/mocked-engine"] # This is just for the CI
 fade-cached-incremental-areas = ["freya-core/fade-cached-incremental-areas"]
-docs = ["dep:freya-testing", "dep:dioxus-i18n", "dep:dioxus-router", "freya-components/docs", "freya-hooks/docs"]
+docs = ["dep:freya-testing", "dep:dioxus-i18n", "dep:freya-router", "freya-components/docs", "freya-hooks/docs"]
 
 # User features
 network-image = ["freya-components/network-image"]
@@ -31,26 +31,23 @@ performance-overlay = []
 disable-zoom-shortcuts = ["freya-winit/disable-zoom-shortcuts"]
 devtools = ["dep:freya-devtools"]
 custom-tokio-rt = []
-gl = ["freya-winit/gl"]
-vulkan = ["freya-winit/vulkan"]
-
+gl = ["winit", "freya-winit/gl"]
+vulkan = ["winit", "freya-winit/vulkan"]
+winit = ["freya-core/winit", "freya-hooks/winit", "freya-components/winit", "dep:freya-winit"]
 
 [dependencies]
 freya-devtools = { workspace = true, optional = true }
-
-freya-winit = { workspace = true }
+freya-winit = { workspace = true, optional = true}
 freya-elements = { workspace = true }
-
 freya-hooks = { workspace = true }
 freya-core = { workspace = true }
 freya-components = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
 
-
 freya-testing = { workspace = true, optional = true }
 dioxus-i18n = { workspace = true, optional = true }
-dioxus-router = { workspace = true, optional = true }
+freya-router = { workspace = true, optional = true }
 
 dioxus = { workspace = true }
 dioxus-core-macro = { workspace = true }

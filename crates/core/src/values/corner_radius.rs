@@ -20,6 +20,12 @@ pub struct CornerRadius {
     pub smoothing: f32,
 }
 
+impl CornerRadius {
+    pub fn is_round(&self) -> bool {
+        self.top_left > 0. || self.top_right > 0. || self.bottom_right > 0. || self.bottom_left > 0.
+    }
+}
+
 // https://www.figma.com/blog/desperately-seeking-squircles/
 fn compute_smooth_corner(
     corner_radius: f32,

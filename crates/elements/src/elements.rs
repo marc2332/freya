@@ -55,6 +55,8 @@ def_element!(
         shadow,
         corner_radius,
         corner_smoothing,
+        blend_mode,
+        backdrop_blur,
 
         // Font style
         color,
@@ -206,6 +208,11 @@ def_element!(
         letter_spacing,
         word_spacing,
         text_height,
+
+        // Style
+        blend_mode,
+        backdrop_blur,
+
 
         // Transform
         rotate,
@@ -460,7 +467,7 @@ def_element!(
     ///     rsx!(
     ///         image {
     ///             image_data,
-    ///             width: "100%", // You must specify size otherwhise it will default to 0
+    ///             width: "100%",
     ///             height: "100%",
     ///         }
     ///     )

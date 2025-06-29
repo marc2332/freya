@@ -33,7 +33,7 @@ use crate::{
     },
 };
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct NodeState {
     pub cursor: CursorState,
     pub font_style: FontStyleState,
