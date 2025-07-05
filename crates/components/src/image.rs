@@ -24,6 +24,7 @@ macro_rules! import_image {
         #[allow(non_snake_case)]
         #[dioxus::prelude::component]
         pub fn $component_name(
+            children: Element,
             $(#[props(default = $value.to_string())] $key: String,)*
         ) -> freya::prelude::Element {
             use freya::prelude::*;
@@ -32,6 +33,7 @@ macro_rules! import_image {
             rsx!(image {
                 $($key: $key,)*
                 image_data,
+                {children}
             })
         }
     };
