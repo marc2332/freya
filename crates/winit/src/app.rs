@@ -265,7 +265,8 @@ impl Application {
             // If there was no relayout but there was a repaint then we can update the devtools now,
             // otherwise if there was a relayout the devtools will get updated on next render
             if let Some(devtools) = &self.devtools {
-                devtools.update(&self.sdom.get());
+                let fdom = self.sdom.get();
+                devtools.update(fdom.rdom(), &fdom.layout());
             }
         }
 
@@ -456,7 +457,7 @@ impl Application {
         );
 
         if let Some(devtools) = &self.devtools {
-            devtools.update(&fdom)
+            devtools.update(rdom, &layout);
         }
 
         #[cfg(debug_assertions)]

@@ -5,7 +5,7 @@ use std::sync::{
 
 use freya_core::{
     accessibility::NodeAccessibility,
-    dom::FreyaDOM,
+    dom::DioxusDOM,
     node::{
         get_node_state,
         NodeState,
@@ -20,7 +20,10 @@ use freya_native_core::{
     tags::TagName,
 };
 use tokio::sync::watch;
-use torin::prelude::LayoutNode;
+use torin::{
+    prelude::LayoutNode,
+    torin::Torin,
+};
 
 pub type DevtoolsReceiver = watch::Receiver<Vec<NodeInfo>>;
 pub type HighlightedNode = Arc<Mutex<Option<NodeId>>>;
@@ -46,10 +49,7 @@ impl Devtools {
         )
     }
 
-    pub fn update(&self, fdom: &FreyaDOM) {
-        let rdom = fdom.rdom();
-        let layout = fdom.layout();
-
+    pub fn update(&self, rdom: &DioxusDOM, layout: &Torin<NodeId>) {
         let mut new_nodes = Vec::new();
 
         let mut devtools_found = false;
