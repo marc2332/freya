@@ -192,10 +192,6 @@ pub(crate) const BASE_THEME: Theme = Theme {
         divider_fill: cow_borrowed!("key(primary_surface)"),
         corner_radius: cow_borrowed!("6"),
     },
-    graph: GraphTheme {
-        width: cow_borrowed!("100%"),
-        height: cow_borrowed!("100%"),
-    },
     icon: IconTheme {
         width: cow_borrowed!("10"),
         height: cow_borrowed!("10"),
