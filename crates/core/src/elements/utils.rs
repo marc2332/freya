@@ -144,7 +144,7 @@ impl ElementWithUtils {
         }
     }
 
-    /// Just like [Self::drawing_area] but only if all the viewports allow the element to be visible.
+    /// Just like [Self::get_drawing_area] but only if all the viewports allow the element to be visible.
     #[allow(clippy::too_many_arguments)]
     pub fn get_drawing_area_if_viewports_allow(
         &self,
