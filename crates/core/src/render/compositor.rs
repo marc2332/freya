@@ -248,11 +248,15 @@ impl Compositor {
                                 };
 
                                 let is_dirty = dirty_nodes.remove(&viewport.node_id);
+                                let needs_render = utils.needs_render(transform_state, style_state);
 
                                 // Use the cached area to invalidate the previous frame area if necessary
                                 let mut invalidated_cache_area =
                                     cache.get(&viewport.node_id).and_then(|cached_area| {
-                                        if is_dirty || dirty_area.intersects(cached_area) {
+                                        if is_dirty
+                                            || needs_render
+                                            || dirty_area.intersects(cached_area)
+                                        {
                                             Some(*cached_area)
                                         } else {
                                             None
@@ -260,6 +264,7 @@ impl Compositor {
                                     });
 
                                 let is_invalidated = is_dirty
+                                    || needs_render
                                     || invalidated_cache_area.is_some()
                                     || dirty_area.intersects(&area);
 
@@ -277,7 +282,7 @@ impl Compositor {
                                         cache.insert(viewport.node_id, area);
                                     }
 
-                                    if is_dirty {
+                                    if is_dirty || needs_render {
                                         // Expand the dirty area with the cached area
                                         if let Some(invalidated_cache_area) =
                                             invalidated_cache_area.take()

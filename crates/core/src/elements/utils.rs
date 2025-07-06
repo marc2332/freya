@@ -160,6 +160,11 @@ pub trait ElementUtils {
 
         element_check || rotate_effect || scales_effect
     }
+
+    #[inline]
+    fn needs_render(&self, _transform_state: &TransformState, _node_style: &StyleState) -> bool {
+        false
+    }
 }
 
 pub trait ElementUtilsResolver {
@@ -353,6 +358,13 @@ impl ElementUtils for ElementWithUtils {
             Self::Paragraph(el) => el.needs_cached_area(node_ref, transform_state, style_state),
             Self::Image(el) => el.needs_cached_area(node_ref, transform_state, style_state),
             Self::Label(el) => el.needs_cached_area(node_ref, transform_state, style_state),
+        }
+    }
+
+    fn needs_render(&self, node_transform: &TransformState, node_style: &StyleState) -> bool {
+        match self {
+            Self::Rect(el) => el.has_blur(node_transform, node_style),
+            _ => false,
         }
     }
 }
