@@ -162,7 +162,11 @@ pub trait ElementUtils {
     }
 
     #[inline]
-    fn needs_render(&self, _transform_state: &TransformState, _node_style: &StyleState) -> bool {
+    fn needs_explicit_render(
+        &self,
+        _transform_state: &TransformState,
+        _node_style: &StyleState,
+    ) -> bool {
         false
     }
 }
@@ -361,7 +365,11 @@ impl ElementUtils for ElementWithUtils {
         }
     }
 
-    fn needs_render(&self, node_transform: &TransformState, node_style: &StyleState) -> bool {
+    fn needs_explicit_render(
+        &self,
+        node_transform: &TransformState,
+        node_style: &StyleState,
+    ) -> bool {
         match self {
             Self::Rect(el) => el.has_blur(node_transform, node_style),
             _ => false,
