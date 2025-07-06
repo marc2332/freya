@@ -74,99 +74,12 @@ pub trait ElementUtils {
         layout_node.visible_area()
     }
 
-    #[allow(clippy::too_many_arguments)]
-    fn drawing_area_with_viewports(
-        &self,
-        layout_node: &LayoutNode,
-        node_ref: &DioxusNode,
-        layout: &Torin<NodeId>,
-        scale_factor: f32,
-        node_style: &StyleState,
-        node_viewports: &ViewportState,
-        transform_state: &TransformState,
-    ) -> Option<Area> {
-        let mut drawing_area = self.drawing_area(
-            layout_node,
-            node_ref,
-            layout,
-            scale_factor,
-            node_style,
-            transform_state,
-        );
-
-        for viewport_id in &node_viewports.viewports {
-            let viewport = layout.get(*viewport_id).unwrap().visible_area();
-            drawing_area.clip(&viewport);
-            if !viewport.intersects(&drawing_area) {
-                return None;
-            }
-        }
-
-        // Inflate the area by 1px in each side to cover potential off-bounds rendering caused by antialising
-        Some(drawing_area.inflate(1.0, 1.0))
-    }
-
-    /// Measure the area for this element considering other
-    /// factors like shadows or borders, which are not part of the layout.
-    fn drawing_area(
-        &self,
-        layout_node: &LayoutNode,
-        node_ref: &DioxusNode,
-        layout: &Torin<NodeId>,
-        scale_factor: f32,
-        node_style: &StyleState,
-        transform_state: &TransformState,
-    ) -> Area {
-        let mut drawing_area =
-            self.element_drawing_area(layout_node, node_ref, scale_factor, node_style);
-
-        for (id, scale_x, scale_y) in &transform_state.scales {
-            let layout_node = layout.get(*id).unwrap();
-            let center = layout_node.area.center();
-            drawing_area = drawing_area.translate(-center.to_vector());
-            drawing_area = drawing_area.scale(*scale_x, *scale_y);
-            drawing_area = drawing_area.translate(center.to_vector());
-            drawing_area = drawing_area.inflate(1.0, 1.0);
-        }
-
-        if !transform_state.rotations.is_empty() {
-            let area = layout_node.visible_area();
-            drawing_area.max_area_when_rotated(area.center())
-        } else {
-            drawing_area
-        }
-    }
-
     /// Check if this element requires any kind of special caching.
     /// Mainly used for text-like elements with shadows.
     /// See [crate::render::CompositorCache].
     /// Default to `false`.
     #[inline]
     fn element_needs_cached_area(&self, _node_ref: &DioxusNode, _style_state: &StyleState) -> bool {
-        false
-    }
-
-    #[inline]
-    fn needs_cached_area(
-        &self,
-        node_ref: &DioxusNode,
-        transform_state: &TransformState,
-        style_state: &StyleState,
-    ) -> bool {
-        let element_check = self.element_needs_cached_area(node_ref, style_state);
-
-        let rotate_effect = !transform_state.rotations.is_empty();
-        let scales_effect = !transform_state.scales.is_empty();
-
-        element_check || rotate_effect || scales_effect
-    }
-
-    #[inline]
-    fn needs_explicit_render(
-        &self,
-        _transform_state: &TransformState,
-        _node_style: &StyleState,
-    ) -> bool {
         false
     }
 }
@@ -195,6 +108,103 @@ pub enum ElementWithUtils {
     Paragraph(ParagraphElement),
     Image(ImageElement),
     Label(LabelElement),
+}
+
+impl ElementWithUtils {
+    /// Measure the area that this element once rendered will use.
+    /// This takes into consideration things like borders and shadows.
+    pub fn get_drawing_area(
+        &self,
+        layout_node: &LayoutNode,
+        node_ref: &DioxusNode,
+        layout: &Torin<NodeId>,
+        scale_factor: f32,
+        node_style: &StyleState,
+        transform_state: &TransformState,
+    ) -> Area {
+        let mut drawing_area =
+            self.element_drawing_area(layout_node, node_ref, scale_factor, node_style);
+
+        // Apply scale effect
+        for (id, scale_x, scale_y) in &transform_state.scales {
+            let layout_node = layout.get(*id).unwrap();
+            let center = layout_node.area.center();
+            drawing_area = drawing_area.translate(-center.to_vector());
+            drawing_area = drawing_area.scale(*scale_x, *scale_y);
+            drawing_area = drawing_area.translate(center.to_vector());
+            drawing_area = drawing_area.inflate(1.0, 1.0);
+        }
+
+        if !transform_state.rotations.is_empty() {
+            // Apply rotation effect
+            let area = layout_node.visible_area();
+            drawing_area.max_area_when_rotated(area.center())
+        } else {
+            drawing_area
+        }
+    }
+
+    /// Just like [Self::drawing_area] but only if all the viewports allow the element to be visible.
+    #[allow(clippy::too_many_arguments)]
+    pub fn get_drawing_area_if_viewports_allow(
+        &self,
+        layout_node: &LayoutNode,
+        node_ref: &DioxusNode,
+        layout: &Torin<NodeId>,
+        scale_factor: f32,
+        node_style: &StyleState,
+        node_viewports: &ViewportState,
+        transform_state: &TransformState,
+    ) -> Option<Area> {
+        let mut drawing_area = self.get_drawing_area(
+            layout_node,
+            node_ref,
+            layout,
+            scale_factor,
+            node_style,
+            transform_state,
+        );
+
+        for viewport_id in &node_viewports.viewports {
+            let viewport = layout.get(*viewport_id).unwrap().visible_area();
+            drawing_area.clip(&viewport);
+            if !viewport.intersects(&drawing_area) {
+                return None;
+            }
+        }
+
+        // Inflate the area by 1px in each side to cover potential off-bounds rendering caused by antialising
+        Some(drawing_area.inflate(1.0, 1.0))
+    }
+
+    /// Check if this element needs its drawing area to be cached in case it needs to be
+    /// invalidated in the next frame due to potential rotation or scale changes.
+    #[inline]
+    pub fn needs_cached_drawing_area(
+        &self,
+        node_ref: &DioxusNode,
+        transform_state: &TransformState,
+        style_state: &StyleState,
+    ) -> bool {
+        let element_check = self.element_needs_cached_area(node_ref, style_state);
+
+        let rotate_effect = !transform_state.rotations.is_empty();
+        let scales_effect = !transform_state.scales.is_empty();
+
+        element_check || rotate_effect || scales_effect
+    }
+
+    /// Some elements such as `rect` might always need to rerender as Skia doesnt work well with clipped canvases with applied blur.
+    pub fn needs_explicit_render(
+        &self,
+        node_transform: &TransformState,
+        node_style: &StyleState,
+    ) -> bool {
+        match self {
+            Self::Rect(el) => el.has_blur(node_transform, node_style),
+            _ => false,
+        }
+    }
 }
 
 impl ElementUtils for ElementWithUtils {
@@ -297,82 +307,29 @@ impl ElementUtils for ElementWithUtils {
         }
     }
 
-    fn drawing_area(
+    fn element_drawing_area(
         &self,
         layout_node: &LayoutNode,
         node_ref: &DioxusNode,
-        layout: &Torin<NodeId>,
         scale_factor: f32,
         node_style: &StyleState,
-        transform_state: &TransformState,
     ) -> Area {
         match self {
-            Self::Rect(el) => el.drawing_area(
-                layout_node,
-                node_ref,
-                layout,
-                scale_factor,
-                node_style,
-                transform_state,
-            ),
-            Self::Svg(el) => el.drawing_area(
-                layout_node,
-                node_ref,
-                layout,
-                scale_factor,
-                node_style,
-                transform_state,
-            ),
-            Self::Paragraph(el) => el.drawing_area(
-                layout_node,
-                node_ref,
-                layout,
-                scale_factor,
-                node_style,
-                transform_state,
-            ),
-            Self::Image(el) => el.drawing_area(
-                layout_node,
-                node_ref,
-                layout,
-                scale_factor,
-                node_style,
-                transform_state,
-            ),
-            Self::Label(el) => el.drawing_area(
-                layout_node,
-                node_ref,
-                layout,
-                scale_factor,
-                node_style,
-                transform_state,
-            ),
-        }
-    }
-
-    fn needs_cached_area(
-        &self,
-        node_ref: &DioxusNode,
-        transform_state: &TransformState,
-        style_state: &StyleState,
-    ) -> bool {
-        match self {
-            Self::Rect(el) => el.needs_cached_area(node_ref, transform_state, style_state),
-            Self::Svg(el) => el.needs_cached_area(node_ref, transform_state, style_state),
-            Self::Paragraph(el) => el.needs_cached_area(node_ref, transform_state, style_state),
-            Self::Image(el) => el.needs_cached_area(node_ref, transform_state, style_state),
-            Self::Label(el) => el.needs_cached_area(node_ref, transform_state, style_state),
-        }
-    }
-
-    fn needs_explicit_render(
-        &self,
-        node_transform: &TransformState,
-        node_style: &StyleState,
-    ) -> bool {
-        match self {
-            Self::Rect(el) => el.has_blur(node_transform, node_style),
-            _ => false,
+            Self::Rect(el) => {
+                el.element_drawing_area(layout_node, node_ref, scale_factor, node_style)
+            }
+            Self::Svg(el) => {
+                el.element_drawing_area(layout_node, node_ref, scale_factor, node_style)
+            }
+            Self::Paragraph(el) => {
+                el.element_drawing_area(layout_node, node_ref, scale_factor, node_style)
+            }
+            Self::Image(el) => {
+                el.element_drawing_area(layout_node, node_ref, scale_factor, node_style)
+            }
+            Self::Label(el) => {
+                el.element_drawing_area(layout_node, node_ref, scale_factor, node_style)
+            }
         }
     }
 }

@@ -28,7 +28,6 @@ use crate::{
         DioxusNode,
     },
     elements::{
-        ElementUtils,
         ElementUtilsResolver,
         ElementWithUtils,
     },
@@ -41,13 +40,15 @@ use crate::{
     },
 };
 
-/// Text-like elements with shadows are the only type of elements
-/// whose drawing area
-///     1. Can affect other nodes
-///     2. Are not part of their layout
+/// Some elements have certain styling or effects that make their drawing area overflow their layout area.
 ///
-/// Therefore a special cache is needed to be able to mark as dirty the previous area
-/// where the shadow of the text was.
+/// This can happen when using:
+/// - Shadows / Text Shadows
+/// - Borders
+/// - Scale effect
+/// - Rotation effect
+///
+/// So, a cache is needed to invalidate these areas in the next frame in case this elements change.
 #[derive(Clone, Default, Debug)]
 pub struct CompositorCache(FxHashMap<NodeId, Area>);
 
@@ -118,44 +119,6 @@ impl Default for Compositor {
 }
 
 impl Compositor {
-    #[inline]
-    pub fn get_drawing_area(
-        node_id: NodeId,
-        layout: &Torin<NodeId>,
-        rdom: &DioxusDOM,
-        scale_factor: f32,
-    ) -> Option<Area> {
-        let layout_node = layout.get(node_id)?;
-        let node_ref = rdom.get(node_id)?;
-        let utils = node_ref.node_type().tag()?.utils()?;
-        let style_state = node_ref.get::<StyleState>().unwrap();
-        let viewport_state = node_ref.get::<ViewportState>().unwrap();
-        let transform_state = node_ref.get::<TransformState>().unwrap();
-        utils.drawing_area_with_viewports(
-            layout_node,
-            &node_ref,
-            layout,
-            scale_factor,
-            &style_state,
-            &viewport_state,
-            &transform_state,
-        )
-    }
-
-    #[inline]
-    pub fn with_utils<T>(
-        node_id: NodeId,
-        layout: &Torin<NodeId>,
-        rdom: &DioxusDOM,
-        run: impl FnOnce(DioxusNode, ElementWithUtils, &LayoutNode) -> T,
-    ) -> Option<T> {
-        let layout_node = layout.get(node_id)?;
-        let node = rdom.get(node_id)?;
-        let utils = node.node_type().tag()?.utils()?;
-
-        Some(run(node, utils, layout_node))
-    }
-
     /// The compositor runs from the bottom layers to the top and viceversa to check what Nodes might be affected by the
     /// dirty area. How a Node is checked is by calculating its drawing area which consists of its layout area plus any possible
     /// outer effect such as shadows and borders.
@@ -175,6 +138,7 @@ impl Compositor {
         rdom: &DioxusDOM,
         scale_factor: f32,
     ) -> &'a Layers {
+        // Full render, with no incremental rendering
         if self.full_render {
             rdom.raw_world().run(
                 |viewport_states: View<ViewportState>,
@@ -188,9 +152,12 @@ impl Compositor {
                             layout,
                             rdom,
                             |node_ref, utils, layout_node| {
-                                if utils.needs_cached_area(&node_ref, transform_state, style_state)
-                                {
-                                    let area = utils.drawing_area(
+                                if utils.needs_cached_drawing_area(
+                                    &node_ref,
+                                    transform_state,
+                                    style_state,
+                                ) {
+                                    let drawing_area = utils.get_drawing_area(
                                         layout_node,
                                         &node_ref,
                                         layout,
@@ -199,7 +166,7 @@ impl Compositor {
                                         transform_state,
                                     );
                                     // Cache the drawing area so it can be invalidated in the next frame
-                                    cache.insert(viewport.node_id, area);
+                                    cache.insert(viewport.node_id, drawing_area);
                                 }
                             },
                         );
@@ -210,6 +177,7 @@ impl Compositor {
             return layers;
         }
 
+        // Incremental rendering from now on
         let mut skipped_nodes = HashSet::<NodeId>::new();
 
         loop {
@@ -235,7 +203,7 @@ impl Compositor {
                             layout,
                             rdom,
                             |node_ref, utils, layout_node| {
-                                let Some(area) = utils.drawing_area_with_viewports(
+                                let Some(drawing_area) = utils.get_drawing_area_if_viewports_allow(
                                     layout_node,
                                     &node_ref,
                                     layout,
@@ -267,7 +235,7 @@ impl Compositor {
                                 let is_invalidated = is_dirty
                                     || needs_explicit_render
                                     || invalidated_cache_area.is_some()
-                                    || dirty_area.intersects(&area);
+                                    || dirty_area.intersects(&drawing_area);
 
                                 if is_invalidated {
                                     // Save this node to the layer it corresponds for rendering
@@ -275,12 +243,12 @@ impl Compositor {
                                         .insert_node_in_layer(viewport.node_id, layer_state.layer);
 
                                     // Cache the drawing area so it can be invalidated in the next frame
-                                    if utils.needs_cached_area(
+                                    if utils.needs_cached_drawing_area(
                                         &node_ref,
                                         transform_state,
                                         style_state,
                                     ) {
-                                        cache.insert(viewport.node_id, area);
+                                        cache.insert(viewport.node_id, drawing_area);
                                     }
 
                                     if is_dirty || needs_explicit_render {
@@ -292,7 +260,7 @@ impl Compositor {
                                         }
 
                                         // Expand the dirty area with new area
-                                        dirty_area.unite_or_insert(&area);
+                                        dirty_area.unite_or_insert(&drawing_area);
 
                                         // Run again in case this affects e.g ancestors
                                         any_dirty = true;
@@ -324,6 +292,44 @@ impl Compositor {
     /// Reset the compositor, thus causing a full render in the next frame.
     pub fn reset(&mut self) {
         self.full_render = true;
+    }
+
+    #[inline]
+    pub fn get_drawing_area(
+        node_id: NodeId,
+        layout: &Torin<NodeId>,
+        rdom: &DioxusDOM,
+        scale_factor: f32,
+    ) -> Option<Area> {
+        let layout_node = layout.get(node_id)?;
+        let node_ref = rdom.get(node_id)?;
+        let utils = node_ref.node_type().tag()?.utils()?;
+        let style_state = node_ref.get::<StyleState>().unwrap();
+        let viewport_state = node_ref.get::<ViewportState>().unwrap();
+        let transform_state = node_ref.get::<TransformState>().unwrap();
+        utils.get_drawing_area_if_viewports_allow(
+            layout_node,
+            &node_ref,
+            layout,
+            scale_factor,
+            &style_state,
+            &viewport_state,
+            &transform_state,
+        )
+    }
+
+    #[inline]
+    fn with_utils<T>(
+        node_id: NodeId,
+        layout: &Torin<NodeId>,
+        rdom: &DioxusDOM,
+        run: impl FnOnce(DioxusNode, ElementWithUtils, &LayoutNode) -> T,
+    ) -> Option<T> {
+        let layout_node = layout.get(node_id)?;
+        let node = rdom.get(node_id)?;
+        let utils = node.node_type().tag()?.utils()?;
+
+        Some(run(node, utils, layout_node))
     }
 }
 
