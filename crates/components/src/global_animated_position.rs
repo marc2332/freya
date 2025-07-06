@@ -144,8 +144,10 @@ pub fn GlobalAnimatedPosition<T: Clone + PartialEq + Hash + Eq + 'static>(
         let has_init_size = init_size.read().is_some();
         let has_previous_size = previous_size.read().is_some();
         if !animations.has_run_yet() && !has_init_size && has_size {
+            // Mark the animation as finished if the component was just created and has no init size
             animations.finish();
         } else if has_size && (has_init_size || has_previous_size) {
+            // Start the animation if the component size changed and has a previous size
             animations.start();
         }
     });
