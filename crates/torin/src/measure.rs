@@ -62,6 +62,8 @@ where
         node: &Node,
         // Area occupied by it's parent
         parent_area: &Area,
+        // Area reserved for it's parent
+        reserved_parent_area: &Area,
         // Area that is available to use by the children of the parent
         available_parent_area: &Area,
         // Whether to cache the measurements of this Node's children
@@ -84,7 +86,7 @@ where
             // Compute the width and height given the size, the minimum size, the maximum size and margins
             area_size.width = node.width.min_max(
                 area_size.width,
-                parent_area.size.width,
+                reserved_parent_area.size.width,
                 available_parent_area.size.width,
                 node.margin.left(),
                 node.margin.horizontal(),
@@ -95,7 +97,7 @@ where
             );
             area_size.height = node.height.min_max(
                 area_size.height,
-                parent_area.size.height,
+                reserved_parent_area.size.height,
                 available_parent_area.size.height,
                 node.margin.top(),
                 node.margin.vertical(),
@@ -112,7 +114,7 @@ where
                     let available_width =
                         Size::Pixels(Length::new(available_parent_area.size.width)).min_max(
                             area_size.width,
-                            parent_area.size.width,
+                            reserved_parent_area.size.width,
                             available_parent_area.size.width,
                             node.margin.left(),
                             node.margin.horizontal(),
@@ -124,7 +126,7 @@ where
                     let available_height =
                         Size::Pixels(Length::new(available_parent_area.size.height)).min_max(
                             area_size.height,
-                            parent_area.size.height,
+                            reserved_parent_area.size.height,
                             available_parent_area.size.height,
                             node.margin.top(),
                             node.margin.vertical(),
@@ -150,7 +152,7 @@ where
                         if node.width.inner_sized() {
                             area_size.width = node.width.min_max(
                                 custom_size.width,
-                                parent_area.size.width,
+                                reserved_parent_area.size.width,
                                 available_parent_area.size.width,
                                 node.margin.left(),
                                 node.margin.horizontal(),
@@ -163,7 +165,7 @@ where
                         if node.height.inner_sized() {
                             area_size.height = node.height.min_max(
                                 custom_size.height,
-                                parent_area.size.height,
+                                reserved_parent_area.size.height,
                                 available_parent_area.size.height,
                                 node.margin.top(),
                                 node.margin.vertical(),
@@ -208,7 +210,7 @@ where
                 if node.width.inner_sized() {
                     inner_size.width = node.width.min_max(
                         available_parent_area.width(),
-                        parent_area.size.width,
+                        reserved_parent_area.size.width,
                         available_parent_area.width(),
                         node.margin.left(),
                         node.margin.horizontal(),
@@ -221,7 +223,7 @@ where
                 if node.height.inner_sized() {
                     inner_size.height = node.height.min_max(
                         available_parent_area.height(),
-                        parent_area.size.height,
+                        reserved_parent_area.size.height,
                         available_parent_area.height(),
                         node.margin.top(),
                         node.margin.vertical(),
@@ -368,6 +370,8 @@ where
     ) {
         let children = self.dom_adapter.children_of(parent_node_id);
 
+        let reserved_area = *inner_area;
+
         let mut initial_phase_flex_grows = FxHashMap::default();
         let mut initial_phase_sizes = FxHashMap::default();
         let mut initial_phase_inner_sizes = Size2D::default();
@@ -435,6 +439,7 @@ where
                     *child_id,
                     &child_data,
                     &inner_area,
+                    &reserved_area,
                     &initial_phase_available_area,
                     false,
                     parent_is_dirty,
@@ -616,6 +621,7 @@ where
                 child_id,
                 &child_data,
                 inner_area,
+                &reserved_area,
                 &adapted_available_area,
                 must_cache_children,
                 parent_is_dirty,

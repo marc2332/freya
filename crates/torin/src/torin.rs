@@ -301,6 +301,7 @@ impl<Key: NodeKey> Torin<Key> {
             root_id,
             &root,
             &layout_node.inner_area,
+            &layout_node.inner_area,
             &available_area,
             true,
             false,
