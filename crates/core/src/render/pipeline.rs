@@ -210,6 +210,7 @@ impl RenderPipeline<'_> {
             let node_transform = &*node_ref.get::<TransformState>().unwrap();
             let node_viewports = node_ref.get::<ViewportState>().unwrap();
 
+            // Apply viewport clipping
             for node_id in &node_viewports.viewports {
                 let node_ref = self.rdom.get(*node_id).unwrap();
                 let node_type = node_ref.node_type();
