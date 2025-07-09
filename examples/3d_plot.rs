@@ -1,3 +1,4 @@
+#[cfg(feature = "plot")]
 use freya::{
     plot::{
         plotters::{
@@ -24,10 +25,17 @@ use freya::{
     prelude::*,
 };
 
+#[cfg(not(feature = "plot"))]
+fn main() {
+    panic!("Run with the 'plot' feature");
+}
+
+#[cfg(feature = "plot")]
 fn main() {
     launch(app);
 }
 
+#[cfg(feature = "plot")]
 fn render_plot(ctx: &mut CanvasRunnerContext<'_>, (cursor_x, cursor_y): (f64, f64)) {
     let backend = SkiaBackend::new(
         ctx.canvas,
@@ -95,6 +103,7 @@ fn render_plot(ctx: &mut CanvasRunnerContext<'_>, (cursor_x, cursor_y): (f64, f6
         .unwrap();
 }
 
+#[cfg(feature = "plot")]
 fn app() -> Element {
     let platform = use_platform();
     let (reference, size) = use_node_signal();
