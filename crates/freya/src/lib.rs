@@ -99,6 +99,13 @@ pub use torin;
 
 pub mod plugins;
 
+/// Plot
+#[cfg(feature = "plot")]
+pub mod plot {
+    pub use plotters;
+    pub use skia_plotters_backend::*;
+}
+
 /// Useful imports.
 pub mod prelude {
     pub use dioxus;
@@ -116,6 +123,7 @@ pub mod prelude {
         custom_attributes::{
             dynamic_bytes,
             static_bytes,
+            CanvasRunnerContext,
             CustomAttributeValues,
         },
         platform::*,
