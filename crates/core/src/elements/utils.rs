@@ -144,7 +144,7 @@ impl ElementWithUtils {
         }
     }
 
-    /// Just like [Self::drawing_area] but only if all the viewports allow the element to be visible.
+    /// Just like [Self::get_drawing_area] but only if all the viewports allow the element to be visible.
     #[allow(clippy::too_many_arguments)]
     pub fn get_drawing_area_if_viewports_allow(
         &self,
@@ -330,6 +330,16 @@ impl ElementUtils for ElementWithUtils {
             Self::Label(el) => {
                 el.element_drawing_area(layout_node, node_ref, scale_factor, node_style)
             }
+        }
+    }
+
+    fn element_needs_cached_area(&self, node_ref: &DioxusNode, style_state: &StyleState) -> bool {
+        match self {
+            Self::Rect(el) => el.element_needs_cached_area(node_ref, style_state),
+            Self::Svg(el) => el.element_needs_cached_area(node_ref, style_state),
+            Self::Paragraph(el) => el.element_needs_cached_area(node_ref, style_state),
+            Self::Image(el) => el.element_needs_cached_area(node_ref, style_state),
+            Self::Label(el) => el.element_needs_cached_area(node_ref, style_state),
         }
     }
 }
