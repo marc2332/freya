@@ -113,6 +113,7 @@ pub fn Menu(children: Element, onclose: Option<EventHandler<()>>) -> Element {
     rsx!(
         rect {
             margin: "2 0",
+            layer: "overlay",
             onglobalclick: move |_| {
                 if let Some(onclose) = &onclose {
                     onclose.call(());
