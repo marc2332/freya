@@ -42,12 +42,12 @@ use tokio::time::{
 /// Wrapper over Skia's Surface.
 ///
 /// # Safety
-/// Marking this as Send is fine because even though it will go through a shipyard's wthread, it will not be accessed at any time.
+/// Marking this as Send is fine because even though it will go through a shipyard's thread, it will not be accessed at any time.
 /// In fact, this surface is only ever used in the main thread.
 struct SharedSurface(Surface);
 
 /// # Safety
-/// Marking this as Send is fine because even though it will go through a shipyard's wthread, it will not be accessed at any time.
+/// Marking this as Send is fine because even though it will go through a shipyard's thread, it will not be accessed at any time.
 /// In fact, this surface is only ever used in the main thread.
 unsafe impl Send for SharedSurface {}
 
