@@ -1,12 +1,10 @@
 use std::sync::Arc;
 
 use dioxus_core::{
-    prelude::{
-        consume_context,
-        provide_root_context,
-        try_consume_context,
-        use_hook,
-    },
+    consume_context,
+    provide_root_context,
+    try_consume_context,
+    use_hook,
     ScopeId,
 };
 use dioxus_signals::{

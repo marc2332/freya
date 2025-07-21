@@ -1,9 +1,7 @@
 use dioxus_core::{
-    prelude::{
-        consume_context,
-        provide_context,
-        spawn,
-    },
+    consume_context,
+    provide_context,
+    spawn,
     use_hook,
 };
 use dioxus_signals::{

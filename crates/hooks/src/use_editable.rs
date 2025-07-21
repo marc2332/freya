@@ -8,7 +8,7 @@ use dioxus_clipboard::prelude::{
     UseClipboard,
 };
 use dioxus_core::{
-    prelude::spawn,
+    spawn,
     use_hook,
     AttributeValue,
 };

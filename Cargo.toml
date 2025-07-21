@@ -19,13 +19,13 @@ docs = ["freya/docs"]
 plot = ["freya/plot"]
 
 [patch.crates-io]
-# dioxus = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
-# dioxus-rsx = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
-# dioxus-core-macro = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
-# dioxus-hooks = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
-# dioxus-signals = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
-# dioxus-core = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }# freya-router = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
-# generational-box  = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", tag = "v0.7.0-alpha.3" }
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", tag = "v0.7.0-alpha.3" }
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", tag = "v0.7.0-alpha.3" }
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", tag = "v0.7.0-alpha.3" }
+dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus", tag = "v0.7.0-alpha.3" }
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", tag = "v0.7.0-alpha.3" }
+generational-box  = { git = "https://github.com/DioxusLabs/dioxus", tag = "v0.7.0-alpha.3" }
 
 [workspace.dependencies]
 freya = { path = "crates/freya", version = "0.4" }
@@ -46,14 +46,14 @@ ragnarok = { path = "crates/ragnarok", version = "0.1.0" }
 freya-native-core-macro = { path = "crates/native-core-macro", version = "0.4" }
 freya-native-core = { path = "crates/native-core", version = "0.4" }
 
-dioxus = { version = "0.6.3", default-features = false, features = ["macro", "signals", "hooks"] }
-dioxus-rsx = { version = "0.6.2" }
-dioxus-core-macro = { version = "0.6.3" }
-dioxus-hooks = { version = "0.6.2" }
-dioxus-signals = { version = "0.6.3" }
-dioxus-core = { version = "0.6.3" }
-dioxus-lib = { version = "0.6.2", default-features = false, features = ["macro", "signals", "hooks"] }
-generational-box = { version = "0.6.2" }
+dioxus = { version = "0.7.0-alpha.3", default-features = false, features = ["macro", "signals", "hooks"] }
+dioxus-rsx = { version = "0.7.0-alpha.3" }
+dioxus-core-macro = { version = "0.7.0-alpha.3" }
+dioxus-hooks = { version = "0.7.0-alpha.3" }
+dioxus-signals = { version = "0.7.0-alpha.3" }
+dioxus-core = { version = "0.7.0-alpha.3" }
+dioxus-lib = { version = "0.7.0-alpha.3", default-features = false, features = ["macro", "signals", "hooks"] }
+generational-box = { version = "0.7.0-alpha.3" }
 
 dioxus-clipboard = "0.2.0"
 dioxus-i18n = "0.4.1"

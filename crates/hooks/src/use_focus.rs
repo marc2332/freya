@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use dioxus_core::{
-    prelude::consume_context,
+    consume_context,
     use_hook,
     AttributeValue,
 };

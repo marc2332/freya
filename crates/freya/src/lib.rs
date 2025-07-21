@@ -108,16 +108,10 @@ pub mod plot {
 
 /// Useful imports.
 pub mod prelude {
-    pub use dioxus;
-    pub use dioxus_core::{
+    pub use dioxus::{
+        self,
         prelude::*,
-        {
-            self,
-        },
     };
-    pub use dioxus_core_macro::*;
-    pub use dioxus_hooks::*;
-    pub use dioxus_signals::*;
     pub use freya_components::*;
     pub use freya_core::{
         custom_attributes::{

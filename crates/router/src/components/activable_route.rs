@@ -1,4 +1,4 @@
-use dioxus_lib::prelude::*;
+use dioxus::prelude::*;
 use freya_hooks::ActivableRouteContext;
 
 use crate::{

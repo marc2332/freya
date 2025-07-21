@@ -216,10 +216,7 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
     }
 
     use dioxus::prelude::Props;
-    use dioxus_core::{
-        fc_to_builder,
-        IntoDynNode,
-    };
+    use dioxus_core::IntoDynNode;
     use dioxus_core_macro::rsx;
     #[cfg(debug_assertions)]
     use dioxus_signals::{

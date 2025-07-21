@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use dioxus_core::{
-    prelude::spawn,
+    spawn,
     use_hook,
     AttributeValue,
 };

@@ -8,7 +8,6 @@ use accesskit::{
     Role,
 };
 use dioxus_core::{
-    fc_to_builder,
     Element,
     IntoDynNode,
     VirtualDom,

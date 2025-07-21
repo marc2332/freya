@@ -6,6 +6,7 @@
 use std::str::FromStr;
 
 use dioxus::CapturedError;
+use dioxus_core::throw_error;
 use freya::prelude::*;
 
 fn main() {

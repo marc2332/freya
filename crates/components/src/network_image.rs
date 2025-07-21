@@ -1,5 +1,6 @@
 use bytes::Bytes;
 use dioxus::prelude::*;
+use dioxus_core::Task;
 use freya_core::custom_attributes::dynamic_bytes;
 use freya_elements as dioxus_elements;
 use freya_hooks::{

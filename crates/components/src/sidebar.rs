@@ -4,6 +4,7 @@ use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_activable_route,
     use_applied_theme,
+    use_drop,
     use_platform,
     SidebarItemTheme,
     SidebarItemThemeWith,

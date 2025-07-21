@@ -11,9 +11,8 @@ use std::{
 };
 
 use bytes::Bytes;
-use dioxus_core::prelude::{
+use dioxus_core::{
     spawn_forever,
-    use_drop,
     ReactiveContext,
     Task,
 };
@@ -31,6 +30,8 @@ use dioxus_signals::{
 };
 use tokio::time::sleep;
 use tracing::info;
+
+use crate::use_drop::use_drop;
 
 /// Defines the duration for which an Asset will remain cached after it's user has stopped using it.
 /// The default is 1h (3600s).
