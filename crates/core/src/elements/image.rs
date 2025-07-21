@@ -28,7 +28,7 @@ impl ElementUtils for ImageElement {
         canvas: &Canvas,
         _font_collection: &mut FontCollection,
         _font_manager: &FontMgr,
-        _default_fonts: &[String],
+        _fallback_fonts: &[String],
         images_cache: &mut ImagesCache,
         _scale_factor: f32,
     ) {
@@ -74,13 +74,7 @@ impl ElementUtils for ImageElement {
             SamplingMode::CatmullRom => SamplingOptions::from(CubicResampler::catmull_rom()),
         };
 
-        canvas.draw_image_rect_with_sampling_options(
-            image,
-            None,
-            rect,
-            sampling,
-            &Paint::default(),
-        );
+        canvas.draw_image_rect_with_sampling_options(image, None, rect, sampling, &paint);
 
         canvas.restore();
     }

@@ -108,7 +108,7 @@ pub struct DioxusNativeCoreMutationWriter<'a, V: FromAnyValue + Send + Sync = ()
 }
 
 impl<V: FromAnyValue + Send + Sync> WriteMutations for DioxusNativeCoreMutationWriter<'_, V> {
-    // fn register_template(&mut self, template: dioxus_core::prelude::Template) {
+    // fn register_template(&mut self, template: dioxus_core::Template) {
     //     let mut template_root_ids = Vec::new();
     //     for root in template.roots {
     //         let id = create_template_node(self.rdom, root);

@@ -1,5 +1,5 @@
 use dioxus_core::{
-    prelude::try_consume_context,
+    try_consume_context,
     use_hook,
 };
 use dioxus_hooks::{

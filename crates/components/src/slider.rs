@@ -11,6 +11,7 @@ use freya_elements::{
 };
 use freya_hooks::{
     use_applied_theme,
+    use_drop,
     use_focus,
     use_node,
     use_platform,
@@ -360,17 +361,17 @@ mod test {
         assert_eq!(label.get(0).text(), Some("50"));
 
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseMove,
+            name: MouseEventName::MouseMove,
             cursor: (250.0, 7.0).into(),
             button: Some(MouseButton::Left),
         });
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseDown,
+            name: MouseEventName::MouseDown,
             cursor: (250.0, 7.0).into(),
             button: Some(MouseButton::Left),
         });
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseMove,
+            name: MouseEventName::MouseMove,
             cursor: (500.0, 7.0).into(),
             button: Some(MouseButton::Left),
         });

@@ -7,6 +7,7 @@ use freya_elements::{
 use freya_hooks::{
     use_activable_route,
     use_applied_theme,
+    use_drop,
     use_focus,
     use_platform,
     BottomTabTheme,
@@ -46,7 +47,7 @@ pub enum TabStatus {
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// # use dioxus_router::prelude::{Routable, Router};
+/// # use freya_router::prelude::*;
 /// # #[allow(non_snake_case)]
 /// # fn PageNotFound() -> Element { VNode::empty() }
 /// # #[allow(non_snake_case)]
@@ -208,7 +209,7 @@ pub fn Tab(
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// # use dioxus_router::prelude::{Routable, Router};
+/// # use freya_router::prelude::*;
 /// # #[allow(non_snake_case)]
 /// # fn PageNotFound() -> Element { VNode::empty() }
 /// # #[allow(non_snake_case)]

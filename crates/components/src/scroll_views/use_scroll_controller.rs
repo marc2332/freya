@@ -1,15 +1,17 @@
 use std::collections::HashSet;
 
 use dioxus::prelude::{
-    current_scope_id,
-    schedule_update_any,
-    use_drop,
     use_hook,
     Readable,
     ScopeId,
     Signal,
     Writable,
     WritableVecExt,
+};
+use dioxus_core::{
+    current_scope_id,
+    schedule_update_any,
+    use_drop,
 };
 use freya_core::custom_attributes::NodeReferenceLayout;
 

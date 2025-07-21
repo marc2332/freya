@@ -9,14 +9,15 @@ pub mod attributes;
 pub mod dioxus;
 pub mod events;
 pub mod node;
+pub mod node_id;
 pub mod node_ref;
 mod passes;
 pub mod real_dom;
 pub mod tags;
 pub mod tree;
 
+pub use node_id::NodeId;
 use rustc_hash::FxHashMap;
-pub use shipyard::EntityId as NodeId;
 
 pub mod exports {
     //! Important dependencies that are used by the rest of the library

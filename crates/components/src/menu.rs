@@ -7,6 +7,7 @@ use freya_elements::{
 };
 use freya_hooks::{
     use_applied_theme,
+    use_drop,
     use_focus,
     use_platform,
     MenuContainerTheme,
@@ -112,7 +113,10 @@ pub fn Menu(children: Element, onclose: Option<EventHandler<()>>) -> Element {
 
     rsx!(
         rect {
-            margin: "2 0",
+            padding: "2 0",
+            layer: "overlay",
+            width: "0",
+            height: "0",
             onglobalclick: move |_| {
                 if let Some(onclose) = &onclose {
                     onclose.call(());

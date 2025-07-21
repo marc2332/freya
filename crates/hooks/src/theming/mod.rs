@@ -237,6 +237,37 @@ define_theme! {
 
 define_theme! {
     %[component]
+    pub SegmentedButton {
+        %[cows]
+        background: str,
+        shadow: str,
+        border_fill: str,
+        corner_radius: str,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub ButtonSegment {
+        %[cows]
+        background: str,
+        hover_background: str,
+        disabled_background: str,
+        shadow: str,
+        width: str,
+        height: str,
+        padding: str,
+
+        selected_padding: str,
+        selected_icon_fill: str,
+
+        %[subthemes]
+        font_theme: FontTheme,
+    }
+}
+
+define_theme! {
+    %[component]
     pub Input {
         %[cows]
         background: str,
@@ -371,15 +402,6 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub Graph {
-        %[cows]
-        width: str,
-        height: str,
-    }
-}
-
-define_theme! {
-    %[component]
     pub Icon {
         %[cows]
         margin: str,
@@ -406,6 +428,8 @@ define_theme! {
         margin: str,
         background: str,
         hover_background: str,
+        corner_radius: str,
+        padding: str,
         %[subthemes]
         font_theme: FontTheme,
     }
@@ -589,6 +613,8 @@ pub struct Theme {
     pub button: ButtonTheme,
     pub filled_button: ButtonTheme,
     pub outline_button: ButtonTheme,
+    pub segmented_button: SegmentedButtonTheme,
+    pub button_segment: ButtonSegmentTheme,
     pub switch: SwitchTheme,
     pub scroll_bar: ScrollBarTheme,
     pub slider: SliderTheme,
@@ -601,7 +627,6 @@ pub struct Theme {
     pub progress_bar: ProgressBarTheme,
     pub table: TableTheme,
     pub input: InputTheme,
-    pub graph: GraphTheme,
     pub icon: IconTheme,
     pub sidebar: SidebarTheme,
     pub sidebar_item: SidebarItemTheme,

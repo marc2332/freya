@@ -8,7 +8,10 @@ use freya_core::{
     dom::DioxusDOM,
     event_loop_messages::EventLoopMessage,
     states::AccessibilityNodeState,
-    types::NativePlatformSender,
+    types::{
+        EventEmitter,
+        NativePlatformSender,
+    },
 };
 use freya_native_core::{
     prelude::NodeImmutable,
@@ -81,10 +84,11 @@ impl WinitAcessibilityTree {
         platform_sender: &NativePlatformSender,
         window: &Window,
         dirty_nodes: &mut AccessibilityDirtyNodes,
+        event_emitter: &EventEmitter,
     ) {
-        let (tree, node_id) = self
-            .accessibility_tree
-            .process_updates(rdom, layout, dirty_nodes);
+        let (tree, node_id) =
+            self.accessibility_tree
+                .process_updates(rdom, layout, dirty_nodes, event_emitter);
 
         // Notify the components
         platform_sender.send_modify(|state| {

@@ -1,14 +1,18 @@
 use bytes::Bytes;
 use dioxus::prelude::*;
+use dioxus_core::Task;
 use freya_core::custom_attributes::dynamic_bytes;
 use freya_elements as dioxus_elements;
 use freya_hooks::{
+    use_asset,
     use_asset_cacher,
     use_focus,
     AssetAge,
+    AssetBytes,
     AssetConfiguration,
 };
 use reqwest::Url;
+use tracing::info;
 
 use crate::Loader;
 
@@ -108,52 +112,42 @@ pub fn NetworkImage(
         sampling,
     }: NetworkImageProps,
 ) -> Element {
-    let mut asset_cacher = use_asset_cacher();
     let focus = use_focus();
-    let mut status = use_signal(|| ImageState::Loading);
-    let mut cached_assets = use_signal::<Vec<AssetConfiguration>>(Vec::new);
+    let asset_config = AssetConfiguration {
+        age: AssetAge::default(),
+        id: url.to_string(),
+    };
+    let asset_bytes = use_asset(asset_config.clone());
+    let mut asset_cacher = use_asset_cacher();
     let mut assets_tasks = use_signal::<Vec<Task>>(Vec::new);
 
-    let a11y_id = focus.attribute();
-
     use_effect(move || {
-        let url = url.read().clone();
+        let url = url();
+
         // Cancel previous asset fetching requests
         for asset_task in assets_tasks.write().drain(..) {
             asset_task.cancel();
         }
 
-        // Stop using previous assets
-        for cached_asset in cached_assets.write().drain(..) {
-            asset_cacher.unuse_asset(cached_asset);
-        }
+        // Fetch asset if still pending or errored
+        if matches!(
+            asset_cacher.read_asset(&asset_config),
+            Some(AssetBytes::Pending) | Some(AssetBytes::Error(_))
+        ) {
+            // Mark asset as loading
+            asset_cacher.update_asset(asset_config.clone(), AssetBytes::Loading);
 
-        let asset_configuration = AssetConfiguration {
-            age: AssetAge::default(),
-            id: url.to_string(),
-        };
-
-        // Loading image
-        status.set(ImageState::Loading);
-        if let Some(asset) = asset_cacher.use_asset(&asset_configuration) {
-            // Image loaded from cache
-            status.set(ImageState::Loaded(asset));
-            cached_assets.write().push(asset_configuration);
-        } else {
+            let asset_config = asset_config.clone();
             let asset_task = spawn(async move {
+                info!("Fetching image {url}");
                 let asset = fetch_image(url).await;
                 if let Ok(asset_bytes) = asset {
-                    asset_cacher.cache_asset(
-                        asset_configuration.clone(),
-                        asset_bytes.clone(),
-                        true,
-                    );
                     // Image loaded
-                    status.set(ImageState::Loaded(asset_bytes));
-                    cached_assets.write().push(asset_configuration);
-                } else if let Err(_err) = asset {
-                    // Image errored
-                    status.set(ImageState::Errored);
+                    asset_cacher
+                        .update_asset(asset_config.clone(), AssetBytes::Cached(asset_bytes));
+                } else if let Err(err) = asset {
+                    // Image errored asset_cacher
+                    asset_cacher.update_asset(asset_config, AssetBytes::Error(err.to_string()));
                 }
             });
 
@@ -161,9 +155,11 @@ pub fn NetworkImage(
         }
     });
 
-    match &*status.read_unchecked() {
-        ImageState::Loaded(bytes) => {
-            let image_data = dynamic_bytes(bytes.clone());
+    let a11y_id = focus.attribute();
+
+    match asset_bytes {
+        AssetBytes::Cached(bytes) => {
+            let image_data = dynamic_bytes(bytes);
             rsx!(image {
                 height,
                 width,
@@ -179,7 +175,7 @@ pub fn NetworkImage(
                 sampling,
             })
         }
-        ImageState::Loading => {
+        AssetBytes::Pending | AssetBytes::Loading => {
             if let Some(loading_element) = loading {
                 rsx!({ loading_element })
             } else {
@@ -196,7 +192,7 @@ pub fn NetworkImage(
                 )
             }
         }
-        _ => {
+        AssetBytes::Error(err) => {
             if let Some(fallback_element) = fallback {
                 rsx!({ fallback_element })
             } else {
@@ -208,9 +204,10 @@ pub fn NetworkImage(
                         min_height,
                         main_align: "center",
                         cross_align: "center",
+                        overflow: "clip",
                         label {
                             text_align: "center",
-                            "Error"
+                            "Error: '{err}'"
                         }
                     }
                 )

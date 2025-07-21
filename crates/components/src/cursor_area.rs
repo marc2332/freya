@@ -1,7 +1,10 @@
 use dioxus::prelude::*;
 use freya_core::platform::CursorIcon;
 use freya_elements as dioxus_elements;
-use freya_hooks::use_platform;
+use freya_hooks::{
+    use_drop,
+    use_platform,
+};
 
 /// Properties for the [`CursorArea`] component.
 #[derive(Props, Clone, PartialEq)]

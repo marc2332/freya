@@ -54,6 +54,7 @@
 //! - `custom-tokio-rt`: disables the default Tokio runtime created by Freya.
 //! - `performance-overlay`: enables the performance overlay plugin.
 //! - `disable-zoom-shortcuts`: disables the default zoom shortcuts.
+//! - `disable-animation-shortcuts`: disables the default animation clock shortcuts.
 
 /// Freya docs.
 #[cfg(doc)]
@@ -98,22 +99,22 @@ pub use torin;
 
 pub mod plugins;
 
+/// Plot
+#[cfg(feature = "plot")]
+pub mod plot {
+    pub use plotters;
+    pub use skia_plotters_backend::*;
+}
+
 /// Useful imports.
 pub mod prelude {
-    pub use dioxus_core::{
-        prelude::*,
-        {
-            self,
-        },
-    };
-    pub use dioxus_core_macro::*;
-    pub use dioxus_hooks::*;
-    pub use dioxus_signals::*;
+    pub use dioxus::prelude::*;
     pub use freya_components::*;
     pub use freya_core::{
         custom_attributes::{
             dynamic_bytes,
             static_bytes,
+            CanvasRunnerContext,
             CustomAttributeValues,
         },
         platform::*,

@@ -12,6 +12,7 @@ use freya_elements::{
 };
 use freya_hooks::{
     use_applied_theme,
+    use_drop,
     use_focus,
     use_init_surface_theme_indicator,
     use_platform,
@@ -248,7 +249,7 @@ pub fn ButtonBase(
         shadow,
     } = theme;
 
-    let onpointerup = {
+    let onpointerpress = {
         to_owned![onpress, onclick];
         move |ev: PointerEvent| {
             if !enabled {
@@ -290,20 +291,20 @@ pub fn ButtonBase(
         }
     });
 
-    let onmouseenter = move |_| {
+    let onpointerenter = move |_| {
         if enabled {
             platform.set_cursor(CursorIcon::Pointer);
             status.set(ButtonStatus::Hovering);
         }
     };
 
-    let onmouseleave = move |_| {
+    let onpointerleave = move |_| {
         platform.set_cursor(CursorIcon::default());
         status.set(ButtonStatus::default());
     };
 
     let onkeydown = move |ev: KeyboardEvent| {
-        if focus.validate_keydown(&ev) && !enabled {
+        if focus.validate_keydown(&ev) && enabled {
             if let Some(onpress) = &onpress {
                 onpress.call(PressEvent::Key(ev))
             }
@@ -324,9 +325,9 @@ pub fn ButtonBase(
 
     rsx!(
         rect {
-            onpointerup,
-            onmouseenter,
-            onmouseleave,
+            onpointerpress,
+            onpointerenter,
+            onpointerleave,
             onkeydown,
             a11y_id,
             width: "{width}",
@@ -381,7 +382,7 @@ mod test {
         assert_eq!(label.get(0).text(), Some("true"));
 
         utils.push_event(TestEvent::Touch {
-            name: EventName::TouchStart,
+            name: TouchEventName::TouchStart,
             location: (15.0, 15.0).into(),
             finger_id: 1,
             phase: TouchPhase::Started,
@@ -390,7 +391,7 @@ mod test {
         utils.wait_for_update().await;
 
         utils.push_event(TestEvent::Touch {
-            name: EventName::TouchEnd,
+            name: TouchEventName::TouchEnd,
             location: (15.0, 15.0).into(),
             finger_id: 1,
             phase: TouchPhase::Ended,

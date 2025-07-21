@@ -10,6 +10,7 @@ use freya_elements::{
 use freya_hooks::{
     use_animation_with_dependencies,
     use_applied_theme,
+    use_drop,
     use_focus,
     use_platform,
     AnimColor,

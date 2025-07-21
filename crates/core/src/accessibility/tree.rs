@@ -14,6 +14,10 @@ use accesskit::{
     Tree,
     TreeUpdate,
 };
+use freya_elements::{
+    WheelData,
+    WheelSource,
+};
 use freya_engine::prelude::{
     Color,
     Slant,
@@ -22,11 +26,13 @@ use freya_engine::prelude::{
     TextDecorationStyle,
 };
 use freya_native_core::{
+    events::EventName,
     node::NodeType,
     prelude::NodeImmutable,
     tags::TagName,
     NodeId,
 };
+use ragnarok::ProcessedEvents;
 use rustc_hash::{
     FxHashMap,
     FxHashSet,
@@ -42,12 +48,19 @@ use crate::{
         DioxusDOM,
         DioxusNode,
     },
+    events::{
+        DomEvent,
+        DomEventData,
+    },
     states::{
         AccessibilityNodeState,
         FontStyleState,
+        ScrollableState,
         StyleState,
         TransformState,
+        ViewportState,
     },
+    types::EventEmitter,
     values::{
         Fill,
         OverflowMode,
@@ -70,8 +83,8 @@ pub struct AccessibilityDirtyNodes {
 }
 
 impl AccessibilityDirtyNodes {
-    pub fn request_focus(&mut self, node_id: AccessibilityFocusStrategy) {
-        self.requested_focus = Some(node_id);
+    pub fn request_focus(&mut self, strategy: AccessibilityFocusStrategy) {
+        self.requested_focus = Some(strategy);
     }
 
     pub fn add_or_update(&mut self, node_id: NodeId) {
@@ -182,6 +195,7 @@ impl AccessibilityTree {
         rdom: &DioxusDOM,
         layout: &Torin<NodeId>,
         dirty_nodes: &mut AccessibilityDirtyNodes,
+        event_emitter: &EventEmitter,
     ) -> (TreeUpdate, NodeId) {
         let requested_focus = dirty_nodes.requested_focus.take();
         let removed_ids = dirty_nodes.removed.drain().collect::<FxHashMap<_, _>>();
@@ -239,6 +253,8 @@ impl AccessibilityTree {
             }
         }
 
+        let has_request_focus = requested_focus.is_some();
+
         // Focus the requested node id if there is one
         if let Some(requested_focus) = requested_focus {
             self.focus_node_with_strategy(requested_focus, rdom);
@@ -251,6 +267,10 @@ impl AccessibilityTree {
 
         let node_id = self.map.get(&self.focused_id).cloned().unwrap();
 
+        if has_request_focus {
+            self.scroll_to(node_id, rdom, layout, event_emitter);
+        }
+
         (
             TreeUpdate {
                 nodes,
@@ -259,6 +279,74 @@ impl AccessibilityTree {
             },
             node_id,
         )
+    }
+
+    /// Send the necessary wheel events to scroll views so that the given focused [NodeId] is visible on screen.
+    fn scroll_to(
+        &self,
+        node_id: NodeId,
+        rdom: &DioxusDOM,
+        layout: &Torin<NodeId>,
+        event_emitter: &EventEmitter,
+    ) {
+        let node_ref = rdom.get(node_id).unwrap();
+        let scrollable_state = &*node_ref.get::<ScrollableState>().unwrap();
+
+        let mut target_node = node_id;
+        let mut emmitable_events = Vec::new();
+
+        // Iterate over the inherited scrollables from the closes to the farest
+        for closest_scrollable in scrollable_state.scrollables.iter().rev() {
+            // Every scrollable has a target node, the first scrollable target is the focused node that we want to make visible,
+            // the rest scrollables will in the other hand just have the previous scrollable as target
+            let target_layout_node = layout.get(target_node).unwrap();
+            let target_area = target_layout_node.area;
+
+            let scrollable_layout_node = layout.get(*closest_scrollable).unwrap();
+            let scrollable_target_area = scrollable_layout_node.area;
+
+            let viewport_state = &*node_ref.get::<ViewportState>().unwrap();
+
+            // We only want to scroll if it is not visible
+            if !viewport_state.is_visible(layout, &target_area) {
+                let node_ref = rdom.get(*closest_scrollable).unwrap();
+                let closest_scrollable_state = &*node_ref.get::<ScrollableState>().unwrap();
+
+                // Get the relative diff from where the scrollable scroll starts
+                let diff_y = target_area.min_y()
+                    - scrollable_target_area.min_y()
+                    - closest_scrollable_state.scroll_y;
+                let diff_x = target_area.min_x()
+                    - scrollable_target_area.min_x()
+                    - closest_scrollable_state.scroll_x;
+
+                // And get the distance it needs to scroll in order to make the target visible
+                let delta_y = -(closest_scrollable_state.scroll_y + diff_y);
+                let delta_x = -(closest_scrollable_state.scroll_x + diff_x);
+
+                emmitable_events.push(DomEvent {
+                    name: EventName::Wheel,
+                    source_event: EventName::Wheel,
+                    node_id: *closest_scrollable,
+                    data: DomEventData::Wheel(WheelData::new(
+                        WheelSource::Custom,
+                        delta_x as f64,
+                        delta_y as f64,
+                    )),
+                    bubbles: false,
+                });
+
+                // Change the target to the current scrollable, so that the next scrollable makes sure this one is visible
+                target_node = *closest_scrollable;
+            }
+        }
+
+        event_emitter
+            .send(ProcessedEvents {
+                emmitable_events,
+                ..Default::default()
+            })
+            .unwrap();
     }
 
     /// Focus a Node given the strategy.

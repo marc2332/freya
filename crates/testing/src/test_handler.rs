@@ -7,28 +7,25 @@ use std::{
 };
 
 use accesskit::NodeId as AccessibilityId;
-use dioxus_core::{
-    Event,
-    VirtualDom,
-};
+use dioxus_core::VirtualDom;
 use freya_core::{
     accessibility::AccessibilityTree,
     dom::SafeDOM,
     event_loop_messages::EventLoopMessage,
     events::{
-        process_events,
-        EventName,
-        NodesState,
+        EventsExecutorAdapter,
+        EventsMeasurerAdapter,
+        MouseEventName,
         PlatformEvent,
-        PlatformEventData,
     },
     layout::process_layout,
+    platform::CursorIcon,
     render::{
         Compositor,
         RenderPipeline,
     },
     states::AccessibilityNodeState,
-    style::default_fonts,
+    style::fallback_fonts,
     types::{
         EventEmitter,
         EventReceiver,
@@ -37,6 +34,7 @@ use freya_core::{
         NativePlatformSender,
     },
 };
+use freya_elements::MouseButton;
 use freya_engine::prelude::{
     raster_n32_premul,
     Color,
@@ -46,8 +44,13 @@ use freya_engine::prelude::{
     FontMgr,
 };
 use freya_native_core::{
-    dioxus::NodeImmutableDioxusExt,
     prelude::NodeImmutable,
+    NodeId,
+};
+use ragnarok::{
+    EventsExecutorRunner,
+    EventsMeasurerRunner,
+    NodesState,
 };
 use tokio::{
     sync::{
@@ -69,10 +72,6 @@ use torin::{
     },
     prelude::CursorPoint,
 };
-use winit::{
-    event::MouseButton,
-    window::CursorIcon,
-};
 
 use crate::{
     config::TestingConfig,
@@ -90,7 +89,7 @@ pub struct TestingHandler<T: 'static + Clone> {
     pub(crate) platform_event_emitter: UnboundedSender<EventLoopMessage>,
     pub(crate) platform_event_receiver: UnboundedReceiver<EventLoopMessage>,
     pub(crate) events_queue: EventsQueue,
-    pub(crate) nodes_state: NodesState,
+    pub(crate) nodes_state: NodesState<NodeId>,
     pub(crate) platform_sender: NativePlatformSender,
     pub(crate) platform_receiver: NativePlatformReceiver,
     pub(crate) font_collection: FontCollection,
@@ -116,6 +115,9 @@ impl<T: 'static + Clone> TestingHandler<T> {
         self.vdom.insert_any_root_context(Box::new(
             self.utils.sdom.get_mut().accessibility_generator().clone(),
         ));
+        self.vdom.insert_any_root_context(Box::new(
+            self.utils.sdom.get_mut().animation_clock().clone(),
+        ));
 
         let sdom = self.utils.sdom();
         let mut fdom = sdom.get_mut();
@@ -140,6 +142,17 @@ impl<T: 'static + Clone> TestingHandler<T> {
     /// Get the current [AccessibilityId].
     pub fn focus_id(&self) -> AccessibilityId {
         self.accessibility_tree.focused_id
+    }
+
+    /// Get the current [AccessibilityId] but as a [TestNode].
+    pub fn focus_node(&self) -> TestNode {
+        let node_id = self
+            .accessibility_tree
+            .map
+            .get(&self.accessibility_tree.focused_id)
+            .unwrap();
+
+        self.utils.get_node_by_id(*node_id)
     }
 
     /// Apply the latest changes of the virtual dom.
@@ -174,9 +187,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
                     }
                     EventLoopMessage::FocusAccessibilityNode(strategy) => {
                         let fdom = self.utils.sdom.get();
-                        let rdom = fdom.rdom();
-                        self.accessibility_tree
-                            .focus_node_with_strategy(strategy, rdom);
+                        fdom.accessibility_dirty_nodes().request_focus(strategy);
                     }
                     EventLoopMessage::SetCursorIcon(icon) => {
                         self.cursor_icon = icon;
@@ -189,20 +200,15 @@ impl<T: 'static + Clone> TestingHandler<T> {
                 }
             }
 
-            if let Ok(events) = vdom_events {
-                let fdom = self.utils.sdom().get();
+            if let Ok(processed_events) = vdom_events {
+                let sdom = self.utils.sdom();
+                let fdom = sdom.get();
                 let rdom = fdom.rdom();
-                for event in events {
-                    if let Some(element_id) =
-                        rdom.get(event.node_id).and_then(|node| node.mounted_id())
-                    {
-                        let name = event.name.into();
-                        let data = event.data.any();
-                        let event = Event::new(data, event.bubbles);
-                        self.vdom.runtime().handle_event(name, event, element_id);
-                        self.vdom.process_events();
-                    }
-                }
+                let events_executor_adapter = EventsExecutorAdapter {
+                    rdom,
+                    vdom: &mut self.vdom,
+                };
+                events_executor_adapter.run(&mut self.nodes_state, processed_events);
             }
         }
 
@@ -225,47 +231,64 @@ impl<T: 'static + Clone> TestingHandler<T> {
 
     /// Wait for layout and events to be processed
     fn wait_for_work(&mut self, size: Size2D) {
+        let sdom = &self.utils.sdom();
+        let fdom = sdom.get_mut();
+        let rdom = fdom.rdom();
+        let mut layout = fdom.layout();
+        let layers = fdom.layers();
+        let mut images_cache = fdom.images_cache();
+        let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
+        let mut compositor_dirty_nodes = fdom.compositor_dirty_nodes();
+        let mut compositor_dirty_area = fdom.compositor_dirty_area();
+
+        // Process layout
         process_layout(
-            &self.utils.sdom().get(),
+            rdom,
+            &mut layout,
+            &mut images_cache,
+            &mut dirty_accessibility_tree,
+            &mut compositor_dirty_nodes,
+            &mut compositor_dirty_area,
             Area {
                 origin: (0.0, 0.0).into(),
                 size,
             },
             &mut self.font_collection,
             SCALE_FACTOR as f32,
-            &default_fonts(),
+            &fallback_fonts(),
         );
 
-        let fdom = &self.utils.sdom().get_mut();
-        {
-            let rdom = fdom.rdom();
-            let layout = fdom.layout();
-            let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
-            let (tree, node_id) = self.accessibility_tree.process_updates(
-                rdom,
-                &layout,
-                &mut dirty_accessibility_tree,
-            );
-
-            // Notify the components
-            self.platform_sender.send_modify(|state| {
-                state.focused_accessibility_id = tree.focus;
-                let node_ref = rdom.get(node_id).unwrap();
-                let node_accessibility = node_ref.get::<AccessibilityNodeState>().unwrap();
-                let layout_node = layout.get(node_id).unwrap();
-                state.focused_accessibility_node =
-                    AccessibilityTree::create_node(&node_ref, layout_node, &node_accessibility)
-            });
-        }
-
-        process_events(
-            fdom,
-            &mut self.events_queue,
+        // Process accessibility updates
+        let (tree, node_id) = self.accessibility_tree.process_updates(
+            rdom,
+            &layout,
+            &mut dirty_accessibility_tree,
             &self.event_emitter,
+        );
+        // Notify the components
+        self.platform_sender.send_modify(|state| {
+            state.focused_accessibility_id = tree.focus;
+            let node_ref = rdom.get(node_id).unwrap();
+            let node_accessibility = node_ref.get::<AccessibilityNodeState>().unwrap();
+            let layout_node = layout.get(node_id).unwrap();
+            state.focused_accessibility_node =
+                AccessibilityTree::create_node(&node_ref, layout_node, &node_accessibility)
+        });
+
+        // Process events
+        let mut events_measurer_adapter = EventsMeasurerAdapter {
+            rdom,
+            layers: &layers,
+            layout: &layout,
+            vdom: &mut self.vdom,
+            scale_factor: SCALE_FACTOR,
+        };
+        let processed_events = events_measurer_adapter.run(
+            &mut self.events_queue,
             &mut self.nodes_state,
-            SCALE_FACTOR,
             self.accessibility_tree.focused_node_id(),
         );
+        self.event_emitter.send(processed_events).unwrap();
     }
 
     /// Push an event to the events queue
@@ -275,7 +298,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
     /// # use freya::prelude::*;
     /// # let mut utils = launch_test(|| rsx!( rect { } ));
     /// utils.push_event(TestEvent::Mouse {
-    ///     name: EventName::MouseDown,
+    ///     name: MouseEventName::MouseDown,
     ///     cursor: (490., 20.).into(),
     ///     button: Some(MouseButton::Left),
     /// });
@@ -361,10 +384,10 @@ impl<T: 'static + Clone> TestingHandler<T> {
             dirty_surface: &mut dirty_surface,
             compositor: &mut compositor,
             scale_factor: SCALE_FACTOR as f32,
-            selected_node: None,
+            highlighted_node: None,
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,
-            default_fonts: &["Fira Sans".to_string()],
+            fallback_fonts: &["Fira Sans".to_string()],
             images_cache: &mut fdom.images_cache(),
         };
         render_pipeline.run();
@@ -404,12 +427,10 @@ impl<T: 'static + Clone> TestingHandler<T> {
     /// utils.move_cursor((5., 5.));
     /// ```
     pub async fn move_cursor(&mut self, cursor: impl Into<CursorPoint>) {
-        self.push_event(PlatformEvent {
-            name: EventName::MouseMove,
-            data: PlatformEventData::Mouse {
-                cursor: cursor.into(),
-                button: Some(MouseButton::Left),
-            },
+        self.push_event(PlatformEvent::Mouse {
+            name: MouseEventName::MouseMove,
+            cursor: cursor.into(),
+            button: Some(MouseButton::Left),
         });
         self.wait_for_update().await;
     }
@@ -423,20 +444,16 @@ impl<T: 'static + Clone> TestingHandler<T> {
     /// utils.click_cursor((5., 5.));
     /// ```
     pub async fn click_cursor(&mut self, cursor: impl Into<CursorPoint> + Clone) {
-        self.push_event(PlatformEvent {
-            name: EventName::MouseDown,
-            data: PlatformEventData::Mouse {
-                cursor: cursor.clone().into(),
-                button: Some(MouseButton::Left),
-            },
+        self.push_event(PlatformEvent::Mouse {
+            name: MouseEventName::MouseDown,
+            cursor: cursor.clone().into(),
+            button: Some(MouseButton::Left),
         });
         self.wait_for_update().await;
-        self.push_event(PlatformEvent {
-            name: EventName::MouseUp,
-            data: PlatformEventData::Mouse {
-                cursor: cursor.into(),
-                button: Some(MouseButton::Left),
-            },
+        self.push_event(PlatformEvent::Mouse {
+            name: MouseEventName::MouseUp,
+            cursor: cursor.into(),
+            button: Some(MouseButton::Left),
         });
         self.wait_for_update().await;
     }

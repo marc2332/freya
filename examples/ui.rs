@@ -54,10 +54,6 @@ fn app() -> Element {
                     title: "Card 7",
                     content: "Content 7",
                 }
-                Card {
-                    title: "Card 7",
-                    content: "Content 7",
-                }
             }
             Navbar {
                 title: "Bottom Bar"
@@ -142,50 +138,19 @@ fn Card(props: CardProps) -> Element {
                     "{props.content}"
                 }
             }
-            Area {
-
-            }
-        }
-    )
-}
-
-#[allow(non_snake_case)]
-fn Area() -> Element {
-    let mut cursor_pos_over = use_signal(|| (0f64, 0f64));
-    let mut cursor_pos_click = use_signal(|| (0f64, 0f64));
-
-    let cursor_moved = move |e: MouseEvent| {
-        let pos = e.get_screen_coordinates();
-        cursor_pos_over.with_mut(|cursor_pos| {
-            cursor_pos.0 = pos.x;
-            cursor_pos.1 = pos.y;
-        });
-    };
-
-    let cursor_clicked = move |e: MouseEvent| {
-        let pos = e.get_screen_coordinates();
-        cursor_pos_click.with_mut(|cursor_pos| {
-            cursor_pos.0 = pos.x;
-            cursor_pos.1 = pos.y;
-        })
-    };
-
-    rsx!(
-        rect {
-            height: "50%",
-            width: "100%",
-            background: "rgb(228, 143, 69)",
-            padding: "10",
-            corner_radius: "12",
-            main_align: "center",
-            cross_align: "center",
-            onmousemove: cursor_moved,
-            onclick: cursor_clicked,
-            label {
-                "Mouse is at [x: {cursor_pos_over.read().0}, y: {cursor_pos_over.read().1}] "
-            }
-            label {
-                "Mouse clicked at [x: {cursor_pos_click.read().0}, y: {cursor_pos_click.read().1}]"
+            rect {
+                width: "fill",
+                height: "fill",
+                main_align: "center",
+                cross_align: "center",
+                background: "rgb(228, 143, 69)",
+                padding: "10",
+                corner_radius: "12",
+                Button {
+                    label {
+                        "Hello, World!"
+                    }
+                }
             }
         }
     )

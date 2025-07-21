@@ -68,8 +68,8 @@ pub struct RenderPipeline<'a> {
     pub canvas_area: Area,
     pub background: Color,
     pub scale_factor: f32,
-    pub selected_node: Option<NodeId>,
-    pub default_fonts: &'a [String],
+    pub highlighted_node: Option<NodeId>,
+    pub fallback_fonts: &'a [String],
 }
 
 impl RenderPipeline<'_> {
@@ -165,8 +165,8 @@ impl RenderPipeline<'_> {
             }
         }
 
-        if let Some(selected_node) = &self.selected_node {
-            if let Some(layout_node) = self.layout.get(*selected_node) {
+        if let Some(highlighted_node) = &self.highlighted_node {
+            if let Some(layout_node) = self.layout.get(*highlighted_node) {
                 wireframe_renderer::render_wireframe(
                     self.dirty_surface.canvas(),
                     &layout_node.visible_area(),
@@ -210,6 +210,7 @@ impl RenderPipeline<'_> {
             let node_transform = &*node_ref.get::<TransformState>().unwrap();
             let node_viewports = node_ref.get::<ViewportState>().unwrap();
 
+            // Apply viewport clipping
             for node_id in &node_viewports.viewports {
                 let node_ref = self.rdom.get(*node_id).unwrap();
                 let node_type = node_ref.node_type();
@@ -271,7 +272,7 @@ impl RenderPipeline<'_> {
                 dirty_canvas,
                 self.font_collection,
                 self.font_manager,
-                self.default_fonts,
+                self.fallback_fonts,
                 self.images_cache,
                 self.scale_factor,
             );

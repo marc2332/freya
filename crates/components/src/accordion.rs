@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use dioxus_core::use_drop;
 use freya_core::platform::CursorIcon;
 use freya_elements::{
     self as dioxus_elements,
@@ -92,21 +93,24 @@ pub fn Accordion(props: AccordionProps) -> Element {
         rect {
             onmouseenter,
             onmouseleave,
-            overflow: "clip",
             color: "{color}",
-            padding: "10",
-            margin: "2 4",
             corner_radius: "6",
-            width: "100%",
+            width: "fill",
             height: "auto",
             background: "{background}",
-            onclick,
             border: "1 inner {border_fill}",
-            {&props.summary}
+            rect {
+                width: "fill",
+                overflow: "clip",
+                padding: "10",
+                onclick,
+                {&props.summary}
+            }
             rect {
                 overflow: "clip",
-                width: "100%",
+                width: "fill",
                 visible_height: "{animation_value}%",
+                padding: "10",
                 {&props.children}
             }
         }

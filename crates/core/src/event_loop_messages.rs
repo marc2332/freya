@@ -1,11 +1,10 @@
+use cursor_icon::CursorIcon;
 use torin::prelude::{
     Area,
     CursorPoint,
 };
-use winit::window::{
-    CursorIcon,
-    Window,
-};
+#[cfg(feature = "winit")]
+use winit::window::Window;
 
 use crate::{
     accessibility::AccessibilityFocusStrategy,
@@ -33,18 +32,21 @@ pub enum EventLoopMessage {
     RemeasureTextGroup(TextGroupMeasurement),
     /// Change the cursor icon
     SetCursorIcon(CursorIcon),
-    /// Accessibility Window Event
-    Accessibility(accesskit_winit::WindowEvent),
     /// Focus with the given strategy
     FocusAccessibilityNode(AccessibilityFocusStrategy),
     /// Close the whole app
     ExitApp,
-    /// Callback to access the Window.
-    WithWindow(Box<dyn FnOnce(&Window) + Send + Sync>),
     /// Raw platform event, this are low level events.
     PlatformEvent(PlatformEvent),
+    /// Accessibility Window Event
+    #[cfg(feature = "winit")]
+    Accessibility(accesskit_winit::WindowEvent),
+    /// Callback to access the Window.
+    #[cfg(feature = "winit")]
+    WithWindow(Box<dyn FnOnce(&Window) + Send + Sync>),
 }
 
+#[cfg(feature = "winit")]
 impl From<accesskit_winit::Event> for EventLoopMessage {
     fn from(value: accesskit_winit::Event) -> Self {
         Self::Accessibility(value.window_event)

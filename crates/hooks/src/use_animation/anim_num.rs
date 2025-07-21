@@ -33,6 +33,15 @@ impl AnimNum {
         }
     }
 
+    /// Reverses the `origin` and the `destination` of the [AnimNum].
+    pub fn into_reversed(self) -> AnimNum {
+        Self {
+            origin: self.destination,
+            destination: self.origin,
+            ..self
+        }
+    }
+
     /// Set the animation duration using milliseconds. Use `Self::duration` if you want to specify the duration in another form.
     pub fn time(mut self, time: u64) -> Self {
         self.time = Duration::from_millis(time);

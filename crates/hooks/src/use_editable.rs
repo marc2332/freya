@@ -1,11 +1,14 @@
-use std::rc::Rc;
+use std::{
+    rc::Rc,
+    time::Duration,
+};
 
 use dioxus_clipboard::prelude::{
     use_clipboard,
     UseClipboard,
 };
 use dioxus_core::{
-    prelude::spawn,
+    spawn,
     use_hook,
     AttributeValue,
 };
@@ -151,7 +154,7 @@ impl UseEditable {
             config.identation,
             mode,
             clipboard,
-            EditorHistory::new(),
+            EditorHistory::new(Duration::from_secs(1)),
         ));
         let dragging = Signal::new(TextDragging::None);
         let (cursor_sender, mut cursor_receiver) = unbounded_channel::<CursorLayoutResponse>();

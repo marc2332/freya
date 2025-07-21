@@ -15,6 +15,7 @@ use freya_hooks::{
     ButtonThemeWith,
     Ease,
     Function,
+    OnCreation,
     PopupTheme,
     PopupThemeWith,
 };
@@ -104,7 +105,7 @@ pub fn Popup(
     close_on_escape_key: bool,
 ) -> Element {
     let animations = use_animation(|conf| {
-        conf.auto_start(true);
+        conf.on_creation(OnCreation::Run);
         (
             AnimNum::new(0.85, 1.)
                 .time(250)
@@ -285,7 +286,7 @@ mod test {
 
         // Send a random globalkeydown event
         utils.push_event(TestEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: KeyboardEventName::KeyDown,
             key: Key::ArrowDown,
             code: Code::ArrowDown,
             modifiers: Modifiers::empty(),
@@ -296,7 +297,7 @@ mod test {
 
         // Send a ESC globalkeydown event
         utils.push_event(TestEvent::Keyboard {
-            name: EventName::KeyDown,
+            name: KeyboardEventName::KeyDown,
             key: Key::Escape,
             code: Code::Escape,
             modifiers: Modifiers::empty(),

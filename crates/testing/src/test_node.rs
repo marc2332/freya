@@ -107,24 +107,15 @@ impl TestNode {
         let Some(area) = self.area() else {
             return false;
         };
-
         let sdom = self.utils().sdom();
         let fdom = sdom.get();
         let dom = fdom.rdom();
         let node = dom.get(self.node_id).unwrap();
-        let node_viewports = node.get::<ViewportState>().unwrap();
 
         let layout = fdom.layout();
+        let node_viewports = node.get::<ViewportState>().unwrap();
 
-        // Skip elements that are completely out of any their parent's viewport
-        for viewport_id in &node_viewports.viewports {
-            let viewport = layout.get(*viewport_id).unwrap().visible_area();
-            if !viewport.intersects(&area) {
-                return false;
-            }
-        }
-
-        true
+        node_viewports.is_visible(&layout, &area)
     }
 
     /// Get the IDs of this Node children.

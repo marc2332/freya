@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use dioxus_router::prelude::use_navigator;
 use freya_elements::{
     self as dioxus_elements,
     events::{
@@ -9,7 +8,9 @@ use freya_elements::{
     },
 };
 
-/// Provides native functionalities for a dioxus-router.
+use crate::hooks::use_navigator;
+
+/// Provides native functionalities for a freya-router.
 ///
 /// Features:
 /// - Navigate using back and forward buttons of the mouse.
@@ -38,13 +39,8 @@ pub fn NativeRouter(children: Element) -> Element {
 
 #[cfg(test)]
 mod test {
-    use dioxus_router::prelude::{
-        Outlet,
-        Routable,
-        Router,
-    };
     use freya::prelude::*;
-    use freya_core::events::EventName;
+    use freya_router::prelude::*;
     use freya_testing::prelude::*;
 
     #[tokio::test]
@@ -116,7 +112,7 @@ mod test {
         assert_eq!(utils.root().get(0).get(1).get(0).text(), Some("B"));
 
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseUp,
+            name: MouseEventName::MouseUp,
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Back),
         });
@@ -125,7 +121,7 @@ mod test {
         assert_eq!(utils.root().get(0).get(1).get(0).text(), Some("A"));
 
         utils.push_event(TestEvent::Mouse {
-            name: EventName::MouseUp,
+            name: MouseEventName::MouseUp,
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Forward),
         });
