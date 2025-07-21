@@ -17,8 +17,6 @@ fade-cached-incremental-areas = ["freya/fade-cached-incremental-areas"]
 disable-zoom-shortcuts = ["freya/disable-zoom-shortcuts"]
 docs = ["freya/docs"]
 plot = ["freya/plot"]
-gif = ["freya/gif"]
-remote-gif = ["freya/remote-gif"]
 
 [patch.crates-io]
 # dioxus = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
@@ -83,7 +81,7 @@ rustc-hash = "2.0.0"
 [dev-dependencies]
 skia-safe = { workspace = true }
 tokio = { workspace = true, features = ["fs"]}
-freya = { workspace = true, features = ["network-image"] }
+freya = { workspace = true, features = ["network-image", "gif", "remote-gif"] }
 freya-hooks = { workspace = true }
 freya-core = { workspace = true }
 freya-testing = { workspace = true }
