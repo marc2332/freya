@@ -5,7 +5,7 @@ use std::sync::{
 
 use bytes::Bytes;
 use dioxus_core::{
-    prelude::spawn,
+    spawn,
     use_hook,
     AttributeValue,
 };
