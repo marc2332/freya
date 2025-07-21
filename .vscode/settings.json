@@ -3,6 +3,8 @@
         "devtools",
         "tracing-subscriber",
         "docs",
-        "fade-cached-incremental-areas"
+        "fade-cached-incremental-areas",
+        "gif",
+        "remote-gif"
     ]
 }

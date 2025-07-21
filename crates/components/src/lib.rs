@@ -49,6 +49,8 @@ mod cursor_area;
 mod drag_drop;
 mod dropdown;
 mod gesture_area;
+#[cfg(feature = "gif")]
+mod gif;
 mod global_animated_position;
 mod hooks;
 mod icons;
@@ -64,6 +66,8 @@ mod overflowed_content;
 mod popup;
 mod progress_bar;
 mod radio;
+#[cfg(feature = "remote-gif")]
+mod remote_gif;
 mod resizable_container;
 mod scroll_views;
 mod segmented_button;
@@ -92,6 +96,8 @@ pub use cursor_area::*;
 pub use drag_drop::*;
 pub use dropdown::*;
 pub use gesture_area::*;
+#[cfg(feature = "gif")]
+pub use gif::*;
 pub use global_animated_position::*;
 pub use hooks::*;
 pub use icons::*;
@@ -106,6 +112,8 @@ pub use overflowed_content::*;
 pub use popup::*;
 pub use progress_bar::*;
 pub use radio::*;
+#[cfg(feature = "remote-gif")]
+pub use remote_gif::*;
 pub use resizable_container::*;
 pub use scroll_views::*;
 pub use segmented_button::*;
