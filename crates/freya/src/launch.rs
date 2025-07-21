@@ -249,13 +249,12 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
         let App = props.app;
 
         let handle_error = |e: ErrorContext| {
-            #[cfg(not(debug_assertions))]
-            panic!("{e:?}");
-
-            #[cfg(debug_assertions)]
             for error in e.errors().iter() {
                 println!("{:?}", error);
             }
+
+            #[cfg(not(debug_assertions))]
+            std::process::exit(1);
 
             #[cfg(debug_assertions)]
             rsx!(
