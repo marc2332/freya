@@ -18,8 +18,10 @@ features = ["freya-engine/mocked-engine"]
 skia-engine = ["freya-engine/skia-engine"]
 disable-zoom-shortcuts = []
 disable-animation-shortcuts = []
+hot-reloading = ["dep:dioxus-devtools"]
 
 [dependencies]
+dioxus-devtools = { workspace = true, optional = true }
 freya-elements = { workspace = true }
 freya-core = { workspace = true, features = ["winit"] }
 freya-engine = { workspace = true }
@@ -44,4 +46,8 @@ futures-task = { workspace = true }
 futures-util = { workspace = true }
 
 itertools = "0.13.0"
-image = { version = "0.25.0", default-features = false, features = [ "ico", "png", "jpeg"]}
+image = { version = "0.25.0", default-features = false, features = [
+    "ico",
+    "png",
+    "jpeg",
+] }

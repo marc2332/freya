@@ -17,12 +17,21 @@ no-default-features = true
 
 [features]
 # Internal features
-default = ["skia", "winit"]
+default = ["skia", "winit", "hot-reloading"]
 skia = ["freya-engine/skia-engine"]
 tracing-subscriber = ["dep:tracing-subscriber"]
-mocked-engine-development = ["freya-engine/mocked-engine"] # This is just for the CI
+mocked-engine-development = [
+  "freya-engine/mocked-engine",
+] # This is just for the CI
 fade-cached-incremental-areas = ["freya-core/fade-cached-incremental-areas"]
-docs = ["dep:freya-testing", "dep:dioxus-i18n", "dep:freya-router", "freya-components/docs", "freya-hooks/docs", "plot"]
+docs = [
+  "dep:freya-testing",
+  "dep:dioxus-i18n",
+  "dep:freya-router",
+  "freya-components/docs",
+  "freya-hooks/docs",
+  "plot",
+]
 
 # User features
 network-image = ["freya-components/network-image"]
@@ -30,13 +39,23 @@ use_camera = ["freya-hooks/use_camera"]
 performance-overlay = []
 disable-zoom-shortcuts = ["freya-winit/disable-zoom-shortcuts"]
 devtools = ["dep:freya-devtools"]
+hot-reloading = [
+  "dep:dioxus-devtools",
+  "freya-winit/hot-reloading",
+  "freya-core/hot-reloading",
+]
 custom-tokio-rt = []
-winit = ["freya-core/winit", "freya-hooks/winit", "freya-components/winit", "dep:freya-winit"]
+winit = [
+  "freya-core/winit",
+  "freya-hooks/winit",
+  "freya-components/winit",
+  "dep:freya-winit",
+]
 plot = ["dep:plotters", "dep:skia-plotters-backend"]
 
 [dependencies]
 freya-devtools = { workspace = true, optional = true }
-freya-winit = { workspace = true, optional = true}
+freya-winit = { workspace = true, optional = true }
 freya-elements = { workspace = true }
 freya-hooks = { workspace = true }
 freya-core = { workspace = true }
@@ -52,10 +71,13 @@ dioxus = { workspace = true }
 dioxus-core-macro = { workspace = true }
 dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
+dioxus-devtools = { workspace = true, optional = true }
 dioxus-signals = { workspace = true }
 
 tokio = { workspace = true }
-tracing-subscriber = { workspace = true, optional = true, features = ["env-filter"]}
+tracing-subscriber = { workspace = true, optional = true, features = [
+  "env-filter",
+] }
 
 # Plot
 plotters = { version = "0.3.7", default-features = false, features = [
@@ -66,4 +88,4 @@ plotters = { version = "0.3.7", default-features = false, features = [
   "full_palette",
   "colormaps",
 ], optional = true }
-skia-plotters-backend = { version = "0.1", optional = true  }
+skia-plotters-backend = { version = "0.1", optional = true }

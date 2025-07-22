@@ -95,6 +95,17 @@ impl<'a, State: Clone + 'static> WinitRenderer<'a, State> {
 
         let mut winit_renderer = WinitRenderer::new(vdom, sdom, config, devtools, proxy);
 
+        #[cfg(all(debug_assertions, feature = "hot-reloading"))]
+        {
+            dioxus_devtools::connect({
+                let proxy = event_loop.create_proxy();
+                move |event| {
+                    println!("got event: {event:#?}");
+                    let _ = proxy.send_event(EventLoopMessage::DioxusDevserverEvent(event));
+                }
+            });
+        }
+
         event_loop.run_app(&mut winit_renderer).unwrap();
     }
 
@@ -223,6 +234,15 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
             EventLoopMessage::PollVDOM => {
                 app.poll_vdom(window);
             }
+
+            #[cfg(all(debug_assertions, feature = "hot-reloading"))]
+            EventLoopMessage::DioxusDevserverEvent(event) => match event {
+                dioxus_devtools::DevserverMsg::HotReload(hot_reload_msg) => {
+                    dioxus_devtools::apply_changes(&app.vdom, &hot_reload_msg);
+                }
+                dioxus_devtools::DevserverMsg::Shutdown => event_loop.exit(),
+                _ => {}
+            },
             _ => {}
         }
     }

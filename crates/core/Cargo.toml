@@ -15,6 +15,7 @@ categories = ["gui", "asynchronous"]
 features = ["freya-engine/mocked-engine"]
 
 [features]
+hot-reloading = ["dep:dioxus-devtools"]
 rc-dom = []
 skia-engine = ["freya-engine/skia-engine"]
 fade-cached-incremental-areas = []
@@ -28,6 +29,7 @@ freya-native-core = { workspace = true }
 freya-native-core-macro = { workspace = true }
 ragnarok = { workspace = true }
 
+dioxus-devtools = { workspace = true, optional = true }
 dioxus-core = { workspace = true }
 shipyard = { workspace = true }
 keyboard-types = "0.7.0"
