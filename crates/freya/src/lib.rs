@@ -51,6 +51,8 @@
 //! - `devtools`: enables a side panel to inspect your App tree, styles and computed layout.
 //! - `use_camera`: enables the [use_camera](self::hooks::use_camera) hook.
 //! - `network-image`: enables the [NetworkImage](self::components::NetworkImage) component.
+//! - `gif`: enables the [Gif](self::components::Gif) component.
+//! - `remote-gif`: enables the [RemoteGif](self::components::RemoteGif) component.
 //! - `custom-tokio-rt`: disables the default Tokio runtime created by Freya.
 //! - `performance-overlay`: enables the performance overlay plugin.
 //! - `disable-zoom-shortcuts`: disables the default zoom shortcuts.
