@@ -43,6 +43,7 @@ hot-reloading = [
   "dep:dioxus-devtools",
   "freya-winit/hot-reloading",
   "freya-core/hot-reloading",
+  "dioxus/devtools",
 ]
 custom-tokio-rt = []
 winit = [
