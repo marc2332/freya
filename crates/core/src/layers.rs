@@ -1,9 +1,6 @@
 use std::{
     self,
-    ops::{
-        Deref,
-        DerefMut,
-    },
+    ops::{Deref, DerefMut},
 };
 
 use freya_native_core::NodeId;
