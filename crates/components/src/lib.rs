@@ -79,6 +79,8 @@ mod theme;
 mod tile;
 mod tooltip;
 mod tree;
+#[cfg(feature = "video")]
+mod video;
 #[cfg(feature = "winit")]
 mod window_drag_area;
 
@@ -120,5 +122,7 @@ pub use theme::*;
 pub use tile::*;
 pub use tooltip::*;
 pub use tree::*;
+#[cfg(feature = "video")]
+pub use video::*;
 #[cfg(feature = "winit")]
 pub use window_drag_area::*;

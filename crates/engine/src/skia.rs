@@ -60,6 +60,7 @@ pub use skia_safe::{
         TypefaceFontProvider,
     },
     wrapper::PointerWrapper,
+    AlphaType,
     Bitmap,
     BlendMode,
     BlurStyle,
