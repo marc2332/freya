@@ -22,7 +22,7 @@ skia = ["freya-engine/skia-engine"]
 tracing-subscriber = ["dep:tracing-subscriber"]
 mocked-engine-development = ["freya-engine/mocked-engine"] # This is just for the CI
 fade-cached-incremental-areas = ["freya-core/fade-cached-incremental-areas"]
-docs = ["dep:freya-testing", "dep:dioxus-i18n", "dep:freya-router", "freya-components/docs", "freya-hooks/docs"]
+docs = ["dep:freya-testing", "dep:dioxus-i18n", "dep:freya-router", "freya-components/docs", "freya-hooks/docs", "plot"]
 
 # User features
 network-image = ["freya-components/network-image"]
@@ -32,6 +32,7 @@ disable-zoom-shortcuts = ["freya-winit/disable-zoom-shortcuts"]
 devtools = ["dep:freya-devtools"]
 custom-tokio-rt = []
 winit = ["freya-core/winit", "freya-hooks/winit", "freya-components/winit", "dep:freya-winit"]
+plot = ["dep:plotters", "dep:skia-plotters-backend"]
 
 [dependencies]
 freya-devtools = { workspace = true, optional = true }
@@ -55,3 +56,14 @@ dioxus-signals = { workspace = true }
 
 tokio = { workspace = true }
 tracing-subscriber = { workspace = true, optional = true, features = ["env-filter"]}
+
+# Plot
+plotters = { version = "0.3.7", default-features = false, features = [
+  "chrono",
+  "image",
+  "all_series",
+  "all_elements",
+  "full_palette",
+  "colormaps",
+], optional = true }
+skia-plotters-backend = { version = "0.1", optional = true  }

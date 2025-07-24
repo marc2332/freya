@@ -74,13 +74,7 @@ impl ElementUtils for ImageElement {
             SamplingMode::CatmullRom => SamplingOptions::from(CubicResampler::catmull_rom()),
         };
 
-        canvas.draw_image_rect_with_sampling_options(
-            image,
-            None,
-            rect,
-            sampling,
-            &Paint::default(),
-        );
+        canvas.draw_image_rect_with_sampling_options(image, None, rect, sampling, &paint);
 
         canvas.restore();
     }

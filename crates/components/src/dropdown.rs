@@ -343,7 +343,7 @@ pub fn Dropdown(
                         rect {
                             onglobalpointerup,
                             onglobalkeydown,
-                            layer: "-1000",
+                            layer: "overlay",
                             margin: "{margin}",
                             border: "1 inner {border_fill}",
                             overflow: "clip",

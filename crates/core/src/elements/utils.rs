@@ -332,4 +332,14 @@ impl ElementUtils for ElementWithUtils {
             }
         }
     }
+
+    fn element_needs_cached_area(&self, node_ref: &DioxusNode, style_state: &StyleState) -> bool {
+        match self {
+            Self::Rect(el) => el.element_needs_cached_area(node_ref, style_state),
+            Self::Svg(el) => el.element_needs_cached_area(node_ref, style_state),
+            Self::Paragraph(el) => el.element_needs_cached_area(node_ref, style_state),
+            Self::Image(el) => el.element_needs_cached_area(node_ref, style_state),
+            Self::Label(el) => el.element_needs_cached_area(node_ref, style_state),
+        }
+    }
 }

@@ -303,7 +303,7 @@ pub fn ButtonBase(
     };
 
     let onkeydown = move |ev: KeyboardEvent| {
-        if focus.validate_keydown(&ev) && !enabled {
+        if focus.validate_keydown(&ev) && enabled {
             if let Some(onpress) = &onpress {
                 onpress.call(PressEvent::Key(ev))
             }

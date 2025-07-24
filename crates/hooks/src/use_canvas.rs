@@ -75,7 +75,7 @@ impl UseCanvas {
 ///     })
 /// }
 /// ```
-pub fn use_canvas<T: FnMut(&mut CanvasRunnerContext) + Sync + Send + 'static>(
+pub fn use_canvas<T: FnMut(&mut CanvasRunnerContext) + Send + 'static>(
     mut renderer_cb: impl FnMut() -> T + 'static,
 ) -> UseCanvas {
     let runner = use_memo(move || UseCanvasRunner(Arc::new(Mutex::new(renderer_cb()))));

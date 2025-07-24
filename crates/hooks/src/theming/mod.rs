@@ -402,15 +402,6 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub Graph {
-        %[cows]
-        width: str,
-        height: str,
-    }
-}
-
-define_theme! {
-    %[component]
     pub Icon {
         %[cows]
         margin: str,
@@ -636,7 +627,6 @@ pub struct Theme {
     pub progress_bar: ProgressBarTheme,
     pub table: TableTheme,
     pub input: InputTheme,
-    pub graph: GraphTheme,
     pub icon: IconTheme,
     pub sidebar: SidebarTheme,
     pub sidebar_item: SidebarItemTheme,

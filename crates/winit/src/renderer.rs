@@ -71,7 +71,7 @@ pub struct WinitRenderer<'a, State: Clone + 'static> {
     pub(crate) cursor_pos: CursorPoint,
     pub(crate) mouse_state: ElementState,
     pub(crate) modifiers_state: ModifiersState,
-    pub(crate) dropped_file_path: Option<PathBuf>,
+    pub(crate) dropped_file_paths: Vec<PathBuf>,
     pub(crate) custom_scale_factor: f64,
 }
 
@@ -116,7 +116,7 @@ impl<'a, State: Clone + 'static> WinitRenderer<'a, State> {
             cursor_pos: CursorPoint::default(),
             mouse_state: ElementState::Released,
             modifiers_state: ModifiersState::default(),
-            dropped_file_path: None,
+            dropped_file_paths: Vec::new(),
             custom_scale_factor: 0.,
         }
     }
@@ -449,7 +449,7 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
                     button: None,
                 });
 
-                if let Some(dropped_file_path) = self.dropped_file_path.take() {
+                for dropped_file_path in self.dropped_file_paths.drain(..).collect::<Vec<_>>() {
                     self.send_event(PlatformEvent::File {
                         name: FileEventName::FileDrop,
                         file_path: Some(dropped_file_path),
@@ -492,7 +492,7 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
                 app.resize(window);
             }
             WindowEvent::DroppedFile(file_path) => {
-                self.dropped_file_path = Some(file_path);
+                self.dropped_file_paths.push(file_path);
             }
             WindowEvent::HoveredFile(file_path) => {
                 self.send_event(PlatformEvent::File {

@@ -6,6 +6,8 @@ use rand::{
     thread_rng,
 };
 
+const SIZE: usize = 8;
+
 #[derive(Debug, Clone)]
 struct Cell {
     id: usize,
@@ -17,11 +19,11 @@ struct Grid {
 }
 
 impl Grid {
-    fn new(size: usize) -> Self {
+    fn new() -> Self {
         let mut cells = Vec::new();
-        for i in 0..size {
-            for j in 0..size {
-                cells.push(Cell { id: i * size + j });
+        for i in 0..SIZE {
+            for j in 0..SIZE {
+                cells.push(Cell { id: i * SIZE + j });
             }
         }
         Grid { cells }
@@ -32,6 +34,15 @@ impl Grid {
 
         self.cells.shuffle(&mut rng);
     }
+
+    pub fn order(&mut self) {
+        *self = Self::new()
+    }
+
+    pub fn reverse(&mut self) {
+        *self = Self::new();
+        self.cells.reverse();
+    }
 }
 
 fn main() {
@@ -39,7 +50,7 @@ fn main() {
 }
 
 fn app() -> Element {
-    let mut grid = use_signal(|| Grid::new(5));
+    let mut grid = use_signal(Grid::new);
     rsx!(
         rect {
             spacing: "12",
@@ -48,35 +59,51 @@ fn app() -> Element {
             width: "fill",
             height: "fill",
             GlobalAnimatedPositionProvider::<usize> {
-                Button {
-                    onpress: move |_| grid.write().suffle(),
-                    label {
-                        "Shuffle"
+                rect {
+                    direction: "horizontal",
+                    Button {
+                        onpress: move |_| grid.write().suffle(),
+                        label {
+                            "Shuffle"
+                        }
+                    }
+                    Button {
+                        onpress: move |_| grid.write().order(),
+                        label {
+                            "Order"
+                        }
+                    }
+                    Button {
+                        onpress: move |_| grid.write().reverse(),
+                        label {
+                            "Reverse"
+                        }
                     }
                 }
                 rect {
                     spacing: "6",
-                    for row in grid.read().cells.chunks(5) {
+                    for row in grid.read().cells.chunks(SIZE) {
                         rect {
                             direction: "horizontal",
                             spacing: "6",
                             for cell in row {
                                 GlobalAnimatedPosition::<usize> {
                                     key: "{cell.id:?}",
-                                    width: "100",
-                                    height: "100",
+                                    width: "80",
+                                    height: "80",
                                     function: Function::Expo,
-                                    duration: Duration::from_millis(600),
+                                    duration: Duration::from_millis(500),
                                     id: cell.id,
                                     rect {
-                                        width: "100",
-                                        height: "100",
-                                        background: "rgb({cell.id * 6}, {cell.id * 8}, { cell.id * 2 })",
+                                        width: "80",
+                                        height: "80",
+                                        background: "rgb({cell.id * 1}, {cell.id * 2}, { cell.id * 1 })",
                                         corner_radius: "32",
                                         color: "white",
                                         main_align: "center",
                                         cross_align: "center",
                                         label {
+                                            font_size: "14",
                                             "{cell.id:?}"
                                         }
                                     }
