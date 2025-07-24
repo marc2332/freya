@@ -158,18 +158,26 @@ pub fn Video(
                                 )
                                 .unwrap();
                                 let stream = input.stream(video_stream_index).unwrap();
+                                let duration = Duration::from_millis(
+                                    (stream.duration().max(1) as f64
+                                        * f64::from(stream.time_base())
+                                        * 1000.) as u64,
+                                );
+                                let frames = if stream.frames() == 0 {
+                                    duration.as_millis() as i64
+                                        / f64::from(stream.avg_frame_rate()) as i64
+                                } else {
+                                    stream.frames()
+                                };
+
                                 data.send(Data {
                                     elapsed_duration: Duration::from_secs(0),
-                                    duration: Duration::from_millis(
-                                        (stream.duration().max(1) as f64
-                                            * f64::from(stream.time_base())
-                                            * 1000.) as u64,
-                                    ),
+                                    duration,
                                     size: (
                                         stream.parameters().width(),
                                         stream.parameters().height(),
                                     ),
-                                    frames: stream.frames(),
+                                    frames,
                                     framerate: stream.avg_frame_rate().into(),
                                 })
                                 .ok();
@@ -189,6 +197,7 @@ pub fn Video(
                                 PlayState::Loaded { input, .. },
                             ) => {
                                 *frame.lock().unwrap() = from_frame;
+                                // *last_frame = ts;
                                 let timestamp = ts * ffmpeg::ffi::AV_TIME_BASE as i64;
 
                                 input.seek(timestamp, ..timestamp + 1).unwrap();
@@ -210,54 +219,52 @@ pub fn Video(
                         };
 
                         if packet.stream() == *video_stream_index {
-                            let mut index = 0f64;
-
                             video.send_packet(&packet).unwrap();
 
-                            let time_base = input.stream(packet.stream()).unwrap().time_base();
+                            let stream = input.stream(packet.stream()).unwrap();
                             let mut decoded = FrameVideo::empty();
                             while video.receive_frame(&mut decoded).is_ok() {
                                 let mut new_frame = FrameVideo::empty();
                                 context.run(&decoded, &mut new_frame).unwrap();
-                                let seconds = packet.pts().unwrap() as f64;
 
-                                index += 1.0;
+                                // ???
+                                let pts = new_frame
+                                    .timestamp()
+                                    .or_else(|| new_frame.pts())
+                                    .unwrap_or(packet.pts().unwrap_or(0)); // fallback
 
-                                // What
-                                let new_seconds =
-                                    (((new_frame.timestamp().unwrap_or(seconds as i64) as f64
-                                        + index)
-                                        * f64::from(time_base))
-                                        * 1000.) as i64;
+                                let seconds = pts as f64 * f64::from(stream.time_base()); // seconds
+                                let millis = (seconds * 1000.0).round() as i64;
 
                                 let mut frames = frames.lock().unwrap();
+                                let exists = frames.iter().any(|f| f.timestamp == millis);
                                 let closest_frame_position = frames
                                     .iter()
                                     .enumerate()
                                     .filter_map(|(i, frame)| {
-                                        if frame.timestamp <= new_seconds {
-                                            Some((i, frame.timestamp))
+                                        if frame.timestamp < millis {
+                                            Some(i)
                                         } else {
                                             None
                                         }
                                     })
                                     .last();
 
-                                if let Some((i, time)) = closest_frame_position {
-                                    if time != new_seconds && new_seconds != i64::MIN {
+                                if !exists && millis != i64::MIN {
+                                    if let Some(i) = closest_frame_position {
                                         frames.insert(
-                                            i + 1,
+                                            i,
                                             VideoFrame {
                                                 frame: new_frame,
-                                                timestamp: new_seconds,
+                                                timestamp: millis,
                                             },
                                         );
+                                    } else {
+                                        frames.push(VideoFrame {
+                                            frame: new_frame,
+                                            timestamp: millis,
+                                        });
                                     }
-                                } else {
-                                    frames.push(VideoFrame {
-                                        frame: new_frame,
-                                        timestamp: new_seconds,
-                                    });
                                 }
                             }
                         }
@@ -282,17 +289,12 @@ pub fn Video(
                     let frames = frames.lock().unwrap();
                     let mut frame = frame.lock().unwrap();
                     if frames.len() > *frame {
-                        let current_frame = frames.get(*frame).unwrap();
-
                         // Move 1 frame forward
                         *frame += 1;
 
                         // Sync elapsed duration
-                        let frame_timestamp = current_frame.timestamp;
-                        if frame_timestamp > 0 {
-                            data.write().elapsed_duration =
-                                Duration::from_millis(frame_timestamp as u64);
-                        }
+                        data.write().elapsed_duration =
+                            Duration::from_millis(*frame as u64 * ms_per_frame);
                     }
                 }
             }
