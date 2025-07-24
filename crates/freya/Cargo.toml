@@ -33,6 +33,7 @@ devtools = ["dep:freya-devtools"]
 custom-tokio-rt = []
 winit = ["freya-core/winit", "freya-hooks/winit", "freya-components/winit", "dep:freya-winit"]
 plot = ["dep:plotters", "dep:skia-plotters-backend"]
+video = ["freya-components/video"]
 
 [dependencies]
 freya-devtools = { workspace = true, optional = true }
