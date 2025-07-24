@@ -85,7 +85,7 @@ pub struct CanvasRunnerContext<'a> {
     pub scale_factor: f32,
 }
 
-pub type CanvasRunner = dyn FnMut(&mut CanvasRunnerContext) + Sync + Send + 'static;
+pub type CanvasRunner = dyn FnMut(&mut CanvasRunnerContext) + Send + 'static;
 
 /// Canvas Reference
 #[derive(Clone)]

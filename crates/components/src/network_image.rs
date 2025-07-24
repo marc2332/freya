@@ -142,14 +142,11 @@ pub fn NetworkImage(
                 let asset = fetch_image(url).await;
                 if let Ok(asset_bytes) = asset {
                     // Image loaded
-                    asset_cacher.update_asset(
-                        asset_config.clone(),
-                        AssetBytes::Cached(asset_bytes.clone()),
-                    );
+                    asset_cacher
+                        .update_asset(asset_config.clone(), AssetBytes::Cached(asset_bytes));
                 } else if let Err(err) = asset {
                     // Image errored asset_cacher
-                    asset_cacher
-                        .update_asset(asset_config.clone(), AssetBytes::Error(err.to_string()));
+                    asset_cacher.update_asset(asset_config, AssetBytes::Error(err.to_string()));
                 }
             });
 

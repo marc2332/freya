@@ -369,7 +369,7 @@ pub fn use_animation<Animated: AnimatedValue>(
     let is_running = use_signal(|| false);
     let has_run_yet = use_signal(|| false);
     let task = use_signal(|| None);
-    let last_direction = use_signal(|| AnimDirection::Reverse);
+    let last_direction = use_signal(|| AnimDirection::Forward);
     let mut animated_value = use_signal(|| None);
     let mut conf = use_signal(AnimConfiguration::default);
 
@@ -429,7 +429,7 @@ where
     let is_running = use_signal(|| false);
     let has_run_yet = use_signal(|| false);
     let task = use_signal(|| None);
-    let last_direction = use_signal(|| AnimDirection::Reverse);
+    let last_direction = use_signal(|| AnimDirection::Forward);
     let mut conf = use_signal(AnimConfiguration::default);
     let mut animated_value = use_signal(|| None);
 

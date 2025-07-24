@@ -19,6 +19,18 @@ Running rustfmt in all the workspace:
 cargo +nightly fmt --all -- --error-on-unformatted --unstable-features
 ```
 
+### Nix
+
+Start a devshell with rust and packages needed to compile:
+```sh
+nix develop
+```
+
+Start a devshell with nightly rust and packages needed to compile:
+```sh
+nix develop .#unstable
+```
+
 ## Architecture Overview
 
 Freya is split in various crates, each with it's own meaning and purpose, here is the list sorted by their importance:
