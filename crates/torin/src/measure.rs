@@ -742,16 +742,16 @@ where
     /// - `available_area`: Shifted forward (in x or y, depending on direction) to reserve space
     ///   for the current child and prepare for the next sibling. Its size is reduced accordingly.
     ///
-    /// - `node_area`: Potentially expanded to fit the child if the node's size is determined
-    ///   by its inner content. This ensures the parent can contain all stacked children.
+    /// - `node_area`: Total area used by the node. If its size is determined by its children,
+    ///   this value is updated accordingly with the last sibling in each line.
     ///
     /// - `inner_area`: Kept in sync with `node_area` but excludes padding and margin. It reflects
     ///   the actual space available for child layout inside the parent.
     ///
     /// - `inner_sizes`: Accumulates the total width and height occupied by children.
     ///
-    /// - `line_size`: Accumulates the width and height of children in the same line
-    ///   (used for wrapping).
+    /// - `line_size`: Accumulates the width and height of children in the same line. A line is a row
+    ///    or column, depending on the direction of the node. A wrapping node can have multiple lines.
     ///
     #[allow(clippy::too_many_arguments)]
     fn stack_child(
@@ -779,7 +779,7 @@ where
                     .unwrap_or_default();
 
                 // update size of current line
-                line_size.height = child_area.height().max(line_size.height);
+                line_size.height = line_size.height.max(child_area.height());
                 line_size.width += spacing.get();
                 // we only know child's correct flex sizing in the final phase
                 if !child_node.width.is_flex() || phase == Phase::Final {
@@ -790,6 +790,22 @@ where
                 if is_last_sibling_in_line {
                     inner_sizes.height += line_size.height;
                     inner_sizes.width = inner_sizes.width.max(line_size.width);
+
+                    if node.height.inner_sized() {
+                        node_area.size.height = node_area.size.height.max(
+                            inner_sizes.height + node.padding.vertical() + node.margin.vertical(),
+                        );
+                        // Keep the inner area in sync
+                        inner_area.size.height = node_area.size.height
+                            - node.padding.vertical()
+                            - node.margin.vertical();
+                    }
+
+                    if node.width.inner_sized() {
+                        node_area.size.width =
+                            inner_sizes.width + node.padding.horizontal() + node.margin.horizontal()
+                    }
+
                     line_size.height = 0.0;
                     line_size.width = 0.0;
                 }
@@ -802,58 +818,59 @@ where
                     available_area.origin.x = child_area.max_x() + spacing.get();
                     available_area.size.width -= child_area.size.width + spacing.get();
                 }
-
-                // Keep the biggest height
-                if node.height.inner_sized() {
-                    node_area.size.height = node_area.size.height.max(
-                        child_area.size.height + node.padding.vertical() + node.margin.vertical(),
-                    );
-                    // Keep the inner area in sync
-                    inner_area.size.height =
-                        node_area.size.height - node.padding.vertical() - node.margin.vertical();
-                }
-
-                // Accumulate width
-                if node.width.inner_sized() {
-                    node_area.size.width += child_area.size.width + spacing.get();
-                }
             }
             Direction::Vertical => {
-                let is_last_singling_in_line = is_last_sibling
+                let is_last_sibling_in_line = is_last_sibling
                     || (node.wrap_content.is_wrap()
-                        && child_area.size.height > available_area.size.height);
-                let is_first_sibling_in_line = child_area.origin.y == inner_area.origin.y;
+                        && child_area.size.height * 2.0 + node.spacing.get()
+                            > available_area.size.height);
 
                 // Don't apply spacing to last child in the line
-                let spacing = (!is_last_singling_in_line)
+                let spacing = (!is_last_sibling_in_line)
                     .then_some(node.spacing)
                     .unwrap_or_default();
 
-                // Move the available area
-                available_area.origin.y = child_area.max_y() + spacing.get();
-                available_area.size.height -= child_area.size.height + spacing.get();
-
-                inner_sizes.width = child_area.width().max(inner_sizes.width);
-                inner_sizes.height += spacing.get();
+                // update size of current line
+                line_size.width = child_area.width().max(line_size.width);
+                line_size.height += spacing.get();
+                // we only know child's correct flex sizing in the final phase
                 if !child_node.height.is_flex() || phase == Phase::Final {
-                    inner_sizes.height += child_area.height();
+                    line_size.height += child_area.size.height;
                 }
 
-                // Keep the biggest width
-                if node.width.inner_sized() {
-                    node_area.size.width = node_area.size.width.max(
-                        child_area.size.width
-                            + node.padding.horizontal()
-                            + node.margin.horizontal(),
-                    );
-                    // Keep the inner area in sync
-                    inner_area.size.width =
-                        node_area.size.width - node.padding.horizontal() - node.margin.horizontal();
+                // if last in line, update inner size
+                if is_last_sibling_in_line {
+                    inner_sizes.width += line_size.width;
+                    inner_sizes.height = inner_sizes.height.max(line_size.height);
+
+                    if node.width.inner_sized() {
+                        node_area.size.width = node_area.size.width.max(
+                            inner_sizes.width
+                                + node.padding.horizontal()
+                                + node.margin.horizontal(),
+                        );
+                        // Keep the inner area in sync
+                        inner_area.size.width = node_area.size.width
+                            - node.padding.horizontal()
+                            - node.margin.horizontal();
+                    }
+
+                    if node.height.inner_sized() {
+                        node_area.size.height =
+                            inner_sizes.height + node.padding.vertical() + node.margin.vertical()
+                    }
+
+                    line_size.width = 0.0;
+                    line_size.height = 0.0;
                 }
 
-                // Accumulate height
-                if node.height.inner_sized() {
-                    node_area.size.height += child_area.size.height + spacing.get();
+                // Move the available area
+                if is_last_sibling_in_line {
+                    available_area.origin.y = inner_area.origin.y;
+                    available_area.size.height = inner_area.size.height;
+                } else {
+                    available_area.origin.y = child_area.max_y() + spacing.get();
+                    available_area.size.height -= child_area.size.height + spacing.get();
                 }
             }
         }

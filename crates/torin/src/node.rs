@@ -1,19 +1,15 @@
 pub use euclid::Rect;
 
+use crate::wrap_content::WrapContent;
 use crate::{
     alignment::Alignment,
     direction::Direction,
     gaps::Gaps,
     geometry::Length,
-    prelude::{
-        Content,
-        Position,
-        VisibleSize,
-    },
+    prelude::{Content, Position, VisibleSize},
     scaled::Scaled,
     size::Size,
 };
-use crate::wrap_content::{FlexWrap, WrapContent};
 
 /// Node layout configuration
 #[derive(PartialEq, Clone, Debug, Default)]
