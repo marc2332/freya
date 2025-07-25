@@ -202,10 +202,6 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
             EventLoopMessage::WithWindow(use_window) => (use_window)(window),
             EventLoopMessage::ExitApp => event_loop.exit(),
             EventLoopMessage::PlatformEvent(platform_event) => self.send_event(platform_event),
-            EventLoopMessage::PollVDOM => {
-                app.poll_vdom(window);
-            }
-
             #[cfg(all(debug_assertions, feature = "hot-reloading"))]
             EventLoopMessage::DioxusDevserverEvent(event) => match event {
                 dioxus_devtools::DevserverMsg::HotReload(hot_reload_msg) => {
@@ -214,6 +210,9 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
                 dioxus_devtools::DevserverMsg::Shutdown => event_loop.exit(),
                 _ => {}
             },
+            EventLoopMessage::PollVDOM => {
+                app.poll_vdom(window);
+            }
             _ => {}
         }
     }

@@ -2,9 +2,10 @@ use dioxus::prelude::{
     ErrorBoundary,
     ErrorContext,
 };
-use dioxus_core::Element;
-#[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
-use dioxus_core::VirtualDom;
+use dioxus_core::{
+    Element,
+    VirtualDom,
+};
 use freya_winit::{
     devtools::{
         DevtoolsReceiver,
