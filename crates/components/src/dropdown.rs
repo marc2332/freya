@@ -228,8 +228,6 @@ pub fn Dropdown(
         group_id: focus.id(),
     });
 
-    let is_opened = *opened.read();
-    let is_focused = focus.is_focused();
     let a11y_id = focus.attribute();
     let a11y_member_of = focus.attribute();
 
@@ -255,20 +253,20 @@ pub fn Dropdown(
 
     let onclick = move |_| {
         focus.request_focus();
-        opened.set(true)
+        opened.toggle();
     };
 
-    let onglobalkeydown = move |e: KeyboardEvent| {
-        match e.key {
-            // Close when `Escape` key is pressed
-            Key::Escape => {
-                opened.set(false);
-            }
-            // Open the dropdown items when the `Enter` key is pressed
-            Key::Enter if is_focused && !is_opened => {
-                opened.set(true);
-            }
-            _ => {}
+    let onglobalkeydown = move |ev: KeyboardEvent| {
+        // Close when `Escape` key is pressed
+        if ev.key == Key::Escape {
+            opened.set(false);
+        }
+    };
+
+    let onkeydown = move |ev: KeyboardEvent| {
+        // Open the dropdown items when the `Enter` key is pressed
+        if ev.key == Key::Enter {
+            opened.toggle();
         }
     };
 
@@ -313,6 +311,7 @@ pub fn Dropdown(
                 onpointerleave,
                 onclick,
                 onglobalkeydown,
+                onkeydown,
                 margin: "{margin}",
                 a11y_id,
                 a11y_member_of,

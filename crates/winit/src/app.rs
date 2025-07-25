@@ -318,6 +318,7 @@ impl Application {
         let rdom = fdom.rdom();
         let layout = fdom.layout();
         let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
+        let accessibility_groups = fdom.accessibility_groups();
         self.accessibility.process_updates(
             rdom,
             &layout,
@@ -325,6 +326,7 @@ impl Application {
             window,
             &mut dirty_accessibility_tree,
             &self.event_emitter,
+            &accessibility_groups,
         );
     }
 
@@ -399,10 +401,8 @@ impl Application {
 
     pub fn request_focus_node(&mut self, focus_strategy: AccessibilityFocusStrategy) {
         let task = match focus_strategy {
-            AccessibilityFocusStrategy::Backward | AccessibilityFocusStrategy::Forward => {
-                AccessibilityTask::ProcessWithMode(NavigationMode::Keyboard)
-            }
-            _ => AccessibilityTask::ProcessUpdate,
+            AccessibilityFocusStrategy::Node(_) => AccessibilityTask::ProcessUpdate,
+            _ => AccessibilityTask::ProcessWithMode(NavigationMode::Keyboard),
         };
 
         let fdom = self.sdom.get();

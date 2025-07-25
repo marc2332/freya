@@ -44,6 +44,7 @@ use crate::{
         AccessibilityGenerator,
     },
     custom_attributes::CustomAttributeValues,
+    dom::AccessibilityGroups,
     parsing::{
         Parse,
         ParseAttribute,
@@ -401,6 +402,7 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
             .get::<Arc<Mutex<AccessibilityDirtyNodes>>>()
             .unwrap();
         let accessibility_generator = context.get::<Arc<AccessibilityGenerator>>().unwrap();
+        let accessibility_groups = context.get::<Arc<Mutex<AccessibilityGroups>>>().unwrap();
         let mut accessibility = AccessibilityNodeState {
             node_id: node_view.node_id(),
             a11y_id: self.a11y_id,
@@ -426,7 +428,8 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
         }
 
         let changed = &accessibility != self;
-        let had_id = self.a11y_id.is_some();
+        let previous_a11y_id = self.a11y_id;
+        let previous_member_of = self.builder.as_ref().and_then(|b| b.member_of());
 
         *self = accessibility;
 
@@ -453,8 +456,27 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
                     .add_or_update(node_view.node_id())
             }
 
+            // Remove the node from any previous group
+            if let Some(previous_member_of) = previous_member_of {
+                let mut groups = accessibility_groups.lock().unwrap();
+                let group = groups.get_mut(&previous_member_of);
+                if let Some(group) = group {
+                    group.retain(|m| Some(*m) != previous_a11y_id && Some(*m) != self.a11y_id);
+                }
+            }
+
+            // Add the node to a group
             if let Some(a11y_id) = self.a11y_id {
-                if !had_id && self.a11y_auto_focus {
+                if let Some(member_of) = self.builder.as_ref().and_then(|b| b.member_of()) {
+                    accessibility_groups
+                        .lock()
+                        .unwrap()
+                        .entry(member_of)
+                        .or_default()
+                        .push(a11y_id)
+                }
+
+                if previous_a11y_id.is_none() && self.a11y_auto_focus {
                     #[cfg(debug_assertions)]
                     tracing::info!("Requested auto focus for {:?}", a11y_id);
 
