@@ -101,6 +101,7 @@ rfd = "0.15.3"
 bytes = "1.5.0"
 dioxus-clipboard = { workspace = true }
 winit = { workspace = true }
+dioxus-radio = "0.6.0"
 
 [profile.release]
 lto = true
