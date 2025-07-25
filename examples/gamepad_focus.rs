@@ -6,7 +6,10 @@
 use std::thread;
 
 use freya::{
-    core::accessibility::AccessibilityFocusStrategy,
+    core::accessibility::{
+        AccessibilityFocusMovement,
+        AccessibilityFocusStrategy,
+    },
     prelude::*,
 };
 use freya_core::{
@@ -45,12 +48,16 @@ impl GamePadPlugin {
                     match ev.event {
                         EventType::ButtonReleased(gilrs::Button::DPadLeft, _) => {
                             handle.send_event_loop_event(EventLoopMessage::FocusAccessibilityNode(
-                                AccessibilityFocusStrategy::Backward,
+                                AccessibilityFocusStrategy::Backward(
+                                    AccessibilityFocusMovement::OutsideGroup,
+                                ),
                             ));
                         }
                         EventType::ButtonReleased(gilrs::Button::DPadRight, _) => {
                             handle.send_event_loop_event(EventLoopMessage::FocusAccessibilityNode(
-                                AccessibilityFocusStrategy::Forward,
+                                AccessibilityFocusStrategy::Forward(
+                                    AccessibilityFocusMovement::OutsideGroup,
+                                ),
                             ));
                         }
                         EventType::ButtonReleased(gilrs::Button::East, _) => {
