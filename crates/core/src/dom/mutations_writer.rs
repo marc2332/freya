@@ -23,11 +23,9 @@ use super::{
     ParagraphElements,
 };
 use crate::{
-    accessibility::{
-        AccessibilityDirtyNodes,
-        NodeAccessibility,
-    },
+    accessibility::AccessibilityDirtyNodes,
     custom_attributes::CustomAttributeValues,
+    dom::AccessibilityGroups,
     layers::Layers,
     render::{
         Compositor,
@@ -35,6 +33,7 @@ use crate::{
         CompositorDirtyArea,
     },
     states::{
+        AccessibilityNodeState,
         CursorState,
         ImageState,
         LayerState,
@@ -52,6 +51,7 @@ pub struct MutationsWriter<'a> {
     pub compositor_cache: &'a mut CompositorCache,
     pub accessibility_dirty_nodes: &'a mut AccessibilityDirtyNodes,
     pub images_cache: &'a mut ImagesCache,
+    pub accessibility_groups: &'a mut AccessibilityGroups,
 }
 
 impl MutationsWriter<'_> {
@@ -101,11 +101,27 @@ impl MutationsWriter<'_> {
                 }
 
                 // Remove from the accessibility tree
-                if node.get_accessibility_id().is_some() {
-                    let parent_id = node
-                        .parent_id()
-                        .unwrap_or(self.native_writer.rdom.root_id());
-                    self.accessibility_dirty_nodes.remove(node.id(), parent_id);
+                if let Some(accessibility_state) = node.get::<AccessibilityNodeState>() {
+                    let accessibility_id = accessibility_state.a11y_id;
+                    if let Some(accessibility_id) = accessibility_id {
+                        let parent_id = node
+                            .parent_id()
+                            .unwrap_or(self.native_writer.rdom.root_id());
+                        self.accessibility_dirty_nodes.remove(node.id(), parent_id);
+                        self.accessibility_groups.remove(&accessibility_id);
+
+                        let member_of = accessibility_state
+                            .builder
+                            .as_ref()
+                            .and_then(|b| b.member_of());
+
+                        if let Some(member_of) = member_of {
+                            let group = self.accessibility_groups.get_mut(&member_of);
+                            if let Some(group) = group {
+                                group.retain(|m| *m != accessibility_id);
+                            }
+                        }
+                    }
                 }
 
                 // Unite the removed area with the dirty area

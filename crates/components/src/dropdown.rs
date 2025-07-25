@@ -108,12 +108,21 @@ pub fn DropdownItem(
 
     let onkeydown = {
         to_owned![onpress];
-        move |ev: KeyboardEvent| {
-            if ev.key == Key::Enter {
+        move |ev: KeyboardEvent| match ev.key {
+            Key::Enter => {
                 if let Some(onpress) = &onpress {
                     onpress.call(())
                 }
             }
+            // Key::ArrowUp => {
+            //     platform.request_focus(AccessibilityFocusStrategy::Backward);
+            //     ev.prevent_default();
+            // }
+            // Key::ArrowDown => {
+            //     platform.request_focus(AccessibilityFocusStrategy::Forward);
+            //     ev.prevent_default();
+            // }
+            _ => {}
         }
     };
 
@@ -228,8 +237,6 @@ pub fn Dropdown(
         group_id: focus.id(),
     });
 
-    let is_opened = *opened.read();
-    let is_focused = focus.is_focused();
     let a11y_id = focus.attribute();
     let a11y_member_of = focus.attribute();
 
@@ -255,18 +262,24 @@ pub fn Dropdown(
 
     let onclick = move |_| {
         focus.request_focus();
-        opened.set(true)
+        opened.toggle();
     };
 
-    let onglobalkeydown = move |e: KeyboardEvent| {
-        match e.key {
+    let onglobalkeydown = move |ev: KeyboardEvent| {
+        match ev.key {
             // Close when `Escape` key is pressed
             Key::Escape => {
                 opened.set(false);
             }
+            _ => {}
+        }
+    };
+
+    let onkeydown = move |ev: KeyboardEvent| {
+        match ev.key {
             // Open the dropdown items when the `Enter` key is pressed
-            Key::Enter if is_focused && !is_opened => {
-                opened.set(true);
+            Key::Enter => {
+                opened.toggle();
             }
             _ => {}
         }
@@ -313,6 +326,7 @@ pub fn Dropdown(
                 onpointerleave,
                 onclick,
                 onglobalkeydown,
+                onkeydown,
                 margin: "{margin}",
                 a11y_id,
                 a11y_member_of,

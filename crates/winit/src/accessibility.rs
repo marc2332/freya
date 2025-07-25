@@ -5,7 +5,10 @@ use freya_core::{
         AccessibilityTree,
         ACCESSIBILITY_ROOT_ID,
     },
-    dom::DioxusDOM,
+    dom::{
+        AccessibilityGroups,
+        DioxusDOM,
+    },
     event_loop_messages::EventLoopMessage,
     states::AccessibilityNodeState,
     types::{
@@ -77,6 +80,7 @@ impl WinitAcessibilityTree {
     }
 
     /// Process any pending accessibility tree update and update the adapter
+    #[allow(clippy::too_many_arguments)]
     pub fn process_updates(
         &mut self,
         rdom: &DioxusDOM,
@@ -85,10 +89,15 @@ impl WinitAcessibilityTree {
         window: &Window,
         dirty_nodes: &mut AccessibilityDirtyNodes,
         event_emitter: &EventEmitter,
+        groups: &AccessibilityGroups,
     ) {
-        let (tree, node_id) =
-            self.accessibility_tree
-                .process_updates(rdom, layout, dirty_nodes, event_emitter);
+        let (tree, node_id) = self.accessibility_tree.process_updates(
+            rdom,
+            layout,
+            dirty_nodes,
+            event_emitter,
+            groups,
+        );
 
         // Notify the components
         platform_sender.send_modify(|state| {

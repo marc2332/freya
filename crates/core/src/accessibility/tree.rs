@@ -45,6 +45,7 @@ use torin::{
 use super::NodeAccessibility;
 use crate::{
     dom::{
+        AccessibilityGroups,
         DioxusDOM,
         DioxusNode,
     },
@@ -69,9 +70,16 @@ use crate::{
 
 /// Strategy focusing an Accessibility Node.
 #[derive(PartialEq, Debug, Clone)]
+pub enum AccessibilityFocusMovement {
+    InsideGroup,
+    OutsideGroup,
+}
+
+/// Strategy focusing an Accessibility Node.
+#[derive(PartialEq, Debug, Clone)]
 pub enum AccessibilityFocusStrategy {
-    Forward,
-    Backward,
+    Forward(AccessibilityFocusMovement),
+    Backward(AccessibilityFocusMovement),
     Node(accesskit::NodeId),
 }
 
@@ -196,6 +204,7 @@ impl AccessibilityTree {
         layout: &Torin<NodeId>,
         dirty_nodes: &mut AccessibilityDirtyNodes,
         event_emitter: &EventEmitter,
+        groups: &AccessibilityGroups,
     ) -> (TreeUpdate, NodeId) {
         let requested_focus = dirty_nodes.requested_focus.take();
         let removed_ids = dirty_nodes.removed.drain().collect::<FxHashMap<_, _>>();
@@ -257,7 +266,7 @@ impl AccessibilityTree {
 
         // Focus the requested node id if there is one
         if let Some(requested_focus) = requested_focus {
-            self.focus_node_with_strategy(requested_focus, rdom);
+            self.focus_node_with_strategy(requested_focus, rdom, groups);
         }
 
         // Fallback the focused id to the root if the focused node no longer exists
@@ -352,15 +361,17 @@ impl AccessibilityTree {
     /// Focus a Node given the strategy.
     pub fn focus_node_with_strategy(
         &mut self,
-        stragegy: AccessibilityFocusStrategy,
+        strategy: AccessibilityFocusStrategy,
         rdom: &DioxusDOM,
+        groups: &AccessibilityGroups,
     ) {
-        if let AccessibilityFocusStrategy::Node(id) = stragegy {
+        if let AccessibilityFocusStrategy::Node(id) = strategy {
             self.focused_id = id;
             return;
         }
 
-        let mut nodes = Vec::new();
+        // Get all accessible nodes
+        let mut all_nodes = Vec::new();
 
         rdom.traverse_depth_first_advanced(|node_ref| {
             if !node_ref.node_type().is_element() {
@@ -372,7 +383,7 @@ impl AccessibilityTree {
             if let Some(accessibility_id) = accessibility_id {
                 let accessibility_state = node_ref.get::<AccessibilityNodeState>().unwrap();
                 if accessibility_state.a11y_focusable.is_enabled() {
-                    nodes.push(accessibility_id)
+                    all_nodes.push(accessibility_id)
                 }
             }
 
@@ -385,35 +396,79 @@ impl AccessibilityTree {
             true
         });
 
-        let node_index = nodes
-            .iter()
-            .position(|accessibility_id| *accessibility_id == self.focused_id);
+        // Get all accessible nodes in the current group
+        let mut group_nodes = Vec::new();
 
-        let target_node = if stragegy == AccessibilityFocusStrategy::Forward {
-            // Find the next Node
-            if let Some(node_index) = node_index {
-                if node_index == nodes.len() - 1 {
-                    nodes.first()
+        let node_id = self.map.get(&self.focused_id).unwrap();
+        let node_ref = rdom.get(*node_id).unwrap();
+        let accessibility_state = node_ref.get::<AccessibilityNodeState>().unwrap();
+        let member_accessibility_id = accessibility_state
+            .builder
+            .as_ref()
+            .and_then(|b| b.member_of());
+        if let Some(member_accessibility_id) = member_accessibility_id {
+            group_nodes = groups
+                .get(&member_accessibility_id)
+                .cloned()
+                .unwrap_or_default();
+
+            // Remove the member nodes from all the nodes so that we have 2 separate groups
+            all_nodes.retain(|id| !group_nodes.contains(id));
+        }
+
+        let target_node = match strategy {
+            AccessibilityFocusStrategy::Forward(mode) => {
+                let mut nodes = if mode == AccessibilityFocusMovement::InsideGroup {
+                    all_nodes
                 } else {
-                    nodes.get(node_index + 1)
-                }
-            } else {
-                nodes.first()
-            }
-        } else {
-            // Find the previous Node
-            if let Some(node_index) = node_index {
-                if node_index == 0 {
-                    nodes.last()
+                    group_nodes
+                };
+
+                nodes.sort();
+
+                let node_index = nodes
+                    .iter()
+                    .position(|accessibility_id| *accessibility_id == self.focused_id);
+
+                // Find the next Node
+                if let Some(node_index) = node_index {
+                    if node_index == nodes.len() - 1 {
+                        nodes.first().cloned()
+                    } else {
+                        nodes.get(node_index + 1).cloned()
+                    }
                 } else {
-                    nodes.get(node_index - 1)
+                    nodes.first().cloned()
                 }
-            } else {
-                nodes.last()
             }
+            AccessibilityFocusStrategy::Backward(mode) => {
+                let mut nodes = if mode == AccessibilityFocusMovement::InsideGroup {
+                    all_nodes
+                } else {
+                    group_nodes
+                };
+
+                nodes.sort();
+
+                let node_index = nodes
+                    .iter()
+                    .position(|accessibility_id| *accessibility_id == self.focused_id);
+
+                // Find the previous Node
+                if let Some(node_index) = node_index {
+                    if node_index == 0 {
+                        nodes.last().cloned()
+                    } else {
+                        nodes.get(node_index - 1).cloned()
+                    }
+                } else {
+                    nodes.last().cloned()
+                }
+            }
+            _ => unreachable!(),
         };
 
-        self.focused_id = target_node.copied().unwrap_or(ACCESSIBILITY_ROOT_ID);
+        self.focused_id = target_node.unwrap_or(ACCESSIBILITY_ROOT_ID);
 
         #[cfg(debug_assertions)]
         tracing::info!("Focused {:?} node.", self.focused_id);

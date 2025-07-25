@@ -240,6 +240,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
         let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
         let mut compositor_dirty_nodes = fdom.compositor_dirty_nodes();
         let mut compositor_dirty_area = fdom.compositor_dirty_area();
+        let groups = fdom.accessibility_groups();
 
         // Process layout
         process_layout(
@@ -264,6 +265,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
             &layout,
             &mut dirty_accessibility_tree,
             &self.event_emitter,
+            &groups,
         );
         // Notify the components
         self.platform_sender.send_modify(|state| {
