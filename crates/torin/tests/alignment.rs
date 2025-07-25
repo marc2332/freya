@@ -1,5 +1,5 @@
 use euclid::Length;
-use torin::{prelude::*, test_utils::*};
+use torin::{prelude::*, test_utils::*, wrap_content::WrapContent};
 
 #[test]
 pub fn display_horizontal() {
@@ -336,18 +336,15 @@ pub fn space_between_alignment() {
     let (mut layout, mut measurer) = test_utils();
 
     let mut mocked_dom = TestingDOM::default();
-    mocked_dom.add(
-        0,
-        None,
-        vec![1, 2, 3, 4],
-        Node::from_size_and_alignments_and_direction(
-            Size::Percentage(Length::new(100.)),
-            Size::Percentage(Length::new(100.)),
-            Alignment::SpaceBetween,
-            Alignment::Start,
-            Direction::Horizontal,
-        ),
+    let mut parent = Node::from_size_and_alignments_and_direction(
+        Size::Percentage(Length::new(100.)),
+        Size::Percentage(Length::new(100.)),
+        Alignment::SpaceBetween,
+        Alignment::Start,
+        Direction::Horizontal,
     );
+    parent.wrap_content = WrapContent::Wrap;
+    mocked_dom.add(0, None, vec![1, 2, 3, 4], parent);
     mocked_dom.add(
         1,
         Some(0),
@@ -391,7 +388,7 @@ pub fn space_between_alignment() {
 
     layout.measure(
         0,
-        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(250.0, 1000.0)),
         &mut measurer,
         &mut mocked_dom,
     );
@@ -403,17 +400,17 @@ pub fn space_between_alignment() {
 
     assert_eq!(
         layout.get(2).unwrap().visible_area(),
-        Rect::new(Point2D::new(300.0, 0.0), Size2D::new(100.0, 100.0)),
+        Rect::new(Point2D::new(150.0, 0.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
         layout.get(3).unwrap().visible_area(),
-        Rect::new(Point2D::new(600.0, 0.0), Size2D::new(100.0, 100.0)),
+        Rect::new(Point2D::new(0.0, 100.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
         layout.get(4).unwrap().visible_area(),
-        Rect::new(Point2D::new(900.0, 0.0), Size2D::new(100.0, 100.0)),
+        Rect::new(Point2D::new(150.0, 100.0), Size2D::new(100.0, 100.0)),
     );
 }
 

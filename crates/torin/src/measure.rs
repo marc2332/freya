@@ -357,6 +357,7 @@ where
 
         let mut initial_phase_flex_grows = FxHashMap::default();
         let mut initial_phase_sizes = FxHashMap::default();
+        let mut initial_phase_children_per_line = vec![0 as usize];
         let mut initial_phase_inner_sizes = Size2D::default();
 
         // Used to calculate the spacing and some alignments
@@ -399,7 +400,7 @@ where
         let mut initial_phase_available_area = *available_area;
 
         // Initial phase: Measure the size and position of the children if the parent has a
-        // non-start cross alignment, non-start main aligment of a fit-content.
+        // non-start cross alignment, non-start main alignment or a fit-content.
         if needs_initial_phase {
             //  Measure the children
             let mut line_size = Size2D::default();
@@ -431,7 +432,7 @@ where
                 child_areas.area.adjust_size(&child_data);
 
                 // Stack this child into the parent
-                Self::stack_child(
+                let is_last_sibling_in_line = Self::stack_child(
                     node,
                     &child_data,
                     &mut initial_phase_available_area,
@@ -443,6 +444,10 @@ where
                     is_last_child,
                     Phase::Initial,
                 );
+                *initial_phase_children_per_line.last_mut().unwrap() += 1;
+                if is_last_sibling_in_line {
+                    initial_phase_children_per_line.push(0);
+                }
 
                 if node.cross_alignment.is_not_start() || node.main_alignment.is_spaced() {
                     initial_phase_sizes.insert(*child_id, child_areas.area.size);
@@ -538,6 +543,8 @@ where
 
         // Final phase: measure the children with all the axis and sizes adjusted
         let mut line_size = Size2D::default();
+        let mut curr_line = 0;
+        let mut line_index = 0;
         for child_id in children {
             let Some(child_data) = self.dom_adapter.get_node(&child_id) else {
                 continue;
@@ -577,9 +584,14 @@ where
                     &node.main_alignment,
                     &node.direction,
                     AlignmentDirection::Main,
-                    non_absolute_children_len,
-                    is_first_child,
+                    initial_phase_children_per_line[curr_line],
+                    line_index == 0,
                 );
+                line_index += 1;
+                if line_index == initial_phase_children_per_line[curr_line] {
+                    curr_line += 1;
+                    line_index = 0;
+                }
             }
 
             if node.cross_alignment.is_not_start() {
@@ -753,6 +765,9 @@ where
     /// - `line_size`: Accumulates the width and height of children in the same line. A line is a row
     ///    or column, depending on the direction of the node. A wrapping node can have multiple lines.
     ///
+    /// Returns:
+    /// Whether the child is the last sibling in its line
+    ///
     #[allow(clippy::too_many_arguments)]
     fn stack_child(
         node: &Node,
@@ -765,10 +780,11 @@ where
         child_area: &Area,
         is_last_sibling: bool,
         phase: Phase,
-    ) {
+    ) -> bool {
+        let is_last_sibling_in_line;
         match node.direction {
             Direction::Horizontal => {
-                let is_last_sibling_in_line = is_last_sibling
+                is_last_sibling_in_line = is_last_sibling
                     || (node.wrap_content.is_wrap()
                         && child_area.size.width * 2.0 + node.spacing.get()
                             > available_area.size.width);
@@ -806,21 +822,21 @@ where
                             inner_sizes.width + node.padding.horizontal() + node.margin.horizontal()
                     }
 
+                    // move available area for next sibling
+                    available_area.origin.x = inner_area.origin.x;
+                    available_area.origin.y += line_size.height;
+                    available_area.size.width = inner_area.size.width;
+
                     line_size.height = 0.0;
                     line_size.width = 0.0;
-                }
-
-                // Move the available area
-                if is_last_sibling_in_line {
-                    available_area.origin.x = inner_area.origin.x;
-                    available_area.size.width = inner_area.size.width;
                 } else {
+                    // move available area for next sibling
                     available_area.origin.x = child_area.max_x() + spacing.get();
                     available_area.size.width -= child_area.size.width + spacing.get();
                 }
             }
             Direction::Vertical => {
-                let is_last_sibling_in_line = is_last_sibling
+                is_last_sibling_in_line = is_last_sibling
                     || (node.wrap_content.is_wrap()
                         && child_area.size.height * 2.0 + node.spacing.get()
                             > available_area.size.height);
@@ -874,6 +890,7 @@ where
                 }
             }
         }
+        is_last_sibling_in_line
     }
 
     /// Shrink the available area and inner area of a parent node when for example height is set to "auto",
