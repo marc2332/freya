@@ -13,7 +13,7 @@ use crate::{
     scaled::Scaled,
     size::Size,
 };
-use crate::flex_wrap::FlexWrap;
+use crate::wrap_content::{FlexWrap, WrapContent};
 
 /// Node layout configuration
 #[derive(PartialEq, Clone, Debug, Default)]
@@ -56,7 +56,7 @@ pub struct Node {
 
     pub content: Content,
 
-    pub flex_wrap: FlexWrap,
+    pub wrap_content: WrapContent,
 
     /// A Node might depend on inner sizes but have a fixed position, like scroll views.
     pub has_layout_references: bool,

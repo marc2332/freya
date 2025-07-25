@@ -1,11 +1,11 @@
 #[derive(PartialEq, Eq, Clone, Debug, Default)]
-pub enum FlexWrap {
+pub enum WrapContent {
     #[default]
     NoWrap,
     Wrap
 }
 
-impl FlexWrap {
+impl WrapContent {
     pub fn is_nowrap(&self) -> bool {
         self == &Self::NoWrap
     }
@@ -15,7 +15,7 @@ impl FlexWrap {
     }
 }
 
-impl FlexWrap {
+impl WrapContent {
     pub fn pretty(&self) -> String {
         match self {
             Self::NoWrap => "no-wrap".to_owned(),
