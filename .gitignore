@@ -5,4 +5,6 @@ snapshot_before.png
 snapshot_after.png
 documents_example
 bacon.toml
+.envrc
+.direnv
 **/.DS_Store
