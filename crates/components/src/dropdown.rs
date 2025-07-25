@@ -108,21 +108,12 @@ pub fn DropdownItem(
 
     let onkeydown = {
         to_owned![onpress];
-        move |ev: KeyboardEvent| match ev.key {
-            Key::Enter => {
+        move |ev: KeyboardEvent| {
+            if ev.key == Key::Enter {
                 if let Some(onpress) = &onpress {
                     onpress.call(())
                 }
             }
-            // Key::ArrowUp => {
-            //     platform.request_focus(AccessibilityFocusStrategy::Backward);
-            //     ev.prevent_default();
-            // }
-            // Key::ArrowDown => {
-            //     platform.request_focus(AccessibilityFocusStrategy::Forward);
-            //     ev.prevent_default();
-            // }
-            _ => {}
         }
     };
 
@@ -266,22 +257,16 @@ pub fn Dropdown(
     };
 
     let onglobalkeydown = move |ev: KeyboardEvent| {
-        match ev.key {
-            // Close when `Escape` key is pressed
-            Key::Escape => {
-                opened.set(false);
-            }
-            _ => {}
+        // Close when `Escape` key is pressed
+        if ev.key == Key::Escape {
+            opened.set(false);
         }
     };
 
     let onkeydown = move |ev: KeyboardEvent| {
-        match ev.key {
-            // Open the dropdown items when the `Enter` key is pressed
-            Key::Enter => {
-                opened.toggle();
-            }
-            _ => {}
+        // Open the dropdown items when the `Enter` key is pressed
+        if ev.key == Key::Enter {
+            opened.toggle();
         }
     };
 
