@@ -51,12 +51,6 @@ impl AnimConfiguration {
     }
 }
 
-#[derive(Clone)]
-pub struct AnimationContext<Animated: AnimatedValue> {
-    value: Animated,
-    conf: AnimConfiguration,
-}
-
 /// Controls the direction of the animation.
 #[derive(Clone, Copy)]
 pub enum AnimDirection {
@@ -118,7 +112,8 @@ pub enum OnDepsChange {
 /// Animate your elements. Use [`use_animation`] to use this.
 #[derive(Clone, PartialEq)]
 pub struct UseAnimation<Animated: AnimatedValue> {
-    pub(crate) context: Signal<Option<AnimationContext<Animated>>>,
+    pub(crate) animated_value: Signal<Option<Animated>>,
+    pub(crate) conf: Signal<AnimConfiguration>,
     pub(crate) platform: UsePlatform,
     pub(crate) animation_clock: CopyValue<AnimationClock>,
     pub(crate) is_running: Signal<bool>,
@@ -131,7 +126,7 @@ impl<T: AnimatedValue> Copy for UseAnimation<T> {}
 impl<Animated: AnimatedValue> UseAnimation<Animated> {
     /// Get the animated value.
     pub fn get(&self) -> MappedSignal<Animated> {
-        self.context.map(|a| &a.as_ref().unwrap().value)
+        self.animated_value.map(|a| a.as_ref().unwrap())
     }
 
     /// Reset the animation to the default state.
@@ -145,11 +140,10 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
             task.cancel();
         }
 
-        self.context
+        self.animated_value
             .write_unchecked()
             .as_mut()
             .unwrap()
-            .value
             .prepare(AnimDirection::Forward);
     }
 
@@ -161,11 +155,10 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
             task.cancel();
         }
 
-        self.context
+        self.animated_value
             .write_unchecked()
             .as_mut()
             .unwrap()
-            .value
             .finish(*self.last_direction.peek());
 
         *self.has_run_yet.write_unchecked() = true;
@@ -205,8 +198,8 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
         let mut last_direction = self.last_direction;
         let animation_clock = self.animation_clock;
 
-        let on_finish = self.context.peek().as_ref().unwrap().conf.on_finish;
-        let mut context = self.context;
+        let on_finish = self.conf.peek().on_finish;
+        let mut animated_value = self.animated_value;
 
         last_direction.set(direction);
 
@@ -225,7 +218,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
             let mut prev_frame = Instant::now();
 
             // Prepare the animations with the the proper direction
-            context.write().as_mut().unwrap().value.prepare(direction);
+            animated_value.write().as_mut().unwrap().prepare(direction);
 
             if !peek_has_run_yet {
                 *has_run_yet.write() = true;
@@ -236,11 +229,11 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
                 // Wait for the event loop to tick
                 ticker.tick().await;
 
-                let Ok(mut context) = context.try_write() else {
-                    // Its okay to stop this animation if the context has been dropped
+                let Ok(mut animated_value) = animated_value.try_write() else {
+                    // Its okay to stop this animation if the animated_value has been dropped
                     break;
                 };
-                let context = context.as_mut().unwrap();
+                let animated_value = animated_value.as_mut().unwrap();
 
                 platform.request_animation_frame();
 
@@ -250,10 +243,10 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 
                 index += elapsed.as_millis();
 
-                let is_finished = context.value.is_finished(index, direction);
+                let is_finished = animated_value.is_finished(index, direction);
 
                 // Advance the animations
-                context.value.advance(index, direction);
+                animated_value.advance(index, direction);
 
                 prev_frame = Instant::now();
 
@@ -267,7 +260,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
                             index = 0;
 
                             // Restart the animation
-                            context.value.prepare(direction);
+                            animated_value.prepare(direction);
                         }
                         OnFinish::Nothing => {
                             // Stop if all the animations are finished
@@ -377,16 +370,19 @@ pub fn use_animation<Animated: AnimatedValue>(
     let has_run_yet = use_signal(|| false);
     let task = use_signal(|| None);
     let last_direction = use_signal(|| AnimDirection::Forward);
-    let mut context = use_signal(|| None);
+    let mut animated_value = use_signal(|| None);
+    let mut conf = use_signal(AnimConfiguration::default);
 
     use_memo(move || {
-        let mut conf = AnimConfiguration::default();
-        let value = run(&mut conf);
-        context.replace(Some(AnimationContext { value, conf }));
+        let mut anim_conf = AnimConfiguration::default();
+        let value = run(&mut anim_conf);
+        conf.replace(anim_conf);
+        animated_value.replace(Some(value));
     });
 
     let animation = UseAnimation {
-        context,
+        conf,
+        animated_value,
         platform,
         is_running,
         has_run_yet,
@@ -397,7 +393,7 @@ pub fn use_animation<Animated: AnimatedValue>(
 
     use_effect(move || {
         if *has_run_yet.peek() {
-            match context.read().as_ref().unwrap().conf.on_deps_change {
+            match conf.read().on_deps_change {
                 OnDepsChange::Finish => animation.finish(),
                 OnDepsChange::Rerun => {
                     let last_direction = *animation.last_direction.peek();
@@ -408,17 +404,15 @@ pub fn use_animation<Animated: AnimatedValue>(
         }
     });
 
-    use_hook(
-        move || match animation.context.read().as_ref().unwrap().conf.on_creation {
-            OnCreation::Run => {
-                animation.run(AnimDirection::Forward);
-            }
-            OnCreation::Finish => {
-                animation.finish();
-            }
-            _ => {}
-        },
-    );
+    use_hook(move || match conf.read().on_creation {
+        OnCreation::Run => {
+            animation.run(AnimDirection::Forward);
+        }
+        OnCreation::Finish => {
+            animation.finish();
+        }
+        _ => {}
+    });
 
     animation
 }
@@ -436,17 +430,19 @@ where
     let has_run_yet = use_signal(|| false);
     let task = use_signal(|| None);
     let last_direction = use_signal(|| AnimDirection::Forward);
-
-    let mut context = use_signal(|| None);
+    let mut conf = use_signal(AnimConfiguration::default);
+    let mut animated_value = use_signal(|| None);
 
     use_memo(use_reactive(deps, move |deps| {
-        let mut conf = AnimConfiguration::default();
-        let value = run(&mut conf, deps);
-        context.replace(Some(AnimationContext { value, conf }));
+        let mut anim_conf = AnimConfiguration::default();
+        let value = run(&mut anim_conf, deps);
+        conf.replace(anim_conf);
+        animated_value.replace(Some(value));
     }));
 
     let animation = UseAnimation {
-        context,
+        conf,
+        animated_value,
         platform,
         is_running,
         has_run_yet,
@@ -457,7 +453,7 @@ where
 
     use_effect(move || {
         if *has_run_yet.peek() {
-            match context.read().as_ref().unwrap().conf.on_deps_change {
+            match conf.read().on_deps_change {
                 OnDepsChange::Finish => animation.finish(),
                 OnDepsChange::Rerun => {
                     let last_direction = *animation.last_direction.peek();
@@ -468,17 +464,15 @@ where
         }
     });
 
-    use_hook(
-        move || match animation.context.peek().as_ref().unwrap().conf.on_creation {
-            OnCreation::Run => {
-                animation.run(AnimDirection::Forward);
-            }
-            OnCreation::Finish => {
-                animation.finish();
-            }
-            _ => {}
-        },
-    );
+    use_hook(move || match conf.read().on_creation {
+        OnCreation::Run => {
+            animation.run(AnimDirection::Forward);
+        }
+        OnCreation::Finish => {
+            animation.finish();
+        }
+        _ => {}
+    });
 
     animation
 }
