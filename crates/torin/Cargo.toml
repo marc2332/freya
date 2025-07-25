@@ -17,7 +17,7 @@ euclid = { workspace = true }
 rustc-hash = { workspace = true }
 
 [dev-dependencies]
-criterion = "0.5.1"
+criterion = "0.7.0"
 
 [lib]
 bench = false
