@@ -587,18 +587,13 @@ where
                     initial_phase_children_per_line[curr_line],
                     line_index == 0,
                 );
-                line_index += 1;
-                if line_index == initial_phase_children_per_line[curr_line] {
-                    curr_line += 1;
-                    line_index = 0;
-                }
             }
 
+            // Alignment in the cross direction
             if node.cross_alignment.is_not_start() {
                 let initial_phase_size = initial_phase_sizes.get(&child_id);
 
                 if let Some(initial_phase_size) = initial_phase_size {
-                    // Align the Cross axis if necessary
                     Self::align_content(
                         &mut adapted_available_area,
                         available_area,
@@ -608,6 +603,17 @@ where
                         AlignmentDirection::Cross,
                     );
                 }
+            }
+            // Realignment is necessary if the node is wrapping and a new line has just started
+            if child_data.position.is_stacked() && curr_line > 0 && line_index == 0 {
+                Self::align_content(
+                    &mut adapted_available_area,
+                    available_area,
+                    initial_phase_inner_sizes_with_flex,
+                    &node.main_alignment,
+                    &node.direction,
+                    AlignmentDirection::Main,
+                );
             }
 
             // Final measurement
@@ -638,6 +644,11 @@ where
                     is_last_child,
                     Phase::Final,
                 );
+                line_index += 1;
+                if line_index == initial_phase_children_per_line[curr_line] {
+                    curr_line += 1;
+                    line_index = 0;
+                }
             }
 
             // Cache the child layout if it was mutated and children must be cached
