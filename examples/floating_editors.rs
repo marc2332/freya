@@ -14,33 +14,17 @@ fn main() {
 
 fn app() -> Element {
     use_init_theme(|| DARK_THEME);
-    let mut hovering = use_signal(|| false);
+    let mut nodes = use_signal(|| 1);
     let mut canvas_pos = use_signal(|| (0.0f64, 0.0f64));
-    let mut nodes = use_signal(|| vec![(25.0f64, 55.0f64)]);
     let mut clicking = use_signal::<Option<(f64, f64)>>(|| None);
-    let mut clicking_drag = use_signal::<Option<(usize, (f64, f64))>>(|| None);
-
-    let onmouseleave = move |_: MouseEvent| {
-        if clicking.peek().is_none() {
-            hovering.set(false);
-        }
-    };
 
     let onmousemove = move |e: MouseEvent| {
-        hovering.set(true);
         if let Some(clicking_cords) = *clicking.peek() {
             let coordinates = e.get_screen_coordinates();
             canvas_pos.set((
                 coordinates.x + clicking_cords.0,
                 coordinates.y + clicking_cords.1,
             ));
-        }
-        if let Some((node_id, clicking_cords)) = *clicking_drag.peek() {
-            let coordinates = e.get_screen_coordinates();
-
-            let mut node = nodes.get_mut(node_id).unwrap();
-            node.0 = coordinates.x - clicking_cords.0 - canvas_pos.peek().0;
-            node.1 = coordinates.y - clicking_cords.1 - canvas_pos.peek().1;
         }
     };
 
@@ -54,11 +38,10 @@ fn app() -> Element {
 
     let onclick = move |_: MouseEvent| {
         clicking.set(None);
-        clicking_drag.set(None);
     };
 
     let create_node = move |_| {
-        nodes.push((25.0f64, 55.0f64));
+        nodes += 1;
     };
 
     rsx!(
@@ -72,49 +55,26 @@ fn app() -> Element {
             onmousedown,
             onclick,
             onmousemove,
-            onmouseleave,
-            rect {
-                height: "0",
-                label {
-                    font_size: "25",
-                    "Floating Editors Example"
-                }
-            }
-            for (i, (x, y)) in nodes.read().iter().enumerate() {
+            DraggableCanvas {
                 rect {
-                    key: "{i}",
-                    direction: "horizontal",
-                    width: "0",
                     height: "0",
+                    label {
+                        font_size: "25",
+                        "Floating Editors Example"
+                    }
+                }
+                for i in 0..nodes() {
                     rect {
-                        offset_x: "{x}",
-                        offset_y: "{y}",
+                        key: "{i}",
+                        direction: "horizontal",
                         width: "0",
                         height: "0",
-                        rect {
-                            overflow: "clip",
-                            background: "rgb(20, 20, 20)",
-                            width: "600",
-                            height: "400",
-                            corner_radius: "15",
-                            padding: "10",
-                            shadow: "0 0 30 0 rgb(0, 0, 0, 150)",
-                            onmousedown:  move |e: MouseEvent| {
-                                e.stop_propagation();
-                                clicking_drag.set(Some((i, e.get_element_coordinates().to_tuple())));
-                            },
-                            onmouseleave: move |_: MouseEvent| {
-                                if clicking.peek().is_none() {
-                                    hovering.set(false);
-                                }
-                            },
-                            Editor {
-
-                            }
+                        Draggable {
+                            Editor { }
                         }
                     }
                 }
-            }
+             }
         }
         rect {
             color: "white",
@@ -194,10 +154,14 @@ fn Editor() -> Element {
             a11y_auto_focus: "true",
             onkeydown,
             onkeyup,
-            width: "fill",
-            height: "fill",
-            padding: "10",
             spacing: "15",
+            overflow: "clip",
+            background: "rgb(20, 20, 20)",
+            width: "600",
+            height: "400",
+            corner_radius: "15",
+            padding: "20",
+            shadow: "0 0 30 0 rgb(0, 0, 0, 150)",
             rect {
                 width: "fill",
                 direction: "horizontal",
