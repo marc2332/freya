@@ -24,11 +24,13 @@ impl Layers {
 
     /// Remove the [NodeId] from the given layer. Will remove the entry of the layer if it becomes empty.
     pub fn remove_node_from_layer(&mut self, node_id: NodeId, layer_n: i16) {
-        let layer = self.0.get_mut(&layer_n).unwrap();
-        layer.retain(|id| *id != node_id);
+        let layer = self.0.get_mut(&layer_n);
+        if let Some(layer) = layer {
+            layer.retain(|id| *id != node_id);
 
-        if layer.is_empty() {
-            self.0.remove(&layer_n);
+            if layer.is_empty() {
+                self.0.remove(&layer_n);
+            }
         }
     }
 }
