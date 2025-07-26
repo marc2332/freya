@@ -1,10 +1,14 @@
-use cursor_icon::CursorIcon;
+#[cfg(all(debug_assertions, feature = "hot-reloading"))]
+use dioxus_devtools::DevserverMsg;
 use torin::prelude::{
     Area,
     CursorPoint,
 };
 #[cfg(feature = "winit")]
-use winit::window::Window;
+use winit::window::{
+    CursorIcon,
+    Window,
+};
 
 use crate::{
     accessibility::AccessibilityFocusStrategy,
@@ -44,6 +48,9 @@ pub enum EventLoopMessage {
     /// Callback to access the Window.
     #[cfg(feature = "winit")]
     WithWindow(Box<dyn FnOnce(&Window) + Send + Sync>),
+    /// dioxus hot patching events
+    #[cfg(all(debug_assertions, feature = "hot-reloading"))]
+    DioxusDevserverEvent(DevserverMsg),
 }
 
 #[cfg(feature = "winit")]
