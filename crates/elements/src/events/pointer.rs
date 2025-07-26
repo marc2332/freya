@@ -5,6 +5,7 @@ use crate::{
     impl_event,
     Force,
     MouseButton,
+    MouseData,
     TouchPhase,
 };
 impl_event! [
@@ -161,6 +162,8 @@ impl_event! [
     /// }
     /// ```
     onpointerpress
+
+    oncaptureglobalpointerup
 ];
 
 /// The type of device that triggered a Pointer event.
