@@ -5,7 +5,6 @@ use crate::{
     impl_event,
     Force,
     MouseButton,
-    MouseData,
     TouchPhase,
 };
 impl_event! [
