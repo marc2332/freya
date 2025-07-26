@@ -79,7 +79,6 @@ pub fn Draggable(children: Element) -> Element {
         if dragging_position.read().is_some() {
             e.stop_propagation();
             e.prevent_default();
-            println!("prevented");
             dragging_position.set(None);
         }
     };
