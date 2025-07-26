@@ -205,7 +205,12 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<'_, St
             #[cfg(all(debug_assertions, feature = "hot-reloading"))]
             EventLoopMessage::DioxusDevserverEvent(event) => match event {
                 dioxus_devtools::DevserverMsg::HotReload(hot_reload_msg) => {
-                    dioxus_devtools::apply_changes(&app.vdom, &hot_reload_msg);
+                    if hot_reload_msg.jump_table.is_some() {
+                        dioxus_devtools::apply_changes(&app.vdom, &hot_reload_msg);
+                    } else {
+                        eprintln!("got hot-reload message from dioxus-cli, freya does not work with hot reloading, \
+                            please use hot patching instead by passing --hot-patch and disable hot-reloading with --hot-reload false");
+                    }
                 }
                 dioxus_devtools::DevserverMsg::Shutdown => event_loop.exit(),
                 _ => {}
