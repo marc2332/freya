@@ -355,39 +355,20 @@ where
     ) {
         let children = self.dom_adapter.children_of(node_id);
 
-        let mut initial_phase_flex_grows = FxHashMap::default();
-        let mut initial_phase_sizes = FxHashMap::default();
-        let mut initial_phase_children_per_line = vec![0 as usize];
-        let mut initial_phase_inner_sizes = Size2D::default();
-
         // Used to calculate the spacing and some alignments
-        let (non_absolute_children_len, first_child, last_child) = if node.spacing.get() > 0. {
+        let last_child = if node.spacing.get() > 0. {
             let mut last_child = None;
-            let mut first_child = None;
-            let len = children
-                .iter()
-                .filter(|child_id| {
-                    let Some(child_data) = self.dom_adapter.get_node(child_id) else {
-                        return false;
-                    };
-                    let is_stacked = child_data.position.is_stacked();
-                    if is_stacked {
-                        last_child = Some(**child_id);
-
-                        if first_child.is_none() {
-                            first_child = Some(**child_id);
-                        }
-                    }
-                    is_stacked
-                })
-                .count();
-            (len, first_child, last_child)
+            for child_id in children.iter() {
+                let Some(child_data) = self.dom_adapter.get_node(child_id) else {
+                    continue;
+                };
+                if child_data.position.is_stacked() {
+                    last_child = Some(*child_id);
+                }
+            }
+            last_child
         } else {
-            (
-                children.len(),
-                children.first().copied(),
-                children.last().copied(),
-            )
+            children.last().copied()
         };
 
         let needs_initial_phase = node.cross_alignment.is_not_start()
@@ -398,12 +379,15 @@ where
         let mut initial_phase_area = *node_area;
         let mut initial_phase_inner_area = *inner_area;
         let mut initial_phase_available_area = *available_area;
+        let mut initial_phase_flex_grows = FxHashMap::default();
+        let mut initial_phase_sizes = FxHashMap::default();
+        let mut initial_phase_lines = vec![(0 as usize, Size2D::default())];
+        let mut initial_phase_inner_sizes = Size2D::default();
 
         // Initial phase: Measure the size and position of the children if the parent has a
         // non-start cross alignment, non-start main alignment or a fit-content.
         if needs_initial_phase {
             //  Measure the children
-            let mut line_size = Size2D::default();
             for child_id in &children {
                 let Some(child_data) = self.dom_adapter.get_node(child_id) else {
                     continue;
@@ -430,6 +414,7 @@ where
                 );
 
                 child_areas.area.adjust_size(&child_data);
+                let (line_len, line_size) = initial_phase_lines.last_mut().unwrap();
 
                 // Stack this child into the parent
                 let is_last_sibling_in_line = Self::stack_child(
@@ -439,14 +424,14 @@ where
                     &mut initial_phase_area,
                     &mut initial_phase_inner_area,
                     &mut initial_phase_inner_sizes,
-                    &mut line_size,
+                    line_size,
                     &child_areas.area,
                     is_last_child,
                     Phase::Initial,
                 );
-                *initial_phase_children_per_line.last_mut().unwrap() += 1;
+                *line_len += 1;
                 if is_last_sibling_in_line {
-                    initial_phase_children_per_line.push(0);
+                    initial_phase_lines.push((0, Size2D::default()));
                 }
 
                 if node.cross_alignment.is_not_start() || node.main_alignment.is_spaced() {
@@ -550,7 +535,6 @@ where
                 continue;
             };
 
-            let is_first_child = first_child == Some(child_id);
             let is_last_child = last_child == Some(child_id);
 
             let mut adapted_available_area = *available_area;
@@ -584,7 +568,7 @@ where
                     &node.main_alignment,
                     &node.direction,
                     AlignmentDirection::Main,
-                    initial_phase_children_per_line[curr_line],
+                    initial_phase_lines[curr_line].0,
                     line_index == 0,
                 );
             }
@@ -645,7 +629,7 @@ where
                     Phase::Final,
                 );
                 line_index += 1;
-                if line_index == initial_phase_children_per_line[curr_line] {
+                if line_index == initial_phase_lines[curr_line].0 {
                     curr_line += 1;
                     line_index = 0;
                 }
