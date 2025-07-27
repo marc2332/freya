@@ -1,5 +1,5 @@
 use euclid::Length;
-use torin::{prelude::*, test_utils::*, wrap_content::WrapContent};
+use torin::{prelude::*, test_utils::*};
 
 #[test]
 pub fn display_horizontal() {

@@ -1,3 +1,4 @@
+use euclid::Point2D;
 pub use euclid::Rect;
 use rustc_hash::FxHashMap;
 
@@ -521,6 +522,15 @@ where
                     node,
                     AlignmentDirection::Cross,
                 );
+                // Align the Cross axis (all children)
+                Self::align_content(
+                    available_area,
+                    &initial_phase_inner_area,
+                    initial_phase_inner_sizes_with_flex,
+                    &node.main_alignment,
+                    &node.direction,
+                    AlignmentDirection::Cross,
+                );
             }
         }
 
@@ -530,6 +540,7 @@ where
         let mut line_size = Size2D::default();
         let mut curr_line = 0;
         let mut line_index = 0;
+        let mut line_origin = available_area.origin;
         for child_id in children {
             let Some(child_data) = self.dom_adapter.get_node(&child_id) else {
                 continue;
@@ -573,14 +584,14 @@ where
                 );
             }
 
-            // Alignment in the cross direction
+            // Alignment in the cross direction (child in line)
             if node.cross_alignment.is_not_start() {
                 let initial_phase_size = initial_phase_sizes.get(&child_id);
 
                 if let Some(initial_phase_size) = initial_phase_size {
                     Self::align_content(
                         &mut adapted_available_area,
-                        available_area,
+                        &Area::new(line_origin, initial_phase_lines[curr_line].1),
                         *initial_phase_size,
                         &node.cross_alignment,
                         &node.direction,
@@ -632,6 +643,14 @@ where
                 if line_index == initial_phase_lines[curr_line].0 {
                     curr_line += 1;
                     line_index = 0;
+                    match node.direction {
+                        Direction::Vertical => {
+                            line_origin.y += initial_phase_lines[curr_line].1.width
+                        }
+                        Direction::Horizontal => {
+                            line_origin.x += initial_phase_lines[curr_line].1.height
+                        }
+                    }
                 }
             }
 
