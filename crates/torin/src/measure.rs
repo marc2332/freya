@@ -374,7 +374,8 @@ where
         let needs_initial_phase = node.cross_alignment.is_not_start()
             || node.main_alignment.is_not_start()
             || node.content.is_fit()
-            || node.content.is_flex();
+            || node.content.is_flex()
+            || node.wrap_content.is_wrap();
 
         let mut initial_phase_area = *node_area;
         let mut initial_phase_inner_area = *inner_area;
