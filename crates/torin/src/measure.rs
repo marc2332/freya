@@ -1,4 +1,3 @@
-use euclid::Point2D;
 pub use euclid::Rect;
 use rustc_hash::FxHashMap;
 
@@ -537,10 +536,10 @@ where
         let initial_available_area = *available_area;
 
         // Final phase: measure the children with all the axis and sizes adjusted
-        let mut line_size = Size2D::default();
         let mut curr_line = 0;
         let mut line_index = 0;
         let mut line_origin = available_area.origin;
+        let mut current_line_size = Size2D::zero();
         for child_id in children {
             let Some(child_data) = self.dom_adapter.get_node(&child_id) else {
                 continue;
@@ -634,7 +633,7 @@ where
                     node_area,
                     inner_area,
                     inner_sizes,
-                    &mut line_size,
+                    &mut current_line_size,
                     &child_areas.area,
                     is_last_child,
                     Phase::Final,
@@ -651,6 +650,7 @@ where
                             line_origin.y += initial_phase_lines[curr_line].1.height
                         }
                     }
+                    current_line_size = Size2D::default();
                 }
             }
 
@@ -886,9 +886,6 @@ where
                         node_area.size.height =
                             inner_sizes.height + node.padding.vertical() + node.margin.vertical()
                     }
-
-                    line_size.width = 0.0;
-                    line_size.height = 0.0;
                 }
 
                 // Move the available area
