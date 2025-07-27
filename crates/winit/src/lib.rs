@@ -7,7 +7,6 @@ pub use renderer::WinitRenderer;
 mod accessibility;
 mod app;
 mod config;
-pub mod devtools;
 mod drivers;
 mod events;
 mod keyboard;

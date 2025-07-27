@@ -19,7 +19,7 @@ use accesskit::{
     Toggled,
     VerticalOffset,
 };
-use freya_engine::prelude::Color;
+use freya_engine::prelude::SkColor;
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
@@ -49,9 +49,13 @@ use crate::{
         ParseAttribute,
         ParseError,
     },
-    values::Focusable,
+    values::{
+        Color,
+        Focusable,
+    },
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, PartialEq, Default, Component)]
 pub struct AccessibilityNodeState {
     pub node_id: NodeId,
@@ -179,7 +183,7 @@ impl ParseAttribute for AccessibilityNodeState {
                             builder.set_position_in_set(attr.parse().map_err(|_| ParseError)?)
                         }
                         AttributeName::A11yColorValue => {
-                            let color = Color::parse(attr)?;
+                            let color: SkColor = Color::parse(attr)?.into();
                             builder.set_color_value(
                                 ((color.a() as u32) << 24)
                                     | ((color.b() as u32) << 16)

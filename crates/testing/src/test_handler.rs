@@ -33,11 +33,11 @@ use freya_core::{
         NativePlatformReceiver,
         NativePlatformSender,
     },
+    values::Color,
 };
 use freya_elements::MouseButton;
 use freya_engine::prelude::{
     raster_n32_premul,
-    Color,
     Data,
     EncodedImageFormat,
     FontCollection,
@@ -384,7 +384,6 @@ impl<T: 'static + Clone> TestingHandler<T> {
             dirty_surface: &mut dirty_surface,
             compositor: &mut compositor,
             scale_factor: SCALE_FACTOR as f32,
-            highlighted_node: None,
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,
             fallback_fonts: &["Fira Sans".to_string()],

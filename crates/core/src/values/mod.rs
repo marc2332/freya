@@ -44,3 +44,4 @@ pub use sampling::*;
 pub use shadow::*;
 pub use size::*;
 pub use text_height::*;
+pub use text_shadow::*;

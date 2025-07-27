@@ -30,27 +30,73 @@ use crate::{
         ParseError,
     },
     values::{
+        Color,
         TextHeight,
         TextOverflow,
+        TextShadow,
     },
 };
 
+#[cfg(feature = "serde")]
+fn default_slant() -> Slant {
+    Slant::Upright
+}
+
+#[cfg(feature = "serde")]
+fn default_weight() -> Weight {
+    Weight::NORMAL
+}
+
+#[cfg(feature = "serde")]
+fn default_width() -> Width {
+    Width::NORMAL
+}
+
+#[cfg(feature = "serde")]
+fn default_text_behavior() -> TextHeightBehavior {
+    TextHeightBehavior::All
+}
+
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Component)]
 pub struct FontStyleState {
     pub color: Color,
     pub text_shadows: Arc<[TextShadow]>,
     pub font_family: Arc<[String]>,
     pub font_size: f32,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing, skip_deserializing, default = "default_slant")
+    )]
     pub font_slant: Slant,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing, skip_deserializing, default = "default_weight")
+    )]
     pub font_weight: Weight,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing, skip_deserializing, default = "default_width")
+    )]
     pub font_width: Width,
     pub line_height: Option<f32>,
+    #[cfg_attr(feature = "serde", serde(skip_serializing, skip_deserializing))]
     pub decoration: Decoration,
     pub word_spacing: f32,
     pub letter_spacing: f32,
+    #[cfg_attr(feature = "serde", serde(skip_serializing, skip_deserializing))]
     pub text_align: TextAlign,
     pub max_lines: Option<usize>,
+    #[cfg_attr(feature = "serde", serde(skip_serializing, skip_deserializing))]
     pub text_overflow: TextOverflow,
+    #[cfg_attr(
+        feature = "serde",
+        serde(
+            skip_serializing,
+            skip_deserializing,
+            default = "default_text_behavior"
+        )
+    )]
     pub text_height: TextHeightBehavior,
 }
 
@@ -89,7 +135,7 @@ impl FontStyleState {
         }
 
         for text_shadow in self.text_shadows.iter() {
-            text_style.add_shadow(*text_shadow);
+            text_style.add_shadow((*text_shadow).into());
         }
 
         text_style.set_decoration_style(self.decoration.style);
@@ -208,8 +254,8 @@ impl ParseAttribute for FontStyleState {
             }
             AttributeName::DecorationColor => {
                 self.decoration.color = match attr.value.as_text() {
-                    Some(v) => Color::parse(v)?,
-                    None => self.color,
+                    Some(v) => Color::parse(v)?.into(),
+                    None => self.color.into(),
                 };
             }
             AttributeName::WordSpacing => {

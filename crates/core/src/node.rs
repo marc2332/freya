@@ -30,9 +30,11 @@ use crate::{
         Shadow,
         SvgPaint,
         TextOverflow,
+        TextShadow,
     },
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, PartialEq, Debug)]
 pub struct NodeState {
     pub cursor: CursorState,

@@ -48,7 +48,7 @@
 //!
 //! ## Features flags
 //!
-//! - `devtools`: enables a side panel to inspect your App tree, styles and computed layout.
+//! - `devtools`: enables the devtools server.
 //! - `use_camera`: enables the [use_camera](self::hooks::use_camera) hook.
 //! - `network-image`: enables the [NetworkImage](self::components::NetworkImage) component.
 //! - `custom-tokio-rt`: disables the default Tokio runtime created by Freya.

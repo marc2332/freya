@@ -1,19 +1,7 @@
 use std::borrow::Cow;
 
 use accesskit::Role;
-use dioxus::prelude::*;
-use freya_components::{
-    ArrowIcon,
-    OutlineButton,
-    PressEvent,
-};
-use freya_elements::{
-    self as dioxus_elements,
-};
-use freya_hooks::{
-    theme_with,
-    ButtonThemeWith,
-};
+use freya::prelude::*;
 use freya_native_core::prelude::NodeId;
 
 use crate::hooks::use_node_info;
@@ -40,7 +28,7 @@ pub fn NodeElement(
         }
     };
 
-    let margin_left = (node.height * 10) as f32 - 20.;
+    let margin_left = (node.height * 10) as f32;
     let id = node_id.index();
 
     let role = node.state.accessibility.builder.clone().and_then(|node| {

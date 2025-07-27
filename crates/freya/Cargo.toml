@@ -28,15 +28,15 @@ docs = ["dep:freya-testing", "dep:dioxus-i18n", "dep:freya-router", "freya-compo
 network-image = ["freya-components/network-image"]
 use_camera = ["freya-hooks/use_camera"]
 performance-overlay = []
-disable-zoom-shortcuts = ["freya-winit/disable-zoom-shortcuts"]
 devtools = ["dep:freya-devtools"]
+disable-zoom-shortcuts = ["freya-winit/disable-zoom-shortcuts"]
 custom-tokio-rt = []
 winit = ["freya-core/winit", "freya-hooks/winit", "freya-components/winit", "dep:freya-winit"]
 plot = ["dep:plotters", "dep:skia-plotters-backend"]
 
 [dependencies]
-freya-devtools = { workspace = true, optional = true }
-freya-winit = { workspace = true, optional = true}
+freya-devtools = { workspace = true, features = ["server"], optional = true }
+freya-winit = { workspace = true, optional = true }
 freya-elements = { workspace = true }
 freya-hooks = { workspace = true }
 freya-core = { workspace = true }

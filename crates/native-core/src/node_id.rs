@@ -1,5 +1,6 @@
 use std::ops::Deref;
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Copy, PartialEq, Debug, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct NodeId(shipyard::EntityId);
 

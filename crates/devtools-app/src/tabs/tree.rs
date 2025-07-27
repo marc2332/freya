@@ -1,8 +1,7 @@
 use std::collections::HashSet;
 
-use dioxus::prelude::*;
 use dioxus_radio::prelude::use_radio;
-use freya_components::*;
+use freya::prelude::*;
 use freya_native_core::NodeId;
 use freya_router::prelude::{
     router,
@@ -10,9 +9,9 @@ use freya_router::prelude::{
 };
 
 use crate::{
+    Route,
     node::NodeElement,
     state::DevtoolsChannel,
-    Route,
 };
 
 #[derive(Clone, PartialEq)]
@@ -29,21 +28,21 @@ pub fn NodesTree(selected_node_id: Option<NodeId>, onselected: EventHandler<Node
 
     let items = {
         let radio = radio.read();
-        let devtools_receiver = radio.devtools_receiver.borrow();
         let mut allowed_nodes = HashSet::new();
-        devtools_receiver
+        radio
+            .nodes
             .iter()
             .enumerate()
             .filter_map(|(i, node)| {
                 let parent_is_open = node
                     .parent_id
-                    .map(|id| allowed_nodes.contains(&id) && radio.devtools_tree.contains(&id))
-                    .unwrap_or(true);
+                    .map(|id| allowed_nodes.contains(&id) && radio.expanded_nodes.contains(&id))
+                    .unwrap_or(false);
                 let is_root = i == 0;
                 if parent_is_open || is_root {
                     allowed_nodes.insert(node.id);
                     let is_open =
-                        (node.children_len != 0).then_some(radio.devtools_tree.contains(&node.id));
+                        (node.children_len != 0).then_some(radio.expanded_nodes.contains(&node.id));
                     Some(NodeTreeItem {
                         is_open,
                         node_id: node.id,
@@ -72,10 +71,10 @@ pub fn NodesTree(selected_node_id: Option<NodeId>, onselected: EventHandler<Node
                     is_open: item.is_open,
                     onarrow: move |_| {
                         let mut radio = radio.write();
-                        if radio.devtools_tree.contains(&node_id) {
-                            radio.devtools_tree.remove(&node_id);
+                        if radio.expanded_nodes.contains(&node_id) {
+                            radio.expanded_nodes.remove(&node_id);
                         } else {
-                            radio.devtools_tree.insert(node_id);
+                            radio.expanded_nodes.insert(node_id);
                         }
                     },
                     onselected: move |_| {

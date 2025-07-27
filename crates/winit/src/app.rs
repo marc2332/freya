@@ -42,6 +42,7 @@ use freya_core::{
         NativePlatformReceiver,
         NativePlatformSender,
     },
+    values::Color,
 };
 use freya_engine::prelude::*;
 use freya_native_core::NodeId;
@@ -69,7 +70,6 @@ use winit::{
 
 use crate::{
     accessibility::WinitAcessibilityTree,
-    devtools::Devtools,
     size::WinitSize,
     winit_waker::winit_waker,
     EmbeddedFonts,
@@ -89,7 +89,6 @@ pub struct Application {
     pub(crate) events: EventsQueue,
     pub(crate) vdom_waker: Waker,
     pub(crate) proxy: EventLoopProxy<EventLoopMessage>,
-    pub(crate) devtools: Option<Devtools>,
     pub(crate) event_emitter: EventEmitter,
     pub(crate) event_receiver: EventReceiver,
     pub(crate) nodes_state: NodesState<NodeId>,
@@ -112,7 +111,6 @@ impl Application {
         sdom: SafeDOM,
         vdom: VirtualDom,
         proxy: &EventLoopProxy<EventLoopMessage>,
-        devtools: Option<Devtools>,
         window: &Window,
         fonts_config: EmbeddedFonts,
         plugins: PluginsManager,
@@ -149,7 +147,6 @@ impl Application {
             events: EventsQueue::new(),
             vdom_waker: winit_waker(proxy),
             proxy: proxy.clone(),
-            devtools,
             event_emitter,
             event_receiver,
             nodes_state: NodesState::default(),
@@ -261,13 +258,6 @@ impl Application {
             self.process_layout_on_next_render = true;
             self.accessibility_tasks_for_next_render
                 .replace(AccessibilityTask::ProcessUpdate);
-        } else if must_repaint {
-            // If there was no relayout but there was a repaint then we can update the devtools now,
-            // otherwise if there was a relayout the devtools will get updated on next render
-            if let Some(devtools) = &self.devtools {
-                let fdom = self.sdom.get();
-                devtools.update(fdom.rdom(), &fdom.layout());
-            }
         }
 
         if must_relayout || must_repaint {
@@ -456,10 +446,6 @@ impl Application {
             PluginHandle::new(&self.proxy),
         );
 
-        if let Some(devtools) = &self.devtools {
-            devtools.update(rdom, &layout);
-        }
-
         #[cfg(debug_assertions)]
         {
             tracing::info!(
@@ -480,10 +466,6 @@ impl Application {
         scale_factor: f32,
     ) {
         let fdom = self.sdom.get();
-        let highlighted_node = self
-            .devtools
-            .as_ref()
-            .and_then(|devtools| *devtools.highlighted_node.lock().unwrap());
 
         let mut render_pipeline = RenderPipeline {
             canvas_area: Area::from_size(window_size.to_torin()),
@@ -498,7 +480,6 @@ impl Application {
             dirty_surface,
             compositor: &mut self.compositor,
             scale_factor,
-            highlighted_node,
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,
             fallback_fonts: &self.fallback_fonts,

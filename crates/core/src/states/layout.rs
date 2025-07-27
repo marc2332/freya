@@ -34,6 +34,7 @@ use crate::{
     },
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Default, Clone, Debug, Component, PartialEq)]
 pub struct LayoutState {
     pub width: Size,
@@ -53,6 +54,7 @@ pub struct LayoutState {
     pub cross_alignment: Alignment,
     pub position: Position,
     pub content: Content,
+    #[cfg_attr(feature = "serde", serde(skip_deserializing, skip_serializing))]
     pub node_ref: Option<NodeReference>,
     pub node_id: NodeId,
     pub spacing: Length,

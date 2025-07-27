@@ -1,10 +1,14 @@
 use freya_engine::prelude::*;
 
-use crate::parsing::{
-    Parse,
-    ParseError,
+use crate::{
+    parsing::{
+        Parse,
+        ParseError,
+    },
+    values::Color,
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum SvgPaint {
     #[default]
@@ -28,7 +32,7 @@ impl From<SvgPaint> for svg::Paint {
         match value {
             SvgPaint::None => svg::Paint::none(),
             SvgPaint::CurrentColor => svg::Paint::current_color(),
-            SvgPaint::Color(color) => svg::Paint::from_color(color),
+            SvgPaint::Color(color) => svg::Paint::from_color(color.into()),
         }
     }
 }

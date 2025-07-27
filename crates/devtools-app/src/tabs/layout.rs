@@ -1,6 +1,4 @@
-use dioxus::prelude::*;
-use freya_components::*;
-use freya_elements as dioxus_elements;
+use freya::prelude::*;
 use freya_native_core::NodeId;
 
 use crate::hooks::use_node_info;

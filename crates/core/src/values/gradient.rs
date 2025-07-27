@@ -12,9 +12,13 @@ use crate::{
         Parse,
         ParseError,
     },
-    values::DisplayColor,
+    values::{
+        Color,
+        DisplayColor,
+    },
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct GradientStop {
     pub color: Color,
@@ -51,6 +55,7 @@ impl fmt::Display for GradientStop {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct LinearGradient {
     pub stops: Vec<GradientStop>,
@@ -59,22 +64,22 @@ pub struct LinearGradient {
 
 impl LinearGradient {
     pub fn into_shader(&self, bounds: Area) -> Option<Shader> {
-        let colors: Vec<Color> = self.stops.iter().map(|stop| stop.color).collect();
+        let colors: Vec<SkColor> = self.stops.iter().map(|stop| stop.color.into()).collect();
         let offsets: Vec<f32> = self.stops.iter().map(|stop| stop.offset).collect();
 
         let (dy, dx) = (self.angle.to_radians() + FRAC_PI_2).sin_cos();
-        let farthest_corner = Point::new(
+        let farthest_corner = SkPoint::new(
             if dx > 0.0 { bounds.width() } else { 0.0 },
             if dy > 0.0 { bounds.height() } else { 0.0 },
         );
-        let delta = farthest_corner - Point::new(bounds.width(), bounds.height()) / 2.0;
+        let delta = farthest_corner - SkPoint::new(bounds.width(), bounds.height()) / 2.0;
         let u = delta.x * dy - delta.y * dx;
-        let endpoint = farthest_corner + Point::new(-u * dy, u * dx);
+        let endpoint = farthest_corner + SkPoint::new(-u * dy, u * dx);
 
-        let origin = Point::new(bounds.min_x(), bounds.min_y());
+        let origin = SkPoint::new(bounds.min_x(), bounds.min_y());
         Shader::linear_gradient(
             (
-                Point::new(bounds.width(), bounds.height()) - endpoint + origin,
+                SkPoint::new(bounds.width(), bounds.height()) - endpoint + origin,
                 endpoint + origin,
             ),
             GradientShaderColors::Colors(&colors[..]),
@@ -133,6 +138,7 @@ impl fmt::Display for LinearGradient {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct RadialGradient {
     pub stops: Vec<GradientStop>,
@@ -140,13 +146,13 @@ pub struct RadialGradient {
 
 impl RadialGradient {
     pub fn into_shader(&self, bounds: Area) -> Option<Shader> {
-        let colors: Vec<Color> = self.stops.iter().map(|stop| stop.color).collect();
+        let colors: Vec<SkColor> = self.stops.iter().map(|stop| stop.color.into()).collect();
         let offsets: Vec<f32> = self.stops.iter().map(|stop| stop.offset).collect();
 
         let center = bounds.center();
 
         Shader::radial_gradient(
-            Point::new(center.x, center.y),
+            SkPoint::new(center.x, center.y),
             bounds.width().max(bounds.height()) / 2.0,
             GradientShaderColors::Colors(&colors[..]),
             Some(&offsets[..]),
@@ -190,6 +196,7 @@ impl fmt::Display for RadialGradient {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ConicGradient {
     pub stops: Vec<GradientStop>,
@@ -199,7 +206,7 @@ pub struct ConicGradient {
 
 impl ConicGradient {
     pub fn into_shader(&self, bounds: Area) -> Option<Shader> {
-        let colors: Vec<Color> = self.stops.iter().map(|stop| stop.color).collect();
+        let colors: Vec<SkColor> = self.stops.iter().map(|stop| stop.color.into()).collect();
         let offsets: Vec<f32> = self.stops.iter().map(|stop| stop.offset).collect();
 
         let center = bounds.center();

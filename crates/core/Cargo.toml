@@ -15,10 +15,12 @@ categories = ["gui", "asynchronous"]
 features = ["freya-engine/mocked-engine"]
 
 [features]
+default = []
 rc-dom = []
 skia-engine = ["freya-engine/skia-engine"]
 fade-cached-incremental-areas = []
 winit = ["dep:winit", "dep:accesskit_winit"]
+serde = ["dep:serde"]
 
 [dependencies]
 freya-elements = { workspace = true }
@@ -45,6 +47,8 @@ tracing = { workspace = true }
 itertools = "0.13.0"
 smallvec = { workspace = true }
 cursor-icon = "1.2.0"
+
+serde = { version = "*", features = ["rc"], optional = true }
 
 [dev-dependencies]
 dioxus = { workspace = true }

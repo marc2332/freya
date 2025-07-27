@@ -19,7 +19,6 @@ use freya_elements::{
     WheelSource,
 };
 use freya_engine::prelude::{
-    Color,
     Slant,
     TextAlign,
     TextDecoration,
@@ -489,9 +488,9 @@ impl AccessibilityTree {
         }
 
         // Foreground/Background color
-        builder.set_foreground_color(skia_color_to_rgba_u32(font_style_state.color));
+        builder.set_foreground_color(font_style_state.color.into());
         if let Fill::Color(color) = style_state.background {
-            builder.set_background_color(skia_color_to_rgba_u32(color));
+            builder.set_background_color(color.into());
         }
 
         // If the node is a block-level element in the layout, indicate that it will cause a linebreak.
@@ -585,10 +584,4 @@ fn skia_decoration_style_to_accesskit(style: TextDecorationStyle) -> accesskit::
         TextDecorationStyle::Double => accesskit::TextDecoration::Double,
         TextDecorationStyle::Wavy => accesskit::TextDecoration::Wavy,
     }
-}
-
-fn skia_color_to_rgba_u32(color: Color) -> u32 {
-    ((color.a() as u32) << 24)
-        | ((color.b() as u32) << 16)
-        | (((color.g() as u32) << 8) + (color.r() as u32))
 }

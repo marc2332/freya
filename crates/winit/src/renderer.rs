@@ -42,7 +42,6 @@ use winit::{
 
 use crate::{
     app::AccessibilityTask,
-    devtools::Devtools,
     events::{
         map_winit_mouse_button,
         map_winit_touch_force,
@@ -77,12 +76,7 @@ pub struct WinitRenderer<'a, State: Clone + 'static> {
 
 impl<'a, State: Clone + 'static> WinitRenderer<'a, State> {
     /// Run the Winit Renderer.
-    pub fn launch(
-        vdom: VirtualDom,
-        sdom: SafeDOM,
-        mut config: LaunchConfig<State>,
-        devtools: Option<Devtools>,
-    ) {
+    pub fn launch(vdom: VirtualDom, sdom: SafeDOM, mut config: LaunchConfig<State>) {
         let mut event_loop_builder = EventLoop::<EventLoopMessage>::with_user_event();
         let event_loop_builder_hook = config.window_config.event_loop_builder_hook.take();
         if let Some(event_loop_builder_hook) = event_loop_builder_hook {
@@ -93,7 +87,7 @@ impl<'a, State: Clone + 'static> WinitRenderer<'a, State> {
             .expect("Failed to create event loop.");
         let proxy = event_loop.create_proxy();
 
-        let mut winit_renderer = WinitRenderer::new(vdom, sdom, config, devtools, proxy);
+        let mut winit_renderer = WinitRenderer::new(vdom, sdom, config, proxy);
 
         event_loop.run_app(&mut winit_renderer).unwrap();
     }
@@ -102,16 +96,10 @@ impl<'a, State: Clone + 'static> WinitRenderer<'a, State> {
         vdom: VirtualDom,
         sdom: SafeDOM,
         config: LaunchConfig<'a, State>,
-        devtools: Option<Devtools>,
         proxy: EventLoopProxy<EventLoopMessage>,
     ) -> Self {
         WinitRenderer {
-            state: WindowState::NotCreated(NotCreatedState {
-                sdom,
-                devtools,
-                vdom,
-                config,
-            }),
+            state: WindowState::NotCreated(NotCreatedState { sdom, vdom, config }),
             event_loop_proxy: proxy,
             cursor_pos: CursorPoint::default(),
             mouse_state: ElementState::Released,

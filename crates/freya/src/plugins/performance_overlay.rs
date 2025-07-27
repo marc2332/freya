@@ -3,13 +3,18 @@ use std::time::{
     Instant,
 };
 
-use freya_core::plugins::{
-    FreyaPlugin,
-    PluginEvent,
-    PluginHandle,
+use freya_core::{
+    plugins::{
+        FreyaPlugin,
+        PluginEvent,
+        PluginHandle,
+    },
+    values::{
+        Color,
+        TextShadow,
+    },
 };
 use freya_engine::prelude::{
-    Color,
     FontStyle,
     Paint,
     PaintStyle,
@@ -17,7 +22,6 @@ use freya_engine::prelude::{
     ParagraphStyle,
     Rect,
     Slant,
-    TextShadow,
     TextStyle,
     Weight,
     Width,
@@ -83,11 +87,9 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                     ParagraphBuilder::new(&ParagraphStyle::default(), *font_collection);
                 let mut text_style = TextStyle::default();
                 text_style.set_color(Color::from_rgb(63, 255, 0));
-                text_style.add_shadow(TextShadow::new(
-                    Color::from_rgb(60, 60, 60),
-                    (0.0, 1.0),
-                    1.0,
-                ));
+                text_style.add_shadow(
+                    TextShadow::new(Color::from_rgb(60, 60, 60), (0.0, 1.0), 1.0).into(),
+                );
                 paragraph_builder.push_style(&text_style);
 
                 // FPS
@@ -190,11 +192,7 @@ fn add_text(paragraph_builder: &mut ParagraphBuilder, text: String, font_size: f
     text_style.set_color(Color::from_rgb(25, 225, 35));
     let font_style = FontStyle::new(Weight::BOLD, Width::EXPANDED, Slant::Upright);
     text_style.set_font_style(font_style);
-    text_style.add_shadow(TextShadow::new(
-        Color::from_rgb(65, 65, 65),
-        (0.0, 1.0),
-        1.0,
-    ));
+    text_style.add_shadow(TextShadow::new(Color::from_rgb(65, 65, 65), (0.0, 1.0), 1.0).into());
     text_style.set_font_size(font_size);
     paragraph_builder.push_style(&text_style);
     paragraph_builder.add_text(text);

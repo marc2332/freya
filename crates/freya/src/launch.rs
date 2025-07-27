@@ -7,10 +7,6 @@ use dioxus_core::{
     VirtualDom,
 };
 use freya_winit::{
-    devtools::{
-        DevtoolsReceiver,
-        HighlightedNode,
-    },
     LaunchConfig,
     WindowConfig,
     WinitRenderer,
@@ -216,10 +212,7 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
     }
 
     use dioxus::prelude::Props;
-    use dioxus_core::{
-        fc_to_builder,
-        IntoDynNode,
-    };
+    use dioxus_core::fc_to_builder;
     use dioxus_core_macro::rsx;
     #[cfg(debug_assertions)]
     use dioxus_signals::{
@@ -229,13 +222,10 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
     use freya_components::NativeContainer;
     #[cfg(debug_assertions)]
     use freya_elements as dioxus_elements;
-    use freya_winit::devtools::Devtools;
 
     #[derive(Props, Clone)]
     struct RootProps {
         app: AppComponent,
-        highlighted_node: Option<HighlightedNode>,
-        devtools_receiver: Option<DevtoolsReceiver>,
     }
     impl PartialEq for RootProps {
         fn eq(&self, _other: &Self) -> bool {
@@ -276,41 +266,13 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
             NativeContainer {
                 ErrorBoundary {
                     handle_error,
-                    {
-                        #[cfg(all(feature = "devtools", debug_assertions))]
-                        rsx!(
-                            freya_devtools::DevtoolsView {
-                                highlighted_node: props.highlighted_node.unwrap(),
-                                devtools_receiver: props.devtools_receiver.unwrap(),
-                                App {}
-                            }
-                        )
-                    }
-                    {
-                        #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
-                        rsx!(
-                            App {}
-                        )
-                    }
+                    App {}
                 }
             }
         )
     }
 
-    #[cfg(all(feature = "devtools", debug_assertions))]
-    let devtools = Some(Devtools::new());
-
-    #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
-    let devtools: Option<(Devtools, DevtoolsReceiver, HighlightedNode)> = None;
-
-    let vdom = VirtualDom::new_with_props(
-        Root,
-        RootProps {
-            app,
-            devtools_receiver: devtools.as_ref().map(|d| d.1.clone()),
-            highlighted_node: devtools.as_ref().map(|d| d.2.clone()),
-        },
-    );
+    let vdom = VirtualDom::new_with_props(Root, RootProps { app });
 
     #[cfg(not(feature = "custom-tokio-rt"))]
     {
@@ -320,11 +282,11 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
             .unwrap();
         let _guard = rt.enter();
 
-        WinitRenderer::launch(vdom, sdom, config, devtools.map(|d| d.0));
+        WinitRenderer::launch(vdom, sdom, config);
     }
 
     #[cfg(feature = "custom-tokio-rt")]
-    WinitRenderer::launch(vdom, sdom, config, devtools.map(|d| d.0), hovered_node);
+    WinitRenderer::launch(vdom, sdom, config);
 }
 
 type AppComponent = fn() -> Element;

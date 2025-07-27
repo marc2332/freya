@@ -1,11 +1,10 @@
-use dioxus::prelude::*;
+use freya::prelude::*;
 use freya_core::values::{
     Border,
     Fill,
     Shadow,
+    TextShadow,
 };
-use freya_elements as dioxus_elements;
-use freya_engine::prelude::*;
 
 #[allow(non_snake_case)]
 #[component]
@@ -243,7 +242,7 @@ pub fn TextShadowProperty(name: String, text_shadow: TextShadow) -> Element {
                 text {
                     font_size: "15",
                     color: "rgb(252,181,172)",
-                    "{text_shadow.offset.x} {text_shadow.offset.y} {text_shadow.blur_sigma}"
+                    "{text_shadow.offset.0} {text_shadow.offset.1} {text_shadow.blur_sigma}"
                 }
             }
             rect {

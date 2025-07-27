@@ -8,8 +8,8 @@ use freya_core::{
         PluginsManager,
     },
     style::fallback_fonts,
+    values::Color,
 };
-use freya_engine::prelude::Color;
 use image::ImageReader;
 use winit::{
     event_loop::EventLoopBuilder,

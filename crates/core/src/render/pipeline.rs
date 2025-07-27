@@ -1,14 +1,13 @@
 use freya_engine::prelude::{
     ClipOp,
-    Color,
     FontCollection,
     FontMgr,
     Matrix,
     Paint,
-    Point,
     Rect,
     SamplingOptions,
     SaveLayerRec,
+    SkPoint,
     Surface,
 };
 use freya_native_core::{
@@ -28,7 +27,6 @@ use torin::prelude::{
 };
 
 use super::{
-    wireframe_renderer,
     Compositor,
     CompositorCache,
     CompositorDirtyArea,
@@ -49,6 +47,7 @@ use crate::{
         TransformState,
         ViewportState,
     },
+    values::Color,
 };
 
 /// Runs the full rendering cycle.
@@ -68,7 +67,6 @@ pub struct RenderPipeline<'a> {
     pub canvas_area: Area,
     pub background: Color,
     pub scale_factor: f32,
-    pub highlighted_node: Option<NodeId>,
     pub fallback_fonts: &'a [String],
 }
 
@@ -165,15 +163,6 @@ impl RenderPipeline<'_> {
             }
         }
 
-        if let Some(highlighted_node) = &self.highlighted_node {
-            if let Some(layout_node) = self.layout.get(*highlighted_node) {
-                wireframe_renderer::render_wireframe(
-                    self.dirty_surface.canvas(),
-                    &layout_node.visible_area(),
-                );
-            }
-        }
-
         #[cfg(debug_assertions)]
         {
             if painted > 0 {
@@ -238,7 +227,7 @@ impl RenderPipeline<'_> {
                 let mut matrix = Matrix::new_identity();
                 matrix.set_rotate(
                     *rotate_degs,
-                    Some(Point {
+                    Some(SkPoint {
                         x: area.min_x() + area.width() / 2.0,
                         y: area.min_y() + area.height() / 2.0,
                     }),
