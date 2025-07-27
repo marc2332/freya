@@ -527,7 +527,7 @@ where
                     available_area,
                     &initial_phase_inner_area,
                     initial_phase_inner_sizes_with_flex,
-                    &node.main_alignment,
+                    &node.cross_alignment,
                     &node.direction,
                     AlignmentDirection::Cross,
                 );
@@ -645,10 +645,10 @@ where
                     line_index = 0;
                     match node.direction {
                         Direction::Vertical => {
-                            line_origin.y += initial_phase_lines[curr_line].1.width
+                            line_origin.x += initial_phase_lines[curr_line].1.width
                         }
                         Direction::Horizontal => {
-                            line_origin.x += initial_phase_lines[curr_line].1.height
+                            line_origin.y += initial_phase_lines[curr_line].1.height
                         }
                     }
                 }
@@ -840,9 +840,6 @@ where
                     available_area.origin.x = inner_area.origin.x;
                     available_area.origin.y += line_size.height;
                     available_area.size.width = inner_area.size.width;
-
-                    line_size.height = 0.0;
-                    line_size.width = 0.0;
                 } else {
                     // move available area for next sibling
                     available_area.origin.x = child_area.max_x() + spacing.get();

@@ -116,18 +116,22 @@ pub fn wrapping_space_between() {
 
 #[test]
 pub fn wrapping_center() {
-    // wrapping_base_test(
-    //     Alignment::Center,
-    //     Alignment::Start,
-    //     250.0,
-    //     1000.0,
-    //     [
-    //         Point2D::new(25.0, 0.0),
-    //         Point2D::new(125.0, 0.0),
-    //         Point2D::new(25.0, 100.0),
-    //         Point2D::new(125.0, 100.0),
-    //     ],
-    // );
+    wrapping_base_test(
+        Alignment::Center,
+        Alignment::Start,
+        250.0,
+        1000.0,
+        [
+            Point2D::new(25.0, 0.0),
+            Point2D::new(125.0, 0.0),
+            Point2D::new(25.0, 100.0),
+            Point2D::new(125.0, 100.0),
+        ],
+    );
+}
+
+#[test]
+pub fn wrapping_center_cross() {
     wrapping_base_test(
         Alignment::Start,
         Alignment::Center,
