@@ -430,7 +430,7 @@ where
                     Phase::Initial,
                 );
                 *line_len += 1;
-                if is_last_sibling_in_line {
+                if is_last_sibling_in_line && !is_last_child {
                     initial_phase_lines.push((0, Size2D::default()));
                 }
 
@@ -500,16 +500,6 @@ where
                     node,
                     AlignmentDirection::Main,
                 );
-
-                // Align the Main axis
-                Self::align_content(
-                    available_area,
-                    &initial_phase_inner_area,
-                    initial_phase_inner_sizes_with_flex,
-                    &node.main_alignment,
-                    &node.direction,
-                    AlignmentDirection::Main,
-                );
             }
 
             if node.cross_alignment.is_not_start() || node.content.is_fit() {
@@ -547,8 +537,6 @@ where
 
             let is_last_child = last_child == Some(child_id);
 
-            let mut adapted_available_area = *available_area;
-
             if node.content.is_flex() {
                 let flex_grow = initial_phase_flex_grows.get(&child_id);
 
@@ -558,11 +546,11 @@ where
                     match flex_axis {
                         AlignAxis::Height => {
                             let size = flex_available_height / 100. * flex_grow_per;
-                            adapted_available_area.size.height = size;
+                            available_area.size.height = size;
                         }
                         AlignAxis::Width => {
                             let size = flex_available_width / 100. * flex_grow_per;
-                            adapted_available_area.size.width = size;
+                            available_area.size.width = size;
                         }
                     }
                 }
@@ -572,9 +560,9 @@ where
             if node.main_alignment.is_spaced() && child_data.position.is_stacked() {
                 // Align the Main axis if necessary
                 Self::align_position(
-                    &mut adapted_available_area,
+                    available_area,
                     &initial_available_area,
-                    initial_phase_inner_sizes_with_flex,
+                    initial_phase_lines[curr_line].1,
                     &node.main_alignment,
                     &node.direction,
                     AlignmentDirection::Main,
@@ -583,13 +571,25 @@ where
                 );
             }
 
-            // Alignment in the cross direction (child in line)
+            // Align the Cross direction (child in line)
             if node.cross_alignment.is_not_start() {
                 let initial_phase_size = initial_phase_sizes.get(&child_id);
 
                 if let Some(initial_phase_size) = initial_phase_size {
+                    if line_index == 0 {
+                        Self::align_position(
+                            available_area,
+                            &initial_available_area,
+                            initial_phase_inner_sizes_with_flex,
+                            &node.cross_alignment,
+                            &node.direction,
+                            AlignmentDirection::Cross,
+                            initial_phase_lines.len(),
+                            curr_line == 0,
+                        );
+                    }
                     Self::align_content(
-                        &mut adapted_available_area,
+                        available_area,
                         &Area::new(line_origin, initial_phase_lines[curr_line].1),
                         *initial_phase_size,
                         &node.cross_alignment,
@@ -598,12 +598,14 @@ where
                     );
                 }
             }
-            // Realignment is necessary if the node is wrapping and a new line has just started
-            if child_data.position.is_stacked() && curr_line > 0 && line_index == 0 {
+
+            // Align the Main direction (new line)
+            if child_data.position.is_stacked() && line_index == 0 {
+                let read_available_area = available_area.clone();
                 Self::align_content(
-                    &mut adapted_available_area,
                     available_area,
-                    initial_phase_inner_sizes_with_flex,
+                    &read_available_area,
+                    initial_phase_lines[curr_line].1,
                     &node.main_alignment,
                     &node.direction,
                     AlignmentDirection::Main,
@@ -615,7 +617,7 @@ where
                 child_id,
                 &child_data,
                 inner_area,
-                &adapted_available_area,
+                &available_area,
                 must_cache_children,
                 node_is_dirty,
                 Phase::Final,
@@ -640,8 +642,6 @@ where
                 );
                 line_index += 1;
                 if line_index == initial_phase_lines[curr_line].0 {
-                    curr_line += 1;
-                    line_index = 0;
                     match node.direction {
                         Direction::Vertical => {
                             line_origin.x += initial_phase_lines[curr_line].1.width
@@ -650,6 +650,8 @@ where
                             line_origin.y += initial_phase_lines[curr_line].1.height
                         }
                     }
+                    curr_line += 1;
+                    line_index = 0;
                     current_line_size = Size2D::default();
                 }
             }
