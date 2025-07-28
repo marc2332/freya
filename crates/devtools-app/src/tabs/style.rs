@@ -19,8 +19,7 @@ use crate::{
 
 #[allow(non_snake_case)]
 #[component]
-pub fn NodeInspectorStyle(node_id: String) -> Element {
-    let node_id = NodeId::deserialize(&node_id);
+pub fn NodeInspectorStyle(node_id: NodeId) -> Element {
     let Some(node) = use_node_info(node_id) else {
         return Ok(VNode::placeholder());
     };

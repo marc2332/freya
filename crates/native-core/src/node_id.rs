@@ -1,4 +1,7 @@
-use std::ops::Deref;
+use std::{
+    ops::Deref,
+    str::FromStr,
+};
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Copy, PartialEq, Debug, Eq, PartialOrd, Ord, Hash, Default)]
@@ -24,17 +27,21 @@ impl From<shipyard::EntityId> for NodeId {
     }
 }
 
-impl NodeId {
-    pub fn serialize(&self) -> String {
-        format!("{}-{}", self.index(), self.gen())
+impl FromStr for NodeId {
+    type Err = std::fmt::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let Some((index, gen)) = s.split_once('-') else {
+            return Err(std::fmt::Error);
+        };
+        let index = index.parse().map_err(|_| std::fmt::Error)?;
+        let gen = gen.parse().map_err(|_| std::fmt::Error)?;
+        Ok(Self(shipyard::EntityId::new_from_index_and_gen(index, gen)))
     }
+}
 
-    pub fn deserialize(node_id: &str) -> Self {
-        let (index, gen) = node_id.split_once('-').unwrap();
-        Self(shipyard::EntityId::new_from_index_and_gen(
-            index.parse().unwrap(),
-            gen.parse().unwrap(),
-        ))
+impl std::fmt::Display for NodeId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&format!("{}-{}", self.index(), self.gen()))
     }
 }
 

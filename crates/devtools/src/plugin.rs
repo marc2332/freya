@@ -57,22 +57,25 @@ impl FreyaPlugin for DevtoolsPlugin {
                 let mut new_nodes = Vec::new();
 
                 rdom.traverse_depth_first(|node| {
-                    let layout_node = layout.get(node.id()).cloned();
-                    if let Some(layout_node) = layout_node {
-                        let node_type = node.node_type();
-                        new_nodes.push(NodeInfo {
-                            id: node.id(),
-                            parent_id: node.parent_id(),
-                            children_len: node
-                                .children()
-                                .iter()
-                                .filter(|node| layout.get(node.id()).is_some())
-                                .count(),
-                            tag: *node_type.tag().unwrap(),
-                            height: node.height(),
-                            state: get_node_state(&node),
-                            layout_node,
-                        });
+                    // Ignore root element and NativeContainer
+                    if node.height() >= 2 {
+                        let layout_node = layout.get(node.id()).cloned();
+                        if let Some(layout_node) = layout_node {
+                            let node_type = node.node_type();
+                            new_nodes.push(NodeInfo {
+                                id: node.id(),
+                                parent_id: node.parent_id(),
+                                children_len: node
+                                    .children()
+                                    .iter()
+                                    .filter(|node| layout.get(node.id()).is_some())
+                                    .count(),
+                                tag: *node_type.tag().unwrap(),
+                                height: node.height(),
+                                state: get_node_state(&node),
+                                layout_node,
+                            });
+                        }
                     }
                 });
 

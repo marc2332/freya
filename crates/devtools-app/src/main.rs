@@ -95,7 +95,7 @@ pub fn DevtoolsBar() -> Element {
                     route: Route::DOMInspector { },
                     Tab {
                         label {
-                            "Elements"
+                            "Tree Inspector"
                         }
                     }
                 }
@@ -117,16 +117,16 @@ pub enum Route {
         #[nest("/node/:node_id")]
             #[layout(LayoutForNodeInspector)]
                 #[route("/style")]
-                NodeInspectorStyle { node_id: String },
+                NodeInspectorStyle { node_id: NodeId },
                 #[route("/layout")]
-                NodeInspectorLayout { node_id: String },
+                NodeInspectorLayout { node_id: NodeId },
 }
 
 impl Route {
-    pub fn get_node_id(&self) -> Option<NodeId> {
+    pub fn node_id(&self) -> Option<NodeId> {
         match self {
             Self::NodeInspectorStyle { node_id } | Self::NodeInspectorLayout { node_id } => {
-                Some(NodeId::deserialize(node_id))
+                Some(*node_id)
             }
             _ => None,
         }
@@ -135,7 +135,7 @@ impl Route {
 
 #[allow(non_snake_case)]
 #[component]
-fn LayoutForNodeInspector(node_id: String) -> Element {
+fn LayoutForNodeInspector(node_id: NodeId) -> Element {
     let navigator = use_navigator();
 
     rsx!(
@@ -144,7 +144,7 @@ fn LayoutForNodeInspector(node_id: String) -> Element {
             width: "fill",
             height: "fill",
             background: "rgb(30, 30, 30)",
-            margin: "10",
+            margin: "0 10 10 10",
             corner_radius: "16",
             cross_align: "center",
             padding: "6",
@@ -156,9 +156,9 @@ fn LayoutForNodeInspector(node_id: String) -> Element {
                 rect {
                     direction: "horizontal",
                     Link {
-                        to: Route::NodeInspectorStyle { node_id: node_id.clone() },
+                        to: Route::NodeInspectorStyle { node_id },
                         ActivableRoute {
-                            route: Route::NodeInspectorStyle { node_id: node_id.clone() },
+                            route: Route::NodeInspectorStyle { node_id },
                             BottomTab {
                                 label {
                                     "Style"
@@ -167,7 +167,7 @@ fn LayoutForNodeInspector(node_id: String) -> Element {
                         }
                     }
                     Link {
-                        to: Route::NodeInspectorLayout { node_id: node_id.clone() },
+                        to: Route::NodeInspectorLayout { node_id },
                         ActivableRoute {
                             route: Route::NodeInspectorLayout { node_id },
                             BottomTab {
@@ -195,32 +195,29 @@ fn LayoutForNodeInspector(node_id: String) -> Element {
 fn LayoutForDOMInspector() -> Element {
     let route = use_route::<Route>();
 
-    let selected_node_id = route.get_node_id();
+    let selected_node_id = route.node_id();
 
     let is_expanded_vertical = selected_node_id.is_some();
 
     rsx!(
-        rect {
-            height: "fill",
-            ResizableContainer {
-                direction: "horizontal",
-                ResizablePanel {
-                    initial_size: 40.,
-                    rect {
-                        padding: "15",
-                        NodesTree {
-                            selected_node_id,
-                            onselected: move |_node_id: NodeId| {
-                                // platform.send(EventLoopMessage::RequestFullRerender).ok();
-                            }
+        ResizableContainer {
+            direction: "horizontal",
+            ResizablePanel {
+                initial_size: 40.,
+                rect {
+                    padding: "10",
+                    NodesTree {
+                        selected_node_id,
+                        onselected: move |_node_id: NodeId| {
+                            // platform.send(EventLoopMessage::RequestFullRerender).ok();
                         }
                     }
                 }
-                if is_expanded_vertical {
-                    ResizablePanel {
-                        initial_size: 60.,
-                        Outlet::<Route> {}
-                    }
+            }
+            if is_expanded_vertical {
+                ResizablePanel {
+                    initial_size: 60.,
+                    Outlet::<Route> {}
                 }
             }
         }

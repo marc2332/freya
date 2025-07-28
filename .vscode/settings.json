@@ -1,8 +1,13 @@
-{
-    "rust-analyzer.cargo.features": [
-        "devtools",
-        "tracing-subscriber",
-        "docs",
-        "fade-cached-incremental-areas",
-    ]
-}
+// {
+//   "rust-analyzer.linkedProjects": [
+//     {
+//       "path": "./Cargo.toml",
+//       "features": [
+//         "devtools",
+//         "tracing-subscriber",
+//         "docs",
+//         "fade-cached-incremental-areas",
+//       ]
+//     }
+//   ]
+// }

@@ -32,14 +32,13 @@ pub fn NodesTree(selected_node_id: Option<NodeId>, onselected: EventHandler<Node
         radio
             .nodes
             .iter()
-            .enumerate()
-            .filter_map(|(i, node)| {
+            .filter_map(|node| {
                 let parent_is_open = node
                     .parent_id
                     .map(|id| allowed_nodes.contains(&id) && radio.expanded_nodes.contains(&id))
                     .unwrap_or(false);
-                let is_root = i == 0;
-                if parent_is_open || is_root {
+                let is_top_height = node.height == 2;
+                if parent_is_open || is_top_height {
                     allowed_nodes.insert(node.id);
                     let is_open =
                         (node.children_len != 0).then_some(radio.expanded_nodes.contains(&node.id));
@@ -82,10 +81,10 @@ pub fn NodesTree(selected_node_id: Option<NodeId>, onselected: EventHandler<Node
 
                         match router().current() {
                             Route::NodeInspectorLayout { .. } => {
-                                navigator.replace(Route::NodeInspectorLayout { node_id: node_id.serialize() });
+                                navigator.replace(Route::NodeInspectorLayout { node_id });
                             }
                             _ => {
-                                navigator.replace(Route::NodeInspectorStyle { node_id: node_id.serialize() });
+                                navigator.replace(Route::NodeInspectorStyle { node_id });
                             }
                         }
                     },
