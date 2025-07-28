@@ -380,7 +380,7 @@ where
         let mut initial_phase_area = *node_area;
         let mut initial_phase_inner_area = *inner_area;
         let mut initial_phase_available_area = *available_area;
-        let mut initial_phase_flex_grows = FxHashMap::default();
+        let mut initial_phase_flex_grows: Vec<Vec<Length>> = Vec::new();
         let mut initial_phase_sizes = FxHashMap::default();
         let mut initial_phase_lines: Vec<(usize, Size2D)> = Vec::new();
         let mut initial_phase_inner_sizes = Size2D::default();
@@ -446,15 +446,18 @@ where
                 }
 
                 if node.content.is_flex() {
+                    if new_line || initial_phase_flex_grows.is_empty() {
+                        initial_phase_flex_grows.push(Vec::new());
+                    }
                     match node.direction {
                         Direction::Vertical => {
                             if let Some(ff) = child_data.height.flex_grow() {
-                                initial_phase_flex_grows.insert(*child_id, ff);
+                                initial_phase_flex_grows.last_mut().unwrap().push(ff);
                             }
                         }
                         Direction::Horizontal => {
                             if let Some(ff) = child_data.width.flex_grow() {
-                                initial_phase_flex_grows.insert(*child_id, ff);
+                                initial_phase_flex_grows.last_mut().unwrap().push(ff);
                             }
                         }
                     }
@@ -464,38 +467,17 @@ where
 
         let initial_available_area = *available_area;
 
-        let flex_grows = initial_phase_flex_grows
-            .values()
-            .copied()
-            .reduce(|acc, v| acc + v)
-            .unwrap_or_default()
-            .max(Length::new(1.0));
-
-        let flex_axis = AlignAxis::new(&node.direction, AlignmentDirection::Main);
-
-        let flex_available_width = initial_available_area.width() - initial_phase_inner_sizes.width;
-        let flex_available_height =
-            initial_available_area.height() - initial_phase_inner_sizes.height;
-
-        let initial_phase_inner_sizes_with_flex =
-            initial_phase_flex_grows
-                .values()
-                .fold(initial_phase_inner_sizes, |mut acc, f| {
-                    let flex_grow_per = f.get() / flex_grows.get() * 100.;
-
-                    match flex_axis {
-                        AlignAxis::Height => {
-                            let size = flex_available_height / 100. * flex_grow_per;
-                            acc.height += size;
-                        }
-                        AlignAxis::Width => {
-                            let size = flex_available_width / 100. * flex_grow_per;
-                            acc.width += size;
-                        }
-                    }
-
-                    acc
-                });
+        let flex_per_line = if node.content.is_flex() {
+            Self::calculate_available_flex_size(
+                &initial_phase_flex_grows,
+                &node.direction,
+                &initial_available_area,
+                &mut initial_phase_inner_sizes,
+                &mut initial_phase_lines,
+            )
+        } else {
+            Vec::new()
+        };
 
         if needs_initial_phase {
             if node.main_alignment.is_not_start() {
@@ -522,7 +504,7 @@ where
                 Self::align_content(
                     available_area,
                     &initial_phase_inner_area,
-                    initial_phase_inner_sizes_with_flex,
+                    initial_phase_inner_sizes,
                     &node.cross_alignment,
                     &node.direction,
                     AlignmentDirection::Cross,
@@ -535,6 +517,7 @@ where
         // Final phase: measure the children with all the axis and sizes adjusted
         let mut curr_line = 0;
         let mut line_index = 0;
+        let mut flex_index = 0;
         let mut line_origin = available_area.origin;
         let mut lines = Vec::new();
         for child_id in children {
@@ -557,23 +540,31 @@ where
                 false
             };
 
-            if node.content.is_flex() {
-                let flex_grow = initial_phase_flex_grows.get(&child_id);
+            let child_is_flex = match AlignAxis::new(&node.direction, AlignmentDirection::Main) {
+                AlignAxis::Height => child_data.height.is_flex(),
+                AlignAxis::Width => child_data.width.is_flex(),
+            };
 
-                if let Some(flex_grow) = flex_grow {
-                    let flex_grow_per = flex_grow.get() / flex_grows.get() * 100.;
+            if node.content.is_flex() && child_is_flex {
+                if new_line {
+                    flex_index = 0;
+                }
+                let flex_grow = initial_phase_flex_grows[curr_line][flex_index];
+                let (flex_grows, flex_available) = flex_per_line[curr_line];
 
-                    match flex_axis {
-                        AlignAxis::Height => {
-                            let size = flex_available_height / 100. * flex_grow_per;
-                            available_area.size.height = size;
-                        }
-                        AlignAxis::Width => {
-                            let size = flex_available_width / 100. * flex_grow_per;
-                            available_area.size.width = size;
-                        }
+                let flex_grow_per = flex_grow.get() / flex_grows.get() * 100.;
+
+                match AlignAxis::new(&node.direction, AlignmentDirection::Main) {
+                    AlignAxis::Height => {
+                        let size = flex_available / 100. * flex_grow_per;
+                        available_area.size.height = size.get();
+                    }
+                    AlignAxis::Width => {
+                        let size = flex_available / 100. * flex_grow_per;
+                        available_area.size.width = size.get();
                     }
                 }
+                flex_index += 1;
             }
 
             // Only the stacked children will be aligned
@@ -597,7 +588,7 @@ where
                         Self::align_position(
                             available_area,
                             &initial_available_area,
-                            initial_phase_inner_sizes_with_flex,
+                            initial_phase_inner_sizes,
                             &node.cross_alignment,
                             &node.direction,
                             AlignmentDirection::Cross,
@@ -674,6 +665,58 @@ where
                 self.layout.cache_node(child_id, child_areas);
             }
         }
+    }
+
+    fn calculate_available_flex_size(
+        initial_flex_grows: &Vec<Vec<Length>>,
+        direction: &Direction,
+        available_area: &Area,
+        inner_sizes: &mut Size2D,
+        line_sizes: &mut Vec<(usize, Size2D)>,
+    ) -> Vec<(Length, Length)> {
+        let mut flex_per_line = Vec::new();
+        for (i, (_, mut line)) in line_sizes.iter_mut().enumerate() {
+            let initial_flex_grows = &initial_flex_grows[i];
+            let flex_grows = initial_flex_grows
+                .iter()
+                .copied()
+                .reduce(|acc, v| acc + v)
+                .unwrap_or_default()
+                .max(Length::new(1.0));
+
+            let flex_axis = AlignAxis::new(&direction, AlignmentDirection::Main);
+            let flex_available;
+            match flex_axis {
+                AlignAxis::Height => {
+                    flex_available = Length::new(available_area.height() - line.height.clone());
+
+                    initial_flex_grows.iter().fold(&mut line, |acc, f| {
+                        let flex_grow_per = f.get() / flex_grows.get() * 100.;
+
+                        let size = flex_available / 100. * flex_grow_per;
+                        acc.height += size.get();
+
+                        acc
+                    });
+                    inner_sizes.height = inner_sizes.height.max(line.height);
+                }
+                AlignAxis::Width => {
+                    flex_available = Length::new(available_area.width() - line.width.clone());
+
+                    initial_flex_grows.iter().fold(&mut line, |acc, f| {
+                        let flex_grow_per = f.get() / flex_grows.get() * 100.;
+
+                        let size = flex_available / 100. * flex_grow_per;
+                        acc.width += size.get();
+
+                        acc
+                    });
+                    inner_sizes.width = inner_sizes.width.max(line.width);
+                }
+            }
+            flex_per_line.push((flex_grows, flex_available));
+        }
+        flex_per_line
     }
 
     /// Align the content of this node.
