@@ -1,6 +1,9 @@
-use std::sync::{
-    Arc,
-    Mutex,
+use std::{
+    collections::HashMap,
+    sync::{
+        Arc,
+        Mutex,
+    },
 };
 
 use freya_core::{
@@ -28,7 +31,7 @@ use crate::{
     server::run_server,
 };
 
-pub(crate) type Websockets = Vec<SplitSink<WebSocketStream<TokioIo<Upgraded>>, Message>>;
+pub(crate) type Websockets = HashMap<u32, SplitSink<WebSocketStream<TokioIo<Upgraded>>, Message>>;
 pub(crate) type SharedWebsockets = Arc<tokio::sync::Mutex<Websockets>>;
 
 #[derive(Default)]
@@ -94,7 +97,7 @@ impl FreyaPlugin for DevtoolsPlugin {
                 );
                 let websockets = self.websockets.clone();
                 tokio::spawn(async move {
-                    for websocket in websockets.lock().await.iter_mut() {
+                    for websocket in websockets.lock().await.values_mut() {
                         websocket.send(outgoing_message.clone()).await.unwrap();
                     }
                 });

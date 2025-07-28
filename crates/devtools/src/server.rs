@@ -1,6 +1,10 @@
 use std::sync::{
     Arc,
     Mutex,
+    atomic::{
+        AtomicU32,
+        Ordering,
+    },
 };
 
 use futures::{
@@ -33,47 +37,53 @@ use crate::{
 
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 
-/// Handle a HTTP or WebSocket request.
 async fn handle_request(
     nodes: Arc<Mutex<Vec<NodeInfo>>>,
     websockets: SharedWebsockets,
     mut request: Request<Incoming>,
 ) -> Result<Response<Full<Bytes>>, Error> {
-    // Check if the request is a websocket upgrade request.
     if hyper_tungstenite::is_upgrade_request(&request) {
         let (response, websocket) = hyper_tungstenite::upgrade(&mut request, None)?;
 
-        // Spawn a task to handle the websocket connection.
         tokio::spawn(async move {
-            if let Err(e) = serve_websocket(nodes, websockets, websocket).await {
-                eprintln!("Error in websocket connection: {e}");
+            let id = WEBSOCKET_ID.fetch_add(1, Ordering::Relaxed);
+            if let Err(e) = serve_websocket(nodes, websockets.clone(), id, websocket).await {
+                eprintln!("Disconnected, error in websocket connection: {e}");
+                websockets.lock().await.remove(&id);
             }
         });
 
-        // Return the response so the spawned future can continue.
         Ok(response)
     } else {
-        // Handle regular HTTP requests here.
         Ok(Response::new(Full::<Bytes>::from("Hello HTTP!")))
     }
 }
+
+static WEBSOCKET_ID: AtomicU32 = AtomicU32::new(0);
 
 /// Handle a websocket connection.
 async fn serve_websocket(
     nodes: Arc<Mutex<Vec<NodeInfo>>>,
     websockets: SharedWebsockets,
+    id: u32,
     websocket: HyperWebsocket,
 ) -> Result<(), Error> {
     let websocket = websocket.await?;
-    let dom = Message::Text(
+
+    let nodes = Message::Text(
         serde_json::to_string(&Outgoing {
             notification: OutgoingNotification::Nodes(nodes.lock().unwrap().clone()),
         })?
         .into(),
     );
     let (mut write, mut read) = websocket.split();
-    write.send(dom).await?;
-    websockets.lock().await.push(write);
+
+    // Send current nodes snapshot
+    write.send(nodes).await?;
+
+    // Store websocket
+    websockets.lock().await.insert(id, write);
+
     while let Some(message) = read.next().await {
         match message? {
             Message::Text(msg) => {
@@ -90,6 +100,7 @@ async fn serve_websocket(
                 }
             }
             Message::Close(_) => {
+                websockets.lock().await.remove(&id);
                 println!("Disconnected");
             }
             _ => {}
