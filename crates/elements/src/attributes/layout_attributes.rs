@@ -661,4 +661,6 @@ def_attribute!(
     /// }
     /// ```
     layer,
+    /// TODO: add docs
+    aspect_ratio,
 );
