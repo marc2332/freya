@@ -1008,7 +1008,7 @@ where
                         line_size.height -= node.spacing.get();
                         // move available area for new line
                         available_area.origin.y = inner_area.origin.x;
-                        available_area.origin.x += line_size.width;
+                        available_area.origin.x += line_size.width + node.spacing.get();
                         available_area.size.height = inner_area.size.height;
                         line_sizes.push((0, Size2D::default()));
                     }
@@ -1023,7 +1023,7 @@ where
                         line_size.width -= node.spacing.get();
                         // move available area for new line
                         available_area.origin.x = inner_area.origin.x;
-                        available_area.origin.y += line_size.height;
+                        available_area.origin.y += line_size.height + node.spacing.get();
                         available_area.size.width = inner_area.size.width;
                         line_sizes.push((0, Size2D::default()));
                     }
