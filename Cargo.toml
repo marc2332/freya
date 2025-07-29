@@ -28,7 +28,7 @@ plot = ["freya/plot"]
 # generational-box  = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
 
 [workspace.dependencies]
-freya = { path = "crates/freya", version = "0.4" }
+freya = { path = "crates/freya", version = "0.4", features = ["devtools"] }
 freya-devtools = { path = "crates/devtools", version = "0.4" }
 freya-node-state = { path = "crates/state", version = "0.4" }
 freya-winit = { path = "crates/winit", version = "0.4" }

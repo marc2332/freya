@@ -16,9 +16,10 @@ fn app() -> Element {
             width: "100%",
             height: "fill",
             direction: "horizontal",
-            main_align: "center",
+            main_align: "start",
+            cross_align: "center",
             wrap_content: "wrap",
-            border: "1px outer black",
+            border: "1 outer black",
             spacing: "15",
 
             rect {
