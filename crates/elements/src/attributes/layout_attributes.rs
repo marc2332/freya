@@ -431,6 +431,44 @@ def_attribute!(
     /// ```
     content,
 
+    /// ### wrap_content
+    ///
+    /// Controls whether to wrap content into new lines.
+    ///
+    /// Accepted values:
+    ///
+    /// - `wrap`: Wraps content into a new line when there is no more available space in the node's layout `direction`.
+    /// - `no-wrap` (default): content does not wrap, but overflows instead.
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             width: "500",
+    ///             height: "500",
+    ///             direction: "horizontal",
+    ///             rect {
+    ///                 width: "200",
+    ///                 height: "200",
+    ///                 background: "red"
+    ///             },
+    ///             rect {
+    ///                 width: "200",
+    ///                 height: "200",
+    ///                 background: "green"
+    ///             },
+    ///             rect { // Wraps and appears on a new line
+    ///                 width: "200",
+    ///                 height: "200",
+    ///                 background: "blue"
+    ///             },
+    ///         }
+    ///     )
+    /// }
+    /// ```
+    wrap_content,
+
     /// ### main_align
     ///
     /// Control how the inner elements are positioned inside the element. You can combine it with the `direction` attribute to create complex flows.

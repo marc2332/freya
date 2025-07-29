@@ -30,6 +30,10 @@ impl<'a> DioxusDOMAdapter<'a> {
 }
 
 impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
+    fn root_id(&self) -> NodeId {
+        self.rdom.root_id()
+    }
+
     fn get_node(&self, node_id: &NodeId) -> Option<Node> {
         let node = self.rdom.get(*node_id)?;
         let contains_text = node
@@ -65,6 +69,7 @@ impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
             has_layout_references: layout.node_ref.is_some(),
             position: layout.position,
             content: layout.content,
+            wrap_content: layout.wrap_content,
             contains_text,
             spacing: layout.spacing,
         };
@@ -90,10 +95,6 @@ impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
 
     fn is_node_valid(&mut self, node_id: &NodeId) -> bool {
         is_node_valid(self.rdom, &mut self.cache, node_id)
-    }
-
-    fn root_id(&self) -> NodeId {
-        self.rdom.root_id()
     }
 }
 

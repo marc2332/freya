@@ -52,6 +52,7 @@ pub struct Node {
 
     pub content: Content,
 
+    /// Whether children wrap into a new line when there is no more space
     pub wrap_content: WrapContent,
 
     /// A Node might depend on inner sizes but have a fixed position, like scroll views.

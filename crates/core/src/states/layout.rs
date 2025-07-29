@@ -20,7 +20,7 @@ use freya_native_core::{
 };
 use freya_native_core_macro::partial_derive_state;
 use torin::prelude::*;
-
+use torin::wrap_content::WrapContent;
 use crate::{
     custom_attributes::{
         CustomAttributeValues,
@@ -53,6 +53,7 @@ pub struct LayoutState {
     pub cross_alignment: Alignment,
     pub position: Position,
     pub content: Content,
+    pub wrap_content: WrapContent,
     pub node_ref: Option<NodeReference>,
     pub node_id: NodeId,
     pub spacing: Length,
