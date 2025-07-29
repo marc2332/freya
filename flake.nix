@@ -22,14 +22,15 @@
       {
         devShells.default = pkgs.mkShell rec {
           packages = [
-            openssl
-            pkg-config
-            fontconfig
             python3
           ];
           buildInputs = [
             libxkbcommon
             libGL
+            udev
+            openssl
+            pkg-config
+            fontconfig
 
             # WINIT_UNIX_BACKEND=wayland
             wayland

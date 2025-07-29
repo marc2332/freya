@@ -1,10 +1,19 @@
 #[cfg(all(debug_assertions, feature = "hot-reloading"))]
 use dioxus_devtools::DevserverMsg;
-use torin::prelude::{Area, CursorPoint};
+use torin::prelude::{
+    Area,
+    CursorPoint,
+};
 #[cfg(feature = "winit")]
-use winit::window::{CursorIcon, Window};
+use winit::window::{
+    CursorIcon,
+    Window,
+};
 
-use crate::{accessibility::AccessibilityFocusStrategy, events::PlatformEvent};
+use crate::{
+    accessibility::AccessibilityFocusStrategy,
+    events::PlatformEvent,
+};
 
 pub struct TextGroupMeasurement {
     pub text_id: usize,

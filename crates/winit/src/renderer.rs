@@ -6,29 +6,58 @@ use freya_core::{
     dom::SafeDOM,
     event_loop_messages::EventLoopMessage,
     events::{
-        FileEventName, KeyboardEventName, MouseEventName, PlatformEvent, TouchEventName,
+        FileEventName,
+        KeyboardEventName,
+        MouseEventName,
+        PlatformEvent,
+        TouchEventName,
         WheelEventName,
     },
     platform_state::NavigationMode,
 };
-use freya_elements::events::{Code, Key};
+use freya_elements::events::{
+    Code,
+    Key,
+};
 use torin::geometry::CursorPoint;
 use winit::{
     application::ApplicationHandler,
     event::{
-        ElementState, Ime, KeyEvent, MouseButton, MouseScrollDelta, StartCause, Touch, TouchPhase,
+        ElementState,
+        Ime,
+        KeyEvent,
+        MouseButton,
+        MouseScrollDelta,
+        StartCause,
+        Touch,
+        TouchPhase,
         WindowEvent,
     },
-    event_loop::{EventLoop, EventLoopProxy},
+    event_loop::{
+        EventLoop,
+        EventLoopProxy,
+    },
     keyboard::ModifiersState,
 };
 
 use crate::{
     app::AccessibilityTask,
     devtools::Devtools,
-    events::{map_winit_mouse_button, map_winit_touch_force, map_winit_touch_phase},
-    keyboard::{map_winit_key, map_winit_modifiers, map_winit_physical_key},
-    window_state::{CreatedState, NotCreatedState, WindowState},
+    events::{
+        map_winit_mouse_button,
+        map_winit_touch_force,
+        map_winit_touch_phase,
+    },
+    keyboard::{
+        map_winit_key,
+        map_winit_modifiers,
+        map_winit_physical_key,
+    },
+    window_state::{
+        CreatedState,
+        NotCreatedState,
+        WindowState,
+    },
     LaunchConfig,
 };
 
