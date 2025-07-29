@@ -1001,7 +1001,7 @@ where
         match node.direction {
             Direction::Vertical => {
                 should_wrap = node.wrap_content.is_wrap()
-                    && line_sizes.len() > 0
+                    && !line_sizes.is_empty()
                     && child_size.height > available_area.size.height;
                 if let Some((_, line_size)) = line_sizes.last_mut() {
                     if should_wrap {
@@ -1016,7 +1016,7 @@ where
             }
             Direction::Horizontal => {
                 should_wrap = node.wrap_content.is_wrap()
-                    && line_sizes.len() > 0
+                    && !line_sizes.is_empty()
                     && child_size.width > available_area.size.width;
                 if let Some((_, line_size)) = line_sizes.last_mut() {
                     if should_wrap {
