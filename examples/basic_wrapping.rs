@@ -14,9 +14,9 @@ fn app() -> Element {
         rect {
             margin: "20",
             width: "100%",
-            height: "fill",
+            height: "100%",
             direction: "horizontal",
-            main_align: "start",
+            main_align: "center",
             cross_align: "center",
             wrap_content: "wrap",
             border: "1 outer black",

@@ -874,7 +874,6 @@ where
         if line_sizes.is_empty() {
             line_sizes.push((0, Size2D::default()));
         }
-        let amount_lines = line_sizes.len();
         match node.direction {
             Direction::Horizontal => {
                 let (cur_line_len, cur_line) = line_sizes.last_mut().unwrap();
@@ -897,17 +896,9 @@ where
                 available_area.origin.x += child_area.size.width + spacing.get();
                 available_area.size.width -= child_area.size.width + spacing.get();
 
-                // end of line, update inner size
-                if new_line || is_last_sibling {
-                    let prev_line = if is_last_sibling || amount_lines == 1 {
-                        cur_line
-                    } else {
-                        let snd_last = amount_lines - 2;
-                        &mut line_sizes[snd_last].1
-                    };
-
-                    inner_sizes.height += prev_line.height;
-                    inner_sizes.width = inner_sizes.width.max(prev_line.width);
+                let mut update_inner_sizes = |line: &mut Size2D| {
+                    inner_sizes.height += line.height;
+                    inner_sizes.width = inner_sizes.width.max(line.width);
 
                     if node.height.inner_sized() {
                         node_area.size.height = node_area.size.height.max(
@@ -923,7 +914,20 @@ where
                         node_area.size.width = inner_sizes.width
                             + node.padding.horizontal()
                             + node.margin.horizontal();
+                        // Keep the inner area in sync
+                        inner_area.size.width = node_area.size.width
+                            - node.padding.horizontal()
+                            - node.margin.horizontal();
                     }
+                };
+
+                if is_last_sibling {
+                    update_inner_sizes(cur_line);
+                }
+
+                if new_line {
+                    let amount_lines = line_sizes.len();
+                    update_inner_sizes(&mut line_sizes[amount_lines - 2].1);
                 }
             }
             Direction::Vertical => {
@@ -948,16 +952,9 @@ where
                 available_area.size.height -= child_area.size.height + spacing.get();
 
                 // end of line, update inner size
-                if new_line || is_last_sibling {
-                    let prev_line = if is_last_sibling || amount_lines == 1 {
-                        cur_line
-                    } else {
-                        let snd_last = amount_lines - 2;
-                        &mut line_sizes[snd_last].1
-                    };
-
-                    inner_sizes.width += prev_line.width;
-                    inner_sizes.height = inner_sizes.height.max(prev_line.height);
+                let mut update_inner_sizes = |line: &mut Size2D| {
+                    inner_sizes.width += line.width;
+                    inner_sizes.height = inner_sizes.height.max(line.height);
 
                     if node.width.inner_sized() {
                         node_area.size.width = node_area.size.width.max(
@@ -974,7 +971,20 @@ where
                     if node.height.inner_sized() {
                         node_area.size.height =
                             inner_sizes.height + node.padding.vertical() + node.margin.vertical();
+                        // Keep the inner area in sync
+                        inner_area.size.height = node_area.size.height
+                            - node.padding.vertical()
+                            - node.margin.vertical();
                     }
+                };
+
+                if is_last_sibling {
+                    update_inner_sizes(cur_line);
+                }
+
+                if new_line {
+                    let amount_lines = line_sizes.len();
+                    update_inner_sizes(&mut line_sizes[amount_lines - 2].1);
                 }
             }
         }
@@ -991,7 +1001,8 @@ where
         match node.direction {
             Direction::Vertical => {
                 should_wrap = node.wrap_content.is_wrap()
-                    && child_size.height + node.spacing.get() > available_area.size.height;
+                    && line_sizes.len() > 0
+                    && child_size.height > available_area.size.height;
                 if let Some((_, line_size)) = line_sizes.last_mut() {
                     if should_wrap {
                         line_size.height -= node.spacing.get();
@@ -1005,7 +1016,8 @@ where
             }
             Direction::Horizontal => {
                 should_wrap = node.wrap_content.is_wrap()
-                    && child_size.width + node.spacing.get() > available_area.size.width;
+                    && line_sizes.len() > 0
+                    && child_size.width > available_area.size.width;
                 if let Some((_, line_size)) = line_sizes.last_mut() {
                     if should_wrap {
                         line_size.width -= node.spacing.get();
