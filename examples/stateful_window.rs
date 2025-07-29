@@ -7,11 +7,14 @@ use freya::prelude::*;
 
 fn main() {
     launch_cfg(
-        app,
         LaunchConfig::new()
-            .with_title("Window with state")
             .with_state(10)
-            .with_default_font("Impact"),
+            .with_default_font("Impact")
+            .with_window(
+                WindowConfig::default()
+                    .with_app(app)
+                    .with_title("Window with state"),
+            ),
     );
 }
 

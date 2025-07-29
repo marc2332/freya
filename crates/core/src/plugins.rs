@@ -1,17 +1,27 @@
+use std::{
+    cell::RefCell,
+    rc::Rc,
+};
+
 use freya_engine::prelude::{
     Canvas,
     FontCollection,
 };
-use freya_native_core::NodeId;
-use torin::torin::Torin;
 use winit::{
     event_loop::EventLoopProxy,
-    window::Window,
+    window::{
+        Window,
+        WindowId,
+    },
 };
 
 use crate::{
     dom::FreyaDOM,
-    event_loop_messages::EventLoopMessage,
+    event_loop_messages::{
+        EventLoopAppMessage,
+        EventLoopAppMessageAction,
+        EventLoopMessage,
+    },
     events::PlatformEvent,
 };
 
@@ -28,9 +38,12 @@ impl PluginHandle {
     }
 
     /// Emit a [PlatformEvent]. Useful to simulate certain events.
-    pub fn send_platform_event(&self, event: PlatformEvent) {
+    pub fn send_platform_event(&self, event: PlatformEvent, window_id: WindowId) {
         self.proxy
-            .send_event(EventLoopMessage::PlatformEvent(event))
+            .send_event(EventLoopMessage::App(EventLoopAppMessage {
+                window_id: Some(window_id),
+                action: EventLoopAppMessageAction::PlatformEvent(event),
+            }))
             .ok();
     }
 
@@ -41,18 +54,18 @@ impl PluginHandle {
 }
 
 /// Manages all loaded plugins.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct PluginsManager {
-    plugins: Vec<Box<dyn FreyaPlugin>>,
+    plugins: Rc<RefCell<Vec<Box<dyn FreyaPlugin>>>>,
 }
 
 impl PluginsManager {
     pub fn add_plugin(&mut self, plugin: impl FreyaPlugin + 'static) {
-        self.plugins.push(Box::new(plugin))
+        self.plugins.borrow_mut().push(Box::new(plugin))
     }
 
     pub fn send(&mut self, event: PluginEvent, handle: PluginHandle) {
-        for plugin in &mut self.plugins {
+        for plugin in self.plugins.borrow_mut().iter_mut() {
             plugin.on_event(&event, handle.clone())
         }
     }
@@ -65,33 +78,53 @@ pub enum PluginEvent<'a> {
 
     /// Before starting to render the app to the Canvas.
     BeforeRender {
+        window: &'a Window,
         canvas: &'a Canvas,
         font_collection: &'a FontCollection,
-        freya_dom: &'a FreyaDOM,
+        fdom: &'a FreyaDOM,
     },
 
     /// After rendering the app to the Canvas.
     AfterRender {
+        window: &'a Window,
         canvas: &'a Canvas,
         font_collection: &'a FontCollection,
-        freya_dom: &'a FreyaDOM,
+        fdom: &'a FreyaDOM,
     },
 
     /// Before starting to measure the layout.
-    StartedMeasuringLayout(&'a Torin<NodeId>),
+    StartedMeasuringLayout {
+        window: &'a Window,
+        fdom: &'a FreyaDOM,
+    },
 
     /// After measuring the layout.
-    FinishedMeasuringLayout(&'a Torin<NodeId>),
+    FinishedMeasuringLayout {
+        window: &'a Window,
+        fdom: &'a FreyaDOM,
+    },
 
     /// Before starting to process the queued events.
-    StartedMeasuringEvents,
+    StartedMeasuringEvents {
+        window: &'a Window,
+        fdom: &'a FreyaDOM,
+    },
 
     /// After processing the queued events.
-    FinishedMeasuringEvents,
+    FinishedMeasuringEvents {
+        window: &'a Window,
+        fdom: &'a FreyaDOM,
+    },
 
-    StartedUpdatingDOM,
+    StartedUpdatingDOM {
+        window: &'a Window,
+        fdom: &'a FreyaDOM,
+    },
 
-    FinishedUpdatingDOM,
+    FinishedUpdatingDOM {
+        window: &'a Window,
+        fdom: &'a FreyaDOM,
+    },
 }
 
 /// Skeleton for Freya plugins.

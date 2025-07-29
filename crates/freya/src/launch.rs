@@ -1,18 +1,7 @@
-use dioxus::prelude::{
-    ErrorBoundary,
-    ErrorContext,
-};
-use dioxus_core::{
-    Element,
-    VirtualDom,
-};
+use dioxus_core::Element;
+use freya_core::window_config::WindowConfig;
 use freya_winit::{
-    devtools::{
-        DevtoolsReceiver,
-        HighlightedNode,
-    },
     LaunchConfig,
-    WindowConfig,
     WinitRenderer,
 };
 
@@ -48,17 +37,16 @@ use freya_winit::{
 /// ```
 pub fn launch(app: AppComponent) {
     launch_cfg(
-        app,
-        LaunchConfig::<()> {
-            window_config: WindowConfig {
+        LaunchConfig::<()>::default().with_window(
+            WindowConfig {
                 size: (700.0, 500.0),
                 decorations: true,
                 transparent: false,
                 title: "Freya",
                 ..Default::default()
-            },
-            ..Default::default()
-        },
+            }
+            .with_app(app),
+        ),
     )
 }
 
@@ -93,17 +81,16 @@ pub fn launch(app: AppComponent) {
 /// ```
 pub fn launch_with_title(app: AppComponent, title: &'static str) {
     launch_cfg(
-        app,
-        LaunchConfig::<()> {
-            window_config: WindowConfig {
+        LaunchConfig::<()>::default().with_window(
+            WindowConfig {
                 size: (700.0, 500.0),
                 decorations: true,
                 transparent: false,
                 title,
                 ..Default::default()
-            },
-            ..Default::default()
-        },
+            }
+            .with_app(app),
+        ),
     )
 }
 
@@ -136,17 +123,16 @@ pub fn launch_with_title(app: AppComponent, title: &'static str) {
 /// ```
 pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height): (f64, f64)) {
     launch_cfg(
-        app,
-        LaunchConfig::<()> {
-            window_config: WindowConfig {
+        LaunchConfig::<()>::default().with_window(
+            WindowConfig {
                 size: (width, height),
                 decorations: true,
                 transparent: false,
                 title,
                 ..Default::default()
-            },
-            ..Default::default()
-        },
+            }
+            .with_app(app),
+        ),
     )
 }
 
@@ -188,17 +174,9 @@ pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height)
 ///     )
 /// }
 /// ```
-pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>) {
+pub fn launch_cfg<T: 'static + Clone>(config: LaunchConfig<T>) {
     #[cfg(feature = "performance-overlay")]
     let config = config.with_plugin(crate::plugins::PerformanceOverlayPlugin::default());
-
-    use freya_core::dom::{
-        FreyaDOM,
-        SafeDOM,
-    };
-
-    let fdom = FreyaDOM::default();
-    let sdom = SafeDOM::new(fdom);
 
     #[cfg(feature = "tracing-subscriber")]
     {
@@ -215,103 +193,6 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
             .init();
     }
 
-    use dioxus::prelude::Props;
-    use dioxus_core::{
-        fc_to_builder,
-        IntoDynNode,
-    };
-    use dioxus_core_macro::rsx;
-    #[cfg(debug_assertions)]
-    use dioxus_signals::{
-        GlobalSignal,
-        Readable,
-    };
-    use freya_components::NativeContainer;
-    #[cfg(debug_assertions)]
-    use freya_elements as dioxus_elements;
-    use freya_winit::devtools::Devtools;
-
-    #[derive(Props, Clone)]
-    struct RootProps {
-        app: AppComponent,
-        highlighted_node: Option<HighlightedNode>,
-        devtools_receiver: Option<DevtoolsReceiver>,
-    }
-    impl PartialEq for RootProps {
-        fn eq(&self, _other: &Self) -> bool {
-            true
-        }
-    }
-
-    #[allow(non_snake_case)]
-    fn Root(props: RootProps) -> Element {
-        #[allow(non_snake_case)]
-        let App = props.app;
-
-        let handle_error = |e: ErrorContext| {
-            for error in e.errors().iter() {
-                println!("{:?}", error);
-            }
-
-            #[cfg(not(debug_assertions))]
-            std::process::exit(1);
-
-            #[cfg(debug_assertions)]
-            rsx!(
-                rect {
-                    width: "fill",
-                    height: "fill",
-                    background: "rgb(138, 0, 0)",
-                    color: "white",
-                    main_align: "center",
-                    cross_align: "center",
-                    label {
-                        "An unhandled error was thrown, check your logs."
-                    }
-                }
-            )
-        };
-
-        rsx!(
-            NativeContainer {
-                ErrorBoundary {
-                    handle_error,
-                    {
-                        #[cfg(all(feature = "devtools", debug_assertions))]
-                        rsx!(
-                            freya_devtools::DevtoolsView {
-                                highlighted_node: props.highlighted_node.unwrap(),
-                                devtools_receiver: props.devtools_receiver.unwrap(),
-                                App {}
-                            }
-                        )
-                    }
-                    {
-                        #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
-                        rsx!(
-                            App {}
-                        )
-                    }
-                }
-            }
-        )
-    }
-
-    #[cfg(all(feature = "devtools", debug_assertions))]
-    let devtools = Some(Devtools::new());
-
-    #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
-    let devtools: Option<(Devtools, DevtoolsReceiver, HighlightedNode)> = None;
-
-    let vdom = VirtualDom::new_with_props(
-        Root,
-        RootProps {
-            app,
-            devtools_receiver: devtools.as_ref().map(|d| d.1.clone()),
-            highlighted_node: devtools.as_ref().map(|d| d.2.clone()),
-        },
-    );
-
     #[cfg(not(feature = "custom-tokio-rt"))]
     {
         let rt = tokio::runtime::Builder::new_multi_thread()
@@ -320,11 +201,11 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
             .unwrap();
         let _guard = rt.enter();
 
-        WinitRenderer::launch(vdom, sdom, config, devtools.map(|d| d.0));
+        WinitRenderer::launch(config);
     }
 
     #[cfg(feature = "custom-tokio-rt")]
-    WinitRenderer::launch(vdom, sdom, config, devtools.map(|d| d.0), hovered_node);
+    WinitRenderer::launch(config);
 }
 
 type AppComponent = fn() -> Element;

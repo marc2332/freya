@@ -28,16 +28,21 @@ use gilrs::{
     EventType,
     Gilrs,
 };
+use winit::window::WindowId;
 
 fn main() {
-    launch_cfg(app, LaunchConfig::<()>::new().with_plugin(GamePadPlugin))
+    launch_cfg(
+        LaunchConfig::<()>::new()
+            .with_plugin(GamePadPlugin)
+            .with_window(WindowConfig::default().with_app(app)),
+    )
 }
 
 #[derive(Default)]
 pub struct GamePadPlugin;
 
 impl GamePadPlugin {
-    pub fn listen_gamepad(handle: PluginHandle) {
+    pub fn listen_gamepad(handle: PluginHandle, window_id: WindowId) {
         thread::spawn(move || {
             println!("Listening for gamepads");
 
@@ -63,20 +68,26 @@ impl GamePadPlugin {
 
                         if diff_x != 0.0 {
                             x += diff_x * 10.;
-                            handle.send_platform_event(PlatformEvent::Mouse {
-                                name: MouseEventName::MouseMove,
-                                cursor: (x, y).into(),
-                                button: None,
-                            });
+                            handle.send_platform_event(
+                                PlatformEvent::Mouse {
+                                    name: MouseEventName::MouseMove,
+                                    cursor: (x, y).into(),
+                                    button: None,
+                                },
+                                window_id,
+                            );
                         }
 
                         if diff_x != 0.0 {
                             y -= diff_y * 10.;
-                            handle.send_platform_event(PlatformEvent::Mouse {
-                                name: MouseEventName::MouseMove,
-                                cursor: (x, y).into(),
-                                button: None,
-                            });
+                            handle.send_platform_event(
+                                PlatformEvent::Mouse {
+                                    name: MouseEventName::MouseMove,
+                                    cursor: (x, y).into(),
+                                    button: None,
+                                },
+                                window_id,
+                            );
                         }
 
                         let new_event = gilrs.next_event();
@@ -96,8 +107,8 @@ impl GamePadPlugin {
 
 impl FreyaPlugin for GamePadPlugin {
     fn on_event(&mut self, event: &PluginEvent, handle: PluginHandle) {
-        if let PluginEvent::WindowCreated(_) = event {
-            Self::listen_gamepad(handle);
+        if let PluginEvent::WindowCreated(window) = event {
+            Self::listen_gamepad(handle, window.id());
         }
     }
 }

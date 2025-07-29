@@ -5,7 +5,10 @@ use torin::prelude::{
 };
 #[cfg(feature = "winit")]
 use winit::window::Window;
+use winit::window::WindowId;
 
+#[cfg(feature = "winit")]
+use crate::window_config;
 use crate::{
     accessibility::AccessibilityFocusStrategy,
     events::PlatformEvent,
@@ -18,8 +21,7 @@ pub struct TextGroupMeasurement {
     pub cursor_selection: Option<(CursorPoint, CursorPoint)>,
 }
 
-/// Custom EventLoop messages
-pub enum EventLoopMessage {
+pub enum EventLoopAppMessageAction {
     /// Poll the VirtualDOM
     PollVDOM,
     /// Request a rerender
@@ -34,8 +36,8 @@ pub enum EventLoopMessage {
     SetCursorIcon(CursorIcon),
     /// Focus with the given strategy
     FocusAccessibilityNode(AccessibilityFocusStrategy),
-    /// Close the whole app
-    ExitApp,
+    /// Close the window
+    CloseWindow,
     /// Raw platform event, this are low level events.
     PlatformEvent(PlatformEvent),
     /// Accessibility Window Event
@@ -46,9 +48,14 @@ pub enum EventLoopMessage {
     WithWindow(Box<dyn FnOnce(&Window) + Send + Sync>),
 }
 
-#[cfg(feature = "winit")]
-impl From<accesskit_winit::Event> for EventLoopMessage {
-    fn from(value: accesskit_winit::Event) -> Self {
-        Self::Accessibility(value.window_event)
-    }
+pub struct EventLoopAppMessage {
+    pub window_id: Option<WindowId>,
+    pub action: EventLoopAppMessageAction,
+}
+
+/// Message for Freya's event loop
+pub enum EventLoopMessage {
+    App(EventLoopAppMessage),
+    #[cfg(feature = "winit")]
+    NewWindow(window_config::WindowConfig),
 }
