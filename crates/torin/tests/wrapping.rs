@@ -1063,3 +1063,71 @@ pub fn wrapping_absolute_child() {
         Rect::new(Point2D::new(0.0, 100.0), Size2D::new(100.0, 100.0)),
     );
 }
+
+#[test]
+pub fn wrapping_last_line_single_child_cross_align_and_overflow() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_dom = TestingDOM::default();
+    let mut parent = Node::from_size_and_alignments_and_direction(
+        Size::Percentage(Length::new(100.)),
+        Size::Percentage(Length::new(100.)),
+        Alignment::Start,
+        Alignment::Center,
+        Direction::Horizontal,
+    );
+    parent.wrap_content = WrapContent::Wrap;
+    mocked_dom.add(0, None, vec![1, 2, 3], parent);
+    mocked_dom.add(
+        1,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(100.)),
+            Size::Pixels(Length::new(200.)),
+            Direction::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        2,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(100.)),
+            Size::Pixels(Length::new(200.)),
+            Direction::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        3,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(100.)),
+            Size::Pixels(Length::new(200.)),
+            Direction::Vertical,
+        ),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(250.0, 350.0)),
+        &mut measurer,
+        &mut mocked_dom,
+    );
+
+    assert_eq!(
+        layout.get(1).unwrap().visible_area(),
+        Rect::new(Point2D::new(0.0, -25.0), Size2D::new(100.0, 200.0)),
+    );
+
+    assert_eq!(
+        layout.get(2).unwrap().visible_area(),
+        Rect::new(Point2D::new(100.0, -25.0), Size2D::new(100.0, 200.0)),
+    );
+
+    assert_eq!(
+        layout.get(3).unwrap().visible_area(),
+        Rect::new(Point2D::new(0.0, 175.0), Size2D::new(100.0, 200.0)),
+    );
+}
