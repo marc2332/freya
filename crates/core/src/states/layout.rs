@@ -19,8 +19,11 @@ use freya_native_core::{
     SendAnyMap,
 };
 use freya_native_core_macro::partial_derive_state;
-use torin::prelude::*;
-use torin::wrap_content::WrapContent;
+use torin::{
+    prelude::*,
+    wrap_content::WrapContent,
+};
+
 use crate::{
     custom_attributes::{
         CustomAttributeValues,

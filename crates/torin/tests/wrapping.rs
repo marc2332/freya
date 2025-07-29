@@ -2,9 +2,18 @@ use euclid::Rect;
 use torin::{
     content::Content,
     node::Node,
-    prelude::{Alignment, Direction, Length, Point2D, Size2D},
+    prelude::{
+        Alignment,
+        Direction,
+        Length,
+        Point2D,
+        Size2D,
+    },
     size::Size,
-    test_utils::{test_utils, TestingDOM},
+    test_utils::{
+        test_utils,
+        TestingDOM,
+    },
     wrap_content::WrapContent,
 };
 

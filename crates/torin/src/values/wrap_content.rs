@@ -2,7 +2,7 @@
 pub enum WrapContent {
     #[default]
     NoWrap,
-    Wrap
+    Wrap,
 }
 
 impl WrapContent {
@@ -19,7 +19,7 @@ impl WrapContent {
     pub fn pretty(&self) -> String {
         match self {
             Self::NoWrap => "no-wrap".to_owned(),
-            Self::Wrap => "wrap".to_owned()
+            Self::Wrap => "wrap".to_owned(),
         }
     }
 }

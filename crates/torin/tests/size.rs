@@ -1,5 +1,8 @@
 use euclid::Length;
-use torin::{prelude::*, test_utils::*};
+use torin::{
+    prelude::*,
+    test_utils::*,
+};
 
 #[test]
 pub fn unsized_parent_with_child_with_margin() {
