@@ -2,6 +2,7 @@ use euclid::Rect;
 use torin::{
     content::Content,
     node::Node,
+    position::Position,
     prelude::{
         Alignment,
         Direction,
@@ -16,7 +17,6 @@ use torin::{
     },
     wrap_content::WrapContent,
 };
-use torin::position::Position;
 
 #[test]
 pub fn basic_wrapping() {
