@@ -874,6 +874,7 @@ where
         if line_sizes.is_empty() {
             line_sizes.push((0, Size2D::default()));
         }
+        let amount_lines = line_sizes.len();
         match node.direction {
             Direction::Horizontal => {
                 let (cur_line_len, cur_line) = line_sizes.last_mut().unwrap();
@@ -898,10 +899,10 @@ where
 
                 // end of line, update inner size
                 if new_line || is_last_sibling {
-                    let prev_line = if is_last_sibling {
+                    let prev_line = if is_last_sibling || amount_lines == 1 {
                         cur_line
                     } else {
-                        let snd_last = line_sizes.len() - 2;
+                        let snd_last = amount_lines - 2;
                         &mut line_sizes[snd_last].1
                     };
 
@@ -948,10 +949,10 @@ where
 
                 // end of line, update inner size
                 if new_line || is_last_sibling {
-                    let prev_line = if is_last_sibling {
+                    let prev_line = if is_last_sibling || amount_lines == 1 {
                         cur_line
                     } else {
-                        let snd_last = line_sizes.len() - 2;
+                        let snd_last = amount_lines - 2;
                         &mut line_sizes[snd_last].1
                     };
 
