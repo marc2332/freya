@@ -358,7 +358,7 @@ where
         // Used to calculate the spacing and some alignments
         let last_child = if node.spacing.get() > 0. {
             let mut last_child = None;
-            for child_id in children.iter() {
+            for child_id in &children {
                 let Some(child_data) = self.dom_adapter.get_node(child_id) else {
                     continue;
                 };
@@ -417,7 +417,7 @@ where
                 let new_line = node.wrap_content.is_wrap()
                     && Self::wrap_if_not_fit(
                         node,
-                        &child_areas.area.size,
+                        child_areas.area.size,
                         &mut initial_phase_available_area,
                         &initial_phase_inner_area,
                         &mut initial_phase_lines,
@@ -449,15 +449,18 @@ where
                     if new_line || initial_phase_flex_grows.is_empty() {
                         initial_phase_flex_grows.push(Vec::new());
                     }
-                    match node.direction {
-                        Direction::Vertical => {
-                            if let Some(ff) = child_data.height.flex_grow() {
-                                initial_phase_flex_grows.last_mut().unwrap().push(ff);
+                    let last_line = initial_phase_flex_grows.last_mut();
+                    if let Some(last_line) = last_line {
+                        match node.direction {
+                            Direction::Vertical => {
+                                if let Some(ff) = child_data.height.flex_grow() {
+                                    last_line.push(ff);
+                                }
                             }
-                        }
-                        Direction::Horizontal => {
-                            if let Some(ff) = child_data.width.flex_grow() {
-                                initial_phase_flex_grows.last_mut().unwrap().push(ff);
+                            Direction::Horizontal => {
+                                if let Some(ff) = child_data.width.flex_grow() {
+                                    last_line.push(ff);
+                                }
                             }
                         }
                     }
@@ -528,14 +531,18 @@ where
             let initial_phase_size = initial_phase_sizes.get(&child_id);
             let is_last_child = last_child == Some(child_id);
 
-            let new_line = if node.wrap_content.is_wrap() && initial_phase_size.is_some() {
-                Self::wrap_if_not_fit(
-                    node,
-                    initial_phase_size.unwrap(),
-                    available_area,
-                    inner_area,
-                    &mut lines,
-                )
+            let new_line = if node.wrap_content.is_wrap() {
+                if let Some(initial_phase_size) = initial_phase_size {
+                    Self::wrap_if_not_fit(
+                        node,
+                        *initial_phase_size,
+                        available_area,
+                        inner_area,
+                        &mut lines,
+                    )
+                } else {
+                    false
+                }
             } else {
                 false
             };
@@ -611,10 +618,9 @@ where
 
             // Align the Main direction (new line)
             if node.main_alignment.is_not_start() && line_index == 0 {
-                let read_available_area = available_area.clone();
                 Self::align_content(
                     available_area,
-                    &read_available_area,
+                    &available_area.clone(),
                     initial_phase_lines[curr_line].1,
                     &node.main_alignment,
                     &node.direction,
@@ -627,7 +633,7 @@ where
                 child_id,
                 &child_data,
                 inner_area,
-                &available_area,
+                available_area,
                 must_cache_children,
                 node_is_dirty,
                 Phase::Final,
@@ -668,11 +674,11 @@ where
     }
 
     fn calculate_available_flex_size(
-        initial_flex_grows: &Vec<Vec<Length>>,
+        initial_flex_grows: &[Vec<Length>],
         direction: &Direction,
         available_area: &Area,
         inner_sizes: &mut Size2D,
-        line_sizes: &mut Vec<(usize, Size2D)>,
+        line_sizes: &mut [(usize, Size2D)],
     ) -> Vec<(Length, Length)> {
         let mut flex_per_line = Vec::new();
         for (i, (_, mut line)) in line_sizes.iter_mut().enumerate() {
@@ -684,11 +690,11 @@ where
                 .unwrap_or_default()
                 .max(Length::new(1.0));
 
-            let flex_axis = AlignAxis::new(&direction, AlignmentDirection::Main);
+            let flex_axis = AlignAxis::new(direction, AlignmentDirection::Main);
             let flex_available;
             match flex_axis {
                 AlignAxis::Height => {
-                    flex_available = Length::new(available_area.height() - line.height.clone());
+                    flex_available = Length::new(available_area.height() - line.height);
 
                     initial_flex_grows.iter().fold(&mut line, |acc, f| {
                         let flex_grow_per = f.get() / flex_grows.get() * 100.;
@@ -701,7 +707,7 @@ where
                     inner_sizes.height = inner_sizes.height.max(line.height);
                 }
                 AlignAxis::Width => {
-                    flex_available = Length::new(available_area.width() - line.width.clone());
+                    flex_available = Length::new(available_area.width() - line.width);
 
                     initial_flex_grows.iter().fold(&mut line, |acc, f| {
                         let flex_grow_per = f.get() / flex_grows.get() * 100.;
@@ -898,8 +904,9 @@ where
                     }
 
                     if node.width.inner_sized() {
-                        node_area.size.width =
-                            inner_sizes.width + node.padding.horizontal() + node.margin.horizontal()
+                        node_area.size.width = inner_sizes.width
+                            + node.padding.horizontal()
+                            + node.margin.horizontal();
                     }
                 }
             }
@@ -951,7 +958,7 @@ where
 
                     if node.height.inner_sized() {
                         node_area.size.height =
-                            inner_sizes.height + node.padding.vertical() + node.margin.vertical()
+                            inner_sizes.height + node.padding.vertical() + node.margin.vertical();
                     }
                 }
             }
@@ -960,7 +967,7 @@ where
 
     fn wrap_if_not_fit(
         node: &Node,
-        child_size: &Size2D,
+        child_size: Size2D,
         available_area: &mut Area,
         inner_area: &Area,
         line_sizes: &mut Vec<(usize, Size2D)>,
