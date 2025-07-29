@@ -171,6 +171,9 @@ impl ParseAttribute for LayoutState {
             AttributeName::Content => {
                 self.content = Content::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
+            AttributeName::WrapContent => {
+                self.wrap_content = WrapContent::parse(attr.value.as_text().ok_or(ParseError)?)?;
+            }
             AttributeName::Reference => {
                 if let OwnedAttributeValue::Custom(CustomAttributeValues::Reference(reference)) =
                     attr.value
@@ -225,6 +228,7 @@ impl State<CustomAttributeValues> for LayoutState {
             AttributeName::PositionBottom,
             AttributeName::PositionLeft,
             AttributeName::Content,
+            AttributeName::WrapContent,
             AttributeName::Spacing,
         ]));
 

@@ -12,10 +12,11 @@ fn main() {
 fn app() -> Element {
     rsx!(
         rect {
-            width: "800",
+            margin: "20",
+            width: "100%",
             height: "fill",
             direction: "horizontal",
-            main_align: "space-around",
+            main_align: "center",
             wrap_content: "wrap",
             border: "1px outer black",
             spacing: "15",
