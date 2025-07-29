@@ -1,19 +1,10 @@
-use euclid::Rect;
+use euclid::{Rect};
 use torin::{
     content::Content,
     node::Node,
-    prelude::{
-        Alignment,
-        Direction,
-        Length,
-        Point2D,
-        Size2D,
-    },
+    prelude::{Alignment, Direction, Length, Point2D, Size2D},
     size::Size,
-    test_utils::{
-        test_utils,
-        TestingDOM,
-    },
+    test_utils::{test_utils, TestingDOM},
     wrap_content::WrapContent,
 };
 
@@ -774,7 +765,88 @@ pub fn flex_min_width_wrapping() {
 pub fn relative_children_wrapping() {}
 
 #[test]
-pub fn wrapping_padding_margin() {}
+pub fn wrapping_padding() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_dom = TestingDOM::default();
+    let mut parent = Node::from_size_and_alignments_and_direction_and_spacing(
+        Size::Percentage(Length::new(100.)),
+        Size::Percentage(Length::new(100.)),
+        Alignment::Center,
+        Alignment::Start,
+        Direction::Horizontal,
+        Length::new(15.0),
+    );
+    parent.wrap_content = WrapContent::Wrap;
+    mocked_dom.add(0, None, vec![1, 2, 3, 4], parent);
+    mocked_dom.add(
+        1,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(100.)),
+            Size::Pixels(Length::new(100.)),
+            Direction::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        2,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(100.)),
+            Size::Pixels(Length::new(100.)),
+            Direction::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        3,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(75.)),
+            Size::Pixels(Length::new(100.)),
+            Direction::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        4,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(100.)),
+            Size::Pixels(Length::new(100.)),
+            Direction::Vertical,
+        ),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(250.0, 1000.0)),
+        &mut measurer,
+        &mut mocked_dom,
+    );
+
+    assert_eq!(
+        layout.get(1).unwrap().visible_area(),
+        Rect::new(Point2D::new(17.5, 0.0), Size2D::new(100.0, 100.0)),
+    );
+
+    assert_eq!(
+        layout.get(2).unwrap().visible_area(),
+        Rect::new(Point2D::new(132.5, 0.0), Size2D::new(100.0, 100.0)),
+    );
+
+    assert_eq!(
+        layout.get(3).unwrap().visible_area(),
+        Rect::new(Point2D::new(30.0, 100.0), Size2D::new(75.0, 100.0)),
+    );
+
+    assert_eq!(
+        layout.get(4).unwrap().visible_area(),
+        Rect::new(Point2D::new(120.0, 100.0), Size2D::new(100.0, 100.0)),
+    );
+}
 
 #[test]
 pub fn wrapping_large_single_child() {}

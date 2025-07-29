@@ -3,24 +3,11 @@ use rustc_hash::FxHashMap;
 
 use crate::{
     custom_measurer::LayoutMeasurer,
-    dom_adapter::{
-        DOMAdapter,
-        LayoutNode,
-        NodeKey,
-    },
-    geometry::{
-        Area,
-        Size2D,
-    },
+    dom_adapter::{DOMAdapter, LayoutNode, NodeKey},
+    geometry::{Area, Size2D},
     node::Node,
     prelude::{
-        AlignAxis,
-        Alignment,
-        AlignmentDirection,
-        AreaModel,
-        Direction,
-        LayoutMetadata,
-        Length,
+        AlignAxis, Alignment, AlignmentDirection, AreaModel, Direction, LayoutMetadata, Length,
         Torin,
     },
     size::Size,
@@ -876,7 +863,7 @@ where
                 let (cur_line_len, cur_line) = line_sizes.last_mut().unwrap();
                 *cur_line_len += 1;
 
-                // Don't apply spacing to last child in the line
+                // Don't apply spacing to last child
                 let spacing = (!is_last_sibling)
                     .then_some(node.spacing)
                     .unwrap_or_default();
@@ -927,7 +914,7 @@ where
 
                 *cur_line_len += 1;
 
-                // Don't apply spacing to last child in the line
+                // Don't apply spacing to last child
                 let spacing = (!is_last_sibling)
                     .then_some(node.spacing)
                     .unwrap_or_default();
@@ -989,25 +976,29 @@ where
             Direction::Vertical => {
                 should_wrap = node.wrap_content.is_wrap()
                     && child_size.height + node.spacing.get() > available_area.size.height;
-                if should_wrap {
-                    let line_size = line_sizes.last().unwrap().1;
-                    // move available area for new line
-                    available_area.origin.y = inner_area.origin.x;
-                    available_area.origin.x += line_size.width;
-                    available_area.size.height = inner_area.size.height;
-                    line_sizes.push((0, Size2D::default()));
+                if let Some((_, line_size)) = line_sizes.last_mut() {
+                    if should_wrap {
+                        line_size.height -= node.spacing.get();
+                        // move available area for new line
+                        available_area.origin.y = inner_area.origin.x;
+                        available_area.origin.x += line_size.width;
+                        available_area.size.height = inner_area.size.height;
+                        line_sizes.push((0, Size2D::default()));
+                    }
                 }
             }
             Direction::Horizontal => {
                 should_wrap = node.wrap_content.is_wrap()
                     && child_size.width + node.spacing.get() > available_area.size.width;
-                if should_wrap {
-                    let line_size = line_sizes.last().unwrap().1;
-                    // move available area for new line
-                    available_area.origin.x = inner_area.origin.x;
-                    available_area.origin.y += line_size.height;
-                    available_area.size.width = inner_area.size.width;
-                    line_sizes.push((0, Size2D::default()));
+                if let Some((_, line_size)) = line_sizes.last_mut() {
+                    if should_wrap {
+                        line_size.width -= node.spacing.get();
+                        // move available area for new line
+                        available_area.origin.x = inner_area.origin.x;
+                        available_area.origin.y += line_size.height;
+                        available_area.size.width = inner_area.size.width;
+                        line_sizes.push((0, Size2D::default()));
+                    }
                 }
             }
         }
