@@ -3,11 +3,24 @@ use rustc_hash::FxHashMap;
 
 use crate::{
     custom_measurer::LayoutMeasurer,
-    dom_adapter::{DOMAdapter, LayoutNode, NodeKey},
-    geometry::{Area, Size2D},
+    dom_adapter::{
+        DOMAdapter,
+        LayoutNode,
+        NodeKey,
+    },
+    geometry::{
+        Area,
+        Size2D,
+    },
     node::Node,
     prelude::{
-        AlignAxis, Alignment, AlignmentDirection, AreaModel, Direction, LayoutMetadata, Length,
+        AlignAxis,
+        Alignment,
+        AlignmentDirection,
+        AreaModel,
+        Direction,
+        LayoutMetadata,
+        Length,
         Torin,
     },
     size::Size,
@@ -531,7 +544,7 @@ where
             let initial_phase_size = initial_phase_sizes.get(&child_id);
             let is_last_child = last_child == Some(child_id);
 
-            let new_line = if node.wrap_content.is_wrap() {
+            let new_line = if node.wrap_content.is_wrap() && child_data.position.is_stacked() {
                 if let Some(initial_phase_size) = initial_phase_size {
                     Self::wrap_if_not_fit(
                         node,
@@ -547,85 +560,88 @@ where
                 false
             };
 
-            let child_is_flex = match AlignAxis::new(&node.direction, AlignmentDirection::Main) {
-                AlignAxis::Height => child_data.height.is_flex(),
-                AlignAxis::Width => child_data.width.is_flex(),
-            };
+            if child_data.position.is_stacked() {
+                let child_is_flex = match AlignAxis::new(&node.direction, AlignmentDirection::Main)
+                {
+                    AlignAxis::Height => child_data.height.is_flex(),
+                    AlignAxis::Width => child_data.width.is_flex(),
+                };
 
-            if node.content.is_flex() && child_is_flex {
-                if new_line {
-                    flex_index = 0;
-                }
-                let flex_grow = initial_phase_flex_grows[curr_line][flex_index];
-                let (flex_grows, flex_available) = flex_per_line[curr_line];
-
-                let flex_grow_per = flex_grow.get() / flex_grows.get() * 100.;
-
-                match AlignAxis::new(&node.direction, AlignmentDirection::Main) {
-                    AlignAxis::Height => {
-                        let size = flex_available / 100. * flex_grow_per;
-                        available_area.size.height = size.get();
+                if node.content.is_flex() && child_is_flex {
+                    if new_line {
+                        flex_index = 0;
                     }
-                    AlignAxis::Width => {
-                        let size = flex_available / 100. * flex_grow_per;
-                        available_area.size.width = size.get();
+                    let flex_grow = initial_phase_flex_grows[curr_line][flex_index];
+                    let (flex_grows, flex_available) = flex_per_line[curr_line];
+
+                    let flex_grow_per = flex_grow.get() / flex_grows.get() * 100.;
+
+                    match AlignAxis::new(&node.direction, AlignmentDirection::Main) {
+                        AlignAxis::Height => {
+                            let size = flex_available / 100. * flex_grow_per;
+                            available_area.size.height = size.get();
+                        }
+                        AlignAxis::Width => {
+                            let size = flex_available / 100. * flex_grow_per;
+                            available_area.size.width = size.get();
+                        }
                     }
+                    flex_index += 1;
                 }
-                flex_index += 1;
-            }
 
-            // Only the stacked children will be aligned
-            if node.main_alignment.is_spaced() && child_data.position.is_stacked() {
-                // Align the Main axis if necessary
-                Self::align_position(
-                    available_area,
-                    &initial_available_area,
-                    initial_phase_lines[curr_line].1,
-                    &node.main_alignment,
-                    &node.direction,
-                    AlignmentDirection::Main,
-                    initial_phase_lines[curr_line].0,
-                    line_index == 0,
-                );
-            }
+                // Only the stacked children will be aligned
+                if node.main_alignment.is_spaced() {
+                    // Align the Main axis if necessary
+                    Self::align_position(
+                        available_area,
+                        &initial_available_area,
+                        initial_phase_lines[curr_line].1,
+                        &node.main_alignment,
+                        &node.direction,
+                        AlignmentDirection::Main,
+                        initial_phase_lines[curr_line].0,
+                        line_index == 0,
+                    );
+                }
 
-            if node.cross_alignment.is_not_start() {
-                if let Some(initial_phase_size) = initial_phase_size {
-                    if line_index == 0 {
-                        Self::align_position(
+                if node.cross_alignment.is_not_start() {
+                    if let Some(initial_phase_size) = initial_phase_size {
+                        if line_index == 0 {
+                            Self::align_position(
+                                available_area,
+                                &initial_available_area,
+                                initial_phase_inner_sizes,
+                                &node.cross_alignment,
+                                &node.direction,
+                                AlignmentDirection::Cross,
+                                initial_phase_lines.len(),
+                                curr_line == 0,
+                            );
+                            line_origin = available_area.origin;
+                        }
+                        // Align the Cross direction (child in line)
+                        Self::align_content(
                             available_area,
-                            &initial_available_area,
-                            initial_phase_inner_sizes,
+                            &Area::new(line_origin, initial_phase_lines[curr_line].1),
+                            *initial_phase_size,
                             &node.cross_alignment,
                             &node.direction,
                             AlignmentDirection::Cross,
-                            initial_phase_lines.len(),
-                            curr_line == 0,
                         );
-                        line_origin = available_area.origin;
                     }
-                    // Align the Cross direction (child in line)
+                }
+
+                // Align the Main direction (new line)
+                if node.main_alignment.is_not_start() && line_index == 0 {
                     Self::align_content(
                         available_area,
-                        &Area::new(line_origin, initial_phase_lines[curr_line].1),
-                        *initial_phase_size,
-                        &node.cross_alignment,
+                        &available_area.clone(),
+                        initial_phase_lines[curr_line].1,
+                        &node.main_alignment,
                         &node.direction,
-                        AlignmentDirection::Cross,
+                        AlignmentDirection::Main,
                     );
                 }
-            }
-
-            // Align the Main direction (new line)
-            if node.main_alignment.is_not_start() && line_index == 0 {
-                Self::align_content(
-                    available_area,
-                    &available_area.clone(),
-                    initial_phase_lines[curr_line].1,
-                    &node.main_alignment,
-                    &node.direction,
-                    AlignmentDirection::Main,
-                );
             }
 
             // Final measurement
@@ -911,7 +927,6 @@ where
             }
             Direction::Vertical => {
                 let (cur_line_len, cur_line) = line_sizes.last_mut().unwrap();
-
                 *cur_line_len += 1;
 
                 // Don't apply spacing to last child
