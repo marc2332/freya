@@ -322,7 +322,6 @@ impl Application {
     pub fn render(
         &mut self,
         scale_factor: f32,
-        background: Color,
         font_collection: &mut FontCollection,
         font_manager: &mut FontMgr,
         fallback_fonts: &[String],
@@ -339,7 +338,7 @@ impl Application {
 
         self.render_with_pipeline(
             scale_factor,
-            background,
+            self.window_config.background,
             font_collection,
             font_manager,
             fallback_fonts,

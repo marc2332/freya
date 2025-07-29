@@ -22,7 +22,6 @@ use freya_elements::events::{
     Code,
     Key,
 };
-use skia_safe::Color;
 use torin::geometry::CursorPoint;
 use winit::{
     application::ApplicationHandler,
@@ -328,7 +327,6 @@ impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<State>
 
                     app.render(
                         scale_factor as f32,
-                        Color::WHITE,
                         state.font_collection,
                         state.font_mgr,
                         state.fallback_fonts,
