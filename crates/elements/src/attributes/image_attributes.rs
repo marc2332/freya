@@ -48,34 +48,6 @@ def_attribute!(
     /// This attribute is primarily used in conjunction with the `use_camera` hook to display camera output.
     image_reference,
 
-    /// `aspect_ratio` controls how an `image` element is rendered when facing unexpected dimensions.
-    ///
-    /// Accepted values:
-    /// - `fit`: The image will be rendered with its original dimensions.
-    /// - `none`: The image will be rendered stretching in all the maximum dimensions.
-    /// - `min` (default): The image will be rendered with the minimum dimensions possible.
-    /// - `max`: The image will be rendered with the maximum dimensions possible.
-    ///
-    /// ### Example
-    ///
-    /// ```rust, no_run
-    /// # use freya::prelude::*;
-    /// static RUST_LOGO: &[u8] = include_bytes!("../_docs/rust_logo.png");
-    ///
-    /// fn app() -> Element {
-    ///     let image_data = static_bytes(RUST_LOGO);
-    ///     rsx!(
-    ///         image {
-    ///             image_data,
-    ///             width: "100%",
-    ///             height: "100%",
-    ///             aspect_ratio: "max"
-    ///         }
-    ///     )
-    /// }
-    /// ```
-    aspect_ratio,
-
     /// `cover` controls how an `image` element position is rendered inside the given dimensions.
     ///
     /// Accepted values:

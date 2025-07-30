@@ -41,7 +41,6 @@ use crate::{
         ParseError,
     },
     values::{
-        AspectRatio,
         ImageCover,
         SamplingMode,
     },
@@ -52,7 +51,6 @@ pub struct ImageState {
     pub image_sampling: SamplingMode,
     pub image_data: Option<AttributesBytes>,
     pub image_cache_key: Option<ImageCacheKey>,
-    pub aspect_ratio: AspectRatio,
     pub image_cover: ImageCover,
     pub image_ref: Option<ImageReference>,
 }
@@ -76,10 +74,6 @@ impl ParseAttribute for ImageState {
                 if let OwnedAttributeValue::Text(key) = attr.value {
                     self.image_cache_key = Some(ImageCacheKey(key.clone()));
                 }
-            }
-            AttributeName::AspectRatio => {
-                self.aspect_ratio = AspectRatio::parse(attr.value.as_text().ok_or(ParseError)?)
-                    .map_err(|_| ParseError)?;
             }
             AttributeName::ImageCover => {
                 self.image_cover = ImageCover::parse(attr.value.as_text().ok_or(ParseError)?)
@@ -113,7 +107,6 @@ impl State<CustomAttributeValues> for ImageState {
             AttributeName::Sampling,
             AttributeName::ImageData,
             AttributeName::ImageCacheKey,
-            AttributeName::AspectRatio,
             AttributeName::ImageCover,
             AttributeName::ImageReference,
         ]));

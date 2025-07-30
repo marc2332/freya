@@ -11,7 +11,6 @@ use crate::{
         ImagesCache,
     },
     states::ImageState,
-    values::AspectRatio,
 };
 
 pub struct ImageData {
@@ -51,26 +50,8 @@ pub fn get_or_create_image(
         None
     }?;
 
-    let image_width = image.width() as f32;
-    let image_height = image.height() as f32;
-
-    let width_ratio = area_size.width / image.width() as f32;
-    let height_ratio = area_size.height / image.height() as f32;
-
-    let size = match image_state.aspect_ratio {
-        AspectRatio::Max => {
-            let ratio = width_ratio.max(height_ratio);
-
-            Size2D::new(image_width * ratio, image_height * ratio)
-        }
-        AspectRatio::Min => {
-            let ratio = width_ratio.min(height_ratio);
-
-            Size2D::new(image_width * ratio, image_height * ratio)
-        }
-        AspectRatio::Fit => Size2D::new(image_width, image_height),
-        AspectRatio::None => *area_size,
-    };
-
-    Some(ImageData { image, size })
+    Some(ImageData {
+        image,
+        size: *area_size,
+    })
 }

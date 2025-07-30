@@ -58,6 +58,7 @@ pub struct LayoutState {
     pub node_ref: Option<NodeReference>,
     pub node_id: NodeId,
     pub spacing: Length,
+    pub aspect_ratio: AspectRatio,
 }
 
 impl ParseAttribute for LayoutState {
@@ -185,6 +186,10 @@ impl ParseAttribute for LayoutState {
                         .map_err(|_| ParseError)?,
                 );
             }
+            AttributeName::AspectRatio => {
+                self.aspect_ratio = AspectRatio::parse(attr.value.as_text().ok_or(ParseError)?)
+                    .map_err(|_| ParseError)?;
+            }
             _ => {}
         }
         Ok(())
@@ -224,6 +229,7 @@ impl State<CustomAttributeValues> for LayoutState {
             AttributeName::PositionLeft,
             AttributeName::Content,
             AttributeName::Spacing,
+            AttributeName::AspectRatio,
         ]));
 
     fn update<'a>(

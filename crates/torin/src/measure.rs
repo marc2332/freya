@@ -18,6 +18,7 @@ use crate::{
         Alignment,
         AlignmentDirection,
         AreaModel,
+        AspectRatio,
         Direction,
         LayoutMetadata,
         Length,
@@ -104,6 +105,26 @@ where
                 self.layout_metadata.root_area.height(),
                 phase,
             );
+
+            if node.aspect_ratio == AspectRatio::Fill || node.aspect_ratio == AspectRatio::Fit {
+                // if any are over 1.0 then its an overflow1
+                let parent_width_overflow = area_size.width / parent_area.width();
+                let parent_height_overflow = area_size.height / parent_area.height();
+
+                // we need to scale by the biggest overflow,
+                // that will assure us that even of the other dimension is overflowing but a little less,
+                // it wont be after the operation.
+                // same applies for `AspectRatio::Fill`, but in that case it will be divided by the value that will make it bigger the least.
+                // because closer to 1 means multiplies the least.
+                let divisor = parent_width_overflow.max(parent_height_overflow);
+
+                if node.aspect_ratio == AspectRatio::Fill
+                    || parent_width_overflow > 1.0
+                    || parent_height_overflow > 1.0
+                {
+                    area_size /= divisor;
+                }
+            }
 
             // If available, run a custom layout measure function
             // This is useful when you use third-party libraries (e.g. rust-skia, cosmic-text) to measure text layouts

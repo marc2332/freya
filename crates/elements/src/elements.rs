@@ -37,6 +37,7 @@ def_element!(
         position_bottom,
         position_left,
         layer,
+        aspect_ratio,
 
         // Children layout
         direction,
@@ -186,6 +187,7 @@ def_element!(
         position_bottom,
         position_left,
         layer,
+        aspect_ratio,
 
         // Children layout
         main_align,
@@ -327,6 +329,7 @@ def_element!(
         position_bottom,
         position_left,
         layer,
+        aspect_ratio,
 
         // Children layout
         main_align,
@@ -487,6 +490,7 @@ def_element!(
         position_bottom,
         position_left,
         layer,
+        aspect_ratio,
 
         // Children layout
         direction,
@@ -504,7 +508,6 @@ def_element!(
 
         // Image
         image_data,
-        aspect_ratio,
         cover,
         cache_key,
         sampling,
@@ -619,6 +622,7 @@ def_element!(
         position_bottom,
         position_left,
         layer,
+        aspect_ratio,
 
         // Transform
         rotate,

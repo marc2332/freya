@@ -51,6 +51,7 @@ pub enum AttributeName {
     Content,
     CanvasReference,
     Layer,
+    AspectRatio,
     OffsetY,
     OffsetX,
     Reference,
@@ -72,7 +73,6 @@ pub enum AttributeName {
     Scale,
 
     // Image element
-    AspectRatio,
     ImageCover,
     ImageCacheKey,
     Sampling,

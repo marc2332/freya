@@ -661,6 +661,31 @@ def_attribute!(
     /// }
     /// ```
     layer,
-    /// TODO: add docs
+
+    /// `aspect_ratio` controls how an element is rendered when facing unexpected dimensions.
+    ///
+    /// Accepted values:
+    /// - `none` (default): The element will be rendered normally.
+    /// - `fit`: The element will be rendered with its original dimensions but scaled down to fit the container when needed.
+    /// - `fill`: The element will be rendered with its original dimensions but scaled to fill the container.
+    ///
+    ///
+    /// ### Example
+    ///
+    /// ```rust, no_run
+    /// # use freya::prelude::*;
+    ///
+    /// fn app() -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             width: 200,
+    ///             height: "50",
+    ///             rect { // will be 50x50
+    ///                 aspect_ratio: "min"
+    ///             }
+    ///         }
+    ///     )
+    /// }
+    /// ```
     aspect_ratio,
 );
