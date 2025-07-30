@@ -586,7 +586,7 @@ pub fn fill_size() {
     mocked_dom.add(
         0,
         None,
-        vec![1, 2],
+        vec![1, 2, 3],
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
@@ -613,6 +613,16 @@ pub fn fill_size() {
             Direction::Vertical,
         ),
     );
+    mocked_dom.add(
+        3,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Percentage(Length::new(100.0)),
+            Size::Fill,
+            Direction::Vertical,
+        ),
+    );
 
     layout.measure(
         0,
@@ -629,6 +639,10 @@ pub fn fill_size() {
     assert_eq!(
         layout.get(2).unwrap().visible_area().round(),
         Rect::new(Point2D::new(0.0, 300.0), Size2D::new(1000.0, 700.0)),
+    );
+    assert_eq!(
+        layout.get(3).unwrap().visible_area().round(),
+        Rect::new(Point2D::new(0.0, 1000.0), Size2D::new(1000.0, 0.0)),
     );
 }
 

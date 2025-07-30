@@ -495,37 +495,16 @@ where
             Vec::new()
         };
 
-        if needs_initial_phase {
-            if node.main_alignment.is_not_start() {
-                // Adjust the available and inner areas of the Main axis
-                Self::shrink_area_to_fit_when_unbounded(
-                    available_area,
-                    &initial_phase_area,
-                    &mut initial_phase_inner_area,
-                    node,
-                    AlignmentDirection::Main,
-                );
-            }
-
-            if node.cross_alignment.is_not_start() || node.content.is_fit() {
-                // Adjust the available and inner areas of the Cross axis
-                Self::shrink_area_to_fit_when_unbounded(
-                    available_area,
-                    &initial_phase_area,
-                    &mut initial_phase_inner_area,
-                    node,
-                    AlignmentDirection::Cross,
-                );
-                // Align the Cross axis (all lines)
-                Self::align_content(
-                    available_area,
-                    &initial_phase_inner_area,
-                    initial_phase_inner_sizes,
-                    &node.cross_alignment,
-                    &node.direction,
-                    AlignmentDirection::Cross,
-                );
-            }
+        if node.cross_alignment.is_not_start() {
+            // Align the Cross axis (all lines)
+            Self::align_content(
+                available_area,
+                &initial_phase_inner_area,
+                initial_phase_inner_sizes,
+                &node.cross_alignment,
+                &node.direction,
+                AlignmentDirection::Cross,
+            );
         }
 
         let initial_available_area = *available_area;
@@ -1010,6 +989,7 @@ where
                         available_area.origin.y = inner_area.origin.x;
                         available_area.origin.x += line_size.width + node.spacing.get();
                         available_area.size.height = inner_area.size.height;
+                        available_area.size.width -= line_size.width + node.spacing.get();
                         line_sizes.push((0, Size2D::default()));
                     }
                 }
@@ -1025,94 +1005,12 @@ where
                         available_area.origin.x = inner_area.origin.x;
                         available_area.origin.y += line_size.height + node.spacing.get();
                         available_area.size.width = inner_area.size.width;
+                        available_area.size.height -= line_size.height + node.spacing.get();
                         line_sizes.push((0, Size2D::default()));
                     }
                 }
             }
         }
         should_wrap
-    }
-
-    /// Shrink the available area and inner area of a parent node when for example height is set to "auto",
-    /// direction is vertical and main_alignment is set to "center" or "end" or the content is set to "fit".
-    /// The intended usage is to call this after the first measurement and before the second,
-    /// this way the second measurement will align the content relatively to the parent element instead
-    /// of overflowing due to being aligned relatively to the upper parent element
-    fn shrink_area_to_fit_when_unbounded(
-        available_area: &mut Area,
-        node_area: &Area,
-        inner_area: &mut Area,
-        parent_node: &Node,
-        alignment_direction: AlignmentDirection,
-    ) {
-        struct NodeData<'a> {
-            pub inner_origin: &'a mut f32,
-            pub inner_size: &'a mut f32,
-            pub area_origin: f32,
-            pub area_size: f32,
-            pub one_side_padding: f32,
-            pub two_sides_padding: f32,
-            pub one_side_margin: f32,
-            pub two_sides_margin: f32,
-            pub available_size: &'a mut f32,
-        }
-
-        let axis = AlignAxis::new(&parent_node.direction, alignment_direction);
-        let (is_vertical_not_start, is_horizontal_not_start) = match parent_node.direction {
-            Direction::Vertical => (
-                parent_node.main_alignment.is_not_start(),
-                parent_node.cross_alignment.is_not_start() || parent_node.content.is_fit(),
-            ),
-            Direction::Horizontal => (
-                parent_node.cross_alignment.is_not_start() || parent_node.content.is_fit(),
-                parent_node.main_alignment.is_not_start(),
-            ),
-        };
-        let NodeData {
-            inner_origin,
-            inner_size,
-            area_origin,
-            area_size,
-            one_side_padding,
-            two_sides_padding,
-            one_side_margin,
-            two_sides_margin,
-            available_size,
-        } = match axis {
-            AlignAxis::Height if parent_node.height.inner_sized() && is_vertical_not_start => {
-                NodeData {
-                    inner_origin: &mut inner_area.origin.y,
-                    inner_size: &mut inner_area.size.height,
-                    area_origin: node_area.origin.y,
-                    area_size: node_area.size.height,
-                    one_side_padding: parent_node.padding.top(),
-                    two_sides_padding: parent_node.padding.vertical(),
-                    one_side_margin: parent_node.margin.top(),
-                    two_sides_margin: parent_node.margin.vertical(),
-                    available_size: &mut available_area.size.height,
-                }
-            }
-            AlignAxis::Width if parent_node.width.inner_sized() && is_horizontal_not_start => {
-                NodeData {
-                    inner_origin: &mut inner_area.origin.x,
-                    inner_size: &mut inner_area.size.width,
-                    area_origin: node_area.origin.x,
-                    area_size: node_area.size.width,
-                    one_side_padding: parent_node.padding.left(),
-                    two_sides_padding: parent_node.padding.horizontal(),
-                    one_side_margin: parent_node.margin.left(),
-                    two_sides_margin: parent_node.margin.horizontal(),
-                    available_size: &mut available_area.size.width,
-                }
-            }
-            _ => return,
-        };
-
-        // Set the origin of the inner area to the origin of the area plus the padding and margin for the given axis
-        *inner_origin = area_origin + one_side_padding + one_side_margin;
-        // Set the size of the inner area to the size of the area minus the padding and margin for the given axis
-        *inner_size = area_size - two_sides_padding - two_sides_margin;
-        // Set the same available size as the inner area for the given axis
-        *available_size = *inner_size;
     }
 }
