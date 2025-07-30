@@ -55,7 +55,7 @@ dioxus-core = { version = "0.7.0-alpha.3" }
 dioxus-lib = { version = "0.7.0-alpha.3", default-features = false, features = ["macro", "signals", "hooks"] }
 generational-box = { version = "0.7.0-alpha.3" }
 
-dioxus-clipboard = "0.2.0"
+dioxus-clipboard = "0.3.0-alpha.0"
 dioxus-i18n = "0.4.1"
 
 skia-safe = { version = "0.87.0", features = ["gl", "textlayout", "svg"] }
