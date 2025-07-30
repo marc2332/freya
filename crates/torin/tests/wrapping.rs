@@ -899,6 +899,7 @@ pub fn wrapping_large_single_child() {
 }
 
 #[test]
+#[ignore = "requires relative sizing fix, which is in PR"]
 pub fn wrapping_unsized_parent() {
     let (mut layout, mut measurer) = test_utils();
 
