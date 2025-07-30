@@ -107,7 +107,7 @@ where
             );
 
             if node.aspect_ratio == AspectRatio::Fill || node.aspect_ratio == AspectRatio::Fit {
-                // if any are over 1.0 then its an overflow1
+                // if any are over 1.0 then its an overflow
                 let parent_width_overflow = area_size.width / parent_area.width();
                 let parent_height_overflow = area_size.height / parent_area.height();
 

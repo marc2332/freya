@@ -30,6 +30,7 @@ mod text_overflow;
 mod text_shadow;
 mod visible_size;
 
+#[allow(unused_imports)]
 pub use aspect_ratio::*;
 pub use border::*;
 pub use color::*;
