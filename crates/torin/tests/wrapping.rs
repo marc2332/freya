@@ -899,7 +899,6 @@ pub fn wrapping_large_single_child() {
 }
 
 #[test]
-#[ignore = "requires relative sizing fix, which is in PR"]
 pub fn wrapping_unsized_parent() {
     let (mut layout, mut measurer) = test_utils();
 
@@ -1130,5 +1129,90 @@ pub fn wrapping_last_line_single_child_cross_align_and_overflow() {
     assert_eq!(
         layout.get(3).unwrap().visible_area(),
         Rect::new(Point2D::new(0.0, 175.0), Size2D::new(100.0, 200.0)),
+    );
+}
+
+#[test]
+#[ignore = "not yet implemented"]
+pub fn wrapping_fit() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_dom = TestingDOM::default();
+    let mut parent = Node::from_size_and_alignments_and_direction(
+        Size::Percentage(Length::new(100.)),
+        Size::Percentage(Length::new(100.)),
+        Alignment::Start,
+        Alignment::Start,
+        Direction::Vertical,
+    );
+    parent.content = Content::Fit;
+    parent.wrap_content = WrapContent::Wrap;
+    mocked_dom.add(0, None, vec![1, 2, 3, 4], parent);
+    mocked_dom.add(
+        1,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::FillMinimum,
+            Size::Pixels(Length::new(100.)),
+            Direction::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        2,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(100.)),
+            Size::Pixels(Length::new(100.)),
+            Direction::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        3,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(75.)),
+            Size::Pixels(Length::new(100.)),
+            Direction::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        4,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::FillMinimum,
+            Size::Pixels(Length::new(100.)),
+            Direction::Vertical,
+        ),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(250.0, 250.0)),
+        &mut measurer,
+        &mut mocked_dom,
+    );
+
+    assert_eq!(
+        layout.get(1).unwrap().visible_area(),
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 100.0)),
+    );
+
+    assert_eq!(
+        layout.get(2).unwrap().visible_area(),
+        Rect::new(Point2D::new(0.0, 100.0), Size2D::new(100.0, 100.0)),
+    );
+
+    assert_eq!(
+        layout.get(3).unwrap().visible_area(),
+        Rect::new(Point2D::new(100.0, 0.0), Size2D::new(75.0, 100.0)),
+    );
+
+    assert_eq!(
+        layout.get(4).unwrap().visible_area(),
+        Rect::new(Point2D::new(100.0, 100.0), Size2D::new(75.0, 100.0)),
     );
 }

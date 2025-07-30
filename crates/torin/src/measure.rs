@@ -390,6 +390,8 @@ where
             || node.content.is_flex()
             || node.wrap_content.is_wrap();
 
+        let initial_available_area = *available_area;
+
         let mut initial_phase_area = *node_area;
         let mut initial_phase_inner_area = *inner_area;
         let mut initial_phase_available_area = *available_area;
@@ -432,7 +434,7 @@ where
                         node,
                         child_areas.area.size,
                         &mut initial_phase_available_area,
-                        &initial_phase_inner_area,
+                        &initial_available_area,
                         &mut initial_phase_lines,
                     );
 
@@ -480,8 +482,6 @@ where
                 }
             }
         }
-
-        let initial_available_area = *available_area;
 
         let flex_per_line = if node.content.is_flex() {
             Self::calculate_available_flex_size(
@@ -550,7 +550,7 @@ where
                         node,
                         *initial_phase_size,
                         available_area,
-                        inner_area,
+                        &initial_available_area,
                         &mut lines,
                     )
                 } else {
