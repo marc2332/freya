@@ -4,4 +4,5 @@ pub enum AspectRatio {
     None,
     Fit,
     Fill,
+    Max,
 }

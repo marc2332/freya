@@ -1,15 +1,9 @@
-use freya_engine::prelude::{
-    Data,
-    Image,
-};
+use freya_engine::prelude::{Data, Image};
 use freya_native_core::prelude::NodeImmutable;
 use torin::prelude::Size2D;
 
 use crate::{
-    dom::{
-        DioxusNode,
-        ImagesCache,
-    },
+    dom::{DioxusNode, ImagesCache},
     states::ImageState,
 };
 
@@ -50,8 +44,7 @@ pub fn get_or_create_image(
         None
     }?;
 
-    Some(ImageData {
-        image,
-        size: *area_size,
-    })
+    let size = Size2D::new(image.width() as f32, image.height() as f32);
+
+    Some(ImageData { image, size })
 }

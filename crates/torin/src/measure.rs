@@ -3,26 +3,12 @@ use rustc_hash::FxHashMap;
 
 use crate::{
     custom_measurer::LayoutMeasurer,
-    dom_adapter::{
-        DOMAdapter,
-        LayoutNode,
-        NodeKey,
-    },
-    geometry::{
-        Area,
-        Size2D,
-    },
+    dom_adapter::{DOMAdapter, LayoutNode, NodeKey},
+    geometry::{Area, Size2D},
     node::Node,
     prelude::{
-        AlignAxis,
-        Alignment,
-        AlignmentDirection,
-        AreaModel,
-        AspectRatio,
-        Direction,
-        LayoutMetadata,
-        Length,
-        Torin,
+        AlignAxis, Alignment, AlignmentDirection, AreaModel, AspectRatio, Direction,
+        LayoutMetadata, Length, Torin,
     },
     size::Size,
 };
@@ -106,26 +92,6 @@ where
                 phase,
             );
 
-            if node.aspect_ratio == AspectRatio::Fill || node.aspect_ratio == AspectRatio::Fit {
-                // if any are over 1.0 then its an overflow
-                let parent_width_overflow = area_size.width / parent_area.width();
-                let parent_height_overflow = area_size.height / parent_area.height();
-
-                // we need to scale by the biggest overflow,
-                // that will assure us that even of the other dimension is overflowing but a little less,
-                // it wont be after the operation.
-                // same applies for `AspectRatio::Fill`, but in that case it will be divided by the value that will make it bigger the least.
-                // because closer to 1 means multiplies the least.
-                let divisor = parent_width_overflow.max(parent_height_overflow);
-
-                if node.aspect_ratio == AspectRatio::Fill
-                    || parent_width_overflow > 1.0
-                    || parent_height_overflow > 1.0
-                {
-                    area_size /= divisor;
-                }
-            }
-
             // If available, run a custom layout measure function
             // This is useful when you use third-party libraries (e.g. rust-skia, cosmic-text) to measure text layouts
             let node_data = if let Some(measurer) = self.measurer {
@@ -161,8 +127,9 @@ where
                         .height
                         .most_fitting_size(&area_size.height, &available_height);
 
-                    let most_fitting_area_size =
+                    let mut most_fitting_area_size =
                         Size2D::new(most_fitting_width, most_fitting_height);
+
                     let res = measurer.measure(node_id, node, &most_fitting_area_size);
 
                     // Compute the width and height again using the new custom area sizes
@@ -206,6 +173,8 @@ where
             } else {
                 None
             };
+
+            self.apply_aspect_ratio(node, parent_area, &mut area_size);
 
             let measure_inner_children = if let Some(measurer) = self.measurer {
                 measurer.should_measure_inner_children(node_id)
@@ -929,5 +898,38 @@ where
         *inner_size = area_size - two_sides_padding - two_sides_margin;
         // Set the same available size as the inner area for the given axis
         *available_size = *inner_size;
+    }
+
+    fn apply_aspect_ratio(
+        &self,
+        node: &Node,
+        parent_area: &Rect<f32, ()>,
+        area_size: &mut euclid::Size2D<f32, ()>,
+    ) {
+        if node.aspect_ratio != AspectRatio::None {
+            // if any are over 1.0 then its an overflow
+            let parent_width_overflow = area_size.width / parent_area.width();
+            let parent_height_overflow = area_size.height / parent_area.height();
+
+            // we need to scale by the biggest overflow,
+            // that will assure us that even of the other dimension is overflowing but a little less,
+            // it wont be after the operation.
+            // same applies for `AspectRatio::Fill`, but in that case it will be divided by the value that will make it bigger the least.
+            // because closer to 1 means multiplies the least.
+
+            let divisor;
+            if node.aspect_ratio != AspectRatio::Max {
+                divisor = parent_width_overflow.max(parent_height_overflow);
+            } else {
+                divisor = parent_width_overflow.min(parent_height_overflow);
+            }
+
+            if node.aspect_ratio != AspectRatio::Fit
+                || parent_width_overflow > 1.0
+                || parent_height_overflow > 1.0
+            {
+                *area_size /= divisor;
+            }
+        }
     }
 }

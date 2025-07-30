@@ -11,6 +11,7 @@ impl Parse for AspectRatio {
             "none" => Self::None,
             "fit" => Self::Fit,
             "fill" => Self::Fill,
+            "max" => Self::Max,
             _ => return Err(ParseError),
         })
     }
