@@ -772,7 +772,7 @@ pub fn flex_min_width_wrapping() {
 }
 
 #[test]
-pub fn wrapping_padding() {
+pub fn wrapping_spacing() {
     let (mut layout, mut measurer) = test_utils();
 
     let mut mocked_dom = TestingDOM::default();
@@ -846,12 +846,12 @@ pub fn wrapping_padding() {
 
     assert_eq!(
         layout.get(3).unwrap().visible_area(),
-        Rect::new(Point2D::new(30.0, 100.0), Size2D::new(75.0, 100.0)),
+        Rect::new(Point2D::new(30.0, 115.0), Size2D::new(75.0, 100.0)),
     );
 
     assert_eq!(
         layout.get(4).unwrap().visible_area(),
-        Rect::new(Point2D::new(120.0, 100.0), Size2D::new(100.0, 100.0)),
+        Rect::new(Point2D::new(120.0, 115.0), Size2D::new(100.0, 100.0)),
     );
 }
 
