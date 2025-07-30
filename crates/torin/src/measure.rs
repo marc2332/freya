@@ -481,6 +481,16 @@ where
                     }
                 }
             }
+            if node.height.inner_sized() {
+                available_area.size.height = initial_phase_inner_sizes
+                    .height
+                    .min(available_area.size.height);
+            }
+            if node.width.inner_sized() {
+                available_area.size.width = initial_phase_inner_sizes
+                    .width
+                    .min(available_area.size.width);
+            }
         }
 
         let flex_per_line = if node.content.is_flex() {
