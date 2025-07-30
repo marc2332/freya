@@ -185,6 +185,8 @@ pub fn Input(
         shadow,
         background,
         hover_background,
+        inner_horizontal_margin,
+        inner_vertical_margin,
     } = use_applied_theme!(&theme, input);
     let mut focus = use_focus();
     let mut drag_origin = use_signal(|| None);
@@ -369,8 +371,8 @@ pub fn Input(
                 direction: "horizontal",
                 show_scrollbar: false,
                 paragraph {
-                    min_width: "calc(100% - 20)",
-                    margin: "6 10",
+                    min_width: "calc(100% - {inner_horizontal_margin} - {inner_horizontal_margin})",
+                    margin: "{inner_vertical_margin} {inner_horizontal_margin}",
                     onglobalclick,
                     onmousedown,
                     onglobalmousemove,

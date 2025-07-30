@@ -74,6 +74,9 @@ pub fn SidebarItem(
     children: Element,
     /// Optionally handle the `onpress` event in the SidebarItem.
     onpress: Option<EventHandler<()>>,
+    /// Optionally specify a custom `overflow` attribute for this component. Defaults to `clip`.
+    #[props(default = "clip".to_string())]
+    overflow: String,
 ) -> Element {
     let SidebarItemTheme {
         margin,
@@ -117,7 +120,7 @@ pub fn SidebarItem(
 
     rsx!(
         rect {
-            overflow: "clip",
+            overflow,
             margin: "{margin}",
             onclick,
             onmouseenter,

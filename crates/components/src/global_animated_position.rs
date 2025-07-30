@@ -15,7 +15,6 @@ use freya_core::custom_attributes::{
 use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_animation_with_dependencies,
-    AnimDirection,
     AnimNum,
     Ease,
     Function,
@@ -38,31 +37,31 @@ type InitCurrPrevSignals = (
 fn use_node_init_curr_prev<T: Clone + PartialEq + Hash + Eq + 'static>(
     id: T,
 ) -> InitCurrPrevSignals {
-    let (tx, init_signal, curr_signal, prev_signal) = use_hook(|| {
+    let (tx, init_size, previous_size, current_size) = use_hook(|| {
         let (tx, mut rx) = channel::<NodeReferenceLayout>(NodeReferenceLayout::default());
         let mut ctx = consume_context::<GlobalAnimatedPositions<T>>();
-        let init_signal = Signal::new(ctx.ids.write().remove(&id));
-        let mut curr_signal = Signal::new(None);
-        let mut prev_signal = Signal::new(None);
+        let init_size = Signal::new(ctx.ids.write().remove(&id));
+        let mut previous_size = Signal::new(None);
+        let mut current_size = Signal::new(None);
 
         spawn(async move {
             while rx.changed().await.is_ok() {
-                if *curr_signal.peek() != Some(rx.borrow().clone().area) {
-                    prev_signal.set(curr_signal());
-                    curr_signal.set(Some(rx.borrow().clone().area));
-                    ctx.ids.write().insert(id.clone(), curr_signal().unwrap());
+                if *current_size.peek() != Some(rx.borrow().area) {
+                    previous_size.set(current_size());
+                    current_size.set(Some(rx.borrow().clone().area));
+                    ctx.ids.write().insert(id.clone(), current_size().unwrap());
                 }
             }
         });
 
-        (Arc::new(tx), init_signal, curr_signal, prev_signal)
+        (Arc::new(tx), init_size, previous_size, current_size)
     });
 
     (
         AttributeValue::any_value(CustomAttributeValues::Reference(NodeReference(tx))),
-        init_signal,
-        curr_signal.into(),
-        prev_signal.into(),
+        init_size,
+        previous_size.into(),
+        current_size.into(),
     )
 }
 
@@ -118,19 +117,21 @@ pub fn GlobalAnimatedPosition<T: Clone + PartialEq + Hash + Eq + 'static>(
     #[props(default = Duration::from_millis(250))] duration: Duration,
     #[props(default = Ease::default())] ease: Ease,
 ) -> Element {
-    let (reference, mut init_size, size, old_size) = use_node_init_curr_prev(id);
+    let (reference, mut init_size, previous_size, current_size) = use_node_init_curr_prev(id);
 
     let animations = use_animation_with_dependencies(
         &(function, duration, ease),
         move |_conf, (function, duration, ease)| {
-            let old_size = init_size.peek().unwrap_or(old_size().unwrap_or_default());
-            let size = size().unwrap_or_default();
+            let from_size = init_size
+                .peek()
+                .unwrap_or(previous_size().unwrap_or_default());
+            let to_size = current_size().unwrap_or_default();
             (
-                AnimNum::new(size.origin.x, old_size.origin.x)
+                AnimNum::new(from_size.origin.x, to_size.origin.x)
                     .duration(duration)
                     .ease(ease)
                     .function(function),
-                AnimNum::new(size.origin.y, old_size.origin.y)
+                AnimNum::new(from_size.origin.y, to_size.origin.y)
                     .duration(duration)
                     .ease(ease)
                     .function(function),
@@ -139,11 +140,15 @@ pub fn GlobalAnimatedPosition<T: Clone + PartialEq + Hash + Eq + 'static>(
     );
 
     use_effect(move || {
-        let has_size = size.read().is_some();
+        let has_size = current_size.read().is_some();
         let has_init_size = init_size.read().is_some();
-        let has_old_size = old_size.read().is_some();
-        if has_size && (has_old_size || has_init_size) {
-            animations.run(AnimDirection::Reverse);
+        let has_previous_size = previous_size.read().is_some();
+        if !animations.has_run_yet() && !has_init_size && has_size {
+            // Mark the animation as finished if the component was just created and has no init size
+            animations.finish();
+        } else if has_size && (has_init_size || has_previous_size) {
+            // Start the animation if the component size changed and has a previous size
+            animations.start();
         }
     });
 
@@ -159,6 +164,7 @@ pub fn GlobalAnimatedPosition<T: Clone + PartialEq + Hash + Eq + 'static>(
     let (offset_x, offset_y) = &*animations.read();
     let offset_x = offset_x.read();
     let offset_y = offset_y.read();
+    let size = current_size().unwrap_or_default();
 
     rsx!(
         rect {
@@ -171,12 +177,10 @@ pub fn GlobalAnimatedPosition<T: Clone + PartialEq + Hash + Eq + 'static>(
                 offset_x: "{offset_x}",
                 offset_y: "{offset_y}",
                 position: "global",
-                 if let Some(size) = size.read().as_ref() {
-                    rect {
-                        width: "{size.width()}",
-                        height: "{size.height()}",
-                        {children}
-                    }
+               rect {
+                    width: "{size.width()}",
+                    height: "{size.height()}",
+                    {children}
                 }
             }
         }
