@@ -549,6 +549,12 @@ where
                 false
             };
 
+            if new_line {
+                line_origin = available_area.origin;
+            }
+
+            let mut flex_height = None;
+            let mut flex_width = None;
             if child_data.position.is_stacked() {
                 let child_is_flex = match AlignAxis::new(&node.direction, AlignmentDirection::Main)
                 {
@@ -568,11 +574,11 @@ where
                     match AlignAxis::new(&node.direction, AlignmentDirection::Main) {
                         AlignAxis::Height => {
                             let size = flex_available / 100. * flex_grow_per;
-                            available_area.size.height = size.get();
+                            flex_height = Some(size.get());
                         }
                         AlignAxis::Width => {
                             let size = flex_available / 100. * flex_grow_per;
-                            available_area.size.width = size.get();
+                            flex_width = Some(size.get());
                         }
                     }
                     flex_index += 1;
@@ -630,15 +636,29 @@ where
                         &node.direction,
                         AlignmentDirection::Main,
                     );
+                    line_origin = available_area.origin;
                 }
             }
+
+            let available_area_in_line = if needs_initial_phase && child_data.position.is_stacked()
+            {
+                let origin_offset = available_area.origin - line_origin;
+                let line_available = &initial_phase_lines[curr_line].1;
+
+                let width = flex_width.unwrap_or(line_available.width - origin_offset.x);
+                let height = flex_height.unwrap_or(line_available.height - origin_offset.y);
+
+                Area::new(available_area.origin, Size2D::new(width, height))
+            } else {
+                available_area.clone()
+            };
 
             // Final measurement
             let (child_revalidated, mut child_areas) = self.measure_node(
                 child_id,
                 &child_data,
                 inner_area,
-                available_area,
+                &available_area_in_line,
                 must_cache_children,
                 node_is_dirty,
                 Phase::Final,

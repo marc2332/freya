@@ -1133,7 +1133,6 @@ pub fn wrapping_last_line_single_child_cross_align_and_overflow() {
 }
 
 #[test]
-#[ignore = "not yet implemented"]
 pub fn wrapping_fit() {
     let (mut layout, mut measurer) = test_utils();
 
