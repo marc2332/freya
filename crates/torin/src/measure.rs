@@ -1009,7 +1009,7 @@ where
         node: &Node,
         child_size: Size2D,
         available_area: &mut Area,
-        inner_area: &Area,
+        initial_available_area: &Area,
         line_sizes: &mut Vec<(usize, Size2D)>,
     ) -> bool {
         let should_wrap;
@@ -1022,9 +1022,9 @@ where
                     if should_wrap {
                         line_size.height -= node.spacing.get();
                         // move available area for new line
-                        available_area.origin.y = inner_area.origin.x;
+                        available_area.origin.y = initial_available_area.origin.y;
                         available_area.origin.x += line_size.width + node.spacing.get();
-                        available_area.size.height = inner_area.size.height;
+                        available_area.size.height = initial_available_area.size.height;
                         available_area.size.width -= line_size.width + node.spacing.get();
                         line_sizes.push((0, Size2D::default()));
                     }
@@ -1038,9 +1038,9 @@ where
                     if should_wrap {
                         line_size.width -= node.spacing.get();
                         // move available area for new line
-                        available_area.origin.x = inner_area.origin.x;
+                        available_area.origin.x = initial_available_area.origin.x;
                         available_area.origin.y += line_size.height + node.spacing.get();
-                        available_area.size.width = inner_area.size.width;
+                        available_area.size.width = initial_available_area.size.width;
                         available_area.size.height -= line_size.height + node.spacing.get();
                         line_sizes.push((0, Size2D::default()));
                     }
