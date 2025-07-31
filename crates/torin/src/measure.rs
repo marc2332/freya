@@ -530,6 +530,7 @@ where
                 continue;
             };
 
+            let align_axis = AlignAxis::new(&node.direction, AlignmentDirection::Main);
             let initial_phase_size = initial_phase_sizes.get(&child_id);
             let is_last_child = last_child == Some(child_id);
 
@@ -556,8 +557,7 @@ where
             let mut flex_height = None;
             let mut flex_width = None;
             if child_data.position.is_stacked() {
-                let child_is_flex = match AlignAxis::new(&node.direction, AlignmentDirection::Main)
-                {
+                let child_is_flex = match align_axis {
                     AlignAxis::Height => child_data.height.is_flex(),
                     AlignAxis::Width => child_data.width.is_flex(),
                 };
@@ -571,7 +571,7 @@ where
 
                     let flex_grow_per = flex_grow.get() / flex_grows.get() * 100.;
 
-                    match AlignAxis::new(&node.direction, AlignmentDirection::Main) {
+                    match align_axis {
                         AlignAxis::Height => {
                             let size = flex_available / 100. * flex_grow_per;
                             flex_height = Some(size.get());
@@ -612,7 +612,10 @@ where
                                 initial_phase_lines.len(),
                                 curr_line == 0,
                             );
-                            line_origin = available_area.origin;
+                            match align_axis {
+                                AlignAxis::Height => line_origin.x = available_area.origin.x,
+                                AlignAxis::Width => line_origin.y = available_area.origin.y,
+                            }
                         }
                         // Align the Cross direction (child in line)
                         Self::align_content(
@@ -636,7 +639,10 @@ where
                         &node.direction,
                         AlignmentDirection::Main,
                     );
-                    line_origin = available_area.origin;
+                    match align_axis {
+                        AlignAxis::Height => line_origin.y = available_area.origin.y,
+                        AlignAxis::Width => line_origin.x = available_area.origin.x,
+                    }
                 }
             }
 
