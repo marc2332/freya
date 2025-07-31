@@ -911,14 +911,14 @@ where
                 available_area.origin.x += child_area.size.width + spacing.get();
                 available_area.size.width -= child_area.size.width + spacing.get();
 
-                let mut update_inner_sizes = |line: &mut Size2D| {
+                let mut update_inner_sizes = |line: &mut Size2D, inner_sizes: &mut Size2D| {
                     inner_sizes.height += line.height;
                     inner_sizes.width = inner_sizes.width.max(line.width);
 
                     if node.height.inner_sized() {
-                        node_area.size.height = node_area.size.height.max(
-                            inner_sizes.height + node.padding.vertical() + node.margin.vertical(),
-                        );
+                        node_area.size.height =
+                            inner_sizes.height + node.padding.vertical() + node.margin.vertical();
+
                         // Keep the inner area in sync
                         inner_area.size.height = node_area.size.height
                             - node.padding.vertical()
@@ -926,9 +926,11 @@ where
                     }
 
                     if node.width.inner_sized() {
-                        node_area.size.width = inner_sizes.width
-                            + node.padding.horizontal()
-                            + node.margin.horizontal();
+                        node_area.size.width = node_area.size.width.max(
+                            inner_sizes.width
+                                + node.padding.horizontal()
+                                + node.margin.horizontal(),
+                        );
                         // Keep the inner area in sync
                         inner_area.size.width = node_area.size.width
                             - node.padding.horizontal()
@@ -937,12 +939,13 @@ where
                 };
 
                 if is_last_sibling {
-                    update_inner_sizes(cur_line);
+                    update_inner_sizes(cur_line, inner_sizes);
                 }
 
                 if new_line {
+                    inner_sizes.height += node.spacing.get();
                     let amount_lines = line_sizes.len();
-                    update_inner_sizes(&mut line_sizes[amount_lines - 2].1);
+                    update_inner_sizes(&mut line_sizes[amount_lines - 2].1, inner_sizes);
                 }
             }
             Direction::Vertical => {
@@ -967,16 +970,14 @@ where
                 available_area.size.height -= child_area.size.height + spacing.get();
 
                 // end of line, update inner size
-                let mut update_inner_sizes = |line: &mut Size2D| {
+                let mut update_inner_sizes = |line: &mut Size2D, inner_sizes: &mut Size2D| {
                     inner_sizes.width += line.width;
                     inner_sizes.height = inner_sizes.height.max(line.height);
 
                     if node.width.inner_sized() {
-                        node_area.size.width = node_area.size.width.max(
-                            inner_sizes.width
-                                + node.padding.horizontal()
-                                + node.margin.horizontal(),
-                        );
+                        node_area.size.width = inner_sizes.width
+                            + node.padding.horizontal()
+                            + node.margin.horizontal();
                         // Keep the inner area in sync
                         inner_area.size.width = node_area.size.width
                             - node.padding.horizontal()
@@ -984,8 +985,9 @@ where
                     }
 
                     if node.height.inner_sized() {
-                        node_area.size.height =
-                            inner_sizes.height + node.padding.vertical() + node.margin.vertical();
+                        node_area.size.height = node_area.size.height.max(
+                            inner_sizes.height + node.padding.vertical() + node.margin.vertical(),
+                        );
                         // Keep the inner area in sync
                         inner_area.size.height = node_area.size.height
                             - node.padding.vertical()
@@ -994,12 +996,13 @@ where
                 };
 
                 if is_last_sibling {
-                    update_inner_sizes(cur_line);
+                    update_inner_sizes(cur_line, inner_sizes);
                 }
 
                 if new_line {
                     let amount_lines = line_sizes.len();
-                    update_inner_sizes(&mut line_sizes[amount_lines - 2].1);
+                    inner_sizes.width += node.spacing.get();
+                    update_inner_sizes(&mut line_sizes[amount_lines - 2].1, inner_sizes);
                 }
             }
         }
