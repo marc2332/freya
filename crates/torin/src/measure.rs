@@ -656,7 +656,7 @@ where
 
                 Area::new(available_area.origin, Size2D::new(width, height))
             } else {
-                available_area.clone()
+                *available_area
             };
 
             // Final measurement
