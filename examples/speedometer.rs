@@ -30,7 +30,7 @@ fn app() -> Element {
             .function(Function::Expo)
     });
 
-    let speed = animation.read().value();
+    let speed = animation.read().value() as u8;
 
     let min = move |_| {
         animation.run(AnimDirection::Reverse);
