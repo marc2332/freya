@@ -19,9 +19,8 @@ fn app() -> Element {
 pub enum Route {
     #[layout(AppSidebar)]
         #[route("/")]
-        Home,
+        Simple,
         #[route("/wow")]
-        Wow,
     #[end_layout]
     #[route("/..route")]
     PageNotFound { },
@@ -34,32 +33,15 @@ fn AppSidebar() -> Element {
             Sidebar {
                 sidebar: rsx!(
                     Link {
-                        to: Route::Home,
+                        to: Route::Simple,
                         ActivableRoute {
-                            route: Route::Home,
+                            route: Route::Simple,
                             exact: true,
                             SidebarItem {
                                 label {
                                     "Go to Hey ! 👋"
                                 }
                             }
-                        }
-                    }
-                    Link {
-                        to: Route::Wow,
-                        ActivableRoute {
-                            route: Route::Wow,
-                            SidebarItem {
-                                label {
-                                    "Go to Wow! 👈"
-                                }
-                            }
-                        }
-                    }
-                    SidebarItem {
-                        onpress: |_| println!("Hello!"),
-                        label {
-                            "Print Hello! 👀"
                         }
                     }
                 ),
@@ -77,20 +59,10 @@ fn AppSidebar() -> Element {
 
 #[allow(non_snake_case)]
 #[component]
-fn Home() -> Element {
+fn Simple() -> Element {
     rsx!(
         label {
-            "Just some text 😗 in /"
-        }
-    )
-}
-
-#[allow(non_snake_case)]
-#[component]
-fn Wow() -> Element {
-    rsx!(
-        label {
-            "Just more text 👈!! in /wow"
+            "Simple -> /"
         }
     )
 }
