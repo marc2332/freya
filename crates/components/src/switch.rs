@@ -173,11 +173,11 @@ pub fn Switch(props: SwitchProps) -> Element {
         }
     };
 
-    let (offset_x, size, background, circle) = &*animation.get().read_unchecked();
-    let offset_x = offset_x.read();
-    let size = size.read();
-    let background = background.read();
-    let circle = circle.read();
+    let (offset_x, size, background, circle) = &*animation.read();
+    let offset_x = offset_x.value();
+    let size = size.value();
+    let background = background.value();
+    let circle = circle.value();
 
     let border = if focus.is_focused_with_keyboard() {
         if props.enabled {

@@ -124,8 +124,9 @@ pub fn Popup(
         height,
     } = use_applied_theme!(&theme, popup);
 
-    let scale = animations.get();
-    let (scale, opacity) = &*scale.read();
+    let (scale, opacity) = &*animations.read();
+    let scale = scale.value();
+    let opacity = opacity.value();
 
     let request_to_close = move || {
         if let Some(oncloserequest) = &oncloserequest {
@@ -143,8 +144,8 @@ pub fn Popup(
         PopupBackground {
             onclick: move |_| request_to_close(),
             rect {
-                scale: "{scale.read()} {scale.read()}",
-                opacity: "{opacity.read()}",
+                scale: "{scale} {scale}",
+                opacity: "{opacity}",
                 corner_radius: "12",
                 background: "{background}",
                 color: "{color}",

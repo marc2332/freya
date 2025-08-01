@@ -67,9 +67,9 @@ fn FromRouteToCurrent(
         }
     });
 
-    let animations = animations.get()();
-    let offset = animations.0.read();
-    let background = animations.1.read();
+    let (offset, background) = &*animations.read();
+    let offset = offset.value();
+    let background = background.value();
     let width = node_size.read().area.width();
 
     let offset = offset * width;

@@ -16,7 +16,7 @@ fn app() -> Element {
             .ease(Ease::Out)
             .function(Function::Sine)
     });
-    let progress = animation.get().read().read();
+    let progress = animation.read().value();
     let mut open = use_signal(|| false);
 
     rsx!(
@@ -41,7 +41,7 @@ fn app() -> Element {
                 open,
                 ProgressBar {
                     show_progress: true,
-                    progress: progress
+                    progress
                 }
             }
         }

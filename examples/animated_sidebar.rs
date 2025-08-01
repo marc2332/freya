@@ -59,7 +59,7 @@ fn FromRouteToCurrent(
         }
     });
 
-    let offset = animations.get().read().read();
+    let offset = animations.read().value();
     let height = node_size.read().area.height();
 
     let offset = height - (offset * height);

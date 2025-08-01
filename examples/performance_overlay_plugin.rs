@@ -25,7 +25,7 @@ fn app() -> Element {
             .function(Function::Sine)
     });
 
-    let progress = animation.get().read().read();
+    let progress = animation.read().value();
 
     if !animation.is_running() {
         if progress == 15.0 {

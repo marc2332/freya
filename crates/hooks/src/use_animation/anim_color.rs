@@ -70,7 +70,7 @@ impl AnimColor {
     }
 
     /// Read the value of the [AnimColor] as a String.
-    pub fn read(&self) -> String {
+    pub fn value(&self) -> String {
         format!(
             "rgb({}, {}, {}, {})",
             self.value.r(),
@@ -78,6 +78,24 @@ impl AnimColor {
             self.value.b(),
             self.value.a()
         )
+    }
+}
+
+impl From<&AnimColor> for String {
+    fn from(value: &AnimColor) -> Self {
+        value.value()
+    }
+}
+
+impl From<AnimColor> for String {
+    fn from(value: AnimColor) -> Self {
+        value.value()
+    }
+}
+
+impl std::fmt::Display for AnimColor {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.value())
     }
 }
 

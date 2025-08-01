@@ -177,8 +177,7 @@ fn Card(food: Food) -> Element {
             .ease(Ease::Out)
     });
 
-    let scale = animation.get();
-    let scale = scale.read();
+    let scale = animation.read().value();
 
     rsx!(
         rect {
@@ -187,7 +186,7 @@ fn Card(food: Food) -> Element {
             background: "rgb(210, 210, 210)",
             corner_radius: "8",
             padding: "10",
-            scale: "{scale.read()}",
+            scale: "{scale}",
             label {
                 "{food.quantity} of {food.name} in {food.state:?} state."
             }

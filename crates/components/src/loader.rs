@@ -62,7 +62,7 @@ pub fn Loader(props: LoaderProps) -> Element {
         SurfaceThemeIndicator::Opposite => theme.primary_color,
     };
 
-    let degrees = animation.get().read().read();
+    let degrees = animation.read().value();
 
     rsx!(svg {
         rotate: "{degrees}deg",
