@@ -106,3 +106,6 @@ dioxus-radio = "0.6.0"
 [profile.release]
 lto = true
 opt-level = 3
+
+[dependencies]
+notify-rust = "4.11.7"
