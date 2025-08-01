@@ -32,17 +32,31 @@ fn AppSidebar() -> Element {
         NativeRouter {
             Sidebar {
                 sidebar: rsx!(
-                    Link {
-                        to: Route::Simple,
-                        ActivableRoute {
-                            route: Route::Simple,
-                            exact: true,
-                            SidebarItem {
-                                label {
-                                    "Go to Hey ! 👋"
-                                }
-                            }
-                        }
+                    Accordion {
+                            summary: rsx!(
+                                AccordionSummary {
+                                    label {
+                                        "Basic Notifications"
+                                    }
+                                }),
+                              AccordionBody {
+                                  Link {
+                                      to: Route::Simple,
+                                      ActivableRoute {
+                                          route: Route::Simple,
+                                          exact: true,
+                                          SidebarItem {
+                                              theme: SidebarItemThemeWith {
+                                              corner_radius: Some(Cow::Borrowed("6")),
+                                              ..Default::default()
+                                              },
+                                              label {
+                                                  "Simple Notification"
+                                              }
+                                          }
+                                      }
+                                  }
+                              }
                     }
                 ),
                 Body {
