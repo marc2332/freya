@@ -237,8 +237,7 @@ fn Card(task: Task) -> Element {
             .ease(Ease::Out)
     });
 
-    let scale = animation.get();
-    let scale = scale.read();
+    let scale = animation.read().value();
 
     rsx!(
         rect {
@@ -247,7 +246,7 @@ fn Card(task: Task) -> Element {
             background: "rgb(45, 45, 45)",
             corner_radius: "8",
             padding: "10",
-            scale: "{scale.read()}",
+            scale: "{scale}",
             direction: "horizontal",
             content: "flex",
             label {
