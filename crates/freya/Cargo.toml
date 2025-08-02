@@ -27,16 +27,13 @@ docs = ["dep:freya-testing", "dep:dioxus-i18n", "dep:freya-router", "freya-compo
 # User features
 network-image = ["freya-components/network-image"]
 use_camera = ["freya-hooks/use_camera"]
-performance-overlay = []
+performance-overlay = ["winit"]
 disable-zoom-shortcuts = ["freya-winit/disable-zoom-shortcuts"]
-devtools = ["dep:freya-devtools"]
 custom-tokio-rt = []
 winit = ["freya-core/winit", "freya-hooks/winit", "freya-components/winit", "dep:freya-winit"]
 plot = ["dep:plotters", "dep:skia-plotters-backend"]
 
 [dependencies]
-freya-devtools = { workspace = true, optional = true }
-freya-winit = { workspace = true, optional = true}
 freya-elements = { workspace = true }
 freya-hooks = { workspace = true }
 freya-core = { workspace = true }
@@ -56,6 +53,9 @@ dioxus-signals = { workspace = true }
 
 tokio = { workspace = true }
 tracing-subscriber = { workspace = true, optional = true, features = ["env-filter"]}
+
+# winit
+freya-winit = { workspace = true, optional = true }
 
 # Plot
 plotters = { version = "0.3.7", default-features = false, features = [

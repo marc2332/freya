@@ -8,7 +8,7 @@ use freya::prelude::*;
 // Replica of https://x.com/martin_cohen/status/1878476739317280901
 
 fn main() {
-    launch_with_props(
+    launch_with_params(
         app,
         "https://x.com/martin_cohen/status/1878476739317280901",
         (400.0, 350.0),

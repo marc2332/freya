@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Scroll example", (400.0, 400.0));
+    launch_with_params(app, "Scroll example", (400.0, 400.0));
 }
 
 fn app() -> Element {

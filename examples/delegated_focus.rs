@@ -9,7 +9,7 @@ use freya::{
 };
 
 fn main() {
-    launch_with_props(app, "Controlled Focus", (400.0, 350.0));
+    launch_with_params(app, "Controlled Focus", (400.0, 350.0));
 }
 
 fn app() -> Element {

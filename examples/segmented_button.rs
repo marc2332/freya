@@ -8,7 +8,7 @@ use std::collections::HashSet;
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Segmented Button", (600.0, 200.0));
+    launch_with_params(app, "Segmented Button", (600.0, 200.0));
 }
 
 fn app() -> Element {

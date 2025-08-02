@@ -7,7 +7,7 @@ use dioxus_clipboard::prelude::use_clipboard;
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Simple editor", (900.0, 650.0));
+    launch_with_params(app, "Simple editor", (900.0, 650.0));
 }
 
 fn app() -> Element {

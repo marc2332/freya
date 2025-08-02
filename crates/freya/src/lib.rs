@@ -129,6 +129,10 @@ pub mod prelude {
         platform::*,
         platform_state::*,
         types::AccessibilityId,
+        window_config::{
+            OnCloseResponse,
+            WindowConfig,
+        },
     };
     pub use freya_elements::{
         self as dioxus_elements,
