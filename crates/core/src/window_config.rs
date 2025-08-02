@@ -1,4 +1,14 @@
-use dioxus_core::Element;
+use std::sync::Arc;
+
+use dioxus_core::{
+    fc_to_builder,
+    Element,
+};
+use dioxus_core_macro::rsx;
+use dioxus_signals::{
+    GlobalSignal,
+    Readable,
+};
 use freya_engine::prelude::Color;
 use winit::window::{
     Icon,
@@ -36,7 +46,7 @@ pub enum OnCloseResponse {
 
 /// Configuration for a Window.
 pub struct WindowConfig {
-    pub app: Option<fn() -> Element>,
+    pub app: Arc<dyn Fn() -> Element + Send + Sync>,
     /// Size of the Window.
     pub size: (f64, f64),
     /// Minimum size of the Window.
@@ -65,15 +75,32 @@ pub struct WindowConfig {
     pub max_gpu_resources_bytes: Option<usize>,
 }
 
-impl Default for WindowConfig {
-    fn default() -> Self {
+impl WindowConfig {
+    /// Create a window with the given app.
+    pub fn new(app: fn() -> Element) -> Self {
+        #[allow(non_snake_case)]
+        let App = app;
+        Self::new_with_defaults(Arc::new(move || rsx!(App {})))
+    }
+
+    /// Create a window with the given app and some props to pass to it.
+    pub fn new_with_props<T: dioxus_core::Properties + Sync + Send>(
+        app: fn(T) -> Element,
+        props: T,
+    ) -> Self {
+        #[allow(non_snake_case)]
+        let App = app;
+        Self::new_with_defaults(Arc::new(move || rsx!(App { ..props.clone() })))
+    }
+
+    fn new_with_defaults(app: Arc<dyn Fn() -> Element + Send + Sync>) -> Self {
         Self {
-            app: None,
+            app,
             size: (700.0, 500.0),
             min_size: None,
             max_size: None,
             decorations: true,
-            title: "Freya App",
+            title: "Freya",
             transparent: false,
             background: Color::WHITE,
             visible: true,
@@ -83,14 +110,6 @@ impl Default for WindowConfig {
             window_attributes_hook: None,
             max_gpu_resources_bytes: None,
         }
-    }
-}
-
-impl WindowConfig {
-    /// Specify the UI root component of the App.
-    pub fn with_app(mut self, app: fn() -> Element) -> Self {
-        self.app = Some(app);
-        self
     }
 
     /// Specify a Window size.

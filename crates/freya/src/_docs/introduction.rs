@@ -18,7 +18,7 @@
 //! # use freya::prelude::*;
 //! fn main() {
 //!     // **Start** your app by specifying the root component, title and size
-//!     launch_with_props(app, "Counter", (400.0, 350.0));
+//!     launch_with_params(app, "Counter", (400.0, 350.0));
 //! }
 //!
 //! fn app() -> Element {

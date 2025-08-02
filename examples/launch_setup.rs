@@ -7,9 +7,8 @@ use freya::prelude::*;
 
 fn main() {
     launch_cfg(
-        LaunchConfig::<()>::new().with_window(
-            WindowConfig::default()
-                .with_app(app)
+        LaunchConfig::new().with_window(
+            WindowConfig::new(app)
                 .with_size(250.0, 60.0)
                 .on_setup(|window| {
                     window.set_title("Hello World");

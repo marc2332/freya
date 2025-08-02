@@ -94,9 +94,8 @@ fn app() -> Element {
 
 fn main() {
     launch_cfg(
-        LaunchConfig::<()>::new().with_window(
-            WindowConfig::default()
-                .with_app(app)
+        LaunchConfig::new().with_window(
+            WindowConfig::new(app)
                 .with_size(500.0, 400.0)
                 .with_min_size(500.0, 400.0)
                 .with_title("Clock"),

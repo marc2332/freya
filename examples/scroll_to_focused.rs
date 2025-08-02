@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Scroll to Focused", (450.0, 450.0));
+    launch_with_params(app, "Scroll to Focused", (450.0, 450.0));
 }
 
 fn app() -> Element {

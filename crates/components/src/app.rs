@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use dioxus::prelude::*;
 use freya_elements as dioxus_elements;
 
@@ -5,7 +7,7 @@ use crate::NativeContainer;
 
 #[derive(Props, Clone)]
 pub struct FreyaAppProps {
-    pub app: fn() -> Element,
+    pub app: Arc<dyn Fn() -> Element>,
 }
 
 impl PartialEq for FreyaAppProps {
@@ -47,7 +49,7 @@ pub fn FreyaApp(props: FreyaAppProps) -> Element {
         NativeContainer {
             ErrorBoundary {
                 handle_error,
-                App {}
+                {App()}
             }
         }
     )

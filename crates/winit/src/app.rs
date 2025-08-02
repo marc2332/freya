@@ -163,11 +163,8 @@ impl Application {
     }
 
     /// Sync the RealDOM with the VirtualDOM
-    pub fn init_doms<State: 'static>(&mut self, scale_factor: f32, app_state: Option<State>) {
+    pub fn init_doms(&mut self, scale_factor: f32) {
         // Insert built-in VirtualDOM contexts
-        if let Some(state) = app_state {
-            self.vdom.insert_any_root_context(Box::new(state));
-        }
         self.vdom
             .insert_any_root_context(Box::new(self.proxy.clone()));
         self.vdom

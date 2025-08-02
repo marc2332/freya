@@ -22,9 +22,9 @@ impl FreyaPlugin for DummyPlugin {
 
 fn main() {
     launch_cfg(
-        LaunchConfig::<()>::new()
+        LaunchConfig::new()
             .with_plugin(DummyPlugin)
-            .with_window(WindowConfig::default().with_app(app).with_size(250.0, 250.)),
+            .with_window(WindowConfig::new(app).with_size(250.0, 250.)),
     )
 }
 

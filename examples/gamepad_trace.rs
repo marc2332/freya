@@ -32,9 +32,9 @@ use winit::window::WindowId;
 
 fn main() {
     launch_cfg(
-        LaunchConfig::<()>::new()
+        LaunchConfig::new()
             .with_plugin(GamePadPlugin)
-            .with_window(WindowConfig::default().with_app(app)),
+            .with_window(WindowConfig::new(app)),
     )
 }
 

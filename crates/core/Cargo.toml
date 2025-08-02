@@ -29,6 +29,8 @@ freya-native-core-macro = { workspace = true }
 ragnarok = { workspace = true }
 
 dioxus-core = { workspace = true }
+dioxus-signals = { workspace = true }
+dioxus-core-macro = { workspace = true }
 shipyard = { workspace = true }
 keyboard-types = "0.7.0"
 

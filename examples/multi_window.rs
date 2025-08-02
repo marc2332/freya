@@ -7,17 +7,9 @@ use freya::prelude::*;
 
 fn main() {
     launch_cfg(
-        LaunchConfig::<()>::new()
-            .with_window(
-                WindowConfig::default()
-                    .with_app(app)
-                    .with_title("Main window"),
-            )
-            .with_window(
-                WindowConfig::default()
-                    .with_app(tiny_window)
-                    .with_size(100., 100.),
-            ),
+        LaunchConfig::new()
+            .with_window(WindowConfig::new(app).with_title("Main window"))
+            .with_window(WindowConfig::new(tiny_window).with_size(100., 100.)),
     );
 }
 
@@ -26,8 +18,7 @@ fn app() -> Element {
 
     let onpress = move |_| {
         platform.new_window(
-            WindowConfig::default()
-                .with_app(another_window)
+            WindowConfig::new_with_props(another_window, another_windowProps { value: 123 })
                 .with_title("Another window"),
         )
     };
@@ -48,7 +39,8 @@ fn app() -> Element {
     )
 }
 
-fn another_window() -> Element {
+#[component]
+fn another_window(value: i32) -> Element {
     let platform = use_platform();
 
     let onpress = move |_| platform.close_window();
@@ -62,7 +54,7 @@ fn another_window() -> Element {
             background: "white",
             font_size: "30",
             label {
-                "Another window!"
+                "Value: {value}"
             }
             Button {
                 onpress,

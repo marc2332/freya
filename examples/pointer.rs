@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Pointer events", (200.0, 200.0));
+    launch_with_params(app, "Pointer events", (200.0, 200.0));
 }
 
 fn app() -> Element {

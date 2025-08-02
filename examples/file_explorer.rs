@@ -12,7 +12,7 @@ use freya::prelude::*;
 use home::home_dir;
 
 fn main() {
-    launch_with_props(app, "File Explorer", (500.0, 500.0));
+    launch_with_params(app, "File Explorer", (500.0, 500.0));
 }
 
 type TreeFileItem = TreeItem<PathBuf, ()>;

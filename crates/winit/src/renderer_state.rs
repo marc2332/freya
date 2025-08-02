@@ -35,7 +35,7 @@ use crate::{
     EmbeddedFonts,
 };
 
-pub struct RendererState<State: Clone + 'static> {
+pub struct RendererState {
     pub(crate) windows_configs: Vec<WindowConfig>,
     pub(crate) apps: HashMap<WindowId, Application>,
 
@@ -43,16 +43,14 @@ pub struct RendererState<State: Clone + 'static> {
     pub(crate) font_mgr: FontMgr,
     pub(crate) proxy: EventLoopProxy<EventLoopMessage>,
 
-    pub(crate) state: Option<State>,
     pub(crate) plugins: PluginsManager,
     pub(crate) fallback_fonts: Vec<String>,
 
     pub(crate) resumed: bool,
 }
 
-impl<State: Clone + 'static> RendererState<State> {
+impl RendererState {
     pub fn new(
-        state: Option<State>,
         windows_configs: Vec<WindowConfig>,
         embedded_fonts: EmbeddedFonts<'_>,
         plugins: PluginsManager,
@@ -73,7 +71,6 @@ impl<State: Clone + 'static> RendererState<State> {
         font_collection.set_dynamic_font_manager(font_mgr.clone());
 
         Self {
-            state,
             windows_configs,
             plugins,
             fallback_fonts,
@@ -161,8 +158,12 @@ impl<State: Clone + 'static> RendererState<State> {
         dirty_surface.canvas().clear(window_config.background);
 
         let sdom = SafeDOM::new(FreyaDOM::default());
-        let app = window_config.app.take().unwrap();
-        let vdom = VirtualDom::new_with_props(FreyaApp, FreyaAppProps { app });
+        let vdom = VirtualDom::new_with_props(
+            FreyaApp,
+            FreyaAppProps {
+                app: window_config.app.clone(),
+            },
+        );
 
         let mut app = Application::new(
             sdom,
@@ -177,7 +178,7 @@ impl<State: Clone + 'static> RendererState<State> {
             self.plugins.clone(),
         );
 
-        app.init_doms(scale_factor as f32, self.state.clone());
+        app.init_doms(scale_factor as f32);
         app.process_layout(
             scale_factor,
             &mut self.font_collection,

@@ -63,9 +63,9 @@ const WHEEL_SPEED_MODIFIER: f64 = 53.0;
 const TOUCHPAD_SPEED_MODIFIER: f64 = 2.0;
 
 /// Window renderer using Skia, Glutin and Winit.
-pub struct WinitRenderer<State: Clone + 'static> {
+pub struct WinitRenderer {
     pub(crate) event_loop_proxy: EventLoopProxy<EventLoopMessage>,
-    pub(crate) state: RendererState<State>,
+    pub(crate) state: RendererState,
     pub(crate) cursor_pos: CursorPoint,
     pub(crate) mouse_state: ElementState,
     pub(crate) modifiers_state: ModifiersState,
@@ -73,9 +73,9 @@ pub struct WinitRenderer<State: Clone + 'static> {
     pub(crate) custom_scale_factor: f64,
 }
 
-impl<State: Clone + 'static> WinitRenderer<State> {
+impl WinitRenderer {
     /// Run the Winit Renderer.
-    pub fn launch(mut config: LaunchConfig<State>) {
+    pub fn launch(mut config: LaunchConfig) {
         let mut event_loop_builder = EventLoop::<EventLoopMessage>::with_user_event();
 
         if let Some(event_loop_builder_hook) = config.event_loop_builder_hook.take() {
@@ -93,10 +93,9 @@ impl<State: Clone + 'static> WinitRenderer<State> {
         event_loop.run_app(&mut winit_renderer).unwrap();
     }
 
-    pub fn new(config: LaunchConfig<'_, State>, proxy: EventLoopProxy<EventLoopMessage>) -> Self {
+    pub fn new(config: LaunchConfig<'_>, proxy: EventLoopProxy<EventLoopMessage>) -> Self {
         WinitRenderer {
             state: RendererState::new(
-                config.state,
                 config.windows_configs,
                 config.embedded_fonts,
                 config.plugins,
@@ -113,7 +112,7 @@ impl<State: Clone + 'static> WinitRenderer<State> {
     }
 }
 
-impl<State: Clone> ApplicationHandler<EventLoopMessage> for WinitRenderer<State> {
+impl ApplicationHandler<EventLoopMessage> for WinitRenderer {
     fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
         if !self.state.resumed {
             self.state.resumed = true;

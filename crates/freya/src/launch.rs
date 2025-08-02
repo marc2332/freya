@@ -36,18 +36,7 @@ use freya_winit::{
 /// }
 /// ```
 pub fn launch(app: AppComponent) {
-    launch_cfg(
-        LaunchConfig::<()>::default().with_window(
-            WindowConfig {
-                size: (700.0, 500.0),
-                decorations: true,
-                transparent: false,
-                title: "Freya",
-                ..Default::default()
-            }
-            .with_app(app),
-        ),
-    )
+    launch_cfg(LaunchConfig::default().with_window(WindowConfig::new(app)))
 }
 
 /// Launch a new window with a custom title and the default config.
@@ -80,18 +69,7 @@ pub fn launch(app: AppComponent) {
 /// }
 /// ```
 pub fn launch_with_title(app: AppComponent, title: &'static str) {
-    launch_cfg(
-        LaunchConfig::<()>::default().with_window(
-            WindowConfig {
-                size: (700.0, 500.0),
-                decorations: true,
-                transparent: false,
-                title,
-                ..Default::default()
-            }
-            .with_app(app),
-        ),
-    )
+    launch_cfg(LaunchConfig::default().with_window(WindowConfig::new(app).with_title(title)))
 }
 
 /// Launch a new window with a custom title, width and height and the default config.
@@ -106,7 +84,7 @@ pub fn launch_with_title(app: AppComponent, title: &'static str) {
 /// # use freya::prelude::*;
 ///
 /// fn main() {
-///     launch_with_props(app, "Whoa!", (700.0, 500.0));
+///     launch_with_params(app, "Whoa!", (700.0, 500.0));
 /// }
 ///
 /// fn app() -> Element {
@@ -121,17 +99,12 @@ pub fn launch_with_title(app: AppComponent, title: &'static str) {
 ///     )
 /// }
 /// ```
-pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height): (f64, f64)) {
+pub fn launch_with_params(app: AppComponent, title: &'static str, (width, height): (f64, f64)) {
     launch_cfg(
-        LaunchConfig::<()>::default().with_window(
-            WindowConfig {
-                size: (width, height),
-                decorations: true,
-                transparent: false,
-                title,
-                ..Default::default()
-            }
-            .with_app(app),
+        LaunchConfig::default().with_window(
+            WindowConfig::new(app)
+                .with_title(title)
+                .with_size(width, height),
         ),
     )
 }
@@ -139,21 +112,14 @@ pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height)
 /// Launch a new window with a custom config.
 /// You can use a builder if you wish.
 ///
-/// - Width
-/// - Height
-/// - Decorations
-/// - Transparency
-/// - Window title
-/// - Window background color
-///
 /// # Example
 /// ```rust,no_run
 /// # use freya::prelude::*;
 ///
 /// fn main() {
 ///     launch_cfg(
-///         LaunchConfig::<()>::new()
-///             .with_window(WindowConfig::default()
+///         LaunchConfig::new()
+///             .with_window(WindowConfig::new(app)
 ///                 .with_size(700.0, 500.0)
 ///                 .with_decorations(true)
 ///                 .with_transparency(false)
@@ -174,7 +140,7 @@ pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height)
 ///     )
 /// }
 /// ```
-pub fn launch_cfg<T: 'static + Clone>(config: LaunchConfig<T>) {
+pub fn launch_cfg(config: LaunchConfig) {
     #[cfg(feature = "performance-overlay")]
     let config = config.with_plugin(crate::plugins::PerformanceOverlayPlugin::default());
 

@@ -9,7 +9,7 @@ use freya::prelude::*;
 use tokio::time::sleep;
 
 fn main() {
-    launch_with_props(app, "Button", (600.0, 350.0));
+    launch_with_params(app, "Button", (600.0, 350.0));
 }
 
 #[component]

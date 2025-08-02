@@ -6,21 +6,13 @@
 use freya::prelude::*;
 
 fn main() {
-    launch_cfg(
-        LaunchConfig::new()
-            .with_state(10)
-            .with_default_font("Impact")
-            .with_window(
-                WindowConfig::default()
-                    .with_app(app)
-                    .with_title("Window with state"),
-            ),
-    );
+    launch_cfg(LaunchConfig::new().with_default_font("Impact").with_window(
+        WindowConfig::new_with_props(app, appProps { number: 10 }).with_title("Window with state"),
+    ));
 }
 
-fn app() -> Element {
-    let num = consume_context::<i32>();
-
+#[component]
+fn app(number: i32) -> Element {
     rsx!(rect {
         width: "100%",
         height: "100%",
@@ -28,7 +20,7 @@ fn app() -> Element {
         cross_align: "center",
         label {
             font_size: "50",
-            "{num}"
+            "{number}"
         }
     })
 }
