@@ -5,6 +5,7 @@
 
 use freya::prelude::*;
 use freya_router::prelude::*;
+use notify_rust::Notification;
 
 fn main() {
     launch_with_props(app, "Router Example", (550.0, 400.0));
@@ -85,9 +86,36 @@ fn AppSidebar() -> Element {
 #[allow(non_snake_case)]
 #[component]
 fn Simple() -> Element {
+    let PlatformInformation { viewport_size, .. } = *use_platform_information().read();
+    let variable_width: &str;
+
+    if viewport_size.width > 640.0 && viewport_size.width < 1024.0 {
+        variable_width = "70%";
+    } else if viewport_size.width >= 1024.0 {
+        variable_width = "60%";
+    } else {
+        variable_width = "90%";
+    }
+
+    fn notify() {
+        let _ = Notification::new()
+        .summary("Firefox News")
+        .body("This will almost look like a real firefox notification.")
+        .icon("firefox")
+        .show();
+    }
+
     rsx!(
-        label {
-            "Simple -> /"
+        Button {
+            theme: ButtonThemeWith {
+                padding: Some(Cow::Borrowed("16 8")),
+         width: Some(Cow::Borrowed(variable_width)),
+         ..Default::default()
+            },
+            onclick: |_| notify(),
+         label {
+             "Notify"
+         }
         }
     )
 }
