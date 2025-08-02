@@ -339,9 +339,9 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 ///     let (width, color) = &*animation.get().read_unchecked();
 ///
 ///     rsx!(rect {
-///         width: "{width.read()}",
+///         width: "{width.value()}",
 ///         height: "100%",
-///         background: "{color.read()}"
+///         background: "{color.value()}"
 ///     })
 /// }
 /// ```
@@ -362,9 +362,9 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 ///     let (width, color) = &*animation.get().read_unchecked();
 ///
 ///     rsx!(rect {
-///         width: "{width.read()}",
+///         width: "{width.value()}",
 ///         height: "100%",
-///         background: "{color.read()}"
+///         background: "{color.value()}"
 ///     })
 /// }
 /// ```
