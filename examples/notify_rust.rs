@@ -3,6 +3,8 @@
     windows_subsystem = "windows"
 )]
 
+use std::thread;
+
 use freya::prelude::*;
 use freya_router::prelude::*;
 use notify_rust::{Hint, Notification};
@@ -27,6 +29,8 @@ pub enum Route {
         Minimal,
         #[route("/actions")]
         Actions,
+        #[route("/on-close")]
+        OnClose,
     #[end_layout]
     #[route("/..route")]
     PageNotFound { },
@@ -130,6 +134,22 @@ fn AppSidebar() -> Element {
                                                 label {
                                                     "Notification With Action"
                                                 }
+                                            }
+                                        }
+                                    }
+                                    Link {
+                                        to: Route::OnClose,
+                                        ActivableRoute {
+                                            route: Route::OnClose,
+                                            exact: true,
+                                            SidebarItem {
+                                                theme: SidebarItemThemeWith {
+                                                corner_radius: Some(Cow::Borrowed("6")),
+                                                ..Default::default()
+                                                },
+                                                label {
+                                                    "Notify On Close With Message"
+                                                }     
                                             }
                                         }
                                     }
@@ -296,6 +316,47 @@ fn Actions() -> Element {
             onclick: |_| actions(),
          label {
              "Notify Actions"
+         }
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+#[component]
+fn OnClose() -> Element {
+    let PlatformInformation { viewport_size, .. } = *use_platform_information().read();
+    let variable_width: &str;
+
+    if viewport_size.width > 640.0 && viewport_size.width < 1024.0 {
+        variable_width = "70%";
+    } else if viewport_size.width >= 1024.0 {
+        variable_width = "60%";
+    } else {
+        variable_width = "90%";
+    }
+
+    fn notify_on_close() {
+        thread::spawn(|| {
+            let _ = Notification::new()
+            .summary("Time is running out")
+            .body("This will go away.")
+            .icon("clock")
+            .show()
+            .map(|handler| handler
+            .on_close(|| println!("Notification closed")));
+        });
+    }
+
+    rsx!(
+        Button {
+            theme: ButtonThemeWith {
+                padding: Some(Cow::Borrowed("16 8")),
+         width: Some(Cow::Borrowed(variable_width)),
+         ..Default::default()
+            },
+            onclick: move |_| notify_on_close(),
+         label {
+             "Notify With On Close Message"
          }
         }
     )
