@@ -31,6 +31,8 @@ pub enum Route {
         Actions,
         #[route("/on-close")]
         OnClose,
+      #[route("/on-close-reason")]
+        OnCloseReason,
     #[end_layout]
     #[route("/..route")]
     PageNotFound { },
@@ -150,6 +152,22 @@ fn AppSidebar() -> Element {
                                                 label {
                                                     "Notify On Close With Message"
                                                 }     
+                                            }
+                                        }
+                                    }
+                                    Link {
+                                        to: Route::OnCloseReason,
+                                        ActivableRoute {
+                                            route: Route::OnCloseReason,
+                                            exact: true,
+                                            SidebarItem {
+                                                theme: SidebarItemThemeWith {
+                                                corner_radius: Some(Cow::Borrowed("6")),
+                                                ..Default::default()
+                                                },
+                                                label {
+                                                    "Notify On Close With Reason"
+                                                }
                                             }
                                         }
                                     }
@@ -357,6 +375,47 @@ fn OnClose() -> Element {
             onclick: move |_| notify_on_close(),
          label {
              "Notify With On Close Message"
+         }
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+#[component]
+fn OnCloseReason() -> Element {
+    let PlatformInformation { viewport_size, .. } = *use_platform_information().read();
+    let variable_width: &str;
+
+    if viewport_size.width > 640.0 && viewport_size.width < 1024.0 {
+        variable_width = "70%";
+    } else if viewport_size.width >= 1024.0 {
+        variable_width = "60%";
+    } else {
+        variable_width = "90%";
+    }
+
+    fn notify_on_close_reason() {
+        thread::spawn(|| {
+            let _ = Notification::new()
+            .summary("Time is running out")
+            .body("This will go away.")
+            .icon("clock")
+            .show()
+            .map(|handler| handler
+            .on_close(|reason| println!("Close due to reason: \"{reason:?}\"")));
+        });
+    }
+
+    rsx!(
+        Button {
+            theme: ButtonThemeWith {
+                padding: Some(Cow::Borrowed("16 8")),
+         width: Some(Cow::Borrowed(variable_width)),
+         ..Default::default()
+            },
+            onclick: move |_| notify_on_close_reason(),
+         label {
+             "Notify With On Close Reason"
          }
         }
     )
