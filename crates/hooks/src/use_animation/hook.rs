@@ -313,7 +313,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 ///         AnimNum::new(0., 100.).time(50)
 ///     });
 ///
-///     let width = animation.get().read().read();
+///     let width = animation.read().value();
 ///
 ///     rsx!(rect {
 ///         width: "{width}",
