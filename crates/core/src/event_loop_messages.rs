@@ -46,6 +46,7 @@ pub enum EventLoopMessageAction {
     /// Callback to access the Window.
     #[cfg(feature = "winit")]
     WithWindow(Box<dyn FnOnce(&Window) + Send + Sync>),
+    /// Create a new Window.
     #[cfg(feature = "winit")]
     NewWindow(window_config::WindowConfig),
 }
