@@ -111,6 +111,10 @@ impl State<CustomAttributeValues> for LayerState {
             layers
                 .lock()
                 .unwrap()
+                .remove_node_from_layer(node_view.node_id(), self.layer);
+            layers
+                .lock()
+                .unwrap()
                 .insert_node_in_layer(node_view.node_id(), layer_state.layer);
         }
 

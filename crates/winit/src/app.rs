@@ -13,6 +13,7 @@ use freya_core::{
     dom::SafeDOM,
     event_loop_messages::{
         EventLoopMessage,
+        EventLoopMessageAction,
         TextGroupMeasurement,
     },
     events::{
@@ -43,6 +44,7 @@ use freya_core::{
         NativePlatformSender,
     },
     values::Color,
+    window_config::WindowConfig,
 };
 use freya_engine::prelude::*;
 use freya_native_core::NodeId;
@@ -63,16 +65,15 @@ use tokio::{
 };
 use torin::geometry::Area;
 use winit::{
-    dpi::PhysicalSize,
     event_loop::EventLoopProxy,
     window::Window,
 };
 
 use crate::{
     accessibility::WinitAcessibilityTree,
+    drivers::GraphicsDriver,
     size::WinitSize,
     winit_waker::winit_waker,
-    EmbeddedFonts,
 };
 
 #[derive(Hash, PartialEq, Eq)]
@@ -88,21 +89,26 @@ pub struct Application {
     pub(crate) compositor: Compositor,
     pub(crate) events: EventsQueue,
     pub(crate) vdom_waker: Waker,
-    pub(crate) proxy: EventLoopProxy<EventLoopMessage>,
     pub(crate) event_emitter: EventEmitter,
     pub(crate) event_receiver: EventReceiver,
     pub(crate) nodes_state: NodesState<NodeId>,
     pub(crate) platform_sender: NativePlatformSender,
     pub(crate) platform_receiver: NativePlatformReceiver,
     pub(crate) accessibility: WinitAcessibilityTree,
-    pub(crate) font_collection: FontCollection,
-    pub(crate) font_mgr: FontMgr,
     pub(crate) ticker_sender: broadcast::Sender<()>,
-    pub(crate) plugins: PluginsManager,
     pub(crate) process_layout_on_next_render: bool,
     pub(crate) accessibility_tasks_for_next_render: Option<AccessibilityTask>,
     pub(crate) init_accessibility_on_next_render: bool,
-    pub(crate) fallback_fonts: Vec<String>,
+
+    pub(crate) surface: Surface,
+    pub(crate) dirty_surface: Surface,
+    pub(crate) graphics_driver: GraphicsDriver,
+    pub(crate) window: Window,
+    pub(crate) is_window_focused: bool,
+    pub(crate) proxy: EventLoopProxy<EventLoopMessage>,
+    pub(crate) plugins: PluginsManager,
+
+    pub(crate) window_config: WindowConfig,
 }
 
 impl Application {
@@ -111,78 +117,54 @@ impl Application {
         sdom: SafeDOM,
         vdom: VirtualDom,
         proxy: &EventLoopProxy<EventLoopMessage>,
-        window: &Window,
-        fonts_config: EmbeddedFonts,
-        plugins: PluginsManager,
-        fallback_fonts: Vec<String>,
+        window: Window,
         accessibility: WinitAcessibilityTree,
+        surface: Surface,
+        dirty_surface: Surface,
+        graphics_driver: GraphicsDriver,
+        window_config: WindowConfig,
+        plugins: PluginsManager,
     ) -> Self {
-        let mut font_collection = FontCollection::new();
-        let def_mgr = FontMgr::default();
-
-        let mut provider = TypefaceFontProvider::new();
-
-        for (font_name, font_data) in fonts_config {
-            let ft_type = def_mgr.new_from_data(font_data, None).unwrap();
-            provider.register_typeface(ft_type, Some(font_name));
-        }
-
-        let font_mgr: FontMgr = provider.into();
-        font_collection.set_default_font_manager(def_mgr, None);
-        font_collection.set_dynamic_font_manager(font_mgr.clone());
-
         let (event_emitter, event_receiver) = mpsc::unbounded_channel();
         let (platform_sender, platform_receiver) = watch::channel(NativePlatformState {
             focused_accessibility_id: ACCESSIBILITY_ROOT_ID,
             focused_accessibility_node: Node::new(Role::Window),
             preferred_theme: window.theme().map(|theme| theme.into()).unwrap_or_default(),
             navigation_mode: NavigationMode::default(),
-            information: PlatformInformation::from_winit(window),
+            information: PlatformInformation::from_winit(&window),
             scale_factor: window.scale_factor(),
         });
 
-        let mut app = Self {
+        Self {
             sdom,
             vdom,
             events: EventsQueue::new(),
-            vdom_waker: winit_waker(proxy),
-            proxy: proxy.clone(),
+            vdom_waker: winit_waker(proxy, window.id()),
             event_emitter,
             event_receiver,
             nodes_state: NodesState::default(),
             accessibility,
             platform_sender,
             platform_receiver,
-            font_collection,
-            font_mgr,
             ticker_sender: broadcast::channel(5).0,
-            plugins,
             process_layout_on_next_render: false,
             accessibility_tasks_for_next_render: None,
             init_accessibility_on_next_render: false,
-            fallback_fonts,
             compositor: Compositor::default(),
-        };
-
-        app.plugins.send(
-            PluginEvent::WindowCreated(window),
-            PluginHandle::new(&app.proxy),
-        );
-
-        app
+            dirty_surface,
+            surface,
+            graphics_driver,
+            is_window_focused: false,
+            window,
+            proxy: proxy.clone(),
+            plugins,
+            window_config,
+        }
     }
 
     /// Sync the RealDOM with the VirtualDOM
-    pub fn init_doms<State: 'static>(&mut self, scale_factor: f32, app_state: Option<State>) {
-        self.plugins.send(
-            PluginEvent::StartedUpdatingDOM,
-            PluginHandle::new(&self.proxy),
-        );
-
+    pub fn init_doms(&mut self, scale_factor: f32) {
         // Insert built-in VirtualDOM contexts
-        if let Some(state) = app_state {
-            self.vdom.insert_any_root_context(Box::new(state));
-        }
         self.vdom
             .insert_any_root_context(Box::new(self.proxy.clone()));
         self.vdom
@@ -193,20 +175,20 @@ impl Application {
             .insert_any_root_context(Box::new(self.sdom.get().accessibility_generator().clone()));
         self.vdom
             .insert_any_root_context(Box::new(self.sdom.get().animation_clock().clone()));
+        self.vdom
+            .insert_any_root_context(Box::new(self.window.id()));
 
         // Init the RealDOM
         self.sdom.get_mut().init_dom(&mut self.vdom, scale_factor);
-
-        self.plugins.send(
-            PluginEvent::FinishedUpdatingDOM,
-            PluginHandle::new(&self.proxy),
-        );
     }
 
     /// Update the RealDOM, layout and others with the latest changes from the VirtualDOM
     pub fn render_mutations(&mut self, scale_factor: f32) -> (bool, bool) {
         self.plugins.send(
-            PluginEvent::StartedUpdatingDOM,
+            PluginEvent::StartedUpdatingDOM {
+                window: &self.window,
+                fdom: &self.sdom.get(),
+            },
             PluginHandle::new(&self.proxy),
         );
 
@@ -216,7 +198,10 @@ impl Application {
             .render_mutations(&mut self.vdom, scale_factor);
 
         self.plugins.send(
-            PluginEvent::FinishedUpdatingDOM,
+            PluginEvent::FinishedUpdatingDOM {
+                window: &self.window,
+                fdom: &self.sdom.get(),
+            },
             PluginHandle::new(&self.proxy),
         );
 
@@ -224,7 +209,7 @@ impl Application {
     }
 
     /// Poll the VirtualDOM for any new change
-    pub fn poll_vdom(&mut self, window: &Window) {
+    pub fn poll_vdom(&mut self) {
         let mut cx = std::task::Context::from_waker(&self.vdom_waker);
 
         {
@@ -246,13 +231,19 @@ impl Application {
 
             match fut.poll(&mut cx) {
                 std::task::Poll::Ready(_) => {
-                    self.proxy.send_event(EventLoopMessage::PollVDOM).ok();
+                    self.proxy
+                        .send_event(EventLoopMessage {
+                            window_id: Some(self.window.id()),
+                            action: EventLoopMessageAction::PollVDOM,
+                        })
+                        .ok();
                 }
                 std::task::Poll::Pending => return,
             }
         }
 
-        let (must_repaint, must_relayout) = self.render_mutations(window.scale_factor() as f32);
+        let (must_repaint, must_relayout) =
+            self.render_mutations(self.window.scale_factor() as f32);
 
         if must_relayout {
             self.process_layout_on_next_render = true;
@@ -261,7 +252,7 @@ impl Application {
         }
 
         if must_relayout || must_repaint {
-            window.request_redraw();
+            self.window.request_redraw();
         }
     }
 
@@ -273,10 +264,10 @@ impl Application {
         let layers = sdom.layers();
 
         let focus_id = self.accessibility.focused_node_id();
-        self.plugins.send(
-            PluginEvent::StartedMeasuringEvents,
-            PluginHandle::new(&self.proxy),
-        );
+        // self.plugins.send(
+        //     PluginEvent::StartedMeasuringEvents,
+        //     PluginHandle::new(&self.proxy),
+        // );
         let mut events_measurer_adapter = EventsMeasurerAdapter {
             rdom,
             layers: &layers,
@@ -288,10 +279,10 @@ impl Application {
             events_measurer_adapter.run(&mut self.events, &mut self.nodes_state, focus_id);
         self.event_emitter.send(processed_events).unwrap();
 
-        self.plugins.send(
-            PluginEvent::FinishedMeasuringEvents,
-            PluginHandle::new(&self.proxy),
-        );
+        // self.plugins.send(
+        //     PluginEvent::FinishedMeasuringEvents,
+        //     PluginHandle::new(&self.proxy),
+        // );
     }
 
     pub fn init_accessibility(&mut self) {
@@ -303,7 +294,7 @@ impl Application {
             .init_accessibility(rdom, &layout, &mut dirty_accessibility_tree);
     }
 
-    pub fn process_accessibility(&mut self, window: &Window) {
+    pub fn process_accessibility(&mut self) {
         let fdom = self.sdom.get();
         let rdom = fdom.rdom();
         let layout = fdom.layout();
@@ -312,7 +303,7 @@ impl Application {
             rdom,
             &layout,
             &self.platform_sender,
-            window,
+            &self.window,
             &mut dirty_accessibility_tree,
             &self.event_emitter,
         );
@@ -327,41 +318,42 @@ impl Application {
     /// Render the App into the Window Canvas
     pub fn render(
         &mut self,
-        background: Color,
-        surface: &mut Surface,
-        dirty_surface: &mut Surface,
-        window: &Window,
-        scale_factor: f64,
+        scale_factor: f32,
+        font_collection: &mut FontCollection,
+        font_manager: &mut FontMgr,
+        fallback_fonts: &[String],
     ) {
         self.plugins.send(
             PluginEvent::BeforeRender {
-                canvas: surface.canvas(),
-                font_collection: &self.font_collection,
-                freya_dom: &self.sdom.get(),
+                window: &self.window,
+                canvas: self.surface.canvas(),
+                font_collection,
+                fdom: &self.sdom.get(),
             },
             PluginHandle::new(&self.proxy),
         );
 
-        self.start_render(
-            background,
-            surface,
-            dirty_surface,
-            window.inner_size(),
-            scale_factor as f32,
+        self.render_with_pipeline(
+            scale_factor,
+            self.window_config.background,
+            font_collection,
+            font_manager,
+            fallback_fonts,
         );
 
         self.plugins.send(
             PluginEvent::AfterRender {
-                canvas: surface.canvas(),
-                font_collection: &self.font_collection,
-                freya_dom: &self.sdom.get(),
+                window: &self.window,
+                canvas: self.surface.canvas(),
+                font_collection,
+                fdom: &self.sdom.get(),
             },
             PluginHandle::new(&self.proxy),
         );
     }
 
     /// Resize the Window
-    pub fn resize(&mut self, window: &Window) {
+    pub fn resize(&mut self) {
         self.process_layout_on_next_render = true;
         self.accessibility_tasks_for_next_render
             .replace(AccessibilityTask::ProcessUpdate);
@@ -372,12 +364,15 @@ impl Application {
             .compositor_dirty_area()
             .unite_or_insert(&Area::new(
                 (0.0, 0.0).into(),
-                window.inner_size().to_torin(),
+                self.window.inner_size().to_torin(),
             ));
         self.sdom.get().layout().reset();
+
         self.platform_sender.send_modify(|state| {
-            state.information = PlatformInformation::from_winit(window);
-        })
+            state.information = PlatformInformation::from_winit(&self.window);
+        });
+
+        self.window.request_redraw();
     }
 
     /// Measure the a text group given it's ID.
@@ -399,6 +394,8 @@ impl Application {
         fdom.accessibility_dirty_nodes()
             .request_focus(focus_strategy);
         self.accessibility_tasks_for_next_render.replace(task);
+
+        self.window.request_redraw();
     }
 
     /// Notify components subscribed to event loop ticks.
@@ -414,35 +411,49 @@ impl Application {
     }
 
     /// Measure the layout
-    pub fn process_layout(&mut self, window_size: PhysicalSize<u32>, scale_factor: f64) {
+    pub fn process_layout(
+        &mut self,
+        scale_factor: f64,
+        font_collection: &mut FontCollection,
+        fallback_fonts: &[String],
+    ) {
         let fdom = self.sdom.get();
-        let rdom = fdom.rdom();
-        let mut layout = fdom.layout();
-        let mut images_cache = fdom.images_cache();
-        let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
-        let mut compositor_dirty_nodes = fdom.compositor_dirty_nodes();
-        let mut compositor_dirty_area = fdom.compositor_dirty_area();
 
         self.plugins.send(
-            PluginEvent::StartedMeasuringLayout(&layout),
+            PluginEvent::StartedMeasuringLayout {
+                fdom: &fdom,
+                window: &self.window,
+            },
             PluginHandle::new(&self.proxy),
         );
 
-        process_layout(
-            rdom,
-            &mut layout,
-            &mut images_cache,
-            &mut dirty_accessibility_tree,
-            &mut compositor_dirty_nodes,
-            &mut compositor_dirty_area,
-            Area::from_size(window_size.to_torin()),
-            &mut self.font_collection,
-            scale_factor as f32,
-            &self.fallback_fonts,
-        );
+        {
+            let rdom = fdom.rdom();
+            let mut layout = fdom.layout();
+            let mut images_cache = fdom.images_cache();
+            let mut dirty_accessibility_tree = fdom.accessibility_dirty_nodes();
+            let mut compositor_dirty_nodes = fdom.compositor_dirty_nodes();
+            let mut compositor_dirty_area = fdom.compositor_dirty_area();
+
+            process_layout(
+                rdom,
+                &mut layout,
+                &mut images_cache,
+                &mut dirty_accessibility_tree,
+                &mut compositor_dirty_nodes,
+                &mut compositor_dirty_area,
+                Area::from_size(self.window.inner_size().to_torin()),
+                font_collection,
+                scale_factor as f32,
+                fallback_fonts,
+            );
+        }
 
         self.plugins.send(
-            PluginEvent::FinishedMeasuringLayout(&layout),
+            PluginEvent::FinishedMeasuringLayout {
+                fdom: &fdom,
+                window: &self.window,
+            },
             PluginHandle::new(&self.proxy),
         );
 
@@ -456,19 +467,19 @@ impl Application {
         }
     }
 
-    /// Start rendering the RealDOM to Window
-    pub fn start_render(
+    /// Render the DOM using the [RenderPipeline].
+    pub fn render_with_pipeline(
         &mut self,
-        background: Color,
-        surface: &mut Surface,
-        dirty_surface: &mut Surface,
-        window_size: PhysicalSize<u32>,
         scale_factor: f32,
+        background: Color,
+        font_collection: &mut FontCollection,
+        font_manager: &mut FontMgr,
+        fallback_fonts: &[String],
     ) {
         let fdom = self.sdom.get();
 
         let mut render_pipeline = RenderPipeline {
-            canvas_area: Area::from_size(window_size.to_torin()),
+            canvas_area: Area::from_size(self.window.inner_size().to_torin()),
             rdom: fdom.rdom(),
             compositor_dirty_area: &mut fdom.compositor_dirty_area(),
             compositor_dirty_nodes: &mut fdom.compositor_dirty_nodes(),
@@ -476,13 +487,13 @@ impl Application {
             layers: &mut fdom.layers(),
             layout: &mut fdom.layout(),
             background,
-            surface,
-            dirty_surface,
+            surface: &mut self.surface,
+            dirty_surface: &mut self.dirty_surface,
             compositor: &mut self.compositor,
             scale_factor,
-            font_collection: &mut self.font_collection,
-            font_manager: &self.font_mgr,
-            fallback_fonts: &self.fallback_fonts,
+            font_collection,
+            font_manager,
+            fallback_fonts,
             images_cache: &mut fdom.images_cache(),
         };
         render_pipeline.run();

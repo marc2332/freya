@@ -6,13 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch_cfg(
-        app,
-        LaunchConfig::<()>::new()
-            .with_title("Devtools Plugin")
-            .with_size(700., 500.)
-            .with_plugin(freya_devtools::DevtoolsPlugin::default()),
-    )
+    launch_with_title(app, "Devtools Plugin");
 }
 
 fn app() -> Element {

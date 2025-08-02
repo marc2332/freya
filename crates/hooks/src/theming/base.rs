@@ -118,6 +118,8 @@ pub(crate) const BASE_THEME: Theme = Theme {
         margin: cow_borrowed!("0"),
         corner_radius: cow_borrowed!("6"),
         shadow: cow_borrowed!("none"),
+        inner_horizontal_margin: cow_borrowed!("10"),
+        inner_vertical_margin: cow_borrowed!("6"),
     },
     switch: SwitchTheme {
         margin: cow_borrowed!("0"),

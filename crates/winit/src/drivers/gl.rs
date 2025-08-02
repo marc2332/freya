@@ -3,6 +3,7 @@ use std::{
     num::NonZeroU32,
 };
 
+use freya_core::window_config::WindowConfig;
 use freya_engine::prelude::{
     backend_render_targets,
     direct_contexts,
@@ -57,10 +58,7 @@ use winit::{
     },
 };
 
-use crate::{
-    size::WinitSize,
-    LaunchConfig,
-};
+use crate::size::WinitSize;
 
 /// Graphics driver using OpenGL.
 pub struct OpenGLDriver {
@@ -82,14 +80,14 @@ impl Drop for OpenGLDriver {
 }
 
 impl OpenGLDriver {
-    pub fn new<State: Clone + 'static>(
+    pub fn new(
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
-        config: &LaunchConfig<State>,
+        window_config: &WindowConfig,
     ) -> (Self, Window, SkiaSurface) {
         let template = ConfigTemplateBuilder::new()
             .with_alpha_size(8)
-            .with_transparency(config.window_config.transparent);
+            .with_transparency(window_config.transparent);
 
         let display_builder = DisplayBuilder::new().with_window_attributes(Some(window_attributes));
         let (window, gl_config) = display_builder
@@ -191,7 +189,7 @@ impl OpenGLDriver {
         let mut gr_context =
             direct_contexts::make_gl(interface, None).expect("Could not create direct context");
 
-        if let Some(max_gpu_resources_bytes) = config.window_config.max_gpu_resources_bytes {
+        if let Some(max_gpu_resources_bytes) = window_config.max_gpu_resources_bytes {
             gr_context.set_resource_cache_limit(max_gpu_resources_bytes);
         }
 

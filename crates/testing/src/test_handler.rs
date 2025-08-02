@@ -11,7 +11,10 @@ use dioxus_core::VirtualDom;
 use freya_core::{
     accessibility::AccessibilityTree,
     dom::SafeDOM,
-    event_loop_messages::EventLoopMessage,
+    event_loop_messages::{
+        EventLoopMessage,
+        EventLoopMessageAction,
+    },
     events::{
         EventsExecutorAdapter,
         EventsMeasurerAdapter,
@@ -174,9 +177,9 @@ impl<T: 'static + Clone> TestingHandler<T> {
                 break;
             }
 
-            if let Ok(ev) = platform_ev {
-                match ev {
-                    EventLoopMessage::RequestRerender => {
+            if let Ok(message) = platform_ev {
+                match message.action {
+                    EventLoopMessageAction::RequestRerender => {
                         if let Some(ticker) = ticker.as_mut() {
                             ticker.tick().await;
                             self.ticker_sender.send(()).unwrap();
@@ -185,14 +188,14 @@ impl<T: 'static + Clone> TestingHandler<T> {
                                 .ok();
                         }
                     }
-                    EventLoopMessage::FocusAccessibilityNode(strategy) => {
+                    EventLoopMessageAction::FocusAccessibilityNode(strategy) => {
                         let fdom = self.utils.sdom.get();
                         fdom.accessibility_dirty_nodes().request_focus(strategy);
                     }
-                    EventLoopMessage::SetCursorIcon(icon) => {
+                    EventLoopMessageAction::SetCursorIcon(icon) => {
                         self.cursor_icon = icon;
                     }
-                    EventLoopMessage::RemeasureTextGroup(text_measurement) => {
+                    EventLoopMessageAction::RemeasureTextGroup(text_measurement) => {
                         let fdom = self.utils.sdom.get();
                         fdom.measure_paragraphs(text_measurement, SCALE_FACTOR);
                     }

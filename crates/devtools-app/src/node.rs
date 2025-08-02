@@ -10,12 +10,13 @@ use crate::hooks::use_node_info;
 #[component]
 pub fn NodeElement(
     node_id: NodeId,
+    window_id: u64,
     is_selected: bool,
     is_open: Option<bool>,
     onselected: EventHandler<()>,
     onarrow: EventHandler<()>,
 ) -> Element {
-    let Some(node) = use_node_info(node_id) else {
+    let Some(node) = use_node_info(node_id, window_id) else {
         return Ok(VNode::placeholder());
     };
 
@@ -28,7 +29,7 @@ pub fn NodeElement(
         }
     };
 
-    let margin_left = (node.height * 10) as f32 - 28.;
+    let margin_left = (node.height * 10) as f32 - 18.;
     let id = node_id.index();
 
     let role = node.state.accessibility.builder.clone().and_then(|node| {
@@ -97,7 +98,9 @@ pub fn NodeElement(
                     text {
                         font_size: "14",
                         color: "white",
-                        if let Some(role) = role {
+                        if node.is_window {
+                            "Window"
+                        } else if let Some(role) = role {
                             "{role:?}"
                         }  else {
                             "{node.tag}"
@@ -106,7 +109,11 @@ pub fn NodeElement(
                     text {
                         font_size: "14",
                         color: "rgb(200, 200, 200)",
-                        ", id: {id}"
+                        if node.is_window {
+                            ", id: {window_id}"
+                        } else {
+                            ", id: {id}"
+                        }
                     }
                 }
             }

@@ -1,7 +1,4 @@
-pub use config::{
-    WindowConfig,
-    *,
-};
+pub use config::*;
 pub use renderer::WinitRenderer;
 
 mod accessibility;
@@ -11,6 +8,10 @@ mod drivers;
 mod events;
 mod keyboard;
 mod renderer;
+mod renderer_state;
 mod size;
-mod window_state;
 mod winit_waker;
+
+pub mod reexports {
+    pub use winit;
+}

@@ -1,5 +1,8 @@
 use std::{
-    collections::HashSet,
+    collections::{
+        HashMap,
+        HashSet,
+    },
     time::Duration,
 };
 
@@ -34,13 +37,13 @@ use tokio_tungstenite::{
 };
 
 fn main() {
-    launch_with_props(app, "Freya Devtools", (700., 500.))
+    launch_with_params(app, "Freya Devtools", (700., 500.))
 }
 
 pub fn app() -> Element {
     use_init_theme(|| DARK_THEME);
     use_init_radio_station::<DevtoolsState, DevtoolsChannel>(|| DevtoolsState {
-        nodes: Vec::new(),
+        nodes: HashMap::new(),
         expanded_nodes: HashSet::default(),
     });
     let radio = use_radio(DevtoolsChannel::Global);
@@ -58,8 +61,11 @@ pub fn app() -> Element {
                     if let Ok(text) = message.into_text() {
                         if let Ok(outgoing) = serde_json::from_str::<Outgoing>(&text) {
                             match outgoing.notification {
-                                OutgoingNotification::Nodes(nodes) => {
-                                    radio.write_channel(DevtoolsChannel::UpdatedDOM).nodes = nodes;
+                                OutgoingNotification::Update { window_id, nodes } => {
+                                    radio
+                                        .write_channel(DevtoolsChannel::UpdatedDOM)
+                                        .nodes
+                                        .insert(window_id, nodes);
                                 }
                             }
                         }
@@ -114,20 +120,27 @@ pub enum Route {
         #[layout(LayoutForDOMInspector)]
             #[route("/")]
             DOMInspector  {},
-        #[nest("/node/:node_id")]
+        #[nest("/node/:node_id/:window_id")]
             #[layout(LayoutForNodeInspector)]
                 #[route("/style")]
-                NodeInspectorStyle { node_id: NodeId },
+                NodeInspectorStyle { node_id: NodeId, window_id: u64 },
                 #[route("/layout")]
-                NodeInspectorLayout { node_id: NodeId },
+                NodeInspectorLayout { node_id: NodeId, window_id: u64 },
 }
 
 impl Route {
     pub fn node_id(&self) -> Option<NodeId> {
         match self {
-            Self::NodeInspectorStyle { node_id } | Self::NodeInspectorLayout { node_id } => {
-                Some(*node_id)
-            }
+            Self::NodeInspectorStyle { node_id, .. }
+            | Self::NodeInspectorLayout { node_id, .. } => Some(*node_id),
+            _ => None,
+        }
+    }
+
+    pub fn window_id(&self) -> Option<u64> {
+        match self {
+            Self::NodeInspectorStyle { window_id, .. }
+            | Self::NodeInspectorLayout { window_id, .. } => Some(*window_id),
             _ => None,
         }
     }
@@ -135,7 +148,7 @@ impl Route {
 
 #[allow(non_snake_case)]
 #[component]
-fn LayoutForNodeInspector(node_id: NodeId) -> Element {
+fn LayoutForNodeInspector(node_id: NodeId, window_id: u64) -> Element {
     let navigator = use_navigator();
 
     rsx!(
@@ -156,9 +169,9 @@ fn LayoutForNodeInspector(node_id: NodeId) -> Element {
                 rect {
                     direction: "horizontal",
                     Link {
-                        to: Route::NodeInspectorStyle { node_id },
+                        to: Route::NodeInspectorStyle { node_id, window_id },
                         ActivableRoute {
-                            route: Route::NodeInspectorStyle { node_id },
+                            route: Route::NodeInspectorStyle { node_id, window_id },
                             BottomTab {
                                 label {
                                     "Style"
@@ -167,9 +180,9 @@ fn LayoutForNodeInspector(node_id: NodeId) -> Element {
                         }
                     }
                     Link {
-                        to: Route::NodeInspectorLayout { node_id },
+                        to: Route::NodeInspectorLayout { node_id, window_id },
                         ActivableRoute {
-                            route: Route::NodeInspectorLayout { node_id },
+                            route: Route::NodeInspectorLayout { node_id, window_id },
                             BottomTab {
                                 label {
                                     "Layout"
@@ -196,6 +209,7 @@ fn LayoutForDOMInspector() -> Element {
     let route = use_route::<Route>();
 
     let selected_node_id = route.node_id();
+    let selected_window_id = route.window_id();
 
     let is_expanded_vertical = selected_node_id.is_some();
 
@@ -208,6 +222,7 @@ fn LayoutForDOMInspector() -> Element {
                     padding: "10",
                     NodesTree {
                         selected_node_id,
+                        selected_window_id,
                         onselected: move |_node_id: NodeId| {
                             // platform.send(EventLoopMessage::RequestFullRerender).ok();
                         }

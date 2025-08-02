@@ -1,5 +1,6 @@
 mod gl;
 
+use freya_core::window_config::WindowConfig;
 use freya_engine::prelude::Surface as SkiaSurface;
 pub use gl::*;
 use glutin::surface::GlSurface;
@@ -12,19 +13,18 @@ use winit::{
     },
 };
 
-use crate::LaunchConfig;
-
 pub enum GraphicsDriver {
     OpenGl(OpenGLDriver),
 }
 
 impl GraphicsDriver {
-    pub fn new<State: Clone + 'static>(
+    pub fn new(
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
-        config: &LaunchConfig<State>,
+        window_config: &WindowConfig,
     ) -> (Self, Window, SkiaSurface) {
-        let (driver, window, surface) = OpenGLDriver::new(event_loop, window_attributes, config);
+        let (driver, window, surface) =
+            OpenGLDriver::new(event_loop, window_attributes, window_config);
         (Self::OpenGl(driver), window, surface)
     }
 

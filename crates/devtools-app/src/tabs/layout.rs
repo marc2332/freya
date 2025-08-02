@@ -5,8 +5,8 @@ use crate::hooks::use_node_info;
 
 #[allow(non_snake_case)]
 #[component]
-pub fn NodeInspectorLayout(node_id: NodeId) -> Element {
-    let Some(node) = use_node_info(node_id) else {
+pub fn NodeInspectorLayout(node_id: NodeId, window_id: u64) -> Element {
+    let Some(node) = use_node_info(node_id, window_id) else {
         return Ok(VNode::placeholder());
     };
 

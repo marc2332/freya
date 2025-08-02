@@ -1,9 +1,12 @@
-use std::sync::{
-    Arc,
-    Mutex,
-    atomic::{
-        AtomicU32,
-        Ordering,
+use std::{
+    collections::HashMap,
+    sync::{
+        Arc,
+        Mutex,
+        atomic::{
+            AtomicU32,
+            Ordering,
+        },
     },
 };
 
@@ -38,7 +41,7 @@ use crate::{
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 async fn handle_request(
-    nodes: Arc<Mutex<Vec<NodeInfo>>>,
+    nodes: Arc<Mutex<HashMap<u64, Vec<NodeInfo>>>>,
     websockets: SharedWebsockets,
     mut request: Request<Incoming>,
 ) -> Result<Response<Full<Bytes>>, Error> {
@@ -63,23 +66,26 @@ static WEBSOCKET_ID: AtomicU32 = AtomicU32::new(0);
 
 /// Handle a websocket connection.
 async fn serve_websocket(
-    nodes: Arc<Mutex<Vec<NodeInfo>>>,
+    nodes: Arc<Mutex<HashMap<u64, Vec<NodeInfo>>>>,
     websockets: SharedWebsockets,
     id: u32,
     websocket: HyperWebsocket,
 ) -> Result<(), Error> {
     let websocket = websocket.await?;
-
-    let nodes = Message::Text(
-        serde_json::to_string(&Outgoing {
-            notification: OutgoingNotification::Nodes(nodes.lock().unwrap().clone()),
-        })?
-        .into(),
-    );
     let (mut write, mut read) = websocket.split();
+    let windows = nodes.lock().unwrap().clone();
 
-    // Send current nodes snapshot
-    write.send(nodes).await?;
+    for (window_id, nodes) in windows {
+        let message = Message::Text(
+            serde_json::to_string(&Outgoing {
+                notification: OutgoingNotification::Update { window_id, nodes },
+            })?
+            .into(),
+        );
+
+        // Send nodes snapshot
+        write.send(message).await?;
+    }
 
     // Store websocket
     websockets.lock().await.insert(id, write);
@@ -111,7 +117,7 @@ async fn serve_websocket(
 }
 
 pub async fn run_server(
-    nodes: Arc<Mutex<Vec<NodeInfo>>>,
+    nodes: Arc<Mutex<HashMap<u64, Vec<NodeInfo>>>>,
     websockets: SharedWebsockets,
 ) -> Result<(), Error> {
     let addr: std::net::SocketAddr = "[::1]:3000".parse()?;

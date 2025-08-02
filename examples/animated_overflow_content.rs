@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "OverflowedContent", (400.0, 350.0));
+    launch_with_params(app, "OverflowedContent", (400.0, 350.0));
 }
 
 import_svg!(Ferris, "./ferris.svg", {

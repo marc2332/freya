@@ -16,11 +16,16 @@ pub struct Outgoing {
 
 #[derive(Deserialize, Serialize)]
 pub enum OutgoingNotification {
-    Nodes(Vec<NodeInfo>),
+    Update {
+        window_id: u64,
+        nodes: Vec<NodeInfo>,
+    },
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq, Debug)]
 pub struct NodeInfo {
+    pub window_id: u64,
+    pub is_window: bool,
     pub id: NodeId,
     pub parent_id: Option<NodeId>,
     pub children_len: usize,
