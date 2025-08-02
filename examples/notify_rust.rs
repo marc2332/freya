@@ -21,7 +21,8 @@ pub enum Route {
     #[layout(AppSidebar)]
         #[route("/")]
         Simple,
-        #[route("/wow")]
+        #[route("/simple-async")]
+        SimpleAsync,
     #[end_layout]
     #[route("/..route")]
     PageNotFound { },
@@ -68,6 +69,22 @@ fn AppSidebar() -> Element {
                                           }
                                       }
                                   }
+                                  Link {
+                                        to: Route::SimpleAsync,
+                                        ActivableRoute {
+                                            route: Route::SimpleAsync,
+                                            exact: true,
+                                            SidebarItem {
+                                                theme: SidebarItemThemeWith {
+                                                    corner_radius: Some(Cow::Borrowed("6")),
+                              ..Default::default()
+                                                },
+                                                label {
+                                                    "Simple (Asynchronous)"
+                                                }
+                                            }
+                                        }
+                                    }
                               }
                     }
                 ),
@@ -115,6 +132,43 @@ fn Simple() -> Element {
             onclick: |_| notify(),
          label {
              "Notify"
+         }
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+#[component]
+fn SimpleAsync() -> Element {
+    let PlatformInformation { viewport_size, .. } = *use_platform_information().read();
+    let variable_width: &str;
+
+    if viewport_size.width > 640.0 && viewport_size.width < 1024.0 {
+        variable_width = "70%";
+    } else if viewport_size.width >= 1024.0 {
+        variable_width = "60%";
+    } else {
+        variable_width = "90%";
+    }
+
+    async fn notify_async() {
+        let _ = Notification::new()
+        .summary("async notification")
+        .body("this notification was sent via an async api")
+        .icon("dialog-positive")
+        .show_async()
+        .await;
+    }
+    rsx!(
+        Button {
+            theme: ButtonThemeWith {
+                padding: Some(Cow::Borrowed("16 8")),
+         width: Some(Cow::Borrowed(variable_width)),
+         ..Default::default()
+            },
+            onclick: |_| notify_async(),
+         label {
+             "Notify Asychronously"
          }
         }
     )
