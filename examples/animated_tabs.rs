@@ -72,14 +72,12 @@ fn FromRouteToCurrent(
         }
     });
 
-    let (offset, scale_a, scale_b, corner_radius) = &*animations.read();
-    let offset = offset.value();
+    let (offset, scale_a, scale_b, corner_radius) = animations.read().value();
     let (scale_out, scale_in) = if left_to_right {
-        (scale_a.value(), scale_b.value())
+        (scale_a, scale_b)
     } else {
-        (scale_b.value(), scale_a.value())
+        (scale_b, scale_a)
     };
-    let corner_radius = corner_radius.value();
     let width = node_size.read().area.width();
 
     let offset = width - (offset * width);

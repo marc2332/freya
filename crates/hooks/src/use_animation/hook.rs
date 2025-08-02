@@ -23,7 +23,10 @@ use dioxus_signals::{
 use freya_core::animation_clock::AnimationClock;
 use tokio::time::Instant;
 
-use super::AnimatedValue;
+use super::{
+    AnimatedValue,
+    ReadAnimatedValue,
+};
 use crate::{
     use_platform,
     UsePlatform,
@@ -531,6 +534,27 @@ macro_rules! impl_tuple_call {
                     $(
                         $type.finish(direction);
                     )*
+                }
+            }
+            impl<$($type,)*> ReadAnimatedValue for  ($($type,)*)
+            where
+                $($type: ReadAnimatedValue,)*
+            {
+
+                type Output = (
+                    $(
+                        <$type as ReadAnimatedValue>::Output,
+                    )*
+                );
+
+                fn value(&self) -> Self::Output {
+                    #[allow(non_snake_case)]
+                    let ($($type,)*) = self;
+                    (
+                        $(
+                            $type.value(),
+                        )*
+                    )
                 }
             }
         )*

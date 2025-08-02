@@ -35,7 +35,7 @@ fn app() -> Element {
         )
     });
 
-    let (size, background, rotate, radius, scale) = &*animation.get().read_unchecked();
+    let (size, background, rotate, radius, scale) = animation.read().value();
 
     rsx!(
         rect {
@@ -52,12 +52,12 @@ fn app() -> Element {
                 toggle.toggle();
             },
             rect {
-                scale: "{scale.read()}",
-                width: "{size.read()}",
-                rotate: "{rotate.read()}deg",
+                scale: "{scale}",
+                width: "{size}",
+                rotate: "{rotate}deg",
                 height: "50%",
-                background: "{background.read()}",
-                corner_radius: "{radius.read()}"
+                background: "{background}",
+                corner_radius: "{radius}"
             }
         }
     )

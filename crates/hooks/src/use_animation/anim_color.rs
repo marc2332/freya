@@ -10,6 +10,7 @@ use super::{
     Ease,
     Function,
 };
+use crate::ReadAnimatedValue;
 
 /// Animate a color.
 #[derive(Clone, PartialEq)]
@@ -71,6 +72,20 @@ impl AnimColor {
 
     /// Read the value of the [AnimColor] as a String.
     pub fn value(&self) -> String {
+        format!(
+            "rgb({}, {}, {}, {})",
+            self.value.r(),
+            self.value.g(),
+            self.value.b(),
+            self.value.a()
+        )
+    }
+}
+
+impl ReadAnimatedValue for AnimColor {
+    type Output = String;
+
+    fn value(&self) -> Self::Output {
         format!(
             "rgb({}, {}, {}, {})",
             self.value.r(),
