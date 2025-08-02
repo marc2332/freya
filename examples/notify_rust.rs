@@ -5,7 +5,7 @@
 
 use freya::prelude::*;
 use freya_router::prelude::*;
-use notify_rust::Notification;
+use notify_rust::{Hint, Notification};
 
 fn main() {
     launch_with_props(app, "Router Example", (550.0, 400.0));
@@ -25,6 +25,8 @@ pub enum Route {
         SimpleAsync,
         #[route("/minimal")]
         Minimal,
+        #[route("/actions")]
+        Actions,
     #[end_layout]
     #[route("/..route")]
     PageNotFound { },
@@ -48,64 +50,91 @@ fn AppSidebar() -> Element {
                 width: "{variable_width}",
                 sidebar: rsx!(
                     Accordion {
-                            summary: rsx!(
-                                AccordionSummary {
-                                    label {
-                                        "Basic Notifications"
-                                    }
-                                }),
-                              AccordionBody {
-                                  Link {
-                                      to: Route::Simple,
-                                      ActivableRoute {
-                                          route: Route::Simple,
-                                          exact: true,
-                                          SidebarItem {
-                                              theme: SidebarItemThemeWith {
-                                              corner_radius: Some(Cow::Borrowed("6")),
-                                              ..Default::default()
-                                              },
-                                              label {
-                                                  "Simple Notification"
-                                              }
-                                          }
-                                      }
-                                  }
-                                  Link {
-                                        to: Route::SimpleAsync,
-                                        ActivableRoute {
-                                            route: Route::SimpleAsync,
-                                            exact: true,
-                                            SidebarItem {
-                                                theme: SidebarItemThemeWith {
-                                                    corner_radius: Some(Cow::Borrowed("6")),
-                                                    ..Default::default()
-                                                },
-                                                label {
-                                                    "Simple (Asynchronous)"
-                                                }
+                        summary: rsx!(
+                            AccordionSummary {
+                                label {
+                                    "Basic Notifications"
+                                }
+                            }),
+                            AccordionBody {
+                                Link {
+                                    to: Route::Simple,
+                                    ActivableRoute {
+                                        route: Route::Simple,
+                                        exact: true,
+                                        SidebarItem {
+                                            theme: SidebarItemThemeWith {
+                                            corner_radius: Some(Cow::Borrowed("6")),
+                                            ..Default::default()
+                                            },
+                                            label {
+                                                "Simple Notification"
                                             }
                                         }
                                   }
-                                  Link {
-                                      to: Route::Minimal,
+                                }
+                                Link {
+                                      to: Route::SimpleAsync,
                                       ActivableRoute {
-                                          route: Route::Minimal,
+                                          route: Route::SimpleAsync,
                                           exact: true,
                                           SidebarItem {
                                               theme: SidebarItemThemeWith {
-                                              corner_radius: Some(Cow::Borrowed("6")),
-                                              ..Default::default()
+                                                  corner_radius: Some(Cow::Borrowed("6")),
+                                                  ..Default::default()
                                               },
                                               label {
-                                                  "Minimal Notification"
+                                                  "Simple (Asynchronous)"
                                               }
                                           }
                                       }
-                                  }
-                              }
-                    }
-                ),
+                                }
+                                Link {
+                                    to: Route::Minimal,
+                                    ActivableRoute {
+                                        route: Route::Minimal,
+                                        exact: true,
+                                        SidebarItem {
+                                            theme: SidebarItemThemeWith {
+                                            corner_radius: Some(Cow::Borrowed("6")),
+                                            ..Default::default()
+                                            },
+                                            label {
+                                                "Minimal Notification"
+                                            }
+                                        }
+                                    }
+                                }
+
+                            }
+                    },
+                    Accordion {
+                        summary:
+                            rsx!(
+                                AccordionSummary {
+                                    label {
+                                        "Action Notifications"
+                                    }
+                                }),
+                                AccordionBody {
+                                    Link {
+                                        to: Route::Actions,
+                                        ActivableRoute {
+                                            route: Route::Actions,
+                                            exact: true,
+                                            SidebarItem {
+                                                theme: SidebarItemThemeWith {
+                                                corner_radius: Some(Cow::Borrowed("6")),
+                                                ..Default::default()
+                                                },
+                                                label {
+                                                    "Notification With Action"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                    }),
                 Body {
                     main_align: "center",
                     cross_align: "center",
@@ -134,10 +163,10 @@ fn Simple() -> Element {
 
     fn notify() {
         let _ = Notification::new()
-        .summary("Firefox News")
-        .body("This will almost look like a real firefox notification.")
-        .icon("firefox")
-        .show();
+            .summary("Firefox News")
+            .body("This will almost look like a real firefox notification.")
+            .icon("firefox")
+            .show();
     }
 
     rsx!(
@@ -171,11 +200,11 @@ fn SimpleAsync() -> Element {
 
     async fn notify_async() {
         let _ = Notification::new()
-        .summary("async notification")
-        .body("this notification was sent via an async api")
-        .icon("dialog-positive")
-        .show_async()
-        .await;
+            .summary("async notification")
+            .body("this notification was sent via an async api")
+            .icon("dialog-positive")
+            .show_async()
+            .await;
     }
     rsx!(
         Button {
@@ -207,9 +236,7 @@ fn Minimal() -> Element {
     }
 
     fn notify_minimal() {
-        let _ = Notification::new()
-        .summary("minimal notification")
-        .show();
+        let _ = Notification::new().summary("minimal notification").show();
     }
 
     rsx!(
@@ -222,6 +249,53 @@ fn Minimal() -> Element {
             onclick: |_| notify_minimal(),
          label {
              "Notify Minimal"
+         }
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+#[component]
+fn Actions() -> Element {
+    let PlatformInformation { viewport_size, .. } = *use_platform_information().read();
+    let variable_width: &str;
+
+    if viewport_size.width > 640.0 && viewport_size.width < 1024.0 {
+        variable_width = "70%";
+    } else if viewport_size.width >= 1024.0 {
+        variable_width = "60%";
+    } else {
+        variable_width = "90%";
+    }
+
+    fn actions() {
+        Notification::new()
+        .summary("click me")
+        .action("default", "default") // IDENTIFIER, LABEL
+        .action("clicked_a", "button a") // IDENTIFIER, LABEL
+        .action("clicked_b", "button b") // IDENTIFIER, LABEL
+        .hint(Hint::Resident(true))
+        .show()
+        .unwrap()
+        .wait_for_action(|action| match action {
+            "default" => println!("default"),
+                         "clicked_a" => println!("clicked a"),
+                         "clicked_b" => println!("clicked b"),
+                         // FIXME: here "__closed" is a hardcoded keyword, it will be deprecated!!
+                         "__closed" => println!("the notification was closed"),
+                         _ => (),
+        });
+    }
+    rsx!(
+        Button {
+            theme: ButtonThemeWith {
+                padding: Some(Cow::Borrowed("16 8")),
+         width: Some(Cow::Borrowed(variable_width)),
+         ..Default::default()
+            },
+            onclick: |_| actions(),
+         label {
+             "Notify Actions"
          }
         }
     )
