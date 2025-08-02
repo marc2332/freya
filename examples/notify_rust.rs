@@ -23,6 +23,8 @@ pub enum Route {
         Simple,
         #[route("/simple-async")]
         SimpleAsync,
+        #[route("/minimal")]
+        Minimal,
     #[end_layout]
     #[route("/..route")]
     PageNotFound { },
@@ -77,14 +79,30 @@ fn AppSidebar() -> Element {
                                             SidebarItem {
                                                 theme: SidebarItemThemeWith {
                                                     corner_radius: Some(Cow::Borrowed("6")),
-                              ..Default::default()
+                                                    ..Default::default()
                                                 },
                                                 label {
                                                     "Simple (Asynchronous)"
                                                 }
                                             }
                                         }
-                                    }
+                                  }
+                                  Link {
+                                      to: Route::Minimal,
+                                      ActivableRoute {
+                                          route: Route::Minimal,
+                                          exact: true,
+                                          SidebarItem {
+                                              theme: SidebarItemThemeWith {
+                                              corner_radius: Some(Cow::Borrowed("6")),
+                                              ..Default::default()
+                                              },
+                                              label {
+                                                  "Minimal Notification"
+                                              }
+                                          }
+                                      }
+                                  }
                               }
                     }
                 ),
@@ -169,6 +187,41 @@ fn SimpleAsync() -> Element {
             onclick: |_| notify_async(),
          label {
              "Notify Asychronously"
+         }
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+#[component]
+fn Minimal() -> Element {
+    let PlatformInformation { viewport_size, .. } = *use_platform_information().read();
+    let variable_width: &str;
+
+    if viewport_size.width > 640.0 && viewport_size.width < 1024.0 {
+        variable_width = "70%";
+    } else if viewport_size.width >= 1024.0 {
+        variable_width = "60%";
+    } else {
+        variable_width = "90%";
+    }
+
+    fn notify_minimal() {
+        let _ = Notification::new()
+        .summary("minimal notification")
+        .show();
+    }
+
+    rsx!(
+        Button {
+            theme: ButtonThemeWith {
+                padding: Some(Cow::Borrowed("16 8")),
+         width: Some(Cow::Borrowed(variable_width)),
+         ..Default::default()
+            },
+            onclick: |_| notify_minimal(),
+         label {
+             "Notify Minimal"
          }
         }
     )
