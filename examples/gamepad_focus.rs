@@ -11,9 +11,8 @@ use freya::{
 };
 use freya_core::{
     event_loop_messages::{
-        EventLoopAppMessage,
-        EventLoopAppMessageAction,
         EventLoopMessage,
+        EventLoopMessageAction,
     },
     events::{
         KeyboardEventName,
@@ -53,24 +52,20 @@ impl GamePadPlugin {
                 while let Some(ev) = gilrs_instance.next_event() {
                     match ev.event {
                         EventType::ButtonReleased(gilrs::Button::DPadLeft, _) => {
-                            handle.send_event_loop_event(EventLoopMessage::App(
-                                EventLoopAppMessage {
-                                    window_id: Some(window_id),
-                                    action: EventLoopAppMessageAction::FocusAccessibilityNode(
-                                        AccessibilityFocusStrategy::Backward,
-                                    ),
-                                },
-                            ));
+                            handle.send_event_loop_event(EventLoopMessage {
+                                window_id: Some(window_id),
+                                action: EventLoopMessageAction::FocusAccessibilityNode(
+                                    AccessibilityFocusStrategy::Backward,
+                                ),
+                            });
                         }
                         EventType::ButtonReleased(gilrs::Button::DPadRight, _) => {
-                            handle.send_event_loop_event(EventLoopMessage::App(
-                                EventLoopAppMessage {
-                                    window_id: Some(window_id),
-                                    action: EventLoopAppMessageAction::FocusAccessibilityNode(
-                                        AccessibilityFocusStrategy::Forward,
-                                    ),
-                                },
-                            ));
+                            handle.send_event_loop_event(EventLoopMessage {
+                                window_id: Some(window_id),
+                                action: EventLoopMessageAction::FocusAccessibilityNode(
+                                    AccessibilityFocusStrategy::Forward,
+                                ),
+                            });
                         }
                         EventType::ButtonReleased(gilrs::Button::East, _) => {
                             handle.send_platform_event(

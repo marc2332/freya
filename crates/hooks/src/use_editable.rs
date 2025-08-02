@@ -24,7 +24,7 @@ use freya_core::{
         CustomAttributeValues,
     },
     event_loop_messages::{
-        EventLoopAppMessageAction,
+        EventLoopMessageAction,
         TextGroupMeasurement,
     },
 };
@@ -346,7 +346,7 @@ impl UseEditable {
         if let Some((cursor_id, cursor_position, cursor_selection)) = res {
             if self.dragging.peek().has_cursor_coords() {
                 self.platform
-                    .send_app_event(EventLoopAppMessageAction::RemeasureTextGroup(
+                    .send_app_event(EventLoopMessageAction::RemeasureTextGroup(
                         TextGroupMeasurement {
                             text_id: self.cursor_reference.peek().text_id,
                             cursor_id,

@@ -18,9 +18,8 @@ use winit::{
 use crate::{
     dom::FreyaDOM,
     event_loop_messages::{
-        EventLoopAppMessage,
-        EventLoopAppMessageAction,
         EventLoopMessage,
+        EventLoopMessageAction,
     },
     events::PlatformEvent,
 };
@@ -40,10 +39,10 @@ impl PluginHandle {
     /// Emit a [PlatformEvent]. Useful to simulate certain events.
     pub fn send_platform_event(&self, event: PlatformEvent, window_id: WindowId) {
         self.proxy
-            .send_event(EventLoopMessage::App(EventLoopAppMessage {
+            .send_event(EventLoopMessage {
                 window_id: Some(window_id),
-                action: EventLoopAppMessageAction::PlatformEvent(event),
-            }))
+                action: EventLoopMessageAction::PlatformEvent(event),
+            })
             .ok();
     }
 

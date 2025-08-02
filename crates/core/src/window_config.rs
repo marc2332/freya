@@ -18,9 +18,8 @@ use winit::window::{
 
 use crate::{
     event_loop_messages::{
-        EventLoopAppMessage,
-        EventLoopAppMessageAction,
         EventLoopMessage,
+        EventLoopMessageAction,
     },
     parsing::Parse,
 };
@@ -31,10 +30,10 @@ pub type WindowBuilderHook = Box<dyn FnOnce(WindowAttributes) -> WindowAttribute
 
 impl From<accesskit_winit::Event> for EventLoopMessage {
     fn from(value: accesskit_winit::Event) -> Self {
-        Self::App(EventLoopAppMessage {
+        Self {
             window_id: Some(value.window_id),
-            action: EventLoopAppMessageAction::Accessibility(value.window_event),
-        })
+            action: EventLoopMessageAction::Accessibility(value.window_event),
+        }
     }
 }
 

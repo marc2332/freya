@@ -12,9 +12,8 @@ use freya_core::{
     },
     dom::SafeDOM,
     event_loop_messages::{
-        EventLoopAppMessage,
-        EventLoopAppMessageAction,
         EventLoopMessage,
+        EventLoopMessageAction,
         TextGroupMeasurement,
     },
     events::{
@@ -232,10 +231,10 @@ impl Application {
             match fut.poll(&mut cx) {
                 std::task::Poll::Ready(_) => {
                     self.proxy
-                        .send_event(EventLoopMessage::App(EventLoopAppMessage {
+                        .send_event(EventLoopMessage {
                             window_id: Some(self.window.id()),
-                            action: EventLoopAppMessageAction::PollVDOM,
-                        }))
+                            action: EventLoopMessageAction::PollVDOM,
+                        })
                         .ok();
                 }
                 std::task::Poll::Pending => return,

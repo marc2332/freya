@@ -3,9 +3,8 @@ use std::path::PathBuf;
 use freya_core::{
     accessibility::AccessibilityFocusStrategy,
     event_loop_messages::{
-        EventLoopAppMessage,
-        EventLoopAppMessageAction,
         EventLoopMessage,
+        EventLoopMessageAction,
     },
     events::{
         FileEventName,
@@ -125,10 +124,10 @@ impl ApplicationHandler<EventLoopMessage> for WinitRenderer {
                 let window_id = self.state.new_app(event_loop, window_config);
 
                 self.event_loop_proxy
-                    .send_event(EventLoopMessage::App(EventLoopAppMessage {
+                    .send_event(EventLoopMessage {
                         window_id: Some(window_id),
-                        action: EventLoopAppMessageAction::PollVDOM,
-                    }))
+                        action: EventLoopMessageAction::PollVDOM,
+                    })
                     .ok();
 
                 if let Some(on_setup) = on_setup {
@@ -147,10 +146,10 @@ impl ApplicationHandler<EventLoopMessage> for WinitRenderer {
         if cause == StartCause::Init {
             for window_id in self.state.apps.keys() {
                 self.event_loop_proxy
-                    .send_event(EventLoopMessage::App(EventLoopAppMessage {
+                    .send_event(EventLoopMessage {
                         window_id: Some(*window_id),
-                        action: EventLoopAppMessageAction::PollVDOM,
-                    }))
+                        action: EventLoopMessageAction::PollVDOM,
+                    })
                     .ok();
             }
         }
@@ -159,89 +158,80 @@ impl ApplicationHandler<EventLoopMessage> for WinitRenderer {
     fn user_event(
         &mut self,
         event_loop: &winit::event_loop::ActiveEventLoop,
-        event: EventLoopMessage,
+        EventLoopMessage { window_id, action }: EventLoopMessage,
     ) {
         let custom_scale_factor = self.custom_scale_factor;
-        match event {
-            EventLoopMessage::NewWindow(window_config) => {
-                let window_id = self.state.new_app(event_loop, window_config);
-                self.event_loop_proxy
-                    .send_event(EventLoopMessage::App(EventLoopAppMessage {
-                        window_id: Some(window_id),
-                        action: EventLoopAppMessageAction::PollVDOM,
-                    }))
-                    .ok();
-            }
+        let window_id = window_id.expect("Unreacheable");
 
-            EventLoopMessage::App(EventLoopAppMessage {
-                window_id: Some(window_id),
-                action,
-            }) => {
-                let mut remove_app = false;
-                self.state.with_app(window_id, |app, _state| {
-                    let scale_factor = app.window.scale_factor() + custom_scale_factor;
-                    match action {
-                        EventLoopAppMessageAction::FocusAccessibilityNode(strategy) => {
-                            app.request_focus_node(strategy);
-                        }
-                        EventLoopAppMessageAction::RequestRerender => {
-                            app.window.request_redraw();
-                        }
-                        EventLoopAppMessageAction::RequestFullRerender => {
-                            app.resize();
-                        }
-                        EventLoopAppMessageAction::InvalidateArea(mut area) => {
-                            let fdom = app.sdom.get();
-                            area.size *= scale_factor as f32;
-                            let mut compositor_dirty_area = fdom.compositor_dirty_area();
-                            compositor_dirty_area.unite_or_insert(&area)
-                        }
-                        EventLoopAppMessageAction::RemeasureTextGroup(text_id) => {
-                            app.measure_text_group(text_id, scale_factor);
-                        }
-                        EventLoopAppMessageAction::Accessibility(
-                            accesskit_winit::WindowEvent::ActionRequested(request),
-                        ) => {
-                            if accesskit::Action::Focus == request.action {
-                                app.request_focus_node(AccessibilityFocusStrategy::Node(
-                                    request.target,
-                                ));
-                            }
-                        }
-                        EventLoopAppMessageAction::Accessibility(
-                            accesskit_winit::WindowEvent::InitialTreeRequested,
-                        ) => {
-                            app.init_accessibility_on_next_render = true;
-                        }
-                        EventLoopAppMessageAction::SetCursorIcon(icon) => {
-                            app.window.set_cursor(icon);
-                        }
-                        EventLoopAppMessageAction::WithWindow(use_window) => {
-                            (use_window)(&app.window)
-                        }
-                        EventLoopAppMessageAction::CloseWindow => {
-                            remove_app = true;
-                        }
-                        EventLoopAppMessageAction::PlatformEvent(platform_event) => {
-                            app.send_event(platform_event, scale_factor);
-                        }
-                        EventLoopAppMessageAction::PollVDOM => {
-                            app.poll_vdom();
-                        }
+        if let EventLoopMessageAction::NewWindow(window_config) = action {
+            let window_id = self.state.new_app(event_loop, window_config);
+            self.event_loop_proxy
+                .send_event(EventLoopMessage {
+                    window_id: Some(window_id),
+                    action: EventLoopMessageAction::PollVDOM,
+                })
+                .ok();
+            return;
+        }
 
-                        _ => {}
-                    }
-                });
-
-                if remove_app {
-                    let _app = self.state.apps.remove(&window_id).unwrap();
-
-                    if self.state.apps.is_empty() {
-                        event_loop.exit();
+        let mut remove_app = false;
+        self.state.with_app(window_id, |app, _state| {
+            let scale_factor = app.window.scale_factor() + custom_scale_factor;
+            match action {
+                EventLoopMessageAction::FocusAccessibilityNode(strategy) => {
+                    app.request_focus_node(strategy);
+                }
+                EventLoopMessageAction::RequestRerender => {
+                    app.window.request_redraw();
+                }
+                EventLoopMessageAction::RequestFullRerender => {
+                    app.resize();
+                }
+                EventLoopMessageAction::InvalidateArea(mut area) => {
+                    let fdom = app.sdom.get();
+                    area.size *= scale_factor as f32;
+                    let mut compositor_dirty_area = fdom.compositor_dirty_area();
+                    compositor_dirty_area.unite_or_insert(&area)
+                }
+                EventLoopMessageAction::RemeasureTextGroup(text_id) => {
+                    app.measure_text_group(text_id, scale_factor);
+                }
+                EventLoopMessageAction::Accessibility(
+                    accesskit_winit::WindowEvent::ActionRequested(request),
+                ) => {
+                    if accesskit::Action::Focus == request.action {
+                        app.request_focus_node(AccessibilityFocusStrategy::Node(request.target));
                     }
                 }
+                EventLoopMessageAction::Accessibility(
+                    accesskit_winit::WindowEvent::InitialTreeRequested,
+                ) => {
+                    app.init_accessibility_on_next_render = true;
+                }
+                EventLoopMessageAction::SetCursorIcon(icon) => {
+                    app.window.set_cursor(icon);
+                }
+                EventLoopMessageAction::WithWindow(use_window) => (use_window)(&app.window),
+                EventLoopMessageAction::CloseWindow => {
+                    remove_app = true;
+                }
+                EventLoopMessageAction::PlatformEvent(platform_event) => {
+                    app.send_event(platform_event, scale_factor);
+                }
+                EventLoopMessageAction::PollVDOM => {
+                    app.poll_vdom();
+                }
+
+                _ => {}
             }
-            _ => unreachable!(),
+        });
+
+        if remove_app {
+            let _app = self.state.apps.remove(&window_id).unwrap();
+
+            if self.state.apps.is_empty() {
+                event_loop.exit();
+            }
         }
     }
 

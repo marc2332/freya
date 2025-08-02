@@ -22,7 +22,7 @@ use freya_core::{
         ACCESSIBILITY_ROOT_ID,
     },
     custom_attributes::CustomAttributeValues,
-    event_loop_messages::EventLoopAppMessageAction,
+    event_loop_messages::EventLoopMessageAction,
     platform_state::NavigationMode,
     types::{
         AccessibilityId,
@@ -69,7 +69,7 @@ impl UseFocus {
     /// Request to **unfocus** accessibility node. This will not immediately update [Self::is_focused].
     pub fn request_unfocus(&mut self) {
         self.platform
-            .send_app_event(EventLoopAppMessageAction::FocusAccessibilityNode(
+            .send_app_event(EventLoopMessageAction::FocusAccessibilityNode(
                 AccessibilityFocusStrategy::Node(ACCESSIBILITY_ROOT_ID),
             ))
     }

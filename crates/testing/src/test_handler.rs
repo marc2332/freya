@@ -12,8 +12,8 @@ use freya_core::{
     accessibility::AccessibilityTree,
     dom::SafeDOM,
     event_loop_messages::{
-        EventLoopAppMessageAction,
         EventLoopMessage,
+        EventLoopMessageAction,
     },
     events::{
         EventsExecutorAdapter,
@@ -177,9 +177,9 @@ impl<T: 'static + Clone> TestingHandler<T> {
                 break;
             }
 
-            if let Ok(EventLoopMessage::App(message)) = platform_ev {
+            if let Ok(message) = platform_ev {
                 match message.action {
-                    EventLoopAppMessageAction::RequestRerender => {
+                    EventLoopMessageAction::RequestRerender => {
                         if let Some(ticker) = ticker.as_mut() {
                             ticker.tick().await;
                             self.ticker_sender.send(()).unwrap();
@@ -188,14 +188,14 @@ impl<T: 'static + Clone> TestingHandler<T> {
                                 .ok();
                         }
                     }
-                    EventLoopAppMessageAction::FocusAccessibilityNode(strategy) => {
+                    EventLoopMessageAction::FocusAccessibilityNode(strategy) => {
                         let fdom = self.utils.sdom.get();
                         fdom.accessibility_dirty_nodes().request_focus(strategy);
                     }
-                    EventLoopAppMessageAction::SetCursorIcon(icon) => {
+                    EventLoopMessageAction::SetCursorIcon(icon) => {
                         self.cursor_icon = icon;
                     }
-                    EventLoopAppMessageAction::RemeasureTextGroup(text_measurement) => {
+                    EventLoopMessageAction::RemeasureTextGroup(text_measurement) => {
                         let fdom = self.utils.sdom.get();
                         fdom.measure_paragraphs(text_measurement, SCALE_FACTOR);
                     }

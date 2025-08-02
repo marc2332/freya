@@ -21,7 +21,7 @@ pub struct TextGroupMeasurement {
     pub cursor_selection: Option<(CursorPoint, CursorPoint)>,
 }
 
-pub enum EventLoopAppMessageAction {
+pub enum EventLoopMessageAction {
     /// Poll the VirtualDOM
     PollVDOM,
     /// Request a rerender
@@ -46,16 +46,12 @@ pub enum EventLoopAppMessageAction {
     /// Callback to access the Window.
     #[cfg(feature = "winit")]
     WithWindow(Box<dyn FnOnce(&Window) + Send + Sync>),
-}
-
-pub struct EventLoopAppMessage {
-    pub window_id: Option<WindowId>,
-    pub action: EventLoopAppMessageAction,
+    #[cfg(feature = "winit")]
+    NewWindow(window_config::WindowConfig),
 }
 
 /// Message for Freya's event loop
-pub enum EventLoopMessage {
-    App(EventLoopAppMessage),
-    #[cfg(feature = "winit")]
-    NewWindow(window_config::WindowConfig),
+pub struct EventLoopMessage {
+    pub window_id: Option<WindowId>,
+    pub action: EventLoopMessageAction,
 }

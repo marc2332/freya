@@ -18,9 +18,8 @@ use freya_core::window_config::WindowConfig;
 use freya_core::{
     accessibility::AccessibilityFocusStrategy,
     event_loop_messages::{
-        EventLoopAppMessage,
-        EventLoopAppMessageAction,
         EventLoopMessage,
+        EventLoopMessageAction,
     },
     platform::CursorIcon,
 };
@@ -93,7 +92,7 @@ impl UsePlatform {
 
     /// Update the [CursorIcon].
     pub fn set_cursor(&self, cursor_icon: CursorIcon) {
-        self.send_app_event(EventLoopAppMessageAction::SetCursorIcon(cursor_icon));
+        self.send_app_event(EventLoopMessageAction::SetCursorIcon(cursor_icon));
     }
 
     #[cfg(feature = "winit")]
@@ -110,7 +109,7 @@ impl UsePlatform {
     ///
     /// For a `Sync` + `Send` version of this method you can use [UsePlatform::sender].
     pub fn with_window(&self, cb: impl FnOnce(&Window) + 'static + Send + Sync) {
-        self.send_app_event(EventLoopAppMessageAction::WithWindow(Box::new(cb)));
+        self.send_app_event(EventLoopMessageAction::WithWindow(Box::new(cb)));
     }
 
     #[cfg(feature = "winit")]
@@ -184,19 +183,19 @@ impl UsePlatform {
     ///
     /// You most likely dont want to use this unless you are dealing with advanced images/canvas rendering.
     pub fn invalidate_drawing_area(&self, area: Area) {
-        self.send_app_event(EventLoopAppMessageAction::InvalidateArea(area));
+        self.send_app_event(EventLoopMessageAction::InvalidateArea(area));
     }
 
     /// Requests a new animation frame.
     ///
     /// You most likely dont want to use this unless you are dealing animations or canvas rendering.
     pub fn request_animation_frame(&self) {
-        self.send_app_event(EventLoopAppMessageAction::RequestRerender);
+        self.send_app_event(EventLoopMessageAction::RequestRerender);
     }
 
     /// Request focus with a given [AccessibilityFocusStrategy].
     pub fn request_focus(&self, strategy: AccessibilityFocusStrategy) {
-        self.send_app_event(EventLoopAppMessageAction::FocusAccessibilityNode(strategy));
+        self.send_app_event(EventLoopMessageAction::FocusAccessibilityNode(strategy));
     }
 
     /// Create a new frame [Ticker].
@@ -210,7 +209,7 @@ impl UsePlatform {
 
     /// Closes the window.
     pub fn close_window(&self) {
-        self.send_app_event(EventLoopAppMessageAction::CloseWindow);
+        self.send_app_event(EventLoopMessageAction::CloseWindow);
     }
 
     /// Get a [PlatformSender] that you can use to send events from other threads.
@@ -223,15 +222,15 @@ impl UsePlatform {
 
     #[cfg(feature = "winit")]
     pub fn new_window(&self, window_config: WindowConfig) {
-        self.send(EventLoopMessage::NewWindow(window_config)).ok();
+        self.send_app_event(EventLoopMessageAction::NewWindow(window_config));
     }
 
-    pub fn send_app_event(&self, action: EventLoopAppMessageAction) {
-        self.send(EventLoopMessage::App(EventLoopAppMessage {
+    pub fn send_app_event(&self, action: EventLoopMessageAction) {
+        self.send(EventLoopMessage {
             #[cfg(feature = "winit")]
             window_id: try_consume_context(),
             action,
-        }))
+        })
         .ok();
     }
 }
@@ -259,14 +258,10 @@ impl PlatformSender {
     /// Send a callback that will be called with the [Window] once this is available to get read.
     #[cfg(feature = "winit")]
     pub fn with_window(&self, cb: impl FnOnce(&Window) + 'static + Send + Sync) {
-        self.send(EventLoopMessage::App(
-            freya_core::event_loop_messages::EventLoopAppMessage {
-                window_id: try_consume_context(),
-                action: freya_core::event_loop_messages::EventLoopAppMessageAction::WithWindow(
-                    Box::new(cb),
-                ),
-            },
-        ))
+        self.send(EventLoopMessage {
+            window_id: try_consume_context(),
+            action: EventLoopMessageAction::WithWindow(Box::new(cb)),
+        })
         .ok();
     }
 }
