@@ -37,7 +37,7 @@ shipyard = { workspace = true }
 keyboard-types = "0.7.0"
 
 nom = "7.1.3"
-bytes = "1.5.0"
+bytes = { workspace = true }
 tokio = { workspace = true }
 accesskit = { workspace = true }
 

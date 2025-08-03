@@ -26,7 +26,7 @@ struct NodeTreeItem {
 pub fn NodesTree(
     selected_node_id: Option<NodeId>,
     selected_window_id: Option<u64>,
-    onselected: EventHandler<NodeId>,
+    onselected: EventHandler<(u64, NodeId)>,
 ) -> Element {
     let navigator = use_navigator();
     let mut radio = use_radio(DevtoolsChannel::UpdatedDOM);
@@ -95,7 +95,7 @@ pub fn NodesTree(
                         }
                     },
                     onselected: move |_| {
-                        onselected.call(node_id);
+                        onselected.call((window_id, node_id));
 
                         match router().current() {
                             Route::NodeInspectorComputedLayout { .. } => {

@@ -77,6 +77,7 @@ futures-task = "0.3.30"
 tracing = "0.1"
 tracing-subscriber = "0.3.17"
 rustc-hash = "2.0.0"
+bytes = "1.5.0"
 
 [dev-dependencies]
 skia-safe = { workspace = true }
@@ -99,7 +100,7 @@ gl = { workspace = true }
 tree-sitter-highlight = "0.23.0"
 tree-sitter-rust = "0.23.0"
 rfd = "0.15.3"
-bytes = "1.5.0"
+bytes = { workspace = true }
 dioxus-clipboard = { workspace = true }
 winit = { workspace = true }
 dioxus-radio = "0.6.0"

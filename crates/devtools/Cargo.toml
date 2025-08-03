@@ -34,6 +34,7 @@ winit = { workspace = true }
 freya-core = { workspace = true, features = ["serde"]}
 torin = { workspace = true, features = ["serde"] }
 freya-native-core = { workspace = true, features = ["serde"] }
+freya-engine = { workspace = true }
 
 serde = "*"
 serde_json = "*"

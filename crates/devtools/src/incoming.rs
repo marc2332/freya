@@ -5,12 +5,11 @@ use serde::{
 };
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct Incoming {
-    id: usize,
-    message: IncomingMessage,
+pub struct IncomingMessage {
+    pub action: IncomingMessageAction,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-pub enum IncomingMessage {
-    HighlightNode(NodeId),
+pub enum IncomingMessageAction {
+    HighlightNode { window_id: u64, node_id: NodeId },
 }

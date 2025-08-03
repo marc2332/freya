@@ -3,18 +3,24 @@ use std::{
         HashMap,
         HashSet,
     },
+    sync::Arc,
     time::Duration,
 };
 
 use dioxus_radio::prelude::*;
 use freya::prelude::*;
 use freya_devtools::{
-    Outgoing,
-    OutgoingNotification,
+    IncomingMessage,
+    IncomingMessageAction,
+    OutgoingMessage,
+    OutgoingMessageAction,
 };
 use freya_native_core::NodeId;
 use freya_router::prelude::*;
-use futures_util::StreamExt;
+use futures_util::{
+    SinkExt,
+    StreamExt,
+};
 use state::{
     DevtoolsChannel,
     DevtoolsState,
@@ -37,7 +43,10 @@ use tabs::{
 };
 use tokio_tungstenite::{
     connect_async,
-    tungstenite,
+    tungstenite::{
+        self,
+        Message,
+    },
 };
 
 fn main() {
@@ -49,6 +58,7 @@ pub fn app() -> Element {
     use_init_radio_station::<DevtoolsState, DevtoolsChannel>(|| DevtoolsState {
         nodes: HashMap::new(),
         expanded_nodes: HashSet::default(),
+        client: Arc::default(),
     });
     let radio = use_radio(DevtoolsChannel::Global);
 
@@ -58,14 +68,16 @@ pub fn app() -> Element {
         ) -> Result<(), tungstenite::Error> {
             let (ws_stream, _) = connect_async("ws://[::1]:7354").await?;
 
-            let (_write, read) = ws_stream.split();
+            let (write, read) = ws_stream.split();
+
+            radio.write_silently().client.lock().await.replace(write);
 
             read.for_each(move |message| async move {
                 if let Ok(message) = message {
                     if let Ok(text) = message.into_text() {
-                        if let Ok(outgoing) = serde_json::from_str::<Outgoing>(&text) {
-                            match outgoing.notification {
-                                OutgoingNotification::Update { window_id, nodes } => {
+                        if let Ok(outgoing) = serde_json::from_str::<OutgoingMessage>(&text) {
+                            match outgoing.action {
+                                OutgoingMessageAction::Update { window_id, nodes } => {
                                     radio
                                         .write_channel(DevtoolsChannel::UpdatedDOM)
                                         .nodes
@@ -248,6 +260,7 @@ fn LayoutForNodeInspector(node_id: NodeId, window_id: u64) -> Element {
 #[component]
 fn LayoutForDOMInspector() -> Element {
     let route = use_route::<Route>();
+    let radio = use_radio(DevtoolsChannel::Global);
 
     let selected_node_id = route.node_id();
     let selected_window_id = route.window_id();
@@ -264,8 +277,17 @@ fn LayoutForDOMInspector() -> Element {
                     NodesTree {
                         selected_node_id,
                         selected_window_id,
-                        onselected: move |_node_id: NodeId| {
-                            // platform.send(EventLoopMessage::RequestFullRerender).ok();
+                        onselected: move |(window_id, node_id): (u64, NodeId)| {
+                            let message = Message::Text(
+                                serde_json::to_string(&IncomingMessage {
+                                    action: IncomingMessageAction::HighlightNode { window_id, node_id },
+                                }).unwrap()
+                                .into()
+                            );
+                            let client = radio.read().client.clone();
+                            spawn(async move {
+                                client.lock().await.as_mut().unwrap().send(message).await.ok();
+                            });
                         }
                     }
                 }
