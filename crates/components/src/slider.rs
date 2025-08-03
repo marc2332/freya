@@ -224,7 +224,7 @@ pub fn Slider(
         "none".to_string()
     };
 
-    let (width, height, inner_width, inner_height, main_align, offset_x, offset_y) =
+    let (width, height, inner_width, inner_height, main_align, offset_x, offset_y, padding) =
         if direction_is_vertical {
             let inner_height = format!("calc({value} / 100 * (100% - 15))");
             (
@@ -235,6 +235,7 @@ pub fn Slider(
                 "end",
                 -6,
                 3,
+                "0 8",
             )
         } else {
             let inner_width = format!("calc({value} / 100 * (100% - 15))");
@@ -246,6 +247,7 @@ pub fn Slider(
                 "start",
                 -3,
                 -6,
+                "8 0",
             )
         };
 
@@ -282,7 +284,7 @@ pub fn Slider(
             reference: node_reference,
             onmouseenter,
             onmouseleave,
-            padding: "8 0",
+            padding,
             a11y_id,
             border: "{border}",
             onmousedown,
