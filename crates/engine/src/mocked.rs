@@ -9,6 +9,21 @@ use std::ops::*;
 use bitflags::bitflags;
 use glutin::context::PossiblyCurrentContext;
 
+#[derive(Copy, Clone, PartialEq, Debug)]
+#[repr(C)]
+pub struct Color4f {
+    pub r: f32,
+    pub g: f32,
+    pub b: f32,
+    pub a: f32,
+}
+
+impl Color4f {
+    pub const fn new(r: f32, g: f32, b: f32, a: f32) -> Color4f {
+        Self { r, g, b, a }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Copy, Eq)]
 pub struct SkColor(u32);
 
@@ -125,9 +140,9 @@ impl HSV {
     }
 }
 
-pub enum GradientShaderSkColors<'a> {
-    SkColors(&'a [SkColor]),
-    // SkColorsInSpace(&'a [SkColor4f], Option<SkColorSpace>),
+pub enum GradientShaderColors<'a> {
+    Colors(&'a [SkColor]),
+    // ColorsInSpace(&'a [SkColor4f], Option<SkColorSpace>),
 }
 
 pub struct Shader;
@@ -135,7 +150,7 @@ pub struct Shader;
 impl Shader {
     pub fn linear_gradient<'a>(
         _points: (impl Into<SkPoint>, impl Into<SkPoint>),
-        _colors: impl Into<GradientShaderSkColors<'a>>,
+        _colors: impl Into<GradientShaderColors<'a>>,
         _pos: impl Into<Option<&'a [f32]>>,
         _mode: TileMode,
         _flags: impl Into<Option<GradientFlags>>,
@@ -147,7 +162,7 @@ impl Shader {
     pub fn radial_gradient<'a>(
         _center: impl Into<SkPoint>,
         _radius: f32,
-        _colors: impl Into<GradientShaderSkColors<'a>>,
+        _colors: impl Into<GradientShaderColors<'a>>,
         _pos: impl Into<Option<&'a [f32]>>,
         _mode: TileMode,
         _flags: impl Into<Option<GradientFlags>>,
@@ -158,7 +173,7 @@ impl Shader {
 
     pub fn sweep_gradient<'a>(
         _center: impl Into<SkPoint>,
-        _colors: impl Into<GradientShaderSkColors<'a>>,
+        _colors: impl Into<GradientShaderColors<'a>>,
         _pos: impl Into<Option<&'a [f32]>>,
         _mode: TileMode,
         _angles: impl Into<Option<(f32, f32)>>,
@@ -280,7 +295,7 @@ impl Default for SkTextShadow {
 }
 
 impl SkTextShadow {
-    pub fn new(color: SkColor, _: (f32, f32), _: f32) -> Self {
+    pub fn new(color: SkColor, _: impl Into<SkPoint>, _: f64) -> Self {
         unimplemented!("This is mocked")
     }
 }
@@ -346,9 +361,15 @@ impl Width {
     pub const ULTRA_EXPANDED: Self = Self(9);
 }
 
+impl From<i32> for Width {
+    fn from(value: i32) -> Width {
+        Width(value)
+    }
+}
+
 bitflags! {
     #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-    pub struct TextDecoration: u32 {
+    pub struct SkTextDecoration: u32 {
         const NO_DECORATION = 0;
         const UNDERLINE = 1;
         const OVERLINE = 2;
@@ -356,25 +377,25 @@ bitflags! {
     }
 }
 
-impl Default for TextDecoration {
+impl Default for SkTextDecoration {
     fn default() -> Self {
-        TextDecoration::NO_DECORATION
+        SkTextDecoration::NO_DECORATION
     }
 }
 
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq, Default, Debug)]
 pub struct Decoration {
-    pub ty: TextDecoration,
-    pub mode: TextDecorationMode,
+    pub ty: SkTextDecoration,
+    pub mode: SkTextDecorationMode,
     pub color: SkColor,
-    pub style: TextDecorationStyle,
+    pub style: SkTextDecorationStyle,
     pub thickness_multiplier: f32,
 }
 
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq, Debug, Default)]
-pub enum TextDecorationMode {
+pub enum SkTextDecorationMode {
     #[default]
     Gaps = 0,
     Through = 1,
@@ -382,7 +403,7 @@ pub enum TextDecorationMode {
 
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq, Debug, Default)]
-pub enum TextDecorationStyle {
+pub enum SkTextDecorationStyle {
     #[default]
     Solid = 0,
     Double = 1,
@@ -392,7 +413,7 @@ pub enum TextDecorationStyle {
 }
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Default)]
-pub enum TextAlign {
+pub enum SkTextAlign {
     #[default]
     Left = 0,
     Right = 1,
@@ -469,15 +490,15 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_decoration_type(&mut self, decoration: TextDecoration) {
+    pub fn set_decoration_type(&mut self, decoration: SkTextDecoration) {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_decoration_mode(&mut self, mode: TextDecorationMode) {
+    pub fn set_decoration_mode(&mut self, mode: SkTextDecorationMode) {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_decoration_style(&mut self, style: TextDecorationStyle) {
+    pub fn set_decoration_style(&mut self, style: SkTextDecorationStyle) {
         unimplemented!("This is mocked")
     }
 
@@ -617,13 +638,13 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_height_behavior(&mut self, behavior: TextHeightBehavior) {
+    pub fn set_height_behavior(&mut self, behavior: SkTextHeightBehavior) {
         unimplemented!("This is mocked")
     }
 }
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub enum TextHeightBehavior {
+pub enum SkTextHeightBehavior {
     All = 0,
     DisableFirstAscent = 1,
     DisableLastDescent = 2,
@@ -892,11 +913,11 @@ impl ParagraphStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn text_align(&self) -> TextAlign {
+    pub fn text_align(&self) -> SkTextAlign {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_text_align(&mut self, _align: TextAlign) -> &mut Self {
+    pub fn set_text_align(&mut self, _align: SkTextAlign) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -926,11 +947,11 @@ impl ParagraphStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn text_height_behavior(&self) -> TextHeightBehavior {
+    pub fn text_height_behavior(&self) -> SkTextHeightBehavior {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_text_height_behavior(&mut self, _v: TextHeightBehavior) -> &mut Self {
+    pub fn set_text_height_behavior(&mut self, _v: SkTextHeightBehavior) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -942,7 +963,7 @@ impl ParagraphStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn effective_align(&self) -> TextAlign {
+    pub fn effective_align(&self) -> SkTextAlign {
         unimplemented!("This is mocked")
     }
 
@@ -1109,7 +1130,7 @@ impl Canvas {
         unimplemented!("This is mocked")
     }
 
-    pub fn clear(&self, _: SkColor) {
+    pub fn clear(&self, _: impl Into<SkColor>) {
         unimplemented!("This is mocked")
     }
 
@@ -1640,8 +1661,8 @@ pub enum BlendMode {
     Overlay = 15,
     Darken = 16,
     Lighten = 17,
-    SkColorDodge = 18,
-    SkColorBurn = 19,
+    ColorDodge = 18,
+    ColorBurn = 19,
     HardLight = 20,
     SoftLight = 21,
     Difference = 22,
@@ -1649,7 +1670,7 @@ pub enum BlendMode {
     Multiply = 24,
     Hue = 25,
     Saturation = 26,
-    SkColor = 27,
+    Color = 27,
     Luminosity = 28,
 }
 
@@ -1785,7 +1806,7 @@ impl Surface {
         _context: &mut RecordingContext,
         _backend_render_target: &BackendRenderTarget,
         _origin: SurfaceOrigin,
-        _color_type: SkColorType,
+        _color_type: ColorType,
         _color_space: impl Into<Option<SkColorSpace>>,
         _surface_props: Option<&SurfaceProps>,
     ) -> Option<Self> {
@@ -1819,7 +1840,7 @@ pub struct SkColorSpace;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 #[repr(i32)]
-pub enum SkColorType {
+pub enum ColorType {
     RGBA8888 = 4,
 }
 
@@ -1920,7 +1941,7 @@ pub fn wrap_backend_render_target(
     context: &mut RecordingContext,
     backend_render_target: &BackendRenderTarget,
     origin: SurfaceOrigin,
-    color_type: SkColorType,
+    color_type: ColorType,
     color_space: impl Into<Option<SkColorSpace>>,
     surface_props: Option<&SurfaceProps>,
 ) -> Option<Surface> {
