@@ -142,7 +142,7 @@ impl FreyaPlugin for DevtoolsPlugin {
                 let rdom = fdom.rdom();
                 let layout = fdom.layout();
 
-                let highlighted_node = self.highlighted_node.lock().unwrap().clone();
+                let highlighted_node = *self.highlighted_node.lock().unwrap();
                 if let Some(highlighted_node) = highlighted_node {
                     let layout_node = layout.get(highlighted_node);
                     if let Some(layout_node) = layout_node {
