@@ -3,7 +3,7 @@ use freya_native_core::real_dom::NodeImmutable;
 use crate::{
     dom::DioxusNode,
     states::{
-        AccessibilityNodeState,
+        AccessibilityState,
         CursorState,
         FontStyleState,
         LayoutState,
@@ -22,10 +22,10 @@ pub trait NodeStateSnapshot {
 pub struct NodeState {
     pub cursor: CursorState,
     pub font_style: FontStyleState,
-    pub size: LayoutState,
+    pub layout: LayoutState,
     pub style: StyleState,
     pub transform: TransformState,
-    pub accessibility: AccessibilityNodeState,
+    pub accessibility: AccessibilityState,
     pub svg: SvgState,
 }
 
@@ -57,7 +57,7 @@ impl NodeStateSnapshot for DioxusNode<'_> {
             .cloned()
             .unwrap_or_default();
         let accessibility = self
-            .get::<AccessibilityNodeState>()
+            .get::<AccessibilityState>()
             .as_deref()
             .cloned()
             .unwrap_or_default();
@@ -70,7 +70,7 @@ impl NodeStateSnapshot for DioxusNode<'_> {
         NodeState {
             cursor,
             font_style,
-            size,
+            layout: size,
             style,
             transform,
             accessibility,

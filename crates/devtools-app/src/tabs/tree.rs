@@ -43,18 +43,20 @@ pub fn NodesTree(
                     .filter_map(|node| {
                         let parent_is_open = node
                             .parent_id
-                            .map(|id| {
-                                allowed_nodes.contains(&id) && radio.expanded_nodes.contains(&id)
+                            .map(|node_id| {
+                                allowed_nodes.contains(&node_id)
+                                    && radio.expanded_nodes.contains(&(*window_id, node_id))
                             })
                             .unwrap_or(false);
                         let is_top_height = node.height == 1;
                         if parent_is_open || is_top_height {
-                            allowed_nodes.insert(node.id);
-                            let is_open = (node.children_len != 0)
-                                .then_some(radio.expanded_nodes.contains(&node.id));
+                            allowed_nodes.insert(node.node_id);
+                            let is_open = (node.children_len != 0).then_some(
+                                radio.expanded_nodes.contains(&(*window_id, node.node_id)),
+                            );
                             Some(NodeTreeItem {
                                 is_open,
-                                node_id: node.id,
+                                node_id: node.node_id,
                                 window_id: *window_id,
                             })
                         } else {
@@ -86,21 +88,21 @@ pub fn NodesTree(
                     is_open: is_open,
                     onarrow: move |_| {
                         let mut radio = radio.write();
-                        if radio.expanded_nodes.contains(&node_id) {
-                            radio.expanded_nodes.remove(&node_id);
+                        if radio.expanded_nodes.contains(&(window_id, node_id)) {
+                            radio.expanded_nodes.remove(&(window_id, node_id));
                         } else {
-                            radio.expanded_nodes.insert(node_id);
+                            radio.expanded_nodes.insert((window_id, node_id));
                         }
                     },
                     onselected: move |_| {
                         onselected.call(node_id);
 
                         match router().current() {
-                            Route::NodeInspectorLayout { .. } => {
-                                navigator.replace(Route::NodeInspectorLayout { node_id, window_id });
+                            Route::NodeInspectorComputedLayout { .. } => {
+                                navigator.replace(Route::NodeInspectorComputedLayout { node_id, window_id });
                             }
                             _ => {
-                                navigator.replace(Route::NodeInspectorStyle { node_id, window_id });
+                                navigator.replace(Route::NodeInspectorLayout { node_id, window_id });
                             }
                         }
                     },

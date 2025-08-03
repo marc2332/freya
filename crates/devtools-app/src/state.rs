@@ -9,7 +9,7 @@ use freya_native_core::prelude::NodeId;
 
 pub struct DevtoolsState {
     pub(crate) nodes: HashMap<u64, Vec<NodeInfo>>,
-    pub(crate) expanded_nodes: HashSet<NodeId>,
+    pub(crate) expanded_nodes: HashSet<(u64, NodeId)>,
 }
 
 #[derive(PartialEq, Eq, Clone, Debug, Hash)]

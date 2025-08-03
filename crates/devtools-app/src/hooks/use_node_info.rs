@@ -12,6 +12,6 @@ pub fn use_node_info(node_id: NodeId, window_id: u64) -> Option<NodeInfo> {
         .nodes
         .get(&window_id)?
         .iter()
-        .find(|node| node.id == node_id)
+        .find(|node| node.node_id == node_id)
         .cloned()
 }

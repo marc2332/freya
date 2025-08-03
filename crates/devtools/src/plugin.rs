@@ -84,7 +84,7 @@ impl FreyaPlugin for DevtoolsPlugin {
                             new_nodes.push(NodeInfo {
                                 window_id,
                                 is_window: node.height() == 1, // We make the NativeContainer's element appear as the Window
-                                id: node.id(),
+                                node_id: node.id(),
                                 parent_id: node.parent_id(),
                                 children_len: node
                                     .children()

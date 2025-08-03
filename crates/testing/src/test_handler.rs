@@ -27,7 +27,7 @@ use freya_core::{
         Compositor,
         RenderPipeline,
     },
-    states::AccessibilityNodeState,
+    states::AccessibilityState,
     style::fallback_fonts,
     types::{
         EventEmitter,
@@ -272,7 +272,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
         self.platform_sender.send_modify(|state| {
             state.focused_accessibility_id = tree.focus;
             let node_ref = rdom.get(node_id).unwrap();
-            let node_accessibility = node_ref.get::<AccessibilityNodeState>().unwrap();
+            let node_accessibility = node_ref.get::<AccessibilityState>().unwrap();
             let layout_node = layout.get(node_id).unwrap();
             state.focused_accessibility_node =
                 AccessibilityTree::create_node(&node_ref, layout_node, &node_accessibility)

@@ -20,6 +20,7 @@ use state::{
     DevtoolsState,
 };
 
+mod components;
 mod hooks;
 mod node;
 mod property;
@@ -27,8 +28,11 @@ mod state;
 mod tabs;
 
 use tabs::{
+    computed_layout::*,
+    font_style::*,
     layout::*,
     style::*,
+    svg::*,
     tree::*,
 };
 use tokio_tungstenite::{
@@ -126,13 +130,22 @@ pub enum Route {
                 NodeInspectorStyle { node_id: NodeId, window_id: u64 },
                 #[route("/layout")]
                 NodeInspectorLayout { node_id: NodeId, window_id: u64 },
+                #[route("/computed-layout")]
+                NodeInspectorComputedLayout { node_id: NodeId, window_id: u64 },
+                #[route("/font-style")]
+                NodeInspectorFontStyle { node_id: NodeId, window_id: u64 },
+                #[route("/svg")]
+                NodeInspectorSvg { node_id: NodeId, window_id: u64 },
 }
 
 impl Route {
     pub fn node_id(&self) -> Option<NodeId> {
         match self {
             Self::NodeInspectorStyle { node_id, .. }
-            | Self::NodeInspectorLayout { node_id, .. } => Some(*node_id),
+            | Self::NodeInspectorLayout { node_id, .. }
+            | Self::NodeInspectorComputedLayout { node_id, .. } => Some(*node_id),
+            Self::NodeInspectorFontStyle { node_id, .. } => Some(*node_id),
+            Self::NodeInspectorSvg { node_id, .. } => Some(*node_id),
             _ => None,
         }
     }
@@ -140,7 +153,10 @@ impl Route {
     pub fn window_id(&self) -> Option<u64> {
         match self {
             Self::NodeInspectorStyle { window_id, .. }
-            | Self::NodeInspectorLayout { window_id, .. } => Some(*window_id),
+            | Self::NodeInspectorLayout { window_id, .. }
+            | Self::NodeInspectorComputedLayout { window_id, .. } => Some(*window_id),
+            Self::NodeInspectorFontStyle { window_id, .. } => Some(*window_id),
+            Self::NodeInspectorSvg { window_id, .. } => Some(*window_id),
             _ => None,
         }
     }
@@ -149,8 +165,6 @@ impl Route {
 #[allow(non_snake_case)]
 #[component]
 fn LayoutForNodeInspector(node_id: NodeId, window_id: u64) -> Element {
-    let navigator = use_navigator();
-
     rsx!(
         rect {
             overflow: "clip",
@@ -159,42 +173,69 @@ fn LayoutForNodeInspector(node_id: NodeId, window_id: u64) -> Element {
             background: "rgb(30, 30, 30)",
             margin: "0 10 10 10",
             corner_radius: "16",
-            cross_align: "center",
             padding: "6",
             spacing: "6",
-            rect {
+            ScrollView {
+                height: "auto",
                 direction: "horizontal",
-                width: "fill",
-                main_align: "space-between",
-                rect {
-                    direction: "horizontal",
-                    Link {
-                        to: Route::NodeInspectorStyle { node_id, window_id },
-                        ActivableRoute {
-                            route: Route::NodeInspectorStyle { node_id, window_id },
-                            BottomTab {
-                                label {
-                                    "Style"
-                                }
-                            }
-                        }
-                    }
-                    Link {
-                        to: Route::NodeInspectorLayout { node_id, window_id },
-                        ActivableRoute {
-                            route: Route::NodeInspectorLayout { node_id, window_id },
-                            BottomTab {
-                                label {
-                                    "Layout"
-                                }
+                Link {
+                    to: Route::NodeInspectorLayout { node_id, window_id },
+                    ActivableRoute {
+                        route: Route::NodeInspectorLayout { node_id, window_id },
+                        BottomTab {
+                            label {
+                                max_lines: "1",
+                                "Layout"
                             }
                         }
                     }
                 }
-                BottomTab {
-                    onpress: move |_| {navigator.replace(Route::DOMInspector {});},
-                    label {
-                        "Close"
+                Link {
+                    to: Route::NodeInspectorStyle { node_id, window_id },
+                    ActivableRoute {
+                        route: Route::NodeInspectorStyle { node_id, window_id },
+                        BottomTab {
+                            label {
+                                max_lines: "1",
+                                "Style"
+                            }
+                        }
+                    }
+                }
+                Link {
+                    to: Route::NodeInspectorComputedLayout { node_id, window_id },
+                    ActivableRoute {
+                        route: Route::NodeInspectorComputedLayout { node_id, window_id },
+                        BottomTab {
+                            label {
+                                max_lines: "1",
+                                "Computed Layout"
+                            }
+                        }
+                    }
+                }
+                Link {
+                    to: Route::NodeInspectorFontStyle { node_id, window_id },
+                    ActivableRoute {
+                        route: Route::NodeInspectorFontStyle { node_id, window_id },
+                        BottomTab {
+                            label {
+                                max_lines: "1",
+                                "Font Style"
+                            }
+                        }
+                    }
+                }
+                Link {
+                    to: Route::NodeInspectorSvg { node_id, window_id },
+                    ActivableRoute {
+                        route: Route::NodeInspectorSvg { node_id, window_id },
+                        BottomTab {
+                            label {
+                                max_lines: "1",
+                                "SVG"
+                            }
+                        }
                     }
                 }
             }

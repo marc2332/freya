@@ -46,7 +46,7 @@ use crate::{
         DomEventData,
     },
     states::{
-        AccessibilityNodeState,
+        AccessibilityState,
         FontStyleState,
         ScrollableState,
         StyleState,
@@ -158,7 +158,7 @@ impl AccessibilityTree {
 
             // Layout nodes might not exist yet when the app is lauched
             if let Some((accessibility_id, layout_node)) = accessibility_id.zip(layout_node) {
-                let node_accessibility_state = node_ref.get::<AccessibilityNodeState>().unwrap();
+                let node_accessibility_state = node_ref.get::<AccessibilityState>().unwrap();
                 let accessibility_node =
                     Self::create_node(&node_ref, layout_node, &node_accessibility_state);
                 nodes.push((accessibility_id, accessibility_node));
@@ -236,7 +236,7 @@ impl AccessibilityTree {
         let mut nodes = Vec::new();
         for node_id in added_or_updated_ids {
             let node_ref = rdom.get(node_id).unwrap();
-            let node_accessibility_state = node_ref.get::<AccessibilityNodeState>();
+            let node_accessibility_state = node_ref.get::<AccessibilityState>();
             let layout_node = layout.get(node_id);
 
             if let Some((node_accessibility_state, layout_node)) =
@@ -367,7 +367,7 @@ impl AccessibilityTree {
             let accessibility_id = node_ref.get_accessibility_id();
 
             if let Some(accessibility_id) = accessibility_id {
-                let accessibility_state = node_ref.get::<AccessibilityNodeState>().unwrap();
+                let accessibility_state = node_ref.get::<AccessibilityState>().unwrap();
                 if accessibility_state.a11y_focusable.is_enabled() {
                     nodes.push(accessibility_id)
                 }
@@ -420,7 +420,7 @@ impl AccessibilityTree {
     pub fn create_node(
         node_ref: &DioxusNode,
         layout_node: &LayoutNode,
-        node_accessibility: &AccessibilityNodeState,
+        node_accessibility: &AccessibilityState,
     ) -> Node {
         let font_style_state = &*node_ref.get::<FontStyleState>().unwrap();
         let style_state = &*node_ref.get::<StyleState>().unwrap();

@@ -443,7 +443,6 @@ def_element!(
         font_style,
         font_weight,
         font_width,
-        text_align,
         line_height,
         text_shadow,
         decoration,
