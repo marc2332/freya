@@ -12,6 +12,7 @@ use crate::{
     },
     scaled::Scaled,
     size::Size,
+    wrap_content::WrapContent,
 };
 
 /// Node layout configuration
@@ -54,6 +55,9 @@ pub struct Node {
     pub position: Position,
 
     pub content: Content,
+
+    /// Whether children wrap into a new line when there is no more space
+    pub wrap_content: WrapContent,
 
     /// A Node might depend on inner sizes but have a fixed position, like scroll views.
     pub has_layout_references: bool,

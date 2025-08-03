@@ -19,7 +19,10 @@ use freya_native_core::{
     SendAnyMap,
 };
 use freya_native_core_macro::partial_derive_state;
-use torin::prelude::*;
+use torin::{
+    prelude::*,
+    wrap_content::WrapContent,
+};
 
 use crate::{
     custom_attributes::{
@@ -53,6 +56,7 @@ pub struct LayoutState {
     pub cross_alignment: Alignment,
     pub position: Position,
     pub content: Content,
+    pub wrap_content: WrapContent,
     pub node_ref: Option<NodeReference>,
     pub node_id: NodeId,
     pub spacing: Length,
@@ -167,6 +171,9 @@ impl ParseAttribute for LayoutState {
             AttributeName::Content => {
                 self.content = Content::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
+            AttributeName::WrapContent => {
+                self.wrap_content = WrapContent::parse(attr.value.as_text().ok_or(ParseError)?)?;
+            }
             AttributeName::Reference => {
                 if let OwnedAttributeValue::Custom(CustomAttributeValues::Reference(reference)) =
                     attr.value
@@ -221,6 +228,7 @@ impl State<CustomAttributeValues> for LayoutState {
             AttributeName::PositionBottom,
             AttributeName::PositionLeft,
             AttributeName::Content,
+            AttributeName::WrapContent,
             AttributeName::Spacing,
         ]));
 
