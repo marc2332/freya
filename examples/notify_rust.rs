@@ -3,14 +3,13 @@
     windows_subsystem = "windows"
 )]
 
+#[cfg(all(unix, not(target_os = "macos")))]
 use std::thread;
+use notify_rust::Hint;
 
 use freya::prelude::*;
 use freya_router::prelude::*;
-use notify_rust::{
-    Hint,
-    Notification,
-};
+use notify_rust::Notification;
 
 fn main() {
     launch_with_params(app, "Notify Example", (550.0, 400.0));
