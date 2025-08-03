@@ -1,15 +1,23 @@
-use std::time::{
-    Duration,
-    Instant,
+use std::{
+    collections::HashMap,
+    time::{
+        Duration,
+        Instant,
+    },
 };
 
-use freya_core::plugins::{
-    FreyaPlugin,
-    PluginEvent,
-    PluginHandle,
+use freya_core::{
+    plugins::{
+        FreyaPlugin,
+        PluginEvent,
+        PluginHandle,
+    },
+    values::{
+        Color,
+        TextShadow,
+    },
 };
 use freya_engine::prelude::{
-    Color,
     FontStyle,
     Paint,
     PaintStyle,
@@ -17,14 +25,19 @@ use freya_engine::prelude::{
     ParagraphStyle,
     Rect,
     Slant,
-    TextShadow,
     TextStyle,
     Weight,
     Width,
 };
+use freya_winit::reexports::winit::window::WindowId;
 
 #[derive(Default)]
 pub struct PerformanceOverlayPlugin {
+    metrics: HashMap<WindowId, WindowMetrics>,
+}
+
+#[derive(Default)]
+struct WindowMetrics {
     frames: Vec<Instant>,
     fps_historic: Vec<usize>,
     max_fps: usize,
@@ -41,65 +54,83 @@ pub struct PerformanceOverlayPlugin {
     finished_events: Option<Duration>,
 }
 
+impl PerformanceOverlayPlugin {
+    fn get_metrics(&mut self, id: WindowId) -> &mut WindowMetrics {
+        self.metrics.entry(id).or_default()
+    }
+}
+
 impl FreyaPlugin for PerformanceOverlayPlugin {
     fn on_event(&mut self, event: &PluginEvent, _handle: PluginHandle) {
         match event {
-            PluginEvent::StartedMeasuringLayout(_) => self.started_layout = Some(Instant::now()),
-            PluginEvent::FinishedMeasuringLayout(_) => {
-                self.finished_layout = Some(self.started_layout.unwrap().elapsed())
+            PluginEvent::StartedMeasuringLayout { window, .. } => {
+                self.get_metrics(window.id()).started_layout = Some(Instant::now())
             }
-            PluginEvent::StartedMeasuringEvents => self.started_events = Some(Instant::now()),
-            PluginEvent::FinishedMeasuringEvents => {
-                self.finished_events = Some(self.started_events.unwrap().elapsed())
+            PluginEvent::FinishedMeasuringLayout { window, .. } => {
+                let metrics = self.get_metrics(window.id());
+                metrics.finished_layout = Some(metrics.started_layout.unwrap().elapsed())
             }
-            PluginEvent::StartedUpdatingDOM => self.started_dom_updates = Some(Instant::now()),
-            PluginEvent::FinishedUpdatingDOM => {
-                self.finished_dom_updates = Some(self.started_dom_updates.unwrap().elapsed())
+            PluginEvent::StartedMeasuringEvents { window, .. } => {
+                self.get_metrics(window.id()).started_events = Some(Instant::now())
             }
-            PluginEvent::BeforeRender { .. } => self.started_render = Some(Instant::now()),
+            PluginEvent::FinishedMeasuringEvents { window, .. } => {
+                let metrics = self.get_metrics(window.id());
+                metrics.finished_events = Some(metrics.started_events.unwrap().elapsed())
+            }
+            PluginEvent::StartedUpdatingDOM { window, .. } => {
+                self.get_metrics(window.id()).started_dom_updates = Some(Instant::now())
+            }
+            PluginEvent::FinishedUpdatingDOM { window, .. } => {
+                let metrics = self.get_metrics(window.id());
+                metrics.finished_dom_updates = Some(metrics.started_dom_updates.unwrap().elapsed())
+            }
+            PluginEvent::BeforeRender { window, .. } => {
+                self.get_metrics(window.id()).started_render = Some(Instant::now())
+            }
             PluginEvent::AfterRender {
+                window,
                 canvas,
                 font_collection,
-                freya_dom,
+                fdom,
             } => {
-                let started_render = self.started_render.take().unwrap();
-                let finished_layout = self.finished_layout.unwrap();
-                let finished_events = self.finished_events.unwrap_or_default();
-                let finished_dom_updates = self.finished_dom_updates.unwrap();
+                let metrics = self.get_metrics(window.id());
+                let started_render = metrics.started_render.take().unwrap();
+                let finished_layout = metrics.finished_layout.unwrap();
+                let finished_events = metrics.finished_events.unwrap_or_default();
+                let finished_dom_updates = metrics.finished_dom_updates.unwrap();
 
-                let rdom = freya_dom.rdom();
-                let layout = freya_dom.layout();
-                let animation_clock = freya_dom.animation_clock();
+                let rdom = fdom.rdom();
+                let layout = fdom.layout();
+                let animation_clock = fdom.animation_clock();
 
                 let now = Instant::now();
 
-                self.frames
+                metrics
+                    .frames
                     .retain(|frame| now.duration_since(*frame).as_millis() < 1000);
 
-                self.frames.push(now);
+                metrics.frames.push(now);
 
                 // Render the texts
                 let mut paragraph_builder =
                     ParagraphBuilder::new(&ParagraphStyle::default(), *font_collection);
                 let mut text_style = TextStyle::default();
                 text_style.set_color(Color::from_rgb(63, 255, 0));
-                text_style.add_shadow(TextShadow::new(
-                    Color::from_rgb(60, 60, 60),
-                    (0.0, 1.0),
-                    1.0,
-                ));
+                text_style.add_shadow(
+                    TextShadow::new(Color::from_rgb(60, 60, 60), (0.0, 1.0), 1.0).into(),
+                );
                 paragraph_builder.push_style(&text_style);
 
                 // FPS
                 add_text(
                     &mut paragraph_builder,
-                    format!("{} FPS\n", self.frames.len()),
+                    format!("{} FPS\n", metrics.frames.len()),
                     30.0,
                 );
 
-                self.fps_historic.push(self.frames.len());
-                if self.fps_historic.len() > 70 {
-                    self.fps_historic.remove(0);
+                metrics.fps_historic.push(metrics.frames.len());
+                if metrics.fps_historic.len() > 70 {
+                    metrics.fps_historic.remove(0);
                 }
 
                 // Rendering time
@@ -160,15 +191,20 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 paint.set_style(PaintStyle::Fill);
                 paint.set_color(Color::from_argb(120, 255, 255, 255));
 
-                self.max_fps = self
-                    .max_fps
-                    .max(self.fps_historic.iter().max().copied().unwrap_or_default());
+                metrics.max_fps = metrics.max_fps.max(
+                    metrics
+                        .fps_historic
+                        .iter()
+                        .max()
+                        .copied()
+                        .unwrap_or_default(),
+                );
                 let start_x = 5.0;
-                let start_y = 250.0 + self.max_fps.max(60) as f32;
+                let start_y = 250.0 + metrics.max_fps.max(60) as f32;
 
                 canvas.draw_rect(Rect::new(5., 200., 200., start_y), &paint);
 
-                for (i, fps) in self.fps_historic.iter().enumerate() {
+                for (i, fps) in metrics.fps_historic.iter().enumerate() {
                     let mut paint = Paint::default();
                     paint.set_anti_alias(true);
                     paint.set_style(PaintStyle::Fill);
@@ -190,11 +226,7 @@ fn add_text(paragraph_builder: &mut ParagraphBuilder, text: String, font_size: f
     text_style.set_color(Color::from_rgb(25, 225, 35));
     let font_style = FontStyle::new(Weight::BOLD, Width::EXPANDED, Slant::Upright);
     text_style.set_font_style(font_style);
-    text_style.add_shadow(TextShadow::new(
-        Color::from_rgb(65, 65, 65),
-        (0.0, 1.0),
-        1.0,
-    ));
+    text_style.add_shadow(TextShadow::new(Color::from_rgb(65, 65, 65), (0.0, 1.0), 1.0).into());
     text_style.set_font_size(font_size);
     paragraph_builder.push_style(&text_style);
     paragraph_builder.add_text(text);

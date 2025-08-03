@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Form", (300.0, 250.0));
+    launch_with_params(app, "Form", (300.0, 250.0));
 }
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug)]

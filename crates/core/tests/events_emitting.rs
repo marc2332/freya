@@ -4,7 +4,7 @@ use std::{
 };
 
 use freya::prelude::*;
-use freya_engine::prelude::Color;
+use freya_core::values::Color;
 use freya_testing::prelude::*;
 
 #[tokio::test]

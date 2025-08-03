@@ -7,6 +7,7 @@ use crate::parsing::{
     ParseError,
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Default, Clone, Debug, PartialEq)]
 pub enum ShadowPosition {
     #[default]
@@ -14,6 +15,7 @@ pub enum ShadowPosition {
     Inset,
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Default, Clone, Debug, PartialEq)]
 pub struct Shadow {
     pub position: ShadowPosition,

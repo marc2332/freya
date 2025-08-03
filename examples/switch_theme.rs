@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Switch Theme", (600., 700.));
+    launch_with_params(app, "Switch Theme", (600., 700.));
 }
 
 #[component]

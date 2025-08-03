@@ -11,7 +11,7 @@ use std::{
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Drag and Drop", (800., 600.));
+    launch_with_params(app, "Drag and Drop", (800., 600.));
 }
 
 #[derive(PartialEq, Clone, Copy)]

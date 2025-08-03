@@ -9,11 +9,12 @@ const ICON: &[u8] = include_bytes!("../assets/icon.png");
 
 fn main() {
     launch_cfg(
-        app,
-        LaunchConfig::<()>::new()
-            .with_title("Freya & cargo-packager")
-            .with_size(400., 300.)
-            .with_icon(LaunchConfig::load_icon(ICON)),
+        LaunchConfig::new().with_window(
+            WindowConfig::new(app)
+                .with_title("Freya & cargo-packager")
+                .with_size(400., 300.)
+                .with_icon(LaunchConfig::load_icon(ICON)),
+        ),
     )
 }
 

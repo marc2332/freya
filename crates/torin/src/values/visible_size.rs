@@ -1,5 +1,6 @@
 use crate::prelude::Length;
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(PartialEq, Clone, Debug)]
 pub enum VisibleSize {
     Full,

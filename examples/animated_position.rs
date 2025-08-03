@@ -9,7 +9,7 @@ use freya::prelude::*;
 use rand::Rng;
 
 fn main() {
-    launch_with_props(app, "Animation position", (800.0, 700.0));
+    launch_with_params(app, "Animation position", (800.0, 700.0));
 }
 
 fn app() -> Element {

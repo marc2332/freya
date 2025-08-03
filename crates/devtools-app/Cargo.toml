@@ -1,0 +1,21 @@
+[package]
+name = "freya-devtools-app"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+freya = { workspace = true }
+freya-core = { workspace = true }
+freya-native-core = { workspace = true }
+freya-router = { workspace = true }
+freya-hooks = { workspace = true }
+
+dioxus-radio = "0.6"
+freya-devtools = { workspace = true }
+
+accesskit = { workspace = true }
+serde_json = "*"
+
+tokio-tungstenite = { version = "0.27" }
+futures-util = { workspace = true }
+tokio = { workspace = true }
