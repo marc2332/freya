@@ -27,7 +27,8 @@ docs = ["dep:freya-testing", "dep:dioxus-i18n", "dep:freya-router", "freya-compo
 # User features
 network-image = ["freya-components/network-image"]
 use_camera = ["freya-hooks/use_camera"]
-performance-overlay = ["winit"]
+performance-overlay = []
+devtools = ["dep:freya-devtools"]
 disable-zoom-shortcuts = ["freya-winit/disable-zoom-shortcuts"]
 custom-tokio-rt = []
 winit = ["freya-core/winit", "freya-hooks/winit", "freya-components/winit", "dep:freya-winit"]
@@ -53,6 +54,9 @@ dioxus-signals = { workspace = true }
 
 tokio = { workspace = true }
 tracing-subscriber = { workspace = true, optional = true, features = ["env-filter"]}
+
+# devtools
+freya-devtools = { workspace = true, features = ["server"], optional = true }
 
 # winit
 freya-winit = { workspace = true, optional = true }

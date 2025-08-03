@@ -1,9 +1,6 @@
 use std::fmt;
 
-use freya_engine::prelude::{
-    Color,
-    Paint,
-};
+use freya_engine::prelude::Paint;
 use torin::prelude::Area;
 
 use super::{
@@ -12,11 +9,15 @@ use super::{
     LinearGradient,
     RadialGradient,
 };
-use crate::parsing::{
-    Parse,
-    ParseError,
+use crate::{
+    parsing::{
+        Parse,
+        ParseError,
+    },
+    values::Color,
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, PartialEq)]
 pub enum Fill {
     Color(Color),

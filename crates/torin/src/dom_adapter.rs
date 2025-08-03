@@ -12,6 +12,7 @@ use crate::{
     },
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 /// Cached layout results of a Node
 #[derive(Debug, Default, Clone)]
 pub struct LayoutNode {
@@ -25,6 +26,7 @@ pub struct LayoutNode {
     pub margin: Gaps,
 
     /// Associated data
+    #[cfg_attr(feature = "serde", serde(skip_deserializing, skip_serializing))]
     pub data: Option<Arc<SendAnyMap>>,
 }
 

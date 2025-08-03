@@ -43,6 +43,7 @@ use freya_core::{
         NativePlatformReceiver,
         NativePlatformSender,
     },
+    values::Color,
     window_config::WindowConfig,
 };
 use freya_engine::prelude::*;
@@ -183,23 +184,21 @@ impl Application {
 
     /// Update the RealDOM, layout and others with the latest changes from the VirtualDOM
     pub fn render_mutations(&mut self, scale_factor: f32) -> (bool, bool) {
+        let mut fdom = self.sdom.get_mut();
         self.plugins.send(
             PluginEvent::StartedUpdatingDOM {
                 window: &self.window,
-                fdom: &self.sdom.get(),
+                fdom: &fdom,
             },
             PluginHandle::new(&self.proxy),
         );
 
-        let (repaint, relayout) = self
-            .sdom
-            .get_mut()
-            .render_mutations(&mut self.vdom, scale_factor);
+        let (repaint, relayout) = fdom.render_mutations(&mut self.vdom, scale_factor);
 
         self.plugins.send(
             PluginEvent::FinishedUpdatingDOM {
                 window: &self.window,
-                fdom: &self.sdom.get(),
+                fdom: &fdom,
             },
             PluginHandle::new(&self.proxy),
         );
@@ -257,31 +256,41 @@ impl Application {
 
     /// Process the events queue
     pub fn process_events(&mut self, scale_factor: f64) {
-        let sdom = self.sdom.get();
-        let rdom = sdom.rdom();
-        let layout = sdom.layout();
-        let layers = sdom.layers();
+        let fdom = self.sdom.get();
 
-        let focus_id = self.accessibility.focused_node_id();
-        // self.plugins.send(
-        //     PluginEvent::StartedMeasuringEvents,
-        //     PluginHandle::new(&self.proxy),
-        // );
-        let mut events_measurer_adapter = EventsMeasurerAdapter {
-            rdom,
-            layers: &layers,
-            layout: &layout,
-            vdom: &mut self.vdom,
-            scale_factor,
-        };
-        let processed_events =
-            events_measurer_adapter.run(&mut self.events, &mut self.nodes_state, focus_id);
-        self.event_emitter.send(processed_events).unwrap();
+        self.plugins.send(
+            PluginEvent::StartedMeasuringEvents {
+                window: &self.window,
+                fdom: &fdom,
+            },
+            PluginHandle::new(&self.proxy),
+        );
 
-        // self.plugins.send(
-        //     PluginEvent::FinishedMeasuringEvents,
-        //     PluginHandle::new(&self.proxy),
-        // );
+        {
+            let rdom = fdom.rdom();
+            let layout = fdom.layout();
+            let layers = fdom.layers();
+
+            let focus_id = self.accessibility.focused_node_id();
+            let mut events_measurer_adapter = EventsMeasurerAdapter {
+                rdom,
+                layers: &layers,
+                layout: &layout,
+                vdom: &mut self.vdom,
+                scale_factor,
+            };
+            let processed_events =
+                events_measurer_adapter.run(&mut self.events, &mut self.nodes_state, focus_id);
+            self.event_emitter.send(processed_events).unwrap();
+        }
+
+        self.plugins.send(
+            PluginEvent::FinishedMeasuringEvents {
+                window: &self.window,
+                fdom: &fdom,
+            },
+            PluginHandle::new(&self.proxy),
+        );
     }
 
     pub fn init_accessibility(&mut self) {
@@ -490,7 +499,6 @@ impl Application {
             dirty_surface: &mut self.dirty_surface,
             compositor: &mut self.compositor,
             scale_factor,
-            highlighted_node: None,
             font_collection,
             font_manager,
             fallback_fonts,

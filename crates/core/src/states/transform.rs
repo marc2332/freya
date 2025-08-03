@@ -29,12 +29,14 @@ use crate::{
     },
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Default, Clone, Debug, Component, PartialEq)]
 pub struct TransformState {
     pub node_id: NodeId,
     pub opacities: Vec<f32>,
     pub rotations: Vec<(NodeId, f32)>,
     pub scales: Vec<(NodeId, f32, f32)>,
+    #[cfg_attr(feature = "serde", serde(skip_serializing, skip_deserializing))]
     pub blend_mode: Option<BlendMode>,
     pub backdrop_blur: f32,
 }

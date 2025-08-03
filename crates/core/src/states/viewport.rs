@@ -30,6 +30,7 @@ use crate::{
     },
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Default, PartialEq, Clone, Debug, Component)]
 pub struct ViewportState {
     pub viewports: Vec<NodeId>,

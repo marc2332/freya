@@ -11,7 +11,11 @@ use freya_core::{
         SafeDOM,
     },
     event_loop_messages::EventLoopMessage,
-    plugins::PluginsManager,
+    plugins::{
+        PluginEvent,
+        PluginHandle,
+        PluginsManager,
+    },
     window_config::WindowConfig,
 };
 use freya_engine::prelude::*;
@@ -185,9 +189,31 @@ impl RendererState {
             &self.fallback_fonts,
         );
 
+        self.plugins.send(
+            PluginEvent::WindowCreated {
+                window: &app.window,
+                canvas: app.surface.canvas(),
+                font_collection: &self.font_collection,
+                fdom: &app.sdom.get(),
+            },
+            PluginHandle::new(&self.proxy),
+        );
+
         self.apps.insert(id, app);
 
         id
+    }
+
+    pub fn close_app(&mut self, window_id: WindowId) {
+        let app = self.apps.remove(&window_id).unwrap();
+
+        self.plugins.send(
+            PluginEvent::WindowClosed {
+                window: &app.window,
+                fdom: &app.sdom.get(),
+            },
+            PluginHandle::new(&self.proxy),
+        );
     }
 }
 

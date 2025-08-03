@@ -72,8 +72,19 @@ impl PluginsManager {
 
 /// Event emitted to Plugins.
 pub enum PluginEvent<'a> {
-    /// The Window just got created.
-    WindowCreated(&'a Window),
+    /// A Window just got created.
+    WindowCreated {
+        window: &'a Window,
+        canvas: &'a Canvas,
+        font_collection: &'a FontCollection,
+        fdom: &'a FreyaDOM,
+    },
+
+    /// A Window just got closed.
+    WindowClosed {
+        window: &'a Window,
+        fdom: &'a FreyaDOM,
+    },
 
     /// Before starting to render the app to the Canvas.
     BeforeRender {

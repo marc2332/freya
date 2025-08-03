@@ -227,7 +227,7 @@ impl ApplicationHandler<EventLoopMessage> for WinitRenderer {
         });
 
         if remove_app {
-            let _app = self.state.apps.remove(&window_id).unwrap();
+            self.state.close_app(window_id);
 
             if self.state.apps.is_empty() {
                 event_loop.exit();
@@ -238,14 +238,14 @@ impl ApplicationHandler<EventLoopMessage> for WinitRenderer {
     fn window_event(
         &mut self,
         event_loop: &winit::event_loop::ActiveEventLoop,
-        id: winit::window::WindowId,
+        window_id: winit::window::WindowId,
         event: winit::event::WindowEvent,
     ) {
         let custom_scale_factor = self.custom_scale_factor;
 
         let mut remove_app = false;
 
-        self.state.with_app(id, |app, state| {
+        self.state.with_app(window_id, |app, state| {
             app.accessibility
                 .process_accessibility_event(&event, &app.window);
             let scale_factor = app.window.scale_factor() + custom_scale_factor;
@@ -403,35 +403,8 @@ impl ApplicationHandler<EventLoopMessage> for WinitRenderer {
                         }
                     };
 
-                    #[allow(dead_code)]
-                    let change_animation_clock = is_control_pressed
-                        && self.modifiers_state.alt_key()
-                        && state == ElementState::Pressed;
-
-                    #[cfg(debug_assertions)]
-                    if change_animation_clock {
-                        let ch = logical_key.to_text();
-                        let render = if ch == Some("+") {
-                            app.sdom.get().animation_clock().increase_by(0.2);
-                            true
-                        } else if ch == Some("-") {
-                            app.sdom.get().animation_clock().decrease_by(0.2);
-                            true
-                        } else {
-                            false
-                        };
-
-                        if render {
-                            app.resize();
-                            app.window.request_redraw();
-                        }
-                    }
-
                     #[cfg(not(feature = "disable-zoom-shortcuts"))]
-                    if !change_animation_clock
-                        && is_control_pressed
-                        && state == ElementState::Pressed
-                    {
+                    if is_control_pressed && state == ElementState::Pressed {
                         let ch = logical_key.to_text();
                         let render = if ch == Some("+") {
                             self.custom_scale_factor =
@@ -570,7 +543,7 @@ impl ApplicationHandler<EventLoopMessage> for WinitRenderer {
         });
 
         if remove_app {
-            let _app = self.state.apps.remove(&id).unwrap();
+            self.state.close_app(window_id);
 
             if self.state.apps.is_empty() {
                 event_loop.exit();
