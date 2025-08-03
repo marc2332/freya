@@ -9,6 +9,7 @@ use std::{
 
 use dioxus_radio::prelude::*;
 use freya::prelude::*;
+use freya_core::animation_clock::AnimationClock;
 use freya_devtools::{
     IncomingMessage,
     IncomingMessageAction,
@@ -37,6 +38,7 @@ use tabs::{
     computed_layout::*,
     font_style::*,
     layout::*,
+    misc::*,
     style::*,
     svg::*,
     tree::*,
@@ -59,6 +61,7 @@ pub fn app() -> Element {
         nodes: HashMap::new(),
         expanded_nodes: HashSet::default(),
         client: Arc::default(),
+        animation_speed: AnimationClock::DEFAULT_SPEED / AnimationClock::MAX_SPEED * 100.,
     });
     let radio = use_radio(DevtoolsChannel::Global);
 
@@ -102,22 +105,36 @@ pub fn app() -> Element {
 
     rsx!(
         Body {
-            Router::<Route> { }
+            Router::<Route> {
+                config: ||RouterConfig::<Route>::default().with_initial_path(Route::DOMInspector { })
+             }
         }
     )
 }
 
 #[component]
-pub fn DevtoolsBar() -> Element {
+pub fn NavBar() -> Element {
     rsx!(
         Tabsbar {
             Link {
                 to: Route::DOMInspector { },
                 ActivableRoute {
+
                     route: Route::DOMInspector { },
                     Tab {
                         label {
                             "Tree Inspector"
+                        }
+                    }
+                }
+            }
+            Link {
+                to: Route::Misc { },
+                ActivableRoute {
+                    route: Route::Misc { },
+                    Tab {
+                        label {
+                            "Misc"
                         }
                     }
                 }
@@ -132,22 +149,25 @@ pub fn DevtoolsBar() -> Element {
 #[derive(Routable, Clone, PartialEq, Debug)]
 #[rustfmt::skip]
 pub enum Route {
-    #[layout(DevtoolsBar)]
+    #[layout(NavBar)]
+        #[route("/misc")]
+        Misc {},
         #[layout(LayoutForDOMInspector)]
-            #[route("/")]
-            DOMInspector  {},
-        #[nest("/node/:node_id/:window_id")]
-            #[layout(LayoutForNodeInspector)]
-                #[route("/style")]
-                NodeInspectorStyle { node_id: NodeId, window_id: u64 },
-                #[route("/layout")]
-                NodeInspectorLayout { node_id: NodeId, window_id: u64 },
-                #[route("/computed-layout")]
-                NodeInspectorComputedLayout { node_id: NodeId, window_id: u64 },
-                #[route("/font-style")]
-                NodeInspectorFontStyle { node_id: NodeId, window_id: u64 },
-                #[route("/svg")]
-                NodeInspectorSvg { node_id: NodeId, window_id: u64 },
+            #[nest("/inspector")]
+                #[route("/")]
+                DOMInspector {},
+                #[nest("/node/:node_id/:window_id")]
+                    #[layout(LayoutForNodeInspector)]
+                        #[route("/style")]
+                        NodeInspectorStyle { node_id: NodeId, window_id: u64 },
+                        #[route("/layout")]
+                        NodeInspectorLayout { node_id: NodeId, window_id: u64 },
+                        #[route("/computed-layout")]
+                        NodeInspectorComputedLayout { node_id: NodeId, window_id: u64 },
+                        #[route("/font-style")]
+                        NodeInspectorFontStyle { node_id: NodeId, window_id: u64 },
+                        #[route("/svg")]
+                        NodeInspectorSvg { node_id: NodeId, window_id: u64 },
 }
 
 impl Route {

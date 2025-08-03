@@ -26,12 +26,14 @@ pub struct DevtoolsState {
     pub(crate) nodes: HashMap<u64, Vec<NodeInfo>>,
     pub(crate) expanded_nodes: HashSet<(u64, NodeId)>,
     pub(crate) client: Arc<Mutex<Option<WebSocket>>>,
+    pub(crate) animation_speed: f32,
 }
 
 #[derive(PartialEq, Eq, Clone, Debug, Hash)]
 pub enum DevtoolsChannel {
     Global,
     UpdatedDOM,
+    Misc,
 }
 
 impl RadioChannel<DevtoolsState> for DevtoolsChannel {}

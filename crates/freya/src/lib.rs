@@ -54,7 +54,6 @@
 //! - `custom-tokio-rt`: disables the default Tokio runtime created by Freya.
 //! - `performance-overlay`: enables the performance overlay plugin.
 //! - `disable-zoom-shortcuts`: disables the default zoom shortcuts.
-//! - `disable-animation-shortcuts`: disables the default animation clock shortcuts.
 
 /// Freya docs.
 #[cfg(doc)]

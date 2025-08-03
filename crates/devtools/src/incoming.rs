@@ -12,4 +12,5 @@ pub struct IncomingMessage {
 #[derive(Deserialize, Serialize, Debug)]
 pub enum IncomingMessageAction {
     HighlightNode { window_id: u64, node_id: NodeId },
+    SetSpeedTo { speed: f32 },
 }

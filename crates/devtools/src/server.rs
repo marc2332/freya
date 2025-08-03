@@ -43,14 +43,14 @@ use crate::{
     OutgoingMessage,
     OutgoingMessageAction,
     SharedWebsockets,
+    WindowState,
     incoming::IncomingMessageAction,
-    node_info::NodeInfo,
 };
 
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 async fn handle_request(
-    nodes: Arc<Mutex<HashMap<u64, Vec<NodeInfo>>>>,
+    windows: Arc<Mutex<HashMap<u64, WindowState>>>,
     websockets: SharedWebsockets,
     mut request: Request<Incoming>,
     highlighted_node: Arc<Mutex<Option<NodeId>>>,
@@ -62,7 +62,7 @@ async fn handle_request(
         tokio::spawn(async move {
             let id = WEBSOCKET_ID.fetch_add(1, Ordering::Relaxed);
             if let Err(e) = serve_websocket(
-                nodes,
+                windows,
                 websockets.clone(),
                 id,
                 websocket,
@@ -86,7 +86,7 @@ static WEBSOCKET_ID: AtomicU32 = AtomicU32::new(0);
 
 /// Handle a websocket connection.
 async fn serve_websocket(
-    nodes: Arc<Mutex<HashMap<u64, Vec<NodeInfo>>>>,
+    windows: Arc<Mutex<HashMap<u64, WindowState>>>,
     websockets: SharedWebsockets,
     id: u32,
     websocket: HyperWebsocket,
@@ -95,9 +95,9 @@ async fn serve_websocket(
 ) -> Result<(), Error> {
     let websocket = websocket.await?;
     let (mut write, mut read) = websocket.split();
-    let windows = nodes.lock().unwrap().clone();
 
-    for (window_id, nodes) in windows {
+    let windows_snapshot = windows.lock().unwrap().clone();
+    for (window_id, WindowState { nodes, .. }) in windows_snapshot {
         let message = Message::Text(
             serde_json::to_string(&OutgoingMessage {
                 action: OutgoingMessageAction::Update { window_id, nodes },
@@ -126,6 +126,14 @@ async fn serve_websocket(
                                 action: EventLoopMessageAction::RequestRerender,
                             });
                         }
+                        IncomingMessageAction::SetSpeedTo { speed } => {
+                            for WindowState {
+                                animation_clock, ..
+                            } in windows.lock().unwrap().values()
+                            {
+                                animation_clock.set_speed(speed);
+                            }
+                        }
                     }
                 } else {
                     println!("failed to parse");
@@ -143,7 +151,7 @@ async fn serve_websocket(
 }
 
 pub async fn run_server(
-    nodes: Arc<Mutex<HashMap<u64, Vec<NodeInfo>>>>,
+    windows: Arc<Mutex<HashMap<u64, WindowState>>>,
     websockets: SharedWebsockets,
     highlighted_node: Arc<Mutex<Option<NodeId>>>,
     plugin_handle: PluginHandle,
@@ -157,7 +165,7 @@ pub async fn run_server(
 
     loop {
         let (stream, _) = listener.accept().await?;
-        let nodes = nodes.clone();
+        let windows = windows.clone();
         let websockets = websockets.clone();
         let highlighted_node = highlighted_node.clone();
         let plugin_handle = plugin_handle.clone();
@@ -166,7 +174,7 @@ pub async fn run_server(
                 TokioIo::new(stream),
                 hyper::service::service_fn(move |req| {
                     handle_request(
-                        nodes.clone(),
+                        windows.clone(),
                         websockets.clone(),
                         req,
                         highlighted_node.clone(),

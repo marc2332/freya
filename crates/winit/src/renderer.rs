@@ -403,35 +403,8 @@ impl ApplicationHandler<EventLoopMessage> for WinitRenderer {
                         }
                     };
 
-                    #[allow(dead_code)]
-                    let change_animation_clock = is_control_pressed
-                        && self.modifiers_state.alt_key()
-                        && state == ElementState::Pressed;
-
-                    #[cfg(debug_assertions)]
-                    if change_animation_clock {
-                        let ch = logical_key.to_text();
-                        let render = if ch == Some("+") {
-                            app.sdom.get().animation_clock().increase_by(0.2);
-                            true
-                        } else if ch == Some("-") {
-                            app.sdom.get().animation_clock().decrease_by(0.2);
-                            true
-                        } else {
-                            false
-                        };
-
-                        if render {
-                            app.resize();
-                            app.window.request_redraw();
-                        }
-                    }
-
                     #[cfg(not(feature = "disable-zoom-shortcuts"))]
-                    if !change_animation_clock
-                        && is_control_pressed
-                        && state == ElementState::Pressed
-                    {
+                    if is_control_pressed && state == ElementState::Pressed {
                         let ch = logical_key.to_text();
                         let render = if ch == Some("+") {
                             self.custom_scale_factor =

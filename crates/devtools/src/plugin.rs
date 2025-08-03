@@ -7,6 +7,7 @@ use std::{
 };
 
 use freya_core::{
+    animation_clock::AnimationClock,
     dom::DioxusDOM,
     node_state_snapshot::NodeStateSnapshot,
     plugins::{
@@ -45,16 +46,28 @@ use crate::{
 pub(crate) type Websockets = HashMap<u32, SplitSink<WebSocketStream<TokioIo<Upgraded>>, Message>>;
 pub(crate) type SharedWebsockets = Arc<tokio::sync::Mutex<Websockets>>;
 
+#[derive(Clone)]
+pub struct WindowState {
+    pub animation_clock: AnimationClock,
+    pub nodes: Vec<NodeInfo>,
+}
+
 #[derive(Default)]
 pub struct DevtoolsPlugin {
-    nodes: Arc<Mutex<HashMap<u64, Vec<NodeInfo>>>>,
+    windows: Arc<Mutex<HashMap<u64, WindowState>>>,
     websockets: SharedWebsockets,
     init: Option<()>,
     highlighted_node: Arc<Mutex<Option<NodeId>>>,
 }
 
 impl DevtoolsPlugin {
-    pub fn sync(&mut self, window_id: WindowId, rdom: &DioxusDOM, layout: &Torin<NodeId>) {
+    pub fn sync(
+        &mut self,
+        window_id: WindowId,
+        rdom: &DioxusDOM,
+        layout: &Torin<NodeId>,
+        animation_clock: AnimationClock,
+    ) {
         let window_id: u64 = window_id.into();
         let mut new_nodes = Vec::new();
 
@@ -84,14 +97,27 @@ impl DevtoolsPlugin {
         });
 
         // Update nodes snapshot
-        self.nodes.lock().unwrap().insert(window_id, new_nodes);
+        self.windows.lock().unwrap().insert(
+            window_id,
+            WindowState {
+                nodes: new_nodes,
+                animation_clock,
+            },
+        );
 
         // Notify the existing subscribers of this change
         let outgoing_message = Message::Text(
             serde_json::to_string(&OutgoingMessage {
                 action: OutgoingMessageAction::Update {
                     window_id,
-                    nodes: self.nodes.lock().unwrap().get(&window_id).cloned().unwrap(),
+                    nodes: self
+                        .windows
+                        .lock()
+                        .unwrap()
+                        .get(&window_id)
+                        .cloned()
+                        .unwrap()
+                        .nodes,
                 },
             })
             .unwrap()
@@ -113,7 +139,7 @@ impl FreyaPlugin for DevtoolsPlugin {
                 let window_id: u64 = window.id().into();
 
                 // Update nodes snapshot
-                self.nodes.lock().unwrap().remove(&window_id);
+                self.windows.lock().unwrap().remove(&window_id);
 
                 // Notify the existing subscribers of this change
                 let outgoing_message = Message::Text(
@@ -141,6 +167,7 @@ impl FreyaPlugin for DevtoolsPlugin {
             } => {
                 let rdom = fdom.rdom();
                 let layout = fdom.layout();
+                let animation_clock = fdom.animation_clock();
 
                 let highlighted_node = *self.highlighted_node.lock().unwrap();
                 if let Some(highlighted_node) = highlighted_node {
@@ -169,11 +196,11 @@ impl FreyaPlugin for DevtoolsPlugin {
                     }
                 }
 
-                self.sync(window.id(), rdom, &layout);
+                self.sync(window.id(), rdom, &layout, animation_clock.clone());
             }
             PluginEvent::WindowCreated { .. } => {
                 if self.init.is_none() {
-                    let nodes = self.nodes.clone();
+                    let nodes = self.windows.clone();
                     let websockets = self.websockets.clone();
                     let highlighted_node = self.highlighted_node.clone();
                     let plugin_handle = plugin_handle.clone();

@@ -67,6 +67,20 @@ pub fn NodesTree(
             .collect::<Vec<_>>()
     };
 
+    if items.is_empty() {
+        return rsx!(
+            rect {
+                width: "fill",
+                height: "fill",
+                main_align: "center",
+                cross_align: "center",
+                label {
+                    "Waiting for an app to connect..."
+                }
+            }
+        );
+    }
+
     rsx!(VirtualScrollView {
         show_scrollbar: true,
         length: items.len(),

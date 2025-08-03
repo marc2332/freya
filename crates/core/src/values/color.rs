@@ -80,7 +80,7 @@ impl Color {
     }
 
     pub fn from_rgb(r: u8, g: u8, b: u8) -> Self {
-        Self::from_argb(1, r, g, b)
+        Self::from_argb(255, r, g, b)
     }
 
     pub fn with_a(self, a: u8) -> Self {
