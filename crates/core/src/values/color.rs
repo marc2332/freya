@@ -1,6 +1,7 @@
 use std::fmt;
 
 use freya_engine::prelude::{
+    SkColor,
     HSV,
     RGB,
 };
@@ -26,7 +27,7 @@ impl From<Color> for u32 {
     }
 }
 
-impl From<Color> for freya_engine::prelude::SkColor {
+impl From<Color> for SkColor {
     fn from(value: Color) -> Self {
         Self::new(value.0)
     }
@@ -43,8 +44,8 @@ impl From<Color> for freya_engine::prelude::Color4f {
     }
 }
 
-impl From<freya_engine::prelude::SkColor> for Color {
-    fn from(value: freya_engine::prelude::SkColor) -> Self {
+impl From<SkColor> for Color {
+    fn from(value: SkColor) -> Self {
         let a = value.a();
         let r = value.r();
         let g = value.g();
@@ -83,7 +84,7 @@ impl Color {
     }
 
     pub fn with_a(self, a: u8) -> Self {
-        let color: freya_engine::prelude::SkColor = self.into();
+        let color: SkColor = self.into();
         color.with_a(a).into()
     }
 
@@ -104,7 +105,7 @@ impl Color {
     }
 
     pub fn to_rgb(self) -> RGB {
-        let color: freya_engine::prelude::SkColor = self.into();
+        let color: SkColor = self.into();
         color.to_rgb()
     }
 }
@@ -143,7 +144,7 @@ impl Parse for Color {
 
 impl DisplayColor for Color {
     fn fmt_rgb(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let color: freya_engine::prelude::SkColor = (*self).into();
+        let color: SkColor = (*self).into();
         write!(
             f,
             "rgb({}, {}, {}, {})",
@@ -155,7 +156,7 @@ impl DisplayColor for Color {
     }
 
     fn fmt_hsl(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let color: freya_engine::prelude::SkColor = (*self).into();
+        let color: SkColor = (*self).into();
         // HSV to HSL conversion
         let hsv = color.to_hsv();
         let l = hsv.v - (hsv.v * hsv.s / 2.0);
@@ -210,7 +211,7 @@ fn parse_rgb(color: &str) -> Result<Color, ParseError> {
         return Err(ParseError);
     }
 
-    let base_color = freya_engine::prelude::SkColor::from_rgb(r, g, b);
+    let base_color = SkColor::from_rgb(r, g, b);
 
     if let Some(a) = a {
         Ok(base_color.with_a(parse_alpha(a)?).into())

@@ -51,6 +51,7 @@ smallvec = { workspace = true }
 cursor-icon = "1.2.0"
 
 serde = { version = "*", features = ["rc"], optional = true }
+bitflags = "2.9.1"
 
 [dev-dependencies]
 dioxus = { workspace = true }

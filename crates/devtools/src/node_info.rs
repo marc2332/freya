@@ -1,101 +1,56 @@
-use freya_engine::prelude::*;
-use freya_native_core::real_dom::NodeImmutable;
-use torin::{
-    alignment::Alignment,
-    direction::Direction,
-    gaps::Gaps,
-    prelude::{
-        Content,
-        Position,
-        VisibleSize,
-    },
-    size::Size,
-};
-
-use crate::{
-    dom::DioxusNode,
-    states::{
-        AccessibilityNodeState,
-        CursorState,
-        FontStyleState,
-        LayoutState,
-        StyleState,
-        SvgState,
-        TransformState,
-    },
+use freya_core::{
+    node_state_snapshot::NodeState,
     values::{
         Border,
         CornerRadius,
         Fill,
         Shadow,
         SvgPaint,
+        TextAlign,
         TextOverflow,
         TextShadow,
     },
 };
+use freya_native_core::{
+    NodeId,
+    tags::TagName,
+};
+use serde::{
+    Deserialize,
+    Serialize,
+};
+use torin::{
+    alignment::Alignment,
+    direction::Direction,
+    gaps::Gaps,
+    prelude::{
+        Content,
+        LayoutNode,
+        Position,
+        VisibleSize,
+    },
+    size::Size,
+};
 
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, PartialEq, Debug)]
-pub struct NodeState {
-    pub cursor: CursorState,
-    pub font_style: FontStyleState,
-    pub size: LayoutState,
-    pub style: StyleState,
-    pub transform: TransformState,
-    pub accessibility: AccessibilityNodeState,
-    pub svg: SvgState,
+#[derive(Deserialize, Serialize, Clone, PartialEq, Debug)]
+pub struct NodeInfo {
+    pub window_id: u64,
+    pub is_window: bool,
+    pub id: NodeId,
+    pub parent_id: Option<NodeId>,
+    pub children_len: usize,
+    pub tag: TagName,
+    pub height: u16,
+    pub state: NodeState,
+    pub layout_node: LayoutNode,
 }
 
-pub fn get_node_state(node: &DioxusNode) -> NodeState {
-    let cursor = node
-        .get::<CursorState>()
-        .as_deref()
-        .cloned()
-        .unwrap_or_default();
-    let font_style = node
-        .get::<FontStyleState>()
-        .as_deref()
-        .cloned()
-        .unwrap_or_default();
-    let size = node
-        .get::<LayoutState>()
-        .as_deref()
-        .cloned()
-        .unwrap_or_default();
-    let style = node
-        .get::<StyleState>()
-        .as_deref()
-        .cloned()
-        .unwrap_or_default();
-    let transform = node
-        .get::<TransformState>()
-        .as_deref()
-        .cloned()
-        .unwrap_or_default();
-    let accessibility = node
-        .get::<AccessibilityNodeState>()
-        .as_deref()
-        .cloned()
-        .unwrap_or_default();
-    let svg = node
-        .get::<SvgState>()
-        .as_deref()
-        .cloned()
-        .unwrap_or_default();
-
-    NodeState {
-        cursor,
-        font_style,
-        size,
-        style,
-        transform,
-        accessibility,
-        svg,
-    }
+pub trait NodeStateAttributes {
+    fn attributes(&self) -> Vec<(&str, AttributeType)>;
 }
 
-impl NodeState {
-    pub fn attributes(&self) -> Vec<(&str, AttributeType)> {
+impl NodeStateAttributes for NodeState {
+    fn attributes(&self) -> Vec<(&str, AttributeType)> {
         let mut attributes = vec![
             ("width", AttributeType::Size(&self.size.width)),
             ("height", AttributeType::Size(&self.size.height)),
@@ -219,21 +174,4 @@ pub enum AttributeType<'a> {
     Border(&'a Border),
     TextAlignment(&'a TextAlign),
     TextOverflow(&'a TextOverflow),
-}
-
-pub trait ExternalPretty {
-    fn pretty(&self) -> String;
-}
-
-impl ExternalPretty for TextAlign {
-    fn pretty(&self) -> String {
-        match self {
-            TextAlign::Left => "left".to_string(),
-            TextAlign::Right => "right".to_string(),
-            TextAlign::Center => "center".to_string(),
-            TextAlign::Justify => "justify".to_string(),
-            TextAlign::Start => "start".to_string(),
-            TextAlign::End => "end".to_string(),
-        }
-    }
 }

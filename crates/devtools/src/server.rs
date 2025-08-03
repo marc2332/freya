@@ -35,7 +35,7 @@ use crate::{
     OutgoingNotification,
     SharedWebsockets,
     incoming::IncomingMessage,
-    outgoing::NodeInfo,
+    node_info::NodeInfo,
 };
 
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
@@ -120,7 +120,7 @@ pub async fn run_server(
     nodes: Arc<Mutex<HashMap<u64, Vec<NodeInfo>>>>,
     websockets: SharedWebsockets,
 ) -> Result<(), Error> {
-    let addr: std::net::SocketAddr = "[::1]:3000".parse()?;
+    let addr: std::net::SocketAddr = "[::1]:7354".parse()?;
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     println!("Listening on http://{addr}");
 

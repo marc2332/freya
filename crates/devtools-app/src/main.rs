@@ -52,7 +52,7 @@ pub fn app() -> Element {
         async fn connect(
             mut radio: dioxus_radio::prelude::Radio<DevtoolsState, DevtoolsChannel>,
         ) -> Result<(), tungstenite::Error> {
-            let (ws_stream, _) = connect_async("ws://[::1]:3000").await?;
+            let (ws_stream, _) = connect_async("ws://[::1]:7354").await?;
 
             let (_write, read) = ws_stream.split();
 

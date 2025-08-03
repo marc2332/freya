@@ -12,6 +12,7 @@ use super::ParagraphData;
 use crate::{
     dom::*,
     states::FontStyleState,
+    values::TextAlign,
 };
 
 pub fn create_label(
@@ -25,10 +26,10 @@ pub fn create_label(
     let font_style = &*node.get::<FontStyleState>().unwrap();
 
     let mut paragraph_style = ParagraphStyle::default();
-    paragraph_style.set_text_align(font_style.text_align);
+    paragraph_style.set_text_align(font_style.text_align.into());
     paragraph_style.set_max_lines(font_style.max_lines);
     paragraph_style.set_replace_tab_characters(true);
-    paragraph_style.set_text_height_behavior(font_style.text_height);
+    paragraph_style.set_text_height_behavior(font_style.text_height.into());
 
     if let Some(ellipsis) = font_style.text_overflow.get_ellipsis() {
         paragraph_style.set_ellipsis(ellipsis);

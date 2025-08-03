@@ -7,7 +7,7 @@ use std::{
 };
 
 use freya_core::{
-    node::get_node_state,
+    node_state_snapshot::NodeStateSnapshot,
     plugins::{
         FreyaPlugin,
         PluginEvent,
@@ -27,7 +27,7 @@ use tungstenite::Message;
 use crate::{
     Outgoing,
     OutgoingNotification,
-    outgoing::NodeInfo,
+    node_info::NodeInfo,
     server::run_server,
 };
 
@@ -93,7 +93,7 @@ impl FreyaPlugin for DevtoolsPlugin {
                                     .count(),
                                 tag: *node_type.tag().unwrap(),
                                 height: node.height(),
-                                state: get_node_state(&node),
+                                state: node.state_snapshot(),
                                 layout_node,
                             });
                         }

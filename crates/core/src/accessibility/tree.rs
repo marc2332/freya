@@ -18,12 +18,6 @@ use freya_elements::{
     WheelData,
     WheelSource,
 };
-use freya_engine::prelude::{
-    Slant,
-    TextAlign,
-    TextDecoration,
-    TextDecorationStyle,
-};
 use freya_native_core::{
     events::EventName,
     node::NodeType,
@@ -62,7 +56,11 @@ use crate::{
     types::EventEmitter,
     values::{
         Fill,
+        FontSlant,
         OverflowMode,
+        TextAlign,
+        TextDecoration,
+        TextDecorationStyle,
     },
 };
 
@@ -539,36 +537,33 @@ impl AccessibilityTree {
 
         // Set italic property for italic/oblique font slants
         match font_style_state.font_slant {
-            Slant::Italic | Slant::Oblique => builder.set_italic(),
+            FontSlant::Italic | FontSlant::Oblique => builder.set_italic(),
             _ => {}
         }
 
         // Text decoration
         if font_style_state
-            .decoration
-            .ty
+            .text_decoration
             .contains(TextDecoration::LINE_THROUGH)
         {
             builder.set_strikethrough(skia_decoration_style_to_accesskit(
-                font_style_state.decoration.style,
+                font_style_state.text_decoration_style,
             ));
         }
         if font_style_state
-            .decoration
-            .ty
+            .text_decoration
             .contains(TextDecoration::UNDERLINE)
         {
             builder.set_underline(skia_decoration_style_to_accesskit(
-                font_style_state.decoration.style,
+                font_style_state.text_decoration_style,
             ));
         }
         if font_style_state
-            .decoration
-            .ty
+            .text_decoration
             .contains(TextDecoration::OVERLINE)
         {
             builder.set_overline(skia_decoration_style_to_accesskit(
-                font_style_state.decoration.style,
+                font_style_state.text_decoration_style,
             ));
         }
 

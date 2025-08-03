@@ -4,7 +4,7 @@ use freya_core::{
         DioxusNode,
         SafeDOM,
     },
-    node::get_node_state,
+    node_state_snapshot::NodeStateSnapshot,
 };
 use freya_native_core::{
     real_dom::NodeImmutable,
@@ -36,7 +36,7 @@ impl TestUtils {
         let children_ids = rdom.tree_ref().children_ids(node_id);
         let node: DioxusNode = rdom.get(node_id).unwrap();
 
-        let state = get_node_state(&node);
+        let state = node.state_snapshot();
         let node_type = node.node_type().clone();
 
         TestNode {
@@ -79,7 +79,7 @@ impl TestUtils {
                 let height = node.height();
                 let children_ids = node.child_ids();
 
-                let state = get_node_state(node);
+                let state = node.state_snapshot();
                 let node_type = node.node_type().clone();
 
                 nodes.push(TestNode {

@@ -19,7 +19,6 @@ use accesskit::{
     Toggled,
     VerticalOffset,
 };
-use freya_engine::prelude::SkColor;
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
@@ -183,7 +182,7 @@ impl ParseAttribute for AccessibilityNodeState {
                             builder.set_position_in_set(attr.parse().map_err(|_| ParseError)?)
                         }
                         AttributeName::A11yColorValue => {
-                            let color: SkColor = Color::parse(attr)?.into();
+                            let color = Color::parse(attr)?;
                             builder.set_color_value(
                                 ((color.a() as u32) << 24)
                                     | ((color.b() as u32) << 16)

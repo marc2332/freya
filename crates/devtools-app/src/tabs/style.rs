@@ -1,7 +1,7 @@
 use freya::prelude::*;
-use freya_core::node::{
+use freya_devtools::{
     AttributeType,
-    ExternalPretty,
+    NodeStateAttributes,
 };
 use freya_native_core::NodeId;
 
