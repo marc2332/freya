@@ -122,7 +122,7 @@ pub async fn run_server(
 ) -> Result<(), Error> {
     let addr: std::net::SocketAddr = "[::1]:7354".parse()?;
     let listener = tokio::net::TcpListener::bind(&addr).await?;
-    println!("Listening on http://{addr}");
+    println!("Running the Devtools Server on http://{addr}");
 
     let mut http = hyper::server::conn::http1::Builder::new();
     http.keep_alive(true);
