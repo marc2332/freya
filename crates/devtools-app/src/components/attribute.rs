@@ -1,8 +1,4 @@
-use freya::prelude::{
-    Element,
-    rsx,
-    *,
-};
+use freya::prelude::*;
 use freya_devtools::AttributeType;
 
 use crate::property::{

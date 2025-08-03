@@ -6,7 +6,6 @@ use freya_core::values::{
     TextShadow,
 };
 
-#[allow(non_snake_case)]
 #[component]
 pub fn Property(name: String, value: String) -> Element {
     rsx!(
@@ -37,7 +36,6 @@ pub fn Property(name: String, value: String) -> Element {
     )
 }
 
-#[allow(non_snake_case)]
 #[component]
 pub fn GradientProperty(name: String, fill: Fill) -> Element {
     rsx!(
@@ -62,7 +60,6 @@ pub fn GradientProperty(name: String, fill: Fill) -> Element {
     )
 }
 
-#[allow(non_snake_case)]
 #[component]
 pub fn ColorProperty(name: String, fill: Fill) -> Element {
     rsx!(
@@ -109,7 +106,6 @@ pub fn ColorProperty(name: String, fill: Fill) -> Element {
     )
 }
 
-#[allow(non_snake_case)]
 #[component]
 pub fn ShadowProperty(name: String, shadow: Shadow) -> Element {
     rsx!(
@@ -164,7 +160,6 @@ pub fn ShadowProperty(name: String, shadow: Shadow) -> Element {
     )
 }
 
-#[allow(non_snake_case)]
 #[component]
 pub fn BorderProperty(name: String, border: Border) -> Element {
     rsx!(
@@ -218,7 +213,6 @@ pub fn BorderProperty(name: String, border: Border) -> Element {
     )
 }
 
-#[allow(non_snake_case)]
 #[component]
 pub fn TextShadowProperty(name: String, text_shadow: TextShadow) -> Element {
     let color = text_shadow.color.to_rgb();

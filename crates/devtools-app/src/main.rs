@@ -174,7 +174,6 @@ impl Route {
     }
 }
 
-#[allow(non_snake_case)]
 #[component]
 fn LayoutForNodeInspector(node_id: NodeId, window_id: u64) -> Element {
     rsx!(
@@ -256,7 +255,6 @@ fn LayoutForNodeInspector(node_id: NodeId, window_id: u64) -> Element {
     )
 }
 
-#[allow(non_snake_case)]
 #[component]
 fn LayoutForDOMInspector() -> Element {
     let route = use_route::<Route>();
@@ -302,7 +300,6 @@ fn LayoutForDOMInspector() -> Element {
     )
 }
 
-#[allow(non_snake_case)]
 #[component]
 fn DOMInspector() -> Element {
     Ok(VNode::placeholder())

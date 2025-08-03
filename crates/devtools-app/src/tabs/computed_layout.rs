@@ -3,7 +3,6 @@ use freya_native_core::NodeId;
 
 use crate::hooks::use_node_info;
 
-#[allow(non_snake_case)]
 #[component]
 pub fn NodeInspectorComputedLayout(node_id: NodeId, window_id: u64) -> Element {
     let Some(node) = use_node_info(node_id, window_id) else {

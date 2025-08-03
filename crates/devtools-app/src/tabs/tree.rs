@@ -21,7 +21,6 @@ struct NodeTreeItem {
     node_id: NodeId,
 }
 
-#[allow(non_snake_case)]
 #[component]
 pub fn NodesTree(
     selected_node_id: Option<NodeId>,

@@ -6,7 +6,6 @@ use freya_native_core::prelude::NodeId;
 
 use crate::hooks::use_node_info;
 
-#[allow(non_snake_case)]
 #[component]
 pub fn NodeElement(
     node_id: NodeId,
