@@ -7,10 +7,13 @@ use std::thread;
 
 use freya::prelude::*;
 use freya_router::prelude::*;
-use notify_rust::{Hint, Notification};
+use notify_rust::{
+    Hint,
+    Notification,
+};
 
 fn main() {
-    launch_with_props(app, "Router Example", (550.0, 400.0));
+    launch_with_props(app, "Notify Example", (550.0, 400.0));
 }
 
 fn app() -> Element {
@@ -151,7 +154,7 @@ fn AppSidebar() -> Element {
                                                 },
                                                 label {
                                                     "Notify On Close With Message"
-                                                }     
+                                                }
                                             }
                                         }
                                     }
@@ -222,6 +225,18 @@ fn Simple() -> Element {
     )
 }
 
+#[cfg(any(target_os = "windows", target_os = "macos"))]
+#[allow(non_snake_case)]
+#[component]
+fn SimpleAsync() -> Element {
+  rsx!(
+    rect {
+      label { "This is an xdg only feature" }
+    }
+  )
+}
+
+#[cfg(all(unix, not(target_os = "macos")))]
 #[allow(non_snake_case)]
 #[component]
 fn SimpleAsync() -> Element {
@@ -292,6 +307,18 @@ fn Minimal() -> Element {
     )
 }
 
+#[cfg(any(target_os = "windows", target_os = "macos"))]
+#[allow(non_snake_case)]
+#[component]
+fn Actions() -> Element {
+  rsx!(
+    rect {
+      label { "This is an xdg only feature" }
+    }
+  )
+}
+
+#[cfg(all(unix, not(target_os = "macos")))]
 #[allow(non_snake_case)]
 #[component]
 fn Actions() -> Element {
@@ -308,21 +335,21 @@ fn Actions() -> Element {
 
     fn actions() {
         Notification::new()
-        .summary("click me")
-        .action("default", "default") // IDENTIFIER, LABEL
-        .action("clicked_a", "button a") // IDENTIFIER, LABEL
-        .action("clicked_b", "button b") // IDENTIFIER, LABEL
-        .hint(Hint::Resident(true))
-        .show()
-        .unwrap()
-        .wait_for_action(|action| match action {
-            "default" => println!("default"),
-                         "clicked_a" => println!("clicked a"),
-                         "clicked_b" => println!("clicked b"),
-                         // FIXME: here "__closed" is a hardcoded keyword, it will be deprecated!!
-                         "__closed" => println!("the notification was closed"),
-                         _ => (),
-        });
+            .summary("click me")
+            .action("default", "default") // IDENTIFIER, LABEL
+            .action("clicked_a", "button a") // IDENTIFIER, LABEL
+            .action("clicked_b", "button b") // IDENTIFIER, LABEL
+            .hint(Hint::Resident(true))
+            .show()
+            .unwrap()
+            .wait_for_action(|action| match action {
+                "default" => println!("default"),
+                "clicked_a" => println!("clicked a"),
+                "clicked_b" => println!("clicked b"),
+                // FIXME: here "__closed" is a hardcoded keyword, it will be deprecated!!
+                "__closed" => println!("the notification was closed"),
+                _ => (),
+            });
     }
     rsx!(
         Button {
@@ -339,6 +366,18 @@ fn Actions() -> Element {
     )
 }
 
+#[cfg(any(target_os = "windows", target_os = "macos"))]
+#[allow(non_snake_case)]
+#[component]
+fn OnClose() -> Element {
+  rsx!(
+    rect {
+      label { "This is an xdg only feature" }
+    }
+  )
+}
+
+#[cfg(all(unix, not(target_os = "macos")))]
 #[allow(non_snake_case)]
 #[component]
 fn OnClose() -> Element {
@@ -356,12 +395,11 @@ fn OnClose() -> Element {
     fn notify_on_close() {
         thread::spawn(|| {
             let _ = Notification::new()
-            .summary("Time is running out")
-            .body("This will go away.")
-            .icon("clock")
-            .show()
-            .map(|handler| handler
-            .on_close(|| println!("Notification closed")));
+                .summary("Time is running out")
+                .body("This will go away.")
+                .icon("clock")
+                .show()
+                .map(|handler| handler.on_close(|| println!("Notification closed")));
         });
     }
 
@@ -380,6 +418,18 @@ fn OnClose() -> Element {
     )
 }
 
+#[cfg(any(target_os = "windows", target_os = "macos"))]
+#[allow(non_snake_case)]
+#[component]
+fn OnCloseReason() -> Element {
+  rsx!(
+    rect {
+      label { "This is an xdg only feature" }
+    }
+  )
+}
+
+#[cfg(all(unix, not(target_os = "macos")))]
 #[allow(non_snake_case)]
 #[component]
 fn OnCloseReason() -> Element {
@@ -397,12 +447,13 @@ fn OnCloseReason() -> Element {
     fn notify_on_close_reason() {
         thread::spawn(|| {
             let _ = Notification::new()
-            .summary("Time is running out")
-            .body("This will go away.")
-            .icon("clock")
-            .show()
-            .map(|handler| handler
-            .on_close(|reason| println!("Close due to reason: \"{reason:?}\"")));
+                .summary("Time is running out")
+                .body("This will go away.")
+                .icon("clock")
+                .show()
+                .map(|handler| {
+                    handler.on_close(|reason| println!("Close due to reason: \"{reason:?}\""))
+                });
         });
     }
 
