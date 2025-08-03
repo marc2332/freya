@@ -5,6 +5,7 @@
 
 #[cfg(all(unix, not(target_os = "macos")))]
 use std::thread;
+#[cfg(all(unix, not(target_os = "macos")))]
 use notify_rust::Hint;
 
 use freya::prelude::*;
