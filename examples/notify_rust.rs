@@ -13,7 +13,7 @@ use notify_rust::{
 };
 
 fn main() {
-    launch_with_props(app, "Notify Example", (550.0, 400.0));
+    launch_with_params(app, "Notify Example", (550.0, 400.0));
 }
 
 fn app() -> Element {
