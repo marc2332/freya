@@ -9,7 +9,7 @@ use freya::prelude::*;
 use freya_router::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Animated Sidebar Indicator", (650.0, 500.0));
+    launch_with_params(app, "Animated Sidebar Indicator", (650.0, 500.0));
 }
 
 fn app() -> Element {

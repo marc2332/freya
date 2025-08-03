@@ -11,7 +11,7 @@ use dioxus_i18n::{
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "freya + i18n", (300.0, 200.0));
+    launch_with_params(app, "freya + i18n", (300.0, 200.0));
 }
 
 #[allow(non_snake_case)]

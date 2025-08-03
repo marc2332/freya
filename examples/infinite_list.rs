@@ -11,7 +11,7 @@ use reqwest::{
 use serde::Deserialize;
 
 fn main() {
-    launch_with_props(app, "Infinite List of Dogs", (500.0, 800.0));
+    launch_with_params(app, "Infinite List of Dogs", (500.0, 800.0));
 }
 
 async fn fetch_random_dog(client: &Client) -> Option<Url> {

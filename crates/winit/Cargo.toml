@@ -23,9 +23,13 @@ disable-animation-shortcuts = []
 freya-elements = { workspace = true }
 freya-core = { workspace = true, features = ["winit"] }
 freya-engine = { workspace = true }
-freya-hooks = { workspace = true }
+freya-hooks = { workspace = true, features = ["winit"] }
+freya-components = { workspace = true, features = ["winit"] }
 torin = { workspace = true }
 ragnarok = { workspace = true }
+
+
+skia-safe = { workspace = true }
 
 freya-native-core = { workspace = true }
 dioxus-core = { workspace = true }
@@ -45,3 +49,22 @@ futures-util = { workspace = true }
 
 itertools = "0.13.0"
 image = { version = "0.25.0", default-features = false, features = [ "ico", "png", "jpeg"]}
+
+
+[target."cfg(target_os = \"linux\")".dependencies.skia-safe]
+workspace = true
+features = ["gl", "textlayout", "svg", "x11", "wayland"]
+
+[dev-dependencies]
+skia-safe = { workspace = true }
+tokio = { workspace = true }
+gl = { workspace = true }
+glutin = { workspace = true }
+glutin-winit = { workspace = true }
+raw-window-handle = { workspace = true }
+winit = { workspace = true }
+accesskit = { workspace = true }
+accesskit_winit = { workspace = true }
+tracing = { workspace = true }
+futures-task = { workspace = true }
+futures-util = { workspace = true }

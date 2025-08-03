@@ -8,7 +8,7 @@ use freya::prelude::*;
 use serde::Deserialize;
 
 fn main() {
-    launch_with_props(app, "dioxus-query", (400.0, 350.0));
+    launch_with_params(app, "dioxus-query", (400.0, 350.0));
 }
 
 #[derive(Deserialize, PartialEq)]

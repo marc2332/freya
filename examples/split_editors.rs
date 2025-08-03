@@ -4,20 +4,10 @@ use dioxus_radio::hooks::{
     use_radio,
     RadioChannel,
 };
-use freya::{
-    events::MouseEvent,
-    prelude::*,
-};
+use freya::prelude::*;
 
 fn main() {
-    launch_cfg(
-        app,
-        LaunchConfig::<()>::new()
-            .with_size(900.0, 500.0)
-            .with_decorations(true)
-            .with_transparency(false)
-            .with_title("Editor"),
-    );
+    launch_with_params(app, "Editor", (900., 500.));
 }
 
 fn app() -> Element {
