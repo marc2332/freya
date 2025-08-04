@@ -46,7 +46,7 @@ fn AppSidebar() -> Element {
     let PlatformInformation { viewport_size, .. } = *use_platform_information().read();
     let variable_width: &str;
     if viewport_size.width > 640.0 && viewport_size.width < 1024.0 {
-        variable_width = "40%".into();
+        variable_width = "40%";
     } else if viewport_size.width >= 1024.0 {
         variable_width = "30%";
     } else {
