@@ -1,15 +1,18 @@
 use std::fmt;
 
-use freya_engine::prelude::Color;
 use torin::scaled::Scaled;
 
 use super::Fill;
-use crate::parsing::{
-    ExtSplit,
-    Parse,
-    ParseError,
+use crate::{
+    parsing::{
+        ExtSplit,
+        Parse,
+        ParseError,
+    },
+    values::Color,
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Default, Clone, Debug, PartialEq)]
 pub struct Border {
     pub fill: Fill,
@@ -28,6 +31,7 @@ impl Border {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Default, Clone, Copy, Debug, PartialEq)]
 pub struct BorderWidth {
     pub top: f32,
@@ -55,6 +59,7 @@ impl fmt::Display for BorderWidth {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Default, Clone, Copy, Debug, PartialEq)]
 pub enum BorderAlignment {
     #[default]

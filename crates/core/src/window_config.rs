@@ -9,7 +9,6 @@ use dioxus_signals::{
     GlobalSignal,
     Readable,
 };
-use freya_engine::prelude::Color;
 use winit::window::{
     Icon,
     Window,
@@ -22,6 +21,7 @@ use crate::{
         EventLoopMessageAction,
     },
     parsing::Parse,
+    values::Color,
 };
 
 pub type WindowCallback = Box<dyn FnOnce(&mut Window) + Send + Sync>;

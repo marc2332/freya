@@ -144,6 +144,9 @@ pub fn launch_cfg(config: LaunchConfig) {
     #[cfg(feature = "performance-overlay")]
     let config = config.with_plugin(crate::plugins::PerformanceOverlayPlugin::default());
 
+    #[cfg(feature = "devtools")]
+    let config = config.with_plugin(freya_devtools::DevtoolsPlugin::default());
+
     #[cfg(feature = "tracing-subscriber")]
     {
         use tracing_subscriber::{

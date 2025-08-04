@@ -11,6 +11,7 @@ use crate::parsing::{
     ParseError,
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(PartialEq, Clone, Debug, Default, Copy)]
 pub struct CornerRadius {
     pub top_left: f32,

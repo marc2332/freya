@@ -107,7 +107,7 @@ impl GamePadPlugin {
 
 impl FreyaPlugin for GamePadPlugin {
     fn on_event(&mut self, event: &PluginEvent, handle: PluginHandle) {
-        if let PluginEvent::WindowCreated(window) = event {
+        if let PluginEvent::WindowCreated { window, .. } = event {
             Self::listen_gamepad(handle, window.id());
         }
     }

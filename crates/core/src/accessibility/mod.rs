@@ -8,7 +8,7 @@ pub use tree::*;
 
 use crate::{
     dom::DioxusNode,
-    states::AccessibilityNodeState,
+    states::AccessibilityState,
     types::AccessibilityId,
 };
 
@@ -28,7 +28,7 @@ impl NodeAccessibility for DioxusNode<'_> {
         if self.id() == self.real_dom().root_id() {
             Some(ACCESSIBILITY_ROOT_ID)
         } else {
-            let node_accessibility = &*self.get::<AccessibilityNodeState>()?;
+            let node_accessibility = &*self.get::<AccessibilityState>()?;
             node_accessibility.a11y_id
         }
     }

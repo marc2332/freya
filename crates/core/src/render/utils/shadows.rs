@@ -28,7 +28,7 @@ pub fn render_shadow(
     // Shadows can be either outset or inset
     // If they are outset, we fill a copy of the path outset by spread_radius, and blur it.
     // Otherwise, we draw a stroke with the inner portion being spread_radius width, and the outer portion being blur_radius width.
-    let outset: Point = match shadow.position {
+    let outset: SkPoint = match shadow.position {
         ShadowPosition::Normal => {
             shadow_paint.set_style(PaintStyle::Fill);
             (shadow.spread, shadow.spread).into()
@@ -55,7 +55,7 @@ pub fn render_shadow(
             &node_style
                 .corner_radius
                 .smoothed_path(rounded_rect.with_outset(outset)),
-            Point::new(area.min_x(), area.min_y()) - outset,
+            SkPoint::new(area.min_x(), area.min_y()) - outset,
             None,
         );
     } else {

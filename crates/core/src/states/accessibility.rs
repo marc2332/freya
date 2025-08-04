@@ -19,7 +19,6 @@ use accesskit::{
     Toggled,
     VerticalOffset,
 };
-use freya_engine::prelude::Color;
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
@@ -49,11 +48,15 @@ use crate::{
         ParseAttribute,
         ParseError,
     },
-    values::Focusable,
+    values::{
+        Color,
+        Focusable,
+    },
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, PartialEq, Default, Component)]
-pub struct AccessibilityNodeState {
+pub struct AccessibilityState {
     pub node_id: NodeId,
     pub a11y_id: Option<AccessibilityId>,
     pub a11y_auto_focus: bool,
@@ -61,7 +64,7 @@ pub struct AccessibilityNodeState {
     pub builder: Option<Node>,
 }
 
-impl ParseAttribute for AccessibilityNodeState {
+impl ParseAttribute for AccessibilityState {
     fn parse_attribute(
         &mut self,
         attr: freya_native_core::prelude::OwnedAttributeView<CustomAttributeValues>,
@@ -309,7 +312,7 @@ impl ParseAttribute for AccessibilityNodeState {
 }
 
 #[partial_derive_state]
-impl State<CustomAttributeValues> for AccessibilityNodeState {
+impl State<CustomAttributeValues> for AccessibilityState {
     type ParentDependencies = ();
 
     type ChildDependencies = ();
@@ -401,7 +404,7 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
             .get::<Arc<Mutex<AccessibilityDirtyNodes>>>()
             .unwrap();
         let accessibility_generator = context.get::<Arc<AccessibilityGenerator>>().unwrap();
-        let mut accessibility = AccessibilityNodeState {
+        let mut accessibility = AccessibilityState {
             node_id: node_view.node_id(),
             a11y_id: self.a11y_id,
             builder: node_view.tag().and_then(|tag| {
