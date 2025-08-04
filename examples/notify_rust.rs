@@ -461,6 +461,7 @@ fn OnCloseReason() -> Element {
     #[cfg(any(target_os = "windows", target_os = "macos"))]
     rsx!(
         rect {
+            width: variable_width,
             label { "This is an xdg only feature" }
         }
     )
