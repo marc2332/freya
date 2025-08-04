@@ -3,11 +3,6 @@
     windows_subsystem = "windows"
 )]
 
-#[cfg(all(unix, not(target_os = "macos")))]
-use std::thread;
-#[cfg(all(unix, not(target_os = "macos")))]
-use notify_rust::Hint;
-
 use freya::prelude::*;
 use freya_router::prelude::*;
 use notify_rust::Notification;
@@ -339,7 +334,7 @@ fn Actions() -> Element {
             .action("default", "default") // IDENTIFIER, LABEL
             .action("clicked_a", "button a") // IDENTIFIER, LABEL
             .action("clicked_b", "button b") // IDENTIFIER, LABEL
-            .hint(Hint::Resident(true))
+            .hint(notify_rust::Hint::Resident(true))
             .show()
             .unwrap()
             .wait_for_action(|action| match action {
@@ -393,7 +388,7 @@ fn OnClose() -> Element {
     }
 
     fn notify_on_close() {
-        thread::spawn(|| {
+        std::thread::spawn(|| {
             let _ = Notification::new()
                 .summary("Time is running out")
                 .body("This will go away.")
@@ -418,18 +413,6 @@ fn OnClose() -> Element {
     )
 }
 
-#[cfg(any(target_os = "windows", target_os = "macos"))]
-#[allow(non_snake_case)]
-#[component]
-fn OnCloseReason() -> Element {
-  rsx!(
-    rect {
-      label { "This is an xdg only feature" }
-    }
-  )
-}
-
-#[cfg(all(unix, not(target_os = "macos")))]
 #[allow(non_snake_case)]
 #[component]
 fn OnCloseReason() -> Element {
@@ -444,8 +427,9 @@ fn OnCloseReason() -> Element {
         variable_width = "90%";
     }
 
+    #[cfg(all(unix, not(target_os = "macos")))]
     fn notify_on_close_reason() {
-        thread::spawn(|| {
+        std::thread::spawn(|| {
             let _ = Notification::new()
                 .summary("Time is running out")
                 .body("This will go away.")
@@ -457,7 +441,9 @@ fn OnCloseReason() -> Element {
         });
     }
 
-    rsx!(
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+      rsx!(
         Button {
             theme: ButtonThemeWith {
                 padding: Some(Cow::Borrowed("16 8")),
@@ -468,6 +454,14 @@ fn OnCloseReason() -> Element {
          label {
              "Notify With On Close Reason"
          }
+        }
+      )
+    }
+
+    #[cfg(any(target_os = "windows", target_os = "macos"))]
+    rsx!(
+        rect {
+            label { "This is an xdg only feature" }
         }
     )
 }
