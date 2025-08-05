@@ -1,61 +1,27 @@
-use std::{
-    ffi::CString,
-    num::NonZeroU32,
-};
+use std::{ffi::CString, num::NonZeroU32};
 
 use freya_core::window_config::WindowConfig;
 use freya_engine::prelude::{
-    backend_render_targets,
-    direct_contexts,
-    wrap_backend_render_target,
-    ColorType,
-    DirectContext,
-    Format,
-    FramebufferInfo,
-    Interface,
-    Surface as SkiaSurface,
-    SurfaceOrigin,
+    backend_render_targets, direct_contexts, wrap_backend_render_target, ColorType, DirectContext,
+    Format, FramebufferInfo, Interface, Surface as SkiaSurface, SurfaceOrigin,
 };
-use gl::{
-    types::*,
-    *,
-};
+use gl::{types::*, *};
 use glutin::{
-    config::{
-        ConfigTemplateBuilder,
-        GlConfig,
-    },
+    config::{ConfigTemplateBuilder, GlConfig},
     context::{
-        ContextApi,
-        ContextAttributesBuilder,
-        GlProfile,
-        NotCurrentGlContext,
+        ContextApi, ContextAttributesBuilder, GlProfile, NotCurrentGlContext,
         PossiblyCurrentContext,
     },
-    display::{
-        GetGlDisplay,
-        GlDisplay,
-    },
-    prelude::{
-        GlSurface,
-        PossiblyCurrentGlContext,
-    },
-    surface::{
-        Surface as GlutinSurface,
-        SurfaceAttributesBuilder,
-        SwapInterval,
-        WindowSurface,
-    },
+    display::{GetGlDisplay, GlDisplay},
+    prelude::{GlSurface, PossiblyCurrentGlContext},
+    surface::{Surface as GlutinSurface, SurfaceAttributesBuilder, SwapInterval, WindowSurface},
 };
 use glutin_winit::DisplayBuilder;
 use raw_window_handle::HasWindowHandle;
 use winit::{
     dpi::PhysicalSize,
     event_loop::ActiveEventLoop,
-    window::{
-        Window,
-        WindowAttributes,
-    },
+    window::{Window, WindowAttributes},
 };
 
 use crate::size::WinitSize;

@@ -29,6 +29,8 @@ fn Card(selected: ReadOnlySignal<bool>, children: Element) -> Element {
             corner_radius: "16",
             height: "100%",
             width: "flex({width})",
+            main_align: "center",
+            cross_align: "center",
             overflow: "clip",
             {children}
         }
@@ -63,11 +65,7 @@ fn app() -> Element {
                 .enumerate()
             {
                 Card { key: "{i}", selected: i == selected(),
-                    NetworkImage {
-                        url: url.parse::<Url>().unwrap(),
-                        aspect_ratio: "max",
-                        cover: "center",
-                    }
+                    NetworkImage { url: url.parse::<Url>().unwrap(), aspect_ratio: "max" }
                 }
             }
         }

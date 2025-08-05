@@ -175,15 +175,8 @@ where
             };
 
             if node.aspect_ratio != AspectRatio::None {
-                // if any are over 1.0 then its an overflow
                 let parent_width_overflow = area_size.width / parent_area.width();
                 let parent_height_overflow = area_size.height / parent_area.height();
-
-                // we need to scale by the biggest overflow,
-                // that will assure us that even of the other dimension is overflowing but a little less,
-                // it wont be after the operation.
-                // same applies for `AspectRatio::Fill`, but in that case it will be divided by the value that will make it bigger the least.
-                // because closer to 1 means multiplies the least.
 
                 let divisor;
                 if node.aspect_ratio != AspectRatio::Max {
