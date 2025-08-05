@@ -14,7 +14,7 @@ pub struct ImageData {
 
 pub fn get_or_create_image(
     node_ref: &DioxusNode,
-    area_size: &Size2D,
+    _area_size: &Size2D,
     images_cache: &mut ImagesCache,
 ) -> Option<ImageData> {
     let image_state = node_ref.get::<ImageState>().unwrap();

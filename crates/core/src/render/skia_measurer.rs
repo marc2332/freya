@@ -2,34 +2,17 @@ use std::sync::Arc;
 
 use freya_engine::prelude::*;
 use freya_native_core::{
-    prelude::{
-        ElementNode,
-        NodeType,
-    },
+    prelude::{ElementNode, NodeType},
     real_dom::NodeImmutable,
     tags::TagName,
     NodeId,
 };
-use torin::prelude::{
-    Area,
-    LayoutMeasurer,
-    Node,
-    SendAnyMap,
-    Size2D,
-};
+use torin::prelude::{Area, LayoutMeasurer, Node, SendAnyMap, Size2D};
 
-use super::{
-    create_label,
-    create_paragraph,
-    get_or_create_image,
-    ImageData,
-};
+use super::{create_label, create_paragraph, get_or_create_image, ImageData};
 use crate::{
-    custom_attributes::NodeReferenceLayout,
-    dom::*,
-    elements::CachedParagraph,
-    render::ParagraphData,
-    states::LayoutState,
+    custom_attributes::NodeReferenceLayout, dom::*, elements::CachedParagraph,
+    render::ParagraphData, states::LayoutState,
 };
 
 /// Provides Text measurements using Skia APIs like SkParagraph

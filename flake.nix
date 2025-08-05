@@ -33,6 +33,7 @@
         commonBuildInputs = [
           pkgs.libxkbcommon
           pkgs.libGL
+          pkgs.libudev-zero
 
           # WINIT_UNIX_BACKEND=wayland
           pkgs.wayland
