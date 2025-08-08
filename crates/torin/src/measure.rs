@@ -3,12 +3,26 @@ use rustc_hash::FxHashMap;
 
 use crate::{
     custom_measurer::LayoutMeasurer,
-    dom_adapter::{DOMAdapter, LayoutNode, NodeKey},
-    geometry::{Area, Size2D},
+    dom_adapter::{
+        DOMAdapter,
+        LayoutNode,
+        NodeKey,
+    },
+    geometry::{
+        Area,
+        Size2D,
+    },
     node::Node,
     prelude::{
-        AlignAxis, Alignment, AlignmentDirection, AreaModel, AspectRatio, Direction,
-        LayoutMetadata, Length, Torin,
+        AlignAxis,
+        Alignment,
+        AlignmentDirection,
+        AreaModel,
+        AspectRatio,
+        Direction,
+        LayoutMetadata,
+        Length,
+        Torin,
     },
     size::Size,
 };
@@ -135,8 +149,10 @@ where
                     // Compute the width and height again using the new custom area sizes
                     #[allow(clippy::float_cmp)]
                     if let Some((custom_size, node_data)) = res {
-                        if node.width.inner_sized() {
-                            area_size.width = node.width.min_max(
+                        let mut new_area_size = area_size;
+
+                        let width_check = {
+                            let (value, check) = node.width.min_max_check(
                                 custom_size.width,
                                 parent_area.size.width,
                                 available_parent_area.size.width,
@@ -147,9 +163,11 @@ where
                                 self.layout_metadata.root_area.width(),
                                 phase,
                             );
-                        }
-                        if node.height.inner_sized() {
-                            area_size.height = node.height.min_max(
+                            new_area_size.width = value;
+                            check
+                        };
+                        let height_check = {
+                            let (value, check) = node.height.min_max_check(
                                 custom_size.height,
                                 parent_area.size.height,
                                 available_parent_area.size.height,
@@ -160,6 +178,36 @@ where
                                 self.layout_metadata.root_area.height(),
                                 phase,
                             );
+                            new_area_size.height = value;
+                            check
+                        };
+
+                        let width_inner_sized = match width_check {
+                            crate::size::MinMaxCheck::Under => node.minimum_width.inner_sized(),
+                            crate::size::MinMaxCheck::Value => node.width.inner_sized(),
+                            crate::size::MinMaxCheck::Over => node.maximum_width.inner_sized(),
+                        };
+                        let height_inner_sized = match width_check {
+                            crate::size::MinMaxCheck::Under => node.minimum_height.inner_sized(),
+                            crate::size::MinMaxCheck::Value => node.height.inner_sized(),
+                            crate::size::MinMaxCheck::Over => node.maximum_height.inner_sized(),
+                        };
+
+                        match (width_inner_sized, height_inner_sized) {
+                            (true, true) => {
+                                area_size = new_area_size;
+                            }
+                            (true, false) => {
+                                let ratio = custom_size.height / new_area_size.height;
+                                new_area_size.width /= ratio;
+                                area_size.width = new_area_size.width;
+                            }
+                            (false, true) => {
+                                let ratio = custom_size.width / new_area_size.width;
+                                new_area_size.height /= ratio;
+                                area_size.height = new_area_size.height;
+                            }
+                            _ => {}
                         }
 
                         // Do not measure inner children

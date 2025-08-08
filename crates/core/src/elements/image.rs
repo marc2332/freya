@@ -3,10 +3,19 @@ use freya_native_core::real_dom::NodeImmutable;
 
 use super::utils::ElementUtils;
 use crate::{
-    dom::{DioxusNode, ImagesCache},
-    render::{get_or_create_image, ImageData},
+    dom::{
+        DioxusNode,
+        ImagesCache,
+    },
+    render::{
+        get_or_create_image,
+        ImageData,
+    },
     states::ImageState,
-    values::{ImageCover, SamplingMode},
+    values::{
+        ImageCover,
+        SamplingMode,
+    },
 };
 
 pub struct ImageElement;

@@ -1,9 +1,15 @@
-use freya_engine::prelude::{Data, Image};
+use freya_engine::prelude::{
+    Data,
+    Image,
+};
 use freya_native_core::prelude::NodeImmutable;
 use torin::prelude::Size2D;
 
 use crate::{
-    dom::{DioxusNode, ImagesCache},
+    dom::{
+        DioxusNode,
+        ImagesCache,
+    },
     states::ImageState,
 };
 
