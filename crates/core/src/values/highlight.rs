@@ -3,6 +3,7 @@ use crate::parsing::{
     ParseError,
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Default, Clone, Debug, PartialEq)]
 pub enum HighlightMode {
     #[default]

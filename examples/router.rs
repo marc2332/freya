@@ -7,7 +7,7 @@ use freya::prelude::*;
 use freya_router::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Router Example", (550.0, 400.0));
+    launch_with_params(app, "Router Example", (550.0, 400.0));
 }
 
 fn app() -> Element {

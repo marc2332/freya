@@ -1,6 +1,6 @@
 use freya_core::{
     custom_attributes::CustomAttributeValues,
-    node::NodeState,
+    node_state_snapshot::NodeState,
     states::{
         StyleState,
         ViewportState,

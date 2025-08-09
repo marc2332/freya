@@ -1,7 +1,6 @@
 use std::collections::hash_map::Iter;
 
 use dioxus_core::VirtualDom;
-use freya_engine::prelude::Color;
 use freya_native_core::{
     events::EventName,
     prelude::NodeImmutable,
@@ -25,7 +24,10 @@ use crate::{
         StyleState,
         ViewportState,
     },
-    values::Fill,
+    values::{
+        Color,
+        Fill,
+    },
 };
 
 pub struct EventsMeasurerAdapter<'a> {

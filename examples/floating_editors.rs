@@ -9,7 +9,7 @@ use freya::{
 };
 
 fn main() {
-    launch_with_props(app, "Floating Editors", (700., 600.))
+    launch_with_params(app, "Floating Editors", (700., 600.))
 }
 
 fn app() -> Element {

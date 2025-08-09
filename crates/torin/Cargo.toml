@@ -11,10 +11,15 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
 categories = ["gui", "caching"]
 
+[features]
+serde = ["dep:serde", "euclid/serde"]
+
 [dependencies]
 tracing = { workspace = true }
 euclid = { workspace = true }
 rustc-hash = { workspace = true }
+
+serde = { version = "*", optional = true }
 
 [dev-dependencies]
 criterion = "0.5.1"

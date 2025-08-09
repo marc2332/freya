@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Themer", (400.0, 350.0));
+    launch_with_params(app, "Themer", (400.0, 350.0));
 }
 
 fn app() -> Element {

@@ -277,6 +277,8 @@ define_theme! {
         shadow: str,
         margin: str,
         corner_radius: str,
+        inner_horizontal_margin: str,
+        inner_vertical_margin: str,
         %[subthemes]
         font_theme: FontTheme,
         placeholder_font_theme: FontTheme,

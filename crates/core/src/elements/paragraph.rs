@@ -40,6 +40,7 @@ use crate::{
         FontStyleState,
         StyleState,
     },
+    values::Color,
 };
 
 pub struct CachedParagraph(pub Paragraph);
@@ -252,8 +253,8 @@ impl ElementUtils for ParagraphElement {
                 for text_shadow in font_style.text_shadows.iter() {
                     if text_shadow.color != Color::TRANSPARENT {
                         text_shadow_area.move_with_offsets(
-                            &Length::new(text_shadow.offset.x),
-                            &Length::new(text_shadow.offset.y),
+                            &Length::new(text_shadow.offset.0),
+                            &Length::new(text_shadow.offset.1),
                         );
 
                         let expanded_size = text_shadow.blur_sigma.ceil() as f32 * scale_factor;

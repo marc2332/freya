@@ -37,12 +37,7 @@ const SHADER: &str = "
  ";
 
 fn main() {
-    launch_cfg(
-        app,
-        LaunchConfig::<()>::new()
-            .with_size(900.0, 500.0)
-            .with_title("Shader Editor"),
-    );
+    launch_with_params(app, "Shader Editor", (900., 500.));
 }
 
 fn app() -> Element {

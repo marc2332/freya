@@ -8,7 +8,7 @@ use freya::prelude::*;
 static FERRIS: &[u8] = include_bytes!("./ferris.svg");
 
 fn main() {
-    launch_with_props(app, "Opacity", (400.0, 350.0));
+    launch_with_params(app, "Opacity", (400.0, 350.0));
 }
 
 fn app() -> Element {

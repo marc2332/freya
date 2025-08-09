@@ -9,37 +9,52 @@ use std::ops::*;
 use bitflags::bitflags;
 use glutin::context::PossiblyCurrentContext;
 
-#[derive(Clone, Debug, PartialEq, Copy, Eq)]
-pub struct Color(u32);
+#[derive(Copy, Clone, PartialEq, Debug)]
+#[repr(C)]
+pub struct Color4f {
+    pub r: f32,
+    pub g: f32,
+    pub b: f32,
+    pub a: f32,
+}
 
-impl From<u32> for Color {
-    fn from(argb: u32) -> Self {
-        Color(argb)
+impl Color4f {
+    pub const fn new(r: f32, g: f32, b: f32, a: f32) -> Color4f {
+        Self { r, g, b, a }
     }
 }
 
-impl Default for Color {
+#[derive(Clone, Debug, PartialEq, Copy, Eq)]
+pub struct SkColor(u32);
+
+impl From<u32> for SkColor {
+    fn from(argb: u32) -> Self {
+        SkColor(argb)
+    }
+}
+
+impl Default for SkColor {
     fn default() -> Self {
         unimplemented!("This is mocked")
     }
 }
 
-impl Color {
-    pub const TRANSPARENT: Self = Color(0);
-    pub const BLACK: Self = Color(4278190080);
-    pub const DARK_GRAY: Self = Color(4282664004);
-    pub const GRAY: Self = Color(4287137928);
-    pub const LIGHT_GRAY: Self = Color(4291611852);
-    pub const DARK_GREY: Self = Color(4282664004);
-    pub const GREY: Self = Color(4287137928);
-    pub const LIGHT_GREY: Self = Color(4291611852);
-    pub const WHITE: Self = Color(4294967295);
-    pub const RED: Self = Color(4294901760);
-    pub const GREEN: Self = Color(4278255360);
-    pub const BLUE: Self = Color(4278190335);
-    pub const YELLOW: Self = Color(4294967040);
-    pub const CYAN: Self = Color(4278255615);
-    pub const MAGENTA: Self = Color(4294902015);
+impl SkColor {
+    pub const TRANSPARENT: Self = SkColor(0);
+    pub const BLACK: Self = SkColor(4278190080);
+    pub const DARK_GRAY: Self = SkColor(4282664004);
+    pub const GRAY: Self = SkColor(4287137928);
+    pub const LIGHT_GRAY: Self = SkColor(4291611852);
+    pub const DARK_GREY: Self = SkColor(4282664004);
+    pub const GREY: Self = SkColor(4287137928);
+    pub const LIGHT_GREY: Self = SkColor(4291611852);
+    pub const WHITE: Self = SkColor(4294967295);
+    pub const RED: Self = SkColor(4294901760);
+    pub const GREEN: Self = SkColor(4278255360);
+    pub const BLUE: Self = SkColor(4278190335);
+    pub const YELLOW: Self = SkColor(4294967040);
+    pub const CYAN: Self = SkColor(4278255615);
+    pub const MAGENTA: Self = SkColor(4294902015);
 
     #[inline]
     pub fn new(_argb: u32) -> Self {
@@ -47,12 +62,12 @@ impl Color {
     }
 
     #[inline]
-    pub fn from_argb(_a: u8, _r: u8, _g: u8, _b: u8) -> Color {
+    pub fn from_argb(_a: u8, _r: u8, _g: u8, _b: u8) -> SkColor {
         unimplemented!("This is mocked")
     }
 
     #[inline]
-    pub fn from_rgb(_r: u8, _g: u8, _b: u8) -> Color {
+    pub fn from_rgb(_r: u8, _g: u8, _b: u8) -> SkColor {
         unimplemented!("This is mocked")
     }
 
@@ -120,21 +135,21 @@ impl From<(f32, f32, f32)> for HSV {
 }
 
 impl HSV {
-    pub fn to_color(self, _alpha: u8) -> Color {
+    pub fn to_color(self, _alpha: u8) -> SkColor {
         unimplemented!("This is mocked")
     }
 }
 
 pub enum GradientShaderColors<'a> {
-    Colors(&'a [Color]),
-    // ColorsInSpace(&'a [Color4f], Option<ColorSpace>),
+    Colors(&'a [SkColor]),
+    // ColorsInSpace(&'a [SkColor4f], Option<SkColorSpace>),
 }
 
 pub struct Shader;
 
 impl Shader {
     pub fn linear_gradient<'a>(
-        _points: (impl Into<Point>, impl Into<Point>),
+        _points: (impl Into<SkPoint>, impl Into<SkPoint>),
         _colors: impl Into<GradientShaderColors<'a>>,
         _pos: impl Into<Option<&'a [f32]>>,
         _mode: TileMode,
@@ -145,7 +160,7 @@ impl Shader {
     }
 
     pub fn radial_gradient<'a>(
-        _center: impl Into<Point>,
+        _center: impl Into<SkPoint>,
         _radius: f32,
         _colors: impl Into<GradientShaderColors<'a>>,
         _pos: impl Into<Option<&'a [f32]>>,
@@ -157,7 +172,7 @@ impl Shader {
     }
 
     pub fn sweep_gradient<'a>(
-        _center: impl Into<Point>,
+        _center: impl Into<SkPoint>,
         _colors: impl Into<GradientShaderColors<'a>>,
         _pos: impl Into<Option<&'a [f32]>>,
         _mode: TileMode,
@@ -195,70 +210,70 @@ impl Matrix {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_rotate(&mut self, _degrees: f32, _pivot: impl Into<Option<Point>>) -> &mut Self {
+    pub fn set_rotate(&mut self, _degrees: f32, _pivot: impl Into<Option<SkPoint>>) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
-    pub fn rotate_deg_pivot(_degrees: f32, _pivot: impl Into<Point>) -> Self {
+    pub fn rotate_deg_pivot(_degrees: f32, _pivot: impl Into<SkPoint>) -> Self {
         unimplemented!("This is mocked")
     }
 }
 
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq, Default, Debug)]
-pub struct Point {
+pub struct SkPoint {
     pub x: f32,
     pub y: f32,
 }
 
-impl Point {
+impl SkPoint {
     pub fn new(_: f32, _: f32) -> Self {
         unimplemented!("This is mocked")
     }
 }
 
-impl Neg for Point {
-    type Output = Point;
+impl Neg for SkPoint {
+    type Output = SkPoint;
     fn neg(self) -> Self::Output {
-        Point::new(-self.x, -self.y)
+        SkPoint::new(-self.x, -self.y)
     }
 }
 
-impl Add for Point {
-    type Output = Point;
+impl Add for SkPoint {
+    type Output = SkPoint;
     fn add(self, rhs: Self) -> Self {
-        Point::new(self.x + rhs.x, self.y + rhs.y)
+        SkPoint::new(self.x + rhs.x, self.y + rhs.y)
     }
 }
 
-impl Sub for Point {
-    type Output = Point;
+impl Sub for SkPoint {
+    type Output = SkPoint;
     fn sub(self, rhs: Self) -> Self {
-        Point::new(self.x - rhs.x, self.y - rhs.y)
+        SkPoint::new(self.x - rhs.x, self.y - rhs.y)
     }
 }
-impl Mul<f32> for Point {
+impl Mul<f32> for SkPoint {
     type Output = Self;
     fn mul(self, rhs: f32) -> Self {
         Self::new(self.x * rhs, self.y * rhs)
     }
 }
 
-impl MulAssign<f32> for Point {
+impl MulAssign<f32> for SkPoint {
     fn mul_assign(&mut self, rhs: f32) {
         self.x *= rhs;
         self.y *= rhs;
     }
 }
 
-impl Div<f32> for Point {
+impl Div<f32> for SkPoint {
     type Output = Self;
     fn div(self, rhs: f32) -> Self {
         Self::new(self.x / rhs, self.y / rhs)
     }
 }
 
-impl DivAssign<f32> for Point {
+impl DivAssign<f32> for SkPoint {
     fn div_assign(&mut self, rhs: f32) {
         self.x /= rhs;
         self.y /= rhs;
@@ -267,31 +282,31 @@ impl DivAssign<f32> for Point {
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct TextShadow {
-    pub color: Color,
-    pub offset: Point,
+pub struct SkTextShadow {
+    pub color: SkColor,
+    pub offset: SkPoint,
     pub blur_sigma: f64,
 }
 
-impl Default for TextShadow {
+impl Default for SkTextShadow {
     fn default() -> Self {
         unimplemented!("This is mocked")
     }
 }
 
-impl TextShadow {
-    pub fn new(color: Color, _: (f32, f32), _: f32) -> Self {
+impl SkTextShadow {
+    pub fn new(color: SkColor, _: impl Into<SkPoint>, _: f64) -> Self {
         unimplemented!("This is mocked")
     }
 }
 
-impl From<(f32, f32)> for Point {
+impl From<(f32, f32)> for SkPoint {
     fn from(source: (f32, f32)) -> Self {
-        Point::new(source.0, source.1)
+        SkPoint::new(source.0, source.1)
     }
 }
 
-impl From<(i32, i32)> for Point {
+impl From<(i32, i32)> for SkPoint {
     fn from(source: (i32, i32)) -> Self {
         (source.0 as f32, source.1 as f32).into()
     }
@@ -346,9 +361,15 @@ impl Width {
     pub const ULTRA_EXPANDED: Self = Self(9);
 }
 
+impl From<i32> for Width {
+    fn from(value: i32) -> Width {
+        Width(value)
+    }
+}
+
 bitflags! {
     #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-    pub struct TextDecoration: u32 {
+    pub struct SkTextDecoration: u32 {
         const NO_DECORATION = 0;
         const UNDERLINE = 1;
         const OVERLINE = 2;
@@ -356,25 +377,25 @@ bitflags! {
     }
 }
 
-impl Default for TextDecoration {
+impl Default for SkTextDecoration {
     fn default() -> Self {
-        TextDecoration::NO_DECORATION
+        SkTextDecoration::NO_DECORATION
     }
 }
 
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq, Default, Debug)]
 pub struct Decoration {
-    pub ty: TextDecoration,
-    pub mode: TextDecorationMode,
-    pub color: Color,
-    pub style: TextDecorationStyle,
+    pub ty: SkTextDecoration,
+    pub mode: SkTextDecorationMode,
+    pub color: SkColor,
+    pub style: SkTextDecorationStyle,
     pub thickness_multiplier: f32,
 }
 
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq, Debug, Default)]
-pub enum TextDecorationMode {
+pub enum SkTextDecorationMode {
     #[default]
     Gaps = 0,
     Through = 1,
@@ -382,7 +403,7 @@ pub enum TextDecorationMode {
 
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq, Debug, Default)]
-pub enum TextDecorationStyle {
+pub enum SkTextDecorationStyle {
     #[default]
     Solid = 0,
     Double = 1,
@@ -392,7 +413,7 @@ pub enum TextDecorationStyle {
 }
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Default)]
-pub enum TextAlign {
+pub enum SkTextAlign {
     #[default]
     Left = 0,
     Right = 1,
@@ -429,11 +450,11 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn color(&self) -> Color {
+    pub fn color(&self) -> SkColor {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_color(&mut self, _color: impl Into<Color>) -> &mut Self {
+    pub fn set_color(&mut self, _color: impl Into<SkColor>) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -469,19 +490,19 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_decoration_type(&mut self, decoration: TextDecoration) {
+    pub fn set_decoration_type(&mut self, decoration: SkTextDecoration) {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_decoration_mode(&mut self, mode: TextDecorationMode) {
+    pub fn set_decoration_mode(&mut self, mode: SkTextDecorationMode) {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_decoration_style(&mut self, style: TextDecorationStyle) {
+    pub fn set_decoration_style(&mut self, style: SkTextDecorationStyle) {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_decoration_color(&mut self, color: impl Into<Color>) {
+    pub fn set_decoration_color(&mut self, color: impl Into<SkColor>) {
         unimplemented!("This is mocked")
     }
 
@@ -493,11 +514,11 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn shadows(&self) -> &[TextShadow] {
+    pub fn shadows(&self) -> &[SkTextShadow] {
         unimplemented!("This is mocked")
     }
 
-    pub fn add_shadow(&mut self, _shadow: TextShadow) -> &mut Self {
+    pub fn add_shadow(&mut self, _shadow: SkTextShadow) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -617,13 +638,13 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_height_behavior(&mut self, behavior: TextHeightBehavior) {
+    pub fn set_height_behavior(&mut self, behavior: SkTextHeightBehavior) {
         unimplemented!("This is mocked")
     }
 }
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub enum TextHeightBehavior {
+pub enum SkTextHeightBehavior {
     All = 0,
     DisableFirstAscent = 1,
     DisableLastDescent = 2,
@@ -648,7 +669,7 @@ impl Paint {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_color(&mut self, _color: impl Into<Color>) -> &mut Self {
+    pub fn set_color(&mut self, _color: impl Into<SkColor>) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -784,7 +805,7 @@ impl Paragraph {
         unimplemented!("This is mocked")
     }
 
-    pub fn paint(&self, _canvas: &Canvas, _p: impl Into<Point>) {
+    pub fn paint(&self, _canvas: &Canvas, _p: impl Into<SkPoint>) {
         unimplemented!("This is mocked")
     }
 
@@ -803,7 +824,7 @@ impl Paragraph {
         unimplemented!("This is mocked")
     }
 
-    pub fn get_glyph_position_at_coordinate(&self, _p: impl Into<Point>) -> PositionWithAffinity {
+    pub fn get_glyph_position_at_coordinate(&self, _p: impl Into<SkPoint>) -> PositionWithAffinity {
         unimplemented!("This is mocked")
     }
 
@@ -847,7 +868,7 @@ impl Paragraph {
         unimplemented!("This is mocked")
     }
 
-    pub fn get_closest_glyph_cluster_at(&self, _d: impl Into<Point>) -> Option<GlyphClusterInfo> {
+    pub fn get_closest_glyph_cluster_at(&self, _d: impl Into<SkPoint>) -> Option<GlyphClusterInfo> {
         unimplemented!("This is mocked")
     }
 
@@ -892,11 +913,11 @@ impl ParagraphStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn text_align(&self) -> TextAlign {
+    pub fn text_align(&self) -> SkTextAlign {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_text_align(&mut self, _align: TextAlign) -> &mut Self {
+    pub fn set_text_align(&mut self, _align: SkTextAlign) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -926,11 +947,11 @@ impl ParagraphStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn text_height_behavior(&self) -> TextHeightBehavior {
+    pub fn text_height_behavior(&self) -> SkTextHeightBehavior {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_text_height_behavior(&mut self, _v: TextHeightBehavior) -> &mut Self {
+    pub fn set_text_height_behavior(&mut self, _v: SkTextHeightBehavior) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -942,7 +963,7 @@ impl ParagraphStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn effective_align(&self) -> TextAlign {
+    pub fn effective_align(&self) -> SkTextAlign {
         unimplemented!("This is mocked")
     }
 
@@ -1101,15 +1122,15 @@ impl Canvas {
         unimplemented!("This is mocked")
     }
 
-    pub fn translate(&self, _d: impl Into<Point>) -> &Self {
+    pub fn translate(&self, _d: impl Into<SkPoint>) -> &Self {
         unimplemented!("This is mocked")
     }
 
-    pub fn scale(&self, _: impl Into<Point>) {
+    pub fn scale(&self, _: impl Into<SkPoint>) {
         unimplemented!("This is mocked")
     }
 
-    pub fn clear(&self, _: Color) {
+    pub fn clear(&self, _: impl Into<SkColor>) {
         unimplemented!("This is mocked")
     }
 
@@ -1117,11 +1138,16 @@ impl Canvas {
         unimplemented!("This is mocked")
     }
 
-    pub fn draw_line(&self, _p1: impl Into<Point>, _p2: impl Into<Point>, _paint: &Paint) -> &Self {
+    pub fn draw_line(
+        &self,
+        _p1: impl Into<SkPoint>,
+        _p2: impl Into<SkPoint>,
+        _paint: &Paint,
+    ) -> &Self {
         unimplemented!("This is mocked")
     }
 
-    pub fn draw_circle(&self, _center: impl Into<Point>, _radius: f32, _paint: &Paint) -> &Self {
+    pub fn draw_circle(&self, _center: impl Into<SkPoint>, _radius: f32, _paint: &Paint) -> &Self {
         unimplemented!("This is mocked")
     }
 
@@ -1170,7 +1196,7 @@ impl<'a> SaveLayerRec {
         unimplemented!("This is mocked")
     }
 
-    pub fn color_space(self, color_space: &'a ColorSpace) -> Self {
+    pub fn color_space(self, color_space: &'a SkColorSpace) -> Self {
         unimplemented!("This is mocked")
     }
 }
@@ -1342,7 +1368,7 @@ impl Rect {
         unimplemented!("This is mocked")
     }
 
-    pub fn with_outset(&self, _delta: impl Into<Point>) -> Self {
+    pub fn with_outset(&self, _delta: impl Into<SkPoint>) -> Self {
         unimplemented!("This is mocked")
     }
 
@@ -1464,36 +1490,36 @@ impl Path {
     pub fn add_path(
         &mut self,
         _src: &Path,
-        _d: impl Into<Point>,
+        _d: impl Into<SkPoint>,
         _mode: Option<&PathAddPathMode>,
     ) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
-    pub fn move_to(&mut self, _p: impl Into<Point>) -> &mut Self {
+    pub fn move_to(&mut self, _p: impl Into<SkPoint>) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
-    pub fn line_to(&mut self, _p: impl Into<Point>) -> &mut Self {
+    pub fn line_to(&mut self, _p: impl Into<SkPoint>) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
     pub fn cubic_to(
         &mut self,
-        _p1: impl Into<Point>,
-        _p2: impl Into<Point>,
-        _p3: impl Into<Point>,
+        _p1: impl Into<SkPoint>,
+        _p2: impl Into<SkPoint>,
+        _p3: impl Into<SkPoint>,
     ) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
     pub fn r_arc_to_rotated(
         &mut self,
-        _r: impl Into<Point>,
+        _r: impl Into<SkPoint>,
         _x_axis_rotate: f32,
         _large_arc: ArcSize,
         _sweep: PathDirection,
-        _d: impl Into<Point>,
+        _d: impl Into<SkPoint>,
     ) -> &mut Self {
         unimplemented!("This is mocked")
     }
@@ -1510,7 +1536,7 @@ impl Path {
         unimplemented!("This is mocked")
     }
 
-    pub fn offset(&mut self, _d: impl Into<Point>) -> &mut Self {
+    pub fn offset(&mut self, _d: impl Into<SkPoint>) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -1537,7 +1563,7 @@ impl AsRef<RRect> for RRect {
 }
 
 impl RRect {
-    pub fn new_rect_radii(_rect: Rect, _radii: &[Point; 4]) -> Self {
+    pub fn new_rect_radii(_rect: Rect, _radii: &[SkPoint; 4]) -> Self {
         unimplemented!("This is mocked")
     }
 
@@ -1557,11 +1583,11 @@ impl RRect {
         unimplemented!("This is mocked")
     }
 
-    pub fn radii(&self, _corner: Corner) -> Point {
+    pub fn radii(&self, _corner: Corner) -> SkPoint {
         unimplemented!("This is mocked")
     }
 
-    pub fn with_outset(&self, _delta: impl Into<Point>) -> Self {
+    pub fn with_outset(&self, _delta: impl Into<SkPoint>) -> Self {
         unimplemented!("This is mocked")
     }
 
@@ -1663,9 +1689,9 @@ pub enum BlurStyle {
 pub mod svg {
     use super::{
         Canvas,
-        Color,
         LocalResourceProvider,
         Size,
+        SkColor,
     };
 
     pub enum LengthUnit {
@@ -1691,7 +1717,7 @@ pub mod svg {
             unimplemented!("This is mocked")
         }
 
-        pub fn from_color(_color: Color) -> Self {
+        pub fn from_color(_color: SkColor) -> Self {
             unimplemented!("This is mocked")
         }
     }
@@ -1707,7 +1733,7 @@ pub mod svg {
             unimplemented!("This is mocked")
         }
 
-        pub fn set_color(&mut self, _value: Color) {
+        pub fn set_color(&mut self, _value: SkColor) {
             unimplemented!("This is mocked")
         }
 
@@ -1781,7 +1807,7 @@ impl Surface {
         _backend_render_target: &BackendRenderTarget,
         _origin: SurfaceOrigin,
         _color_type: ColorType,
-        _color_space: impl Into<Option<ColorSpace>>,
+        _color_space: impl Into<Option<SkColorSpace>>,
         _surface_props: Option<&SurfaceProps>,
     ) -> Option<Self> {
         unimplemented!("This is mocked")
@@ -1790,7 +1816,7 @@ impl Surface {
     pub fn draw(
         &self,
         canvas: &Canvas,
-        offset: impl Into<Point>,
+        offset: impl Into<SkPoint>,
         sampling: impl Into<SamplingOptions>,
         paint: Option<&Paint>,
     ) {
@@ -1810,7 +1836,7 @@ impl From<(i32, i32)> for ISize {
     }
 }
 
-pub struct ColorSpace;
+pub struct SkColorSpace;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 #[repr(i32)]
@@ -1916,7 +1942,7 @@ pub fn wrap_backend_render_target(
     backend_render_target: &BackendRenderTarget,
     origin: SurfaceOrigin,
     color_type: ColorType,
-    color_space: impl Into<Option<ColorSpace>>,
+    color_space: impl Into<Option<SkColorSpace>>,
     surface_props: Option<&SurfaceProps>,
 ) -> Option<Surface> {
     unimplemented!("This is mocked")

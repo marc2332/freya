@@ -42,6 +42,7 @@ pub fn gallery() {}
 mod accordion;
 mod animated_position;
 mod animated_router;
+mod app;
 mod body;
 mod button;
 mod checkbox;
@@ -86,6 +87,7 @@ mod window_drag_area;
 pub use accordion::*;
 pub use animated_position::*;
 pub use animated_router::*;
+pub use app::*;
 pub use body::*;
 pub use button::*;
 pub use checkbox::*;

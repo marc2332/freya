@@ -7,7 +7,7 @@ pub mod event_loop_messages;
 pub mod events;
 pub mod layers;
 pub mod layout;
-pub mod node;
+pub mod node_state_snapshot;
 pub mod parsing;
 pub mod platform;
 pub mod platform_state;
@@ -17,3 +17,6 @@ pub mod states;
 pub mod style;
 pub mod types;
 pub mod values;
+
+#[cfg(feature = "winit")]
+pub mod window_config;

@@ -1,7 +1,9 @@
 use std::time::Duration;
 
-use freya_core::parsing::Parse;
-use freya_engine::prelude::Color;
+use freya_core::{
+    parsing::Parse,
+    values::Color,
+};
 
 use super::{
     apply_value,

@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "iOS-Styled Notifications", (350., 700.));
+    launch_with_params(app, "iOS-Styled Notifications", (350., 700.));
 }
 
 static WALLPAPER: &[u8] = include_bytes!("./wallpaper.png");
