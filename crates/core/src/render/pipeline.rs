@@ -194,7 +194,7 @@ impl RenderPipeline<'_> {
             let initial_layer = dirty_canvas.save();
 
             let area = layout_node.visible_area();
-            let rect = Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
+            let bounds = Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
 
             let node_transform = &*node_ref.get::<TransformState>().unwrap();
             let node_viewports = node_ref.get::<ViewportState>().unwrap();
@@ -240,13 +240,13 @@ impl RenderPipeline<'_> {
                 let mut paint = Paint::default();
                 paint.set_blend_mode(blend);
 
-                let layer_rec = SaveLayerRec::default().bounds(&rect).paint(&paint);
+                let layer_rec = SaveLayerRec::default().bounds(&bounds).paint(&paint);
                 dirty_canvas.save_layer(&layer_rec);
             }
 
             // Apply inherited opacity effects
             for opacity in &node_transform.opacities {
-                dirty_canvas.save_layer_alpha_f(rect, *opacity);
+                dirty_canvas.save_layer_alpha_f(bounds, *opacity);
             }
 
             // Clip the element itself if non-children content can overflow, like an image in case of `image`

@@ -29,6 +29,8 @@ fn Card(selected: ReadOnlySignal<bool>, children: Element) -> Element {
             corner_radius: "16",
             height: "100%",
             width: "flex({width})",
+            main_align: "center",
+            cross_align: "center",
             overflow: "clip",
             {children}
         }
@@ -54,21 +56,16 @@ fn app() -> Element {
             width: "100%",
             padding: "5",
 
-            for (i, url) in [
+            for (i , url) in [
                 "https://images.dog.ceo/breeds/dachshund/dachshund-2033796_640.jpg",
                 "https://images.dog.ceo/breeds/cavapoo/doggo4.jpg",
-                "https://images.dog.ceo/breeds/wolfhound-irish/n02090721_3109.jpg"
-            ].iter().enumerate() {
-                Card {
-                    key: "{i}",
-                    selected: i == selected(),
-                    NetworkImage {
-                        url: url.parse::<Url>().unwrap(),
-                        aspect_ratio: "max",
-                        cover: "center",
-                        width: "fill",
-                        height: "fill"
-                    }
+                "https://images.dog.ceo/breeds/wolfhound-irish/n02090721_3109.jpg",
+            ]
+                .iter()
+                .enumerate()
+            {
+                Card { key: "{i}", selected: i == selected(),
+                    NetworkImage { url: url.parse::<Url>().unwrap(), aspect_ratio: "max" }
                 }
             }
         }

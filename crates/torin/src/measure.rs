@@ -18,6 +18,7 @@ use crate::{
         Alignment,
         AlignmentDirection,
         AreaModel,
+        AspectRatio,
         Direction,
         LayoutMetadata,
         Length,
@@ -142,13 +143,16 @@ where
 
                     let most_fitting_area_size =
                         Size2D::new(most_fitting_width, most_fitting_height);
+
                     let res = measurer.measure(node_id, node, &most_fitting_area_size);
 
                     // Compute the width and height again using the new custom area sizes
                     #[allow(clippy::float_cmp)]
                     if let Some((custom_size, node_data)) = res {
-                        if node.width.inner_sized() {
-                            area_size.width = node.width.min_max(
+                        let mut new_area_size = area_size;
+
+                        let width_check = {
+                            let (value, check) = node.width.min_max_check(
                                 custom_size.width,
                                 parent_area.size.width,
                                 available_parent_area.size.width,
@@ -159,9 +163,11 @@ where
                                 self.layout_metadata.root_area.width(),
                                 phase,
                             );
-                        }
-                        if node.height.inner_sized() {
-                            area_size.height = node.height.min_max(
+                            new_area_size.width = value;
+                            check
+                        };
+                        let height_check = {
+                            let (value, check) = node.height.min_max_check(
                                 custom_size.height,
                                 parent_area.size.height,
                                 available_parent_area.size.height,
@@ -172,6 +178,36 @@ where
                                 self.layout_metadata.root_area.height(),
                                 phase,
                             );
+                            new_area_size.height = value;
+                            check
+                        };
+
+                        let width_inner_sized = match width_check {
+                            crate::size::MinMaxCheck::Under => node.minimum_width.inner_sized(),
+                            crate::size::MinMaxCheck::Value => node.width.inner_sized(),
+                            crate::size::MinMaxCheck::Over => node.maximum_width.inner_sized(),
+                        };
+                        let height_inner_sized = match width_check {
+                            crate::size::MinMaxCheck::Under => node.minimum_height.inner_sized(),
+                            crate::size::MinMaxCheck::Value => node.height.inner_sized(),
+                            crate::size::MinMaxCheck::Over => node.maximum_height.inner_sized(),
+                        };
+
+                        match (width_inner_sized, height_inner_sized) {
+                            (true, true) => {
+                                area_size = new_area_size;
+                            }
+                            (true, false) => {
+                                let ratio = custom_size.height / new_area_size.height;
+                                new_area_size.width /= ratio;
+                                area_size.width = new_area_size.width;
+                            }
+                            (false, true) => {
+                                let ratio = custom_size.width / new_area_size.width;
+                                new_area_size.height /= ratio;
+                                area_size.height = new_area_size.height;
+                            }
+                            _ => {}
                         }
 
                         // Do not measure inner children
@@ -185,6 +221,25 @@ where
             } else {
                 None
             };
+
+            if node.aspect_ratio != AspectRatio::None {
+                let parent_width_overflow = area_size.width / parent_area.width();
+                let parent_height_overflow = area_size.height / parent_area.height();
+
+                let divisor;
+                if node.aspect_ratio != AspectRatio::Max {
+                    divisor = parent_width_overflow.max(parent_height_overflow);
+                } else {
+                    divisor = parent_width_overflow.min(parent_height_overflow);
+                }
+
+                if node.aspect_ratio != AspectRatio::Fit
+                    || parent_width_overflow > 1.0
+                    || parent_height_overflow > 1.0
+                {
+                    area_size /= divisor;
+                }
+            }
 
             let measure_inner_children = if let Some(measurer) = self.measurer {
                 measurer.should_measure_inner_children(node_id)

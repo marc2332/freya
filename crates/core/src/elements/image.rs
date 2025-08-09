@@ -34,8 +34,7 @@ impl ElementUtils for ImageElement {
     ) {
         let area = layout_node.visible_area();
 
-        let Some(ImageData { image, size }) =
-            get_or_create_image(node_ref, &area.size, images_cache)
+        let Some(ImageData { image, .. }) = get_or_create_image(node_ref, &area.size, images_cache)
         else {
             return;
         };
@@ -45,20 +44,20 @@ impl ElementUtils for ImageElement {
         let mut rect = Rect::new(
             area.min_x(),
             area.min_y(),
-            area.min_x() + size.width,
-            area.min_y() + size.height,
+            area.min_x() + area.width(),
+            area.min_y() + area.height(),
         );
         let clip_rect = Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
 
-        if image_state.image_cover == ImageCover::Center {
-            let width_offset = (size.width - area.width()) / 2.;
-            let height_offset = (size.height - area.height()) / 2.;
+        // if image_state.image_cover == ImageCover::Center {
+        //     let width_offset = (size.width - area.width()) / 2.;
+        //     let height_offset = (size.height - area.height()) / 2.;
 
-            rect.left -= width_offset;
-            rect.right -= width_offset;
-            rect.top -= height_offset;
-            rect.bottom -= height_offset;
-        }
+        //     rect.left -= width_offset;
+        //     rect.right -= width_offset;
+        //     rect.top -= height_offset;
+        //     rect.bottom -= height_offset;
+        // }
 
         canvas.save();
         canvas.clip_rect(clip_rect, ClipOp::Intersect, true);

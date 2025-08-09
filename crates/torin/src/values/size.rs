@@ -30,6 +30,16 @@ pub enum Size {
     Flex(Length),
 }
 
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+pub enum MinMaxCheck {
+    /// The value was under the min constaint so the min value was used
+    Under,
+    /// The value was within the min and max constraints
+    Value,
+    /// The value was over the max constaint so the max value was used
+    Over,
+}
+
 impl Default for Size {
     fn default() -> Self {
         Self::Inner
@@ -151,6 +161,66 @@ impl Size {
         }
 
         final_value
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn min_max_check(
+        &self,
+        value: f32,
+        parent_value: f32,
+        available_parent_value: f32,
+        single_margin: f32,
+        margin: f32,
+        minimum: &Self,
+        maximum: &Self,
+        root_value: f32,
+        phase: Phase,
+    ) -> (f32, MinMaxCheck) {
+        let value = self
+            .eval(
+                parent_value,
+                available_parent_value,
+                margin,
+                root_value,
+                phase,
+            )
+            .unwrap_or(value + margin);
+
+        let minimum_value = minimum
+            .eval(
+                parent_value,
+                available_parent_value,
+                margin,
+                root_value,
+                phase,
+            )
+            .map(|v| v + single_margin);
+        let maximum_value = maximum.eval(
+            parent_value,
+            available_parent_value,
+            margin,
+            root_value,
+            phase,
+        );
+
+        let mut final_value = value;
+        let mut check = MinMaxCheck::Value;
+
+        if let Some(minimum_value) = minimum_value {
+            if minimum_value > final_value {
+                final_value = minimum_value;
+                check = MinMaxCheck::Under;
+            }
+        }
+
+        if let Some(maximum_value) = maximum_value {
+            if final_value > maximum_value {
+                final_value = maximum_value;
+                check = MinMaxCheck::Over;
+            }
+        }
+
+        (final_value, check)
     }
 
     pub fn most_fitting_size<'a>(&self, size: &'a f32, available_size: &'a f32) -> &'a f32 {
