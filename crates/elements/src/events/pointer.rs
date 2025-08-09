@@ -161,6 +161,8 @@ impl_event! [
     /// }
     /// ```
     onpointerpress
+
+    oncaptureglobalpointerup
 ];
 
 /// The type of device that triggered a Pointer event.

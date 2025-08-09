@@ -33,11 +33,13 @@ pub enum EventName {
 
     GlobalClick,
     GlobalPointerUp,
-    CaptureGlobalMouseMove,
     GlobalMouseDown,
     GlobalMouseMove,
     GlobalFileHover,
     GlobalFileHoverCancelled,
+
+    CaptureGlobalMouseMove,
+    CaptureGlobalPointerUp,
 
     FileDrop,
 }
@@ -73,11 +75,12 @@ impl FromStr for EventName {
             "globalclick" => Ok(EventName::GlobalClick),
             "globalpointerup" => Ok(EventName::GlobalPointerUp),
             "globalmousedown" => Ok(EventName::GlobalMouseDown),
-            "captureglobalmousemove" => Ok(EventName::CaptureGlobalMouseMove),
             "globalmousemove" => Ok(EventName::GlobalMouseMove),
             "filedrop" => Ok(EventName::FileDrop),
             "globalfilehover" => Ok(EventName::GlobalFileHover),
             "globalfilehovercancelled" => Ok(EventName::GlobalFileHoverCancelled),
+            "captureglobalmousemove" => Ok(EventName::CaptureGlobalMouseMove),
+            "captureglobalpointerup" => Ok(EventName::CaptureGlobalPointerUp),
             _ => Err(()),
         }
     }
@@ -110,13 +113,14 @@ impl From<EventName> for &str {
             EventName::TouchMove => "touchmove",
             EventName::TouchEnd => "touchend",
             EventName::GlobalClick => "globalclick",
-            EventName::CaptureGlobalMouseMove => "captureglobalmousemove",
             EventName::GlobalPointerUp => "globalpointerup",
             EventName::GlobalMouseDown => "globalmousedown",
             EventName::GlobalMouseMove => "globalmousemove",
             EventName::FileDrop => "filedrop",
             EventName::GlobalFileHover => "globalfilehover",
             EventName::GlobalFileHoverCancelled => "globalfilehovercancelled",
+            EventName::CaptureGlobalMouseMove => "captureglobalmousemove",
+            EventName::CaptureGlobalPointerUp => "captureglobalpointerup",
         }
     }
 }
@@ -152,7 +156,10 @@ impl Ord for EventName {
 impl EventName {
     /// Check if it's one of the Pointer variants
     pub fn is_capture(&self) -> bool {
-        matches!(&self, Self::CaptureGlobalMouseMove)
+        matches!(
+            &self,
+            Self::CaptureGlobalMouseMove | Self::CaptureGlobalPointerUp
+        )
     }
 
     /// Check if it's one of the Pointer variants
@@ -166,6 +173,7 @@ impl EventName {
                 | Self::PointerUp
                 | Self::PointerPress
                 | Self::GlobalPointerUp
+                | Self::CaptureGlobalPointerUp
         )
     }
 
@@ -180,7 +188,7 @@ impl ragnarok::NameOfEvent for EventName {
         let mut events = Vec::new();
         match self {
             Self::MouseUp => events.push(Self::GlobalClick),
-            Self::PointerUp => events.push(Self::GlobalPointerUp),
+            Self::PointerUp => events.extend([Self::GlobalPointerUp, Self::CaptureGlobalPointerUp]),
             Self::MouseDown => events.push(Self::GlobalMouseDown),
             Self::MouseMove => events.extend([Self::GlobalMouseMove, Self::CaptureGlobalMouseMove]),
             Self::GlobalFileHover => events.push(Self::GlobalFileHover),
@@ -242,6 +250,14 @@ impl ragnarok::NameOfEvent for EventName {
                 Self::MouseEnter,
                 Self::GlobalMouseMove,
                 Self::PointerEnter,
+            ]),
+
+            Self::CaptureGlobalPointerUp => events.extend([
+                Self::Click,
+                Self::GlobalClick,
+                Self::PointerUp,
+                Self::PointerPress,
+                Self::GlobalPointerUp,
             ]),
             _ => {}
         }
