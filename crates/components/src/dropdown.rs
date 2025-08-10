@@ -511,16 +511,16 @@ mod test {
         // Click on the second option
         utils.push_event(TestEvent::Keyboard {
             name: KeyboardEventName::KeyDown,
-            key: Key::Tab,
-            code: Code::Tab,
+            key: Key::ArrowDown,
+            code: Code::ArrowDown,
             modifiers: Modifiers::default(),
         });
         utils.wait_for_update().await;
         utils.wait_for_update().await;
         utils.push_event(TestEvent::Keyboard {
             name: KeyboardEventName::KeyDown,
-            key: Key::Tab,
-            code: Code::Tab,
+            key: Key::ArrowDown,
+            code: Code::ArrowDown,
             modifiers: Modifiers::default(),
         });
         utils.wait_for_update().await;
