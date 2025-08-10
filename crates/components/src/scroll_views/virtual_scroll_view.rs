@@ -325,46 +325,45 @@ pub fn VirtualScrollView<
         }
     };
 
-    let onglobalkeydown = move |e: KeyboardEvent| {
-        match &e.key {
-            Key::Shift => {
-                clicking_shift.set(true);
-            }
-            Key::Alt => {
-                clicking_alt.set(true);
-            }
-            k => {
-                if !focus.is_focused() {
-                    return;
-                }
+    let onglobalkeydown = move |e: KeyboardEvent| match &e.key {
+        Key::Shift => {
+            clicking_shift.set(true);
+        }
+        Key::Alt => {
+            clicking_alt.set(true);
+        }
+        _ => {}
+    };
 
-                if !scroll_with_arrows
-                    && (k == &Key::ArrowUp
-                        || k == &Key::ArrowRight
-                        || k == &Key::ArrowDown
-                        || k == &Key::ArrowLeft)
-                {
-                    return;
-                }
+    let onkeydown = move |e: KeyboardEvent| {
+        if !scroll_with_arrows
+            && (e.key == Key::ArrowUp
+                || e.key == Key::ArrowRight
+                || e.key == Key::ArrowDown
+                || e.key == Key::ArrowLeft)
+        {
+            return;
+        }
 
-                let x = corrected_scrolled_x;
-                let y = corrected_scrolled_y;
-                let viewport_height = size.area.height();
-                let viewport_width = size.area.width();
+        e.prevent_default();
+        e.stop_propagation();
 
-                let (x, y) = manage_key_event(
-                    e,
-                    (x, y),
-                    inner_height,
-                    inner_width,
-                    viewport_height,
-                    viewport_width,
-                );
+        let x = corrected_scrolled_x;
+        let y = corrected_scrolled_y;
+        let viewport_height = size.area.height();
+        let viewport_width = size.area.width();
 
-                scrolled_x.set(x as i32);
-                scrolled_y.set(y as i32);
-            }
-        };
+        if let Some((x, y)) = manage_key_event(
+            &e.key,
+            (x, y),
+            inner_height,
+            inner_width,
+            viewport_height,
+            viewport_width,
+        ) {
+            scrolled_x.set(x as i32);
+            scrolled_y.set(y as i32);
+        }
     };
 
     let onglobalkeyup = move |e: KeyboardEvent| {
@@ -456,6 +455,7 @@ pub fn VirtualScrollView<
             onglobalclick,
             oncaptureglobalmousemove,
             onglobalkeydown,
+            onkeydown,
             onglobalkeyup,
             a11y_id,
             a11y_focusable: "false",
