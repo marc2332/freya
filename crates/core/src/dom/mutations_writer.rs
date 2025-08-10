@@ -33,7 +33,7 @@ use crate::{
         CompositorDirtyArea,
     },
     states::{
-        AccessibilityNodeState,
+        AccessibilityState,
         CursorState,
         ImageState,
         LayerState,
@@ -101,7 +101,7 @@ impl MutationsWriter<'_> {
                 }
 
                 // Remove from the accessibility tree
-                if let Some(accessibility_state) = node.get::<AccessibilityNodeState>() {
+                if let Some(accessibility_state) = node.get::<AccessibilityState>() {
                     let accessibility_id = accessibility_state.a11y_id;
                     if let Some(accessibility_id) = accessibility_id {
                         let parent_id = node

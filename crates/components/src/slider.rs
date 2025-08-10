@@ -167,18 +167,17 @@ pub fn Slider(
         platform.set_cursor(CursorIcon::Pointer);
     };
 
-    let onmousemove = {
-        to_owned![onmoved];
+    let onglobalmousemove = {
         move |e: MouseEvent| {
             e.stop_propagation();
             if *clicking.peek() {
                 let coordinates = e.get_element_coordinates();
                 let percentage = if direction_is_vertical {
-                    let y = coordinates.y - node_size.area.min_y() as f64 - 6.0;
+                    let y = coordinates.y - node_size.area.min_y() as f64 - 8.0;
                     100. - (y / (node_size.area.height() as f64 - 15.0) * 100.0)
                 } else {
-                    let x = coordinates.x - node_size.area.min_x() as f64 - 6.0;
-                    x / (node_size.area.width() as f64 - 15.0) * 100.0
+                    let x = coordinates.x - node_size.area.min_x() as f64 - 8.0;
+                    x / (node_size.area.width() as f64 - 15.) * 100.0
                 };
                 let percentage = percentage.clamp(0.0, 100.0);
 
@@ -188,18 +187,17 @@ pub fn Slider(
     };
 
     let onmousedown = {
-        to_owned![onmoved];
         move |e: MouseEvent| {
             e.stop_propagation();
             focus.request_focus();
             clicking.set(true);
             let coordinates = e.get_element_coordinates();
             let percentage = if direction_is_vertical {
-                let y = coordinates.y - 6.0;
+                let y = coordinates.y - 8.0;
                 100. - (y / (node_size.area.height() as f64 - 15.0) * 100.0)
             } else {
-                let x = coordinates.x - 6.0;
-                x / (node_size.area.width() as f64 - 15.0) * 100.0
+                let x = coordinates.x - 8.0;
+                x / (node_size.area.width() as f64 - 15.) * 100.0
             };
             let percentage = percentage.clamp(0.0, 100.0);
 
@@ -207,7 +205,7 @@ pub fn Slider(
         }
     };
 
-    let onclick = move |_: MouseEvent| {
+    let onglobalclick = move |_: MouseEvent| {
         clicking.set(false);
     };
 
@@ -226,43 +224,32 @@ pub fn Slider(
         "none".to_string()
     };
 
-    let (
-        width,
-        height,
-        container_width,
-        container_height,
-        inner_width,
-        inner_height,
-        main_align,
-        offset_x,
-        offset_y,
-    ) = if direction_is_vertical {
-        let inner_height = (node_size.area.height() - 15.0) * (value / 100.0) as f32;
-        (
-            "20",
-            size.as_str(),
-            "6",
-            "100%",
-            "100%".to_string(),
-            inner_height.to_string(),
-            "end",
-            -6,
-            3,
-        )
-    } else {
-        let inner_width = (node_size.area.width() - 15.0) * (value / 100.0) as f32;
-        (
-            size.as_str(),
-            "20",
-            "100%",
-            "6",
-            inner_width.to_string(),
-            "100%".to_string(),
-            "start",
-            -3,
-            -6,
-        )
-    };
+    let (width, height, inner_width, inner_height, main_align, offset_x, offset_y, padding) =
+        if direction_is_vertical {
+            let inner_height = format!("calc({value} / 100 * (100% - 15))");
+            (
+                "6",
+                size.as_str(),
+                "100%".to_string(),
+                inner_height,
+                "end",
+                -6,
+                3,
+                "0 8",
+            )
+        } else {
+            let inner_width = format!("calc({value} / 100 * (100% - 15))");
+            (
+                size.as_str(),
+                "6",
+                inner_width,
+                "100%".to_string(),
+                "start",
+                -3,
+                -6,
+                "8 0",
+            )
+        };
 
     let inner_fill = rsx!(rect {
         background: "{theme.thumb_inner_background}",
@@ -295,24 +282,20 @@ pub fn Slider(
     rsx!(
         rect {
             reference: node_reference,
-            width: "{width}",
-            height: "{height}",
-            onmousedown,
-            onglobalclick: onclick,
-            a11y_id,
             onmouseenter,
-            onglobalmousemove: onmousemove,
             onmouseleave,
-            onwheel: onwheel,
-            onkeydown,
-            main_align: "center",
-            cross_align: "center",
+            padding,
+            a11y_id,
             border: "{border}",
-            corner_radius: "8",
+            onmousedown,
+            onglobalclick,
+            onglobalmousemove,
+            onwheel,
+            onkeydown,
             rect {
+                width: "{width}",
+                height: "{height}",
                 background: "{theme.background}",
-                width: "{container_width}",
-                height: "{container_height}",
                 main_align: "{main_align}",
                 direction: "{direction}",
                 corner_radius: "50",

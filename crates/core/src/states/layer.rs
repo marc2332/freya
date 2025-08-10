@@ -29,6 +29,7 @@ use crate::{
     values::LayerMode,
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Default, PartialEq, Clone, Debug, Component)]
 pub struct LayerState {
     pub layer: i16,
@@ -107,6 +108,10 @@ impl State<CustomAttributeValues> for LayerState {
         let is_orphan = node_view.height() == 0 && node_view.node_id() != *root_id;
 
         if changed && !is_orphan {
+            layers
+                .lock()
+                .unwrap()
+                .remove_node_from_layer(node_view.node_id(), self.layer);
             layers
                 .lock()
                 .unwrap()

@@ -11,6 +11,9 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
 categories = ["gui"]
 
+[features]
+serde = ["dep:serde", "shipyard/serde1"]
+
 [dependencies]
 dioxus-core = { workspace = true}
 torin = { workspace = true }
@@ -19,6 +22,8 @@ ragnarok = { workspace = true }
 rustc-hash = { workspace = true }
 parking_lot = { version = "0.12.1", features = ["send_guard"] }
 shipyard = { workspace = true }
+
+serde ={ version = "*", optional = true }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["full"] }

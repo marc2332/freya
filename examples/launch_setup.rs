@@ -7,16 +7,19 @@ use freya::prelude::*;
 
 fn main() {
     launch_cfg(
-        app,
-        LaunchConfig::<()>::new()
-            .with_size(250.0, 60.0)
-            .on_setup(|window| {
-                window.set_title("Hello World");
-            })
-            .on_exit(|window| {
-                println!("Window title was {}", window.title());
-            })
-            .with_window_attributes(|attributes| attributes.with_resizable(false)),
+        LaunchConfig::new().with_window(
+            WindowConfig::new(app)
+                .with_size(250.0, 60.0)
+                .on_setup(|window| {
+                    window.set_title("Hello World");
+                })
+                .on_close(|window| {
+                    println!("Window title was {}", window.title());
+
+                    OnCloseResponse::Close
+                })
+                .with_window_attributes(|attributes| attributes.with_resizable(false)),
+        ),
     );
 }
 

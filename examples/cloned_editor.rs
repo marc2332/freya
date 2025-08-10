@@ -5,12 +5,13 @@ use freya::{
 
 fn main() {
     launch_cfg(
-        app,
-        LaunchConfig::<()>::new()
-            .with_size(900.0, 500.0)
-            .with_decorations(true)
-            .with_transparency(false)
-            .with_title("Editor"),
+        LaunchConfig::new().with_window(
+            WindowConfig::new(app)
+                .with_size(900.0, 500.0)
+                .with_decorations(true)
+                .with_transparency(false)
+                .with_title("Editor"),
+        ),
     );
 }
 

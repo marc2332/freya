@@ -11,7 +11,10 @@ use dioxus_core::VirtualDom;
 use freya_core::{
     accessibility::AccessibilityTree,
     dom::SafeDOM,
-    event_loop_messages::EventLoopMessage,
+    event_loop_messages::{
+        EventLoopMessage,
+        EventLoopMessageAction,
+    },
     events::{
         EventsExecutorAdapter,
         EventsMeasurerAdapter,
@@ -24,7 +27,7 @@ use freya_core::{
         Compositor,
         RenderPipeline,
     },
-    states::AccessibilityNodeState,
+    states::AccessibilityState,
     style::fallback_fonts,
     types::{
         EventEmitter,
@@ -33,11 +36,11 @@ use freya_core::{
         NativePlatformReceiver,
         NativePlatformSender,
     },
+    values::Color,
 };
 use freya_elements::MouseButton;
 use freya_engine::prelude::{
     raster_n32_premul,
-    Color,
     Data,
     EncodedImageFormat,
     FontCollection,
@@ -174,9 +177,9 @@ impl<T: 'static + Clone> TestingHandler<T> {
                 break;
             }
 
-            if let Ok(ev) = platform_ev {
-                match ev {
-                    EventLoopMessage::RequestRerender => {
+            if let Ok(message) = platform_ev {
+                match message.action {
+                    EventLoopMessageAction::RequestRerender => {
                         if let Some(ticker) = ticker.as_mut() {
                             ticker.tick().await;
                             self.ticker_sender.send(()).unwrap();
@@ -185,14 +188,14 @@ impl<T: 'static + Clone> TestingHandler<T> {
                                 .ok();
                         }
                     }
-                    EventLoopMessage::FocusAccessibilityNode(strategy) => {
+                    EventLoopMessageAction::FocusAccessibilityNode(strategy) => {
                         let fdom = self.utils.sdom.get();
                         fdom.accessibility_dirty_nodes().request_focus(strategy);
                     }
-                    EventLoopMessage::SetCursorIcon(icon) => {
+                    EventLoopMessageAction::SetCursorIcon(icon) => {
                         self.cursor_icon = icon;
                     }
-                    EventLoopMessage::RemeasureTextGroup(text_measurement) => {
+                    EventLoopMessageAction::RemeasureTextGroup(text_measurement) => {
                         let fdom = self.utils.sdom.get();
                         fdom.measure_paragraphs(text_measurement, SCALE_FACTOR);
                     }
@@ -271,7 +274,7 @@ impl<T: 'static + Clone> TestingHandler<T> {
         self.platform_sender.send_modify(|state| {
             state.focused_accessibility_id = tree.focus;
             let node_ref = rdom.get(node_id).unwrap();
-            let node_accessibility = node_ref.get::<AccessibilityNodeState>().unwrap();
+            let node_accessibility = node_ref.get::<AccessibilityState>().unwrap();
             let layout_node = layout.get(node_id).unwrap();
             state.focused_accessibility_node =
                 AccessibilityTree::create_node(&node_ref, layout_node, &node_accessibility)
@@ -386,7 +389,6 @@ impl<T: 'static + Clone> TestingHandler<T> {
             dirty_surface: &mut dirty_surface,
             compositor: &mut compositor,
             scale_factor: SCALE_FACTOR as f32,
-            highlighted_node: None,
             font_collection: &mut self.font_collection,
             font_manager: &self.font_mgr,
             fallback_fonts: &["Fira Sans".to_string()],

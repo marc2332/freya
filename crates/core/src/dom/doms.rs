@@ -50,7 +50,7 @@ use crate::{
         CompositorDirtyArea,
     },
     states::{
-        AccessibilityNodeState,
+        AccessibilityState,
         CanvasState,
         CursorState,
         FontStyleState,
@@ -157,7 +157,7 @@ impl Default for FreyaDOM {
             LayoutState::to_type_erased(),
             StyleState::to_type_erased(),
             TransformState::to_type_erased(),
-            AccessibilityNodeState::to_type_erased(),
+            AccessibilityState::to_type_erased(),
             ViewportState::to_type_erased(),
             LayerState::to_type_erased(),
             SvgState::to_type_erased(),

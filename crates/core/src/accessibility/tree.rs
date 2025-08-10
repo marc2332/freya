@@ -18,13 +18,6 @@ use freya_elements::{
     WheelData,
     WheelSource,
 };
-use freya_engine::prelude::{
-    Color,
-    Slant,
-    TextAlign,
-    TextDecoration,
-    TextDecorationStyle,
-};
 use freya_native_core::{
     events::EventName,
     node::NodeType,
@@ -54,7 +47,7 @@ use crate::{
         DomEventData,
     },
     states::{
-        AccessibilityNodeState,
+        AccessibilityState,
         FontStyleState,
         ScrollableState,
         StyleState,
@@ -64,7 +57,11 @@ use crate::{
     types::EventEmitter,
     values::{
         Fill,
+        FontSlant,
         OverflowMode,
+        TextAlign,
+        TextDecoration,
+        TextDecorationStyle,
     },
 };
 
@@ -169,7 +166,7 @@ impl AccessibilityTree {
 
             // Layout nodes might not exist yet when the app is lauched
             if let Some((accessibility_id, layout_node)) = accessibility_id.zip(layout_node) {
-                let node_accessibility_state = node_ref.get::<AccessibilityNodeState>().unwrap();
+                let node_accessibility_state = node_ref.get::<AccessibilityState>().unwrap();
                 let accessibility_node =
                     Self::create_node(&node_ref, layout_node, &node_accessibility_state);
                 nodes.push((accessibility_id, accessibility_node));
@@ -248,7 +245,7 @@ impl AccessibilityTree {
         let mut nodes = Vec::new();
         for node_id in added_or_updated_ids {
             let node_ref = rdom.get(node_id).unwrap();
-            let node_accessibility_state = node_ref.get::<AccessibilityNodeState>();
+            let node_accessibility_state = node_ref.get::<AccessibilityState>();
             let layout_node = layout.get(node_id);
 
             if let Some((node_accessibility_state, layout_node)) =
@@ -381,7 +378,7 @@ impl AccessibilityTree {
             let accessibility_id = node_ref.get_accessibility_id();
 
             if let Some(accessibility_id) = accessibility_id {
-                let accessibility_state = node_ref.get::<AccessibilityNodeState>().unwrap();
+                let accessibility_state = node_ref.get::<AccessibilityState>().unwrap();
                 if accessibility_state.a11y_focusable.is_enabled() {
                     all_nodes.push(accessibility_id)
                 }
@@ -401,7 +398,7 @@ impl AccessibilityTree {
 
         let node_id = self.map.get(&self.focused_id).unwrap();
         let node_ref = rdom.get(*node_id).unwrap();
-        let accessibility_state = node_ref.get::<AccessibilityNodeState>().unwrap();
+        let accessibility_state = node_ref.get::<AccessibilityState>().unwrap();
         let member_accessibility_id = accessibility_state
             .builder
             .as_ref()
@@ -419,9 +416,9 @@ impl AccessibilityTree {
         let target_node = match strategy {
             AccessibilityFocusStrategy::Forward(mode) => {
                 let mut nodes = if mode == AccessibilityFocusMovement::InsideGroup {
-                    all_nodes
-                } else {
                     group_nodes
+                } else {
+                    all_nodes
                 };
 
                 nodes.sort();
@@ -443,9 +440,9 @@ impl AccessibilityTree {
             }
             AccessibilityFocusStrategy::Backward(mode) => {
                 let mut nodes = if mode == AccessibilityFocusMovement::InsideGroup {
-                    all_nodes
-                } else {
                     group_nodes
+                } else {
+                    all_nodes
                 };
 
                 nodes.sort();
@@ -478,7 +475,7 @@ impl AccessibilityTree {
     pub fn create_node(
         node_ref: &DioxusNode,
         layout_node: &LayoutNode,
-        node_accessibility: &AccessibilityNodeState,
+        node_accessibility: &AccessibilityState,
     ) -> Node {
         let font_style_state = &*node_ref.get::<FontStyleState>().unwrap();
         let style_state = &*node_ref.get::<StyleState>().unwrap();
@@ -544,9 +541,9 @@ impl AccessibilityTree {
         }
 
         // Foreground/Background color
-        builder.set_foreground_color(skia_color_to_rgba_u32(font_style_state.color));
+        builder.set_foreground_color(font_style_state.color.into());
         if let Fill::Color(color) = style_state.background {
-            builder.set_background_color(skia_color_to_rgba_u32(color));
+            builder.set_background_color(color.into());
         }
 
         // If the node is a block-level element in the layout, indicate that it will cause a linebreak.
@@ -595,36 +592,33 @@ impl AccessibilityTree {
 
         // Set italic property for italic/oblique font slants
         match font_style_state.font_slant {
-            Slant::Italic | Slant::Oblique => builder.set_italic(),
+            FontSlant::Italic | FontSlant::Oblique => builder.set_italic(),
             _ => {}
         }
 
         // Text decoration
         if font_style_state
-            .decoration
-            .ty
+            .text_decoration
             .contains(TextDecoration::LINE_THROUGH)
         {
             builder.set_strikethrough(skia_decoration_style_to_accesskit(
-                font_style_state.decoration.style,
+                font_style_state.text_decoration_style,
             ));
         }
         if font_style_state
-            .decoration
-            .ty
+            .text_decoration
             .contains(TextDecoration::UNDERLINE)
         {
             builder.set_underline(skia_decoration_style_to_accesskit(
-                font_style_state.decoration.style,
+                font_style_state.text_decoration_style,
             ));
         }
         if font_style_state
-            .decoration
-            .ty
+            .text_decoration
             .contains(TextDecoration::OVERLINE)
         {
             builder.set_overline(skia_decoration_style_to_accesskit(
-                font_style_state.decoration.style,
+                font_style_state.text_decoration_style,
             ));
         }
 
@@ -640,10 +634,4 @@ fn skia_decoration_style_to_accesskit(style: TextDecorationStyle) -> accesskit::
         TextDecorationStyle::Double => accesskit::TextDecoration::Double,
         TextDecorationStyle::Wavy => accesskit::TextDecoration::Wavy,
     }
-}
-
-fn skia_color_to_rgba_u32(color: Color) -> u32 {
-    ((color.a() as u32) << 24)
-        | ((color.b() as u32) << 16)
-        | (((color.g() as u32) << 8) + (color.r() as u32))
 }

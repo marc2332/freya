@@ -1,5 +1,10 @@
-use freya_core::parsing::Parse;
-use freya_engine::prelude::*;
+use freya_core::{
+    parsing::Parse,
+    values::{
+        Color,
+        TextShadow,
+    },
+};
 
 #[test]
 fn parse_text_shadow() {
@@ -8,7 +13,7 @@ fn parse_text_shadow() {
         text_shadow,
         Ok(TextShadow {
             color: Color::RED,
-            offset: Point::new(1.0, 5.0),
+            offset: (1.0, 5.0),
             blur_sigma: 6.0
         })
     );

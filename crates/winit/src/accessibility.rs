@@ -10,7 +10,7 @@ use freya_core::{
         DioxusDOM,
     },
     event_loop_messages::EventLoopMessage,
-    states::AccessibilityNodeState,
+    states::AccessibilityState,
     types::{
         EventEmitter,
         NativePlatformSender,
@@ -103,7 +103,7 @@ impl WinitAcessibilityTree {
         platform_sender.send_modify(|state| {
             state.focused_accessibility_id = tree.focus;
             let node_ref = rdom.get(node_id).unwrap();
-            let node_accessibility = node_ref.get::<AccessibilityNodeState>().unwrap();
+            let node_accessibility = node_ref.get::<AccessibilityState>().unwrap();
             let layout_node = layout.get(node_id).unwrap();
             state.focused_accessibility_node =
                 AccessibilityTree::create_node(&node_ref, layout_node, &node_accessibility)

@@ -171,13 +171,13 @@ pub fn border_shape(
 
         path.add_path(
             &outer_corner_radius.smoothed_path(outer_rrect),
-            Point::new(outer_rrect.rect().x(), outer_rrect.rect().y()),
+            SkPoint::new(outer_rrect.rect().x(), outer_rrect.rect().y()),
             None,
         );
 
         path.add_path(
             &inner_corner_radius.smoothed_path(inner_rrect),
-            Point::new(inner_rrect.rect().x(), inner_rrect.rect().y()),
+            SkPoint::new(inner_rrect.rect().x(), inner_rrect.rect().y()),
             None,
         );
 

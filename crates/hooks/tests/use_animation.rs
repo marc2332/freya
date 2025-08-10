@@ -4,9 +4,11 @@ use dioxus_core::use_hook;
 use freya::prelude::*;
 use freya_core::{
     parsing::Parse,
-    values::Fill,
+    values::{
+        Color,
+        Fill,
+    },
 };
-use freya_engine::prelude::Color;
 use freya_testing::prelude::*;
 use tokio::time::sleep;
 
