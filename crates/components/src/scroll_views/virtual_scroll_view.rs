@@ -345,9 +345,6 @@ pub fn VirtualScrollView<
             return;
         }
 
-        e.prevent_default();
-        e.stop_propagation();
-
         let x = corrected_scrolled_x;
         let y = corrected_scrolled_y;
         let viewport_height = size.area.height();
@@ -363,6 +360,9 @@ pub fn VirtualScrollView<
         ) {
             scrolled_x.set(x as i32);
             scrolled_y.set(y as i32);
+
+            e.prevent_default();
+            e.stop_propagation();
         }
     };
 

@@ -137,7 +137,7 @@ pub fn get_corrected_scroll_position(
 
 pub fn manage_key_event(
     key: &Key,
-    position: (f32, f32),
+    (mut x, mut y): (f32, f32),
     inner_height: f32,
     inner_width: f32,
     viewport_height: f32,
@@ -147,9 +147,6 @@ pub fn manage_key_event(
     let y_line_delta = y_page_delta / 5.0;
     let x_page_delta = viewport_width;
     let x_line_delta = x_page_delta / 5.0;
-
-    let initial_position = position;
-    let (mut x, mut y) = position;
 
     // TODO(tropix126): Handle spacebar and spacebar + shift as Home and End
 
@@ -178,12 +175,8 @@ pub fn manage_key_event(
         Key::End => {
             y = -inner_height;
         }
-        _ => {}
+        _ => return None,
     };
 
-    if initial_position == (x, y) {
-        None
-    } else {
-        Some((x, y))
-    }
+    Some((x, y))
 }
