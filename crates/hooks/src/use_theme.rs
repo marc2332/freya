@@ -1,5 +1,5 @@
 use dioxus_core::{
-    prelude::try_consume_context,
+    try_consume_context,
     use_hook,
 };
 use dioxus_hooks::{
@@ -7,7 +7,7 @@ use dioxus_hooks::{
     use_context_provider,
 };
 use dioxus_signals::{
-    Readable,
+    ReadableExt,
     Signal,
 };
 

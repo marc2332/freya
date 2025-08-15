@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use dioxus_core::{
-    prelude::consume_context,
+    consume_context,
     use_hook,
     AttributeValue,
 };
@@ -12,7 +12,7 @@ use dioxus_hooks::{
 use dioxus_signals::{
     Memo,
     ReadOnlySignal,
-    Readable,
+    ReadableExt,
     Signal,
 };
 use freya_core::{

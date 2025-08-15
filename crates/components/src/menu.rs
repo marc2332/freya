@@ -7,6 +7,7 @@ use freya_elements::{
 };
 use freya_hooks::{
     use_applied_theme,
+    use_drop,
     use_focus,
     use_platform,
     MenuContainerTheme,
