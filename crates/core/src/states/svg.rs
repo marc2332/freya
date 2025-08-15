@@ -36,10 +36,12 @@ use crate::{
     values::SvgPaint,
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Default, Debug, Clone, PartialEq, Component)]
 pub struct SvgState {
     pub svg_fill: Option<SvgPaint>,
     pub svg_stroke: Option<SvgPaint>,
+    #[cfg_attr(feature = "serde", serde(skip_serializing, skip_deserializing))]
     pub svg_data: Option<AttributesBytes>,
 }
 

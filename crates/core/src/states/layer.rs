@@ -29,6 +29,7 @@ use crate::{
     values::LayerMode,
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Default, PartialEq, Clone, Debug, Component)]
 pub struct LayerState {
     pub layer: i16,

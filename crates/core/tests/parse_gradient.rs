@@ -1,13 +1,13 @@
 use freya_core::{
     parsing::Parse,
     values::{
+        Color,
         ConicGradient,
         GradientStop,
         LinearGradient,
         RadialGradient,
     },
 };
-use freya_engine::prelude::*;
 
 #[test]
 fn parse_basic_linear_gradient() {

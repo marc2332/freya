@@ -31,6 +31,7 @@ use crate::{
         TransformState,
     },
     values::{
+        Color,
         Fill,
         ShadowPosition,
     },
@@ -279,7 +280,7 @@ impl ElementUtils for RectElement {
 
                 let mut shadow_path = Path::new();
 
-                let outset: Option<Point> = match shadow.position {
+                let outset: Option<SkPoint> = match shadow.position {
                     ShadowPosition::Normal => Some(
                         (
                             shadow.spread.max(shadow.blur),
@@ -295,7 +296,7 @@ impl ElementUtils for RectElement {
                     if corner_radius.smoothing > 0.0 {
                         shadow_path.add_path(
                             &corner_radius.smoothed_path(rounded_rect.with_outset(outset)),
-                            Point::new(area.min_x(), area.min_y()) - outset,
+                            SkPoint::new(area.min_x(), area.min_y()) - outset,
                             None,
                         );
                     } else {

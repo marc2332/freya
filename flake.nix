@@ -24,15 +24,16 @@
         pkgs = nixpkgs.legacyPackages.${system};
 
         commonPackages = [
-          pkgs.openssl
-          pkgs.pkg-config
-          pkgs.fontconfig
           pkgs.python3
         ];
 
         commonBuildInputs = [
           pkgs.libxkbcommon
           pkgs.libGL
+          pkgs.udev
+          pkgs.openssl
+          pkgs.pkg-config
+          pkgs.fontconfig
 
           # WINIT_UNIX_BACKEND=wayland
           pkgs.wayland

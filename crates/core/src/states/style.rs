@@ -36,6 +36,7 @@ use crate::{
     },
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Default, Debug, Clone, PartialEq, Component)]
 pub struct StyleState {
     pub background: Fill,

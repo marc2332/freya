@@ -10,7 +10,7 @@ use tree_sitter_highlight::{
 };
 
 fn main() {
-    launch_with_props(app, "like freyaui.dev but in freya", (1500.0, 900.0));
+    launch_with_params(app, "like freyaui.dev but in freya", (1500.0, 900.0));
 }
 
 fn app() -> Element {

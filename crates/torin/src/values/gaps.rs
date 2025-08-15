@@ -5,6 +5,7 @@ use crate::{
     scaled::Scaled,
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(PartialEq, Clone, Debug, Default, Copy)]
 pub struct Gaps {
     top: Length,

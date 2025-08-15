@@ -1,5 +1,7 @@
-use freya_core::parsing::Parse;
-use freya_engine::prelude::*;
+use freya_core::{
+    parsing::Parse,
+    values::Color,
+};
 
 #[test]
 fn parse_manual_color() {

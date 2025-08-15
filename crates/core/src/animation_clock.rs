@@ -21,9 +21,9 @@ impl Default for AnimationClock {
 }
 
 impl AnimationClock {
-    const DEFAULT_SPEED: f32 = 1.0;
-    const MIN_SPEED: f32 = 0.1;
-    const MAX_SPEED: f32 = 10.0;
+    pub const DEFAULT_SPEED: f32 = 1.0;
+    pub const MIN_SPEED: f32 = 0.01;
+    pub const MAX_SPEED: f32 = 5.0;
 
     pub fn new() -> Self {
         Self(Arc::new(AtomicU32::new(Self::DEFAULT_SPEED.to_bits())))
@@ -34,20 +34,10 @@ impl AnimationClock {
         (f32::from_bits(bits).clamp(Self::MIN_SPEED, Self::MAX_SPEED) * 100.0).round() / 100.0
     }
 
-    pub(crate) fn set_speed(&self, speed: f32) {
+    pub fn set_speed(&self, speed: f32) {
         let speed = speed.clamp(Self::MIN_SPEED, Self::MAX_SPEED);
         self.0.store(speed.to_bits(), Ordering::Relaxed);
         info!("Animation clock speed changed to {:.2}x", speed);
-    }
-
-    pub fn increase_by(&self, factor: f32) {
-        let current = self.speed();
-        self.set_speed(current + factor);
-    }
-
-    pub fn decrease_by(&self, factor: f32) {
-        let current = self.speed();
-        self.set_speed(current - factor);
     }
 
     pub fn correct_elapsed_duration(&self, elapsed: Duration) -> Duration {

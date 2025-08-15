@@ -30,22 +30,34 @@ use crate::{
         ParseError,
     },
     values::{
+        Color,
+        FontSlant,
+        FontWeight,
+        FontWidth,
+        TextAlign,
+        TextDecoration,
+        TextDecorationStyle,
         TextHeight,
+        TextHeightBehavior,
         TextOverflow,
+        TextShadow,
     },
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Component)]
 pub struct FontStyleState {
     pub color: Color,
     pub text_shadows: Arc<[TextShadow]>,
     pub font_family: Arc<[String]>,
     pub font_size: f32,
-    pub font_slant: Slant,
-    pub font_weight: Weight,
-    pub font_width: Width,
+    pub font_slant: FontSlant,
+    pub font_weight: FontWeight,
+    pub font_width: FontWidth,
     pub line_height: Option<f32>,
-    pub decoration: Decoration,
+    pub text_decoration: TextDecoration,
+    pub text_decoration_style: TextDecorationStyle,
+    pub text_decoration_color: Color,
     pub word_spacing: f32,
     pub letter_spacing: f32,
     pub text_align: TextAlign,
@@ -70,9 +82,9 @@ impl FontStyleState {
         text_style
             .set_color(self.color)
             .set_font_style(FontStyle::new(
-                self.font_weight,
-                self.font_width,
-                self.font_slant,
+                self.font_weight.into(),
+                self.font_width.into(),
+                self.font_slant.into(),
             ))
             .set_font_size(self.font_size * scale_factor)
             .set_font_families(&font_family)
@@ -89,12 +101,12 @@ impl FontStyleState {
         }
 
         for text_shadow in self.text_shadows.iter() {
-            text_style.add_shadow(*text_shadow);
+            text_style.add_shadow((*text_shadow).into());
         }
 
-        text_style.set_decoration_style(self.decoration.style);
-        text_style.set_decoration_type(self.decoration.ty);
-        text_style.set_decoration_color(self.decoration.color);
+        text_style.set_decoration_style(self.text_decoration_style.into());
+        text_style.set_decoration_type(self.text_decoration.into());
+        text_style.set_decoration_color(self.text_decoration_color);
 
         text_style
     }
@@ -107,16 +119,15 @@ impl Default for FontStyleState {
             text_shadows: Arc::default(),
             font_family: Arc::default(),
             font_size: 16.0,
-            font_weight: Weight::NORMAL,
-            font_slant: Slant::Upright,
-            font_width: Width::NORMAL,
+            font_weight: FontWeight::NORMAL,
+            font_slant: FontSlant::Upright,
+            font_width: FontWidth::NORMAL,
             line_height: None,
             word_spacing: 0.0,
             letter_spacing: 0.0,
-            decoration: Decoration {
-                thickness_multiplier: 1.0, // Defaults to 0.0, even though 0.0 won't render anything
-                ..Decoration::default()
-            },
+            text_decoration: TextDecoration::default(),
+            text_decoration_style: TextDecorationStyle::default(),
+            text_decoration_color: Color::TRANSPARENT,
             text_align: TextAlign::default(),
             max_lines: None,
             text_overflow: TextOverflow::default(),
@@ -190,24 +201,24 @@ impl ParseAttribute for FontStyleState {
                 self.text_overflow = TextOverflow::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::FontStyle => {
-                self.font_slant = Slant::parse(attr.value.as_text().ok_or(ParseError)?)?;
+                self.font_slant = FontSlant::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::FontWeight => {
-                self.font_weight = Weight::parse(attr.value.as_text().ok_or(ParseError)?)?;
+                self.font_weight = FontWeight::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::FontWidth => {
-                self.font_width = Width::parse(attr.value.as_text().ok_or(ParseError)?)?;
+                self.font_width = FontWidth::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::Decoration => {
-                self.decoration.ty =
+                self.text_decoration =
                     TextDecoration::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::DecorationStyle => {
-                self.decoration.style =
+                self.text_decoration_style =
                     TextDecorationStyle::parse(attr.value.as_text().ok_or(ParseError)?)?;
             }
             AttributeName::DecorationColor => {
-                self.decoration.color = match attr.value.as_text() {
+                self.text_decoration_color = match attr.value.as_text() {
                     Some(v) => Color::parse(v)?,
                     None => self.color,
                 };

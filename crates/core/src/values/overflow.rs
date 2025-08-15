@@ -5,6 +5,7 @@ use crate::parsing::{
     ParseError,
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub enum OverflowMode {
     #[default]

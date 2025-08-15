@@ -3,7 +3,6 @@ use std::sync::{
     Mutex,
 };
 
-use freya_engine::prelude::*;
 use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
@@ -40,11 +39,13 @@ use crate::{
         ParseError,
     },
     values::{
+        Color,
         CursorMode,
         HighlightMode,
     },
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, PartialEq, Component)]
 pub struct CursorState {
     pub position: Option<i32>,
@@ -54,6 +55,7 @@ pub struct CursorState {
     pub highlights: Option<Vec<(usize, usize)>>,
     pub highlight_color: Color,
     pub highlight_mode: HighlightMode,
+    #[cfg_attr(feature = "serde", serde(skip_deserializing, skip_serializing))]
     pub cursor_ref: Option<CursorReference>,
 }
 
