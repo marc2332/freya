@@ -24,9 +24,9 @@ use dioxus_hooks::{
     use_signal,
 };
 use dioxus_signals::{
-    Readable,
+    ReadableExt,
     Signal,
-    Writable,
+    WritableExt,
 };
 use tokio::time::sleep;
 use tracing::info;

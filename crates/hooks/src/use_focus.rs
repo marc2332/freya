@@ -12,7 +12,7 @@ use dioxus_hooks::{
 use dioxus_signals::{
     Memo,
     ReadOnlySignal,
-    Readable,
+    ReadableExt,
     Signal,
 };
 use freya_core::{

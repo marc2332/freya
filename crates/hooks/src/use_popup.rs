@@ -9,10 +9,10 @@ use dioxus_hooks::{
 use dioxus_signals::{
     CopyValue,
     MappedSignal,
-    Readable,
+    ReadableExt,
     ReadableRef,
     Signal,
-    Writable,
+    WritableExt,
 };
 use tokio::sync::Notify;
 
@@ -99,7 +99,7 @@ impl<Data, Answer> UsePopupAnswer<Data, Answer> {
     }
 
     /// Read the data provided to this popup, if any.
-    pub fn data(&self) -> MappedSignal<Data> {
+    pub fn data(&self) -> MappedSignal<Data, Signal<Option<Data>>> {
         self.data.map(|data| data.as_ref().unwrap())
     }
 }

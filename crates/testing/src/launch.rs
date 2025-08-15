@@ -9,7 +9,6 @@ use accesskit::{
 };
 use dioxus_core::{
     Element,
-    IntoDynNode,
     VirtualDom,
 };
 use dioxus_core_macro::{
@@ -20,7 +19,7 @@ use dioxus_core_macro::{
 #[cfg(debug_assertions)]
 use dioxus_signals::{
     GlobalSignal,
-    Readable,
+    ReadableExt,
 };
 use freya_components::NativeContainer;
 use freya_core::{

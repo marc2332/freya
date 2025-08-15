@@ -13,9 +13,9 @@ use dioxus_core::{
     AttributeValue,
 };
 use dioxus_signals::{
-    Readable,
+    ReadableExt,
     Signal,
-    Writable,
+    WritableExt,
 };
 use freya_core::{
     custom_attributes::{

@@ -7,7 +7,7 @@ use dioxus_hooks::{
     use_context_provider,
 };
 use dioxus_signals::{
-    Readable,
+    ReadableExt,
     Signal,
 };
 

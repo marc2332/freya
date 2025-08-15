@@ -1,6 +1,6 @@
 use dioxus_hooks::try_use_context;
 use dioxus_signals::{
-    Readable,
+    ReadableExt,
     Signal,
 };
 

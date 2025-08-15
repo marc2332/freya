@@ -8,7 +8,7 @@ use dioxus_core::{
     ScopeId,
 };
 use dioxus_signals::{
-    Readable,
+    ReadableExt,
     Signal,
 };
 #[cfg(feature = "winit")]

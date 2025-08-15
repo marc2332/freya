@@ -17,9 +17,9 @@ use dioxus_hooks::{
 };
 use dioxus_signals::{
     ReadOnlySignal,
-    Readable,
+    ReadableExt,
     Signal,
-    Writable,
+    WritableExt,
 };
 use freya_core::custom_attributes::{
     CustomAttributeValues,

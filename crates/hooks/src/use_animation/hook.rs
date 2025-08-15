@@ -14,9 +14,9 @@ use dioxus_hooks::{
 use dioxus_signals::{
     CopyValue,
     MappedSignal,
-    Readable,
+    ReadableExt,
     Signal,
-    Writable,
+    WritableExt,
 };
 use freya_core::animation_clock::AnimationClock;
 use tokio::time::Instant;
@@ -125,7 +125,7 @@ impl<T: AnimatedValue> Copy for UseAnimation<T> {}
 
 impl<Animated: AnimatedValue> UseAnimation<Animated> {
     /// Get the animated value.
-    pub fn get(&self) -> MappedSignal<Animated> {
+    pub fn get(&self) -> MappedSignal<Animated, Signal<Option<Animated>>> {
         self.animated_value.map(|a| a.as_ref().unwrap())
     }
 

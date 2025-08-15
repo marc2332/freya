@@ -5,9 +5,9 @@ use dioxus_core::{
     use_hook,
 };
 use dioxus_signals::{
-    Readable,
+    ReadableExt,
     Signal,
-    Writable,
+    WritableExt,
 };
 use freya_core::types::NativePlatformReceiver;
 
