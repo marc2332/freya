@@ -22,7 +22,7 @@ fn Card(selected: ReadOnlySignal<bool>, children: Element) -> Element {
             .function(Function::Expo)
     });
 
-    let width = animations.get().read().read();
+    let width = animations.read().value();
 
     rsx!(
         rect {

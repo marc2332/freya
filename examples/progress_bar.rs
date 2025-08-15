@@ -17,7 +17,7 @@ fn app() -> Element {
             .ease(Ease::InOut)
             .function(Function::Sine)
     });
-    let progress = animation.get().read().read();
+    let progress = animation.read().value();
 
     let set_to_max = move |_| {
         animation.start();

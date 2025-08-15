@@ -160,10 +160,9 @@ pub fn GlobalAnimatedPosition<T: Clone + PartialEq + Hash + Eq + 'static>(
         }
     });
 
-    let animations = animations.get();
     let (offset_x, offset_y) = &*animations.read();
-    let offset_x = offset_x.read();
-    let offset_y = offset_y.read();
+    let offset_x = offset_x.value();
+    let offset_y = offset_y.value();
     let size = current_size().unwrap_or_default();
 
     rsx!(

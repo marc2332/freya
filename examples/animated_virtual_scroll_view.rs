@@ -52,7 +52,7 @@ fn AnimatedContainer(height: f32, children: Element) -> Element {
             .function(Function::Expo)
     });
 
-    let pos = animation.get().read().read();
+    let pos = animation.read().value();
 
     rsx!(
         rect {
