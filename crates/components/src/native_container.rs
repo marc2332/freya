@@ -19,6 +19,30 @@ pub fn NativeContainer(children: Element) -> Element {
     use_init_native_platform();
     let platform = use_platform();
 
+    #[cfg(feature = "winit")]
+    use_hook(|| {
+        let (tx, rx) = tokio::sync::oneshot::channel();
+
+        // Get the window handle to create a clipboard
+        platform.with_window(|window| {
+            use dioxus_clipboard::integrations::window_handle::create_native_clipboard;
+            use raw_window_handle::HasDisplayHandle;
+
+            let display_handle = window.display_handle().unwrap();
+            let clipboard = unsafe { create_native_clipboard(display_handle.as_raw()) };
+            tx.send(clipboard).ok();
+        });
+
+        // Receive the clipboard and register it
+        spawn(async move {
+            let provider = rx.await;
+            use dioxus_clipboard::integrations::window_handle::provide_native_clipboard;
+            if let Ok(Some(provider)) = provider {
+                provide_native_clipboard(provider);
+            }
+        });
+    });
+
     let onglobalkeydown = move |e: KeyboardEvent| {
         if e.key == Key::Tab {
             if e.modifiers.contains(Modifiers::SHIFT) {

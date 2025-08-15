@@ -18,18 +18,21 @@ features = ["freya-engine/mocked-engine", "docs"]
 skia-engine = ["freya-engine/skia-engine"]
 docs = ["network-image", "dep:embed-doc-image"]
 network-image = ["dep:reqwest", "dep:bytes"]
-winit = ["freya-core/winit", "freya-hooks/winit"]
+winit = ["freya-core/winit", "freya-hooks/winit", "dep:raw-window-handle"]
 
 [dependencies]
 freya-elements = { workspace = true }
 freya-hooks = { workspace = true }
 freya-core = { workspace = true }
 freya-engine = { workspace = true }
+freya-router = { workspace = true }
 torin = { workspace = true }
 
-freya-router = { workspace = true }
+dioxus-clipboard = { workspace = true }
 dioxus = { workspace = true }
 warnings = "0.2.1"
+
+raw-window-handle = { workspace = true, optional = true }
 
 futures-util = { workspace = true }
 tokio = { workspace = true }

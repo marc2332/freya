@@ -215,6 +215,7 @@ impl UsePlatform {
     /// Get a [PlatformSender] that you can use to send events from other threads.
     pub fn sender(&self) -> PlatformSender {
         PlatformSender {
+            #[cfg(feature = "winit")]
             event_loop_proxy: self.event_loop_proxy.read().clone(),
             platform_emitter: self.platform_emitter.read().clone(),
         }
@@ -237,17 +238,20 @@ impl UsePlatform {
 
 #[derive(Clone)]
 pub struct PlatformSender {
+    #[cfg(feature = "winit")]
     event_loop_proxy: Option<EventLoopProxy<EventLoopMessage>>,
     platform_emitter: Option<UnboundedSender<EventLoopMessage>>,
 }
 
 impl PlatformSender {
     pub fn send(&self, event: EventLoopMessage) -> Result<(), UsePlatformError> {
+        #[cfg(feature = "winit")]
         if let Some(event_loop_proxy) = &self.event_loop_proxy {
-            event_loop_proxy
+            return event_loop_proxy
                 .send_event(event)
-                .map_err(|_| UsePlatformError::EventLoopProxyFailed)?;
-        } else if let Some(platform_emitter) = &self.platform_emitter {
+                .map_err(|_| UsePlatformError::EventLoopProxyFailed);
+        }
+        if let Some(platform_emitter) = &self.platform_emitter {
             platform_emitter
                 .send(event)
                 .map_err(|_| UsePlatformError::PlatformEmitterFailed)?;
@@ -255,6 +259,7 @@ impl PlatformSender {
         Ok(())
     }
 
+    #[cfg(feature = "winit")]
     /// Send a callback that will be called with the [Window] once this is available to get read.
     #[cfg(feature = "winit")]
     pub fn with_window(&self, cb: impl FnOnce(&Window) + 'static + Send + Sync) {
