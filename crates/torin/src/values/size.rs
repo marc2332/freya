@@ -48,7 +48,7 @@ impl Size {
     }
 
     pub fn inner_sized(&self) -> bool {
-        matches!(self, Self::Inner | Self::FillMinimum)
+        matches!(self, Self::Inner)
     }
 
     pub fn pretty(&self) -> String {

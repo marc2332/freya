@@ -1,8 +1,5 @@
 use euclid::Length;
-use torin::{
-    prelude::*,
-    test_utils::*,
-};
+use torin::{prelude::*, test_utils::*};
 
 #[test]
 pub fn unsized_parent_with_child_with_margin() {
@@ -771,6 +768,76 @@ pub fn content_fit_fill_min() {
     assert_eq!(
         layout.get(3).unwrap().visible_area(),
         Rect::new(Point2D::new(0.0, 600.0), Size2D::new(100.0, 300.0)),
+    );
+}
+
+#[test]
+pub fn fill_min_cross_align_center() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_dom = TestingDOM::default();
+    let mut parent = Node::from_size_and_alignments_and_direction(
+        Size::Percentage(Length::new(100.)),
+        Size::Percentage(Length::new(100.)),
+        Alignment::Start,
+        Alignment::Start,
+        Direction::Vertical,
+    );
+    parent.content = Content::Fit;
+    mocked_dom.add(0, None, vec![1, 3], parent);
+    mocked_dom.add(
+        1,
+        Some(0),
+        vec![2],
+        Node::from_size_and_alignments_and_direction(
+            Size::FillMinimum,
+            Size::Inner,
+            Alignment::Start,
+            Alignment::Center,
+            Direction::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        2,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(50.)),
+            Size::Pixels(Length::new(50.)),
+            Direction::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        3,
+        Some(0),
+        vec![4],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(100.)),
+            Size::Pixels(Length::new(100.)),
+            Direction::Vertical,
+        ),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        &mut measurer,
+        &mut mocked_dom,
+    );
+
+    assert_eq!(
+        layout.get(1).unwrap().visible_area(),
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 50.0)),
+    );
+
+    assert_eq!(
+        layout.get(2).unwrap().visible_area(),
+        Rect::new(Point2D::new(25.0, 0.0), Size2D::new(50.0, 50.0)),
+    );
+
+    assert_eq!(
+        layout.get(3).unwrap().visible_area(),
+        Rect::new(Point2D::new(0.0, 50.0), Size2D::new(100.0, 100.0)),
     );
 }
 

@@ -1,0 +1,11 @@
+cross align center + content fit -> causes fill-min children to become minimum size
+
+fill-min + cross_align center -> does not work
+    fixed
+
+devtools layout boxes do not work correctly
+
+devtools close button is vertical instead of horizontal
+
+sound player layout grows to full size
+    hypothesis: fill-min when sibling is inner sized is broken
