@@ -423,26 +423,28 @@ where
 
                 let new_line = node.wrap_content.is_wrap()
                     && Self::should_wrap(
-                    node,
-                    child_areas.area.size,
-                    &initial_phase_available_area,
-                    &initial_phase_lines,
-                );
+                        node,
+                        child_areas.area.size,
+                        &initial_phase_available_area,
+                        &initial_phase_lines,
+                    );
 
                 if new_line {
                     for child_id in mem::take(&mut initial_phase_defer) {
-                        self.deferred_measure_child(
-                            node,
-                            node_is_dirty,
-                            child_id,
-                            &self.dom_adapter.get_node(child_id).unwrap(),
-                            &mut initial_phase_inner_area,
-                            &initial_phase_available_area,
-                            &mut initial_phase_flex_grows,
-                            defer_size,
-                            &mut initial_phase_sizes,
-                            &mut initial_phase_lines,
-                        );
+                        if let Some(child_data) = self.dom_adapter.get_node(child_id) {
+                            self.deferred_measure_child(
+                                node,
+                                node_is_dirty,
+                                child_id,
+                                &child_data,
+                                &mut initial_phase_inner_area,
+                                &initial_phase_available_area,
+                                &mut initial_phase_flex_grows,
+                                defer_size,
+                                &mut initial_phase_sizes,
+                                &mut initial_phase_lines,
+                            );
+                        }
                     }
                     defer_size = 0.;
                     Self::wrap_new_line(
@@ -469,7 +471,10 @@ where
                     Phase::Initial,
                 );
 
-                if node.cross_alignment.is_not_start() || node.main_alignment.is_spaced() || new_line {
+                if node.cross_alignment.is_not_start()
+                    || node.main_alignment.is_spaced()
+                    || new_line
+                {
                     initial_phase_sizes.insert(*child_id, child_areas.area.size);
                 }
 
@@ -499,18 +504,20 @@ where
                 }
             }
             for child_id in initial_phase_defer {
-                self.deferred_measure_child(
-                    node,
-                    node_is_dirty,
-                    child_id,
-                    &self.dom_adapter.get_node(child_id).unwrap(),
-                    &mut initial_phase_inner_area,
-                    &initial_phase_available_area,
-                    &mut initial_phase_flex_grows,
-                    defer_size,
-                    &mut initial_phase_sizes,
-                    &mut initial_phase_lines,
-                );
+                if let Some(child_data) = self.dom_adapter.get_node(child_id) {
+                    self.deferred_measure_child(
+                        node,
+                        node_is_dirty,
+                        child_id,
+                        &child_data,
+                        &mut initial_phase_inner_area,
+                        &initial_phase_available_area,
+                        &mut initial_phase_flex_grows,
+                        defer_size,
+                        &mut initial_phase_sizes,
+                        &mut initial_phase_lines,
+                    );
+                }
             }
             if node.height.inner_sized() {
                 available_area.size.height = initial_phase_inner_sizes
@@ -628,36 +635,35 @@ where
                 }
             }
 
-            let available_area_in_line = if needs_initial_phase
-                && child_data.position.is_stacked()
-                && initial_phase_size.is_some()
-            {
-                let origin_offset = available_area.origin - line_origin;
-                let line_available = &initial_phase_lines[curr_line].1;
+            let mut available_area_in_line = *available_area;
+            if needs_initial_phase && child_data.position.is_stacked() {
+                if let Some(initial_phase_size) = initial_phase_size {
+                    let origin_offset = available_area.origin - line_origin;
+                    let line_available = &initial_phase_lines[curr_line].1;
 
-                let (width, height) = match node.direction {
-                    Direction::Vertical => (
-                        line_available.width - origin_offset.x,
-                        child_data
-                            .height
-                            .is_flex()
-                            .then_some(initial_phase_size.unwrap().height)
-                            .unwrap_or(line_available.height - origin_offset.y),
-                    ),
-                    Direction::Horizontal => (
-                        child_data
-                            .width
-                            .is_flex()
-                            .then_some(initial_phase_size.unwrap().width)
-                            .unwrap_or(line_available.width - origin_offset.x),
-                        line_available.height - origin_offset.y,
-                    ),
-                };
+                    let (width, height) = match node.direction {
+                        Direction::Vertical => (
+                            line_available.width - origin_offset.x,
+                            if child_data.height.is_flex() {
+                                initial_phase_size.height
+                            } else {
+                                line_available.height - origin_offset.y
+                            },
+                        ),
+                        Direction::Horizontal => (
+                            if child_data.width.is_flex() {
+                                initial_phase_size.width
+                            } else {
+                                line_available.width - origin_offset.x
+                            },
+                            line_available.height - origin_offset.y,
+                        ),
+                    };
 
-                Area::new(available_area.origin, Size2D::new(width, height))
-            } else {
-                *available_area
-            };
+                    available_area_in_line =
+                        Area::new(available_area.origin, Size2D::new(width, height));
+                }
+            }
 
             // Final measurement
             let (child_revalidated, mut child_areas) = self.measure_node(
@@ -704,6 +710,7 @@ where
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn deferred_measure_child(
         &mut self,
         node: &Node,
@@ -712,12 +719,12 @@ where
         child_data: &Node,
         initial_phase_inner_area: &mut Area,
         initial_phase_available_area: &Area,
-        initial_phase_flex_grows: &mut Vec<Length>,
+        initial_phase_flex_grows: &mut [Length],
         defer_size: f32,
         initial_phase_sizes: &mut HashMap<Key, Size2D, FxBuildHasher>,
-        initial_phase_lines: &mut Vec<(usize, Size2D)>,
+        initial_phase_lines: &mut [(usize, Size2D)],
     ) {
-        let mut deferred_available_area= initial_phase_available_area.clone();
+        let mut deferred_available_area = *initial_phase_available_area;
         match node.direction {
             Direction::Vertical => {
                 deferred_available_area.size.height += defer_size;
@@ -778,8 +785,8 @@ where
 
         let (_, mut child_areas) = self.measure_node(
             *child_id,
-            &child_data,
-            &initial_phase_inner_area,
+            child_data,
+            initial_phase_inner_area,
             &Area::new(
                 deferred_available_area.origin,
                 Size2D::new(available_width, available_height),
@@ -789,7 +796,7 @@ where
             Phase::InitialDeferred,
         );
 
-        child_areas.area.adjust_size(&child_data);
+        child_areas.area.adjust_size(child_data);
         initial_phase_sizes.insert(*child_id, child_areas.area.size);
     }
 
@@ -960,7 +967,7 @@ where
         node_area: &mut Area,
         inner_area: &mut Area,
         inner_sizes: &mut Size2D,
-        line_sizes: &mut Vec<(usize, Size2D)>,
+        line_sizes: &mut [(usize, Size2D)],
         child_area: &Area,
         new_line: bool,
         is_last_sibling: bool,
@@ -1089,7 +1096,7 @@ where
         node: &Node,
         child_size: Size2D,
         available_area: &Area,
-        line_sizes: &Vec<(usize, Size2D)>,
+        line_sizes: &[(usize, Size2D)],
     ) -> bool {
         match node.direction {
             Direction::Vertical => {
