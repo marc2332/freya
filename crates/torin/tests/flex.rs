@@ -95,22 +95,26 @@ pub fn flex_under_1_flex_grow() {
     let (mut layout, mut measurer) = test_utils();
 
     let mut mocked_dom = TestingDOM::default();
+    let mut parent = Node::from_size_and_alignments_and_direction(
+        Size::Pixels(Length::new(500.0)),
+        Size::Pixels(Length::new(500.0)),
+        Alignment::SpaceAround,
+        Alignment::Start,
+        Direction::Vertical
+    );
+    parent.content = Content::Flex;
     mocked_dom.add(
         0,
         None,
         vec![1, 2],
-        Node::from_size_and_content(
-            Size::Pixels(Length::new(200.0)),
-            Size::Pixels(Length::new(200.0)),
-            Content::Flex,
-        ),
+        parent,
     );
     mocked_dom.add(
         1,
         Some(0),
         vec![],
         Node::from_size_and_direction(
-            Size::Pixels(Length::new(100.0)),
+            Size::Fill,
             Size::Flex(Length::new(0.2)),
             Direction::Vertical,
         ),
@@ -120,8 +124,8 @@ pub fn flex_under_1_flex_grow() {
         Some(0),
         vec![],
         Node::from_size_and_direction(
-            Size::Pixels(Length::new(100.0)),
-            Size::Flex(Length::new(0.5)),
+            Size::Fill,
+            Size::Pixels(Length::new(120.)),
             Direction::Vertical,
         ),
     );
@@ -135,16 +139,16 @@ pub fn flex_under_1_flex_grow() {
 
     assert_eq!(
         layout.get(0).unwrap().area,
-        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(500.0, 500.0)),
     );
 
     assert_eq!(
         layout.get(1).unwrap().area,
-        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 40.0)),
+        Rect::new(Point2D::new(0.0, 76.0), Size2D::new(500.0, 76.0)),
     );
     assert_eq!(
         layout.get(2).unwrap().area,
-        Rect::new(Point2D::new(0.0, 40.0), Size2D::new(100.0, 100.0)),
+        Rect::new(Point2D::new(0.0, 304.0), Size2D::new(500.0, 120.0)),
     );
 }
 

@@ -1,16 +1,15 @@
 cross align center + content fit -> causes fill-min children to become minimum size
     approaches:
-    - third phase for fit-min and flex. move some flex code from final phase
-    - defer initial phase for fit-min and flex till end of line. move flex code from final phase
+        - third phase for fit-min and flex. move some flex code from final phase
+        - defer initial phase for fit-min and flex till end of line. move flex code from final phase
+    fixed
 
-flex in main direction??
-
-fill-min + cross_align center -> does not work
+flex_2 example too wide
     fixed
 
 devtools layout boxes do not work correctly
 
 devtools close button is vertical instead of horizontal
 
-sound player layout grows to full size
-    hypothesis: fill-min when sibling is inner sized is broken
+fill-min + cross_align center -> does not work
+    fixed
