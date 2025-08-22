@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch_cfg(app, LaunchConfig::<()>::new().with_title("Mouse Trace"));
+    launch_cfg(LaunchConfig::new().with_window(WindowConfig::new(app).with_title("Mouse Trace")));
 }
 
 const MOVEMENT_MARGIN: f64 = 75.0;

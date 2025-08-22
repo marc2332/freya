@@ -7,7 +7,7 @@ use freya::prelude::*;
 use reqwest::Url;
 
 fn main() {
-    launch_with_props(app, "Images Slideshow", (400.0, 350.0));
+    launch_with_params(app, "Images Slideshow", (400.0, 350.0));
 }
 
 #[component]

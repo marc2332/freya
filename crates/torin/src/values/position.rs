@@ -7,6 +7,7 @@ use crate::{
     scaled::Scaled,
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Default, PartialEq, Clone, Debug)]
 pub struct PositionSides {
     pub top: Option<f32>,
@@ -15,6 +16,7 @@ pub struct PositionSides {
     pub left: Option<f32>,
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(PartialEq, Clone, Debug)]
 pub enum Position {
     Stacked(Box<PositionSides>),

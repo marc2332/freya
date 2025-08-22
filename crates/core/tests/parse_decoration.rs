@@ -1,5 +1,10 @@
-use freya_core::parsing::Parse;
-use freya_engine::prelude::*;
+use freya_core::{
+    parsing::Parse,
+    values::{
+        TextDecoration,
+        TextDecorationStyle,
+    },
+};
 
 #[test]
 fn parse_text_decoration() {

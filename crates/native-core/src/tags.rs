@@ -3,6 +3,7 @@ use std::{
     str::FromStr,
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Copy, PartialEq, Debug, Hash)]
 pub enum TagName {
     Root,

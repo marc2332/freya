@@ -4,12 +4,12 @@ use freya_core::{
         Border,
         BorderAlignment,
         BorderWidth,
+        Color,
         Fill,
         GradientStop,
         LinearGradient,
     },
 };
-use freya_engine::prelude::*;
 
 #[test]
 fn parse_basic_border() {

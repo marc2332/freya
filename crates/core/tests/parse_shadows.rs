@@ -1,6 +1,7 @@
 use freya_core::{
     parsing::Parse,
     values::{
+        Color,
         Fill,
         GradientStop,
         LinearGradient,
@@ -8,7 +9,6 @@ use freya_core::{
         ShadowPosition,
     },
 };
-use freya_engine::prelude::*;
 
 #[test]
 fn parse_big_shadow() {

@@ -1,15 +1,11 @@
-use dioxus::prelude::*;
-use freya_components::*;
-use freya_elements as dioxus_elements;
+use freya::prelude::*;
 use freya_native_core::NodeId;
 
 use crate::hooks::use_node_info;
 
-#[allow(non_snake_case)]
 #[component]
-pub fn NodeInspectorLayout(node_id: String) -> Element {
-    let node_id = NodeId::deserialize(&node_id);
-    let Some(node) = use_node_info(node_id) else {
+pub fn NodeInspectorComputedLayout(node_id: NodeId, window_id: u64) -> Element {
+    let Some(node) = use_node_info(node_id, window_id) else {
         return Ok(VNode::placeholder());
     };
 
@@ -23,8 +19,8 @@ pub fn NodeInspectorLayout(node_id: String) -> Element {
         node.layout_node.area.width().round(),
         node.layout_node.area.height().round()
     );
-    let paddings = node.state.size.padding;
-    let margins = node.state.size.margin;
+    let paddings = node.state.layout.padding;
+    let margins = node.state.layout.margin;
 
     rsx!(
         ScrollView {

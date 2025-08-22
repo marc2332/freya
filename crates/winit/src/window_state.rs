@@ -19,7 +19,6 @@ use crate::{
     accessibility::WinitAcessibilityTree,
     app::Application,
     config::WindowConfig,
-    devtools::Devtools,
     drivers::GraphicsDriver,
     size::WinitSize,
     LaunchConfig,
@@ -28,7 +27,6 @@ use crate::{
 pub struct NotCreatedState<'a, State: Clone + 'static> {
     pub(crate) sdom: SafeDOM,
     pub(crate) vdom: VirtualDom,
-    pub(crate) devtools: Option<Devtools>,
     pub(crate) config: LaunchConfig<'a, State>,
 }
 
@@ -68,7 +66,6 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
         let Self::NotCreated(NotCreatedState {
             sdom,
             vdom,
-            devtools,
             mut config,
         }) = mem::replace(self, WindowState::Creating)
         else {
@@ -131,7 +128,6 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
             sdom,
             vdom,
             event_loop_proxy,
-            devtools,
             &window,
             config.embedded_fonts,
             config.plugins,

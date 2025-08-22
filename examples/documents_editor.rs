@@ -14,7 +14,7 @@ use freya_router::prelude::*;
 use rand::Rng;
 
 fn main() {
-    launch_with_props(app, "Documents Editor", (900.0, 750.0));
+    launch_with_params(app, "Documents Editor", (900.0, 750.0));
 }
 
 fn app() -> Element {

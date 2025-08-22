@@ -16,11 +16,12 @@ use freya::prelude::*;
 
 fn main() {
     launch_cfg(
-        app,
-        LaunchConfig::<()>::new()
-            .with_min_size(600., 400.)
-            .with_size(1000., 700.)
-            .with_title("To Do"),
+        LaunchConfig::new().with_window(
+            WindowConfig::new(app)
+                .with_min_size(600., 400.)
+                .with_size(1000., 700.)
+                .with_title("To Do"),
+        ),
     );
 }
 

@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Selectable Text", (900.0, 650.0));
+    launch_with_params(app, "Selectable Text", (900.0, 650.0));
 }
 
 fn app() -> Element {

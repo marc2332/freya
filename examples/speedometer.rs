@@ -18,7 +18,7 @@ use skia_safe::{
 };
 
 fn main() {
-    launch_with_props(app, "Speedometer", (400., 400.));
+    launch_with_params(app, "Speedometer", (400., 400.));
 }
 
 fn app() -> Element {

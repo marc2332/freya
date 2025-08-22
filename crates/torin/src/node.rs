@@ -16,6 +16,7 @@ use crate::{
 };
 
 /// Node layout configuration
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(PartialEq, Clone, Debug, Default)]
 pub struct Node {
     /// Dimentions

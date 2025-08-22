@@ -5,11 +5,11 @@ edition = "2021"
 publish = false
 
 [workspace]
-members = ["crates/winit", "crates/freya", "crates/elements", "crates/components", "crates/hooks", "crates/core", "crates/testing", "crates/devtools", "crates/torin", "crates/engine", "./examples/installer",  "crates/native-core", "crates/native-core-macro", "crates/router", "crates/router-macro", "crates/ragnarok"]
+members = ["crates/winit", "crates/freya", "crates/elements", "crates/components", "crates/hooks", "crates/core", "crates/testing", "crates/torin", "crates/engine", "./examples/installer",  "crates/native-core", "crates/native-core-macro", "crates/router", "crates/router-macro", "crates/ragnarok", "crates/devtools", "crates/devtools-app"]
 
 [features]
 tracing-subscriber = ["freya/tracing-subscriber"]
-devtools = ["freya/devtools"]
+devtools = ["freya/devtools", "freya-devtools/server"]
 use_camera = ["freya/use_camera"]
 custom-tokio-rt = ["freya/custom-tokio-rt"]
 performance-overlay = ["freya/performance-overlay"]
@@ -17,6 +17,7 @@ fade-cached-incremental-areas = ["freya/fade-cached-incremental-areas"]
 disable-zoom-shortcuts = ["freya/disable-zoom-shortcuts"]
 docs = ["freya/docs"]
 plot = ["freya/plot"]
+
 
 [patch.crates-io]
 # dioxus = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
@@ -30,7 +31,6 @@ plot = ["freya/plot"]
 [workspace.dependencies]
 freya = { path = "crates/freya", version = "0.4" }
 freya-devtools = { path = "crates/devtools", version = "0.4" }
-freya-node-state = { path = "crates/state", version = "0.4" }
 freya-winit = { path = "crates/winit", version = "0.4" }
 freya-elements = { path = "crates/elements", version = "0.4" }
 freya-common = { path = "crates/common", version = "0.4" }
@@ -66,7 +66,7 @@ glutin-winit = "0.5.0"
 raw-window-handle = "0.6.0"
 winit = "0.30.0"
 tokio = { version = "1", features = ["sync", "rt-multi-thread", "time", "macros"] }
-accesskit = { version = "0.19.0", features = ["serde"]}
+accesskit = { version = "0.19.0", features = ["serde"] }
 accesskit_winit = "0.27.0"
 shipyard = { version = "0.8", features = ["proc", "std", "parallel"], default-features = false }
 smallvec = "1.13.1"
@@ -77,6 +77,7 @@ futures-task = "0.3.30"
 tracing = "0.1"
 tracing-subscriber = "0.3.17"
 rustc-hash = "2.0.0"
+bytes = "1.5.0"
 
 [dev-dependencies]
 skia-safe = { workspace = true }
@@ -85,6 +86,7 @@ freya = { workspace = true, features = ["network-image"] }
 freya-hooks = { workspace = true }
 freya-core = { workspace = true }
 freya-testing = { workspace = true }
+freya-devtools = { workspace = true, features = ["server"] }
 reqwest = { version = "0.12.0", features = ["json"] }
 serde = "1.0.189"
 dioxus-i18n = { workspace = true }
@@ -98,7 +100,7 @@ gl = { workspace = true }
 tree-sitter-highlight = "0.23.0"
 tree-sitter-rust = "0.23.0"
 rfd = "0.15.3"
-bytes = "1.5.0"
+bytes = { workspace = true }
 dioxus-clipboard = { workspace = true }
 winit = { workspace = true }
 dioxus-radio = "0.6.0"

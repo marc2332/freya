@@ -17,6 +17,7 @@ use crate::{
     scaled::Scaled,
 };
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(PartialEq, Clone, Debug)]
 pub enum Size {
     Inner,
@@ -178,6 +179,7 @@ impl Scaled for Size {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum DynamicCalculation {
     Sub,

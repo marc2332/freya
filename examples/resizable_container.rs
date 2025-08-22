@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Resizable Container", (1000.0, 550.0));
+    launch_with_params(app, "Resizable Container", (1000.0, 550.0));
 }
 
 fn app() -> Element {
