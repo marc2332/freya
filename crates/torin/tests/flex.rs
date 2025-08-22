@@ -100,15 +100,10 @@ pub fn flex_under_1_flex_grow() {
         Size::Pixels(Length::new(500.0)),
         Alignment::SpaceAround,
         Alignment::Start,
-        Direction::Vertical
+        Direction::Vertical,
     );
     parent.content = Content::Flex;
-    mocked_dom.add(
-        0,
-        None,
-        vec![1, 2],
-        parent,
-    );
+    mocked_dom.add(0, None, vec![1, 2], parent);
     mocked_dom.add(
         1,
         Some(0),

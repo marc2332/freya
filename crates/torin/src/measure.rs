@@ -1,18 +1,38 @@
+use std::{
+    collections::HashMap,
+    mem,
+};
+
+pub use euclid::Rect;
+use rustc_hash::{
+    FxBuildHasher,
+    FxHashMap,
+};
+
 use crate::{
     custom_measurer::LayoutMeasurer,
-    dom_adapter::{DOMAdapter, LayoutNode, NodeKey},
-    geometry::{Area, Size2D},
+    dom_adapter::{
+        DOMAdapter,
+        LayoutNode,
+        NodeKey,
+    },
+    geometry::{
+        Area,
+        Size2D,
+    },
     node::Node,
     prelude::{
-        AlignAxis, Alignment, AlignmentDirection, AreaModel, Direction, LayoutMetadata, Length,
+        AlignAxis,
+        Alignment,
+        AlignmentDirection,
+        AreaModel,
+        Direction,
+        LayoutMetadata,
+        Length,
         Torin,
     },
     size::Size,
 };
-pub use euclid::Rect;
-use rustc_hash::{FxBuildHasher, FxHashMap};
-use std::collections::HashMap;
-use std::mem;
 
 /// Some layout strategies require two-phase measurements
 /// Example: Alignments or content-fit.

@@ -47,7 +47,9 @@ impl Size {
         matches!(self, Self::Flex(_))
     }
 
-    pub fn is_fill_minimum(&self) -> bool { matches!(self, Self::FillMinimum) }
+    pub fn is_fill_minimum(&self) -> bool {
+        matches!(self, Self::FillMinimum)
+    }
 
     pub fn inner_sized(&self) -> bool {
         matches!(self, Self::Inner)
@@ -90,7 +92,9 @@ impl Size {
             ),
             Self::Fill => Some(available_parent_value),
             Self::RootPercentage(per) => Some(root_value / 100.0 * per.get()),
-            Self::Flex(_) | Self::FillMinimum if phase == Phase::Final || phase == Phase::InitialDeferred => {
+            Self::Flex(_) | Self::FillMinimum
+                if phase == Phase::Final || phase == Phase::InitialDeferred =>
+            {
                 Some(available_parent_value)
             }
             _ => None,
