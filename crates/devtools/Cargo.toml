@@ -19,7 +19,7 @@ server = [
 client = []
 
 [dependencies]
-hyper = { version = "1", features = ["server"], optional = true }
+hyper = { version = "1", features = ["server", "http1"], optional = true }
 tokio = { version = "1", features = ["full"], optional = true }
 hyper-util = { version = "0.1", features = ["tokio"], optional = true }
 tokio-tungstenite = { version = "0.27", optional = true }
