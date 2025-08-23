@@ -8,6 +8,7 @@ use freya_elements::{
     MouseEvent,
 };
 use freya_hooks::{
+    use_drop,
     use_editable,
     use_focus,
     use_platform,

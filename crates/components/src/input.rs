@@ -7,7 +7,6 @@ use std::{
     rc::Rc,
 };
 
-use ::warnings::Warning;
 use dioxus::prelude::*;
 use freya_core::platform::CursorIcon;
 use freya_elements::{
@@ -20,6 +19,7 @@ use freya_elements::{
 };
 use freya_hooks::{
     use_applied_theme,
+    use_drop,
     use_editable,
     use_focus,
     use_platform,
@@ -194,11 +194,6 @@ pub fn Input(
     let value = value.read();
     let placeholder = placeholder.read();
     let display_placeholder = value.is_empty() && placeholder.is_some();
-
-    let _allow_write_in_component_body =
-        ::warnings::Allow::new(warnings::signal_write_in_component_body::ID);
-    let _allow_read_and_write_in_reactive_scope =
-        ::warnings::Allow::new(warnings::signal_read_and_write_in_reactive_scope::ID);
 
     if &*value != editable.editor().read().rope() {
         editable.editor_mut().write().set(&value);

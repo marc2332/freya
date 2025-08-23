@@ -8,14 +8,14 @@ use dioxus_clipboard::prelude::{
     UseClipboard,
 };
 use dioxus_core::{
-    prelude::spawn,
+    spawn,
     use_hook,
     AttributeValue,
 };
 use dioxus_signals::{
-    Readable,
+    ReadableExt,
     Signal,
-    Writable,
+    WritableExt,
 };
 use freya_core::{
     custom_attributes::{
