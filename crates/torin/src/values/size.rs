@@ -52,8 +52,8 @@ impl Size {
         matches!(self, Self::FillMinimum)
     }
 
-    pub fn inner_sized(&self) -> bool {
-        matches!(self, Self::Inner)
+    pub fn inner_sized(&self, phase: Phase) -> bool {
+        matches!(self, Self::Inner) || matches!(self, Self::FillMinimum if phase == Phase::Initial)
     }
 
     pub fn pretty(&self) -> String {

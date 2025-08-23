@@ -156,7 +156,7 @@ where
                     // Compute the width and height again using the new custom area sizes
                     #[allow(clippy::float_cmp)]
                     if let Some((custom_size, node_data)) = res {
-                        if node.width.inner_sized() {
+                        if node.width.inner_sized(phase) {
                             area_size.width = node.width.min_max(
                                 custom_size.width,
                                 parent_area.size.width,
@@ -169,7 +169,7 @@ where
                                 phase,
                             );
                         }
-                        if node.height.inner_sized() {
+                        if node.height.inner_sized(phase) {
                             area_size.height = node.height.min_max(
                                 custom_size.height,
                                 parent_area.size.height,
@@ -205,7 +205,7 @@ where
             // isn't decided by his children
             let phase_measure_inner_children =
                 if phase == Phase::Initial || phase == Phase::InitialDeferred {
-                    node.width.inner_sized() || node.height.inner_sized()
+                    node.width.inner_sized(phase) || node.height.inner_sized(phase)
                 } else {
                     true
                 };
@@ -215,7 +215,7 @@ where
                 let mut inner_size = area_size;
 
                 // When having an unsized bound we set it to whatever is still available in the parent's area
-                if node.width.inner_sized() {
+                if node.width.inner_sized(phase) {
                     inner_size.width = node.width.min_max(
                         available_parent_area.width(),
                         parent_area.size.width,
@@ -228,7 +228,7 @@ where
                         phase,
                     );
                 }
-                if node.height.inner_sized() {
+                if node.height.inner_sized(phase) {
                     inner_size.height = node.height.min_max(
                         available_parent_area.height(),
                         parent_area.size.height,
@@ -268,6 +268,7 @@ where
                 self.measure_children(
                     &node_id,
                     node,
+                    phase,
                     &mut available_area,
                     &mut inner_sizes,
                     &mut area,
@@ -278,7 +279,7 @@ where
 
                 // Re apply min max values after measuring with inner sized
                 // Margins are set to 0 because area.size already contains the margins
-                if node.width.inner_sized() {
+                if node.width.inner_sized(phase) {
                     area.size.width = node.width.min_max(
                         area.size.width,
                         parent_area.size.width,
@@ -291,7 +292,7 @@ where
                         phase,
                     );
                 }
-                if node.height.inner_sized() {
+                if node.height.inner_sized(phase) {
                     area.size.height = node.height.min_max(
                         area.size.height,
                         parent_area.size.height,
@@ -344,6 +345,7 @@ where
                 self.measure_children(
                     &node_id,
                     node,
+                    phase,
                     &mut available_area,
                     &mut inner_sizes,
                     &mut area,
@@ -363,6 +365,7 @@ where
         &mut self,
         node_id: &Key,
         node: &Node,
+        node_phase: Phase,
         // Area available for children inside the Node
         available_area: &mut Area,
         // Accumulated sizes in both axis in the Node
@@ -450,22 +453,17 @@ where
                     );
 
                 if new_line {
-                    for child_id in mem::take(&mut initial_phase_defer) {
-                        if let Some(child_data) = self.dom_adapter.get_node(child_id) {
-                            self.deferred_measure_child(
-                                node,
-                                node_is_dirty,
-                                child_id,
-                                &child_data,
-                                &mut initial_phase_inner_area,
-                                &initial_phase_available_area,
-                                &mut initial_phase_flex_grows,
-                                defer_size,
-                                &mut initial_phase_sizes,
-                                &mut initial_phase_lines,
-                            );
-                        }
-                    }
+                    self.deferred_measure_children(
+                        node,
+                        node_is_dirty,
+                        &mut initial_phase_inner_area,
+                        &initial_phase_available_area,
+                        &mut initial_phase_flex_grows,
+                        &mut initial_phase_sizes,
+                        &mut initial_phase_lines,
+                        &mut initial_phase_defer,
+                        defer_size,
+                    );
                     defer_size = 0.;
                     Self::wrap_new_line(
                         node,
@@ -488,6 +486,7 @@ where
                     &child_areas.area,
                     new_line,
                     is_last_child,
+                    node_phase,
                     Phase::Initial,
                 );
 
@@ -523,28 +522,23 @@ where
                     }
                 }
             }
-            for child_id in initial_phase_defer {
-                if let Some(child_data) = self.dom_adapter.get_node(child_id) {
-                    self.deferred_measure_child(
-                        node,
-                        node_is_dirty,
-                        child_id,
-                        &child_data,
-                        &mut initial_phase_inner_area,
-                        &initial_phase_available_area,
-                        &mut initial_phase_flex_grows,
-                        defer_size,
-                        &mut initial_phase_sizes,
-                        &mut initial_phase_lines,
-                    );
-                }
-            }
-            if node.height.inner_sized() {
+            self.deferred_measure_children(
+                node,
+                node_is_dirty,
+                &mut initial_phase_inner_area,
+                &initial_phase_available_area,
+                &mut initial_phase_flex_grows,
+                &mut initial_phase_sizes,
+                &mut initial_phase_lines,
+                &mut initial_phase_defer,
+                defer_size,
+            );
+            if node.height.inner_sized(node_phase) {
                 available_area.size.height = initial_phase_inner_sizes
                     .height
                     .min(available_area.size.height);
             }
-            if node.width.inner_sized() {
+            if node.width.inner_sized(node_phase) {
                 available_area.size.width = initial_phase_inner_sizes
                     .width
                     .min(available_area.size.width);
@@ -712,6 +706,7 @@ where
                     &child_areas.area,
                     new_line,
                     is_last_child,
+                    node_phase,
                     Phase::Final,
                 );
                 line_index += 1;
@@ -731,136 +726,110 @@ where
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn deferred_measure_child(
+    fn deferred_measure_children(
         &mut self,
         node: &Node,
         node_is_dirty: bool,
-        child_id: &Key,
-        child_data: &Node,
         initial_phase_inner_area: &mut Area,
         initial_phase_available_area: &Area,
         initial_phase_flex_grows: &mut [Length],
-        defer_size: f32,
         initial_phase_sizes: &mut HashMap<Key, Size2D, FxBuildHasher>,
         initial_phase_lines: &mut [(usize, Size2D)],
+        initial_phase_defer: &mut Vec<&Key>,
+        defer_size: f32,
     ) {
         let mut deferred_available_area = *initial_phase_available_area;
         match node.direction {
             Direction::Vertical => {
                 deferred_available_area.size.height += defer_size;
+                initial_phase_lines.last_mut().unwrap().1.height -= defer_size;
             }
             Direction::Horizontal => {
                 deferred_available_area.size.width += defer_size;
+                initial_phase_lines.last_mut().unwrap().1.width -= defer_size;
             }
         }
+        let cur_line = initial_phase_lines.last_mut().unwrap();
+        for child_id in mem::take(initial_phase_defer) {
+            if let Some(child_data) = self.dom_adapter.get_node(child_id) {
+                let mut deferred_height = None;
+                let mut deferred_width = None;
 
-        let mut deferred_height = None;
-        let mut deferred_width = None;
+                if node.content.is_flex() {
+                    let flex_grow = match node.direction {
+                        Direction::Vertical => child_data.height.flex_grow(),
+                        Direction::Horizontal => child_data.width.flex_grow(),
+                    };
 
-        if node.content.is_flex() {
-            let flex_grow = match node.direction {
-                Direction::Vertical => child_data.height.flex_grow(),
-                Direction::Horizontal => child_data.width.flex_grow(),
-            };
+                    if let Some(flex_grow) = flex_grow {
+                        let flex_grows = initial_phase_flex_grows
+                            .iter()
+                            .copied()
+                            .reduce(|acc, v| acc + v)
+                            .unwrap_or_default()
+                            .max(Length::new(1.0));
+                        let flex_grow_per = flex_grow.get() / flex_grows.get() * 100.;
 
-            if let Some(flex_grow) = flex_grow {
-                let (flex_grows, flex_available) = Self::calculate_available_flex_size(
-                    initial_phase_flex_grows,
-                    &node.direction,
-                    &deferred_available_area,
-                    &mut initial_phase_lines.last_mut().unwrap().1,
+                        match node.direction {
+                            Direction::Vertical => {
+                                let flex_available = Length::new(deferred_available_area.height());
+                                let size = flex_available / 100. * flex_grow_per;
+                                deferred_height = Some(size.get());
+                            }
+                            Direction::Horizontal => {
+                                let flex_available = Length::new(deferred_available_area.width());
+                                let size = flex_available / 100. * flex_grow_per;
+                                deferred_width = Some(size.get());
+                            }
+                        }
+                    }
+                }
+
+                if node.content.is_fit() {
+                    match node.direction {
+                        Direction::Vertical => {
+                            if child_data.width.is_fill_minimum() {
+                                deferred_width = Some(cur_line.1.width);
+                            }
+                        }
+                        Direction::Horizontal => {
+                            if child_data.height.is_fill_minimum() {
+                                deferred_height = Some(cur_line.1.height);
+                            }
+                        }
+                    }
+                }
+
+                let available_width = deferred_width.unwrap_or(deferred_available_area.width());
+                let available_height = deferred_height.unwrap_or(deferred_available_area.height());
+
+                let (_, mut child_areas) = self.measure_node(
+                    *child_id,
+                    &child_data,
+                    initial_phase_inner_area,
+                    &Area::new(
+                        deferred_available_area.origin,
+                        Size2D::new(available_width, available_height),
+                    ),
+                    false,
+                    node_is_dirty,
+                    Phase::InitialDeferred,
                 );
-                let flex_grow_per = flex_grow.get() / flex_grows.get() * 100.;
+
+                child_areas.area.adjust_size(&child_data);
 
                 match node.direction {
                     Direction::Vertical => {
-                        let size = flex_available / 100. * flex_grow_per;
-                        deferred_height = Some(size.get());
+                        cur_line.1.height += child_areas.area.height();
                     }
                     Direction::Horizontal => {
-                        let size = flex_available / 100. * flex_grow_per;
-                        deferred_width = Some(size.get());
+                        cur_line.1.width += child_areas.area.width();
                     }
                 }
+
+                initial_phase_sizes.insert(*child_id, child_areas.area.size);
             }
         }
-
-        if node.content.is_fit() {
-            match node.direction {
-                Direction::Vertical => {
-                    if child_data.width.is_fill_minimum() {
-                        deferred_width = Some(initial_phase_lines.last().unwrap().1.width);
-                    }
-                }
-                Direction::Horizontal => {
-                    if child_data.height.is_fill_minimum() {
-                        deferred_height = Some(initial_phase_lines.last().unwrap().1.height);
-                    }
-                }
-            }
-        }
-
-        let available_width = deferred_width.unwrap_or(deferred_available_area.width());
-        let available_height = deferred_height.unwrap_or(deferred_available_area.height());
-
-        let (_, mut child_areas) = self.measure_node(
-            *child_id,
-            child_data,
-            initial_phase_inner_area,
-            &Area::new(
-                deferred_available_area.origin,
-                Size2D::new(available_width, available_height),
-            ),
-            false,
-            node_is_dirty,
-            Phase::InitialDeferred,
-        );
-
-        child_areas.area.adjust_size(child_data);
-        initial_phase_sizes.insert(*child_id, child_areas.area.size);
-    }
-
-    fn calculate_available_flex_size(
-        initial_flex_grows: &[Length],
-        direction: &Direction,
-        available_area: &Area,
-        line_size: &mut Size2D,
-    ) -> (Length, Length) {
-        let flex_grows = initial_flex_grows
-            .iter()
-            .copied()
-            .reduce(|acc, v| acc + v)
-            .unwrap_or_default()
-            .max(Length::new(1.0));
-
-        let flex_available;
-        match direction {
-            Direction::Vertical => {
-                flex_available = Length::new(available_area.height());
-
-                initial_flex_grows.iter().fold(line_size, |acc, f| {
-                    let flex_grow_per = f.get() / flex_grows.get() * 100.;
-
-                    let size = flex_available / 100. * flex_grow_per;
-                    acc.height += size.get();
-
-                    acc
-                });
-            }
-            Direction::Horizontal => {
-                flex_available = Length::new(available_area.width());
-
-                initial_flex_grows.iter().fold(line_size, |acc, f| {
-                    let flex_grow_per = f.get() / flex_grows.get() * 100.;
-
-                    let size = flex_available / 100. * flex_grow_per;
-                    acc.width += size.get();
-
-                    acc
-                });
-            }
-        }
-        (flex_grows, flex_available)
     }
 
     /// Align the content of this node.
@@ -991,7 +960,8 @@ where
         child_area: &Area,
         new_line: bool,
         is_last_sibling: bool,
-        phase: Phase,
+        node_phase: Phase,
+        child_phase: Phase,
     ) {
         match node.direction {
             Direction::Horizontal => {
@@ -1007,7 +977,7 @@ where
                 cur_line.height = cur_line.height.max(child_area.height());
                 cur_line.width += spacing.get();
                 // we only know child's correct flex sizing in the final phase
-                if !child_node.width.is_flex() || phase == Phase::Final {
+                if !child_node.width.is_flex() || child_phase == Phase::Final {
                     cur_line.width += child_area.size.width;
                 }
 
@@ -1019,7 +989,7 @@ where
                     inner_sizes.height += line.height;
                     inner_sizes.width = inner_sizes.width.max(line.width);
 
-                    if node.height.inner_sized() {
+                    if node.height.inner_sized(node_phase) {
                         node_area.size.height =
                             inner_sizes.height + node.padding.vertical() + node.margin.vertical();
 
@@ -1029,7 +999,7 @@ where
                             - node.margin.vertical();
                     }
 
-                    if node.width.inner_sized() {
+                    if node.width.inner_sized(node_phase) {
                         node_area.size.width = node_area.size.width.max(
                             inner_sizes.width
                                 + node.padding.horizontal()
@@ -1065,7 +1035,7 @@ where
                 cur_line.width = cur_line.width.max(child_area.width());
                 cur_line.height += spacing.get();
                 // we only know child's correct flex sizing in the final phase
-                if !child_node.height.is_flex() || phase == Phase::Final {
+                if !child_node.height.is_flex() || child_phase == Phase::Final {
                     cur_line.height += child_area.size.height;
                 }
 
@@ -1078,7 +1048,7 @@ where
                     inner_sizes.width += line.width;
                     inner_sizes.height = inner_sizes.height.max(line.height);
 
-                    if node.width.inner_sized() {
+                    if node.width.inner_sized(node_phase) {
                         node_area.size.width = inner_sizes.width
                             + node.padding.horizontal()
                             + node.margin.horizontal();
@@ -1088,7 +1058,7 @@ where
                             - node.margin.horizontal();
                     }
 
-                    if node.height.inner_sized() {
+                    if node.height.inner_sized(node_phase) {
                         node_area.size.height = node_area.size.height.max(
                             inner_sizes.height + node.padding.vertical() + node.margin.vertical(),
                         );

@@ -7,6 +7,7 @@ use crate::{
     geometry::Length,
     prelude::{
         Content,
+        Phase,
         Position,
         VisibleSize,
     },
@@ -285,8 +286,8 @@ impl Node {
 
     /// Has properties that depend on the inner Nodes?
     pub fn does_depend_on_inner(&self) -> bool {
-        self.width.inner_sized()
-            || self.height.inner_sized()
+        self.width.inner_sized(Phase::Initial)
+            || self.height.inner_sized(Phase::Initial)
             || self.contains_text
             || self.do_inner_depend_on_parent()
     }
