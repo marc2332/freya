@@ -7,6 +7,7 @@ use super::{
     Ease,
     Function,
 };
+use crate::ReadAnimatedValue;
 
 /// Animate a numeric value.
 #[derive(Clone, PartialEq)]
@@ -67,14 +68,28 @@ impl AnimNum {
     }
 
     /// Read the value of the [AnimNum] as a f32.
-    pub fn read(&self) -> f32 {
+    pub fn value(&self) -> f32 {
+        self.value
+    }
+}
+
+impl ReadAnimatedValue for AnimNum {
+    type Output = f32;
+
+    fn value(&self) -> Self::Output {
         self.value
     }
 }
 
 impl From<&AnimNum> for f32 {
     fn from(value: &AnimNum) -> Self {
-        value.read()
+        value.value()
+    }
+}
+
+impl From<AnimNum> for f32 {
+    fn from(value: AnimNum) -> Self {
+        value.value()
     }
 }
 

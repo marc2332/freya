@@ -91,7 +91,7 @@ pub fn SnackBar(
         }
     });
 
-    let offset_y = animation.get().read().read();
+    let offset_y = animation.read().value();
 
     rsx!(
         rect {
