@@ -66,9 +66,9 @@ glutin-winit = "0.5.0"
 raw-window-handle = "0.6.0"
 winit = "0.30.0"
 tokio = { version = "1", features = ["sync", "rt-multi-thread", "time", "macros"] }
-accesskit = { version = "0.19.0", features = ["serde"] }
-accesskit_winit = "0.27.0"
-shipyard = { version = "0.8", features = ["proc", "std", "parallel"], default-features = false }
+accesskit = { version = "0.21.0", features = ["serde"] }
+accesskit_winit = "0.29.0"
+shipyard = { version = "0.9", features = ["proc", "std", "parallel"], default-features = false }
 smallvec = "1.13.1"
 
 euclid = "0.22.9"
@@ -90,15 +90,15 @@ freya-devtools = { workspace = true, features = ["server"] }
 reqwest = { version = "0.12.0", features = ["json"] }
 serde = "1.0.189"
 dioxus-i18n = { workspace = true }
-rand = "0.8.5"
+rand = "0.9.0"
 freya-router = { workspace = true }
-itertools = "0.13.0"
+itertools = "0.14.0"
 home = "0.5.9"
 dioxus-query = "0.8.1"
-gilrs = "0.10.8"
+gilrs = "0.11.0"
 gl = { workspace = true }
-tree-sitter-highlight = "0.23.0"
-tree-sitter-rust = "0.23.0"
+tree-sitter-highlight = "0.25.0"
+tree-sitter-rust = "0.24.0"
 rfd = "0.15.3"
 bytes = { workspace = true }
 dioxus-clipboard = { workspace = true }
