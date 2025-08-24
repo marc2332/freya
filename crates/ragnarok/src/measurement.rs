@@ -1,4 +1,4 @@
-use itertools::sorted;
+use itertools::Itertools;
 
 use crate::{
     EmmitableEvent,
@@ -67,8 +67,11 @@ pub fn measure_potential_events<
     let mut potential_events = PotentialEvents::default();
 
     // Walk layer by layer from the bottom to the top
-    for (layer, layer_nodes) in sorted(events_measurer.get_layers()) {
-        for node_id in layer_nodes.iter() {
+    for (layer, layer_nodes) in events_measurer
+        .get_layers()
+        .sorted_by(|(layer, _), (layer_b, _)| layer.cmp(layer_b))
+    {
+        for node_id in layer_nodes {
             for source_event in source_events {
                 let Some(cursor) = source_event.try_cursor() else {
                     if focus_id == Some(*node_id) {

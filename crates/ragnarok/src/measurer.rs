@@ -1,5 +1,3 @@
-use std::collections::hash_map::Iter;
-
 use itertools::Itertools;
 
 use crate::{
@@ -25,7 +23,7 @@ where
     type Emmitable: EmmitableEvent<Key = Self::Key, Name = Self::Name>;
     type Source: SourceEvent<Name = Self::Name>;
 
-    fn get_layers(&self) -> Iter<'_, i16, Vec<Self::Key>>;
+    fn get_layers(&self) -> impl Iterator<Item = (&i16, impl Iterator<Item = &Self::Key>)>;
     fn get_listeners_of(&self, name: &Self::Name) -> Vec<Self::Key>;
 
     fn is_point_inside(&self, key: Self::Key, cursor: CursorPoint) -> bool;
