@@ -661,14 +661,14 @@ where
                             if child_data.height.is_flex() {
                                 initial_phase_size.height
                             } else {
-                                line_available.height - origin_offset.y
+                                available_area.height()
                             },
                         ),
                         Direction::Horizontal => (
                             if child_data.width.is_flex() {
                                 initial_phase_size.width
                             } else {
-                                line_available.width - origin_offset.x
+                                available_area.width()
                             },
                             line_available.height - origin_offset.y,
                         ),
@@ -847,20 +847,30 @@ where
             AlignAxis::Height => match alignment {
                 Alignment::Center => {
                     let new_origin_y = (inner_area.height() / 2.0) - (contents_size.height / 2.0);
+                    let origin_diff = new_origin_y - available_area.origin.y;
                     available_area.origin.y = inner_area.min_y() + new_origin_y;
+                    available_area.size.height -= origin_diff;
                 }
                 Alignment::End => {
-                    available_area.origin.y = inner_area.max_y() - contents_size.height;
+                    let new_origin_y = inner_area.max_y() - contents_size.height;
+                    let origin_diff = new_origin_y - available_area.origin.y;
+                    available_area.origin.y = new_origin_y;
+                    available_area.size.height -= origin_diff;
                 }
                 _ => {}
             },
             AlignAxis::Width => match alignment {
                 Alignment::Center => {
                     let new_origin_x = (inner_area.width() / 2.0) - (contents_size.width / 2.0);
+                    let origin_diff = new_origin_x - available_area.origin.x;
                     available_area.origin.x = inner_area.min_x() + new_origin_x;
+                    available_area.size.width -= origin_diff;
                 }
                 Alignment::End => {
-                    available_area.origin.x = inner_area.max_x() - contents_size.width;
+                    let new_origin_x = inner_area.max_x() - contents_size.width;
+                    let origin_diff = new_origin_x - available_area.origin.x;
+                    available_area.origin.x = new_origin_x;
+                    available_area.size.width -= origin_diff;
                 }
                 _ => {}
             },
@@ -887,11 +897,13 @@ where
                     let all_gaps_sizes = initial_available_area.height() - inner_sizes.height;
                     let gap_size = all_gaps_sizes / (siblings_len - 1) as f32;
                     available_area.origin.y += gap_size;
+                    available_area.size.height -= gap_size;
                 }
                 Alignment::SpaceEvenly => {
                     let all_gaps_sizes = initial_available_area.height() - inner_sizes.height;
                     let gap_size = all_gaps_sizes / (siblings_len + 1) as f32;
                     available_area.origin.y += gap_size;
+                    available_area.size.height -= gap_size;
                 }
                 Alignment::SpaceAround => {
                     let all_gaps_sizes = initial_available_area.height() - inner_sizes.height;
@@ -902,6 +914,7 @@ where
                         one_gap_size
                     };
                     available_area.origin.y += gap_size;
+                    available_area.size.height -= gap_size;
                 }
                 _ => {}
             },
@@ -910,11 +923,13 @@ where
                     let all_gaps_sizes = initial_available_area.width() - inner_sizes.width;
                     let gap_size = all_gaps_sizes / (siblings_len - 1) as f32;
                     available_area.origin.x += gap_size;
+                    available_area.size.width -= gap_size;
                 }
                 Alignment::SpaceEvenly => {
                     let all_gaps_sizes = initial_available_area.width() - inner_sizes.width;
                     let gap_size = all_gaps_sizes / (siblings_len + 1) as f32;
                     available_area.origin.x += gap_size;
+                    available_area.size.width -= gap_size;
                 }
                 Alignment::SpaceAround => {
                     let all_gaps_sizes = initial_available_area.width() - inner_sizes.width;
@@ -925,6 +940,7 @@ where
                         one_gap_size
                     };
                     available_area.origin.x += gap_size;
+                    available_area.size.width -= gap_size;
                 }
                 _ => {}
             },
