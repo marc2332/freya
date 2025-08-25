@@ -269,8 +269,10 @@ impl EventsMeasurer for TestMeasurer {
 
     type Source = TestSourceEvent;
 
-    fn get_layers(&self) -> std::collections::hash_map::Iter<'_, i16, Vec<Self::Key>> {
-        self.layers.iter()
+    fn get_layers(&self) -> impl Iterator<Item = (&i16, impl Iterator<Item = &Self::Key>)> {
+        self.layers
+            .iter()
+            .map(|(layer, nodes)| (layer, nodes.iter()))
     }
 
     fn get_listeners_of(&self, name: &Self::Name) -> Vec<Self::Key> {
