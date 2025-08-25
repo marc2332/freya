@@ -269,7 +269,7 @@ impl ApplicationHandler<EventLoopMessage> for WinitRenderer {
                     );
                 }
                 WindowEvent::CloseRequested => {
-                    if let Some(on_close) = app.window_config.on_close.take() {
+                    if let Some(on_close) = &mut app.window_config.on_close {
                         let response = (on_close)(&mut app.window);
                         if response == OnCloseResponse::Close {
                             remove_app = true;
