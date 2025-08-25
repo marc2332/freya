@@ -25,7 +25,7 @@ use crate::{
 };
 
 pub type WindowCallback = Box<dyn FnOnce(&mut Window) + Send + Sync>;
-pub type OnCloseCallback = Box<dyn FnOnce(&mut Window) -> OnCloseResponse + Send + Sync>;
+pub type OnCloseCallback = Box<dyn FnMut(&mut Window) -> OnCloseResponse + Send + Sync>;
 pub type WindowBuilderHook = Box<dyn FnOnce(WindowAttributes) -> WindowAttributes + Send + Sync>;
 
 impl From<accesskit_winit::Event> for EventLoopMessage {
@@ -177,7 +177,7 @@ impl WindowConfig {
     /// Register a callback that will be executed when the window is closed.
     pub fn on_close(
         mut self,
-        callback: impl FnOnce(&mut Window) -> OnCloseResponse + 'static + Send + Sync,
+        callback: impl FnMut(&mut Window) -> OnCloseResponse + 'static + Send + Sync,
     ) -> Self {
         self.on_close = Some(Box::new(callback));
         self
