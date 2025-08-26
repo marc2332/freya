@@ -663,3 +663,64 @@ pub fn alignment_with_absolute_child() {
         Rect::new(Point2D::new(450.0, 507.5), Size2D::new(100.0, 100.0)),
     );
 }
+
+#[test]
+pub fn alignment_with_absolute_last_child() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_dom = TestingDOM::default();
+    mocked_dom.add(
+        0,
+        None,
+        vec![1, 2],
+        Node::from_size_and_alignments_and_direction(
+            Size::Percentage(Length::new(100.)),
+            Size::Inner,
+            Alignment::Start,
+            Alignment::Center,
+            Direction::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        1,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(100.)),
+            Size::Pixels(Length::new(100.)),
+            Direction::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        2,
+        Some(0),
+        vec![],
+        Node::from_size_and_position(
+            Size::Pixels(Length::new(50.)),
+            Size::Pixels(Length::new(50.)),
+            Position::Absolute(Box::default()),
+        ),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        &mut measurer,
+        &mut mocked_dom,
+    );
+
+    assert_eq!(
+        layout.get(0).unwrap().visible_area(),
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 100.0)),
+    );
+
+    assert_eq!(
+        layout.get(1).unwrap().visible_area(),
+        Rect::new(Point2D::new(450.0, 0.0), Size2D::new(100.0, 100.0)),
+    );
+
+    assert_eq!(
+        layout.get(2).unwrap().visible_area(),
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(50.0, 50.0)),
+    );
+}

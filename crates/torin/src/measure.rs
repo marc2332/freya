@@ -382,20 +382,16 @@ where
         let children = self.dom_adapter.children_of(node_id);
 
         // Used to calculate the spacing and some alignments
-        let last_child = if node.spacing.get() > 0. {
-            let mut last_child = None;
-            for child_id in &children {
-                let Some(child_data) = self.dom_adapter.get_node(child_id) else {
-                    continue;
-                };
-                if child_data.position.is_stacked() {
-                    last_child = Some(*child_id);
-                }
-            }
-            last_child
-        } else {
-            children.last().copied()
-        };
+        let last_child = children
+            .iter()
+            .filter(|child_id| {
+                self.dom_adapter
+                    .get_node(child_id)
+                    .map(|child_data| child_data.position.is_stacked())
+                    .unwrap_or(false)
+            })
+            .last()
+            .cloned();
 
         let needs_initial_phase = node.cross_alignment.is_not_start()
             || node.main_alignment.is_not_start()
