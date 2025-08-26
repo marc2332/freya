@@ -1,8 +1,5 @@
 #[cfg(test)]
-use torin::{
-    prelude::*,
-    test_utils::*,
-};
+use torin::{prelude::*, test_utils::*};
 
 #[test]
 pub fn absolute() {
@@ -112,6 +109,62 @@ pub fn absolute() {
     assert_eq!(
         layout.get(5).unwrap().area.round(),
         Rect::new(Point2D::new(100.0, 650.0), Size2D::new(200.0, 200.0)),
+    );
+}
+
+#[test]
+pub fn absolute_inner_sized() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_dom = TestingDOM::default();
+    mocked_dom.add(
+        0,
+        None,
+        vec![1],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(100.0)),
+            Size::Pixels(Length::new(100.0)),
+            Direction::Vertical,
+        ),
+    );
+
+    mocked_dom.add(
+        1,
+        None,
+        vec![2],
+        Node::from_size_and_position(
+            Size::Inner,
+            Size::Inner,
+            Position::Absolute(Box::new(PositionSides {
+                top: None,
+                right: Some(0.0),
+                bottom: None,
+                left: None,
+            })),
+        ),
+    );
+
+    mocked_dom.add(
+        2,
+        None,
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(50.0)),
+            Size::Pixels(Length::new(50.0)),
+            Direction::Vertical,
+        ),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        &mut measurer,
+        &mut mocked_dom,
+    );
+
+    assert_eq!(
+        layout.get(1).unwrap().area,
+        Rect::new(Point2D::new(50.0, 0.0), Size2D::new(50.0, 50.0)),
     );
 }
 
