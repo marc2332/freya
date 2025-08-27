@@ -247,6 +247,7 @@ where
                     node,
                     available_parent_area,
                     parent_area,
+                    inner_size,
                     &mut available_area,
                     &mut inner_sizes,
                     must_cache_children,
@@ -325,6 +326,7 @@ where
                     node,
                     available_parent_area,
                     parent_area,
+                    Size2D::zero(),
                     &mut available_area,
                     &mut inner_sizes,
                     must_cache_children,
@@ -346,6 +348,7 @@ where
         parent_node: &Node,
         parent_available_area: &Area,
         grand_parent_area: &Area,
+        original_inner_size: Size2D,
         // Area available inside the Node
         available_area: &mut Area,
         // Accumulated sizes in both axis in the Node
@@ -482,7 +485,7 @@ where
                     &initial_phase_area.size,
                     &self.layout_metadata.root_area,
                 );
-                *inner_area = Rect::new(area.origin, inner_area.size)
+                *inner_area = Rect::new(area.origin, original_inner_size)
                     .without_gaps(&parent_node.padding)
                     .without_gaps(&parent_node.margin);
             }
@@ -770,7 +773,7 @@ where
         phase: Phase,
     ) {
         // Only apply the spacing to elements after `i > 0` and `i < len - 1`
-        let spacing = if (!is_last_sibiling) {
+        let spacing = if !is_last_sibiling {
             parent_node.spacing
         } else {
             Default::default()
