@@ -770,9 +770,11 @@ where
         phase: Phase,
     ) {
         // Only apply the spacing to elements after `i > 0` and `i < len - 1`
-        let spacing = (!is_last_sibiling)
-            .then_some(parent_node.spacing)
-            .unwrap_or_default();
+        let spacing = if (!is_last_sibiling) {
+            parent_node.spacing
+        } else {
+            Default::default()
+        };
 
         match parent_node.direction {
             Direction::Horizontal => {
