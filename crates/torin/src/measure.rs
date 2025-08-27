@@ -3,24 +3,11 @@ use rustc_hash::FxHashMap;
 
 use crate::{
     custom_measurer::LayoutMeasurer,
-    dom_adapter::{
-        DOMAdapter,
-        LayoutNode,
-        NodeKey,
-    },
-    geometry::{
-        Area,
-        Size2D,
-    },
+    dom_adapter::{DOMAdapter, LayoutNode, NodeKey},
+    geometry::{Area, Size2D},
     node::Node,
     prelude::{
-        AlignAxis,
-        Alignment,
-        AlignmentDirection,
-        AreaModel,
-        Direction,
-        LayoutMetadata,
-        Length,
+        AlignAxis, Alignment, AlignmentDirection, AreaModel, Direction, LayoutMetadata, Length,
         Torin,
     },
     size::Size,
@@ -258,6 +245,8 @@ where
                 self.measure_children(
                     &node_id,
                     node,
+                    available_parent_area,
+                    parent_area,
                     &mut available_area,
                     &mut inner_sizes,
                     must_cache_children,
@@ -334,6 +323,8 @@ where
                 self.measure_children(
                     &node_id,
                     node,
+                    available_parent_area,
+                    parent_area,
                     &mut available_area,
                     &mut inner_sizes,
                     must_cache_children,
@@ -353,6 +344,8 @@ where
         &mut self,
         parent_node_id: &Key,
         parent_node: &Node,
+        parent_available_area: &Area,
+        grand_parent_area: &Area,
         // Area available inside the Node
         available_area: &mut Area,
         // Accumulated sizes in both axis in the Node
@@ -406,7 +399,9 @@ where
         let needs_initial_phase = parent_node.cross_alignment.is_not_start()
             || parent_node.main_alignment.is_not_start()
             || parent_node.content.is_fit()
-            || parent_node.content.is_flex();
+            || parent_node.content.is_flex()
+            || (parent_node.position.is_absolute()
+                && (parent_node.width.inner_sized() || parent_node.height.inner_sized()));
 
         let mut initial_phase_area = *area;
         let mut initial_phase_inner_area = *inner_area;
@@ -477,6 +472,16 @@ where
                     }
                 }
             }
+
+            area.origin = parent_node.position.get_origin(
+                parent_available_area,
+                grand_parent_area,
+                &initial_phase_area.size,
+                &self.layout_metadata.root_area,
+            );
+            *inner_area = Rect::new(area.origin, inner_area.size)
+                .without_gaps(&parent_node.padding)
+                .without_gaps(&parent_node.margin);
         }
 
         let initial_available_area = *available_area;
