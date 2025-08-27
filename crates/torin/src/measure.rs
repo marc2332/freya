@@ -473,15 +473,19 @@ where
                 }
             }
 
-            area.origin = parent_node.position.get_origin(
-                parent_available_area,
-                grand_parent_area,
-                &initial_phase_area.size,
-                &self.layout_metadata.root_area,
-            );
-            *inner_area = Rect::new(area.origin, inner_area.size)
-                .without_gaps(&parent_node.padding)
-                .without_gaps(&parent_node.margin);
+            if parent_node.position.is_absolute()
+                && (parent_node.width.inner_sized() || parent_node.height.inner_sized())
+            {
+                area.origin = parent_node.position.get_origin(
+                    parent_available_area,
+                    grand_parent_area,
+                    &initial_phase_area.size,
+                    &self.layout_metadata.root_area,
+                );
+                *inner_area = Rect::new(area.origin, inner_area.size)
+                    .without_gaps(&parent_node.padding)
+                    .without_gaps(&parent_node.margin);
+            }
         }
 
         let initial_available_area = *available_area;
