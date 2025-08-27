@@ -41,6 +41,7 @@ def_element!(
         // Children layout
         direction,
         content,
+        wrap_content,
         main_align,
         cross_align,
         spacing,
