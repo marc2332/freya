@@ -773,10 +773,10 @@ where
         phase: Phase,
     ) {
         // Only apply the spacing to elements after `i > 0` and `i < len - 1`
-        let spacing = if !is_last_sibiling {
-            parent_node.spacing
+        let spacing = if is_last_sibiling {
+            Length::default()
         } else {
-            Default::default()
+            parent_node.spacing
         };
 
         match parent_node.direction {
