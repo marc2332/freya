@@ -34,8 +34,8 @@ use crate::{
     size::Size,
 };
 
-/// Some layout strategies require two-phase measurements
-/// Example: Alignments or content-fit.
+/// Some layout strategies require two- or three-phase measurements
+/// Example: Alignments, content-fit or wrapping
 #[derive(Clone, Copy, PartialEq)]
 pub enum Phase {
     Initial,
