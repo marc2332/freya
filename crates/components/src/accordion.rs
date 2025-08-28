@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use dioxus_core::use_drop;
 use freya_core::platform::CursorIcon;
 use freya_elements::{
     self as dioxus_elements,

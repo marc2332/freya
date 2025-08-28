@@ -10,10 +10,8 @@ use std::{
 };
 
 use dioxus_core::{
-    prelude::{
-        provide_root_context,
-        try_consume_context,
-    },
+    provide_root_context,
+    try_consume_context,
     use_hook,
 };
 

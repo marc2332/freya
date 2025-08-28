@@ -13,7 +13,8 @@ keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
 features = ["freya-engine/mocked-engine", "docs"]
 
 [dependencies]
-dioxus-lib = { workspace = true }
+dioxus = { workspace = true }
+dioxus-core = { workspace = true }
 
 freya-router-macro = { workspace = true }
 freya-hooks = { workspace = true }

@@ -6,10 +6,10 @@
 //!
 //! ### `spawn`
 //!
-//! With [`spawn`](dioxus_core::prelude::spawn) you can spawn an **async task** (Also known as green threads), this is primarily targeted for custom hooks or when you want to run some async code dynamically such as from an event listener.
+//! With [`spawn`](dioxus_core::spawn) you can spawn an **async task** (Also known as green threads), this is primarily targeted for custom hooks or when you want to run some async code dynamically such as from an event listener.
 //!
 //! **Important:** Tasks spawned with `spawn` will be cancelled when the component their were created is dropped.
-//! If you want to have an async tasks not attached to the component you may use [`spawn_forever`](dioxus_core::prelude::spawn_forever).
+//! If you want to have an async tasks not attached to the component you may use [`spawn_forever`](dioxus_core::spawn_forever).
 //!
 //! ```rust
 //! # use freya::prelude::*;

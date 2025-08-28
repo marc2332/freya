@@ -8,7 +8,7 @@ use std::{
     str::FromStr,
 };
 
-use dioxus_lib::prelude::*;
+use dioxus::prelude::*;
 
 /// An error that occurs when parsing a route.
 #[derive(Debug, PartialEq)]

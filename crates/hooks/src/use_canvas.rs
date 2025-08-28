@@ -11,7 +11,7 @@ use dioxus_hooks::{
 };
 use dioxus_signals::{
     Memo,
-    Readable,
+    ReadableExt,
 };
 use freya_core::custom_attributes::{
     CanvasReference,
