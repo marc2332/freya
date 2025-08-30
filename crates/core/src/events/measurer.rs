@@ -1,5 +1,3 @@
-use std::collections::hash_map::Iter;
-
 use dioxus_core::VirtualDom;
 use freya_native_core::{
     events::EventName,
@@ -56,8 +54,10 @@ impl ragnarok::EventsMeasurer for EventsMeasurerAdapter<'_> {
         self.rdom.is_node_listening(&key, name)
     }
 
-    fn get_layers(&self) -> Iter<'_, i16, Vec<Self::Key>> {
-        self.layers.iter()
+    fn get_layers(&self) -> impl Iterator<Item = (&i16, impl Iterator<Item = &Self::Key>)> {
+        self.layers
+            .iter()
+            .map(|(layer, nodes)| (layer, nodes.iter()))
     }
 
     fn is_point_inside(&self, key: Self::Key, cursor: ragnarok::CursorPoint) -> bool {

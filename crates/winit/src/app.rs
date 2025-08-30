@@ -184,11 +184,11 @@ impl Application {
 
     /// Update the RealDOM, layout and others with the latest changes from the VirtualDOM
     pub fn render_mutations(&mut self, scale_factor: f32) -> (bool, bool) {
-        let mut fdom = self.sdom.get_mut();
+        let fdom = &mut self.sdom.get_mut();
         self.plugins.send(
             PluginEvent::StartedUpdatingDOM {
                 window: &self.window,
-                fdom: &fdom,
+                fdom,
             },
             PluginHandle::new(&self.proxy),
         );
@@ -198,7 +198,7 @@ impl Application {
         self.plugins.send(
             PluginEvent::FinishedUpdatingDOM {
                 window: &self.window,
-                fdom: &fdom,
+                fdom,
             },
             PluginHandle::new(&self.proxy),
         );

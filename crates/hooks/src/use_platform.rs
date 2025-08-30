@@ -34,6 +34,7 @@ pub use winit::{
     window::{
         Fullscreen,
         Window,
+        WindowId,
     },
 };
 
@@ -215,6 +216,8 @@ impl UsePlatform {
     /// Get a [PlatformSender] that you can use to send events from other threads.
     pub fn sender(&self) -> PlatformSender {
         PlatformSender {
+            #[cfg(feature = "winit")]
+            window_id: try_consume_context(),
             event_loop_proxy: self.event_loop_proxy.read().clone(),
             platform_emitter: self.platform_emitter.read().clone(),
         }
@@ -237,6 +240,8 @@ impl UsePlatform {
 
 #[derive(Clone)]
 pub struct PlatformSender {
+    #[cfg(feature = "winit")]
+    window_id: Option<WindowId>,
     event_loop_proxy: Option<EventLoopProxy<EventLoopMessage>>,
     platform_emitter: Option<UnboundedSender<EventLoopMessage>>,
 }
@@ -259,7 +264,7 @@ impl PlatformSender {
     #[cfg(feature = "winit")]
     pub fn with_window(&self, cb: impl FnOnce(&Window) + 'static + Send + Sync) {
         self.send(EventLoopMessage {
-            window_id: try_consume_context(),
+            window_id: self.window_id,
             action: EventLoopMessageAction::WithWindow(Box::new(cb)),
         })
         .ok();
