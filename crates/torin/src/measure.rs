@@ -258,6 +258,9 @@ where
                 self.measure_children(
                     &node_id,
                     node,
+                    available_parent_area,
+                    parent_area,
+                    inner_size,
                     &mut available_area,
                     &mut inner_sizes,
                     must_cache_children,
@@ -334,6 +337,9 @@ where
                 self.measure_children(
                     &node_id,
                     node,
+                    available_parent_area,
+                    parent_area,
+                    Size2D::zero(),
                     &mut available_area,
                     &mut inner_sizes,
                     must_cache_children,
@@ -353,6 +359,9 @@ where
         &mut self,
         parent_node_id: &Key,
         parent_node: &Node,
+        parent_available_area: &Area,
+        grand_parent_area: &Area,
+        original_inner_size: Size2D,
         // Area available inside the Node
         available_area: &mut Area,
         // Accumulated sizes in both axis in the Node
@@ -406,7 +415,9 @@ where
         let needs_initial_phase = parent_node.cross_alignment.is_not_start()
             || parent_node.main_alignment.is_not_start()
             || parent_node.content.is_fit()
-            || parent_node.content.is_flex();
+            || parent_node.content.is_flex()
+            || (parent_node.position.is_absolute()
+                && (parent_node.width.inner_sized() || parent_node.height.inner_sized()));
 
         let mut initial_phase_area = *area;
         let mut initial_phase_inner_area = *inner_area;
@@ -476,6 +487,21 @@ where
                         }
                     }
                 }
+            }
+
+            if parent_node.position.is_absolute()
+                && (parent_node.width.inner_sized() || parent_node.height.inner_sized())
+            {
+                area.origin = parent_node.position.get_origin(
+                    parent_available_area,
+                    grand_parent_area,
+                    &initial_phase_area.size,
+                    &self.layout_metadata.root_area,
+                );
+                *inner_area = Rect::new(area.origin, original_inner_size)
+                    .without_gaps(&parent_node.padding)
+                    .without_gaps(&parent_node.margin);
+                available_area.origin = inner_area.origin;
             }
         }
 
@@ -761,9 +787,11 @@ where
         phase: Phase,
     ) {
         // Only apply the spacing to elements after `i > 0` and `i < len - 1`
-        let spacing = (!is_last_sibiling)
-            .then_some(parent_node.spacing)
-            .unwrap_or_default();
+        let spacing = if is_last_sibiling {
+            Length::default()
+        } else {
+            parent_node.spacing
+        };
 
         match parent_node.direction {
             Direction::Horizontal => {
