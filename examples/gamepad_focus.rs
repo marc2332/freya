@@ -6,7 +6,10 @@
 use std::thread;
 
 use freya::{
-    core::accessibility::AccessibilityFocusStrategy,
+    core::accessibility::{
+        AccessibilityFocusMovement,
+        AccessibilityFocusStrategy,
+    },
     prelude::*,
 };
 use freya_core::{
@@ -55,7 +58,9 @@ impl GamePadPlugin {
                             handle.send_event_loop_event(EventLoopMessage {
                                 window_id: Some(window_id),
                                 action: EventLoopMessageAction::FocusAccessibilityNode(
-                                    AccessibilityFocusStrategy::Backward,
+                                    AccessibilityFocusStrategy::Forward(
+                                        AccessibilityFocusMovement::OutsideGroup,
+                                    ),
                                 ),
                             });
                         }
@@ -63,7 +68,9 @@ impl GamePadPlugin {
                             handle.send_event_loop_event(EventLoopMessage {
                                 window_id: Some(window_id),
                                 action: EventLoopMessageAction::FocusAccessibilityNode(
-                                    AccessibilityFocusStrategy::Forward,
+                                    AccessibilityFocusStrategy::Backward(
+                                        AccessibilityFocusMovement::OutsideGroup,
+                                    ),
                                 ),
                             });
                         }
