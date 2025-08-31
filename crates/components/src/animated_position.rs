@@ -48,9 +48,9 @@ pub fn AnimatedPosition(
         }
     });
 
-    let (offset_x, offset_y) = &*animation.get().read_unchecked();
-    let offset_x = offset_x.read();
-    let offset_y = offset_y.read();
+    let (offset_x, offset_y) = &*animation.read();
+    let offset_x = offset_x.value();
+    let offset_y = offset_y.value();
 
     rsx!(
         rect {

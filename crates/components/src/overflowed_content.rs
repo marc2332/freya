@@ -66,7 +66,7 @@ pub fn OverflowedContent(
         }
     }));
 
-    let progress = animation.get().read().read();
+    let progress = animation.read().value();
     let offset_x = if does_overflow {
         ((label_width + rect_width) * progress / 100.) - rect_width
     } else {

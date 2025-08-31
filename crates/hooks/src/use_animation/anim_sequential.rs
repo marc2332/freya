@@ -21,6 +21,10 @@ impl<Animated: AnimatedValue, const N: usize> AnimSequential<Animated, N> {
             acc_index: 0,
         }
     }
+
+    pub fn values(&self) -> &[Animated; N] {
+        &self.values
+    }
 }
 
 impl<Animated: AnimatedValue, const N: usize> Deref for AnimSequential<Animated, N> {
