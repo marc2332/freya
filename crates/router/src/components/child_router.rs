@@ -1,6 +1,6 @@
 /// Components that allow the macro to add child routers. This component provides a context
 /// to the child router that maps child routes to root routes and vice versa.
-use dioxus_lib::prelude::*;
+use dioxus::prelude::*;
 
 use crate::prelude::Routable;
 

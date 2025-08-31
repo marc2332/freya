@@ -10,6 +10,7 @@ use freya_elements::{
 };
 use freya_hooks::{
     use_applied_theme,
+    use_drop,
     use_node_signal,
     use_platform,
     ResizableHandleTheme,

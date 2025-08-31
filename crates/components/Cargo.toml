@@ -29,6 +29,7 @@ torin = { workspace = true }
 
 freya-router = { workspace = true }
 dioxus = { workspace = true }
+dioxus-core = { workspace = true }
 warnings = "0.2.1"
 
 futures-util = { workspace = true }

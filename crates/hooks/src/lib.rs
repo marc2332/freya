@@ -26,6 +26,7 @@ mod use_theme;
 
 #[cfg(feature = "use_camera")]
 mod use_camera;
+mod use_drop;
 
 pub use editor_history::*;
 pub use rope_editor::*;
@@ -38,6 +39,7 @@ pub use use_asset_cacher::*;
 #[cfg(feature = "use_camera")]
 pub use use_camera::*;
 pub use use_canvas::*;
+pub use use_drop::*;
 pub use use_editable::*;
 pub use use_focus::*;
 pub use use_id::*;
