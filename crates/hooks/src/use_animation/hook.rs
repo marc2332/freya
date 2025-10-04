@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use dioxus_core::prelude::{
     consume_context,
     spawn,
@@ -13,7 +15,7 @@ use dioxus_hooks::{
 };
 use dioxus_signals::{
     CopyValue,
-    MappedSignal,
+    ReadOnlySignal,
     Readable,
     Signal,
     Writable,
@@ -21,7 +23,10 @@ use dioxus_signals::{
 use freya_core::animation_clock::AnimationClock;
 use tokio::time::Instant;
 
-use super::AnimatedValue;
+use super::{
+    AnimatedValue,
+    ReadAnimatedValue,
+};
 use crate::{
     use_platform,
     UsePlatform,
@@ -112,7 +117,7 @@ pub enum OnDepsChange {
 /// Animate your elements. Use [`use_animation`] to use this.
 #[derive(Clone, PartialEq)]
 pub struct UseAnimation<Animated: AnimatedValue> {
-    pub(crate) animated_value: Signal<Option<Animated>>,
+    pub(crate) animated_value: Signal<Animated>,
     pub(crate) conf: Signal<AnimConfiguration>,
     pub(crate) platform: UsePlatform,
     pub(crate) animation_clock: CopyValue<AnimationClock>,
@@ -123,10 +128,17 @@ pub struct UseAnimation<Animated: AnimatedValue> {
 }
 impl<T: AnimatedValue> Copy for UseAnimation<T> {}
 
+impl<Animated: AnimatedValue> Deref for UseAnimation<Animated> {
+    type Target = Signal<Animated>;
+    fn deref(&self) -> &Self::Target {
+        &self.animated_value
+    }
+}
+
 impl<Animated: AnimatedValue> UseAnimation<Animated> {
     /// Get the animated value.
-    pub fn get(&self) -> MappedSignal<Animated> {
-        self.animated_value.map(|a| a.as_ref().unwrap())
+    pub fn get(&self) -> ReadOnlySignal<Animated> {
+        self.animated_value.into()
     }
 
     /// Reset the animation to the default state.
@@ -142,8 +154,6 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 
         self.animated_value
             .write_unchecked()
-            .as_mut()
-            .unwrap()
             .prepare(AnimDirection::Forward);
     }
 
@@ -157,8 +167,6 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 
         self.animated_value
             .write_unchecked()
-            .as_mut()
-            .unwrap()
             .finish(*self.last_direction.peek());
 
         *self.has_run_yet.write_unchecked() = true;
@@ -218,7 +226,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
             let mut prev_frame = Instant::now();
 
             // Prepare the animations with the the proper direction
-            animated_value.write().as_mut().unwrap().prepare(direction);
+            animated_value.write().prepare(direction);
 
             if !peek_has_run_yet {
                 *has_run_yet.write() = true;
@@ -233,7 +241,6 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
                     // Its okay to stop this animation if the animated_value has been dropped
                     break;
                 };
-                let animated_value = animated_value.as_mut().unwrap();
 
                 platform.request_animation_frame();
 
@@ -306,7 +313,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 ///         AnimNum::new(0., 100.).time(50)
 ///     });
 ///
-///     let width = animation.get().read().read();
+///     let width = animation.read().value();
 ///
 ///     rsx!(rect {
 ///         width: "{width}",
@@ -332,9 +339,9 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 ///     let (width, color) = &*animation.get().read_unchecked();
 ///
 ///     rsx!(rect {
-///         width: "{width.read()}",
+///         width: "{width.value()}",
 ///         height: "100%",
-///         background: "{color.read()}"
+///         background: "{color.value()}"
 ///     })
 /// }
 /// ```
@@ -355,9 +362,9 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 ///     let (width, color) = &*animation.get().read_unchecked();
 ///
 ///     rsx!(rect {
-///         width: "{width.read()}",
+///         width: "{width.value()}",
 ///         height: "100%",
-///         background: "{color.read()}"
+///         background: "{color.value()}"
 ///     })
 /// }
 /// ```
@@ -370,14 +377,17 @@ pub fn use_animation<Animated: AnimatedValue>(
     let has_run_yet = use_signal(|| false);
     let task = use_signal(|| None);
     let last_direction = use_signal(|| AnimDirection::Forward);
-    let mut animated_value = use_signal(|| None);
+    let mut animated_value = use_signal(|| {
+        let mut anim_conf = AnimConfiguration::default();
+        run(&mut anim_conf)
+    });
     let mut conf = use_signal(AnimConfiguration::default);
 
     use_memo(move || {
         let mut anim_conf = AnimConfiguration::default();
         let value = run(&mut anim_conf);
         conf.replace(anim_conf);
-        animated_value.replace(Some(value));
+        animated_value.replace(value);
     });
 
     let animation = UseAnimation {
@@ -431,13 +441,16 @@ where
     let task = use_signal(|| None);
     let last_direction = use_signal(|| AnimDirection::Forward);
     let mut conf = use_signal(AnimConfiguration::default);
-    let mut animated_value = use_signal(|| None);
+    let mut animated_value = use_signal(|| {
+        let mut anim_conf = AnimConfiguration::default();
+        run(&mut anim_conf, deps.out())
+    });
 
     use_memo(use_reactive(deps, move |deps| {
         let mut anim_conf = AnimConfiguration::default();
         let value = run(&mut anim_conf, deps);
         conf.replace(anim_conf);
-        animated_value.replace(Some(value));
+        animated_value.replace(value);
     }));
 
     let animation = UseAnimation {
@@ -521,6 +534,27 @@ macro_rules! impl_tuple_call {
                     $(
                         $type.finish(direction);
                     )*
+                }
+            }
+            impl<$($type,)*> ReadAnimatedValue for  ($($type,)*)
+            where
+                $($type: ReadAnimatedValue,)*
+            {
+
+                type Output = (
+                    $(
+                        <$type as ReadAnimatedValue>::Output,
+                    )*
+                );
+
+                fn value(&self) -> Self::Output {
+                    #[allow(non_snake_case)]
+                    let ($($type,)*) = self;
+                    (
+                        $(
+                            $type.value(),
+                        )*
+                    )
                 }
             }
         )*

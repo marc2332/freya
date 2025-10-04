@@ -56,7 +56,7 @@ pub fn Accordion(props: AccordionProps) -> Element {
     let mut status = use_signal(AccordionStatus::default);
     let platform = use_platform();
 
-    let animation_value = animation.get().read().read();
+    let animation_value = animation.read().value();
     let AccordionTheme {
         background,
         color,
