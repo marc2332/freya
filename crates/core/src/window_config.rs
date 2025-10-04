@@ -1,13 +1,10 @@
 use std::sync::Arc;
 
-use dioxus_core::{
-    fc_to_builder,
-    Element,
-};
+use dioxus_core::Element;
 use dioxus_core_macro::rsx;
 use dioxus_signals::{
     GlobalSignal,
-    Readable,
+    ReadableExt,
 };
 use winit::window::{
     Icon,

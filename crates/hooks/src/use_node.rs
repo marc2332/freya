@@ -1,15 +1,15 @@
 use std::sync::Arc;
 
 use dioxus_core::{
-    prelude::spawn,
+    spawn,
     use_hook,
     AttributeValue,
 };
 use dioxus_signals::{
     ReadOnlySignal,
-    Readable,
+    ReadableExt,
     Signal,
-    Writable,
+    WritableExt,
 };
 use freya_core::custom_attributes::{
     CustomAttributeValues,

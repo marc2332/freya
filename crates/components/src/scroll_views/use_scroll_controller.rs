@@ -1,17 +1,17 @@
 use std::collections::HashSet;
 
-use ::warnings::Warning;
 use dioxus::prelude::{
+    use_hook,
+    ReadableExt,
+    ScopeId,
+    Signal,
+    WritableExt,
+    WritableVecExt,
+};
+use dioxus_core::{
     current_scope_id,
     schedule_update_any,
     use_drop,
-    use_hook,
-    warnings,
-    Readable,
-    ScopeId,
-    Signal,
-    Writable,
-    WritableVecExt,
 };
 use freya_core::custom_attributes::NodeReferenceLayout;
 
@@ -103,9 +103,6 @@ impl ScrollController {
         use_drop(move || {
             requests_subscribers.write().remove(&scope_id);
         });
-
-        let _allow_write_in_component_body =
-            ::warnings::Allow::new(warnings::signal_write_in_component_body::ID);
 
         self.requests.write().retain_mut(|request| {
             if request.applied_by.contains(&scope_id) {
