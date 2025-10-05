@@ -49,13 +49,13 @@ impl Position {
             Self::Stacked(_) => {
                 *self = Self::new_stacked();
             }
-        };
+        }
 
         match self {
             Self::Absolute(positions) | Self::Global(positions) | Self::Stacked(positions) => {
                 *positions = old_positions;
             }
-        };
+        }
     }
 
     pub fn new_absolute() -> Self {
