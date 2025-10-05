@@ -49,7 +49,7 @@ pub async fn scroll_to_focused() {
     assert!(utils.focus_node().is_visible());
 
     // The "repeat(2)" makes sure that only these 6 elements defined above are being focused
-    for id in [3, 12, 4, 6, 13, 7].repeat(2) {
+    for id in [3, 4, 6, 7, 12, 13].repeat(2) {
         utils.push_event(TestEvent::Keyboard {
             name: KeyboardEventName::KeyDown,
             key: Key::Tab,
