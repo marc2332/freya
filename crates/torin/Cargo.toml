@@ -22,7 +22,7 @@ rustc-hash = { workspace = true }
 serde = { version = "*", optional = true }
 
 [dev-dependencies]
-criterion = "0.5.1"
+criterion = "0.7.0"
 
 [lib]
 bench = false
