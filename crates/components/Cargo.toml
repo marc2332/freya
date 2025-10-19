@@ -16,9 +16,11 @@ features = ["freya-engine/mocked-engine", "docs"]
 
 [features]
 skia-engine = ["freya-engine/skia-engine"]
-docs = ["network-image", "dep:embed-doc-image"]
+docs = ["network-image", "dep:embed-doc-image", "gif", "remote-gif"]
 network-image = ["dep:reqwest", "dep:bytes"]
 winit = ["freya-core/winit", "freya-hooks/winit"]
+gif = ["dep:gif", "dep:bytes"]
+remote-gif = ["gif", "dep:reqwest"]
 
 [dependencies]
 freya-elements = { workspace = true }
@@ -39,6 +41,7 @@ open = "5"
 reqwest = { version = "0.12.0", optional = true }
 bytes = { version = "1.5.0", optional = true }
 embed-doc-image = { version = "0.1.4", optional = true }
+gif = { version = "0.13.3", optional = true }
 
 [dev-dependencies]
 freya = { path = "../freya" }
