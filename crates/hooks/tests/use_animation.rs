@@ -17,7 +17,7 @@ pub async fn track_progress() {
     fn use_animation_app() -> Element {
         let animation = use_animation(|_conf| AnimNum::new(0., 100.).time(50));
 
-        let progress = animation.get().read().read();
+        let progress = animation.get().read().value();
 
         use_hook(|| {
             animation.start();
@@ -63,7 +63,7 @@ pub async fn reverse_progress() {
     fn use_animation_app() -> Element {
         let animation = use_animation(|_conf| AnimNum::new(10., 100.).time(50));
 
-        let progress = animation.get().read().read();
+        let progress = animation.get().read().value();
 
         use_hook(|| {
             animation.start();
@@ -117,7 +117,7 @@ pub async fn animate_color() {
     fn use_animation_app() -> Element {
         let animation = use_animation(|_conf| AnimColor::new("red", "rgb(50, 100, 200)").time(50));
 
-        let progress = animation.get().read().read();
+        let progress = animation.get().read().value();
 
         use_hook(|| {
             animation.start();
@@ -173,7 +173,7 @@ pub async fn auto_start() {
             AnimNum::new(10., 100.).time(50)
         });
 
-        let progress = animation.get().read().read();
+        let progress = animation.get().read().value();
 
         rsx!(rect {
             background: "white",
@@ -220,8 +220,8 @@ pub async fn sequential() {
             ])
         });
 
-        let progress_a = animation.get().read()[0].read();
-        let progress_b = animation.get().read()[1].read();
+        let progress_a = animation.get().read()[0].value();
+        let progress_b = animation.get().read()[1].value();
 
         rsx!(
             rect {

@@ -26,7 +26,7 @@ fn app() -> Element {
         }
     });
 
-    let background = animation.get().read().read();
+    let background = animation.read().value();
 
     rsx!(
         rect {

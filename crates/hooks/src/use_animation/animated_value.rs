@@ -17,6 +17,11 @@ pub trait AnimatedValue: Clone + 'static {
     fn finish(&mut self, direction: AnimDirection);
 }
 
+pub trait ReadAnimatedValue: Clone + 'static {
+    type Output;
+    fn value(&self) -> Self::Output;
+}
+
 #[derive(Default, Clone, Copy, PartialEq, Eq)]
 pub enum Ease {
     In,
