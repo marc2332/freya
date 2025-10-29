@@ -34,6 +34,8 @@
           pkgs.openssl
           pkgs.pkg-config
           pkgs.fontconfig
+          pkgs.libgcc.lib
+          pkgs.freetype
 
           # WINIT_UNIX_BACKEND=wayland
           pkgs.wayland
