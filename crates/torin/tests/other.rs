@@ -8,7 +8,7 @@ use torin::{
 pub fn caching() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -38,7 +38,7 @@ pub fn caching() {
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 5.0), Size2D::new(200.0, 195.0)),
     );
 
@@ -60,7 +60,7 @@ pub fn caching() {
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 5.0), Size2D::new(100.0, 195.0)),
     );
 }
@@ -69,7 +69,7 @@ pub fn caching() {
 pub fn layout_dirty_nodes() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -114,17 +114,17 @@ pub fn layout_dirty_nodes() {
     // - Child A[0] is fixed
 
     assert_eq!(
-        layout.get(0).unwrap().area,
+        layout.get(&0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(50.0, 50.0)),
     );
 
@@ -206,7 +206,7 @@ pub fn layout_dirty_nodes() {
 pub fn node_removal() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -264,17 +264,17 @@ pub fn node_removal() {
     assert_eq!(layout.size(), 5);
 
     assert_eq!(
-        layout.get(0).unwrap().area,
+        layout.get(&0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 400.0)),
     );
 
     assert_eq!(
-        layout.get(3).unwrap().area,
+        layout.get(&3).unwrap().area,
         Rect::new(Point2D::new(0.0, 200.0), Size2D::new(200.0, 200.0)),
     );
 
@@ -299,17 +299,17 @@ pub fn node_removal() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().area,
+        layout.get(&0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get(3).unwrap().area,
+        layout.get(&3).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 }
@@ -318,7 +318,7 @@ pub fn node_removal() {
 pub fn deep_tree() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -415,7 +415,7 @@ pub fn deep_tree() {
 pub fn node_reordering() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -455,17 +455,17 @@ pub fn node_reordering() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().area,
+        layout.get(&0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(0.0, 100.0), Size2D::new(200.0, 100.0)),
     );
 
@@ -493,12 +493,12 @@ pub fn node_reordering() {
     );
 
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 100.0), Size2D::new(200.0, 100.0)),
     );
 
@@ -521,12 +521,107 @@ pub fn node_reordering() {
     // That is why these nodes still have the same positions as before
 
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 100.0), Size2D::new(200.0, 100.0)),
+    );
+}
+
+#[test]
+pub fn offset_change() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_dom = TestingTree::default();
+    mocked_dom.add(
+        0,
+        None,
+        vec![1],
+        Node::from_size_and_direction(Size::Inner, Size::Inner, Direction::Vertical),
+    );
+    mocked_dom.add(
+        1,
+        None,
+        vec![2],
+        Node::from_size_and_scroll(
+            Size::Pixels(Length::new(100.0)),
+            Size::Pixels(Length::new(100.0)),
+            Length::new(0.),
+            Length::new(100.),
+        ),
+    );
+    mocked_dom.add(
+        2,
+        Some(1),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(50.0)),
+            Size::Pixels(Length::new(50.0)),
+            Direction::Vertical,
+        ),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        &mut measurer,
+        &mut mocked_dom,
+    );
+
+    assert_eq!(
+        layout.get(&0).unwrap().area,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 100.0)),
+    );
+
+    assert_eq!(
+        layout.get(&1).unwrap().area,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 100.0)),
+    );
+
+    assert_eq!(
+        layout.get(&2).unwrap().area,
+        Rect::new(Point2D::new(0.0, 100.0), Size2D::new(50.0, 50.0)),
+    );
+
+    mocked_dom.set_node(
+        1,
+        Node::from_size_and_scroll(
+            Size::Pixels(Length::new(100.0)),
+            Size::Pixels(Length::new(100.0)),
+            Length::new(0.),
+            Length::new(150.),
+        ),
+    );
+    layout.invalidate_with_reason(1, DirtyReason::InnerLayout);
+
+    layout.find_best_root(&mut mocked_dom);
+
+    assert_eq!(
+        layout.get_dirty_nodes(),
+        &FxHashMap::from_iter([(1, DirtyReason::InnerLayout)])
+    );
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        &mut measurer,
+        &mut mocked_dom,
+    );
+
+    assert_eq!(
+        layout.get(&0).unwrap().area,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 100.0)),
+    );
+
+    assert_eq!(
+        layout.get(&1).unwrap().area,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 100.0)),
+    );
+
+    assert_eq!(
+        layout.get(&2).unwrap().area,
+        Rect::new(Point2D::new(0.0, 150.0), Size2D::new(50.0, 50.0)),
     );
 }

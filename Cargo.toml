@@ -1,110 +1,171 @@
 [package]
 name = "examples"
-version = "0.0.0"
-edition = "2021"
+edition = "2024"
 publish = false
 
-[workspace]
-members = ["crates/winit", "crates/freya", "crates/elements", "crates/components", "crates/hooks", "crates/core", "crates/testing", "crates/torin", "crates/engine", "./examples/installer",  "crates/native-core", "crates/native-core-macro", "crates/router", "crates/router-macro", "crates/ragnarok", "crates/devtools", "crates/devtools-app"]
-
 [features]
-tracing-subscriber = ["freya/tracing-subscriber"]
-devtools = ["freya/devtools", "freya-devtools/server"]
-use_camera = ["freya/use_camera"]
-custom-tokio-rt = ["freya/custom-tokio-rt"]
-performance-overlay = ["freya/performance-overlay"]
-fade-cached-incremental-areas = ["freya/fade-cached-incremental-areas"]
-disable-zoom-shortcuts = ["freya/disable-zoom-shortcuts"]
-docs = ["freya/docs"]
+hotpath = ["freya-core/hotpath", "ragnarok/hotpath", "freya-winit/hotpath"]
+hotpath-ci = ["hotpath/hotpath-ci"]
+hotpath-alloc-bytes-total = [
+  "freya-core/hotpath-alloc-bytes-total",
+  "ragnarok/hotpath-alloc-bytes-total",
+  "freya-winit/hotpath-alloc-bytes-total",
+]
+hotpath-alloc-count-total = [
+  "freya-core/hotpath-alloc-count-total",
+  "ragnarok/hotpath-alloc-count-total",
+  "freya-winit/hotpath-alloc-count-total",
+]
+hotpath-off = [
+  "freya-core/hotpath-off",
+  "ragnarok/hotpath-off",
+  "freya-winit/hotpath-off",
+]
+devtools = ["freya/devtools"]
+performance = ["freya/performance"]
 plot = ["freya/plot"]
+vulkan = ["freya-winit/vulkan"]
 
-
-[patch.crates-io]
-# dioxus = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
-# dioxus-rsx = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
-# dioxus-core-macro = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
-# dioxus-hooks = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
-# dioxus-signals = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
-# dioxus-core = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }# freya-router = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
-# generational-box  = { git = "https://github.com/ealmloff/dioxus", rev = "5c410876666710f0c497fd6d4033011ac37087bc" }
+[workspace]
+members = [
+  "./crates/freya",
+  "./crates/freya-core",
+  "./crates/torin",
+  "./crates/ragnarok",
+  "./crates/freya-clipboard",
+  "./crates/freya-edit",
+  "./crates/freya-winit",
+  "./crates/freya-components",
+  "./crates/pathmap",
+  "./crates/freya-animation",
+  "./crates/freya-router",
+  "./crates/freya-router-macro",
+  "./crates/freya-testing",
+  "./crates/freya-i18n",
+  "./crates/freya-performance-plugin",
+  "./crates/freya-radio",
+  "./crates/freya-engine",
+  "./crates/freya-devtools",
+  "./crates/freya-devtools-app",
+  "./crates/freya-icons",
+  "./examples/website",
+]
 
 [workspace.dependencies]
-freya = { path = "crates/freya", version = "0.4" }
-freya-devtools = { path = "crates/devtools", version = "0.4" }
-freya-winit = { path = "crates/winit", version = "0.4" }
-freya-elements = { path = "crates/elements", version = "0.4" }
-freya-common = { path = "crates/common", version = "0.4" }
-freya-hooks = { path = "crates/hooks", version = "0.4" }
-freya-core = { path = "crates/core", version = "0.4" }
-freya-components = { path = "crates/components", version = "0.4" }
-freya-testing = { path = "crates/testing", version = "0.4" }
-freya-engine = { path = "crates/engine", version = "0.4" }
-freya-router = { path = "crates/router", version = "0.4.0" }
-freya-router-macro = { path = "crates/router-macro", version = "0.4.0" }
-torin = { path = "crates/torin", version = "0.4" }
-ragnarok = { path = "crates/ragnarok", version = "0.1.0" }
-freya-native-core-macro = { path = "crates/native-core-macro", version = "0.4" }
-freya-native-core = { path = "crates/native-core", version = "0.4" }
+freya = { path = "./crates/freya", features = ["all"] }
+freya-core = { path = "./crates/freya-core" }
+torin = { path = "./crates/torin" }
+ragnarok = { path = "./crates/ragnarok" }
+freya-clipboard = { path = "./crates/freya-clipboard" }
+freya-edit = { path = "./crates/freya-edit" }
+freya-winit = { path = "./crates/freya-winit" }
+freya-components = { path = "./crates/freya-components" }
+pathmap = { path = "./crates/pathmap/" }
+freya-animation = { path = "./crates/freya-animation" }
+freya-router = { path = "./crates/freya-router" }
+freya-router-macro = { path = "./crates/freya-router-macro" }
+freya-testing = { path = "./crates/freya-testing" }
+freya-i18n = { path = "./crates/freya-i18n" }
+freya-performance-plugin = { path = "./crates/freya-performance-plugin" }
+freya-radio = { path = "./crates/freya-radio" }
+freya-engine = { path = "./crates/freya-engine" }
+freya-devtools = { path = "./crates/freya-devtools", features = ["server"] }
+freya-icons = { path = "./crates/freya-icons", features = ["all"] }
 
-dioxus = { version = "0.6.3", default-features = false, features = ["macro", "signals", "hooks"] }
-dioxus-rsx = { version = "0.6.2" }
-dioxus-core-macro = { version = "0.6.3" }
-dioxus-hooks = { version = "0.6.2" }
-dioxus-signals = { version = "0.6.3" }
-dioxus-core = { version = "0.6.3" }
-dioxus-lib = { version = "0.6.2", default-features = false, features = ["macro", "signals", "hooks"] }
-generational-box = { version = "0.6.2" }
+# core
+generational-box = "0.6.2"
+tracing = "0.1.41"
+rustc-hash = "2.1.1"
+bitflags = "2.9.3"
+# Core/async
+futures-util = "0.3.31"
+futures-channel = "0.3.31"
+futures-lite = "2.6.1"
+async-io = "2.5.0"
+# Core/components
+typed-builder = "0.21.2"
 
-dioxus-clipboard = "0.2.0"
-dioxus-i18n = "0.4.1"
+# Animations
+easer = "0.3.0"
+async-broadcast = "0.7.2"
 
+# Text editing
+ropey = "1.6.1"
+keyboard-types = "0.7.0"
+
+# Layout
+euclid = "0.22.9"
+
+# Layers, Ragnarok, etc
+itertools = "0.14.0"
+
+# Rendering
 skia-safe = { version = "0.87.0", features = ["gl", "textlayout", "svg"] }
 
+# Desktop renderer
+raw-window-handle = "0.6.0"
+winit = "0.30.0"
+
+# OpenGL
 gl = "0.14.0"
 glutin = "0.32.0"
 glutin-winit = "0.5.0"
-raw-window-handle = "0.6.0"
-winit = "0.30.0"
-tokio = { version = "1", features = ["sync", "rt-multi-thread", "time", "macros"] }
-accesskit = { version = "0.19.0", features = ["serde"] }
-accesskit_winit = "0.27.0"
-shipyard = { version = "0.8", features = ["proc", "std", "parallel"], default-features = false }
-smallvec = "1.13.1"
 
-euclid = "0.22.9"
-futures-util = "0.3.30"
-futures-task = "0.3.30"
-tracing = "0.1"
-tracing-subscriber = "0.3.17"
-rustc-hash = "2.0.0"
-bytes = "1.5.0"
+# Vulkan
+ash = "^0.38"
+ash-window = "0.13.0"
+
+# accessibility
+accesskit = "0.21.0"
+accesskit_winit = "0.29.0"
+
+# Performance
+hotpath = "0.4"
+
+# Errors
+anyhow = "1.0.100"
+
+# Rendering
+[target."cfg(target_os = \"linux\")".dependencies.skia-safe]
+version = "0.87.0"
+features = ["gl", "textlayout", "svg", "x11", "wayland"]
 
 [dev-dependencies]
-skia-safe = { workspace = true }
-tokio = { workspace = true, features = ["fs"]}
-freya = { workspace = true, features = ["network-image"] }
-freya-hooks = { workspace = true }
-freya-core = { workspace = true }
-freya-testing = { workspace = true }
-freya-devtools = { workspace = true, features = ["server"] }
-reqwest = { version = "0.12.0", features = ["json"] }
-serde = "1.0.189"
-dioxus-i18n = { workspace = true }
-rand = "0.8.5"
+freya = { workspace = true }
+freya-core = { workspace = true, features = ["debug-integrity", "test"] }
+torin = { workspace = true }
+ragnarok = { workspace = true }
+freya-edit = { workspace = true }
 freya-router = { workspace = true }
-itertools = "0.13.0"
-home = "0.5.9"
-dioxus-query = "0.8.1"
-gilrs = "0.10.8"
-gl = { workspace = true }
-tree-sitter-highlight = "0.23.0"
-tree-sitter-rust = "0.23.0"
-rfd = "0.15.3"
-bytes = { workspace = true }
-dioxus-clipboard = { workspace = true }
-winit = { workspace = true }
-dioxus-radio = "0.6.0"
+freya-winit = { workspace = true }
+freya-testing = { workspace = true }
+freya-i18n = { workspace = true }
+freya-performance-plugin = { workspace = true }
+freya-radio = { workspace = true }
+freya-icons = { workspace = true }
+
+skia-safe = { workspace = true }
+
+tracing = { workspace = true }
+tracing-subscriber = "0.3.19"
+
+rand = "0.9"
+
+async-io = { workspace = true }
+futures-lite = { workspace = true }
+
+ropey = { workspace = true }
+bitflags = { workspace = true }
+keyboard-types = { workspace = true }
+
+hotpath = { workspace = true }
+
+itertools = { workspace = true }
 
 [profile.release]
 lto = true
+opt-level = 3
+
+# Optimizes the freya devtools server
+[profile.dev.package.freya-devtools]
 opt-level = 3

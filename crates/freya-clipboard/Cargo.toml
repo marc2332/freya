@@ -1,0 +1,15 @@
+[package]
+name = "freya-clipboard"
+version = "0.4.0"
+edition = "2024"
+description = "Clipboard integration for Freya."
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+homepage = "https://github.com/marc2332/freya"
+repository = "https://github.com/marc2332/freya"
+keywords = ["freya"]
+categories = ["gui"]
+
+[dependencies]
+copypasta = "0.10"
+freya-core = { workspace = true }

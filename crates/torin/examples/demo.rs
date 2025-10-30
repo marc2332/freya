@@ -11,14 +11,14 @@ struct DemoNode {
 }
 
 #[derive(Default)]
-pub struct DemoDOM {
+pub struct DemoTree {
     nodes: HashMap<usize, DemoNode>,
 }
 
-impl DemoDOM {
-    /// Add the Node to the DOM
+impl DemoTree {
+    /// Add the Node to the Tree
     pub fn add(&mut self, node_id: usize, parent: Option<usize>, children: Vec<usize>, node: Node) {
-        // Get the parent's height in the DOM
+        // Get the parent's height in the Tree
         let parent_height = parent
             .map(|p| self.nodes.get(&p).unwrap().height)
             .unwrap_or(0);
@@ -42,7 +42,7 @@ impl DemoDOM {
         self.nodes.get_mut(&node_id).unwrap().node = node;
     }
 
-    // Recursively remove a Node from the DOM
+    // Recursively remove a Node from the Tree
     pub fn remove(&mut self, node_id: usize) {
         let node = self.nodes.remove(&node_id).unwrap();
 
@@ -56,7 +56,7 @@ impl DemoDOM {
     }
 }
 
-impl DOMAdapter<usize> for DemoDOM {
+impl TreeAdapter<usize> for DemoTree {
     fn children_of(&mut self, node_id: &usize) -> Vec<usize> {
         self.nodes
             .get(node_id)
@@ -76,22 +76,15 @@ impl DOMAdapter<usize> for DemoDOM {
         self.nodes.get(node_id).map(|c| c.node.clone())
     }
 
-    fn is_node_valid(&mut self, _node_id: &usize) -> bool {
-        // We assume all the nodes in this Demo DOM are actually available for measurement
-        // This could not be the case in certain implementations of DOMs, for example Dioxus has a concept of
-        // Placeholders, which are elements in the DOM but are not to be measured
-        true
-    }
-
     fn root_id(&self) -> usize {
-        0 // We assume 0 is the root ID of the DOM
+        0 // We assume 0 is the root ID of the Tree
     }
 }
 
 fn main() {
     let mut layout = Torin::<usize>::new();
 
-    let mut demo_dom = DemoDOM::default();
+    let mut demo_dom = DemoTree::default();
 
     // Node A: Root Node
     demo_dom.add(
@@ -131,7 +124,7 @@ fn main() {
         ),
     );
 
-    // Measure our DOM layout
+    // Measure our Tree layout
     layout.measure(
         0,                                                              // Root ID
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)), // Available Area

@@ -1,127 +1,118 @@
 //! # Hooks
 //!
-//! Hooks are special functions that must be called inside of Components.
+//! Hooks are special functions that let you tap into Freya's reactivity and lifecycle system.
+//! They can **only** be called at the top level of your component's `render` method (not inside event handlers, loops, or conditionals).
 //!
-//! These let you manage things like state or lifecycle of your component.
+//! Hooks are always prefixed with `use_`, for example: [`use_animation`](crate::animation::use_animation), [`use_state`](crate::prelude::use_state), etc.
 //!
-//! They are usually prefixed with `use`, e.g [`use_animation`](crate::hooks::use_animation), [`use_signal`](dioxus::hooks::use_signal), [`use_effect`](dioxus::hooks::use_signal), [`use_memo`]((dioxus::hooks::use_memo)), etc.
+//! ## Rules of Hooks
 //!
-//! # Rules of Hooks
+//! Hooks are not ordinary functions. To ensure correct behavior, follow these rules:
 //!
-//! Even though hooks appear to be normal functions they are in fact special so you cannot just call them however you want.
+//! ### 1. Only call hooks at the top level of your `render` method
 //!
-//! ## 1. They cannot be called conditionally
+//! Hooks must always be called in the same order on every render.
 //!
-//! You cannot do the following because hooks need to maintain their order between multiple renders.
-//!
-//! So, if the same component is calling 3 different hooks in the first render, and then in the next render if just calls 2, it would be breaking this rule.
-//!
-//! ❌:
+//! ❌ **Incorrect:**
 //! ```rust
 //! # use freya::prelude::*;
-//! #[component]
-//! fn MyComponent(value: bool) -> Element {
-//!     let is_enabled = if value {
-//!         // This should be moved out of the conditional
-//!         let state = use_signal(|| value);
-//!
-//!         state()
-//!     } else {
-//!         true
-//!     };
-//!
-//!     Ok(VNode::placeholder())
-//! }
-//! ```
-//!
-//! ✅:
-//! ```rust
-//! # use freya::prelude::*;
-//! #[component]
-//! fn MyComponent(initial_value: bool) -> Element {
-//!     let is_enabled = use_signal(move || initial_value);
-//!
-//!     rsx!( label { "{is_enabled}" } )
-//! }
-//! ```
-//!
-//! Or even better, move the state up ✅:
-//! ```rust
-//! # use freya::prelude::*;
-//! #[component]
-//! fn MyComponent(is_enabled: bool) -> Element {
-//!     rsx!( label { "{is_enabled}" } )
-//! }
-//! ```
-//!
-//! ## 2. They can only be called inside of Component functions
-//!
-//! You cannot call them inside of event handlers, futures, etc.
-//!
-//! ❌:
-//! ```rust
-//! # use freya::prelude::*;
-//! #[component]
-//! fn MyComponent() -> Element {
-//!     let onclick = |_| {
-//!          let state = use_signal(|| false);
-//!     };
-//!
-//!     rsx!(
-//!         label {
-//!             onclick,
-//!             "Hello, World!"
+//! #[derive(PartialEq)]
+//! struct MyComponent(bool);
+//! impl Render for MyComponent {
+//!     fn render(&self) -> Element {
+//!         if self.0 {
+//!             let state = use_state(|| self.0);
+//!             // ...
 //!         }
-//!     )
-//! }
-//! ```
-//!
-//! ✅:
-//! ```rust
-//! # use freya::prelude::*;
-//! #[component]
-//! fn MyComponent() -> Element {
-//!     let mut state = use_signal(|| false);
-//!
-//!     let onclick = move |_| {
-//!          state.set(true);
-//!     };
-//!
-//!     rsx!(
-//!         label {
-//!             onclick,
-//!             "Hello, World!"
-//!         }
-//!     )
-//! }
-//! ```
-//!
-//! ## 3. They cannot be called in loops
-//!
-//! Hooks cannot be called in loops as the numbers of iterations might change between renders.
-//!
-//! ❌:
-//! ```rust
-//! # use freya::prelude::*;
-//! #[component]
-//! fn MyComponent() -> Element {
-//!     for i in 0..5 {
-//!         let state = use_signal(|| i);
+//!         rect().into()
 //!     }
-//!
-//!     rsx!( label { "hi" } )
 //! }
 //! ```
 //!
-//! ✅:
+//! ✅ **Correct:**
 //! ```rust
 //! # use freya::prelude::*;
-//! #[component]
-//! fn MyComponent() -> Element {
-//!     let state = use_signal(|| (0..5).into_iter().collect::<Vec<_>>());
-//!
-//!     rsx!( label { "hi" } )
+//! #[derive(PartialEq)]
+//! struct MyComponent(bool);
+//! impl Render for MyComponent {
+//!     fn render(&self) -> Element {
+//!         let state = use_state(|| self.0);
+//!         rect().into()
+//!     }
 //! }
 //! ```
 //!
-//! #### You can learn more in depth now about [State Management](crate::_docs::state_management).
+//! Or, move state up to the parent component for even simpler code:
+//! ```rust
+//! # use freya::prelude::*;
+//! #[derive(PartialEq)]
+//! struct MyComponent(bool);
+//! impl Render for MyComponent {
+//!     fn render(&self) -> Element {
+//!         rect().into()
+//!     }
+//! }
+//! ```
+//!
+//! ### 2. Only call hooks inside `render` methods
+//!
+//! Hooks **cannot** be called inside event handlers, async blocks, or outside of components.
+//!
+//! ❌ **Incorrect:**
+//! ```rust
+//! # use freya::prelude::*;
+//! struct MyComponent;
+//! impl Render for MyComponent {
+//!     fn render(&self) -> Element {
+//!         let onclick = |_| {
+//!             let state = use_state(|| false); // ❌ Not allowed here
+//!         };
+//!         rect().on_mouse_up(onclick).child("Hello, World!").into()
+//!     }
+//! }
+//! ```
+//!
+//! ✅ **Correct:**
+//! ```rust
+//! # use freya::prelude::*;
+//! struct MyComponent;
+//! impl Render for MyComponent {
+//!     fn render(&self) -> Element {
+//!         let mut state = use_state(|| false);
+//!         let onclick = move |_| {
+//!             state.set(true);
+//!         };
+//!         rect().on_mouse_up(onclick).child("Hello, World!").into()
+//!     }
+//! }
+//! ```
+//!
+//! ### 3. Do not call hooks inside loops
+//!
+//! The number of hook calls must not change between renders.
+//!
+//! ❌ **Incorrect:**
+//! ```rust
+//! # use freya::prelude::*;
+//! struct MyComponent;
+//! impl Render for MyComponent {
+//!     fn render(&self) -> Element {
+//!         for i in 0..5 {
+//!             let state = use_state(|| i); // ❌ Not allowed in a loop
+//!         }
+//!         rect().child("Hello, World!").into()
+//!     }
+//! }
+//! ```
+//!
+//! ✅ **Correct:**
+//! ```rust
+//! # use freya::prelude::*;
+//! struct MyComponent;
+//! impl Render for MyComponent {
+//!     fn render(&self) -> Element {
+//!         let state = use_state(|| (0..5).collect::<Vec<_>>());
+//!         rect().child("Hello, World!").into()
+//!     }
+//! }
+//! ```

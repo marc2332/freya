@@ -1,5 +1,5 @@
 name: Deploy docs
-on: 
+on:
   push:
     paths:
       - 'crates/**/*'
@@ -23,7 +23,7 @@ jobs:
       - name: Set up cargo cache
         uses: Swatinem/rust-cache@v2
         with:
-          prefix-key: "3"   
+          prefix-key: "docs"
 
       - name: Install linux dependencies
         run: |

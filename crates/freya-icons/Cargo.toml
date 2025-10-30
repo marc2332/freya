@@ -1,0 +1,18 @@
+[package]
+name = "freya-icons"
+version = "0.4.0"
+edition = "2024"
+description = "Icons library for Freya."
+categories = ["gui"]
+license = "MIT"
+
+[features]
+skia = ["freya-engine/skia-engine"]
+# Icons
+all = ["lucide"]
+lucide = []
+
+[dependencies]
+freya-core = { workspace = true }
+freya-engine = { workspace = true }
+bytes = "1.10.1"

@@ -1,22 +1,30 @@
 use std::{
-    sync::Arc,
+    any::Any,
+    borrow::Cow,
+    collections::HashMap,
+    rc::Rc,
     time::Instant,
 };
 
 use freya::{
-    events::MouseEvent,
     prelude::*,
+    text_edit::*,
 };
+use freya_core::integration::{
+    DiffModifies,
+    ElementExt,
+    RenderContext,
+};
+use freya_performance_plugin::PerformanceOverlayPlugin;
 use skia_safe::{
-    textlayout::{
-        ParagraphBuilder,
-        ParagraphStyle,
-    },
-    Color,
     Data,
     Paint,
     Rect,
     RuntimeEffect,
+    textlayout::{
+        ParagraphBuilder,
+        ParagraphStyle,
+    },
 };
 
 const SHADER: &str = "
@@ -37,168 +45,245 @@ const SHADER: &str = "
  ";
 
 fn main() {
-    launch_with_params(app, "Shader Editor", (900., 500.));
+    launch(
+        LaunchConfig::new()
+            .with_window(WindowConfig::new(app).with_size(900., 600.))
+            .with_plugin(PerformanceOverlayPlugin::default()),
+    )
 }
 
 fn app() -> Element {
-    use_init_theme(|| DARK_THEME);
     let editable = use_editable(
-        || EditableConfig::new(SHADER.trim().to_string()),
+        || SHADER.trim().to_string(),
+        EditableConfig::new,
         EditableMode::SingleLineMultipleEditors,
     );
 
-    rsx!(
-        Body {
-            direction: "horizontal",
-            ShaderEditor {
-                editable
-            }
-            ShaderView {
-                editable
-            }
-        }
-    )
+    rect()
+        .horizontal()
+        .child(ShaderEditor(editable))
+        .child(ShaderView(editable))
+        .into()
 }
 
-#[component]
-fn ShaderEditor(editable: UseEditable) -> Element {
-    let editor = editable.editor().read();
+#[derive(PartialEq)]
+struct ShaderEditor(UseEditable);
 
-    let onglobalclick = move |_: MouseEvent| {
-        editable.process_event(&EditableEvent::Click);
-    };
+impl Render for ShaderEditor {
+    fn render(&self) -> Element {
+        let mut editable = self.0;
 
-    let onglobalkeydown = move |e: KeyboardEvent| {
-        editable.process_event(&EditableEvent::KeyDown(e.data));
-    };
+        let on_global_mouse_up = move |_: Event<MouseEventData>| {
+            editable.process_event(EditableEvent::Release);
+        };
 
-    let onglobalkeyup = move |e: KeyboardEvent| {
-        editable.process_event(&EditableEvent::KeyUp(e.data));
-    };
+        let on_global_key_down = move |e: Event<KeyboardEventData>| {
+            editable.process_event(EditableEvent::KeyDown {
+                key: &e.key,
+                code: e.code,
+                modifiers: e.modifiers,
+            });
+        };
 
-    rsx!(
-        rect {
-            onglobalkeydown,
-            onglobalkeyup,
-            onglobalclick,
-            width: "50%",
-            height: "fill",
-            VirtualScrollView {
-                length: editor.len_lines(),
-                item_size: 27.0,
-                scroll_with_arrows: false,
-                cache_elements: false,
-                builder: move |line_index, _: &Option<()>| {
-                    let editor = editable.editor().read();
-                    let line = editor.line(line_index).unwrap();
+        let on_global_key_up = move |e: Event<KeyboardEventData>| {
+            editable.process_event(EditableEvent::KeyUp { code: e.code });
+        };
 
-                    let is_line_selected = editor.cursor_row() == line_index;
-
-                    // Only show the cursor in the active line
-                    let character_index = if is_line_selected {
-                        editor.cursor_col().to_string()
-                    } else {
-                        "none".to_string()
-                    };
-
-                    // Only highlight the active line
-                    let line_background = if is_line_selected {
-                        "rgb(37, 37, 37)"
-                    } else {
-                        "none"
-                    };
-
-                    let onmousedown = move |e: MouseEvent| {
-                        editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
-                    };
-
-                    let onmousemove = move |e: MouseEvent| {
-                        editable.process_event(&EditableEvent::MouseMove(e.data, line_index));
-                    };
-
-                    let highlights = editable.highlights_attr(line_index);
-
-                    rsx! {
-                        rect {
-                            key: "{line_index}",
-                            width: "100%",
-                            height: "27",
-                            direction: "horizontal",
-                            background: "{line_background}",
-                            label {
-                                main_align: "center",
-                                width: "30",
-                                height: "100%",
-                                text_align: "center",
-                                font_size: "15",
-                                color: "rgb(200, 200, 200)",
-                                "{line_index + 1} "
-                            }
-                            paragraph {
-                                cursor_reference: editable.cursor_attr(),
-                                main_align: "center",
-                                height: "100%",
-                                width: "100%",
-                                cursor_index: "{character_index}",
-                                cursor_color: "white",
-                                max_lines: "1",
-                                cursor_mode: "editable",
-                                cursor_id: "{line_index}",
-                                onmousedown,
-                                onmousemove,
-                                highlights,
-                                highlight_mode: "expanded",
-                                text {
-                                    color: "rgb(240, 240, 240)",
-                                    font_size: "15",
-                                    "{line}"
-                                }
-                            }
-                        }
+        rect()
+            .on_global_mouse_up(on_global_mouse_up)
+            .on_global_key_down(on_global_key_down)
+            .on_global_key_up(on_global_key_up)
+            .width(Size::percent(50.))
+            .height(Size::fill())
+            .child(
+                VirtualScrollView::new(move |line_index, _| {
+                    EditingLine {
+                        line_index,
+                        editable,
                     }
-                }
-            }
-        }
-    )
+                    .into()
+                })
+                .length(editable.editor().read().len_lines() as i32)
+                .item_size(27.),
+            )
+            .into()
+    }
 }
 
-#[component]
-fn ShaderView(editable: UseEditable) -> Element {
-    let platform = use_platform();
-    let (reference, size) = use_node_signal();
+#[derive(PartialEq)]
+struct EditingLine {
+    line_index: usize,
+    editable: UseEditable,
+}
 
-    use_hook(|| {
-        let mut ticker = platform.new_ticker();
-
-        spawn(async move {
-            loop {
-                ticker.tick().await;
-                platform.invalidate_drawing_area(size.peek().area);
-                platform.request_animation_frame();
-            }
-        });
-    });
-
-    let canvas = use_canvas(move || {
+impl Render for EditingLine {
+    fn render_key(&self) -> DiffKey {
+        (&self.line_index).into()
+    }
+    fn render(&self) -> Element {
+        let line_index = self.line_index;
+        let mut editable = self.editable;
+        let holder = use_state(ParagraphHolder::default);
         let editor = editable.editor().read();
-        let runtime_effect = RuntimeEffect::make_for_shader(editor.to_string(), None);
-        let shared_runtime_effect = Arc::new(RuntimeEffectWrapper(runtime_effect));
-        let instant = Instant::now();
+        let line = editor.line(line_index).unwrap();
 
-        move |ctx| {
-            ctx.canvas.save();
+        let is_line_selected = editor.cursor_row() == line_index;
 
-            let runtime_effect = &shared_runtime_effect.0;
+        // Only show the cursor in the active line
+        let cursor_index = if is_line_selected {
+            Some(editor.cursor_col())
+        } else {
+            None
+        };
 
-            if let Ok(runtime_effect) = runtime_effect {
+        // Only highlight the active line
+        let line_background = if is_line_selected {
+            (225, 225, 225).into()
+        } else {
+            Color::TRANSPARENT
+        };
+
+        let on_mouse_down = move |e: Event<MouseEventData>| {
+            editable.process_event(EditableEvent::Down {
+                location: e.element_location,
+                editor_id: line_index,
+                holder: &holder.read(),
+            });
+        };
+
+        let on_mouse_move = move |e: Event<MouseEventData>| {
+            editable.process_event(EditableEvent::Move {
+                location: e.element_location,
+                editor_id: line_index,
+                holder: &holder.read(),
+            });
+        };
+
+        let highlights = editable.editor().read().get_visible_selection(line_index);
+
+        rect()
+            .width(Size::fill())
+            .height(Size::px(27.))
+            .horizontal()
+            .color(Color::BLACK)
+            .background(line_background)
+            .child(
+                label()
+                    .width(Size::px(60.))
+                    .text_align(TextAlign::Center)
+                    .font_size(15.)
+                    .color((90, 90, 90))
+                    .text((line_index + 1).to_string()),
+            )
+            .child(
+                paragraph()
+                    .holder(holder.read().clone())
+                    .on_mouse_down(on_mouse_down)
+                    .on_mouse_move(on_mouse_move)
+                    .cursor_index(cursor_index)
+                    .highlights(highlights.map(|h| vec![h]))
+                    .width(Size::fill())
+                    .height(Size::fill())
+                    .font_size(15.)
+                    .max_lines(1)
+                    .color((35, 35, 35))
+                    .span(line.text.to_string()),
+            )
+            .into()
+    }
+}
+
+#[derive(PartialEq)]
+struct ShaderView(UseEditable);
+
+impl Render for ShaderView {
+    fn render(&self) -> Element {
+        let editable = self.0;
+
+        use_hook(|| {
+            let mut ticker = try_consume_root_context::<RenderingTicker>().unwrap();
+            let event_notifier = EventNotifier::get();
+
+            spawn(async move {
+                loop {
+                    ticker.tick().await;
+                    event_notifier.send(UserEvent::RequestRedraw);
+                }
+            });
+        });
+
+        let runtime_effect = use_side_effect_value(move || {
+            RuntimeEffect::make_for_shader(editable.editor().read().rope().to_string(), None)
+                .map(Rc::from)
+        });
+
+        rect()
+            .width(Size::percent(50.))
+            .height(Size::fill())
+            .background((0, 0, 0))
+            .child(Shader(runtime_effect.read().clone(), Instant::now()))
+            .into()
+    }
+}
+
+struct Shader(Result<Rc<RuntimeEffect>, String>, Instant);
+
+impl ElementExt for Shader {
+    fn layout(&'_ self) -> Cow<'_, LayoutData> {
+        Cow::Owned(LayoutData {
+            layout: torin::node::Node::from_size_and_direction(
+                Size::Fill,
+                Size::Fill,
+                Direction::Vertical,
+            ),
+        })
+    }
+
+    fn changed(&self, other: &Rc<dyn ElementExt>) -> bool {
+        let Some(shader) = (other.as_ref() as &dyn Any).downcast_ref::<Self>() else {
+            return true;
+        };
+
+        let is_equal = match (&self.0, &shader.0) {
+            (Ok(a), Ok(b)) => Rc::ptr_eq(a, b),
+            (Err(a), Err(b)) => a == b,
+            _ => false,
+        };
+
+        !is_equal
+    }
+
+    fn diff(&self, other: &Rc<dyn ElementExt>) -> DiffModifies {
+        let Some(shader) = (other.as_ref() as &dyn Any).downcast_ref::<Self>() else {
+            return DiffModifies::all();
+        };
+
+        let is_equal = match (&self.0, &shader.0) {
+            (Ok(a), Ok(b)) => Rc::ptr_eq(a, b),
+            (Err(a), Err(b)) => a == b,
+            _ => false,
+        };
+        if is_equal {
+            DiffModifies::empty()
+        } else {
+            DiffModifies::STYLE
+        }
+    }
+
+    fn render(&self, context: RenderContext) {
+        match &self.0 {
+            Ok(runtime_effect) => {
                 let mut builder = UniformsBuilder::default();
                 builder.set(
                     "u_resolution",
-                    UniformValue::FloatVec(vec![ctx.area.width(), ctx.area.height()]),
+                    UniformValue::FloatVec(vec![
+                        context.layout_node.area.width(),
+                        context.layout_node.area.height(),
+                    ]),
                 );
                 builder.set(
                     "u_time",
-                    UniformValue::Float(instant.elapsed().as_secs_f32()),
+                    UniformValue::Float(self.1.elapsed().as_secs_f32()),
                 );
 
                 let uniforms = Data::new_copy(&builder.build(runtime_effect));
@@ -210,42 +295,87 @@ fn ShaderView(editable: UseEditable) -> Element {
                 paint.set_color(Color::WHITE);
                 paint.set_shader(shader);
 
-                ctx.canvas.draw_rect(
+                context.canvas.draw_rect(
                     Rect::new(
-                        ctx.area.min_x(),
-                        ctx.area.min_y(),
-                        ctx.area.max_x(),
-                        ctx.area.max_y(),
+                        context.layout_node.area.min_x(),
+                        context.layout_node.area.min_y(),
+                        context.layout_node.area.max_x(),
+                        context.layout_node.area.max_y(),
                     ),
                     &paint,
                 );
-            } else if let Err(err) = runtime_effect {
+            }
+            Err(err) => {
                 let mut text_paint = Paint::default();
                 text_paint.set_anti_alias(true);
                 text_paint.set_color(Color::WHITE);
-                let mut paragraph_builder =
-                    ParagraphBuilder::new(&ParagraphStyle::default(), ctx.font_collection.clone());
+                let mut paragraph_builder = ParagraphBuilder::new(
+                    &ParagraphStyle::default(),
+                    context.font_collection.clone(),
+                );
                 paragraph_builder.add_text(err);
                 let mut paragraph = paragraph_builder.build();
-                paragraph.layout(ctx.area.width());
+                paragraph.layout(context.layout_node.area.width());
 
-                paragraph.paint(ctx.canvas, (ctx.area.min_x(), ctx.area.min_y()));
+                paragraph.paint(
+                    context.canvas,
+                    (
+                        context.layout_node.area.min_x(),
+                        context.layout_node.area.min_y(),
+                    ),
+                );
             }
-
-            ctx.canvas.restore();
         }
-    });
-
-    rsx!(rect {
-        canvas_reference: canvas.attribute(),
-        reference,
-        background: "black",
-        width: "fill",
-        height: "fill",
-    })
+    }
 }
 
-struct RuntimeEffectWrapper(Result<RuntimeEffect, String>);
+impl From<Shader> for Element {
+    fn from(value: Shader) -> Self {
+        Element::Element {
+            key: DiffKey::None,
+            element: Rc::new(value),
+            elements: vec![],
+        }
+    }
+}
 
-unsafe impl Sync for RuntimeEffectWrapper {}
-unsafe impl Send for RuntimeEffectWrapper {}
+/// Pass uniform values to a Shader.
+#[derive(Default)]
+pub struct UniformsBuilder {
+    uniforms: HashMap<String, UniformValue>,
+}
+
+/// Uniform value to be passed to a Shader.
+pub enum UniformValue {
+    Float(f32),
+    #[allow(dead_code)]
+    FloatVec(Vec<f32>),
+}
+
+impl UniformsBuilder {
+    /// Set a uniform value.
+    pub fn set(&mut self, name: &str, value: UniformValue) {
+        self.uniforms.insert(name.to_string(), value);
+    }
+
+    /// Build the uniform bytes.
+    pub fn build(&self, shader: &RuntimeEffect) -> Vec<u8> {
+        let mut values = Vec::new();
+
+        for uniform in shader.uniforms().iter() {
+            let value = self.uniforms.get(uniform.name()).unwrap();
+            match &value {
+                UniformValue::Float(f) => {
+                    values.extend(f.to_le_bytes());
+                }
+                UniformValue::FloatVec(f) => {
+                    for n in f {
+                        values.extend(n.to_le_bytes());
+                    }
+                }
+            }
+        }
+
+        values
+    }
+}

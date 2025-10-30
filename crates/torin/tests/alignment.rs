@@ -8,7 +8,7 @@ use torin::{
 pub fn display_horizontal() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -40,12 +40,12 @@ pub fn display_horizontal() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().area,
+        layout.get(&0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(50.0, 50.0), Size2D::new(100.0, 100.0)),
     );
 }
@@ -54,7 +54,7 @@ pub fn display_horizontal() {
 pub fn display_vertical_with_inner_children() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -97,17 +97,17 @@ pub fn display_vertical_with_inner_children() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().area,
+        layout.get(&0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(50.0, 50.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(55.0, 55.0), Size2D::new(90.0, 90.0)),
     );
 }
@@ -116,7 +116,7 @@ pub fn display_vertical_with_inner_children() {
 pub fn double_center_alignment() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -158,12 +158,12 @@ pub fn double_center_alignment() {
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(400.0, 250.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(350.0, 450.0), Size2D::new(300.0, 300.0)),
     );
 }
@@ -172,7 +172,7 @@ pub fn double_center_alignment() {
 pub fn double_end_alignment() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -214,12 +214,12 @@ pub fn double_end_alignment() {
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(800.0, 500.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(700.0, 700.0), Size2D::new(300.0, 300.0)),
     );
 }
@@ -228,7 +228,7 @@ pub fn double_end_alignment() {
 pub fn unsized_alignment() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -272,12 +272,12 @@ pub fn unsized_alignment() {
     );
 
     assert_eq!(
-        layout.get(1).unwrap().visible_area(),
+        layout.get(&1).unwrap().visible_area(),
         Rect::new(Point2D::new(15.0, 75.0), Size2D::new(100.0, 50.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().visible_area(),
+        layout.get(&2).unwrap().visible_area(),
         Rect::new(Point2D::new(115.0, 25.0), Size2D::new(150.0, 80.0)),
     );
 }
@@ -286,7 +286,7 @@ pub fn unsized_alignment() {
 pub fn nested_unsized_alignment() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -324,12 +324,12 @@ pub fn nested_unsized_alignment() {
     );
 
     assert_eq!(
-        layout.get(1).unwrap().visible_area(),
+        layout.get(&1).unwrap().visible_area(),
         Rect::new(Point2D::new(50.0, 50.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().visible_area(),
+        layout.get(&2).unwrap().visible_area(),
         Rect::new(Point2D::new(50.0, 50.0), Size2D::new(100.0, 100.0)),
     );
 }
@@ -338,7 +338,7 @@ pub fn nested_unsized_alignment() {
 pub fn space_between_alignment() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -400,22 +400,22 @@ pub fn space_between_alignment() {
     );
 
     assert_eq!(
-        layout.get(1).unwrap().visible_area(),
+        layout.get(&1).unwrap().visible_area(),
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().visible_area(),
+        layout.get(&2).unwrap().visible_area(),
         Rect::new(Point2D::new(300.0, 0.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(3).unwrap().visible_area(),
+        layout.get(&3).unwrap().visible_area(),
         Rect::new(Point2D::new(600.0, 0.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(4).unwrap().visible_area(),
+        layout.get(&4).unwrap().visible_area(),
         Rect::new(Point2D::new(900.0, 0.0), Size2D::new(100.0, 100.0)),
     );
 }
@@ -424,7 +424,7 @@ pub fn space_between_alignment() {
 pub fn space_around_alignment() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -486,22 +486,22 @@ pub fn space_around_alignment() {
     );
 
     assert_eq!(
-        layout.get(1).unwrap().visible_area(),
+        layout.get(&1).unwrap().visible_area(),
         Rect::new(Point2D::new(0.0, 75.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().visible_area(),
+        layout.get(&2).unwrap().visible_area(),
         Rect::new(Point2D::new(0.0, 325.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(3).unwrap().visible_area(),
+        layout.get(&3).unwrap().visible_area(),
         Rect::new(Point2D::new(0.0, 575.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(4).unwrap().visible_area(),
+        layout.get(&4).unwrap().visible_area(),
         Rect::new(Point2D::new(0.0, 825.0), Size2D::new(100.0, 100.0)),
     );
 }
@@ -510,7 +510,7 @@ pub fn space_around_alignment() {
 pub fn space_evenly_alignment() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -572,22 +572,22 @@ pub fn space_evenly_alignment() {
     );
 
     assert_eq!(
-        layout.get(1).unwrap().visible_area(),
+        layout.get(&1).unwrap().visible_area(),
         Rect::new(Point2D::new(0.0, 120.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().visible_area(),
+        layout.get(&2).unwrap().visible_area(),
         Rect::new(Point2D::new(0.0, 340.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(3).unwrap().visible_area(),
+        layout.get(&3).unwrap().visible_area(),
         Rect::new(Point2D::new(0.0, 560.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(4).unwrap().visible_area(),
+        layout.get(&4).unwrap().visible_area(),
         Rect::new(Point2D::new(0.0, 780.0), Size2D::new(100.0, 100.0)),
     );
 }
@@ -596,7 +596,7 @@ pub fn space_evenly_alignment() {
 pub fn alignment_with_absolute_child() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -649,17 +649,17 @@ pub fn alignment_with_absolute_child() {
     );
 
     assert_eq!(
-        layout.get(1).unwrap().visible_area(),
+        layout.get(&1).unwrap().visible_area(),
         Rect::new(Point2D::new(450.0, 392.5), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().visible_area(),
+        layout.get(&2).unwrap().visible_area(),
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(3).unwrap().visible_area(),
+        layout.get(&3).unwrap().visible_area(),
         Rect::new(Point2D::new(450.0, 507.5), Size2D::new(100.0, 100.0)),
     );
 }

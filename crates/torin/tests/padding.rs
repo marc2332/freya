@@ -7,7 +7,7 @@ use torin::{
 pub fn padding() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -37,7 +37,7 @@ pub fn padding() {
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(20.0, 5.0), Size2D::new(170.0, 180.0)),
     );
 }

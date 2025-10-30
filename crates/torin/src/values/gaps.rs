@@ -14,6 +14,24 @@ pub struct Gaps {
     left: Length,
 }
 
+impl From<f32> for Gaps {
+    fn from(padding: f32) -> Self {
+        Gaps::new_all(padding)
+    }
+}
+
+impl From<(f32, f32)> for Gaps {
+    fn from((vertical, horizontal): (f32, f32)) -> Self {
+        Gaps::new(vertical, horizontal, vertical, horizontal)
+    }
+}
+
+impl From<(f32, f32, f32, f32)> for Gaps {
+    fn from((top, right, bottom, left): (f32, f32, f32, f32)) -> Self {
+        Gaps::new(top, right, bottom, left)
+    }
+}
+
 impl Gaps {
     pub const fn new(top: f32, right: f32, bottom: f32, left: f32) -> Self {
         Self {
@@ -22,6 +40,10 @@ impl Gaps {
             bottom: Length::new(bottom),
             left: Length::new(left),
         }
+    }
+
+    pub const fn new_all(gaps: f32) -> Self {
+        Self::new(gaps, gaps, gaps, gaps)
     }
 
     pub fn fill_vertical(&mut self, value: f32) {

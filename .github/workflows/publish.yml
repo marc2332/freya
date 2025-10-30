@@ -14,8 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install the nightly toolchain
-        uses: dtolnay/rust-toolchain@nightly
-      - run: cargo +nightly publish --features skia-engine --workspace -Z package-workspace --exclude "examples" --exclude "freya-installer-example"
+        with:
+          submodules: true
+      - name: Install the rust toolchain
+        uses: dtolnay/rust-toolchain@1.90
+      - run: cargo publish --features skia-engine --workspace -Z package-workspace --exclude "examples" --exclude "freya-installer-example"
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}

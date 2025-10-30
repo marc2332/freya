@@ -14,7 +14,7 @@ pub fn same_height_different_parent() {
     //   /     \
     // 4-5     6-7
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -131,7 +131,7 @@ pub fn same_height_same_parent() {
     //   /     \
     // 4-5     6-7
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,

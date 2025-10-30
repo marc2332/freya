@@ -1,0 +1,45 @@
+[package]
+name = "freya-devtools"
+version = "0.4.0"
+edition = "2024"
+
+[features]
+server = [
+  "dep:hyper",
+  "dep:hyper-util",
+  "dep:smol",
+  "dep:async-lock",
+  "dep:tungstenite",
+  "dep:futures",
+  "dep:futures-util",
+  "dep:http-body-util",
+  "dep:bytes",
+  "dep:async-tungstenite",
+  "dep:anyhow",
+  "dep:serde_json",
+]
+client = []
+
+[dependencies]
+# Core
+freya-core = { workspace = true, features = ["serde"] }
+freya-winit = { workspace = true }
+freya-engine = { workspace = true }
+torin = { workspace = true, features = ["serde"] }
+
+# Server
+hyper = { version = "1", features = ["server", "http1"], optional = true }
+hyper-util = { version = "0.1", optional = true }
+tungstenite = { version = "0.27", features = ["handshake"], optional = true }
+futures-util = { version = "0.3", optional = true }
+futures = { version = "0.3", optional = true }
+http-body-util = { version = "*", optional = true }
+bytes = { version = "1", optional = true }
+smol = { version = "2.0.2", optional = true }
+async-lock = { version = "3.4.1", optional = true }
+async-tungstenite = { version = "0.31.0", optional = true }
+anyhow = { version = "1", optional = true }
+serde_json = { version = "1", optional = true }
+
+# Common
+serde = "1"

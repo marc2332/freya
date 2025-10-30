@@ -8,7 +8,7 @@ use torin::{
 pub fn unsized_parent_with_child_with_margin() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -34,12 +34,12 @@ pub fn unsized_parent_with_child_with_margin() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().visible_area(),
+        layout.get(&0).unwrap().visible_area(),
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
     );
 
     assert_eq!(
-        layout.get(1).unwrap().visible_area(),
+        layout.get(&1).unwrap().visible_area(),
         Rect::new(Point2D::new(40.0, 10.0), Size2D::new(940.0, 960.0)),
     );
 }
@@ -48,7 +48,7 @@ pub fn unsized_parent_with_child_with_margin() {
 pub fn unsized_parent_with_margin_with_child() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -74,12 +74,12 @@ pub fn unsized_parent_with_margin_with_child() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().area,
+        layout.get(&0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(160.0, 140.0)),
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(40.0, 10.0), Size2D::new(100.0, 100.0)),
     );
 }
@@ -88,7 +88,7 @@ pub fn unsized_parent_with_margin_with_child() {
 pub fn unsized_parent_with_padding() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -114,12 +114,12 @@ pub fn unsized_parent_with_padding() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().visible_area().round(),
+        layout.get(&0).unwrap().visible_area().round(),
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
     );
 
     assert_eq!(
-        layout.get(1).unwrap().visible_area().round(),
+        layout.get(&1).unwrap().visible_area().round(),
         Rect::new(Point2D::new(40.0, 10.0), Size2D::new(940.0, 960.0)),
     );
 }
@@ -128,7 +128,7 @@ pub fn unsized_parent_with_padding() {
 pub fn stacked() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -168,12 +168,12 @@ pub fn stacked() {
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(0.0, 100.0), Size2D::new(200.0, 100.0)),
     );
 
@@ -197,12 +197,12 @@ pub fn stacked() {
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(0.0, 100.0), Size2D::new(200.0, 100.0)),
     );
 }
@@ -211,7 +211,7 @@ pub fn stacked() {
 pub fn two_cols_auto() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -252,17 +252,17 @@ pub fn two_cols_auto() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().area,
+        layout.get(&0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(400.0, 400.0)),
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(200.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 }
@@ -271,7 +271,7 @@ pub fn two_cols_auto() {
 pub fn sibling_increments_area() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -307,12 +307,12 @@ pub fn sibling_increments_area() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().area,
+        layout.get(&0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(300.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(0.0, 100.0), Size2D::new(150.0, 100.0)),
     );
 }
@@ -321,7 +321,7 @@ pub fn sibling_increments_area() {
 pub fn root_100per_children_50per50per() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -362,17 +362,17 @@ pub fn root_100per_children_50per50per() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().area,
+        layout.get(&0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 500.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(0.0, 500.0), Size2D::new(1000.0, 500.0)),
     );
 }
@@ -381,7 +381,7 @@ pub fn root_100per_children_50per50per() {
 pub fn root_200px_children_50per50per() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -422,17 +422,17 @@ pub fn root_200px_children_50per50per() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().area,
+        layout.get(&0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(0.0, 100.0), Size2D::new(200.0, 100.0)),
     );
 }
@@ -441,7 +441,7 @@ pub fn root_200px_children_50per50per() {
 pub fn direction() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -481,12 +481,12 @@ pub fn direction() {
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(0.0, 100.0), Size2D::new(100.0, 100.0)),
     );
 
@@ -511,12 +511,12 @@ pub fn direction() {
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(100.0, 0.0), Size2D::new(100.0, 100.0)),
     );
 }
@@ -525,7 +525,7 @@ pub fn direction() {
 pub fn scroll() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -567,12 +567,12 @@ pub fn scroll() {
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(50.0, 0.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(50.0, 100.0), Size2D::new(100.0, 100.0)),
     );
 }
@@ -581,7 +581,7 @@ pub fn scroll() {
 pub fn fill_size() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -621,12 +621,12 @@ pub fn fill_size() {
     );
 
     assert_eq!(
-        layout.get(1).unwrap().visible_area().round(),
+        layout.get(&1).unwrap().visible_area().round(),
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 300.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().visible_area().round(),
+        layout.get(&2).unwrap().visible_area().round(),
         Rect::new(Point2D::new(0.0, 300.0), Size2D::new(1000.0, 700.0)),
     );
 }
@@ -635,7 +635,7 @@ pub fn fill_size() {
 pub fn root_percentage() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -675,12 +675,12 @@ pub fn root_percentage() {
     );
 
     assert_eq!(
-        layout.get(1).unwrap().visible_area().round(),
+        layout.get(&1).unwrap().visible_area().round(),
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(500.0, 300.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().visible_area().round(),
+        layout.get(&2).unwrap().visible_area().round(),
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(750.0, 100.0)),
     );
 }
@@ -689,7 +689,7 @@ pub fn root_percentage() {
 pub fn content_fit_fill_min() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -739,22 +739,22 @@ pub fn content_fit_fill_min() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().visible_area(),
+        layout.get(&0).unwrap().visible_area(),
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 1000.0)),
     );
 
     assert_eq!(
-        layout.get(1).unwrap().visible_area(),
+        layout.get(&1).unwrap().visible_area(),
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 300.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().visible_area(),
+        layout.get(&2).unwrap().visible_area(),
         Rect::new(Point2D::new(0.0, 300.0), Size2D::new(100.0, 300.0)),
     );
 
     assert_eq!(
-        layout.get(3).unwrap().visible_area(),
+        layout.get(&3).unwrap().visible_area(),
         Rect::new(Point2D::new(0.0, 600.0), Size2D::new(100.0, 300.0)),
     );
 }
@@ -763,7 +763,7 @@ pub fn content_fit_fill_min() {
 pub fn inner_percentage() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -804,255 +804,18 @@ pub fn inner_percentage() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().visible_area(),
+        layout.get(&0).unwrap().visible_area(),
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get(1).unwrap().visible_area(),
+        layout.get(&1).unwrap().visible_area(),
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(0.0, 300.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().visible_area(),
+        layout.get(&2).unwrap().visible_area(),
         Rect::new(Point2D::new(0.0, 300.0), Size2D::new(100.0, 100.0)),
-    );
-}
-
-#[test]
-fn test_calc_and_scaling() {
-    const PARENT_VALUE: f32 = 500.0;
-    const ROOT_VALUE: f32 = 1000.0;
-    const SCALING_FACTOR: f32 = 2.0;
-    const PARENT_MARGIN: f32 = 0.0;
-
-    #[track_caller]
-    fn test_calc_with_scaling(
-        calcs: Vec<DynamicCalculation>,
-        expected_unscaled: Option<f32>,
-        expected_scaled: Option<f32>,
-    ) {
-        let caller_location = std::panic::Location::caller();
-        let mut size = Size::DynamicCalculations(1.0, Box::new(calcs.clone()));
-
-        let unscaled = size.eval(
-            PARENT_VALUE,
-            PARENT_VALUE,
-            PARENT_MARGIN,
-            ROOT_VALUE,
-            Phase::Initial,
-        );
-        assert_eq!(
-            unscaled,
-            expected_unscaled,
-            "Assertion failed in test_calc_with_scaling at {}:{}
-            Test case: {:?}
-            Unscaled calculation failed
-            Expected: {:?}, Got: {:?}",
-            caller_location.file(),
-            caller_location.line(),
-            calcs,
-            expected_unscaled,
-            unscaled
-        );
-
-        size.scale(SCALING_FACTOR);
-
-        let scaled = size.eval(
-            PARENT_VALUE,
-            PARENT_VALUE,
-            PARENT_MARGIN,
-            ROOT_VALUE,
-            Phase::Initial,
-        );
-        assert_eq!(
-            scaled,
-            expected_scaled,
-            "Assertion failed in test_calc_with_scaling at {}:{}
-                Test case: {:?}
-                Scaled calculation failed
-                Expected: {:?}, Got: {:?}",
-            caller_location.file(),
-            caller_location.line(),
-            calcs,
-            expected_scaled,
-            scaled
-        );
-    }
-
-    test_calc_with_scaling(
-        vec![DynamicCalculation::Pixels(10.0)],
-        Some(10.0),
-        Some(10.0 * SCALING_FACTOR),
-    );
-
-    test_calc_with_scaling(
-        vec![DynamicCalculation::Percentage(10.0)],
-        Some((10.0 / 100.0 * PARENT_VALUE).round()),
-        Some((10.0 / 100.0 * PARENT_VALUE).round()),
-    );
-
-    test_calc_with_scaling(
-        vec![
-            DynamicCalculation::Pixels(10.0),
-            DynamicCalculation::Add,
-            DynamicCalculation::Pixels(20.0),
-            DynamicCalculation::Mul,
-            DynamicCalculation::Percentage(50.0),
-        ],
-        Some(10.0 + 20.0 * (50.0 / 100.0 * PARENT_VALUE).round()),
-        Some(10.0 * SCALING_FACTOR + (20.0 * (50.0 / 100.0 * PARENT_VALUE).round())),
-    );
-
-    test_calc_with_scaling(
-        vec![
-            DynamicCalculation::Pixels(10.0),
-            DynamicCalculation::Add,
-            DynamicCalculation::Percentage(10.0),
-            DynamicCalculation::Add,
-            DynamicCalculation::Pixels(30.0),
-            DynamicCalculation::Mul,
-            DynamicCalculation::Pixels(10.0),
-            DynamicCalculation::Add,
-            DynamicCalculation::Pixels(75.0),
-            DynamicCalculation::Mul,
-            DynamicCalculation::Pixels(2.0),
-        ],
-        Some(10.0 + (10.0 / 100.0 * PARENT_VALUE).round() + 30.0 * 10.0 + 75.0 * 2.0),
-        Some(
-            10.0 * SCALING_FACTOR
-                + (10.0 / 100.0 * PARENT_VALUE).round()
-                + 30.0 * 10.0 * SCALING_FACTOR
-                + 75.0 * 2.0 * SCALING_FACTOR,
-        ),
-    );
-
-    test_calc_with_scaling(
-        vec![
-            DynamicCalculation::Pixels(10.0),
-            DynamicCalculation::Pixels(20.0),
-        ],
-        Some(0.0),
-        Some(0.0),
-    );
-
-    test_calc_with_scaling(
-        vec![DynamicCalculation::Pixels(10.0), DynamicCalculation::Add],
-        Some(0.0),
-        Some(0.0),
-    );
-
-    test_calc_with_scaling(
-        vec![DynamicCalculation::Add, DynamicCalculation::Pixels(10.0)],
-        Some(10.0),
-        Some(10.0 * SCALING_FACTOR),
-    );
-
-    test_calc_with_scaling(
-        vec![
-            DynamicCalculation::Pixels(10.0),
-            DynamicCalculation::Add,
-            DynamicCalculation::Add,
-            DynamicCalculation::Pixels(10.0),
-        ],
-        Some(20.0),
-        Some(20.0 * SCALING_FACTOR),
-    );
-
-    test_calc_with_scaling(
-        vec![
-            DynamicCalculation::Percentage(50.0),
-            DynamicCalculation::Sub,
-            DynamicCalculation::RootPercentage(20.0),
-        ],
-        Some((PARENT_VALUE * 0.5) - (ROOT_VALUE * 0.20)),
-        Some((PARENT_VALUE * 0.5) - (ROOT_VALUE * 0.20)),
-    );
-
-    test_calc_with_scaling(
-        vec![
-            DynamicCalculation::OpenParenthesis,
-            DynamicCalculation::Pixels(10.0),
-            DynamicCalculation::ClosedParenthesis,
-        ],
-        Some(10.0),
-        Some(10.0 * SCALING_FACTOR),
-    );
-
-    test_calc_with_scaling(
-        vec![
-            DynamicCalculation::OpenParenthesis,
-            DynamicCalculation::Pixels(10.0),
-        ],
-        Some(0.0),
-        Some(0.0),
-    );
-
-    // Example 1: calc(2 * 5)
-    test_calc_with_scaling(
-        vec![
-            DynamicCalculation::Pixels(2.0),
-            DynamicCalculation::Mul,
-            DynamicCalculation::Pixels(5.0),
-        ],
-        Some(2.0 * 5.0),                    // unscaled: 2 * 5 = 10
-        Some((2.0 * 5.0) * SCALING_FACTOR), // scaled: (2 * 5) * 2 = 20
-    );
-
-    // Example 2: calc(25% * 2)
-    test_calc_with_scaling(
-        vec![
-            DynamicCalculation::Percentage(25.0),
-            DynamicCalculation::Mul,
-            DynamicCalculation::Pixels(2.0),
-        ],
-        Some((25.0 / 100.0 * PARENT_VALUE).round() * 2.0), // unscaled: 25% of 500 * 2
-        Some((25.0 / 100.0 * PARENT_VALUE).round() * 2.0), // scaled: 25% of 500 * 2 (percentage not scaled)
-    );
-
-    // Example 3: calc(5 + 2 * 3 + 25% * 3)
-    test_calc_with_scaling(
-        vec![
-            DynamicCalculation::Pixels(5.0),
-            DynamicCalculation::Add,
-            DynamicCalculation::Pixels(2.0),
-            DynamicCalculation::Mul,
-            DynamicCalculation::Pixels(3.0),
-            DynamicCalculation::Add,
-            DynamicCalculation::Percentage(25.0),
-            DynamicCalculation::Mul,
-            DynamicCalculation::Pixels(3.0),
-        ],
-        Some(5.0 + 2.0 * 3.0 + (25.0 / 100.0 * PARENT_VALUE).round() * 3.0), // unscaled
-        Some(
-            5.0 * SCALING_FACTOR
-                + (2.0 * 3.0) * SCALING_FACTOR
-                + (25.0 / 100.0 * PARENT_VALUE).round() * 3.0,
-        ), // scaled
-    );
-
-    // Example 4: calc(2 * (25% * 2 + 10 * 3 + 2))
-    test_calc_with_scaling(
-        vec![
-            DynamicCalculation::Pixels(2.0),
-            DynamicCalculation::Mul,
-            DynamicCalculation::OpenParenthesis,
-            DynamicCalculation::Percentage(25.0),
-            DynamicCalculation::Mul,
-            DynamicCalculation::Pixels(2.0),
-            DynamicCalculation::Add,
-            DynamicCalculation::Pixels(10.0),
-            DynamicCalculation::Mul,
-            DynamicCalculation::Pixels(3.0),
-            DynamicCalculation::Add,
-            DynamicCalculation::Pixels(2.0),
-            DynamicCalculation::ClosedParenthesis,
-        ],
-        Some(2.0 * ((25.0 / 100.0 * PARENT_VALUE).round() * 2.0 + 10.0 * 3.0 + 2.0)), // unscaled
-        Some(
-            2.0 * (25.0 / 100.0 * PARENT_VALUE).round() * 2.0
-                + (10.0 * 3.0 + 2.0) * SCALING_FACTOR * 2.0,
-        ), // scaled with new logic
     );
 }
 
@@ -1060,7 +823,7 @@ fn test_calc_and_scaling() {
 pub fn inner_min_max_sizes() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -1093,12 +856,12 @@ pub fn inner_min_max_sizes() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().visible_area().round(),
+        layout.get(&0).unwrap().visible_area().round(),
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get(1).unwrap().visible_area().round(),
+        layout.get(&1).unwrap().visible_area().round(),
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 }
@@ -1107,7 +870,7 @@ pub fn inner_min_max_sizes() {
 pub fn fixed_min_max_sizes() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -1130,7 +893,7 @@ pub fn fixed_min_max_sizes() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().visible_area().round(),
+        layout.get(&0).unwrap().visible_area().round(),
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 100.0)),
     );
 }
@@ -1139,7 +902,7 @@ pub fn fixed_min_max_sizes() {
 pub fn relative_min_max_sizes() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -1162,7 +925,7 @@ pub fn relative_min_max_sizes() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().visible_area().round(),
+        layout.get(&0).unwrap().visible_area().round(),
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(0.0, 500.0)),
     );
 
@@ -1175,7 +938,7 @@ pub fn relative_min_max_sizes() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().visible_area().round(),
+        layout.get(&0).unwrap().visible_area().round(),
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(0.0, 250.0)),
     );
 
@@ -1188,7 +951,51 @@ pub fn relative_min_max_sizes() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().visible_area().round(),
+        layout.get(&0).unwrap().visible_area().round(),
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(0.0, 140.0)),
+    );
+}
+
+#[test]
+pub fn size_fn() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_dom = TestingTree::default();
+    mocked_dom.add(
+        0,
+        None,
+        vec![1],
+        Node::from_size_and_direction(
+            Size::Fn(Box::new(SizeFn::new(|ctx| Some(ctx.parent / 2.)))),
+            Size::Inner,
+            Direction::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        1,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Percentage(Length::new(50.0)),
+            Size::Percentage(Length::new(100.0)),
+            Direction::Vertical,
+        ),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        &mut measurer,
+        &mut mocked_dom,
+    );
+
+    assert_eq!(
+        layout.get(&0).unwrap().visible_area(),
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(500.0, 1000.0)),
+    );
+
+    assert_eq!(
+        layout.get(&1).unwrap().visible_area(),
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(250.0, 1000.0)),
     );
 }

@@ -1,0 +1,9 @@
+[package]
+name = "website"
+publish = false
+edition = "2024"
+
+[dependencies]
+freya = { workspace = true }
+tree-sitter-highlight = "0.23.0"
+tree-sitter-rust = "0.23.0"
