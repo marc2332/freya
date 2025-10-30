@@ -50,12 +50,10 @@ setup:
     cargo install cargo-nextest
     git submodule update --recursive --remote
 
-set shell := ["bash", "-cu"]
-
 run-examples:
     for ex_file in examples/*.rs; do \
         ex=$(basename "$ex_file" .rs); \
-        echo "🚀 Running example: $ex"; \
+        echo "running $ex"; \
         cargo run --example "$ex"; \
         echo; \
     done
