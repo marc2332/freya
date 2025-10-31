@@ -753,6 +753,10 @@ impl FontCollection {
         unimplemented!("This is mocked")
     }
 
+    pub fn fallback_manager(&self) -> Option<FontMgr> {
+        unimplemented!("This is mocked")
+    }
+
     pub fn set_default_font_manager<'a>(
         &mut self,
         _font_manager: impl Into<Option<FontMgr>>,
