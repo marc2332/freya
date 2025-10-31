@@ -204,6 +204,7 @@ impl TestingRunner {
     }
 
     pub fn set_default_fonts(&mut self, fonts: &[Cow<'static, str>]) {
+        self.default_fonts.clear();
         self.default_fonts.extend_from_slice(fonts);
         self.tree.borrow_mut().layout.reset();
         self.tree.borrow_mut().measure_layout(
