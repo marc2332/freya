@@ -41,6 +41,7 @@ use crate::{
     },
     animation_clock::AnimationClock,
     custom_attributes::CustomAttributeValues,
+    dom::AccessibilityGroups,
     elements::ParagraphElement,
     event_loop_messages::TextGroupMeasurement,
     layers::Layers,
@@ -144,6 +145,7 @@ pub struct FreyaDOM {
     accessibility_generator: Arc<AccessibilityGenerator>,
     images_cache: Arc<Mutex<ImagesCache>>,
     animation_clock: AnimationClock,
+    accessibility_groups: Arc<Mutex<AccessibilityGroups>>,
 }
 
 impl Default for FreyaDOM {
@@ -176,6 +178,7 @@ impl Default for FreyaDOM {
             accessibility_generator: Arc::default(),
             images_cache: Arc::default(),
             animation_clock: AnimationClock::default(),
+            accessibility_groups: Arc::default(),
         }
     }
 }
@@ -221,6 +224,10 @@ impl FreyaDOM {
         &self.animation_clock
     }
 
+    pub fn accessibility_groups(&self) -> MutexGuard<AccessibilityGroups> {
+        self.accessibility_groups.lock().unwrap()
+    }
+
     /// Create the initial DOM from the given Mutations
     pub fn init_dom(&mut self, vdom: &mut VirtualDom, scale_factor: f32) {
         // Build the RealDOM
@@ -237,6 +244,7 @@ impl FreyaDOM {
             compositor_cache: &mut self.compositor_cache.lock().unwrap(),
             accessibility_dirty_nodes: &mut self.accessibility_dirty_nodes.lock().unwrap(),
             images_cache: &mut self.images_cache.lock().unwrap(),
+            accessibility_groups: &mut self.accessibility_groups.lock().unwrap(),
         });
 
         let mut ctx = SendAnyMap::new();
@@ -248,6 +256,7 @@ impl FreyaDOM {
         ctx.insert(self.rdom.root_id());
         ctx.insert(self.accessibility_generator.clone());
         ctx.insert(self.images_cache.clone());
+        ctx.insert(self.accessibility_groups.clone());
 
         self.rdom.update_state(ctx);
     }
@@ -268,6 +277,7 @@ impl FreyaDOM {
             compositor_cache: &mut self.compositor_cache.lock().unwrap(),
             accessibility_dirty_nodes: &mut self.accessibility_dirty_nodes.lock().unwrap(),
             images_cache: &mut self.images_cache.lock().unwrap(),
+            accessibility_groups: &mut self.accessibility_groups.lock().unwrap(),
         });
 
         // Update the Nodes states
@@ -280,6 +290,7 @@ impl FreyaDOM {
         ctx.insert(self.rdom.root_id());
         ctx.insert(self.accessibility_generator.clone());
         ctx.insert(self.images_cache.clone());
+        ctx.insert(self.accessibility_groups.clone());
 
         // Update the Node's states
         let diff = self.rdom.update_state(ctx);
