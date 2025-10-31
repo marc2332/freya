@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use freya::{
     helpers::*,
     prelude::*,
@@ -33,6 +35,7 @@ fn multiple_lines_single_editor() {
         };
 
         rect()
+            .font_family("NotoSans")
             .width(Size::fill())
             .height(Size::fill())
             .background((255, 255, 255))
@@ -58,6 +61,11 @@ fn multiple_lines_single_editor() {
             .into()
     }
     let mut utils = launch_test(app);
+    utils.set_fonts(HashMap::from_iter([(
+        "NotoSans",
+        include_bytes!("./NotoSans-Regular.ttf").as_slice(),
+    )]));
+    utils.set_default_fonts(&["NotoSans".into()]);
 
     let cursor = utils.find(|_, element| Some(Label::try_downcast(element)?.text.to_string()));
     let content = utils.find(|_, element| Some(Paragraph::try_downcast(element)?.to_string()));
@@ -178,6 +186,11 @@ fn single_line_multiple_editors() {
     }
 
     let mut utils = launch_test(app);
+    utils.set_fonts(HashMap::from_iter([(
+        "NotoSans",
+        include_bytes!("./NotoSans-Regular.ttf").as_slice(),
+    )]));
+    utils.set_default_fonts(&["NotoSans".into()]);
 
     let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
     let content = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.to_string()));
@@ -252,6 +265,11 @@ fn highlight_multiple_lines_single_editor() {
             )
             .into()
     });
+    utils.set_fonts(HashMap::from_iter([(
+        "NotoSans",
+        include_bytes!("./NotoSans-Regular.ttf").as_slice(),
+    )]));
+    utils.set_default_fonts(&["NotoSans".into()]);
     utils.send_event(PlatformEvent::Mouse {
         name: MouseEventName::MouseDown,
         cursor: (35.0, 3.0).into(),
@@ -344,6 +362,11 @@ fn highlights_single_line_multiple_editors() {
             )
             .into()
     });
+    utils.set_fonts(HashMap::from_iter([(
+        "NotoSans",
+        include_bytes!("./NotoSans-Regular.ttf").as_slice(),
+    )]));
+    utils.set_default_fonts(&["NotoSans".into()]);
 
     utils.press_cursor((35.0, 3.0));
     utils.sync_and_update();
@@ -415,6 +438,11 @@ fn special_text_editing() {
             )))
             .into()
     });
+    utils.set_fonts(HashMap::from_iter([(
+        "NotoSans",
+        include_bytes!("./NotoSans-Regular.ttf").as_slice(),
+    )]));
+    utils.set_default_fonts(&["NotoSans".into()]);
 
     utils.click_cursor((35.0, 3.0));
     utils.write_text("🦀");
@@ -467,6 +495,11 @@ fn backspace_remove() {
             )
             .into()
     });
+    utils.set_fonts(HashMap::from_iter([(
+        "NotoSans",
+        include_bytes!("./NotoSans-Regular.ttf").as_slice(),
+    )]));
+    utils.set_default_fonts(&["NotoSans".into()]);
 
     utils.click_cursor((35.0, 3.0));
     utils.write_text("🦀");
@@ -550,6 +583,11 @@ fn highlight_shift_click_multiple_lines_single_editor() {
             )
             .into()
     });
+    utils.set_fonts(HashMap::from_iter([(
+        "NotoSans",
+        include_bytes!("./NotoSans-Regular.ttf").as_slice(),
+    )]));
+    utils.set_default_fonts(&["NotoSans".into()]);
 
     utils.press_cursor((35.0, 3.0));
     utils.move_cursor((35.0, 3.0));
@@ -652,6 +690,11 @@ fn highlights_shift_click_single_line_multiple_editors() {
             )
             .into()
     });
+    utils.set_fonts(HashMap::from_iter([(
+        "NotoSans",
+        include_bytes!("./NotoSans-Regular.ttf").as_slice(),
+    )]));
+    utils.set_default_fonts(&["NotoSans".into()]);
 
     utils.press_cursor((35.0, 3.0));
     utils.move_cursor((35.0, 3.0));
@@ -738,6 +781,11 @@ fn highlight_all_text() {
             )
             .into()
     });
+    utils.set_fonts(HashMap::from_iter([(
+        "NotoSans",
+        include_bytes!("./NotoSans-Regular.ttf").as_slice(),
+    )]));
+    utils.set_default_fonts(&["NotoSans".into()]);
 
     utils.send_event(PlatformEvent::Keyboard {
         name: KeyboardEventName::KeyDown,
@@ -825,6 +873,11 @@ fn replace_text() {
             )
             .into()
     });
+    utils.set_fonts(HashMap::from_iter([(
+        "NotoSans",
+        include_bytes!("./NotoSans-Regular.ttf").as_slice(),
+    )]));
+    utils.set_default_fonts(&["NotoSans".into()]);
 
     let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
     let content = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.to_string()));
@@ -893,6 +946,11 @@ fn navigate_empty_lines() {
             )))
             .into()
     });
+    utils.set_fonts(HashMap::from_iter([(
+        "NotoSans",
+        include_bytes!("./NotoSans-Regular.ttf").as_slice(),
+    )]));
+    utils.set_default_fonts(&["NotoSans".into()]);
 
     utils.write_text("\n");
 

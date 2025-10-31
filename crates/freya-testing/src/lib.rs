@@ -1,5 +1,7 @@
 use std::{
+    borrow::Cow,
     cell::RefCell,
+    collections::HashMap,
     fs::File,
     io::Write,
     path::PathBuf,
@@ -77,6 +79,8 @@ pub struct TestingRunner {
     platform_state: PlatformState,
 
     ticker_sender: RenderingTickerSender,
+
+    default_fonts: Vec<Cow<'static, str>>,
 }
 
 impl TestingRunner {
@@ -176,9 +180,44 @@ impl TestingRunner {
                 font_collection,
 
                 ticker_sender,
+
+                default_fonts: default_fonts(),
             },
             hook_result,
         )
+    }
+
+    pub fn set_fonts(&mut self, fonts: HashMap<&str, &[u8]>) {
+        let mut provider = TypefaceFontProvider::new();
+        for (font_name, font_data) in fonts {
+            let ft_type = self
+                .font_collection
+                .fallback_manager()
+                .unwrap()
+                .new_from_data(font_data, None)
+                .unwrap();
+            provider.register_typeface(ft_type, Some(font_name));
+        }
+        let font_manager: FontMgr = provider.into();
+        self.font_manager = font_manager.clone();
+        self.font_collection.set_dynamic_font_manager(font_manager);
+    }
+
+    pub fn set_default_fonts(&mut self, fonts: &[Cow<'static, str>]) {
+        self.default_fonts.extend_from_slice(fonts);
+        self.tree.borrow_mut().layout.reset();
+        self.tree.borrow_mut().measure_layout(
+            self.size,
+            &self.font_collection,
+            &self.font_manager,
+            &self.events_sender,
+            1.0,
+            &self.default_fonts,
+        );
+        self.tree.borrow_mut().accessibility_diff.clear();
+        self.accessibility.focused_id = ACCESSIBILITY_ROOT_ID;
+        self.accessibility.init(&mut self.tree.borrow_mut());
+        self.sync_and_update();
     }
 
     pub async fn handle_events(&mut self) {
@@ -226,7 +265,7 @@ impl TestingRunner {
             &self.font_manager,
             &self.events_sender,
             1.0,
-            &default_fonts(),
+            &self.default_fonts,
         );
     }
 
