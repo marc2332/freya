@@ -1,4 +1,4 @@
-use std::ops::Mul;
+use std::{cmp::Ordering, ops::Mul};
 
 use freya_core::{
     elements::paragraph::ParagraphHolderInner,
@@ -8,13 +8,30 @@ use keyboard_types::Code;
 use torin::prelude::CursorPoint;
 
 use crate::{
-    EditableConfig,
-    rope_editor::RopeEditor,
-    text_editor::{
+    EditableConfig, rope_editor::RopeEditor, text_editor::{
         TextEditor,
         TextEvent,
-    },
+    }
 };
+
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
+enum CursorMovement {
+    /// Move one character left/right.
+    Character,
+
+    /// Move one word boundary left/right.
+    Word,
+
+    /// Move to start/end of line.
+    Line,
+
+    /// Move to start/end of buffer.
+    Buffer,
+
+    /// Move to start/end of selection.
+    Selection,
+}
 
 pub enum EditableEvent<'a> {
     Release,
@@ -36,6 +53,177 @@ pub enum EditableEvent<'a> {
     KeyUp {
         code: Code,
     },
+}
+
+/// Move the cursor 1 line up
+fn cursor_up(editor: &mut impl TextEditor) -> bool {
+    let pos = editor.cursor_pos();
+    let old_row = editor.cursor_row();
+    let old_col = editor.cursor_col();
+
+    if pos > 0 {
+        // Reached max
+        if old_row == 0 {
+            editor.cursor_mut().set(0);
+        } else {
+            let new_row = old_row - 1;
+            let new_row_char = editor.char_to_utf16_cu(editor.line_to_char(new_row));
+            let new_row_len = editor.line(new_row).unwrap().utf16_len();
+
+            if editor.cursor().x_pos() < old_col {
+                editor.cursor_mut().set_x_pos(old_col);
+            }
+            let new_col = editor.cursor().x_pos().min(new_row_len.saturating_sub(1));
+
+            editor.cursor_mut().set(new_row_char + new_col);
+        }
+
+        true
+    } else {
+        false
+    }
+}
+
+/// Move the cursor 1 line down
+fn cursor_down(editor: &mut impl TextEditor) -> bool {
+    let old_row = editor.cursor_row();
+    let old_col = editor.cursor_col();
+
+    match old_row.cmp(&(editor.len_lines() - 1)) {
+        Ordering::Less => {
+            // One line below
+            let new_row = old_row + 1;
+            let new_row_char = editor.char_to_utf16_cu(editor.line_to_char(new_row));
+            let mut new_row_len = editor.line(new_row).unwrap().utf16_len();
+
+            // Consider newline characters when calculating line length.
+            //
+            // Last line doesn't have a newline, so we don't subtract from it.
+            if editor.line(new_row + 1).is_some() {
+                new_row_len = new_row_len.saturating_sub(1);
+            }
+
+            if editor.cursor().x_pos() < old_col {
+                editor.cursor_mut().set_x_pos(old_col);
+            }
+            let new_col = editor.cursor().x_pos().min(new_row_len);
+
+            editor.cursor_mut().set(new_row_char + new_col);
+
+            true
+        }
+        Ordering::Equal => {
+            let end = editor.len_utf16_cu();
+            // Reached max
+            editor.cursor_mut().set(end);
+
+            true
+        }
+        Ordering::Greater => {
+            // Can't go further
+
+            false
+        }
+    }
+}
+
+/// Move the cursor to the left
+fn cursor_left(editor: &mut impl TextEditor, movement: CursorMovement) -> bool {
+    let pos = editor.cursor_pos();
+
+    let target_pos = match movement {
+        CursorMovement::Character => {
+            if pos > 0 {
+                pos - 1
+            } else {
+                return false;
+            }
+        }
+        CursorMovement::Line => editor.line_to_char(editor.cursor_row()),
+        CursorMovement::Word => {
+            todo!()
+        }
+        CursorMovement::Buffer => 0,
+        CursorMovement::Selection => {
+            let Some(selection) = editor.get_selection() else {
+                return false;
+            };
+
+            let selection_min = selection.0.min(selection.1);
+
+            if editor.cursor_pos() == selection_min {
+                return false;
+            }
+
+            selection_min
+        }
+        _ => unimplemented!(),
+    };
+
+    if pos != target_pos {
+        editor.set_cursor_pos(target_pos);
+
+        true
+    } else {
+        false
+    }
+}
+
+/// Move the cursor to th right
+fn cursor_right(editor: &mut impl TextEditor, movement: CursorMovement) -> bool {
+    let pos = editor.cursor_pos();
+    let target_pos = match movement {
+        CursorMovement::Character => {
+            if pos < editor.len_utf16_cu() {
+                pos + 1
+            } else {
+                return false;
+            }
+        }
+        CursorMovement::Line => {
+            let cursor_row = editor.cursor_row();
+            let current_line = editor.line(cursor_row).unwrap();
+            let current_line_start = editor.line_to_char(cursor_row);
+
+            let mut target = current_line_start + current_line.utf16_len();
+
+            // Freya currently has no concept of cursor affinity and counts newlines as
+            // characters. because of this, we need to subtract off the newline character from
+            // our jump or else the cursor will end up on the next line. The final line has no
+            // explicit trailing linebreak though, meaning we shouldn't subtract if we're
+            // jumping to the end of the last line in the buffer.
+            if editor.line(cursor_row + 1).is_some() {
+                target = target.saturating_sub(1);
+            }
+
+            target
+        }
+        CursorMovement::Word => {
+            todo!();
+        }
+        CursorMovement::Buffer => editor.len_utf16_cu(),
+        CursorMovement::Selection => {
+            let Some(selection) = editor.get_selection() else {
+                return false;
+            };
+
+            let selection_max = selection.0.max(selection.1);
+
+            if editor.cursor_pos() == selection_max {
+                return false;
+            }
+
+            selection_max
+        }
+    };
+
+    if pos != target_pos {
+        editor.set_cursor_pos(target_pos);
+
+        true
+    } else {
+        false
+    }
 }
 
 impl EditableEvent<'_> {
@@ -171,18 +359,345 @@ impl EditableEvent<'_> {
                     }
                     // Handle editing
                     _ => {
-                        editor.write_if(|mut ditor| {
-                            let event = ditor.process_key(
-                                key,
-                                &code,
-                                &modifiers,
-                                config.allow_tabs,
-                                config.allow_changes,
-                                config.allow_clipboard,
-                            );
+                        editor.write_if(|mut editor| {
+                            let mut event = TextEvent::empty();
+
+                            let shift = modifiers.contains(Modifiers::SHIFT);
+                            let meta_or_ctrl = if cfg!(target_os = "macos") {
+                                modifiers.meta()
+                            } else {
+                                modifiers.ctrl()
+                            };
+                    
+                            match key {
+                                Key::Shift => {}
+                                Key::Control => {}
+                                Key::Alt => {}
+                                Key::Escape => {
+                                    editor.clear_selection();
+                                    event.insert(TextEvent::SELECTION_CHANGED);
+                                }
+                                Key::ArrowLeft => {
+                                    // TODO: Modifier (Ctrl/Meta) should move one grapheme left
+                                    let initial_selection = editor.get_selection();
+                    
+                                    if shift {
+                                        editor.expand_selection_to_cursor();
+                    
+                                        if cursor_left(&mut *editor, if meta_or_ctrl {
+                                            CursorMovement::Word
+                                        } else {
+                                            CursorMovement::Character
+                                        }) {
+                                            event.insert(TextEvent::CURSOR_CHANGED);
+                                            editor.expand_selection_to_cursor();
+                                        }
+                                    } else {
+                                        let movement = if meta_or_ctrl {
+                                            CursorMovement::Word
+                                        } else if editor.has_any_selection() {
+                                            CursorMovement::Selection
+                                        } else {
+                                            CursorMovement::Character
+                                        };
+
+                                        // If we have an active selection, move to the start of that selection and clear it.
+                                        if cursor_left(&mut *editor, movement) {
+                                            event.insert(TextEvent::CURSOR_CHANGED);
+                                        }
+                    
+                                        editor.clear_selection();
+                                    }
+                    
+                                    if initial_selection != editor.get_selection() {
+                                        event.insert(TextEvent::SELECTION_CHANGED);
+                                    }
+                                }
+                                Key::ArrowRight => {
+                                    // TODO: Modifier (Ctrl/Meta) should move one grapheme right
+                                    let initial_selection = editor.get_selection();
+                    
+                                    if shift {
+                                        editor.expand_selection_to_cursor();
+                    
+                                        if cursor_right(&mut *editor, if meta_or_ctrl {
+                                            CursorMovement::Word
+                                        } else {
+                                            CursorMovement::Character
+                                        }) {
+                                            event.insert(TextEvent::CURSOR_CHANGED);
+                                            editor.expand_selection_to_cursor();
+                                        }
+                                    } else {
+                                        let movement = if meta_or_ctrl {
+                                            CursorMovement::Word
+                                        } else if editor.has_any_selection() {
+                                            CursorMovement::Selection
+                                        } else {
+                                            CursorMovement::Character
+                                        };
+
+                                        // If we have an active selection, move to the end of that selection and clear it.
+                                        if cursor_right(&mut *editor, movement) {
+                                            event.insert(TextEvent::CURSOR_CHANGED);
+                                        }
+                    
+                                        editor.clear_selection();
+                                    }
+                    
+                                    if initial_selection != editor.get_selection() {
+                                        event.insert(TextEvent::SELECTION_CHANGED);
+                                    }
+                                }
+                                Key::ArrowUp => {
+                                    let initial_selection = editor.get_selection();
+                    
+                                    if shift {
+                                        editor.expand_selection_to_cursor();
+                                    } else {
+                                        editor.clear_selection();
+                                    }
+                    
+                                    if cursor_up(&mut *editor) {
+                                        event.insert(TextEvent::CURSOR_CHANGED);
+                                    }
+                    
+                                    if shift {
+                                        editor.expand_selection_to_cursor();
+                                    }
+                    
+                                    if initial_selection != editor.get_selection() {
+                                        event.insert(TextEvent::SELECTION_CHANGED);
+                                    }
+                                }
+                                Key::ArrowDown => {
+                                    if shift {
+                                        editor.expand_selection_to_cursor();
+                                    } else {
+                                        editor.clear_selection();
+                                    }
+                    
+                                    if cursor_down(&mut *editor) {
+                                        event.insert(TextEvent::CURSOR_CHANGED);
+                                    }
+                    
+                                    if shift {
+                                        editor.expand_selection_to_cursor();
+                                    }
+                                }
+                                Key::Home => {
+                                    let initial_selection = editor.get_selection();
+                    
+                                    if shift {
+                                        editor.expand_selection_to_cursor();
+                                    }
+                    
+                                    // Move to either start of line or start of buffer depending on if ctrl is pressed.
+                                    if cursor_left(&mut *editor, if meta_or_ctrl {
+                                        CursorMovement::Buffer
+                                    } else {
+                                        CursorMovement::Line
+                                    }) {
+                                        event.insert(TextEvent::CURSOR_CHANGED);
+                                    }
+                    
+                                    if shift {
+                                        editor.expand_selection_to_cursor();
+                                    }
+                    
+                                    if initial_selection != editor.get_selection() {
+                                        event.insert(TextEvent::SELECTION_CHANGED);
+                                    }
+                                }
+                                Key::End => {
+                                    let initial_selection = editor.get_selection();
+                    
+                                    if shift {
+                                        editor.expand_selection_to_cursor();
+                                    }
+                    
+                                    // Move to either end of line or end of buffer depending on if ctrl is pressed.
+                                    if cursor_right(&mut *editor, if meta_or_ctrl {
+                                        CursorMovement::Buffer
+                                    } else {
+                                        CursorMovement::Line
+                                    }) {
+                                        event.insert(TextEvent::CURSOR_CHANGED);
+                                    }
+                    
+                                    if shift {
+                                        editor.expand_selection_to_cursor();
+                                    }
+                    
+                                    if initial_selection != editor.get_selection() {
+                                        event.insert(TextEvent::SELECTION_CHANGED);
+                                    }
+                                }
+                                Key::Backspace if config.allow_changes => {
+                                    let cursor_pos = editor.cursor_pos();
+                                    let selection = editor.get_selection_range();
+                    
+                                    if let Some((start, end)) = selection {
+                                        editor.remove(start..end);
+                                        editor.set_cursor_pos(start);
+                                        event.insert(TextEvent::TEXT_CHANGED);
+                                    } else if cursor_pos > 0 {
+                                        // Remove the character to the left if there is any
+                                        let removed_text_len = editor.remove(cursor_pos - 1..cursor_pos);
+                                        editor.set_cursor_pos(cursor_pos - removed_text_len);
+                                        event.insert(TextEvent::TEXT_CHANGED);
+                                    }
+                                }
+                                Key::Delete if config.allow_changes => {
+                                    let cursor_pos = editor.cursor_pos();
+                                    let selection = editor.get_selection_range();
+                    
+                                    if let Some((start, end)) = selection {
+                                        editor.remove(start..end);
+                                        editor.set_cursor_pos(start);
+                                        event.insert(TextEvent::TEXT_CHANGED);
+                                    } else if cursor_pos < editor.len_utf16_cu() {
+                                        // Remove the character to the right if there is any
+                                        editor.remove(cursor_pos..cursor_pos + 1);
+                                        event.insert(TextEvent::TEXT_CHANGED);
+                                    }
+                                }
+                                Key::Enter if config.allow_changes => {
+                                    // Breaks the line
+                                    let cursor_pos = editor.cursor_pos();
+                                    editor.insert_char('\n', cursor_pos);
+                                    cursor_right(&mut *editor, CursorMovement::Character);
+                    
+                                    event.insert(TextEvent::TEXT_CHANGED);
+                                }
+                                Key::Tab if config.allow_tabs && config.allow_changes => {
+                                    // Inserts a tab
+                                    let text = " ".repeat(editor.get_identation().into());
+                                    let cursor_pos = editor.cursor_pos();
+                                    editor.insert(&text, cursor_pos);
+                                    editor.set_cursor_pos(cursor_pos + text.chars().count());
+                    
+                                    event.insert(TextEvent::TEXT_CHANGED);
+                                }
+                                Key::Character(character) => {
+                                    match code {
+                                        Code::Delete if config.allow_changes => {}
+                                        Code::Space if config.allow_changes => {
+                                            let selection = editor.get_selection_range();
+                                            if let Some((start, end)) = selection {
+                                                editor.remove(start..end);
+                                                editor.set_cursor_pos(start);
+                                                event.insert(TextEvent::TEXT_CHANGED);
+                                            }
+                    
+                                            // Simply adds an space
+                                            let cursor_pos = editor.cursor_pos();
+                                            editor.insert_char(' ', cursor_pos);
+                                            cursor_right(&mut *editor, CursorMovement::Character);
+                    
+                                            event.insert(TextEvent::TEXT_CHANGED);
+                                        }
+                    
+                                        // Select all text
+                                        Code::KeyA if meta_or_ctrl => {
+                                            let len = editor.len_utf16_cu();
+                                            editor.set_selection((0, len));
+                                            event.insert(TextEvent::SELECTION_CHANGED);
+                                        }
+                    
+                                        // Copy selected text
+                                        Code::KeyC if meta_or_ctrl && config.allow_clipboard => {
+                                            let selected = editor.get_selected_text();
+                                            if let Some(selected) = selected {
+                                                editor.get_clipboard().set(selected).ok();
+                                            }
+                                        }
+                    
+                                        // Cut selected text
+                                        Code::KeyX if meta_or_ctrl && config.allow_changes && config.allow_clipboard => {
+                                            let selection = editor.get_selection_range();
+                                            if let Some((start, end)) = selection {
+                                                let text = editor.get_selected_text().unwrap();
+                                                editor.remove(start..end);
+                                                editor.get_clipboard().set(text).ok();
+                                                editor.set_cursor_pos(start);
+                                                event.insert(TextEvent::TEXT_CHANGED);
+                                            }
+                                        }
+                    
+                                        // Paste copied text
+                                        Code::KeyV if meta_or_ctrl && config.allow_changes && config.allow_clipboard => {
+                                            let copied_text = editor.get_clipboard().get();
+                                            if let Ok(copied_text) = copied_text {
+                                                let selection = editor.get_selection_range();
+                                                if let Some((start, end)) = selection {
+                                                    editor.remove(start..end);
+                                                    editor.set_cursor_pos(start);
+                                                }
+                                                let cursor_pos = editor.cursor_pos();
+                                                editor.insert(&copied_text, cursor_pos);
+                                                let last_idx = copied_text.encode_utf16().count() + cursor_pos;
+                                                editor.set_cursor_pos(last_idx);
+                                                event.insert(TextEvent::TEXT_CHANGED);
+                                            }
+                                        }
+                    
+                                        // Undo last change
+                                        Code::KeyZ if meta_or_ctrl && config.allow_changes => {
+                                            let undo_result = editor.undo();
+                    
+                                            if let Some(idx) = undo_result {
+                                                editor.set_cursor_pos(idx);
+                                                event.insert(TextEvent::TEXT_CHANGED);
+                                            }
+                                        }
+                    
+                                        // Redo last change
+                                        Code::KeyY if meta_or_ctrl && config.allow_changes => {
+                                            let redo_result = editor.redo();
+                    
+                                            if let Some(idx) = redo_result {
+                                                editor.set_cursor_pos(idx);
+                                                event.insert(TextEvent::TEXT_CHANGED);
+                                            }
+                                        }
+                    
+                                        _ if config.allow_changes => {
+                                            // Remove selected text
+                                            let selection = editor.get_selection_range();
+                                            if let Some((start, end)) = selection {
+                                                editor.remove(start..end);
+                                                editor.set_cursor_pos(start);
+                                                event.insert(TextEvent::TEXT_CHANGED);
+                                            }
+                    
+                                            if let Ok(ch) = character.parse::<char>() {
+                                                // Inserts a character
+                                                let cursor_pos = editor.cursor_pos();
+                                                let inserted_text_len = editor.insert_char(ch, cursor_pos);
+                                                editor.set_cursor_pos(cursor_pos + inserted_text_len);
+                    
+                                                event.insert(TextEvent::TEXT_CHANGED);
+                                            } else {
+                                                // Inserts a text
+                                                let cursor_pos = editor.cursor_pos();
+                                                let inserted_text_len = editor.insert(character, cursor_pos);
+                                                editor.set_cursor_pos(cursor_pos + inserted_text_len);
+                    
+                                                event.insert(TextEvent::TEXT_CHANGED);
+                                            }
+                                        }
+                                        _ => {}
+                                    }
+                                }
+                                _ => {}
+                            }
+                    
                             if event.contains(TextEvent::TEXT_CHANGED) {
+                                editor.clear_selection();
                                 *dragging.write() = TextDragging::None;
                             }
+
                             !event.is_empty()
                         });
                     }
