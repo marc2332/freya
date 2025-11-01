@@ -268,13 +268,14 @@ pub trait TextEditor {
     ) -> TextEvent {
         let mut event = TextEvent::empty();
 
+        let selection = self.get_selection();
+
         match key {
             Key::Shift => {}
             Key::Control => {}
             Key::Alt => {}
             Key::Escape => {
                 self.clear_selection();
-                event.insert(TextEvent::SELECTION_CHANGED);
             }
             Key::ArrowDown => {
                 if modifiers.contains(Modifiers::SHIFT) {
@@ -411,7 +412,6 @@ pub trait TextEditor {
                     Code::KeyA if meta_or_ctrl => {
                         let len = self.len_utf16_cu();
                         self.set_selection((0, len));
-                        event.insert(TextEvent::SELECTION_CHANGED);
                     }
 
                     // Copy selected text
@@ -485,14 +485,12 @@ pub trait TextEditor {
                             let cursor_pos = self.cursor_pos();
                             let inserted_text_len = self.insert_char(ch, cursor_pos);
                             self.set_cursor_pos(cursor_pos + inserted_text_len);
-
                             event.insert(TextEvent::TEXT_CHANGED);
                         } else {
                             // Inserts a text
                             let cursor_pos = self.cursor_pos();
                             let inserted_text_len = self.insert(character, cursor_pos);
                             self.set_cursor_pos(cursor_pos + inserted_text_len);
-
                             event.insert(TextEvent::TEXT_CHANGED);
                         }
                     }
@@ -504,6 +502,10 @@ pub trait TextEditor {
 
         if event.contains(TextEvent::TEXT_CHANGED) {
             self.clear_selection();
+        }
+
+        if self.get_selection() != selection {
+            event.insert(TextEvent::SELECTION_CHANGED);
         }
 
         event

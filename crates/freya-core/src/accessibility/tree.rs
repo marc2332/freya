@@ -231,7 +231,7 @@ impl AccessibilityTree {
             _ => unreachable!(),
         };
 
-        self.focused_id = target_node.unwrap_or(ACCESSIBILITY_ROOT_ID);
+        self.focused_id = target_node.unwrap_or(self.focused_id);
 
         #[cfg(debug_assertions)]
         tracing::info!("Focused {:?} node.", self.focused_id);
