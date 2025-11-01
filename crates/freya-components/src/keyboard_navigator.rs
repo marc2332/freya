@@ -16,16 +16,16 @@ pub fn keyboard_navigator(app: FpRender) -> Element {
                 AccessibilityFocusStrategy::Forward(AccessibilityFocusMovement::OutsideGroup),
             ));
         }
-        Key::ArrowUp => {
-            event_notifier.send(UserEvent::FocusAccessibilityNode(
-                AccessibilityFocusStrategy::Backward(AccessibilityFocusMovement::InsideGroup),
-            ));
-        }
-        Key::ArrowDown => {
-            event_notifier.send(UserEvent::FocusAccessibilityNode(
-                AccessibilityFocusStrategy::Forward(AccessibilityFocusMovement::InsideGroup),
-            ));
-        }
+        // Key::ArrowUp => {
+        //     event_notifier.send(UserEvent::FocusAccessibilityNode(
+        //         AccessibilityFocusStrategy::Backward(AccessibilityFocusMovement::InsideGroup),
+        //     ));
+        // }
+        // Key::ArrowDown => {
+        //     event_notifier.send(UserEvent::FocusAccessibilityNode(
+        //         AccessibilityFocusStrategy::Forward(AccessibilityFocusMovement::InsideGroup),
+        //     ));
+        // }
         _ => {}
     };
 
