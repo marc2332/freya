@@ -8,13 +8,13 @@ use crate::editor_history::EditorHistory;
 #[derive(Clone, Default, PartialEq, Debug)]
 pub struct TextCursor {
     pos: usize,
-    x_pos: usize,
+    x_pos: f32,
 }
 
 impl TextCursor {
     /// Construct a new [TextCursor]
     pub fn new(pos: usize) -> Self {
-        Self { pos, x_pos: 0 }
+        Self { pos, x_pos: 0. }
     }
 
     /// Get the position
@@ -32,12 +32,12 @@ impl TextCursor {
         &mut self.pos
     }
 
-    pub fn x_pos(&self) -> usize {
+    pub fn x_pos(&self) -> f32 {
         self.x_pos
     }
 
-    pub fn set_x_pos(&mut self, col: usize) {
-        self.x_pos = col;
+    pub fn set_x_pos(&mut self, x_pos: f32) {
+        self.x_pos = x_pos;
     }
 }
 
@@ -147,6 +147,7 @@ pub trait TextEditor {
     /// Set the cursor position
     fn set_cursor_pos(&mut self, pos: usize) {
         self.cursor_mut().set(pos);
+        self.cursor_mut().set_x_pos(0.);
     }
 
     // Check if has any selection at all

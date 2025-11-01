@@ -13,6 +13,7 @@ categories = ["gui"]
 [dependencies]
 freya-clipboard = { workspace = true }
 freya-core = { workspace = true }
+freya-engine = { workspace = true }
 torin = { workspace = true }
 
 ropey = { workspace = true }
