@@ -1,16 +1,7 @@
-use std::{
-    borrow::Cow,
-    cmp::Ordering,
-    fmt::Display,
-    ops::Range,
-};
+use std::{borrow::Cow, cmp::Ordering, fmt::Display, ops::Range};
 
 use freya_clipboard::hooks::UseClipboard;
-use keyboard_types::{
-    Code,
-    Key,
-    Modifiers,
-};
+use keyboard_types::{Code, Key, Modifiers};
 
 use crate::editor_history::EditorHistory;
 
@@ -24,10 +15,7 @@ pub struct TextCursor {
 impl TextCursor {
     /// Construct a new [TextCursor]
     pub fn new(pos: usize) -> Self {
-        Self {
-            pos,
-            col: 0,
-        }
+        Self { pos, col: 0 }
     }
 
     /// Get the position
@@ -103,6 +91,9 @@ pub enum CursorMovement {
 
     /// Move to start/end of buffer.
     Buffer,
+
+    /// Move to start/end of selection.
+    Selection,
 }
 
 /// Common trait for editable texts
@@ -232,7 +223,7 @@ pub trait TextEditor {
                 let new_row = old_row - 1;
                 let new_row_char = self.char_to_utf16_cu(self.line_to_char(new_row));
                 let new_row_len = self.line(new_row).unwrap().utf16_len();
-                
+
                 if self.cursor().col() < old_col {
                     self.cursor_mut().set_col(old_col);
                 }
@@ -262,9 +253,9 @@ pub trait TextEditor {
                 let cursor_row = self.cursor_row();
                 let current_line = self.line(cursor_row).unwrap();
                 let current_line_start = self.line_to_char(cursor_row);
-                
+
                 let mut target = current_line_start + current_line.utf16_len();
-                
+
                 // Freya currently has no concept of cursor affinity and counts newlines as
                 // characters. because of this, we need to subtract off the newline character from
                 // our jump or else the cursor will end up on the next line. The final line has no
@@ -277,9 +268,22 @@ pub trait TextEditor {
                 target
             }
             CursorMovement::Buffer => self.len_utf16_cu(),
+            CursorMovement::Selection => {
+                let Some(selection) = self.get_selection() else {
+                    return false;
+                };
+
+                let selection_max = selection.0.max(selection.1);
+
+                if self.cursor_pos() == selection_max {
+                    return false;
+                }
+
+                selection_max
+            }
             _ => unimplemented!(),
         };
-    
+
         if pos != target_pos {
             self.set_cursor_pos(target_pos);
 
@@ -292,7 +296,7 @@ pub trait TextEditor {
     /// Move the cursor to the left
     fn cursor_left(&mut self, movement: CursorMovement) -> bool {
         let pos = self.cursor_pos();
-        
+
         let target_pos = match movement {
             CursorMovement::Character => {
                 if pos > 0 {
@@ -303,9 +307,22 @@ pub trait TextEditor {
             }
             CursorMovement::Line => self.line_to_char(self.cursor_row()),
             CursorMovement::Buffer => 0,
+            CursorMovement::Selection => {
+                let Some(selection) = self.get_selection() else {
+                    return false;
+                };
+
+                let selection_min = selection.0.min(selection.1);
+
+                if self.cursor_pos() == selection_min {
+                    return false;
+                }
+
+                selection_min
+            }
             _ => unimplemented!(),
         };
-    
+
         if pos != target_pos {
             self.set_cursor_pos(target_pos);
 
@@ -392,14 +409,11 @@ pub trait TextEditor {
                     }
                 } else {
                     // If we have an active selection, move to the start of that selection and clear it.
-                    if let Some(selection) = self.get_selection() {
-                        let selection_min = selection.0.min(selection.1);
-
-                        if self.cursor_pos() != selection_min {
-                            self.set_cursor_pos(selection_min);
-                            event.insert(TextEvent::CURSOR_CHANGED);
-                        }
-                    } else if self.cursor_left(CursorMovement::Character) {
+                    if self.cursor_left(if self.has_any_selection() {
+                        CursorMovement::Selection
+                    } else {
+                        CursorMovement::Character
+                    }) {
                         event.insert(TextEvent::CURSOR_CHANGED);
                     }
 
@@ -423,14 +437,11 @@ pub trait TextEditor {
                     }
                 } else {
                     // If we have an active selection, move to the end of that selection and clear it.
-                    if let Some(selection) = self.get_selection() {
-                        let selection_max = selection.0.max(selection.1);
-
-                        if self.cursor_pos() != selection_max {
-                            self.set_cursor_pos(selection_max);
-                            event.insert(TextEvent::CURSOR_CHANGED);
-                        }
-                    } else if self.cursor_right(CursorMovement::Character) {
+                    if self.cursor_right(if self.has_any_selection() {
+                        CursorMovement::Selection
+                    } else {
+                        CursorMovement::Character
+                    }) {
                         event.insert(TextEvent::CURSOR_CHANGED);
                     }
 
@@ -449,11 +460,11 @@ pub trait TextEditor {
                 } else {
                     self.clear_selection();
                 }
-                
+
                 if self.cursor_up() {
                     event.insert(TextEvent::CURSOR_CHANGED);
                 }
-                
+
                 if shift {
                     self.expand_selection_to_cursor();
                 }
