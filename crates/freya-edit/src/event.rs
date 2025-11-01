@@ -1,17 +1,13 @@
 use std::{cmp::Ordering, ops::Mul};
 
-use freya_core::{
-    elements::paragraph::ParagraphHolderInner,
-    prelude::*,
-};
+use freya_core::{elements::paragraph::ParagraphHolderInner, prelude::*};
 use keyboard_types::Code;
 use torin::prelude::CursorPoint;
 
 use crate::{
-    EditableConfig, rope_editor::RopeEditor, text_editor::{
-        TextEditor,
-        TextEvent,
-    }
+    EditableConfig,
+    rope_editor::RopeEditor,
+    text_editor::{TextEditor, TextEvent},
 };
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
@@ -128,7 +124,14 @@ fn cursor_down(editor: &mut impl TextEditor) -> bool {
 }
 
 /// Move the cursor to the left
-fn cursor_left(editor: &mut impl TextEditor, movement: CursorMovement) -> bool {
+fn cursor_left(
+    editor: &mut impl TextEditor,
+    ParagraphHolderInner {
+        paragraph,
+        scale_factor,
+    }: &ParagraphHolderInner,
+    movement: CursorMovement,
+) -> bool {
     let pos = editor.cursor_pos();
 
     let target_pos = match movement {
@@ -141,7 +144,7 @@ fn cursor_left(editor: &mut impl TextEditor, movement: CursorMovement) -> bool {
         }
         CursorMovement::Line => editor.line_to_char(editor.cursor_row()),
         CursorMovement::Word => {
-            todo!()
+            paragraph.get_word_boundary(editor.cursor_pos().saturating_sub(1) as u32).start
         }
         CursorMovement::Buffer => 0,
         CursorMovement::Selection => {
@@ -170,7 +173,14 @@ fn cursor_left(editor: &mut impl TextEditor, movement: CursorMovement) -> bool {
 }
 
 /// Move the cursor to th right
-fn cursor_right(editor: &mut impl TextEditor, movement: CursorMovement) -> bool {
+fn cursor_right(
+    editor: &mut impl TextEditor,
+    ParagraphHolderInner {
+        paragraph,
+        scale_factor,
+    }: &ParagraphHolderInner,
+    movement: CursorMovement,
+) -> bool {
     let pos = editor.cursor_pos();
     let target_pos = match movement {
         CursorMovement::Character => {
@@ -199,7 +209,7 @@ fn cursor_right(editor: &mut impl TextEditor, movement: CursorMovement) -> bool 
             target
         }
         CursorMovement::Word => {
-            todo!();
+            paragraph.get_word_boundary(editor.cursor_pos() as u32).end
         }
         CursorMovement::Buffer => editor.len_utf16_cu(),
         CursorMovement::Selection => {
@@ -337,10 +347,7 @@ impl EditableEvent<'_> {
                 holder,
             } => {
                 let paragraph = holder.0.borrow();
-                let ParagraphHolderInner {
-                    paragraph,
-                    scale_factor,
-                } = paragraph.as_ref().unwrap();
+                let paragraph = paragraph.as_ref().unwrap();
 
                 match code {
                     // Handle dragging
@@ -375,7 +382,7 @@ impl EditableEvent<'_> {
                             } else {
                                 modifiers.ctrl()
                             };
-                    
+
                             match key {
                                 Key::Shift => {}
                                 Key::Control => {}
@@ -387,15 +394,19 @@ impl EditableEvent<'_> {
                                 Key::ArrowLeft => {
                                     // TODO: Modifier (Ctrl/Meta) should move one grapheme left
                                     let initial_selection = editor.get_selection();
-                    
+
                                     if shift {
                                         editor.expand_selection_to_cursor();
-                    
-                                        if cursor_left(&mut *editor, if meta_or_ctrl {
-                                            CursorMovement::Word
-                                        } else {
-                                            CursorMovement::Character
-                                        }) {
+
+                                        if cursor_left(
+                                            &mut *editor,
+                                            paragraph,
+                                            if meta_or_ctrl {
+                                                CursorMovement::Word
+                                            } else {
+                                                CursorMovement::Character
+                                            },
+                                        ) {
                                             event.insert(TextEvent::CURSOR_CHANGED);
                                             editor.expand_selection_to_cursor();
                                         }
@@ -409,13 +420,13 @@ impl EditableEvent<'_> {
                                         };
 
                                         // If we have an active selection, move to the start of that selection and clear it.
-                                        if cursor_left(&mut *editor, movement) {
+                                        if cursor_left(&mut *editor, paragraph, movement) {
                                             event.insert(TextEvent::CURSOR_CHANGED);
                                         }
-                    
+
                                         editor.clear_selection();
                                     }
-                    
+
                                     if initial_selection != editor.get_selection() {
                                         event.insert(TextEvent::SELECTION_CHANGED);
                                     }
@@ -423,15 +434,19 @@ impl EditableEvent<'_> {
                                 Key::ArrowRight => {
                                     // TODO: Modifier (Ctrl/Meta) should move one grapheme right
                                     let initial_selection = editor.get_selection();
-                    
+
                                     if shift {
                                         editor.expand_selection_to_cursor();
-                    
-                                        if cursor_right(&mut *editor, if meta_or_ctrl {
-                                            CursorMovement::Word
-                                        } else {
-                                            CursorMovement::Character
-                                        }) {
+
+                                        if cursor_right(
+                                            &mut *editor,
+                                            paragraph,
+                                            if meta_or_ctrl {
+                                                CursorMovement::Word
+                                            } else {
+                                                CursorMovement::Character
+                                            },
+                                        ) {
                                             event.insert(TextEvent::CURSOR_CHANGED);
                                             editor.expand_selection_to_cursor();
                                         }
@@ -445,34 +460,34 @@ impl EditableEvent<'_> {
                                         };
 
                                         // If we have an active selection, move to the end of that selection and clear it.
-                                        if cursor_right(&mut *editor, movement) {
+                                        if cursor_right(&mut *editor, paragraph, movement) {
                                             event.insert(TextEvent::CURSOR_CHANGED);
                                         }
-                    
+
                                         editor.clear_selection();
                                     }
-                    
+
                                     if initial_selection != editor.get_selection() {
                                         event.insert(TextEvent::SELECTION_CHANGED);
                                     }
                                 }
                                 Key::ArrowUp => {
                                     let initial_selection = editor.get_selection();
-                    
+
                                     if shift {
                                         editor.expand_selection_to_cursor();
                                     } else {
                                         editor.clear_selection();
                                     }
-                    
+
                                     if cursor_up(&mut *editor) {
                                         event.insert(TextEvent::CURSOR_CHANGED);
                                     }
-                    
+
                                     if shift {
                                         editor.expand_selection_to_cursor();
                                     }
-                    
+
                                     if initial_selection != editor.get_selection() {
                                         event.insert(TextEvent::SELECTION_CHANGED);
                                     }
@@ -483,59 +498,67 @@ impl EditableEvent<'_> {
                                     } else {
                                         editor.clear_selection();
                                     }
-                    
+
                                     if cursor_down(&mut *editor) {
                                         event.insert(TextEvent::CURSOR_CHANGED);
                                     }
-                    
+
                                     if shift {
                                         editor.expand_selection_to_cursor();
                                     }
                                 }
                                 Key::Home => {
                                     let initial_selection = editor.get_selection();
-                    
+
                                     if shift {
                                         editor.expand_selection_to_cursor();
                                     }
-                    
+
                                     // Move to either start of line or start of buffer depending on if ctrl is pressed.
-                                    if cursor_left(&mut *editor, if meta_or_ctrl {
-                                        CursorMovement::Buffer
-                                    } else {
-                                        CursorMovement::Line
-                                    }) {
+                                    if cursor_left(
+                                        &mut *editor,
+                                        paragraph,
+                                        if meta_or_ctrl {
+                                            CursorMovement::Buffer
+                                        } else {
+                                            CursorMovement::Line
+                                        },
+                                    ) {
                                         event.insert(TextEvent::CURSOR_CHANGED);
                                     }
-                    
+
                                     if shift {
                                         editor.expand_selection_to_cursor();
                                     }
-                    
+
                                     if initial_selection != editor.get_selection() {
                                         event.insert(TextEvent::SELECTION_CHANGED);
                                     }
                                 }
                                 Key::End => {
                                     let initial_selection = editor.get_selection();
-                    
+
                                     if shift {
                                         editor.expand_selection_to_cursor();
                                     }
-                    
+
                                     // Move to either end of line or end of buffer depending on if ctrl is pressed.
-                                    if cursor_right(&mut *editor, if meta_or_ctrl {
-                                        CursorMovement::Buffer
-                                    } else {
-                                        CursorMovement::Line
-                                    }) {
+                                    if cursor_right(
+                                        &mut *editor,
+                                        paragraph,
+                                        if meta_or_ctrl {
+                                            CursorMovement::Buffer
+                                        } else {
+                                            CursorMovement::Line
+                                        },
+                                    ) {
                                         event.insert(TextEvent::CURSOR_CHANGED);
                                     }
-                    
+
                                     if shift {
                                         editor.expand_selection_to_cursor();
                                     }
-                    
+
                                     if initial_selection != editor.get_selection() {
                                         event.insert(TextEvent::SELECTION_CHANGED);
                                     }
@@ -543,14 +566,15 @@ impl EditableEvent<'_> {
                                 Key::Backspace if config.allow_changes => {
                                     let cursor_pos = editor.cursor_pos();
                                     let selection = editor.get_selection_range();
-                    
+
                                     if let Some((start, end)) = selection {
                                         editor.remove(start..end);
                                         editor.set_cursor_pos(start);
                                         event.insert(TextEvent::TEXT_CHANGED);
                                     } else if cursor_pos > 0 {
                                         // Remove the character to the left if there is any
-                                        let removed_text_len = editor.remove(cursor_pos - 1..cursor_pos);
+                                        let removed_text_len =
+                                            editor.remove(cursor_pos - 1..cursor_pos);
                                         editor.set_cursor_pos(cursor_pos - removed_text_len);
                                         event.insert(TextEvent::TEXT_CHANGED);
                                     }
@@ -558,7 +582,7 @@ impl EditableEvent<'_> {
                                 Key::Delete if config.allow_changes => {
                                     let cursor_pos = editor.cursor_pos();
                                     let selection = editor.get_selection_range();
-                    
+
                                     if let Some((start, end)) = selection {
                                         editor.remove(start..end);
                                         editor.set_cursor_pos(start);
@@ -573,8 +597,12 @@ impl EditableEvent<'_> {
                                     // Breaks the line
                                     let cursor_pos = editor.cursor_pos();
                                     editor.insert_char('\n', cursor_pos);
-                                    cursor_right(&mut *editor, CursorMovement::Character);
-                    
+                                    cursor_right(
+                                        &mut *editor,
+                                        paragraph,
+                                        CursorMovement::Character,
+                                    );
+
                                     event.insert(TextEvent::TEXT_CHANGED);
                                 }
                                 Key::Tab if config.allow_tabs && config.allow_changes => {
@@ -583,7 +611,7 @@ impl EditableEvent<'_> {
                                     let cursor_pos = editor.cursor_pos();
                                     editor.insert(&text, cursor_pos);
                                     editor.set_cursor_pos(cursor_pos + text.chars().count());
-                    
+
                                     event.insert(TextEvent::TEXT_CHANGED);
                                 }
                                 Key::Character(character) => {
@@ -596,22 +624,26 @@ impl EditableEvent<'_> {
                                                 editor.set_cursor_pos(start);
                                                 event.insert(TextEvent::TEXT_CHANGED);
                                             }
-                    
+
                                             // Simply adds an space
                                             let cursor_pos = editor.cursor_pos();
                                             editor.insert_char(' ', cursor_pos);
-                                            cursor_right(&mut *editor, CursorMovement::Character);
-                    
+                                            cursor_right(
+                                                &mut *editor,
+                                                paragraph,
+                                                CursorMovement::Character,
+                                            );
+
                                             event.insert(TextEvent::TEXT_CHANGED);
                                         }
-                    
+
                                         // Select all text
                                         Code::KeyA if meta_or_ctrl => {
                                             let len = editor.len_utf16_cu();
                                             editor.set_selection((0, len));
                                             event.insert(TextEvent::SELECTION_CHANGED);
                                         }
-                    
+
                                         // Copy selected text
                                         Code::KeyC if meta_or_ctrl && config.allow_clipboard => {
                                             let selected = editor.get_selected_text();
@@ -619,9 +651,13 @@ impl EditableEvent<'_> {
                                                 editor.get_clipboard().set(selected).ok();
                                             }
                                         }
-                    
+
                                         // Cut selected text
-                                        Code::KeyX if meta_or_ctrl && config.allow_changes && config.allow_clipboard => {
+                                        Code::KeyX
+                                            if meta_or_ctrl
+                                                && config.allow_changes
+                                                && config.allow_clipboard =>
+                                        {
                                             let selection = editor.get_selection_range();
                                             if let Some((start, end)) = selection {
                                                 let text = editor.get_selected_text().unwrap();
@@ -631,9 +667,13 @@ impl EditableEvent<'_> {
                                                 event.insert(TextEvent::TEXT_CHANGED);
                                             }
                                         }
-                    
+
                                         // Paste copied text
-                                        Code::KeyV if meta_or_ctrl && config.allow_changes && config.allow_clipboard => {
+                                        Code::KeyV
+                                            if meta_or_ctrl
+                                                && config.allow_changes
+                                                && config.allow_clipboard =>
+                                        {
                                             let copied_text = editor.get_clipboard().get();
                                             if let Ok(copied_text) = copied_text {
                                                 let selection = editor.get_selection_range();
@@ -643,32 +683,33 @@ impl EditableEvent<'_> {
                                                 }
                                                 let cursor_pos = editor.cursor_pos();
                                                 editor.insert(&copied_text, cursor_pos);
-                                                let last_idx = copied_text.encode_utf16().count() + cursor_pos;
+                                                let last_idx =
+                                                    copied_text.encode_utf16().count() + cursor_pos;
                                                 editor.set_cursor_pos(last_idx);
                                                 event.insert(TextEvent::TEXT_CHANGED);
                                             }
                                         }
-                    
+
                                         // Undo last change
                                         Code::KeyZ if meta_or_ctrl && config.allow_changes => {
                                             let undo_result = editor.undo();
-                    
+
                                             if let Some(idx) = undo_result {
                                                 editor.set_cursor_pos(idx);
                                                 event.insert(TextEvent::TEXT_CHANGED);
                                             }
                                         }
-                    
+
                                         // Redo last change
                                         Code::KeyY if meta_or_ctrl && config.allow_changes => {
                                             let redo_result = editor.redo();
-                    
+
                                             if let Some(idx) = redo_result {
                                                 editor.set_cursor_pos(idx);
                                                 event.insert(TextEvent::TEXT_CHANGED);
                                             }
                                         }
-                    
+
                                         _ if config.allow_changes => {
                                             // Remove selected text
                                             let selection = editor.get_selection_range();
@@ -677,20 +718,24 @@ impl EditableEvent<'_> {
                                                 editor.set_cursor_pos(start);
                                                 event.insert(TextEvent::TEXT_CHANGED);
                                             }
-                    
+
                                             if let Ok(ch) = character.parse::<char>() {
                                                 // Inserts a character
                                                 let cursor_pos = editor.cursor_pos();
-                                                let inserted_text_len = editor.insert_char(ch, cursor_pos);
-                                                editor.set_cursor_pos(cursor_pos + inserted_text_len);
-                    
+                                                let inserted_text_len =
+                                                    editor.insert_char(ch, cursor_pos);
+                                                editor
+                                                    .set_cursor_pos(cursor_pos + inserted_text_len);
+
                                                 event.insert(TextEvent::TEXT_CHANGED);
                                             } else {
                                                 // Inserts a text
                                                 let cursor_pos = editor.cursor_pos();
-                                                let inserted_text_len = editor.insert(character, cursor_pos);
-                                                editor.set_cursor_pos(cursor_pos + inserted_text_len);
-                    
+                                                let inserted_text_len =
+                                                    editor.insert(character, cursor_pos);
+                                                editor
+                                                    .set_cursor_pos(cursor_pos + inserted_text_len);
+
                                                 event.insert(TextEvent::TEXT_CHANGED);
                                             }
                                         }
@@ -699,7 +744,7 @@ impl EditableEvent<'_> {
                                 }
                                 _ => {}
                             }
-                    
+
                             if event.contains(TextEvent::TEXT_CHANGED) {
                                 editor.clear_selection();
                                 *dragging.write() = TextDragging::None;
