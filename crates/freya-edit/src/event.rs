@@ -504,16 +504,19 @@ impl EditableEvent<'_> {
                                     if shift {
                                         editor.expand_selection_to_cursor();
                                     } else {
+                                        // Move to start of selection range if one exists.
+                                        if cursor_left(
+                                            &mut *editor,
+                                            paragraph,
+                                            CursorMovement::Selection,
+                                        ) {
+                                            event.insert(TextEvent::CURSOR_CHANGED);
+                                        }
+
                                         editor.clear_selection();
                                     }
 
-                                    // Move to start of selection range if one exists, then move up.
-                                    if cursor_left(
-                                        &mut *editor,
-                                        paragraph,
-                                        CursorMovement::Selection,
-                                    ) || cursor_up(&mut *editor, paragraph)
-                                    {
+                                    if cursor_up(&mut *editor, paragraph) {
                                         event.insert(TextEvent::CURSOR_CHANGED);
                                     }
 
@@ -525,16 +528,19 @@ impl EditableEvent<'_> {
                                     if shift {
                                         editor.expand_selection_to_cursor();
                                     } else {
+                                        // Move to end of selection range if one exists.
+                                        if cursor_right(
+                                            &mut *editor,
+                                            paragraph,
+                                            CursorMovement::Selection,
+                                        ) {
+                                            event.insert(TextEvent::CURSOR_CHANGED);
+                                        }
+
                                         editor.clear_selection();
                                     }
 
-                                    // Move to end of selection range if one exists, then move down.
-                                    if cursor_right(
-                                        &mut *editor,
-                                        paragraph,
-                                        CursorMovement::Selection,
-                                    ) || cursor_down(&mut *editor, paragraph)
-                                    {
+                                    if cursor_down(&mut *editor, paragraph) {
                                         event.insert(TextEvent::CURSOR_CHANGED);
                                     }
 
