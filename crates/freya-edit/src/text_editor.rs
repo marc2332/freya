@@ -16,7 +16,7 @@ use crate::editor_history::EditorHistory;
 
 /// Holds the position of a cursor in a text
 #[derive(Clone, Default, PartialEq, Debug)]
-pub struct TextCursor(usize);
+pub struct TextCursor;
 
 impl TextCursor {
     /// Construct a new [TextCursor]
@@ -71,6 +71,24 @@ bitflags::bitflags! {
         /// Selected text has changed
         const SELECTION_CHANGED = 0x04;
     }
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
+pub enum CursorMovement {
+    /// Move one character left/right.
+    Character,
+
+    /// Move one word left/right.
+    Word,
+
+    /// Move to start/end of line.
+    Line,
+
+    /// Move to start/end of paragraph.
+    Paragraph,
+
+    /// Move to start/end of buffer.
+    Buffer,
 }
 
 /// Common trait for editable texts
@@ -198,22 +216,64 @@ pub trait TextEditor {
         }
     }
 
-    /// Move the cursor 1 char to the right
-    fn cursor_right(&mut self) -> bool {
-        if self.cursor_pos() < self.len_utf16_cu() {
-            *self.cursor_mut().write() += 1;
+    /// Move the cursor to th right
+    fn cursor_right(&mut self, movement: CursorMovement) -> bool {
+        let pos = self.cursor_pos();
+        let target_pos = match movement {
+            CursorMovement::Character => {
+                if pos < self.len_utf16_cu() {
+                    pos + 1
+                } else {
+                    return false;
+                }
+            }
+            CursorMovement::Line => {
+                let current_line_idx = self.cursor_row();
+                let current_line = self.line(current_line_idx).unwrap();
+                
+                let mut target = self.line_to_char(current_line_idx) + current_line.utf16_len();
+                
+                // Freya currently has no concept of cursor affinity and counts newlines as
+                // characters. because of this, we need to subtract off the newline character from
+                // our jump or else the cursor will end up on the next line. The final line has no
+                // explicit trailing linebreak though, meaning we shouldn't subtract if we're
+                // jumping to the end of the last line in the buffer.
+                if self.line(current_line_idx + 1).is_some() {
+                    target -= 1;
+                }
 
+                target
+            }
+            CursorMovement::Buffer => self.len_utf16_cu(),
+            _ => unimplemented!(),
+        };
+    
+        if pos != target_pos {
+            *self.cursor_mut().write() = target_pos;
             true
         } else {
             false
         }
     }
 
-    /// Move the cursor 1 char to the left
-    fn cursor_left(&mut self) -> bool {
-        if self.cursor_pos() > 0 {
-            *self.cursor_mut().write() -= 1;
-
+    /// Move the cursor to the left
+    fn cursor_left(&mut self, movement: CursorMovement) -> bool {
+        let pos = self.cursor_pos();
+        let target_pos = match movement {
+            CursorMovement::Character => {
+                if pos > 0 {
+                    pos - 1
+                } else {
+                    return false;
+                }
+            }
+            CursorMovement::Line => self.line_to_char(self.cursor_row()),
+            CursorMovement::Buffer => 0,
+            _ => unimplemented!(),
+        };
+    
+        if pos != target_pos {
+            *self.cursor_mut().write() = target_pos;
             true
         } else {
             false
@@ -290,7 +350,7 @@ pub trait TextEditor {
                 if shift {
                     self.expand_selection_to_cursor();
 
-                    if self.cursor_left() {
+                    if self.cursor_left(CursorMovement::Character) {
                         event.insert(TextEvent::CURSOR_CHANGED);
                         self.expand_selection_to_cursor();
                     }
@@ -303,7 +363,7 @@ pub trait TextEditor {
                             self.set_cursor_pos(selection_min);
                             event.insert(TextEvent::CURSOR_CHANGED);
                         }
-                    } else if self.cursor_left() {
+                    } else if self.cursor_left(CursorMovement::Character) {
                         event.insert(TextEvent::CURSOR_CHANGED);
                     }
 
@@ -321,7 +381,8 @@ pub trait TextEditor {
                 if shift {
                     self.expand_selection_to_cursor();
 
-                    if self.cursor_right() {
+                    if self.cursor_right(CursorMovement::Character) {
+                        println!("{}", self.cursor_pos());
                         event.insert(TextEvent::CURSOR_CHANGED);
                         self.expand_selection_to_cursor();
                     }
@@ -334,7 +395,7 @@ pub trait TextEditor {
                             self.set_cursor_pos(selection_max);
                             event.insert(TextEvent::CURSOR_CHANGED);
                         }
-                    } else if self.cursor_right() {
+                    } else if self.cursor_right(CursorMovement::Character) {
                         event.insert(TextEvent::CURSOR_CHANGED);
                     }
 
@@ -382,22 +443,18 @@ pub trait TextEditor {
                 }
             }
             Key::Home => {
-                // TODO: Modifier (Ctrl/Meta) should move to start of buffer
                 let initial_selection = self.get_selection();
 
                 if shift {
                     self.expand_selection_to_cursor();
                 }
 
-                // Move to either start of buffer or start of line. 
-                let cursor_target = if meta_or_ctrl {
-                    0
+                // Move to either start of line or start of buffer depending on if ctrl is pressed.
+                if self.cursor_left(if meta_or_ctrl {
+                    CursorMovement::Buffer
                 } else {
-                    self.line_to_char(self.cursor_row())
-                };
-                
-                if self.cursor_pos() != cursor_target {
-                    self.set_cursor_pos(cursor_target);
+                    CursorMovement::Line
+                }) {
                     event.insert(TextEvent::CURSOR_CHANGED);
                 }
 
@@ -416,18 +473,12 @@ pub trait TextEditor {
                     self.expand_selection_to_cursor();
                 }
 
-                // Move to either end of line or end of buffer.
-                let cursor_target = if meta_or_ctrl {
-                    self.len_utf16_cu()
+                // Move to either end of line or end of buffer depending on if ctrl is pressed.
+                if self.cursor_right(if meta_or_ctrl {
+                    CursorMovement::Buffer
                 } else {
-                    let current_line_idx = self.cursor_row();
-                    let current_line = self.line(current_line_idx).unwrap();
-
-                    self.line_to_char(current_line_idx) + current_line.utf16_len()
-                };
-
-                if self.cursor_pos() != cursor_target {
-                    self.set_cursor_pos(cursor_target);
+                    CursorMovement::Line
+                }) {
                     event.insert(TextEvent::CURSOR_CHANGED);
                 }
 
@@ -472,7 +523,7 @@ pub trait TextEditor {
                 // Breaks the line
                 let cursor_pos = self.cursor_pos();
                 self.insert_char('\n', cursor_pos);
-                self.cursor_right();
+                self.cursor_right(CursorMovement::Character);
 
                 event.insert(TextEvent::TEXT_CHANGED);
             }
@@ -499,7 +550,7 @@ pub trait TextEditor {
                         // Simply adds an space
                         let cursor_pos = self.cursor_pos();
                         self.insert_char(' ', cursor_pos);
-                        self.cursor_right();
+                        self.cursor_right(CursorMovement::Character);
 
                         event.insert(TextEvent::TEXT_CHANGED);
                     }
