@@ -180,7 +180,7 @@ impl TextEditor for RopeEditor {
         if let Some(selected) = self.selected.as_mut() {
             selected.1 = pos;
         } else {
-            self.selected = Some((self.cursor_pos(), self.cursor_pos()))
+            self.selected = Some((pos, pos))
         }
     }
 

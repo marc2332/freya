@@ -183,6 +183,7 @@ pub trait TextEditor {
         if pos > 0 {
             // Reached max
             if old_row == 0 {
+                println!("Set to pos=0");
                 self.cursor_mut().set(0);
             } else {
                 let new_row = old_row - 1;
@@ -269,6 +270,12 @@ pub trait TextEditor {
         let mut event = TextEvent::empty();
 
         let selection = self.get_selection();
+        let shift = modifiers.contains(Modifiers::SHIFT);
+        let meta_or_ctrl = if cfg!(target_os = "macos") {
+            modifiers.meta()
+        } else {
+            modifiers.ctrl()
+        };
 
         match key {
             Key::Shift => {}
@@ -277,8 +284,91 @@ pub trait TextEditor {
             Key::Escape => {
                 self.clear_selection();
             }
+            Key::ArrowLeft => {
+                // TODO: Modifier (Ctrl/Meta) should move one grapheme left
+                let initial_selection = self.get_selection();
+
+                if shift {
+                    self.expand_selection_to_cursor();
+
+                    if self.cursor_left() {
+                        event.insert(TextEvent::CURSOR_CHANGED);
+                        self.expand_selection_to_cursor();
+                    }
+                } else {
+                    // If we have an active selection, move to the start of that selection and clear it.
+                    if let Some(selection) = self.get_selection() {
+                        let selection_min = selection.0.min(selection.1);
+
+                        if self.cursor_pos() != selection_min {
+                            self.set_cursor_pos(selection_min);
+                            event.insert(TextEvent::CURSOR_CHANGED);
+                        }
+                    } else if self.cursor_left() {
+                        event.insert(TextEvent::CURSOR_CHANGED);
+                    }
+
+                    self.clear_selection();
+                }
+
+                if initial_selection != self.get_selection() {
+                    event.insert(TextEvent::SELECTION_CHANGED);
+                }
+            }
+            Key::ArrowRight => {
+                // TODO: Modifier (Ctrl/Meta) should move one grapheme right
+                let initial_selection = self.get_selection();
+
+                if shift {
+                    self.expand_selection_to_cursor();
+
+                    if self.cursor_right() {
+                        event.insert(TextEvent::CURSOR_CHANGED);
+                        self.expand_selection_to_cursor();
+                    }
+                } else {
+                    // If we have an active selection, move to the end of that selection and clear it.
+                    if let Some(selection) = self.get_selection() {
+                        let selection_max = selection.0.max(selection.1);
+
+                        if self.cursor_pos() != selection_max {
+                            self.set_cursor_pos(selection_max);
+                            event.insert(TextEvent::CURSOR_CHANGED);
+                        }
+                    } else if self.cursor_right() {
+                        event.insert(TextEvent::CURSOR_CHANGED);
+                    }
+
+                    self.clear_selection();
+                }
+
+                if initial_selection != self.get_selection() {
+                    event.insert(TextEvent::SELECTION_CHANGED);
+                }
+            }
+            Key::ArrowUp => {
+                let initial_selection = self.get_selection();
+
+                if shift {
+                    self.expand_selection_to_cursor();
+                } else {
+                    self.clear_selection();
+                }
+                
+                if self.cursor_up() {
+                    event.insert(TextEvent::CURSOR_CHANGED);
+                }
+                
+                if shift {
+                    self.expand_selection_to_cursor();
+                }
+
+                if initial_selection != self.get_selection() {
+                    event.insert(TextEvent::SELECTION_CHANGED);
+                }
+            }
             Key::ArrowDown => {
-                if modifiers.contains(Modifiers::SHIFT) {
+                if shift {
                     self.expand_selection_to_cursor();
                 } else {
                     self.clear_selection();
@@ -288,53 +378,66 @@ pub trait TextEditor {
                     event.insert(TextEvent::CURSOR_CHANGED);
                 }
 
-                if modifiers.contains(Modifiers::SHIFT) {
+                if shift {
                     self.expand_selection_to_cursor();
                 }
             }
-            Key::ArrowLeft => {
-                if modifiers.contains(Modifiers::SHIFT) {
+            Key::Home => {
+                // TODO: Modifier (Ctrl/Meta) should move to start of buffer
+                let initial_selection = self.get_selection();
+
+                if shift {
                     self.expand_selection_to_cursor();
-                } else {
-                    self.clear_selection();
                 }
 
-                if self.cursor_left() {
+                // Move to either start of buffer or start of line. 
+                let cursor_target = if meta_or_ctrl {
+                    0
+                } else {
+                    self.line_to_char(self.cursor_row())
+                };
+                
+                if self.cursor_pos() != cursor_target {
+                    self.set_cursor_pos(cursor_target);
                     event.insert(TextEvent::CURSOR_CHANGED);
                 }
 
-                if modifiers.contains(Modifiers::SHIFT) {
+                if shift {
                     self.expand_selection_to_cursor();
+                }
+
+                if initial_selection != self.get_selection() {
+                    event.insert(TextEvent::SELECTION_CHANGED);
                 }
             }
-            Key::ArrowRight => {
-                if modifiers.contains(Modifiers::SHIFT) {
+            Key::End => {
+                let initial_selection = self.get_selection();
+
+                if shift {
                     self.expand_selection_to_cursor();
-                } else {
-                    self.clear_selection();
                 }
 
-                if self.cursor_right() {
+                // Move to either end of line or end of buffer.
+                let cursor_target = if meta_or_ctrl {
+                    self.len_utf16_cu()
+                } else {
+                    let current_line_idx = self.cursor_row();
+                    let current_line = self.line(current_line_idx).unwrap();
+
+                    self.line_to_char(current_line_idx) + current_line.utf16_len()
+                };
+
+                if self.cursor_pos() != cursor_target {
+                    self.set_cursor_pos(cursor_target);
                     event.insert(TextEvent::CURSOR_CHANGED);
                 }
 
-                if modifiers.contains(Modifiers::SHIFT) {
+                if shift {
                     self.expand_selection_to_cursor();
-                }
-            }
-            Key::ArrowUp => {
-                if modifiers.contains(Modifiers::SHIFT) {
-                    self.expand_selection_to_cursor();
-                } else {
-                    self.clear_selection();
                 }
 
-                if self.cursor_up() {
-                    event.insert(TextEvent::CURSOR_CHANGED);
-                }
-
-                if modifiers.contains(Modifiers::SHIFT) {
-                    self.expand_selection_to_cursor();
+                if initial_selection != self.get_selection() {
+                    event.insert(TextEvent::SELECTION_CHANGED);
                 }
             }
             Key::Backspace if allow_changes => {
@@ -384,12 +487,6 @@ pub trait TextEditor {
                 event.insert(TextEvent::TEXT_CHANGED);
             }
             Key::Character(character) => {
-                let meta_or_ctrl = if cfg!(target_os = "macos") {
-                    modifiers.meta()
-                } else {
-                    modifiers.ctrl()
-                };
-
                 match code {
                     Code::Delete if allow_changes => {}
                     Code::Space if allow_changes => {
