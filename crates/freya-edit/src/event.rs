@@ -188,7 +188,21 @@ fn cursor_left(
                 return false;
             }
         }
-        CursorMovement::Line => editor.line_to_char(editor.cursor_row()),
+        CursorMovement::Line => {
+            let current_line_number = if pos == editor.len_utf16_cu() {
+                Some(paragraph.line_number() - 1)
+            } else {
+                paragraph.get_line_number_at(pos)
+            };
+
+            if let Some(current_line_number) = current_line_number {
+                let line_metrics = paragraph.get_line_metrics_at(current_line_number).unwrap();
+
+                line_metrics.start_index
+            } else {
+                return false;
+            }
+        }
         CursorMovement::Word => {
             paragraph
                 .get_word_boundary(editor.cursor_pos().saturating_sub(1) as u32)
@@ -200,13 +214,7 @@ fn cursor_left(
                 return false;
             };
 
-            let selection_min = selection.0.min(selection.1);
-
-            if editor.cursor_pos() == selection_min {
-                return false;
-            }
-
-            selection_min
+            selection.0.min(selection.1)
         }
         _ => unimplemented!(),
     };
@@ -235,23 +243,20 @@ fn cursor_right(
                 return false;
             }
         }
-        CursorMovement::Line => {
-            let cursor_row = editor.cursor_row();
-            let current_line = editor.line(cursor_row).unwrap();
-            let current_line_start = editor.line_to_char(cursor_row);
+        CursorMovement::Line => {   
+            let current_line_number = if pos == editor.len_utf16_cu() {
+                Some(paragraph.line_number() - 1)
+            } else {
+                paragraph.get_line_number_at(pos)
+            };
 
-            let mut target = current_line_start + current_line.utf16_len();
+            if let Some(current_line_number) = current_line_number {
+                let line_metrics = paragraph.get_line_metrics_at(current_line_number).unwrap();
 
-            // Freya currently has no concept of cursor affinity and counts newlines as
-            // characters. because of this, we need to subtract off the newline character from
-            // our jump or else the cursor will end up on the next line. The final line has no
-            // explicit trailing linebreak though, meaning we shouldn't subtract if we're
-            // jumping to the end of the last line in the buffer.
-            if editor.line(cursor_row + 1).is_some() {
-                target = target.saturating_sub(1);
+                line_metrics.end_index
+            } else {
+                return false;
             }
-
-            target
         }
         CursorMovement::Word => paragraph.get_word_boundary(editor.cursor_pos() as u32).end,
         CursorMovement::Buffer => editor.len_utf16_cu(),
@@ -260,13 +265,7 @@ fn cursor_right(
                 return false;
             };
 
-            let selection_max = selection.0.max(selection.1);
-
-            if editor.cursor_pos() == selection_max {
-                return false;
-            }
-
-            selection_max
+            selection.0.max(selection.1)
         }
     };
 
@@ -619,7 +618,7 @@ impl EditableEvent<'_> {
                                         // Remove the character to the right if there is any
                                         editor.remove(cursor_pos..cursor_pos + 1);
                                     }
-                                    
+
                                     event.insert(TextEvent::TEXT_CHANGED);
                                 }
                                 Key::Enter if config.allow_changes => {
