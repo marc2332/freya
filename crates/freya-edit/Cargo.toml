@@ -18,6 +18,7 @@ torin = { workspace = true }
 ropey = { workspace = true }
 bitflags = { workspace = true }
 keyboard-types = { workspace = true }
+unicode-segmentation = { workspace = true }
 
 [dev-dependencies]
 freya = { workspace = true }
