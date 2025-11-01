@@ -1,42 +1,45 @@
-use std::{
-    borrow::Cow,
-    cmp::Ordering,
-    fmt::Display,
-    ops::Range,
-};
+use std::{borrow::Cow, cmp::Ordering, fmt::Display, ops::Range};
 
 use freya_clipboard::hooks::UseClipboard;
-use keyboard_types::{
-    Code,
-    Key,
-    Modifiers,
-};
+use keyboard_types::{Code, Key, Modifiers};
+use unicode_segmentation::UnicodeSegmentation;
 
 use crate::editor_history::EditorHistory;
 
 /// Holds the position of a cursor in a text
 #[derive(Clone, Default, PartialEq, Debug)]
-pub struct TextCursor(usize);
+pub struct TextCursor {
+    pos: usize,
+    col: usize,
+}
 
 impl TextCursor {
     /// Construct a new [TextCursor]
     pub fn new(pos: usize) -> Self {
-        Self(pos)
+        Self { pos, col: 0 }
     }
 
     /// Get the position
     pub fn pos(&self) -> usize {
-        self.0
+        self.pos
     }
 
     /// Set the position
     pub fn set(&mut self, pos: usize) {
-        self.0 = pos;
+        self.pos = pos;
     }
 
     /// Write the position
     pub fn write(&mut self) -> &mut usize {
-        &mut self.0
+        &mut self.pos
+    }
+
+    pub fn col(&self) -> usize {
+        self.col
+    }
+
+    pub fn set_col(&mut self, col: usize) {
+        self.col = col;
     }
 }
 
@@ -71,6 +74,24 @@ bitflags::bitflags! {
         /// Selected text has changed
         const SELECTION_CHANGED = 0x04;
     }
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
+pub enum CursorMovement {
+    /// Move one character left/right.
+    Character,
+
+    /// Move one word boundary left/right.
+    Word,
+
+    /// Move to start/end of line.
+    Line,
+
+    /// Move to start/end of buffer.
+    Buffer,
+
+    /// Move to start/end of selection.
+    Selection,
 }
 
 /// Common trait for editable texts
@@ -153,8 +174,20 @@ pub trait TextEditor {
                 // One line below
                 let new_row = old_row + 1;
                 let new_row_char = self.char_to_utf16_cu(self.line_to_char(new_row));
-                let new_row_len = self.line(new_row).unwrap().utf16_len();
-                let new_col = old_col.min(new_row_len.saturating_sub(1));
+                let mut new_row_len = self.line(new_row).unwrap().utf16_len();
+
+                // Consider newline characters when calculating line length.
+                //
+                // Last line doesn't have a newline, so we don't subtract from it.
+                if self.line(new_row + 1).is_some() {
+                    new_row_len = new_row_len.saturating_sub(1);
+                }
+
+                if self.cursor().col() < old_col {
+                    self.cursor_mut().set_col(old_col);
+                }
+                let new_col = self.cursor().col().min(new_row_len);
+
                 self.cursor_mut().set(new_row_char + new_col);
 
                 true
@@ -188,7 +221,12 @@ pub trait TextEditor {
                 let new_row = old_row - 1;
                 let new_row_char = self.char_to_utf16_cu(self.line_to_char(new_row));
                 let new_row_len = self.line(new_row).unwrap().utf16_len();
-                let new_col = old_col.min(new_row_len.saturating_sub(1));
+
+                if self.cursor().col() < old_col {
+                    self.cursor_mut().set_col(old_col);
+                }
+                let new_col = self.cursor().col().min(new_row_len.saturating_sub(1));
+
                 self.cursor_mut().set(new_row_char + new_col);
             }
 
@@ -198,10 +236,66 @@ pub trait TextEditor {
         }
     }
 
-    /// Move the cursor 1 char to the right
-    fn cursor_right(&mut self) -> bool {
-        if self.cursor_pos() < self.len_utf16_cu() {
-            *self.cursor_mut().write() += 1;
+    /// Move the cursor to th right
+    fn cursor_right(&mut self, movement: CursorMovement) -> bool {
+        let pos = self.cursor_pos();
+        let target_pos = match movement {
+            CursorMovement::Character => {
+                if pos < self.len_utf16_cu() {
+                    pos + 1
+                } else {
+                    return false;
+                }
+            }
+            CursorMovement::Line => {
+                let cursor_row = self.cursor_row();
+                let current_line = self.line(cursor_row).unwrap();
+                let current_line_start = self.line_to_char(cursor_row);
+
+                let mut target = current_line_start + current_line.utf16_len();
+
+                // Freya currently has no concept of cursor affinity and counts newlines as
+                // characters. because of this, we need to subtract off the newline character from
+                // our jump or else the cursor will end up on the next line. The final line has no
+                // explicit trailing linebreak though, meaning we shouldn't subtract if we're
+                // jumping to the end of the last line in the buffer.
+                if self.line(cursor_row + 1).is_some() {
+                    target = target.saturating_sub(1);
+                }
+
+                target
+            }
+            CursorMovement::Word => {
+                let cursor_col = self.cursor_col();
+                let cursor_row = self.cursor_row();
+                let current_line = self.line(cursor_row).unwrap();
+
+                let Some(next_word_bound) =
+                    current_line.text[cursor_col..].split_word_bounds().next()
+                else {
+                    return false;
+                };
+
+                pos + next_word_bound.chars().count()
+            }
+            CursorMovement::Buffer => self.len_utf16_cu(),
+            CursorMovement::Selection => {
+                let Some(selection) = self.get_selection() else {
+                    return false;
+                };
+
+                let selection_max = selection.0.max(selection.1);
+
+                if self.cursor_pos() == selection_max {
+                    return false;
+                }
+
+                selection_max
+            }
+        };
+
+        if pos != target_pos {
+            self.set_cursor_pos(target_pos);
 
             true
         } else {
@@ -209,10 +303,51 @@ pub trait TextEditor {
         }
     }
 
-    /// Move the cursor 1 char to the left
-    fn cursor_left(&mut self) -> bool {
-        if self.cursor_pos() > 0 {
-            *self.cursor_mut().write() -= 1;
+    /// Move the cursor to the left
+    fn cursor_left(&mut self, movement: CursorMovement) -> bool {
+        let pos = self.cursor_pos();
+
+        let target_pos = match movement {
+            CursorMovement::Character => {
+                if pos > 0 {
+                    pos - 1
+                } else {
+                    return false;
+                }
+            }
+            CursorMovement::Line => self.line_to_char(self.cursor_row()),
+            CursorMovement::Word => {
+                let cursor_col = self.cursor_col();
+                let cursor_row = self.cursor_row();
+                let current_line = self.line(cursor_row).unwrap();
+
+                let Some(current_word_bound) =
+                    current_line.text[0..cursor_col].split_word_bounds().last()
+                else {
+                    return false;
+                };
+
+                pos - current_word_bound.chars().count()
+            }
+            CursorMovement::Buffer => 0,
+            CursorMovement::Selection => {
+                let Some(selection) = self.get_selection() else {
+                    return false;
+                };
+
+                let selection_min = selection.0.min(selection.1);
+
+                if self.cursor_pos() == selection_min {
+                    return false;
+                }
+
+                selection_min
+            }
+            _ => unimplemented!(),
+        };
+
+        if pos != target_pos {
+            self.set_cursor_pos(target_pos);
 
             true
         } else {
@@ -227,6 +362,7 @@ pub trait TextEditor {
 
     /// Set the cursor position
     fn set_cursor_pos(&mut self, pos: usize) {
+        self.cursor_mut().set_col(0);
         self.cursor_mut().set(pos);
     }
 
@@ -268,6 +404,13 @@ pub trait TextEditor {
     ) -> TextEvent {
         let mut event = TextEvent::empty();
 
+        let shift = modifiers.contains(Modifiers::SHIFT);
+        let meta_or_ctrl = if cfg!(target_os = "macos") {
+            modifiers.meta()
+        } else {
+            modifiers.ctrl()
+        };
+
         match key {
             Key::Shift => {}
             Key::Control => {}
@@ -276,53 +419,78 @@ pub trait TextEditor {
                 self.clear_selection();
                 event.insert(TextEvent::SELECTION_CHANGED);
             }
-            Key::ArrowDown => {
-                if modifiers.contains(Modifiers::SHIFT) {
-                    self.expand_selection_to_cursor();
-                } else {
-                    self.clear_selection();
-                }
-
-                if self.cursor_down() {
-                    event.insert(TextEvent::CURSOR_CHANGED);
-                }
-
-                if modifiers.contains(Modifiers::SHIFT) {
-                    self.expand_selection_to_cursor();
-                }
-            }
             Key::ArrowLeft => {
-                if modifiers.contains(Modifiers::SHIFT) {
+                // TODO: Modifier (Ctrl/Meta) should move one grapheme left
+                let initial_selection = self.get_selection();
+
+                if shift {
                     self.expand_selection_to_cursor();
+
+                    if self.cursor_left(if meta_or_ctrl {
+                        CursorMovement::Word
+                    } else {
+                        CursorMovement::Character
+                    }) {
+                        event.insert(TextEvent::CURSOR_CHANGED);
+                        self.expand_selection_to_cursor();
+                    }
                 } else {
+                    // If we have an active selection, move to the start of that selection and clear it.
+                    if self.cursor_left(if meta_or_ctrl {
+                        CursorMovement::Word
+                    } else if self.has_any_selection() {
+                        CursorMovement::Selection
+                    } else {
+                        CursorMovement::Character
+                    }) {
+                        event.insert(TextEvent::CURSOR_CHANGED);
+                    }
+
                     self.clear_selection();
                 }
 
-                if self.cursor_left() {
-                    event.insert(TextEvent::CURSOR_CHANGED);
-                }
-
-                if modifiers.contains(Modifiers::SHIFT) {
-                    self.expand_selection_to_cursor();
+                if initial_selection != self.get_selection() {
+                    event.insert(TextEvent::SELECTION_CHANGED);
                 }
             }
             Key::ArrowRight => {
-                if modifiers.contains(Modifiers::SHIFT) {
+                // TODO: Modifier (Ctrl/Meta) should move one grapheme right
+                let initial_selection = self.get_selection();
+
+                if shift {
                     self.expand_selection_to_cursor();
+
+                    if self.cursor_right(if meta_or_ctrl {
+                        CursorMovement::Word
+                    } else {
+                        CursorMovement::Character
+                    }) {
+                        event.insert(TextEvent::CURSOR_CHANGED);
+                        self.expand_selection_to_cursor();
+                    }
                 } else {
+                    // If we have an active selection, move to the end of that selection and clear it.
+                    if self.cursor_right(if meta_or_ctrl {
+                        CursorMovement::Word
+                    } else if self.has_any_selection() {
+                        CursorMovement::Selection
+                    } else {
+                        CursorMovement::Character
+                    }) {
+                        event.insert(TextEvent::CURSOR_CHANGED);
+                    }
+
                     self.clear_selection();
                 }
 
-                if self.cursor_right() {
-                    event.insert(TextEvent::CURSOR_CHANGED);
-                }
-
-                if modifiers.contains(Modifiers::SHIFT) {
-                    self.expand_selection_to_cursor();
+                if initial_selection != self.get_selection() {
+                    event.insert(TextEvent::SELECTION_CHANGED);
                 }
             }
             Key::ArrowUp => {
-                if modifiers.contains(Modifiers::SHIFT) {
+                let initial_selection = self.get_selection();
+
+                if shift {
                     self.expand_selection_to_cursor();
                 } else {
                     self.clear_selection();
@@ -332,8 +500,75 @@ pub trait TextEditor {
                     event.insert(TextEvent::CURSOR_CHANGED);
                 }
 
-                if modifiers.contains(Modifiers::SHIFT) {
+                if shift {
                     self.expand_selection_to_cursor();
+                }
+
+                if initial_selection != self.get_selection() {
+                    event.insert(TextEvent::SELECTION_CHANGED);
+                }
+            }
+            Key::ArrowDown => {
+                if shift {
+                    self.expand_selection_to_cursor();
+                } else {
+                    self.clear_selection();
+                }
+
+                if self.cursor_down() {
+                    event.insert(TextEvent::CURSOR_CHANGED);
+                }
+
+                if shift {
+                    self.expand_selection_to_cursor();
+                }
+            }
+            Key::Home => {
+                let initial_selection = self.get_selection();
+
+                if shift {
+                    self.expand_selection_to_cursor();
+                }
+
+                // Move to either start of line or start of buffer depending on if ctrl is pressed.
+                if self.cursor_left(if meta_or_ctrl {
+                    CursorMovement::Buffer
+                } else {
+                    CursorMovement::Line
+                }) {
+                    event.insert(TextEvent::CURSOR_CHANGED);
+                }
+
+                if shift {
+                    self.expand_selection_to_cursor();
+                }
+
+                if initial_selection != self.get_selection() {
+                    event.insert(TextEvent::SELECTION_CHANGED);
+                }
+            }
+            Key::End => {
+                let initial_selection = self.get_selection();
+
+                if shift {
+                    self.expand_selection_to_cursor();
+                }
+
+                // Move to either end of line or end of buffer depending on if ctrl is pressed.
+                if self.cursor_right(if meta_or_ctrl {
+                    CursorMovement::Buffer
+                } else {
+                    CursorMovement::Line
+                }) {
+                    event.insert(TextEvent::CURSOR_CHANGED);
+                }
+
+                if shift {
+                    self.expand_selection_to_cursor();
+                }
+
+                if initial_selection != self.get_selection() {
+                    event.insert(TextEvent::SELECTION_CHANGED);
                 }
             }
             Key::Backspace if allow_changes => {
@@ -369,7 +604,7 @@ pub trait TextEditor {
                 // Breaks the line
                 let cursor_pos = self.cursor_pos();
                 self.insert_char('\n', cursor_pos);
-                self.cursor_right();
+                self.cursor_right(CursorMovement::Character);
 
                 event.insert(TextEvent::TEXT_CHANGED);
             }
@@ -383,12 +618,6 @@ pub trait TextEditor {
                 event.insert(TextEvent::TEXT_CHANGED);
             }
             Key::Character(character) => {
-                let meta_or_ctrl = if cfg!(target_os = "macos") {
-                    modifiers.meta()
-                } else {
-                    modifiers.ctrl()
-                };
-
                 match code {
                     Code::Delete if allow_changes => {}
                     Code::Space if allow_changes => {
@@ -402,7 +631,7 @@ pub trait TextEditor {
                         // Simply adds an space
                         let cursor_pos = self.cursor_pos();
                         self.insert_char(' ', cursor_pos);
-                        self.cursor_right();
+                        self.cursor_right(CursorMovement::Character);
 
                         event.insert(TextEvent::TEXT_CHANGED);
                     }
