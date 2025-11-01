@@ -16,27 +16,41 @@ use crate::editor_history::EditorHistory;
 
 /// Holds the position of a cursor in a text
 #[derive(Clone, Default, PartialEq, Debug)]
-pub struct TextCursor;
+pub struct TextCursor {
+    pos: usize,
+    col: usize,
+}
 
 impl TextCursor {
     /// Construct a new [TextCursor]
     pub fn new(pos: usize) -> Self {
-        Self(pos)
+        Self {
+            pos,
+            col: 0,
+        }
     }
 
     /// Get the position
     pub fn pos(&self) -> usize {
-        self.0
+        self.pos
     }
 
     /// Set the position
     pub fn set(&mut self, pos: usize) {
-        self.0 = pos;
+        self.pos = pos;
     }
 
     /// Write the position
     pub fn write(&mut self) -> &mut usize {
-        &mut self.0
+        &mut self.pos
+    }
+
+    pub fn col(&self) -> usize {
+        self.col
+    }
+
+    pub fn set_col(&mut self, col: usize) {
+        self.col = col;
     }
 }
 
@@ -171,8 +185,20 @@ pub trait TextEditor {
                 // One line below
                 let new_row = old_row + 1;
                 let new_row_char = self.char_to_utf16_cu(self.line_to_char(new_row));
-                let new_row_len = self.line(new_row).unwrap().utf16_len();
-                let new_col = old_col.min(new_row_len.saturating_sub(1));
+                let mut new_row_len = self.line(new_row).unwrap().utf16_len();
+
+                // Consider newline characters when calculating line length.
+                //
+                // Last line doesn't have a newline, so we don't subtract from it.
+                if self.line(new_row + 1).is_some() {
+                    new_row_len = new_row_len.saturating_sub(1);
+                }
+
+                if self.cursor().col() < old_col {
+                    self.cursor_mut().set_col(old_col);
+                }
+                let new_col = self.cursor().col().min(new_row_len);
+
                 self.cursor_mut().set(new_row_char + new_col);
 
                 true
@@ -206,7 +232,12 @@ pub trait TextEditor {
                 let new_row = old_row - 1;
                 let new_row_char = self.char_to_utf16_cu(self.line_to_char(new_row));
                 let new_row_len = self.line(new_row).unwrap().utf16_len();
-                let new_col = old_col.min(new_row_len.saturating_sub(1));
+                
+                if self.cursor().col() < old_col {
+                    self.cursor_mut().set_col(old_col);
+                }
+                let new_col = self.cursor().col().min(new_row_len.saturating_sub(1));
+
                 self.cursor_mut().set(new_row_char + new_col);
             }
 
@@ -228,18 +259,19 @@ pub trait TextEditor {
                 }
             }
             CursorMovement::Line => {
-                let current_line_idx = self.cursor_row();
-                let current_line = self.line(current_line_idx).unwrap();
+                let cursor_row = self.cursor_row();
+                let current_line = self.line(cursor_row).unwrap();
+                let current_line_start = self.line_to_char(cursor_row);
                 
-                let mut target = self.line_to_char(current_line_idx) + current_line.utf16_len();
+                let mut target = current_line_start + current_line.utf16_len();
                 
                 // Freya currently has no concept of cursor affinity and counts newlines as
                 // characters. because of this, we need to subtract off the newline character from
                 // our jump or else the cursor will end up on the next line. The final line has no
                 // explicit trailing linebreak though, meaning we shouldn't subtract if we're
                 // jumping to the end of the last line in the buffer.
-                if self.line(current_line_idx + 1).is_some() {
-                    target -= 1;
+                if self.line(cursor_row + 1).is_some() {
+                    target = target.saturating_sub(1);
                 }
 
                 target
@@ -249,7 +281,8 @@ pub trait TextEditor {
         };
     
         if pos != target_pos {
-            *self.cursor_mut().write() = target_pos;
+            self.set_cursor_pos(target_pos);
+
             true
         } else {
             false
@@ -259,6 +292,7 @@ pub trait TextEditor {
     /// Move the cursor to the left
     fn cursor_left(&mut self, movement: CursorMovement) -> bool {
         let pos = self.cursor_pos();
+        
         let target_pos = match movement {
             CursorMovement::Character => {
                 if pos > 0 {
@@ -273,7 +307,8 @@ pub trait TextEditor {
         };
     
         if pos != target_pos {
-            *self.cursor_mut().write() = target_pos;
+            self.set_cursor_pos(target_pos);
+
             true
         } else {
             false
@@ -287,6 +322,7 @@ pub trait TextEditor {
 
     /// Set the cursor position
     fn set_cursor_pos(&mut self, pos: usize) {
+        self.cursor_mut().set_col(0);
         self.cursor_mut().set(pos);
     }
 
@@ -382,7 +418,6 @@ pub trait TextEditor {
                     self.expand_selection_to_cursor();
 
                     if self.cursor_right(CursorMovement::Character) {
-                        println!("{}", self.cursor_pos());
                         event.insert(TextEvent::CURSOR_CHANGED);
                         self.expand_selection_to_cursor();
                     }
