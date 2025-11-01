@@ -615,14 +615,21 @@ impl EditableEvent<'_> {
                                     if let Some((start, end)) = selection {
                                         editor.remove(start..end);
                                         editor.set_cursor_pos(start);
-                                        event.insert(TextEvent::TEXT_CHANGED);
                                     } else if cursor_pos < editor.len_utf16_cu() {
                                         // Remove the character to the right if there is any
                                         editor.remove(cursor_pos..cursor_pos + 1);
-                                        event.insert(TextEvent::TEXT_CHANGED);
                                     }
+                                    
+                                    event.insert(TextEvent::TEXT_CHANGED);
                                 }
                                 Key::Enter if config.allow_changes => {
+                                    // Remove selected text
+                                    let selection = editor.get_selection_range();
+                                    if let Some((start, end)) = selection {
+                                        editor.remove(start..end);
+                                        editor.set_cursor_pos(start);
+                                    }
+
                                     // Breaks the line
                                     let cursor_pos = editor.cursor_pos();
                                     editor.insert_char('\n', cursor_pos);
@@ -647,7 +654,6 @@ impl EditableEvent<'_> {
                                             if let Some((start, end)) = selection {
                                                 editor.remove(start..end);
                                                 editor.set_cursor_pos(start);
-                                                event.insert(TextEvent::TEXT_CHANGED);
                                             }
 
                                             // Simply adds an space
@@ -751,7 +757,6 @@ impl EditableEvent<'_> {
                                             if let Some((start, end)) = selection {
                                                 editor.remove(start..end);
                                                 editor.set_cursor_pos(start);
-                                                event.insert(TextEvent::TEXT_CHANGED);
                                             }
 
                                             if let Ok(ch) = character.parse::<char>() {
@@ -761,8 +766,6 @@ impl EditableEvent<'_> {
                                                     editor.insert_char(ch, cursor_pos);
                                                 editor
                                                     .set_cursor_pos(cursor_pos + inserted_text_len);
-
-                                                event.insert(TextEvent::TEXT_CHANGED);
                                             } else {
                                                 // Inserts a text
                                                 let cursor_pos = editor.cursor_pos();
@@ -770,9 +773,9 @@ impl EditableEvent<'_> {
                                                     editor.insert(character, cursor_pos);
                                                 editor
                                                     .set_cursor_pos(cursor_pos + inserted_text_len);
-
-                                                event.insert(TextEvent::TEXT_CHANGED);
                                             }
+
+                                            event.insert(TextEvent::TEXT_CHANGED);
                                         }
                                         _ => {}
                                     }
