@@ -59,8 +59,6 @@ pub struct Node {
     /// A Node might depend on inner sizes but have a fixed position, like scroll views.
     pub has_layout_references: bool,
 
-    pub contains_text: bool,
-
     pub spacing: Length,
 }
 
@@ -85,6 +83,32 @@ impl Node {
     /// Create a Node with the default values
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn self_layout_eq(&self, other: &Self) -> bool {
+        // Excludes offset_x and offset_y
+        self.width == other.width
+            && self.height == other.height
+            && self.minimum_width == other.minimum_width
+            && self.minimum_height == other.minimum_height
+            && self.maximum_width == other.maximum_width
+            && self.maximum_height == other.maximum_height
+            && self.visible_width == other.visible_width
+            && self.visible_height == other.visible_height
+            && self.main_alignment == other.main_alignment
+            && self.cross_alignment == other.cross_alignment
+            && self.padding == other.padding
+            && self.margin == other.margin
+            && self.direction == other.direction
+            && self.position == other.position
+            && self.content == other.content
+            && self.has_layout_references == other.has_layout_references
+            && self.spacing == other.spacing
+    }
+
+    pub fn inner_layout_eq(&self, other: &Self) -> bool {
+        // Excludes everything but offset_x and offset_y
+        self.offset_x == other.offset_x && self.offset_y == other.offset_y
     }
 
     /// Construct a new Node given a size and a direction
@@ -281,10 +305,7 @@ impl Node {
 
     /// Has properties that depend on the inner Nodes?
     pub fn does_depend_on_inner(&self) -> bool {
-        self.width.inner_sized()
-            || self.height.inner_sized()
-            || self.contains_text
-            || self.do_inner_depend_on_parent()
+        self.width.inner_sized() || self.height.inner_sized() || self.do_inner_depend_on_parent()
     }
 
     /// Has properties that make its children dependant on it?

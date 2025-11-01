@@ -10,7 +10,7 @@ pub trait Scaled {
         }
     }
 
-    fn with_scale(&self, scale_factor: f32) -> Cow<Self>
+    fn with_scale(&'_ self, scale_factor: f32) -> Cow<'_, Self>
     where
         Self: Clone,
     {

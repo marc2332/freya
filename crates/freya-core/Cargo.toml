@@ -1,0 +1,73 @@
+[package]
+name = "freya-core"
+version = "0.4.0"
+edition = "2024"
+
+[package.metadata.docs.rs]
+features = ["freya-engine/mocked-engine"]
+
+[dependencies]
+# Core
+generational-box = { workspace = true }
+tracing = { workspace = true }
+rustc-hash = { workspace = true }
+bitflags = { workspace = true }
+pathmap = { workspace = true }
+# Core/async
+futures-util = { workspace = true }
+futures-channel = { workspace = true }
+futures-lite = { workspace = true }
+# Core/components
+typed-builder = { workspace = true }
+
+# Animations
+async-broadcast = { workspace = true }
+
+# Text
+keyboard-types = { workspace = true }
+
+# Layout
+torin = { workspace = true }
+
+# Layers
+itertools = { workspace = true }
+
+# Rendering
+freya-engine = { workspace = true }
+
+# Events
+ragnarok = { workspace = true }
+
+# accessibility
+accesskit = { workspace = true }
+
+# Performance
+hotpath = { workspace = true }
+
+# SVG
+bytes = "1.10.1"
+
+# Extensions
+paste = "1.0.15"
+
+# Devtools
+serde = { version = "1", optional = true }
+
+# Cursor styling
+cursor-icon = "1.2.0"
+
+[dev-dependencies]
+freya = { workspace = true }
+freya-core = { workspace = true, features = ["debug-integrity", "test"] }
+freya-engine = { workspace = true, features = ["skia-engine"] }
+freya-testing = { workspace = true }
+
+[features]
+hotpath = ["hotpath/hotpath"]
+hotpath-alloc-bytes-total = ["hotpath/hotpath-alloc-bytes-total"]
+hotpath-alloc-count-total = ["hotpath/hotpath-alloc-count-total"]
+hotpath-off = ["hotpath/hotpath-off"]
+debug-integrity = []
+devtools = ["serde"]
+serde = ["dep:serde"]
+test = []

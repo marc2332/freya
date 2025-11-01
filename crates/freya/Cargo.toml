@@ -1,73 +1,49 @@
 [package]
 name = "freya"
-description = "Cross-platform and non-web GUI Library powered by Skia."
 version = "0.4.0"
-edition = "2021"
-license = "MIT"
-authors = ["Marc Espín <mespinsanz@gmail.com>"]
-readme = "../../README.md"
-homepage = "https://freyaui.dev/"
-repository = "https://github.com/marc2332/freya"
-keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
-categories = ["gui", "asynchronous"]
+edition = "2024"
 
 [package.metadata.docs.rs]
-features = ["freya-engine/mocked-engine", "docs", "winit"]
+features = ["freya-engine/mocked-engine", "all-debug"]
 no-default-features = true
 
 [features]
-# Internal features
-default = ["skia", "winit"]
+default = ["skia"]
+# Enable skia-safe
 skia = ["freya-engine/skia-engine"]
-tracing-subscriber = ["dep:tracing-subscriber"]
-mocked-engine-development = ["freya-engine/mocked-engine"] # This is just for the CI
-fade-cached-incremental-areas = ["freya-core/fade-cached-incremental-areas"]
-docs = ["dep:freya-testing", "dep:dioxus-i18n", "dep:freya-router", "freya-components/docs", "freya-hooks/docs", "plot"]
-
-# User features
-network-image = ["freya-components/network-image"]
-use_camera = ["freya-hooks/use_camera"]
-performance-overlay = []
-devtools = ["dep:freya-devtools"]
-disable-zoom-shortcuts = ["freya-winit/disable-zoom-shortcuts"]
-custom-tokio-rt = []
-winit = ["freya-core/winit", "freya-hooks/winit", "freya-components/winit", "dep:freya-winit"]
-plot = ["dep:plotters", "dep:skia-plotters-backend"]
+mocked-engine = ["freya-engine/mocked-engine"]
+# Shortcuts
+all = ["router", "i18n", "remote-asset", "engine", "plot", "gif"]
+all-debug = ["all", "performance", "vulkan"]
+# Features
+router = ["dep:freya-router", "freya-components/router"]
+remote-asset = ["freya-components/remote-asset"]
+i18n = ["dep:freya-i18n"]
+engine = []
+devtools = ["dep:freya-devtools", "freya-core/devtools"]
+performance = ["freya-performance-plugin"]
+plot = ["freya-components/plot"]
+gif = ["freya-components/gif"]
+vulkan = ["freya-winit/vulkan"]
 
 [dependencies]
-freya-elements = { workspace = true }
-freya-hooks = { workspace = true }
 freya-core = { workspace = true }
-freya-components = { workspace = true }
-freya-engine = { workspace = true }
+freya-winit = { workspace = true }
 torin = { workspace = true }
+freya-edit = { workspace = true }
+freya-components = { workspace = true }
+freya-animation = { workspace = true }
+freya-engine = { workspace = true }
+freya-devtools = { workspace = true, optional = true }
 
-freya-testing = { workspace = true, optional = true }
-dioxus-i18n = { workspace = true, optional = true }
+# Router
 freya-router = { workspace = true, optional = true }
 
-dioxus = { workspace = true }
-dioxus-core-macro = { workspace = true }
-dioxus-hooks = { workspace = true }
-dioxus-core = { workspace = true }
-dioxus-signals = { workspace = true }
+# i18n
+freya-i18n = { workspace = true, optional = true }
 
-tokio = { workspace = true }
-tracing-subscriber = { workspace = true, optional = true, features = ["env-filter"]}
+# Performance
+freya-performance-plugin = { workspace = true, optional = true }
 
-# devtools
-freya-devtools = { workspace = true, features = ["server"], optional = true }
-
-# winit
-freya-winit = { workspace = true, optional = true }
-
-# Plot
-plotters = { version = "0.3.7", default-features = false, features = [
-  "chrono",
-  "image",
-  "all_series",
-  "all_elements",
-  "full_palette",
-  "colormaps",
-], optional = true }
-skia-plotters-backend = { version = "0.1", optional = true  }
+# Other
+cfg-if = "1.0"

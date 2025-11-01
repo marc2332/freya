@@ -4,145 +4,145 @@
 )]
 //! # Freya
 //!
-//! **Freya** is a declarative, cross-platform GUI Rust library, powered by 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/).
-//!
-//! **It does not use any web tech**, check the [Differences with Dioxus](https://github.com/marc2332/freya/tree/main?tab=readme-ov-file#differences-with-dioxus).
+//! **Freya** is a declarative, cross-platform GUI Rust library, powered by 🎨 [Skia](https://skia.org/).
 //!
 //! ### Basics
 //! - [Introduction](self::_docs::introduction)
-//! - [Dioxus Fundamentals](self::_docs::dioxus_fundamentals)
-//!     - [UI](self::_docs::ui)
-//!     - [Elements Overview](self::_docs::elements)
-//!     - [Components](self::_docs::components_and_props)
-//!     - [Hooks](self::_docs::hooks)
-//!     - [State Management](self::_docs::state_management)
-//!         - [Signals](self::_docs::state_management::signals)
-//!         - [Global Signals](self::_docs::state_management::global_signals)
-//!         - [Lifecycle](self::_docs::state_management::lifecycle)
-//!         - [Context](self::_docs::state_management::context)
-//!         - [Memoization](self::_docs::state_management::memoization)
-//!     - [Async Tasks](self::_docs::async_tasks)
+//! - [UI](self::_docs::ui)
+//! - [Elements](self::elements)
+//! - [Components and Props](self::_docs::components_and_props)
+//! - [Hooks](self::_docs::hooks)
 //!
 //! ### Learn
 //! - [Development Setup](self::_docs::development_setup)
-//! - [Theming](self::_docs::theming)
 //! - [i18n](self::_docs::i18n)
-//! - [Accessibility](self::hooks::use_focus)
-//! - [Router](self::_docs::router)
-//!     - [Native Router](self::_docs::router::native_router)
-//! - [Third Party State Managemement](self::_docs::third_party_state)
-//! - [Devtools](self::_docs::devtools)
-//! - [Performance Tips](self::_docs::performance)
-//!
-//! ### Advanced
-//! - [Animations](self::hooks::use_animation)
-//! - [Text Editing](self::hooks::use_editable)
-//! - [Unit Testing of Components](freya_testing)
-//!
-//! ### API References
-//! - [Elements and attributes](self::elements#structs)
-//! - [Events](self::events#functions)
-//! - [Built-in Components](self::components)
-//! - [Built-in Components Gallery](self::components::gallery)
-//! - [Built-in Hooks](self::hooks)
+//! - [Built-in Components Gallery](crate::components::gallery)
 //!
 //! ## Features flags
 //!
-//! - `devtools`: enables the devtools server.
-//! - `use_camera`: enables the [use_camera](self::hooks::use_camera) hook.
-//! - `network-image`: enables the [NetworkImage](self::components::NetworkImage) component.
-//! - `custom-tokio-rt`: disables the default Tokio runtime created by Freya.
-//! - `performance-overlay`: enables the performance overlay plugin.
-//! - `disable-zoom-shortcuts`: disables the default zoom shortcuts.
+//! - `all`: Enables all the features listed below
+//! - `router`: Reexport `freya-router` under `freya::router`
+//! - `i18n`: Reexport `freya-i18n` under `freya::router`
+//! - `remote-asset`: Enables support for **HTTP** asset sources for [ImageViewer](freya_components::image_viewer::ImageViewer) and [freya_components::gif_viewer::GifViewer] components.
+//! - `devtools`: Enables devtools support.
+//! - `performance`: Enables the performance overlay plugin.
+//! - `vulkan`: Enables Vulkan rendering support.
 
-/// Freya docs.
-#[cfg(doc)]
-pub mod _docs;
-
-/// Dioxus library.
-pub use dioxus;
-pub use dioxus_core;
-#[cfg(doc)]
-pub use freya_elements::_docs as elements_docs;
-
-/// Launch your app.
-pub mod launch;
-
-/// Collection of components.
-///
-/// Go to [Gallery](freya_components::gallery) to see previews of the components.
-pub mod components {
-    pub use freya_components::*;
-}
-
-/// Useful utilities.
-pub mod hooks {
-    pub use freya_hooks::*;
-}
-
-/// Common data structures and utils.
-pub mod common {
-    pub use freya_core::*;
-}
-
-/// Core APIs.
-pub mod core {
-    pub use freya_core::*;
-}
-
-/// Elements, attributes and events definitions.
-pub use freya_elements::elements;
-/// Events data.
-pub use freya_elements::events;
-pub use torin;
-
-pub mod plugins;
-
-/// Plot
-#[cfg(feature = "plot")]
-pub mod plot {
-    pub use plotters;
-    pub use skia_plotters_backend::*;
-}
-
-/// Useful imports.
 pub mod prelude {
-    pub use dioxus;
-    pub use dioxus_core::{
-        prelude::*,
-        {
-            self,
-        },
-    };
-    pub use dioxus_core_macro::*;
-    pub use dioxus_hooks::*;
-    pub use dioxus_signals::*;
-    pub use freya_components::*;
-    pub use freya_core::{
-        custom_attributes::{
-            dynamic_bytes,
-            static_bytes,
-            CanvasRunnerContext,
-            CustomAttributeValues,
-        },
-        platform::*,
-        platform_state::*,
-        types::AccessibilityId,
-        window_config::{
-            OnCloseResponse,
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "router")] {
+            pub use freya_components::activable_route::*;
+            pub use freya_components::link::*;
+            pub use freya_components::native_router::*;
+        }
+    }
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "plot")] {
+            pub use freya_components::plot::*;
+        }
+    }
+    pub use freya_core::prelude::*;
+    pub use freya_winit::{
+        WinitEventNotifierExt,
+        config::{
+            LaunchConfig,
             WindowConfig,
         },
     };
-    pub use freya_elements::{
-        self as dioxus_elements,
-        events::*,
-    };
-    pub use freya_hooks::*;
-    pub use freya_winit::*;
-    pub use torin::prelude::*;
 
-    pub use crate::{
-        launch::*,
-        plugins::*,
+    pub use crate::components::*;
+    pub fn launch(launch_config: LaunchConfig) {
+        #[cfg(feature = "devtools")]
+        let launch_config = launch_config.with_plugin(freya_devtools::DevtoolsPlugin::default());
+        #[cfg(feature = "performance")]
+        let launch_config = launch_config
+            .with_plugin(freya_performance_plugin::PerformanceOverlayPlugin::default());
+        freya_winit::launch(launch_config)
+    }
+    pub use torin::{
+        alignment::Alignment,
+        content::Content,
+        direction::Direction,
+        gaps::Gaps,
+        geometry::{
+            Area,
+            CursorPoint,
+            Size2D,
+        },
+        position::Position,
+        size::Size,
     };
 }
+pub mod elements {
+    pub use freya_core::elements::*;
+}
+
+pub mod components {
+    #[cfg(feature = "gif")]
+    pub use freya_components::gif_viewer::*;
+    pub use freya_components::{
+        accordion::*,
+        activable_route_context::*,
+        button::*,
+        checkbox::*,
+        chip::*,
+        drag_drop::*,
+        draggable_canvas::*,
+        dropdown::*,
+        element_expansions::*,
+        floating_tab::*,
+        gallery,
+        get_theme,
+        icons::{
+            arrow::*,
+            tick::*,
+        },
+        image_viewer::*,
+        input::*,
+        loader::*,
+        popup::*,
+        portal::*,
+        progressbar::*,
+        radio_item::*,
+        resizable_container::*,
+        scrollviews::*,
+        selectable_text::*,
+        sidebar::*,
+        slider::*,
+        switch::*,
+        table::*,
+        theming::{
+            component_themes::*,
+            hooks::*,
+            themes::*,
+        },
+        tile::*,
+        tooltip::*,
+    };
+}
+
+pub mod text_edit {
+    pub use freya_edit::*;
+}
+pub mod animation {
+    pub use freya_animation::prelude::*;
+}
+#[cfg(feature = "router")]
+pub mod router {
+    pub use freya_router::*;
+}
+#[cfg(feature = "i18n")]
+pub mod i18n {
+    pub use freya_i18n::*;
+}
+#[cfg(feature = "engine")]
+pub mod engine {
+    pub use freya_engine::*;
+}
+
+pub mod helpers {
+    pub use freya_core::helpers::*;
+}
+
+#[cfg(doc)]
+pub mod _docs;

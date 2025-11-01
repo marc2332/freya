@@ -1,0 +1,48 @@
+[package]
+name = "freya-winit"
+version = "0.4.0"
+edition = "2024"
+
+[package.metadata.docs.rs]
+features = ["freya-engine/mocked-engine"]
+
+[dependencies]
+freya-core = { workspace = true }
+freya-components = { workspace = true }
+torin = { workspace = true }
+
+# Rendering
+gl = { workspace = true }
+glutin = { workspace = true }
+glutin-winit = { workspace = true }
+
+ash = { workspace = true, optional = true }
+ash-window = { workspace = true, optional = true }
+
+# Window
+raw-window-handle = { workspace = true }
+winit = { workspace = true }
+freya-engine = { workspace = true }
+
+# Events
+ragnarok = { workspace = true }
+keyboard-types = { workspace = true }
+
+# Accessibility
+accesskit_winit = { workspace = true }
+accesskit = { workspace = true }
+
+# Other
+futures-channel = { workspace = true }
+futures-util = { workspace = true }
+rustc-hash = { workspace = true }
+
+# Performance
+hotpath = { workspace = true }
+
+[features]
+hotpath = ["hotpath/hotpath"]
+hotpath-alloc-bytes-total = ["hotpath/hotpath-alloc-bytes-total"]
+hotpath-alloc-count-total = ["hotpath/hotpath-alloc-count-total"]
+hotpath-off = ["hotpath/hotpath-off"]
+vulkan = ["dep:ash", "dep:ash-window", "freya-engine/vulkan"]

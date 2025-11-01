@@ -1,4 +1,7 @@
-use std::sync::Arc;
+use std::{
+    any::Any,
+    rc::Rc,
+};
 
 pub use euclid::Rect;
 
@@ -8,7 +11,6 @@ use crate::{
     prelude::{
         AreaModel,
         Gaps,
-        SendAnyMap,
     },
 };
 
@@ -27,7 +29,7 @@ pub struct LayoutNode {
 
     /// Associated data
     #[cfg_attr(feature = "serde", serde(skip_deserializing, skip_serializing))]
-    pub data: Option<Arc<SendAnyMap>>,
+    pub data: Option<Rc<dyn Any>>,
 }
 
 impl PartialEq for LayoutNode {
@@ -49,13 +51,13 @@ pub trait NodeKey: Clone + PartialEq + Eq + std::hash::Hash + Copy + std::fmt::D
 
 impl NodeKey for usize {}
 
-pub trait DOMAdapter<Key: NodeKey> {
+pub trait TreeAdapter<Key: NodeKey> {
     fn root_id(&self) -> Key;
 
     /// Get the Node size
     fn get_node(&self, node_id: &Key) -> Option<Node>;
 
-    /// Get the height in the DOM of the given Node
+    /// Get the height in the Tree of the given Node
     fn height(&self, node_id: &Key) -> Option<u16>;
 
     /// Get the parent of a Node
@@ -63,9 +65,6 @@ pub trait DOMAdapter<Key: NodeKey> {
 
     /// Get the children of a Node
     fn children_of(&mut self, node_id: &Key) -> Vec<Key>;
-
-    /// Check whether the given Node is valid (isn't a placeholder, unconnected node..)
-    fn is_node_valid(&mut self, node_id: &Key) -> bool;
 
     /// Get the closest common parent Node of two Nodes
     fn closest_common_parent(&self, node_a: &Key, node_b: &Key) -> Option<Key> {
@@ -115,7 +114,7 @@ pub trait DOMAdapter<Key: NodeKey> {
 
 /// Walk to the ancestor of `base` with the same height of `target`
 fn balance_heights<Key: NodeKey>(
-    dom_adapter: &(impl DOMAdapter<Key> + ?Sized),
+    dom_adapter: &(impl TreeAdapter<Key> + ?Sized),
     base: Key,
     target: Key,
 ) -> Option<Key> {
