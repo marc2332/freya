@@ -297,25 +297,23 @@ impl ElementExt for ParagraphElement {
 
         // Draw cursor
         if let Some(cursor_index) = self.cursor_index {
-            let cursor_rect = if cursor_index == 0 {
-                paragraph.get_rects_for_range(
-                    cursor_index..cursor_index + 1,
-                    RectHeightStyle::Tight,
-                    RectWidthStyle::Tight,
-                ).first().map(|textbox| {
-                    let origin_x = match textbox.direct {
-                        TextDirection::LTR => textbox.rect.left,
-                        TextDirection::RTL => textbox.rect.right,
-                    };
+            let cursor_rect = paragraph.get_rects_for_range(
+                cursor_index..cursor_index + 1,
+                RectHeightStyle::Tight,
+                RectWidthStyle::Tight,
+            ).first().map(|textbox| {
+                let origin_x = match textbox.direct {
+                    TextDirection::LTR => textbox.rect.left,
+                    TextDirection::RTL => textbox.rect.right,
+                };
 
-                    SkRect::new(
-                        area.min_x() + origin_x,
-                        area.min_y() + textbox.rect.top,
-                        area.min_x() + origin_x + 2.,
-                        area.min_y() + textbox.rect.bottom,
-                    )
-                })
-            } else {
+                SkRect::new(
+                    area.min_x() + origin_x,
+                    area.min_y() + textbox.rect.top,
+                    area.min_x() + origin_x + 2.,
+                    area.min_y() + textbox.rect.bottom,
+                )
+            }).or_else(|| {
                 paragraph.get_rects_for_range(
                     cursor_index - 1..cursor_index,
                     RectHeightStyle::Tight,
@@ -325,7 +323,7 @@ impl ElementExt for ParagraphElement {
                         TextDirection::LTR => textbox.rect.right,
                         TextDirection::RTL => textbox.rect.left,
                     };
-
+    
                     SkRect::new(
                         area.min_x() + origin_x,
                         area.min_y() + textbox.rect.top,
@@ -333,7 +331,7 @@ impl ElementExt for ParagraphElement {
                         area.min_y() + textbox.rect.bottom,
                     )
                 })
-            };
+            });
 
             if let Some(cursor_rect) = cursor_rect {
                 let mut paint = Paint::default();
