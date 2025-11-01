@@ -55,7 +55,7 @@ pub enum EditableEvent<'a> {
 /// Move the cursor 1 line up
 fn cursor_up(editor: &mut impl TextEditor, paragraph: &Paragraph) -> bool {
     let cursor_pos = editor.cursor_pos();
-    let cursor_x_pos = paragraph
+    let Some(cursor_x_pos) = paragraph
         .get_rects_for_range(
             cursor_pos..cursor_pos + 1,
             RectHeightStyle::Tight,
@@ -79,7 +79,11 @@ fn cursor_up(editor: &mut impl TextEditor, paragraph: &Paragraph) -> bool {
                     TextDirection::RTL => textbox.rect.left,
                 })
         })
-        .unwrap();
+    else {
+        #[cfg(debug_assertions)]
+        panic!("Cursor is somehow not on a glyph.");
+        return false;
+    };
 
     if editor.cursor().x_pos() < cursor_x_pos {
         editor.cursor_mut().set_x_pos(cursor_x_pos);
@@ -115,7 +119,7 @@ fn cursor_up(editor: &mut impl TextEditor, paragraph: &Paragraph) -> bool {
 /// Move the cursor 1 line down
 fn cursor_down(editor: &mut impl TextEditor, paragraph: &Paragraph) -> bool {
     let cursor_pos = editor.cursor_pos();
-    let cursor_x_pos = paragraph
+    let Some(cursor_x_pos) = paragraph
         .get_rects_for_range(
             cursor_pos..cursor_pos + 1,
             RectHeightStyle::Tight,
@@ -139,7 +143,11 @@ fn cursor_down(editor: &mut impl TextEditor, paragraph: &Paragraph) -> bool {
                     TextDirection::RTL => textbox.rect.left,
                 })
         })
-        .unwrap();
+    else {
+        #[cfg(debug_assertions)]
+        panic!("Cursor is somehow not on a glyph.");
+        return false;
+    };
 
     if editor.cursor().x_pos() < cursor_x_pos {
         editor.cursor_mut().set_x_pos(cursor_x_pos);
