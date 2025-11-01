@@ -2,6 +2,7 @@ use std::{borrow::Cow, cmp::Ordering, fmt::Display, ops::Range};
 
 use freya_clipboard::hooks::UseClipboard;
 use keyboard_types::{Code, Key, Modifiers};
+use unicode_segmentation::UnicodeSegmentation;
 
 use crate::editor_history::EditorHistory;
 
@@ -80,14 +81,11 @@ pub enum CursorMovement {
     /// Move one character left/right.
     Character,
 
-    /// Move one word left/right.
+    /// Move one word boundary left/right.
     Word,
 
     /// Move to start/end of line.
     Line,
-
-    /// Move to start/end of paragraph.
-    Paragraph,
 
     /// Move to start/end of buffer.
     Buffer,
@@ -267,6 +265,19 @@ pub trait TextEditor {
 
                 target
             }
+            CursorMovement::Word => {
+                let cursor_col = self.cursor_col();
+                let cursor_row = self.cursor_row();
+                let current_line = self.line(cursor_row).unwrap();
+
+                let Some(next_word_bound) =
+                    current_line.text[cursor_col..].split_word_bounds().next()
+                else {
+                    return false;
+                };
+
+                pos + next_word_bound.chars().count()
+            }
             CursorMovement::Buffer => self.len_utf16_cu(),
             CursorMovement::Selection => {
                 let Some(selection) = self.get_selection() else {
@@ -281,7 +292,6 @@ pub trait TextEditor {
 
                 selection_max
             }
-            _ => unimplemented!(),
         };
 
         if pos != target_pos {
@@ -306,6 +316,19 @@ pub trait TextEditor {
                 }
             }
             CursorMovement::Line => self.line_to_char(self.cursor_row()),
+            CursorMovement::Word => {
+                let cursor_col = self.cursor_col();
+                let cursor_row = self.cursor_row();
+                let current_line = self.line(cursor_row).unwrap();
+
+                let Some(current_word_bound) =
+                    current_line.text[0..cursor_col].split_word_bounds().last()
+                else {
+                    return false;
+                };
+
+                pos - current_word_bound.chars().count()
+            }
             CursorMovement::Buffer => 0,
             CursorMovement::Selection => {
                 let Some(selection) = self.get_selection() else {
@@ -403,13 +426,19 @@ pub trait TextEditor {
                 if shift {
                     self.expand_selection_to_cursor();
 
-                    if self.cursor_left(CursorMovement::Character) {
+                    if self.cursor_left(if meta_or_ctrl {
+                        CursorMovement::Word
+                    } else {
+                        CursorMovement::Character
+                    }) {
                         event.insert(TextEvent::CURSOR_CHANGED);
                         self.expand_selection_to_cursor();
                     }
                 } else {
                     // If we have an active selection, move to the start of that selection and clear it.
-                    if self.cursor_left(if self.has_any_selection() {
+                    if self.cursor_left(if meta_or_ctrl {
+                        CursorMovement::Word
+                    } else if self.has_any_selection() {
                         CursorMovement::Selection
                     } else {
                         CursorMovement::Character
@@ -431,13 +460,19 @@ pub trait TextEditor {
                 if shift {
                     self.expand_selection_to_cursor();
 
-                    if self.cursor_right(CursorMovement::Character) {
+                    if self.cursor_right(if meta_or_ctrl {
+                        CursorMovement::Word
+                    } else {
+                        CursorMovement::Character
+                    }) {
                         event.insert(TextEvent::CURSOR_CHANGED);
                         self.expand_selection_to_cursor();
                     }
                 } else {
                     // If we have an active selection, move to the end of that selection and clear it.
-                    if self.cursor_right(if self.has_any_selection() {
+                    if self.cursor_right(if meta_or_ctrl {
+                        CursorMovement::Word
+                    } else if self.has_any_selection() {
                         CursorMovement::Selection
                     } else {
                         CursorMovement::Character
