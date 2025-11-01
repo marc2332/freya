@@ -720,7 +720,7 @@ impl EditableEvent<'_> {
                                             }
                                         }
 
-                                        _ if config.allow_changes => {
+                                        _ if config.allow_changes && !meta_or_ctrl && !modifiers.alt() => {
                                             // Remove selected text
                                             let selection = editor.get_selection_range();
                                             if let Some((start, end)) = selection {
