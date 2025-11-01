@@ -229,6 +229,7 @@ impl Render for Input {
                     key: &e.key,
                     code: e.code,
                     modifiers: e.modifiers,
+                    holder: &holder.read(),
                 });
                 let text = editable.editor().peek().to_string();
 
