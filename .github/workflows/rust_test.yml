@@ -1,4 +1,4 @@
-name: Rust
+name: Rust Test
 
 on:
   workflow_dispatch:
@@ -23,18 +23,10 @@ jobs:
         submodules: true
     - name: Install stable rust toolchain
       uses: dtolnay/rust-toolchain@1.90
-      with:
-        components: rustfmt, clippy
-    - name: Install nightly rust toolchain
-      uses: dtolnay/rust-toolchain@nightly
-      with:
-        components: rustfmt
     - name: Install nextest
       uses: taiki-e/install-action@nextest
     - name: Install just
       uses: taiki-e/install-action@just
-    - name: Install taplo
-      uses: taiki-e/install-action@taplo
     - name: Set up cargo cache
       uses: Swatinem/rust-cache@v2
       if: github.ref != 'refs/heads/main'
@@ -43,10 +35,6 @@ jobs:
     - name: Install linux dependencies
       if: runner.os == 'Linux'
       run: sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev
-    - name: Lint
-      run: just c
-    - name: Format
-      run: just f
     - name: Run Linux tests
       if: runner.os == 'Linux'
       run: |
@@ -56,10 +44,6 @@ jobs:
     - name: Run MacOS and Windows tests
       if: runner.os != 'Linux'
       run: just t
-    - name: Run doctests
-      run: cargo test --workspace --doc --features all
-    - name: Build all --features
-      run: just ba
     - name: Run coverage
       if: runner.os == 'Linux'
       run: |

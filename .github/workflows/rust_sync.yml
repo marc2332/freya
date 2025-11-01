@@ -1,4 +1,4 @@
-name: Skia bindings sync
+name: Rust Skia bindings sync
 
 on:
   workflow_dispatch:
