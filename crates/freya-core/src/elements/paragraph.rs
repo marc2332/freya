@@ -7,16 +7,7 @@ use std::{
 };
 
 use freya_engine::prelude::{
-    FontStyle,
-    Paint,
-    PaintStyle,
-    ParagraphBuilder,
-    ParagraphStyle,
-    RectHeightStyle,
-    RectWidthStyle,
-    SkParagraph,
-    SkRect,
-    TextStyle,
+    FontStyle, Paint, PaintStyle, ParagraphBuilder, ParagraphStyle, RectHeightStyle, RectWidthStyle, SkParagraph, SkRect, TextDirection, TextStyle
 };
 use rustc_hash::FxHashMap;
 use torin::prelude::Size2D;
@@ -306,37 +297,45 @@ impl ElementExt for ParagraphElement {
 
         // Draw cursor
         if let Some(cursor_index) = self.cursor_index {
-            let cursor_rects = paragraph.get_rects_for_range(
-                cursor_index..cursor_index + 1,
-                RectHeightStyle::Tight,
-                RectWidthStyle::Tight,
-            );
-            if let Some(cursor_rect) = cursor_rects.first().map(|text| text.rect).or_else(|| {
-                // Show the cursor at the end of the text if possible
-                let text_len = paragraph
-                    .get_glyph_position_at_coordinate((f32::MAX, f32::MAX))
-                    .position as usize;
-                let last_rects = paragraph.get_rects_for_range(
-                    (text_len - 1)..text_len,
+            let cursor_rect = if cursor_index == 0 {
+                paragraph.get_rects_for_range(
+                    cursor_index..cursor_index + 1,
                     RectHeightStyle::Tight,
                     RectWidthStyle::Tight,
-                );
+                ).first().map(|textbox| {
+                    let origin_x = match textbox.direct {
+                        TextDirection::LTR => textbox.rect.left,
+                        TextDirection::RTL => textbox.rect.right,
+                    };
 
-                if let Some(last_rect) = last_rects.first() {
-                    let mut caret = last_rect.rect;
-                    caret.left = caret.right;
-                    Some(caret)
-                } else {
-                    None
-                }
-            }) {
-                let cursor_rect = SkRect::new(
-                    area.min_x() + cursor_rect.left,
-                    area.min_y() + cursor_rect.top,
-                    area.min_x() + cursor_rect.left + 2.,
-                    area.min_y() + cursor_rect.bottom,
-                );
+                    SkRect::new(
+                        area.min_x() + origin_x,
+                        area.min_y() + textbox.rect.top,
+                        area.min_x() + origin_x + 2.,
+                        area.min_y() + textbox.rect.bottom,
+                    )
+                })
+            } else {
+                paragraph.get_rects_for_range(
+                    cursor_index - 1..cursor_index,
+                    RectHeightStyle::Tight,
+                    RectWidthStyle::Tight,
+                ).first().map(|textbox| {
+                    let origin_x = match textbox.direct {
+                        TextDirection::LTR => textbox.rect.right,
+                        TextDirection::RTL => textbox.rect.left,
+                    };
 
+                    SkRect::new(
+                        area.min_x() + origin_x,
+                        area.min_y() + textbox.rect.top,
+                        area.min_x() + origin_x + 2.,
+                        area.min_y() + textbox.rect.bottom,
+                    )
+                })
+            };
+
+            if let Some(cursor_rect) = cursor_rect {
                 let mut paint = Paint::default();
                 paint.set_anti_alias(true);
                 paint.set_style(PaintStyle::Fill);
