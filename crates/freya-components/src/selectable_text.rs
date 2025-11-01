@@ -92,6 +92,7 @@ impl Render for SelectableText {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
+                holder: &holder.read(),
             });
         };
 

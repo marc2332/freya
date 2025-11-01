@@ -14,7 +14,6 @@ use crate::{
     }
 };
 
-
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 enum CursorMovement {
     /// Move one character left/right.
@@ -49,6 +48,7 @@ pub enum EditableEvent<'a> {
         key: &'a Key,
         code: Code,
         modifiers: Modifiers,
+        holder: &'a ParagraphHolder,
     },
     KeyUp {
         code: Code,
@@ -334,7 +334,14 @@ impl EditableEvent<'_> {
                 code,
                 key,
                 modifiers,
+                holder,
             } => {
+                let paragraph = holder.0.borrow();
+                let ParagraphHolderInner {
+                    paragraph,
+                    scale_factor,
+                } = paragraph.as_ref().unwrap();
+
                 match code {
                     // Handle dragging
                     Code::ShiftLeft => {
