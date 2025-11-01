@@ -391,7 +391,7 @@ impl EditableEvent<'_> {
             } => {
                 let paragraph = holder.0.borrow();
                 let paragraph = &paragraph.as_ref().unwrap().paragraph;
-                
+
                 match code {
                     // Handle dragging
                     Code::ShiftLeft => {
@@ -507,7 +507,13 @@ impl EditableEvent<'_> {
                                         editor.clear_selection();
                                     }
 
-                                    if cursor_up(&mut *editor, paragraph) {
+                                    // Move to start of selection range if one exists, then move up.
+                                    if cursor_left(
+                                        &mut *editor,
+                                        paragraph,
+                                        CursorMovement::Selection,
+                                    ) || cursor_up(&mut *editor, paragraph)
+                                    {
                                         event.insert(TextEvent::CURSOR_CHANGED);
                                     }
 
@@ -522,7 +528,13 @@ impl EditableEvent<'_> {
                                         editor.clear_selection();
                                     }
 
-                                    if cursor_down(&mut *editor, paragraph) {
+                                    // Move to end of selection range if one exists, then move down.
+                                    if cursor_right(
+                                        &mut *editor,
+                                        paragraph,
+                                        CursorMovement::Selection,
+                                    ) || cursor_down(&mut *editor, paragraph)
+                                    {
                                         event.insert(TextEvent::CURSOR_CHANGED);
                                     }
 
@@ -649,7 +661,11 @@ impl EditableEvent<'_> {
                                             let len = editor.len_utf16_cu();
                                             editor.set_selection((0, len));
 
-                                            if cursor_right(&mut *editor, paragraph, CursorMovement::Buffer) {
+                                            if cursor_right(
+                                                &mut *editor,
+                                                paragraph,
+                                                CursorMovement::Buffer,
+                                            ) {
                                                 event.insert(TextEvent::CURSOR_CHANGED);
                                             }
                                         }
@@ -720,7 +736,10 @@ impl EditableEvent<'_> {
                                             }
                                         }
 
-                                        _ if config.allow_changes && !meta_or_ctrl && !modifiers.alt() => {
+                                        _ if config.allow_changes
+                                            && !meta_or_ctrl
+                                            && !modifiers.alt() =>
+                                        {
                                             // Remove selected text
                                             let selection = editor.get_selection_range();
                                             if let Some((start, end)) = selection {
