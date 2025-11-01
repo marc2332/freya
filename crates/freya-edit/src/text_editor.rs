@@ -183,7 +183,6 @@ pub trait TextEditor {
         if pos > 0 {
             // Reached max
             if old_row == 0 {
-                println!("Set to pos=0");
                 self.cursor_mut().set(0);
             } else {
                 let new_row = old_row - 1;
