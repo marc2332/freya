@@ -680,6 +680,11 @@ impl EditableEvent<'_> {
                                         Code::KeyA if meta_or_ctrl => {
                                             let len = editor.len_utf16_cu();
                                             editor.set_selection((0, len));
+
+                                            if cursor_right(&mut *editor, paragraph, CursorMovement::Buffer) {
+                                                event.insert(TextEvent::CURSOR_CHANGED);
+                                            }
+
                                             event.insert(TextEvent::SELECTION_CHANGED);
                                         }
 
