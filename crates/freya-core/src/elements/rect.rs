@@ -471,12 +471,12 @@ impl ElementExt for RectElement {
 
     fn clip(&self, context: ClipContext) {
         let style = self.style();
-        let area = context.layout_node.area;
+        let area = context.visible_area;
         let corner_radius = style.corner_radius.with_scale(context.scale_factor as f32);
 
         let mut path = SkPath::new();
 
-        let rounded_rect = self.container_rect(&area, context.scale_factor as f32);
+        let rounded_rect = self.container_rect(area, context.scale_factor as f32);
 
         if corner_radius.smoothing > 0.0 {
             path.add_path(

@@ -12,6 +12,7 @@ use freya_engine::prelude::{
 };
 use rustc_hash::FxHashMap;
 use torin::prelude::{
+    Area,
     LayoutNode,
     Size2D,
 };
@@ -145,7 +146,7 @@ pub struct EventMeasurementContext<'a> {
 
 pub struct ClipContext<'a> {
     pub canvas: &'a Canvas,
-    pub layout_node: &'a LayoutNode,
+    pub visible_area: &'a Area,
     pub scale_factor: f64,
 }
 

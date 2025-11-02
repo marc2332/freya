@@ -137,7 +137,7 @@ impl ElementExt for PlotElement {
     }
 
     fn clip(&self, context: ClipContext) {
-        let area = context.layout_node.visible_area();
+        let area = context.visible_area;
 
         context.canvas.clip_rect(
             SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
