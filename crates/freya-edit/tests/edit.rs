@@ -31,7 +31,7 @@ fn multiple_lines_single_editor() {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
-                holder: &holder.read(),
+                holder: Some(&holder.read()),
             });
         };
 
@@ -146,7 +146,7 @@ fn single_line_multiple_editors() {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
-                holder: &holder.read(),
+                holder: Some(&holder.read()),
             });
         };
 

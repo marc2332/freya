@@ -232,16 +232,14 @@ fn cursor_down(editor: &mut impl TextEditor, paragraph: Option<&Ref<Paragraph>>)
                 }
                 Ordering::Equal => {
                     let end = editor.len_utf16_cu();
-                    if pos == end  {
+                    if pos == end {
                         return false;
                     }
 
                     editor.cursor_mut().set(end);
                     true
                 }
-                Ordering::Greater => {
-                    false
-                }
+                Ordering::Greater => false,
             }
         }
     }
@@ -604,7 +602,8 @@ impl EditableEvent<'_> {
                                         };
 
                                         // If we have an active selection, move to the end of that selection and clear it.
-                                        if cursor_right(&mut *editor, paragraph.as_ref(), movement) {
+                                        if cursor_right(&mut *editor, paragraph.as_ref(), movement)
+                                        {
                                             event.insert(TextEvent::CURSOR_CHANGED);
                                         }
 
@@ -662,6 +661,8 @@ impl EditableEvent<'_> {
                                 Key::Home => {
                                     if shift {
                                         editor.expand_selection_to_cursor();
+                                    } else {
+                                        editor.clear_selection();
                                     }
 
                                     // Move to either start of line or start of buffer depending on if ctrl is pressed.
@@ -677,6 +678,7 @@ impl EditableEvent<'_> {
                                         event.insert(TextEvent::CURSOR_CHANGED);
                                     }
 
+
                                     if shift {
                                         editor.expand_selection_to_cursor();
                                     }
@@ -684,6 +686,8 @@ impl EditableEvent<'_> {
                                 Key::End => {
                                     if shift {
                                         editor.expand_selection_to_cursor();
+                                    } else {
+                                        editor.clear_selection();
                                     }
 
                                     // Move to either end of line or end of buffer depending on if ctrl is pressed.
@@ -713,10 +717,24 @@ impl EditableEvent<'_> {
                                         event.insert(TextEvent::TEXT_CHANGED);
                                     } else if cursor_pos > 0 {
                                         // Remove the character to the left if there is any
-                                        let removed_text_len =
-                                            editor.remove(cursor_pos - 1..cursor_pos);
-                                        editor.set_cursor_pos(cursor_pos - removed_text_len);
-                                        event.insert(TextEvent::TEXT_CHANGED);
+                                        let removed_text_len = if meta_or_ctrl
+                                            && let Some(paragraph) = paragraph
+                                        {
+                                            let word_boundary_start = paragraph
+                                                .get_word_boundary(
+                                                    editor.cursor_pos().saturating_sub(1) as u32,
+                                                )
+                                                .start;
+
+                                            editor.remove(word_boundary_start..cursor_pos)
+                                        } else {
+                                            editor.remove(cursor_pos - 1..cursor_pos)
+                                        };
+
+                                        if removed_text_len > 0 {
+                                            editor.set_cursor_pos(cursor_pos - removed_text_len);
+                                            event.insert(TextEvent::TEXT_CHANGED);
+                                        }
                                     }
                                 }
                                 Key::Delete if config.allow_changes => {
@@ -744,7 +762,11 @@ impl EditableEvent<'_> {
                                     // Breaks the line
                                     let cursor_pos = editor.cursor_pos();
                                     editor.insert_char('\n', cursor_pos);
-                                    cursor_right(&mut *editor, paragraph.as_ref(), CursorMovement::Glyph);
+                                    cursor_right(
+                                        &mut *editor,
+                                        paragraph.as_ref(),
+                                        CursorMovement::Glyph,
+                                    );
 
                                     event.insert(TextEvent::TEXT_CHANGED);
                                 }
