@@ -1,4 +1,4 @@
-use std::ops::Mul;
+use std::{cell::Ref, cmp::Ordering, ops::Mul};
 
 use freya_core::{elements::paragraph::ParagraphHolderInner, prelude::*};
 use freya_engine::prelude::{Paragraph, RectHeightStyle, RectWidthStyle, TextDirection};
@@ -45,7 +45,7 @@ pub enum EditableEvent<'a> {
         key: &'a Key,
         code: Code,
         modifiers: Modifiers,
-        holder: &'a ParagraphHolder,
+        holder: Option<&'a ParagraphHolder>,
     },
     KeyUp {
         code: Code,
@@ -53,129 +53,204 @@ pub enum EditableEvent<'a> {
 }
 
 /// Move the cursor 1 line up
-fn cursor_up(editor: &mut impl TextEditor, paragraph: &Paragraph) -> bool {
-    let cursor_pos = editor.cursor_pos();
-    let Some(cursor_x_pos) = paragraph
-        .get_rects_for_range(
-            cursor_pos..cursor_pos + 1,
-            RectHeightStyle::Tight,
-            RectWidthStyle::Tight,
-        )
-        .first()
-        .map(|textbox| match textbox.direct {
-            TextDirection::LTR => textbox.rect.left,
-            TextDirection::RTL => textbox.rect.right,
-        })
-        .or_else(|| {
-            paragraph
-                .get_rects_for_range(
-                    cursor_pos - 1..cursor_pos,
-                    RectHeightStyle::Tight,
-                    RectWidthStyle::Tight,
-                )
+fn cursor_up(editor: &mut impl TextEditor, paragraph: Option<&Ref<Paragraph>>) -> bool {
+    let pos = editor.cursor_pos();
+
+    match paragraph {
+        Some(paragraph) => {
+            let Some(cursor_x_pos) = paragraph
+                .get_rects_for_range(pos..pos + 1, RectHeightStyle::Tight, RectWidthStyle::Tight)
                 .first()
                 .map(|textbox| match textbox.direct {
-                    TextDirection::LTR => textbox.rect.right,
-                    TextDirection::RTL => textbox.rect.left,
+                    TextDirection::LTR => textbox.rect.left,
+                    TextDirection::RTL => textbox.rect.right,
                 })
-        })
-    else {
-        #[cfg(debug_assertions)]
-        panic!("Cursor is somehow not on a glyph.");
-        return false;
-    };
+                .or_else(|| {
+                    paragraph
+                        .get_rects_for_range(
+                            pos - 1..pos,
+                            RectHeightStyle::Tight,
+                            RectWidthStyle::Tight,
+                        )
+                        .first()
+                        .map(|textbox| match textbox.direct {
+                            TextDirection::LTR => textbox.rect.right,
+                            TextDirection::RTL => textbox.rect.left,
+                        })
+                })
+            else {
+                #[cfg(debug_assertions)]
+                panic!("Cursor is somehow not on a glyph.");
+                return false;
+            };
 
-    if editor.cursor().x_pos() < cursor_x_pos {
-        editor.cursor_mut().set_x_pos(cursor_x_pos);
+            if editor.cursor().x_pos() < cursor_x_pos {
+                editor.cursor_mut().set_x_pos(cursor_x_pos);
+            }
+
+            let current_line_number = if pos == editor.len_utf16_cu() {
+                Some(paragraph.line_number() - 1)
+            } else {
+                paragraph.get_line_number_at(pos)
+            };
+
+            if let Some(current_line_number) = current_line_number
+                && current_line_number > 0
+            {
+                let prev_line_metrics = paragraph
+                    .get_line_metrics_at(current_line_number - 1)
+                    .unwrap();
+                let nearest_glyph_on_prev_line = paragraph.get_glyph_position_at_coordinate((
+                    editor.cursor().x_pos(),
+                    prev_line_metrics.baseline as f32,
+                ));
+
+                editor
+                    .cursor_mut()
+                    .set(nearest_glyph_on_prev_line.position as usize);
+            } else {
+                editor.cursor_mut().set(0);
+            }
+
+            true
+        }
+
+        // Fallback implementation for SingleLineMultipleEditors when text metrics are unavailable.
+        None => {
+            let old_row = editor.cursor_row();
+            let old_col = editor.cursor_col();
+
+            if pos > 0 {
+                // Reached max
+                if old_row == 0 {
+                    editor.cursor_mut().set(0);
+                } else {
+                    let new_row = old_row - 1;
+                    let new_row_char = editor.char_to_utf16_cu(editor.line_to_char(new_row));
+                    let new_row_len = editor.line(new_row).unwrap().utf16_len();
+
+                    if editor.cursor().x_pos() < (old_col as f32) {
+                        editor.cursor_mut().set_x_pos(old_col as f32);
+                    }
+                    let new_col =
+                        (editor.cursor().x_pos() as usize).min(new_row_len.saturating_sub(1));
+
+                    editor.cursor_mut().set(new_row_char + new_col);
+                }
+
+                true
+            } else {
+                false
+            }
+        }
     }
-
-    let current_line_number = if cursor_pos == editor.len_utf16_cu() {
-        Some(paragraph.line_number() - 1)
-    } else {
-        paragraph.get_line_number_at(cursor_pos)
-    };
-
-    if let Some(current_line_number) = current_line_number
-        && current_line_number > 0
-    {
-        let prev_line_metrics = paragraph
-            .get_line_metrics_at(current_line_number - 1)
-            .unwrap();
-        let nearest_glyph_on_prev_line = paragraph.get_glyph_position_at_coordinate((
-            editor.cursor().x_pos(),
-            prev_line_metrics.baseline as f32,
-        ));
-
-        editor
-            .cursor_mut()
-            .set(nearest_glyph_on_prev_line.position as usize);
-    } else {
-        editor.cursor_mut().set(0);
-    }
-
-    true
 }
 
 /// Move the cursor 1 line down
-fn cursor_down(editor: &mut impl TextEditor, paragraph: &Paragraph) -> bool {
-    let cursor_pos = editor.cursor_pos();
-    let Some(cursor_x_pos) = paragraph
-        .get_rects_for_range(
-            cursor_pos..cursor_pos + 1,
-            RectHeightStyle::Tight,
-            RectWidthStyle::Tight,
-        )
-        .first()
-        .map(|textbox| match textbox.direct {
-            TextDirection::LTR => textbox.rect.left,
-            TextDirection::RTL => textbox.rect.right,
-        })
-        .or_else(|| {
-            paragraph
-                .get_rects_for_range(
-                    cursor_pos - 1..cursor_pos,
-                    RectHeightStyle::Tight,
-                    RectWidthStyle::Tight,
-                )
+fn cursor_down(editor: &mut impl TextEditor, paragraph: Option<&Ref<Paragraph>>) -> bool {
+    let pos = editor.cursor_pos();
+
+    match paragraph {
+        Some(paragraph) => {
+            let Some(cursor_x_pos) = paragraph
+                .get_rects_for_range(pos..pos + 1, RectHeightStyle::Tight, RectWidthStyle::Tight)
                 .first()
                 .map(|textbox| match textbox.direct {
-                    TextDirection::LTR => textbox.rect.right,
-                    TextDirection::RTL => textbox.rect.left,
+                    TextDirection::LTR => textbox.rect.left,
+                    TextDirection::RTL => textbox.rect.right,
                 })
-        })
-    else {
-        #[cfg(debug_assertions)]
-        panic!("Cursor is somehow not on a glyph.");
-        return false;
-    };
+                .or_else(|| {
+                    paragraph
+                        .get_rects_for_range(
+                            pos - 1..pos,
+                            RectHeightStyle::Tight,
+                            RectWidthStyle::Tight,
+                        )
+                        .first()
+                        .map(|textbox| match textbox.direct {
+                            TextDirection::LTR => textbox.rect.right,
+                            TextDirection::RTL => textbox.rect.left,
+                        })
+                })
+            else {
+                #[cfg(debug_assertions)]
+                panic!("Cursor is somehow not on a glyph.");
+                return false;
+            };
 
-    if editor.cursor().x_pos() < cursor_x_pos {
-        editor.cursor_mut().set_x_pos(cursor_x_pos);
+            if editor.cursor().x_pos() < cursor_x_pos {
+                editor.cursor_mut().set_x_pos(cursor_x_pos);
+            }
+
+            if let Some(current_line_number) = paragraph.get_line_number_at(pos)
+                && let Some(next_line_metrics) =
+                    paragraph.get_line_metrics_at(current_line_number + 1)
+            {
+                let nearest_glyph_on_next_line = paragraph.get_glyph_position_at_coordinate((
+                    editor.cursor().x_pos(),
+                    next_line_metrics.baseline as f32,
+                ));
+
+                editor
+                    .cursor_mut()
+                    .set(nearest_glyph_on_next_line.position as usize);
+            } else {
+                let end_of_buffer = editor.len_utf16_cu();
+                editor.cursor_mut().set(end_of_buffer);
+            }
+
+            true
+        }
+
+        // Fallback implementation for SingleLineMultipleEditors when text metrics are unavailable.
+        None => {
+            let old_row = editor.cursor_row();
+            let old_col = editor.cursor_col();
+
+            match old_row.cmp(&(editor.len_lines() - 1)) {
+                Ordering::Less => {
+                    // One line below
+                    let new_row = old_row + 1;
+                    let new_row_char = editor.char_to_utf16_cu(editor.line_to_char(new_row));
+                    let mut new_row_len = editor.line(new_row).unwrap().utf16_len();
+
+                    // Consider newline characters when calculating line length.
+                    //
+                    // Last line doesn't have a newline, so we don't subtract from it.
+                    if editor.line(new_row + 1).is_some() {
+                        new_row_len = new_row_len.saturating_sub(1);
+                    }
+
+                    if editor.cursor().x_pos() < (old_col as f32) {
+                        editor.cursor_mut().set_x_pos(old_col as f32);
+                    }
+                    let new_col = (editor.cursor().x_pos() as usize).min(new_row_len);
+
+                    editor.cursor_mut().set(new_row_char + (new_col as usize));
+
+                    true
+                }
+                Ordering::Equal => {
+                    let end = editor.len_utf16_cu();
+                    // Reached max
+                    editor.cursor_mut().set(end);
+
+                    true
+                }
+                Ordering::Greater => {
+                    // Can't go further
+
+                    false
+                }
+            }
+        }
     }
-
-    if let Some(current_line_number) = paragraph.get_line_number_at(cursor_pos)
-        && let Some(next_line_metrics) = paragraph.get_line_metrics_at(current_line_number + 1)
-    {
-        let nearest_glyph_on_next_line = paragraph.get_glyph_position_at_coordinate((
-            editor.cursor().x_pos(),
-            next_line_metrics.baseline as f32,
-        ));
-
-        editor
-            .cursor_mut()
-            .set(nearest_glyph_on_next_line.position as usize);
-    } else {
-        let end_of_buffer = editor.len_utf16_cu();
-        editor.cursor_mut().set(end_of_buffer);
-    }
-
-    true
 }
 
 /// Move the cursor to the left
 fn cursor_left(
     editor: &mut impl TextEditor,
-    paragraph: &Paragraph,
+    paragraph: Option<&Ref<Paragraph>>,
     movement: CursorMovement,
 ) -> bool {
     let pos = editor.cursor_pos();
@@ -189,24 +264,33 @@ fn cursor_left(
             }
         }
         CursorMovement::Line => {
-            let current_line_number = if pos == editor.len_utf16_cu() {
-                Some(paragraph.line_number() - 1)
-            } else {
-                paragraph.get_line_number_at(pos)
-            };
+            if let Some(paragraph) = paragraph {
+                let current_line_number = if pos == editor.len_utf16_cu() {
+                    Some(paragraph.line_number() - 1)
+                } else {
+                    paragraph.get_line_number_at(pos)
+                };
 
-            if let Some(current_line_number) = current_line_number {
-                let line_metrics = paragraph.get_line_metrics_at(current_line_number).unwrap();
+                if let Some(current_line_number) = current_line_number {
+                    let line_metrics = paragraph.get_line_metrics_at(current_line_number).unwrap();
 
-                line_metrics.start_index
+                    line_metrics.start_index
+                } else {
+                    return false;
+                }
             } else {
-                return false;
+                editor.line_to_char(editor.cursor_row())
             }
         }
         CursorMovement::Word => {
-            paragraph
-                .get_word_boundary(editor.cursor_pos().saturating_sub(1) as u32)
-                .start
+            if let Some(paragraph) = paragraph {
+                paragraph
+                    .get_word_boundary(editor.cursor_pos().saturating_sub(1) as u32)
+                    .start
+            } else {
+                // TODO
+                return false;
+            }
         }
         CursorMovement::Buffer => 0,
         CursorMovement::Selection => {
@@ -231,7 +315,7 @@ fn cursor_left(
 /// Move the cursor to th right
 fn cursor_right(
     editor: &mut impl TextEditor,
-    paragraph: &Paragraph,
+    paragraph: Option<&Ref<Paragraph>>,
     movement: CursorMovement,
 ) -> bool {
     let pos = editor.cursor_pos();
@@ -243,22 +327,48 @@ fn cursor_right(
                 return false;
             }
         }
-        CursorMovement::Line => {   
-            let current_line_number = if pos == editor.len_utf16_cu() {
-                Some(paragraph.line_number() - 1)
-            } else {
-                paragraph.get_line_number_at(pos)
-            };
+        CursorMovement::Line => {
+            if let Some(paragraph) = paragraph {
+                let current_line_number = if pos == editor.len_utf16_cu() {
+                    Some(paragraph.line_number() - 1)
+                } else {
+                    paragraph.get_line_number_at(pos)
+                };
 
-            if let Some(current_line_number) = current_line_number {
-                let line_metrics = paragraph.get_line_metrics_at(current_line_number).unwrap();
+                if let Some(current_line_number) = current_line_number {
+                    let line_metrics = paragraph.get_line_metrics_at(current_line_number).unwrap();
 
-                line_metrics.end_index
+                    line_metrics.end_index
+                } else {
+                    return false;
+                }
             } else {
+                let cursor_row = editor.cursor_row();
+                let current_line = editor.line(cursor_row).unwrap();
+                let current_line_start = editor.line_to_char(cursor_row);
+
+                let mut target = current_line_start + current_line.utf16_len();
+
+                // Freya currently has no concept of cursor affinity and counts newlines as
+                // characters. because of this, we need to subtract off the newline character from
+                // our jump or else the cursor will end up on the next line. The final line has no
+                // explicit trailing linebreak though, meaning we shouldn't subtract if we're
+                // jumping to the end of the last line in the buffer.
+                if editor.line(cursor_row + 1).is_some() {
+                    target = target.saturating_sub(1);
+                }
+
+                target
+            }
+        }
+        CursorMovement::Word => {
+            if let Some(paragraph) = paragraph {
+                paragraph.get_word_boundary(editor.cursor_pos() as u32).end
+            } else {
+                // TODO
                 return false;
             }
         }
-        CursorMovement::Word => paragraph.get_word_boundary(editor.cursor_pos() as u32).end,
         CursorMovement::Buffer => editor.len_utf16_cu(),
         CursorMovement::Selection => {
             let Some(selection) = editor.get_selection() else {
@@ -388,8 +498,11 @@ impl EditableEvent<'_> {
                 modifiers,
                 holder,
             } => {
-                let paragraph = holder.0.borrow();
-                let paragraph = &paragraph.as_ref().unwrap().paragraph;
+                let paragraph = holder.map(|h| {
+                    Ref::map(h.0.borrow(), |opt_inner| {
+                        &opt_inner.as_ref().unwrap().paragraph
+                    })
+                });
 
                 match code {
                     // Handle dragging
@@ -439,7 +552,7 @@ impl EditableEvent<'_> {
 
                                         if cursor_left(
                                             &mut *editor,
-                                            paragraph,
+                                            paragraph.as_ref(),
                                             if meta_or_ctrl {
                                                 CursorMovement::Word
                                             } else {
@@ -459,7 +572,7 @@ impl EditableEvent<'_> {
                                         };
 
                                         // If we have an active selection, move to the start of that selection and clear it.
-                                        if cursor_left(&mut *editor, paragraph, movement) {
+                                        if cursor_left(&mut *editor, paragraph.as_ref(), movement) {
                                             event.insert(TextEvent::CURSOR_CHANGED);
                                         }
 
@@ -472,7 +585,7 @@ impl EditableEvent<'_> {
 
                                         if cursor_right(
                                             &mut *editor,
-                                            paragraph,
+                                            paragraph.as_ref(),
                                             if meta_or_ctrl {
                                                 CursorMovement::Word
                                             } else {
@@ -492,7 +605,7 @@ impl EditableEvent<'_> {
                                         };
 
                                         // If we have an active selection, move to the end of that selection and clear it.
-                                        if cursor_right(&mut *editor, paragraph, movement) {
+                                        if cursor_right(&mut *editor, paragraph.as_ref(), movement) {
                                             event.insert(TextEvent::CURSOR_CHANGED);
                                         }
 
@@ -506,7 +619,7 @@ impl EditableEvent<'_> {
                                         // Move to start of selection range if one exists.
                                         if cursor_left(
                                             &mut *editor,
-                                            paragraph,
+                                            paragraph.as_ref(),
                                             CursorMovement::Selection,
                                         ) {
                                             event.insert(TextEvent::CURSOR_CHANGED);
@@ -515,7 +628,7 @@ impl EditableEvent<'_> {
                                         editor.clear_selection();
                                     }
 
-                                    if cursor_up(&mut *editor, paragraph) {
+                                    if cursor_up(&mut *editor, paragraph.as_ref()) {
                                         event.insert(TextEvent::CURSOR_CHANGED);
                                     }
 
@@ -530,7 +643,7 @@ impl EditableEvent<'_> {
                                         // Move to end of selection range if one exists.
                                         if cursor_right(
                                             &mut *editor,
-                                            paragraph,
+                                            paragraph.as_ref(),
                                             CursorMovement::Selection,
                                         ) {
                                             event.insert(TextEvent::CURSOR_CHANGED);
@@ -539,7 +652,7 @@ impl EditableEvent<'_> {
                                         editor.clear_selection();
                                     }
 
-                                    if cursor_down(&mut *editor, paragraph) {
+                                    if cursor_down(&mut *editor, paragraph.as_ref()) {
                                         event.insert(TextEvent::CURSOR_CHANGED);
                                     }
 
@@ -555,7 +668,7 @@ impl EditableEvent<'_> {
                                     // Move to either start of line or start of buffer depending on if ctrl is pressed.
                                     if cursor_left(
                                         &mut *editor,
-                                        paragraph,
+                                        paragraph.as_ref(),
                                         if meta_or_ctrl {
                                             CursorMovement::Buffer
                                         } else {
@@ -577,7 +690,7 @@ impl EditableEvent<'_> {
                                     // Move to either end of line or end of buffer depending on if ctrl is pressed.
                                     if cursor_right(
                                         &mut *editor,
-                                        paragraph,
+                                        paragraph.as_ref(),
                                         if meta_or_ctrl {
                                             CursorMovement::Buffer
                                         } else {
@@ -632,7 +745,7 @@ impl EditableEvent<'_> {
                                     // Breaks the line
                                     let cursor_pos = editor.cursor_pos();
                                     editor.insert_char('\n', cursor_pos);
-                                    cursor_right(&mut *editor, paragraph, CursorMovement::Glyph);
+                                    cursor_right(&mut *editor, paragraph.as_ref(), CursorMovement::Glyph);
 
                                     event.insert(TextEvent::TEXT_CHANGED);
                                 }
@@ -660,7 +773,7 @@ impl EditableEvent<'_> {
                                             editor.insert_char(' ', cursor_pos);
                                             cursor_right(
                                                 &mut *editor,
-                                                paragraph,
+                                                paragraph.as_ref(),
                                                 CursorMovement::Glyph,
                                             );
 
@@ -674,7 +787,7 @@ impl EditableEvent<'_> {
 
                                             if cursor_right(
                                                 &mut *editor,
-                                                paragraph,
+                                                paragraph.as_ref(),
                                                 CursorMovement::Buffer,
                                             ) {
                                                 event.insert(TextEvent::CURSOR_CHANGED);

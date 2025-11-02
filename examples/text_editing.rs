@@ -49,7 +49,7 @@ fn app() -> Element {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
-                holder: &holder.read(),
+                holder: None,
             });
         })
         .on_key_up(move |e: Event<KeyboardEventData>| {
