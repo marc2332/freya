@@ -255,7 +255,7 @@ impl Route {
                 quote! {
                     #[allow(unused)]
                     (#last_index.., Self::#name { #field_name, .. }) => {
-                        freya_core::prelude::Element::from(freya_router::components::child_router::ChildRouter {
+                        freya::prelude::Element::from(freya_router::components::child_router::ChildRouter {
                             route: #field_name,
                             // Try to parse the current route as a parent route, and then match it as a child route
                             parse_route_from_root_route: |__route| if let Ok(__route) = __route.parse() {
@@ -279,7 +279,7 @@ impl Route {
                 quote! {
                     #[allow(unused)]
                     (#last_index, Self::#name { #(#dynamic_segments,)* }) => {
-                        freya_core::prelude::Element::from(#component {
+                        freya::prelude::Element::from(#component {
                             #(#dynamic_segments_from_route: #dynamic_segments_from_route,)*
                         })
                     }

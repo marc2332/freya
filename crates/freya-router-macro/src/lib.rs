@@ -477,7 +477,7 @@ impl RouteEnum {
                     #(#site_map,)*
                 ];
 
-                fn render(&self, level: usize) -> freya_core::prelude::Element {
+                fn render(&self, level: usize) -> freya::prelude::Element {
                     let myself = self.clone();
                     match (level, myself) {
                         #(#matches)*

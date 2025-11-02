@@ -25,7 +25,7 @@ impl Layout {
             .flat_map(|id| nests[id.0].dynamic_segments());
 
         quote! {
-            freya_core::prelude::Element::from(
+            freya::prelude::Element::from(
                 #comp_name { #(#dynamic_segments: #dynamic_segments,)* }
             )
         }
