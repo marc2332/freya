@@ -232,14 +232,14 @@ fn cursor_down(editor: &mut impl TextEditor, paragraph: Option<&Ref<Paragraph>>)
                 }
                 Ordering::Equal => {
                     let end = editor.len_utf16_cu();
-                    // Reached max
-                    editor.cursor_mut().set(end);
+                    if pos == end  {
+                        return false;
+                    }
 
+                    editor.cursor_mut().set(end);
                     true
                 }
                 Ordering::Greater => {
-                    // Can't go further
-
                     false
                 }
             }
@@ -300,7 +300,6 @@ fn cursor_left(
 
             selection.0.min(selection.1)
         }
-        _ => unimplemented!(),
     };
 
     if pos != target_pos {
