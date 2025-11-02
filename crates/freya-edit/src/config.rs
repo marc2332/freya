@@ -1,6 +1,6 @@
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct EditableConfig {
-    pub(crate) identation: u8,
+    pub(crate) indentation: u8,
     pub(crate) allow_tabs: bool,
     pub(crate) allow_changes: bool,
     pub(crate) allow_clipboard: bool,
@@ -16,7 +16,7 @@ impl EditableConfig {
     /// Create a [`EditableConfig`].
     pub fn new() -> Self {
         Self {
-            identation: 4,
+            indentation: 4,
             allow_tabs: false,
             allow_changes: true,
             allow_clipboard: true,
@@ -25,7 +25,7 @@ impl EditableConfig {
 
     /// Specify a custom identation
     pub fn with_identation(mut self, identation: u8) -> Self {
-        self.identation = identation;
+        self.indentation = identation;
         self
     }
 

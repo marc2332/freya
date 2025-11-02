@@ -427,7 +427,7 @@ impl EditableEvent<'_> {
                                 }
                                 Key::Tab if config.allow_tabs && config.allow_changes => {
                                     // Inserts a tab
-                                    let text = " ".repeat(editor.get_identation().into());
+                                    let text = " ".repeat(editor.get_indentation().into());
                                     let cursor_pos = editor.cursor_pos();
                                     editor.insert(&text, cursor_pos);
                                     editor.set_cursor_pos(cursor_pos + text.chars().count());

@@ -116,7 +116,7 @@ pub fn cursor_up(editor: &mut impl TextEditor, paragraph: Option<&Ref<Paragraph>
     }
 }
 
-/// Move the cursor one line down.
+/// Moves the cursor to the previous line in the buffer.
 pub fn cursor_down(editor: &mut impl TextEditor, paragraph: Option<&Ref<Paragraph>>) -> bool {
     let pos = editor.cursor_pos();
 
@@ -215,71 +215,7 @@ pub fn cursor_down(editor: &mut impl TextEditor, paragraph: Option<&Ref<Paragrap
     }
 }
 
-/// Move the cursor to the left
-pub fn cursor_backward(
-    editor: &mut impl TextEditor,
-    paragraph: Option<&Ref<Paragraph>>,
-    movement: CursorMovement,
-) -> bool {
-    let pos = editor.cursor_pos();
-
-    let target_pos = match movement {
-        CursorMovement::Glyph => {
-            if pos > 0 {
-                pos - 1
-            } else {
-                return false;
-            }
-        }
-        CursorMovement::Line => {
-            if let Some(paragraph) = paragraph {
-                let current_line_number = if pos == editor.len_utf16_cu() {
-                    Some(paragraph.line_number() - 1)
-                } else {
-                    paragraph.get_line_number_at(pos)
-                };
-
-                if let Some(current_line_number) = current_line_number {
-                    let line_metrics = paragraph.get_line_metrics_at(current_line_number).unwrap();
-
-                    line_metrics.start_index
-                } else {
-                    return false;
-                }
-            } else {
-                editor.line_to_char(editor.cursor_row())
-            }
-        }
-        CursorMovement::Word => {
-            if let Some(paragraph) = paragraph {
-                paragraph
-                    .get_word_boundary(editor.cursor_pos().saturating_sub(1) as u32)
-                    .start
-            } else {
-                // TODO
-                return false;
-            }
-        }
-        CursorMovement::Buffer => 0,
-        CursorMovement::Selection => {
-            let Some(selection) = editor.get_selection() else {
-                return false;
-            };
-
-            selection.0.min(selection.1)
-        }
-    };
-
-    if pos != target_pos {
-        editor.set_cursor_pos(target_pos);
-
-        true
-    } else {
-        false
-    }
-}
-
-/// Move the cursor to th right
+/// Moves the cursor forward in the buffer.
 pub fn cursor_forward(
     editor: &mut impl TextEditor,
     paragraph: Option<&Ref<Paragraph>>,
@@ -343,6 +279,71 @@ pub fn cursor_forward(
             };
 
             selection.0.max(selection.1)
+        }
+    };
+
+    if pos != target_pos {
+        editor.set_cursor_pos(target_pos);
+
+        true
+    } else {
+        false
+    }
+}
+
+
+/// Move the cursor backwards in the buffer.
+pub fn cursor_backward(
+    editor: &mut impl TextEditor,
+    paragraph: Option<&Ref<Paragraph>>,
+    movement: CursorMovement,
+) -> bool {
+    let pos = editor.cursor_pos();
+
+    let target_pos = match movement {
+        CursorMovement::Glyph => {
+            if pos > 0 {
+                pos - 1
+            } else {
+                return false;
+            }
+        }
+        CursorMovement::Line => {
+            if let Some(paragraph) = paragraph {
+                let current_line_number = if pos == editor.len_utf16_cu() {
+                    Some(paragraph.line_number() - 1)
+                } else {
+                    paragraph.get_line_number_at(pos)
+                };
+
+                if let Some(current_line_number) = current_line_number {
+                    let line_metrics = paragraph.get_line_metrics_at(current_line_number).unwrap();
+
+                    line_metrics.start_index
+                } else {
+                    return false;
+                }
+            } else {
+                editor.line_to_char(editor.cursor_row())
+            }
+        }
+        CursorMovement::Word => {
+            if let Some(paragraph) = paragraph {
+                paragraph
+                    .get_word_boundary(editor.cursor_pos().saturating_sub(1) as u32)
+                    .start
+            } else {
+                // TODO
+                return false;
+            }
+        }
+        CursorMovement::Buffer => 0,
+        CursorMovement::Selection => {
+            let Some(selection) = editor.get_selection() else {
+                return false;
+            };
+
+            selection.0.min(selection.1)
         }
     };
 

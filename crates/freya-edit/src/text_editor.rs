@@ -4,10 +4,13 @@ use freya_clipboard::hooks::UseClipboard;
 
 use crate::editor_history::EditorHistory;
 
-/// Holds the position of a cursor in a text
+/// A cursor (caret) in a text editor.
 #[derive(Clone, Default, PartialEq, Debug)]
 pub struct TextCursor {
+    /// Glyph index of the cursor.
     pos: usize,
+
+    /// Stored horizontal position of the cursor in pixels.
     x_pos: f32,
 }
 
@@ -74,7 +77,7 @@ bitflags::bitflags! {
     }
 }
 
-/// Common trait for editable texts
+/// Common trait for text editors.
 pub trait TextEditor {
     type LinesIterator<'a>: Iterator<Item = Line<'a>>
     where
@@ -186,5 +189,5 @@ pub trait TextEditor {
 
     fn get_selection_range(&self) -> Option<(usize, usize)>;
 
-    fn get_identation(&self) -> u8;
+    fn get_indentation(&self) -> u8;
 }

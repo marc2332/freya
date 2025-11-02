@@ -332,7 +332,7 @@ impl TextEditor for RopeEditor {
         &mut self.history
     }
 
-    fn get_identation(&self) -> u8 {
+    fn get_indentation(&self) -> u8 {
         self.indentation
     }
 }
