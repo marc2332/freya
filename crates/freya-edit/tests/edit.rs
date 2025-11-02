@@ -246,7 +246,7 @@ fn highlight_multiple_lines_single_editor() {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
-                holder: &holder.read(),
+                holder: Some(&holder.read()),
             });
         };
 
@@ -309,7 +309,7 @@ fn highlights_single_line_multiple_editors() {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
-                holder: &holder.read(),
+                holder: Some(&holder.read()),
             });
         };
 
@@ -413,7 +413,7 @@ fn special_text_editing() {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
-                holder: &holder.read(),
+                holder: Some(&holder.read()),
             });
         };
 
@@ -476,7 +476,7 @@ fn backspace_remove() {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
-                holder: &holder.read(),
+                holder: Some(&holder.read()),
             });
         };
 
@@ -556,7 +556,7 @@ fn highlight_shift_click_multiple_lines_single_editor() {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
-                holder: &holder.read(),
+                holder: Some(&holder.read()),
             });
         };
 
@@ -624,7 +624,7 @@ fn highlights_shift_click_single_line_multiple_editors() {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
-                holder: &holder.read(),
+                holder: Some(&holder.read()),
             });
         };
 
@@ -756,7 +756,7 @@ fn highlight_all_text() {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
-                holder: &holder.read(),
+                holder: Some(&holder.read()),
             });
         };
 
@@ -849,7 +849,7 @@ fn replace_text() {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
-                holder: &holder.read(),
+                holder: Some(&holder.read()),
             });
         };
 
@@ -928,7 +928,7 @@ fn navigate_empty_lines() {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
-                holder: &holder.read(),
+                holder: Some(&holder.read()),
             });
         };
 

@@ -5,6 +5,7 @@ pub enum EditableMode {
     ///
     /// Useful for textarea-like editors that need more customization than a simple paragraph for example.
     SingleLineMultipleEditors,
+    
     /// One editor of multiple lines.
     ///
     /// A paragraph for example.
