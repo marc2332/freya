@@ -119,7 +119,7 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 let finished_render = started_render.elapsed();
                 let finished_presenting = metrics.finished_presenting.unwrap_or_default();
                 let finished_layout = metrics.finished_layout.unwrap();
-                let finished_dom_updates = metrics.finished_dom_updates.unwrap();
+                let finished_dom_updates = metrics.finished_dom_updates.unwrap_or_default();
                 let finished_accessibility_updates =
                     metrics.finished_accessibility_updates.unwrap_or_default();
 
