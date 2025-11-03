@@ -32,8 +32,7 @@ use winit::{
     },
     keyboard::ModifiersState,
     window::{
-        Window,
-        WindowId,
+        Window, WindowId
     },
 };
 
@@ -95,6 +94,8 @@ impl AppWindow {
         screen_reader: ScreenReader,
     ) -> Self {
         let mut window_attributes = Window::default_attributes()
+            .with_resizable(window_config.resizable)
+            .with_window_icon(window_config.icon.clone())
             .with_visible(false)
             .with_title(window_config.title)
             .with_decorations(window_config.decorations)

@@ -2,6 +2,7 @@ use std::borrow::Cow;
 
 use freya_core::integration::*;
 use freya_engine::prelude::Color;
+use winit::window::Icon;
 
 use crate::plugins::{
     FreyaPlugin,
@@ -28,6 +29,10 @@ pub struct WindowConfig {
     /// TODO: Actually use it
     #[allow(unused)]
     pub(crate) background: Color,
+    /// Enable Window resizable behaviour.
+    pub(crate) resizable: bool,
+    /// Icon for the Window.
+    pub(crate) icon: Option<Icon>
 }
 
 impl WindowConfig {
@@ -46,6 +51,8 @@ impl WindowConfig {
             title: "Freya",
             transparent: false,
             background: Color::WHITE,
+            resizable: true,
+            icon: None,
         }
     }
 
@@ -82,6 +89,23 @@ impl WindowConfig {
     /// Make the Window transparent or not.
     pub fn with_transparency(mut self, transparency: bool) -> Self {
         self.transparent = transparency;
+        self
+    }
+
+    /// Is Window resizable.
+    pub fn with_resizable(mut self, resizable: bool) -> Self {
+        self.resizable = resizable;
+        self
+    }
+
+    /// Specify Window icon from 32bpp RGBA data.
+    ///
+    /// The length of `rgba` must be divisible by 4, and `width * height` must equal
+    /// `rgba.len() / 4`. Otherwise, the icon will not be specified.
+    pub fn with_icon(mut self, rgba: Vec<u8>, width: u32, height: u32) -> Self {
+        if let Ok(icon) = Icon::from_rgba(rgba, width, height) {
+            self.icon = Some(icon);
+        }
         self
     }
 }
