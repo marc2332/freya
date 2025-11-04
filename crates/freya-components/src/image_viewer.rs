@@ -121,7 +121,7 @@ impl Hash for ImageSource {
 }
 
 impl ImageSource {
-    pub async fn bytes(&self) -> anyhow::Result<SkImage> {
+    pub async fn bytes(&self) -> anyhow::Result<(SkImage, Bytes)> {
         let source = self.clone();
         blocking::unblock(move || {
             let bytes = match source {
@@ -136,7 +136,7 @@ impl ImageSource {
             };
             let image = SkImage::from_encoded(unsafe { SkData::new_bytes(&bytes) })
                 .context("Failed to decode Image.")?;
-            Ok(image)
+            Ok((image, bytes))
         })
         .await
     }
@@ -236,9 +236,12 @@ impl Render for ImageViewer {
                 let asset_config = asset_config.clone();
                 let asset_task = spawn(async move {
                     match source.bytes().await {
-                        Ok(image) => {
+                        Ok((image, bytes)) => {
                             // Image loaded
-                            let image_holder = ImageHolder(Rc::new(RefCell::new(image)));
+                            let image_holder = ImageHolder {
+                                bytes,
+                                image: Rc::new(RefCell::new(image)),
+                            };
                             asset_cacher.update_asset(
                                 asset_config.clone(),
                                 Asset::Cached(Rc::new(image_holder)),

@@ -6,6 +6,7 @@ use std::{
     rc::Rc,
 };
 
+use bytes::Bytes;
 use freya_engine::prelude::{
     ClipOp,
     CubicResampler,
@@ -69,11 +70,14 @@ pub enum SamplingMode {
 }
 
 #[derive(Clone)]
-pub struct ImageHolder(pub Rc<RefCell<SkImage>>);
+pub struct ImageHolder {
+    pub image: Rc<RefCell<SkImage>>,
+    pub bytes: Bytes,
+}
 
 impl PartialEq for ImageHolder {
     fn eq(&self, other: &Self) -> bool {
-        Rc::ptr_eq(&self.0, &other.0)
+        Rc::ptr_eq(&self.image, &other.image)
     }
 }
 
@@ -152,7 +156,7 @@ impl ElementExt for ImageElement {
     }
 
     fn measure(&self, context: LayoutContext) -> Option<(Size2D, Rc<dyn Any>)> {
-        let image = self.image_holder.0.borrow();
+        let image = self.image_holder.image.borrow();
 
         let image_width = image.width() as f32;
         let image_height = image.height() as f32;
@@ -206,7 +210,7 @@ impl ElementExt for ImageElement {
             context.layout_node.area.max_y(),
         );
 
-        let image = self.image_holder.0.borrow();
+        let image = self.image_holder.image.borrow();
 
         context
             .canvas
