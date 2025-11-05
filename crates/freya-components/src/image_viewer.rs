@@ -179,6 +179,8 @@ pub struct ImageViewer {
     layout: LayoutData,
     image_data: ImageData,
     accessibility: AccessibilityData,
+
+    children: Vec<Element>,
 }
 
 impl ImageViewer {
@@ -188,6 +190,7 @@ impl ImageViewer {
             layout: LayoutData::default(),
             image_data: ImageData::default(),
             accessibility: AccessibilityData::default(),
+            children: Vec::new(),
         }
     }
 }
@@ -198,6 +201,8 @@ impl LayoutExt for ImageViewer {
     }
 }
 
+impl ContainerWithContentExt for ImageViewer {}
+
 impl ImageExt for ImageViewer {
     fn get_image_data(&mut self) -> &mut ImageData {
         &mut self.image_data
@@ -207,6 +212,12 @@ impl ImageExt for ImageViewer {
 impl AccessibilityExt for ImageViewer {
     fn get_accessibility_data(&mut self) -> &mut AccessibilityData {
         &mut self.accessibility
+    }
+}
+
+impl ChildrenExt for ImageViewer {
+    fn get_children(&mut self) -> &mut Vec<Element> {
+        &mut self.children
     }
 }
 
@@ -267,6 +278,7 @@ impl Render for ImageViewer {
                     .a11y_focusable(true)
                     .layout(self.layout.clone())
                     .image_data(self.image_data.clone())
+                    .children(self.children.clone())
                     .into()
             }
             Asset::Pending | Asset::Loading => rect()

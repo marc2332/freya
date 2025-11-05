@@ -40,7 +40,9 @@ use crate::{
     events::name::EventName,
     prelude::{
         AccessibilityExt,
+        ChildrenExt,
         ContainerExt,
+        ContainerWithContentExt,
         EventHandlersExt,
         ImageExt,
         KeyExt,
@@ -250,6 +252,7 @@ impl MaybeExt for Image {}
 pub struct Image {
     key: DiffKey,
     element: ImageElement,
+    elements: Vec<Element>,
 }
 
 /// [image] makes it possible to render a Skia image into the canvas.
@@ -266,6 +269,7 @@ pub fn image(image_holder: ImageHolder) -> Image {
             event_handlers: HashMap::default(),
             image_data: ImageData::default(),
         },
+        elements: Vec::new(),
     }
 }
 
@@ -284,9 +288,16 @@ impl LayoutExt for Image {
 }
 
 impl ContainerExt for Image {}
+impl ContainerWithContentExt for Image {}
 
 impl ImageExt for Image {
     fn get_image_data(&mut self) -> &mut ImageData {
         &mut self.element.image_data
+    }
+}
+
+impl ChildrenExt for Image {
+    fn get_children(&mut self) -> &mut Vec<Element> {
+        &mut self.elements
     }
 }
