@@ -1,13 +1,11 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, io::Cursor};
 
 use freya_core::integration::*;
 use freya_engine::prelude::Color;
+use image::ImageReader;
 use winit::window::Icon;
 
-use crate::plugins::{
-    FreyaPlugin,
-    PluginsManager,
-};
+use crate::plugins::{FreyaPlugin, PluginsManager};
 
 /// Configuration for a Window.
 pub struct WindowConfig {
@@ -32,7 +30,7 @@ pub struct WindowConfig {
     /// Enable Window resizable behaviour.
     pub(crate) resizable: bool,
     /// Icon for the Window.
-    pub(crate) icon: Option<Icon>
+    pub(crate) icon: Option<Icon>,
 }
 
 impl WindowConfig {
@@ -98,14 +96,19 @@ impl WindowConfig {
         self
     }
 
-    /// Specify Window icon from 32bpp RGBA data.
-    ///
-    /// The length of `rgba` must be divisible by 4, and `width * height` must equal
-    /// `rgba.len() / 4`. Otherwise, the icon will not be specified.
-    pub fn with_icon(mut self, rgba: Vec<u8>, width: u32, height: u32) -> Self {
-        if let Ok(icon) = Icon::from_rgba(rgba, width, height) {
-            self.icon = Some(icon);
-        }
+    /// Specify Window icon.
+    pub fn with_icon(mut self, data: &[u8]) -> Self {
+        let reader = ImageReader::new(Cursor::new(data))
+            .with_guessed_format()
+            .expect("cursor io never fails");
+        let image = reader
+            .decode()
+            .expect("image format is supported")
+            .into_rgba8();
+        let (width, height) = image.dimensions();
+        let rgba = image.into_raw();
+        let icon = Icon::from_rgba(rgba, width, height).expect("image format is correct");
+        self.icon = Some(icon);
         self
     }
 }
