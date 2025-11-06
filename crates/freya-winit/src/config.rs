@@ -3,9 +3,11 @@ use std::{borrow::Cow, io::Cursor};
 use freya_core::integration::*;
 use freya_engine::prelude::Color;
 use image::ImageReader;
-use winit::window::Icon;
+use winit::window::{Icon, WindowAttributes};
 
 use crate::plugins::{FreyaPlugin, PluginsManager};
+
+pub type WindowBuilderHook = Box<dyn FnOnce(WindowAttributes) -> WindowAttributes + Send + Sync>;
 
 /// Configuration for a Window.
 pub struct WindowConfig {
@@ -31,6 +33,8 @@ pub struct WindowConfig {
     pub(crate) resizable: bool,
     /// Icon for the Window.
     pub(crate) icon: Option<Icon>,
+    /// Hook function called with the Window Attributes.
+    pub(crate) window_attributes_hook: Option<WindowBuilderHook>,
 }
 
 impl WindowConfig {
@@ -51,6 +55,7 @@ impl WindowConfig {
             background: Color::WHITE,
             resizable: true,
             icon: None,
+            window_attributes_hook: None,
         }
     }
 
@@ -109,6 +114,18 @@ impl WindowConfig {
         let rgba = image.into_raw();
         let icon = Icon::from_rgba(rgba, width, height).expect("image format is correct");
         self.icon = Some(icon);
+        self
+    }
+
+    /// Register a Window Attributes hook.
+    pub fn with_window_attributes(
+        mut self,
+        window_attributes_hook: impl FnOnce(WindowAttributes) -> WindowAttributes
+        + 'static
+        + Send
+        + Sync,
+    ) -> Self {
+        self.window_attributes_hook = Some(Box::new(window_attributes_hook));
         self
     }
 }
