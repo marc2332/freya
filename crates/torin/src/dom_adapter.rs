@@ -42,6 +42,8 @@ impl PartialEq for LayoutNode {
         self.area == other.area
             && self.inner_area == other.inner_area
             && self.margin == other.margin
+            && self.offset_x == other.offset_x
+            && self.offset_y == other.offset_y
     }
 }
 
