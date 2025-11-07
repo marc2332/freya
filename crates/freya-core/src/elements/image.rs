@@ -150,7 +150,7 @@ impl ElementExt for ImageElement {
     }
 
     fn should_measure_inner_children(&self) -> bool {
-        false
+        true
     }
 
     fn should_hook_measurement(&self) -> bool {
@@ -225,7 +225,7 @@ impl From<Image> for Element {
         Element::Element {
             key: value.key,
             element: Rc::new(value.element),
-            elements: vec![],
+            elements: value.elements,
         }
     }
 }
