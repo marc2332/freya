@@ -157,8 +157,8 @@ impl Node {
         }
     }
 
-    /// Construct a new Node given a size and a scroll
-    pub fn from_size_and_scroll(
+    /// Construct a new Node given a size and some offsets
+    pub fn from_size_and_offset(
         width: Size,
         height: Size,
         offset_x: Length,

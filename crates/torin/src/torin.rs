@@ -21,6 +21,7 @@ use crate::{
     prelude::{
         AreaModel,
         Gaps,
+        Length,
     },
 };
 
@@ -49,6 +50,7 @@ impl<Key: NodeKey> RootNodeCandidate<Key> {
         &mut self,
         proposed_candidate: &Key,
         dom_adapter: &mut impl TreeAdapter<Key>,
+        dirty: &mut FxHashMap<Key, DirtyReason>,
     ) {
         if let RootNodeCandidate::Valid(current_candidate) = self {
             if current_candidate != proposed_candidate {
@@ -56,7 +58,15 @@ impl<Key: NodeKey> RootNodeCandidate<Key> {
                     dom_adapter.closest_common_parent(proposed_candidate, current_candidate);
 
                 if let Some(closest_parent) = closest_parent {
+                    if dirty.get(&closest_parent) == Some(&DirtyReason::InnerLayout)
+                        && (closest_parent == *current_candidate
+                            || closest_parent == *proposed_candidate)
+                    {
+                        dirty.insert(closest_parent, DirtyReason::None);
+                    }
                     *self = RootNodeCandidate::Valid(closest_parent);
+                } else if dirty.get(current_candidate) == Some(&DirtyReason::InnerLayout) {
+                    dirty.insert(*current_candidate, DirtyReason::None);
                 }
             }
         } else {
@@ -182,15 +192,18 @@ impl<Key: NodeKey> Torin<Key> {
         self.invalidate_with_reason(node_id, reason);
 
         self.root_node_candidate
-            .propose_new_candidate(&node_id, dom_adapter);
+            .propose_new_candidate(&node_id, dom_adapter, &mut self.dirty);
 
         // Mark this Node's parent if it is affected
         let parent_id = dom_adapter.parent_of(&node_id);
 
         if let Some(parent_id) = parent_id {
             if reason == DirtyReason::InnerLayout {
-                self.root_node_candidate
-                    .propose_new_candidate(&parent_id, dom_adapter);
+                self.root_node_candidate.propose_new_candidate(
+                    &parent_id,
+                    dom_adapter,
+                    &mut self.dirty,
+                );
                 return;
             }
 
@@ -220,8 +233,11 @@ impl<Key: NodeKey> Torin<Key> {
 
                     // Try using the node's parent as root candidate if it has multiple children
                     if multiple_children || parent.do_inner_depend_on_parent() {
-                        self.root_node_candidate
-                            .propose_new_candidate(&parent_id, dom_adapter);
+                        self.root_node_candidate.propose_new_candidate(
+                            &parent_id,
+                            dom_adapter,
+                            &mut self.dirty,
+                        );
                     }
                 }
             }
@@ -273,6 +289,8 @@ impl<Key: NodeKey> Torin<Key> {
                 area: root_area,
                 inner_area: root_area,
                 margin: Gaps::default(),
+                offset_x: Length::default(),
+                offset_y: Length::default(),
                 data: None,
             });
         let root = dom_adapter.get_node(&root_id).unwrap();
@@ -325,12 +343,17 @@ impl<Key: NodeKey> Torin<Key> {
         self.root_node_candidate = RootNodeCandidate::None;
     }
 
-    /// Get the layout_node of a Node
+    /// Get a reference to [LayoutNode] of a Node
     pub fn get(&self, node_id: &Key) -> Option<&LayoutNode> {
         self.results.get(node_id)
     }
 
-    /// Cache a Node's layout_node
+    /// Get a mutable reference to [LayoutNode] of a Node
+    pub fn get_mut(&mut self, node_id: &Key) -> Option<&mut LayoutNode> {
+        self.results.get_mut(node_id)
+    }
+
+    /// Cache a Node's [LayoutNode]
     pub fn cache_node(&mut self, node_id: Key, layout_node: LayoutNode) {
         self.results.insert(node_id, layout_node);
     }

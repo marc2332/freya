@@ -14,6 +14,9 @@ t:
     cargo test --doc --workspace
     cargo nextest run --workspace --exclude examples
 
+t-layout:
+    cargo nextest run --workspace --package torin
+
 d:
     cargo doc --workspace --features "all, docs" --open
 

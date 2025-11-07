@@ -11,6 +11,7 @@ use crate::{
     prelude::{
         AreaModel,
         Gaps,
+        Length,
     },
 };
 
@@ -26,6 +27,10 @@ pub struct LayoutNode {
 
     /// Outer margin
     pub margin: Gaps,
+
+    /// Offsets
+    pub offset_x: Length,
+    pub offset_y: Length,
 
     /// Associated data
     #[cfg_attr(feature = "serde", serde(skip_deserializing, skip_serializing))]

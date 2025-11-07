@@ -21,9 +21,11 @@ use crate::{
         Direction,
         LayoutMetadata,
         Length,
+        Position,
         Torin,
     },
     size::Size,
+    torin::DirtyReason,
 };
 
 /// Some layout strategies require two-phase measurements
@@ -52,6 +54,46 @@ where
     L: LayoutMeasurer<Key>,
     D: TreeAdapter<Key>,
 {
+    fn recursive_translate(
+        &mut self,
+        // ID for this Node
+        node_id: Key,
+        // X axis translation offset
+        offset_x: Length,
+        // Y axis translation offset
+        offset_y: Length,
+    ) {
+        let mut buffer = self
+            .dom_adapter
+            .children_of(&node_id)
+            .into_iter()
+            .map(|id| (node_id, id))
+            .collect::<Vec<(Key, Key)>>();
+        while let Some((parent, child)) = buffer.pop() {
+            let node = self.dom_adapter.get_node(&child).unwrap();
+            let translate = match node.position {
+                Position::Global(_) => false,
+                Position::Absolute(_) => parent != node_id,
+                Position::Stacked(_) => true,
+            };
+            if translate {
+                let layout_node = self.layout.get_mut(&child).unwrap();
+
+                layout_node.area.origin.x += offset_x.get();
+                layout_node.area.origin.y += offset_y.get();
+                layout_node.inner_area.origin.x += offset_x.get();
+                layout_node.inner_area.origin.y += offset_y.get();
+
+                buffer.extend(
+                    self.dom_adapter
+                        .children_of(&child)
+                        .into_iter()
+                        .map(|id| (node_id, id)),
+                );
+            }
+        }
+    }
+
     /// Measure a Node.
     #[allow(clippy::too_many_arguments, clippy::missing_panics_doc)]
     pub fn measure_node(
@@ -71,12 +113,32 @@ where
         // Current phase of measurement
         phase: Phase,
     ) -> (bool, LayoutNode) {
+        let reason = self.layout.dirty.get(&node_id).copied();
+
+        // If possible translate all this node's descendants to avoid relayout
+        if let Some(layout_node) = self.layout.get_mut(&node_id)
+            && reason == Some(DirtyReason::InnerLayout)
+            && must_cache_children
+        {
+            // Get the offset difference since the last layout
+            let offset_x = node.offset_x - layout_node.offset_x;
+            let offset_y = node.offset_y - layout_node.offset_y;
+
+            layout_node.offset_x = node.offset_x;
+            layout_node.offset_y = node.offset_y;
+
+            let layout_node = layout_node.clone();
+
+            self.recursive_translate(node_id, offset_x, offset_y);
+
+            return (must_cache_children, layout_node);
+        }
+
         // 1. If parent is dirty
         // 2. If this Node has been marked as dirty
         // 3. If there is no know cached data about this Node.
-        let must_revalidate = parent_is_dirty
-            || self.layout.dirty.contains_key(&node_id)
-            || !self.layout.results.contains_key(&node_id);
+        let must_revalidate =
+            parent_is_dirty || reason.is_some() || !self.layout.results.contains_key(&node_id);
         if must_revalidate {
             // Create the initial Node area size
             let mut area_size = Size2D::new(node.padding.horizontal(), node.padding.vertical());
@@ -299,6 +361,8 @@ where
             let layout_node = LayoutNode {
                 area,
                 margin: node.margin,
+                offset_x: node.offset_x,
+                offset_y: node.offset_y,
                 inner_area,
                 data: node_data,
             };
