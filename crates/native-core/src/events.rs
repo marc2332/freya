@@ -42,6 +42,8 @@ pub enum EventName {
     CaptureGlobalPointerUp,
 
     FileDrop,
+
+    ImePreedit,
 }
 
 impl FromStr for EventName {
@@ -81,6 +83,7 @@ impl FromStr for EventName {
             "globalfilehovercancelled" => Ok(EventName::GlobalFileHoverCancelled),
             "captureglobalmousemove" => Ok(EventName::CaptureGlobalMouseMove),
             "captureglobalpointerup" => Ok(EventName::CaptureGlobalPointerUp),
+            "imepreedit" => Ok(EventName::ImePreedit),
             _ => Err(()),
         }
     }
@@ -121,6 +124,7 @@ impl From<EventName> for &str {
             EventName::GlobalFileHoverCancelled => "globalfilehovercancelled",
             EventName::CaptureGlobalMouseMove => "captureglobalmousemove",
             EventName::CaptureGlobalPointerUp => "captureglobalpointerup",
+            EventName::ImePreedit => "imepreedit",
         }
     }
 }

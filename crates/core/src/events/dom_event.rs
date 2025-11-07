@@ -14,6 +14,7 @@ use freya_elements::{
         TouchData,
         WheelData,
     },
+    ImeData,
     WheelSource,
 };
 use freya_native_core::NodeId;
@@ -190,6 +191,24 @@ impl DomEvent {
                     bubbles,
                 }
             }
+            PlatformEvent::ImePreedit {
+                name: platform_event_name,
+                text,
+                cursor,
+            } => {
+                let event_data = DomEventData::ImePreedit(ImeData {
+                    text,
+                    cursor_pos: cursor,
+                });
+
+                Self {
+                    node_id,
+                    name,
+                    source_event: platform_event_name.into(),
+                    data: event_data,
+                    bubbles,
+                }
+            }
         }
     }
 }
@@ -203,6 +222,7 @@ pub enum DomEventData {
     Touch(TouchData),
     Pointer(PointerData),
     File(FileData),
+    ImePreedit(ImeData),
 }
 
 impl DomEventData {
@@ -214,6 +234,7 @@ impl DomEventData {
             DomEventData::Touch(t) => Rc::new(ErasedEventData::new(Box::new(t))),
             DomEventData::Pointer(p) => Rc::new(ErasedEventData::new(Box::new(p))),
             DomEventData::File(fd) => Rc::new(ErasedEventData::new(Box::new(fd))),
+            DomEventData::ImePreedit(ip) => Rc::new(ErasedEventData::new(Box::new(ip))),
         }
     }
 }
