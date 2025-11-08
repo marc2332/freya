@@ -181,6 +181,7 @@ impl ElementExt for ParagraphElement {
             spans: &self.spans,
             max_lines: self.max_lines,
             line_height: self.line_height,
+            width: context.area_size.width,
         };
         let paragraph = context
             .text_cache

@@ -157,6 +157,7 @@ impl ElementExt for LabelElement {
             spans: &[Span::new(&*self.text)],
             max_lines: None,
             line_height: None,
+            width: context.area_size.width,
         };
         let paragraph = context
             .text_cache
