@@ -143,7 +143,7 @@ impl NodeStateAttributes for NodeState {
             ),
             (
                 "font_size",
-                AttributeType::Measure(self.text_style.font_size),
+                AttributeType::Measure(f32::from(self.text_style.font_size)),
             ),
             (
                 "text_align",

@@ -54,19 +54,34 @@ impl<Key: NodeKey> RootNodeCandidate<Key> {
     ) {
         if let RootNodeCandidate::Valid(current_candidate) = self {
             if current_candidate != proposed_candidate {
-                let closest_parent =
-                    dom_adapter.closest_common_parent(proposed_candidate, current_candidate);
+                let mut continue_waking = true;
+                let closest_parent = dom_adapter.closest_common_parent(
+                    proposed_candidate,
+                    current_candidate,
+                    |id| {
+                        if !continue_waking {
+                            return;
+                        }
+                        let reason = dirty.get(&id);
+                        match reason {
+                            Some(DirtyReason::InnerLayout) => {
+                                // Replace the [DirtyReason::InnerLayout] with  [DirtyReason::None]
+                                // for all the nodes between the proposed candidate and the current candidate
+                                // that are ascendants of proposed_candidate
+                                dirty.insert(id, DirtyReason::None);
+                            }
+                            None => {}
+                            Some(DirtyReason::None | DirtyReason::Reorder) => {
+                                // No need to continue checking if we encountered an ascendant
+                                // that is dirty but not with[DirtyReason::InnerLayout]
+                                continue_waking = false;
+                            }
+                        }
+                    },
+                );
 
                 if let Some(closest_parent) = closest_parent {
-                    if dirty.get(&closest_parent) == Some(&DirtyReason::InnerLayout)
-                        && (closest_parent == *current_candidate
-                            || closest_parent == *proposed_candidate)
-                    {
-                        dirty.insert(closest_parent, DirtyReason::None);
-                    }
                     *self = RootNodeCandidate::Valid(closest_parent);
-                } else if dirty.get(current_candidate) == Some(&DirtyReason::InnerLayout) {
-                    dirty.insert(*current_candidate, DirtyReason::None);
                 }
             }
         } else {
@@ -173,7 +188,7 @@ impl<Key: NodeKey> Torin<Key> {
 
     /// Mark as dirty a Node, with a reason.
     pub fn invalidate_with_reason(&mut self, node_id: Key, reason: DirtyReason) {
-        self.dirty.insert(node_id, reason);
+        self.dirty.entry(node_id).or_insert(reason);
     }
 
     // Mark as dirty the given Node and all the nodes that depend on it

@@ -74,18 +74,23 @@ pub trait TreeAdapter<Key: NodeKey> {
     fn children_of(&mut self, node_id: &Key) -> Vec<Key>;
 
     /// Get the closest common parent Node of two Nodes
-    fn closest_common_parent(&self, node_a: &Key, node_b: &Key) -> Option<Key> {
+    fn closest_common_parent(
+        &self,
+        node_a: &Key,
+        node_b: &Key,
+        walker: impl FnMut(Key),
+    ) -> Option<Key> {
         let height_a = self.height(node_a)?;
         let height_b = self.height(node_b)?;
 
         let (node_a, node_b) = match height_a.cmp(&height_b) {
             std::cmp::Ordering::Less => (
                 *node_a,
-                balance_heights(self, *node_b, *node_a).unwrap_or(*node_b),
+                balance_heights(self, *node_b, *node_a, walker).unwrap_or(*node_b),
             ),
             std::cmp::Ordering::Equal => (*node_a, *node_b),
             std::cmp::Ordering::Greater => (
-                balance_heights(self, *node_a, *node_b).unwrap_or(*node_a),
+                balance_heights(self, *node_a, *node_b, walker).unwrap_or(*node_a),
                 *node_b,
             ),
         };
@@ -124,6 +129,7 @@ fn balance_heights<Key: NodeKey>(
     dom_adapter: &(impl TreeAdapter<Key> + ?Sized),
     base: Key,
     target: Key,
+    mut walker: impl FnMut(Key),
 ) -> Option<Key> {
     let target_height = dom_adapter.height(&target)?;
     let mut current = base;
@@ -134,6 +140,7 @@ fn balance_heights<Key: NodeKey>(
 
         let parent_current = dom_adapter.parent_of(&current);
         if let Some(parent_current) = parent_current {
+            walker(parent_current);
             current = parent_current;
         }
     }

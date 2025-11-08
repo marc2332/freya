@@ -1,5 +1,6 @@
 use std::{
     borrow::Cow,
+    hash::Hash,
     rc::Rc,
 };
 
@@ -24,6 +25,7 @@ use crate::{
         color::Color,
         corner_radius::CornerRadius,
         fill::Fill,
+        font_size::FontSize,
         font_slant::FontSlant,
         font_weight::FontWeight,
         font_width::FontWidth,
@@ -74,9 +76,9 @@ impl Default for CursorStyleData {
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub struct TextStyleState {
-    pub font_size: f32,
+    pub font_size: FontSize,
     pub color: Color,
     pub text_align: TextAlign,
     pub font_families: Vec<Cow<'static, str>>,
@@ -91,7 +93,7 @@ pub struct TextStyleState {
 impl Default for TextStyleState {
     fn default() -> Self {
         Self {
-            font_size: 16.,
+            font_size: FontSize::default(),
             color: Color::BLACK,
             text_align: TextAlign::default(),
             font_families: Vec::new(),
@@ -157,10 +159,10 @@ impl TextStyleState {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default, Hash)]
 pub struct TextStyleData {
     pub color: Option<Color>,
-    pub font_size: Option<f32>,
+    pub font_size: Option<FontSize>,
     pub font_families: Vec<Cow<'static, str>>,
     pub text_align: Option<TextAlign>,
     pub text_height: Option<TextHeightBehavior>,

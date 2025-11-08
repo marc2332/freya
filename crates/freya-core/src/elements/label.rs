@@ -41,9 +41,11 @@ use crate::{
         KeyExt,
         LayoutExt,
         MaybeExt,
+        Span,
         TextAlign,
         TextStyleExt,
     },
+    text_cache::CachedParagraph,
     tree::DiffModifies,
 };
 
@@ -150,62 +152,79 @@ impl ElementExt for LabelElement {
     }
 
     fn measure(&self, context: LayoutContext) -> Option<(Size2D, Rc<dyn Any>)> {
-        let mut paragraph_style = ParagraphStyle::default();
-        let mut text_style = TextStyle::default();
+        let cached_paragraph = CachedParagraph {
+            text_style_state: context.text_style_state,
+            spans: &[Span::new(&*self.text)],
+            max_lines: None,
+            line_height: None,
+        };
+        let paragraph = context
+            .text_cache
+            .get(context.node_id, &cached_paragraph)
+            .unwrap_or_else(|| {
+                let mut paragraph_style = ParagraphStyle::default();
+                let mut text_style = TextStyle::default();
 
-        let mut font_families = context.text_style_state.font_families.clone();
-        font_families.extend_from_slice(context.fallback_fonts);
+                let mut font_families = context.text_style_state.font_families.clone();
+                font_families.extend_from_slice(context.fallback_fonts);
 
-        text_style.set_color(context.text_style_state.color);
-        text_style.set_font_size(context.text_style_state.font_size * context.scale_factor as f32);
-        text_style.set_font_families(&font_families);
-        text_style.set_font_style(FontStyle::new(
-            context.text_style_state.font_weight.into(),
-            context.text_style_state.font_width.into(),
-            context.text_style_state.font_slant.into(),
-        ));
+                text_style.set_color(context.text_style_state.color);
+                text_style.set_font_size(
+                    f32::from(context.text_style_state.font_size) * context.scale_factor as f32,
+                );
+                text_style.set_font_families(&font_families);
+                text_style.set_font_style(FontStyle::new(
+                    context.text_style_state.font_weight.into(),
+                    context.text_style_state.font_width.into(),
+                    context.text_style_state.font_slant.into(),
+                ));
 
-        if context.text_style_state.text_height.needs_custom_height() {
-            text_style.set_height_override(true);
-            text_style.set_half_leading(true);
-        }
+                if context.text_style_state.text_height.needs_custom_height() {
+                    text_style.set_height_override(true);
+                    text_style.set_half_leading(true);
+                }
 
-        if let Some(line_height) = self.line_height {
-            text_style.set_height_override(true).set_height(line_height);
-        }
+                if let Some(line_height) = self.line_height {
+                    text_style.set_height_override(true).set_height(line_height);
+                }
 
-        for text_shadow in context.text_style_state.text_shadows.iter() {
-            text_style.add_shadow((*text_shadow).into());
-        }
+                for text_shadow in context.text_style_state.text_shadows.iter() {
+                    text_style.add_shadow((*text_shadow).into());
+                }
 
-        if let Some(ellipsis) = context.text_style_state.text_overflow.get_ellipsis() {
-            paragraph_style.set_ellipsis(ellipsis);
-        }
+                if let Some(ellipsis) = context.text_style_state.text_overflow.get_ellipsis() {
+                    paragraph_style.set_ellipsis(ellipsis);
+                }
 
-        paragraph_style.set_text_style(&text_style);
-        paragraph_style.set_max_lines(self.max_lines);
-        paragraph_style.set_text_align(context.text_style_state.text_align.into());
+                paragraph_style.set_text_style(&text_style);
+                paragraph_style.set_max_lines(self.max_lines);
+                paragraph_style.set_text_align(context.text_style_state.text_align.into());
 
-        let mut paragraph_builder =
-            ParagraphBuilder::new(&paragraph_style, context.font_collection);
+                let mut paragraph_builder =
+                    ParagraphBuilder::new(&paragraph_style, context.font_collection);
 
-        paragraph_builder.add_text(&self.text);
+                paragraph_builder.add_text(&self.text);
 
-        let mut paragraph = paragraph_builder.build();
-        paragraph.layout(
-            if self.max_lines == Some(1)
-                && context.text_style_state.text_align == TextAlign::default()
-                && !paragraph_style.ellipsized()
-            {
-                f32::MAX
-            } else {
-                context.area_size.width + 1.0
-            },
-        );
+                let mut paragraph = paragraph_builder.build();
+                paragraph.layout(
+                    if self.max_lines == Some(1)
+                        && context.text_style_state.text_align == TextAlign::default()
+                        && !paragraph_style.ellipsized()
+                    {
+                        f32::MAX
+                    } else {
+                        context.area_size.width + 1.0
+                    },
+                );
+
+                context
+                    .text_cache
+                    .insert(context.node_id, &cached_paragraph, paragraph)
+            });
 
         let size = Size2D::new(paragraph.longest_line(), paragraph.height());
 
-        Some((size, Rc::new(paragraph)))
+        Some((size, paragraph))
     }
 
     fn should_hook_measurement(&self) -> bool {

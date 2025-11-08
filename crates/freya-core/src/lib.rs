@@ -25,6 +25,7 @@ pub mod runner;
 pub mod scope;
 pub mod scope_id;
 pub mod style;
+pub mod text_cache;
 pub mod tree;
 pub mod tree_layout_adapter;
 pub mod user_event;

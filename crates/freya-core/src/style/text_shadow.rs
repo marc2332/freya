@@ -1,3 +1,5 @@
+use std::hash::Hash;
+
 use freya_engine::prelude::*;
 
 use crate::style::color::Color;
@@ -8,6 +10,15 @@ pub struct TextShadow {
     pub color: Color,
     pub offset: (f32, f32),
     pub blur_sigma: f64,
+}
+
+impl Hash for TextShadow {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.color.hash(state);
+        self.offset.0.to_bits().hash(state);
+        self.offset.1.to_bits().hash(state);
+        self.blur_sigma.to_bits().hash(state);
+    }
 }
 
 impl TextShadow {

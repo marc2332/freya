@@ -144,10 +144,10 @@ impl TestingRunner {
         let mut font_collection = FontCollection::new();
         let def_mgr = FontMgr::default();
         let provider = TypefaceFontProvider::new();
-        // TODO: Embed custom fonts here
         let font_manager: FontMgr = provider.into();
         font_collection.set_default_font_manager(def_mgr, None);
         font_collection.set_dynamic_font_manager(font_manager.clone());
+        font_collection.paragraph_cache_mut().turn_on(false);
 
         let mutations = runner.sync_and_update();
         tree.borrow_mut().apply_mutations(mutations);

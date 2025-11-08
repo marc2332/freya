@@ -64,6 +64,7 @@ use crate::{
         MutationRemove,
         Mutations,
     },
+    text_cache::TextCache,
     tree_layout_adapter::TreeAdapterFreya,
 };
 
@@ -87,6 +88,7 @@ pub struct Tree {
     // Other
     pub layout: Torin<NodeId>,
     pub layers: Layers,
+    pub text_cache: TextCache,
 
     // Accessibility
     pub accessibility_groups: AccessibilityGroups,
@@ -211,6 +213,7 @@ impl Tree {
                     self.heights.remove(&node_id);
                     self.effect_state.remove(&node_id);
                     self.text_style_state.remove(&node_id);
+                    self.text_cache.remove(&node_id);
                 }
             }
 
@@ -560,6 +563,7 @@ impl Tree {
             events: &mut events,
             scale_factor,
             fallback_fonts,
+            text_cache: &mut self.text_cache,
         };
 
         self.layout.find_best_root(&mut tree_adapter);
@@ -648,6 +652,7 @@ pub struct LayoutMeasurerAdapter<'a> {
     events: &'a mut Vec<EmmitableEvent>,
     scale_factor: f64,
     fallback_fonts: &'a [Cow<'static, str>],
+    text_cache: &'a mut TextCache,
 }
 
 impl LayoutMeasurer<NodeId> for LayoutMeasurerAdapter<'_> {
@@ -666,6 +671,7 @@ impl LayoutMeasurer<NodeId> for LayoutMeasurerAdapter<'_> {
             text_style_state: self.text_style_state.get(&node_id).unwrap(),
             scale_factor: self.scale_factor,
             fallback_fonts: self.fallback_fonts,
+            text_cache: self.text_cache,
         })
     }
 

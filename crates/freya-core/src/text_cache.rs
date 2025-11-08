@@ -1,0 +1,95 @@
+use std::{
+    hash::{
+        Hash,
+        Hasher,
+    },
+    rc::Rc,
+};
+
+use freya_engine::prelude::SkParagraph;
+use rustc_hash::{
+    FxHashMap,
+    FxHasher,
+};
+
+use crate::{
+    data::TextStyleState,
+    node_id::NodeId,
+    prelude::Span,
+};
+
+pub struct CachedParagraph<'a> {
+    pub text_style_state: &'a TextStyleState,
+    pub spans: &'a [Span<'a>],
+    pub max_lines: Option<usize>,
+    pub line_height: Option<f32>,
+}
+
+impl Hash for CachedParagraph<'_> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.text_style_state.hash(state);
+        self.spans.hash(state);
+        self.max_lines.hash(state);
+        self.line_height.map(|v| v.to_bits().hash(state));
+    }
+}
+
+#[derive(Default)]
+pub struct TextCache {
+    map: FxHashMap<u64, (i32, Rc<SkParagraph>)>,
+    users: FxHashMap<NodeId, u64>,
+}
+
+impl TextCache {
+    pub fn get(&mut self, node_id: NodeId, paragraph: &CachedParagraph) -> Option<Rc<SkParagraph>> {
+        let mut hasher = FxHasher::default();
+        paragraph.hash(&mut hasher);
+        let hash = hasher.finish();
+        let mut value = self.map.get_mut(&hash);
+
+        if let Some(value) = &mut value {
+            value.0 += 1;
+        }
+
+        self.users.insert(node_id, hash);
+
+        value.map(|v| v.1.clone())
+    }
+
+    pub fn insert(
+        &mut self,
+        node_id: NodeId,
+        paragraph: &CachedParagraph,
+        sk_paragraph: SkParagraph,
+    ) -> Rc<SkParagraph> {
+        let mut hasher = FxHasher::default();
+        paragraph.hash(&mut hasher);
+        let hash = hasher.finish();
+        let sk_paragraph = Rc::new(sk_paragraph);
+
+        self.map.insert(hash, (1, sk_paragraph.clone()));
+        self.users.insert(node_id, hash);
+
+        sk_paragraph
+    }
+
+    pub fn remove(&mut self, node_id: &NodeId) {
+        let Some(hash) = self.users.remove(node_id) else {
+            return;
+        };
+        let Some(entry) = self.map.get_mut(&hash) else {
+            return;
+        };
+
+        entry.0 -= 1;
+
+        if entry.0 == 0 {
+            self.map.remove(&hash);
+        }
+    }
+
+    pub fn print_metrics(&self) {
+        println!("Cached Paragraphs {}", self.map.len());
+        println!("Paragraphs Users {}", self.users.len());
+    }
+}

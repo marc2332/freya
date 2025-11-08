@@ -46,6 +46,7 @@ pub fn launch(launch_config: LaunchConfig) {
     let font_mgr: FontMgr = provider.into();
     font_collection.set_default_font_manager(def_mgr, None);
     font_collection.set_dynamic_font_manager(font_mgr.clone());
+    font_collection.paragraph_cache_mut().turn_on(false);
 
     let screen_reader = ScreenReader::new();
 

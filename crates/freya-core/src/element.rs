@@ -42,6 +42,7 @@ use crate::{
     },
     helpers::from_fn_standalone_borrowed_keyed,
     node_id::NodeId,
+    text_cache::TextCache,
     tree::{
         DiffModifies,
         Tree,
@@ -126,6 +127,7 @@ pub struct LayoutContext<'a> {
     pub text_style_state: &'a TextStyleState,
     pub fallback_fonts: &'a [Cow<'static, str>],
     pub scale_factor: f64,
+    pub text_cache: &'a mut TextCache,
 }
 
 #[allow(dead_code)]

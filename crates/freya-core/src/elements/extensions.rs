@@ -57,6 +57,7 @@ use crate::{
     },
     prelude::*,
     style::{
+        font_size::FontSize,
         font_slant::FontSlant,
         font_weight::FontWeight,
         font_width::FontWidth,
@@ -598,7 +599,7 @@ where
         self
     }
 
-    fn font_size(mut self, font_size: impl Into<f32>) -> Self {
+    fn font_size(mut self, font_size: impl Into<FontSize>) -> Self {
         self.get_text_style_data().font_size = Some(font_size.into());
         self
     }

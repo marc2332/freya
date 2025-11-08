@@ -36,6 +36,7 @@ use crate::{
     prelude::*,
     style::{
         fill::Fill,
+        font_size::FontSize,
         gradient::{
             ConicGradient,
             LinearGradient,
@@ -635,7 +636,7 @@ impl Rect {
         self
     }
 
-    pub fn font_size(mut self, font_size: impl Into<f32>) -> Self {
+    pub fn font_size(mut self, font_size: impl Into<FontSize>) -> Self {
         self.element.text_style_data.font_size = Some(font_size.into());
         self
     }
