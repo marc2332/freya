@@ -7,11 +7,13 @@ use crate::{
     geometry::Length,
     prelude::{
         Content,
+        Phase,
         Position,
         VisibleSize,
     },
     scaled::Scaled,
     size::Size,
+    wrap_content::WrapContent,
 };
 
 /// Node layout configuration
@@ -55,6 +57,9 @@ pub struct Node {
     pub position: Position,
 
     pub content: Content,
+
+    /// Whether children wrap into a new line when there is no more space
+    pub wrap_content: WrapContent,
 
     /// A Node might depend on inner sizes but have a fixed position, like scroll views.
     pub has_layout_references: bool,
@@ -281,8 +286,8 @@ impl Node {
 
     /// Has properties that depend on the inner Nodes?
     pub fn does_depend_on_inner(&self) -> bool {
-        self.width.inner_sized()
-            || self.height.inner_sized()
+        self.width.inner_sized(Phase::Initial)
+            || self.height.inner_sized(Phase::Initial)
             || self.contains_text
             || self.do_inner_depend_on_parent()
     }
