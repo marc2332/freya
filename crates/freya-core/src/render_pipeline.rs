@@ -22,12 +22,13 @@ pub struct RenderPipeline<'a> {
     pub canvas: &'a Canvas,
     pub tree: &'a Tree,
     pub scale_factor: f64,
+    pub background: Color,
 }
 
 impl RenderPipeline<'_> {
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     pub fn render(self) {
-        self.canvas.clear(Color::WHITE);
+        self.canvas.clear(self.background);
 
         // TODO: Use incremental rendering
         for i16 in itertools::sorted(self.tree.layers.keys()) {

@@ -83,9 +83,11 @@ impl OpenGLDriver {
     pub fn new(
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
-        _window_config: &WindowConfig,
+        window_config: &WindowConfig,
     ) -> (Self, Window) {
-        let template = ConfigTemplateBuilder::new().with_alpha_size(8);
+        let template = ConfigTemplateBuilder::new()
+            .with_alpha_size(8)
+            .with_transparency(window_config.transparent);
 
         let display_builder = DisplayBuilder::new().with_window_attributes(Some(window_attributes));
         let (window, gl_config) = display_builder

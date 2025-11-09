@@ -351,6 +351,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                     tree: &app.tree,
                                     canvas: surface.canvas(),
                                     scale_factor: app.window.scale_factor(),
+                                    background: app.background,
                                 };
 
                                 render_pipeline.render();

@@ -374,6 +374,7 @@ impl TestingRunner {
             tree: &self.tree.borrow(),
             canvas: surface.canvas(),
             scale_factor: 1.0,
+            background: Color::WHITE,
         };
         render_pipeline.render();
 

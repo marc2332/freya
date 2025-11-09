@@ -3,8 +3,10 @@ use std::{
     io::Cursor,
 };
 
-use freya_core::integration::*;
-use freya_engine::prelude::Color;
+use freya_core::{
+    integration::*,
+    prelude::Color,
+};
 use image::ImageReader;
 use winit::window::{
     Icon,
@@ -35,8 +37,6 @@ pub struct WindowConfig {
     /// Make the Window transparent or not.
     pub(crate) transparent: bool,
     /// Background color of the Window.
-    /// TODO: Actually use it
-    #[allow(unused)]
     pub(crate) background: Color,
     /// Enable Window resizable behaviour.
     pub(crate) resizable: bool,
@@ -101,6 +101,12 @@ impl WindowConfig {
     /// Make the Window transparent or not.
     pub fn with_transparency(mut self, transparency: bool) -> Self {
         self.transparent = transparency;
+        self
+    }
+
+    /// Specify the Window's background color.
+    pub fn with_background(mut self, background: impl Into<Color>) -> Self {
+        self.background = background.into();
         self
     }
 

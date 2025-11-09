@@ -9,7 +9,10 @@ use freya_components::{
     cache::AssetCacher,
     keyboard_navigator::keyboard_navigator,
 };
-use freya_core::integration::*;
+use freya_core::{
+    integration::*,
+    prelude::Color,
+};
 use freya_engine::prelude::{
     FontCollection,
     FontMgr,
@@ -80,6 +83,8 @@ pub struct AppWindow {
     pub platform_state: PlatformState,
 
     pub animation_clock: AnimationClock,
+
+    pub background: Color,
 }
 
 impl AppWindow {
@@ -100,6 +105,7 @@ impl AppWindow {
             .with_visible(false)
             .with_title(window_config.title)
             .with_decorations(window_config.decorations)
+            .with_transparent(window_config.transparent)
             .with_inner_size(LogicalSize::<f64>::from(window_config.size));
 
         if let Some(min_size) = window_config.min_size {
@@ -236,6 +242,8 @@ impl AppWindow {
             platform_state,
 
             animation_clock,
+
+            background: window_config.background,
         }
     }
 }
