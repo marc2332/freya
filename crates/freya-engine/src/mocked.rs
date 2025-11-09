@@ -768,6 +768,18 @@ impl FontCollection {
     pub fn set_dynamic_font_manager(&mut self, _font_manager: impl Into<Option<FontMgr>>) {
         unimplemented!("This is mocked")
     }
+
+    pub fn paragraph_cache_mut(&mut self) -> &mut ParagraphCache {
+        unimplemented!("This is mocked")
+    }
+}
+
+pub struct ParagraphCache;
+
+impl ParagraphCache {
+    pub fn turn_on(&mut self, on: bool) {
+        unimplemented!("This is mocked")
+    }
 }
 
 pub struct Paragraph;
