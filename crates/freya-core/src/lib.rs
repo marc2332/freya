@@ -67,7 +67,12 @@ pub mod prelude {
         },
         elements::{
             extensions::*,
-            // The image element is hidden on purpose as its a "low level" element, users should rather use the `ImageViewer` component.
+            image::{
+                AspectRatio,
+                ImageCover,
+                // The image element is hidden on purpose as its a "low level" element, users should rather use the `ImageViewer` component.
+                SamplingMode,
+            },
             label::{
                 Label,
                 TextWidth,

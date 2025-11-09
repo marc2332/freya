@@ -41,6 +41,7 @@ use crate::{
     },
     elements::image::{
         AspectRatio,
+        ImageCover,
         ImageData,
         SamplingMode,
     },
@@ -541,6 +542,11 @@ where
 
     fn aspect_ratio(mut self, aspect_ratio: AspectRatio) -> Self {
         self.get_image_data().aspect_ratio = aspect_ratio;
+        self
+    }
+
+    fn image_cover(mut self, image_cover: ImageCover) -> Self {
+        self.get_image_data().image_cover = image_cover;
         self
     }
 }

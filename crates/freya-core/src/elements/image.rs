@@ -54,6 +54,13 @@ use crate::{
 };
 
 #[derive(Default, Clone, Debug, PartialEq)]
+pub enum ImageCover {
+    #[default]
+    Fill,
+    Center,
+}
+
+#[derive(Default, Clone, Debug, PartialEq)]
 pub enum AspectRatio {
     #[default]
     Min,
@@ -88,6 +95,7 @@ impl PartialEq for ImageHolder {
 pub struct ImageData {
     pub sampling_mode: SamplingMode,
     pub aspect_ratio: AspectRatio,
+    pub image_cover: ImageCover,
 }
 
 #[derive(PartialEq, Clone)]
@@ -191,7 +199,7 @@ impl ElementExt for ImageElement {
             AspectRatio::None => *context.area_size,
         };
 
-        Some((size, Rc::new(())))
+        Some((size, Rc::new(size)))
     }
 
     fn clip(&self, context: ClipContext) {
@@ -204,8 +212,37 @@ impl ElementExt for ImageElement {
     }
 
     fn render(&self, context: RenderContext) {
-        let mut paint = Paint::default();
-        paint.set_anti_alias(true);
+        let size = context
+            .layout_node
+            .data
+            .as_ref()
+            .unwrap()
+            .downcast_ref::<Size2D>()
+            .unwrap();
+
+        let area = context.layout_node.visible_area();
+        let image = self.image_holder.image.borrow();
+
+        let mut rect = SkRect::new(
+            area.min_x(),
+            area.min_y(),
+            area.min_x() + size.width,
+            area.min_y() + size.height,
+        );
+        let clip_rect = SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
+
+        if self.image_data.image_cover == ImageCover::Center {
+            let width_offset = (size.width - area.width()) / 2.;
+            let height_offset = (size.height - area.height()) / 2.;
+
+            rect.left -= width_offset;
+            rect.right -= width_offset;
+            rect.top -= height_offset;
+            rect.bottom -= height_offset;
+        }
+
+        context.canvas.save();
+        context.canvas.clip_rect(clip_rect, ClipOp::Intersect, true);
 
         let sampling = match self.image_data.sampling_mode {
             SamplingMode::Nearest => SamplingOptions::new(FilterMode::Nearest, MipmapMode::None),
@@ -215,18 +252,14 @@ impl ElementExt for ImageElement {
             SamplingMode::CatmullRom => SamplingOptions::from(CubicResampler::catmull_rom()),
         };
 
-        let rect = SkRect::new(
-            context.layout_node.area.min_x(),
-            context.layout_node.area.min_y(),
-            context.layout_node.area.max_x(),
-            context.layout_node.area.max_y(),
-        );
-
-        let image = self.image_holder.image.borrow();
+        let mut paint = Paint::default();
+        paint.set_anti_alias(true);
 
         context
             .canvas
             .draw_image_rect_with_sampling_options(&*image, None, rect, sampling, &paint);
+
+        context.canvas.restore();
     }
 }
 
