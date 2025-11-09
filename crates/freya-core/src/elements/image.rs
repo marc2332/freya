@@ -46,6 +46,7 @@ use crate::{
         EventHandlersExt,
         ImageExt,
         KeyExt,
+        LayerExt,
         LayoutExt,
         MaybeExt,
     },
@@ -96,6 +97,7 @@ pub struct ImageElement {
     pub event_handlers: FxHashMap<EventName, EventHandlerType>,
     pub image_holder: ImageHolder,
     pub image_data: ImageData,
+    pub relative_layer: i16,
 }
 
 impl ElementExt for ImageElement {
@@ -115,6 +117,10 @@ impl ElementExt for ImageElement {
 
         if self.accessibility != image.accessibility {
             diff.insert(DiffModifies::ACCESSIBILITY);
+        }
+
+        if self.relative_layer != image.relative_layer {
+            diff.insert(DiffModifies::LAYER);
         }
 
         if self.layout != image.layout {
@@ -147,6 +153,10 @@ impl ElementExt for ImageElement {
 
     fn accessibility(&'_ self) -> Cow<'_, AccessibilityData> {
         Cow::Borrowed(&self.accessibility)
+    }
+
+    fn relative_layer(&self) -> i16 {
+        self.relative_layer
     }
 
     fn should_measure_inner_children(&self) -> bool {
@@ -249,6 +259,33 @@ impl AccessibilityExt for Image {
 }
 impl MaybeExt for Image {}
 
+impl LayoutExt for Image {
+    fn get_layout(&mut self) -> &mut LayoutData {
+        &mut self.element.layout
+    }
+}
+
+impl ContainerExt for Image {}
+impl ContainerWithContentExt for Image {}
+
+impl ImageExt for Image {
+    fn get_image_data(&mut self) -> &mut ImageData {
+        &mut self.element.image_data
+    }
+}
+
+impl ChildrenExt for Image {
+    fn get_children(&mut self) -> &mut Vec<Element> {
+        &mut self.elements
+    }
+}
+
+impl LayerExt for Image {
+    fn get_layer(&mut self) -> &mut i16 {
+        &mut self.element.relative_layer
+    }
+}
+
 pub struct Image {
     key: DiffKey,
     element: ImageElement,
@@ -268,6 +305,7 @@ pub fn image(image_holder: ImageHolder) -> Image {
             layout: LayoutData::default(),
             event_handlers: HashMap::default(),
             image_data: ImageData::default(),
+            relative_layer: 0,
         },
         elements: Vec::new(),
     }
@@ -278,26 +316,5 @@ impl Image {
         (element as &dyn Any)
             .downcast_ref::<ImageElement>()
             .cloned()
-    }
-}
-
-impl LayoutExt for Image {
-    fn get_layout(&mut self) -> &mut LayoutData {
-        &mut self.element.layout
-    }
-}
-
-impl ContainerExt for Image {}
-impl ContainerWithContentExt for Image {}
-
-impl ImageExt for Image {
-    fn get_image_data(&mut self) -> &mut ImageData {
-        &mut self.element.image_data
-    }
-}
-
-impl ChildrenExt for Image {
-    fn get_children(&mut self) -> &mut Vec<Element> {
-        &mut self.elements
     }
 }

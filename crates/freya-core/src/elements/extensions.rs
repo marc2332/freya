@@ -660,3 +660,15 @@ where
         }
     }
 }
+
+pub trait LayerExt
+where
+    Self: Sized,
+{
+    fn get_layer(&mut self) -> &mut i16;
+
+    fn layer(mut self, layer: i16) -> Self {
+        *self.get_layer() = layer;
+        self
+    }
+}

@@ -44,6 +44,7 @@ use crate::{
         ContainerExt,
         EventHandlersExt,
         KeyExt,
+        LayerExt,
         LayoutExt,
         MaybeExt,
     },
@@ -60,6 +61,7 @@ pub struct SvgElement {
     pub stroke: Option<Color>,
     pub fill: Option<Color>,
     pub effect: Option<EffectData>,
+    pub relative_layer: i16,
 }
 
 impl ElementExt for SvgElement {
@@ -79,6 +81,10 @@ impl ElementExt for SvgElement {
 
         if self.accessibility != svg.accessibility {
             diff.insert(DiffModifies::ACCESSIBILITY);
+        }
+
+        if self.relative_layer != svg.relative_layer {
+            diff.insert(DiffModifies::LAYER);
         }
 
         if self.layout != svg.layout || self.bytes != svg.bytes {
@@ -114,6 +120,10 @@ impl ElementExt for SvgElement {
 
     fn accessibility(&'_ self) -> Cow<'_, AccessibilityData> {
         Cow::Borrowed(&self.accessibility)
+    }
+
+    fn relative_layer(&self) -> i16 {
+        self.relative_layer
     }
 
     fn should_measure_inner_children(&self) -> bool {
@@ -241,6 +251,12 @@ impl AccessibilityExt for Svg {
 
 impl MaybeExt for Svg {}
 
+impl LayerExt for Svg {
+    fn get_layer(&mut self) -> &mut i16 {
+        &mut self.element.relative_layer
+    }
+}
+
 pub struct Svg {
     key: DiffKey,
     element: SvgElement,
@@ -268,6 +284,7 @@ pub fn svg(bytes: Bytes) -> Svg {
             color: Color::BLACK,
             stroke: None,
             fill: None,
+            relative_layer: 0,
         },
     }
 }

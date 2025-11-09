@@ -46,6 +46,7 @@ use crate::{
         ContainerExt,
         EventHandlersExt,
         KeyExt,
+        LayerExt,
         LayoutExt,
         MaybeExt,
         TextAlign,
@@ -87,6 +88,7 @@ pub struct ParagraphElement {
     pub highlights: Vec<(usize, usize)>,
     pub max_lines: Option<usize>,
     pub line_height: Option<f32>,
+    pub relative_layer: i16,
 }
 
 impl Display for ParagraphElement {
@@ -126,6 +128,10 @@ impl ElementExt for ParagraphElement {
 
         if self.accessibility != paragraph.accessibility {
             diff.insert(DiffModifies::ACCESSIBILITY);
+        }
+
+        if self.relative_layer != paragraph.relative_layer {
+            diff.insert(DiffModifies::LAYER);
         }
 
         if self.text_style_data != paragraph.text_style_data {
@@ -173,6 +179,10 @@ impl ElementExt for ParagraphElement {
 
     fn accessibility(&'_ self) -> Cow<'_, AccessibilityData> {
         Cow::Borrowed(&self.accessibility)
+    }
+
+    fn relative_layer(&self) -> i16 {
+        self.relative_layer
     }
 
     fn measure(&self, context: LayoutContext) -> Option<(Size2D, Rc<dyn Any>)> {
@@ -391,6 +401,12 @@ impl EventHandlersExt for Paragraph {
 }
 
 impl MaybeExt for Paragraph {}
+
+impl LayerExt for Paragraph {
+    fn get_layer(&mut self) -> &mut i16 {
+        &mut self.element.relative_layer
+    }
+}
 
 pub struct Paragraph {
     key: DiffKey,

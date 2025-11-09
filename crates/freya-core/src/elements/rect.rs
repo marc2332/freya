@@ -585,6 +585,22 @@ impl TextStyleExt for Rect {
 
 impl MaybeExt for Rect {}
 
+impl LayerExt for Rect {
+    fn get_layer(&mut self) -> &mut i16 {
+        &mut self.element.relative_layer
+    }
+}
+
+impl LayoutExt for Rect {
+    fn get_layout(&mut self) -> &mut LayoutData {
+        &mut self.element.layout
+    }
+}
+
+impl ContainerExt for Rect {}
+
+impl ContainerWithContentExt for Rect {}
+
 impl From<Rect> for Element {
     fn from(value: Rect) -> Self {
         Element::Element {
@@ -702,19 +718,4 @@ impl Rect {
             .opacity = Some(opacity.into());
         self
     }
-
-    pub fn layer(mut self, layer: i16) -> Self {
-        self.element.relative_layer = layer;
-        self
-    }
 }
-
-impl LayoutExt for Rect {
-    fn get_layout(&mut self) -> &mut LayoutData {
-        &mut self.element.layout
-    }
-}
-
-impl ContainerExt for Rect {}
-
-impl ContainerWithContentExt for Rect {}
