@@ -11,13 +11,10 @@ env:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     concurrency:
-      group: rust-build-${{ matrix.os }}
+      group: rust-build
       cancel-in-progress: true
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
     - name: Maximize build space
