@@ -1,12 +1,22 @@
-use std::borrow::Cow;
+use std::{
+    borrow::Cow,
+    io::Cursor,
+};
 
 use freya_core::integration::*;
 use freya_engine::prelude::Color;
+use image::ImageReader;
+use winit::window::{
+    Icon,
+    WindowAttributes,
+};
 
 use crate::plugins::{
     FreyaPlugin,
     PluginsManager,
 };
+
+pub type WindowBuilderHook = Box<dyn FnOnce(WindowAttributes) -> WindowAttributes + Send + Sync>;
 
 /// Configuration for a Window.
 pub struct WindowConfig {
@@ -28,6 +38,12 @@ pub struct WindowConfig {
     /// TODO: Actually use it
     #[allow(unused)]
     pub(crate) background: Color,
+    /// Enable Window resizable behaviour.
+    pub(crate) resizable: bool,
+    /// Icon for the Window.
+    pub(crate) icon: Option<Icon>,
+    /// Hook function called with the Window Attributes.
+    pub(crate) window_attributes_hook: Option<WindowBuilderHook>,
 }
 
 impl WindowConfig {
@@ -46,6 +62,9 @@ impl WindowConfig {
             title: "Freya",
             transparent: false,
             background: Color::WHITE,
+            resizable: true,
+            icon: None,
+            window_attributes_hook: None,
         }
     }
 
@@ -82,6 +101,40 @@ impl WindowConfig {
     /// Make the Window transparent or not.
     pub fn with_transparency(mut self, transparency: bool) -> Self {
         self.transparent = transparency;
+        self
+    }
+
+    /// Is Window resizable.
+    pub fn with_resizable(mut self, resizable: bool) -> Self {
+        self.resizable = resizable;
+        self
+    }
+
+    /// Specify Window icon.
+    pub fn with_icon(mut self, data: &[u8]) -> Self {
+        let reader = ImageReader::new(Cursor::new(data))
+            .with_guessed_format()
+            .expect("cursor io never fails");
+        let image = reader
+            .decode()
+            .expect("image format is supported")
+            .into_rgba8();
+        let (width, height) = image.dimensions();
+        let rgba = image.into_raw();
+        let icon = Icon::from_rgba(rgba, width, height).expect("image format is correct");
+        self.icon = Some(icon);
+        self
+    }
+
+    /// Register a Window Attributes hook.
+    pub fn with_window_attributes(
+        mut self,
+        window_attributes_hook: impl FnOnce(WindowAttributes) -> WindowAttributes
+        + 'static
+        + Send
+        + Sync,
+    ) -> Self {
+        self.window_attributes_hook = Some(Box::new(window_attributes_hook));
         self
     }
 }

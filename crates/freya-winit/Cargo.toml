@@ -40,6 +40,9 @@ rustc-hash = { workspace = true }
 # Performance
 hotpath = { workspace = true }
 
+# Images
+image = { workspace = true }
+
 [features]
 hotpath = ["hotpath/hotpath"]
 hotpath-alloc-bytes-total = ["hotpath/hotpath-alloc-bytes-total"]
