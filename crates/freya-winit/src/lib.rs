@@ -41,8 +41,11 @@ pub fn launch(launch_config: LaunchConfig) {
 
     let mut font_collection = FontCollection::new();
     let def_mgr = FontMgr::default();
-    let provider = TypefaceFontProvider::new();
-    // TODO: Embed custom fonts here
+    let mut provider = TypefaceFontProvider::new();
+    for (font_name, font_data) in launch_config.embedded_fonts {
+        let ft_type = def_mgr.new_from_data(&font_data, None).unwrap();
+        provider.register_typeface(ft_type, Some(font_name.as_ref()));
+    }
     let font_mgr: FontMgr = provider.into();
     font_collection.set_default_font_manager(def_mgr, None);
     font_collection.set_dynamic_font_manager(font_mgr.clone());

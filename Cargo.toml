@@ -103,6 +103,7 @@ itertools = "0.14.0"
 
 # Rendering
 skia-safe = { version = "0.87.0", features = ["gl", "textlayout", "svg"] }
+bytes = "1.10.1"
 
 # Desktop renderer
 raw-window-handle = "0.6.0"

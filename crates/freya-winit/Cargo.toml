@@ -12,10 +12,14 @@ freya-components = { workspace = true }
 torin = { workspace = true }
 
 # Rendering
+bytes = { workspace = true }
+
+# Rendering OpenGL
 gl = { workspace = true }
 glutin = { workspace = true }
 glutin-winit = { workspace = true }
 
+# Rendering VUlkan
 ash = { workspace = true, optional = true }
 ash-window = { workspace = true, optional = true }
 

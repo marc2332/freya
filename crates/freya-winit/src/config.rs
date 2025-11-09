@@ -3,6 +3,7 @@ use std::{
     io::Cursor,
 };
 
+use bytes::Bytes;
 use freya_core::{
     integration::*,
     prelude::Color,
@@ -145,10 +146,13 @@ impl WindowConfig {
     }
 }
 
+pub type EmbeddedFonts = Vec<(Cow<'static, str>, Bytes)>;
+
 /// Launch configuration.
 pub struct LaunchConfig {
     pub(crate) windows_configs: Vec<WindowConfig>,
     pub(crate) plugins: PluginsManager,
+    pub(crate) embedded_fonts: EmbeddedFonts,
     pub(crate) fallback_fonts: Vec<Cow<'static, str>>,
 }
 
@@ -157,6 +161,7 @@ impl Default for LaunchConfig {
         LaunchConfig {
             windows_configs: Vec::default(),
             plugins: PluginsManager::default(),
+            embedded_fonts: Default::default(),
             fallback_fonts: default_fonts(),
         }
     }
@@ -181,9 +186,25 @@ impl LaunchConfig {
         self
     }
 
+    /// Embed a font.
+    pub fn with_font(
+        mut self,
+        font_name: impl Into<Cow<'static, str>>,
+        font: impl Into<Bytes>,
+    ) -> Self {
+        self.embedded_fonts.push((font_name.into(), font.into()));
+        self
+    }
+
     /// Register a fallback font. Will be used if the default fonts are not available.
     pub fn with_fallback_font(mut self, font_family: impl Into<Cow<'static, str>>) -> Self {
         self.fallback_fonts.push(font_family.into());
+        self
+    }
+
+    /// Register a default font. Will be used if found.
+    pub fn with_default_font(mut self, font_name: impl Into<Cow<'static, str>>) -> Self {
+        self.fallback_fonts.insert(0, font_name.into());
         self
     }
 }
