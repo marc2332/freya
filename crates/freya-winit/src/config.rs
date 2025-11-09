@@ -1,11 +1,20 @@
-use std::{borrow::Cow, io::Cursor};
+use std::{
+    borrow::Cow,
+    io::Cursor,
+};
 
 use freya_core::integration::*;
 use freya_engine::prelude::Color;
 use image::ImageReader;
-use winit::window::{Icon, WindowAttributes};
+use winit::window::{
+    Icon,
+    WindowAttributes,
+};
 
-use crate::plugins::{FreyaPlugin, PluginsManager};
+use crate::plugins::{
+    FreyaPlugin,
+    PluginsManager,
+};
 
 pub type WindowBuilderHook = Box<dyn FnOnce(WindowAttributes) -> WindowAttributes + Send + Sync>;
 

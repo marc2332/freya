@@ -1,26 +1,56 @@
-use std::{borrow::Cow, sync::Arc, task::Waker};
+use std::{
+    borrow::Cow,
+    sync::Arc,
+    task::Waker,
+};
 
 use accesskit_winit::Adapter;
-use freya_components::{cache::AssetCacher, keyboard_navigator::keyboard_navigator};
+use freya_components::{
+    cache::AssetCacher,
+    keyboard_navigator::keyboard_navigator,
+};
 use freya_core::integration::*;
-use freya_engine::prelude::{FontCollection, FontMgr};
-use futures_util::task::{ArcWake, waker};
+use freya_engine::prelude::{
+    FontCollection,
+    FontMgr,
+};
+use futures_util::task::{
+    ArcWake,
+    waker,
+};
 use ragnarok::NodesState;
-use torin::prelude::{CursorPoint, Size2D};
+use torin::prelude::{
+    CursorPoint,
+    Size2D,
+};
 use winit::{
     dpi::LogicalSize,
     event::ElementState,
-    event_loop::{ActiveEventLoop, EventLoopProxy},
+    event_loop::{
+        ActiveEventLoop,
+        EventLoopProxy,
+    },
     keyboard::ModifiersState,
-    window::{Window, WindowId},
+    window::{
+        Window,
+        WindowId,
+    },
 };
 
 use crate::{
     accessibility::AccessibilityTask,
     config::WindowConfig,
     drivers::GraphicsDriver,
-    plugins::{PluginEvent, PluginHandle, PluginsManager},
-    renderer::{NativeEvent, NativeWindowEvent, NativeWindowEventAction},
+    plugins::{
+        PluginEvent,
+        PluginHandle,
+        PluginsManager,
+    },
+    renderer::{
+        NativeEvent,
+        NativeWindowEvent,
+        NativeWindowEventAction,
+    },
 };
 
 pub struct AppWindow {
