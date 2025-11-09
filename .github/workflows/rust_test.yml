@@ -12,6 +12,9 @@ env:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    concurrency:
+      group: rust-test
+      cancel-in-progress: true
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]

@@ -12,6 +12,9 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    concurrency:
+      group: rust-lint
+      cancel-in-progress: true
 
     steps:
     - uses: actions/checkout@v5

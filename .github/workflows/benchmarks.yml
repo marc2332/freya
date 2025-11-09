@@ -12,6 +12,9 @@ jobs:
   runBenchmark:
     name: run benchmark
     runs-on: ubuntu-latest
+    concurrency:
+      group: benchmarks
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v5
         with:

@@ -6,6 +6,9 @@ on:
 jobs:
   hotpath:
     runs-on: ubuntu-latest
+    concurrency:
+      group: hotpath
+      cancel-in-progress: true
     permissions:
       pull-requests: write
       contents: read
