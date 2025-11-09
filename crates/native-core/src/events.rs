@@ -181,6 +181,14 @@ impl EventName {
     pub fn is_left(&self) -> bool {
         matches!(&self, Self::MouseLeave | Self::PointerLeave)
     }
+
+    /// Check if the event means a key was pressed or released.
+    pub fn is_keyboard(&self) -> bool {
+        matches!(
+            &self,
+            Self::KeyDown | Self::KeyUp | Self::GlobalKeyDown | Self::GlobalKeyUp
+        )
+    }
 }
 
 impl ragnarok::NameOfEvent for EventName {
@@ -293,6 +301,7 @@ impl ragnarok::NameOfEvent for EventName {
             && !self.is_left()
             && !self.is_global()
             && !self.is_capture()
+            && !self.is_keyboard()
     }
 
     fn does_go_through_solid(&self) -> bool {

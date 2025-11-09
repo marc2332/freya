@@ -1,5 +1,8 @@
 use dioxus::prelude::*;
-use freya_core::accessibility::AccessibilityFocusStrategy;
+use freya_core::accessibility::{
+    AccessibilityFocusMovement,
+    AccessibilityFocusStrategy,
+};
 use freya_elements::{
     self as dioxus_elements,
     events::{
@@ -19,14 +22,28 @@ pub fn NativeContainer(children: Element) -> Element {
     use_init_native_platform();
     let platform = use_platform();
 
-    let onglobalkeydown = move |e: KeyboardEvent| {
-        if e.key == Key::Tab {
-            if e.modifiers.contains(Modifiers::SHIFT) {
-                platform.request_focus(AccessibilityFocusStrategy::Backward);
-            } else {
-                platform.request_focus(AccessibilityFocusStrategy::Forward);
-            }
+    let onglobalkeydown = move |ev: KeyboardEvent| match ev.key {
+        Key::Tab if ev.modifiers.contains(Modifiers::SHIFT) => {
+            platform.request_focus(AccessibilityFocusStrategy::Backward(
+                AccessibilityFocusMovement::OutsideGroup,
+            ));
         }
+        Key::Tab => {
+            platform.request_focus(AccessibilityFocusStrategy::Forward(
+                AccessibilityFocusMovement::OutsideGroup,
+            ));
+        }
+        Key::ArrowUp => {
+            platform.request_focus(AccessibilityFocusStrategy::Backward(
+                AccessibilityFocusMovement::InsideGroup,
+            ));
+        }
+        Key::ArrowDown => {
+            platform.request_focus(AccessibilityFocusStrategy::Forward(
+                AccessibilityFocusMovement::InsideGroup,
+            ));
+        }
+        _ => {}
     };
 
     rsx!(rect {
