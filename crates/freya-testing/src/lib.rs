@@ -207,6 +207,7 @@ impl TestingRunner {
         self.default_fonts.clear();
         self.default_fonts.extend_from_slice(fonts);
         self.tree.borrow_mut().layout.reset();
+        self.tree.borrow_mut().text_cache.reset();
         self.tree.borrow_mut().measure_layout(
             self.size,
             &self.font_collection,

@@ -285,7 +285,7 @@ fn highlight_multiple_lines_single_editor() {
     utils.sync_and_update();
 
     let highlights = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.highlights.clone()));
-    assert_eq!(highlights, Some(vec![(5, 28)]));
+    assert_eq!(highlights, Some(vec![(5, 27)]));
 }
 
 #[test]
@@ -382,7 +382,7 @@ fn highlights_single_line_multiple_editors() {
 
     assert_eq!(highlights[0], vec![(5, 17)]);
 
-    assert_eq!(highlights[1], vec![(0, 11)]);
+    assert_eq!(highlights[1], vec![(0, 10)]);
 }
 
 #[test]
@@ -598,7 +598,7 @@ fn highlight_shift_click_multiple_lines_single_editor() {
         Some(paragraph.highlights.clone())
     });
 
-    assert_eq!(highlights, Some(vec![(5, 28)]));
+    assert_eq!(highlights, Some(vec![(5, 27)]));
 }
 
 #[test]
@@ -707,7 +707,7 @@ fn highlights_shift_click_single_line_multiple_editors() {
 
     assert_eq!(highlights[0], vec![(5, 17)]);
 
-    assert_eq!(highlights[1], vec![(0, 11)]);
+    assert_eq!(highlights[1], vec![(0, 10)]);
 }
 
 #[test]
@@ -897,7 +897,7 @@ fn replace_text() {
 
     let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
     let content = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.to_string()));
-    assert_eq!(content.as_deref(), Some("Hello🦀ceans\nHello Rustaceans"));
+    assert_eq!(content.as_deref(), Some("Hello🦀aceans\nHello Rustaceans"));
     assert_eq!(cursor.as_deref(), Some("0:7"));
 }
 

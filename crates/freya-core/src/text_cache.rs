@@ -92,6 +92,11 @@ impl TextCache {
         }
     }
 
+    pub fn reset(&mut self) {
+        self.map.clear();
+        self.users.clear();
+    }
+
     pub fn print_metrics(&self) {
         println!("Cached Paragraphs {}", self.map.len());
         println!("Paragraphs Users {}", self.users.len());
