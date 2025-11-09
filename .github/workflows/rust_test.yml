@@ -13,7 +13,7 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     concurrency:
-      group: rust-test
+      group: rust-test-${{ matrix.os }}
       cancel-in-progress: true
     strategy:
       matrix:
