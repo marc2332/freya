@@ -1,0 +1,19 @@
+[package]
+name = "freya-sdk"
+version = "0.4.0"
+edition = "2024"
+description = "Generic utils for Freya apps."
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+homepage = "https://github.com/marc2332/freya"
+repository = "https://github.com/marc2332/freya"
+keywords = ["freya"]
+categories = ["gui"]
+
+[features]
+tokio = ["dep:tokio"]
+all = ["tokio"]
+
+[dependencies]
+freya-core = { workspace = true }
+tokio = { workspace = true, features = ["sync"], optional = true }

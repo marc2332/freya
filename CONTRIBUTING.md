@@ -47,6 +47,7 @@ Freya is split in various crates, each with it's own meaning and purpose, here i
 - `freya-router`: Fully typed router API to manage multiple pages in your app.
 - `freya-router-macro`: Macros for `freya-router`.
 - `freya-icons`: Provides lots of SVG icons as Freya components.
+- `freya-sdk`: Contains generic utility APIs for Freya, like integrations with Tokio.
 
 ## Examples
 All important examples are located in the  `./examples` folder although you might also find some in the form of docs comments in the code itself.

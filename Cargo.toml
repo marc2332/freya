@@ -48,6 +48,7 @@ members = [
   "./crates/freya-devtools",
   "./crates/freya-devtools-app",
   "./crates/freya-icons",
+  "./crates/freya-sdk",
   "./examples/website",
 ]
 
@@ -71,6 +72,7 @@ freya-radio = { path = "./crates/freya-radio" }
 freya-engine = { path = "./crates/freya-engine" }
 freya-devtools = { path = "./crates/freya-devtools", features = ["server"] }
 freya-icons = { path = "./crates/freya-icons", features = ["all"] }
+freya-sdk = { path = "./crates/freya-sdk", features = ["all"] }
 
 # core
 generational-box = "0.6.2"
@@ -128,10 +130,14 @@ anyhow = "1.0.100"
 # Images
 image = "0.25.8"
 
+# SDK
+tokio = { version = "1.0", default-features = false }
+
 # Rendering
 [target."cfg(target_os = \"linux\")".dependencies.skia-safe]
 version = "0.87.0"
 features = ["gl", "textlayout", "svg", "x11", "wayland"]
+
 
 [dev-dependencies]
 freya = { workspace = true }
@@ -146,6 +152,7 @@ freya-i18n = { workspace = true }
 freya-performance-plugin = { workspace = true }
 freya-radio = { workspace = true }
 freya-icons = { workspace = true }
+freya-sdk = { workspace = true }
 
 skia-safe = { workspace = true }
 
@@ -164,6 +171,8 @@ keyboard-types = { workspace = true }
 hotpath = { workspace = true }
 
 itertools = { workspace = true }
+
+tokio = { workspace = true }
 
 [profile.release]
 lto = true
