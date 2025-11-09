@@ -20,6 +20,13 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
+    - name: Maximize build space
+      uses: easimon/maximize-build-space@master
+      with:
+        root-reserve-mb: 512
+        swap-size-mb: 1024
+        remove-dotnet: 'true'
+        remove-android: 'true'
     - uses: actions/checkout@v5
       with:
         fetch-depth: 2
