@@ -140,6 +140,10 @@ pub mod engine {
     pub use freya_engine::*;
 }
 
+pub mod winit {
+    pub use freya_winit::winit::*;
+}
+
 pub mod helpers {
     pub use freya_core::helpers::*;
 }

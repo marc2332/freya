@@ -20,6 +20,10 @@ mod winit_mappings;
 
 pub use extensions::*;
 
+pub mod winit {
+    pub use winit::*;
+}
+
 pub fn launch(launch_config: LaunchConfig) {
     use std::collections::HashMap;
 
