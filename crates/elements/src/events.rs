@@ -4,6 +4,7 @@ pub mod mouse;
 pub mod pointer;
 pub mod touch;
 pub mod wheel;
+pub mod ime;
 
 use std::any::Any;
 
@@ -14,12 +15,14 @@ pub use mouse::*;
 pub use pointer::*;
 pub use touch::*;
 pub use wheel::*;
+pub use ime::*;
 
 pub type KeyboardEvent = Event<KeyboardData>;
 pub type MouseEvent = Event<MouseData>;
 pub type WheelEvent = Event<WheelData>;
 pub type TouchEvent = Event<TouchData>;
 pub type PointerEvent = Event<PointerData>;
+pub type ImeEvent = Event<ImeData>;
 
 /// A platform specific event.
 #[doc(hidden)]

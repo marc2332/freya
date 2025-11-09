@@ -66,6 +66,19 @@ impl From<KeyboardEventName> for EventName {
 }
 
 #[derive(Clone, Debug, PartialEq, Copy, Eq, Hash)]
+pub enum ImeEventName {
+    Preedit,
+}
+
+impl From<ImeEventName> for EventName {
+    fn from(value: ImeEventName) -> Self {
+        match value {
+            ImeEventName::Preedit => EventName::ImePreedit,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Copy, Eq, Hash)]
 pub enum TouchEventName {
     TouchStart,
     TouchMove,
@@ -122,6 +135,12 @@ pub enum PlatformEvent {
         code: Code,
         modifiers: Modifiers,
     },
+    /// An IME event.
+    ImePreedit {
+        name: ImeEventName,
+        text: String,
+        cursor: Option<(usize, usize)>,
+    },
     /// A Touch event.
     Touch {
         name: TouchEventName,
@@ -171,6 +190,7 @@ impl ragnarok::SourceEvent for PlatformEvent {
             Self::Mouse { name, .. } => (*name).into(),
             Self::Wheel { name, .. } => (*name).into(),
             Self::Keyboard { name, .. } => (*name).into(),
+            Self::ImePreedit { name, .. } => (*name).into(),
             Self::Touch { name, .. } => (*name).into(),
             Self::File { name, .. } => (*name).into(),
         }
@@ -182,6 +202,7 @@ impl ragnarok::SourceEvent for PlatformEvent {
             PlatformEvent::Mouse { cursor, .. } => Some(*cursor),
             PlatformEvent::Wheel { cursor, .. } => Some(*cursor),
             PlatformEvent::Keyboard { .. } => None,
+            PlatformEvent::ImePreedit { .. } => None,
             PlatformEvent::Touch { location, .. } => Some(*location),
         }
     }

@@ -17,6 +17,7 @@ use freya_elements::{
         KeyboardData,
         MouseEvent,
     },
+    ImeEvent,
 };
 use freya_hooks::{
     use_applied_theme,
@@ -190,6 +191,7 @@ pub fn Input(
     } = use_applied_theme!(&theme, input);
     let mut focus = use_focus();
     let mut drag_origin = use_signal(|| None);
+    let mut ime_preedit = use_signal(|| None);
 
     let value = value.read();
     let placeholder = placeholder.read();
@@ -320,6 +322,10 @@ pub fn Input(
         }
     };
 
+    let onimepreedit = move |e: ImeEvent| {
+        ime_preedit.set(Some(e.data.text.clone()));
+    };
+
     let a11y_id = focus.attribute();
     let cursor_reference = editable.cursor_attr();
     let highlights = editable.highlights_attr(0);
@@ -350,6 +356,16 @@ pub fn Input(
         (InputMode::Shown, _) => Cow::Borrowed(value.as_str()),
     };
 
+    let binding = ime_preedit.read();
+    let preedit_text = if !display_placeholder {
+        binding
+            .as_ref()
+            .map(|s| Cow::Borrowed(s.as_str()))
+            .unwrap_or_else(|| Cow::Borrowed(""))
+    } else {
+        Cow::Borrowed("")
+    };
+
     rsx!(
         rect {
             width,
@@ -367,6 +383,7 @@ pub fn Input(
             a11y_value: "{text}",
             onkeydown,
             onkeyup,
+            onimepreedit,
             overflow: "clip",
             onmousedown: oninputmousedown,
             onmouseenter,
@@ -390,6 +407,9 @@ pub fn Input(
                     highlights,
                     text {
                         "{text}"
+                    },
+                    text {
+                        "{preedit_text}"
                     }
                 }
             }

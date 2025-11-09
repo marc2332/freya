@@ -268,6 +268,16 @@ impl ApplicationHandler<EventLoopMessage> for WinitRenderer {
                         scale_factor,
                     );
                 }
+                WindowEvent::Ime(Ime::Preedit(text, pos)) => {
+                    app.send_event(
+                        PlatformEvent::ImePreedit {
+                            name: freya_core::events::ImeEventName::Preedit,
+                            text,
+                            cursor: pos,
+                        },
+                        scale_factor,
+                    );
+                }
                 WindowEvent::CloseRequested => {
                     if let Some(on_close) = &mut app.window_config.on_close {
                         let response = (on_close)(&mut app.window);
