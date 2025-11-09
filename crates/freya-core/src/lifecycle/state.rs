@@ -215,6 +215,14 @@ impl<T> State<T> {
         self.key.write()
     }
 
+    pub fn with_mut(&mut self, with: impl FnOnce(WriteRef<'static, T>))
+    where
+        T: 'static,
+    {
+        self.subscribers.write().borrow_mut().retain(|s| s.notify());
+        with(self.key.write());
+    }
+
     pub fn write_unchecked(&self) -> WriteRef<'static, T> {
         for subscriber in self.subscribers.write().borrow_mut().iter() {
             subscriber.notify();
