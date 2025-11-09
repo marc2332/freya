@@ -17,13 +17,9 @@ jobs:
       cancel-in-progress: true
 
     steps:
-    - name: Maximize build space
-      uses: easimon/maximize-build-space@master
-      with:
-        root-reserve-mb: 512
-        swap-size-mb: 1024
-        remove-dotnet: 'true'
-        remove-android: 'true'
+    - name: Remove unused programs
+      run: |
+        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
     - uses: actions/checkout@v5
       with:
         fetch-depth: 2
