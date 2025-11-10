@@ -4,6 +4,7 @@ use std::{
 };
 
 pub use euclid::Rect;
+use itertools::Itertools;
 use rustc_hash::FxHashMap;
 
 use crate::{
@@ -65,17 +66,18 @@ impl<Key: NodeKey> RootNodeCandidate<Key> {
                         let reason = dirty.get(&id);
                         match reason {
                             Some(DirtyReason::InnerLayout) => {
-                                // Replace the [DirtyReason::InnerLayout] with  [DirtyReason::None]
+                                // Replace [DirtyReason::InnerLayout] with [DirtyReason::None]
                                 // for all the nodes between the proposed candidate and the current candidate
-                                // that are ascendants of proposed_candidate
                                 dirty.insert(id, DirtyReason::None);
                             }
-                            None => {}
-                            Some(DirtyReason::None | DirtyReason::Reorder) => {
+                            Some(DirtyReason::None | DirtyReason::Reorder)
+                                if id != *proposed_candidate =>
+                            {
                                 // No need to continue checking if we encountered an ascendant
-                                // that is dirty but not with[DirtyReason::InnerLayout]
+                                // that is dirty but not with [DirtyReason::InnerLayout]
                                 continue_waking = false;
                             }
+                            _ => {}
                         }
                     },
                 );
@@ -269,7 +271,12 @@ impl<Key: NodeKey> Torin<Key> {
         if self.results.is_empty() {
             return;
         }
-        for (id, reason) in self.dirty.clone() {
+        for (id, reason) in self
+            .dirty
+            .clone()
+            .into_iter()
+            .sorted_by_key(|e| dom_adapter.height(&e.0))
+        {
             self.check_dirty_dependants(id, reason, dom_adapter, false);
         }
     }

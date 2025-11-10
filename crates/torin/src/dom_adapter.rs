@@ -86,11 +86,12 @@ pub trait TreeAdapter<Key: NodeKey> {
         let (node_a, node_b) = match height_a.cmp(&height_b) {
             std::cmp::Ordering::Less => (
                 *node_a,
-                balance_heights(self, *node_b, *node_a, walker).unwrap_or(*node_b),
+                // Does not make sense to call the walker for when the node a is higher than the node b
+                balance_heights(self, *node_b, *node_a, None::<fn(_)>).unwrap_or(*node_b),
             ),
             std::cmp::Ordering::Equal => (*node_a, *node_b),
             std::cmp::Ordering::Greater => (
-                balance_heights(self, *node_a, *node_b, walker).unwrap_or(*node_a),
+                balance_heights(self, *node_a, *node_b, Some(walker)).unwrap_or(*node_a),
                 *node_b,
             ),
         };
@@ -129,18 +130,20 @@ fn balance_heights<Key: NodeKey>(
     dom_adapter: &(impl TreeAdapter<Key> + ?Sized),
     base: Key,
     target: Key,
-    mut walker: impl FnMut(Key),
+    mut walker: Option<impl FnMut(Key)>,
 ) -> Option<Key> {
     let target_height = dom_adapter.height(&target)?;
     let mut current = base;
     loop {
+        if let Some(walker) = &mut walker {
+            (walker)(current);
+        }
         if dom_adapter.height(&current)? == target_height {
             break;
         }
 
         let parent_current = dom_adapter.parent_of(&current);
         if let Some(parent_current) = parent_current {
-            walker(parent_current);
             current = parent_current;
         }
     }

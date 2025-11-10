@@ -18,6 +18,7 @@ serde = ["dep:serde", "euclid/serde"]
 tracing = { workspace = true }
 euclid = { workspace = true }
 rustc-hash = { workspace = true }
+itertools = { workspace = true }
 
 serde = { version = "1.0", optional = true }
 

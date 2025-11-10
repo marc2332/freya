@@ -259,9 +259,12 @@ impl Tree {
                         parent.remove(from);
                         parent.insert(*to as usize, *node_id);
                     }
-
-                    // TODO: Mark dirty in layout?
                 }
+                let mut diff = DiffModifies::empty();
+                diff.insert(DiffModifies::REORDER_LAYOUT);
+                diff.insert(DiffModifies::ACCESSIBILITY);
+                diff.insert(DiffModifies::STYLE);
+                dirty.push((parent_node_id, diff));
             }
 
             for (node_id, element, flags) in mutations.modified {
@@ -303,6 +306,11 @@ impl Tree {
             for (node_id, flags) in dirty {
                 let element = self.elements.get(&node_id).unwrap();
                 let height_b = self.heights.get(&node_id).unwrap();
+
+                if flags.contains(DiffModifies::REORDER_LAYOUT) {
+                    self.layout
+                        .invalidate_with_reason(node_id, DirtyReason::Reorder);
+                }
 
                 if flags.contains(DiffModifies::INNER_LAYOUT) {
                     self.layout
@@ -637,6 +645,7 @@ bitflags! {
         const TEXT_STYLE = 6;
         const EFFECT = 7;
         const INNER_LAYOUT = 8;
+        const REORDER_LAYOUT = 9;
     }
 }
 
