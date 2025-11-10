@@ -136,10 +136,10 @@ pub(crate) const BASE_THEME: Theme = Theme {
         focus_border_fill: Preference::Reference("border_focus"),
     },
     scrollbar: ScrollBarThemePreference {
-        background: Preference::Reference("surface_secondary"),
-        thumb_background: Preference::Reference("surface_inverse"),
-        hover_thumb_background: Preference::Reference("surface_inverse_secondary"),
-        active_thumb_background: Preference::Reference("surface_inverse_tertiary"),
+        background: Preference::Reference("active"),
+        thumb_background: Preference::Reference("surface_primary"),
+        hover_thumb_background: Preference::Reference("surface_secondary"),
+        active_thumb_background: Preference::Reference("surface_tertiary"),
         size: Preference::Specific(15.),
     },
     progressbar: ProgressBarThemePreference {

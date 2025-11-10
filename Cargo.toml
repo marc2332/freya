@@ -84,8 +84,6 @@ futures-util = "0.3.31"
 futures-channel = "0.3.31"
 futures-lite = "2.6.1"
 async-io = "2.5.0"
-# Core/components
-typed-builder = "0.21.2"
 
 # Animations
 easer = "0.3.0"

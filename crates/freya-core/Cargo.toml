@@ -17,8 +17,6 @@ pathmap = { workspace = true }
 futures-util = { workspace = true }
 futures-channel = { workspace = true }
 futures-lite = { workspace = true }
-# Core/components
-typed-builder = { workspace = true }
 
 # Animations
 async-broadcast = { workspace = true }

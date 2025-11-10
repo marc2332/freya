@@ -5,21 +5,18 @@ enum ScrollThumbState {
     Hovering,
 }
 
-use typed_builder::TypedBuilder;
-
 use crate::{
     get_theme,
     scrollviews::shared::Axis,
     theming::component_themes::ScrollBarThemePartial,
 };
 
-#[derive(Clone, PartialEq, TypedBuilder)]
+#[derive(Clone, PartialEq)]
 pub struct ScrollThumb {
-    #[builder(default)]
     pub(crate) theme: Option<ScrollBarThemePartial>,
-    clicking_scrollbar: State<Option<(Axis, f64)>>,
-    axis: Axis,
-    size: f32,
+    pub clicking_scrollbar: State<Option<(Axis, f64)>>,
+    pub axis: Axis,
+    pub size: f32,
 }
 
 impl RenderOwned for ScrollThumb {
@@ -66,8 +63,4 @@ impl RenderOwned for ScrollThumb {
             )
             .into()
     }
-}
-
-pub fn scrollthumb() -> ScrollThumbBuilder<((), (), (), ())> {
-    ScrollThumb::builder()
 }

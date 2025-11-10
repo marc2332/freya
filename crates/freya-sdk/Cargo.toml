@@ -16,4 +16,7 @@ all = ["tokio"]
 
 [dependencies]
 freya-core = { workspace = true }
+async-io = { workspace = true }
+
+# Tokio
 tokio = { workspace = true, features = ["sync"], optional = true }

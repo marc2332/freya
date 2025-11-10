@@ -1,4 +1,7 @@
+use std::time::Duration;
+
 use freya_core::prelude::*;
+use freya_sdk::timeout::use_timeout;
 use torin::{
     prelude::{
         Alignment,
@@ -6,7 +9,6 @@ use torin::{
     },
     size::Size,
 };
-use typed_builder::TypedBuilder;
 
 use crate::{
     get_theme,
@@ -23,26 +25,32 @@ enum ScrollBarState {
     Hovering,
 }
 
-#[derive(Clone, PartialEq, TypedBuilder)]
+#[derive(Clone, PartialEq)]
 pub struct ScrollBar {
-    #[builder(default)]
     pub(crate) theme: Option<ScrollBarThemePartial>,
-    clicking_scrollbar: State<Option<(Axis, f64)>>,
-    axis: Axis,
-    offset: f32,
-    thumb: ScrollThumb,
+    pub clicking_scrollbar: State<Option<(Axis, f64)>>,
+    pub axis: Axis,
+    pub offset: f32,
+    pub thumb: ScrollThumb,
 }
 
 impl RenderOwned for ScrollBar {
     fn render(self) -> Element {
         let scrollbar_theme = get_theme!(&self.theme, scrollbar);
 
+        let mut timeout = use_timeout(|| Duration::from_millis(800));
         let mut state = use_state(|| ScrollBarState::Idle);
 
-        let (size, opacity) = match *state.read() {
-            _ if self.clicking_scrollbar.read().is_some() => (15., 225),
-            ScrollBarState::Idle => (5., 0),
-            ScrollBarState::Hovering => (15., 225),
+        use_side_effect_with_deps(&self.offset, move |_| {
+            // Reset the timeout whenever there is scroll movement
+            timeout.reset();
+        });
+
+        let (size, opacity, visible) = match *state.read() {
+            _ if self.clicking_scrollbar.read().is_some() => (16., 160, true),
+            ScrollBarState::Idle if timeout.elapsed() => (5., 0, false),
+            ScrollBarState::Idle => (5., 0, true),
+            ScrollBarState::Hovering => (16., 160, true),
         };
 
         let (
@@ -57,18 +65,18 @@ impl RenderOwned for ScrollBar {
         ) = match self.axis {
             Axis::X => (
                 Size::fill(),
-                Size::px(15.),
+                Size::px(16.),
                 0.,
-                -15.,
+                -16.,
                 self.offset,
                 0.,
                 Size::fill(),
                 Size::px(size),
             ),
             Axis::Y => (
-                Size::px(15.),
+                Size::px(16.),
                 Size::fill(),
-                -15.,
+                -16.,
                 0.,
                 0.,
                 self.offset,
@@ -77,7 +85,10 @@ impl RenderOwned for ScrollBar {
             ),
         };
 
-        let on_pointer_enter = move |_| state.set(ScrollBarState::Hovering);
+        let on_pointer_enter = move |_| {
+            timeout.reset();
+            state.set(ScrollBarState::Hovering);
+        };
         let on_pointer_leave = move |_| state.set(ScrollBarState::Idle);
 
         rect()
@@ -93,25 +104,21 @@ impl RenderOwned for ScrollBar {
                     .direction(if self.axis == Axis::Y {
                         Direction::vertical()
                     } else {
-                        Direction::Horizontal
+                        Direction::horizontal()
                     })
                     .cross_align(Alignment::end())
                     .background(scrollbar_theme.background.with_a(opacity))
                     .on_pointer_enter(on_pointer_enter)
                     .on_pointer_leave(on_pointer_leave)
-                    .child(
+                    .maybe_child(visible.then(|| {
                         rect()
                             .width(inner_width)
                             .height(inner_height)
                             .offset_x(inner_offset_x)
                             .offset_y(inner_offset_y)
-                            .child(self.thumb),
-                    ),
+                            .child(self.thumb)
+                    })),
             )
             .into()
     }
-}
-
-pub fn scrollbar() -> ScrollBarBuilder<((), (), (), (), ())> {
-    ScrollBar::builder()
 }

@@ -39,7 +39,6 @@ pub mod prelude {
         Key,
         Modifiers,
     };
-    pub use typed_builder::TypedBuilder;
 
     pub use crate::{
         accessibility::{

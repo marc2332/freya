@@ -25,6 +25,7 @@ performance = ["freya-performance-plugin"]
 plot = ["freya-components/plot"]
 gif = ["freya-components/gif"]
 vulkan = ["freya-winit/vulkan"]
+sdk = ["dep:freya-sdk"]
 
 [dependencies]
 freya-core = { workspace = true }
@@ -35,6 +36,7 @@ freya-components = { workspace = true }
 freya-animation = { workspace = true }
 freya-engine = { workspace = true }
 freya-devtools = { workspace = true, optional = true }
+freya-sdk = { workspace = true, optional = true }
 
 # Router
 freya-router = { workspace = true, optional = true }

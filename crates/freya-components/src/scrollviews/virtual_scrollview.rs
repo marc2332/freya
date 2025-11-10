@@ -7,10 +7,10 @@ use torin::{
 };
 
 use crate::scrollviews::{
+    ScrollBar,
     ScrollConfig,
     ScrollController,
-    scrollbar,
-    scrollthumb,
+    ScrollThumb,
     shared::{
         Axis,
         get_container_sizes,
@@ -453,34 +453,34 @@ impl<D: 'static, B: Fn(usize, &D) -> Element + 'static> Render for VirtualScroll
                             })
                             .children(children),
                     )
-                    .maybe_child(vertical_scrollbar_is_visible.then(|| {
-                        scrollbar()
-                            .clicking_scrollbar(clicking_scrollbar)
-                            .axis(Axis::Y)
-                            .offset(scrollbar_y)
-                            .thumb(
-                                scrollthumb()
-                                    .clicking_scrollbar(clicking_scrollbar)
-                                    .axis(Axis::Y)
-                                    .size(scrollbar_height)
-                                    .build(),
-                            )
-                            .build()
+                    .maybe_child(vertical_scrollbar_is_visible.then_some({
+                        ScrollBar {
+                            theme: None,
+                            clicking_scrollbar,
+                            axis: Axis::Y,
+                            offset: scrollbar_y,
+                            thumb: ScrollThumb {
+                                theme: None,
+                                clicking_scrollbar,
+                                axis: Axis::Y,
+                                size: scrollbar_height,
+                            },
+                        }
                     })),
             )
-            .maybe_child(horizontal_scrollbar_is_visible.then(|| {
-                scrollbar()
-                    .clicking_scrollbar(clicking_scrollbar)
-                    .axis(Axis::X)
-                    .offset(scrollbar_x)
-                    .thumb(
-                        scrollthumb()
-                            .clicking_scrollbar(clicking_scrollbar)
-                            .axis(Axis::X)
-                            .size(scrollbar_width)
-                            .build(),
-                    )
-                    .build()
+            .maybe_child(horizontal_scrollbar_is_visible.then_some({
+                ScrollBar {
+                    theme: None,
+                    clicking_scrollbar,
+                    axis: Axis::X,
+                    offset: scrollbar_x,
+                    thumb: ScrollThumb {
+                        theme: None,
+                        clicking_scrollbar,
+                        axis: Axis::X,
+                        size: scrollbar_width,
+                    },
+                }
             }))
             .into()
     }

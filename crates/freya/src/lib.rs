@@ -148,5 +148,10 @@ pub mod helpers {
     pub use freya_core::helpers::*;
 }
 
+#[cfg(feature = "sdk")]
+pub mod sdk {
+    pub use freya_sdk::*;
+}
+
 #[cfg(doc)]
 pub mod _docs;

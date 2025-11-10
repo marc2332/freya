@@ -19,9 +19,7 @@ freya-animation = { workspace = true }
 torin = { workspace = true }
 freya-engine = { workspace = true }
 freya-edit = { workspace = true }
-
-# Builders
-typed-builder = { workspace = true }
+freya-sdk = { workspace = true }
 
 # Theming
 paste = "1.0.15"
