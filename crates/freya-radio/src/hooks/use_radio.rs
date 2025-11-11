@@ -480,6 +480,18 @@ impl<Channel> ChannelSelection<Channel> {
     }
 }
 
+/// Provide the given [RadioStation] to descendants components, this is the same as when
+/// using [use_init_radio_station] except that you pass an already created one.
+///
+/// This is specially useful to share the same [RadioStation] across different windows.
+pub fn use_share_radio<Value, Channel>(radio: impl FnOnce() -> RadioStation<Value, Channel>)
+where
+    Channel: RadioChannel<Value>,
+    Value: 'static,
+{
+    use_provide_context(radio);
+}
+
 /// Consume the state and subscribe using the given `channel`
 /// Any mutation using this radio will notify other subscribers to the same `channel`,
 /// unless you explicitely pass a custom channel using other methods as [`Radio::write_channel()`]
