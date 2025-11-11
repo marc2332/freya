@@ -1,7 +1,4 @@
-use std::time::Duration;
-
 use freya_core::prelude::*;
-use freya_sdk::timeout::use_timeout;
 use torin::{
     prelude::{
         Alignment,
@@ -38,19 +35,12 @@ impl RenderOwned for ScrollBar {
     fn render(self) -> Element {
         let scrollbar_theme = get_theme!(&self.theme, scrollbar);
 
-        let mut timeout = use_timeout(|| Duration::from_millis(800));
         let mut state = use_state(|| ScrollBarState::Idle);
 
-        use_side_effect_with_deps(&self.offset, move |_| {
-            // Reset the timeout whenever there is scroll movement
-            timeout.reset();
-        });
-
-        let (size, opacity, visible) = match *state.read() {
-            _ if self.clicking_scrollbar.read().is_some() => (16., 160, true),
-            ScrollBarState::Idle if timeout.elapsed() => (5., 0, false),
-            ScrollBarState::Idle => (5., 0, true),
-            ScrollBarState::Hovering => (16., 160, true),
+        let (size, opacity) = match *state.read() {
+            _ if self.clicking_scrollbar.read().is_some() => (16., 160),
+            ScrollBarState::Idle => (5., 0),
+            ScrollBarState::Hovering => (16., 160),
         };
 
         let (
@@ -86,7 +76,6 @@ impl RenderOwned for ScrollBar {
         };
 
         let on_pointer_enter = move |_| {
-            timeout.reset();
             state.set(ScrollBarState::Hovering);
         };
         let on_pointer_leave = move |_| state.set(ScrollBarState::Idle);
@@ -110,14 +99,14 @@ impl RenderOwned for ScrollBar {
                     .background(scrollbar_theme.background.with_a(opacity))
                     .on_pointer_enter(on_pointer_enter)
                     .on_pointer_leave(on_pointer_leave)
-                    .maybe_child(visible.then(|| {
+                    .child(
                         rect()
                             .width(inner_width)
                             .height(inner_height)
                             .offset_x(inner_offset_x)
                             .offset_y(inner_offset_y)
-                            .child(self.thumb)
-                    })),
+                            .child(self.thumb),
+                    ),
             )
             .into()
     }

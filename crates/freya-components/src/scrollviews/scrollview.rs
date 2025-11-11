@@ -1,4 +1,7 @@
+use std::time::Duration;
+
 use freya_core::prelude::*;
+use freya_sdk::timeout::use_timeout;
 use torin::{
     prelude::Direction,
     size::Size,
@@ -141,6 +144,7 @@ impl ScrollView {
 impl Render for ScrollView {
     fn render(self: &ScrollView) -> Element {
         let focus = use_focus();
+        let mut timeout = use_timeout(|| Duration::from_millis(800));
         let mut pressing_shift = use_state(|| false);
         let mut pressing_alt = use_state(|| false);
         let mut clicking_scrollbar = use_state::<Option<(Axis, f64)>>(|| None);
@@ -166,16 +170,18 @@ impl Render for ScrollView {
             size.read().area.height(),
             scrolled_y as f32,
         );
-        let horizontal_scrollbar_is_visible = is_scrollbar_visible(
-            self.show_scrollbar,
-            size.read().inner_sizes.width,
-            size.read().area.width(),
-        );
-        let vertical_scrollbar_is_visible = is_scrollbar_visible(
-            self.show_scrollbar,
-            size.read().inner_sizes.height,
-            size.read().area.height(),
-        );
+        let horizontal_scrollbar_is_visible = !timeout.elapsed()
+            && is_scrollbar_visible(
+                self.show_scrollbar,
+                size.read().inner_sizes.width,
+                size.read().area.width(),
+            );
+        let vertical_scrollbar_is_visible = !timeout.elapsed()
+            && is_scrollbar_visible(
+                self.show_scrollbar,
+                size.read().inner_sizes.height,
+                size.read().area.height(),
+            );
 
         let (scrollbar_x, scrollbar_width) = get_scrollbar_pos_and_size(
             size.read().inner_sizes.width,
@@ -231,6 +237,11 @@ impl Render for ScrollView {
             scroll_controller.scroll_to_x(scroll_position_x).then(|| {
                 e.stop_propagation();
             });
+            timeout.reset();
+        };
+
+        let on_mouse_move = move |_| {
+            timeout.reset();
         };
 
         let on_capture_global_mouse_move = move |e: Event<MouseEventData>| {
@@ -262,6 +273,7 @@ impl Render for ScrollView {
 
             if clicking_scrollbar.is_some() {
                 e.prevent_default();
+                timeout.reset();
                 if !focus.is_focused() {
                     focus.request_focus();
                 }
@@ -293,8 +305,8 @@ impl Render for ScrollView {
             ) {
                 scroll_controller.scroll_to_x(x as i32);
                 scroll_controller.scroll_to_y(y as i32);
-                // e.prevent_default();
                 e.stop_propagation();
+                timeout.reset();
             }
         };
 
@@ -323,6 +335,7 @@ impl Render for ScrollView {
             .a11y_focusable(false)
             .on_wheel(on_wheel)
             .on_global_mouse_up(on_global_mouse_up)
+            .on_mouse_move(on_mouse_move)
             .on_capture_global_mouse_move(on_capture_global_mouse_move)
             .on_key_down(on_key_down)
             .on_global_key_up(on_global_key_up)
