@@ -5,6 +5,7 @@ mod mode;
 mod rope_editor;
 mod text_editor;
 mod use_editable;
+mod movement;
 
 pub use config::*;
 pub use editor_history::*;

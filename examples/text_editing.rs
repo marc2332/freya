@@ -49,6 +49,7 @@ fn app() -> Element {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
+                holder: Some(&holder.read()),
             });
         })
         .on_key_up(move |e: Event<KeyboardEventData>| {
