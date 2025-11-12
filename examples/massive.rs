@@ -1,44 +1,45 @@
-use freya::prelude::*;
+use freya::{
+    helpers::from_fn,
+    prelude::*,
+};
+use freya_performance_plugin::PerformanceOverlayPlugin;
 
+#[cfg_attr(feature = "hotpath", hotpath::main(percentiles = [90, 95, 99]))]
 fn main() {
-    launch_cfg(
-        LaunchConfig::default()
-            .with_plugin(PerformanceOverlayPlugin::default())
-            .with_window(WindowConfig::new(app).with_size(1500., 900.)),
-    );
-}
-
-#[allow(non_snake_case)]
-fn StatefulSwitch() -> Element {
-    let mut enabled = use_signal(|| false);
-
-    rsx!(Switch {
-        enabled: *enabled.read(),
-        ontoggled: move |_| {
-            enabled.toggle();
-        }
-    })
+    launch(
+        LaunchConfig::new()
+            .with_window(WindowConfig::new(app))
+            .with_plugin(PerformanceOverlayPlugin::default()),
+    )
 }
 
 fn app() -> Element {
     let cols = 30;
     let rows = 30;
 
-    rsx!(
-        for row in 0..rows {
-            rect {
-                key: "{row}",
-                width: "100%",
-                height: "{(100.0 / rows as f32)}%",
-                direction: "horizontal",
-                for col in 0..cols {
-                    rect {
-                        width: "{(100.0 / cols as f32)}%",
-                        key: "{row}{col}",
-                        StatefulSwitch { }
-                    }
-                }
-            }
-        }
-    )
+    rect()
+        .children_iter((0..rows).map(|row| {
+            rect()
+                .height(Size::percent(100. / rows as f32))
+                .horizontal()
+                .children_iter((0..cols).map(|col| {
+                    rect()
+                        .width(Size::percent(100. / cols as f32))
+                        .children([from_fn((row, col), (), stateful_switch)])
+                        .into()
+                }))
+                .into()
+        }))
+        .into()
+}
+
+fn stateful_switch(_: &()) -> Element {
+    let mut toggled = use_state(|| false);
+
+    Switch::new()
+        .toggled(toggled())
+        .on_toggle(move |_| {
+            toggled.toggle();
+        })
+        .into()
 }

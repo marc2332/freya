@@ -1,4 +1,7 @@
-use std::sync::Arc;
+use std::{
+    any::Any,
+    rc::Rc,
+};
 
 pub use euclid::Rect;
 
@@ -8,7 +11,7 @@ use crate::{
     prelude::{
         AreaModel,
         Gaps,
-        SendAnyMap,
+        Length,
     },
 };
 
@@ -25,9 +28,13 @@ pub struct LayoutNode {
     /// Outer margin
     pub margin: Gaps,
 
+    /// Offsets
+    pub offset_x: Length,
+    pub offset_y: Length,
+
     /// Associated data
     #[cfg_attr(feature = "serde", serde(skip_deserializing, skip_serializing))]
-    pub data: Option<Arc<SendAnyMap>>,
+    pub data: Option<Rc<dyn Any>>,
 }
 
 impl PartialEq for LayoutNode {
@@ -35,6 +42,8 @@ impl PartialEq for LayoutNode {
         self.area == other.area
             && self.inner_area == other.inner_area
             && self.margin == other.margin
+            && self.offset_x == other.offset_x
+            && self.offset_y == other.offset_y
     }
 }
 
@@ -49,13 +58,13 @@ pub trait NodeKey: Clone + PartialEq + Eq + std::hash::Hash + Copy + std::fmt::D
 
 impl NodeKey for usize {}
 
-pub trait DOMAdapter<Key: NodeKey> {
+pub trait TreeAdapter<Key: NodeKey> {
     fn root_id(&self) -> Key;
 
     /// Get the Node size
     fn get_node(&self, node_id: &Key) -> Option<Node>;
 
-    /// Get the height in the DOM of the given Node
+    /// Get the height in the Tree of the given Node
     fn height(&self, node_id: &Key) -> Option<u16>;
 
     /// Get the parent of a Node
@@ -64,22 +73,25 @@ pub trait DOMAdapter<Key: NodeKey> {
     /// Get the children of a Node
     fn children_of(&mut self, node_id: &Key) -> Vec<Key>;
 
-    /// Check whether the given Node is valid (isn't a placeholder, unconnected node..)
-    fn is_node_valid(&mut self, node_id: &Key) -> bool;
-
     /// Get the closest common parent Node of two Nodes
-    fn closest_common_parent(&self, node_a: &Key, node_b: &Key) -> Option<Key> {
+    fn closest_common_parent(
+        &self,
+        node_a: &Key,
+        node_b: &Key,
+        walker: impl FnMut(Key),
+    ) -> Option<Key> {
         let height_a = self.height(node_a)?;
         let height_b = self.height(node_b)?;
 
         let (node_a, node_b) = match height_a.cmp(&height_b) {
             std::cmp::Ordering::Less => (
                 *node_a,
-                balance_heights(self, *node_b, *node_a).unwrap_or(*node_b),
+                // Does not make sense to call the walker for when the node a is higher than the node b
+                balance_heights(self, *node_b, *node_a, None::<fn(_)>).unwrap_or(*node_b),
             ),
             std::cmp::Ordering::Equal => (*node_a, *node_b),
             std::cmp::Ordering::Greater => (
-                balance_heights(self, *node_a, *node_b).unwrap_or(*node_a),
+                balance_heights(self, *node_a, *node_b, Some(walker)).unwrap_or(*node_a),
                 *node_b,
             ),
         };
@@ -115,13 +127,17 @@ pub trait DOMAdapter<Key: NodeKey> {
 
 /// Walk to the ancestor of `base` with the same height of `target`
 fn balance_heights<Key: NodeKey>(
-    dom_adapter: &(impl DOMAdapter<Key> + ?Sized),
+    dom_adapter: &(impl TreeAdapter<Key> + ?Sized),
     base: Key,
     target: Key,
+    mut walker: Option<impl FnMut(Key)>,
 ) -> Option<Key> {
     let target_height = dom_adapter.height(&target)?;
     let mut current = base;
     loop {
+        if let Some(walker) = &mut walker {
+            (walker)(current);
+        }
         if dom_adapter.height(&current)? == target_height {
             break;
         }

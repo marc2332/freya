@@ -1,0 +1,3 @@
+[submodule "crates/freya-icons/external/lucide"]
+	path = crates/freya-icons/external/lucide
+	url = https://github.com/lucide-icons/lucide

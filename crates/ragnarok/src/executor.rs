@@ -67,7 +67,7 @@ impl<T: EventsExecutor + private::Sealed> EventsExecutorRunner for T {
         let mut processed_events = Vec::<Self::Emmitable>::new();
 
         #[cfg(debug_assertions)]
-        tracing::info!("Processing {} DOM events", emmitable_events.len());
+        tracing::info!("Processing {} Tree events", emmitable_events.len());
 
         while !emmitable_events.is_empty() {
             let emmitable_event = emmitable_events.remove(0);
