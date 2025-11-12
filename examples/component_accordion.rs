@@ -13,9 +13,9 @@ fn app() -> Element {
         .expanded()
         .spacing(4.)
         .children_iter((0..3).map(|_| {
-            accordion()
+            Accordion::new()
                 .header("Click to expand!")
-                .content(LOREM_IPSUM)
+                .child(LOREM_IPSUM)
                 .into()
         }))
         .into()

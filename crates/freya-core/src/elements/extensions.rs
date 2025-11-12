@@ -587,6 +587,11 @@ pub trait AccessibilityExt: Sized {
         self.get_accessibility_data().builder.set_label(value);
         self
     }
+
+    fn a11y_builder(mut self, with: impl FnOnce(&mut accesskit::Node)) -> Self {
+        with(&mut self.get_accessibility_data().builder);
+        self
+    }
 }
 
 pub trait TextStyleExt

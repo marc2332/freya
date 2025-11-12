@@ -15,7 +15,7 @@ use crate::{
     theming::component_themes::AccordionThemePartial,
 };
 
-/// A container that expands vertically on press.
+/// A container that expands/collapses vertically when pressed.
 ///
 /// # Example
 ///
@@ -29,9 +29,9 @@ use crate::{
 ///        .expanded()
 ///        .spacing(4.)
 ///        .children_iter((0..2).map(|_| {
-///            accordion()
+///            Accordion::new()
 ///                .header("Click to expand!")
-///                .content(LOREM_IPSUM)
+///                .child(LOREM_IPSUM)
 ///                .into()
 ///        }))
 ///        .into()
@@ -53,27 +53,33 @@ use crate::{
 #[cfg_attr(feature = "docs",
     doc = embed_doc_image::embed_image!("accordion", "images/gallery_accordion.png")
 )]
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Default)]
 pub struct Accordion {
-    header: Option<Element>,
-    content: Option<Element>,
     pub(crate) theme: Option<AccordionThemePartial>,
+    header: Option<Element>,
+    children: Vec<Element>,
 }
 
 impl Accordion {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     pub fn header<C: Into<Element>>(mut self, header: C) -> Self {
         self.header = Some(header.into());
         self
     }
+}
 
-    pub fn content<C: Into<Element>>(mut self, content: C) -> Self {
-        self.content = Some(content.into());
-        self
+impl ChildrenExt for Accordion {
+    fn get_children(&mut self) -> &mut Vec<Element> {
+        &mut self.children
     }
 }
 
 impl Render for Accordion {
     fn render(self: &Accordion) -> Element {
+        let header = use_focus();
         let accordion_theme = get_theme!(&self.theme, accordion);
         let mut open = use_state(|| false);
         let mut animation = use_animation(move |_conf| {
@@ -86,6 +92,9 @@ impl Render for Accordion {
         let clip_percent = animation.get().value();
 
         rect()
+            .a11y_id(header.a11y_id())
+            .a11y_role(AccessibilityRole::Header)
+            .a11y_focusable(true)
             .corner_radius(CornerRadius::new_all(8.))
             .padding(Gaps::new_all(8.))
             .color(accordion_theme.color)
@@ -96,6 +105,12 @@ impl Render for Accordion {
                     .width(1.)
                     .alignment(BorderAlignment::Inner),
             )
+            .on_pointer_enter(move |_| {
+                Cursor::set(CursorIcon::Pointer);
+            })
+            .on_pointer_leave(move |_| {
+                Cursor::set(CursorIcon::default());
+            })
             .on_press(move |_| {
                 if open.toggled() {
                     animation.start();
@@ -106,18 +121,17 @@ impl Render for Accordion {
             .maybe_child(self.header.clone())
             .child(
                 rect()
+                    .a11y_role(AccessibilityRole::Region)
+                    .a11y_builder(|b| {
+                        b.set_labelled_by([header.a11y_id()]);
+                        if !open() {
+                            b.set_hidden();
+                        }
+                    })
                     .overflow_mode(OverflowMode::Clip)
                     .visible_height(VisibleSize::inner_percent(clip_percent))
-                    .maybe_child(self.content.clone()),
+                    .children(self.children.clone()),
             )
             .into()
-    }
-}
-
-pub fn accordion() -> Accordion {
-    Accordion {
-        header: None,
-        content: None,
-        theme: None,
     }
 }
