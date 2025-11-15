@@ -16,6 +16,6 @@ freya-devtools = { workspace = true }
 accesskit = { workspace = true }
 serde_json = "*"
 
-tokio-tungstenite = { version = "0.27" }
+tokio-tungstenite = { version = "0.28" }
 futures-util = { workspace = true }
 tokio = { workspace = true }
