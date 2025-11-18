@@ -61,6 +61,7 @@ impl Render for DraggableCanvas {
 
 #[derive(PartialEq)]
 pub struct Draggable {
+    initial_position: CursorPoint,
     children: Vec<Element>,
 }
 
@@ -72,7 +73,15 @@ impl Default for Draggable {
 
 impl Draggable {
     pub fn new() -> Self {
-        Self { children: vec![] }
+        Self {
+            initial_position: CursorPoint::zero(),
+            children: vec![],
+        }
+    }
+
+    pub fn inital_position(mut self, initial_position: impl Into<CursorPoint>) -> Self {
+        self.initial_position = initial_position.into();
+        self
     }
 }
 
@@ -84,7 +93,7 @@ impl ChildrenExt for Draggable {
 
 impl Render for Draggable {
     fn render(&self) -> Element {
-        let mut position = use_state(|| CursorPoint::new(0., 0.));
+        let mut position = use_state(|| self.initial_position);
         let mut dragging_position = use_state::<Option<CursorPoint>>(|| None);
         let DraggableCanvasLayout(layout) = use_consume::<DraggableCanvasLayout>();
         let DraggableCanvasRegistry(mut registry) = use_consume::<DraggableCanvasRegistry>();
