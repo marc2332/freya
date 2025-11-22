@@ -8,7 +8,7 @@ use torin::{
 pub fn margin() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -47,7 +47,7 @@ pub fn margin() {
         &mut mocked_dom,
     );
 
-    let layout_node = layout.get(1).unwrap();
+    let layout_node = layout.get(&1).unwrap();
 
     assert_eq!(
         layout_node.area,

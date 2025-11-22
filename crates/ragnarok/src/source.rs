@@ -9,7 +9,7 @@ pub trait SourceEvent: Clone + PartialEq {
     fn is_pressed(&self) -> bool;
     fn is_moved(&self) -> bool;
 
-    fn try_cursor(&self) -> Option<CursorPoint>;
+    fn try_location(&self) -> Option<CursorPoint>;
 
     fn as_event_name(&self) -> Self::Name;
 }

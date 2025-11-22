@@ -8,7 +8,7 @@ use torin::{
 pub fn absolute() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -98,19 +98,19 @@ pub fn absolute() {
     );
 
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(100.0, 150.0), Size2D::new(200.0, 200.0)),
     );
     assert_eq!(
-        layout.get(3).unwrap().area.round(),
+        layout.get(&3).unwrap().area.round(),
         Rect::new(Point2D::new(700.0, 150.0), Size2D::new(200.0, 200.0)),
     );
     assert_eq!(
-        layout.get(4).unwrap().area.round(),
+        layout.get(&4).unwrap().area.round(),
         Rect::new(Point2D::new(700.0, 650.0), Size2D::new(200.0, 200.0)),
     );
     assert_eq!(
-        layout.get(5).unwrap().area.round(),
+        layout.get(&5).unwrap().area.round(),
         Rect::new(Point2D::new(100.0, 650.0), Size2D::new(200.0, 200.0)),
     );
 }
@@ -119,7 +119,7 @@ pub fn absolute() {
 pub fn global() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -209,19 +209,19 @@ pub fn global() {
     );
 
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(50.0, 100.0), Size2D::new(200.0, 200.0)),
     );
     assert_eq!(
-        layout.get(3).unwrap().area.round(),
+        layout.get(&3).unwrap().area.round(),
         Rect::new(Point2D::new(750.0, 100.0), Size2D::new(200.0, 200.0)),
     );
     assert_eq!(
-        layout.get(4).unwrap().area.round(),
+        layout.get(&4).unwrap().area.round(),
         Rect::new(Point2D::new(750.0, 700.0), Size2D::new(200.0, 200.0)),
     );
     assert_eq!(
-        layout.get(5).unwrap().area.round(),
+        layout.get(&5).unwrap().area.round(),
         Rect::new(Point2D::new(50.0, 700.0), Size2D::new(200.0, 200.0)),
     );
 }

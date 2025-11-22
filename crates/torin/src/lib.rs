@@ -14,7 +14,6 @@ pub mod geometry;
 pub mod measure;
 pub mod node;
 pub mod scaled;
-pub mod sendanymap;
 pub mod torin;
 pub mod values;
 
@@ -29,7 +28,6 @@ pub mod prelude {
         measure::*,
         node::*,
         scaled::*,
-        sendanymap::*,
         torin::*,
         values::prelude::*,
     };

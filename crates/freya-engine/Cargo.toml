@@ -1,0 +1,33 @@
+[package]
+name = "freya-engine"
+description = "Abstract Freya's graphics APIs"
+version = "0.4.0"
+edition = "2024"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "ui", "desktop", "skia", "graphics"]
+categories = ["gui"]
+
+[package.metadata.docs.rs]
+features = ["mocked-engine"]
+
+[features]
+mocked-engine = []
+skia-engine = ["dep:skia-safe"]
+vulkan = ["skia-safe/vulkan"]
+
+[dependencies]
+bitflags = { workspace = true }
+skia-safe = { workspace = true, optional = true }
+glutin = { workspace = true }
+
+[target."cfg(target_os = \"linux\")".dependencies.skia-safe]
+workspace = true
+optional = true
+features = ["gl", "textlayout", "svg", "x11", "wayland"]
+
+[dev-dependencies]
+freya-engine = { workspace = true, features = ["skia-engine"] }

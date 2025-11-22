@@ -7,7 +7,7 @@ use torin::{
 pub fn spacing() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -69,22 +69,22 @@ pub fn spacing() {
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(0.0, 240.0), Size2D::new(600.0, 600.0)),
     );
 
     assert_eq!(
-        layout.get(3).unwrap().area,
+        layout.get(&3).unwrap().area,
         Rect::new(Point2D::new(0.0, 240.0), Size2D::new(300.0, 300.0)),
     );
 
     assert_eq!(
-        layout.get(4).unwrap().area,
+        layout.get(&4).unwrap().area,
         Rect::new(Point2D::new(350.0, 240.0), Size2D::new(200.0, 200.0)),
     );
 }

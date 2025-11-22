@@ -8,7 +8,7 @@ use torin::{
 pub fn flex_generic() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -68,24 +68,24 @@ pub fn flex_generic() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().area,
+        layout.get(&0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 20.0)),
     );
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(0.0, 20.0), Size2D::new(100.0, 32.5)),
     );
     assert_eq!(
-        layout.get(3).unwrap().area,
+        layout.get(&3).unwrap().area,
         Rect::new(Point2D::new(0.0, 52.5), Size2D::new(100.0, 50.0)),
     );
     assert_eq!(
-        layout.get(4).unwrap().area,
+        layout.get(&4).unwrap().area,
         Rect::new(Point2D::new(0.0, 102.5), Size2D::new(100.0, 97.5)),
     );
 }
@@ -94,7 +94,7 @@ pub fn flex_generic() {
 pub fn flex_under_1_flex_grow() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -134,16 +134,16 @@ pub fn flex_under_1_flex_grow() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().area,
+        layout.get(&0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 40.0)),
     );
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(0.0, 40.0), Size2D::new(100.0, 100.0)),
     );
 }
@@ -152,7 +152,7 @@ pub fn flex_under_1_flex_grow() {
 pub fn flex_grow_balance() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -212,24 +212,24 @@ pub fn flex_grow_balance() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().area,
+        layout.get(&0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 20.0)),
     );
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(0.0, 20.0), Size2D::new(100.0, 40.0)),
     );
     assert_eq!(
-        layout.get(3).unwrap().area.round(),
+        layout.get(&3).unwrap().area.round(),
         Rect::new(Point2D::new(0.0, 60.0), Size2D::new(100.0, 60.0)),
     );
     assert_eq!(
-        layout.get(4).unwrap().area.round(),
+        layout.get(&4).unwrap().area.round(),
         Rect::new(Point2D::new(0.0, 120.0), Size2D::new(100.0, 80.0)),
     );
 }
@@ -238,7 +238,7 @@ pub fn flex_grow_balance() {
 pub fn flex_large_grow_balance() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -298,24 +298,24 @@ pub fn flex_large_grow_balance() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().area,
+        layout.get(&0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 5.0)),
     );
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(0.0, 5.0), Size2D::new(100.0, 65.0)),
     );
     assert_eq!(
-        layout.get(3).unwrap().area.round(),
+        layout.get(&3).unwrap().area.round(),
         Rect::new(Point2D::new(0.0, 70.0), Size2D::new(100.0, 30.0)),
     );
     assert_eq!(
-        layout.get(4).unwrap().area.round(),
+        layout.get(&4).unwrap().area.round(),
         Rect::new(Point2D::new(0.0, 100.0), Size2D::new(100.0, 100.0)),
     );
 }
@@ -324,7 +324,7 @@ pub fn flex_large_grow_balance() {
 pub fn flex_with_inner_percentage() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -375,20 +375,20 @@ pub fn flex_with_inner_percentage() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().area,
+        layout.get(&0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 150.0)),
     );
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(0.0, 150.0), Size2D::new(100.0, 50.0)),
     );
     assert_eq!(
-        layout.get(3).unwrap().area.round(),
+        layout.get(&3).unwrap().area.round(),
         Rect::new(Point2D::new(0.0, 150.0), Size2D::new(100.0, 100.0)),
     );
 }
@@ -397,7 +397,7 @@ pub fn flex_with_inner_percentage() {
 pub fn flex_root_candidate_resolution() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
+    let mut mocked_dom = TestingTree::default();
     mocked_dom.add(
         0,
         None,
@@ -447,20 +447,20 @@ pub fn flex_root_candidate_resolution() {
     );
 
     assert_eq!(
-        layout.get(0).unwrap().area,
+        layout.get(&0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 100.0)),
     );
     assert_eq!(
-        layout.get(3).unwrap().area.round(),
+        layout.get(&3).unwrap().area.round(),
         Rect::new(Point2D::new(0.0, 100.0), Size2D::new(100.0, 100.0)),
     );
 
@@ -487,11 +487,11 @@ pub fn flex_root_candidate_resolution() {
     );
 
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 150.0)),
     );
     assert_eq!(
-        layout.get(3).unwrap().area.round(),
+        layout.get(&3).unwrap().area.round(),
         Rect::new(Point2D::new(0.0, 150.0), Size2D::new(100.0, 50.0)),
     );
 }

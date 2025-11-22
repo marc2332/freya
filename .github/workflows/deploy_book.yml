@@ -1,5 +1,5 @@
 name: Deploy book
-on: 
+on:
   push:
     paths:
       - 'book/**/*'
@@ -21,7 +21,7 @@ jobs:
         uses: peaceiris/actions-mdbook@v2
         with:
           mdbook-version: '0.4.32'
-      
+
       - run: mdbook build
         working-directory: book
 

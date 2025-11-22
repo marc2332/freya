@@ -4,9 +4,9 @@ use rustc_hash::FxHashMap;
 use crate::{
     custom_measurer::LayoutMeasurer,
     dom_adapter::{
-        DOMAdapter,
         LayoutNode,
         NodeKey,
+        TreeAdapter,
     },
     geometry::{
         Area,
@@ -21,9 +21,11 @@ use crate::{
         Direction,
         LayoutMetadata,
         Length,
+        Position,
         Torin,
     },
     size::Size,
+    torin::DirtyReason,
 };
 
 /// Some layout strategies require two-phase measurements
@@ -38,7 +40,7 @@ pub struct MeasureContext<'a, Key, L, D>
 where
     Key: NodeKey,
     L: LayoutMeasurer<Key>,
-    D: DOMAdapter<Key>,
+    D: TreeAdapter<Key>,
 {
     pub layout: &'a mut Torin<Key>,
     pub measurer: &'a mut Option<L>,
@@ -50,8 +52,48 @@ impl<Key, L, D> MeasureContext<'_, Key, L, D>
 where
     Key: NodeKey,
     L: LayoutMeasurer<Key>,
-    D: DOMAdapter<Key>,
+    D: TreeAdapter<Key>,
 {
+    fn recursive_translate(
+        &mut self,
+        // ID for this Node
+        node_id: Key,
+        // X axis translation offset
+        offset_x: Length,
+        // Y axis translation offset
+        offset_y: Length,
+    ) {
+        let mut buffer = self
+            .dom_adapter
+            .children_of(&node_id)
+            .into_iter()
+            .map(|id| (node_id, id))
+            .collect::<Vec<(Key, Key)>>();
+        while let Some((parent, child)) = buffer.pop() {
+            let node = self.dom_adapter.get_node(&child).unwrap();
+            let translate = match node.position {
+                Position::Global(_) => false,
+                Position::Absolute(_) => parent != node_id,
+                Position::Stacked(_) => true,
+            };
+            if translate {
+                let layout_node = self.layout.get_mut(&child).unwrap();
+
+                layout_node.area.origin.x += offset_x.get();
+                layout_node.area.origin.y += offset_y.get();
+                layout_node.inner_area.origin.x += offset_x.get();
+                layout_node.inner_area.origin.y += offset_y.get();
+
+                buffer.extend(
+                    self.dom_adapter
+                        .children_of(&child)
+                        .into_iter()
+                        .map(|id| (node_id, id)),
+                );
+            }
+        }
+    }
+
     /// Measure a Node.
     #[allow(clippy::too_many_arguments, clippy::missing_panics_doc)]
     pub fn measure_node(
@@ -71,12 +113,32 @@ where
         // Current phase of measurement
         phase: Phase,
     ) -> (bool, LayoutNode) {
+        let reason = self.layout.dirty.get(&node_id).copied();
+
+        // If possible translate all this node's descendants to avoid relayout
+        if let Some(layout_node) = self.layout.get_mut(&node_id)
+            && reason == Some(DirtyReason::InnerLayout)
+            && must_cache_children
+        {
+            // Get the offset difference since the last layout
+            let offset_x = node.offset_x - layout_node.offset_x;
+            let offset_y = node.offset_y - layout_node.offset_y;
+
+            layout_node.offset_x = node.offset_x;
+            layout_node.offset_y = node.offset_y;
+
+            let layout_node = layout_node.clone();
+
+            self.recursive_translate(node_id, offset_x, offset_y);
+
+            return (must_cache_children, layout_node);
+        }
+
         // 1. If parent is dirty
         // 2. If this Node has been marked as dirty
         // 3. If there is no know cached data about this Node.
-        let must_revalidate = parent_is_dirty
-            || self.layout.dirty.contains_key(&node_id)
-            || !self.layout.results.contains_key(&node_id);
+        let must_revalidate =
+            parent_is_dirty || reason.is_some() || !self.layout.results.contains_key(&node_id);
         if must_revalidate {
             // Create the initial Node area size
             let mut area_size = Size2D::new(node.padding.horizontal(), node.padding.vertical());
@@ -108,7 +170,7 @@ where
             // If available, run a custom layout measure function
             // This is useful when you use third-party libraries (e.g. rust-skia, cosmic-text) to measure text layouts
             let node_data = if let Some(measurer) = self.measurer {
-                if measurer.should_measure(node_id) {
+                if measurer.should_hook_measurement(node_id) {
                     let available_width =
                         Size::Pixels(Length::new(available_parent_area.size.width)).min_max(
                             area_size.width,
@@ -238,7 +300,7 @@ where
             let area_origin = node.position.get_origin(
                 available_parent_area,
                 parent_area,
-                &area_size,
+                area_size,
                 &self.layout_metadata.root_area,
             );
             let mut area = Rect::new(area_origin, area_size);
@@ -296,26 +358,34 @@ where
                 }
             }
 
-            inner_sizes.width += node.padding.horizontal();
-            inner_sizes.height += node.padding.vertical();
-
             let layout_node = LayoutNode {
                 area,
                 margin: node.margin,
+                offset_x: node.offset_x,
+                offset_y: node.offset_y,
                 inner_area,
                 data: node_data,
             };
 
             // In case of any layout listener, notify it with the new areas.
-            if node.has_layout_references {
-                if let Some(measurer) = self.measurer {
-                    measurer.notify_layout_references(node_id, layout_node.area, inner_sizes);
-                }
+            if must_cache_children
+                && phase == Phase::Final
+                && node.has_layout_references
+                && let Some(measurer) = self.measurer
+            {
+                inner_sizes.width += node.padding.horizontal();
+                inner_sizes.height += node.padding.vertical();
+                measurer.notify_layout_references(
+                    node_id,
+                    layout_node.area,
+                    layout_node.visible_area(),
+                    inner_sizes,
+                );
             }
 
             (must_cache_children, layout_node)
         } else {
-            let layout_node = self.layout.get(node_id).unwrap().clone();
+            let layout_node = self.layout.get(&node_id).unwrap().clone();
 
             let mut inner_sizes = Size2D::default();
             let mut available_area = layout_node.inner_area;
@@ -531,7 +601,7 @@ where
                     &initial_phase_inner_area,
                     initial_phase_inner_sizes_with_flex,
                     &parent_node.main_alignment,
-                    &parent_node.direction,
+                    parent_node.direction,
                     AlignmentDirection::Main,
                 );
             }
@@ -589,7 +659,7 @@ where
                     &initial_available_area,
                     initial_phase_inner_sizes_with_flex,
                     &parent_node.main_alignment,
-                    &parent_node.direction,
+                    parent_node.direction,
                     non_absolute_children_len,
                     is_first_child,
                 );
@@ -605,7 +675,7 @@ where
                         available_area,
                         *initial_phase_size,
                         &parent_node.cross_alignment,
-                        &parent_node.direction,
+                        parent_node.direction,
                         AlignmentDirection::Cross,
                     );
                 }
@@ -654,10 +724,10 @@ where
         inner_area: &Area,
         contents_size: Size2D,
         alignment: &Alignment,
-        direction: &Direction,
+        direction: Direction,
         alignment_direction: AlignmentDirection,
     ) {
-        let axis = AlignAxis::new(direction, alignment_direction);
+        let axis = AlignAxis::new(&direction, alignment_direction);
 
         match axis {
             AlignAxis::Height => match alignment {
@@ -691,11 +761,11 @@ where
         initial_available_area: &Area,
         inner_sizes: Size2D,
         alignment: &Alignment,
-        direction: &Direction,
+        direction: Direction,
         siblings_len: usize,
         is_first_sibling: bool,
     ) {
-        let axis = AlignAxis::new(direction, alignment_direction);
+        let axis = AlignAxis::new(&direction, alignment_direction);
 
         match axis {
             AlignAxis::Height => match alignment {
@@ -761,9 +831,11 @@ where
         phase: Phase,
     ) {
         // Only apply the spacing to elements after `i > 0` and `i < len - 1`
-        let spacing = (!is_last_sibiling)
-            .then_some(parent_node.spacing)
-            .unwrap_or_default();
+        let spacing = if is_last_sibiling {
+            Length::default()
+        } else {
+            parent_node.spacing
+        };
 
         match parent_node.direction {
             Direction::Horizontal => {

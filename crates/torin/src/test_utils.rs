@@ -5,11 +5,11 @@ use std::collections::HashMap;
 use crate::prelude::*;
 
 #[derive(Default)]
-pub struct TestingDOM {
+pub struct TestingTree {
     mapper: HashMap<usize, (Option<usize>, Vec<usize>, u16, Node)>,
 }
 
-impl TestingDOM {
+impl TestingTree {
     pub fn add(&mut self, node_id: usize, parent: Option<usize>, children: Vec<usize>, node: Node) {
         let depth = parent.map_or(0, |p| self.mapper.get(&p).unwrap().2) + 1;
         self.mapper.insert(node_id, (parent, children, depth, node));
@@ -32,7 +32,7 @@ impl TestingDOM {
     }
 }
 
-impl DOMAdapter<usize> for TestingDOM {
+impl TreeAdapter<usize> for TestingTree {
     fn children_of(&mut self, node_id: &usize) -> Vec<usize> {
         self.mapper
             .get(node_id)
@@ -50,10 +50,6 @@ impl DOMAdapter<usize> for TestingDOM {
 
     fn get_node(&self, node_id: &usize) -> Option<Node> {
         self.mapper.get(node_id).map(|c| c.3.clone())
-    }
-
-    fn is_node_valid(&mut self, _node_id: &usize) -> bool {
-        true
     }
 
     fn root_id(&self) -> usize {
