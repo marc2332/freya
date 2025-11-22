@@ -37,7 +37,7 @@ pub struct EditorHistory {
     // Incremental counter for every transaction.
     pub version: usize,
     /// After how many seconds since the last transaction a change should be grouped with the last transaction.
-    transaction_treshold_groping: Duration,
+    transaction_threshold_grouping: Duration,
 }
 
 impl EditorHistory {
@@ -46,7 +46,7 @@ impl EditorHistory {
             transactions: Vec::default(),
             current_transaction: 0,
             version: 0,
-            transaction_treshold_groping,
+            transaction_threshold_grouping: transaction_treshold_groping,
         }
     }
 
@@ -59,7 +59,7 @@ impl EditorHistory {
             .transactions
             .get_mut(self.current_transaction.saturating_sub(1));
         if let Some(last_transaction) = last_transaction
-            && last_transaction.timestamp.elapsed() <= self.transaction_treshold_groping
+            && last_transaction.timestamp.elapsed() <= self.transaction_threshold_grouping
         {
             last_transaction.changes.push(change);
             last_transaction.timestamp = Instant::now();

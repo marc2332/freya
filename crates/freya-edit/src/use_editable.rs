@@ -32,7 +32,7 @@ impl UseEditable {
         let editor = State::create(RopeEditor::new(
             content,
             TextCursor::default(),
-            config.identation,
+            config.indentation,
             mode,
             EditorHistory::new(Duration::from_millis(10)),
             clipboard,
