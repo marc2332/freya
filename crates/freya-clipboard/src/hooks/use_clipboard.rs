@@ -32,7 +32,7 @@ impl UseClipboard {
                 let clipboard_state =
                     State::create_in_scope(ClipboardContext::new().ok(), ScopeId::ROOT);
                 provide_context_for_scope_id(clipboard_state, ScopeId::ROOT);
-                try_consume_root_context().unwrap()
+                clipboard_state
             }
         };
         UseClipboard { clipboard }

@@ -276,7 +276,7 @@ where
     }
 
     pub(crate) fn subscribe_if_not(&self) {
-        if let Some(rc) = ReactiveContext::current() {
+        if let Some(rc) = ReactiveContext::try_current() {
             let antenna = &self.antenna.write_unchecked();
             let channel = antenna.channel.clone();
             let is_listening = antenna.station.is_listening(&channel, &rc);
@@ -523,7 +523,7 @@ where
 {
     use_provide_context(|| RadioStation {
         value: State::create(init_value()),
-        listeners: State::default(),
+        listeners: State::create(HashMap::default()),
     })
 }
 

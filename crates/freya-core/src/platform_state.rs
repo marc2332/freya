@@ -4,7 +4,7 @@ use crate::{
     accessibility::id::AccessibilityId,
     prelude::{
         State,
-        try_consume_root_context,
+        consume_root_context,
     },
 };
 
@@ -26,6 +26,6 @@ pub struct PlatformState {
 
 impl PlatformState {
     pub fn get() -> Self {
-        try_consume_root_context::<Self>().unwrap()
+        consume_root_context()
     }
 }

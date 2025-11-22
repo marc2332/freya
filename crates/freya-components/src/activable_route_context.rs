@@ -3,7 +3,7 @@ use freya_core::prelude::{
     use_try_consume,
 };
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 pub struct ActivableRouteContext(pub State<bool>);
 
 impl ActivableRouteContext {

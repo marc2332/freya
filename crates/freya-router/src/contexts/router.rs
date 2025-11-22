@@ -54,7 +54,7 @@ impl RouterContextInner {
     }
 
     fn subscribe_to_current_context(&self) {
-        if let Some(mut rc) = ReactiveContext::current() {
+        if let Some(mut rc) = ReactiveContext::try_current() {
             rc.subscribe(&self.subscribers);
         }
     }
@@ -102,7 +102,7 @@ impl RouterContext {
     }
 
     pub fn get() -> Self {
-        Self::try_get().unwrap()
+        consume_context()
     }
 
     /// Check whether there is a previous page to navigate back to.

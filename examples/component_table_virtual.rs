@@ -118,7 +118,7 @@ fn app() -> Element {
                 .child(
                     TableBody::new().child(
                         VirtualScrollView::new_with_data(filtered_data, move |i, filtered_data| {
-                            let items = filtered_data.get(i).unwrap();
+                            let items = &filtered_data[i];
                             TableRow::new()
                                 .key(i)
                                 .children_iter(items.iter().enumerate().map(|(n, item)| {

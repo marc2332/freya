@@ -11,7 +11,7 @@ use std::{
 
 use tracing::info;
 
-use crate::prelude::try_consume_root_context;
+use crate::prelude::consume_root_context;
 
 #[derive(Clone)]
 pub struct AnimationClock(Arc<AtomicU32>);
@@ -28,7 +28,7 @@ impl AnimationClock {
     pub const MAX_SPEED: f32 = 5.0;
 
     pub fn get() -> Self {
-        try_consume_root_context().unwrap()
+        consume_root_context()
     }
 
     pub fn new() -> Self {

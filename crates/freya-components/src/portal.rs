@@ -140,12 +140,9 @@ impl<T: PartialEq + 'static + Clone + std::hash::Hash + Eq + Debug> Render for P
         rect()
             .on_sized(move |e: Event<SizedEventData>| {
                 if *current_size.peek() != Some(e.area) && show {
-                    previous_size.set(*current_size.read());
+                    previous_size.set(current_size());
                     current_size.set(Some(e.area));
-                    positions
-                        .ids
-                        .write()
-                        .insert(id.clone(), current_size.read().unwrap());
+                    positions.ids.write().insert(id.clone(), e.area);
 
                     spawn(async move {
                         let has_init_size = init_size.is_some();

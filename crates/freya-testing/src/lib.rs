@@ -102,7 +102,7 @@ impl TestingRunner {
         let animation_clock = AnimationClock::new();
         runner.provide_root_context(|| animation_clock.clone());
 
-        runner.provide_root_context(AssetCacher::default);
+        runner.provide_root_context(AssetCacher::create);
 
         let platform_state = runner.provide_root_context(|| PlatformState {
             focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
@@ -195,7 +195,7 @@ impl TestingRunner {
                 .fallback_manager()
                 .unwrap()
                 .new_from_data(font_data, None)
-                .unwrap();
+                .unwrap_or_else(|| panic!("Failed to load font {font_name}."));
             provider.register_typeface(ft_type, Some(font_name));
         }
         let font_manager: FontMgr = provider.into();

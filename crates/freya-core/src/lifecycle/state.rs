@@ -27,7 +27,7 @@ pub trait MutView<'a, T: 'static> {
 
 impl<T: 'static> MutView<'static, T> for State<T> {
     fn read(&mut self) -> ReadRef<'static, T> {
-        if let Some(mut rc) = ReactiveContext::current() {
+        if let Some(mut rc) = ReactiveContext::try_current() {
             rc.subscribe(&self.subscribers.read());
         }
         self.key.read()
@@ -62,12 +62,6 @@ impl<T: 'static> PartialEq for State<T> {
 }
 
 impl<T: 'static> Eq for State<T> {}
-
-impl<T: 'static + Default> Default for State<T> {
-    fn default() -> Self {
-        Self::create(T::default())
-    }
-}
 
 /// Allow calling the states as functions.
 /// Limited to `Copy` values only.
@@ -200,7 +194,7 @@ pub type WriteRef<'a, T> =
 
 impl<T> State<T> {
     pub fn read(&self) -> ReadRef<'static, T> {
-        if let Some(mut rc) = ReactiveContext::current() {
+        if let Some(mut rc) = ReactiveContext::try_current() {
             rc.subscribe(&self.subscribers.read());
         }
         self.key.read()
@@ -289,6 +283,15 @@ impl<T> Clone for State<T> {
 }
 
 impl<T> Copy for State<T> {}
+
+impl<T> State<Option<T>> {
+    pub fn take(&mut self) -> Option<T>
+    where
+        T: 'static,
+    {
+        self.write().take()
+    }
+}
 
 pub fn use_state<T: 'static>(init: impl FnOnce() -> T) -> State<T> {
     use_hook(|| State::create(init()))

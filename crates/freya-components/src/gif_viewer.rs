@@ -13,6 +13,7 @@ use std::{
     time::Duration,
 };
 
+use anyhow::Context;
 use async_io::Timer;
 use blocking::unblock;
 use bytes::Bytes;
@@ -243,14 +244,14 @@ impl Render for GifViewer {
         let mut asset_cacher = use_hook(AssetCacher::get);
         let mut assets_tasks = use_state::<Vec<TaskHandle>>(Vec::new);
 
-        let mut stream_gif = async move |bytes: Bytes| {
+        let mut stream_gif = async move |bytes: Bytes| -> anyhow::Result<()> {
             loop {
                 let mut decoder_options = gif::DecodeOptions::new();
                 decoder_options.set_color_output(gif::ColorOutput::RGBA);
                 let cursor = std::io::Cursor::new(&bytes);
-                let mut decoder = decoder_options.read_info(cursor.clone()).unwrap();
-                let surface =
-                    raster_n32_premul((decoder.width() as i32, decoder.height() as i32)).unwrap();
+                let mut decoder = decoder_options.read_info(cursor.clone())?;
+                let surface = raster_n32_premul((decoder.width() as i32, decoder.height() as i32))
+                    .context("Failed to create GIF surface")?;
                 loop {
                     match decoder.read_next_frame() {
                         Ok(Some(frame)) => {
@@ -269,9 +270,9 @@ impl Render for GifViewer {
                                     data,
                                     row_bytes,
                                 )
-                                .unwrap()
+                                .context("Failed to crate GIF Frame.")
                             })
-                            .await;
+                            .await?;
                             *asset.write() = Some(GifData {
                                 holder: Rc::new(RefCell::new(gif)),
                                 surface: Rc::new(RefCell::new(surface.clone())),
@@ -340,11 +341,24 @@ impl Render for GifViewer {
 
         use_side_effect(move || {
             if let Some(Asset::Cached(asset)) = asset_cacher.subscribe_asset(&asset_config) {
-                let bytes = asset.downcast_ref::<Bytes>().unwrap().clone();
-                let asset_task = spawn(async move {
-                    stream_gif(bytes).await;
-                });
-                assets_tasks.write().push(asset_task);
+                if let Some(bytes) = asset.downcast_ref::<Bytes>().cloned() {
+                    let asset_task = spawn(async move {
+                        if let Err(err) = stream_gif(bytes).await {
+                            #[cfg(debug_assertions)]
+                            tracing::error!(
+                                "Failed to render GIF by ID <{}>, error: {err:?}",
+                                asset_config.id
+                            )
+                        }
+                    });
+                    assets_tasks.write().push(asset_task);
+                } else {
+                    #[cfg(debug_assertions)]
+                    tracing::error!(
+                        "Failed to downcast asset of GIF by ID <{}>",
+                        asset_config.id
+                    )
+                }
             }
         });
 

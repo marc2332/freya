@@ -201,7 +201,7 @@ impl Render for ShaderView {
         let editable = self.0;
 
         use_hook(|| {
-            let mut ticker = try_consume_root_context::<RenderingTicker>().unwrap();
+            let mut ticker = consume_root_context::<RenderingTicker>();
             let event_notifier = EventNotifier::get();
 
             spawn(async move {

@@ -125,6 +125,7 @@ hotpath = "0.4"
 
 # Errors
 anyhow = "1.0.100"
+thiserror = "2.0.17"
 
 # Images
 image = "0.25.8"

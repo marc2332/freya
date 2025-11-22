@@ -149,7 +149,7 @@ impl AppWindow {
         });
         runner.provide_root_context(|| event_notifier);
 
-        runner.provide_root_context(AssetCacher::default);
+        runner.provide_root_context(AssetCacher::create);
 
         let window_size = window.inner_size();
         let platform_state = runner.provide_root_context(|| PlatformState {

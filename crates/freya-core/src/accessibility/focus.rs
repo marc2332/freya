@@ -20,7 +20,7 @@ use crate::{
         Memo,
         ScreenReader,
         UserEvent,
-        try_consume_root_context,
+        consume_root_context,
         use_hook,
         use_memo,
     },
@@ -41,7 +41,7 @@ impl Focus {
     }
 
     pub fn new_id() -> AccessibilityId {
-        let accessibility_generator = try_consume_root_context::<AccessibilityGenerator>().unwrap();
+        let accessibility_generator = consume_root_context::<AccessibilityGenerator>();
         AccessibilityId(accessibility_generator.new_id())
     }
 

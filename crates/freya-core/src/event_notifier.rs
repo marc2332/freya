@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use crate::{
-    prelude::try_consume_root_context,
+    prelude::consume_root_context,
     user_event::UserEvent,
 };
 
@@ -12,7 +12,7 @@ pub struct EventNotifier {
 
 impl EventNotifier {
     pub fn get() -> Self {
-        try_consume_root_context::<Self>().unwrap()
+        consume_root_context()
     }
 
     pub fn new(sender: impl Fn(UserEvent) + 'static) -> Self {

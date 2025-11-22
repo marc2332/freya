@@ -1,16 +1,8 @@
-use std::{
-    marker::PhantomData,
-    sync::{
-        Arc,
-        atomic::{
-            AtomicUsize,
-            Ordering,
-        },
-    },
-};
+use std::marker::PhantomData;
 
 use crate::{
     prelude::{
+        State,
         provide_context_for_scope_id,
         try_consume_context,
         use_hook,
@@ -19,18 +11,17 @@ use crate::{
 };
 
 pub struct UseId<T> {
-    counter: Arc<AtomicUsize>,
+    counter: State<usize>,
     _phantom: PhantomData<T>,
 }
 
 impl<T> Clone for UseId<T> {
     fn clone(&self) -> Self {
-        Self {
-            counter: self.counter.clone(),
-            _phantom: self._phantom,
-        }
+        *self
     }
 }
+
+impl<T> Copy for UseId<T> {}
 
 impl<T: 'static> UseId<T> {
     /// Composable alternative to [use_id].
@@ -38,17 +29,15 @@ impl<T: 'static> UseId<T> {
         let storage = match try_consume_context::<UseId<T>>() {
             Some(storage) => storage,
             None => {
-                provide_context_for_scope_id(
-                    UseId {
-                        counter: Arc::default(),
-                        _phantom: PhantomData::<T>,
-                    },
-                    ScopeId::ROOT,
-                );
-                try_consume_context().unwrap()
+                let use_id = UseId {
+                    counter: State::create_in_scope(0, Some(ScopeId::ROOT)),
+                    _phantom: PhantomData::<T>,
+                };
+                provide_context_for_scope_id(use_id, ScopeId::ROOT);
+                use_id
             }
         };
-        storage.counter.fetch_add(1, Ordering::SeqCst)
+        *storage.counter.peek()
     }
 }
 

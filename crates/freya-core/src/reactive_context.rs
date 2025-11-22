@@ -116,8 +116,12 @@ impl ReactiveContext {
         res
     }
 
-    pub fn current() -> Option<Self> {
+    pub fn try_current() -> Option<Self> {
         REACTIVE_CONTEXTS_STACK.with_borrow(|contexts| contexts.last().cloned())
+    }
+
+    pub fn current() -> Self {
+        REACTIVE_CONTEXTS_STACK.with_borrow(|contexts| contexts.last().cloned().expect("Your trying to access a Freya reactive context outside of Freya, you might be in a separate thread or async task that is not integrated with Freya."))
     }
 
     pub fn notify(&self) -> bool {

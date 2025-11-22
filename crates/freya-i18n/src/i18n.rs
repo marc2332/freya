@@ -250,7 +250,7 @@ impl I18n {
     }
 
     pub fn get() -> Self {
-        Self::try_get().unwrap()
+        consume_context()
     }
 
     pub fn new(

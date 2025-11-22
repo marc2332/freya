@@ -1,4 +1,5 @@
 use freya_core::prelude::*;
+use thiserror::Error;
 use torin::{
     content::Content,
     prelude::{
@@ -15,6 +16,12 @@ use crate::{
         ResizableHandleThemePartial,
     },
 };
+
+#[derive(Error, Debug)]
+pub enum ResizableError {
+    #[error("Panel does not exist")]
+    PanelNotFound,
+}
 
 #[derive(Clone, Copy, Debug)]
 pub struct Panel {
@@ -63,8 +70,13 @@ impl ResizableContext {
         }
     }
 
-    pub fn remove_panel(&mut self, id: usize) {
-        let removed_panel = self.panels.iter().find(|p| p.id == id).cloned().unwrap();
+    pub fn remove_panel(&mut self, id: usize) -> Result<(), ResizableError> {
+        let removed_panel = self
+            .panels
+            .iter()
+            .find(|p| p.id == id)
+            .cloned()
+            .ok_or(ResizableError::PanelNotFound)?;
         self.panels.retain(|e| e.id != id);
 
         let mut buffer = removed_panel.size;
@@ -76,6 +88,8 @@ impl ResizableContext {
             let new_resized_sized = panel.initial_size - panel.size;
             buffer -= new_resized_sized;
         }
+
+        Ok(())
     }
 
     pub fn apply_resize(&mut self, panel_index: usize, distance: f32) -> bool {
@@ -262,7 +276,8 @@ impl Render for ResizablePanel {
         });
 
         use_drop(move || {
-            registry.write().remove_panel(id);
+            // Safe to ignore any error as we are dropping
+            let _ = registry.write().remove_panel(id);
         });
 
         let registry = registry.read();

@@ -89,18 +89,24 @@ struct AssetState {
     asset: Asset,
 }
 
-#[derive(Clone, Copy, Default, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct AssetCacher {
     registry: State<HashMap<AssetConfiguration, AssetState>>,
 }
 
 impl AssetCacher {
+    pub fn create() -> Self {
+        Self {
+            registry: State::create(HashMap::new()),
+        }
+    }
+
     pub fn try_get() -> Option<Self> {
-        try_consume_context()
+        try_consume_root_context()
     }
 
     pub fn get() -> Self {
-        Self::try_get().unwrap()
+        consume_root_context()
     }
 
     /// Attempt to resolve a [Asset] given a [AssetConfiguration].
@@ -113,9 +119,7 @@ impl AssetCacher {
 
     /// Subscribes to a [Asset] given a [AssetConfiguration].
     pub fn subscribe_asset(&self, asset_config: &AssetConfiguration) -> Option<Asset> {
-        if let Some(rc) = ReactiveContext::current() {
-            self.listen(rc, asset_config.clone());
-        }
+        self.listen(ReactiveContext::current(), asset_config.clone());
         self.registry
             .peek()
             .get(asset_config)
@@ -181,8 +185,15 @@ impl AssetCacher {
 
                 // Registry the clear-task
                 let mut registry = registry.write();
-                let entry = registry.get_mut(asset_config).unwrap();
-                entry.users = AssetUsers::ClearTask(clear_task);
+                if let Some(entry) = registry.get_mut(asset_config) {
+                    entry.users = AssetUsers::ClearTask(clear_task);
+                } else {
+                    #[cfg(debug_assertions)]
+                    tracing::info!(
+                        "Failed to spawn clear task to remove cache of {}",
+                        asset_config.id
+                    )
+                }
             }
         }
     }
@@ -241,10 +252,10 @@ pub fn use_asset(asset_config: &AssetConfiguration) -> Asset {
             }
             prev.replace(asset_config.clone());
         }
-        if let Some(rc) = ReactiveContext::current() {
-            asset_cacher.listen(rc, asset_config.clone());
-        }
+        asset_cacher.listen(ReactiveContext::current(), asset_config.clone());
     }
 
-    asset_cacher.read_asset(asset_config).unwrap()
+    asset_cacher
+        .read_asset(asset_config)
+        .expect("Asset should be be cached by now.")
 }

@@ -13,7 +13,7 @@ pub fn use_track_watcher<T: 'static>(watcher: &watch::Receiver<T>) {
         // No need to make this component rerun if it just got created
         watcher.mark_unchanged();
 
-        let rc = ReactiveContext::current().unwrap();
+        let rc = ReactiveContext::current();
 
         spawn(async move {
             while watcher.changed().await.is_ok() {

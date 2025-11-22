@@ -1,4 +1,6 @@
-use crate::prelude::try_consume_root_context;
+use crate::prelude::{
+    consume_root_context,
+};
 
 pub type RenderingTickerSender = async_broadcast::Sender<()>;
 
@@ -9,7 +11,7 @@ pub struct RenderingTicker {
 
 impl RenderingTicker {
     pub fn get() -> Self {
-        try_consume_root_context::<Self>().unwrap()
+        consume_root_context()
     }
     pub fn new() -> (async_broadcast::Sender<()>, Self) {
         let (tx, rx) = async_broadcast::broadcast(256);

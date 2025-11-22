@@ -35,6 +35,20 @@ pub fn try_consume_root_context<T: Clone + 'static>() -> Option<T> {
     try_consume_context_from_scope_id(Some(ScopeId::ROOT))
 }
 
+pub fn consume_context<T: Clone + 'static>() -> T {
+    try_consume_context_from_scope_id(None)
+        .unwrap_or_else(|| panic!("Context <{}> was not found.", std::any::type_name::<T>()))
+}
+
+pub fn consume_root_context<T: Clone + 'static>() -> T {
+    try_consume_context_from_scope_id(Some(ScopeId::ROOT)).unwrap_or_else(|| {
+        panic!(
+            "Root context <{}> was not found.",
+            std::any::type_name::<T>()
+        )
+    })
+}
+
 pub fn try_consume_context_from_scope_id<T: Clone + 'static>(
     scope_id: Option<ScopeId>,
 ) -> Option<T> {
@@ -46,7 +60,7 @@ pub fn try_consume_context_from_scope_id<T: Clone + 'static>(
         let type_id = TypeId::of::<T>();
 
         while let Some(scope_id) = ladder.pop() {
-            let scopes_storage = scopes_storages.get(&scope_id).unwrap();
+            let scopes_storage = scopes_storages.get(&scope_id)?;
 
             if let Some(context) = scopes_storage.contexts.get(&type_id) {
                 return context.downcast_ref::<T>().cloned();
@@ -68,7 +82,7 @@ pub fn use_provide_context<T: Clone + 'static>(init: impl FnOnce() -> T) -> T {
 }
 
 pub fn use_consume<T: Clone + 'static>() -> T {
-    use_hook(|| try_consume_context().unwrap())
+    use_hook(|| consume_context())
 }
 
 pub fn use_try_consume<T: Clone + 'static>() -> Option<T> {

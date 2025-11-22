@@ -6,7 +6,7 @@ use std::sync::{
     },
 };
 
-use crate::prelude::try_consume_root_context;
+use crate::prelude::consume_root_context;
 
 #[derive(Clone)]
 pub struct ScreenReader {
@@ -27,7 +27,7 @@ impl ScreenReader {
     }
 
     pub fn get() -> Self {
-        try_consume_root_context::<Self>().unwrap()
+        consume_root_context::<Self>()
     }
 
     pub fn set(&self, on: bool) {

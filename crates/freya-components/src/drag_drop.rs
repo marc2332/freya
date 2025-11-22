@@ -8,11 +8,9 @@ fn use_drag<T: 'static>() -> State<Option<T>> {
     match try_consume_root_context() {
         Some(s) => s,
         None => {
-            provide_context_for_scope_id(
-                State::<Option<T>>::create_in_scope(None, ScopeId::ROOT),
-                ScopeId::ROOT,
-            );
-            try_consume_root_context().unwrap()
+            let state = State::<Option<T>>::create_in_scope(None, ScopeId::ROOT);
+            provide_context_for_scope_id(state, ScopeId::ROOT);
+            state
         }
     }
 }

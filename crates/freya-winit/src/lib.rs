@@ -47,7 +47,9 @@ pub fn launch(launch_config: LaunchConfig) {
     let def_mgr = FontMgr::default();
     let mut provider = TypefaceFontProvider::new();
     for (font_name, font_data) in launch_config.embedded_fonts {
-        let ft_type = def_mgr.new_from_data(&font_data, None).unwrap();
+        let ft_type = def_mgr
+            .new_from_data(&font_data, None)
+            .unwrap_or_else(|| panic!("Failed to load font {font_name}."));
         provider.register_typeface(ft_type, Some(font_name.as_ref()));
     }
     let font_mgr: FontMgr = provider.into();
