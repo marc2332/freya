@@ -83,7 +83,7 @@ impl KeyExt for Chip {
 }
 
 impl Render for Chip {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, chip);
         let mut status = use_state(|| ChipStatus::Idle);
         let focus = use_focus();
@@ -188,7 +188,6 @@ impl Render for Chip {
                     .height(Size::px(12.))
             }))
             .children(self.children.clone())
-            .into()
     }
 
     fn render_key(&self) -> DiffKey {

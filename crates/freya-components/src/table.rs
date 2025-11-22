@@ -43,13 +43,13 @@ impl KeyExt for TableArrow {
 }
 
 impl Render for TableArrow {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let TableTheme { arrow_fill, .. } = get_theme!(None::<TableThemePartial>, table);
         let rotate = match self.order_direction {
             OrderDirection::Down => 0.,
             OrderDirection::Up => 180.,
         };
-        ArrowIcon::new().rotate(rotate).fill(arrow_fill).into()
+        ArrowIcon::new().rotate(rotate).fill(arrow_fill)
     }
 
     fn render_key(&self) -> DiffKey {
@@ -83,11 +83,8 @@ impl KeyExt for TableHead {
 }
 
 impl Render for TableHead {
-    fn render(&self) -> Element {
-        rect()
-            .width(Size::fill())
-            .children(self.children.clone())
-            .into()
+    fn render(&self) -> impl IntoElement {
+        rect().width(Size::fill()).children(self.children.clone())
     }
 
     fn render_key(&self) -> DiffKey {
@@ -119,11 +116,8 @@ impl KeyExt for TableBody {
 }
 
 impl Render for TableBody {
-    fn render(&self) -> Element {
-        rect()
-            .width(Size::fill())
-            .children(self.children.clone())
-            .into()
+    fn render(&self) -> impl IntoElement {
+        rect().width(Size::fill()).children(self.children.clone())
     }
 
     fn render_key(&self) -> DiffKey {
@@ -163,7 +157,7 @@ impl KeyExt for TableRow {
 }
 
 impl Render for TableRow {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, table);
         let mut state = use_state(|| TableRowState::Idle);
         let TableTheme {
@@ -194,7 +188,6 @@ impl Render for TableRow {
                     .width(Size::fill())
                     .background(divider_fill),
             )
-            .into()
     }
 
     fn render_key(&self) -> DiffKey {
@@ -268,7 +261,7 @@ impl KeyExt for TableCell {
 }
 
 impl Render for TableCell {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let config = use_try_consume::<TableConfig>().unwrap_or(TableConfig::new(1));
         let width_percent = 100.0 / (config.columns as f32);
         let mut container = rect()
@@ -295,7 +288,7 @@ impl Render for TableCell {
             );
         }
 
-        container.children(self.children.clone()).into()
+        container.children(self.children.clone())
     }
 
     fn render_key(&self) -> DiffKey {
@@ -367,7 +360,7 @@ impl TableConfig {
 }
 
 impl Render for Table {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let TableTheme {
             background,
             corner_radius,
@@ -391,7 +384,6 @@ impl Render for Table {
                     .width(1.0),
             )
             .children(self.children.clone())
-            .into()
     }
 
     fn render_key(&self) -> DiffKey {

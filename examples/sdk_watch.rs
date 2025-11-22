@@ -24,13 +24,12 @@ struct App {
 }
 
 impl Render for App {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         use_track_watcher(&self.rx);
 
         rect()
             .expanded()
             .center()
             .child(format!("Latest value is {}", *self.rx.borrow()))
-            .into()
     }
 }

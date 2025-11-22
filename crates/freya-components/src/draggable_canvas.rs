@@ -47,7 +47,7 @@ impl ChildrenExt for DraggableCanvas {
 }
 
 impl Render for DraggableCanvas {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let mut layout = use_state(Area::default);
         use_provide_context(move || DraggableCanvasLayout(layout));
         use_provide_context(|| DraggableCanvasRegistry(State::create(Vec::new())));
@@ -55,7 +55,6 @@ impl Render for DraggableCanvas {
             .layout(self.layout.clone())
             .on_sized(move |e: Event<SizedEventData>| layout.set(e.visible_area))
             .children(self.children.clone())
-            .into()
     }
 }
 
@@ -92,7 +91,7 @@ impl ChildrenExt for Draggable {
 }
 
 impl Render for Draggable {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let mut position = use_state(|| self.initial_position);
         let mut dragging_position = use_state::<Option<CursorPoint>>(|| None);
         let DraggableCanvasLayout(layout) = use_consume::<DraggableCanvasLayout>();
@@ -153,6 +152,5 @@ impl Render for Draggable {
             .position(Position::new_absolute().left(left as f32).top(top as f32))
             .layer(layer as i16)
             .children(self.children.clone())
-            .into()
     }
 }

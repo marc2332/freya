@@ -268,8 +268,8 @@ pub struct Svg {
 ///
 /// ```rust, no_run
 /// # use freya::prelude::*;
-/// fn app() -> Element {
-///     svg(Bytes::from_static(include_bytes!("../../../../logo.svg"))).into()
+/// fn app() -> impl IntoElement {
+///     svg(Bytes::from_static(include_bytes!("../../../../logo.svg")))
 /// }
 /// ```
 pub fn svg(bytes: Bytes) -> Svg {

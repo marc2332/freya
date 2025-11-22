@@ -13,15 +13,14 @@ use crate::{
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// fn app() -> Element {
+/// fn app() -> impl IntoElement {
 ///     CircularLoader::new()
-///         .into()
 /// }
 ///
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
 /// #   rect()
-///         .spacing(8.).center().expanded().child(app()).into()
+///         .spacing(8.).center().expanded().child(app())
 /// # }, (250., 250.).into(), "./images/gallery_circular_loader.png");
 /// ```
 ///
@@ -57,7 +56,7 @@ impl CircularLoader {
 }
 
 impl Render for CircularLoader {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, circular_loader);
 
         let animation = use_animation(|conf| {
@@ -79,6 +78,5 @@ impl Render for CircularLoader {
         .height(Size::px(self.size))
         .stroke(theme.primary_color)
         .rotate(animation.get().value())
-        .into()
     }
 }

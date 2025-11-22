@@ -9,8 +9,8 @@ use crate::prelude::Routable;
 /// # #[derive(PartialEq)]
 /// # struct Index;
 /// # impl Render for Index {
-/// #    fn render(&self) -> Element {
-/// #        unreachable!()
+/// #    fn render(&self) -> impl IntoElement {
+/// #        rect()
 /// #    }
 /// # }
 /// #[derive(Clone, Routable)]

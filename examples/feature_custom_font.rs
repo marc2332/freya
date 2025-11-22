@@ -12,7 +12,7 @@ fn main() {
     )
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     rect()
         .background((0, 0, 0))
         .color((255, 255, 255))
@@ -20,5 +20,4 @@ fn app() -> Element {
         .center()
         .font_size(48.)
         .child("Hello, World!")
-        .into()
 }

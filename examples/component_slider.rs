@@ -4,7 +4,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut value = use_state(|| 0.0f64);
 
     rect()
@@ -29,5 +29,4 @@ fn app() -> Element {
                 .value(value())
                 .size(Size::px(150.)),
         )
-        .into()
 }

@@ -11,7 +11,7 @@ struct App {
 }
 
 impl Render for App {
-    fn render(&self) -> Element {
-        format!("Value is {}", self.value).into()
+    fn render(&self) -> impl IntoElement {
+        format!("Value is {}", self.value)
     }
 }

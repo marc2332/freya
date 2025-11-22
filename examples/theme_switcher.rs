@@ -4,7 +4,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut theme = use_init_theme(|| LIGHT_THEME);
     let is_light = *theme.read() == LIGHT_THEME;
 
@@ -22,5 +22,4 @@ fn app() -> Element {
                 theme.set(LIGHT_THEME);
             }
         }))
-        .into()
 }

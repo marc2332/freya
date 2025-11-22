@@ -6,13 +6,12 @@
 //!
 //! ```rust, no_run
 //! # use freya::prelude::*;
-//! fn app() -> Element {
+//! fn app() -> impl IntoElement {
 //!     rect()
 //!         .background((255, 0, 0))
 //!         .width(Size::fill())
 //!         .height(Size::px(100.))
 //!         .on_mouse_up(|_| println!("Clicked!"))
-//!         .into()
 //! }
 //! ```
 //!

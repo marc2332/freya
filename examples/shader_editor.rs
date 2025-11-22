@@ -52,7 +52,7 @@ fn main() {
     )
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let editable = use_editable(
         || SHADER.trim().to_string(),
         EditableConfig::new,
@@ -63,14 +63,13 @@ fn app() -> Element {
         .horizontal()
         .child(ShaderEditor(editable))
         .child(ShaderView(editable))
-        .into()
 }
 
 #[derive(PartialEq)]
 struct ShaderEditor(UseEditable);
 
 impl Render for ShaderEditor {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let mut editable = self.0;
 
         let on_global_mouse_up = move |_: Event<MouseEventData>| {
@@ -106,7 +105,6 @@ impl Render for ShaderEditor {
                 .length(editable.editor().read().len_lines() as i32)
                 .item_size(27.),
             )
-            .into()
     }
 }
 
@@ -120,7 +118,7 @@ impl Render for EditingLine {
     fn render_key(&self) -> DiffKey {
         (&self.line_index).into()
     }
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let line_index = self.line_index;
         let mut editable = self.editable;
         let holder = use_state(ParagraphHolder::default);
@@ -189,7 +187,6 @@ impl Render for EditingLine {
                     .color((35, 35, 35))
                     .span(line.text.to_string()),
             )
-            .into()
     }
 }
 
@@ -197,7 +194,7 @@ impl Render for EditingLine {
 struct ShaderView(UseEditable);
 
 impl Render for ShaderView {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let editable = self.0;
 
         use_hook(|| {
@@ -222,7 +219,6 @@ impl Render for ShaderView {
             .height(Size::fill())
             .background((0, 0, 0))
             .child(Shader(runtime_effect.read().clone(), Instant::now()))
-            .into()
     }
 }
 

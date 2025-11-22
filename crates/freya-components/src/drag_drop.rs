@@ -50,7 +50,7 @@ impl<T: Clone + PartialEq + 'static> DragZone<T> {
 }
 
 impl<T: Clone + PartialEq> Render for DragZone<T> {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let mut drags = use_drag::<T>();
         let mut position = use_state::<Option<CursorPoint>>(|| None);
         let data = self.data.clone();
@@ -97,7 +97,6 @@ impl<T: Clone + PartialEq> Render for DragZone<T> {
                 (self.show_while_dragging || position.read().is_none())
                     .then(|| self.children.clone()),
             )
-            .into()
     }
 }
 
@@ -121,7 +120,7 @@ impl<T: PartialEq + Clone + 'static> DropZone<T> {
 }
 
 impl<T: Clone + PartialEq + 'static> Render for DropZone<T> {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let mut drags = use_drag::<T>();
         let on_drop = self.on_drop.clone();
 
@@ -140,6 +139,5 @@ impl<T: Clone + PartialEq + 'static> Render for DropZone<T> {
             .width(self.width.clone())
             .height(self.height.clone())
             .child(self.children.clone())
-            .into()
     }
 }

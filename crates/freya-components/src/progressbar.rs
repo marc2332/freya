@@ -12,15 +12,14 @@ use crate::{
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// fn app() -> Element {
+/// fn app() -> impl IntoElement {
 ///     ProgressBar::new(50.)
-///         .into()
 /// }
 ///
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
 /// #   rect()
-///         .padding(8.).center().expanded().child(app()).into()
+///         .padding(8.).center().expanded().child(app())
 /// # }, (250., 250.).into(), "./images/gallery_progressbar.png");
 /// ```
 ///
@@ -59,7 +58,7 @@ impl ProgressBar {
 }
 
 impl Render for ProgressBar {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let progressbar_theme = get_theme!(&self.theme, progressbar);
 
         let progress = self.progress.clamp(0., 100.);
@@ -93,6 +92,5 @@ impl Render for ProgressBar {
                             .max_lines(1),
                     ),
             )
-            .into()
     }
 }

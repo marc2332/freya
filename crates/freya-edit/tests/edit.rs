@@ -9,7 +9,7 @@ use freya_testing::*;
 
 #[test]
 fn multiple_lines_single_editor() {
-    fn app() -> Element {
+    fn app() -> impl IntoElement {
         let mut editable = use_editable(
             || "Hello Rustaceans\nHello Rustaceans".to_string(),
             EditableConfig::new,
@@ -58,7 +58,7 @@ fn multiple_lines_single_editor() {
                     .height(Size::percent(50.0))
                     .text(format!("{}:{}", editor.cursor_row(), editor.cursor_col())),
             )
-            .into()
+
     }
     let mut utils = launch_test(app);
     utils.set_fonts(HashMap::from_iter([(
@@ -130,7 +130,7 @@ fn multiple_lines_single_editor() {
 
 #[test]
 fn single_line_multiple_editors() {
-    fn app() -> Element {
+    fn app() -> impl IntoElement {
         let mut editable = use_editable(
             || "Hello Rustaceans\nHello World".to_string(),
             EditableConfig::new,
@@ -182,7 +182,7 @@ fn single_line_multiple_editors() {
                     .height(Size::percent(50.0))
                     .text(format!("{}:{}", editor.cursor_row(), editor.cursor_col())),
             )
-            .into()
+
     }
 
     let mut utils = launch_test(app);
@@ -263,7 +263,6 @@ fn highlight_multiple_lines_single_editor() {
                     .on_global_key_down(on_global_key_down)
                     .span(Span::new(editor.to_string())),
             )
-            .into()
     });
     utils.set_fonts(HashMap::from_iter([(
         "NotoSans",
@@ -360,7 +359,6 @@ fn highlights_single_line_multiple_editors() {
                     .height(Size::percent(50.0))
                     .text(format!("{}:{}", editor.cursor_row(), editor.cursor_col())),
             )
-            .into()
     });
     utils.set_fonts(HashMap::from_iter([(
         "NotoSans",
@@ -432,7 +430,6 @@ fn special_text_editing() {
                 editor.cursor_row(),
                 editor.cursor_col()
             )))
-            .into()
     });
     utils.set_fonts(HashMap::from_iter([(
         "NotoSans",
@@ -489,7 +486,6 @@ fn backspace_remove() {
                     .on_global_key_down(on_global_key_down)
                     .span(Span::new(editor.to_string())),
             )
-            .into()
     });
     utils.set_fonts(HashMap::from_iter([(
         "NotoSans",
@@ -577,7 +573,6 @@ fn highlight_shift_click_multiple_lines_single_editor() {
                     .height(Size::percent(50.0))
                     .text(format!("{}:{}", editor.cursor_row(), editor.cursor_col())),
             )
-            .into()
     });
     utils.set_fonts(HashMap::from_iter([(
         "NotoSans",
@@ -684,7 +679,6 @@ fn highlights_shift_click_single_line_multiple_editors() {
                     .height(Size::percent(50.0))
                     .text(format!("{}:{}", editor.cursor_row(), editor.cursor_col())),
             )
-            .into()
     });
     utils.set_fonts(HashMap::from_iter([(
         "NotoSans",
@@ -775,7 +769,6 @@ fn highlight_all_text() {
                     .height(Size::percent(50.0))
                     .text(format!("{}:{}", editor.cursor_row(), editor.cursor_col())),
             )
-            .into()
     });
     utils.set_fonts(HashMap::from_iter([(
         "NotoSans",
@@ -867,7 +860,6 @@ fn replace_text() {
                     .height(Size::percent(50.0))
                     .text(format!("{}:{}", editor.cursor_row(), editor.cursor_col())),
             )
-            .into()
     });
     utils.set_fonts(HashMap::from_iter([(
         "NotoSans",
@@ -940,7 +932,6 @@ fn navigate_empty_lines() {
                 editor.cursor_row(),
                 editor.cursor_col()
             )))
-            .into()
     });
     utils.set_fonts(HashMap::from_iter([(
         "NotoSans",

@@ -31,15 +31,14 @@ use crate::scrollviews::{
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// fn app() -> Element {
+/// fn app() -> impl IntoElement {
 ///     ScrollView::new()
 ///         .child("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum laoreet tristique diam, ut gravida enim. Phasellus viverra vitae risus sit amet iaculis. Morbi porttitor quis nisl eu vulputate. Etiam vitae ligula a purus suscipit iaculis non ac risus. Suspendisse potenti. Aenean orci massa, ornare ut elit id, tristique commodo dui. Vestibulum laoreet tristique diam, ut gravida enim. Phasellus viverra vitae risus sit amet iaculis. Vestibulum laoreet tristique diam, ut gravida enim. Phasellus viverra vitae risus sit amet iaculis. Vestibulum laoreet tristique diam, ut gravida enim. Phasellus viverra vitae risus sit amet iaculis.")
-///         .into()
 /// }
 ///
 /// # use freya_testing::prelude::*;
 /// # launch_doc_hook(|| {
-/// #   rect().center().expanded().child(app()).into()
+/// #   rect().center().expanded().child(app())
 /// # }, (250., 250.).into(), "./images/gallery_scrollview.png", |t| {
 /// #   t.move_cursor((125., 115.));
 /// #   t.sync_and_update();
@@ -142,7 +141,7 @@ impl ScrollView {
 }
 
 impl Render for ScrollView {
-    fn render(self: &ScrollView) -> Element {
+    fn render(self: &ScrollView) -> impl IntoElement {
         let focus = use_focus();
         let mut timeout = use_timeout(|| Duration::from_millis(800));
         let mut pressing_shift = use_state(|| false);
@@ -388,6 +387,5 @@ impl Render for ScrollView {
                     },
                 }
             }))
-            .into()
     }
 }

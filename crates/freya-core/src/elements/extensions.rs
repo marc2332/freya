@@ -224,15 +224,15 @@ pub trait ChildrenExt: Sized {
         self
     }
 
-    fn maybe_child<C: Into<Element>>(mut self, child: Option<C>) -> Self {
+    fn maybe_child<C: IntoElement>(mut self, child: Option<C>) -> Self {
         if let Some(child) = child {
-            self.get_children().push(child.into());
+            self.get_children().push(child.into_element());
         }
         self
     }
 
-    fn child<C: Into<Element>>(mut self, child: C) -> Self {
-        self.get_children().push(child.into());
+    fn child<C: IntoElement>(mut self, child: C) -> Self {
+        self.get_children().push(child.into_element());
         self
     }
 }

@@ -33,7 +33,7 @@
 //! struct Body;
 //!
 //! impl Render for Body {
-//!     fn render(&self) -> Element {
+//!     fn render(&self) -> impl IntoElement {
 //!         // Access to the i18n state
 //!         let mut i18n = I18n::get();
 //!
@@ -52,11 +52,10 @@
 //!           )
 //!          .child(t!("hello_world"))
 //!          .child(t!("hello", name: "Freya!"))
-//!          .into()
 //!     }
 //! }
 //!
-//! fn app() -> Element {
+//! fn app() -> impl IntoElement {
 //!     // Initialize our i18n config
 //!     use_init_i18n(|| {
 //!         I18nConfig::new(langid!("en-US"))
@@ -70,6 +69,6 @@
 //!             ))
 //!     });
 //!
-//!     Body.into()
+//!     Body
 //! }
 //! ```

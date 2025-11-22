@@ -29,7 +29,7 @@ pub struct NodesTree {
 }
 
 impl Render for NodesTree {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let mut radio = use_radio(DevtoolsChannel::UpdatedTree);
 
         let items = {
@@ -74,7 +74,7 @@ impl Render for NodesTree {
                 .center()
                 .expanded()
                 .child("Waiting for an app to connect...")
-                .into();
+                .into_element();
         }
 
         let items_len = items.len() as i32;

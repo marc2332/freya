@@ -4,7 +4,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let scroll_controller = use_scroll_controller(ScrollConfig::default);
     rect()
         .direction(Direction::Horizontal)
@@ -34,5 +34,4 @@ fn app() -> Element {
                         .into()
                 })),
         )
-        .into()
 }

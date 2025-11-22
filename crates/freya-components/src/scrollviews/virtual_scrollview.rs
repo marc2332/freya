@@ -35,7 +35,7 @@ use crate::scrollviews::{
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// fn app() -> Element {
+/// fn app() -> impl IntoElement {
 ///     rect()
 ///         .child(
 ///             VirtualScrollView::new(|i, _| {
@@ -49,12 +49,11 @@ use crate::scrollviews::{
 ///             .length(300)
 ///             .item_size(25.),
 ///         )
-///         .into()
 /// }
 ///
 /// # use freya_testing::prelude::*;
 /// # launch_doc_hook(|| {
-/// #   rect().center().expanded().child(app()).into()
+/// #   rect().center().expanded().child(app())
 /// # }, (250., 250.).into(), "./images/gallery_virtual_scrollview.png", |t| {
 /// #   t.move_cursor((125., 115.));
 /// #   t.sync_and_update();
@@ -220,7 +219,7 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
 }
 
 impl<D: 'static, B: Fn(usize, &D) -> Element + 'static> Render for VirtualScrollView<D, B> {
-    fn render(self: &VirtualScrollView<D, B>) -> Element {
+    fn render(self: &VirtualScrollView<D, B>) -> impl IntoElement {
         let focus = use_focus();
         let mut timeout = use_timeout(|| Duration::from_millis(800));
         let mut pressing_shift = use_state(|| false);
@@ -494,7 +493,6 @@ impl<D: 'static, B: Fn(usize, &D) -> Element + 'static> Render for VirtualScroll
                     },
                 }
             }))
-            .into()
     }
 }
 

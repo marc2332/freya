@@ -14,9 +14,9 @@ pub struct NodeInspectorStyle {
 }
 
 impl Render for NodeInspectorStyle {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let Some(node) = use_node_info(self.node_id, self.window_id) else {
-            return rect().into();
+            return rect().into_element();
         };
 
         ScrollView::new()

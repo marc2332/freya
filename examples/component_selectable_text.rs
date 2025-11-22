@@ -9,7 +9,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     rect()
         .padding(25.)
         .spacing(10.)
@@ -19,5 +19,4 @@ fn app() -> Element {
             "You can select this looooooooooong text",
         ))
         .child(SelectableText::new("Or this short text :)"))
-        .into()
 }

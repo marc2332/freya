@@ -11,7 +11,7 @@ use crate::state::DevtoolsChannel;
 #[derive(PartialEq)]
 pub struct Misc;
 impl Render for Misc {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let mut radio = use_radio(DevtoolsChannel::Misc);
 
         use_side_effect(move || {
@@ -62,6 +62,5 @@ impl Render for Misc {
                     })
                     .child("Reset"),
             )
-            .into()
     }
 }

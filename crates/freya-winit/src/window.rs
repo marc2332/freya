@@ -124,7 +124,8 @@ impl AppWindow {
 
         let (events_sender, events_receiver) = futures_channel::mpsc::unbounded();
 
-        let mut runner = Runner::new(move || keyboard_navigator(window_config.app.clone()));
+        let mut runner =
+            Runner::new(move || keyboard_navigator(window_config.app.clone()).into_element());
 
         runner.provide_root_context(|| screen_reader);
 

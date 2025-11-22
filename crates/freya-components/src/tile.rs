@@ -55,7 +55,7 @@ impl Tile {
 }
 
 impl Render for Tile {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let mut status = use_state(|| TileStatus::Idle);
 
         let on_press = {
@@ -94,7 +94,6 @@ impl Render for Tile {
                     .map(|leading| rect().padding(Gaps::new_all(4.0)).child(leading)),
             )
             .children(self.children.clone())
-            .into()
     }
 
     fn render_key(&self) -> DiffKey {

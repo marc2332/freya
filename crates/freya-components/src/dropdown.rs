@@ -70,7 +70,7 @@ impl DropdownItem {
 }
 
 impl Render for DropdownItem {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, dropdown_item);
         let focus = use_focus();
         let focus_status = use_focus_status(focus);
@@ -119,7 +119,6 @@ impl Render for DropdownItem {
                 rect.on_press(on_press)
             })
             .children(self.children.clone())
-            .into()
     }
 
     fn render_key(&self) -> DiffKey {
@@ -145,7 +144,7 @@ pub enum DropdownStatus {
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// fn app() -> Element {
+/// fn app() -> impl IntoElement {
 ///     let values = use_hook(|| {
 ///         vec![
 ///             "Rust".to_string(),
@@ -163,12 +162,11 @@ pub enum DropdownStatus {
 ///                 .child(val.to_string())
 ///                 .into()
 ///         }))
-///         .into()
 /// }
 ///
 /// # use freya_testing::prelude::*;
 /// # launch_doc_hook(|| {
-/// #   rect().center().expanded().child(app()).into()
+/// #   rect().center().expanded().child(app())
 /// # }, (250., 250.).into(), "./images/gallery_dropdown.png", |t| {
 /// #   t.move_cursor((125., 125.));
 /// #   t.click_cursor((125., 125.));
@@ -228,7 +226,7 @@ impl Dropdown {
 }
 
 impl Render for Dropdown {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, dropdown);
         let focus = use_focus();
         let focus_status = use_focus_status(focus);
@@ -352,7 +350,6 @@ impl Render for Dropdown {
                         ),
                 )
             }))
-            .into()
     }
 
     fn render_key(&self) -> DiffKey {

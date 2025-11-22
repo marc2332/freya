@@ -179,7 +179,7 @@ impl ResizableContainer {
 }
 
 impl Render for ResizableContainer {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let mut size = use_state(Area::default);
         use_provide_context(|| size);
 
@@ -202,7 +202,6 @@ impl Render for ResizableContainer {
                     vec![e.clone().into()]
                 }
             }))
-            .into()
     }
 }
 
@@ -257,7 +256,7 @@ impl Render for ResizablePanel {
     fn render_key(&self) -> DiffKey {
         self.key.clone().or(DiffKey::None)
     }
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let mut registry = use_consume::<State<ResizableContext>>();
 
         let id = use_hook(|| {
@@ -299,7 +298,6 @@ impl Render for ResizablePanel {
             .height(height)
             .overflow_mode(OverflowMode::Clip)
             .children(self.children.clone())
-            .into()
     }
 }
 
@@ -330,7 +328,7 @@ impl ResizableHandle {
 }
 
 impl Render for ResizableHandle {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let ResizableHandleTheme {
             background,
             hover_background,
@@ -439,6 +437,5 @@ impl Render for ResizableHandle {
             .on_pointer_enter(on_pointer_enter)
             .on_capture_global_mouse_move(on_capture_global_mouse_move)
             .on_pointer_leave(on_pointer_leave)
-            .into()
     }
 }

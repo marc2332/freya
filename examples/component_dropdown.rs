@@ -4,7 +4,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let values = use_hook(|| {
         vec![
             "Rust".to_string(),
@@ -35,5 +35,4 @@ fn app() -> Element {
                 .on_press(move |_| selected_dropdown.set(0))
                 .child("Reset"),
         )
-        .into()
 }

@@ -3,7 +3,7 @@ use freya_core::{
     prelude::*,
 };
 
-pub fn keyboard_navigator(app: FpRender) -> Element {
+pub fn keyboard_navigator(app: FpRender) -> impl IntoElement {
     let event_notifier = EventNotifier::get();
     let on_global_key_down = move |e: Event<KeyboardEventData>| match e.key {
         Key::Tab if e.modifiers.contains(Modifiers::SHIFT) => {
@@ -29,8 +29,5 @@ pub fn keyboard_navigator(app: FpRender) -> Element {
         _ => {}
     };
 
-    rect()
-        .on_global_key_down(on_global_key_down)
-        .child(app)
-        .into()
+    rect().on_global_key_down(on_global_key_down).child(app)
 }

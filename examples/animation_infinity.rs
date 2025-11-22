@@ -7,7 +7,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let animation = use_animation(|conf| {
         conf.on_creation(OnCreation::Run);
         conf.on_finish(OnFinish::Reverse);
@@ -21,5 +21,4 @@ fn app() -> Element {
         .main_align(Alignment::center())
         .cross_align(Alignment::center())
         .spacing(8.0)
-        .into()
 }

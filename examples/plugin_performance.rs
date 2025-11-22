@@ -17,7 +17,7 @@ fn main() {
     )
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let animation = use_animation(|conf| {
         conf.on_creation(OnCreation::Run);
         conf.on_finish(OnFinish::Reverse);
@@ -29,43 +29,39 @@ fn app() -> Element {
 
     let progress = animation.get().value();
 
-    rect()
-        .expanded()
-        .center()
-        .children_iter((0..32).map(|i| {
-            rect()
-                .key(i)
-                .offset_x(progress - i as f32 * 10.)
-                .horizontal()
-                .child(
-                    rect()
-                        .width(Size::px(45.))
-                        .height(Size::px(25.))
-                        .background((7, 102, 173))
-                        .corner_radius(100.),
-                )
-                .child(
-                    rect()
-                        .width(Size::px(45.))
-                        .height(Size::px(25.))
-                        .background((166, 207, 152))
-                        .corner_radius(100.),
-                )
-                .child(
-                    rect()
-                        .width(Size::px(45.))
-                        .height(Size::px(25.))
-                        .background((179, 19, 18))
-                        .corner_radius(100.),
-                )
-                .child(
-                    rect()
-                        .width(Size::px(45.))
-                        .height(Size::px(25.))
-                        .background((255, 108, 34))
-                        .corner_radius(100.),
-                )
-                .into()
-        }))
-        .into()
+    rect().expanded().center().children_iter((0..32).map(|i| {
+        rect()
+            .key(i)
+            .offset_x(progress - i as f32 * 10.)
+            .horizontal()
+            .child(
+                rect()
+                    .width(Size::px(45.))
+                    .height(Size::px(25.))
+                    .background((7, 102, 173))
+                    .corner_radius(100.),
+            )
+            .child(
+                rect()
+                    .width(Size::px(45.))
+                    .height(Size::px(25.))
+                    .background((166, 207, 152))
+                    .corner_radius(100.),
+            )
+            .child(
+                rect()
+                    .width(Size::px(45.))
+                    .height(Size::px(25.))
+                    .background((179, 19, 18))
+                    .corner_radius(100.),
+            )
+            .child(
+                rect()
+                    .width(Size::px(45.))
+                    .height(Size::px(25.))
+                    .background((255, 108, 34))
+                    .corner_radius(100.),
+            )
+            .into()
+    }))
 }

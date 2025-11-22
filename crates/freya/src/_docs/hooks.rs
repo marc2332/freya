@@ -19,12 +19,12 @@
 //! #[derive(PartialEq)]
 //! struct MyComponent(bool);
 //! impl Render for MyComponent {
-//!     fn render(&self) -> Element {
+//!     fn render(&self) -> impl IntoElement {
 //!         if self.0 {
 //!             let state = use_state(|| self.0);
 //!             // ...
 //!         }
-//!         rect().into()
+//!         rect()
 //!     }
 //! }
 //! ```
@@ -35,9 +35,9 @@
 //! #[derive(PartialEq)]
 //! struct MyComponent(bool);
 //! impl Render for MyComponent {
-//!     fn render(&self) -> Element {
+//!     fn render(&self) -> impl IntoElement {
 //!         let state = use_state(|| self.0);
-//!         rect().into()
+//!         rect()
 //!     }
 //! }
 //! ```
@@ -48,8 +48,8 @@
 //! #[derive(PartialEq)]
 //! struct MyComponent(bool);
 //! impl Render for MyComponent {
-//!     fn render(&self) -> Element {
-//!         rect().into()
+//!     fn render(&self) -> impl IntoElement {
+//!         rect()
 //!     }
 //! }
 //! ```
@@ -63,11 +63,11 @@
 //! # use freya::prelude::*;
 //! struct MyComponent;
 //! impl Render for MyComponent {
-//!     fn render(&self) -> Element {
+//!     fn render(&self) -> impl IntoElement {
 //!         let onclick = |_| {
 //!             let state = use_state(|| false); // ❌ Not allowed here
 //!         };
-//!         rect().on_mouse_up(onclick).child("Hello, World!").into()
+//!         rect().on_mouse_up(onclick).child("Hello, World!")
 //!     }
 //! }
 //! ```
@@ -77,12 +77,12 @@
 //! # use freya::prelude::*;
 //! struct MyComponent;
 //! impl Render for MyComponent {
-//!     fn render(&self) -> Element {
+//!     fn render(&self) -> impl IntoElement {
 //!         let mut state = use_state(|| false);
 //!         let onclick = move |_| {
 //!             state.set(true);
 //!         };
-//!         rect().on_mouse_up(onclick).child("Hello, World!").into()
+//!         rect().on_mouse_up(onclick).child("Hello, World!")
 //!     }
 //! }
 //! ```
@@ -96,11 +96,11 @@
 //! # use freya::prelude::*;
 //! struct MyComponent;
 //! impl Render for MyComponent {
-//!     fn render(&self) -> Element {
+//!     fn render(&self) -> impl IntoElement {
 //!         for i in 0..5 {
 //!             let state = use_state(|| i); // ❌ Not allowed in a loop
 //!         }
-//!         rect().child("Hello, World!").into()
+//!         rect().child("Hello, World!")
 //!     }
 //! }
 //! ```
@@ -110,9 +110,9 @@
 //! # use freya::prelude::*;
 //! struct MyComponent;
 //! impl Render for MyComponent {
-//!     fn render(&self) -> Element {
+//!     fn render(&self) -> impl IntoElement {
 //!         let state = use_state(|| (0..5).collect::<Vec<_>>());
-//!         rect().child("Hello, World!").into()
+//!         rect().child("Hello, World!")
 //!     }
 //! }
 //! ```

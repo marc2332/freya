@@ -76,7 +76,7 @@ impl InputValidator {
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// fn app() -> Element {
+/// fn app() -> impl IntoElement {
 ///     let mut value = use_state(String::new);
 ///
 ///     rect()
@@ -90,12 +90,11 @@ impl InputValidator {
 ///                 .onchange(move |v| value.set(v)),
 ///         )
 ///         .child(format!("Your name is {}", value.read()))
-///         .into()
 /// }
 ///
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
-/// #   rect().center().expanded().child(Input::new() .value("Ferris")).into()
+/// #   rect().center().expanded().child(Input::new() .value("Ferris"))
 /// # }, (250., 250.).into(), "./images/gallery_input.png");
 /// ```
 /// # Preview
@@ -191,7 +190,7 @@ impl Input {
 }
 
 impl Render for Input {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let focus = use_focus();
         let focus_status = use_focus_status(focus);
         let holder = use_state(ParagraphHolder::default);
@@ -414,7 +413,6 @@ impl Render for Input {
                             .span(text.to_string()),
                     ),
             )
-            .into()
     }
 
     fn render_key(&self) -> DiffKey {
@@ -431,7 +429,7 @@ mod test {
 
     #[test]
     pub fn input_test() {
-        fn input_app() -> Element {
+        fn input_app() -> impl IntoElement {
             let mut value = use_state(String::new);
 
             rect()
@@ -443,7 +441,6 @@ mod test {
                         .onchange(move |v| value.set(v)),
                 )
                 .child(format!("Your name is {}", value.read()))
-                .into()
         }
 
         let mut test = launch_test(input_app);

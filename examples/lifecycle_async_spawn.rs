@@ -8,7 +8,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     use_hook(|| {
         spawn(async move {
             let mut interval = Timer::interval(Duration::from_secs(1));
@@ -32,6 +32,5 @@ fn app() -> Element {
         .height(Size::fill())
         .main_align(Alignment::center())
         .cross_align(Alignment::center())
-        .children([Button::new().on_press(on_press).child("Spawn").into()])
-        .into()
+        .child(Button::new().on_press(on_press).child("Spawn"))
 }

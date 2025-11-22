@@ -4,7 +4,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     rect()
         .center()
         .expanded()
@@ -12,7 +12,6 @@ fn app() -> Element {
         .spacing(6.)
         .child(rect().spacing(6.).children(buttons()))
         .child(rect().spacing(6.).children(disabled_buttons()))
-        .into()
 }
 
 fn buttons() -> [Element; 9] {

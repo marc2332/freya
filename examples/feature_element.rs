@@ -93,7 +93,7 @@ fn cool_element(color: impl Into<Color>) -> CoolElement {
     }
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut r = use_state(|| 127u8);
 
     rect()
@@ -110,5 +110,4 @@ fn app() -> Element {
         .child(Button::new().child("Decrease").on_press(move |_| {
             r.with_mut(|mut v| *v = v.saturating_sub(25));
         }))
-        .into()
 }

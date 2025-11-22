@@ -5,7 +5,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut selected = use_state(|| false);
     rect()
         .center()
@@ -28,5 +28,4 @@ fn app() -> Element {
                 .on_select(move |_| selected.toggle())
                 .child(RadioItem::new().selected(selected()).size(128.)),
         )
-        .into()
 }

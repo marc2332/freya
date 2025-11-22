@@ -1,6 +1,4 @@
-use crate::prelude::{
-    consume_root_context,
-};
+use crate::prelude::consume_root_context;
 
 pub type RenderingTickerSender = async_broadcast::Sender<()>;
 

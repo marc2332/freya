@@ -21,7 +21,7 @@ fn translate_from_static_source() {
     let panic = std::panic::catch_unwind(|| {
         launch_test(|| {
             i18n_from_static();
-            t!(&"hello", name: "World").into()
+            t!(&"hello", name: "World")
         })
     });
     assert!(panic.is_ok(), "translate_from_static_source");
@@ -33,7 +33,7 @@ fn failed_to_translate_with_invalid_key() {
         i18n_from_static();
         let panic = std::panic::catch_unwind(|| t!("invalid"));
         assert!(panic.is_err(), "failed_to_translate_with_invalid_key");
-        rect().into()
+        rect()
     });
 }
 
@@ -46,7 +46,7 @@ fn failed_to_translate_with_invalid_key_as_error() {
             panic.is_err(),
             "failed_to_translate_with_invalid_key_as_error"
         );
-        rect().into()
+        rect()
     });
 }
 #[test]
@@ -63,7 +63,7 @@ fn failed_to_translate_with_invalid_key_with_args_as_error() {
             "message id not found for key: 'invalid'",
             "failed_to_translate_with_invalid_key_with_args_as_error"
         );
-        rect().into()
+        rect()
     });
 }
 
@@ -78,7 +78,7 @@ fn failed_to_translate_with_invalid_key_as_id() {
             "message id not found for key: 'invalid'".to_string(),
             "failed_to_translate_with_invalid_key_as_id"
         );
-        rect().into()
+        rect()
     });
 }
 
@@ -96,7 +96,7 @@ fn failed_to_translate_with_invalid_key_with_args_as_id() {
             "message id not found for key: 'invalid'".to_string(),
             "failed_to_translate_with_invalid_key_with_args_as_id"
         );
-        rect().into()
+        rect()
     });
 }
 
@@ -114,7 +114,7 @@ fn translate_root_message_in_attributed_definition() {
             "My Component".to_string(),
             "translate_root_message_in_attributed_definition"
         );
-        rect().into()
+        rect()
     });
 }
 
@@ -132,7 +132,7 @@ fn translate_attribute_with_no_args_in_attributed_definition() {
             "Component's placeholder".to_string(),
             "translate_attribute_with_no_args_in_attributed_definition"
         );
-        rect().into()
+        rect()
     });
 }
 
@@ -150,7 +150,7 @@ fn translate_attribute_with_args_in_attributed_definition() {
             "Component's hint with parameter \u{2068}Zaphod\u{2069}".to_string(),
             "translate_attribute_with_args_in_attributed_definition"
         );
-        rect().into()
+        rect()
     });
 }
 
@@ -168,7 +168,7 @@ fn fail_translate_invalid_attribute_with_no_args_in_attributed_definition() {
             "attribute id not found for key: 'my_component.not_a_placeholder'".to_string(),
             "fail_translate_invalid_attribute_with_no_args_in_attributed_definition"
         );
-        rect().into()
+        rect()
     });
 }
 
@@ -186,7 +186,7 @@ fn fail_translate_invalid_attribute_with_args_in_attributed_definition() {
             "attribute id not found for key: 'my_component.not_a_hint'".to_string(),
             "fail_translate_invalid_attribute_with_args_in_attributed_definition"
         );
-        rect().into()
+        rect()
     });
 }
 
@@ -201,7 +201,7 @@ fn fail_translate_with_invalid_attribute_key() {
             "invalid message id: 'my_component.placeholder.invalid'".to_string(),
             "fail_translate_with_invalid_attribute_key"
         );
-        rect().into()
+        rect()
     });
 }
 
@@ -219,7 +219,7 @@ fn translate_from_dynamic_source() {
             "Hello, \u{2068}World\u{2069}!".to_string(),
             "translate_from_dynamic_source"
         );
-        rect().into()
+        rect()
     });
 }
 
@@ -230,7 +230,7 @@ fn fail_translate_from_dynamic_source_when_file_does_not_exist() {
     launch_test(|| {
         i18n_from_dynamic_none_existing();
 
-        rect().into()
+        rect()
     });
 }
 
@@ -239,7 +239,7 @@ fn initial_language_is_set() {
     launch_test(|| {
         let value = i18n_from_static();
         assert_eq!(value.language(), EN, "initial_language_is_set");
-        rect().into()
+        rect()
     });
 }
 
@@ -251,7 +251,7 @@ fn language_can_be_set() {
             .try_set_language(JP)
             .expect("set_language must succeed");
         assert_eq!(value.language(), JP, "language_can_be_set");
-        rect().into()
+        rect()
     });
 }
 
@@ -264,7 +264,7 @@ fn no_default_fallback_language() {
             "None".to_string(),
             "no_default_fallback_language"
         );
-        rect().into()
+        rect()
     });
 }
 
@@ -277,7 +277,7 @@ fn some_default_fallback_language() {
             "Some(\"jp\")".to_string(),
             "some_default_fallback_language"
         );
-        rect().into()
+        rect()
     });
 }
 
@@ -293,7 +293,7 @@ fn fallback_language_can_be_set() {
             "Some(\"en\")".to_string(),
             "fallback_language_can_be_set"
         );
-        rect().into()
+        rect()
     });
 }
 
@@ -316,7 +316,7 @@ fn fallback_language_must_have_locale_translation() {
             "Some(\"jp\")".to_string(),
             "fallback_language_must_have_locale_translation"
         );
-        rect().into()
+        rect()
     });
 }
 

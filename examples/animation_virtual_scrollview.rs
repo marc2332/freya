@@ -8,30 +8,28 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
-    rect()
-        .child(
-            VirtualScrollView::new(|i, _| {
-                AnimatedContainer {
-                    height: 70.,
-                    i,
-                    children: rect()
-                        .width(Size::fill())
-                        .height(Size::fill())
-                        .padding(4.)
-                        .corner_radius(8.)
-                        .color((255, 255, 255))
-                        .background((0, 119, 182))
-                        .child(format!("Item {i}"))
-                        .into(),
-                }
-                .into()
-            })
-            .length(300)
-            .item_size(70.)
-            .height(Size::percent(100.)),
-        )
-        .into()
+fn app() -> impl IntoElement {
+    rect().child(
+        VirtualScrollView::new(|i, _| {
+            AnimatedContainer {
+                height: 70.,
+                i,
+                children: rect()
+                    .width(Size::fill())
+                    .height(Size::fill())
+                    .padding(4.)
+                    .corner_radius(8.)
+                    .color((255, 255, 255))
+                    .background((0, 119, 182))
+                    .child(format!("Item {i}"))
+                    .into(),
+            }
+            .into()
+        })
+        .length(300)
+        .item_size(70.)
+        .height(Size::percent(100.)),
+    )
 }
 
 #[derive(PartialEq)]
@@ -42,7 +40,7 @@ struct AnimatedContainer {
 }
 
 impl Render for AnimatedContainer {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let animation = use_animation(|conf| {
             conf.on_creation(OnCreation::Run);
             AnimNum::new(350., 0.)
@@ -59,7 +57,6 @@ impl Render for AnimatedContainer {
             .height(Size::px(self.height))
             .padding(4.)
             .child(self.children.clone())
-            .into()
     }
 
     fn render_key(&self) -> DiffKey {

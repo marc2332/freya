@@ -16,7 +16,7 @@ impl<R> PartialEq for Outlet<R> {
 }
 
 impl<R: Routable> Render for Outlet<R> {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         OutletContext::<R>::render()
     }
 }

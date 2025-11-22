@@ -9,7 +9,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn card(i: i32) -> Element {
+fn card(i: i32) -> impl IntoElement {
     rect()
         .expanded()
         .background((103, 80, 164))
@@ -17,7 +17,6 @@ fn card(i: i32) -> Element {
         .center()
         .color(Color::WHITE)
         .child(format!("Number {}", i))
-        .into()
 }
 
 const LOREM_IPSUM: &str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit,
@@ -26,7 +25,7 @@ Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliqu
  Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
  Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
 
-fn popup(i: i32, mut show_popup: State<Option<i32>>) -> Element {
+fn popup(i: i32, mut show_popup: State<Option<i32>>) -> impl IntoElement {
     Popup::new()
         .on_close_request(move |_| show_popup.set(None))
         .child(PopupTitle::new("Title".to_string()))
@@ -64,10 +63,9 @@ fn popup(i: i32, mut show_popup: State<Option<i32>>) -> Element {
                         .child("Accept"),
                 ),
         )
-        .into()
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut show_popup = use_state::<Option<i32>>(|| None);
 
     rect()
@@ -98,5 +96,4 @@ fn app() -> Element {
                 )
                 .into()
         }))
-        .into()
 }

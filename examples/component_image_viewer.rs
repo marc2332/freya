@@ -11,7 +11,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let uri = "https://images.pexels.com/photos/842711/pexels-photo-842711.jpeg";
     let path = PathBuf::from("./examples/rust_logo.png");
     let embedded = ("rust-logo", include_bytes!("./rust_logo.png"));
@@ -27,5 +27,4 @@ fn app() -> Element {
         )
         .child(ImageViewer::new(path).width(Size::percent(33.)))
         .child(ImageViewer::new(embedded).width(Size::percent(33.)))
-        .into()
 }

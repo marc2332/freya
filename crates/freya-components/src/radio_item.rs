@@ -16,7 +16,7 @@ use crate::{
 /// ```rust
 /// # use std::collections::HashSet;
 /// # use freya::prelude::*;
-/// fn app() -> Element {
+/// fn app() -> impl IntoElement {
 ///     let mut checked = use_state(|| false);
 ///
 ///     rect()
@@ -32,13 +32,12 @@ use crate::{
 ///                 .child(RadioItem::new().selected(!checked()))
 ///                 .child("Click to check"),
 ///         )
-///         .into()
 /// }
 ///
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
 /// #   rect()
-///         .spacing(8.).center().expanded().child(app()).into()
+///         .spacing(8.).center().expanded().child(app())
 /// # }, (250., 250.).into(), "./images/gallery_radio.png");
 /// ```
 ///
@@ -93,7 +92,7 @@ impl RadioItem {
 }
 
 impl Render for RadioItem {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let focus = use_focus();
         let focus_status = use_focus_status(focus);
         let RadioItemTheme {
@@ -143,7 +142,6 @@ impl Render for RadioItem {
                     .background(fill)
                     .corner_radius(CornerRadius::new_all(99.))
             }))
-            .into()
     }
 
     fn render_key(&self) -> DiffKey {

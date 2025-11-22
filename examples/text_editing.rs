@@ -7,7 +7,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let holder = use_state(ParagraphHolder::default);
     let mut editable = use_editable(
         || "Hello, World!".to_string(),
@@ -56,5 +56,4 @@ fn app() -> Element {
         })
         .span(editable.editor().read().to_string())
         .holder(holder.read().clone())
-        .into()
 }

@@ -9,7 +9,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut panels = use_state(|| 5);
 
     ResizableContainer::new()
@@ -53,5 +53,4 @@ fn app() -> Element {
                     })),
             ),
         )
-        .into()
 }

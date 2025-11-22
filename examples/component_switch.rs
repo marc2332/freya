@@ -4,7 +4,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut toggled = use_state(|| false);
     rect()
         .center()
@@ -14,5 +14,4 @@ fn app() -> Element {
             toggled.toggle();
         }))
         .child(Switch::new().toggled(toggled).enabled(false))
-        .into()
 }

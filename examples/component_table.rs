@@ -32,7 +32,7 @@ impl Display for OrderBy {
     }
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut order_direction = use_state(|| OrderDirection::Down);
     let mut order = use_state(|| OrderBy::Name);
     let data = use_state(|| {
@@ -89,38 +89,35 @@ fn app() -> Element {
         }
     };
 
-    rect()
-        .padding(8.)
-        .child(
-            Table::new(3)
-                .child(
-                    TableHead::new().child(
-                        TableRow::new().children_iter(columns.into_iter().enumerate().map(
-                            |(n, (text, order_by))| {
-                                TableCell::new()
-                                    .key(n)
-                                    .order_direction(if *order.read() == order_by {
-                                        Some(*order_direction.read())
-                                    } else {
-                                        None
-                                    })
-                                    .on_press(move |_| on_column_head_click(&order_by))
-                                    .child(text.to_string())
-                                    .into()
-                            },
-                        )),
-                    ),
-                )
-                .child(TableBody::new().child(ScrollView::new().children_iter(
-                    filtered_data.enumerate().map(|(i, items)| {
-                        TableRow::new()
-                            .key(i)
-                            .children_iter(items.iter().enumerate().map(|(n, item)| {
-                                TableCell::new().key(n).child(item.to_string()).into()
-                            }))
-                            .into()
-                    }),
-                ))),
-        )
-        .into()
+    rect().padding(8.).child(
+        Table::new(3)
+            .child(
+                TableHead::new().child(
+                    TableRow::new().children_iter(columns.into_iter().enumerate().map(
+                        |(n, (text, order_by))| {
+                            TableCell::new()
+                                .key(n)
+                                .order_direction(if *order.read() == order_by {
+                                    Some(*order_direction.read())
+                                } else {
+                                    None
+                                })
+                                .on_press(move |_| on_column_head_click(&order_by))
+                                .child(text.to_string())
+                                .into()
+                        },
+                    )),
+                ),
+            )
+            .child(TableBody::new().child(ScrollView::new().children_iter(
+                filtered_data.enumerate().map(|(i, items)| {
+                    TableRow::new()
+                        .key(i)
+                        .children_iter(items.iter().enumerate().map(|(n, item)| {
+                            TableCell::new().key(n).child(item.to_string()).into()
+                        }))
+                        .into()
+                }),
+            ))),
+    )
 }

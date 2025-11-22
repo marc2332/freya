@@ -4,7 +4,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut show_popup = use_state(|| true);
 
     rect()
@@ -19,5 +19,4 @@ fn app() -> Element {
                 .child("Open")
                 .on_press(move |_| show_popup.toggle()),
         )
-        .into()
 }

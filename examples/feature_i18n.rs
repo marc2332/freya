@@ -12,7 +12,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut i18n = use_init_i18n(|| {
         I18nConfig::new(langid!("en-US"))
             .with_locale((langid!("en-US"), include_str!("./i18n/en-US.ftl")))
@@ -33,5 +33,4 @@ fn app() -> Element {
         )
         .child(t!("hello_world"))
         .child(t!("hello", name: "Freya!"))
-        .into()
 }

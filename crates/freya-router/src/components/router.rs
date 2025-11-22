@@ -7,7 +7,7 @@ use crate::{
 };
 
 /// A component that renders the current route.
-pub fn router<R: Routable + Clone>(init: impl FnOnce() -> RouterConfig<R>) -> Element {
+pub fn router<R: Routable + Clone>(init: impl FnOnce() -> RouterConfig<R>) -> impl IntoElement {
     use crate::prelude::{
         RouterContext,
         outlet::OutletContext,

@@ -4,7 +4,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     rect()
         .content(Content::Fit)
         .background((125, 125, 125))
@@ -28,5 +28,4 @@ fn app() -> Element {
                 .width(Size::fill_minimum())
                 .height(Size::px(100.)),
         )
-        .into()
 }

@@ -317,8 +317,8 @@ pub struct Label {
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// fn app() -> Element {
-///     label().text("Hello, world!").font_size(16.0).into()
+/// fn app() -> impl IntoElement {
+///     label().text("Hello, world!").font_size(16.0)
 /// }
 /// ```
 pub fn label() -> Label {

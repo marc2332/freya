@@ -4,7 +4,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     rect()
         .child(
             ScrollView::new()
@@ -31,5 +31,4 @@ fn app() -> Element {
                         .into()
                 })),
         )
-        .into()
 }

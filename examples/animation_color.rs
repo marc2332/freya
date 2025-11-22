@@ -7,7 +7,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut animation = use_animation(|_| AnimColor::new((246, 240, 240), (205, 86, 86)).time(400));
 
     rect()
@@ -31,5 +31,4 @@ fn app() -> Element {
                 .child("Reverse")
                 .into(),
         ])
-        .into()
 }

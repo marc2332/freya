@@ -27,7 +27,7 @@ impl SelectableText {
 }
 
 impl Render for SelectableText {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let holder = use_state(ParagraphHolder::default);
         let mut editable = use_editable(
             || self.value.to_string(),
@@ -133,6 +133,5 @@ impl Render for SelectableText {
             .on_key_down(on_key_down)
             .on_key_up(on_key_up)
             .span(Span::new(editable.editor().read().to_string()))
-            .into()
     }
 }

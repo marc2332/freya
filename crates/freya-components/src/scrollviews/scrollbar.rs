@@ -32,7 +32,7 @@ pub struct ScrollBar {
 }
 
 impl RenderOwned for ScrollBar {
-    fn render(self) -> Element {
+    fn render(self) -> impl IntoElement {
         let scrollbar_theme = get_theme!(&self.theme, scrollbar);
 
         let mut state = use_state(|| ScrollBarState::Idle);
@@ -108,6 +108,5 @@ impl RenderOwned for ScrollBar {
                             .child(self.thumb),
                     ),
             )
-            .into()
     }
 }

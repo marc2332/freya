@@ -4,7 +4,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut value = use_state(String::new);
 
     rect()
@@ -24,5 +24,4 @@ fn app() -> Element {
                 .value(value.read().clone()),
         )
         .child(format!("Your name is {}", value.read()))
-        .into()
 }

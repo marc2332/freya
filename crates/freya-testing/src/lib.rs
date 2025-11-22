@@ -91,7 +91,7 @@ impl TestingRunner {
     ) -> (Self, T) {
         let (events_sender, events_receiver) = futures_channel::mpsc::unbounded();
         let app = app.into();
-        let mut runner = Runner::new(move || keyboard_navigator(app.clone()));
+        let mut runner = Runner::new(move || keyboard_navigator(app.clone()).into_element());
 
         runner.provide_root_context(ScreenReader::new);
 

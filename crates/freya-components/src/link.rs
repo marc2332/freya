@@ -62,7 +62,7 @@ impl Link {
 }
 
 impl Render for Link {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, link);
         let mut is_hovering = use_state(|| false);
 
@@ -116,7 +116,7 @@ impl Render for Link {
         if let Some(tooltip_text) = tooltip_text {
             TooltipContainer::new(Tooltip::new(tooltip_text))
                 .child(link)
-                .into()
+                .into_element()
         } else {
             link.into()
         }

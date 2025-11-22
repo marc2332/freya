@@ -92,7 +92,7 @@ fn on_render(ctx: &mut RenderContext, (cursor_x, cursor_y): (f64, f64)) {
         .unwrap();
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut cursor_position = use_state(CursorPoint::default);
 
     let on_global_mouse_move = move |e: Event<MouseEventData>| {
@@ -109,5 +109,4 @@ fn app() -> Element {
     }))
     .expanded()
     .on_global_mouse_move(on_global_mouse_move)
-    .into()
 }

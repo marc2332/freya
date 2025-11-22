@@ -10,7 +10,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     router::<Route>(RouterConfig::default)
 }
 
@@ -27,50 +27,47 @@ pub enum Route {
 #[derive(PartialEq)]
 struct AppSideBar;
 impl Render for AppSideBar {
-    fn render(&self) -> Element {
-        NativeRouter::new()
-            .child(
-                SideBar::new()
-                    .bar(
-                        rect()
-                            .child(
-                                ActivableRoute::new(
-                                    Route::Home,
-                                    Link::new(Route::Home).child(SideBarItem::new().child("Home")),
-                                )
-                                .exact(true),
+    fn render(&self) -> impl IntoElement {
+        NativeRouter::new().child(
+            SideBar::new()
+                .bar(
+                    rect()
+                        .child(
+                            ActivableRoute::new(
+                                Route::Home,
+                                Link::new(Route::Home).child(SideBarItem::new().child("Home")),
                             )
-                            .child(ActivableRoute::new(
-                                Route::Settings,
-                                Link::new(Route::Settings)
-                                    .child(SideBarItem::new().child("Settings")),
-                            ))
-                            .child(
-                                SideBarItem::new()
-                                    .on_press(|_| {
-                                        println!("Pressed 🦀");
-                                    })
-                                    .child("Crab 🦀"),
-                            ),
-                    )
-                    .content(rect().expanded().center().child(outlet::<Route>())),
-            )
-            .into()
+                            .exact(true),
+                        )
+                        .child(ActivableRoute::new(
+                            Route::Settings,
+                            Link::new(Route::Settings).child(SideBarItem::new().child("Settings")),
+                        ))
+                        .child(
+                            SideBarItem::new()
+                                .on_press(|_| {
+                                    println!("Pressed 🦀");
+                                })
+                                .child("Crab 🦀"),
+                        ),
+                )
+                .content(rect().expanded().center().child(outlet::<Route>())),
+        )
     }
 }
 
 #[derive(PartialEq)]
 struct Home;
 impl Render for Home {
-    fn render(&self) -> Element {
-        "Home Page!".into()
+    fn render(&self) -> impl IntoElement {
+        "Home Page!"
     }
 }
 
 #[derive(PartialEq)]
 struct Settings;
 impl Render for Settings {
-    fn render(&self) -> Element {
-        "Settings Page!".into()
+    fn render(&self) -> impl IntoElement {
+        "Settings Page!"
     }
 }

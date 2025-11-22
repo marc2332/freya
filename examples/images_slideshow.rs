@@ -7,7 +7,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut selected = use_state(|| 2);
 
     let on_wheel = move |e: Event<WheelEventData>| {
@@ -52,7 +52,6 @@ fn app() -> Element {
                     .into()
             }),
         )
-        .into()
 }
 
 #[derive(Default, PartialEq)]
@@ -75,7 +74,7 @@ impl ChildrenExt for Card {
 }
 
 impl Render for Card {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let animations = use_animation_with_dependencies(&self.selected, move |conf, selected| {
             conf.on_change(OnChange::Rerun);
             conf.on_creation(OnCreation::Run);
@@ -94,6 +93,5 @@ impl Render for Card {
             .width(Size::flex(width))
             .overflow_mode(OverflowMode::Clip)
             .children(self.children.clone())
-            .into()
     }
 }

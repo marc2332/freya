@@ -7,7 +7,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut toggle = use_state(|| false);
     let mut animations = use_animation(|_conf| {
         AnimSequential::new([
@@ -53,5 +53,4 @@ fn app() -> Element {
                 .rotate(rotate_b)
                 .background((0, 119, 182)),
         )
-        .into()
 }

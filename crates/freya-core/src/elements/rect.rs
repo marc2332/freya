@@ -619,8 +619,8 @@ impl From<Rect> for Element {
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// fn app() -> Element {
-///     rect().expanded().background((0, 255, 0)).into()
+/// fn app() -> impl IntoElement {
+///     rect().expanded().background((0, 255, 0))
 /// }
 /// ```
 pub fn rect() -> Rect {

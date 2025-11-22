@@ -21,17 +21,16 @@ pub enum SliderStatus {
 /// # Example
 /// ```rust
 /// # use freya::prelude::*;
-/// fn app() -> Element {
+/// fn app() -> impl IntoElement {
 ///     let mut percentage = use_state(|| 25.0);
 ///
 ///     Slider::new(move |per| percentage.set(per))
 ///         .value(percentage())
-///         .into()
 /// }
 ///
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
-/// #   rect().padding(48.).center().expanded().child(app()).into()
+/// #   rect().padding(48.).center().expanded().child(app())
 /// # }, (250., 250.).into(), "./images/gallery_slider.png");
 /// ```
 /// # Preview
@@ -95,7 +94,7 @@ impl Slider {
 }
 
 impl Render for Slider {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, slider);
         let focus = use_focus();
         let focus_status = use_focus_status(focus);
@@ -294,7 +293,6 @@ impl Render for Slider {
                         vec![track.into(), thumb.into()]
                     }),
             )
-            .into()
     }
 
     fn render_key(&self) -> DiffKey {

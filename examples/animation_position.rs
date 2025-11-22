@@ -7,7 +7,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut animation = use_animation(|_| {
         AnimNum::new(50., 550.)
             .function(Function::Elastic)
@@ -18,13 +18,14 @@ fn app() -> Element {
     let value = animation.read().value();
 
     rect()
-        .children([
+        .child(
             rect()
                 .position(Position::new_absolute().left(value).top(50.))
                 .background(Color::BLUE)
                 .width(Size::px(100.))
-                .height(Size::px(100.))
-                .into(),
+                .height(Size::px(100.)),
+        )
+        .child(
             rect()
                 .horizontal()
                 .width(Size::fill())
@@ -45,8 +46,6 @@ fn app() -> Element {
                             animation.reverse();
                         })
                         .child("Reverse"),
-                )
-                .into(),
-        ])
-        .into()
+                ),
+        )
 }

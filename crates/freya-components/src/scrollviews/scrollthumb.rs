@@ -20,7 +20,7 @@ pub struct ScrollThumb {
 }
 
 impl RenderOwned for ScrollThumb {
-    fn render(mut self) -> Element {
+    fn render(mut self) -> impl IntoElement {
         let scrollbar_theme = get_theme!(&self.theme, scrollbar);
         let mut state = use_state(|| ScrollThumbState::Idle);
 
@@ -61,6 +61,5 @@ impl RenderOwned for ScrollThumb {
                     .background(thumb_background)
                     .corner_radius(8.),
             )
-            .into()
     }
 }

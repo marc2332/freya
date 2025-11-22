@@ -4,7 +4,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app).with_size(500., 450.)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut count = use_state(|| 4);
 
     rect()
@@ -41,5 +41,4 @@ fn app() -> Element {
                         .child("Decrease"),
                 ),
         )
-        .into()
 }

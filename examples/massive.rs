@@ -1,5 +1,7 @@
 use freya::{
-    helpers::from_fn,
+    helpers::{
+        from_fn_standalone,
+    },
     prelude::*,
 };
 use freya_performance_plugin::PerformanceOverlayPlugin;
@@ -13,27 +15,26 @@ fn main() {
     )
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let cols = 30;
     let rows = 30;
 
-    rect()
-        .children_iter((0..rows).map(|row| {
-            rect()
-                .height(Size::percent(100. / rows as f32))
-                .horizontal()
-                .children_iter((0..cols).map(|col| {
-                    rect()
-                        .width(Size::percent(100. / cols as f32))
-                        .children([from_fn((row, col), (), stateful_switch)])
-                        .into()
-                }))
-                .into()
-        }))
-        .into()
+    rect().children_iter((0..rows).map(|row| {
+        rect()
+            .height(Size::percent(100. / rows as f32))
+            .horizontal()
+            .children_iter((0..cols).map(|col| {
+                rect()
+                    .key((row, col))
+                    .width(Size::percent(100. / cols as f32))
+                    .child(from_fn_standalone(stateful_switch))
+                    .into()
+            }))
+            .into()
+    }))
 }
 
-fn stateful_switch(_: &()) -> Element {
+fn stateful_switch() -> Element {
     let mut toggled = use_state(|| false);
 
     Switch::new()

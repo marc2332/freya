@@ -14,14 +14,14 @@
 /// # use freya::prelude::*;
 /// # use freya_i18n::prelude::*;
 /// # use unic_langid::langid;
-/// # fn example() -> Element {
+/// # fn example() -> impl IntoElement {
 /// #   let lang = langid!("en-US");
 /// #   let config = I18nConfig::new(lang.clone()).with_locale((lang.clone(), "hello = Hello, {$name}")).with_fallback(lang.clone());
 /// #   let mut i18n = use_init_i18n(|| config);
 /// let name = "Avery Gigglesworth";
 /// let hi = te!("hello", name: {name}).expect("message id 'name' should be present");
 /// assert_eq!(hi, "Hello, Avery Gigglesworth");
-/// #   rect().into()
+/// #   rect()
 /// # }
 /// ```
 #[macro_export]
@@ -47,14 +47,14 @@ macro_rules! te {
 /// # use freya::prelude::*;
 /// # use freya_i18n::prelude::*;
 /// # use unic_langid::langid;
-/// # fn example() -> Element {
+/// # fn example() -> impl IntoElement {
 /// #   let lang = langid!("en-US");
 /// #   let config = I18nConfig::new(lang.clone()).with_locale((lang.clone(), "hello = Hello, {$name}")).with_fallback(lang.clone());
 /// #   let mut i18n = use_init_i18n(|| config);
 /// let name = "Avery Gigglesworth";
 /// let hi = t!("hello", name: {name});
 /// assert_eq!(hi, "Hello, Avery Gigglesworth");
-/// #   rect().into()
+/// #   rect()
 /// # }
 /// ```
 #[macro_export]
@@ -74,13 +74,13 @@ macro_rules! t {
 /// # use freya::prelude::*;
 /// # use freya_i18n::{tid, prelude::*};
 /// # use unic_langid::langid;
-/// # fn example() -> Element {
+/// # fn example() -> impl IntoElement {
 /// #   let lang = langid!("en-US");
 /// #   let config = I18nConfig::new(lang.clone()).with_locale((lang.clone(), "hello = Hello, {$name}")).with_fallback(lang.clone());
 /// #   let mut i18n = use_init_i18n(|| config);
 /// let message = tid!("no-key");
 /// assert_eq!(message, "message-id: no-key should be translated");
-/// #   rect().into()
+/// #   rect()
 /// # }
 /// ```
 #[macro_export]

@@ -58,7 +58,7 @@ impl SideBar {
 }
 
 impl Render for SideBar {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let SideBarTheme {
             spacing,
             padding,
@@ -90,7 +90,6 @@ impl Render for SideBar {
                     .expanded()
                     .maybe_child(self.content.clone()),
             )
-            .into()
     }
 }
 
@@ -148,7 +147,7 @@ impl SideBarItem {
 }
 
 impl Render for SideBarItem {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let SideBarItemTheme {
             margin,
             hover_background,
@@ -189,6 +188,5 @@ impl Render for SideBarItem {
             .background(background)
             .corner_radius(corner_radius)
             .children(self.children.clone())
-            .into()
     }
 }

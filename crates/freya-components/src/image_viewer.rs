@@ -148,19 +148,18 @@ impl ImageSource {
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// fn app() -> Element {
+/// fn app() -> impl IntoElement {
 ///     let source: ImageSource =
 ///         "https://upload.wikimedia.org/wikipedia/commons/8/8a/Gecarcinus_quadratus_%28Nosara%29.jpg"
 ///             .into();
 ///
 ///     ImageViewer::new(source)
-///         .into()
 /// }
 ///
 /// # use freya_testing::prelude::*;
 /// # use std::path::PathBuf;
 /// # launch_doc_hook(|| {
-/// #   rect().center().expanded().child(ImageViewer::new(("rust-logo", include_bytes!("../../../examples/rust_logo.png")))).into()
+/// #   rect().center().expanded().child(ImageViewer::new(("rust-logo", include_bytes!("../../../examples/rust_logo.png"))))
 /// # }, (250., 250.).into(), "./images/gallery_image_viewer.png", |t| {
 /// #   t.poll(std::time::Duration::from_millis(1),std::time::Duration::from_millis(50));
 /// #   t.sync_and_update();
@@ -222,7 +221,7 @@ impl ChildrenExt for ImageViewer {
 }
 
 impl Render for ImageViewer {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let asset_config = AssetConfiguration::new(&self.source, AssetAge::default());
         let asset = use_asset(&asset_config);
         let mut asset_cacher = use_hook(AssetCacher::get);
@@ -279,7 +278,7 @@ impl Render for ImageViewer {
                     .layout(self.layout.clone())
                     .image_data(self.image_data.clone())
                     .children(self.children.clone())
-                    .into()
+                    .into_element()
             }
             Asset::Pending | Asset::Loading => rect()
                 .layout(self.layout.clone())

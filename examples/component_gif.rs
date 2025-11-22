@@ -11,7 +11,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let uri = "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExeXh5YWhscmo0YmF3OG1oMmpnMzBnbXFjcDR5Y2xoODE2ZnRpc2FhZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/HTZVeK0esRjyw/giphy.gif";
     let path = PathBuf::from("./examples/frog_typing.gif");
     let embedded = ("frog-typing", include_bytes!("./frog_typing.gif"));
@@ -35,5 +35,4 @@ fn app() -> Element {
                 .width(Size::percent(33.))
                 .a11y_alt("Frog typing"),
         )
-        .into()
 }

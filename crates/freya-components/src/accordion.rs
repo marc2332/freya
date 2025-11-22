@@ -23,7 +23,7 @@ use crate::{
 /// # use freya::prelude::*;
 /// const LOREM_IPSUM: &str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna.";
 ///
-/// fn app() -> Element {
+/// fn app() -> impl IntoElement {
 ///     rect()
 ///        .center()
 ///        .expanded()
@@ -34,13 +34,12 @@ use crate::{
 ///                .child(LOREM_IPSUM)
 ///                .into()
 ///        }))
-///        .into()
 /// }
 ///
 /// # use freya_testing::prelude::*;
 /// # use std::time::Duration;
 /// # launch_doc_hook(|| {
-/// #   rect().child(app()).into()
+/// #   rect().child(app())
 /// # }, (250., 250.).into(), "./images/gallery_accordion.png", |t| {
 /// #   t.click_cursor((125., 115.));
 /// #   t.poll(Duration::from_millis(1), Duration::from_millis(300));
@@ -78,7 +77,7 @@ impl ChildrenExt for Accordion {
 }
 
 impl Render for Accordion {
-    fn render(self: &Accordion) -> Element {
+    fn render(self: &Accordion) -> impl IntoElement {
         let header = use_focus();
         let accordion_theme = get_theme!(&self.theme, accordion);
         let mut open = use_state(|| false);
@@ -132,6 +131,5 @@ impl Render for Accordion {
                     .visible_height(VisibleSize::inner_percent(clip_percent))
                     .children(self.children.clone()),
             )
-            .into()
     }
 }

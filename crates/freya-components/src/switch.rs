@@ -19,24 +19,23 @@ use crate::{
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// fn app() -> Element {
+/// fn app() -> impl IntoElement {
 ///     let mut toggled = use_state(|| false);
 ///
 ///     Switch::new()
 ///         .toggled(toggled())
 ///         .on_toggle(move |_| toggled.toggle())
-///         .into()
 /// }
 /// # // TOGGLED
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
-/// #   rect().center().expanded().child(Switch::new().toggled(true)).into()
+/// #   rect().center().expanded().child(Switch::new().toggled(true))
 /// # }, (250., 250.).into(), "./images/gallery_toggled_switch.png");
 /// #
 /// # // NOT TOGGLED
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
-/// #   rect().center().expanded().child(Switch::new().toggled(false)).into()
+/// #   rect().center().expanded().child(Switch::new().toggled(false))
 /// # }, (250., 250.).into(), "./images/gallery_not_toggled_switch.png");
 /// ```
 /// # Preview
@@ -92,7 +91,7 @@ impl Switch {
 }
 
 impl Render for Switch {
-    fn render(self: &Switch) -> Element {
+    fn render(self: &Switch) -> impl IntoElement {
         let theme = get_theme!(&self.theme, switch);
         let mut hovering = use_state(|| false);
         let focus = use_focus();
@@ -192,6 +191,5 @@ impl Render for Switch {
                     .background(thumb.mul_if(!self.enabled, 0.85))
                     .corner_radius(CornerRadius::new_all(50.)),
             )
-            .into()
     }
 }

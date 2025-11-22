@@ -50,7 +50,7 @@ impl TickIcon {
 }
 
 impl Render for TickIcon {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         svg(Bytes::from_static(
             r#"
             <svg viewBox="0 0 333 263" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -63,6 +63,5 @@ impl Render for TickIcon {
         .width(self.width.clone())
         .height(self.height.clone())
         .fill(self.fill)
-        .into()
     }
 }

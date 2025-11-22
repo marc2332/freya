@@ -17,7 +17,7 @@ pub enum DataChannel {
 
 impl RadioChannel<Data> for DataChannel {}
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let radio_station = use_init_radio_station::<Data, DataChannel>(Data::default);
 
     let on_press = move |_| {
@@ -31,10 +31,9 @@ fn app() -> Element {
         .expanded()
         .center()
         .child(Button::new().on_press(on_press).child("Open"))
-        .into()
 }
 
-fn sub_app() -> Element {
+fn sub_app() -> impl IntoElement {
     let mut radio = use_radio(DataChannel::Count);
 
     let on_press = move |_| {
@@ -47,5 +46,4 @@ fn sub_app() -> Element {
         .spacing(6.)
         .child(format!("Value is {}", radio.read().count))
         .child(Button::new().on_press(on_press).child("Increase"))
-        .into()
 }

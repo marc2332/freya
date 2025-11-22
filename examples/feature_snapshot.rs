@@ -3,19 +3,18 @@ use freya_testing::TestingRunner;
 use torin::prelude::Size2D;
 
 fn main() {
-    fn app() -> Element {
+    fn app() -> impl IntoElement {
         rect()
             .expanded()
             .spacing(24.0)
             .child(Component(20))
             .child(Component(60))
-            .into()
     }
 
     #[derive(PartialEq)]
     struct Component(u8);
     impl Render for Component {
-        fn render(&self) -> Element {
+        fn render(&self) -> impl IntoElement {
             let mut value = use_state(|| 40);
             rect()
                 .on_press(move |_| {
@@ -45,7 +44,6 @@ fn main() {
                         .into(),
                     Button::new().on_press(|_| {}).child("hi").into(),
                 ])
-                .into()
         }
     }
 

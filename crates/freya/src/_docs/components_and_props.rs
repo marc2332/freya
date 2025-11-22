@@ -10,8 +10,8 @@
 //!
 //! ```rust
 //! # use freya::prelude::*;
-//! fn app() -> Element {
-//!     "Hello, World!".into()
+//! fn app() -> impl IntoElement {
+//!     "Hello, World!"
 //! }
 //! ```
 //!
@@ -23,8 +23,8 @@
 //! struct App;
 //!
 //! impl Render for App {
-//!     fn render(&self) -> Element {
-//!         "Hello, World!".into()
+//!     fn render(&self) -> impl IntoElement {
+//!         "Hello, World!"
 //!     }
 //! }
 //! ```
@@ -39,17 +39,16 @@
 //! #[derive(PartialEq)]
 //! struct TextLabel(Cow<'static, str>);
 //! impl Render for TextLabel {
-//!     fn render(&self) -> Element {
-//!         label().text(self.0.clone()).into()
+//!     fn render(&self) -> impl IntoElement {
+//!         label().text(self.0.clone())
 //!     }
 //! }
 //!
-//! fn app() -> Element {
+//! fn app() -> impl IntoElement {
 //!     rect()
 //!         .child(TextLabel("Number 1".into()))
 //!         .child("Number 2")
 //!         .child(TextLabel("Number 3".into()))
-//!         .into()
 //! }
 //! ```
 //!
@@ -71,13 +70,12 @@
 //! struct CoolComp;
 //! impl Render for CoolComp {
 //!     // One run of this function is the same saying as one render of this component
-//!     fn render(&self) -> Element {
+//!     fn render(&self) -> impl IntoElement {
 //!         let mut count = use_state(|| 0);
 //!
 //!         label()
 //!             .on_mouse_up(move |_| *count.write() += 1)
 //!             .text(format!("Increase {}", count.read()))
-//!             .into()
 //!     }
 //! }
 //! ```

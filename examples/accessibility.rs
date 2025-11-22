@@ -4,7 +4,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let platform_state = PlatformState::get();
 
     rect()
@@ -17,5 +17,4 @@ fn app() -> Element {
         ))
         .child(Button::new().child("Button 1"))
         .child(Button::new().child("Button 2"))
-        .into()
 }

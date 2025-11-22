@@ -22,7 +22,7 @@ fn exact_locale_match_will_use_translation() {
             "exact_locale_match_will_use_translation",
         );
 
-        rect().into()
+        rect()
     });
 }
 
@@ -39,7 +39,7 @@ fn non_exact_locale_match_will_use_region() {
             "non_exact_locale_match_will_use_region",
         );
 
-        rect().into()
+        rect()
     });
 }
 
@@ -56,7 +56,7 @@ fn non_exact_locale_match_will_use_script() {
             "non_exact_locale_match_will_use_script",
         );
 
-        rect().into()
+        rect()
     });
 }
 
@@ -73,7 +73,7 @@ fn non_exact_locale_match_will_use_language() {
             "non_exact_locale_match_will_use_language",
         );
 
-        rect().into()
+        rect()
     });
 }
 
@@ -90,7 +90,7 @@ fn no_locale_match_will_use_fallback() {
             "no_locale_match_will_use_fallback",
         );
 
-        rect().into()
+        rect()
     });
 }
 

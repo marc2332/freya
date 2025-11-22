@@ -24,13 +24,13 @@ use crate::{
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// fn app() -> Element {
-///     Tooltip::new("Hello, World!").into()
+/// fn app() -> impl IntoElement {
+///     Tooltip::new("Hello, World!")
 /// }
 ///
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
-/// #   rect().center().expanded().child(app()).into()
+/// #   rect().center().expanded().child(app())
 /// # }, (250., 250.).into(), "./images/gallery_tooltip.png");
 /// ```
 ///
@@ -57,7 +57,7 @@ impl Tooltip {
 }
 
 impl Render for Tooltip {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, tooltip);
         let TooltipTheme {
             background,
@@ -82,7 +82,6 @@ impl Render for Tooltip {
                     .color(color)
                     .text(self.text.clone()),
             )
-            .into()
     }
 }
 
@@ -122,7 +121,7 @@ impl TooltipContainer {
 }
 
 impl Render for TooltipContainer {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let mut is_hovering = use_state(|| false);
         let mut size = use_state(Area::default);
 
@@ -173,6 +172,5 @@ impl Render for TooltipContainer {
                         None
                     }),
             )
-            .into()
     }
 }

@@ -7,7 +7,7 @@ fn main() {
 const LOREM_IPSUM: &str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit,
 sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ";
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     rect()
         .center()
         .expanded()
@@ -18,5 +18,4 @@ fn app() -> Element {
                 .child(LOREM_IPSUM)
                 .into()
         }))
-        .into()
 }

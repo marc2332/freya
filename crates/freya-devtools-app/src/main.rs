@@ -54,7 +54,7 @@ fn main() {
     )
 }
 
-pub fn app() -> Element {
+pub fn app() -> impl IntoElement {
     use_init_theme(|| DARK_THEME);
     use_init_radio_station::<DevtoolsState, DevtoolsChannel>(|| DevtoolsState {
         nodes: HashMap::new(),
@@ -117,13 +117,12 @@ pub fn app() -> Element {
         .child(router(|| {
             RouterConfig::<Route>::default().with_initial_path(Route::TreeInspector {})
         }))
-        .into()
 }
 
 #[derive(PartialEq)]
 struct NavBar;
 impl Render for NavBar {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         SideBar::new()
             .width(Size::px(100.))
             .bar(
@@ -138,7 +137,6 @@ impl Render for NavBar {
                     )),
             )
             .content(rect().padding(Gaps::new_all(8.)).child(outlet::<Route>()))
-            .into()
     }
 }
 #[derive(Routable, Clone, PartialEq, Debug)]
@@ -192,7 +190,7 @@ struct LayoutForNodeInspector {
 }
 
 impl Render for LayoutForNodeInspector {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let LayoutForNodeInspector { window_id, node_id } = *self;
 
         rect()
@@ -223,7 +221,6 @@ impl Render for LayoutForNodeInspector {
                     )),
             )
             .child(rect().padding((6., 0.)).child(outlet::<Route>()))
-            .into()
     }
 }
 
@@ -231,7 +228,7 @@ impl Render for LayoutForNodeInspector {
 struct LayoutForTreeInspector;
 
 impl Render for LayoutForTreeInspector {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let route = use_route::<Route>();
         let radio = use_radio(DevtoolsChannel::Global);
 
@@ -269,7 +266,6 @@ impl Render for LayoutForTreeInspector {
                 })),
             )
             .panel(is_expanded_vertical.then(|| ResizablePanel::new(40.).child(outlet::<Route>())))
-            .into()
     }
 }
 
@@ -277,7 +273,7 @@ impl Render for LayoutForTreeInspector {
 struct TreeInspector;
 
 impl Render for TreeInspector {
-    fn render(&self) -> Element {
-        rect().into()
+    fn render(&self) -> impl IntoElement {
+        rect()
     }
 }

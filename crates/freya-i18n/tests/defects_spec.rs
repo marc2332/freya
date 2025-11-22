@@ -17,7 +17,7 @@ fn issue_15_recent_change_to_t_macro_unnecessarily_breaks_v0_3_code_test_attr() 
     let panic = std::panic::catch_unwind(|| {
         launch_test(|| {
             i18n_from_static();
-            t!(&"hello", name: "World").into()
+            t!(&"hello", name: "World")
         })
     });
     assert!(panic.is_ok(), "translate_from_static_source");

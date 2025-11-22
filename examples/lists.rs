@@ -1,14 +1,11 @@
-use freya::{
-    helpers::from_fn_owned,
-    prelude::*,
-};
+use freya::prelude::*;
 use rand::Rng;
 
 fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut state = use_state(|| {
         let mut rng = rand::rng();
         vec![rng.random::<i32>(), rng.random::<i32>()]
@@ -30,17 +27,27 @@ fn app() -> Element {
                 .read()
                 .iter()
                 .enumerate()
-                .map(|(i, id)| from_fn_owned(id, (state, i), list)),
+                .map(|(i, id)| List { i, id: *id, state }.into_element()),
         )
         .child(Button::new().on_press(add).child("Create"))
-        .into()
 }
 
-fn list((mut state, i): (State<Vec<i32>>, usize)) -> Element {
-    let mut count = use_state(|| 2);
+#[derive(PartialEq, Clone)]
+struct List {
+    pub i: usize,
+    pub id: i32,
+    pub state: State<Vec<i32>>,
+}
 
-    rect()
-        .children_iter(
+impl RenderOwned for List {
+    fn render_key(&self) -> DiffKey {
+        DiffKey::from(&self.id)
+    }
+
+    fn render(mut self) -> impl IntoElement {
+        let mut count = use_state(|| 2);
+
+        rect().children_iter(
             (0..count())
                 .map(|i| {
                     rect()
@@ -52,10 +59,10 @@ fn list((mut state, i): (State<Vec<i32>>, usize)) -> Element {
                 })
                 .chain([Button::new()
                     .on_press(move |_| {
-                        state.write().remove(i);
+                        self.state.write().remove(self.i);
                     })
                     .child("Remove")
                     .into()]),
         )
-        .into()
+    }
 }

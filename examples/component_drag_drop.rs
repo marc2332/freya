@@ -4,7 +4,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut position = use_state(|| 1);
     rect()
         .content(Content::flex())
@@ -46,5 +46,4 @@ fn app() -> Element {
                 ))
                 .into()
         }))
-        .into()
 }

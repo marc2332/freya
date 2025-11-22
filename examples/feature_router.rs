@@ -11,41 +11,39 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     router::<Route>(|| RouterConfig::default().with_initial_path(Route::Settings))
 }
 
 #[derive(PartialEq)]
 struct Layout;
 impl Render for Layout {
-    fn render(&self) -> Element {
-        rect().center().expanded().child(outlet::<Route>()).into()
+    fn render(&self) -> impl IntoElement {
+        rect().center().expanded().child(outlet::<Route>())
     }
 }
 
 #[derive(PartialEq)]
 struct Home {}
 impl Render for Home {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         Button::new()
             .on_press(|_| {
                 RouterContext::get().replace(Route::Settings);
             })
             .child("Go Settings")
-            .into()
     }
 }
 
 #[derive(PartialEq)]
 struct Settings {}
 impl Render for Settings {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         Button::new()
             .on_press(|_| {
                 RouterContext::get().replace(Route::Home);
             })
             .child("Go Home")
-            .into()
     }
 }
 

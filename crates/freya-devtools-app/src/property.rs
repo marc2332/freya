@@ -23,7 +23,7 @@ impl Property {
 }
 
 impl Render for Property {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         rect()
             .overflow_mode(OverflowMode::Clip)
             .width(Size::fill())
@@ -37,7 +37,6 @@ impl Render for Property {
                     .span(Span::new(": ").color((215, 215, 215)))
                     .span(Span::new(self.value.clone()).color((252, 181, 172))),
             )
-            .into()
     }
 }
 
@@ -57,7 +56,7 @@ impl GradientProperty {
 }
 
 impl Render for GradientProperty {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         paragraph()
             .line_height(1.9)
             .span(Span::new(self.name.to_string()))
@@ -69,7 +68,6 @@ impl Render for GradientProperty {
             .span(Span::new(format!("{:?}", self.fill)))
             .font_size(15.)
             .color(Color::from_rgb(252, 181, 172))
-            .into()
     }
 }
 
@@ -89,7 +87,7 @@ impl ColorProperty {
 }
 
 impl Render for ColorProperty {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         rect()
             .overflow_mode(OverflowMode::Clip)
             .width(Size::fill())
@@ -124,7 +122,6 @@ impl Render for ColorProperty {
                     .color(Color::from_rgb(252, 181, 172))
                     .text(self.color.pretty()),
             )
-            .into()
     }
 }
 
@@ -144,7 +141,7 @@ impl ShadowProperty {
 }
 
 impl Render for ShadowProperty {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         rect()
             .overflow_mode(OverflowMode::Clip)
             .width(Size::fill())
@@ -178,7 +175,6 @@ impl Render for ShadowProperty {
                     .text(format!("{:?}", self.shadow.color))
                     .into(),
             ])
-            .into()
     }
 }
 
@@ -198,7 +194,7 @@ impl BorderProperty {
 }
 
 impl Render for BorderProperty {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         rect()
             .overflow_mode(OverflowMode::Clip)
             .width(Size::fill())
@@ -233,7 +229,6 @@ impl Render for BorderProperty {
                     .text(self.border.fill.pretty())
                     .into(),
             ])
-            .into()
     }
 }
 
@@ -253,7 +248,7 @@ impl TextShadowProperty {
 }
 
 impl Render for TextShadowProperty {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let color = self.text_shadow.color;
 
         rect()
@@ -296,6 +291,5 @@ impl Render for TextShadowProperty {
                     .text(format!("{:?}", color))
                     .into(),
             ])
-            .into()
     }
 }

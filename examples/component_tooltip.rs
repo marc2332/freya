@@ -9,7 +9,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     rect()
         .expanded()
         .center()
@@ -20,5 +20,4 @@ fn app() -> Element {
                 .position(TooltipPosition::Besides)
                 .child(Button::new().child("Besides!")),
         )
-        .into()
 }

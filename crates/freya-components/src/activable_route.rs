@@ -36,7 +36,7 @@ impl<T> ActivableRoute<T> {
 }
 
 impl<T: PartialEq + Clone + 'static + Routable> Render for ActivableRoute<T> {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let current_route = use_route::<T>();
 
         let is_descendent_route_active = current_route.is_child_of(&self.route);

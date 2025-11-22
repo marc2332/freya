@@ -4,7 +4,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let count = use_state(|| 0);
 
     let on_press = move |_| {
@@ -15,10 +15,9 @@ fn app() -> Element {
         .expanded()
         .center()
         .child(Button::new().on_press(on_press).child("Open"))
-        .into()
 }
 
-fn sub_app(mut count: State<i32>) -> Element {
+fn sub_app(mut count: State<i32>) -> impl IntoElement {
     let on_press = move |_| {
         *count.write() += 1;
     };
@@ -29,5 +28,4 @@ fn sub_app(mut count: State<i32>) -> Element {
         .spacing(6.)
         .child(format!("Value is {}", count.read()))
         .child(Button::new().on_press(on_press).child("Increase"))
-        .into()
 }

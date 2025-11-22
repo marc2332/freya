@@ -5,7 +5,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut size = use_state(Area::default);
 
     rect()
@@ -14,5 +14,4 @@ fn app() -> Element {
         .center()
         .background((0, 119, 182))
         .child(format!("{:?}", size.read()))
-        .into()
 }

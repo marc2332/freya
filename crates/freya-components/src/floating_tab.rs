@@ -45,17 +45,16 @@ impl ChildrenExt for FloatingTab {
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// fn app() -> Element {
+/// fn app() -> impl IntoElement {
 ///     rect()
 ///         .spacing(8.)
 ///         .child(FloatingTab::new().child("Page 1"))
 ///         .child(FloatingTab::new().child("Page 2"))
-///         .into()
 /// }
 ///
 /// # use freya_testing::prelude::*;
 /// # launch_doc_hook(|| {
-/// #   rect().center().expanded().child(app()).into()
+/// #   rect().center().expanded().child(app())
 /// # }, (250., 250.).into(), "./images/gallery_floating_tab.png", |t| {
 /// #   t.move_cursor((125., 115.));
 /// #   t.sync_and_update();
@@ -78,7 +77,7 @@ impl FloatingTab {
 }
 
 impl Render for FloatingTab {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let focus = use_focus();
         let focus_status = use_focus_status(focus);
         let mut status = use_state(TabStatus::default);
@@ -133,6 +132,5 @@ impl Render for FloatingTab {
             .corner_radius(99.)
             // TODO: max lines 1
             .children(self.children.clone())
-            .into()
     }
 }

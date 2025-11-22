@@ -25,7 +25,7 @@ impl NativeRouter {
 }
 
 impl Render for NativeRouter {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         rect()
             .on_global_mouse_up(|e: Event<MouseEventData>| match e.button {
                 Some(MouseButton::Back) => Navigator::get().go_back(),
@@ -33,6 +33,5 @@ impl Render for NativeRouter {
                 _ => {}
             })
             .children(self.children.clone())
-            .into()
     }
 }

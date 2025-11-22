@@ -7,7 +7,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut selected = use_state::<HashSet<i32>>(|| HashSet::from_iter([1, 3, 5]));
 
     rect()
@@ -53,5 +53,4 @@ fn app() -> Element {
                         .into()
                 })),
         )
-        .into()
 }

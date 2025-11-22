@@ -29,47 +29,44 @@ pub enum ButtonLayoutVariant {
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// fn app() -> Element {
+/// fn app() -> impl IntoElement {
 ///     Button::new()
 ///         .on_press(|_| println!("Pressed!"))
 ///         .child("Press me")
-///         .into()
 /// }
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
-/// #   rect().center().expanded().child(app()).into()
+/// #   rect().center().expanded().child(app())
 /// # }, (250., 250.).into(), "./images/gallery_button.png");
 /// ```
 /// ## **Filled**
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// fn app() -> Element {
+/// fn app() -> impl IntoElement {
 ///     Button::new()
 ///         .on_press(|_| println!("Pressed!"))
 ///         .filled()
 ///         .child("Press me")
-///         .into()
 /// }
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
-/// #   rect().center().expanded().child(app()).into()
+/// #   rect().center().expanded().child(app())
 /// # }, (250., 250.).into(), "./images/gallery_filled_button.png");
 /// ```
 /// ## **Outline**
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// fn app() -> Element {
+/// fn app() -> impl IntoElement {
 ///     Button::new()
 ///         .on_press(|_| println!("Pressed!"))
 ///         .outline()
 ///         .child("Press me")
-///         .into()
 /// }
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
-/// #   rect().center().expanded().child(app()).into()
+/// #   rect().center().expanded().child(app())
 /// # }, (250., 250.).into(), "./images/gallery_outline_button.png");
 /// ```
 ///
@@ -183,7 +180,7 @@ impl Button {
 }
 
 impl Render for Button {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let mut hovering = use_state(|| false);
         let focus = use_focus();
         let focus_status = use_focus_status(focus);
@@ -257,7 +254,6 @@ impl Render for Button {
                 }
             })
             .children(self.elements.clone())
-            .into()
     }
 
     fn render_key(&self) -> DiffKey {
@@ -274,7 +270,7 @@ mod test {
 
     #[test]
     pub fn button_test() {
-        fn button_app() -> Element {
+        fn button_app() -> impl IntoElement {
             let mut state = use_state(|| false);
 
             Button::new()
@@ -282,7 +278,6 @@ mod test {
                     state.toggle();
                 })
                 .child(format!("{}", state.read()))
-                .into()
         }
 
         let mut test = launch_test(button_app);

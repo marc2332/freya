@@ -4,10 +4,6 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
-    rect()
-        .expanded()
-        .center()
-        .child(CircularLoader::new())
-        .into()
+fn app() -> impl IntoElement {
+    rect().expanded().center().child(CircularLoader::new())
 }

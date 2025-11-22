@@ -209,7 +209,7 @@ pub struct FpRender {
 impl FpRender {
     pub fn from_render(render: impl Render + 'static) -> Self {
         Self {
-            render: Rc::new(move || render.render()),
+            render: Rc::new(move || render.render().into_element()),
         }
     }
 }
@@ -220,25 +220,26 @@ impl PartialEq for FpRender {
     }
 }
 
-impl<F> From<F> for FpRender
+impl<F, E> From<F> for FpRender
 where
-    F: Fn() -> Element + 'static,
+    F: Fn() -> E + 'static,
+    E: IntoElement,
 {
     fn from(render: F) -> Self {
         FpRender {
-            render: Rc::new(render),
+            render: Rc::new(move || render().into_element()),
         }
     }
 }
 
 impl Render for FpRender {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         (self.render)()
     }
 }
 
 pub trait Render: RenderKey + 'static {
-    fn render(&self) -> Element;
+    fn render(&self) -> impl IntoElement;
 
     fn render_key(&self) -> DiffKey {
         self.default_key()
@@ -246,7 +247,7 @@ pub trait Render: RenderKey + 'static {
 }
 
 pub trait RenderOwned: RenderKey + 'static {
-    fn render(self) -> Element;
+    fn render(self) -> impl IntoElement;
 
     fn render_key(&self) -> DiffKey {
         self.default_key()
@@ -261,7 +262,7 @@ impl<T> Render for T
 where
     T: RenderOwned + Clone,
 {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         <Self as RenderOwned>::render(self.clone())
     }
     fn render_key(&self) -> DiffKey {
@@ -280,7 +281,7 @@ where
 
 impl<T: Render + PartialEq> From<T> for Element {
     fn from(value: T) -> Self {
-        from_fn_standalone_borrowed_keyed(value.render_key(), value, T::render)
+        from_fn_standalone_borrowed_keyed(value.render_key(), value, |v| v.render().into_element())
     }
 }
 

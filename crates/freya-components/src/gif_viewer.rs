@@ -174,19 +174,18 @@ impl GifSource {
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// fn app() -> Element {
+/// fn app() -> impl IntoElement {
 ///     let source: GifSource =
 ///         "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExeXh5YWhscmo0YmF3OG1oMmpnMzBnbXFjcDR5Y2xoODE2ZnRpc2FhZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/HTZVeK0esRjyw/giphy.gif"
 ///             .into();
 ///
 ///     GifViewer::new(source)
-///         .into()
 /// }
 ///
 /// # use freya_testing::prelude::*;
 /// # use std::path::PathBuf;
 /// # launch_doc_hook(|| {
-/// #   rect().center().expanded().child(GifViewer::new(("frog-typing", include_bytes!("../../../examples/frog_typing.gif")))).into()
+/// #   rect().center().expanded().child(GifViewer::new(("frog-typing", include_bytes!("../../../examples/frog_typing.gif"))))
 /// # }, (250., 250.).into(), "./images/gallery_gif_viewer.png", |t| {
 /// #   t.poll(std::time::Duration::from_millis(1),std::time::Duration::from_millis(50));
 /// #   t.sync_and_update();
@@ -237,7 +236,7 @@ impl AccessibilityExt for GifViewer {
 }
 
 impl Render for GifViewer {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let asset_config = AssetConfiguration::new(&self.source, AssetAge::default());
         let asset_data = use_asset(&asset_config);
         let mut asset = use_state::<Option<GifData>>(|| None);
@@ -369,7 +368,7 @@ impl Render for GifViewer {
                 .a11y_focusable(true)
                 .layout(self.layout.clone())
                 .image_data(self.image_data.clone())
-                .into(),
+                .into_element(),
             (Asset::Cached(_), _) | (Asset::Pending | Asset::Loading, _) => rect()
                 .layout(self.layout.clone())
                 .center()

@@ -15,7 +15,7 @@
 //!     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 //! }
 //!
-//! fn app() -> Element {
+//! fn app() -> impl IntoElement {
 //!     // Define a **state**
 //!     let mut count = use_state(|| 0);
 //!
@@ -28,6 +28,5 @@
 //!         .padding(Gaps::new_all(12.))
 //!         .on_mouse_up(move |_| *count.write() += 1)
 //!         .child(format!("Click to increase -> {}", count.read()))
-//!         .into()
 //! }
 //! ```

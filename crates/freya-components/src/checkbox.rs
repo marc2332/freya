@@ -17,7 +17,7 @@ use crate::{
 /// ```rust
 /// # use std::collections::HashSet;
 /// # use freya::prelude::*;
-/// fn app() -> Element {
+/// fn app() -> impl IntoElement {
 ///     let mut checked = use_state(|| false);
 ///
 ///     rect()
@@ -34,13 +34,12 @@ use crate::{
 ///                 .child(Checkbox::new().selected(!checked()))
 ///                 .child("Click to check"),
 ///         )
-///         .into()
 /// }
 ///
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
 /// #   rect()
-///         .spacing(8.).center().expanded().child(app()).into()
+///         .spacing(8.).center().expanded().child(app())
 /// # }, (250., 250.).into(), "./images/gallery_checkbox.png");
 /// ```
 ///
@@ -95,7 +94,7 @@ impl Checkbox {
 }
 
 impl Render for Checkbox {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let focus = use_focus();
         let focus_status = use_focus_status(focus);
         let CheckboxTheme {
@@ -148,7 +147,6 @@ impl Render for Checkbox {
                     .height(Size::px(self.size * 0.7))
                     .fill(selected_icon_fill)
             }))
-            .into()
     }
 
     fn render_key(&self) -> DiffKey {

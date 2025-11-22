@@ -5,7 +5,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut checked = use_state(|| false);
     rect()
         .center()
@@ -28,5 +28,4 @@ fn app() -> Element {
                 .on_select(move |_| checked.toggle())
                 .child(Checkbox::new().selected(checked()).size(128.)),
         )
-        .into()
 }

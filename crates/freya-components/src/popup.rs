@@ -36,7 +36,7 @@ impl PopupBackground {
 }
 
 impl Render for PopupBackground {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let animation = use_animation(|conf| {
             conf.on_creation(OnCreation::Run);
             AnimColor::new((0, 0, 0, 0), (0, 0, 0, 150)).time(150)
@@ -63,7 +63,6 @@ impl Render for PopupBackground {
                     .center()
                     .child(self.children.clone()),
             )
-            .into()
     }
 }
 
@@ -105,7 +104,7 @@ impl ChildrenExt for Popup {
 }
 
 impl Render for Popup {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let animations = use_animation(|conf| {
             conf.on_creation(OnCreation::Run);
             (
@@ -162,7 +161,6 @@ impl Render for Popup {
                 request_to_close();
             },
         )
-        .into()
     }
 }
 
@@ -179,16 +177,12 @@ impl PopupTitle {
 }
 
 impl Render for PopupTitle {
-    fn render(&self) -> Element {
-        rect()
-            .font_size(18.)
-            .padding(8.)
-            .child(
-                label()
-                    .width(Size::fill())
-                    .text(self.text.read().to_string()),
-            )
-            .into()
+    fn render(&self) -> impl IntoElement {
+        rect().font_size(18.).padding(8.).child(
+            label()
+                .width(Size::fill())
+                .text(self.text.read().to_string()),
+        )
     }
 }
 
@@ -216,12 +210,11 @@ impl ChildrenExt for PopupContent {
 }
 
 impl Render for PopupContent {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         rect()
             .font_size(15.)
             .padding(8.)
             .children(self.children.clone())
-            .into()
     }
 }
 
@@ -250,7 +243,7 @@ impl ChildrenExt for PopupButtons {
 }
 
 impl Render for PopupButtons {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         rect()
             .width(Size::fill())
             .main_align(Alignment::End)
@@ -258,6 +251,5 @@ impl Render for PopupButtons {
             .spacing(4.)
             .horizontal()
             .children(self.children.clone())
-            .into()
     }
 }

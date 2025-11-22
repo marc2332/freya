@@ -419,11 +419,10 @@ pub struct Paragraph {
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// fn app() -> Element {
+/// fn app() -> impl IntoElement {
 ///     paragraph()
 ///         .span(Span::new("Hello").font_size(24.0))
 ///         .span(Span::new("World").font_size(16.0))
-///         .into()
 /// }
 /// ```
 pub fn paragraph() -> Paragraph {

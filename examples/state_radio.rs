@@ -17,7 +17,7 @@ impl RadioChannel<Data> for DataChannel {}
 fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
-fn app() -> Element {
+fn app() -> impl IntoElement {
     use_init_radio_station::<Data, DataChannel>(Data::default);
     let mut radio = use_radio::<Data, DataChannel>(DataChannel::ListCreation);
 
@@ -38,13 +38,12 @@ fn app() -> Element {
                 .enumerate()
                 .map(|(list_n, _)| ListComp(list_n).into()),
         )
-        .into()
 }
 
 #[derive(PartialEq)]
 struct ListComp(usize);
 impl Render for ListComp {
-    fn render(&self) -> Element {
+    fn render(&self) -> impl IntoElement {
         let list_n = self.0;
         let mut radio = use_radio::<Data, DataChannel>(DataChannel::SpecificListItemUpdate(list_n));
 
@@ -62,6 +61,5 @@ impl Render for ListComp {
                     .enumerate()
                     .map(move |(i, item)| label().key(i).text(item.clone()).into()),
             )
-            .into()
     }
 }

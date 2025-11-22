@@ -4,7 +4,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut count = use_state(|| 4);
 
     use_side_effect(move || {
@@ -16,5 +16,4 @@ fn app() -> Element {
             *count.write() += 1;
         })
         .child("Increase")
-        .into()
 }

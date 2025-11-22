@@ -6,7 +6,7 @@ use freya_testing::*;
 
 #[test]
 pub fn track_progress() {
-    fn use_animation_app() -> Element {
+    fn use_animation_app() -> impl IntoElement {
         let animation = use_animation(|conf| {
             conf.on_creation(OnCreation::Run);
 
@@ -15,7 +15,7 @@ pub fn track_progress() {
 
         let progress = animation.get().value();
 
-        rect().width(Size::px(progress)).into()
+        rect().width(Size::px(progress))
     }
 
     let mut test = launch_test(use_animation_app);
@@ -34,7 +34,7 @@ pub fn track_progress() {
 
 #[test]
 pub fn reverse_progress() {
-    fn use_animation_app() -> Element {
+    fn use_animation_app() -> impl IntoElement {
         let mut animation = use_animation(|conf| {
             conf.on_creation(OnCreation::Run);
 
@@ -48,7 +48,6 @@ pub fn reverse_progress() {
             .width(Size::px(progress))
             .height(Size::fill())
             .background(Color::WHITE)
-            .into()
     }
 
     let mut test = launch_test(use_animation_app);
@@ -74,7 +73,7 @@ pub fn reverse_progress() {
 
 #[test]
 pub fn animate_color() {
-    fn use_animation_app() -> Element {
+    fn use_animation_app() -> impl IntoElement {
         let animation = use_animation(|conf| {
             conf.on_creation(OnCreation::Run);
 
@@ -87,7 +86,6 @@ pub fn animate_color() {
             .width(Size::fill())
             .height(Size::fill())
             .background(background)
-            .into()
     }
 
     let mut test = launch_test(use_animation_app);
@@ -102,7 +100,7 @@ pub fn animate_color() {
 
 #[test]
 pub fn sequential() {
-    fn use_animation_app() -> Element {
+    fn use_animation_app() -> impl IntoElement {
         let animation = use_animation(|conf| {
             conf.on_creation(OnCreation::Run);
 
@@ -125,7 +123,6 @@ pub fn sequential() {
                     .height(Size::fill())
                     .width(Size::px(progress_b)),
             )
-            .into()
     }
 
     let mut test = launch_test(use_animation_app);

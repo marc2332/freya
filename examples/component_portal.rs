@@ -66,7 +66,7 @@ impl Grid {
     }
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut grid = use_state(|| Grid::new(SIZE));
 
     // Just some values to generate a different size and color based on the grid size
@@ -143,5 +143,4 @@ fn app() -> Element {
                         .into()
                 })),
         )
-        .into()
 }

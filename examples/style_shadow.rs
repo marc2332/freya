@@ -4,7 +4,7 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
     rect()
         .expanded()
         .center()
@@ -29,5 +29,4 @@ fn app() -> Element {
                         .color((0, 255, 0, 0.3)),
                 ),
         )
-        .into()
 }
