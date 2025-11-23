@@ -104,6 +104,7 @@ pub mod prelude {
             base::*,
             context::*,
             effect::*,
+            future_task::*,
             memo::*,
             reactive::*,
             state::*,

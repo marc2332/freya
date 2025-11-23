@@ -24,8 +24,7 @@ pub enum SliderStatus {
 /// fn app() -> impl IntoElement {
 ///     let mut percentage = use_state(|| 25.0);
 ///
-///     Slider::new(move |per| percentage.set(per))
-///         .value(percentage())
+///     Slider::new(move |per| percentage.set(per)).value(percentage())
 /// }
 ///
 /// # use freya_testing::prelude::*;

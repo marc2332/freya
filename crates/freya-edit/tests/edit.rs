@@ -58,7 +58,6 @@ fn multiple_lines_single_editor() {
                     .height(Size::percent(50.0))
                     .text(format!("{}:{}", editor.cursor_row(), editor.cursor_col())),
             )
-
     }
     let mut utils = launch_test(app);
     utils.set_fonts(HashMap::from_iter([(
@@ -182,7 +181,6 @@ fn single_line_multiple_editors() {
                     .height(Size::percent(50.0))
                     .text(format!("{}:{}", editor.cursor_row(), editor.cursor_col())),
             )
-
     }
 
     let mut utils = launch_test(app);

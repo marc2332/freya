@@ -36,19 +36,18 @@ use crate::scrollviews::{
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     rect()
-///         .child(
-///             VirtualScrollView::new(|i, _| {
-///                 rect()
-///                     .key(i)
-///                     .height(Size::px(25.))
-///                     .padding(4.)
-///                     .child(format!("Item {i}"))
-///                     .into()
-///             })
-///             .length(300)
-///             .item_size(25.),
-///         )
+///     rect().child(
+///         VirtualScrollView::new(|i, _| {
+///             rect()
+///                 .key(i)
+///                 .height(Size::px(25.))
+///                 .padding(4.)
+///                 .child(format!("Item {i}"))
+///                 .into()
+///         })
+///         .length(300)
+///         .item_size(25.),
+///     )
 /// }
 ///
 /// # use freya_testing::prelude::*;

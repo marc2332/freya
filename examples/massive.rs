@@ -1,7 +1,5 @@
 use freya::{
-    helpers::{
-        from_fn_standalone,
-    },
+    helpers::from_fn_standalone,
     prelude::*,
 };
 use freya_performance_plugin::PerformanceOverlayPlugin;
