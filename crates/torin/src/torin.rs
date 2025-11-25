@@ -132,6 +132,11 @@ impl<Key: NodeKey> Torin<Key> {
         self.results.len()
     }
 
+    /// Clear the dirty nodes buffer
+    pub fn clear_dirty(&mut self) {
+        self.dirty.clear();
+    }
+
     /// Reset the layout
     pub fn reset(&mut self) {
         self.root_node_candidate = RootNodeCandidate::None;

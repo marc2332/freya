@@ -462,7 +462,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     app.window.request_redraw();
 
                     app.process_layout_on_next_render = true;
-                    app.tree.layout.reset();
+                    app.tree.layout.clear_dirty();
+                    app.tree.layout.invalidate(NodeId::ROOT);
                 }
 
                 WindowEvent::MouseInput { state, button, .. } => {
