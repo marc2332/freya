@@ -14,6 +14,7 @@ pub mod image_viewer;
 pub mod input;
 pub mod keyboard_navigator;
 pub mod loader;
+pub mod menu;
 pub mod popup;
 pub mod portal;
 pub mod progressbar;

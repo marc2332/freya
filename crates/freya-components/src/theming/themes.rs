@@ -19,6 +19,8 @@ use crate::theming::{
         DropdownThemePreference,
         FloatingTabThemePreference,
         InputThemePreference,
+        MenuContainerThemePreference,
+        MenuItemThemePreference,
         PopupThemePreference,
         ProgressBarThemePreference,
         RadioItemThemePreference,
@@ -264,6 +266,18 @@ pub(crate) const BASE_THEME: Theme = Theme {
         selected_color: Preference::Reference("text_inverse"),
         selected_icon_fill: Preference::Reference("secondary"),
         hover_icon_fill: Preference::Reference("secondary"),
+    },
+    menu_item: MenuItemThemePreference {
+        hover_background: Preference::Reference("surface_secondary"),
+        corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
+        color: Preference::Reference("text_primary"),
+    },
+    menu_container: MenuContainerThemePreference {
+        background: Preference::Reference("background"),
+        padding: Preference::Specific(Gaps::new_all(4.)),
+        shadow: Preference::Reference("shadow"),
+        border_fill: Preference::Reference("surface_primary"),
+        corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
     },
 };
 

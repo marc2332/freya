@@ -167,41 +167,46 @@ impl AccessibilityTree {
             return;
         }
 
-        let mut nodes = Vec::new();
+        let (navigable_nodes, focused_id) = if strategy.mode()
+            == Some(AccessibilityFocusMovement::InsideGroup)
+        {
+            // Get all accessible nodes in the current group
+            let mut group_nodes = Vec::new();
 
-        tree.traverse_depth(|node_id| {
-            let accessibility_state = tree.accessibility_state.get(&node_id).unwrap();
-            if accessibility_state.a11y_focusable == Focusable::Enabled {
-                nodes.push(accessibility_state.a11y_id);
+            let node_id = self.map.get(&self.focused_id).unwrap();
+            let accessibility_state = tree.accessibility_state.get(node_id).unwrap();
+            let member_accessibility_id = accessibility_state.a11y_member_of;
+            if let Some(member_accessibility_id) = member_accessibility_id {
+                group_nodes = tree
+                    .accessibility_groups
+                    .get(&member_accessibility_id)
+                    .cloned()
+                    .unwrap_or_default()
+                    .into_iter()
+                    .filter(|id| {
+                        let node_id = self.map.get(id).unwrap();
+                        let accessibility_state = tree.accessibility_state.get(node_id).unwrap();
+                        accessibility_state.a11y_focusable == Focusable::Enabled
+                    })
+                    .collect();
             }
-        });
-
-        // Get all accessible nodes in the current group
-        let mut group_nodes = Vec::new();
-
-        let node_id = self.map.get(&self.focused_id).unwrap();
-        let accessibility_state = tree.accessibility_state.get(node_id).unwrap();
-        let member_accessibility_id = accessibility_state.a11y_member_of;
-        if let Some(member_accessibility_id) = member_accessibility_id {
-            group_nodes = tree
-                .accessibility_groups
-                .get(&member_accessibility_id)
-                .cloned()
-                .unwrap_or_default();
-
-            // Remove the member nodes from all the nodes so that we have 2 separate groups
-            nodes.retain(|id| !group_nodes.contains(id));
-        }
-
-        let navigable_nodes = if strategy.mode() == Some(AccessibilityFocusMovement::InsideGroup) {
-            group_nodes
+            (group_nodes, self.focused_id)
         } else {
-            nodes
+            let mut nodes = Vec::new();
+
+            tree.traverse_depth(|node_id| {
+                let accessibility_state = tree.accessibility_state.get(&node_id).unwrap();
+                if accessibility_state.a11y_focusable == Focusable::Enabled {
+                    nodes.push(accessibility_state.a11y_id);
+                }
+            });
+
+            (nodes, self.focused_id)
         };
 
         let node_index = navigable_nodes
             .iter()
-            .position(|accessibility_id| *accessibility_id == self.focused_id);
+            .position(|accessibility_id| *accessibility_id == focused_id);
 
         let target_node = match strategy {
             AccessibilityFocusStrategy::Forward(_) => {
@@ -231,7 +236,7 @@ impl AccessibilityTree {
             _ => unreachable!(),
         };
 
-        self.focused_id = target_node.unwrap_or(self.focused_id);
+        self.focused_id = target_node.unwrap_or(focused_id);
 
         #[cfg(debug_assertions)]
         tracing::info!("Focused {:?} node.", self.focused_id);

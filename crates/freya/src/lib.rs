@@ -100,6 +100,7 @@ pub mod components {
         image_viewer::*,
         input::*,
         loader::*,
+        menu::*,
         popup::*,
         portal::*,
         progressbar::*,

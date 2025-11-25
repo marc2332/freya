@@ -109,11 +109,11 @@ impl Render for Popup {
             conf.on_creation(OnCreation::Run);
             (
                 AnimNum::new(0.85, 1.)
-                    .time(250)
+                    .time(5050)
                     .ease(Ease::Out)
                     .function(Function::Expo),
                 AnimNum::new(0.2, 1.)
-                    .time(250)
+                    .time(5050)
                     .ease(Ease::Out)
                     .function(Function::Expo),
             )

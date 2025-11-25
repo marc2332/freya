@@ -19,6 +19,10 @@ use crate::{
     floating_tab::FloatingTab,
     input::Input,
     loader::CircularLoader,
+    menu::{
+        MenuContainer,
+        MenuItem,
+    },
     popup::Popup,
     progressbar::ProgressBar,
     radio_item::RadioItem,
@@ -66,6 +70,8 @@ pub struct Theme {
     pub popup: PopupThemePreference,
     pub table: TableThemePreference,
     pub chip: ChipThemePreference,
+    pub menu_item: MenuItemThemePreference,
+    pub menu_container: MenuContainerThemePreference,
 }
 
 impl Default for Theme {
@@ -389,5 +395,27 @@ define_theme! {
         selected_color: Color,
         selected_icon_fill: Color,
         hover_icon_fill: Color,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub MenuContainer {
+        %[fields]
+        background: Color,
+        padding: Gaps,
+        shadow: Color,
+        border_fill: Color,
+        corner_radius: CornerRadius,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub MenuItem {
+       %[fields]
+        hover_background: Color,
+        corner_radius: CornerRadius,
+        color: Color,
     }
 }
