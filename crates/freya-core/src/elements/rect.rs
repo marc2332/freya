@@ -465,8 +465,8 @@ impl ElementExt for RectElement {
         rounded_rect.contains(SkRect::new(
             cursor.x,
             cursor.y,
-            cursor.x + 1.,
-            cursor.y + 1.,
+            cursor.x + 0.0001,
+            cursor.y + 0.0001,
         ))
     }
 
