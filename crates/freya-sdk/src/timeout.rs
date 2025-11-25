@@ -20,8 +20,8 @@ impl Timeout {
 
     /// Reset the timer.
     pub fn reset(&mut self) {
-        self.instant.set(Instant::now());
-        self.elapsed.set(false);
+        self.instant.set_if_modified(Instant::now());
+        self.elapsed.set_if_modified(false);
     }
 }
 
