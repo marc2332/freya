@@ -114,6 +114,17 @@ impl RenderPipeline<'_> {
                         self.canvas.concat(&matrix);
                     }
 
+                    // Apply inherited opacity effects
+                    let rect = SkRect::new(
+                        visible_area.min_x(),
+                        visible_area.min_y(),
+                        visible_area.max_x(),
+                        visible_area.max_y(),
+                    );
+                    for opacity in effect_state.opacities.iter() {
+                        self.canvas.save_layer_alpha_f(rect, *opacity);
+                    }
+
                     // Transform the canvas area given the scale effects
                     for id in effect_state.scales.iter() {
                         let layout_node = self.tree.layout.get(id).unwrap();
@@ -125,17 +136,6 @@ impl RenderPipeline<'_> {
                         self.canvas.translate((center.x, center.y));
                         self.canvas.scale((scale.x, scale.y));
                         self.canvas.translate((-center.x, -center.y));
-                    }
-
-                    // Apply inherited opacity effects
-                    let rect = SkRect::new(
-                        visible_area.min_x(),
-                        visible_area.min_y(),
-                        visible_area.max_x(),
-                        visible_area.max_y(),
-                    );
-                    for opacity in effect_state.opacities.iter() {
-                        self.canvas.save_layer_alpha_f(rect, *opacity);
                     }
                 }
 
