@@ -23,6 +23,8 @@ fn main() {
 }
 
 fn app() -> Element {
+    use_init_theme(|| DARK_THEME);
+
     rect()
         .background((24, 24, 27))
         .color((255, 255, 255))
@@ -116,7 +118,7 @@ impl Render for Home {
                             .border(Border::new().alignment(BorderAlignment::Inner).fill((41, 37, 36)).width(1.0))
                             .corner_radius(16.0)
                             .width(Size::px(960.0))
-                            .height(Size::px(612.0))
+                            .height(Size::px(700.0))
                             .spacing(20.0)
                             .padding((32.0, 24.0))
                             .direction(Direction::Horizontal)
@@ -125,7 +127,7 @@ impl Render for Home {
                                     .width(Size::func(|c| Some(c.parent / 2. - 20.)))
                                     .height(Size::fill())
                                     .cross_align(Alignment::Center)
-                                    .child(Code.render()),
+                                    .child(Code),
                             )
                             .child(
                                 rect()
@@ -133,7 +135,7 @@ impl Render for Home {
                                     .height(Size::fill())
                                     .padding((20.0, 20.0))
                                     .spacing(20.0)
-                                    .child(rect().height(Size::percent(90.)).child(Counter.render()))
+                                    .child(rect().height(Size::percent(90.)).child(Counter))
                                     .child(
                                         rect()
                                             .height(Size::fill())
@@ -143,10 +145,10 @@ impl Render for Home {
                                                 Link::new("https://github.com/marc2332/freya#want-to-try-it-")
                                                     .child(Button::new()
                                                         .padding((10., 24.))
-                                            .background((109, 78, 233))
-                                            .hover_background((87, 62, 186))
-                                            .border_fill(Color::TRANSPARENT)
-                                            .color(Color::WHITE)
+                                                        .background((109, 78, 233))
+                                                        .hover_background((87, 62, 186))
+                                                        .border_fill(Color::TRANSPARENT)
+                                                        .color(Color::WHITE)
                                                         .child("Run Locally")
                                                     )
                                             ),
@@ -183,9 +185,11 @@ impl Render for Navigation {
     }
 }
 
+#[derive(PartialEq)]
 struct Counter;
 impl Render for Counter {
     fn render(&self) -> impl IntoElement {
+        use_init_default_theme();
         let mut count = use_state(|| 4);
 
         rect()
@@ -206,6 +210,7 @@ impl Render for Counter {
             .child(
                 rect()
                     .horizontal()
+                    .background((255, 255, 255))
                     .width(Size::fill())
                     .height(Size::percent(50.))
                     .center()
@@ -228,6 +233,7 @@ impl Render for Counter {
     }
 }
 
+#[derive(PartialEq)]
 struct Code;
 impl Render for Code {
     fn render(&self) -> impl IntoElement {
