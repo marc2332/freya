@@ -265,7 +265,7 @@ impl Render for TableCell {
         let config = use_try_consume::<TableConfig>().unwrap_or(TableConfig::new(1));
         let width_percent = 100.0 / (config.columns as f32);
         let mut container = rect()
-            .overflow_mode(OverflowMode::Clip)
+            .overflow(Overflow::Clip)
             .padding(self.padding)
             .width(Size::percent(width_percent))
             .main_align(Alignment::End)
@@ -372,7 +372,7 @@ impl Render for Table {
         provide_context(TableConfig::new(self.columns));
 
         rect()
-            .overflow_mode(OverflowMode::Clip)
+            .overflow(Overflow::Clip)
             .color(color)
             .background(background)
             .corner_radius(corner_radius)

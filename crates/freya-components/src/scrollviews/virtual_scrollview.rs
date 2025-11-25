@@ -457,7 +457,7 @@ impl<D: 'static, B: Fn(usize, &D) -> Element + 'static> Render for VirtualScroll
                             .height(content_height)
                             .offset_x(offset_x)
                             .offset_y(offset_y)
-                            .overflow_mode(OverflowMode::Clip)
+                            .overflow(Overflow::Clip)
                             .on_sized(move |e: Event<SizedEventData>| {
                                 size.set_if_modified(e.clone())
                             })

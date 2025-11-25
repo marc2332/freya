@@ -127,7 +127,7 @@ impl Render for Accordion {
                             b.set_hidden();
                         }
                     })
-                    .overflow_mode(OverflowMode::Clip)
+                    .overflow(Overflow::Clip)
                     .visible_height(VisibleSize::inner_percent(clip_percent))
                     .children(self.children.clone()),
             )

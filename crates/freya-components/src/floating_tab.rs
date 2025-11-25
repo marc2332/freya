@@ -125,7 +125,7 @@ impl Render for FloatingTab {
             .width(width)
             .height(height)
             .center()
-            .overflow_mode(OverflowMode::Clip)
+            .overflow(Overflow::Clip)
             .padding(padding)
             .background(background)
             .color(color)

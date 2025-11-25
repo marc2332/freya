@@ -352,7 +352,7 @@ impl Render for ScrollView {
                             .offset_x(corrected_scrolled_x)
                             .offset_y(corrected_scrolled_y)
                             .spacing(self.spacing)
-                            .overflow_mode(OverflowMode::Clip)
+                            .overflow(Overflow::Clip)
                             .on_sized(move |e: Event<SizedEventData>| {
                                 size.set_if_modified(e.clone())
                             })

@@ -340,7 +340,7 @@ impl Render for Dropdown {
                                         .width(1.)
                                         .alignment(BorderAlignment::Inner),
                                 )
-                                .overflow_mode(OverflowMode::Clip)
+                                .overflow(Overflow::Clip)
                                 .corner_radius(8.)
                                 .background(theme.dropdown_background)
                                 // TODO: Shadows

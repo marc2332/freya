@@ -45,7 +45,7 @@ pub struct LayoutData {
 
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct EffectData {
-    pub overflow_mode: OverflowMode,
+    pub overflow: Overflow,
     pub rotation: Option<f32>,
     pub scale: Option<Scale>,
     pub opacity: Option<f32>,
@@ -210,7 +210,7 @@ impl LayerState {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
-pub enum OverflowMode {
+pub enum Overflow {
     #[default]
     None,
     Clip,
@@ -218,7 +218,7 @@ pub enum OverflowMode {
 
 #[derive(PartialEq, Default, Debug, Clone)]
 pub struct EffectState {
-    pub overflow_mode: OverflowMode,
+    pub overflow: Overflow,
     pub clips: Rc<[NodeId]>,
 
     pub rotations: Rc<[NodeId]>,
@@ -239,11 +239,11 @@ impl EffectState {
         effect_data: Option<Cow<'_, EffectData>>,
     ) {
         *self = Self {
-            overflow_mode: OverflowMode::default(),
+            overflow: Overflow::default(),
             ..parent_effect_state.clone()
         };
 
-        if parent_effect_state.overflow_mode == OverflowMode::Clip {
+        if parent_effect_state.overflow == Overflow::Clip {
             let mut clips = parent_effect_state.clips.to_vec();
             clips.push(parent_node_id);
             if self.clips.as_ref() != clips {
@@ -252,7 +252,7 @@ impl EffectState {
         }
 
         if let Some(effect_data) = effect_data {
-            self.overflow_mode = effect_data.overflow_mode;
+            self.overflow = effect_data.overflow;
 
             if let Some(rotation) = effect_data.rotation {
                 let mut rotations = parent_effect_state.rotations.to_vec();

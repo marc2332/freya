@@ -173,7 +173,7 @@ impl Render for Chip {
             .height(height)
             .padding(padding)
             .margin(margin)
-            .overflow_mode(OverflowMode::Clip)
+            .overflow(Overflow::Clip)
             .border(border)
             .corner_radius(corner_radius)
             .color(color.mul_if(!self.enabled, 0.9))

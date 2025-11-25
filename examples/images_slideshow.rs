@@ -91,7 +91,7 @@ impl Render for Card {
             .corner_radius(16.)
             .height(Size::fill())
             .width(Size::flex(width))
-            .overflow_mode(OverflowMode::Clip)
+            .overflow(Overflow::Clip)
             .children(self.children.clone())
     }
 }

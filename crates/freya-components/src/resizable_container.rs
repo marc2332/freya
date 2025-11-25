@@ -296,7 +296,7 @@ impl Render for ResizablePanel {
         rect()
             .width(width)
             .height(height)
-            .overflow_mode(OverflowMode::Clip)
+            .overflow(Overflow::Clip)
             .children(self.children.clone())
     }
 }

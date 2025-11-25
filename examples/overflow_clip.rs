@@ -8,7 +8,7 @@ fn app() -> impl IntoElement {
     rect()
         .width(Size::px(300.))
         .height(Size::px(300.))
-        .overflow_mode(OverflowMode::Clip)
+        .overflow(Overflow::Clip)
         .child(
             rect()
                 .width(Size::px(600.))

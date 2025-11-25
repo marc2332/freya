@@ -25,7 +25,7 @@ impl Property {
 impl Render for Property {
     fn render(&self) -> impl IntoElement {
         rect()
-            .overflow_mode(OverflowMode::Clip)
+            .overflow(Overflow::Clip)
             .width(Size::fill())
             .direction(Direction::Horizontal)
             .cross_align(Alignment::center())
@@ -89,7 +89,7 @@ impl ColorProperty {
 impl Render for ColorProperty {
     fn render(&self) -> impl IntoElement {
         rect()
-            .overflow_mode(OverflowMode::Clip)
+            .overflow(Overflow::Clip)
             .width(Size::fill())
             .direction(Direction::Horizontal)
             .cross_align(Alignment::center())
@@ -143,7 +143,7 @@ impl ShadowProperty {
 impl Render for ShadowProperty {
     fn render(&self) -> impl IntoElement {
         rect()
-            .overflow_mode(OverflowMode::Clip)
+            .overflow(Overflow::Clip)
             .width(Size::fill())
             .direction(Direction::Horizontal)
             .cross_align(Alignment::center())
@@ -196,7 +196,7 @@ impl BorderProperty {
 impl Render for BorderProperty {
     fn render(&self) -> impl IntoElement {
         rect()
-            .overflow_mode(OverflowMode::Clip)
+            .overflow(Overflow::Clip)
             .width(Size::fill())
             .direction(Direction::Horizontal)
             .cross_align(Alignment::center())

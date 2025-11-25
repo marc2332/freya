@@ -662,11 +662,11 @@ impl Rect {
         self
     }
 
-    pub fn overflow_mode<S: Into<OverflowMode>>(mut self, overflow_mode: S) -> Self {
+    pub fn overflow<S: Into<Overflow>>(mut self, overflow: S) -> Self {
         self.element
             .effect
             .get_or_insert_with(Default::default)
-            .overflow_mode = overflow_mode.into();
+            .overflow = overflow.into();
         self
     }
 

@@ -73,7 +73,7 @@ impl Render for SideBar {
             .color(color)
             .child(
                 rect()
-                    .overflow_mode(OverflowMode::Clip)
+                    .overflow(Overflow::Clip)
                     .width(self.width.clone())
                     .height(Size::fill())
                     .background(background)
@@ -86,7 +86,7 @@ impl Render for SideBar {
             )
             .child(
                 rect()
-                    .overflow_mode(OverflowMode::Clip)
+                    .overflow(Overflow::Clip)
                     .expanded()
                     .maybe_child(self.content.clone()),
             )
@@ -110,7 +110,7 @@ pub struct SideBarItem {
     /// Optionally handle the `on_press` event in the [SideBarItem].
     on_press: Option<EventHandler<Event<PressEventData>>>,
     /// Optionally specify a custom `overflow` attribute for this component. Defaults to [OverflowMode::Clip].
-    overflow_mode: OverflowMode,
+    overflow: Overflow,
 }
 
 impl Default for SideBarItem {
@@ -131,7 +131,7 @@ impl SideBarItem {
             theme: None,
             children: Vec::new(),
             on_press: None,
-            overflow_mode: OverflowMode::Clip,
+            overflow: Overflow::Clip,
         }
     }
 
@@ -140,8 +140,8 @@ impl SideBarItem {
         self
     }
 
-    pub fn overflow_mode(mut self, overflow_mode: impl Into<OverflowMode>) -> Self {
-        self.overflow_mode = overflow_mode.into();
+    pub fn overflow(mut self, overflow: impl Into<Overflow>) -> Self {
+        self.overflow = overflow.into();
         self
     }
 }
@@ -180,7 +180,7 @@ impl Render for SideBarItem {
             })
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
-            .overflow_mode(self.overflow_mode)
+            .overflow(self.overflow)
             .width(Size::fill())
             .margin(margin)
             .padding(padding)

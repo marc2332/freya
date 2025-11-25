@@ -194,7 +194,7 @@ impl Render for Counter {
 
         rect()
             .corner_radius(16.)
-            .overflow_mode(OverflowMode::Clip)
+            .overflow(Overflow::Clip)
             .shadow(Shadow::new().blur(10.).color((0, 0, 0, 0.3)))
             .child(
                 rect()
