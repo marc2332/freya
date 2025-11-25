@@ -16,7 +16,7 @@ jobs:
       group: benchmarks
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: true
       - uses: boa-dev/criterion-compare-action@59f4d964c5f19d7f13d36f5c0944b18ce6652cb0
