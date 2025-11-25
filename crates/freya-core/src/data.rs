@@ -238,7 +238,10 @@ impl EffectState {
         node_id: NodeId,
         effect_data: Option<Cow<'_, EffectData>>,
     ) {
-        *self = parent_effect_state.clone();
+        *self = Self {
+            overflow_mode: OverflowMode::default(),
+            ..parent_effect_state.clone()
+        };
 
         if parent_effect_state.overflow_mode == OverflowMode::Clip {
             let mut clips = parent_effect_state.clips.to_vec();
