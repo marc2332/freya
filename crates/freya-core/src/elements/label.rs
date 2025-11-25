@@ -135,6 +135,10 @@ impl ElementExt for LabelElement {
             diff.insert(DiffModifies::LAYOUT);
         }
 
+        if self.event_handlers != label.event_handlers {
+            diff.insert(DiffModifies::EVENT_HANDLERS);
+        }
+
         diff
     }
 
@@ -172,8 +176,10 @@ impl ElementExt for LabelElement {
         };
         let paragraph = context
             .text_cache
-            .get(context.node_id, &cached_paragraph)
+            .utilize(context.node_id, &cached_paragraph)
             .unwrap_or_else(|| {
+                context.text_cache.remove(&context.node_id);
+
                 let mut paragraph_style = ParagraphStyle::default();
                 let mut text_style = TextStyle::default();
 

@@ -195,7 +195,7 @@ impl ElementExt for ParagraphElement {
         };
         let paragraph = context
             .text_cache
-            .get(context.node_id, &cached_paragraph)
+            .utilize(context.node_id, &cached_paragraph)
             .unwrap_or_else(|| {
                 let mut paragraph_style = ParagraphStyle::default();
                 let mut text_style = TextStyle::default();

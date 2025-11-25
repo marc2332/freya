@@ -45,7 +45,11 @@ pub struct TextCache {
 }
 
 impl TextCache {
-    pub fn get(&mut self, node_id: NodeId, paragraph: &CachedParagraph) -> Option<Rc<SkParagraph>> {
+    pub fn utilize(
+        &mut self,
+        node_id: NodeId,
+        paragraph: &CachedParagraph,
+    ) -> Option<Rc<SkParagraph>> {
         let mut hasher = FxHasher::default();
         paragraph.hash(&mut hasher);
         let hash = hasher.finish();
@@ -55,9 +59,26 @@ impl TextCache {
             value.0 += 1;
         }
 
-        self.users.insert(node_id, hash);
+        value.map(|v| v.1.clone()).inspect(|_| {
+            // Stop utilizing the old paragraph if it had one and its different
+            let Some(old_hash) = self.users.insert(node_id, hash) else {
+                return;
+            };
 
-        value.map(|v| v.1.clone())
+            if hash == old_hash {
+                return;
+            }
+
+            let Some(entry) = self.map.get_mut(&old_hash) else {
+                return;
+            };
+
+            entry.0 -= 1;
+
+            if entry.0 == 0 {
+                self.map.remove(&hash);
+            }
+        })
     }
 
     pub fn insert(
