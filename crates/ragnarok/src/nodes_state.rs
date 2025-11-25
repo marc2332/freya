@@ -15,10 +15,18 @@ use crate::{
 };
 
 /// [`NodesState`] stores the nodes states given incoming events.
-#[derive(Default)]
 pub struct NodesState<Key: NodeKey> {
     pressed_nodes: FxHashSet<Key>,
     hovered_nodes: FxHashSet<Key>,
+}
+
+impl<Key: NodeKey> Default for NodesState<Key> {
+    fn default() -> Self {
+        Self {
+            pressed_nodes: FxHashSet::default(),
+            hovered_nodes: FxHashSet::default(),
+        }
+    }
 }
 
 pub type PotentialEvents<Key, Name, Source> =
@@ -50,12 +58,12 @@ impl<Key: NodeKey> NodesState<Key> {
         // Pressed Nodes
         #[allow(unused_variables)]
         self.pressed_nodes.retain(|node_key| {
-            // Check if a DOM event that presses this Node will get emitted
+            // Check if a Tree event that presses this Node will get emitted
             let emmitable_press_event = emmitable_events
                 .iter()
                 .any(|event| event.name().is_pressed() && &event.key() == node_key);
 
-            // If there has been a mouse press but a DOM event was not emitted to this node, then we safely assume
+            // If there has been a mouse press but a Tree event was not emitted to this node, then we safely assume
             // the user does no longer want to press this Node
             if !emmitable_press_event && source_press_event {
                 #[cfg(debug_assertions)]
@@ -73,21 +81,21 @@ impl<Key: NodeKey> NodesState<Key> {
 
         // Hovered Nodes
         self.hovered_nodes.retain(|node_key| {
-            // Check if a DOM event that moves the cursor in this Node will get emitted
+            // Check if a Tree event that moves the cursor in this Node will get emitted
             let emmitable_movement_event = emmitable_events.iter().any(|event| {
                 (event.name().is_moved() || event.name().is_enter()) && &event.key() == node_key
             });
 
             if !emmitable_movement_event {
-                // If there has been a mouse movement but a DOM event was not emitted to this node, then we safely assume
+                // If there has been a mouse movement but a Tree event was not emitted to this node, then we safely assume
                 // the user does no longer want to hover this Node
                 if let Some(source_event) = source_movement_event {
-                    if let Some(area) = events_measurer.try_area_of(*node_key) {
-                        // Emit a MouseLeave event as the cursor was moved outside the Node bounds
+                    if let Some(area) = events_measurer.try_area_of(node_key) {
+                        // Emit a leave event as the cursor was moved outside the Node bounds
                         let event = Name::new_leave();
                         for derived_event in event.get_derived_events() {
                             let is_node_listening =
-                                events_measurer.is_listening_to(*node_key, &derived_event);
+                                events_measurer.is_listening_to(node_key, &derived_event);
                             if is_node_listening {
                                 collateral_emmitable_events.push(
                                     events_measurer.new_emmitable_event(
@@ -152,14 +160,13 @@ impl<Key: NodeKey> NodesState<Key> {
             let mut child_node: Option<Key> = None;
 
             for PotentialEvent { node_key, name, .. } in events.iter().rev() {
-                if let Some(child_node) = child_node {
-                    if !events_measurer.is_node_parent_of(child_node, *node_key) {
-                        continue;
-                    }
+                if let Some(child_node) = child_node
+                    && !events_measurer.is_node_parent_of(&child_node, *node_key)
+                {
+                    continue;
                 }
 
-                if !events_measurer.is_node_transparent(*node_key) && !name.does_go_through_solid()
-                {
+                if !events_measurer.is_node_transparent(node_key) && !name.does_go_through_solid() {
                     // If the background isn't transparent,
                     // we must make sure that next nodes are parent of it
                     // This only matters for events that bubble up (e.g. cursor click events)

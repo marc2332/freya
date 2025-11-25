@@ -1,76 +1,97 @@
-#![cfg_attr(
-    all(not(debug_assertions), target_os = "windows"),
-    windows_subsystem = "windows"
-)]
-
-use freya::prelude::*;
-use reqwest::Url;
+use freya::{
+    animation::*,
+    prelude::*,
+};
 
 fn main() {
-    launch_with_params(app, "Images Slideshow", (400.0, 350.0));
+    launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-#[component]
-fn Card(selected: ReadOnlySignal<bool>, children: Element) -> Element {
-    let animations = use_animation(move |conf| {
-        conf.on_deps_change(OnDepsChange::Rerun);
-        conf.on_creation(OnCreation::Run);
-        let (from, to) = if selected() { (1.0, 3.0) } else { (3.0, 1.0) };
-        AnimNum::new(from, to)
-            .time(250)
-            .ease(Ease::Out)
-            .function(Function::Expo)
-    });
+fn app() -> impl IntoElement {
+    let mut selected = use_state(|| 2);
 
-    let width = animations.get().read().read();
-
-    rsx!(
-        rect {
-            corner_radius: "16",
-            height: "100%",
-            width: "flex({width})",
-            overflow: "clip",
-            {children}
+    let on_wheel = move |e: Event<WheelEventData>| {
+        if e.delta_y > 0. {
+            *selected.write() -= 1;
+        } else {
+            *selected.write() += 1;
         }
-    )
-}
 
-fn app() -> Element {
-    let mut selected = use_signal(|| 0);
-
-    let onwheel = move |_| {
-        *selected.write() += 1;
-        if selected() == 3 {
-            selected.set(0)
+        match selected() {
+            4 => selected.set(1),
+            0 => selected.set(3),
+            _ => {}
         }
     };
 
-    rsx!(
-        rect {
-            onwheel,
-            content: "flex",
-            direction: "horizontal",
-            spacing: "5",
-            width: "100%",
-            padding: "5",
-
-            for (i, url) in [
+    rect()
+        .on_wheel(on_wheel)
+        .content(Content::Flex)
+        .horizontal()
+        .spacing(5.)
+        .width(Size::fill())
+        .padding(5.)
+        .children_iter(
+            [
                 "https://images.dog.ceo/breeds/dachshund/dachshund-2033796_640.jpg",
                 "https://images.dog.ceo/breeds/cavapoo/doggo4.jpg",
-                "https://images.dog.ceo/breeds/wolfhound-irish/n02090721_3109.jpg"
-            ].iter().enumerate() {
-                Card {
-                    key: "{i}",
-                    selected: i == selected(),
-                    NetworkImage {
-                        url: url.parse::<Url>().unwrap(),
-                        aspect_ratio: "max",
-                        cover: "center",
-                        width: "fill",
-                        height: "fill"
-                    }
-                }
-            }
-        }
-    )
+                "https://images.dog.ceo/breeds/wolfhound-irish/n02090721_3109.jpg",
+            ]
+            .iter()
+            .enumerate()
+            .map(|(i, url)| {
+                Card::default()
+                    .selected(i == selected() - 1)
+                    .child(
+                        ImageViewer::new(*url)
+                            .aspect_ratio(AspectRatio::Max)
+                            .image_cover(ImageCover::Center)
+                            .width(Size::fill())
+                            .height(Size::fill()),
+                    )
+                    .into()
+            }),
+        )
+}
+
+#[derive(Default, PartialEq)]
+struct Card {
+    selected: bool,
+    children: Vec<Element>,
+}
+
+impl Card {
+    pub fn selected(mut self, selected: bool) -> Self {
+        self.selected = selected;
+        self
+    }
+}
+
+impl ChildrenExt for Card {
+    fn get_children(&mut self) -> &mut Vec<Element> {
+        &mut self.children
+    }
+}
+
+impl Render for Card {
+    fn render(&self) -> impl IntoElement {
+        let animations = use_animation_with_dependencies(&self.selected, move |conf, selected| {
+            conf.on_change(OnChange::Rerun);
+            conf.on_creation(OnCreation::Run);
+            let (from, to) = if *selected { (1.0, 3.0) } else { (3.0, 1.0) };
+            AnimNum::new(from, to)
+                .time(250)
+                .ease(Ease::Out)
+                .function(Function::Expo)
+        });
+
+        let width = animations.get().value();
+
+        rect()
+            .corner_radius(16.)
+            .height(Size::fill())
+            .width(Size::flex(width))
+            .overflow(Overflow::Clip)
+            .children(self.children.clone())
+    }
 }
