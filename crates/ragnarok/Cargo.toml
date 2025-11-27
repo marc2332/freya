@@ -13,6 +13,6 @@ categories = ["gui"]
 
 [dependencies]
 euclid = { workspace = true }
-itertools = "0.13.0"
+itertools = "0.14.0"
 tracing = { workspace = true }
 rustc-hash = { workspace = true }
