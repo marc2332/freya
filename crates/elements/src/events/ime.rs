@@ -1,4 +1,7 @@
-use crate::{ErasedEventData, impl_event};
+use crate::{
+    impl_event,
+    ErasedEventData,
+};
 
 impl_event![
     ImeData;
