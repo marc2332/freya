@@ -1,4 +1,5 @@
 pub mod file;
+pub mod ime;
 pub mod keyboard;
 pub mod mouse;
 pub mod pointer;
@@ -9,6 +10,7 @@ use std::any::Any;
 
 use dioxus_core::Event;
 pub use file::*;
+pub use ime::*;
 pub use keyboard::*;
 pub use mouse::*;
 pub use pointer::*;
@@ -20,6 +22,7 @@ pub type MouseEvent = Event<MouseData>;
 pub type WheelEvent = Event<WheelData>;
 pub type TouchEvent = Event<TouchData>;
 pub type PointerEvent = Event<PointerData>;
+pub type ImeEvent = Event<ImeData>;
 
 /// A platform specific event.
 #[doc(hidden)]
