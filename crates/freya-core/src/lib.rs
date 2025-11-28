@@ -14,6 +14,7 @@ pub mod helpers;
 pub mod hooks;
 pub mod layers;
 pub mod lifecycle;
+pub mod lru_cache;
 pub mod node_id;
 pub mod notify;
 pub mod path_element;

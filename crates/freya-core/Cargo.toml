@@ -26,6 +26,7 @@ keyboard-types = { workspace = true }
 
 # Layout
 torin = { workspace = true }
+smallvec = "1.15.1"
 
 # Layers
 itertools = { workspace = true }

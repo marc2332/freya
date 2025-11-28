@@ -525,6 +525,7 @@ impl Tree {
             self.accessibility_state.capacity()
         );
         println!("text_style_state: {}", self.text_style_state.capacity());
+        self.text_cache.print_metrics();
     }
 
     /// Walk to the ancestor of `base` with the same height of `target`

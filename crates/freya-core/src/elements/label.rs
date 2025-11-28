@@ -178,8 +178,6 @@ impl ElementExt for LabelElement {
             .text_cache
             .utilize(context.node_id, &cached_paragraph)
             .unwrap_or_else(|| {
-                context.text_cache.remove(&context.node_id);
-
                 let mut paragraph_style = ParagraphStyle::default();
                 let mut text_style = TextStyle::default();
 
