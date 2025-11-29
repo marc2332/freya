@@ -31,6 +31,7 @@ fn multiple_lines_single_editor() {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
+                holder: Some(&holder.read()),
             });
         };
 
@@ -137,12 +138,14 @@ fn single_line_multiple_editors() {
         );
 
         let editor = editable.editor().read();
+        let holder = use_state(ParagraphHolder::default);
 
         let on_global_key_down = move |e: Event<KeyboardEventData>| {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
+                holder: Some(&holder.read()),
             });
         };
 
@@ -241,6 +244,7 @@ fn highlight_multiple_lines_single_editor() {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
+                holder: Some(&holder.read()),
             });
         };
 
@@ -295,12 +299,14 @@ fn highlights_single_line_multiple_editors() {
         );
 
         let editor = editable.editor().read();
+        let holder = use_state(ParagraphHolder::default);
 
         let on_global_key_down = move |e: Event<KeyboardEventData>| {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
+                holder: Some(&holder.read()),
             });
         };
 
@@ -312,8 +318,6 @@ fn highlights_single_line_multiple_editors() {
             .children_iter(editor.lines().enumerate().map(move |(i, line)| {
                 let line = line.to_string();
                 from_fn((), line, move |line| {
-                    let holder = use_state(ParagraphHolder::default);
-
                     let editor = editable.editor().read();
                     let is_selected = editable.editor().read().cursor_row() == i;
                     let cursor_index = if is_selected {
@@ -405,6 +409,7 @@ fn special_text_editing() {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
+                holder: Some(&holder.read()),
             });
         };
 
@@ -466,6 +471,7 @@ fn backspace_remove() {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
+                holder: Some(&holder.read()),
             });
         };
 
@@ -544,6 +550,7 @@ fn highlight_shift_click_multiple_lines_single_editor() {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
+                holder: Some(&holder.read()),
             });
         };
 
@@ -603,12 +610,14 @@ fn highlights_shift_click_single_line_multiple_editors() {
             EditableMode::SingleLineMultipleEditors,
         );
         let editor = editable.editor().read();
+        let holder = use_state(ParagraphHolder::default);
 
         let on_global_key_down = move |e: Event<KeyboardEventData>| {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
+                holder: Some(&holder.read()),
             });
         };
 
@@ -624,7 +633,6 @@ fn highlights_shift_click_single_line_multiple_editors() {
                     .map(|(i, line)| {
                         let line = line.text.to_string();
                         from_fn((), line, move |line| {
-                            let holder = use_state(ParagraphHolder::default);
                             let highlights = editable.editor().read().get_visible_selection(i);
 
                             let is_line_selected = editable.editor().read().cursor_row() == i;
@@ -740,6 +748,7 @@ fn highlight_all_text() {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
+                holder: Some(&holder.read()),
             });
         };
 
@@ -831,6 +840,7 @@ fn replace_text() {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
+                holder: Some(&holder.read()),
             });
         };
 
@@ -908,6 +918,7 @@ fn navigate_empty_lines() {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
+                holder: Some(&holder.read()),
             });
         };
 

@@ -81,6 +81,7 @@ impl Render for ShaderEditor {
                 key: &e.key,
                 code: e.code,
                 modifiers: e.modifiers,
+                holder: None,
             });
         };
 

@@ -13,11 +13,13 @@ categories = ["gui"]
 [dependencies]
 freya-clipboard = { workspace = true }
 freya-core = { workspace = true }
+freya-engine = { workspace = true }
 torin = { workspace = true }
 
 ropey = { workspace = true }
 bitflags = { workspace = true }
 keyboard-types = { workspace = true }
+unicode-segmentation = { workspace = true }
 
 [dev-dependencies]
 freya = { workspace = true }
