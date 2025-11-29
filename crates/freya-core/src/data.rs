@@ -4,7 +4,10 @@ use std::{
     rc::Rc,
 };
 
-use torin::torin::Torin;
+use torin::{
+    prelude::Area,
+    torin::Torin,
+};
 
 use crate::{
     accessibility::{
@@ -280,6 +283,17 @@ impl EffectState {
                 }
             }
         }
+    }
+
+    pub fn is_visible(&self, layout: &Torin<NodeId>, area: &Area) -> bool {
+        // Skip elements that are completely out of any their parent's viewport
+        for viewport_id in self.clips.iter() {
+            let viewport = layout.get(viewport_id).unwrap().visible_area();
+            if !viewport.intersects(area) {
+                return false;
+            }
+        }
+        true
     }
 }
 

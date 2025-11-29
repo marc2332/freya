@@ -363,6 +363,18 @@ impl TestingRunner {
         self.sync_and_update();
     }
 
+    pub fn scroll(&mut self, cursor: impl Into<CursorPoint>, scroll: impl Into<CursorPoint>) {
+        let cursor = cursor.into();
+        let scroll = scroll.into();
+        self.send_event(PlatformEvent::Wheel {
+            name: WheelEventName::Wheel,
+            scroll,
+            cursor,
+            source: WheelSource::Device,
+        });
+        self.sync_and_update();
+    }
+
     pub fn render_to_file(&mut self, path: impl Into<PathBuf>) {
         let path = path.into();
 
@@ -446,5 +458,36 @@ pub struct TestingNode {
 impl TestingNode {
     pub fn layout(&self) -> LayoutNode {
         self.tree.borrow().layout.get(&self.id).cloned().unwrap()
+    }
+
+    pub fn children(&self) -> Vec<Self> {
+        let children = self
+            .tree
+            .borrow()
+            .children
+            .get(&self.id)
+            .cloned()
+            .unwrap_or_default();
+
+        children
+            .into_iter()
+            .map(|child_id| Self {
+                id: child_id,
+                tree: self.tree.clone(),
+            })
+            .collect()
+    }
+
+    pub fn is_visible(&self) -> bool {
+        let layout = self.layout();
+        let effect_state = self
+            .tree
+            .borrow()
+            .effect_state
+            .get(&self.id)
+            .cloned()
+            .unwrap();
+
+        effect_state.is_visible(&self.tree.borrow().layout, &layout.area)
     }
 }
