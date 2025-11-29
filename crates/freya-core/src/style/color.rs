@@ -139,8 +139,14 @@ impl Color {
                 })
             }
             8 => {
-                // AARRGGBB
-                u32::from_str_radix(s, 16).ok().map(Color::new)
+                // RRGGBBAA
+                u32::from_str_radix(s, 16).ok().map(|rgba| {
+                    let r = ((rgba >> 24) & 0xFF) as u8;
+                    let g = ((rgba >> 16) & 0xFF) as u8;
+                    let b = ((rgba >> 8) & 0xFF) as u8;
+                    let a = (rgba & 0xFF) as u8;
+                    Color::from_argb(a, r, g, b)
+                })
             }
             _ => None,
         }
