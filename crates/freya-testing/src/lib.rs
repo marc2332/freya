@@ -490,4 +490,13 @@ impl TestingNode {
 
         effect_state.is_visible(&self.tree.borrow().layout, &layout.area)
     }
+
+    pub fn element(&self) -> Rc<dyn ElementExt> {
+        self.tree
+            .borrow()
+            .elements
+            .get(&self.id)
+            .cloned()
+            .expect("Element does not exist.")
+    }
 }

@@ -409,16 +409,11 @@ mod test {
         let mut test = launch_test(scroll_view_wheel_app);
         let scrollview = test
             .find(|node, element| {
-                if Rect::try_downcast(element)
+                Rect::try_downcast(element)
                     .filter(|rect| {
                         rect.accessibility.builder.role() == AccessibilityRole::ScrollView
                     })
-                    .is_some()
-                {
-                    Some(node)
-                } else {
-                    None
-                }
+                    .map(move |_| node)
             })
             .unwrap();
         let content = scrollview.children()[0].children()[0].children();
@@ -453,16 +448,11 @@ mod test {
         let mut test = launch_test(scroll_view_scrollbar_app);
         let scrollview = test
             .find(|node, element| {
-                if Rect::try_downcast(element)
+                Rect::try_downcast(element)
                     .filter(|rect| {
                         rect.accessibility.builder.role() == AccessibilityRole::ScrollView
                     })
-                    .is_some()
-                {
-                    Some(node)
-                } else {
-                    None
-                }
+                    .map(move |_| node)
             })
             .unwrap();
         let content = scrollview.children()[0].children()[0].children();
