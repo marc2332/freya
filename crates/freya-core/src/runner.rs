@@ -389,6 +389,38 @@ impl Runner {
                                             }
                                         }
                                     }
+                                    EventType::File(data) => {
+                                        let event_handlers = element.events_handlers();
+                                        if let Some(event_handlers) = event_handlers {
+                                            match event_handlers.get(&event_name) {
+                                                Some(EventHandlerType::File(handler)) => {
+                                                    handler.call(Event {
+                                                        data: data.clone(),
+                                                        propagate: propagate.clone(),
+                                                        default: default.clone(),
+                                                    });
+                                                }
+                                                Some(_) => unreachable!(),
+                                                _ => {}
+                                            }
+                                        }
+                                    }
+                                    EventType::ImePreedit(data) => {
+                                        let event_handlers = element.events_handlers();
+                                        if let Some(event_handlers) = event_handlers {
+                                            match event_handlers.get(&event_name) {
+                                                Some(EventHandlerType::ImePreedit(handler)) => {
+                                                    handler.call(Event {
+                                                        data: data.clone(),
+                                                        propagate: propagate.clone(),
+                                                        default: default.clone(),
+                                                    });
+                                                }
+                                                Some(_) => unreachable!(),
+                                                _ => {}
+                                            }
+                                        }
+                                    }
                                 }
 
                                 // Bubble up if desired

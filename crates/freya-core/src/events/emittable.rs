@@ -18,6 +18,10 @@ use crate::{
     },
     integration::PlatformEvent,
     node_id::NodeId,
+    prelude::{
+        FileEventData,
+        ImePreeditEventData,
+    },
 };
 /// Event emitted to the Tree.
 #[derive(Debug, Clone, PartialEq)]
@@ -209,6 +213,30 @@ impl EmmitableEvent {
                     bubbles,
                 }
             }
+            PlatformEvent::ImePreedit {
+                name: platform_event_name,
+                cursor,
+                text,
+            } => Self {
+                node_id,
+                name,
+
+                source_event: platform_event_name.into(),
+                data: EventType::ImePreedit(ImePreeditEventData::new(text, cursor)),
+                bubbles,
+            },
+            PlatformEvent::File {
+                name: platform_event_name,
+                cursor,
+                file_path,
+            } => Self {
+                node_id,
+                name,
+
+                source_event: platform_event_name.into(),
+                data: EventType::File(FileEventData::new(cursor, file_path)),
+                bubbles,
+            },
         }
     }
 }

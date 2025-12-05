@@ -202,6 +202,7 @@ impl Render for Input {
             EditableMode::MultipleLinesSingleEditor,
         );
         let mut is_dragging = use_state(|| false);
+        let mut ime_preedit = use_state(|| None);
 
         let enabled = use_reactive(&self.enabled);
         use_drop(move || {
@@ -220,6 +221,10 @@ impl Render for Input {
             editable.editor_mut().write().set(&self.value);
             editable.editor_mut().write().editor_history().clear();
         }
+
+        let on_ime_preedit = move |e: Event<ImePreeditEventData>| {
+            ime_preedit.set(Some(e.data().text.clone()));
+        };
 
         let on_key_down = move |e: Event<KeyboardEventData>| {
             if e.key != Key::Enter && e.key != Key::Tab {
@@ -368,6 +373,10 @@ impl Render for Input {
             (InputMode::Shown, _) => Cow::Borrowed(self.value.as_ref()),
         };
 
+        let preedit_text = (!display_placeholder)
+            .then(|| ime_preedit.read().clone())
+            .flatten();
+
         rect()
             .a11y_id(a11y_id)
             .a11y_focusable(self.enabled)
@@ -380,6 +389,7 @@ impl Render for Input {
                     .on_pointer_down(on_input_pointer_down)
                     .on_pointer_enter(on_pointer_enter)
                     .on_pointer_leave(on_pointer_leave)
+                    .on_ime_preedit(on_ime_preedit)
             })
             .width(self.width.clone())
             .background(background.mul_if(!self.enabled, 0.85))
@@ -410,7 +420,8 @@ impl Render for Input {
                             .color(color)
                             .max_lines(1)
                             .highlights(text_selection.map(|h| vec![h]))
-                            .span(text.to_string()),
+                            .span(text.to_string())
+                            .map(preedit_text, |el, preedit_text| el.span(preedit_text)),
                     ),
             )
     }

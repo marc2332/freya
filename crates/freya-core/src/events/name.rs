@@ -28,12 +28,19 @@ pub enum EventName {
     GlobalKeyDown,
     GlobalKeyUp,
 
+    GlobalFileHover,
+    GlobalFileHoverCancelled,
+
     CaptureGlobalMouseMove,
     CaptureGlobalMouseUp,
 
     Wheel,
 
     Sized,
+
+    FileDrop,
+
+    ImePreedit,
 }
 
 impl Eq for EventName {}
@@ -94,6 +101,9 @@ impl ragnarok::NameOfEvent for EventName {
 
             Self::KeyDown => events.push(Self::GlobalKeyDown),
             Self::KeyUp => events.push(Self::GlobalKeyUp),
+
+            Self::GlobalFileHover => events.push(Self::GlobalFileHover),
+            Self::GlobalFileHoverCancelled => events.push(Self::GlobalFileHoverCancelled),
             _ => {}
         }
         events
@@ -142,7 +152,12 @@ impl ragnarok::NameOfEvent for EventName {
     fn is_global(&self) -> bool {
         matches!(
             self,
-            Self::GlobalKeyDown | Self::GlobalKeyUp | Self::GlobalMouseUp | Self::GlobalMouseMove
+            Self::GlobalKeyDown
+                | Self::GlobalKeyUp
+                | Self::GlobalMouseUp
+                | Self::GlobalMouseMove
+                | Self::GlobalFileHover
+                | Self::GlobalFileHoverCancelled
         )
     }
 

@@ -24,6 +24,7 @@ use winit::{
     application::ApplicationHandler,
     event::{
         ElementState,
+        Ime,
         MouseScrollDelta,
         Touch,
         TouchPhase,
@@ -583,24 +584,34 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     }
                 }
                 WindowEvent::CursorMoved { position, .. } => {
-                    let platform_event = PlatformEvent::Mouse {
+                    app.position = CursorPoint::from((position.x, position.y));
+
+                    let mut platform_event = vec![PlatformEvent::Mouse {
                         name: MouseEventName::MouseMove,
-                        cursor: (position.x, position.y).into(),
+                        cursor: app.position,
                         button: None,
-                    };
+                    }];
+
+                    for dropped_file_path in app.dropped_file_paths.drain(..) {
+                        platform_event.push(PlatformEvent::File {
+                            name: FileEventName::FileDrop,
+                            file_path: Some(dropped_file_path),
+                            cursor: app.position,
+                        });
+                    }
+
                     let mut events_measurer_adapter = EventsMeasurerAdapter {
                         tree: &mut app.tree,
                         scale_factor: app.window.scale_factor(),
                     };
                     let processed_events = events_measurer_adapter.run(
-                        &mut vec![platform_event],
+                        &mut platform_event,
                         &mut app.nodes_state,
                         app.accessibility.focused_node_id(),
                     );
                     app.events_sender
                         .unbounded_send(EventsChunk::Processed(processed_events))
                         .unwrap();
-                    app.position = CursorPoint::from((position.x, position.y));
                 }
 
                 WindowEvent::Touch(Touch {
@@ -639,6 +650,66 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         .unbounded_send(EventsChunk::Processed(processed_events))
                         .unwrap();
                     app.position = CursorPoint::from((location.x, location.y));
+                }
+                WindowEvent::Ime(Ime::Preedit(text, pos)) => {
+                    let platform_event = PlatformEvent::ImePreedit {
+                        name: ImeEventName::Preedit,
+                        text,
+                        cursor: pos,
+                    };
+                    let mut events_measurer_adapter = EventsMeasurerAdapter {
+                        tree: &mut app.tree,
+                        scale_factor: app.window.scale_factor(),
+                    };
+                    let processed_events = events_measurer_adapter.run(
+                        &mut vec![platform_event],
+                        &mut app.nodes_state,
+                        app.accessibility.focused_node_id(),
+                    );
+                    app.events_sender
+                        .unbounded_send(EventsChunk::Processed(processed_events))
+                        .unwrap();
+                }
+                WindowEvent::DroppedFile(file_path) => {
+                    app.dropped_file_paths.push(file_path);
+                }
+                WindowEvent::HoveredFile(file_path) => {
+                    let platform_event = PlatformEvent::File {
+                        name: FileEventName::FileHover,
+                        file_path: Some(file_path),
+                        cursor: app.position,
+                    };
+                    let mut events_measurer_adapter = EventsMeasurerAdapter {
+                        tree: &mut app.tree,
+                        scale_factor: app.window.scale_factor(),
+                    };
+                    let processed_events = events_measurer_adapter.run(
+                        &mut vec![platform_event],
+                        &mut app.nodes_state,
+                        app.accessibility.focused_node_id(),
+                    );
+                    app.events_sender
+                        .unbounded_send(EventsChunk::Processed(processed_events))
+                        .unwrap();
+                }
+                WindowEvent::HoveredFileCancelled => {
+                    let platform_event = PlatformEvent::File {
+                        name: FileEventName::FileHoverCancelled,
+                        file_path: None,
+                        cursor: app.position,
+                    };
+                    let mut events_measurer_adapter = EventsMeasurerAdapter {
+                        tree: &mut app.tree,
+                        scale_factor: app.window.scale_factor(),
+                    };
+                    let processed_events = events_measurer_adapter.run(
+                        &mut vec![platform_event],
+                        &mut app.nodes_state,
+                        app.accessibility.focused_node_id(),
+                    );
+                    app.events_sender
+                        .unbounded_send(EventsChunk::Processed(processed_events))
+                        .unwrap();
                 }
                 _ => {}
             }

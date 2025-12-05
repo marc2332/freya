@@ -4,6 +4,7 @@ use std::{
         Deref,
         Div,
     },
+    path::PathBuf,
     rc::Rc,
 };
 
@@ -234,6 +235,30 @@ impl PointerEventData {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ImePreeditEventData {
+    pub text: String,
+    pub cursor: Option<(usize, usize)>,
+}
+
+impl ImePreeditEventData {
+    pub(crate) fn new(text: String, cursor: Option<(usize, usize)>) -> Self {
+        Self { text, cursor }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct FileEventData {
+    pub cursor: CursorPoint,
+    pub file_path: Option<PathBuf>,
+}
+
+impl FileEventData {
+    pub(crate) fn new(cursor: CursorPoint, file_path: Option<PathBuf>) -> Self {
+        Self { cursor, file_path }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum EventType {
     Mouse(MouseEventData),
     Keyboard(KeyboardEventData),
@@ -241,4 +266,6 @@ pub enum EventType {
     Wheel(WheelEventData),
     Touch(TouchEventData),
     Pointer(PointerEventData),
+    ImePreedit(ImePreeditEventData),
+    File(FileEventData),
 }

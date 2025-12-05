@@ -1,5 +1,6 @@
 use std::{
     borrow::Cow,
+    path::PathBuf,
     sync::Arc,
     task::Waker,
 };
@@ -85,6 +86,8 @@ pub struct AppWindow {
     pub animation_clock: AnimationClock,
 
     pub background: Color,
+
+    pub dropped_file_paths: Vec<PathBuf>,
 }
 
 impl AppWindow {
@@ -245,6 +248,8 @@ impl AppWindow {
             animation_clock,
 
             background: window_config.background,
+
+            dropped_file_paths: Vec::new(),
         }
     }
 }

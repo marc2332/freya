@@ -335,6 +335,22 @@ pub trait EventHandlersExt: Sized + LayoutExt {
         pointer_leave => EventName::PointerLeave;
     }
 
+    event_handlers! {
+        File,
+        FileEventData;
+
+        file_drop => EventName::FileDrop;
+        global_file_hover => EventName::GlobalFileHover;
+        global_file_hover_cancelled => EventName::GlobalFileHoverCancelled;
+    }
+
+    event_handlers! {
+        ImePreedit,
+        ImePreeditEventData;
+
+        ime_preedit => EventName::ImePreedit;
+    }
+
     fn on_sized(mut self, on_sized: impl Into<EventHandler<Event<SizedEventData>>>) -> Self {
         self.get_event_handlers()
             .insert(EventName::Sized, EventHandlerType::Sized(on_sized.into()));

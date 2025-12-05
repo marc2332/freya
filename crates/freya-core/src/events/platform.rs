@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use keyboard_types::{
     Code,
     Key,
@@ -64,6 +66,23 @@ impl From<KeyboardEventName> for EventName {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Copy, Eq, Hash)]
+pub enum FileEventName {
+    FileDrop,
+    FileHover,
+    FileHoverCancelled,
+}
+
+impl From<FileEventName> for EventName {
+    fn from(value: FileEventName) -> Self {
+        match value {
+            FileEventName::FileDrop => EventName::FileDrop,
+            FileEventName::FileHover => EventName::GlobalFileHover,
+            FileEventName::FileHoverCancelled => EventName::GlobalFileHoverCancelled,
+        }
+    }
+}
+
 /// Data for [PlatformEvent].
 #[derive(Clone, Debug, PartialEq)]
 pub enum PlatformEvent {
@@ -95,6 +114,31 @@ pub enum PlatformEvent {
         phase: TouchPhase,
         force: Option<Force>,
     },
+    /// An IME event.
+    ImePreedit {
+        name: ImeEventName,
+        text: String,
+        cursor: Option<(usize, usize)>,
+    },
+    /// A File event.
+    File {
+        name: FileEventName,
+        cursor: CursorPoint,
+        file_path: Option<PathBuf>,
+    },
+}
+
+#[derive(Clone, Debug, PartialEq, Copy, Eq, Hash)]
+pub enum ImeEventName {
+    Preedit,
+}
+
+impl From<ImeEventName> for EventName {
+    fn from(value: ImeEventName) -> Self {
+        match value {
+            ImeEventName::Preedit => EventName::ImePreedit,
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Copy, Eq, Hash)]
@@ -146,7 +190,9 @@ impl ragnarok::SourceEvent for PlatformEvent {
             Self::Mouse { name, .. } => (*name).into(),
             Self::Keyboard { name, .. } => (*name).into(),
             Self::Wheel { name, .. } => (*name).into(),
+            Self::ImePreedit { name, .. } => (*name).into(),
             Self::Touch { name, .. } => (*name).into(),
+            Self::File { name, .. } => (*name).into(),
         }
     }
 
@@ -155,6 +201,7 @@ impl ragnarok::SourceEvent for PlatformEvent {
             PlatformEvent::Mouse { cursor, .. } => Some(*cursor),
             PlatformEvent::Wheel { cursor, .. } => Some(*cursor),
             PlatformEvent::Touch { location, .. } => Some(*location),
+            PlatformEvent::File { cursor, .. } => Some(*cursor),
             _ => None,
         }
     }

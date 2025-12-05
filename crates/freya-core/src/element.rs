@@ -42,6 +42,10 @@ use crate::{
     },
     helpers::from_fn_standalone_borrowed_keyed,
     node_id::NodeId,
+    prelude::{
+        FileEventData,
+        ImePreeditEventData,
+    },
     text_cache::TextCache,
     tree::{
         DiffModifies,
@@ -325,4 +329,6 @@ pub enum EventHandlerType {
     Wheel(EventHandler<Event<WheelEventData>>),
     Touch(EventHandler<Event<TouchEventData>>),
     Pointer(EventHandler<Event<PointerEventData>>),
+    ImePreedit(EventHandler<Event<ImePreeditEventData>>),
+    File(EventHandler<Event<FileEventData>>),
 }
