@@ -172,7 +172,11 @@ hotpath = { workspace = true }
 
 itertools = { workspace = true }
 
+# SDK examples
 tokio = { workspace = true }
+
+# File picker example
+rfd = "0.16.0"
 
 [profile.release]
 lto = true
