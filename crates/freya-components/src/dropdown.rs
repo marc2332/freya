@@ -289,11 +289,11 @@ impl Render for Dropdown {
             open.set(false);
         };
 
-        let on_global_key_down = move |e: Event<KeyboardEventData>| match e.code {
-            Code::Escape => {
+        let on_global_key_down = move |e: Event<KeyboardEventData>| match e.key {
+            Key::Escape => {
                 open.set(false);
             }
-            Code::Enter if focus.is_focused() => {
+            Key::Enter if focus.is_focused() => {
                 open.toggle();
             }
             _ => {}
