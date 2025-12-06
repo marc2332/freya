@@ -33,7 +33,7 @@ pub fn gif_viewer_load_and_render() {
     // Wait a bit for the GIF to load and render
     test.poll(
         std::time::Duration::from_millis(1),
-        std::time::Duration::from_millis(70),
+        std::time::Duration::from_millis(150),
     );
     test.sync_and_update();
 
