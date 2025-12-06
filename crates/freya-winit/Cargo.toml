@@ -49,7 +49,6 @@ image = { workspace = true }
 
 [features]
 hotpath = ["hotpath/hotpath"]
-hotpath-alloc-bytes-total = ["hotpath/hotpath-alloc-bytes-total"]
-hotpath-alloc-count-total = ["hotpath/hotpath-alloc-count-total"]
+hotpath-alloc = ["hotpath/hotpath-alloc"]
 hotpath-off = ["hotpath/hotpath-off"]
 vulkan = ["dep:ash", "dep:ash-window", "freya-engine/vulkan"]

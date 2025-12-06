@@ -5,16 +5,10 @@ publish = false
 
 [features]
 hotpath = ["freya-core/hotpath", "ragnarok/hotpath", "freya-winit/hotpath"]
-hotpath-ci = ["hotpath/hotpath-ci"]
-hotpath-alloc-bytes-total = [
-  "freya-core/hotpath-alloc-bytes-total",
-  "ragnarok/hotpath-alloc-bytes-total",
-  "freya-winit/hotpath-alloc-bytes-total",
-]
-hotpath-alloc-count-total = [
-  "freya-core/hotpath-alloc-count-total",
-  "ragnarok/hotpath-alloc-count-total",
-  "freya-winit/hotpath-alloc-count-total",
+hotpath-alloc = [
+  "freya-core/hotpath-alloc",
+  "ragnarok/hotpath-alloc",
+  "freya-winit/hotpath-alloc",
 ]
 hotpath-off = [
   "freya-core/hotpath-off",
@@ -121,7 +115,7 @@ accesskit = "0.21.0"
 accesskit_winit = "0.29.0"
 
 # Performance
-hotpath = "0.4"
+hotpath = "0.8"
 
 # Errors
 anyhow = "1.0.100"

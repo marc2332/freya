@@ -2,7 +2,6 @@ use std::collections::HashSet;
 
 use freya::prelude::*;
 
-#[cfg_attr(feature = "hotpath", hotpath::main(percentiles = [90, 95, 99]))]
 fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }

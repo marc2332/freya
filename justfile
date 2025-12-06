@@ -30,13 +30,13 @@ ps:
     cargo run --example perf --features "hotpath" --release
 
 pa:
-    cargo run --example perf --features "hotpath, hotpath-alloc-bytes-total" --release
+    cargo run --example perf --features "hotpath, hotpath-alloc" --release
 
 ps-ci:
-    cargo run --example perf --features "hotpath, hotpath-ci" --release
+    cargo run --example perf --features "hotpath" --release
 
 pa-ci:
-    cargo run --example perf --features "hotpath, hotpath-ci, hotpath-alloc-bytes-total" --release
+    cargo run --example perf --features "hotpath, hotpath-alloc" --release
 
 ba:
     cargo build --all-targets --all-features

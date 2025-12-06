@@ -15,7 +15,6 @@ use rand::{
     seq::SliceRandom,
 };
 
-#[cfg_attr(feature = "hotpath", hotpath::main(percentiles = [33, 66, 99]))]
 fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app).with_size(900., 800.)))
 }

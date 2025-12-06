@@ -23,8 +23,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.90
       - name: Install just
         uses: taiki-e/install-action@just
-      - name: Install hotpath
-        run: cargo install hotpath
+      - name: Install hotpath-ci CLI
+        run: cargo install hotpath --bin hotpath-ci --features=ci
       - name: Set up cargo cache
         uses: Swatinem/rust-cache@v2
         if: github.ref != 'refs/heads/main'
@@ -70,7 +70,30 @@ jobs:
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
           git checkout ${{ github.event.pull_request.head.ref }}
-      - name: Run hotpath CLI - timing mode
-        run: hotpath profile-pr --head-metrics '${{ steps.head_timing_metrics.outputs.metrics }}' --base-metrics '${{ steps.base_timing_metrics.outputs.metrics }}' --github-token '${{ github.token }}' --pr-number '${{ github.event.pull_request.number }}'
-      - name: Run hotpath CLI - alloc mode
-        run: hotpath profile-pr --head-metrics '${{ steps.head_alloc_metrics.outputs.metrics }}' --base-metrics '${{ steps.base_alloc_metrics.outputs.metrics }}' --github-token '${{ github.token }}' --pr-number '${{ github.event.pull_request.number }}'
+      - name: Post PR comment - alloc mode
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          HEAD_METRICS=$(cat /tmp/metrics/head_alloc.json)
+          BASE_METRICS=$(cat /tmp/metrics/base_alloc.json)
+          PR_NUMBER=$(cat /tmp/metrics/pr_number.txt)
+          hotpath-ci profile-pr \
+            --head-metrics "$HEAD_METRICS" \
+            --base-metrics "$BASE_METRICS" \
+            --github-token "$GH_TOKEN" \
+            --pr-number "$PR_NUMBER"
+
+      - name: Post PR comment - timing mode
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          HEAD_METRICS=$(cat /tmp/metrics/head_timing.json)
+          BASE_METRICS=$(cat /tmp/metrics/base_timing.json)
+          PR_NUMBER=$(cat /tmp/metrics/pr_number.txt)
+          hotpath-ci profile-pr \
+            --head-metrics "$HEAD_METRICS" \
+            --base-metrics "$BASE_METRICS" \
+            --github-token "$GH_TOKEN" \
+            --pr-number "$PR_NUMBER"
