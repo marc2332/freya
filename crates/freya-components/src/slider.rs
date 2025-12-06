@@ -114,20 +114,20 @@ impl Render for Slider {
 
         let on_key_down = {
             let on_moved = self.on_moved.clone();
-            move |e: Event<KeyboardEventData>| match e.code {
-                Code::ArrowLeft if !direction_is_vertical => {
+            move |e: Event<KeyboardEventData>| match e.key {
+                Key::ArrowLeft if !direction_is_vertical => {
                     e.stop_propagation();
                     on_moved.call((value - 4.0).clamp(0.0, 100.0));
                 }
-                Code::ArrowRight if !direction_is_vertical => {
+                Key::ArrowRight if !direction_is_vertical => {
                     e.stop_propagation();
                     on_moved.call((value + 4.0).clamp(0.0, 100.0));
                 }
-                Code::ArrowUp if direction_is_vertical => {
+                Key::ArrowUp if direction_is_vertical => {
                     e.stop_propagation();
                     on_moved.call((value + 4.0).clamp(0.0, 100.0));
                 }
-                Code::ArrowDown if direction_is_vertical => {
+                Key::ArrowDown if direction_is_vertical => {
                     e.stop_propagation();
                     on_moved.call((value - 4.0).clamp(0.0, 100.0));
                 }
