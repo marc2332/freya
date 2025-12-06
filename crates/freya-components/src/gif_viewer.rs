@@ -351,12 +351,13 @@ impl Render for GifViewer {
             if let Some(Asset::Cached(asset)) = asset_cacher.subscribe_asset(&asset_config) {
                 if let Some(bytes) = asset.downcast_ref::<Bytes>().cloned() {
                     let asset_task = spawn(async move {
-                        if let Err(err) = stream_gif(bytes).await {
+                        match stream_gif(bytes).await {
                             #[cfg(debug_assertions)]
-                            tracing::error!(
+                            Err(err) => tracing::error!(
                                 "Failed to render GIF by ID <{}>, error: {err:?}",
                                 asset_config.id
-                            )
+                            ),
+                            _ => {}
                         }
                     });
                     assets_tasks.write().push(asset_task);
