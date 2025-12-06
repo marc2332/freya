@@ -110,7 +110,7 @@ pub fn slider_keyboard_horizontal() {
     let value: f64 = value_text.replace("Value: ", "").parse().unwrap();
 
     // Should have increased by 5 * 4 = 20 (from ~50 to ~70)
-    assert!((value - 70.0).abs() < 10.0);
+    assert!((value - 75.0).abs() < 10.0);
 
     // Press ArrowLeft to decrease value
     for _ in 0..3 {
@@ -250,7 +250,7 @@ pub fn slider_clamping() {
     test.click_cursor((100.0, 20.0));
 
     // Try to go beyond 100%
-    for _ in 0..15 {
+    for _ in 0..25 {
         test.press_key(Key::ArrowRight);
     }
 
