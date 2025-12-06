@@ -1,5 +1,8 @@
 use freya_core::prelude::*;
-use torin::size::Size;
+use torin::{
+    prelude::Direction,
+    size::Size,
+};
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Axis {
@@ -139,6 +142,7 @@ pub fn handle_key_event(
     inner_width: f32,
     viewport_height: f32,
     viewport_width: f32,
+    direction: Direction,
 ) -> Option<(f32, f32)> {
     let y_page_delta = viewport_height;
     let y_line_delta = y_page_delta / 5.0;
@@ -167,10 +171,18 @@ pub fn handle_key_event(
             x = get_corrected_scroll_position(inner_width, viewport_width, x - x_line_delta)
         }
         Key::Home => {
-            y = 0.0;
+            if direction == Direction::Vertical {
+                y = 0.0;
+            } else {
+                x = 0.0;
+            }
         }
         Key::End => {
-            y = -inner_height;
+            if direction == Direction::Vertical {
+                y = -inner_height;
+            } else {
+                x = -inner_width;
+            }
         }
         _ => return None,
     };

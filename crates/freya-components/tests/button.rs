@@ -1,0 +1,30 @@
+use freya::prelude::Button;
+use freya_core::prelude::*;
+use freya_testing::*;
+
+#[test]
+pub fn button_test() {
+    fn button_app() -> impl IntoElement {
+        let mut state = use_state(|| false);
+
+        Button::new()
+            .on_press(move |_| {
+                state.toggle();
+            })
+            .child(format!("{}", state.read()))
+    }
+
+    let mut test = launch_test(button_app);
+
+    let label = test.find(|_, element| {
+        Label::try_downcast(element).filter(|label| label.text.as_ref() == "false")
+    });
+    assert!(label.is_some());
+
+    test.click_cursor((15.0, 15.0));
+
+    let label = test.find(|_, element| {
+        Label::try_downcast(element).filter(|label| label.text.as_ref() == "true")
+    });
+    assert!(label.is_some());
+}
