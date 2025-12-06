@@ -32,7 +32,7 @@ pub fn slider_mouse_drag_horizontal() {
     );
 
     // Click at the middle of the slider (should be around 50%)
-    test.click_cursor((105.0, 20.0));
+    test.click_cursor((105.0, 30.0));
     test.sync_and_update();
 
     let label = test
@@ -51,13 +51,13 @@ pub fn slider_mouse_drag_horizontal() {
     assert!((40..60).contains(&(value as i32)));
 
     // Drag to the right
-    test.move_cursor((150.0, 20.0));
+    test.move_cursor((150.0, 30.0));
     test.sync_and_update();
-    test.press_cursor((150.0, 20.0));
+    test.press_cursor((150.0, 30.0));
     test.sync_and_update();
-    test.move_cursor((175.0, 20.0));
+    test.move_cursor((175.0, 30.0));
     test.sync_and_update();
-    test.release_cursor((175.0, 20.0));
+    test.release_cursor((175.0, 30.0));
     test.sync_and_update();
 
     let label = test
@@ -93,7 +93,7 @@ pub fn slider_keyboard_horizontal() {
     test.sync_and_update();
 
     // Focus the slider by clicking on it
-    test.click_cursor((100.0, 20.0));
+    test.click_cursor((100.0, 30.0));
 
     // Press ArrowRight to increase value
     for _ in 0..5 {
@@ -250,7 +250,7 @@ pub fn slider_disabled() {
     test.sync_and_update();
 
     // Try to click the slider
-    test.click_cursor((150.0, 20.0));
+    test.click_cursor((150.0, 30.0));
 
     let label = test
         .find(|node, element| {
