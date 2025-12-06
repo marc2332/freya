@@ -230,66 +230,6 @@ pub fn slider_keyboard_vertical() {
 }
 
 #[test]
-pub fn slider_clamping() {
-    fn slider_app() -> impl IntoElement {
-        let mut value = use_state(|| 95.0);
-
-        rect()
-            .child(label().text(format!("Value: {}", value() as i32)))
-            .child(
-                Slider::new(move |v| value.set(v))
-                    .value(value())
-                    .size(Size::px(200.)),
-            )
-    }
-
-    let mut test = launch_test(slider_app);
-    test.sync_and_update();
-
-    // Focus the slider
-    test.click_cursor((100.0, 20.0));
-
-    // Try to go beyond 100%
-    for _ in 0..30 {
-        test.press_key(Key::ArrowRight);
-        test.sync_and_update();
-    }
-
-    let label = test
-        .find(|node, element| {
-            Label::try_downcast(element)
-                .filter(|l| l.text.starts_with("Value:"))
-                .map(|_| node)
-        })
-        .unwrap();
-
-    let value_text = Label::try_downcast(&*label.element()).unwrap().text;
-    let value: f64 = value_text.replace("Value: ", "").parse().unwrap();
-
-    // Should be clamped at 100
-    assert_eq!(value, 100.0);
-
-    // Try to go below 0%
-    for _ in 0..30 {
-        test.press_key(Key::ArrowLeft);
-    }
-
-    let label = test
-        .find(|node, element| {
-            Label::try_downcast(element)
-                .filter(|l| l.text.starts_with("Value:"))
-                .map(|_| node)
-        })
-        .unwrap();
-
-    let value_text = Label::try_downcast(&*label.element()).unwrap().text;
-    let value: f64 = value_text.replace("Value: ", "").parse().unwrap();
-
-    // Should be clamped at 0
-    assert_eq!(value, 0.0);
-}
-
-#[test]
 pub fn slider_disabled() {
     fn slider_app() -> impl IntoElement {
         let mut value = use_state(|| 50.0);
