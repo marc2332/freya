@@ -46,7 +46,7 @@ pub fn slider_mouse_drag_horizontal() {
     let value: f64 = value_text.replace("Value: ", "").parse().unwrap();
 
     // Should be around 50% (middle of 200px slider)
-    assert!((value - 50.0).abs() < 10.0);
+    assert!((40..60).contains(&(value as i32)));
 
     // Drag to the right
     test.move_cursor((150.0, 20.0));
@@ -252,6 +252,7 @@ pub fn slider_clamping() {
     // Try to go beyond 100%
     for _ in 0..30 {
         test.press_key(Key::ArrowRight);
+        test.sync_and_update();
     }
 
     let label = test

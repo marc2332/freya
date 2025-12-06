@@ -392,11 +392,9 @@ impl TestingRunner {
 
         let image = surface.image_snapshot();
         let mut context = surface.direct_context();
-        let image = image
-            .encode(context.as_mut(), EncodedImageFormat::PNG, None)
-            .expect("Failed to encode the snapshot.");
-
         image
+            .encode(context.as_mut(), EncodedImageFormat::PNG, None)
+            .expect("Failed to encode the snapshot.")
     }
 
     pub fn render_to_file(&mut self, path: impl Into<PathBuf>) {
