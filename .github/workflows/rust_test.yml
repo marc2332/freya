@@ -42,6 +42,7 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         export RUSTFLAGS="-Cinstrument-coverage"
+        export RUSTDOCFLAGS="-Cinstrument-coverage"
         export LLVM_PROFILE_FILE='cargo-test-%p-%m.profraw'
         just t
     - name: Run MacOS and Windows tests
