@@ -57,6 +57,13 @@ pub struct Accordion {
     pub(crate) theme: Option<AccordionThemePartial>,
     header: Option<Element>,
     children: Vec<Element>,
+    key: DiffKey,
+}
+
+impl KeyExt for Accordion {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
 }
 
 impl Accordion {
@@ -131,5 +138,9 @@ impl Render for Accordion {
                     .visible_height(VisibleSize::inner_percent(clip_percent))
                     .children(self.children.clone()),
             )
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
     }
 }

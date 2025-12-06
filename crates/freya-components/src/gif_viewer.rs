@@ -204,6 +204,8 @@ pub struct GifViewer {
     layout: LayoutData,
     image_data: ImageData,
     accessibility: AccessibilityData,
+
+    key: DiffKey,
 }
 
 impl GifViewer {
@@ -213,7 +215,14 @@ impl GifViewer {
             layout: LayoutData::default(),
             image_data: ImageData::default(),
             accessibility: AccessibilityData::default(),
+            key: DiffKey::None,
         }
+    }
+}
+
+impl KeyExt for GifViewer {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
     }
 }
 
@@ -376,6 +385,10 @@ impl Render for GifViewer {
                 .into(),
             (Asset::Error(err), _) => err.into(),
         }
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
     }
 }
 

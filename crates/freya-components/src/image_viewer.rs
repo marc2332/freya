@@ -180,6 +180,8 @@ pub struct ImageViewer {
     accessibility: AccessibilityData,
 
     children: Vec<Element>,
+
+    key: DiffKey,
 }
 
 impl ImageViewer {
@@ -190,7 +192,14 @@ impl ImageViewer {
             image_data: ImageData::default(),
             accessibility: AccessibilityData::default(),
             children: Vec::new(),
+            key: DiffKey::None,
         }
+    }
+}
+
+impl KeyExt for ImageViewer {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
     }
 }
 
@@ -287,5 +296,9 @@ impl Render for ImageViewer {
                 .into(),
             Asset::Error(err) => err.into(),
         }
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
     }
 }

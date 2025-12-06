@@ -15,13 +15,21 @@ pub enum SelectableTextStatus {
 
 #[derive(Clone, PartialEq)]
 pub struct SelectableText {
-    pub value: Cow<'static, str>,
+    value: Cow<'static, str>,
+    key: DiffKey,
+}
+
+impl KeyExt for SelectableText {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
 }
 
 impl SelectableText {
     pub fn new(value: impl Into<Cow<'static, str>>) -> Self {
         Self {
             value: value.into(),
+            key: DiffKey::None,
         }
     }
 }
@@ -133,5 +141,9 @@ impl Render for SelectableText {
             .on_key_down(on_key_down)
             .on_key_up(on_key_up)
             .span(Span::new(editable.editor().read().to_string()))
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
     }
 }

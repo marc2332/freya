@@ -16,6 +16,12 @@ pub struct Tile {
     key: DiffKey,
 }
 
+impl KeyExt for Tile {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
+}
+
 impl Default for Tile {
     fn default() -> Self {
         Self::new()

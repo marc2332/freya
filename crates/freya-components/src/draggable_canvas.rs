@@ -15,6 +15,13 @@ struct DraggableCanvasRegistry(State<Vec<usize>>);
 pub struct DraggableCanvas {
     children: Vec<Element>,
     layout: LayoutData,
+    key: DiffKey,
+}
+
+impl KeyExt for DraggableCanvas {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
 }
 
 impl Default for DraggableCanvas {
@@ -28,6 +35,7 @@ impl DraggableCanvas {
         Self {
             children: vec![],
             layout: LayoutData::default(),
+            key: DiffKey::None,
         }
     }
 }
@@ -56,12 +64,16 @@ impl Render for DraggableCanvas {
             .on_sized(move |e: Event<SizedEventData>| layout.set(e.visible_area))
             .children(self.children.clone())
     }
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
+    }
 }
 
 #[derive(PartialEq)]
 pub struct Draggable {
     initial_position: CursorPoint,
     children: Vec<Element>,
+    key: DiffKey,
 }
 
 impl Default for Draggable {
@@ -75,12 +87,19 @@ impl Draggable {
         Self {
             initial_position: CursorPoint::zero(),
             children: vec![],
+            key: DiffKey::None,
         }
     }
 
     pub fn inital_position(mut self, initial_position: impl Into<CursorPoint>) -> Self {
         self.initial_position = initial_position.into();
         self
+    }
+}
+
+impl KeyExt for Draggable {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
     }
 }
 
@@ -152,5 +171,9 @@ impl Render for Draggable {
             .position(Position::new_absolute().left(left as f32).top(top as f32))
             .layer(layer as i16)
             .children(self.children.clone())
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
     }
 }

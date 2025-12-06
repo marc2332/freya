@@ -48,6 +48,13 @@ use crate::{
 pub struct Menu {
     children: Vec<Element>,
     on_close: Option<EventHandler<()>>,
+    key: DiffKey,
+}
+
+impl KeyExt for Menu {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
 }
 
 impl Menu {
@@ -95,6 +102,9 @@ impl RenderOwned for Menu {
             })
             .child(MenuContainer::new().children(self.children))
     }
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
+    }
 }
 
 /// Container for menu items with proper spacing and layout.
@@ -111,8 +121,15 @@ impl RenderOwned for Menu {
 /// ```
 #[derive(Default, Clone, PartialEq)]
 pub struct MenuContainer {
-    children: Vec<Element>,
     pub(crate) theme: Option<MenuContainerThemePartial>,
+    children: Vec<Element>,
+    key: DiffKey,
+}
+
+impl KeyExt for MenuContainer {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
 }
 
 impl MenuContainer {
@@ -150,6 +167,10 @@ impl RenderOwned for MenuContainer {
             .content(Content::fit())
             .children(self.children)
     }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
+    }
 }
 
 /// A clickable menu item with hover and focus states.
@@ -168,10 +189,17 @@ impl RenderOwned for MenuContainer {
 /// ```
 #[derive(Default, Clone, PartialEq)]
 pub struct MenuItem {
+    pub(crate) theme: Option<MenuItemThemePartial>,
     children: Vec<Element>,
     on_press: Option<EventHandler<Event<PressEventData>>>,
     on_pointer_enter: Option<EventHandler<Event<PointerEventData>>>,
-    pub(crate) theme: Option<MenuItemThemePartial>,
+    key: DiffKey,
+}
+
+impl KeyExt for MenuItem {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
 }
 
 impl MenuItem {
@@ -254,6 +282,10 @@ impl RenderOwned for MenuItem {
             .on_press(on_press)
             .children(self.children)
     }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
+    }
 }
 
 /// Like a button, but for Menus.
@@ -272,6 +304,13 @@ impl RenderOwned for MenuItem {
 pub struct MenuButton {
     children: Vec<Element>,
     on_press: Option<EventHandler<()>>,
+    key: DiffKey,
+}
+
+impl KeyExt for MenuButton {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
 }
 
 impl MenuButton {
@@ -312,6 +351,10 @@ impl RenderOwned for MenuButton {
             })
             .children(self.children)
     }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
+    }
 }
 
 /// Create sub menus inside a Menu.
@@ -330,6 +373,13 @@ impl RenderOwned for MenuButton {
 pub struct SubMenu {
     label: Option<Element>,
     items: Vec<Element>,
+    key: DiffKey,
+}
+
+impl KeyExt for SubMenu {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
 }
 
 impl SubMenu {
@@ -389,6 +439,10 @@ impl RenderOwned for SubMenu {
                             .child(MenuContainer::new().children(self.items)),
                     )
             }))
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
     }
 }
 

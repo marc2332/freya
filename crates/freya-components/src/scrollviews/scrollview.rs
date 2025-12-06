@@ -61,11 +61,18 @@ pub struct ScrollView {
     scroll_with_arrows: bool,
     scroll_controller: Option<ScrollController>,
     invert_scroll_wheel: bool,
+    key: DiffKey,
 }
 
 impl ChildrenExt for ScrollView {
     fn get_children(&mut self) -> &mut Vec<Element> {
         &mut self.children
+    }
+}
+
+impl KeyExt for ScrollView {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
     }
 }
 
@@ -81,6 +88,7 @@ impl Default for ScrollView {
             scroll_with_arrows: true,
             scroll_controller: None,
             invert_scroll_wheel: false,
+            key: DiffKey::None,
         }
     }
 }
@@ -101,6 +109,7 @@ impl ScrollView {
             scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
             invert_scroll_wheel: false,
+            key: DiffKey::None,
         }
     }
 
@@ -395,5 +404,9 @@ impl Render for ScrollView {
                     },
                 }
             }))
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
     }
 }

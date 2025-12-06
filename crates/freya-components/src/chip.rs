@@ -23,11 +23,11 @@ pub enum ChipStatus {
 // TODO: Ability to hide/customize icon
 #[derive(PartialEq)]
 pub struct Chip {
-    pub theme: Option<ChipThemePartial>,
-    pub children: Vec<Element>,
-    pub on_press: Option<EventHandler<Event<PressEventData>>>,
-    pub selected: bool,
-    pub enabled: bool,
+    pub(crate) theme: Option<ChipThemePartial>,
+    children: Vec<Element>,
+    on_press: Option<EventHandler<Event<PressEventData>>>,
+    selected: bool,
+    enabled: bool,
     key: DiffKey,
 }
 

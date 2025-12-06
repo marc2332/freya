@@ -77,6 +77,13 @@ pub struct VirtualScrollView<D, B: Fn(usize, &D) -> Element> {
     scroll_with_arrows: bool,
     scroll_controller: Option<ScrollController>,
     invert_scroll_wheel: bool,
+    key: DiffKey,
+}
+
+impl<D: PartialEq, B: Fn(usize, &D) -> Element> KeyExt for VirtualScrollView<D, B> {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
 }
 
 impl<D: PartialEq, B: Fn(usize, &D) -> Element> PartialEq for VirtualScrollView<D, B> {
@@ -108,6 +115,7 @@ impl<B: Fn(usize, &()) -> Element> VirtualScrollView<(), B> {
             scroll_with_arrows: true,
             scroll_controller: None,
             invert_scroll_wheel: false,
+            key: DiffKey::None,
         }
     }
 
@@ -127,6 +135,7 @@ impl<B: Fn(usize, &()) -> Element> VirtualScrollView<(), B> {
             scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
             invert_scroll_wheel: false,
+            key: DiffKey::None,
         }
     }
 }
@@ -145,6 +154,7 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
             scroll_with_arrows: true,
             scroll_controller: None,
             invert_scroll_wheel: false,
+            key: DiffKey::None,
         }
     }
 
@@ -165,6 +175,7 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
             scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
             invert_scroll_wheel: false,
+            key: DiffKey::None,
         }
     }
 
@@ -500,6 +511,10 @@ impl<D: 'static, B: Fn(usize, &D) -> Element + 'static> Render for VirtualScroll
                     },
                 }
             }))
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
     }
 }
 

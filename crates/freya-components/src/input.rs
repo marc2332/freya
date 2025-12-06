@@ -116,6 +116,12 @@ pub struct Input {
     key: DiffKey,
 }
 
+impl KeyExt for Input {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
+}
+
 impl Default for Input {
     fn default() -> Self {
         Self::new()

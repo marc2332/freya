@@ -214,6 +214,12 @@ pub struct ResizablePanel {
     order: Option<usize>,
 }
 
+impl KeyExt for ResizablePanel {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
+}
+
 impl ChildrenExt for ResizablePanel {
     fn get_children(&mut self) -> &mut Vec<Element> {
         &mut self.children
@@ -253,9 +259,6 @@ impl ResizablePanel {
 }
 
 impl Render for ResizablePanel {
-    fn render_key(&self) -> DiffKey {
-        self.key.clone().or(DiffKey::None)
-    }
     fn render(&self) -> impl IntoElement {
         let mut registry = use_consume::<State<ResizableContext>>();
 
@@ -298,6 +301,10 @@ impl Render for ResizablePanel {
             .height(height)
             .overflow(Overflow::Clip)
             .children(self.children.clone())
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(DiffKey::None)
     }
 }
 

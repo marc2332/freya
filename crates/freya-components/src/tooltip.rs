@@ -44,7 +44,14 @@ pub struct Tooltip {
     /// Theme override.
     pub(crate) theme: Option<TooltipThemePartial>,
     /// Text to show in the [Tooltip].
-    pub text: Cow<'static, str>,
+    text: Cow<'static, str>,
+    key: DiffKey,
+}
+
+impl KeyExt for Tooltip {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
 }
 
 impl Tooltip {
@@ -52,6 +59,7 @@ impl Tooltip {
         Self {
             theme: None,
             text: text.into(),
+            key: DiffKey::None,
         }
     }
 }
@@ -83,6 +91,10 @@ impl Render for Tooltip {
                     .text(self.text.clone()),
             )
     }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
+    }
 }
 
 #[derive(PartialEq, Clone, Copy, Debug, Default)]
@@ -97,6 +109,13 @@ pub struct TooltipContainer {
     tooltip: Tooltip,
     children: Vec<Element>,
     position: TooltipPosition,
+    key: DiffKey,
+}
+
+impl KeyExt for TooltipContainer {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
 }
 
 impl ChildrenExt for TooltipContainer {
@@ -111,6 +130,7 @@ impl TooltipContainer {
             tooltip,
             children: vec![],
             position: TooltipPosition::Below,
+            key: DiffKey::None,
         }
     }
 
@@ -172,5 +192,9 @@ impl Render for TooltipContainer {
                         None
                     }),
             )
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
     }
 }

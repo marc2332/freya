@@ -56,6 +56,13 @@ pub struct Switch {
     toggled: ReadState<bool>,
     on_toggle: Option<EventHandler<()>>,
     enabled: bool,
+    key: DiffKey,
+}
+
+impl KeyExt for Switch {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
 }
 
 impl Default for Switch {
@@ -71,6 +78,7 @@ impl Switch {
             on_toggle: None,
             theme: None,
             enabled: true,
+            key: DiffKey::None,
         }
     }
 
@@ -191,5 +199,9 @@ impl Render for Switch {
                     .background(thumb.mul_if(!self.enabled, 0.85))
                     .corner_radius(CornerRadius::new_all(50.)),
             )
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
     }
 }

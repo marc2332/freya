@@ -48,6 +48,12 @@ pub struct Slider {
     key: DiffKey,
 }
 
+impl KeyExt for Slider {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
+}
+
 impl Slider {
     pub fn new(handler: impl FnMut(f64) + 'static) -> Self {
         Self {

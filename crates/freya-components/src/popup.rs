@@ -73,6 +73,13 @@ pub struct Popup {
     children: Vec<Element>,
     on_close_request: Option<EventHandler<()>>,
     close_on_escape_key: bool,
+    key: DiffKey,
+}
+
+impl KeyExt for Popup {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
 }
 
 impl Default for Popup {
@@ -88,6 +95,7 @@ impl Popup {
             children: vec![],
             on_close_request: None,
             close_on_escape_key: true,
+            key: DiffKey::None,
         }
     }
 
@@ -161,6 +169,10 @@ impl Render for Popup {
                 request_to_close();
             },
         )
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
     }
 }
 

@@ -111,6 +111,13 @@ pub struct SideBarItem {
     on_press: Option<EventHandler<Event<PressEventData>>>,
     /// Optionally specify a custom `overflow` attribute for this component. Defaults to [OverflowMode::Clip].
     overflow: Overflow,
+    key: DiffKey,
+}
+
+impl KeyExt for SideBarItem {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
 }
 
 impl Default for SideBarItem {
@@ -132,6 +139,7 @@ impl SideBarItem {
             children: Vec::new(),
             on_press: None,
             overflow: Overflow::Clip,
+            key: DiffKey::None,
         }
     }
 
@@ -188,5 +196,9 @@ impl Render for SideBarItem {
             .background(background)
             .corner_radius(corner_radius)
             .children(self.children.clone())
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
     }
 }

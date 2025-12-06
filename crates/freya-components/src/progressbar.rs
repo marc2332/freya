@@ -30,10 +30,17 @@ use crate::{
 )]
 #[derive(Clone, PartialEq)]
 pub struct ProgressBar {
-    pub width: Size,
     pub(crate) theme: Option<ProgressBarThemePartial>,
-    pub show_progress: bool,
-    pub progress: f32,
+    width: Size,
+    show_progress: bool,
+    progress: f32,
+    key: DiffKey,
+}
+
+impl KeyExt for ProgressBar {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
 }
 
 impl ProgressBar {
@@ -43,6 +50,7 @@ impl ProgressBar {
             theme: None,
             show_progress: true,
             progress: progress.into(),
+            key: DiffKey::None,
         }
     }
 
@@ -92,5 +100,9 @@ impl Render for ProgressBar {
                             .max_lines(1),
                     ),
             )
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
     }
 }

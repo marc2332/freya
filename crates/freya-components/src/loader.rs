@@ -31,8 +31,15 @@ use crate::{
 )]
 #[derive(PartialEq)]
 pub struct CircularLoader {
-    pub theme: Option<CircularLoaderThemePartial>,
+    pub(crate) theme: Option<CircularLoaderThemePartial>,
     size: f32,
+    key: DiffKey,
+}
+
+impl KeyExt for CircularLoader {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
 }
 
 impl Default for CircularLoader {
@@ -46,6 +53,7 @@ impl CircularLoader {
         Self {
             size: 32.,
             theme: None,
+            key: DiffKey::None,
         }
     }
 
@@ -78,5 +86,9 @@ impl Render for CircularLoader {
         .height(Size::px(self.size))
         .stroke(theme.primary_color)
         .rotate(animation.get().value())
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
     }
 }
