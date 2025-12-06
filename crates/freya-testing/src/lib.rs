@@ -25,6 +25,7 @@ use freya_engine::prelude::{
     EncodedImageFormat,
     FontCollection,
     FontMgr,
+    SkData,
     TypefaceFontProvider,
     raster_n32_premul,
 };
@@ -375,9 +376,7 @@ impl TestingRunner {
         self.sync_and_update();
     }
 
-    pub fn render_to_file(&mut self, path: impl Into<PathBuf>) {
-        let path = path.into();
-
+    pub fn render(&mut self) -> SkData {
         let mut surface = raster_n32_premul((self.size.width as i32, self.size.height as i32))
             .expect("Failed to create the surface.");
 
@@ -396,6 +395,14 @@ impl TestingRunner {
         let image = image
             .encode(context.as_mut(), EncodedImageFormat::PNG, None)
             .expect("Failed to encode the snapshot.");
+
+        image
+    }
+
+    pub fn render_to_file(&mut self, path: impl Into<PathBuf>) {
+        let path = path.into();
+
+        let image = self.render();
 
         let mut snapshot_file = File::create(path).expect("Failed to create the snapshot file.");
 

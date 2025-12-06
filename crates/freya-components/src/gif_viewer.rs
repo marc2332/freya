@@ -384,6 +384,12 @@ pub struct Gif {
     element: GifElement,
 }
 
+impl Gif {
+    pub fn try_downcast(element: &dyn ElementExt) -> Option<GifElement> {
+        (element as &dyn Any).downcast_ref::<GifElement>().cloned()
+    }
+}
+
 impl From<Gif> for Element {
     fn from(value: Gif) -> Self {
         Element::Element {
@@ -441,7 +447,7 @@ impl AccessibilityExt for Gif {
 impl MaybeExt for Gif {}
 
 #[derive(PartialEq, Clone)]
-struct GifElement {
+pub struct GifElement {
     accessibility: AccessibilityData,
     layout: LayoutData,
     event_handlers: FxHashMap<EventName, EventHandlerType>,
