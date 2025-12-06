@@ -26,7 +26,7 @@ impl<T> Copy for UseId<T> {}
 impl<T: 'static> UseId<T> {
     /// Composable alternative to [use_id].
     pub fn get_in_hook() -> usize {
-        let storage = match try_consume_context::<UseId<T>>() {
+        let mut storage = match try_consume_context::<UseId<T>>() {
             Some(storage) => storage,
             None => {
                 let use_id = UseId {
@@ -37,6 +37,7 @@ impl<T: 'static> UseId<T> {
                 use_id
             }
         };
+        *storage.counter.write() += 1;
         *storage.counter.peek()
     }
 }
