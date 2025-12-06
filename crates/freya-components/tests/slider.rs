@@ -32,7 +32,8 @@ pub fn slider_mouse_drag_horizontal() {
     );
 
     // Click at the middle of the slider (should be around 50%)
-    test.click_cursor((100.0, 20.0));
+    test.click_cursor((105.0, 20.0));
+    test.sync_and_update();
 
     let label = test
         .find(|node, element| {
