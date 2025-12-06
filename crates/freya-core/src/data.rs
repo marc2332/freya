@@ -52,6 +52,7 @@ pub struct EffectData {
     pub rotation: Option<f32>,
     pub scale: Option<Scale>,
     pub opacity: Option<f32>,
+    pub scrollable: bool,
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -231,6 +232,8 @@ pub struct EffectState {
     pub scale: Option<Scale>,
 
     pub opacities: Rc<[f32]>,
+
+    pub scrollables: Rc<[NodeId]>,
 }
 
 impl EffectState {
@@ -280,6 +283,14 @@ impl EffectState {
                 opacities.push(opacity);
                 if self.opacities.as_ref() != opacities {
                     self.opacities = Rc::from(opacities);
+                }
+            }
+
+            if effect_data.scrollable {
+                let mut scrolls = parent_effect_state.scrollables.to_vec();
+                scrolls.push(node_id);
+                if self.scrollables.as_ref() != scrolls {
+                    self.scrollables = Rc::from(scrolls);
                 }
             }
         }

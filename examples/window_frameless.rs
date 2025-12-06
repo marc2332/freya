@@ -12,5 +12,10 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    rect().center().expanded().color((0, 255, 0)).font_size(100).child("Frameless window")
+    rect()
+        .center()
+        .expanded()
+        .color((0, 255, 0))
+        .font_size(100)
+        .child("Frameless window")
 }

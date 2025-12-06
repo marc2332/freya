@@ -441,6 +441,11 @@ impl<D: 'static, B: Fn(usize, &D) -> Element + 'static> Render for VirtualScroll
             .a11y_id(focus.a11y_id())
             .a11y_focusable(false)
             .a11y_role(AccessibilityRole::ScrollView)
+            .a11y_builder(move |node| {
+                node.set_scroll_x(corrected_scrolled_x as f64);
+                node.set_scroll_y(corrected_scrolled_y as f64)
+            })
+            .scrollable(true)
             .on_wheel(on_wheel)
             .on_global_mouse_up(on_global_mouse_up)
             .on_mouse_move(on_mouse_move)

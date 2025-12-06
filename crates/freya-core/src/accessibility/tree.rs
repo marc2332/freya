@@ -4,6 +4,7 @@ use accesskit::{
     Rect,
     TreeUpdate,
 };
+use ragnarok::ProcessedEvents;
 use rustc_hash::{
     FxHashMap,
     FxHashSet,
@@ -17,8 +18,18 @@ use crate::{
         id::AccessibilityId,
     },
     elements::label::Label,
+    events::emittable::EmmitableEvent,
+    integration::{
+        EventName,
+        EventsChunk,
+    },
     node_id::NodeId,
-    prelude::AccessibilityFocusMovement,
+    prelude::{
+        AccessibilityFocusMovement,
+        EventType,
+        WheelEventData,
+        WheelSource,
+    },
     tree::Tree,
 };
 
@@ -81,7 +92,11 @@ impl AccessibilityTree {
 
     /// Process any pending Accessibility Tree update
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
-    pub fn process_updates(&mut self, tree: &mut Tree) -> TreeUpdate {
+    pub fn process_updates(
+        &mut self,
+        tree: &mut Tree,
+        events_sender: &futures_channel::mpsc::UnboundedSender<EventsChunk>,
+    ) -> TreeUpdate {
         let requested_focus = tree.accessibility_diff.requested_focus.take();
         let removed_ids = tree
             .accessibility_diff
@@ -134,8 +149,7 @@ impl AccessibilityTree {
             nodes.push((accessibility_state.a11y_id, accessibility_node));
         }
 
-        // TODO: Auto scroll
-        // let has_request_focus = requested_focus.is_some();
+        let has_request_focus = requested_focus.is_some();
 
         // Fallback the focused id to the root if the focused node no longer exists
         if !self.map.contains_key(&self.focused_id) {
@@ -145,6 +159,12 @@ impl AccessibilityTree {
         // Focus the requested node id if there is one
         if let Some(requested_focus) = requested_focus {
             self.focus_node_with_strategy(requested_focus, tree);
+        }
+
+        if let Some(node_id) = self.focused_node_id()
+            && has_request_focus
+        {
+            self.scroll_to(node_id, tree, events_sender);
         }
 
         TreeUpdate {
@@ -240,6 +260,71 @@ impl AccessibilityTree {
 
         #[cfg(debug_assertions)]
         tracing::info!("Focused {:?} node.", self.focused_id);
+    }
+
+    /// Send the necessary wheel events to scroll views so that the given focused [NodeId] is visible on screen.
+    fn scroll_to(
+        &self,
+        node_id: NodeId,
+        tree: &mut Tree,
+        events_sender: &futures_channel::mpsc::UnboundedSender<EventsChunk>,
+    ) {
+        let Some(effect_state) = tree.effect_state.get(&node_id) else {
+            return;
+        };
+        let mut target_node = node_id;
+        let mut emmitable_events = Vec::new();
+        // Iterate over the inherited scrollables from the closes to the farest
+        for closest_scrollable in effect_state.scrollables.iter().rev() {
+            // Every scrollable has a target node, the first scrollable target is the focused node that we want to make visible,
+            // the rest scrollables will in the other hand just have the previous scrollable as target
+            let target_layout_node = tree.layout.get(&target_node).unwrap();
+            let target_area = target_layout_node.area;
+            let scrollable_layout_node = tree.layout.get(closest_scrollable).unwrap();
+            let scrollable_target_area = scrollable_layout_node.area;
+
+            // We only want to scroll if it is not visible
+            if !effect_state.is_visible(&tree.layout, &target_area) {
+                let element = tree.elements.get(closest_scrollable).unwrap();
+                let scroll_x = element
+                    .accessibility()
+                    .builder
+                    .scroll_x()
+                    .unwrap_or_default() as f32;
+                let scroll_y = element
+                    .accessibility()
+                    .builder
+                    .scroll_y()
+                    .unwrap_or_default() as f32;
+
+                // Get the relative diff from where the scrollable scroll starts
+                let diff_x = target_area.min_x() - scrollable_target_area.min_x() - scroll_x;
+                let diff_y = target_area.min_y() - scrollable_target_area.min_y() - scroll_y;
+
+                // And get the distance it needs to scroll in order to make the target visible
+                let delta_y = -(scroll_y + diff_y);
+                let delta_x = -(scroll_x + diff_x);
+                emmitable_events.push(EmmitableEvent {
+                    name: EventName::Wheel,
+                    source_event: EventName::Wheel,
+                    node_id: *closest_scrollable,
+                    data: EventType::Wheel(WheelEventData::new(
+                        delta_x as f64,
+                        delta_y as f64,
+                        WheelSource::Custom,
+                    )),
+                    bubbles: false,
+                });
+                // Change the target to the current scrollable, so that the next scrollable makes sure this one is visible
+                target_node = *closest_scrollable;
+            }
+        }
+        events_sender
+            .unbounded_send(EventsChunk::Processed(ProcessedEvents {
+                emmitable_events,
+                ..Default::default()
+            }))
+            .unwrap();
     }
 
     /// Create an accessibility node

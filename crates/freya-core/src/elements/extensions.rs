@@ -699,3 +699,15 @@ where
         self
     }
 }
+
+pub trait ScrollableExt
+where
+    Self: Sized,
+{
+    fn get_effect(&mut self) -> &mut EffectData;
+
+    fn scrollable(mut self, scrollable: impl Into<bool>) -> Self {
+        self.get_effect().scrollable = scrollable.into();
+        self
+    }
+}

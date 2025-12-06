@@ -234,7 +234,7 @@ impl TestingRunner {
     pub fn sync_and_update(&mut self) {
         let accessibility_update = self
             .accessibility
-            .process_updates(&mut self.tree.borrow_mut());
+            .process_updates(&mut self.tree.borrow_mut(), &self.events_sender);
         self.platform_state
             .focused_accessibility_id
             .set(accessibility_update.focus);

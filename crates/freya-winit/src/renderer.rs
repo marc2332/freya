@@ -397,7 +397,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
 
                         match app.accessibility_tasks_for_next_render.take() {
                             AccessibilityTask::ProcessUpdate { mode } => {
-                                let update = app.accessibility.process_updates(&mut app.tree);
+                                let update = app
+                                    .accessibility
+                                    .process_updates(&mut app.tree, &app.events_sender);
                                 app.platform_state
                                     .focused_accessibility_id
                                     .set_if_modified(update.focus);
