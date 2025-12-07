@@ -1,4 +1,4 @@
-⚠️⚠️⚠️ **I am currently rewriting Freya, you can follow the progress in https://github.com/marc2332/freya/pull/1351** ⚠️⚠️⚠️
+⚠️⚠️ **I am currently rewriting Freya in the `main` branch, source code for the latest stable release is in [0.3.4](https://github.com/marc2332/freya/tree/v0.3.4).** ⚠️⚠️
 
 # Freya 🦀
 
