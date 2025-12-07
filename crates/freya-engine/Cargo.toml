@@ -30,4 +30,4 @@ optional = true
 features = ["gl", "textlayout", "svg", "x11", "wayland"]
 
 [dev-dependencies]
-freya-engine = { workspace = true, features = ["skia-engine"] }
+freya-engine = { path = "./", features = ["skia-engine"] }
