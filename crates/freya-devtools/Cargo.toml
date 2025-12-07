@@ -42,7 +42,7 @@ hyper-util = { version = "0.1", optional = true }
 tungstenite = { version = "0.27", features = ["handshake"], optional = true }
 futures-util = { version = "0.3", optional = true }
 futures = { version = "0.3", optional = true }
-http-body-util = { version = "*", optional = true }
+http-body-util = { version = "0.1", optional = true }
 bytes = { version = "1", optional = true }
 smol = { version = "2.0.2", optional = true }
 async-lock = { version = "3.4.1", optional = true }
