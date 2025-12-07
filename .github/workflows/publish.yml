@@ -18,6 +18,6 @@ jobs:
           submodules: true
       - name: Install the rust toolchain
         uses: dtolnay/rust-toolchain@1.90
-      - run: cargo publish --features skia-engine --workspace --exclude "examples" --exclude "freya-installer-example"
+      - run: cargo publish --features skia-engine --workspace --exclude "examples" --exclude "website"
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
