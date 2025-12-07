@@ -13,6 +13,7 @@ categories = ["gui", "asynchronous"]
 
 [features]
 tracing = ["dep:tracing", "dep:itertools"]
+skia-engine = ["freya-core/skia-engine"]
 
 [dependencies]
 freya-core = { workspace = true }

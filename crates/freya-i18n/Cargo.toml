@@ -10,6 +10,7 @@ categories = ["accessibility", "gui", "localization", "internationalization"]
 
 [features]
 discovery = ["walkdir"]
+skia-engine = ["freya-core/skia-engine"]
 
 [dependencies]
 freya-core = { workspace = true }

@@ -10,6 +10,9 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["freya"]
 categories = ["gui"]
 
+[features]
+skia-engine = ["freya-core/skia-engine"]
+
 [dependencies]
 freya-clipboard = { workspace = true }
 freya-core = { workspace = true }
