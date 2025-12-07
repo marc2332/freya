@@ -29,7 +29,6 @@ fn multiple_lines_single_editor() {
         let on_global_key_down = move |e: Event<KeyboardEventData>| {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
-                code: e.code,
                 modifiers: e.modifiers,
             });
         };
@@ -141,7 +140,6 @@ fn single_line_multiple_editors() {
         let on_global_key_down = move |e: Event<KeyboardEventData>| {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
-                code: e.code,
                 modifiers: e.modifiers,
             });
         };
@@ -239,7 +237,6 @@ fn highlight_multiple_lines_single_editor() {
         let on_global_key_down = move |e: Event<KeyboardEventData>| {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
-                code: e.code,
                 modifiers: e.modifiers,
             });
         };
@@ -299,7 +296,6 @@ fn highlights_single_line_multiple_editors() {
         let on_global_key_down = move |e: Event<KeyboardEventData>| {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
-                code: e.code,
                 modifiers: e.modifiers,
             });
         };
@@ -403,7 +399,6 @@ fn special_text_editing() {
         let on_global_key_down = move |e: Event<KeyboardEventData>| {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
-                code: e.code,
                 modifiers: e.modifiers,
             });
         };
@@ -464,7 +459,6 @@ fn backspace_remove() {
         let on_global_key_down = move |e: Event<KeyboardEventData>| {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
-                code: e.code,
                 modifiers: e.modifiers,
             });
         };
@@ -542,7 +536,6 @@ fn highlight_shift_click_multiple_lines_single_editor() {
         let on_global_key_down = move |e: Event<KeyboardEventData>| {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
-                code: e.code,
                 modifiers: e.modifiers,
             });
         };
@@ -607,7 +600,6 @@ fn highlights_shift_click_single_line_multiple_editors() {
         let on_global_key_down = move |e: Event<KeyboardEventData>| {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
-                code: e.code,
                 modifiers: e.modifiers,
             });
         };
@@ -738,7 +730,6 @@ fn highlight_all_text() {
         let on_global_key_down = move |e: Event<KeyboardEventData>| {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
-                code: e.code,
                 modifiers: e.modifiers,
             });
         };
@@ -829,7 +820,6 @@ fn replace_text() {
         let on_global_key_down = move |e: Event<KeyboardEventData>| {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
-                code: e.code,
                 modifiers: e.modifiers,
             });
         };
@@ -906,7 +896,6 @@ fn navigate_empty_lines() {
         let on_global_key_down = move |e: Event<KeyboardEventData>| {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
-                code: e.code,
                 modifiers: e.modifiers,
             });
         };

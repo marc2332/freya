@@ -7,7 +7,6 @@ use std::{
 
 use freya_clipboard::hooks::UseClipboard;
 use keyboard_types::{
-    Code,
     Key,
     Modifiers,
 };
@@ -260,7 +259,6 @@ pub trait TextEditor {
     fn process_key(
         &mut self,
         key: &Key,
-        code: &Code,
         modifiers: &Modifiers,
         allow_tabs: bool,
         allow_changes: bool,
@@ -390,9 +388,8 @@ pub trait TextEditor {
                     modifiers.ctrl()
                 };
 
-                match code {
-                    Code::Delete if allow_changes => {}
-                    Code::Space if allow_changes => {
+                match character.as_str() {
+                    " " if allow_changes => {
                         let selection = self.get_selection_range();
                         if let Some((start, end)) = selection {
                             self.remove(start..end);
@@ -409,13 +406,13 @@ pub trait TextEditor {
                     }
 
                     // Select all text
-                    Code::KeyA if meta_or_ctrl => {
+                    "a" if meta_or_ctrl => {
                         let len = self.len_utf16_cu();
                         self.set_selection((0, len));
                     }
 
                     // Copy selected text
-                    Code::KeyC if meta_or_ctrl && allow_clipboard => {
+                    "c" if meta_or_ctrl && allow_clipboard => {
                         let selected = self.get_selected_text();
                         if let Some(selected) = selected {
                             self.get_clipboard().set(selected).ok();
@@ -423,7 +420,7 @@ pub trait TextEditor {
                     }
 
                     // Cut selected text
-                    Code::KeyX if meta_or_ctrl && allow_changes && allow_clipboard => {
+                    "x" if meta_or_ctrl && allow_changes && allow_clipboard => {
                         let selection = self.get_selection_range();
                         if let Some((start, end)) = selection {
                             let text = self.get_selected_text().unwrap();
@@ -435,7 +432,7 @@ pub trait TextEditor {
                     }
 
                     // Paste copied text
-                    Code::KeyV if meta_or_ctrl && allow_changes && allow_clipboard => {
+                    "v" if meta_or_ctrl && allow_changes && allow_clipboard => {
                         let copied_text = self.get_clipboard().get();
                         if let Ok(copied_text) = copied_text {
                             let selection = self.get_selection_range();
@@ -452,7 +449,7 @@ pub trait TextEditor {
                     }
 
                     // Undo last change
-                    Code::KeyZ if meta_or_ctrl && allow_changes => {
+                    "z" if meta_or_ctrl && allow_changes => {
                         let undo_result = self.undo();
 
                         if let Some(idx) = undo_result {
@@ -462,7 +459,7 @@ pub trait TextEditor {
                     }
 
                     // Redo last change
-                    Code::KeyY if meta_or_ctrl && allow_changes => {
+                    "y" if meta_or_ctrl && allow_changes => {
                         let redo_result = self.redo();
 
                         if let Some(idx) = redo_result {

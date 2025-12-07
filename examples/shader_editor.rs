@@ -79,13 +79,12 @@ impl Render for ShaderEditor {
         let on_global_key_down = move |e: Event<KeyboardEventData>| {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
-                code: e.code,
                 modifiers: e.modifiers,
             });
         };
 
         let on_global_key_up = move |e: Event<KeyboardEventData>| {
-            editable.process_event(EditableEvent::KeyUp { code: e.code });
+            editable.process_event(EditableEvent::KeyUp { key: &e.key });
         };
 
         rect()

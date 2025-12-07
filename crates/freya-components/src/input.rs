@@ -237,7 +237,6 @@ impl Render for Input {
                 e.stop_propagation();
                 editable.process_event(EditableEvent::KeyDown {
                     key: &e.key,
-                    code: e.code,
                     modifiers: e.modifiers,
                 });
                 let text = editable.editor().peek().to_string();
@@ -271,7 +270,7 @@ impl Render for Input {
 
         let on_key_up = move |e: Event<KeyboardEventData>| {
             e.stop_propagation();
-            editable.process_event(EditableEvent::KeyUp { code: e.code });
+            editable.process_event(EditableEvent::KeyUp { key: &e.key });
         };
 
         let on_input_pointer_down = move |e: Event<PointerEventData>| {

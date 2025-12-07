@@ -98,13 +98,12 @@ impl Render for SelectableText {
         let on_key_down = move |e: Event<KeyboardEventData>| {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,
-                code: e.code,
                 modifiers: e.modifiers,
             });
         };
 
         let on_key_up = move |e: Event<KeyboardEventData>| {
-            editable.process_event(EditableEvent::KeyUp { code: e.code });
+            editable.process_event(EditableEvent::KeyUp { key: &e.key });
         };
 
         let on_global_mouse_up = move |_| {

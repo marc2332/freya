@@ -4,7 +4,6 @@ use freya_core::{
     elements::paragraph::ParagraphHolderInner,
     prelude::*,
 };
-use keyboard_types::Code;
 use torin::prelude::CursorPoint;
 
 use crate::{
@@ -30,11 +29,10 @@ pub enum EditableEvent<'a> {
     },
     KeyDown {
         key: &'a Key,
-        code: Code,
         modifiers: Modifiers,
     },
     KeyUp {
-        code: Code,
+        key: &'a Key,
     },
 }
 
@@ -142,14 +140,10 @@ impl EditableEvent<'_> {
                     }
                 }
             }
-            EditableEvent::KeyDown {
-                code,
-                key,
-                modifiers,
-            } => {
-                match code {
+            EditableEvent::KeyDown { key, modifiers } => {
+                match key {
                     // Handle dragging
-                    Code::ShiftLeft => {
+                    Key::Shift => {
                         let dragging = &mut *dragging.write();
                         match dragging {
                             TextDragging::FromCursorToPoint {
@@ -174,7 +168,6 @@ impl EditableEvent<'_> {
                         editor.write_if(|mut ditor| {
                             let event = ditor.process_key(
                                 key,
-                                &code,
                                 &modifiers,
                                 config.allow_tabs,
                                 config.allow_changes,
@@ -188,8 +181,8 @@ impl EditableEvent<'_> {
                     }
                 }
             }
-            EditableEvent::KeyUp { code } => {
-                if code == Code::ShiftLeft {
+            EditableEvent::KeyUp { key } => {
+                if *key == Key::Shift {
                     if let TextDragging::FromCursorToPoint { shift, .. } = &mut *dragging.write() {
                         *shift = false;
                     }
