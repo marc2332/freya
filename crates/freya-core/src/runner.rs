@@ -16,7 +16,7 @@ use futures_lite::{
     StreamExt,
 };
 use itertools::Itertools;
-use pathmap::PathMap;
+use pathgraph::PathGraph;
 use rustc_hash::{
     FxHashMap,
     FxHashSet,
@@ -159,7 +159,7 @@ impl Runner {
                     props: Rc::new(()),
                     element: None,
                     nodes: {
-                        let mut map = PathMap::new();
+                        let mut map = PathGraph::new();
                         map.insert(
                             &[],
                             PathNode {
@@ -732,7 +732,7 @@ impl Runner {
                             comp: comp.clone(),
                             props: props.clone(),
                             element: None,
-                            nodes: PathMap::default(),
+                            nodes: PathGraph::default(),
                         })),
                     );
                     self.scopes_storages.borrow_mut().insert(

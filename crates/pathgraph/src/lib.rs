@@ -1,20 +1,20 @@
 use core::fmt;
 
-pub struct PathMapEntry<V> {
+pub struct PathGraphEntry<V> {
     value: Option<V>,
-    items: Vec<PathMapEntry<V>>,
+    items: Vec<PathGraphEntry<V>>,
 }
 
-impl<V: fmt::Debug> fmt::Debug for PathMapEntry<V> {
+impl<V: fmt::Debug> fmt::Debug for PathGraphEntry<V> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("PathMapEntry")
+        f.debug_struct("PathGraphEntry")
             .field("value", &self.value)
             .field("items", &self.items)
             .finish()
     }
 }
 
-impl<V> PathMapEntry<V> {
+impl<V> PathGraphEntry<V> {
     pub fn insert(&mut self, path: &[u32], value: V) {
         if path.is_empty() {
             self.value = Some(value);
@@ -37,7 +37,7 @@ impl<V> PathMapEntry<V> {
         }
     }
 
-    pub fn insert_entry(&mut self, path: &[u32], entry: PathMapEntry<V>) {
+    pub fn insert_entry(&mut self, path: &[u32], entry: PathGraphEntry<V>) {
         if path.is_empty() {
             *self = entry;
         } else {
@@ -59,7 +59,7 @@ impl<V> PathMapEntry<V> {
         }
     }
 
-    pub fn remove(&mut self, path: &[u32]) -> Option<PathMapEntry<V>> {
+    pub fn remove(&mut self, path: &[u32]) -> Option<PathGraphEntry<V>> {
         if path.is_empty() {
             unreachable!()
         } else if path.len() == 1 {
@@ -220,25 +220,25 @@ impl<V> PathMapEntry<V> {
     }
 }
 
-pub struct PathMap<V> {
-    entry: Option<PathMapEntry<V>>,
+pub struct PathGraph<V> {
+    entry: Option<PathGraphEntry<V>>,
 }
 
-impl<V> Default for PathMap<V> {
+impl<V> Default for PathGraph<V> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<V: fmt::Debug> fmt::Debug for PathMap<V> {
+impl<V: fmt::Debug> fmt::Debug for PathGraph<V> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("PathMap")
+        f.debug_struct("PathGraph")
             .field("entry", &self.entry)
             .finish()
     }
 }
 
-impl<V> PathMap<V> {
+impl<V> PathGraph<V> {
     pub fn new() -> Self {
         Self { entry: None }
     }
@@ -247,7 +247,7 @@ impl<V> PathMap<V> {
         if let Some(entry) = &mut self.entry {
             entry.insert(path, value);
         } else {
-            let mut entry = PathMapEntry {
+            let mut entry = PathGraphEntry {
                 value: None,
                 items: Vec::new(),
             };
@@ -256,11 +256,11 @@ impl<V> PathMap<V> {
         }
     }
 
-    pub fn insert_entry(&mut self, path: &[u32], entry: PathMapEntry<V>) {
+    pub fn insert_entry(&mut self, path: &[u32], entry: PathGraphEntry<V>) {
         if let Some(root_entry) = &mut self.entry {
             root_entry.insert_entry(path, entry);
         } else {
-            let mut root_entry = PathMapEntry {
+            let mut root_entry = PathGraphEntry {
                 value: None,
                 items: Vec::new(),
             };
@@ -269,7 +269,7 @@ impl<V> PathMap<V> {
         }
     }
 
-    pub fn remove(&mut self, path: &[u32]) -> Option<PathMapEntry<V>> {
+    pub fn remove(&mut self, path: &[u32]) -> Option<PathGraphEntry<V>> {
         if let Some(entry) = &mut self.entry {
             entry.remove(path)
         } else {

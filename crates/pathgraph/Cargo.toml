@@ -1,5 +1,5 @@
 [package]
-name = "pathmap"
+name = "pathgraph"
 description = "Array-indexed hashmap"
 version = "0.4.0-alpha.0"
 edition = "2024"

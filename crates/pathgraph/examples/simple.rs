@@ -1,7 +1,7 @@
-use pathmap::PathMap;
+use pathgraph::PathGraph;
 
 fn main() {
-    let mut map = PathMap::new();
+    let mut map = PathGraph::new();
 
     map.insert(&[0], 1);
     map.insert(&[1], 2);

@@ -12,7 +12,7 @@ use generational_box::{
     Owner,
     UnsyncStorage,
 };
-use pathmap::PathMap;
+use pathgraph::PathGraph;
 use rustc_hash::FxHashMap;
 
 use crate::{
@@ -35,7 +35,7 @@ pub struct Scope {
     pub parent_node_id_in_parent: NodeId,
     pub path_in_parent: Box<[u32]>, // TODO: Maybe just store the index rather than the whole path?
 
-    pub nodes: PathMap<PathNode>,
+    pub nodes: PathGraph<PathNode>,
 
     pub key: DiffKey,
 
