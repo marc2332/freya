@@ -1,6 +1,7 @@
 [package]
 name = "freya-devtools"
 version = "0.4.0-alpha.1"
+description = "Devtools Server for Freya"
 edition = "2024"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]

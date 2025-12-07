@@ -1,6 +1,7 @@
 [package]
 name = "freya-core"
 version = "0.4.0-alpha.1"
+description = "Reactivity runtime, tree management, accessibility integration, rendering pipeline and more, for Freya"
 edition = "2024"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
