@@ -56,10 +56,10 @@ serde = { version = "1", optional = true }
 cursor-icon = "1.2.0"
 
 [dev-dependencies]
-freya = { workspace = true }
-freya-core = { workspace = true, features = ["debug-integrity", "test"] }
-freya-engine = { workspace = true, features = ["skia-engine"] }
-freya-testing = { workspace = true }
+freya = { path = "../freya" }
+freya-testing = { path = "../freya-testing" }
+freya-core = { path = "../freya-core", features = ["debug-integrity", "test"] }
+freya-engine = { path = "../freya-engine", features = ["skia-engine"] }
 
 [features]
 hotpath = ["hotpath/hotpath"]

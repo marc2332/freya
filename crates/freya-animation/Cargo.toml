@@ -15,5 +15,5 @@ freya-core = { workspace = true }
 easer = { workspace = true }
 
 [dev-dependencies]
-freya = { workspace = true }
-freya-testing = { workspace = true }
+freya = { path = "../freya" }
+freya-testing = { path = "../freya-testing" }

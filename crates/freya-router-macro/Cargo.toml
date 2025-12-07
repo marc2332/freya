@@ -18,5 +18,5 @@ proc-macro2 = "1.0.95"
 slab = "0.4.10"
 
 [dev-dependencies]
-freya = { workspace = true }
-freya-router = { workspace = true }
+freya = { path = "../freya" }
+freya-router = { path = "../freya-router" }
