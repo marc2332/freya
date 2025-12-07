@@ -19,6 +19,7 @@ remote-asset = ["dep:ureq"]
 plot = ["dep:plotters", "dep:skia-plotters-backend"]
 docs = ["dep:embed-doc-image"]
 gif = ["dep:gif"]
+skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
 freya-core = { workspace = true }

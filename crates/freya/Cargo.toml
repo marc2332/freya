@@ -16,9 +16,9 @@ features = ["freya-engine/mocked-engine", "all-debug"]
 no-default-features = true
 
 [features]
-default = ["skia"]
+default = ["skia-engine"]
 # Enable skia-safe
-skia = ["freya-engine/skia-engine"]
+skia-engine = ["freya-engine/skia-engine"]
 mocked-engine = ["freya-engine/mocked-engine"]
 # Shortcuts
 all = ["router", "i18n", "remote-asset", "engine", "plot", "gif"]
