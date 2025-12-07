@@ -1,6 +1,6 @@
 [package]
 name = "freya"
-version = "0.4.0-alpha.1"
+version = "0.4.0-alpha.2"
 description = "Cross-platform and non-web GUI Library powered by Skia."
 edition = "2024"
 license = "MIT"
