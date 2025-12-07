@@ -3,44 +3,41 @@ import { Code } from "astro:components";
 import Layout from "../layouts/Layout.astro";
 
 const EXAMPLE_CODE = `
-fn app() -> Element {
+fn app() -> impl IntoElement {
     let mut count = use_state(|| 4);
 
-    rect()
+    let counter = rect()
+        .width(Size::fill())
+        .height(Size::percent(50.))
+        .center()
+        .color((255, 255, 255))
+        .background((15, 163, 242))
+        .font_size(75.)
+        .shadow((0., 4., 20., 4., (0, 0, 0, 80)))
+        .child(count.read().to_string());
+
+    let actions = rect()
+        .horizontal()
+        .width(Size::fill())
+        .height(Size::percent(50.))
+        .center()
+        .spacing(8.0)
         .child(
-            rect()
-                .width(Size::fill())
-                .height(Size::percent(50.))
-                .center()
-                .color((255, 255, 255))
-                .background((15, 163, 242))
-                .font_size(75.)
-                .shadow((0., 4., 20., 4., (0, 0, 0, 80)))
-                .child(count.read().to_string()),
+            Button::new()
+                .on_press(move |_| {
+                    *count.write() += 1;
+                })
+                .child("Increase"),
         )
         .child(
-            rect()
-                .horizontal()
-                .width(Size::fill())
-                .height(Size::percent(50.))
-                .center()
-                .spacing(8.0)
-                .child(
-                    Button::new()
-                        .on_press(move |_| {
-                            *count.write() += 1;
-                        })
-                        .child("Increase"),
-                )
-                .child(
-                    Button::new()
-                        .on_press(move |_| {
-                            *count.write() -= 1;
-                        })
-                        .child("Decrease"),
-                ),
-        )
-        .into()
+            Button::new()
+                .on_press(move |_| {
+                    *count.write() -= 1;
+                })
+                .child("Decrease"),
+        );
+
+    rect().child(counter).child(actions)
 }
 `.trim();
 ---
