@@ -2,6 +2,7 @@
 name = "freya-testing"
 version = "0.4.0-alpha.0"
 edition = "2024"
+license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
 readme = "../../README.md"
 homepage = "https://freyaui.dev/"
@@ -14,6 +15,7 @@ features = ["freya-engine/mocked-engine"]
 
 [features]
 mocked-engine = ["freya-engine/mocked-engine"]
+skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
 freya-core = { workspace = true, features = ["debug-integrity"] }

@@ -2,6 +2,13 @@
 name = "freya-winit"
 version = "0.4.0-alpha.0"
 edition = "2024"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui"]
+categories = ["gui", "asynchronous"]
 
 [package.metadata.docs.rs]
 features = ["freya-engine/mocked-engine"]
@@ -52,3 +59,4 @@ hotpath = ["hotpath/hotpath"]
 hotpath-alloc = ["hotpath/hotpath-alloc"]
 hotpath-off = ["hotpath/hotpath-off"]
 vulkan = ["dep:ash", "dep:ash-window", "freya-engine/vulkan"]
+skia-engine = ["freya-engine/skia-engine"]

@@ -3,6 +3,7 @@ name = "freya-icons"
 version = "0.4.0-alpha.0"
 edition = "2024"
 description = "Icons library for Freya."
+license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
 readme = "../../README.md"
 homepage = "https://freyaui.dev/"
@@ -11,12 +12,9 @@ keywords = ["gui"]
 categories = ["gui", "asynchronous"]
 
 [features]
-skia = ["freya-engine/skia-engine"]
 # Icons
 all = ["lucide"]
 lucide = []
 
 [dependencies]
-freya-core = { workspace = true }
-freya-engine = { workspace = true }
 bytes = { workspace = true }
