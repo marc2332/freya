@@ -392,6 +392,7 @@ pub trait EventHandlersExt: Sized + LayoutExt {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub enum PressEventData {
     Mouse(MouseEventData),
     Keyboard(KeyboardEventData),

@@ -156,3 +156,152 @@ pub fn sequential() {
     assert_eq!(rect_a.area.width(), 100.0);
     assert_eq!(rect_b.area.width(), 100.0);
 }
+
+#[test]
+pub fn animation_with_dependencies() {
+    fn use_animation_app() -> impl IntoElement {
+        let mut target = use_state(|| 100.0);
+
+        let animation = use_animation_with_dependencies(&target(), |conf, target| {
+            conf.on_creation(OnCreation::Run);
+
+            AnimNum::new(0., *target).time(50)
+        });
+
+        let progress = animation.get().value();
+
+        rect()
+            .width(Size::px(progress))
+            .height(Size::fill())
+            .background(Color::WHITE)
+            .child(
+                Button::new()
+                    .on_press(move |_| target.set(200.0))
+                    .child("Change Target"),
+            )
+    }
+
+    let mut test = launch_test(use_animation_app);
+
+    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    assert_eq!(rect.area.width(), 0.0);
+
+    test.poll(Duration::from_millis(1), Duration::from_millis(100));
+    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    assert_eq!(rect.area.width(), 100.0);
+
+    // Click button to change target to 200
+    test.click_cursor((15.0, 15.0));
+    test.sync_and_update();
+    test.sync_and_update();
+    test.sync_and_update();
+    test.sync_and_update();
+    test.sync_and_update();
+
+    // Animation should reset to 0 when dependencies change (default OnChange::Reset)
+    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    assert_eq!(rect.area.width(), 0.0);
+}
+
+#[test]
+pub fn animation_with_dependencies_on_change_finish() {
+    fn use_animation_app() -> impl IntoElement {
+        let mut target = use_state(|| 100.0);
+
+        let animation = use_animation_with_dependencies(&target(), |conf, target| {
+            conf.on_creation(OnCreation::Run);
+            conf.on_change(OnChange::Finish);
+
+            AnimNum::new(0., *target).time(50)
+        });
+
+        let progress = animation.get().value();
+
+        rect()
+            .width(Size::px(progress))
+            .height(Size::fill())
+            .background(Color::WHITE)
+            .child(
+                Button::new()
+                    .on_press(move |_| target.set(200.0))
+                    .child("Change Target"),
+            )
+    }
+
+    let mut test = launch_test(use_animation_app);
+
+    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    assert_eq!(rect.area.width(), 0.0);
+
+    test.poll(Duration::from_millis(1), Duration::from_millis(25));
+    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    let width_mid = rect.area.width();
+    assert!(width_mid > 0.0 && width_mid < 100.0);
+
+    // Click button to change target to 200
+    // With OnChange::Finish, should immediately jump to finish value
+    test.click_cursor((7.0, 7.0));
+    test.sync_and_update();
+    test.sync_and_update();
+    test.sync_and_update();
+    test.sync_and_update();
+    test.sync_and_update();
+
+    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[1];
+    assert_eq!(rect.area.width(), 200.0);
+}
+
+#[test]
+pub fn animation_with_dependencies_on_change_rerun() {
+    fn use_animation_app() -> impl IntoElement {
+        let mut target = use_state(|| 100.0);
+
+        let animation = use_animation_with_dependencies(&target(), |conf, target| {
+            conf.on_creation(OnCreation::Run);
+            conf.on_change(OnChange::Rerun);
+
+            AnimNum::new(0., *target).time(50)
+        });
+
+        let progress = animation.get().value();
+
+        rect()
+            .width(Size::px(progress))
+            .height(Size::fill())
+            .background(Color::WHITE)
+            .child(
+                Button::new()
+                    .on_press(move |_| target.set(200.0))
+                    .child("Change Target"),
+            )
+    }
+
+    let mut test = launch_test(use_animation_app);
+
+    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    assert_eq!(rect.area.width(), 0.0);
+
+    test.poll(Duration::from_millis(1), Duration::from_millis(100));
+    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    assert_eq!(rect.area.width(), 100.0);
+
+    // Click button to change target to 200
+    // With OnChange::Rerun, should restart from 0 and animate to 200
+    test.click_cursor((15.0, 15.0));
+    test.sync_and_update();
+    test.sync_and_update();
+    test.sync_and_update();
+    test.sync_and_update();
+    test.sync_and_update();
+
+    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    assert_eq!(rect.area.width(), 0.0);
+
+    test.poll(Duration::from_millis(1), Duration::from_millis(25));
+    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    assert!(rect.area.width() > 0.0 && rect.area.width() < 200.0);
+
+    test.poll(Duration::from_millis(1), Duration::from_millis(75));
+    let rect = &test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()))[2];
+    assert_eq!(rect.area.width(), 200.0);
+}
