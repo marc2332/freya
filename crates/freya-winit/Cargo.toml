@@ -1,6 +1,6 @@
 [package]
 name = "freya-winit"
-version = "0.4.0-alpha.3"
+version = "0.4.0-alpha.4"
 description = "Winit renderer for Freya"
 edition = "2024"
 license = "MIT"
