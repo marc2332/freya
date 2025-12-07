@@ -2,6 +2,13 @@
 name = "freya-devtools"
 version = "0.4.0-alpha.0"
 edition = "2024"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "ui", "desktop", "skia"]
+categories = ["gui", "asynchronous"]
 
 [features]
 server = [

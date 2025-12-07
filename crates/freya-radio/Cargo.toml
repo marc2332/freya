@@ -3,8 +3,12 @@ name = "freya-radio"
 version = "0.4.0-alpha.0"
 edition = "2024"
 description = "Fully-typed global state management with a topics subscription system for Freya 🧬"
-categories = ["gui"]
-license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui"]
+categories = ["gui", "asynchronous"]
 
 [features]
 tracing = ["dep:tracing", "dep:itertools"]

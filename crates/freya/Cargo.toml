@@ -1,7 +1,15 @@
 [package]
 name = "freya"
 version = "0.4.0-alpha.0"
+description = "Cross-platform and non-web GUI Library powered by Skia."
 edition = "2024"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "ui", "desktop", "skia"]
+categories = ["gui", "asynchronous"]
 
 [package.metadata.docs.rs]
 features = ["freya-engine/mocked-engine", "all-debug"]

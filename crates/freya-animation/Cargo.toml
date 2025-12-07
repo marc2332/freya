@@ -2,7 +2,7 @@
 name = "freya-animation"
 version = "0.4.0-alpha.0"
 edition = "2024"
-readme = "./README.md"
+readme = "../../README.md"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
 homepage = "https://github.com/marc2332/freya"
