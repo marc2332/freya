@@ -21,10 +21,14 @@ fn app() -> impl IntoElement {
     let radio_station = use_init_radio_station::<Data, DataChannel>(Data::default);
 
     let on_press = move |_| {
-        EventNotifier::get().launch_window(WindowConfig::new(move || {
-            use_share_radio(move || radio_station);
-            sub_app()
-        }));
+        spawn(async move {
+            let _ = EventNotifier::get()
+                .launch_window(WindowConfig::new(move || {
+                    use_share_radio(move || radio_station);
+                    sub_app()
+                }))
+                .await;
+        });
     };
 
     rect()

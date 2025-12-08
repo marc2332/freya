@@ -30,14 +30,14 @@ fn main() {
     };
     let tray_handler = |ev, mut ctx: TrayContext| match ev {
         TrayEvent::Menu(MenuEvent { id }) if id == "3" => {
-            ctx.launch_window(WindowConfig::new(app).with_size(500., 450.))
+            ctx.launch_window(WindowConfig::new(app).with_size(500., 450.));
         }
         TrayEvent::Menu(MenuEvent { id }) if id == "4" => {
             for window in ctx.windows_mut().values_mut() {
                 if Some(true) == window.window().is_visible() {
-                    window.window_mut().set_visible(false)
+                    window.window_mut().set_visible(false);
                 } else {
-                    window.window_mut().set_visible(true)
+                    window.window_mut().set_visible(true);
                 }
             }
         }

@@ -80,6 +80,15 @@ pub enum NativeWindowEventAction {
 }
 
 #[derive(Debug)]
+pub enum NativeWindowErasedEventAction {
+    LaunchWindow {
+        window_config: WindowConfig,
+        ack: futures_channel::oneshot::Sender<WindowId>,
+    },
+    CloseWindow(WindowId),
+}
+
+#[derive(Debug)]
 pub struct NativeWindowEvent {
     pub window_id: WindowId,
     pub action: NativeWindowEventAction,
@@ -316,29 +325,43 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 app.window.set_cursor(cursor_icon);
                             }
                             UserEvent::Erased(data) => {
-                                let window_config = data
+                                let action = data
                                     .0
-                                    .downcast::<WindowConfig>()
-                                    .expect("Expected WindowConfig");
-                                let app_window = AppWindow::new(
-                                    *window_config,
-                                    active_event_loop,
-                                    &self.proxy,
-                                    &mut self.plugins,
-                                    &self.font_collection,
-                                    &self.font_manager,
-                                    &self.fallback_fonts,
-                                    self.screen_reader.clone(),
-                                );
+                                    .downcast::<NativeWindowErasedEventAction>()
+                                    .expect("Expected NativeWindowErasedEventAction");
+                                match *action {
+                                    NativeWindowErasedEventAction::LaunchWindow {
+                                        window_config,
+                                        ack,
+                                    } => {
+                                        let app_window = AppWindow::new(
+                                            window_config,
+                                            active_event_loop,
+                                            &self.proxy,
+                                            &mut self.plugins,
+                                            &self.font_collection,
+                                            &self.font_manager,
+                                            &self.fallback_fonts,
+                                            self.screen_reader.clone(),
+                                        );
 
-                                self.proxy
-                                    .send_event(NativeEvent::Window(NativeWindowEvent {
-                                        window_id: app_window.window.id(),
-                                        action: NativeWindowEventAction::PollRunner,
-                                    }))
-                                    .ok();
+                                        let window_id = app_window.window.id();
 
-                                self.windows.insert(app_window.window.id(), app_window);
+                                        let _ = self.proxy.send_event(NativeEvent::Window(
+                                            NativeWindowEvent {
+                                                window_id,
+                                                action: NativeWindowEventAction::PollRunner,
+                                            },
+                                        ));
+
+                                        self.windows.insert(window_id, app_window);
+                                        let _ = ack.send(window_id);
+                                    }
+                                    NativeWindowErasedEventAction::CloseWindow(window_id) => {
+                                        // Its fine to ignore if the window doesnt exist anymore
+                                        let _ = self.windows.remove(&window_id);
+                                    }
+                                }
                             }
                         },
                         NativeWindowEventAction::PlatformEvent(platform_event) => {

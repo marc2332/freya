@@ -6,7 +6,10 @@ fn main() {
             WindowConfig::new(app)
                 .with_background(Color::TRANSPARENT)
                 .with_decorations(false)
-                .with_transparency(true),
+                .with_transparency(true)
+                .with_window_handle(|window| {
+                    let _ = window.set_cursor_hittest(false);
+                }),
         ),
     )
 }

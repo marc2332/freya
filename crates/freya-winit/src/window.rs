@@ -122,8 +122,12 @@ impl AppWindow {
         if let Some(window_attributes_hook) = window_config.window_attributes_hook.take() {
             window_attributes = window_attributes_hook(window_attributes);
         }
-        let (driver, window) =
+        let (driver, mut window) =
             GraphicsDriver::new(active_event_loop, window_attributes, &window_config);
+
+        if let Some(window_handle_hook) = window_config.window_handle_hook.take() {
+            window_handle_hook(&mut window);
+        }
 
         let (events_sender, events_receiver) = futures_channel::mpsc::unbounded();
 

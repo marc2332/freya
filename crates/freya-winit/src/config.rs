@@ -11,8 +11,7 @@ use freya_core::{
 };
 use image::ImageReader;
 use winit::window::{
-    Icon,
-    WindowAttributes,
+    Icon, Window, WindowAttributes
 };
 
 use crate::plugins::{
@@ -21,6 +20,7 @@ use crate::plugins::{
 };
 
 pub type WindowBuilderHook = Box<dyn FnOnce(WindowAttributes) -> WindowAttributes + Send + Sync>;
+pub type WindowHandleHook = Box<dyn FnOnce(&mut Window) + Send + Sync>;
 
 /// Configuration for a Window.
 pub struct WindowConfig {
@@ -46,6 +46,8 @@ pub struct WindowConfig {
     pub(crate) icon: Option<Icon>,
     /// Hook function called with the Window Attributes.
     pub(crate) window_attributes_hook: Option<WindowBuilderHook>,
+    /// Hook function called with the Window.
+    pub(crate) window_handle_hook: Option<WindowHandleHook>
 }
 
 impl Debug for WindowConfig {
@@ -83,6 +85,7 @@ impl WindowConfig {
             resizable: true,
             icon: None,
             window_attributes_hook: None,
+            window_handle_hook: None
         }
     }
 
@@ -149,6 +152,15 @@ impl WindowConfig {
         + Sync,
     ) -> Self {
         self.window_attributes_hook = Some(Box::new(window_attributes_hook));
+        self
+    }
+
+    /// Register a Window handle hook.
+    pub fn with_window_handle(mut self, window_handle_hook: impl FnOnce(&mut Window)
+        + 'static
+        + Send
+        + Sync,) -> Self {
+        self.window_handle_hook = Some(Box::new(window_handle_hook));
         self
     }
 }

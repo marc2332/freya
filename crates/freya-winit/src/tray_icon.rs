@@ -73,7 +73,7 @@ impl<'a> TrayContext<'a> {
 }
 
 impl TrayContext<'_> {
-    pub fn launch_window(&mut self, window_config: WindowConfig) {
+    pub fn launch_window(&mut self, window_config: WindowConfig) -> WindowId {
         let app_window = AppWindow::new(
             window_config,
             self.active_event_loop,
@@ -85,14 +85,18 @@ impl TrayContext<'_> {
             self.screen_reader.clone(),
         );
 
+        let window_id = app_window.window.id();
+
         self.proxy
             .send_event(NativeEvent::Window(NativeWindowEvent {
-                window_id: app_window.window.id(),
+                window_id,
                 action: NativeWindowEventAction::PollRunner,
             }))
             .ok();
 
-        self.windows.insert(app_window.window.id(), app_window);
+        self.windows.insert(window_id, app_window);
+
+        window_id
     }
 
     pub fn windows(&self) -> &FxHashMap<WindowId, AppWindow> {

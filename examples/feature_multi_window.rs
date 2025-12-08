@@ -6,15 +6,34 @@ fn main() {
 
 fn app() -> impl IntoElement {
     let count = use_state(|| 0);
+    let mut windows = use_state(Vec::new);
 
-    let on_press = move |_| {
-        EventNotifier::get().launch_window(WindowConfig::new(move || sub_app(count)));
+    let on_open = move |_| {
+        spawn(async move {
+            let window_id = EventNotifier::get()
+                .launch_window(WindowConfig::new(move || sub_app(count)))
+                .await;
+            windows.write().push(window_id);
+        });
+    };
+
+    let on_close_children = move |_| {
+        spawn(async move {
+            for window_id in windows.write().drain(..) {
+                EventNotifier::get().close_window(window_id);
+            }
+        });
     };
 
     rect()
         .expanded()
         .center()
-        .child(Button::new().on_press(on_press).child("Open"))
+        .child(Button::new().on_press(on_open).child("Open"))
+        .child(
+            Button::new()
+                .on_press(on_close_children)
+                .child("Close children"),
+        )
 }
 
 fn sub_app(mut count: State<i32>) -> impl IntoElement {
