@@ -123,6 +123,7 @@ pub mod prelude {
             font_weight::*,
             font_width::*,
             gradient::*,
+            scale::*,
             shadow::*,
             text_align::*,
             text_height::*,

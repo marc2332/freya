@@ -10,3 +10,9 @@ impl From<(f32, f32)> for Scale {
         Scale { x, y }
     }
 }
+
+impl From<f32> for Scale {
+    fn from(x_y: f32) -> Self {
+        Scale { x: x_y, y: x_y }
+    }
+}

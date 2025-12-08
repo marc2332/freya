@@ -1,5 +1,17 @@
 use std::borrow::Cow;
 
+use freya_animation::{
+    easing::Function,
+    hook::{
+        AnimatedValue,
+        Ease,
+        OnChange,
+        OnCreation,
+        ReadAnimatedValue,
+        use_animation,
+    },
+    prelude::AnimNum,
+};
 use freya_core::prelude::*;
 use torin::{
     prelude::{
@@ -145,6 +157,28 @@ impl Render for TooltipContainer {
         let mut is_hovering = use_state(|| false);
         let mut size = use_state(Area::default);
 
+        let animation = use_animation(move |conf| {
+            conf.on_change(OnChange::Rerun);
+            conf.on_creation(OnCreation::Run);
+
+            let scale = AnimNum::new(0.8, 1.)
+                .time(350)
+                .ease(Ease::Out)
+                .function(Function::Expo);
+            let opacity = AnimNum::new(0., 1.)
+                .time(350)
+                .ease(Ease::Out)
+                .function(Function::Expo);
+
+            if is_hovering() {
+                (scale, opacity)
+            } else {
+                (scale.into_reversed(), opacity.into_reversed())
+            }
+        });
+
+        let (scale, opacity) = animation.read().value();
+
         let on_pointer_enter = move |_| {
             is_hovering.set(true);
         };
@@ -173,23 +207,29 @@ impl Render for TooltipContainer {
                     .width(Size::px(0.))
                     .height(Size::px(0.))
                     .layer(1500)
-                    .maybe_child(if *is_hovering.read() {
-                        Some(match self.position {
+                    .opacity(opacity)
+                    .overflow(if opacity == 0. {
+                        Overflow::Clip
+                    } else {
+                        Overflow::None
+                    })
+                    .child({
+                        match self.position {
                             TooltipPosition::Below => rect()
                                 .width(Size::px(size.read().width()))
                                 .cross_align(Alignment::Center)
                                 .main_align(Alignment::Center)
+                                .scale(scale)
                                 .padding((5., 0., 0., 0.))
                                 .child(self.tooltip.clone()),
                             TooltipPosition::Besides => rect()
                                 .height(Size::px(size.read().height()))
                                 .cross_align(Alignment::Center)
                                 .main_align(Alignment::Center)
+                                .scale(scale)
                                 .padding((0., 0., 0., 5.))
                                 .child(self.tooltip.clone()),
-                        })
-                    } else {
-                        None
+                        }
                     }),
             )
     }
