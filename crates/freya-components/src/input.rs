@@ -274,9 +274,14 @@ impl Render for Input {
         };
 
         let on_input_pointer_down = move |e: Event<PointerEventData>| {
+            e.stop_propagation();
+            is_dragging.set(true);
             if !display_placeholder {
+                let area = area.read().to_f64();
+                let global_location = e.global_location().clamp(area.min(), area.max());
+                let location = (global_location - area.min()).to_point();
                 editable.process_event(EditableEvent::Down {
-                    location: e.element_location(),
+                    location,
                     editor_id: 0,
                     holder: &holder.read(),
                 });
