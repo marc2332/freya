@@ -111,7 +111,7 @@ pub fn launch(launch_config: LaunchConfig) {
         #[cfg(target_os = "linux")]
         if let Some(tray_icon) = renderer.tray.0.take() {
             std::thread::spawn(move || {
-                gtk::init().unwrap();
+                gtk::init().expect("Failed to initialize GTK for the Tray Icon.");
 
                 let _tray_icon = (tray_icon)();
 
