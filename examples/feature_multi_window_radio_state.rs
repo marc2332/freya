@@ -2,7 +2,13 @@ use freya::prelude::*;
 use freya_radio::prelude::*;
 
 fn main() {
-    launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
+    let radio_station = RadioStation::create_global(Data::default());
+
+    launch(
+        LaunchConfig::new().with_window(WindowConfig::new(FpRender::from_render(App {
+            radio_station,
+        }))),
+    )
 }
 
 #[derive(Default)]
@@ -17,37 +23,50 @@ pub enum DataChannel {
 
 impl RadioChannel<Data> for DataChannel {}
 
-fn app() -> impl IntoElement {
-    let radio_station = use_init_radio_station::<Data, DataChannel>(Data::default);
-
-    let on_press = move |_| {
-        spawn(async move {
-            let _ = EventNotifier::get()
-                .launch_window(WindowConfig::new(move || {
-                    use_share_radio(move || radio_station);
-                    sub_app()
-                }))
-                .await;
-        });
-    };
-
-    rect()
-        .expanded()
-        .center()
-        .child(Button::new().on_press(on_press).child("Open"))
+struct App {
+    radio_station: RadioStation<Data, DataChannel>,
 }
 
-fn sub_app() -> impl IntoElement {
-    let mut radio = use_radio(DataChannel::Count);
+impl Render for App {
+    fn render(&self) -> impl IntoElement {
+        use_share_radio(move || self.radio_station);
 
-    let on_press = move |_| {
-        radio.write().count += 1;
-    };
+        let radio_station = self.radio_station;
+        let on_press = move |_| {
+            spawn(async move {
+                let _ = EventNotifier::get()
+                    .launch_window(WindowConfig::new(FpRender::from_render(SubApp {
+                        radio_station,
+                    })))
+                    .await;
+            });
+        };
 
-    rect()
-        .expanded()
-        .center()
-        .spacing(6.)
-        .child(format!("Value is {}", radio.read().count))
-        .child(Button::new().on_press(on_press).child("Increase"))
+        rect()
+            .expanded()
+            .center()
+            .child(Button::new().on_press(on_press).child("Open"))
+    }
+}
+
+struct SubApp {
+    radio_station: RadioStation<Data, DataChannel>,
+}
+
+impl Render for SubApp {
+    fn render(&self) -> impl IntoElement {
+        use_share_radio(move || self.radio_station);
+        let mut radio = use_radio(DataChannel::Count);
+
+        let on_press = move |_| {
+            radio.write().count += 1;
+        };
+
+        rect()
+            .expanded()
+            .center()
+            .spacing(6.)
+            .child(format!("Value is {}", radio.read().count))
+            .child(Button::new().on_press(on_press).child("Increase"))
+    }
 }

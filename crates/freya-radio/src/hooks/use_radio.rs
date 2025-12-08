@@ -53,6 +53,21 @@ impl<Value, Channel> RadioStation<Value, Channel>
 where
     Channel: RadioChannel<Value>,
 {
+    pub(crate) fn create(init_value: Value) -> Self {
+        RadioStation {
+            value: State::create(init_value),
+            listeners: State::create(HashMap::default()),
+        }
+    }
+
+    /// Create a [RadioStation] expected to life until the end of the process.
+    pub fn create_global(init_value: Value) -> Self {
+        RadioStation {
+            value: State::create_global(init_value),
+            listeners: State::create_global(HashMap::default()),
+        }
+    }
+
     pub(crate) fn is_listening(
         &self,
         channel: &Channel,
@@ -108,7 +123,7 @@ where
         self.value.peek()
     }
 
-    pub fn cleanup(&self) {
+    pub(crate) fn cleanup(&self) {
         let mut listeners = self.listeners.write_unchecked();
 
         // Clean up those channels with no reactive contexts
@@ -137,6 +152,21 @@ where
             }
         }
     }
+
+    /// Modify the state using a custom Channel.
+    ///
+    /// ## Example:
+    /// ```rs, no_run
+    /// radio_station.write(Channel::Whatever).value = 1;
+    /// ```
+    pub fn write_channel(&mut self, channel: Channel) -> RadioGuard<Value, Channel> {
+        let value = self.value.write_unchecked();
+        RadioGuard {
+            channels: channel.clone().derive_channel(&*value),
+            station: *self,
+            value,
+        }
+    }
 }
 
 pub struct RadioAntenna<Value, Channel>
@@ -159,13 +189,24 @@ where
         RadioAntenna { channel, station }
     }
 }
+impl<Value, Channel> Clone for RadioAntenna<Value, Channel>
+where
+    Channel: RadioChannel<Value>,
+{
+    fn clone(&self) -> Self {
+        Self {
+            channel: self.channel.clone(),
+            station: self.station,
+        }
+    }
+}
 
 pub struct RadioGuard<Value, Channel>
 where
     Channel: RadioChannel<Value>,
     Value: 'static,
 {
-    antenna: State<RadioAntenna<Value, Channel>>,
+    station: RadioStation<Value, Channel>,
     channels: Vec<Channel>,
     value: WriteRef<'static, Value>,
 }
@@ -176,10 +217,10 @@ where
 {
     fn drop(&mut self) {
         for channel in &mut self.channels {
-            self.antenna.peek().station.notify_listeners(channel)
+            self.station.notify_listeners(channel)
         }
         if !self.channels.is_empty() {
-            self.antenna.peek().station.cleanup();
+            self.station.cleanup();
         }
     }
 }
@@ -328,7 +369,7 @@ where
         let channel = self.antenna.peek().channel.clone();
         RadioGuard {
             channels: channel.derive_channel(&*value),
-            antenna: self.antenna,
+            station: self.antenna.read().station,
             value,
         }
     }
@@ -357,7 +398,7 @@ where
         let value = self.antenna.peek().station.value.write_unchecked();
         RadioGuard {
             channels: channel.derive_channel(&*value),
-            antenna: self.antenna,
+            station: self.antenna.read().station,
             value,
         }
     }
@@ -401,7 +442,7 @@ where
         let value = self.antenna.peek().station.value.write_unchecked();
         let mut guard = RadioGuard {
             channels: Vec::default(),
-            antenna: self.antenna,
+            station: self.antenna.read().station,
             value,
         };
         let channel_selection = cb(&mut guard.value);
@@ -427,7 +468,7 @@ where
         let value = self.antenna.peek().station.value.write_unchecked();
         RadioGuard {
             channels: Vec::default(),
-            antenna: self.antenna,
+            station: self.antenna.read().station,
             value,
         }
     }
@@ -521,10 +562,7 @@ where
     Channel: RadioChannel<Value>,
     Value: 'static,
 {
-    use_provide_context(|| RadioStation {
-        value: State::create(init_value()),
-        listeners: State::create(HashMap::default()),
-    })
+    use_provide_context(|| RadioStation::create(init_value()))
 }
 
 pub fn use_radio_station<Value, Channel>() -> RadioStation<Value, Channel>

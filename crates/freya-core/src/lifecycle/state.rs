@@ -5,7 +5,11 @@ use std::{
     rc::Rc,
 };
 
-use generational_box::GenerationalBox;
+use generational_box::{
+    AnyStorage,
+    GenerationalBox,
+    UnsyncStorage,
+};
 use rustc_hash::FxHashSet;
 
 use crate::{
@@ -252,6 +256,7 @@ impl<T> State<T> {
         }
     }
 
+    /// Create a [State] attached to the current Scope.
     pub fn create(value: T) -> Self
     where
         T: 'static, // TODO: Move this lifetime bound to impl
@@ -259,6 +264,7 @@ impl<T> State<T> {
         Self::create_in_scope(value, None)
     }
 
+    /// Create a [State] attached to the given Scope.
     pub fn create_in_scope(value: T, scope_id: impl Into<Option<ScopeId>>) -> Self
     where
         T: 'static,
@@ -270,6 +276,18 @@ impl<T> State<T> {
             let scopes_storage = scopes_storages.get(&scope_id.into().unwrap_or(context.scope_id));
             scopes_storage.unwrap().owner.clone()
         });
+        let key = owner.insert(value);
+        let subscribers = owner.insert(Rc::default());
+        State { key, subscribers }
+    }
+
+    /// Create a global [State] that is expected to live until the end of the process.
+    pub fn create_global(value: T) -> Self
+    where
+        T: 'static,
+    {
+        let owner = UnsyncStorage::owner();
+        Box::leak(Box::new(owner.clone()));
         let key = owner.insert(value);
         let subscribers = owner.insert(Rc::default());
         State { key, subscribers }
