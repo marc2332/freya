@@ -142,8 +142,12 @@ impl Render for Slider {
         };
 
         let on_pointer_enter = move |_| {
-            Cursor::set(CursorIcon::Pointer);
             *status.write() = SliderStatus::Hovering;
+            if enabled() {
+                Cursor::set(CursorIcon::Pointer);
+            } else {
+                Cursor::set(CursorIcon::NotAllowed);
+            }
         };
 
         let on_pointer_leave = move |_| {
@@ -273,12 +277,12 @@ impl Render for Slider {
             .on_sized(move |e: Event<SizedEventData>| size.set(e.area))
             .maybe(self.enabled, |rect| {
                 rect.on_key_down(on_key_down)
-                    .on_pointer_enter(on_pointer_enter)
-                    .on_pointer_leave(on_pointer_leave)
                     .on_pointer_down(on_pointer_down)
                     .on_global_mouse_move(on_global_mouse_move)
                     .on_global_mouse_up(on_global_mouse_up)
             })
+            .on_pointer_enter(on_pointer_enter)
+            .on_pointer_leave(on_pointer_leave)
             .a11y_id(focus.a11y_id())
             .a11y_focusable(self.enabled)
             .border(border)

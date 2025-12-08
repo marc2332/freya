@@ -214,7 +214,7 @@ impl Render for Button {
                 .width(1.)
                 .alignment(BorderAlignment::Inner)
         };
-        let background = if hovering() {
+        let background = if enabled() && hovering() {
             theme_colors.hover_background
         } else {
             theme_colors.background
@@ -242,10 +242,14 @@ impl Render for Button {
                         }
                     }
                 })
-                .on_pointer_enter(move |_| {
+            })
+            .on_pointer_enter(move |_| {
+                hovering.set(true);
+                if enabled() {
                     Cursor::set(CursorIcon::Pointer);
-                    hovering.set(true);
-                })
+                } else {
+                    Cursor::set(CursorIcon::NotAllowed);
+                }
             })
             .on_pointer_leave(move |_| {
                 if hovering() {

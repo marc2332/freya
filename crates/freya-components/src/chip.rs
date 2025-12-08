@@ -109,6 +109,13 @@ impl Render for Chip {
             selected_icon_fill,
         } = theme;
 
+        let enabled = use_reactive(&self.enabled);
+        use_drop(move || {
+            if status() == ChipStatus::Hovering && enabled() {
+                Cursor::set(CursorIcon::default());
+            }
+        });
+
         let on_press = self.on_press.clone();
         let on_press = move |e: Event<PressEventData>| {
             focus.request_focus();
@@ -118,8 +125,12 @@ impl Render for Chip {
         };
 
         let on_pointer_enter = move |_| {
-            Cursor::set(CursorIcon::Pointer);
             status.set(ChipStatus::Hovering);
+            if enabled() {
+                Cursor::set(CursorIcon::Pointer);
+            } else {
+                Cursor::set(CursorIcon::NotAllowed);
+            }
         };
 
         let on_pointer_leave = move |_| {
@@ -130,26 +141,26 @@ impl Render for Chip {
         };
 
         let background = match status() {
-            ChipStatus::Hovering => hover_background,
+            ChipStatus::Hovering if enabled() => hover_background,
             _ if self.selected => selected_background,
             _ => background,
         };
         let color = match status() {
-            ChipStatus::Hovering => hover_color,
+            ChipStatus::Hovering if enabled() => hover_color,
             _ if self.selected => selected_color,
             _ => color,
         };
         let border_fill = match status() {
-            ChipStatus::Hovering => hover_border_fill,
+            ChipStatus::Hovering if enabled() => hover_border_fill,
             _ if self.selected => selected_border_fill,
             _ => border_fill,
         };
         let icon_fill = match status() {
-            ChipStatus::Hovering if self.selected => Some(hover_icon_fill),
+            ChipStatus::Hovering if self.selected && enabled() => Some(hover_icon_fill),
             _ if self.selected => Some(selected_icon_fill),
             _ => None,
         };
-        let border = if focus_status() == FocusStatus::Keyboard {
+        let border = if self.enabled && focus_status() == FocusStatus::Keyboard {
             Border::new()
                 .fill(focus_border_fill)
                 .width(2.)
@@ -165,9 +176,8 @@ impl Render for Chip {
             .a11y_id(focus.a11y_id())
             .a11y_focusable(self.enabled)
             .a11y_role(AccessibilityRole::Button)
-            .maybe(self.enabled, |rect| {
-                rect.on_press(on_press).on_pointer_enter(on_pointer_enter)
-            })
+            .maybe(self.enabled, |rect| rect.on_press(on_press))
+            .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
             .width(width)
             .height(height)

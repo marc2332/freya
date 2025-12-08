@@ -311,13 +311,19 @@ impl Render for Input {
         };
 
         let on_pointer_enter = move |_| {
-            Cursor::set(CursorIcon::Text);
             *status.write() = InputStatus::Hovering;
+            if enabled() {
+                Cursor::set(CursorIcon::Text);
+            } else {
+                Cursor::set(CursorIcon::NotAllowed);
+            }
         };
 
         let on_pointer_leave = move |_| {
-            Cursor::set(CursorIcon::default());
-            *status.write() = InputStatus::default();
+            if status() == InputStatus::Hovering {
+                Cursor::set(CursorIcon::default());
+                *status.write() = InputStatus::default();
+            }
         };
 
         let on_global_mouse_up = move |_| {
@@ -344,15 +350,16 @@ impl Render for Input {
 
         let a11y_id = focus.a11y_id();
 
-        let (background, cursor_index, text_selection) = if focus_status() != FocusStatus::Not {
-            (
-                theme.hover_background,
-                Some(editable.editor().read().cursor_pos()),
-                editable.editor().read().get_visible_selection(0),
-            )
-        } else {
-            (theme.background, None, None)
-        };
+        let (background, cursor_index, text_selection) =
+            if enabled() && focus_status() != FocusStatus::Not {
+                (
+                    theme.hover_background,
+                    Some(editable.editor().read().cursor_pos()),
+                    editable.editor().read().get_visible_selection(0),
+                )
+            } else {
+                (theme.background, None, None)
+            };
 
         let border = if focus_status() == FocusStatus::Keyboard {
             Border::new()
@@ -392,10 +399,10 @@ impl Render for Input {
                 rect.on_key_up(on_key_up)
                     .on_key_down(on_key_down)
                     .on_pointer_down(on_input_pointer_down)
-                    .on_pointer_enter(on_pointer_enter)
-                    .on_pointer_leave(on_pointer_leave)
                     .on_ime_preedit(on_ime_preedit)
             })
+            .on_pointer_enter(on_pointer_enter)
+            .on_pointer_leave(on_pointer_leave)
             .width(self.width.clone())
             .background(background.mul_if(!self.enabled, 0.85))
             .border(border)

@@ -181,10 +181,14 @@ impl Render for Switch {
                         focus.request_focus();
                     }
                 })
-                .on_pointer_enter(move |_| {
+            })
+            .on_pointer_enter(move |_| {
+                hovering.set(true);
+                if enabled() {
                     Cursor::set(CursorIcon::Pointer);
-                    hovering.set(true);
-                })
+                } else {
+                    Cursor::set(CursorIcon::NotAllowed);
+                }
             })
             .on_pointer_leave(move |_| {
                 if hovering() {
