@@ -35,6 +35,6 @@ jobs:
         prefix-key: "rust"
     - name: Install linux dependencies
       if: runner.os == 'Linux'
-      run: sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev
+      run: sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev
     - name: Build all --features
       run: just ba

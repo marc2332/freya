@@ -130,7 +130,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     use objc2_core_foundation::CFRunLoop;
 
                     let rl = CFRunLoop::main().expect("Failed to run CFRunLoop");
-                     CFRunLoop::wake_up(&rl);
+                    CFRunLoop::wake_up(&rl);
                 }
             }
 
