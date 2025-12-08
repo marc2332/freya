@@ -38,6 +38,10 @@ jobs:
     - name: Install linux dependencies
       if: runner.os == 'Linux'
       run: sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev
+    - name: Remove unused programs in linux
+      if: runner.os == 'Linux'
+      run: |
+        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
     - name: Run Linux tests
       if: runner.os == 'Linux'
       run: |
