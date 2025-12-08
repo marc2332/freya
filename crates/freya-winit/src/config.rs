@@ -1,5 +1,6 @@
 use std::{
     borrow::Cow,
+    fmt::Debug,
     io::Cursor,
 };
 
@@ -45,6 +46,22 @@ pub struct WindowConfig {
     pub(crate) icon: Option<Icon>,
     /// Hook function called with the Window Attributes.
     pub(crate) window_attributes_hook: Option<WindowBuilderHook>,
+}
+
+impl Debug for WindowConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("WindowConfig")
+            .field("size", &self.size)
+            .field("min_size", &self.min_size)
+            .field("max_size", &self.max_size)
+            .field("decorations", &self.decorations)
+            .field("title", &self.title)
+            .field("transparent", &self.transparent)
+            .field("background", &self.background)
+            .field("resizable", &self.resizable)
+            .field("icon", &self.icon)
+            .finish()
+    }
 }
 
 impl WindowConfig {
@@ -118,17 +135,7 @@ impl WindowConfig {
     }
 
     /// Specify Window icon.
-    pub fn with_icon(mut self, data: &[u8]) -> Self {
-        let reader = ImageReader::new(Cursor::new(data))
-            .with_guessed_format()
-            .expect("cursor io never fails");
-        let image = reader
-            .decode()
-            .expect("image format is supported")
-            .into_rgba8();
-        let (width, height) = image.dimensions();
-        let rgba = image.into_raw();
-        let icon = Icon::from_rgba(rgba, width, height).expect("image format is correct");
+    pub fn with_icon(mut self, icon: Icon) -> Self {
         self.icon = Some(icon);
         self
     }
@@ -147,10 +154,16 @@ impl WindowConfig {
 }
 
 pub type EmbeddedFonts = Vec<(Cow<'static, str>, Bytes)>;
+#[cfg(feature = "tray")]
+pub type TrayIconGetter = Box<dyn FnOnce() -> tray_icon::TrayIcon + Send>;
+#[cfg(feature = "tray")]
+pub type TrayHandler = Box<dyn FnMut(crate::tray_icon::TrayEvent, crate::tray_icon::TrayContext)>;
 
 /// Launch configuration.
 pub struct LaunchConfig {
     pub(crate) windows_configs: Vec<WindowConfig>,
+    #[cfg(feature = "tray")]
+    pub(crate) tray: (Option<TrayIconGetter>, Option<TrayHandler>),
     pub(crate) plugins: PluginsManager,
     pub(crate) embedded_fonts: EmbeddedFonts,
     pub(crate) fallback_fonts: Vec<Cow<'static, str>>,
@@ -160,6 +173,8 @@ impl Default for LaunchConfig {
     fn default() -> Self {
         LaunchConfig {
             windows_configs: Vec::default(),
+            #[cfg(feature = "tray")]
+            tray: (None, None),
             plugins: PluginsManager::default(),
             embedded_fonts: Default::default(),
             fallback_fonts: default_fonts(),
@@ -171,12 +186,50 @@ impl LaunchConfig {
     pub fn new() -> LaunchConfig {
         LaunchConfig::default()
     }
+
+    pub fn window_icon(icon: &[u8]) -> Icon {
+        let reader = ImageReader::new(Cursor::new(icon))
+            .with_guessed_format()
+            .expect("Cursor io never fails");
+        let image = reader
+            .decode()
+            .expect("Failed to open icon path")
+            .into_rgba8();
+        let (width, height) = image.dimensions();
+        let rgba = image.into_raw();
+        Icon::from_rgba(rgba, width, height).expect("Failed to open icon")
+    }
+
+    #[cfg(feature = "tray")]
+    pub fn tray_icon(icon: &[u8]) -> tray_icon::Icon {
+        let reader = ImageReader::new(Cursor::new(icon))
+            .with_guessed_format()
+            .expect("Cursor io never fails");
+        let image = reader
+            .decode()
+            .expect("Failed to open icon path")
+            .into_rgba8();
+        let (width, height) = image.dimensions();
+        let rgba = image.into_raw();
+        tray_icon::Icon::from_rgba(rgba, width, height).expect("Failed to open icon")
+    }
 }
 
 impl LaunchConfig {
     /// Register a window configuration. You can call this multiple times.
     pub fn with_window(mut self, window_config: WindowConfig) -> Self {
         self.windows_configs.push(window_config);
+        self
+    }
+
+    /// Register a tray icon and its handler.
+    #[cfg(feature = "tray")]
+    pub fn with_tray(
+        mut self,
+        tray_icon: impl FnOnce() -> tray_icon::TrayIcon + 'static + Send,
+        tray_handler: impl FnMut(crate::tray_icon::TrayEvent, crate::tray_icon::TrayContext) + 'static,
+    ) -> Self {
+        self.tray = (Some(Box::new(tray_icon)), Some(Box::new(tray_handler)));
         self
     }
 

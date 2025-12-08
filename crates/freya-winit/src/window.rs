@@ -58,36 +58,36 @@ use crate::{
 };
 
 pub struct AppWindow {
-    pub runner: Runner,
-    pub tree: Tree,
-    pub driver: GraphicsDriver,
-    pub window: Window,
-    pub nodes_state: NodesState<NodeId>,
+    pub(crate) runner: Runner,
+    pub(crate) tree: Tree,
+    pub(crate) driver: GraphicsDriver,
+    pub(crate) window: Window,
+    pub(crate) nodes_state: NodesState<NodeId>,
 
-    pub position: CursorPoint,
-    pub mouse_state: ElementState,
-    pub modifiers_state: ModifiersState,
+    pub(crate) position: CursorPoint,
+    pub(crate) mouse_state: ElementState,
+    pub(crate) modifiers_state: ModifiersState,
 
-    pub events_receiver: futures_channel::mpsc::UnboundedReceiver<EventsChunk>,
-    pub events_sender: futures_channel::mpsc::UnboundedSender<EventsChunk>,
+    pub(crate) events_receiver: futures_channel::mpsc::UnboundedReceiver<EventsChunk>,
+    pub(crate) events_sender: futures_channel::mpsc::UnboundedSender<EventsChunk>,
 
-    pub accessibility: AccessibilityTree,
-    pub accessibility_adapter: accesskit_winit::Adapter,
-    pub accessibility_tasks_for_next_render: AccessibilityTask,
+    pub(crate) accessibility: AccessibilityTree,
+    pub(crate) accessibility_adapter: accesskit_winit::Adapter,
+    pub(crate) accessibility_tasks_for_next_render: AccessibilityTask,
 
-    pub process_layout_on_next_render: bool,
+    pub(crate) process_layout_on_next_render: bool,
 
-    pub waker: Waker,
+    pub(crate) waker: Waker,
 
-    pub ticker_sender: RenderingTickerSender,
+    pub(crate) ticker_sender: RenderingTickerSender,
 
-    pub platform_state: PlatformState,
+    pub(crate) platform_state: PlatformState,
 
-    pub animation_clock: AnimationClock,
+    pub(crate) animation_clock: AnimationClock,
 
-    pub background: Color,
+    pub(crate) background: Color,
 
-    pub dropped_file_paths: Vec<PathBuf>,
+    pub(crate) dropped_file_paths: Vec<PathBuf>,
 }
 
 impl AppWindow {
@@ -251,5 +251,13 @@ impl AppWindow {
 
             dropped_file_paths: Vec::new(),
         }
+    }
+
+    pub fn window(&self) -> &Window {
+        &self.window
+    }
+
+    pub fn window_mut(&mut self) -> &mut Window {
+        &mut self.window
     }
 }

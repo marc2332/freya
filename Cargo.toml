@@ -109,6 +109,9 @@ bytes = "1.10.1"
 raw-window-handle = "0.6.0"
 winit = "0.30.0"
 
+# Tray
+tray-icon = "0.21"
+
 # OpenGL
 gl = "0.14.0"
 glutin = "0.32.0"

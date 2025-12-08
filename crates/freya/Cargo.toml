@@ -21,7 +21,7 @@ default = ["skia-engine"]
 skia-engine = ["freya-engine/skia-engine"]
 mocked-engine = ["freya-engine/mocked-engine"]
 # Shortcuts
-all = ["router", "i18n", "remote-asset", "engine", "plot", "gif"]
+all = ["router", "i18n", "remote-asset", "engine", "plot", "gif", "tray"]
 all-debug = ["all", "performance", "vulkan"]
 # Features
 router = ["dep:freya-router", "freya-components/router"]
@@ -34,6 +34,7 @@ plot = ["freya-components/plot"]
 gif = ["freya-components/gif"]
 vulkan = ["freya-winit/vulkan"]
 sdk = ["dep:freya-sdk"]
+tray = ["freya-winit/tray", "dep:tray-icon"]
 
 [dependencies]
 freya-core = { workspace = true }
@@ -54,6 +55,9 @@ freya-i18n = { workspace = true, optional = true }
 
 # Performance
 freya-performance-plugin = { workspace = true, optional = true }
+
+# Tray
+tray-icon = { workspace = true, optional = true }
 
 # Other
 cfg-if = "1.0"

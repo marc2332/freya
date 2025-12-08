@@ -149,6 +149,11 @@ pub mod helpers {
     pub use freya_core::helpers::*;
 }
 
+#[cfg(feature = "tray")]
+pub mod tray {
+    pub use freya_winit::tray::*;
+}
+
 #[cfg(feature = "sdk")]
 pub mod sdk {
     pub use freya_sdk::*;

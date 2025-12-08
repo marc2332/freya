@@ -53,6 +53,11 @@ use crate::{
 
 pub struct WinitRenderer {
     pub windows_configs: Vec<WindowConfig>,
+    #[cfg(feature = "tray")]
+    pub(crate) tray: (
+        Option<crate::config::TrayIconGetter>,
+        Option<crate::config::TrayHandler>,
+    ),
     pub resumed: bool,
     pub windows: FxHashMap<WindowId, AppWindow>,
     pub proxy: EventLoopProxy<NativeEvent>,
@@ -80,9 +85,25 @@ pub struct NativeWindowEvent {
     pub action: NativeWindowEventAction,
 }
 
+#[cfg(feature = "tray")]
+#[derive(Debug)]
+pub enum NativeTrayEventAction {
+    TrayEvent(tray_icon::TrayIconEvent),
+    MenuEvent(tray_icon::menu::MenuEvent),
+    LaunchWindow(SingleThreadErasedEvent),
+}
+
+#[cfg(feature = "tray")]
+#[derive(Debug)]
+pub struct NativeTrayEvent {
+    pub action: NativeTrayEventAction,
+}
+
 #[derive(Debug)]
 pub enum NativeEvent {
     Window(NativeWindowEvent),
+    #[cfg(feature = "tray")]
+    Tray(NativeTrayEvent),
 }
 
 impl From<accesskit_winit::Event> for NativeEvent {
@@ -97,6 +118,25 @@ impl From<accesskit_winit::Event> for NativeEvent {
 impl ApplicationHandler<NativeEvent> for WinitRenderer {
     fn resumed(&mut self, active_event_loop: &winit::event_loop::ActiveEventLoop) {
         if !self.resumed {
+            #[cfg(feature = "tray")]
+            {
+                #[cfg(not(target_os = "linux"))]
+                if let Some(tray_icon) = self.tray_icon.0.take() {
+                    let _tray_icon = (tray_icon)();
+                }
+
+                #[cfg(target_os = "macos")]
+                unsafe {
+                    use objc2_core_foundation::{
+                        CFRunLoopGetMain,
+                        CFRunLoopWakeUp,
+                    };
+
+                    let rl = CFRunLoopGetMain().unwrap();
+                    CFRunLoopWakeUp(&rl);
+                }
+            }
+
             for window_config in self.windows_configs.drain(..) {
                 let app_window = AppWindow::new(
                     window_config,
@@ -128,6 +168,56 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
         event: NativeEvent,
     ) {
         match event {
+            #[cfg(feature = "tray")]
+            NativeEvent::Tray(NativeTrayEvent { action }) => match action {
+                NativeTrayEventAction::TrayEvent(icon_event) => {
+                    use crate::tray::{
+                        TrayContext,
+                        TrayEvent,
+                    };
+                    if let Some((tray_context, tray_handler)) =
+                        TrayContext::new(active_event_loop, self)
+                    {
+                        (tray_handler)(TrayEvent::Icon(icon_event), tray_context)
+                    }
+                }
+                NativeTrayEventAction::MenuEvent(menu_event) => {
+                    use crate::tray::{
+                        TrayContext,
+                        TrayEvent,
+                    };
+                    if let Some((tray_context, tray_handler)) =
+                        TrayContext::new(active_event_loop, self)
+                    {
+                        (tray_handler)(TrayEvent::Menu(menu_event), tray_context)
+                    }
+                }
+                NativeTrayEventAction::LaunchWindow(data) => {
+                    let window_config = data
+                        .0
+                        .downcast::<WindowConfig>()
+                        .expect("Expected WindowConfig");
+                    let app_window = AppWindow::new(
+                        *window_config,
+                        active_event_loop,
+                        &self.proxy,
+                        &mut self.plugins,
+                        &self.font_collection,
+                        &self.font_manager,
+                        &self.fallback_fonts,
+                        self.screen_reader.clone(),
+                    );
+
+                    self.proxy
+                        .send_event(NativeEvent::Window(NativeWindowEvent {
+                            window_id: app_window.window.id(),
+                            action: NativeWindowEventAction::PollRunner,
+                        }))
+                        .ok();
+
+                    self.windows.insert(app_window.window.id(), app_window);
+                }
+            },
             NativeEvent::Window(NativeWindowEvent { action, window_id }) => {
                 if let Some(app) = &mut self.windows.get_mut(&window_id) {
                     match action {
@@ -229,29 +319,29 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 app.window.set_cursor(cursor_icon);
                             }
                             UserEvent::Erased(data) => {
-                                if let Ok(window_config) = data.0.downcast::<WindowConfig>() {
-                                    let app_window = AppWindow::new(
-                                        *window_config,
-                                        active_event_loop,
-                                        &self.proxy,
-                                        &mut self.plugins,
-                                        &self.font_collection,
-                                        &self.font_manager,
-                                        &self.fallback_fonts,
-                                        self.screen_reader.clone(),
-                                    );
+                                let window_config = data
+                                    .0
+                                    .downcast::<WindowConfig>()
+                                    .expect("Expected WindowConfig");
+                                let app_window = AppWindow::new(
+                                    *window_config,
+                                    active_event_loop,
+                                    &self.proxy,
+                                    &mut self.plugins,
+                                    &self.font_collection,
+                                    &self.font_manager,
+                                    &self.fallback_fonts,
+                                    self.screen_reader.clone(),
+                                );
 
-                                    self.proxy
-                                        .send_event(NativeEvent::Window(NativeWindowEvent {
-                                            window_id: app_window.window.id(),
-                                            action: NativeWindowEventAction::PollRunner,
-                                        }))
-                                        .ok();
+                                self.proxy
+                                    .send_event(NativeEvent::Window(NativeWindowEvent {
+                                        window_id: app_window.window.id(),
+                                        action: NativeWindowEventAction::PollRunner,
+                                    }))
+                                    .ok();
 
-                                    self.windows.insert(app_window.window.id(), app_window);
-                                } else {
-                                    unreachable!()
-                                }
+                                self.windows.insert(app_window.window.id(), app_window);
                             }
                         },
                         NativeWindowEventAction::PlatformEvent(platform_event) => {
@@ -290,7 +380,21 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 }
                 WindowEvent::CloseRequested => {
                     self.windows.remove(&window_id);
-                    if self.windows.is_empty() {
+                    let has_windows = !self.windows.is_empty();
+
+                    let has_tray = {
+                        #[cfg(feature = "tray")]
+                        {
+                            self.tray.1.is_some()
+                        }
+                        #[cfg(not(feature = "tray"))]
+                        {
+                            false
+                        }
+                    };
+
+                    // Only exit when there is no window and no tray
+                    if !has_windows && !has_tray {
                         event_loop.exit();
                     }
                 }

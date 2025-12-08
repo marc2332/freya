@@ -55,9 +55,19 @@ hotpath = { workspace = true }
 # Images
 image = { workspace = true }
 
+# Tray
+tray-icon = { workspace = true, optional = true }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+gtk = { version = "0.18.2", optional = true }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2-core-foundation = { version = "0.3.2", optional = true }
+
 [features]
 hotpath = ["hotpath/hotpath"]
 hotpath-alloc = ["hotpath/hotpath-alloc"]
 hotpath-off = ["hotpath/hotpath-off"]
 vulkan = ["dep:ash", "dep:ash-window", "freya-engine/vulkan"]
 skia-engine = ["freya-engine/skia-engine"]
+tray = ["dep:tray-icon", "dep:gtk", "dep:objc2-core-foundation"]

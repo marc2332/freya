@@ -15,6 +15,8 @@ mod drivers;
 pub mod extensions;
 pub mod plugins;
 pub mod renderer;
+#[cfg(feature = "tray")]
+mod tray_icon;
 mod window;
 mod winit_mappings;
 
@@ -22,6 +24,13 @@ pub use extensions::*;
 
 pub mod winit {
     pub use winit::*;
+}
+
+#[cfg(feature = "tray")]
+pub mod tray {
+    pub use tray_icon::*;
+
+    pub use crate::tray_icon::*;
 }
 
 pub fn launch(launch_config: LaunchConfig) {
@@ -61,6 +70,8 @@ pub fn launch(launch_config: LaunchConfig) {
 
     let mut renderer = WinitRenderer {
         windows: HashMap::default(),
+        #[cfg(feature = "tray")]
+        tray: launch_config.tray,
         resumed: false,
         proxy,
         font_manager: font_mgr,
@@ -70,6 +81,44 @@ pub fn launch(launch_config: LaunchConfig) {
         fallback_fonts: launch_config.fallback_fonts,
         screen_reader,
     };
+
+    #[cfg(feature = "tray")]
+    {
+        use crate::{
+            renderer::{
+                NativeTrayEvent,
+                NativeTrayEventAction,
+            },
+            tray::{
+                TrayIconEvent,
+                menu::MenuEvent,
+            },
+        };
+
+        let proxy = renderer.proxy.clone();
+        MenuEvent::set_event_handler(Some(move |event| {
+            let _ = proxy.send_event(NativeEvent::Tray(NativeTrayEvent {
+                action: NativeTrayEventAction::MenuEvent(event),
+            }));
+        }));
+        let proxy = renderer.proxy.clone();
+        TrayIconEvent::set_event_handler(Some(move |event| {
+            let _ = proxy.send_event(NativeEvent::Tray(NativeTrayEvent {
+                action: NativeTrayEventAction::TrayEvent(event),
+            }));
+        }));
+
+        #[cfg(target_os = "linux")]
+        if let Some(tray_icon) = renderer.tray.0.take() {
+            std::thread::spawn(move || {
+                gtk::init().unwrap();
+
+                let _tray_icon = (tray_icon)();
+
+                gtk::main();
+            });
+        }
+    }
 
     event_loop.run_app(&mut renderer).unwrap();
 }
