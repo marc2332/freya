@@ -27,6 +27,10 @@
 //! - `devtools`: Enables devtools support.
 //! - `performance`: Enables the performance overlay plugin.
 //! - `vulkan`: Enables Vulkan rendering support.
+//! - `tray`: Enables tray support using the `tray-icon` crate.
+//! - `sdk`: Reexport `freya-sdk` under `freya::sdk`
+//! - `gif`: Enables the `GifViewer` component.
+//! - `plot`: Enables the `plot` element.
 
 pub mod prelude {
     cfg_if::cfg_if! {
