@@ -60,7 +60,7 @@ where
         }
     }
 
-    /// Create a [RadioStation] expected to life until the end of the process.
+    /// Create a [RadioStation] expected to live until the end of the process.
     pub fn create_global(init_value: Value) -> Self {
         RadioStation {
             value: State::create_global(init_value),
