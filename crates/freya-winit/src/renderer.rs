@@ -121,19 +121,16 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
             #[cfg(feature = "tray")]
             {
                 #[cfg(not(target_os = "linux"))]
-                if let Some(tray_icon) = self.tray_icon.0.take() {
+                if let Some(tray_icon) = self.tray.0.take() {
                     let _tray_icon = (tray_icon)();
                 }
 
                 #[cfg(target_os = "macos")]
                 unsafe {
-                    use objc2_core_foundation::{
-                        CFRunLoopGetMain,
-                        CFRunLoopWakeUp,
-                    };
+                    use objc2_core_foundation::CFRunLoop;
 
-                    let rl = CFRunLoopGetMain().unwrap();
-                    CFRunLoopWakeUp(&rl);
+                    let rl = CFRunLoop::main().expect("Failed to run CFRunLoop");
+                     CFRunLoop::wake_up(&rl);
                 }
             }
 
