@@ -586,6 +586,11 @@ pub trait AccessibilityExt: Sized {
         self
     }
 
+    fn a11y_auto_focus(mut self, a11y_auto_focus: impl Into<bool>) -> Self {
+        self.get_accessibility_data().a11y_auto_focus = a11y_auto_focus.into();
+        self
+    }
+
     fn a11y_member_of(mut self, a11y_member_of: impl Into<AccessibilityId>) -> Self {
         self.get_accessibility_data()
             .builder

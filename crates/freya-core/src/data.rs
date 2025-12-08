@@ -23,6 +23,7 @@ use crate::{
     element::ElementExt,
     layers::Layers,
     node_id::NodeId,
+    prelude::AccessibilityFocusStrategy,
     style::{
         border::Border,
         color::Color,
@@ -340,6 +341,10 @@ impl AccessibilityState {
             // But we can't either assume that all the members are from the same parent so knowing their UI order gets trickier
             // So for no we just push to the end of the vector
             group.push(a11y_id);
+        }
+
+        if data.a11y_auto_focus {
+            accessibility_diff.request_focus(AccessibilityFocusStrategy::Node(a11y_id));
         }
 
         Self {

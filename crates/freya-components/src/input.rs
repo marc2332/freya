@@ -174,8 +174,8 @@ impl Input {
         self
     }
 
-    pub fn auto_focus(mut self, auto_focus: bool) -> Self {
-        self.auto_focus = auto_focus;
+    pub fn auto_focus(mut self, auto_focus: impl Into<bool>) -> Self {
+        self.auto_focus = auto_focus.into();
         self
     }
 
@@ -397,8 +397,7 @@ impl Render for Input {
         rect()
             .a11y_id(a11y_id)
             .a11y_focusable(self.enabled)
-            // TODO
-            // .a11y_auto_focus(self.auto_focus)
+            .a11y_auto_focus(self.auto_focus)
             .a11y_alt(text.clone())
             .maybe(self.enabled, |rect| {
                 rect.on_key_up(on_key_up)

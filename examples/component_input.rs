@@ -13,6 +13,7 @@ fn app() -> impl IntoElement {
         .spacing(6.)
         .child(
             Input::new()
+                .auto_focus(true)
                 .placeholder("Type your name")
                 .value(value.read().clone())
                 .onchange(move |v| value.set(v)),
