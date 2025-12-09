@@ -2,6 +2,7 @@ use std::{
     borrow::Cow,
     fmt::Debug,
     io::Cursor,
+    pin::Pin,
 };
 
 use bytes::Bytes;
@@ -181,6 +182,7 @@ pub struct LaunchConfig {
     pub(crate) plugins: PluginsManager,
     pub(crate) embedded_fonts: EmbeddedFonts,
     pub(crate) fallback_fonts: Vec<Cow<'static, str>>,
+    pub(crate) futures: Vec<Pin<Box<dyn Future<Output = ()>>>>,
 }
 
 impl Default for LaunchConfig {
@@ -192,6 +194,7 @@ impl Default for LaunchConfig {
             plugins: PluginsManager::default(),
             embedded_fonts: Default::default(),
             fallback_fonts: default_fonts(),
+            futures: Vec::new(),
         }
     }
 }
@@ -272,6 +275,12 @@ impl LaunchConfig {
     /// Register a default font. Will be used if found.
     pub fn with_default_font(mut self, font_name: impl Into<Cow<'static, str>>) -> Self {
         self.fallback_fonts.insert(0, font_name.into());
+        self
+    }
+
+    /// Register a single-thread future / async task.
+    pub fn with_future(mut self, future: impl Future<Output = ()> + 'static) -> Self {
+        self.futures.push(Box::pin(future));
         self
     }
 }

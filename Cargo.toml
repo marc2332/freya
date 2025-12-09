@@ -168,6 +168,7 @@ rand = "0.9"
 
 async-io = { workspace = true }
 futures-lite = { workspace = true }
+futures-channel = { workspace = true }
 
 ropey = { workspace = true }
 bitflags = { workspace = true }

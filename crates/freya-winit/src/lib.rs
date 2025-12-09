@@ -2,10 +2,13 @@ pub mod reexports {
     pub use winit;
 }
 
+use std::sync::Arc;
+
 use crate::{
     config::LaunchConfig,
     renderer::{
         NativeEvent,
+        NativeGenericEvent,
         WinitRenderer,
     },
 };
@@ -21,6 +24,12 @@ mod window;
 mod winit_mappings;
 
 pub use extensions::*;
+use futures_util::task::{
+    ArcWake,
+    waker,
+};
+
+use crate::winit::event_loop::EventLoopProxy;
 
 pub mod winit {
     pub use winit::*;
@@ -68,6 +77,18 @@ pub fn launch(launch_config: LaunchConfig) {
 
     let screen_reader = ScreenReader::new();
 
+    struct FuturesWaker(EventLoopProxy<NativeEvent>);
+
+    impl ArcWake for FuturesWaker {
+        fn wake_by_ref(arc_self: &Arc<Self>) {
+            _ = arc_self
+                .0
+                .send_event(NativeEvent::Generic(NativeGenericEvent::PollFutures));
+        }
+    }
+
+    let waker = waker(Arc::new(FuturesWaker(proxy.clone())));
+
     let mut renderer = WinitRenderer {
         windows: HashMap::default(),
         #[cfg(feature = "tray")]
@@ -80,6 +101,8 @@ pub fn launch(launch_config: LaunchConfig) {
         plugins: launch_config.plugins,
         fallback_fonts: launch_config.fallback_fonts,
         screen_reader,
+        futures: launch_config.futures,
+        waker,
     };
 
     #[cfg(feature = "tray")]

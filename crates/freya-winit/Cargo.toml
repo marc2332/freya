@@ -45,6 +45,7 @@ accesskit_winit = { workspace = true }
 accesskit = { workspace = true }
 
 # Other
+futures-lite = { workspace = true }
 futures-channel = { workspace = true }
 futures-util = { workspace = true }
 rustc-hash = { workspace = true }

@@ -1,4 +1,8 @@
-use std::borrow::Cow;
+use std::{
+    borrow::Cow,
+    pin::Pin,
+    task::Waker,
+};
 
 use accesskit_winit::WindowEvent as AccessibilityWindowEvent;
 use freya_core::integration::*;
@@ -6,8 +10,9 @@ use freya_engine::prelude::{
     FontCollection,
     FontMgr,
 };
+use futures_lite::future::FutureExt as _;
 use futures_util::{
-    FutureExt,
+    FutureExt as _,
     StreamExt,
     select,
 };
@@ -66,6 +71,8 @@ pub struct WinitRenderer {
     pub screen_reader: ScreenReader,
     pub font_manager: FontMgr,
     pub font_collection: FontCollection,
+    pub futures: Vec<Pin<Box<dyn Future<Output = ()>>>>,
+    pub waker: Waker,
 }
 
 #[derive(Debug)]
@@ -109,10 +116,16 @@ pub struct NativeTrayEvent {
 }
 
 #[derive(Debug)]
+pub enum NativeGenericEvent {
+    PollFutures,
+}
+
+#[derive(Debug)]
 pub enum NativeEvent {
     Window(NativeWindowEvent),
     #[cfg(feature = "tray")]
     Tray(NativeTrayEvent),
+    Generic(NativeGenericEvent),
 }
 
 impl From<accesskit_winit::Event> for NativeEvent {
@@ -165,6 +178,10 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 self.windows.insert(app_window.window.id(), app_window);
             }
             self.resumed = true;
+
+            let _ = self
+                .proxy
+                .send_event(NativeEvent::Generic(NativeGenericEvent::PollFutures));
         }
     }
 
@@ -174,6 +191,11 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
         event: NativeEvent,
     ) {
         match event {
+            NativeEvent::Generic(NativeGenericEvent::PollFutures) => {
+                let mut cx = std::task::Context::from_waker(&self.waker);
+                self.futures
+                    .retain_mut(|fut| fut.poll(&mut cx).is_pending());
+            }
             #[cfg(feature = "tray")]
             NativeEvent::Tray(NativeTrayEvent { action }) => match action {
                 NativeTrayEventAction::TrayEvent(icon_event) => {
