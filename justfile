@@ -21,7 +21,7 @@ d:
     cargo doc --workspace --features "all, docs" --open
 
 tc:
-    cargo nextest run --workspace --exclude examples
+    cargo nextest run --workspace --exclude examples --features all-tests
 
 pe:
     cargo run --example perf --release

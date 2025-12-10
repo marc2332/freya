@@ -23,6 +23,7 @@ mocked-engine = ["freya-engine/mocked-engine"]
 # Shortcuts
 all = ["router", "i18n", "remote-asset", "engine", "plot", "gif", "tray"]
 all-debug = ["all", "performance", "vulkan"]
+all-tests = ["router", "i18n", "remote-asset", "engine", "plot", "gif"]
 docs = ["all-debug"]
 # Features
 router = ["dep:freya-router", "freya-components/router"]
