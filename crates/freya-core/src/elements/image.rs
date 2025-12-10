@@ -330,11 +330,13 @@ pub struct Image {
 ///
 /// See the available methods in [Image].
 pub fn image(image_holder: ImageHolder) -> Image {
+    let mut accessibility = AccessibilityData::default();
+    accessibility.builder.set_role(accesskit::Role::Image);
     Image {
         key: DiffKey::None,
         element: ImageElement {
             image_holder,
-            accessibility: AccessibilityData::default(),
+            accessibility,
             layout: LayoutData::default(),
             event_handlers: HashMap::default(),
             image_data: ImageData::default(),

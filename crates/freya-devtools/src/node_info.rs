@@ -46,6 +46,7 @@ pub struct NodeState {
     pub style: StyleState,
     pub text_style: TextStyleState,
     pub layout: torin::node::Node,
+    pub accessibility: AccessibilityData,
 }
 
 pub trait NodeStateAttributes {

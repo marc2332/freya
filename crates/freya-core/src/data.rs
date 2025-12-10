@@ -406,7 +406,8 @@ impl AccessibilityState {
     }
 }
 
-#[derive(PartialEq, Default, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct AccessibilityData {
     pub a11y_id: Option<AccessibilityId>,
     pub a11y_auto_focus: bool,

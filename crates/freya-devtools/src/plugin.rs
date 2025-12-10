@@ -115,6 +115,7 @@ impl DevtoolsPlugin {
                     style: element.style().into_owned(),
                     layout: element.layout().into_owned().layout,
                     text_style: text_style_state,
+                    accessibility: element.accessibility().into_owned(),
                 },
                 area: layout_node.area.div(scale_factor),
                 inner_area: layout_node.inner_area.div(scale_factor),

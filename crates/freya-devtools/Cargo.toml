@@ -52,3 +52,4 @@ serde_json = { version = "1", optional = true }
 
 # Common
 serde = "1"
+accesskit = { workspace = true, features = ["serde"] }

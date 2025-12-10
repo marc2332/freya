@@ -51,7 +51,7 @@ use crate::{
     tree::DiffModifies,
 };
 
-#[derive(PartialEq, Default, Clone)]
+#[derive(PartialEq, Clone)]
 pub struct RectElement {
     pub style: StyleState,
     pub layout: LayoutData,
@@ -60,6 +60,24 @@ pub struct RectElement {
     pub event_handlers: FxHashMap<EventName, EventHandlerType>,
     pub accessibility: AccessibilityData,
     pub effect: Option<EffectData>,
+}
+
+impl Default for RectElement {
+    fn default() -> Self {
+        let mut accessibility = AccessibilityData::default();
+        accessibility
+            .builder
+            .set_role(accesskit::Role::GenericContainer);
+        Self {
+            style: Default::default(),
+            layout: Default::default(),
+            text_style_data: Default::default(),
+            relative_layer: Default::default(),
+            event_handlers: Default::default(),
+            accessibility,
+            effect: Default::default(),
+        }
+    }
 }
 
 impl RectElement {

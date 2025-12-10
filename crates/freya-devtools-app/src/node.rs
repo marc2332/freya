@@ -28,15 +28,7 @@ impl Render for NodeElement {
         let margin_left = ((node.height + 1) * 10) as f32 - 18.;
         let id = self.node_id.0;
 
-        // TODO: Add a11y roles
-        // let role = node.state.accessibility.builder.clone().and_then(|node| {
-        //     let role = node.role();
-        //     if role != Role::GenericContainer {
-        //         Some(role)
-        //     } else {
-        //         None
-        //     }
-        // });
+        let role = node.state.accessibility.builder.role();
 
         let on_select = {
             let on_selected = self.on_selected.clone();
@@ -97,11 +89,10 @@ impl Render for NodeElement {
                             .span(
                                 Span::new(if node.is_window {
                                     "Window".to_string()
-                                // TODO: Add a11 roles
-                                // } else if let Some(role) = role {
-                                //     format!("{role:?}")
+                                } else if role == AccessibilityRole::GenericContainer {
+                                    "rect".to_string()
                                 } else {
-                                    "element".to_string()
+                                    format!("{role:?}")
                                 })
                                 .color(Color::WHITE),
                             )

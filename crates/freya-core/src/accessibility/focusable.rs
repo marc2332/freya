@@ -1,4 +1,5 @@
-#[derive(Clone, Debug, PartialEq, Default, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub enum Focusable {
     #[default]
     Unknown,

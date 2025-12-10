@@ -75,7 +75,7 @@ impl Default for ParagraphHolder {
     }
 }
 
-#[derive(Default, PartialEq, Clone)]
+#[derive(PartialEq, Clone)]
 pub struct ParagraphElement {
     pub layout: LayoutData,
     pub spans: Vec<Span<'static>>,
@@ -89,6 +89,27 @@ pub struct ParagraphElement {
     pub max_lines: Option<usize>,
     pub line_height: Option<f32>,
     pub relative_layer: i16,
+}
+
+impl Default for ParagraphElement {
+    fn default() -> Self {
+        let mut accessibility = AccessibilityData::default();
+        accessibility.builder.set_role(accesskit::Role::Paragraph);
+        Self {
+            layout: Default::default(),
+            spans: Default::default(),
+            accessibility,
+            text_style_data: Default::default(),
+            cursor_style_data: Default::default(),
+            event_handlers: Default::default(),
+            sk_paragraph: Default::default(),
+            cursor_index: Default::default(),
+            highlights: Default::default(),
+            max_lines: Default::default(),
+            line_height: Default::default(),
+            relative_layer: Default::default(),
+        }
+    }
 }
 
 impl Display for ParagraphElement {
