@@ -12,7 +12,7 @@ e example:
 
 t:
     cargo test --doc --workspace
-    cargo nextest run --workspace --exclude examples
+    cargo nextest run --workspace --exclude examples --features all-tests
 
 t-layout:
     cargo nextest run --package torin

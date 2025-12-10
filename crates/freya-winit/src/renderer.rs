@@ -148,7 +148,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 }
 
                 #[cfg(target_os = "macos")]
-                unsafe {
+                {
                     use objc2_core_foundation::CFRunLoop;
 
                     let rl = CFRunLoop::main().expect("Failed to run CFRunLoop");
