@@ -1,5 +1,5 @@
-pub mod hooks;
+pub mod clipboard;
 
 pub mod prelude {
-    pub use crate::hooks::*;
+    pub use crate::clipboard::*;
 }

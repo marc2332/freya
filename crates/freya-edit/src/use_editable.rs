@@ -1,6 +1,5 @@
 use std::time::Duration;
 
-use freya_clipboard::hooks::UseClipboard;
 use freya_core::prelude::*;
 
 use crate::{
@@ -23,19 +22,13 @@ pub struct UseEditable {
 
 impl UseEditable {
     /// Manually create an editable content instead of using [use_editable].
-    pub fn create(
-        content: String,
-        config: EditableConfig,
-        mode: EditableMode,
-        clipboard: UseClipboard,
-    ) -> Self {
+    pub fn create(content: String, config: EditableConfig, mode: EditableMode) -> Self {
         let editor = State::create(RopeEditor::new(
             content,
             TextCursor::default(),
             config.identation,
             mode,
             EditorHistory::new(Duration::from_millis(10)),
-            clipboard,
         ));
         let dragging = State::create(TextDragging::None);
 
@@ -73,8 +66,5 @@ pub fn use_editable(
     config: impl FnOnce() -> EditableConfig,
     mode: EditableMode,
 ) -> UseEditable {
-    use_hook(|| {
-        let clibpoard = UseClipboard::create();
-        UseEditable::create(content(), config(), mode, clibpoard)
-    })
+    use_hook(|| UseEditable::create(content(), config(), mode))
 }

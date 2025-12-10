@@ -4,7 +4,6 @@ use std::{
     ops::Range,
 };
 
-use freya_clipboard::hooks::UseClipboard;
 use ropey::{
     Rope,
     iter::Lines,
@@ -31,7 +30,6 @@ pub struct RopeEditor {
     pub(crate) mode: EditableMode,
     pub(crate) selected: Option<(usize, usize)>,
     pub(crate) history: EditorHistory,
-    pub(crate) clipboard: UseClipboard,
 }
 
 impl Display for RopeEditor {
@@ -48,7 +46,6 @@ impl RopeEditor {
         identation: u8,
         mode: EditableMode,
         history: EditorHistory,
-        clipboard: UseClipboard,
     ) -> Self {
         Self {
             rope: Rope::from_str(&text),
@@ -57,7 +54,6 @@ impl RopeEditor {
             selected: None,
             mode,
             history,
-            clipboard,
         }
     }
 
@@ -182,10 +178,6 @@ impl TextEditor for RopeEditor {
         } else {
             self.selected = Some((self.cursor_pos(), self.cursor_pos()))
         }
-    }
-
-    fn get_clipboard(&mut self) -> &mut UseClipboard {
-        &mut self.clipboard
     }
 
     fn has_any_selection(&self) -> bool {

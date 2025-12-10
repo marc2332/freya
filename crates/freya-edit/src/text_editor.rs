@@ -5,7 +5,7 @@ use std::{
     ops::Range,
 };
 
-use freya_clipboard::hooks::UseClipboard;
+use freya_clipboard::clipboard::Clipboard;
 use keyboard_types::{
     Key,
     Modifiers,
@@ -253,8 +253,6 @@ pub trait TextEditor {
     // Update the selection with a new cursor
     fn expand_selection_to_cursor(&mut self);
 
-    fn get_clipboard(&mut self) -> &mut UseClipboard;
-
     // Process a Keyboard event
     fn process_key(
         &mut self,
@@ -415,7 +413,7 @@ pub trait TextEditor {
                     "c" if meta_or_ctrl && allow_clipboard => {
                         let selected = self.get_selected_text();
                         if let Some(selected) = selected {
-                            self.get_clipboard().set(selected).ok();
+                            Clipboard::set(selected).ok();
                         }
                     }
 
@@ -425,7 +423,7 @@ pub trait TextEditor {
                         if let Some((start, end)) = selection {
                             let text = self.get_selected_text().unwrap();
                             self.remove(start..end);
-                            self.get_clipboard().set(text).ok();
+                            Clipboard::set(text).ok();
                             self.set_cursor_pos(start);
                             event.insert(TextEvent::TEXT_CHANGED);
                         }
@@ -433,8 +431,7 @@ pub trait TextEditor {
 
                     // Paste copied text
                     "v" if meta_or_ctrl && allow_changes && allow_clipboard => {
-                        let copied_text = self.get_clipboard().get();
-                        if let Ok(copied_text) = copied_text {
+                        if let Ok(copied_text) = Clipboard::get() {
                             let selection = self.get_selection_range();
                             if let Some((start, end)) = selection {
                                 self.remove(start..end);
