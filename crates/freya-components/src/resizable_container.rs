@@ -374,6 +374,8 @@ impl Render for ResizableHandle {
 
         let on_capture_global_mouse_move = move |e: Event<MouseEventData>| {
             if *clicking.read() {
+                e.prevent_default();
+
                 if !*allow_resizing.read() {
                     return;
                 }
@@ -401,7 +403,6 @@ impl Render for ResizableHandle {
                 if changed_panels {
                     allow_resizing.set(false);
                 }
-                e.prevent_default();
             }
         };
 
