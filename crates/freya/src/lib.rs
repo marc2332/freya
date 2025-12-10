@@ -47,7 +47,7 @@ pub mod prelude {
     }
     pub use freya_core::prelude::*;
     pub use freya_winit::{
-        WinitEventNotifierExt,
+        WinitPlatformExt,
         config::{
             LaunchConfig,
             WindowConfig,

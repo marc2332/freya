@@ -198,12 +198,12 @@ impl Render for ShaderView {
 
         use_hook(|| {
             let mut ticker = consume_root_context::<RenderingTicker>();
-            let event_notifier = EventNotifier::get();
+            let platform = Platform::get();
 
             spawn(async move {
                 loop {
                     ticker.tick().await;
-                    event_notifier.send(UserEvent::RequestRedraw);
+                    platform.send(UserEvent::RequestRedraw);
                 }
             });
         });

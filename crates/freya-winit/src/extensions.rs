@@ -1,6 +1,6 @@
 use freya_core::{
     prelude::{
-        EventNotifier,
+        Platform,
         UserEvent,
     },
     user_event::SingleThreadErasedEvent,
@@ -12,13 +12,13 @@ use crate::{
     renderer::NativeWindowErasedEventAction,
 };
 
-pub trait WinitEventNotifierExt {
+pub trait WinitPlatformExt {
     fn launch_window(&self, window_config: WindowConfig) -> impl Future<Output = WindowId>;
 
     fn close_window(&self, window_id: WindowId);
 }
 
-impl WinitEventNotifierExt for EventNotifier {
+impl WinitPlatformExt for Platform {
     async fn launch_window(&self, window_config: WindowConfig) -> WindowId {
         let (tx, rx) = futures_channel::oneshot::channel();
         self.send(UserEvent::Erased(SingleThreadErasedEvent(Box::new(

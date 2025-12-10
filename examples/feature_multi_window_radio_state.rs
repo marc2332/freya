@@ -34,7 +34,7 @@ impl Render for App {
         let radio_station = self.radio_station;
         let on_press = move |_| {
             spawn(async move {
-                let _ = EventNotifier::get()
+                let _ = Platform::get()
                     .launch_window(WindowConfig::new(FpRender::from_render(SubApp {
                         radio_station,
                     })))

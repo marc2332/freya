@@ -117,7 +117,7 @@ impl TestingRunner {
         let tree = Tree::default();
         let tree = Rc::new(RefCell::new(tree));
 
-        let event_notifier = EventNotifier::new({
+        let platform = Platform::new({
             let tree = tree.clone();
             move |user_event| {
                 match user_event {
@@ -136,7 +136,7 @@ impl TestingRunner {
                 }
             }
         });
-        runner.provide_root_context(|| event_notifier);
+        runner.provide_root_context(|| platform);
 
         runner.provide_root_context(|| tree.borrow().accessibility_generator.clone());
 

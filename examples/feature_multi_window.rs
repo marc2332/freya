@@ -10,7 +10,7 @@ fn app() -> impl IntoElement {
 
     let on_open = move |_| {
         spawn(async move {
-            let window_id = EventNotifier::get()
+            let window_id = Platform::get()
                 .launch_window(WindowConfig::new(move || sub_app(count)))
                 .await;
             windows.write().push(window_id);
@@ -20,7 +20,7 @@ fn app() -> impl IntoElement {
     let on_close_children = move |_| {
         spawn(async move {
             for window_id in windows.write().drain(..) {
-                EventNotifier::get().close_window(window_id);
+                Platform::get().close_window(window_id);
             }
         });
     };

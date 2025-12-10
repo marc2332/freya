@@ -7,7 +7,6 @@ pub mod diff_key;
 pub mod element;
 pub mod elements;
 pub mod event_handler;
-pub mod event_notifier;
 pub mod events;
 pub mod extended_hashmap;
 pub mod helpers;
@@ -18,6 +17,7 @@ pub mod lru_cache;
 pub mod node_id;
 pub mod notify;
 pub mod path_element;
+pub mod platform;
 pub mod platform_state;
 pub mod reactive_context;
 pub mod render_pipeline;
@@ -97,7 +97,6 @@ pub mod prelude {
             Callback,
             EventHandler,
         },
-        event_notifier::EventNotifier,
         events::data::*,
         events::*,
         hooks::use_id::*,
@@ -111,6 +110,7 @@ pub mod prelude {
             state::*,
             task::*,
         },
+        platform::Platform,
         platform_state::*,
         reactive_context::ReactiveContext,
         rendering_ticker::RenderingTicker,
@@ -153,7 +153,6 @@ pub mod integration {
             extensions::*,
             label::LabelElement,
         },
-        event_notifier::*,
         events::{
             data::*,
             executor::*,
@@ -163,6 +162,7 @@ pub mod integration {
         },
         lifecycle::state::State,
         node_id::NodeId,
+        platform::*,
         platform_state::*,
         render_pipeline::RenderPipeline,
         rendering_ticker::*,

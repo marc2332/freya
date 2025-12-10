@@ -99,8 +99,8 @@ fn app() -> impl IntoElement {
         // Dont move when the cursor goes outside the window
         if e.global_location.to_tuple() != (-1., -1.) {
             cursor_position.set(e.global_location);
-            let event_notifier = EventNotifier::get();
-            event_notifier.send(UserEvent::RequestRedraw);
+            let platform = Platform::get();
+            platform.send(UserEvent::RequestRedraw);
         }
     };
 

@@ -6,11 +6,11 @@ use crate::{
 };
 
 #[derive(Clone)]
-pub struct EventNotifier {
+pub struct Platform {
     sender: Rc<dyn Fn(UserEvent)>,
 }
 
-impl EventNotifier {
+impl Platform {
     pub fn get() -> Self {
         consume_root_context()
     }

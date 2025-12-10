@@ -15,9 +15,9 @@ use crate::{
     },
     prelude::{
         AccessibilityFocusStrategy,
-        EventNotifier,
         KeyboardEventData,
         Memo,
+        Platform,
         ScreenReader,
         UserEvent,
         consume_root_context,
@@ -61,13 +61,13 @@ impl Focus {
     }
 
     pub fn request_focus(&self) {
-        EventNotifier::get().send(UserEvent::FocusAccessibilityNode(
+        Platform::get().send(UserEvent::FocusAccessibilityNode(
             AccessibilityFocusStrategy::Node(self.a11y_id),
         ));
     }
 
     pub fn request_unfocus(&self) {
-        EventNotifier::get().send(UserEvent::FocusAccessibilityNode(
+        Platform::get().send(UserEvent::FocusAccessibilityNode(
             AccessibilityFocusStrategy::Node(ACCESSIBILITY_ROOT_ID),
         ));
     }

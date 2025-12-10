@@ -143,7 +143,7 @@ impl AppWindow {
         let animation_clock = AnimationClock::new();
         runner.provide_root_context(|| animation_clock.clone());
 
-        let event_notifier = EventNotifier::new({
+        let platform = Platform::new({
             let event_loop_proxy = event_loop_proxy.clone();
             let window_id = window.id();
             move |user_event| {
@@ -155,7 +155,7 @@ impl AppWindow {
                     .unwrap();
             }
         });
-        runner.provide_root_context(|| event_notifier);
+        runner.provide_root_context(|| platform);
 
         runner.provide_root_context(AssetCacher::create);
 

@@ -184,11 +184,11 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
         let peek_has_run_yet = *self.has_run_yet.peek();
 
         let mut ticker = RenderingTicker::get();
-        let event_notifier = EventNotifier::get();
+        let platform = Platform::get();
         let animation_clock = AnimationClock::get();
 
         let animation_task = spawn(async move {
-            event_notifier.send(UserEvent::RequestRedraw);
+            platform.send(UserEvent::RequestRedraw);
 
             let mut index = 0u128;
             let mut prev_frame = Instant::now();
@@ -206,7 +206,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
                 ticker.tick().await;
 
                 // Request another redraw to move the animation forward
-                event_notifier.send(UserEvent::RequestRedraw);
+                platform.send(UserEvent::RequestRedraw);
 
                 let elapsed = animation_clock.correct_elapsed_duration(prev_frame.elapsed());
 
