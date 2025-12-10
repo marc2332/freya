@@ -44,7 +44,7 @@ freya-edit = { workspace = true }
 freya-components = { workspace = true }
 freya-animation = { workspace = true }
 freya-engine = { workspace = true }
-freya-devtools = { workspace = true, optional = true }
+freya-devtools = { workspace = true, optional = true, features = ["server"] }
 freya-sdk = { workspace = true, optional = true }
 
 # Router
