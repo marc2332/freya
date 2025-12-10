@@ -349,27 +349,27 @@ impl Render for ResizableHandle {
 
         let panel_index = self.panel_index;
 
-        // use_drop(move || {
-        //     if *status.peek() == HandleStatus::Hovering {
-        //         platform.set_cursor(CursorIcon::default());
-        //     }
-        // });
+        use_drop(move || {
+            if *status.peek() == HandleStatus::Hovering {
+                Cursor::set(CursorIcon::default());
+            }
+        });
 
-        // let cursor = match registry.read().direction {
-        //     "horizontal" => CursorIcon::ColResize,
-        //     _ => CursorIcon::RowResize,
-        // };
+        let cursor = match registry.read().direction {
+            Direction::Horizontal => CursorIcon::ColResize,
+            _ => CursorIcon::RowResize,
+        };
 
         let on_pointer_leave = move |_| {
             *status.write() = HandleStatus::Idle;
-            // if !clicking() {
-            //     platform.set_cursor(CursorIcon::default());
-            // }
+            if !clicking() {
+                Cursor::set(CursorIcon::default());
+            }
         };
 
         let on_pointer_enter = move |_| {
             *status.write() = HandleStatus::Hovering;
-            // platform.set_cursor(cursor);
+            Cursor::set(cursor);
         };
 
         let on_capture_global_mouse_move = move |e: Event<MouseEventData>| {
@@ -415,7 +415,7 @@ impl Render for ResizableHandle {
         let on_global_mouse_up = move |_| {
             if *clicking.read() {
                 if *status.peek() != HandleStatus::Hovering {
-                    // platform.set_cursor(CursorIcon::default());
+                    Cursor::set(CursorIcon::default());
                 }
                 clicking.set(false);
             }
