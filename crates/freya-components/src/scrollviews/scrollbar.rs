@@ -3,6 +3,7 @@ use torin::{
     prelude::{
         Alignment,
         Direction,
+        Position,
     },
     size::Size,
 };
@@ -81,6 +82,7 @@ impl RenderOwned for ScrollBar {
         let on_pointer_leave = move |_| state.set(ScrollBarState::Idle);
 
         rect()
+            .position(Position::new_absolute())
             .width(width)
             .height(height)
             .offset_x(offset_x)

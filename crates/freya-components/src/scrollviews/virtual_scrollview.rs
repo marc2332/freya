@@ -483,7 +483,7 @@ impl<D: 'static, B: Fn(usize, &D) -> Element + 'static> Render for VirtualScroll
                             .children(children),
                     )
                     .maybe_child(vertical_scrollbar_is_visible.then_some({
-                        ScrollBar {
+                        rect().child(ScrollBar {
                             theme: None,
                             clicking_scrollbar,
                             axis: Axis::Y,
@@ -494,11 +494,11 @@ impl<D: 'static, B: Fn(usize, &D) -> Element + 'static> Render for VirtualScroll
                                 axis: Axis::Y,
                                 size: scrollbar_height,
                             },
-                        }
+                        })
                     })),
             )
             .maybe_child(horizontal_scrollbar_is_visible.then_some({
-                ScrollBar {
+                rect().child(ScrollBar {
                     theme: None,
                     clicking_scrollbar,
                     axis: Axis::X,
@@ -509,7 +509,7 @@ impl<D: 'static, B: Fn(usize, &D) -> Element + 'static> Render for VirtualScroll
                         axis: Axis::X,
                         size: scrollbar_width,
                     },
-                }
+                })
             }))
     }
 

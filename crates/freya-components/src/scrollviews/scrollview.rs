@@ -376,7 +376,7 @@ impl Render for ScrollView {
                             .children(self.children.clone()),
                     )
                     .maybe_child(vertical_scrollbar_is_visible.then_some({
-                        ScrollBar {
+                        rect().child(ScrollBar {
                             theme: None,
                             clicking_scrollbar,
                             axis: Axis::Y,
@@ -387,11 +387,11 @@ impl Render for ScrollView {
                                 axis: Axis::Y,
                                 size: scrollbar_height,
                             },
-                        }
+                        })
                     })),
             )
             .maybe_child(horizontal_scrollbar_is_visible.then_some({
-                ScrollBar {
+                rect().child(ScrollBar {
                     theme: None,
                     clicking_scrollbar,
                     axis: Axis::X,
@@ -402,7 +402,7 @@ impl Render for ScrollView {
                         axis: Axis::X,
                         size: scrollbar_width,
                     },
-                }
+                })
             }))
     }
 
