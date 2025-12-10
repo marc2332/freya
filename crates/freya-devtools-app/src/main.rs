@@ -202,22 +202,24 @@ impl Render for LayoutForNodeInspector {
                     .child(ActivableRoute::new(
                         Route::NodeInspectorStyle { node_id, window_id },
                         Link::new(Route::NodeInspectorStyle { node_id, window_id })
-                            .child(FloatingTab::new().child("Style")),
+                            .child(FloatingTab::new().child(label().text("Style").max_lines(1))),
                     ))
                     .child(ActivableRoute::new(
                         Route::NodeInspectorLayout { node_id, window_id },
                         Link::new(Route::NodeInspectorLayout { node_id, window_id })
-                            .child(FloatingTab::new().child("Layout")),
+                            .child(FloatingTab::new().child(label().text("Layout").max_lines(1))),
                     ))
                     .child(ActivableRoute::new(
                         Route::NodeInspectorTextStyle { node_id, window_id },
-                        Link::new(Route::NodeInspectorTextStyle { node_id, window_id })
-                            .child(FloatingTab::new().child("Text Style")),
+                        Link::new(Route::NodeInspectorTextStyle { node_id, window_id }).child(
+                            FloatingTab::new().child(label().text("Text Style").max_lines(1)),
+                        ),
                     ))
                     .child(ActivableRoute::new(
                         Route::NodeInspectorComputedLayout { node_id, window_id },
-                        Link::new(Route::NodeInspectorComputedLayout { node_id, window_id })
-                            .child(FloatingTab::new().child("Computed Layout")),
+                        Link::new(Route::NodeInspectorComputedLayout { node_id, window_id }).child(
+                            FloatingTab::new().child(label().text("Computed Layout").max_lines(1)),
+                        ),
                     )),
             )
             .child(rect().padding((6., 0.)).child(outlet::<Route>()))

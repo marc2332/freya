@@ -130,7 +130,6 @@ impl Render for FloatingTab {
             .background(background)
             .color(color)
             .corner_radius(99.)
-            // TODO: max lines 1
             .children(self.children.clone())
     }
 }
