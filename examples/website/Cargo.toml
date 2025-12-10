@@ -4,6 +4,6 @@ publish = false
 edition = "2024"
 
 [dependencies]
-freya = { workspace = true }
+freya = { workspace = true, features = ["router"] }
 tree-sitter-highlight = "0.23.0"
 tree-sitter-rust = "0.23.0"
