@@ -36,7 +36,7 @@ pub struct Clipboard;
 
 impl Clipboard {
     pub(crate) fn create_or_create() -> State<Option<ClipboardContext>> {
-        let clipboard = match try_consume_root_context() {
+        match try_consume_root_context() {
             Some(rt) => rt,
             None => {
                 let clipboard_state =
@@ -44,8 +44,7 @@ impl Clipboard {
                 provide_context_for_scope_id(clipboard_state, ScopeId::ROOT);
                 clipboard_state
             }
-        };
-        clipboard
+        }
     }
 
     // Read from the clipboard
