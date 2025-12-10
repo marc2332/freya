@@ -77,6 +77,12 @@ impl Render for DropdownItem {
         let mut status = use_state(DropdownItemStatus::default);
         let dropdown_group = use_consume::<DropdownGroup>();
 
+        use_drop(move || {
+            if status() == DropdownItemStatus::Hovering {
+                Cursor::set(CursorIcon::default());
+            }
+        });
+
         let background = if self.selected {
             theme.select_background
         } else if *status.read() == DropdownItemStatus::Hovering {
@@ -111,9 +117,11 @@ impl Render for DropdownItem {
             .main_align(Alignment::center())
             .on_pointer_enter(move |_| {
                 *status.write() = DropdownItemStatus::Hovering;
+                Cursor::set(CursorIcon::Pointer);
             })
             .on_pointer_leave(move |_| {
                 *status.write() = DropdownItemStatus::Idle;
+                Cursor::set(CursorIcon::default());
             })
             .map(self.on_press.clone(), |rect, on_press| {
                 rect.on_press(on_press)
@@ -236,22 +244,11 @@ impl Render for Dropdown {
             group_id: focus.a11y_id(),
         });
 
-        let background = match *status.read() {
-            DropdownStatus::Hovering => theme.hover_background,
-            DropdownStatus::Idle => theme.background_button,
-        };
-
-        let border = if focus_status() == FocusStatus::Keyboard {
-            Border::new()
-                .fill(theme.focus_border_fill)
-                .width(2.)
-                .alignment(BorderAlignment::Inner)
-        } else {
-            Border::new()
-                .fill(theme.border_fill)
-                .width(1.)
-                .alignment(BorderAlignment::Inner)
-        };
+        use_drop(move || {
+            if status() == DropdownStatus::Hovering {
+                Cursor::set(CursorIcon::default());
+            }
+        });
 
         // Close the dropdown when the focused accessibility node changes and its not the dropdown or any of its childrens
         use_side_effect(move || {
@@ -270,7 +267,7 @@ impl Render for Dropdown {
 
         let on_press = move |e: Event<PressEventData>| {
             focus.request_focus();
-            open.set(true);
+            open.toggle();
             // Prevent global mouse up
             e.prevent_default();
             e.stop_propagation();
@@ -278,10 +275,12 @@ impl Render for Dropdown {
 
         let on_pointer_enter = move |_| {
             *status.write() = DropdownStatus::Hovering;
+            Cursor::set(CursorIcon::Pointer);
         };
 
         let on_pointer_leave = move |_| {
             *status.write() = DropdownStatus::Idle;
+            Cursor::set(CursorIcon::default());
         };
 
         // Close the dropdown if clicked anywhere
@@ -297,6 +296,23 @@ impl Render for Dropdown {
                 open.toggle();
             }
             _ => {}
+        };
+
+        let background = match *status.read() {
+            DropdownStatus::Hovering => theme.hover_background,
+            DropdownStatus::Idle => theme.background_button,
+        };
+
+        let border = if focus_status() == FocusStatus::Keyboard {
+            Border::new()
+                .fill(theme.focus_border_fill)
+                .width(2.)
+                .alignment(BorderAlignment::Inner)
+        } else {
+            Border::new()
+                .fill(theme.border_fill)
+                .width(1.)
+                .alignment(BorderAlignment::Inner)
         };
 
         rect()
