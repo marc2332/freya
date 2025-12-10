@@ -159,7 +159,7 @@ impl Render for TooltipContainer {
 
         let animation = use_animation(move |conf| {
             conf.on_change(OnChange::Rerun);
-            conf.on_creation(OnCreation::Run);
+            conf.on_creation(OnCreation::Finish);
 
             let scale = AnimNum::new(0.8, 1.)
                 .time(350)
