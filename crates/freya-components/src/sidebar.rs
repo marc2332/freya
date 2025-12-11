@@ -159,6 +159,7 @@ impl Render for SideBarItem {
         let SideBarItemTheme {
             margin,
             hover_background,
+            active_background,
             background,
             corner_radius,
             padding,
@@ -184,7 +185,7 @@ impl Render for SideBarItem {
         };
 
         let background = match *status.read() {
-            _ if is_active => hover_background,
+            _ if is_active => active_background,
             ButtonStatus::Hovering => hover_background,
             ButtonStatus::Idle => background,
         };

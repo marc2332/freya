@@ -219,6 +219,7 @@ define_theme! {
         color: Color,
         background: Color,
         hover_background: Color,
+        active_background: Color,
         corner_radius: CornerRadius,
         margin: Gaps,
         padding: Gaps,

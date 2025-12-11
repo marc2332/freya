@@ -159,6 +159,7 @@ pub(crate) const BASE_THEME: Theme = Theme {
     sidebar_item: SideBarItemThemePreference {
         color: Preference::Reference("text_primary"),
         background: Preference::Reference("surface_tertiary"),
+        active_background: Preference::Reference("surface_secondary"),
         hover_background: Preference::Reference("hover"),
         corner_radius: Preference::Specific(CornerRadius::new_all(99.)),
         margin: Preference::Specific(Gaps::new_all(0.)),
@@ -221,7 +222,7 @@ pub(crate) const BASE_THEME: Theme = Theme {
         margin: Preference::Specific(Gaps::new_all(0.)),
         dropdown_background: Preference::Reference("background"),
         background_button: Preference::Reference("surface_tertiary"),
-        hover_background: Preference::Reference("background"),
+        hover_background: Preference::Reference("hover"),
         color: Preference::Reference("text_primary"),
         border_fill: Preference::Reference("border"),
         focus_border_fill: Preference::Reference("border_focus"),
@@ -230,7 +231,7 @@ pub(crate) const BASE_THEME: Theme = Theme {
     dropdown_item: DropdownItemThemePreference {
         background: Preference::Reference("background"),
         select_background: Preference::Reference("surface_secondary"),
-        hover_background: Preference::Reference("surface_secondary"),
+        hover_background: Preference::Reference("hover"),
         border_fill: Preference::Specific(Color::TRANSPARENT),
         select_border_fill: Preference::Reference("border_focus"),
         color: Preference::Reference("text_primary"),
