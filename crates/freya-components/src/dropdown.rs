@@ -1,3 +1,4 @@
+use freya_animation::prelude::*;
 use freya_core::prelude::*;
 use torin::prelude::*;
 
@@ -244,6 +245,26 @@ impl Render for Dropdown {
             group_id: focus.a11y_id(),
         });
 
+        let animation = use_animation(move |conf| {
+            conf.on_change(OnChange::Rerun);
+            conf.on_creation(OnCreation::Finish);
+
+            let scale = AnimNum::new(0.8, 1.)
+                .time(350)
+                .ease(Ease::Out)
+                .function(Function::Expo);
+            let opacity = AnimNum::new(0., 1.)
+                .time(350)
+                .ease(Ease::Out)
+                .function(Function::Expo);
+
+            if open() {
+                (scale, opacity)
+            } else {
+                (scale.into_reversed(), opacity.into_reversed())
+            }
+        });
+
         use_drop(move || {
             if status() == DropdownStatus::Hovering {
                 Cursor::set(CursorIcon::default());
@@ -258,10 +279,10 @@ impl Render for Dropdown {
                 .member_of()
             {
                 if member_of != focus.a11y_id() {
-                    open.set(false);
+                    open.set_if_modified(false);
                 }
             } else {
-                open.set(false);
+                open.set_if_modified(false);
             }
         });
 
@@ -285,18 +306,20 @@ impl Render for Dropdown {
 
         // Close the dropdown if clicked anywhere
         let on_global_mouse_up = move |_| {
-            open.set(false);
+            open.set_if_modified(false);
         };
 
         let on_global_key_down = move |e: Event<KeyboardEventData>| match e.key {
             Key::Escape => {
-                open.set(false);
+                open.set_if_modified(false);
             }
             Key::Enter if focus.is_focused() => {
                 open.toggle();
             }
             _ => {}
         };
+
+        let (scale, opacity) = animation.read().value();
 
         let background = match *status.read() {
             DropdownStatus::Hovering => theme.hover_background,
@@ -343,7 +366,7 @@ impl Render for Dropdown {
                             .fill(theme.arrow_fill),
                     ),
             )
-            .maybe_child(open().then(|| {
+            .maybe_child((open() || opacity > 0.).then(|| {
                 rect().height(Size::px(0.)).width(Size::px(0.)).child(
                     rect()
                         .width(Size::window_percent(100.))
@@ -362,6 +385,8 @@ impl Render for Dropdown {
                                 // TODO: Shadows
                                 .padding(6.)
                                 .content(Content::Fit)
+                                .opacity(opacity)
+                                .scale(scale)
                                 .children(self.children.clone()),
                         ),
                 )
