@@ -1,3 +1,4 @@
+use freya_animation::prelude::*;
 use freya_core::prelude::*;
 use torin::prelude::*;
 
@@ -101,6 +102,28 @@ impl Render for RadioItem {
             border_fill,
         } = get_theme!(&self.theme, radio);
 
+        let animation = use_animation_with_dependencies(&self.selected, move |conf, selected| {
+            conf.on_change(OnChange::Rerun);
+            conf.on_creation(OnCreation::Finish);
+
+            let scale = AnimNum::new(0.7, 1.)
+                .time(250)
+                .ease(Ease::Out)
+                .function(Function::Expo);
+            let opacity = AnimNum::new(0., 1.)
+                .time(250)
+                .ease(Ease::Out)
+                .function(Function::Expo);
+
+            if *selected {
+                (scale, opacity)
+            } else {
+                (scale.into_reversed(), opacity.into_reversed())
+            }
+        });
+
+        let (scale, opacity) = animation.read().value();
+
         let fill = if self.selected {
             selected_fill
         } else {
@@ -135,8 +158,10 @@ impl Render for RadioItem {
                     e.stop_propagation();
                 }
             })
-            .maybe_child(self.selected.then(|| {
+            .maybe_child((self.selected || opacity > 0.).then(|| {
                 rect()
+                    .opacity(opacity)
+                    .scale(scale)
                     .width(Size::px((self.size * 0.55).floor()))
                     .height(Size::px((self.size * 0.55).floor()))
                     .background(fill)

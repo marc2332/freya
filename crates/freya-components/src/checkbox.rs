@@ -1,3 +1,4 @@
+use freya_animation::prelude::*;
 use freya_core::prelude::*;
 use torin::prelude::*;
 
@@ -104,6 +105,28 @@ impl Render for Checkbox {
             selected_icon_fill,
         } = get_theme!(&self.theme, checkbox);
 
+        let animation = use_animation_with_dependencies(&self.selected, move |conf, selected| {
+            conf.on_change(OnChange::Rerun);
+            conf.on_creation(OnCreation::Finish);
+
+            let scale = AnimNum::new(0.6, 1.)
+                .time(350)
+                .ease(Ease::Out)
+                .function(Function::Expo);
+            let opacity = AnimNum::new(0., 1.)
+                .time(350)
+                .ease(Ease::Out)
+                .function(Function::Expo);
+
+            if *selected {
+                (scale, opacity)
+            } else {
+                (scale.into_reversed(), opacity.into_reversed())
+            }
+        });
+
+        let (scale, opacity) = animation.read().value();
+
         let (background, fill) = if self.selected {
             (selected_fill, selected_fill)
         } else {
@@ -141,11 +164,13 @@ impl Render for Checkbox {
                     }
                 }
             })
-            .maybe_child(self.selected.then(|| {
-                TickIcon::new()
-                    .width(Size::px(self.size * 0.7))
-                    .height(Size::px(self.size * 0.7))
-                    .fill(selected_icon_fill)
+            .maybe_child((self.selected || opacity > 0.).then(|| {
+                rect().opacity(opacity).scale(scale).child(
+                    TickIcon::new()
+                        .width(Size::px(self.size * 0.7))
+                        .height(Size::px(self.size * 0.7))
+                        .fill(selected_icon_fill),
+                )
             }))
     }
 
