@@ -202,6 +202,7 @@ pub(crate) const BASE_THEME: Theme = Theme {
     resizable_handle: ResizableHandleThemePreference {
         background: Preference::Reference("surface_secondary"),
         hover_background: Preference::Reference("surface_primary"),
+        corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
     },
     floating_tab: FloatingTabThemePreference {
         background: Preference::Specific(Color::TRANSPARENT),

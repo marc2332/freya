@@ -339,6 +339,7 @@ impl Render for ResizableHandle {
         let ResizableHandleTheme {
             background,
             hover_background,
+            corner_radius,
         } = get_theme!(&self.theme, resizable_handle);
         let mut size = use_state(Area::default);
         let mut clicking = use_state(|| false);
@@ -436,6 +437,7 @@ impl Render for ResizableHandle {
             .width(width)
             .height(height)
             .background(background)
+            .corner_radius(corner_radius)
             .on_sized(move |e: Event<SizedEventData>| {
                 size.set(e.area);
                 allow_resizing.set(true);

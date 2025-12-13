@@ -296,6 +296,7 @@ define_theme! {
         %[fields]
         background: Color,
         hover_background: Color,
+        corner_radius: CornerRadius,
     }
 }
 
