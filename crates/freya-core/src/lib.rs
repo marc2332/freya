@@ -18,7 +18,6 @@ pub mod node_id;
 pub mod notify;
 pub mod path_element;
 pub mod platform;
-pub mod platform_state;
 pub mod reactive_context;
 pub mod render_pipeline;
 pub mod rendering_ticker;
@@ -111,8 +110,7 @@ pub mod prelude {
             state::*,
             task::*,
         },
-        platform::Platform,
-        platform_state::*,
+        platform::*,
         reactive_context::ReactiveContext,
         rendering_ticker::RenderingTicker,
         style::{
@@ -164,7 +162,6 @@ pub mod integration {
         lifecycle::state::State,
         node_id::NodeId,
         platform::*,
-        platform_state::*,
         render_pipeline::RenderPipeline,
         rendering_ticker::*,
         runner::Runner,

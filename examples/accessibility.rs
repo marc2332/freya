@@ -5,16 +5,13 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    let platform_state = PlatformState::get();
+    let platform = Platform::get();
 
     rect()
         .expanded()
         .center()
         .spacing(8.)
-        .child(format!(
-            "{:?}",
-            platform_state.focused_accessibility_id.read()
-        ))
+        .child(format!("{:?}", platform.focused_accessibility_id.read()))
         .child(Button::new().child("Button 1"))
         .child(Button::new().child("Button 2"))
 }

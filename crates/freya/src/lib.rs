@@ -119,6 +119,7 @@ pub mod components {
         table::*,
         theming::{
             component_themes::*,
+            extensions::*,
             hooks::*,
             themes::*,
         },

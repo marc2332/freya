@@ -9,15 +9,14 @@ use crate::{
         ACCESSIBILITY_ROOT_ID,
         AccessibilityGenerator,
     },
-    platform_state::{
+    platform::{
         NavigationMode,
-        PlatformState,
+        Platform,
     },
     prelude::{
         AccessibilityFocusStrategy,
         KeyboardEventData,
         Memo,
-        Platform,
         ScreenReader,
         UserEvent,
         consume_root_context,
@@ -50,14 +49,14 @@ impl Focus {
     }
 
     pub fn is_focused(&self) -> bool {
-        let platform_state = PlatformState::get();
-        *platform_state.focused_accessibility_id.peek() == self.a11y_id
+        let platform = Platform::get();
+        *platform.focused_accessibility_id.peek() == self.a11y_id
     }
 
     pub fn is_focused_with_keyboard(&self) -> bool {
-        let platform_state = PlatformState::get();
-        *platform_state.focused_accessibility_id.peek() == self.a11y_id
-            && *platform_state.navigation_mode.peek() == NavigationMode::Keyboard
+        let platform = Platform::get();
+        *platform.focused_accessibility_id.peek() == self.a11y_id
+            && *platform.navigation_mode.peek() == NavigationMode::Keyboard
     }
 
     pub fn request_focus(&self) {
@@ -101,9 +100,9 @@ pub enum FocusStatus {
 
 pub fn use_focus_status(focus: Focus) -> Memo<FocusStatus> {
     use_memo(move || {
-        let platform_state = PlatformState::get();
-        let is_focused = *platform_state.focused_accessibility_id.read() == focus.a11y_id;
-        let is_keyboard = *platform_state.navigation_mode.read() == NavigationMode::Keyboard;
+        let platform = Platform::get();
+        let is_focused = *platform.focused_accessibility_id.read() == focus.a11y_id;
+        let is_keyboard = *platform.navigation_mode.read() == NavigationMode::Keyboard;
 
         match (is_focused, is_keyboard) {
             (true, false) => FocusStatus::Pointer,

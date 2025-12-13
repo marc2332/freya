@@ -1,6 +1,7 @@
 use std::{
     borrow::Cow,
     path::PathBuf,
+    rc::Rc,
     sync::Arc,
     task::Waker,
 };
@@ -36,6 +37,7 @@ use winit::{
     },
     keyboard::ModifiersState,
     window::{
+        Theme,
         Window,
         WindowId,
     },
@@ -81,7 +83,7 @@ pub struct AppWindow {
 
     pub(crate) ticker_sender: RenderingTickerSender,
 
-    pub(crate) platform_state: PlatformState,
+    pub(crate) platform: Platform,
 
     pub(crate) animation_clock: AnimationClock,
 
@@ -142,36 +144,38 @@ impl AppWindow {
         let animation_clock = AnimationClock::new();
         runner.provide_root_context(|| animation_clock.clone());
 
-        let platform = Platform::new({
-            let event_loop_proxy = event_loop_proxy.clone();
-            let window_id = window.id();
-            move |user_event| {
-                event_loop_proxy
-                    .send_event(NativeEvent::Window(NativeWindowEvent {
-                        window_id,
-                        action: NativeWindowEventAction::User(user_event),
-                    }))
-                    .unwrap();
-            }
-        });
-        runner.provide_root_context(|| platform);
-
         runner.provide_root_context(AssetCacher::create);
+        let mut tree = Tree::default();
 
         let window_size = window.inner_size();
-        let platform_state = runner.provide_root_context(|| PlatformState {
-            focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
-            focused_accessibility_node: State::create(accesskit::Node::new(
-                accesskit::Role::Window,
-            )),
-            root_size: State::create(Size2D::new(
-                window_size.width as f32,
-                window_size.height as f32,
-            )),
-            navigation_mode: State::create(NavigationMode::NotKeyboard),
+        let platform = runner.provide_root_context({
+            let event_loop_proxy = event_loop_proxy.clone();
+            let window_id = window.id();
+            let theme = match window.theme() {
+                Some(Theme::Dark) => PreferredTheme::Dark,
+                _ => PreferredTheme::Light,
+            };
+            move || Platform {
+                focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
+                focused_accessibility_node: State::create(accesskit::Node::new(
+                    accesskit::Role::Window,
+                )),
+                root_size: State::create(Size2D::new(
+                    window_size.width as f32,
+                    window_size.height as f32,
+                )),
+                navigation_mode: State::create(NavigationMode::NotKeyboard),
+                preferred_theme: State::create(theme),
+                sender: Rc::new(move |user_event| {
+                    event_loop_proxy
+                        .send_event(NativeEvent::Window(NativeWindowEvent {
+                            window_id,
+                            action: NativeWindowEventAction::User(user_event),
+                        }))
+                        .unwrap();
+                }),
+            }
         });
-
-        let mut tree = Tree::default();
 
         runner.provide_root_context(|| tree.accessibility_generator.clone());
 
@@ -246,7 +250,7 @@ impl AppWindow {
 
             ticker_sender,
 
-            platform_state,
+            platform,
 
             animation_clock,
 

@@ -5,7 +5,7 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    let platform_state = PlatformState::get();
+    let platform = Platform::get();
 
-    format!("{:?}", platform_state.root_size.read())
+    format!("{:?}", platform.root_size.read())
 }

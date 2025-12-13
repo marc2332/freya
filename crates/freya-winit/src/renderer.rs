@@ -36,7 +36,10 @@ use winit::{
         WindowEvent,
     },
     event_loop::EventLoopProxy,
-    window::WindowId,
+    window::{
+        Theme,
+        WindowId,
+    },
 };
 
 use crate::{
@@ -415,6 +418,12 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
         if let Some(app) = &mut self.windows.get_mut(&window_id) {
             app.accessibility_adapter.process_event(&app.window, &event);
             match event {
+                WindowEvent::ThemeChanged(theme) => {
+                    app.platform.preferred_theme.set(match theme {
+                        Theme::Light => PreferredTheme::Light,
+                        Theme::Dark => PreferredTheme::Dark,
+                    });
+                }
                 WindowEvent::ScaleFactorChanged { .. } => {
                     app.window.request_redraw();
                     app.process_layout_on_next_render = true;
@@ -467,7 +476,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 app.window.scale_factor(),
                                 &self.fallback_fonts,
                             );
-                            app.platform_state.root_size.set_if_modified(size);
+                            app.platform.root_size.set_if_modified(size);
                             app.process_layout_on_next_render = false;
                             self.plugins.send(
                                 PluginEvent::FinishedMeasuringLayout {
@@ -546,37 +555,29 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 let update = app
                                     .accessibility
                                     .process_updates(&mut app.tree, &app.events_sender);
-                                app.platform_state
+                                app.platform
                                     .focused_accessibility_id
                                     .set_if_modified(update.focus);
                                 let node_id = app.accessibility.focused_node_id().unwrap();
                                 let layout_node = app.tree.layout.get(&node_id).unwrap();
-                                app.platform_state
-                                    .focused_accessibility_node
-                                    .set_if_modified(AccessibilityTree::create_node(
-                                        node_id,
-                                        layout_node,
-                                        &app.tree,
-                                    ));
+                                app.platform.focused_accessibility_node.set_if_modified(
+                                    AccessibilityTree::create_node(node_id, layout_node, &app.tree),
+                                );
                                 if let Some(mode) = mode {
-                                    app.platform_state.navigation_mode.set(mode);
+                                    app.platform.navigation_mode.set(mode);
                                 }
                                 app.accessibility_adapter.update_if_active(|| update);
                             }
                             AccessibilityTask::Init => {
                                 let update = app.accessibility.init(&mut app.tree);
-                                app.platform_state
+                                app.platform
                                     .focused_accessibility_id
                                     .set_if_modified(update.focus);
                                 let node_id = app.accessibility.focused_node_id().unwrap();
                                 let layout_node = app.tree.layout.get(&node_id).unwrap();
-                                app.platform_state
-                                    .focused_accessibility_node
-                                    .set_if_modified(AccessibilityTree::create_node(
-                                        node_id,
-                                        layout_node,
-                                        &app.tree,
-                                    ));
+                                app.platform.focused_accessibility_node.set_if_modified(
+                                    AccessibilityTree::create_node(node_id, layout_node, &app.tree),
+                                );
                                 app.accessibility_adapter.update_if_active(|| update);
                             }
                             AccessibilityTask::None => {}
@@ -617,7 +618,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
 
                 WindowEvent::MouseInput { state, button, .. } => {
                     app.mouse_state = state;
-                    app.platform_state
+                    app.platform
                         .navigation_mode
                         .set(NavigationMode::NotKeyboard);
 

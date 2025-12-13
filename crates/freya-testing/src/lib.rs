@@ -77,7 +77,7 @@ pub struct TestingRunner {
     font_manager: FontMgr,
     font_collection: FontCollection,
 
-    platform_state: PlatformState,
+    platform: Platform,
 
     ticker_sender: RenderingTickerSender,
 
@@ -105,38 +105,37 @@ impl TestingRunner {
 
         runner.provide_root_context(AssetCacher::create);
 
-        let platform_state = runner.provide_root_context(|| PlatformState {
-            focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
-            focused_accessibility_node: State::create(accesskit::Node::new(
-                accesskit::Role::Window,
-            )),
-            root_size: State::create(size),
-            navigation_mode: State::create(NavigationMode::NotKeyboard),
-        });
-
         let tree = Tree::default();
         let tree = Rc::new(RefCell::new(tree));
 
-        let platform = Platform::new({
+        let platform = runner.provide_root_context({
             let tree = tree.clone();
-            move |user_event| {
-                match user_event {
-                    UserEvent::RequestRedraw => {
-                        // Nothing
+            || Platform {
+                focused_accessibility_id: State::create(ACCESSIBILITY_ROOT_ID),
+                focused_accessibility_node: State::create(accesskit::Node::new(
+                    accesskit::Role::Window,
+                )),
+                root_size: State::create(size),
+                navigation_mode: State::create(NavigationMode::NotKeyboard),
+                preferred_theme: State::create(PreferredTheme::Light),
+                sender: Rc::new(move |user_event| {
+                    match user_event {
+                        UserEvent::RequestRedraw => {
+                            // Nothing
+                        }
+                        UserEvent::FocusAccessibilityNode(strategy) => {
+                            tree.borrow_mut().accessibility_diff.request_focus(strategy);
+                        }
+                        UserEvent::SetCursorIcon(_) => {
+                            // Nothing
+                        }
+                        UserEvent::Erased(_) => {
+                            // Nothing
+                        }
                     }
-                    UserEvent::FocusAccessibilityNode(strategy) => {
-                        tree.borrow_mut().accessibility_diff.request_focus(strategy);
-                    }
-                    UserEvent::SetCursorIcon(_) => {
-                        // Nothing
-                    }
-                    UserEvent::Erased(_) => {
-                        // Nothing
-                    }
-                }
+                }),
             }
         });
-        runner.provide_root_context(|| platform);
 
         runner.provide_root_context(|| tree.borrow().accessibility_generator.clone());
 
@@ -171,7 +170,7 @@ impl TestingRunner {
                 size,
 
                 accessibility,
-                platform_state,
+                platform,
 
                 nodes_state,
                 events_receiver,
@@ -235,7 +234,7 @@ impl TestingRunner {
         let accessibility_update = self
             .accessibility
             .process_updates(&mut self.tree.borrow_mut(), &self.events_sender);
-        self.platform_state
+        self.platform
             .focused_accessibility_id
             .set(accessibility_update.focus);
 

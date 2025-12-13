@@ -275,7 +275,7 @@ impl Render for Dropdown {
 
         // Close the dropdown when the focused accessibility node changes and its not the dropdown or any of its childrens
         use_side_effect(move || {
-            if let Some(member_of) = PlatformState::get()
+            if let Some(member_of) = Platform::get()
                 .focused_accessibility_node
                 .read()
                 .member_of()
