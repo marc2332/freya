@@ -2,6 +2,7 @@ use std::collections::HashSet;
 
 use freya::prelude::*;
 use freya_core::integration::NodeId;
+use freya_devtools::NodeInfo;
 use freya_radio::prelude::use_radio;
 use freya_router::prelude::{
     Navigator,
@@ -26,6 +27,27 @@ pub struct NodesTree {
     pub selected_node_id: Option<NodeId>,
     pub selected_window_id: Option<u64>,
     pub on_selected: EventHandler<(u64, NodeId)>,
+}
+
+impl NodesTree {
+    /// Collect all descendant node IDs starting from a given node
+    fn collect_descendants(window_nodes: &[NodeInfo], node_id: NodeId) -> Vec<NodeId> {
+        let mut result = Vec::new();
+        let mut stack = vec![node_id];
+
+        while let Some(current_id) = stack.pop() {
+            result.push(current_id);
+
+            // Find children of current node and push to stack
+            for node in window_nodes.iter() {
+                if node.parent_id == Some(current_id) {
+                    stack.push(node.node_id);
+                }
+            }
+        }
+
+        result
+    }
 }
 
 impl Render for NodesTree {
@@ -96,12 +118,36 @@ impl Render for NodesTree {
                     is_selected: Some(node_id) == *selected_node_id
                         && Some(window_id) == *selected_window_id,
                     is_open,
-                    on_arrow: EventHandler::new(move |_| {
+                    on_toggle: EventHandler::new(move |_| {
                         let mut radio = radio.write();
                         if radio.expanded_nodes.contains(&(window_id, node_id)) {
                             radio.expanded_nodes.remove(&(window_id, node_id));
                         } else {
                             radio.expanded_nodes.insert((window_id, node_id));
+                        }
+                    }),
+                    on_expand_all: EventHandler::new(move |_| {
+                        let mut radio = radio.write();
+
+                        if let Some((_, window_nodes)) =
+                            radio.nodes.iter().find(|(id, _)| **id == window_id)
+                        {
+                            let descendants = NodesTree::collect_descendants(window_nodes, node_id);
+                            for nid in descendants {
+                                radio.expanded_nodes.insert((window_id, nid));
+                            }
+                        }
+                    }),
+                    on_collapse_all: EventHandler::new(move |_| {
+                        let mut radio = radio.write();
+
+                        if let Some((_, window_nodes)) =
+                            radio.nodes.iter().find(|(id, _)| **id == window_id)
+                        {
+                            let descendants = NodesTree::collect_descendants(window_nodes, node_id);
+                            for nid in descendants {
+                                radio.expanded_nodes.remove(&(window_id, nid));
+                            }
                         }
                     }),
                     on_selected: EventHandler::new(move |_| {

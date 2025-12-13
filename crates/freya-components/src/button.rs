@@ -85,6 +85,7 @@ pub struct Button {
     pub(crate) theme_layout: Option<ButtonLayoutThemePartial>,
     elements: Vec<Element>,
     on_press: Option<EventHandler<Event<PressEventData>>>,
+    on_secondary_press: Option<EventHandler<Event<PressEventData>>>,
     key: DiffKey,
     style_variant: ButtonStyleVariant,
     layout_variant: ButtonLayoutVariant,
@@ -117,6 +118,7 @@ impl Button {
             style_variant: ButtonStyleVariant::Normal,
             layout_variant: ButtonLayoutVariant::Normal,
             on_press: None,
+            on_secondary_press: None,
             elements: Vec::default(),
             enabled: true,
             key: DiffKey::None,
@@ -140,6 +142,14 @@ impl Button {
 
     pub fn on_press(mut self, on_press: impl FnMut(Event<PressEventData>) + 'static) -> Self {
         self.on_press = Some(EventHandler::new(on_press));
+        self
+    }
+
+    pub fn on_secondary_press(
+        mut self,
+        on_secondary_press: impl FnMut(Event<PressEventData>) + 'static,
+    ) -> Self {
+        self.on_secondary_press = Some(EventHandler::new(on_secondary_press));
         self
     }
 
@@ -233,12 +243,19 @@ impl Render for Button {
             .color(theme_colors.color.mul_if(!self.enabled, 0.9))
             .center()
             .maybe(self.enabled, |rect| {
-                rect.on_press({
+                rect.on_all_press({
                     let on_press = self.on_press.clone();
-                    move |e| {
+                    let on_secondary_press = self.on_secondary_press.clone();
+                    move |e: Event<PressEventData>| {
                         focus.request_focus();
-                        if let Some(on_press) = &on_press {
-                            on_press.call(e)
+                        if let PressEventData::Mouse(data) = e.data() {
+                            match (data.button, &on_press, &on_secondary_press) {
+                                (Some(MouseButton::Left), Some(on_press), _) => on_press.call(e),
+                                (Some(MouseButton::Right), _, Some(on_secondary_press)) => {
+                                    on_secondary_press.call(e)
+                                }
+                                _ => {}
+                            }
                         }
                     }
                 })

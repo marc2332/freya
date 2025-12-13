@@ -10,7 +10,9 @@ pub struct NodeElement {
     pub is_selected: bool,
     pub is_open: Option<bool>,
     pub on_selected: EventHandler<()>,
-    pub on_arrow: EventHandler<()>,
+    pub on_toggle: EventHandler<()>,
+    pub on_expand_all: EventHandler<()>,
+    pub on_collapse_all: EventHandler<()>,
 }
 
 impl Render for NodeElement {
@@ -20,6 +22,7 @@ impl Render for NodeElement {
     {
         DiffKey::from(&(self.node_id, self.window_id))
     }
+
     fn render(&self) -> impl IntoElement {
         let Some(node) = use_node_info(self.node_id, self.window_id) else {
             return rect().into_element();
@@ -36,13 +39,65 @@ impl Render for NodeElement {
         };
 
         let on_open = {
-            let handler = self.on_arrow.clone();
+            let handler = self.on_toggle.clone();
             let is_open = self.is_open;
             move |e: Event<PressEventData>| {
                 if is_open.is_some() {
                     handler.call(());
                     e.stop_propagation();
                 }
+            }
+        };
+
+        let on_secondary_press = {
+            let on_expand = self.on_toggle.clone();
+            let on_expand_all = self.on_expand_all.clone();
+            let on_collapse_all = self.on_collapse_all.clone();
+            let is_open = self.is_open;
+            move |_| {
+                let on_expand = on_expand.clone();
+                let on_expand_all = on_expand_all.clone();
+                let on_collapse_all = on_collapse_all.clone();
+                ContextMenu::open(
+                    Menu::new()
+                        .child(
+                            MenuItem::new()
+                                .on_press({
+                                    let on_expand = on_expand.clone();
+                                    move |_| {
+                                        on_expand.call(());
+                                        ContextMenu::close();
+                                    }
+                                })
+                                .child(if Some(true) == is_open {
+                                    "Collapse"
+                                } else {
+                                    "Expand"
+                                }),
+                        )
+                        .child(
+                            MenuItem::new()
+                                .on_press({
+                                    let on_expand_all = on_expand_all.clone();
+                                    move |_| {
+                                        on_expand_all.call(());
+                                        ContextMenu::close();
+                                    }
+                                })
+                                .child("Expand All"),
+                        )
+                        .child(
+                            MenuItem::new()
+                                .on_press({
+                                    let on_collapse_all = on_collapse_all.clone();
+                                    move |_| {
+                                        on_collapse_all.call(());
+                                        ContextMenu::close();
+                                    }
+                                })
+                                .child("Collapse All"),
+                        ),
+                );
             }
         };
 
@@ -73,6 +128,7 @@ impl Render for NodeElement {
                 Color::from((45, 45, 45))
             })
             .on_press(on_select)
+            .on_secondary_press(on_secondary_press)
             .child(
                 rect()
                     .offset_x(margin_left)
@@ -84,7 +140,6 @@ impl Render for NodeElement {
                         paragraph()
                             .max_lines(1)
                             .font_size(14.)
-                            // TODO: Add text overflow
                             .text_overflow(TextOverflow::Ellipsis)
                             .span(
                                 Span::new(if node.is_window {

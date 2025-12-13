@@ -55,7 +55,7 @@ fn main() {
 }
 
 pub fn app() -> impl IntoElement {
-    use_init_theme(|| DARK_THEME);
+    use_init_root_theme(|| DARK_THEME);
     use_init_radio_station::<DevtoolsState, DevtoolsChannel>(|| DevtoolsState {
         nodes: HashMap::new(),
         expanded_nodes: HashSet::default(),

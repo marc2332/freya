@@ -51,6 +51,12 @@ pub struct Menu {
     key: DiffKey,
 }
 
+impl ChildrenExt for Menu {
+    fn get_children(&mut self) -> &mut Vec<Element> {
+        &mut self.children
+    }
+}
+
 impl KeyExt for Menu {
     fn write_key(&mut self) -> &mut DiffKey {
         &mut self.key
@@ -60,16 +66,6 @@ impl KeyExt for Menu {
 impl Menu {
     pub fn new() -> Self {
         Self::default()
-    }
-
-    pub fn child(mut self, child: impl IntoElement) -> Self {
-        self.children.push(child.into_element());
-        self
-    }
-
-    pub fn children(mut self, children: Vec<Element>) -> Self {
-        self.children = children;
-        self
     }
 
     pub fn on_close<F>(mut self, f: F) -> Self

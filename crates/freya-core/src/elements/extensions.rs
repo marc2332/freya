@@ -415,6 +415,34 @@ pub trait EventHandlersExt: Sized + LayoutExt {
             }
         })
     }
+
+    /// Gets triggered when:
+    /// - **Click**: There is a `MouseUp` event (Any button) with the in the same element that there had been a `MouseDown` just before
+    /// - **Touched**: There is a `TouchEnd` event in the same element that there had been a `TouchStart` just before
+    /// - **Activated**: The element is focused and there is a keydown event pressing the OS activation key (e.g Space, Enter)
+    fn on_all_press(self, on_press: impl Into<EventHandler<Event<PressEventData>>>) -> Self {
+        let on_press = on_press.into();
+        self.on_pointer_press({
+            let on_press = on_press.clone();
+            move |e: Event<PointerEventData>| {
+                let event = e.try_map(|d| match d {
+                    PointerEventData::Mouse(m) => Some(PressEventData::Mouse(m)),
+                    PointerEventData::Touch(t) => Some(PressEventData::Touch(t)),
+                });
+                if let Some(event) = event {
+                    on_press.call(event);
+                }
+            }
+        })
+        .on_key_down({
+            let on_press = on_press.clone();
+            move |e: Event<KeyboardEventData>| {
+                if Focus::is_pressed(&e) {
+                    on_press.call(e.map(PressEventData::Keyboard))
+                }
+            }
+        })
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
