@@ -430,7 +430,7 @@ impl RenderOwned for SubMenu {
             .child(rect().horizontal().maybe_child(self.label.clone()))
             .maybe_child(show_submenu.then(|| {
                 rect()
-                    .position(Position::new_absolute().top(-8.).right(-16.))
+                    .position(Position::new_absolute().top(-8.).right(-10.))
                     .width(Size::px(0.))
                     .height(Size::px(0.))
                     .child(
