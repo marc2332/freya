@@ -22,6 +22,6 @@ fn app() -> impl IntoElement {
     rect().expanded().center().child(
         label()
             .text("Right click to copy")
-            .on_pointer_press(on_secondary_press),
+            .on_secondary_press(on_secondary_press),
     )
 }

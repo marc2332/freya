@@ -403,7 +403,6 @@ pub trait EventHandlersExt: Sized + LayoutExt {
         self.on_pointer_press({
             let on_pointer_press = on_pointer_press.clone();
             move |e: Event<PointerEventData>| {
-                println!("{:?}", e.data);
                 let event = e.try_map(|d| match d {
                     PointerEventData::Mouse(m) if m.button == Some(MouseButton::Right) => {
                         Some(PressEventData::Mouse(m))
