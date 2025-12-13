@@ -29,6 +29,7 @@ mod text_height;
 mod text_overflow;
 mod text_shadow;
 mod visible_size;
+mod wrap_content;
 
 pub use aspect_ratio::*;
 pub use border::*;

@@ -5,6 +5,7 @@ pub mod gaps;
 pub mod position;
 pub mod size;
 pub mod visible_size;
+pub mod wrap_content;
 
 pub mod prelude {
     pub use crate::{
