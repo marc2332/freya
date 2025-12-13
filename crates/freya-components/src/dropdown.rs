@@ -27,6 +27,18 @@ pub struct DropdownItem {
     pub key: DiffKey,
 }
 
+impl ChildrenExt for DropdownItem {
+    fn get_children(&mut self) -> &mut Vec<Element> {
+        &mut self.children
+    }
+}
+
+impl KeyExt for DropdownItem {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
+}
+
 impl Default for DropdownItem {
     fn default() -> Self {
         Self::new()
@@ -56,16 +68,6 @@ impl DropdownItem {
 
     pub fn on_press(mut self, handler: impl FnMut(Event<PressEventData>) + 'static) -> Self {
         self.on_press = Some(EventHandler::new(handler));
-        self
-    }
-
-    pub fn child(mut self, child: impl Into<Element>) -> Self {
-        self.children.push(child.into());
-        self
-    }
-
-    pub fn key(mut self, key: impl Into<DiffKey>) -> Self {
-        self.key = key.into();
         self
     }
 }

@@ -128,19 +128,15 @@ impl KeyExt for MenuContainer {
     }
 }
 
+impl ChildrenExt for MenuContainer {
+    fn get_children(&mut self) -> &mut Vec<Element> {
+        &mut self.children
+    }
+}
+
 impl MenuContainer {
     pub fn new() -> Self {
         Self::default()
-    }
-
-    pub fn child(mut self, child: impl IntoElement) -> Self {
-        self.children.push(child.into_element());
-        self
-    }
-
-    pub fn children(mut self, children: Vec<Element>) -> Self {
-        self.children = children;
-        self
     }
 }
 
@@ -303,6 +299,12 @@ pub struct MenuButton {
     key: DiffKey,
 }
 
+impl ChildrenExt for MenuButton {
+    fn get_children(&mut self) -> &mut Vec<Element> {
+        &mut self.children
+    }
+}
+
 impl KeyExt for MenuButton {
     fn write_key(&mut self) -> &mut DiffKey {
         &mut self.key
@@ -314,21 +316,8 @@ impl MenuButton {
         Self::default()
     }
 
-    pub fn child(mut self, child: impl IntoElement) -> Self {
-        self.children.push(child.into_element());
-        self
-    }
-
-    pub fn children(mut self, children: Vec<Element>) -> Self {
-        self.children = children;
-        self
-    }
-
-    pub fn on_press<F>(mut self, f: F) -> Self
-    where
-        F: Into<EventHandler<()>>,
-    {
-        self.on_press = Some(f.into());
+    pub fn on_press(mut self, on_press: impl Into<EventHandler<()>>) -> Self {
+        self.on_press = Some(on_press.into());
         self
     }
 }
