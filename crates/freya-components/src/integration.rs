@@ -43,13 +43,11 @@ pub fn integration(app: FpRender) -> impl IntoElement {
         .on_global_mouse_move(on_global_mouse_move)
         .on_global_key_down(on_global_key_down)
         .child(app)
-        .maybe_child(context.menu.read().clone().and_then(|(location, menu)| {
+        .maybe_child(context.menu.read().clone().map(|(location, menu)| {
             let location = location.to_f32();
-            Some(
-                rect()
-                    .layer(Layer::Overlay)
-                    .position(Position::new_global().left(location.x).top(location.y))
-                    .child(menu.on_close(move |_| context.menu.set(None))),
-            )
+            rect()
+                .layer(Layer::Overlay)
+                .position(Position::new_global().left(location.x).top(location.y))
+                .child(menu.on_close(move |_| context.menu.set(None)))
         }))
 }
