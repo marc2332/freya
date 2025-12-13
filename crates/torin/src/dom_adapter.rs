@@ -10,7 +10,9 @@ use crate::{
     node::Node,
     prelude::{
         AreaModel,
+        AreaOf,
         Gaps,
+        Inner,
         Length,
     },
 };
@@ -23,7 +25,7 @@ pub struct LayoutNode {
     pub area: Area,
 
     /// Area inside this Node
-    pub inner_area: Area,
+    pub inner_area: AreaOf<Inner>,
 
     /// Outer margin
     pub margin: Gaps,

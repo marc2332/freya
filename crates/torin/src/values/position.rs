@@ -1,6 +1,9 @@
 use crate::{
     prelude::{
         Area,
+        AreaOf,
+        Available,
+        Parent,
         Point2D,
         Size2D,
     },
@@ -103,13 +106,13 @@ impl Position {
 
     pub(crate) fn get_origin(
         &self,
-        available_parent_area: &Area,
-        parent_area: &Area,
+        available_parent_area: &AreaOf<Available>,
+        parent_area: &AreaOf<Parent>,
         area_size: Size2D,
         root_area: &Area,
     ) -> Point2D {
         match self {
-            Self::Stacked(_) => available_parent_area.origin,
+            Self::Stacked(_) => available_parent_area.origin.cast_unit(),
             Self::Absolute(absolute_position) => {
                 let PositionSides {
                     top,

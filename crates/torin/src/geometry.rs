@@ -9,18 +9,45 @@ use crate::{
     },
 };
 
-pub type Area = euclid::Rect<f32, ()>;
+pub type AreaOf<T> = euclid::Rect<f32, T>;
+
 pub type Size2D = euclid::Size2D<f32, ()>;
 pub type Point2D = euclid::Point2D<f32, ()>;
 pub type CursorPoint = euclid::Point2D<f64, ()>;
 pub type Length = euclid::Length<f32, ()>;
 
+/// Area used by a Node, including its margins.
+pub type Area = euclid::Rect<f32, ()>;
+/// Remaining area avaiable to the children of a Node.
+pub struct Available;
+/// Area used by the parent of a Node.
+pub struct Parent;
+/// Area used by a Node, excluding its margins.
+pub struct Inner;
+
+pub trait AvailableAreaModel {
+    /// Adjust the available area with the node offsets (mainly used by scrollviews)
+    fn move_with_offsets(&mut self, offset_x: &Length, offset_y: &Length);
+}
+
+impl AvailableAreaModel for AreaOf<Available> {
+    fn move_with_offsets(&mut self, offset_x: &Length, offset_y: &Length) {
+        self.origin.x += offset_x.get();
+        self.origin.y += offset_y.get();
+    }
+}
+
+pub trait AreaConverter {
+    fn as_parent(&self) -> AreaOf<Parent>;
+
+    fn as_available(&self) -> AreaOf<Available>;
+
+    fn as_inner(&self) -> AreaOf<Inner>;
+}
+
 pub trait AreaModel {
     /// The area without any outer gap (e.g margin)
     fn without_gaps(self, gap: &Gaps) -> Area;
-
-    /// Adjust the available area with the node offsets (mainly used by scrollviews)
-    fn move_with_offsets(&mut self, offset_x: &Length, offset_y: &Length);
 
     /// Adjust the size given the Node data
     fn adjust_size(&mut self, node: &Node);
@@ -43,11 +70,6 @@ impl AreaModel for Area {
                 size.height - gaps.vertical(),
             ),
         )
-    }
-
-    fn move_with_offsets(&mut self, offset_x: &Length, offset_y: &Length) {
-        self.origin.x += offset_x.get();
-        self.origin.y += offset_y.get();
     }
 
     fn adjust_size(&mut self, node: &Node) {
@@ -83,6 +105,54 @@ impl AreaModel for Area {
         self.origin.y = self.origin.y.max(other.origin.y);
         self.size.width = self.size.width.min(other.size.width);
         self.size.height = self.size.height.min(other.size.height);
+    }
+}
+
+impl AreaConverter for Area {
+    fn as_parent(&self) -> AreaOf<Parent> {
+        self.cast_unit()
+    }
+    fn as_available(&self) -> AreaOf<Available> {
+        self.cast_unit()
+    }
+    fn as_inner(&self) -> AreaOf<Inner> {
+        self.cast_unit()
+    }
+}
+
+impl AreaConverter for AreaOf<Available> {
+    fn as_parent(&self) -> AreaOf<Parent> {
+        self.cast_unit()
+    }
+    fn as_available(&self) -> AreaOf<Available> {
+        self.cast_unit()
+    }
+    fn as_inner(&self) -> AreaOf<Inner> {
+        self.cast_unit()
+    }
+}
+
+impl AreaConverter for AreaOf<Parent> {
+    fn as_parent(&self) -> AreaOf<Parent> {
+        self.cast_unit()
+    }
+    fn as_available(&self) -> AreaOf<Available> {
+        self.cast_unit()
+    }
+    fn as_inner(&self) -> AreaOf<Inner> {
+        self.cast_unit()
+    }
+}
+
+impl AreaConverter for AreaOf<Inner> {
+    fn as_parent(&self) -> AreaOf<Parent> {
+        self.cast_unit()
+    }
+    fn as_available(&self) -> AreaOf<Available> {
+        self.cast_unit()
+    }
+    fn as_inner(&self) -> AreaOf<Inner> {
+        self.cast_unit()
     }
 }
 

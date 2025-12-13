@@ -20,7 +20,9 @@ use crate::{
         Phase,
     },
     prelude::{
+        AreaConverter,
         AreaModel,
+        AvailableAreaModel,
         Gaps,
         Length,
     },
@@ -314,7 +316,7 @@ impl<Key: NodeKey> Torin<Key> {
             .and_then(|root_parent_id| self.get(&root_parent_id).cloned())
             .unwrap_or(LayoutNode {
                 area: root_area,
-                inner_area: root_area,
+                inner_area: root_area.as_inner(),
                 margin: Gaps::default(),
                 offset_x: Length::default(),
                 offset_y: Length::default(),
@@ -335,7 +337,7 @@ impl<Key: NodeKey> Torin<Key> {
 
         let layout_metadata = LayoutMetadata { root_area };
 
-        let mut available_area = layout_node.inner_area;
+        let mut available_area = layout_node.inner_area.as_available();
         if let Some(root_parent_id) = root_parent_id {
             let root_parent = dom_adapter.get_node(&root_parent_id).unwrap();
             available_area.move_with_offsets(&root_parent.offset_x, &root_parent.offset_y);
@@ -351,8 +353,8 @@ impl<Key: NodeKey> Torin<Key> {
         let (root_revalidated, mut root_layout_node) = measure_context.measure_node(
             root_id,
             &root,
-            &layout_node.inner_area,
-            &available_area,
+            layout_node.inner_area.as_parent(),
+            available_area,
             true,
             false,
             Phase::Final,

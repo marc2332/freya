@@ -21,7 +21,9 @@ use torin::{
     gaps::Gaps,
     prelude::{
         Area,
+        AreaOf,
         Content,
+        Inner,
         Position,
         VisibleSize,
     },
@@ -38,7 +40,7 @@ pub struct NodeInfo {
     pub height: u16,
     pub state: NodeState,
     pub area: Area,
-    pub inner_area: Area,
+    pub inner_area: AreaOf<Inner>,
 }
 
 #[derive(Clone, PartialEq, Debug, serde::Serialize, serde::Deserialize)]
