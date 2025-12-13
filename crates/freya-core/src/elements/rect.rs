@@ -560,7 +560,7 @@ impl ElementExt for RectElement {
             if border.is_visible() {
                 let border = border.with_scale(context.scale_factor as f32);
                 let rect = *rounded_rect.rect();
-                Self::render_border(context.canvas, rect.into(), &border, &corner_radius);
+                Self::render_border(context.canvas, rect, &border, &corner_radius);
             }
         }
     }
