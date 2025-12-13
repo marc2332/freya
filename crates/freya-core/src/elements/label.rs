@@ -34,6 +34,7 @@ use crate::{
         RenderContext,
     },
     events::name::EventName,
+    layers::Layer,
     prelude::{
         AccessibilityExt,
         ContainerExt,
@@ -76,7 +77,7 @@ pub struct LabelElement {
     pub event_handlers: FxHashMap<EventName, EventHandlerType>,
     pub max_lines: Option<usize>,
     pub line_height: Option<f32>,
-    pub relative_layer: i16,
+    pub relative_layer: Layer,
 }
 
 impl Default for LabelElement {
@@ -91,7 +92,7 @@ impl Default for LabelElement {
             event_handlers: Default::default(),
             max_lines: None,
             line_height: None,
-            relative_layer: 0,
+            relative_layer: Layer::default(),
         }
     }
 }
@@ -162,8 +163,12 @@ impl ElementExt for LabelElement {
         Cow::Borrowed(&self.accessibility)
     }
 
-    fn relative_layer(&self) -> i16 {
+    fn layer(&self) -> Layer {
         self.relative_layer
+    }
+
+    fn events_handlers(&'_ self) -> Option<Cow<'_, FxHashMap<EventName, EventHandlerType>>> {
+        Some(Cow::Borrowed(&self.event_handlers))
     }
 
     fn measure(&self, context: LayoutContext) -> Option<(Size2D, Rc<dyn Any>)> {
@@ -303,7 +308,7 @@ impl TextStyleExt for Label {
 }
 
 impl LayerExt for Label {
-    fn get_layer(&mut self) -> &mut i16 {
+    fn get_layer(&mut self) -> &mut Layer {
         &mut self.element.relative_layer
     }
 }

@@ -38,6 +38,7 @@ use crate::{
         RenderContext,
     },
     events::name::EventName,
+    layers::Layer,
     prelude::{
         AccessibilityExt,
         Color,
@@ -61,7 +62,7 @@ pub struct SvgElement {
     pub stroke: Option<Color>,
     pub fill: Option<Color>,
     pub effect: Option<EffectData>,
-    pub relative_layer: i16,
+    pub relative_layer: Layer,
 }
 
 impl ElementExt for SvgElement {
@@ -122,7 +123,7 @@ impl ElementExt for SvgElement {
         Cow::Borrowed(&self.accessibility)
     }
 
-    fn relative_layer(&self) -> i16 {
+    fn layer(&self) -> Layer {
         self.relative_layer
     }
 
@@ -252,7 +253,7 @@ impl AccessibilityExt for Svg {
 impl MaybeExt for Svg {}
 
 impl LayerExt for Svg {
-    fn get_layer(&mut self) -> &mut i16 {
+    fn get_layer(&mut self) -> &mut Layer {
         &mut self.element.relative_layer
     }
 }
@@ -284,7 +285,7 @@ pub fn svg(bytes: Bytes) -> Svg {
             color: Color::BLACK,
             stroke: None,
             fill: None,
-            relative_layer: 0,
+            relative_layer: Layer::default(),
         },
     }
 }

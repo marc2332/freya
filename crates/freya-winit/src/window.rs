@@ -8,7 +8,7 @@ use std::{
 use accesskit_winit::Adapter;
 use freya_components::{
     cache::AssetCacher,
-    keyboard_navigator::keyboard_navigator,
+    integration::integration,
 };
 use freya_core::{
     integration::*,
@@ -131,8 +131,7 @@ impl AppWindow {
 
         let (events_sender, events_receiver) = futures_channel::mpsc::unbounded();
 
-        let mut runner =
-            Runner::new(move || keyboard_navigator(window_config.app.clone()).into_element());
+        let mut runner = Runner::new(move || integration(window_config.app.clone()).into_element());
 
         runner.provide_root_context(|| screen_reader);
 

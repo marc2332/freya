@@ -41,6 +41,7 @@ use crate::{
         name::EventName,
     },
     helpers::from_fn_standalone_borrowed_keyed,
+    layers::Layer,
     node_id::NodeId,
     prelude::{
         FileEventData,
@@ -89,8 +90,8 @@ pub trait ElementExt: Any {
         Cow::Owned(Default::default())
     }
 
-    fn relative_layer(&self) -> i16 {
-        0
+    fn layer(&self) -> Layer {
+        Layer::default()
     }
 
     fn events_handlers(&'_ self) -> Option<Cow<'_, FxHashMap<EventName, EventHandlerType>>> {

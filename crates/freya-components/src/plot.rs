@@ -122,18 +122,8 @@ impl ElementExt for PlotElement {
         Cow::Owned(AccessibilityData::default())
     }
 
-    fn relative_layer(&self) -> i16 {
-        0
-    }
-
     fn events_handlers(&'_ self) -> Option<Cow<'_, FxHashMap<EventName, EventHandlerType>>> {
         Some(Cow::Borrowed(&self.event_handlers))
-    }
-
-    fn is_point_inside(&self, context: EventMeasurementContext) -> bool {
-        let area = context.layout_node.visible_area();
-        let cursor = context.cursor.to_f32();
-        area.contains(cursor)
     }
 
     fn clip(&self, context: ClipContext) {

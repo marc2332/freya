@@ -33,6 +33,7 @@ use crate::{
         RenderContext,
     },
     events::name::EventName,
+    layers::Layer,
     prelude::*,
     style::{
         fill::Fill,
@@ -56,7 +57,7 @@ pub struct RectElement {
     pub style: StyleState,
     pub layout: LayoutData,
     pub text_style_data: TextStyleData,
-    pub relative_layer: i16,
+    pub relative_layer: Layer,
     pub event_handlers: FxHashMap<EventName, EventHandlerType>,
     pub accessibility: AccessibilityData,
     pub effect: Option<EffectData>,
@@ -456,7 +457,7 @@ impl ElementExt for RectElement {
         Cow::Borrowed(&self.accessibility)
     }
 
-    fn relative_layer(&self) -> i16 {
+    fn layer(&self) -> Layer {
         self.relative_layer
     }
 
@@ -604,7 +605,7 @@ impl TextStyleExt for Rect {
 impl MaybeExt for Rect {}
 
 impl LayerExt for Rect {
-    fn get_layer(&mut self) -> &mut i16 {
+    fn get_layer(&mut self) -> &mut Layer {
         &mut self.element.relative_layer
     }
 }

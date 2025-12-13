@@ -14,7 +14,7 @@ use std::{
 
 use freya_components::{
     cache::AssetCacher,
-    keyboard_navigator::keyboard_navigator,
+    integration::integration,
 };
 use freya_core::integration::*;
 pub use freya_core::{
@@ -92,7 +92,7 @@ impl TestingRunner {
     ) -> (Self, T) {
         let (events_sender, events_receiver) = futures_channel::mpsc::unbounded();
         let app = app.into();
-        let mut runner = Runner::new(move || keyboard_navigator(app.clone()).into_element());
+        let mut runner = Runner::new(move || integration(app.clone()).into_element());
 
         runner.provide_root_context(ScreenReader::new);
 

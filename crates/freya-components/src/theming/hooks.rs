@@ -1,15 +1,16 @@
-use freya_core::prelude::{
-    State,
-    provide_context,
-    try_consume_context,
-    use_consume,
-    use_hook,
+use freya_core::{
+    prelude::{
+        State,
+        provide_context,
+        provide_context_for_scope_id,
+        try_consume_context,
+        use_consume,
+        use_hook,
+    },
+    scope_id::ScopeId,
 };
 
-use crate::theming::{
-    component_themes::Theme,
-    themes::LIGHT_THEME,
-};
+use crate::theming::component_themes::Theme;
 
 /// Provides a custom [`Theme`].
 pub fn use_init_theme(theme_cb: impl FnOnce() -> Theme) -> State<Theme> {
@@ -20,9 +21,12 @@ pub fn use_init_theme(theme_cb: impl FnOnce() -> Theme) -> State<Theme> {
     })
 }
 
-/// Provide [LIGHT_THEME] as the default [`Theme`].
-pub fn use_init_default_theme() -> State<Theme> {
-    use_init_theme(|| LIGHT_THEME)
+pub fn use_init_root_theme(theme_cb: impl FnOnce() -> Theme) -> State<Theme> {
+    use_hook(|| {
+        let state = State::create_in_scope(theme_cb(), ScopeId::ROOT);
+        provide_context_for_scope_id(state, ScopeId::ROOT);
+        state
+    })
 }
 
 /// Subscribe to [`Theme`] changes.

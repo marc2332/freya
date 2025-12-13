@@ -10,6 +10,24 @@ use rustc_hash::{
 
 use crate::node_id::NodeId;
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Layer {
+    Relative(i16),
+    Overlay,
+}
+
+impl Default for Layer {
+    fn default() -> Self {
+        Layer::Relative(0)
+    }
+}
+
+impl From<i16> for Layer {
+    fn from(value: i16) -> Self {
+        Layer::Relative(value)
+    }
+}
+
 #[derive(Default, Clone, Debug, PartialEq)]
 pub struct Layers(FxHashMap<i16, FxHashSet<NodeId>>);
 

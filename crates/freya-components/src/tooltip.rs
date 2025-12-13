@@ -206,7 +206,7 @@ impl Render for TooltipContainer {
                 rect()
                     .width(Size::px(0.))
                     .height(Size::px(0.))
-                    .layer(1500)
+                    .layer(Layer::Overlay)
                     .opacity(opacity)
                     .overflow(if opacity == 0. {
                         Overflow::Clip

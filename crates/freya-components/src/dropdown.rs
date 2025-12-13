@@ -373,6 +373,7 @@ impl Render for Dropdown {
                         .margin(Gaps::new(4., 0., 0., 0.))
                         .child(
                             rect()
+                                .layer(Layer::Overlay)
                                 .border(
                                     Border::new()
                                         .fill(theme.border_fill)

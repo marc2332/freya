@@ -38,6 +38,7 @@ use crate::{
         RenderContext,
     },
     events::name::EventName,
+    layers::Layer,
     prelude::{
         AccessibilityExt,
         ChildrenExt,
@@ -105,7 +106,7 @@ pub struct ImageElement {
     pub event_handlers: FxHashMap<EventName, EventHandlerType>,
     pub image_holder: ImageHolder,
     pub image_data: ImageData,
-    pub relative_layer: i16,
+    pub relative_layer: Layer,
 }
 
 impl ElementExt for ImageElement {
@@ -163,7 +164,7 @@ impl ElementExt for ImageElement {
         Cow::Borrowed(&self.accessibility)
     }
 
-    fn relative_layer(&self) -> i16 {
+    fn layer(&self) -> Layer {
         self.relative_layer
     }
 
@@ -314,7 +315,7 @@ impl ChildrenExt for Image {
 }
 
 impl LayerExt for Image {
-    fn get_layer(&mut self) -> &mut i16 {
+    fn get_layer(&mut self) -> &mut Layer {
         &mut self.element.relative_layer
     }
 }
@@ -340,7 +341,7 @@ pub fn image(image_holder: ImageHolder) -> Image {
             layout: LayoutData::default(),
             event_handlers: HashMap::default(),
             image_data: ImageData::default(),
-            relative_layer: 0,
+            relative_layer: Layer::default(),
         },
         elements: Vec::new(),
     }

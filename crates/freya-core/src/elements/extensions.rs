@@ -56,6 +56,7 @@ use crate::{
         },
         name::EventName,
     },
+    layers::Layer,
     prelude::*,
     style::{
         font_size::FontSize,
@@ -361,7 +362,7 @@ pub trait EventHandlersExt: Sized + LayoutExt {
     /// This is generally the best event in which to run "press" logic, this might be called `onClick`, `onActivate`, or `onConnect` in other platforms.
     ///
     /// Gets triggered when:
-    /// - **Click**: There is a `MouseUp` event in the same element that there had been a `MouseDown` just before, or in other words
+    /// - **Click**: There is a `MouseUp` event (Left button) with the in the same element that there had been a `MouseDown` just before
     /// - **Touched**: There is a `TouchEnd` event in the same element that there had been a `TouchStart` just before
     /// - **Activated**: The element is focused and there is a keydown event pressing the OS activation key (e.g Space, Enter)
     fn on_press(self, on_press: impl Into<EventHandler<Event<PressEventData>>>) -> Self {
@@ -386,6 +387,31 @@ pub trait EventHandlersExt: Sized + LayoutExt {
             move |e: Event<KeyboardEventData>| {
                 if Focus::is_pressed(&e) {
                     on_press.call(e.map(PressEventData::Keyboard))
+                }
+            }
+        })
+    }
+
+    /// Also called the context menu click in other platforms.
+    /// Gets triggered when:
+    /// - **Click**: There is a `MouseUp` (Right button) event in the same element that there had been a `MouseDown` just before
+    fn on_secondary_press(
+        self,
+        on_pointer_press: impl Into<EventHandler<Event<PressEventData>>>,
+    ) -> Self {
+        let on_pointer_press = on_pointer_press.into();
+        self.on_pointer_press({
+            let on_pointer_press = on_pointer_press.clone();
+            move |e: Event<PointerEventData>| {
+                println!("{:?}", e.data);
+                let event = e.try_map(|d| match d {
+                    PointerEventData::Mouse(m) if m.button == Some(MouseButton::Right) => {
+                        Some(PressEventData::Mouse(m))
+                    }
+                    _ => None,
+                });
+                if let Some(event) = event {
+                    on_pointer_press.call(event);
                 }
             }
         })
@@ -698,10 +724,10 @@ pub trait LayerExt
 where
     Self: Sized,
 {
-    fn get_layer(&mut self) -> &mut i16;
+    fn get_layer(&mut self) -> &mut Layer;
 
-    fn layer(mut self, layer: i16) -> Self {
-        *self.get_layer() = layer;
+    fn layer(mut self, layer: impl Into<Layer>) -> Self {
+        *self.get_layer() = layer.into();
         self
     }
 }

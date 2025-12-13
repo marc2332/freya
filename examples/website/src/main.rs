@@ -189,7 +189,7 @@ impl Render for Navigation {
 struct Counter;
 impl Render for Counter {
     fn render(&self) -> impl IntoElement {
-        use_init_default_theme();
+        use_init_theme(|| LIGHT_THEME);
         let mut count = use_state(|| 4);
 
         rect()

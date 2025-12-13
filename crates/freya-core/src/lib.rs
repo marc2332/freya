@@ -100,6 +100,7 @@ pub mod prelude {
         events::data::*,
         events::*,
         hooks::use_id::*,
+        layers::Layer,
         lifecycle::{
             base::*,
             context::*,

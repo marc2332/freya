@@ -21,7 +21,10 @@ use crate::{
         tree::ACCESSIBILITY_ROOT_ID,
     },
     element::ElementExt,
-    layers::Layers,
+    layers::{
+        Layer,
+        Layers,
+    },
     node_id::NodeId,
     prelude::AccessibilityFocusStrategy,
     style::{
@@ -203,13 +206,16 @@ impl LayerState {
         element: &Rc<dyn ElementExt>,
         layers: &mut Layers,
     ) {
-        let relative_layer = element.relative_layer();
+        let relative_layer = element.layer();
 
         // Old
         layers.remove_node_from_layer(&node_id, self.layer);
 
         // New
-        self.layer = parent_layer.layer + relative_layer + 1;
+        self.layer = match relative_layer {
+            Layer::Relative(relative_layer) => parent_layer.layer + relative_layer + 1,
+            Layer::Overlay => i16::MAX / 2,
+        };
         layers.insert_node_in_layer(node_id, self.layer);
     }
 }

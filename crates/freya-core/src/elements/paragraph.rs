@@ -40,6 +40,7 @@ use crate::{
         RenderContext,
     },
     events::name::EventName,
+    layers::Layer,
     prelude::{
         AccessibilityExt,
         Color,
@@ -88,7 +89,7 @@ pub struct ParagraphElement {
     pub highlights: Vec<(usize, usize)>,
     pub max_lines: Option<usize>,
     pub line_height: Option<f32>,
-    pub relative_layer: i16,
+    pub relative_layer: Layer,
 }
 
 impl Default for ParagraphElement {
@@ -202,7 +203,7 @@ impl ElementExt for ParagraphElement {
         Cow::Borrowed(&self.accessibility)
     }
 
-    fn relative_layer(&self) -> i16 {
+    fn layer(&self) -> Layer {
         self.relative_layer
     }
 
@@ -424,7 +425,7 @@ impl EventHandlersExt for Paragraph {
 impl MaybeExt for Paragraph {}
 
 impl LayerExt for Paragraph {
-    fn get_layer(&mut self) -> &mut i16 {
+    fn get_layer(&mut self) -> &mut Layer {
         &mut self.element.relative_layer
     }
 }
