@@ -1379,6 +1379,12 @@ impl AsRef<Rect> for IRect {
     }
 }
 
+impl From<Rect> for IRect {
+    fn from(value: Rect) -> IRect {
+        unimplemented!("This is mocked")
+    }
+}
+
 impl Rect {
     pub fn new(_left: f32, _top: f32, _right: f32, _bottom: f32) -> Self {
         unimplemented!("This is mocked")
