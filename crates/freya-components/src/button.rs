@@ -248,13 +248,24 @@ impl Render for Button {
                     let on_secondary_press = self.on_secondary_press.clone();
                     move |e: Event<PressEventData>| {
                         focus.request_focus();
-                        if let PressEventData::Mouse(data) = e.data() {
-                            match (data.button, &on_press, &on_secondary_press) {
-                                (Some(MouseButton::Left), Some(on_press), _) => on_press.call(e),
-                                (Some(MouseButton::Right), _, Some(on_secondary_press)) => {
-                                    on_secondary_press.call(e)
+                        match e.data() {
+                            PressEventData::Mouse(data) => match data.button {
+                                Some(MouseButton::Left) => {
+                                    if let Some(handler) = &on_press {
+                                        handler.call(e);
+                                    }
+                                }
+                                Some(MouseButton::Right) => {
+                                    if let Some(handler) = &on_secondary_press {
+                                        handler.call(e);
+                                    }
                                 }
                                 _ => {}
+                            },
+                            PressEventData::Touch(_) | PressEventData::Keyboard(_) => {
+                                if let Some(handler) = &on_press {
+                                    handler.call(e);
+                                }
                             }
                         }
                     }
