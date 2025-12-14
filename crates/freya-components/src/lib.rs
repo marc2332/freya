@@ -39,6 +39,7 @@ cfg_if::cfg_if! {
         pub mod activable_route;
         pub mod link;
         pub mod native_router;
+        pub mod animated_router;
     }
 }
 

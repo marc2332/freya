@@ -160,6 +160,10 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
         *self.has_run_yet.write() = true;
     }
 
+    pub fn is_running(&self) -> State<bool> {
+        self.is_running
+    }
+
     pub fn has_run_yet(&self) -> State<bool> {
         self.has_run_yet
     }

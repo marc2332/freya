@@ -38,6 +38,7 @@ pub mod prelude {
             pub use freya_components::activable_route::*;
             pub use freya_components::link::*;
             pub use freya_components::native_router::*;
+            pub use freya_components::animated_router::*;
         }
     }
     cfg_if::cfg_if! {
