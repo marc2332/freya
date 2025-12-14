@@ -1,5 +1,5 @@
 use keyboard_types::{
-    Code,
+    Key,
     Modifiers,
 };
 
@@ -72,17 +72,20 @@ impl Focus {
     }
 
     pub fn is_pressed(event: &KeyboardEventData) -> bool {
+        let is_space = matches!(event.key, Key::Character(ref s) if s == " ");
+        let is_enter = event.key == Key::Enter;
+
         if cfg!(target_os = "macos") {
             let screen_reader = ScreenReader::get();
             if screen_reader.is_on() {
-                event.code == Code::Space
+                is_space
                     && event.modifiers.contains(Modifiers::CONTROL)
                     && event.modifiers.contains(Modifiers::ALT)
             } else {
-                event.code == Code::Enter || event.code == Code::Space
+                is_enter || is_space
             }
         } else {
-            event.code == Code::Enter || event.code == Code::Space
+            is_enter || is_space
         }
     }
 }
