@@ -59,6 +59,9 @@ image = { workspace = true }
 # Tray
 tray-icon = { workspace = true, optional = true }
 
+# Clipboard
+freya-clipboard = { workspace = true }
+
 [target.'cfg(target_os = "linux")'.dependencies]
 gtk = { version = "0.18.2", optional = true }
 

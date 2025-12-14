@@ -12,6 +12,10 @@ use std::{
     },
 };
 
+use freya_clipboard::copypasta::{
+    ClipboardContext,
+    ClipboardProvider,
+};
 use freya_components::{
     cache::AssetCacher,
     integration::integration,
@@ -135,6 +139,14 @@ impl TestingRunner {
                     }
                 }),
             }
+        });
+
+        runner.provide_root_context(|| {
+            let clipboard: Option<Box<dyn ClipboardProvider>> = ClipboardContext::new()
+                .ok()
+                .map(|c| Box::new(c) as Box<dyn ClipboardProvider>);
+
+            State::create(clipboard)
         });
 
         runner.provide_root_context(|| tree.borrow().accessibility_generator.clone());
