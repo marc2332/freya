@@ -274,6 +274,9 @@ impl Render for Slider {
             .corner_radius(50.);
 
         rect()
+            .a11y_id(focus.a11y_id())
+            .a11y_focusable(self.enabled)
+            .a11y_role(AccessibilityRole::Slider)
             .on_sized(move |e: Event<SizedEventData>| size.set(e.area))
             .maybe(self.enabled, |rect| {
                 rect.on_key_down(on_key_down)
@@ -283,8 +286,6 @@ impl Render for Slider {
             })
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
-            .a11y_id(focus.a11y_id())
-            .a11y_focusable(self.enabled)
             .border(border)
             .corner_radius(50.)
             .padding(padding)

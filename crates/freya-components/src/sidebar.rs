@@ -192,7 +192,7 @@ impl Render for SideBarItem {
 
         rect()
             .a11y_focusable(true)
-            .a11y_role(AccessibilityRole::Button)
+            .a11y_role(AccessibilityRole::Link)
             .map(self.on_press.clone(), |rect, on_press| {
                 rect.on_press(on_press)
             })

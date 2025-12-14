@@ -274,10 +274,13 @@ pub struct Svg {
 /// }
 /// ```
 pub fn svg(bytes: Bytes) -> Svg {
+    let mut accessibility = AccessibilityData::default();
+    accessibility.builder.set_role(accesskit::Role::SvgRoot);
+
     Svg {
         key: DiffKey::None,
         element: SvgElement {
-            accessibility: AccessibilityData::default(),
+            accessibility,
             layout: LayoutData::default(),
             event_handlers: HashMap::default(),
             bytes,

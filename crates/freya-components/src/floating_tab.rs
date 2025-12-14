@@ -117,11 +117,12 @@ impl Render for FloatingTab {
         };
 
         rect()
+            .a11y_id(focus.a11y_id())
+            .a11y_focusable(Focusable::Enabled)
+            .a11y_role(AccessibilityRole::Tab)
             .on_press(on_press)
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
-            .a11y_id(focus.a11y_id())
-            .a11y_focusable(Focusable::Enabled)
             .width(width)
             .height(height)
             .center()

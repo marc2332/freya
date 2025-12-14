@@ -394,11 +394,17 @@ impl Render for Input {
             .then(|| ime_preedit.read().clone())
             .flatten();
 
+        let a11_role = match self.mode {
+            InputMode::Hidden(_) => AccessibilityRole::PasswordInput,
+            _ => AccessibilityRole::TextInput,
+        };
+
         rect()
             .a11y_id(a11y_id)
             .a11y_focusable(self.enabled)
             .a11y_auto_focus(self.auto_focus)
             .a11y_alt(text.clone())
+            .a11y_role(a11_role)
             .maybe(self.enabled, |rect| {
                 rect.on_key_up(on_key_up)
                     .on_key_down(on_key_down)

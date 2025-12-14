@@ -150,6 +150,8 @@ impl RenderOwned for MenuContainer {
         rect()
             .a11y_id(focus.a11y_id())
             .a11y_member_of(focus.a11y_id())
+            .a11y_focusable(true)
+            .a11y_role(AccessibilityRole::Menu)
             .position(Position::new_absolute())
             .shadow((0.0, 4.0, 10.0, 0., theme.shadow))
             .background(theme.background)
@@ -257,7 +259,7 @@ impl RenderOwned for MenuItem {
         };
 
         rect()
-            .a11y_role(AccessibilityRole::Button)
+            .a11y_role(AccessibilityRole::MenuItem)
             .a11y_id(focus.a11y_id())
             .a11y_focusable(true)
             .a11y_member_of(menu_group)

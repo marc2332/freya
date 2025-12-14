@@ -125,6 +125,7 @@ impl Render for SelectableText {
         };
 
         paragraph()
+            .a11y_focusable(true)
             .holder(holder.read().clone())
             .a11y_focusable(true)
             .cursor_color(Color::BLACK)

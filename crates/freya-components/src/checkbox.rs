@@ -148,6 +148,7 @@ impl Render for Checkbox {
         rect()
             .a11y_id(focus.a11y_id())
             .a11y_focusable(Focusable::Enabled)
+            .a11y_role(AccessibilityRole::CheckBox)
             .width(Size::px(self.size))
             .height(Size::px(self.size))
             .padding(Gaps::new_all(4.0))

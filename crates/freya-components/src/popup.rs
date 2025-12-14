@@ -152,6 +152,7 @@ impl Render for Popup {
 
         PopupBackground::new(
             rect()
+                .a11y_role(AccessibilityRole::Dialog)
                 .scale((scale.value(), scale.value()))
                 .opacity(opacity.value())
                 .corner_radius(12.)
@@ -192,6 +193,7 @@ impl Render for PopupTitle {
     fn render(&self) -> impl IntoElement {
         rect().font_size(18.).padding(8.).child(
             label()
+                .a11y_role(AccessibilityRole::TitleBar)
                 .width(Size::fill())
                 .text(self.text.read().to_string()),
         )

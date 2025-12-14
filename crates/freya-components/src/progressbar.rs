@@ -72,6 +72,9 @@ impl Render for ProgressBar {
         let progress = self.progress.clamp(0., 100.);
 
         rect()
+            .a11y_alt(format!("Progress {progress}%"))
+            .a11y_focusable(true)
+            .a11y_role(AccessibilityRole::ProgressIndicator)
             .horizontal()
             .width(self.width.clone())
             .height(Size::px(progressbar_theme.height))

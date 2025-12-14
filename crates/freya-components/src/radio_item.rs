@@ -145,6 +145,7 @@ impl Render for RadioItem {
         rect()
             .a11y_id(focus.a11y_id())
             .a11y_focusable(Focusable::Enabled)
+            .a11y_role(AccessibilityRole::RadioButton)
             .width(Size::px(self.size))
             .height(Size::px(self.size))
             .border(border)

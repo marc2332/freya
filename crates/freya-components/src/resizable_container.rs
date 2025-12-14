@@ -297,6 +297,7 @@ impl Render for ResizablePanel {
         };
 
         rect()
+            .a11y_role(AccessibilityRole::Pane)
             .width(width)
             .height(height)
             .overflow(Overflow::Clip)

@@ -138,6 +138,7 @@ impl<T: PartialEq + 'static + Clone + std::hash::Hash + Eq + Debug> Render for P
         let show = self.show;
 
         rect()
+            .a11y_focusable(false)
             .on_sized(move |e: Event<SizedEventData>| {
                 if *current_size.peek() != Some(e.area) && show {
                     previous_size.set(current_size());

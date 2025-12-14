@@ -82,6 +82,8 @@ impl Render for CircularLoader {
             </svg>"#
                 .as_bytes(),
         ))
+        .a11y_focusable(true)
+        .a11y_role(AccessibilityRole::ProgressIndicator)
         .width(Size::px(self.size))
         .height(Size::px(self.size))
         .stroke(theme.primary_color)

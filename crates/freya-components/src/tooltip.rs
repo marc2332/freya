@@ -198,6 +198,8 @@ impl Render for TooltipContainer {
         };
 
         rect()
+            .a11y_focusable(false)
+            .a11y_role(AccessibilityRole::Tooltip)
             .direction(direction)
             .on_sized(on_sized)
             .on_pointer_enter(on_pointer_enter)
