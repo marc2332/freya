@@ -1,3 +1,4 @@
+use accesskit::Toggled;
 use freya_animation::prelude::*;
 use freya_core::prelude::*;
 use torin::{
@@ -163,6 +164,8 @@ impl Render for Switch {
         rect()
             .a11y_id(focus.a11y_id())
             .a11y_focusable(self.enabled)
+            .a11y_role(AccessibilityRole::Switch)
+            .a11y_builder(|builder| builder.set_toggled(Toggled::from(toggled)))
             .width(Size::px(48.))
             .height(Size::px(25.))
             .padding(Gaps::new_all(4.0))

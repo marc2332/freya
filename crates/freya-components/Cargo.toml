@@ -72,6 +72,9 @@ skia-plotters-backend = { version = "0.2", optional = true }
 # GIF
 gif = { version = "0.13.3", optional = true }
 
+# Accessibility
+accesskit = { workspace = true }
+
 [dev-dependencies]
 freya = { path = "../freya" }
 freya-testing = { path = "../freya-testing" }
