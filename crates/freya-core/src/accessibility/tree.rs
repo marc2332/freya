@@ -216,6 +216,14 @@ impl AccessibilityTree {
 
             tree.traverse_depth(|node_id| {
                 let accessibility_state = tree.accessibility_state.get(&node_id).unwrap();
+                let member_accessibility_id = accessibility_state.a11y_member_of;
+
+                // Exclude nodes that are members of groups except for the parent of the group
+                if let Some(member_accessibility_id) = member_accessibility_id
+                    && member_accessibility_id != accessibility_state.a11y_id
+                {
+                    return;
+                }
                 if accessibility_state.a11y_focusable == Focusable::Enabled {
                     nodes.push(accessibility_state.a11y_id);
                 }
