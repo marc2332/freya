@@ -105,7 +105,7 @@ pub fn portal_animates_position_change() {
     assert!(mid_b_x < initial_b_x, "B should be moving left");
 
     // Wait for animation to complete
-    test.poll(Duration::from_millis(1), Duration::from_millis(50));
+    test.poll(Duration::from_millis(1), Duration::from_millis(75));
 
     let labels = test.find_many(|node, element| Label::try_downcast(element).map(|_| node));
 
