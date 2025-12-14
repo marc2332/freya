@@ -7,8 +7,8 @@ use torin::{
 pub fn padding() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1],
@@ -18,7 +18,7 @@ pub fn padding() {
             Gaps::new(5.0, 10.0, 15.0, 20.0),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -33,7 +33,7 @@ pub fn padding() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(

@@ -8,8 +8,8 @@ use torin::{
 pub fn caching() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1],
@@ -19,7 +19,7 @@ pub fn caching() {
             Gaps::new(5.0, 0.0, 0.0, 0.0),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -34,7 +34,7 @@ pub fn caching() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -42,7 +42,7 @@ pub fn caching() {
         Rect::new(Point2D::new(0.0, 5.0), Size2D::new(200.0, 195.0)),
     );
 
-    mocked_dom.set_node(
+    mocked_tree.set_node(
         1,
         Node::from_size_and_direction(
             Size::Percentage(Length::new(50.0)),
@@ -56,7 +56,7 @@ pub fn caching() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -69,8 +69,8 @@ pub fn caching() {
 pub fn layout_dirty_nodes() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1],
@@ -80,7 +80,7 @@ pub fn layout_dirty_nodes() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         None,
         vec![2],
@@ -90,7 +90,7 @@ pub fn layout_dirty_nodes() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(1),
         vec![],
@@ -105,7 +105,7 @@ pub fn layout_dirty_nodes() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     // CASE 1
@@ -128,7 +128,7 @@ pub fn layout_dirty_nodes() {
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(50.0, 50.0)),
     );
 
-    mocked_dom.set_node(
+    mocked_tree.set_node(
         2,
         Node::from_size_and_direction(
             Size::Pixels(Length::new(10.0)),
@@ -146,7 +146,7 @@ pub fn layout_dirty_nodes() {
     // CASE 2
     // Same as Case 1 but we make Child A depend on Child A[0]'s size
 
-    mocked_dom.set_node(
+    mocked_tree.set_node(
         1,
         Node::from_size_and_direction(
             Size::Inner,
@@ -164,7 +164,7 @@ pub fn layout_dirty_nodes() {
     // CASE 3
     // Same as Case 2, but triggers a change in Child A[0]
 
-    mocked_dom.set_node(
+    mocked_tree.set_node(
         2,
         Node::from_size_and_direction(
             Size::Pixels(Length::new(50.0)),
@@ -182,7 +182,7 @@ pub fn layout_dirty_nodes() {
     // CASE 4
     // Same as Case 3, but triggers a change in the root
 
-    mocked_dom.set_node(
+    mocked_tree.set_node(
         0,
         Node::from_size_and_direction(
             Size::Pixels(Length::new(150.0)),
@@ -206,8 +206,8 @@ pub fn layout_dirty_nodes() {
 pub fn node_removal() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1],
@@ -217,13 +217,13 @@ pub fn node_removal() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![2, 3],
         Node::from_size_and_direction(Size::Inner, Size::Inner, Direction::Vertical),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(1),
         vec![4],
@@ -233,7 +233,7 @@ pub fn node_removal() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         3,
         Some(1),
         vec![],
@@ -243,7 +243,7 @@ pub fn node_removal() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         4,
         Some(2),
         vec![],
@@ -258,7 +258,7 @@ pub fn node_removal() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(layout.size(), 5);
@@ -278,11 +278,11 @@ pub fn node_removal() {
         Rect::new(Point2D::new(0.0, 200.0), Size2D::new(200.0, 200.0)),
     );
 
-    layout.remove(2, &mut mocked_dom, true);
+    layout.remove(2, &mut mocked_tree, true);
 
-    mocked_dom.remove(2);
+    mocked_tree.remove(2);
 
-    layout.find_best_root(&mut mocked_dom);
+    layout.find_best_root(&mut mocked_tree);
 
     assert_eq!(
         layout.get_dirty_nodes(),
@@ -295,7 +295,7 @@ pub fn node_removal() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -318,8 +318,8 @@ pub fn node_removal() {
 pub fn deep_tree() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1],
@@ -329,7 +329,7 @@ pub fn deep_tree() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![2],
@@ -339,7 +339,7 @@ pub fn deep_tree() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(1),
         vec![3],
@@ -349,7 +349,7 @@ pub fn deep_tree() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         3,
         Some(2),
         vec![4],
@@ -359,7 +359,7 @@ pub fn deep_tree() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         4,
         Some(3),
         vec![5],
@@ -369,7 +369,7 @@ pub fn deep_tree() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         5,
         Some(4),
         vec![],
@@ -380,15 +380,15 @@ pub fn deep_tree() {
         ),
     );
 
-    layout.find_best_root(&mut mocked_dom);
+    layout.find_best_root(&mut mocked_tree);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
-    mocked_dom.set_node(
+    mocked_tree.set_node(
         4,
         Node::from_size_and_direction(
             Size::Percentage(Length::new(200.0)),
@@ -398,14 +398,14 @@ pub fn deep_tree() {
     );
     layout.invalidate(4);
 
-    layout.find_best_root(&mut mocked_dom);
+    layout.find_best_root(&mut mocked_tree);
     assert_eq!(layout.get_root_candidate(), RootNodeCandidate::Valid(4));
 
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(layout.get_root_candidate(), RootNodeCandidate::None);
@@ -415,8 +415,8 @@ pub fn deep_tree() {
 pub fn node_reordering() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2],
@@ -426,7 +426,7 @@ pub fn node_reordering() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -436,7 +436,7 @@ pub fn node_reordering() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![],
@@ -451,7 +451,7 @@ pub fn node_reordering() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -472,7 +472,7 @@ pub fn node_reordering() {
     layout.invalidate_with_reason(1, DirtyReason::Reorder);
     layout.invalidate_with_reason(2, DirtyReason::Reorder);
 
-    mocked_dom.add(
+    mocked_tree.add(
         0,
         None,
         vec![2, 1],
@@ -483,13 +483,13 @@ pub fn node_reordering() {
         ),
     );
 
-    layout.find_best_root(&mut mocked_dom);
+    layout.find_best_root(&mut mocked_tree);
 
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -505,7 +505,7 @@ pub fn node_reordering() {
     // This will not cause the desired output expected by the user as we are not properly invalidating those reordered nodes
     layout.invalidate_with_reason(1, DirtyReason::None);
 
-    mocked_dom.add(
+    mocked_tree.add(
         0,
         None,
         vec![1, 2],
@@ -516,7 +516,7 @@ pub fn node_reordering() {
         ),
     );
 
-    layout.find_best_root(&mut mocked_dom);
+    layout.find_best_root(&mut mocked_tree);
 
     // That is why these nodes still have the same positions as before
 

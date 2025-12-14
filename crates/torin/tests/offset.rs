@@ -8,14 +8,14 @@ use torin::{
 pub fn offset_change() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1],
         Node::from_size_and_direction(Size::Inner, Size::Inner, Direction::Vertical),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         None,
         vec![2],
@@ -26,7 +26,7 @@ pub fn offset_change() {
             Length::new(100.),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(1),
         vec![],
@@ -41,7 +41,7 @@ pub fn offset_change() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -59,7 +59,7 @@ pub fn offset_change() {
         Rect::new(Point2D::new(0.0, 100.0), Size2D::new(50.0, 50.0)),
     );
 
-    mocked_dom.set_node(
+    mocked_tree.set_node(
         1,
         Node::from_size_and_offset(
             Size::Pixels(Length::new(100.0)),
@@ -70,7 +70,7 @@ pub fn offset_change() {
     );
     layout.invalidate_with_reason(1, DirtyReason::InnerLayout);
 
-    layout.find_best_root(&mut mocked_dom);
+    layout.find_best_root(&mut mocked_tree);
 
     assert_eq!(
         layout.get_dirty_nodes(),
@@ -80,7 +80,7 @@ pub fn offset_change() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -103,14 +103,14 @@ pub fn offset_change() {
 pub fn offset_change_and_nested_changed() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 3],
         Node::from_size_and_direction(Size::Inner, Size::Inner, Direction::Vertical),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         None,
         vec![2],
@@ -121,7 +121,7 @@ pub fn offset_change_and_nested_changed() {
             Length::new(100.),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(1),
         vec![],
@@ -131,7 +131,7 @@ pub fn offset_change_and_nested_changed() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         3,
         Some(0),
         vec![],
@@ -146,7 +146,7 @@ pub fn offset_change_and_nested_changed() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -169,7 +169,7 @@ pub fn offset_change_and_nested_changed() {
         Rect::new(Point2D::new(0.0, 100.0), Size2D::new(100.0, 100.0)),
     );
 
-    mocked_dom.set_node(
+    mocked_tree.set_node(
         1,
         Node::from_size_and_offset(
             Size::Pixels(Length::new(100.0)),
@@ -179,7 +179,7 @@ pub fn offset_change_and_nested_changed() {
         ),
     );
     layout.invalidate_with_reason(1, DirtyReason::InnerLayout);
-    mocked_dom.set_node(
+    mocked_tree.set_node(
         2,
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
@@ -189,7 +189,7 @@ pub fn offset_change_and_nested_changed() {
     );
     layout.invalidate_with_reason(2, DirtyReason::None);
 
-    layout.find_best_root(&mut mocked_dom);
+    layout.find_best_root(&mut mocked_tree);
 
     assert_eq!(layout.get_dirty_nodes().len(), 2);
     assert_eq!(layout.get_dirty_nodes().get(&1), Some(&DirtyReason::None));
@@ -198,7 +198,7 @@ pub fn offset_change_and_nested_changed() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -226,14 +226,14 @@ pub fn offset_change_and_nested_changed() {
 pub fn offset_change_and_nested_addition() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 3],
         Node::from_size_and_direction(Size::Inner, Size::Inner, Direction::Vertical),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         None,
         vec![2],
@@ -244,7 +244,7 @@ pub fn offset_change_and_nested_addition() {
             Length::new(100.),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(1),
         vec![],
@@ -254,7 +254,7 @@ pub fn offset_change_and_nested_addition() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         3,
         Some(0),
         vec![],
@@ -269,7 +269,7 @@ pub fn offset_change_and_nested_addition() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -292,7 +292,7 @@ pub fn offset_change_and_nested_addition() {
         Rect::new(Point2D::new(0.0, 100.0), Size2D::new(100.0, 100.0)),
     );
 
-    mocked_dom.set_node(
+    mocked_tree.set_node(
         1,
         Node::from_size_and_offset(
             Size::Pixels(Length::new(100.0)),
@@ -302,7 +302,7 @@ pub fn offset_change_and_nested_addition() {
         ),
     );
     layout.invalidate_with_reason(1, DirtyReason::InnerLayout);
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(1),
         vec![3],
@@ -313,7 +313,7 @@ pub fn offset_change_and_nested_addition() {
         ),
     );
     layout.invalidate_with_reason(2, DirtyReason::None);
-    mocked_dom.add(
+    mocked_tree.add(
         3,
         Some(2),
         vec![],
@@ -324,7 +324,7 @@ pub fn offset_change_and_nested_addition() {
         ),
     );
 
-    layout.find_best_root(&mut mocked_dom);
+    layout.find_best_root(&mut mocked_tree);
 
     assert_eq!(layout.get_dirty_nodes().len(), 2);
     assert_eq!(layout.get_dirty_nodes().get(&1), Some(&DirtyReason::None));
@@ -334,7 +334,7 @@ pub fn offset_change_and_nested_addition() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -357,11 +357,11 @@ pub fn offset_change_and_nested_addition() {
         Rect::new(Point2D::new(0.0, 150.0), Size2D::new(50.0, 50.0)),
     );
 
-    mocked_dom.remove(3);
+    mocked_tree.remove(3);
     layout.invalidate_with_reason(1, DirtyReason::InnerLayout);
     layout.invalidate_with_reason(2, DirtyReason::None);
 
-    layout.find_best_root(&mut mocked_dom);
+    layout.find_best_root(&mut mocked_tree);
 
     assert_eq!(layout.get_dirty_nodes().len(), 2);
     assert_eq!(layout.get_dirty_nodes().get(&1), Some(&DirtyReason::None));
@@ -372,8 +372,8 @@ pub fn offset_change_and_nested_addition() {
 pub fn offset() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2],
@@ -384,7 +384,7 @@ pub fn offset() {
             Length::new(0.0),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -394,7 +394,7 @@ pub fn offset() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![],
@@ -405,12 +405,12 @@ pub fn offset() {
         ),
     );
 
-    layout.find_best_root(&mut mocked_dom);
+    layout.find_best_root(&mut mocked_tree);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(

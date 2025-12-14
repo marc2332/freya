@@ -129,22 +129,22 @@ pub trait TreeAdapter<Key: NodeKey> {
 
 /// Walk to the ancestor of `base` with the same height of `target`
 fn balance_heights<Key: NodeKey>(
-    dom_adapter: &(impl TreeAdapter<Key> + ?Sized),
+    tree_adapter: &(impl TreeAdapter<Key> + ?Sized),
     base: Key,
     target: Key,
     mut walker: Option<impl FnMut(Key)>,
 ) -> Option<Key> {
-    let target_height = dom_adapter.height(&target)?;
+    let target_height = tree_adapter.height(&target)?;
     let mut current = base;
     loop {
         if let Some(walker) = &mut walker {
             (walker)(current);
         }
-        if dom_adapter.height(&current)? == target_height {
+        if tree_adapter.height(&current)? == target_height {
             break;
         }
 
-        let parent_current = dom_adapter.parent_of(&current);
+        let parent_current = tree_adapter.parent_of(&current);
         if let Some(parent_current) = parent_current {
             current = parent_current;
         }

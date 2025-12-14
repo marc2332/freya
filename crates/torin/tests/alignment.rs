@@ -8,8 +8,8 @@ use torin::{
 pub fn display_horizontal() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1],
@@ -21,7 +21,7 @@ pub fn display_horizontal() {
             Direction::Horizontal,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -36,7 +36,7 @@ pub fn display_horizontal() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -54,8 +54,8 @@ pub fn display_horizontal() {
 pub fn display_vertical_with_inner_children() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1],
@@ -67,7 +67,7 @@ pub fn display_vertical_with_inner_children() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![2],
@@ -77,7 +77,7 @@ pub fn display_vertical_with_inner_children() {
             Gaps::new(5.0, 5.0, 5.0, 5.0),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(1),
         vec![],
@@ -88,12 +88,12 @@ pub fn display_vertical_with_inner_children() {
         ),
     );
 
-    layout.find_best_root(&mut mocked_dom);
+    layout.find_best_root(&mut mocked_tree);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -116,8 +116,8 @@ pub fn display_vertical_with_inner_children() {
 pub fn double_center_alignment() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2],
@@ -129,7 +129,7 @@ pub fn double_center_alignment() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -139,7 +139,7 @@ pub fn double_center_alignment() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![],
@@ -154,7 +154,7 @@ pub fn double_center_alignment() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -172,8 +172,8 @@ pub fn double_center_alignment() {
 pub fn double_end_alignment() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2],
@@ -185,7 +185,7 @@ pub fn double_end_alignment() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -195,7 +195,7 @@ pub fn double_end_alignment() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![],
@@ -210,7 +210,7 @@ pub fn double_end_alignment() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -228,8 +228,8 @@ pub fn double_end_alignment() {
 pub fn unsized_alignment() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2],
@@ -242,7 +242,7 @@ pub fn unsized_alignment() {
             Gaps::new(15.0, 15.0, 15.0, 15.0),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -252,7 +252,7 @@ pub fn unsized_alignment() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![],
@@ -268,7 +268,7 @@ pub fn unsized_alignment() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(350.0, 190.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -286,8 +286,8 @@ pub fn unsized_alignment() {
 pub fn nested_unsized_alignment() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1],
@@ -299,13 +299,13 @@ pub fn nested_unsized_alignment() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![2],
         Node::from_size_and_direction(Size::Inner, Size::Inner, Direction::Vertical),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(1),
         vec![],
@@ -320,7 +320,7 @@ pub fn nested_unsized_alignment() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -338,8 +338,8 @@ pub fn nested_unsized_alignment() {
 pub fn space_between_alignment() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2, 3, 4],
@@ -351,7 +351,7 @@ pub fn space_between_alignment() {
             Direction::Horizontal,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -361,7 +361,7 @@ pub fn space_between_alignment() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![],
@@ -371,7 +371,7 @@ pub fn space_between_alignment() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         3,
         Some(0),
         vec![],
@@ -381,7 +381,7 @@ pub fn space_between_alignment() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         4,
         Some(0),
         vec![],
@@ -396,7 +396,7 @@ pub fn space_between_alignment() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -424,8 +424,8 @@ pub fn space_between_alignment() {
 pub fn space_around_alignment() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2, 3, 4],
@@ -437,7 +437,7 @@ pub fn space_around_alignment() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -447,7 +447,7 @@ pub fn space_around_alignment() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![],
@@ -457,7 +457,7 @@ pub fn space_around_alignment() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         3,
         Some(0),
         vec![],
@@ -467,7 +467,7 @@ pub fn space_around_alignment() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         4,
         Some(0),
         vec![],
@@ -482,7 +482,7 @@ pub fn space_around_alignment() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -510,8 +510,8 @@ pub fn space_around_alignment() {
 pub fn space_evenly_alignment() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2, 3, 4],
@@ -523,7 +523,7 @@ pub fn space_evenly_alignment() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -533,7 +533,7 @@ pub fn space_evenly_alignment() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![],
@@ -543,7 +543,7 @@ pub fn space_evenly_alignment() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         3,
         Some(0),
         vec![],
@@ -553,7 +553,7 @@ pub fn space_evenly_alignment() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         4,
         Some(0),
         vec![],
@@ -568,7 +568,7 @@ pub fn space_evenly_alignment() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -596,8 +596,8 @@ pub fn space_evenly_alignment() {
 pub fn alignment_with_absolute_child() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2, 3],
@@ -610,7 +610,7 @@ pub fn alignment_with_absolute_child() {
             Length::new(15.0),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -620,7 +620,7 @@ pub fn alignment_with_absolute_child() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![],
@@ -630,7 +630,7 @@ pub fn alignment_with_absolute_child() {
             Position::Absolute(Box::default()),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         3,
         Some(0),
         vec![],
@@ -645,7 +645,7 @@ pub fn alignment_with_absolute_child() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(

@@ -193,10 +193,6 @@ impl FreyaPlugin for DevtoolsPlugin {
                 canvas,
                 ..
             } => {
-                //     let rdom = fdom.rdom();
-                //     let layout = fdom.layout();
-                // let animation_clock = fdom.animation_clock();
-
                 let highlighted_node = *self.highlighted_node.lock().unwrap();
                 if let Some(highlighted_node) = highlighted_node {
                     let layout_node = tree.layout.get(&highlighted_node);

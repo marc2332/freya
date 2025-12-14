@@ -84,10 +84,10 @@ impl TreeAdapter<usize> for DemoTree {
 fn main() {
     let mut layout = Torin::<usize>::new();
 
-    let mut demo_dom = DemoTree::default();
+    let mut demo_tree = DemoTree::default();
 
     // Node A: Root Node
-    demo_dom.add(
+    demo_tree.add(
         0,       // ID
         None,    // Parent ID
         vec![1], // Children IDs
@@ -101,7 +101,7 @@ fn main() {
     );
 
     // Node B: Child of the Root Node
-    demo_dom.add(
+    demo_tree.add(
         1,       // ID
         Some(0), // Parent ID
         vec![2], // Children IDs
@@ -113,7 +113,7 @@ fn main() {
     );
 
     // Node C: Child of Node B
-    demo_dom.add(
+    demo_tree.add(
         2,       // ID
         Some(1), // Parent ID
         vec![],  // Children IDs
@@ -129,11 +129,11 @@ fn main() {
         0,                                                              // Root ID
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)), // Available Area
         &mut None::<NoopMeasurer>,
-        &mut demo_dom,
+        &mut demo_tree,
     );
 
     // Mutate the Node B
-    demo_dom.set_node(
+    demo_tree.set_node(
         1, // ID
         Node::from_size_and_direction(
             Size::Percentage(Length::new(80.0)), // We change this from 50% to 80%
@@ -149,14 +149,14 @@ fn main() {
     }
 
     // Make Torin calculate from what Node it is the most efficiente to start measuring again
-    layout.find_best_root(&mut demo_dom);
+    layout.find_best_root(&mut demo_tree);
 
     // If Torin wasn't able to find a Root candidate, it will just use the ID we pass as fist argument
     layout.measure(
         0,                                                              // Fallback Root ID
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)), // Available Area
         &mut None::<NoopMeasurer>,
-        &mut demo_dom,
+        &mut demo_tree,
     );
 
     println!("\nSecond measurement");

@@ -238,9 +238,9 @@ impl AppWindow {
 
         window.set_visible(true);
 
-        struct DomHandle(EventLoopProxy<NativeEvent>, WindowId);
+        struct TreeHandle(EventLoopProxy<NativeEvent>, WindowId);
 
-        impl ArcWake for DomHandle {
+        impl ArcWake for TreeHandle {
             fn wake_by_ref(arc_self: &Arc<Self>) {
                 _ = arc_self
                     .0
@@ -251,7 +251,7 @@ impl AppWindow {
             }
         }
 
-        let waker = waker(Arc::new(DomHandle(event_loop_proxy.clone(), window.id())));
+        let waker = waker(Arc::new(TreeHandle(event_loop_proxy.clone(), window.id())));
 
         plugins.send(
             PluginEvent::WindowCreated {

@@ -8,8 +8,8 @@ use torin::{
 pub fn flex_generic() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2, 3, 4],
@@ -19,7 +19,7 @@ pub fn flex_generic() {
             Content::Flex,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -29,7 +29,7 @@ pub fn flex_generic() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![],
@@ -39,7 +39,7 @@ pub fn flex_generic() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         3,
         Some(0),
         vec![],
@@ -49,7 +49,7 @@ pub fn flex_generic() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         4,
         Some(0),
         vec![],
@@ -64,7 +64,7 @@ pub fn flex_generic() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -94,8 +94,8 @@ pub fn flex_generic() {
 pub fn flex_under_1_flex_grow() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2],
@@ -105,7 +105,7 @@ pub fn flex_under_1_flex_grow() {
             Content::Flex,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -115,7 +115,7 @@ pub fn flex_under_1_flex_grow() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![],
@@ -130,7 +130,7 @@ pub fn flex_under_1_flex_grow() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -152,8 +152,8 @@ pub fn flex_under_1_flex_grow() {
 pub fn flex_grow_balance() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2, 3, 4],
@@ -163,7 +163,7 @@ pub fn flex_grow_balance() {
             Content::Flex,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -173,7 +173,7 @@ pub fn flex_grow_balance() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![],
@@ -183,7 +183,7 @@ pub fn flex_grow_balance() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         3,
         Some(0),
         vec![],
@@ -193,7 +193,7 @@ pub fn flex_grow_balance() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         4,
         Some(0),
         vec![],
@@ -208,7 +208,7 @@ pub fn flex_grow_balance() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -238,8 +238,8 @@ pub fn flex_grow_balance() {
 pub fn flex_large_grow_balance() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2, 3, 4],
@@ -249,7 +249,7 @@ pub fn flex_large_grow_balance() {
             Content::Flex,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -259,7 +259,7 @@ pub fn flex_large_grow_balance() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![],
@@ -269,7 +269,7 @@ pub fn flex_large_grow_balance() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         3,
         Some(0),
         vec![],
@@ -279,7 +279,7 @@ pub fn flex_large_grow_balance() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         4,
         Some(0),
         vec![],
@@ -294,7 +294,7 @@ pub fn flex_large_grow_balance() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -324,8 +324,8 @@ pub fn flex_large_grow_balance() {
 pub fn flex_with_inner_percentage() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2],
@@ -335,7 +335,7 @@ pub fn flex_with_inner_percentage() {
             Content::Flex,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -345,7 +345,7 @@ pub fn flex_with_inner_percentage() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![3],
@@ -356,7 +356,7 @@ pub fn flex_with_inner_percentage() {
             VisibleSize::InnerPercentage(Length::new(50.0)),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         3,
         Some(2),
         vec![],
@@ -371,7 +371,7 @@ pub fn flex_with_inner_percentage() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -397,8 +397,8 @@ pub fn flex_with_inner_percentage() {
 pub fn flex_root_candidate_resolution() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1],
@@ -408,7 +408,7 @@ pub fn flex_root_candidate_resolution() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![2, 3],
@@ -418,7 +418,7 @@ pub fn flex_root_candidate_resolution() {
             Content::Flex,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(1),
         vec![],
@@ -428,7 +428,7 @@ pub fn flex_root_candidate_resolution() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         3,
         Some(1),
         vec![],
@@ -443,7 +443,7 @@ pub fn flex_root_candidate_resolution() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -464,7 +464,7 @@ pub fn flex_root_candidate_resolution() {
         Rect::new(Point2D::new(0.0, 100.0), Size2D::new(100.0, 100.0)),
     );
 
-    mocked_dom.set_node(
+    mocked_tree.set_node(
         2,
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
@@ -474,7 +474,7 @@ pub fn flex_root_candidate_resolution() {
     );
     layout.invalidate(2);
 
-    layout.find_best_root(&mut mocked_dom);
+    layout.find_best_root(&mut mocked_tree);
 
     // It is Node 1 because it has a `flex` content
     assert_eq!(layout.get_root_candidate(), RootNodeCandidate::Valid(1));
@@ -483,7 +483,7 @@ pub fn flex_root_candidate_resolution() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(

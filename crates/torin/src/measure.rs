@@ -3,11 +3,6 @@ use rustc_hash::FxHashMap;
 
 use crate::{
     custom_measurer::LayoutMeasurer,
-    dom_adapter::{
-        LayoutNode,
-        NodeKey,
-        TreeAdapter,
-    },
     geometry::{
         Area,
         Size2D,
@@ -32,6 +27,11 @@ use crate::{
     },
     size::Size,
     torin::DirtyReason,
+    tree_adapter::{
+        LayoutNode,
+        NodeKey,
+        TreeAdapter,
+    },
 };
 
 /// Some layout strategies require two-phase measurements
@@ -50,7 +50,7 @@ where
 {
     pub layout: &'a mut Torin<Key>,
     pub measurer: &'a mut Option<L>,
-    pub dom_adapter: &'a mut D,
+    pub tree_adapter: &'a mut D,
     pub layout_metadata: LayoutMetadata,
 }
 
@@ -63,14 +63,14 @@ where
     /// Translate all the children of the given Node by the specified X and Y offsets.
     fn recursive_translate(&mut self, node_id: Key, offset_x: Length, offset_y: Length) {
         let mut buffer = self
-            .dom_adapter
+            .tree_adapter
             .children_of(&node_id)
             .into_iter()
             .map(|id| (node_id, id))
             .collect::<Vec<(Key, Key)>>();
         while let Some((parent, child)) = buffer.pop() {
             let node = self
-                .dom_adapter
+                .tree_adapter
                 .get_node(&child)
                 .expect("Node does not exist");
             let translate = match node.position {
@@ -90,7 +90,7 @@ where
                 layout_node.inner_area.origin.y += offset_y.get();
 
                 buffer.extend(
-                    self.dom_adapter
+                    self.tree_adapter
                         .children_of(&child)
                         .into_iter()
                         .map(|id| (node_id, id)),
@@ -443,7 +443,7 @@ where
         // Parent Node is dirty.
         parent_is_dirty: bool,
     ) {
-        let children = self.dom_adapter.children_of(parent_node_id);
+        let children = self.tree_adapter.children_of(parent_node_id);
 
         let mut initial_phase_flex_grows = FxHashMap::default();
         let mut initial_phase_sizes = FxHashMap::default();
@@ -457,7 +457,7 @@ where
             let len = children
                 .iter()
                 .filter(|child_id| {
-                    let Some(child_data) = self.dom_adapter.get_node(child_id) else {
+                    let Some(child_data) = self.tree_adapter.get_node(child_id) else {
                         return false;
                     };
                     let is_stacked = child_data.position.is_stacked();
@@ -494,7 +494,7 @@ where
         if needs_initial_phase {
             //  Measure the children
             for child_id in &children {
-                let Some(child_data) = self.dom_adapter.get_node(child_id) else {
+                let Some(child_data) = self.tree_adapter.get_node(child_id) else {
                     continue;
                 };
 
@@ -629,7 +629,7 @@ where
 
         // Final phase: measure the children with all the axis and sizes adjusted
         for child_id in children {
-            let Some(child_data) = self.dom_adapter.get_node(&child_id) else {
+            let Some(child_data) = self.tree_adapter.get_node(&child_id) else {
                 continue;
             };
 

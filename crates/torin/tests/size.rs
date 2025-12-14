@@ -8,14 +8,14 @@ use torin::{
 pub fn unsized_parent_with_child_with_margin() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1],
         Node::from_size_and_direction(Size::Inner, Size::Inner, Direction::Vertical),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -30,7 +30,7 @@ pub fn unsized_parent_with_child_with_margin() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -48,14 +48,14 @@ pub fn unsized_parent_with_child_with_margin() {
 pub fn unsized_parent_with_margin_with_child() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1],
         Node::from_size_and_margin(Size::Inner, Size::Inner, Gaps::new(10.0, 20.0, 30.0, 40.0)),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -70,7 +70,7 @@ pub fn unsized_parent_with_margin_with_child() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -88,14 +88,14 @@ pub fn unsized_parent_with_margin_with_child() {
 pub fn unsized_parent_with_padding() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1],
         Node::from_size_and_padding(Size::Inner, Size::Inner, Gaps::new(10.0, 20.0, 30.0, 40.0)),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -110,7 +110,7 @@ pub fn unsized_parent_with_padding() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -128,8 +128,8 @@ pub fn unsized_parent_with_padding() {
 pub fn stacked() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2],
@@ -139,7 +139,7 @@ pub fn stacked() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -149,7 +149,7 @@ pub fn stacked() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![],
@@ -164,7 +164,7 @@ pub fn stacked() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -177,7 +177,7 @@ pub fn stacked() {
         Rect::new(Point2D::new(0.0, 100.0), Size2D::new(200.0, 100.0)),
     );
 
-    mocked_dom.set_node(
+    mocked_tree.set_node(
         2,
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
@@ -187,13 +187,13 @@ pub fn stacked() {
     );
     layout.invalidate(2);
 
-    layout.find_best_root(&mut mocked_dom);
+    layout.find_best_root(&mut mocked_tree);
 
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -211,8 +211,8 @@ pub fn stacked() {
 pub fn two_cols_auto() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2],
@@ -222,7 +222,7 @@ pub fn two_cols_auto() {
             Direction::Horizontal,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -232,7 +232,7 @@ pub fn two_cols_auto() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![],
@@ -243,12 +243,12 @@ pub fn two_cols_auto() {
         ),
     );
 
-    layout.find_best_root(&mut mocked_dom);
+    layout.find_best_root(&mut mocked_tree);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(400.0, 400.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -271,14 +271,14 @@ pub fn two_cols_auto() {
 pub fn sibling_increments_area() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2],
         Node::from_size_and_direction(Size::Inner, Size::Inner, Direction::Vertical),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -288,7 +288,7 @@ pub fn sibling_increments_area() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![],
@@ -303,7 +303,7 @@ pub fn sibling_increments_area() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -321,8 +321,8 @@ pub fn sibling_increments_area() {
 pub fn root_100per_children_50per50per() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2],
@@ -332,7 +332,7 @@ pub fn root_100per_children_50per50per() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -342,7 +342,7 @@ pub fn root_100per_children_50per50per() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![],
@@ -353,12 +353,12 @@ pub fn root_100per_children_50per50per() {
         ),
     );
 
-    layout.find_best_root(&mut mocked_dom);
+    layout.find_best_root(&mut mocked_tree);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -381,8 +381,8 @@ pub fn root_100per_children_50per50per() {
 pub fn root_200px_children_50per50per() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2],
@@ -392,7 +392,7 @@ pub fn root_200px_children_50per50per() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -402,7 +402,7 @@ pub fn root_200px_children_50per50per() {
             Direction::Horizontal,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![],
@@ -413,12 +413,12 @@ pub fn root_200px_children_50per50per() {
         ),
     );
 
-    layout.find_best_root(&mut mocked_dom);
+    layout.find_best_root(&mut mocked_tree);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -441,8 +441,8 @@ pub fn root_200px_children_50per50per() {
 pub fn direction() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2],
@@ -452,7 +452,7 @@ pub fn direction() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -462,7 +462,7 @@ pub fn direction() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![],
@@ -477,7 +477,7 @@ pub fn direction() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -492,7 +492,7 @@ pub fn direction() {
 
     // Change the direction from vertical to horizontal
 
-    mocked_dom.set_node(
+    mocked_tree.set_node(
         0,
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
@@ -502,12 +502,12 @@ pub fn direction() {
     );
     layout.invalidate(0);
 
-    layout.find_best_root(&mut mocked_dom);
+    layout.find_best_root(&mut mocked_tree);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -525,8 +525,8 @@ pub fn direction() {
 pub fn fill_size() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2],
@@ -536,7 +536,7 @@ pub fn fill_size() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -546,7 +546,7 @@ pub fn fill_size() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![],
@@ -561,7 +561,7 @@ pub fn fill_size() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -579,8 +579,8 @@ pub fn fill_size() {
 pub fn root_percentage() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1],
@@ -590,7 +590,7 @@ pub fn root_percentage() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![2],
@@ -600,7 +600,7 @@ pub fn root_percentage() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(1),
         vec![],
@@ -615,7 +615,7 @@ pub fn root_percentage() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -633,8 +633,8 @@ pub fn root_percentage() {
 pub fn content_fit_fill_min() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2, 3],
@@ -644,7 +644,7 @@ pub fn content_fit_fill_min() {
             Content::Fit,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -654,7 +654,7 @@ pub fn content_fit_fill_min() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![],
@@ -664,7 +664,7 @@ pub fn content_fit_fill_min() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         3,
         Some(0),
         vec![],
@@ -679,7 +679,7 @@ pub fn content_fit_fill_min() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -707,8 +707,8 @@ pub fn content_fit_fill_min() {
 pub fn inner_percentage() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2],
@@ -719,7 +719,7 @@ pub fn inner_percentage() {
             VisibleSize::InnerPercentage(Length::new(50.0)),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -729,7 +729,7 @@ pub fn inner_percentage() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![],
@@ -744,7 +744,7 @@ pub fn inner_percentage() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -767,8 +767,8 @@ pub fn inner_percentage() {
 pub fn inner_min_max_sizes() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1],
@@ -781,7 +781,7 @@ pub fn inner_min_max_sizes() {
             Size::Pixels(Length::new(100.)),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -796,7 +796,7 @@ pub fn inner_min_max_sizes() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -814,8 +814,8 @@ pub fn inner_min_max_sizes() {
 pub fn fixed_min_max_sizes() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![],
@@ -833,7 +833,7 @@ pub fn fixed_min_max_sizes() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -846,8 +846,8 @@ pub fn fixed_min_max_sizes() {
 pub fn relative_min_max_sizes() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![],
@@ -865,7 +865,7 @@ pub fn relative_min_max_sizes() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -878,7 +878,7 @@ pub fn relative_min_max_sizes() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 400.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -891,7 +891,7 @@ pub fn relative_min_max_sizes() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 200.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
@@ -904,8 +904,8 @@ pub fn relative_min_max_sizes() {
 pub fn size_fn() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingTree::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1],
@@ -915,7 +915,7 @@ pub fn size_fn() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -930,7 +930,7 @@ pub fn size_fn() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(

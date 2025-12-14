@@ -9,11 +9,6 @@ use rustc_hash::FxHashMap;
 
 use crate::{
     custom_measurer::LayoutMeasurer,
-    dom_adapter::{
-        LayoutNode,
-        NodeKey,
-        TreeAdapter,
-    },
     geometry::Area,
     measure::{
         MeasureContext,
@@ -25,6 +20,11 @@ use crate::{
         AvailableAreaModel,
         Gaps,
         Length,
+    },
+    tree_adapter::{
+        LayoutNode,
+        NodeKey,
+        TreeAdapter,
     },
 };
 
@@ -52,13 +52,13 @@ impl<Key: NodeKey> RootNodeCandidate<Key> {
     pub fn propose_new_candidate(
         &mut self,
         proposed_candidate: &Key,
-        dom_adapter: &mut impl TreeAdapter<Key>,
+        tree_adapter: &mut impl TreeAdapter<Key>,
         dirty: &mut FxHashMap<Key, DirtyReason>,
     ) {
         if let RootNodeCandidate::Valid(current_candidate) = self {
             if current_candidate != proposed_candidate {
                 let mut continue_waking = true;
-                let closest_parent = dom_adapter.closest_common_parent(
+                let closest_parent = tree_adapter.closest_common_parent(
                     proposed_candidate,
                     current_candidate,
                     |id| {
@@ -168,20 +168,20 @@ impl<Key: NodeKey> Torin<Key> {
     pub fn remove(
         &mut self,
         node_id: Key,
-        dom_adapter: &mut impl TreeAdapter<Key>,
+        tree_adapter: &mut impl TreeAdapter<Key>,
         invalidate_parent: bool,
     ) {
         // Remove itself
         self.raw_remove(node_id);
 
         // Mark as dirty the Node's parent
-        if invalidate_parent && let Some(parent) = dom_adapter.parent_of(&node_id) {
+        if invalidate_parent && let Some(parent) = tree_adapter.parent_of(&node_id) {
             self.invalidate(parent);
         }
 
         // Remove all it's children
-        for child_id in dom_adapter.children_of(&node_id) {
-            self.remove(child_id, dom_adapter, false);
+        for child_id in tree_adapter.children_of(&node_id) {
+            self.remove(child_id, tree_adapter, false);
         }
     }
 
@@ -205,7 +205,7 @@ impl<Key: NodeKey> Torin<Key> {
         &mut self,
         node_id: Key,
         reason: DirtyReason,
-        dom_adapter: &mut impl TreeAdapter<Key>,
+        tree_adapter: &mut impl TreeAdapter<Key>,
         ignore: bool,
     ) {
         if self.dirty.contains_key(&node_id) && ignore {
@@ -216,29 +216,29 @@ impl<Key: NodeKey> Torin<Key> {
         self.invalidate_with_reason(node_id, reason);
 
         self.root_node_candidate
-            .propose_new_candidate(&node_id, dom_adapter, &mut self.dirty);
+            .propose_new_candidate(&node_id, tree_adapter, &mut self.dirty);
 
         // Mark this Node's parent if it is affected
-        let parent_id = dom_adapter.parent_of(&node_id);
+        let parent_id = tree_adapter.parent_of(&node_id);
 
         if let Some(parent_id) = parent_id {
             if reason == DirtyReason::InnerLayout {
                 self.root_node_candidate.propose_new_candidate(
                     &parent_id,
-                    dom_adapter,
+                    tree_adapter,
                     &mut self.dirty,
                 );
                 return;
             }
 
-            let parent = dom_adapter.get_node(&parent_id);
+            let parent = tree_adapter.get_node(&parent_id);
 
             if let Some(parent) = parent {
                 if parent.does_depend_on_inner() {
                     // Mark parent if it depends on it's inner children
-                    self.check_dirty_dependants(parent_id, DirtyReason::None, dom_adapter, true);
+                    self.check_dirty_dependants(parent_id, DirtyReason::None, tree_adapter, true);
                 } else {
-                    let parent_children = dom_adapter.children_of(&parent_id);
+                    let parent_children = tree_adapter.children_of(&parent_id);
                     let multiple_children = parent_children.len() > 1;
 
                     let mut found_node = match reason {
@@ -259,7 +259,7 @@ impl<Key: NodeKey> Torin<Key> {
                     if multiple_children || parent.do_inner_depend_on_parent() {
                         self.root_node_candidate.propose_new_candidate(
                             &parent_id,
-                            dom_adapter,
+                            tree_adapter,
                             &mut self.dirty,
                         );
                     }
@@ -274,7 +274,7 @@ impl<Key: NodeKey> Torin<Key> {
     }
 
     /// Find the best root Node from where to start measuring
-    pub fn find_best_root(&mut self, dom_adapter: &mut impl TreeAdapter<Key>) {
+    pub fn find_best_root(&mut self, tree_adapter: &mut impl TreeAdapter<Key>) {
         if self.results.is_empty() {
             return;
         }
@@ -282,9 +282,9 @@ impl<Key: NodeKey> Torin<Key> {
             .dirty
             .clone()
             .into_iter()
-            .sorted_by_key(|e| dom_adapter.height(&e.0))
+            .sorted_by_key(|e| tree_adapter.height(&e.0))
         {
-            self.check_dirty_dependants(id, reason, dom_adapter, false);
+            self.check_dirty_dependants(id, reason, tree_adapter, false);
         }
     }
 
@@ -296,7 +296,7 @@ impl<Key: NodeKey> Torin<Key> {
         suggested_root_id: Key,
         root_area: Area,
         measurer: &mut Option<impl LayoutMeasurer<Key>>,
-        dom_adapter: &mut impl TreeAdapter<Key>,
+        tree_adapter: &mut impl TreeAdapter<Key>,
     ) {
         // If there are previosuly cached results
         // But no dirty nodes, we can simply skip the measurement
@@ -311,7 +311,7 @@ impl<Key: NodeKey> Torin<Key> {
         } else {
             suggested_root_id
         };
-        let root_parent_id = dom_adapter.parent_of(&root_id);
+        let root_parent_id = tree_adapter.parent_of(&root_id);
         let layout_node = root_parent_id
             .and_then(|root_parent_id| self.get(&root_parent_id).cloned())
             .unwrap_or(LayoutNode {
@@ -322,11 +322,11 @@ impl<Key: NodeKey> Torin<Key> {
                 offset_y: Length::default(),
                 data: None,
             });
-        let root = dom_adapter.get_node(&root_id).unwrap();
+        let root = tree_adapter.get_node(&root_id).unwrap();
 
         #[cfg(debug_assertions)]
         {
-            let root_height = dom_adapter.height(&root_id).unwrap();
+            let root_height = tree_adapter.height(&root_id).unwrap();
             tracing::info!(
                 "Processing {} dirty nodes and {} cached nodes from a height of {}",
                 self.dirty.len(),
@@ -339,14 +339,14 @@ impl<Key: NodeKey> Torin<Key> {
 
         let mut available_area = layout_node.inner_area.as_available();
         if let Some(root_parent_id) = root_parent_id {
-            let root_parent = dom_adapter.get_node(&root_parent_id).unwrap();
+            let root_parent = tree_adapter.get_node(&root_parent_id).unwrap();
             available_area.move_with_offsets(&root_parent.offset_x, &root_parent.offset_y);
         }
 
         let mut measure_context = MeasureContext {
             layout: self,
             layout_metadata,
-            dom_adapter,
+            tree_adapter,
             measurer,
         };
 

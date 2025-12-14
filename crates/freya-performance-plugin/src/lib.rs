@@ -45,8 +45,8 @@ struct WindowMetrics {
     started_layout: Option<Instant>,
     finished_layout: Option<Duration>,
 
-    started_dom_updates: Option<Instant>,
-    finished_dom_updates: Option<Duration>,
+    started_tree_updates: Option<Instant>,
+    finished_tree_updates: Option<Duration>,
 
     started_accessibility_updates: Option<Instant>,
     finished_accessibility_updates: Option<Duration>,
@@ -89,11 +89,12 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 metrics.finished_layout = Some(metrics.started_layout.unwrap().elapsed())
             }
             PluginEvent::StartedUpdatingTree { window, .. } => {
-                self.get_metrics(window.id()).started_dom_updates = Some(Instant::now())
+                self.get_metrics(window.id()).started_tree_updates = Some(Instant::now())
             }
             PluginEvent::FinishedUpdatingTree { window, .. } => {
                 let metrics = self.get_metrics(window.id());
-                metrics.finished_dom_updates = Some(metrics.started_dom_updates.unwrap().elapsed())
+                metrics.finished_tree_updates =
+                    Some(metrics.started_tree_updates.unwrap().elapsed())
             }
             PluginEvent::BeforeAccessibility { window, .. } => {
                 self.get_metrics(window.id()).started_accessibility_updates = Some(Instant::now())
@@ -119,7 +120,7 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 let finished_render = started_render.elapsed();
                 let finished_presenting = metrics.finished_presenting.unwrap_or_default();
                 let finished_layout = metrics.finished_layout.unwrap();
-                let finished_dom_updates = metrics.finished_dom_updates.unwrap_or_default();
+                let finished_tree_updates = metrics.finished_tree_updates.unwrap_or_default();
                 let finished_accessibility_updates =
                     metrics.finished_accessibility_updates.unwrap_or_default();
 
@@ -186,7 +187,7 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                     &mut paragraph_builder,
                     format!(
                         "Tree Updates: {:.3}ms \n",
-                        finished_dom_updates.as_secs_f64() * 1000.0
+                        finished_tree_updates.as_secs_f64() * 1000.0
                     ),
                     18.0,
                 );

@@ -4,10 +4,10 @@ use std::{
 };
 
 use crate::{
-    dom_adapter::NodeKey,
     geometry::Size2D,
     node::Node,
     prelude::Area,
+    tree_adapter::NodeKey,
 };
 
 pub trait LayoutMeasurer<Key: NodeKey> {

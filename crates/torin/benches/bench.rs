@@ -251,9 +251,9 @@ fn criterion_benchmark(c: &mut Criterion) {
             b.iter_batched(
                 || {
                     let mut measurer = Some(NoopMeasurer);
-                    let mut mocked_dom = TestingTree::default();
+                    let mut mocked_tree = TestingTree::default();
 
-                    mocked_dom.add(
+                    mocked_tree.add(
                         0,
                         None,
                         (0..wide - 1).map(|i| (i + 1) + 100).collect(),
@@ -265,7 +265,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                     );
 
                     fn build_branch(
-                        mocked_dom: &mut TestingTree,
+                        mocked_tree: &mut TestingTree,
                         node_generator: fn(depth: usize) -> Node,
                         root: usize,
                         level: usize,
@@ -288,7 +288,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                             }
 
                             let children = build_branch(
-                                mocked_dom,
+                                mocked_tree,
                                 node_generator,
                                 *id,
                                 level + 1,
@@ -296,7 +296,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                                 wide,
                                 mid_node,
                             );
-                            mocked_dom.add_with_depth(
+                            mocked_tree.add_with_depth(
                                 *id,
                                 Some(root),
                                 children,
@@ -309,7 +309,7 @@ fn criterion_benchmark(c: &mut Criterion) {
 
                     let mut invalidate_node = 0;
                     build_branch(
-                        &mut mocked_dom,
+                        &mut mocked_tree,
                         node_generator,
                         0,
                         0,
@@ -321,9 +321,9 @@ fn criterion_benchmark(c: &mut Criterion) {
                     let mut layout = Torin::<usize>::new();
 
                     if mode == BenchmarkMode::InvalidatedCache {
-                        layout.find_best_root(&mut mocked_dom);
-                        layout.measure(0, root_area, &mut measurer, &mut mocked_dom);
-                        mocked_dom.set_node(
+                        layout.find_best_root(&mut mocked_tree);
+                        layout.measure(0, root_area, &mut measurer, &mut mocked_tree);
+                        mocked_tree.set_node(
                             invalidate_node,
                             Node::from_size_and_direction(
                                 Size::Inner,
@@ -334,11 +334,11 @@ fn criterion_benchmark(c: &mut Criterion) {
                         layout.invalidate(invalidate_node);
                     }
 
-                    (mocked_dom, measurer, layout)
+                    (mocked_tree, measurer, layout)
                 },
-                |(mut mocked_dom, mut measurer, mut layout)| {
-                    layout.find_best_root(&mut mocked_dom);
-                    layout.measure(0, root_area, &mut measurer, &mut mocked_dom)
+                |(mut mocked_tree, mut measurer, mut layout)| {
+                    layout.find_best_root(&mut mocked_tree);
+                    layout.measure(0, root_area, &mut measurer, &mut mocked_tree)
                 },
                 criterion::BatchSize::SmallInput,
             )
