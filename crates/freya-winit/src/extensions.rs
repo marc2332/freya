@@ -16,6 +16,8 @@ pub trait WinitPlatformExt {
     fn launch_window(&self, window_config: WindowConfig) -> impl Future<Output = WindowId>;
 
     fn close_window(&self, window_id: WindowId);
+
+    fn focus_window(&self, window_id: Option<WindowId>);
 }
 
 impl WinitPlatformExt for Platform {
@@ -33,6 +35,12 @@ impl WinitPlatformExt for Platform {
     fn close_window(&self, window_id: WindowId) {
         self.send(UserEvent::Erased(SingleThreadErasedEvent(Box::new(
             NativeWindowErasedEventAction::CloseWindow(window_id),
+        ))));
+    }
+
+    fn focus_window(&self, window_id: Option<WindowId>) {
+        self.send(UserEvent::Erased(SingleThreadErasedEvent(Box::new(
+            NativeWindowErasedEventAction::FocusWindow(window_id),
         ))));
     }
 }

@@ -96,6 +96,7 @@ pub enum NativeWindowErasedEventAction {
         ack: futures_channel::oneshot::Sender<WindowId>,
     },
     CloseWindow(WindowId),
+    FocusWindow(Option<WindowId>),
 }
 
 #[derive(Debug)]
@@ -385,6 +386,15 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                     NativeWindowErasedEventAction::CloseWindow(window_id) => {
                                         // Its fine to ignore if the window doesnt exist anymore
                                         let _ = self.windows.remove(&window_id);
+                                    }
+                                    NativeWindowErasedEventAction::FocusWindow(window_id) => {
+                                        if let Some(window_id) = window_id {
+                                            if let Some(app) = self.windows.get(&window_id) {
+                                                app.window.focus_window();
+                                            }
+                                        } else {
+                                            app.window.focus_window();
+                                        }
                                     }
                                 }
                             }
