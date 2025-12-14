@@ -770,3 +770,15 @@ where
         self
     }
 }
+
+pub trait InteractiveExt
+where
+    Self: Sized,
+{
+    fn get_effect(&mut self) -> &mut EffectData;
+
+    fn interactive(mut self, interactive: impl Into<Interactive>) -> Self {
+        self.get_effect().interactive = interactive.into();
+        self
+    }
+}

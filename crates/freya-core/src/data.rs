@@ -57,6 +57,7 @@ pub struct EffectData {
     pub scale: Option<Scale>,
     pub opacity: Option<f32>,
     pub scrollable: bool,
+    pub interactive: Interactive,
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -227,6 +228,13 @@ pub enum Overflow {
     Clip,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Default, Copy)]
+pub enum Interactive {
+    #[default]
+    Yes,
+    No,
+}
+
 #[derive(PartialEq, Default, Debug, Clone)]
 pub struct EffectState {
     pub overflow: Overflow,
@@ -241,6 +249,8 @@ pub struct EffectState {
     pub opacities: Rc<[f32]>,
 
     pub scrollables: Rc<[NodeId]>,
+
+    pub interactive: Interactive,
 }
 
 impl EffectState {
@@ -300,6 +310,8 @@ impl EffectState {
                     self.scrollables = Rc::from(scrolls);
                 }
             }
+
+            self.interactive = effect_data.interactive;
         }
     }
 

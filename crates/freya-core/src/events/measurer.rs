@@ -1,4 +1,5 @@
 use crate::{
+    data::Interactive,
     element::EventMeasurementContext,
     events::{
         emittable::EmmitableEvent,
@@ -96,7 +97,13 @@ impl ragnarok::EventsMeasurer for EventsMeasurerAdapter<'_> {
 
     fn is_node_transparent(&self, key: &Self::Key) -> bool {
         let element = self.tree.elements.get(key).unwrap();
-        element.style().background == Fill::Color(Color::TRANSPARENT)
+        if element.style().background == Fill::Color(Color::TRANSPARENT) {
+            return true;
+        }
+        if let Some(effect_state) = self.tree.effect_state.get(key) {
+            return effect_state.interactive == Interactive::No;
+        }
+        false
     }
 
     fn try_area_of(&self, key: &Self::Key) -> Option<ragnarok::Area> {

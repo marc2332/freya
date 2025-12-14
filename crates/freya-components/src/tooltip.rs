@@ -86,6 +86,7 @@ impl Render for Tooltip {
         } = theme;
 
         rect()
+            .interactive(Interactive::No)
             .padding((4., 10.))
             .border(
                 Border::new()
