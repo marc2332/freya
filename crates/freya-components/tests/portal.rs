@@ -80,7 +80,7 @@ pub fn portal_animates_position_change() {
     assert!(initial_a_x < initial_b_x);
 
     // Click the swap button
-    test.click_cursor((50.0, 25.0));
+    test.click_cursor((15.0, 15.0));
 
     // Poll partway through the animation (25ms out of 50ms)
     test.poll(Duration::from_millis(1), Duration::from_millis(25));
