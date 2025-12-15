@@ -1,5 +1,6 @@
 use std::{
     borrow::Cow,
+    fmt,
     pin::Pin,
     task::Waker,
 };
@@ -38,6 +39,7 @@ use winit::{
     event_loop::EventLoopProxy,
     window::{
         Theme,
+        Window,
         WindowId,
     },
 };
@@ -89,6 +91,14 @@ pub enum NativeWindowEventAction {
     User(UserEvent),
 }
 
+pub struct WithWindowCallback(pub(crate) Box<dyn FnOnce(&mut Window)>);
+
+impl fmt::Debug for WithWindowCallback {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("WithWindowCallback")
+    }
+}
+
 #[derive(Debug)]
 pub enum NativeWindowErasedEventAction {
     LaunchWindow {
@@ -96,7 +106,10 @@ pub enum NativeWindowErasedEventAction {
         ack: futures_channel::oneshot::Sender<WindowId>,
     },
     CloseWindow(WindowId),
-    FocusWindow(Option<WindowId>),
+    WithWindow {
+        window_id: Option<WindowId>,
+        callback: WithWindowCallback,
+    },
 }
 
 #[derive(Debug)]
@@ -387,13 +400,16 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                         // Its fine to ignore if the window doesnt exist anymore
                                         let _ = self.windows.remove(&window_id);
                                     }
-                                    NativeWindowErasedEventAction::FocusWindow(window_id) => {
+                                    NativeWindowErasedEventAction::WithWindow {
+                                        window_id,
+                                        callback,
+                                    } => {
                                         if let Some(window_id) = window_id {
-                                            if let Some(app) = self.windows.get(&window_id) {
-                                                app.window.focus_window();
+                                            if let Some(app) = self.windows.get_mut(&window_id) {
+                                                (callback.0)(&mut app.window)
                                             }
                                         } else {
-                                            app.window.focus_window();
+                                            (callback.0)(&mut app.window)
                                         }
                                     }
                                 }
