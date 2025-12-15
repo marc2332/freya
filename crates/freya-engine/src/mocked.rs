@@ -1980,6 +1980,10 @@ impl DirectContext {
         unimplemented!("This is mocked")
     }
 
+    pub fn release_resources_and_abandon(&self) {
+        unimplemented!("This is mocked")
+    }
+
     pub fn set_resource_cache_limit(&mut self, max_resource_bytes: usize) {
         unimplemented!("This is mocked")
     }
