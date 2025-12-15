@@ -10,7 +10,7 @@ env:
 
 jobs:
   publish:
-    name: Publish to crate.io
+    name: Publish to crates.io
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
