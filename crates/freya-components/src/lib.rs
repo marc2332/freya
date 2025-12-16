@@ -30,6 +30,7 @@ pub mod table;
 pub mod theming;
 pub mod tile;
 pub mod tooltip;
+pub mod overflowed_content;
 
 #[cfg(feature = "remote-asset")]
 pub use ureq::http::Uri;

@@ -126,6 +126,7 @@ pub mod components {
         },
         tile::*,
         tooltip::*,
+        overflowed_content::*,
     };
 }
 
