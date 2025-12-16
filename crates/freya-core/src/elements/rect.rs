@@ -52,6 +52,22 @@ use crate::{
     tree::DiffModifies,
 };
 
+/// [rect] acts as a generic container to contain other elements inside, like a box.
+///
+/// Its the equivalent of `view`/`div`/`container` in other UI models.
+///
+/// See the available methods in [Rect].
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> impl IntoElement {
+///     rect().expanded().background((0, 255, 0))
+/// }
+/// ```
+pub fn rect() -> Rect {
+    Rect::empty()
+}
+
 #[derive(PartialEq, Clone)]
 pub struct RectElement {
     pub style: StyleState,
@@ -648,22 +664,6 @@ impl From<Rect> for Element {
             elements: value.elements,
         }
     }
-}
-
-/// [rect] acts as a generic container to wrapper other elements inside or to simply pain boxes.
-///
-/// Its the equivalent of other UI APIs like `view`/`div`/`container` etc.
-///
-/// See the available methods in [Rect].
-///
-/// ```rust
-/// # use freya::prelude::*;
-/// fn app() -> impl IntoElement {
-///     rect().expanded().background((0, 255, 0))
-/// }
-/// ```
-pub fn rect() -> Rect {
-    Rect::empty()
 }
 
 impl Rect {

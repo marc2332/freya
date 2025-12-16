@@ -54,6 +54,27 @@ use crate::{
     tree::DiffModifies,
 };
 
+/// [image] makes it possible to render a Skia image into the canvas.
+/// You most likely want to use a higher level than this, like the component `ImageViewer`.
+///
+/// See the available methods in [Image].
+pub fn image(image_holder: ImageHolder) -> Image {
+    let mut accessibility = AccessibilityData::default();
+    accessibility.builder.set_role(accesskit::Role::Image);
+    Image {
+        key: DiffKey::None,
+        element: ImageElement {
+            image_holder,
+            accessibility,
+            layout: LayoutData::default(),
+            event_handlers: HashMap::default(),
+            image_data: ImageData::default(),
+            relative_layer: Layer::default(),
+        },
+        elements: Vec::new(),
+    }
+}
+
 #[derive(Default, Clone, Debug, PartialEq)]
 pub enum ImageCover {
     #[default]
@@ -324,27 +345,6 @@ pub struct Image {
     key: DiffKey,
     element: ImageElement,
     elements: Vec<Element>,
-}
-
-/// [image] makes it possible to render a Skia image into the canvas.
-/// You most likely want to use a higher level than this, like the component `ImageViewer`.
-///
-/// See the available methods in [Image].
-pub fn image(image_holder: ImageHolder) -> Image {
-    let mut accessibility = AccessibilityData::default();
-    accessibility.builder.set_role(accesskit::Role::Image);
-    Image {
-        key: DiffKey::None,
-        element: ImageElement {
-            image_holder,
-            accessibility,
-            layout: LayoutData::default(),
-            event_handlers: HashMap::default(),
-            image_data: ImageData::default(),
-            relative_layer: Layer::default(),
-        },
-        elements: Vec::new(),
-    }
 }
 
 impl Image {

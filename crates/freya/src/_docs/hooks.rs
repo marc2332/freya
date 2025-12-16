@@ -64,10 +64,10 @@
 //! struct MyComponent;
 //! impl Render for MyComponent {
 //!     fn render(&self) -> impl IntoElement {
-//!         let onclick = |_| {
+//!         let on_mouse_up = |_| {
 //!             let state = use_state(|| false); // ❌ Not allowed here
 //!         };
-//!         rect().on_mouse_up(onclick).child("Hello, World!")
+//!         rect().on_mouse_up(on_mouse_up).child("Hello, World!")
 //!     }
 //! }
 //! ```
@@ -79,10 +79,10 @@
 //! impl Render for MyComponent {
 //!     fn render(&self) -> impl IntoElement {
 //!         let mut state = use_state(|| false);
-//!         let onclick = move |_| {
+//!         let on_mouse_up = move |_| {
 //!             state.set(true);
 //!         };
-//!         rect().on_mouse_up(onclick).child("Hello, World!")
+//!         rect().on_mouse_up(on_mouse_up).child("Hello, World!")
 //!     }
 //! }
 //! ```

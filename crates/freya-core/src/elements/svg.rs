@@ -52,6 +52,36 @@ use crate::{
     tree::DiffModifies,
 };
 
+/// Use [svg()] to render SVG in your app.
+///
+/// See the available methods in [Svg].
+///
+/// ```rust, no_run
+/// # use freya::prelude::*;
+/// fn app() -> impl IntoElement {
+///     svg(Bytes::from_static(include_bytes!("../../../../logo.svg")))
+/// }
+/// ```
+pub fn svg(bytes: Bytes) -> Svg {
+    let mut accessibility = AccessibilityData::default();
+    accessibility.builder.set_role(accesskit::Role::SvgRoot);
+
+    Svg {
+        key: DiffKey::None,
+        element: SvgElement {
+            accessibility,
+            layout: LayoutData::default(),
+            event_handlers: HashMap::default(),
+            bytes,
+            effect: None,
+            color: Color::BLACK,
+            stroke: None,
+            fill: None,
+            relative_layer: Layer::default(),
+        },
+    }
+}
+
 #[derive(PartialEq, Clone)]
 pub struct SvgElement {
     pub accessibility: AccessibilityData,
@@ -261,36 +291,6 @@ impl LayerExt for Svg {
 pub struct Svg {
     key: DiffKey,
     element: SvgElement,
-}
-
-/// Use [svg()] to render SVG in your app.
-///
-/// See the available methods in [Svg].
-///
-/// ```rust, no_run
-/// # use freya::prelude::*;
-/// fn app() -> impl IntoElement {
-///     svg(Bytes::from_static(include_bytes!("../../../../logo.svg")))
-/// }
-/// ```
-pub fn svg(bytes: Bytes) -> Svg {
-    let mut accessibility = AccessibilityData::default();
-    accessibility.builder.set_role(accesskit::Role::SvgRoot);
-
-    Svg {
-        key: DiffKey::None,
-        element: SvgElement {
-            accessibility,
-            layout: LayoutData::default(),
-            event_handlers: HashMap::default(),
-            bytes,
-            effect: None,
-            color: Color::BLACK,
-            stroke: None,
-            fill: None,
-            relative_layer: Layer::default(),
-        },
-    }
 }
 
 impl Svg {

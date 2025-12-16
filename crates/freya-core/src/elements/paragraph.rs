@@ -56,6 +56,26 @@ use crate::{
     text_cache::CachedParagraph,
     tree::DiffModifies,
 };
+
+/// [paragraph] makes it possible to render rich text with different styles. Its a more personalizable api than [crate::elements::label].
+///
+/// See the available methods in [Paragraph].
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> impl IntoElement {
+///     paragraph()
+///         .span(Span::new("Hello").font_size(24.0))
+///         .span(Span::new("World").font_size(16.0))
+/// }
+/// ```
+pub fn paragraph() -> Paragraph {
+    Paragraph {
+        key: DiffKey::None,
+        element: ParagraphElement::default(),
+    }
+}
+
 pub struct ParagraphHolderInner {
     pub paragraph: Rc<SkParagraph>,
     pub scale_factor: f64,
@@ -433,25 +453,6 @@ impl LayerExt for Paragraph {
 pub struct Paragraph {
     key: DiffKey,
     element: ParagraphElement,
-}
-
-/// [paragraph] makes it possible to render rich text with different styles. Its a more personalizable api than [crate::elements::label].
-///
-/// See the available methods in [Paragraph].
-///
-/// ```rust
-/// # use freya::prelude::*;
-/// fn app() -> impl IntoElement {
-///     paragraph()
-///         .span(Span::new("Hello").font_size(24.0))
-///         .span(Span::new("World").font_size(16.0))
-/// }
-/// ```
-pub fn paragraph() -> Paragraph {
-    Paragraph {
-        key: DiffKey::None,
-        element: ParagraphElement::default(),
-    }
 }
 
 impl LayoutExt for Paragraph {

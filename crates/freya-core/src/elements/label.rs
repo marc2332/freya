@@ -51,6 +51,23 @@ use crate::{
     tree::DiffModifies,
 };
 
+/// Draw text with [label]. Its a simplified version of [crate::elements::paragraph].
+///
+/// See the available methods in [Label].
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> impl IntoElement {
+///     label().text("Hello, world!").font_size(16.0)
+/// }
+/// ```
+pub fn label() -> Label {
+    Label {
+        key: DiffKey::None,
+        element: LabelElement::default(),
+    }
+}
+
 impl From<&str> for Element {
     fn from(value: &str) -> Self {
         label().text(value.to_string()).into()
@@ -318,23 +335,6 @@ impl MaybeExt for Label {}
 pub struct Label {
     key: DiffKey,
     element: LabelElement,
-}
-
-/// Draw text with [label]. Its a simplified version of [crate::elements::paragraph].
-///
-/// See the available methods in [Label].
-///
-/// ```rust
-/// # use freya::prelude::*;
-/// fn app() -> impl IntoElement {
-///     label().text("Hello, world!").font_size(16.0)
-/// }
-/// ```
-pub fn label() -> Label {
-    Label {
-        key: DiffKey::None,
-        element: LabelElement::default(),
-    }
 }
 
 impl Label {

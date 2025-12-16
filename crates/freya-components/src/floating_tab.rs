@@ -21,10 +21,10 @@ pub enum TabStatus {
 
 #[derive(PartialEq)]
 pub struct FloatingTab {
-    children: Vec<Element>,
     pub(crate) theme: Option<FloatingTabThemePartial>,
-    /// Optionally handle the `onclick` event in the SidebarItem.
-    on_press: Option<EventHandler<()>>,
+    children: Vec<Element>,
+    /// Optionally handle the `on_press` event in [FloatingTab].
+    on_press: Option<EventHandler<Event<PressEventData>>>,
 }
 
 impl Default for FloatingTab {
@@ -92,14 +92,6 @@ impl Render for FloatingTab {
             color,
         } = get_theme!(&self.theme, floating_tab);
 
-        let on_press = self.on_press.clone();
-
-        let on_press = move |_| {
-            if let Some(onpress) = &on_press {
-                onpress.call(());
-            }
-        };
-
         let on_pointer_enter = move |_| {
             Cursor::set(CursorIcon::Pointer);
             status.set(TabStatus::Hovering);
@@ -120,9 +112,9 @@ impl Render for FloatingTab {
             .a11y_id(focus.a11y_id())
             .a11y_focusable(Focusable::Enabled)
             .a11y_role(AccessibilityRole::Tab)
-            .on_press(on_press)
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
+            .map(self.on_press.clone(), |el, on_press| el.on_press(on_press))
             .width(width)
             .height(height)
             .center()
