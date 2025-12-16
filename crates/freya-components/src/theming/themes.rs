@@ -15,7 +15,6 @@ use crate::theming::{
         ChipThemePreference,
         CircularLoaderThemePreference,
         ColorsSheet,
-        DropdownThemePreference,
         FloatingTabThemePreference,
         InputThemePreference,
         MenuContainerThemePreference,
@@ -25,6 +24,7 @@ use crate::theming::{
         RadioItemThemePreference,
         ResizableHandleThemePreference,
         ScrollBarThemePreference,
+        SelectThemePreference,
         SideBarItemThemePreference,
         SideBarThemePreference,
         SliderThemePreference,
@@ -217,10 +217,10 @@ pub(crate) const BASE_THEME: Theme = Theme {
         thumb_inner_background: Preference::Reference("primary"),
         border_fill: Preference::Reference("surface_primary"),
     },
-    dropdown: DropdownThemePreference {
+    select: SelectThemePreference {
         width: Preference::Specific(Size::Inner),
         margin: Preference::Specific(Gaps::new_all(0.)),
-        dropdown_background: Preference::Reference("background"),
+        select_background: Preference::Reference("background"),
         background_button: Preference::Reference("surface_tertiary"),
         hover_background: Preference::Reference("hover"),
         color: Preference::Reference("text_primary"),

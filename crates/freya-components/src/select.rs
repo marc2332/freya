@@ -6,11 +6,11 @@ use crate::{
     get_theme,
     icons::arrow::ArrowIcon,
     menu::MenuGroup,
-    theming::component_themes::DropdownThemePartial,
+    theming::component_themes::SelectThemePartial,
 };
 
 #[derive(Debug, Default, PartialEq, Clone, Copy)]
-pub enum DropdownStatus {
+pub enum SelectStatus {
     #[default]
     Idle,
     Hovering,
@@ -30,55 +30,56 @@ pub enum DropdownStatus {
 ///             "Crabs".to_string(),
 ///         ]
 ///     });
-///     let mut selected_dropdown = use_state(|| 0);
+///     let mut selected_select = use_state(|| 0);
 ///
-///     Dropdown::new()
-///         .selected_item(values[selected_dropdown()].to_string())
+///     Select::new()
+///         .selected_item(values[selected_select()].to_string())
 ///         .children_iter(values.iter().enumerate().map(|(i, val)| {
 ///             MenuItem::new()
-///                 .selected(selected_dropdown() == i)
-///                 .on_press(move |_| selected_dropdown.set(i))
+///                 .selected(selected_select() == i)
+///                 .on_press(move |_| selected_select.set(i))
 ///                 .child(val.to_string())
 ///                 .into()
 ///         }))
 /// }
 ///
 /// # use freya_testing::prelude::*;
+/// # use std::time::Duration;
 /// # launch_doc_hook(|| {
 /// #   rect().center().expanded().child(app())
-/// # }, (250., 250.).into(), "./images/gallery_dropdown.png", |t| {
+/// # }, (250., 250.).into(), "./images/gallery_select.png", |t| {
 /// #   t.move_cursor((125., 125.));
 /// #   t.click_cursor((125., 125.));
-/// #   t.sync_and_update();
+/// #   t.poll(Duration::from_millis(1), Duration::from_millis(350));
 /// # });
 /// ```
 ///
 /// # Preview
-/// ![Dropdown Preview][dropdown]
+/// ![Select Preview][select]
 #[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("dropdown", "images/gallery_dropdown.png")
+    doc = embed_doc_image::embed_image!("select", "images/gallery_select.png")
 )]
 #[derive(Clone, PartialEq)]
-pub struct Dropdown {
-    pub(crate) theme: Option<DropdownThemePartial>,
+pub struct Select {
+    pub(crate) theme: Option<SelectThemePartial>,
     pub selected_item: Option<Element>,
     pub children: Vec<Element>,
     pub key: DiffKey,
 }
 
-impl ChildrenExt for Dropdown {
+impl ChildrenExt for Select {
     fn get_children(&mut self) -> &mut Vec<Element> {
         &mut self.children
     }
 }
 
-impl Default for Dropdown {
+impl Default for Select {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Dropdown {
+impl Select {
     pub fn new() -> Self {
         Self {
             theme: None,
@@ -88,7 +89,7 @@ impl Dropdown {
         }
     }
 
-    pub fn theme(mut self, theme: DropdownThemePartial) -> Self {
+    pub fn theme(mut self, theme: SelectThemePartial) -> Self {
         self.theme = Some(theme);
         self
     }
@@ -104,12 +105,12 @@ impl Dropdown {
     }
 }
 
-impl Render for Dropdown {
+impl Render for Select {
     fn render(&self) -> impl IntoElement {
-        let theme = get_theme!(&self.theme, dropdown);
+        let theme = get_theme!(&self.theme, select);
         let focus = use_focus();
         let focus_status = use_focus_status(focus);
-        let mut status = use_state(DropdownStatus::default);
+        let mut status = use_state(SelectStatus::default);
         let mut open = use_state(|| false);
         use_provide_context(|| MenuGroup {
             group_id: focus.a11y_id(),
@@ -127,7 +128,6 @@ impl Render for Dropdown {
                 .time(350)
                 .ease(Ease::Out)
                 .function(Function::Expo);
-
             if open() {
                 (scale, opacity)
             } else {
@@ -136,18 +136,19 @@ impl Render for Dropdown {
         });
 
         use_drop(move || {
-            if status() == DropdownStatus::Hovering {
+            if status() == SelectStatus::Hovering {
                 Cursor::set(CursorIcon::default());
             }
         });
 
-        // Close the dropdown when the focused accessibility node changes and its not the dropdown or any of its childrens
+        // Close the select when the focused accessibility node changes and its not the select or any of its children
         use_side_effect(move || {
             if let Some(member_of) = Platform::get()
                 .focused_accessibility_node
                 .read()
                 .member_of()
             {
+                println!("{member_of:?} | {:?}", focus.a11y_id());
                 if member_of != focus.a11y_id() {
                     open.set_if_modified(false);
                 }
@@ -162,19 +163,20 @@ impl Render for Dropdown {
             // Prevent global mouse up
             e.prevent_default();
             e.stop_propagation();
+            println!("CLICKED");
         };
 
         let on_pointer_enter = move |_| {
-            *status.write() = DropdownStatus::Hovering;
+            *status.write() = SelectStatus::Hovering;
             Cursor::set(CursorIcon::Pointer);
         };
 
         let on_pointer_leave = move |_| {
-            *status.write() = DropdownStatus::Idle;
+            *status.write() = SelectStatus::Idle;
             Cursor::set(CursorIcon::default());
         };
 
-        // Close the dropdown if clicked anywhere
+        // Close the select if clicked anywhere
         let on_global_mouse_up = move |_| {
             open.set_if_modified(false);
         };
@@ -191,9 +193,11 @@ impl Render for Dropdown {
 
         let (scale, opacity) = animation.read().value();
 
+        println!("{opacity:?}");
+
         let background = match *status.read() {
-            DropdownStatus::Hovering => theme.hover_background,
-            DropdownStatus::Idle => theme.background_button,
+            SelectStatus::Hovering => theme.hover_background,
+            SelectStatus::Idle => theme.background_button,
         };
 
         let border = if focus_status() == FocusStatus::Keyboard {
@@ -253,7 +257,7 @@ impl Render for Dropdown {
                                 )
                                 .overflow(Overflow::Clip)
                                 .corner_radius(8.)
-                                .background(theme.dropdown_background)
+                                .background(theme.select_background)
                                 // TODO: Shadows
                                 .padding(6.)
                                 .content(Content::Fit)

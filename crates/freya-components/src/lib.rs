@@ -7,7 +7,6 @@ pub mod chip;
 pub mod context_menu;
 pub mod drag_drop;
 pub mod draggable_canvas;
-pub mod dropdown;
 pub mod element_expansions;
 pub mod floating_tab;
 pub mod icons;
@@ -23,6 +22,7 @@ pub mod progressbar;
 pub mod radio_item;
 pub mod resizable_container;
 pub mod scrollviews;
+pub mod select;
 pub mod selectable_text;
 pub mod sidebar;
 pub mod slider;
@@ -62,8 +62,8 @@ cfg_if::cfg_if! {
 /// | [Switch](switch::Switch)        | [Button](button::Button)        | [Filled Button](button::Button)        | [Outline Button](button::Button)        |
 /// | ![Slider Preview][gallery_slider] | ![Checkbox Preview][gallery_checkbox] | ![RadioItem Preview][gallery_radio] | ![Input Preview][gallery_input] |
 /// | [Slider](slider::Slider)        | [Checkbox](checkbox::Checkbox)        | [RadioItem](radio_item::RadioItem)        | [Input](input::Input)        |
-/// | ![ProgressBar Preview][gallery_progressbar] | ![Dropdown Preview][gallery_dropdown] | ![GifViewer Preview][gallery_gif_viewer] | ![Accordion Preview][gallery_accordion] |
-/// | [ProgressBar](progressbar::ProgressBar)        | [Dropdown](dropdown::Dropdown)        |  [GifViewer](gif_viewer::GifViewer) | [Accordion](accordion::Accordion) |
+/// | ![ProgressBar Preview][gallery_progressbar] | ![Select Preview][gallery_select] | ![GifViewer Preview][gallery_gif_viewer] | ![Accordion Preview][gallery_accordion] |
+/// | [ProgressBar](progressbar::ProgressBar)        | [Select](select::Select)        |  [GifViewer](gif_viewer::GifViewer) | [Accordion](accordion::Accordion) |
 /// | ![Floating Tab Preview][gallery_floating_tab] | ![ImageViewer Preview][gallery_image_viewer] |  ![ScrollView Preview][gallery_scrollview] |  ![VirtualScrollView Preview][gallery_virtual_scrollview] |
 /// | [FloatingTab](floating_tab::FloatingTab)        | [ImageViewer](image_viewer::ImageViewer) | [ScrollView](scrollviews::ScrollView) | [VirtualScrollView](scrollviews::VirtualScrollView) |
 /// | ![Circular Loader Preview][gallery_circular_loader] |  | ![Tooltip Preview][gallery_tooltip] |  |
@@ -78,7 +78,7 @@ cfg_if::cfg_if! {
     doc = embed_doc_image::embed_image!("gallery_radio", "images/gallery_radio.png"),
     doc = embed_doc_image::embed_image!("gallery_input", "images/gallery_input.png"),
     doc = embed_doc_image::embed_image!("gallery_progressbar", "images/gallery_progressbar.png"),
-    doc = embed_doc_image::embed_image!("gallery_dropdown", "images/gallery_dropdown.png"),
+    doc = embed_doc_image::embed_image!("gallery_select", "images/gallery_select.png"),
     doc = embed_doc_image::embed_image!("gallery_accordion", "images/gallery_accordion.png"),
     doc = embed_doc_image::embed_image!("gallery_floating_tab", "images/gallery_floating_tab.png"),
     doc = embed_doc_image::embed_image!("gallery_image_viewer", "images/gallery_image_viewer.png"),

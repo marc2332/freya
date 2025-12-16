@@ -12,7 +12,6 @@ use crate::{
     checkbox::Checkbox,
     chip::Chip,
     define_theme,
-    dropdown::Dropdown,
     floating_tab::FloatingTab,
     input::Input,
     loader::CircularLoader,
@@ -25,6 +24,7 @@ use crate::{
     radio_item::RadioItem,
     resizable_container::ResizableHandle,
     scrollviews::ScrollBar,
+    select::Select,
     sidebar::{
         SideBar,
         SideBarItem,
@@ -62,7 +62,7 @@ pub struct Theme {
     pub resizable_handle: ResizableHandleThemePreference,
     pub floating_tab: FloatingTabThemePreference,
     pub slider: SliderThemePreference,
-    pub dropdown: DropdownThemePreference,
+    pub select: SelectThemePreference,
     pub popup: PopupThemePreference,
     pub table: TableThemePreference,
     pub chip: ChipThemePreference,
@@ -322,11 +322,11 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub Dropdown {
+    pub Select {
         %[fields]
         width: Size,
         margin: Gaps,
-        dropdown_background: Color,
+        select_background: Color,
         background_button: Color,
         hover_background: Color,
         border_fill: Color,
