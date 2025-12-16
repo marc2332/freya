@@ -26,13 +26,15 @@ impl Effect {
         });
     }
 
-    pub fn create_with_gen(mut callback: impl FnMut(usize) + 'static) {
+    // TODO: This should probably not be sync but instead Freya should prioritize effect tasks
+    pub fn create_sync_with_gen(mut callback: impl FnMut(usize) + 'static) {
         let (rx, rc) = ReactiveContext::new_for_task();
+        ReactiveContext::run(rc.clone(), || callback(0));
         spawn(async move {
-            let mut current_gen = 0;
+            let mut current_gen = 1;
             loop {
-                ReactiveContext::run(rc.clone(), || callback(current_gen));
                 rx.notified().await;
+                ReactiveContext::run(rc.clone(), || callback(current_gen));
                 current_gen += 1;
             }
         });

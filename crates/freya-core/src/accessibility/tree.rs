@@ -2,6 +2,7 @@ use accesskit::{
     Action,
     Node,
     Rect,
+    Role,
     TreeUpdate,
 };
 use ragnarok::ProcessedEvents;
@@ -339,6 +340,10 @@ impl AccessibilityTree {
     pub fn create_node(node_id: NodeId, layout_node: &LayoutNode, tree: &Tree) -> Node {
         let element = tree.elements.get(&node_id).unwrap();
         let mut accessibility_data = element.accessibility().into_owned();
+
+        if node_id == NodeId::ROOT {
+            accessibility_data.builder.set_role(Role::Window);
+        }
 
         // Set children
         let children = tree

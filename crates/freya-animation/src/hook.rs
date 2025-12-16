@@ -280,7 +280,7 @@ pub fn use_animation<Animated: AnimatedValue>(
             *config.write() = anim_conf;
         });
 
-        Effect::create_with_gen(move |current_gen| match config.read().on_change {
+        Effect::create_sync_with_gen(move |current_gen| match config.read().on_change {
             OnChange::Finish if current_gen > 0 => {
                 animation.finish();
             }
@@ -334,7 +334,7 @@ pub fn use_animation_with_dependencies<Animated: AnimatedValue, D: 'static + Clo
             *config.write() = anim_conf;
         });
 
-        Effect::create_with_gen(move |current_gen| match config.read().on_change {
+        Effect::create_sync_with_gen(move |current_gen| match config.read().on_change {
             OnChange::Finish if current_gen > 0 => {
                 animation.finish();
             }

@@ -161,42 +161,32 @@ impl TestingRunner {
         font_collection.set_dynamic_font_manager(font_manager.clone());
         font_collection.paragraph_cache_mut().turn_on(false);
 
-        let mutations = runner.sync_and_update();
-        tree.borrow_mut().apply_mutations(mutations);
-        tree.borrow_mut().measure_layout(
-            size,
-            &font_collection,
-            &font_manager,
-            &events_sender,
-            1.0,
-            &default_fonts(),
-        );
-
         let nodes_state = NodesState::default();
         let accessibility = AccessibilityTree::default();
 
-        (
-            Self {
-                runner,
-                tree,
-                size,
+        let mut runner = Self {
+            runner,
+            tree,
+            size,
 
-                accessibility,
-                platform,
+            accessibility,
+            platform,
 
-                nodes_state,
-                events_receiver,
-                events_sender,
+            nodes_state,
+            events_receiver,
+            events_sender,
 
-                font_manager,
-                font_collection,
+            font_manager,
+            font_collection,
 
-                ticker_sender,
+            ticker_sender,
 
-                default_fonts: default_fonts(),
-            },
-            hook_result,
-        )
+            default_fonts: default_fonts(),
+        };
+
+        runner.sync_and_update();
+
+        (runner, hook_result)
     }
 
     pub fn set_fonts(&mut self, fonts: HashMap<&str, &[u8]>) {
@@ -243,13 +233,6 @@ impl TestingRunner {
     }
 
     pub fn sync_and_update(&mut self) {
-        let accessibility_update = self
-            .accessibility
-            .process_updates(&mut self.tree.borrow_mut(), &self.events_sender);
-        self.platform
-            .focused_accessibility_id
-            .set(accessibility_update.focus);
-
         while let Ok(Some(events_chunk)) = self.events_receiver.try_next() {
             match events_chunk {
                 EventsChunk::Processed(processed_events) => {
@@ -281,6 +264,20 @@ impl TestingRunner {
             1.0,
             &self.default_fonts,
         );
+
+        let accessibility_update = self
+            .accessibility
+            .process_updates(&mut self.tree.borrow_mut(), &self.events_sender);
+
+        self.platform
+            .focused_accessibility_id
+            .set_if_modified(accessibility_update.focus);
+        let node_id = self.accessibility.focused_node_id().unwrap();
+        let tree = self.tree.borrow();
+        let layout_node = tree.layout.get(&node_id).unwrap();
+        self.platform
+            .focused_accessibility_node
+            .set_if_modified(AccessibilityTree::create_node(node_id, layout_node, &tree));
     }
 
     /// Poll async tasks and events every `step` time for a total time of `duration`.
