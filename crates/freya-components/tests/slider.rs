@@ -47,7 +47,6 @@ pub fn slider_mouse_drag_horizontal() {
     let value: f64 = value_text.replace("Value: ", "").parse().unwrap();
 
     // Should be around 50% (middle of 200px slider)
-    println!("{value:?}");
     assert!((40..60).contains(&(value as i32)));
 
     // Drag to the right

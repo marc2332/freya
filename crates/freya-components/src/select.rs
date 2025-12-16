@@ -148,7 +148,6 @@ impl Render for Select {
                 .read()
                 .member_of()
             {
-                println!("{member_of:?} | {:?}", focus.a11y_id());
                 if member_of != focus.a11y_id() {
                     open.set_if_modified(false);
                 }
@@ -163,7 +162,6 @@ impl Render for Select {
             // Prevent global mouse up
             e.prevent_default();
             e.stop_propagation();
-            println!("CLICKED");
         };
 
         let on_pointer_enter = move |_| {
@@ -192,8 +190,6 @@ impl Render for Select {
         };
 
         let (scale, opacity) = animation.read().value();
-
-        println!("{opacity:?}");
 
         let background = match *status.read() {
             SelectStatus::Hovering => theme.hover_background,
