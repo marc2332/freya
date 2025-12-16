@@ -107,6 +107,7 @@ pub mod components {
         input::*,
         loader::*,
         menu::*,
+        overflowed_content::*,
         popup::*,
         portal::*,
         progressbar::*,
@@ -126,7 +127,6 @@ pub mod components {
         },
         tile::*,
         tooltip::*,
-        overflowed_content::*,
     };
 }
 

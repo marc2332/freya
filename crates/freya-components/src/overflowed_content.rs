@@ -25,10 +25,9 @@ use torin::{
 /// fn app() -> impl IntoElement {
 ///     Button::new().child(
 ///         OverflowedContent::new().width(Size::px(100.)).child(
-///             rect()
-///                 .horizontal()
-///                 .cross_align(Alignment::Center)
-///                 .child(label().child("Freya is a cross-platform GUI library for Rust")),
+///             label()
+///                 .text("Freya is a cross-platform GUI library for Rust")
+///                 .max_lines(1),
 ///         ),
 ///     )
 /// }

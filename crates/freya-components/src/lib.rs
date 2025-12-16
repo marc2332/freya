@@ -16,6 +16,7 @@ pub mod input;
 pub mod integration;
 pub mod loader;
 pub mod menu;
+pub mod overflowed_content;
 pub mod popup;
 pub mod portal;
 pub mod progressbar;
@@ -30,7 +31,6 @@ pub mod table;
 pub mod theming;
 pub mod tile;
 pub mod tooltip;
-pub mod overflowed_content;
 
 #[cfg(feature = "remote-asset")]
 pub use ureq::http::Uri;
