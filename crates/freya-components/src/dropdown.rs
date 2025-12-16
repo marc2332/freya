@@ -5,142 +5,9 @@ use torin::prelude::*;
 use crate::{
     get_theme,
     icons::arrow::ArrowIcon,
-    theming::component_themes::{
-        DropdownItemThemePartial,
-        DropdownThemePartial,
-    },
+    menu::MenuGroup,
+    theming::component_themes::DropdownThemePartial,
 };
-
-#[derive(Debug, Default, PartialEq, Clone, Copy)]
-pub enum DropdownItemStatus {
-    #[default]
-    Idle,
-    Hovering,
-}
-
-#[derive(Clone, PartialEq)]
-pub struct DropdownItem {
-    pub(crate) theme: Option<DropdownItemThemePartial>,
-    pub selected: bool,
-    pub on_press: Option<EventHandler<Event<PressEventData>>>,
-    pub children: Vec<Element>,
-    pub key: DiffKey,
-}
-
-impl ChildrenExt for DropdownItem {
-    fn get_children(&mut self) -> &mut Vec<Element> {
-        &mut self.children
-    }
-}
-
-impl KeyExt for DropdownItem {
-    fn write_key(&mut self) -> &mut DiffKey {
-        &mut self.key
-    }
-}
-
-impl Default for DropdownItem {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl DropdownItem {
-    pub fn new() -> Self {
-        Self {
-            theme: None,
-            selected: false,
-            on_press: None,
-            children: Vec::new(),
-            key: DiffKey::None,
-        }
-    }
-
-    pub fn theme(mut self, theme: DropdownItemThemePartial) -> Self {
-        self.theme = Some(theme);
-        self
-    }
-
-    pub fn selected(mut self, selected: bool) -> Self {
-        self.selected = selected;
-        self
-    }
-
-    pub fn on_press(mut self, handler: impl FnMut(Event<PressEventData>) + 'static) -> Self {
-        self.on_press = Some(EventHandler::new(handler));
-        self
-    }
-}
-
-impl Render for DropdownItem {
-    fn render(&self) -> impl IntoElement {
-        let theme = get_theme!(&self.theme, dropdown_item);
-        let focus = use_focus();
-        let focus_status = use_focus_status(focus);
-        let mut status = use_state(DropdownItemStatus::default);
-        let dropdown_group = use_consume::<DropdownGroup>();
-
-        use_drop(move || {
-            if status() == DropdownItemStatus::Hovering {
-                Cursor::set(CursorIcon::default());
-            }
-        });
-
-        let background = if self.selected {
-            theme.select_background
-        } else if *status.read() == DropdownItemStatus::Hovering {
-            theme.hover_background
-        } else {
-            theme.background
-        };
-
-        let border = if focus_status() == FocusStatus::Keyboard {
-            Border::new()
-                .fill(theme.select_border_fill)
-                .width(2.)
-                .alignment(BorderAlignment::Inner)
-        } else {
-            Border::new()
-                .fill(theme.border_fill)
-                .width(1.)
-                .alignment(BorderAlignment::Inner)
-        };
-
-        rect()
-            .width(Size::fill_minimum())
-            .color(theme.color)
-            .a11y_id(focus.a11y_id())
-            .a11y_focusable(Focusable::Enabled)
-            .a11y_member_of(dropdown_group.group_id)
-            .a11y_role(AccessibilityRole::ListBoxOption)
-            .background(background)
-            .border(border)
-            .corner_radius(6.)
-            .padding((6., 10., 6., 10.))
-            .main_align(Alignment::center())
-            .on_pointer_enter(move |_| {
-                *status.write() = DropdownItemStatus::Hovering;
-                Cursor::set(CursorIcon::Pointer);
-            })
-            .on_pointer_leave(move |_| {
-                *status.write() = DropdownItemStatus::Idle;
-                Cursor::set(CursorIcon::default());
-            })
-            .map(self.on_press.clone(), |rect, on_press| {
-                rect.on_press(on_press)
-            })
-            .children(self.children.clone())
-    }
-
-    fn render_key(&self) -> DiffKey {
-        self.key.clone().or(self.default_key())
-    }
-}
-
-#[derive(Clone)]
-struct DropdownGroup {
-    group_id: AccessibilityId,
-}
 
 #[derive(Debug, Default, PartialEq, Clone, Copy)]
 pub enum DropdownStatus {
@@ -168,7 +35,8 @@ pub enum DropdownStatus {
 ///     Dropdown::new()
 ///         .selected_item(values[selected_dropdown()].to_string())
 ///         .children_iter(values.iter().enumerate().map(|(i, val)| {
-///             DropdownItem::new()
+///             MenuItem::new()
+///                 .selected(selected_dropdown() == i)
 ///                 .on_press(move |_| selected_dropdown.set(i))
 ///                 .child(val.to_string())
 ///                 .into()
@@ -243,7 +111,7 @@ impl Render for Dropdown {
         let focus_status = use_focus_status(focus);
         let mut status = use_state(DropdownStatus::default);
         let mut open = use_state(|| false);
-        use_provide_context(|| DropdownGroup {
+        use_provide_context(|| MenuGroup {
             group_id: focus.a11y_id(),
         });
 

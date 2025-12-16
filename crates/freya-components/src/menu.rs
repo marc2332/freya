@@ -145,7 +145,9 @@ impl RenderOwned for MenuContainer {
         let focus = use_focus();
         let theme = get_theme!(self.theme, menu_container);
 
-        use_provide_context(move || focus.a11y_id());
+        use_provide_context(move || MenuGroup {
+            group_id: focus.a11y_id(),
+        });
 
         rect()
             .a11y_id(focus.a11y_id())
@@ -165,6 +167,11 @@ impl RenderOwned for MenuContainer {
     fn render_key(&self) -> DiffKey {
         self.key.clone().or(self.default_key())
     }
+}
+
+#[derive(Clone)]
+pub struct MenuGroup {
+    pub group_id: AccessibilityId,
 }
 
 /// A clickable menu item with hover and focus states.
@@ -187,6 +194,7 @@ pub struct MenuItem {
     children: Vec<Element>,
     on_press: Option<EventHandler<Event<PressEventData>>>,
     on_pointer_enter: Option<EventHandler<Event<PointerEventData>>>,
+    selected: bool,
     key: DiffKey,
 }
 
@@ -216,6 +224,11 @@ impl MenuItem {
         self.on_pointer_enter = Some(f.into());
         self
     }
+
+    pub fn selected(mut self, selected: bool) -> Self {
+        self.selected = selected;
+        self
+    }
 }
 
 impl ChildrenExt for MenuItem {
@@ -230,12 +243,26 @@ impl RenderOwned for MenuItem {
         let mut hovering = use_state(|| false);
         let focus = use_focus();
         let focus_status = use_focus_status(focus);
-        let menu_group = use_consume::<AccessibilityId>();
+        let MenuGroup { group_id } = use_consume::<MenuGroup>();
 
-        let background = if focus_status() == FocusStatus::Keyboard || *hovering.read() {
+        let background = if self.selected {
+            theme.select_background
+        } else if hovering() {
             theme.hover_background
         } else {
-            Color::TRANSPARENT
+            theme.background
+        };
+
+        let border = if focus_status() == FocusStatus::Keyboard {
+            Border::new()
+                .fill(theme.select_border_fill)
+                .width(2.)
+                .alignment(BorderAlignment::Inner)
+        } else {
+            Border::new()
+                .fill(theme.border_fill)
+                .width(1.)
+                .alignment(BorderAlignment::Inner)
         };
 
         let on_pointer_enter = move |e| {
@@ -250,8 +277,6 @@ impl RenderOwned for MenuItem {
         };
 
         let on_press = move |e: Event<PressEventData>| {
-            e.stop_propagation();
-            e.prevent_default();
             focus.request_focus();
             if let Some(on_press) = &self.on_press {
                 on_press.call(e);
@@ -262,12 +287,13 @@ impl RenderOwned for MenuItem {
             .a11y_role(AccessibilityRole::MenuItem)
             .a11y_id(focus.a11y_id())
             .a11y_focusable(true)
-            .a11y_member_of(menu_group)
+            .a11y_member_of(group_id)
             .min_width(Size::px(105.))
             .width(Size::fill_minimum())
             .padding((4.0, 10.0))
             .corner_radius(theme.corner_radius)
             .background(background)
+            .border(border)
             .color(theme.color)
             .text_align(TextAlign::Start)
             .main_align(Alignment::Center)
@@ -401,19 +427,19 @@ impl RenderOwned for SubMenu {
 
         let show_submenu = menus.read().contains(&submenu_id);
 
-        let onmouseenter = move |_| {
+        let on_pointer_enter = move |_| {
             close_menus_until(&mut menus, parent_menu_id);
             push_menu(&mut menus, submenu_id);
         };
 
-        let onpress = move |_| {
+        let on_press = move |_| {
             close_menus_until(&mut menus, parent_menu_id);
             push_menu(&mut menus, submenu_id);
         };
 
         MenuItem::new()
-            .on_pointer_enter(onmouseenter)
-            .on_press(onpress)
+            .on_pointer_enter(on_pointer_enter)
+            .on_press(on_press)
             .child(rect().horizontal().maybe_child(self.label.clone()))
             .maybe_child(show_submenu.then(|| {
                 rect()

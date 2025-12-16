@@ -66,7 +66,6 @@ impl Render for NodeElement {
                                     let on_expand = on_expand.clone();
                                     move |_| {
                                         on_expand.call(());
-                                        ContextMenu::close();
                                     }
                                 })
                                 .child(if Some(true) == is_open {
@@ -81,7 +80,6 @@ impl Render for NodeElement {
                                     let on_expand_all = on_expand_all.clone();
                                     move |_| {
                                         on_expand_all.call(());
-                                        ContextMenu::close();
                                     }
                                 })
                                 .child("Expand All"),
@@ -92,7 +90,6 @@ impl Render for NodeElement {
                                     let on_collapse_all = on_collapse_all.clone();
                                     move |_| {
                                         on_collapse_all.call(());
-                                        ContextMenu::close();
                                     }
                                 })
                                 .child("Collapse All"),

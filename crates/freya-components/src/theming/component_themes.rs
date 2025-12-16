@@ -12,10 +12,7 @@ use crate::{
     checkbox::Checkbox,
     chip::Chip,
     define_theme,
-    dropdown::{
-        Dropdown,
-        DropdownItem,
-    },
+    dropdown::Dropdown,
     floating_tab::FloatingTab,
     input::Input,
     loader::CircularLoader,
@@ -66,7 +63,6 @@ pub struct Theme {
     pub floating_tab: FloatingTabThemePreference,
     pub slider: SliderThemePreference,
     pub dropdown: DropdownThemePreference,
-    pub dropdown_item: DropdownItemThemePreference,
     pub popup: PopupThemePreference,
     pub table: TableThemePreference,
     pub chip: ChipThemePreference,
@@ -342,19 +338,6 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub DropdownItem {
-        %[fields]
-        background: Color,
-        select_background: Color,
-        hover_background: Color,
-        border_fill: Color,
-        select_border_fill: Color,
-        color: Color,
-    }
-}
-
-define_theme! {
-    %[component]
     pub Popup {
         %[fields]
         background: Color,
@@ -416,7 +399,11 @@ define_theme! {
     %[component]
     pub MenuItem {
        %[fields]
+        background: Color,
         hover_background: Color,
+        select_background: Color,
+        border_fill: Color,
+        select_border_fill: Color,
         corner_radius: CornerRadius,
         color: Color,
     }

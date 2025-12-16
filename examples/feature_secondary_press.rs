@@ -12,7 +12,6 @@ fn app() -> impl IntoElement {
                 MenuItem::new()
                     .on_press(move |_| {
                         let _ = Clipboard::set("Right Click Me".to_string());
-                        ContextMenu::close();
                     })
                     .child("Copy"),
             ),

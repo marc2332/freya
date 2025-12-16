@@ -23,7 +23,7 @@ fn app() -> impl IntoElement {
             Dropdown::new()
                 .selected_item(values[selected_dropdown()].to_string())
                 .children_iter(values.iter().enumerate().map(|(i, val)| {
-                    DropdownItem::new()
+                    MenuItem::new()
                         .selected(selected_dropdown() == i)
                         .on_press(move |_| selected_dropdown.set(i))
                         .child(val.to_string())
