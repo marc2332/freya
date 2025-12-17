@@ -13,6 +13,23 @@ pub struct Timeout {
 }
 
 impl Timeout {
+    /// You most likely want to use [use_timeout].
+    pub fn create(duration: Duration) -> Self {
+        let mut elapsed = State::create(false);
+        let instant = State::create(Instant::now());
+
+        spawn(async move {
+            loop {
+                Timer::after(duration).await;
+                if instant.read().elapsed() >= duration && !elapsed() {
+                    elapsed.set(true);
+                }
+            }
+        });
+
+        Timeout { elapsed, instant }
+    }
+
     /// Check if the timeout has passed its specified [Duration].
     pub fn elapsed(&self) -> bool {
         (self.elapsed)()
@@ -31,20 +48,5 @@ impl Timeout {
 /// You can reset it by calling [Timeout::reset],
 /// use [Timeout::elapsed] to check if it has timed out or not.
 pub fn use_timeout(duration: impl FnOnce() -> Duration) -> Timeout {
-    use_hook(|| {
-        let duration = duration();
-        let mut elapsed = State::create(false);
-        let instant = State::create(Instant::now());
-
-        spawn(async move {
-            loop {
-                Timer::after(duration).await;
-                if instant.read().elapsed() >= duration && !elapsed() {
-                    elapsed.set(true);
-                }
-            }
-        });
-
-        Timeout { elapsed, instant }
-    })
+    use_hook(|| Timeout::create(duration()))
 }
