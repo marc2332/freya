@@ -83,6 +83,7 @@ pub struct TestingRunner {
 
     platform: Platform,
 
+    animation_clock: AnimationClock,
     ticker_sender: RenderingTickerSender,
 
     default_fonts: Vec<Cow<'static, str>>,
@@ -104,8 +105,7 @@ impl TestingRunner {
         ticker_sender.set_overflow(true);
         runner.provide_root_context(|| ticker);
 
-        let animation_clock = AnimationClock::new();
-        runner.provide_root_context(|| animation_clock.clone());
+        let animation_clock = runner.provide_root_context(|| AnimationClock::new());
 
         runner.provide_root_context(AssetCacher::create);
 
@@ -179,6 +179,7 @@ impl TestingRunner {
             font_manager,
             font_collection,
 
+            animation_clock,
             ticker_sender,
 
             default_fonts: default_fonts(),
@@ -382,6 +383,10 @@ impl TestingRunner {
             source: WheelSource::Device,
         });
         self.sync_and_update();
+    }
+
+    pub fn animation_clock(&mut self) -> &mut AnimationClock {
+        &mut self.animation_clock
     }
 
     pub fn render(&mut self) -> SkData {
