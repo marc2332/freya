@@ -57,10 +57,7 @@ pub fn portal_animates_position_change() {
     }
 
     let mut test = launch_test(portal_app);
-    test.sync_and_update();
-    test.sync_and_update();
-    test.sync_and_update();
-    test.sync_and_update();
+    test.poll(Duration::from_millis(1), Duration::from_millis(10));
 
     // Find labels and get initial positions
     let labels = test.find_many(|node, element| Label::try_downcast(element).map(|_| node));
@@ -84,7 +81,7 @@ pub fn portal_animates_position_change() {
     test.click_cursor((15.0, 15.0));
 
     // Poll partway through the animation (25ms out of 50ms)
-    test.poll(Duration::from_millis(2), Duration::from_millis(35));
+    test.poll(Duration::from_millis(2), Duration::from_millis(40));
 
     let labels = test.find_many(|node, element| Label::try_downcast(element).map(|_| node));
 
