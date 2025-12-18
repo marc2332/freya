@@ -59,7 +59,7 @@ fn app() -> impl IntoElement {
 </td>
 <td style="border:hidden;">
 
-![Freya Demo](https://github.com/user-attachments/assets/c9a118ce-e268-4fa4-9424-2156cd314cdc)
+![Freya Demo](https://github.com/user-attachments/assets/6f13c144-9557-4518-9b2e-93706568f355)
 
 </td>
 </table>
