@@ -10,6 +10,8 @@
 
 **Freya** is a **cross-platform and non-web** GUI library for Rust powered by 🎨 [Skia](https://skia.org/).
 
+> :warning: I recently rewrote a huge percentage of Freya in https://github.com/marc2332/freya/pull/1351, so the `main` branchd differs a lot from the latest stable release.
+
 #### Counter example
 <table>
 <tr>
