@@ -105,7 +105,7 @@ impl TestingRunner {
         ticker_sender.set_overflow(true);
         runner.provide_root_context(|| ticker);
 
-        let animation_clock = runner.provide_root_context(|| AnimationClock::new());
+        let animation_clock = runner.provide_root_context(AnimationClock::new);
 
         runner.provide_root_context(AssetCacher::create);
 
