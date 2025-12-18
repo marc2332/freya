@@ -348,6 +348,7 @@ const CODE: &str = r#"fn app() -> impl IntoElement {
         .center()
         .color((255, 255, 255))
         .background((15, 163, 242))
+        .font_weight(FontWeight::BOLD)
         .font_size(75.)
         .shadow((0., 4., 20., 4., (0, 0, 0, 80)))
         .child(count.read().to_string());
