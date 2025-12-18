@@ -97,16 +97,17 @@ cargo run --example counter
 You can also try [`freya-template`](https://github.com/marc2332/freya-template)
 
 ### Usage 📜
-`main` branch changes:
+`main` branch (Without Dioxus):
 
 ```toml
 freya = { git = "https://github.com/marc2332/freya", branch = "main" }
 ```
 
-Stable release:
+Stable release (With Dioxus):
 
 ```toml
 freya = "0.3"
+dioxus = { version = "0.6", features = ["macro", "hooks"], default-features = false }
 ```
 
 ### Contributing 🧙‍♂️
