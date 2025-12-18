@@ -1,5 +1,3 @@
-⚠️⚠️ **I am currently rewriting Freya in the `main` branch, source code for the latest stable release is in [0.3.4](https://github.com/marc2332/freya/tree/v0.3.4).** ⚠️⚠️
-
 # Freya 🦀
 
 <a href="https://freyaui.dev/"><img align="right" src="logo.svg" alt="Freya logo" width="150"/></a>
@@ -8,7 +6,7 @@
 [![Github Sponsors](https://img.shields.io/github/sponsors/marc2332?style=social)](https://github.com/sponsors/marc2332)
 [![codecov](https://codecov.io/github/marc2332/freya/branch/main/graph/badge.svg?token=APSGEC84B8)](https://codecov.io/github/marc2332/freya)
 
-[Website](https://freyaui.dev) | [Documentation](https://docs.rs/freya/0.3/freya) | [Discord](https://discord.gg/sYejxCdewG) | [Contact](#contact)
+[Website](https://freyaui.dev) | [Stable Documentation](https://docs.rs/freya/) | [Discord](https://discord.gg/sYejxCdewG) | [Contact](#contact)
 
 **Freya** is a **cross-platform and non-web** GUI library for Rust powered by 🎨 [Skia](https://skia.org/).
 
@@ -76,7 +74,7 @@ fn app() -> impl IntoElement {
 - **Animations**: Easily animate your UI whether its a size or a color. You have full control over its behavior.
 - **Text Editing**: Freya supports from simple to rich text editing. You can even make cloned editors, virtualized editors, etc.
 - **Cross-platform**: Your app will render and behave the same in Windows, Linux and MacOS.
-- **Efficient Global State**: Manage your app state efficiently using `freya-radio`.
+- **Efficient Global State**: Efficiently manage a global state based on topics subscription using `freya-radio`.
 - **Icons**: Easily add icons to your app using `freya-icons`, currently only supports Lucide.
 - **Devtools**: Inspect your app UI tree to to debug, or see performance state.
 - **Routing**: Manage your app UI in separate routes using `freya-router`.
@@ -96,15 +94,20 @@ cargo run --example counter
 You can also try [`freya-template`](https://github.com/marc2332/freya-template)
 
 ### Usage 📜
-Add **Freya** as dependency:
+`main` branch changes:
 
 ```toml
-freya = "0.4"
+freya = { git = "https://github.com/marc2332/freya", branch = "main" }
 ```
+
+Stable release:
+
+```toml
+freya = "0.3"
+```
+
 ### Contributing 🧙‍♂️
-
 If you are interested in contributing please make sure to have read the [Contributing](CONTRIBUTING.md) guide first!
-
 
 ### Contact 
 You may contact me for questions, collaboration or anything that comes to your mind at [marc@mespin.me](mailto:marc@mespin.me).
