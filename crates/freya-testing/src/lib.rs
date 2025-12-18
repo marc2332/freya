@@ -293,6 +293,17 @@ impl TestingRunner {
         }
     }
 
+    /// Poll async tasks and events every `step`, N times.
+    /// This is useful for animations for instance.
+    pub fn poll_n(&mut self, step: Duration, times: u32) {
+        for _ in 0..times {
+            self.handle_events_immediately();
+            self.sync_and_update();
+            std::thread::sleep(step);
+            self.ticker_sender.broadcast_blocking(()).unwrap();
+        }
+    }
+
     pub fn send_event(&mut self, platform_event: PlatformEvent) {
         let mut events_measurer_adapter = EventsMeasurerAdapter {
             tree: &mut self.tree.borrow_mut(),

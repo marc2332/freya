@@ -59,7 +59,7 @@ pub fn portal_animates_position_change() {
     let mut test = launch_test(portal_app);
     // Disable animations from the start
     test.animation_clock().disable();
-    test.poll(Duration::from_millis(1), Duration::from_millis(10));
+    test.poll_n(Duration::from_millis(1), 15);
 
     // Find labels and get initial positions
     let labels = test.find_many(|node, element| Label::try_downcast(element).map(|_| node));
@@ -87,8 +87,7 @@ pub fn portal_animates_position_change() {
     // Click the swap button
     test.click_cursor((15.0, 15.0));
 
-    // Multiple sync cycles to ensure state change and animation completion
-    test.poll(Duration::from_millis(1), Duration::from_millis(10));
+    test.poll_n(Duration::from_millis(1), 15);
     let labels = test.find_many(|node, element| Label::try_downcast(element).map(|_| node));
 
     let label_a = labels
