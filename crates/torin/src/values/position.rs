@@ -1,6 +1,9 @@
 use crate::{
     prelude::{
         Area,
+        AreaOf,
+        Available,
+        Parent,
         Point2D,
         Size2D,
     },
@@ -32,32 +35,6 @@ impl Default for Position {
 }
 
 impl Position {
-    pub fn swap_for(&mut self, mut other: Self) {
-        let old_positions = match self {
-            Self::Global(positions) | Self::Absolute(positions) | Self::Stacked(positions) => {
-                positions.clone()
-            }
-        };
-
-        match &mut other {
-            Self::Absolute(_) => {
-                *self = Self::new_absolute();
-            }
-            Self::Global(_) => {
-                *self = Self::new_global();
-            }
-            Self::Stacked(_) => {
-                *self = Self::new_stacked();
-            }
-        };
-
-        match self {
-            Self::Absolute(positions) | Self::Global(positions) | Self::Stacked(positions) => {
-                *positions = old_positions;
-            }
-        };
-    }
-
     pub fn new_absolute() -> Self {
         Self::Absolute(Box::new(PositionSides {
             top: None,
@@ -85,6 +62,36 @@ impl Position {
         }))
     }
 
+    #[must_use]
+    pub fn top(mut self, value: f32) -> Self {
+        self.position_mut().top = Some(value);
+        self
+    }
+
+    #[must_use]
+    pub fn right(mut self, value: f32) -> Self {
+        self.position_mut().right = Some(value);
+        self
+    }
+
+    #[must_use]
+    pub fn bottom(mut self, value: f32) -> Self {
+        self.position_mut().bottom = Some(value);
+        self
+    }
+
+    #[must_use]
+    pub fn left(mut self, value: f32) -> Self {
+        self.position_mut().left = Some(value);
+        self
+    }
+
+    fn position_mut(&mut self) -> &mut PositionSides {
+        match self {
+            Self::Absolute(position) | Self::Global(position) | Self::Stacked(position) => position,
+        }
+    }
+
     pub fn is_stacked(&self) -> bool {
         matches!(self, Self::Stacked { .. })
     }
@@ -97,47 +104,15 @@ impl Position {
         matches!(self, Self::Global { .. })
     }
 
-    pub fn set_top(&mut self, value: f32) {
-        match self {
-            Self::Absolute(position) | Self::Global(position) | Self::Stacked(position) => {
-                position.top = Some(value);
-            }
-        }
-    }
-
-    pub fn set_right(&mut self, value: f32) {
-        match self {
-            Self::Absolute(position) | Self::Global(position) | Self::Stacked(position) => {
-                position.right = Some(value);
-            }
-        }
-    }
-
-    pub fn set_bottom(&mut self, value: f32) {
-        match self {
-            Self::Absolute(position) | Self::Global(position) | Self::Stacked(position) => {
-                position.bottom = Some(value);
-            }
-        }
-    }
-
-    pub fn set_left(&mut self, value: f32) {
-        match self {
-            Self::Absolute(position) | Self::Global(position) | Self::Stacked(position) => {
-                position.left = Some(value);
-            }
-        }
-    }
-
-    pub fn get_origin(
+    pub(crate) fn get_origin(
         &self,
-        available_parent_area: &Area,
-        parent_area: &Area,
-        area_size: &Size2D,
+        available_parent_area: &AreaOf<Available>,
+        parent_area: &AreaOf<Parent>,
+        area_size: Size2D,
         root_area: &Area,
     ) -> Point2D {
         match self {
-            Self::Stacked(_) => available_parent_area.origin,
+            Self::Stacked(_) => available_parent_area.origin.cast_unit(),
             Self::Absolute(absolute_position) => {
                 let PositionSides {
                     top,

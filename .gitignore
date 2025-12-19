@@ -8,3 +8,5 @@ bacon.toml
 .envrc
 .direnv
 **/.DS_Store
+*demo-*.png
+other

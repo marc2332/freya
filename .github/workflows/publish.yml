@@ -10,12 +10,20 @@ env:
 
 jobs:
   publish:
-    name: Publish to crate.io
+    name: Publish to crates.io
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Install the nightly toolchain
-        uses: dtolnay/rust-toolchain@nightly
-      - run: cargo +nightly publish --features skia-engine --workspace -Z package-workspace --exclude "examples" --exclude "freya-installer-example"
+        with:
+          submodules: true
+      - name: Remove unused programs
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+      - name: Install linux dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev
+      - name: Install the rust toolchain
+        uses: dtolnay/rust-toolchain@1.90
+      - run: cargo publish --features skia-engine --workspace --exclude "examples" --exclude "website"
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}

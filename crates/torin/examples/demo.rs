@@ -11,14 +11,14 @@ struct DemoNode {
 }
 
 #[derive(Default)]
-pub struct DemoDOM {
+pub struct DemoTree {
     nodes: HashMap<usize, DemoNode>,
 }
 
-impl DemoDOM {
-    /// Add the Node to the DOM
+impl DemoTree {
+    /// Add the Node to the Tree
     pub fn add(&mut self, node_id: usize, parent: Option<usize>, children: Vec<usize>, node: Node) {
-        // Get the parent's height in the DOM
+        // Get the parent's height in the Tree
         let parent_height = parent
             .map(|p| self.nodes.get(&p).unwrap().height)
             .unwrap_or(0);
@@ -42,7 +42,7 @@ impl DemoDOM {
         self.nodes.get_mut(&node_id).unwrap().node = node;
     }
 
-    // Recursively remove a Node from the DOM
+    // Recursively remove a Node from the Tree
     pub fn remove(&mut self, node_id: usize) {
         let node = self.nodes.remove(&node_id).unwrap();
 
@@ -56,7 +56,7 @@ impl DemoDOM {
     }
 }
 
-impl DOMAdapter<usize> for DemoDOM {
+impl TreeAdapter<usize> for DemoTree {
     fn children_of(&mut self, node_id: &usize) -> Vec<usize> {
         self.nodes
             .get(node_id)
@@ -76,25 +76,18 @@ impl DOMAdapter<usize> for DemoDOM {
         self.nodes.get(node_id).map(|c| c.node.clone())
     }
 
-    fn is_node_valid(&mut self, _node_id: &usize) -> bool {
-        // We assume all the nodes in this Demo DOM are actually available for measurement
-        // This could not be the case in certain implementations of DOMs, for example Dioxus has a concept of
-        // Placeholders, which are elements in the DOM but are not to be measured
-        true
-    }
-
     fn root_id(&self) -> usize {
-        0 // We assume 0 is the root ID of the DOM
+        0 // We assume 0 is the root ID of the Tree
     }
 }
 
 fn main() {
     let mut layout = Torin::<usize>::new();
 
-    let mut demo_dom = DemoDOM::default();
+    let mut demo_tree = DemoTree::default();
 
     // Node A: Root Node
-    demo_dom.add(
+    demo_tree.add(
         0,       // ID
         None,    // Parent ID
         vec![1], // Children IDs
@@ -108,7 +101,7 @@ fn main() {
     );
 
     // Node B: Child of the Root Node
-    demo_dom.add(
+    demo_tree.add(
         1,       // ID
         Some(0), // Parent ID
         vec![2], // Children IDs
@@ -120,7 +113,7 @@ fn main() {
     );
 
     // Node C: Child of Node B
-    demo_dom.add(
+    demo_tree.add(
         2,       // ID
         Some(1), // Parent ID
         vec![],  // Children IDs
@@ -131,16 +124,16 @@ fn main() {
         ),
     );
 
-    // Measure our DOM layout
+    // Measure our Tree layout
     layout.measure(
         0,                                                              // Root ID
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)), // Available Area
         &mut None::<NoopMeasurer>,
-        &mut demo_dom,
+        &mut demo_tree,
     );
 
     // Mutate the Node B
-    demo_dom.set_node(
+    demo_tree.set_node(
         1, // ID
         Node::from_size_and_direction(
             Size::Percentage(Length::new(80.0)), // We change this from 50% to 80%
@@ -156,14 +149,14 @@ fn main() {
     }
 
     // Make Torin calculate from what Node it is the most efficiente to start measuring again
-    layout.find_best_root(&mut demo_dom);
+    layout.find_best_root(&mut demo_tree);
 
     // If Torin wasn't able to find a Root candidate, it will just use the ID we pass as fist argument
     layout.measure(
         0,                                                              // Fallback Root ID
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)), // Available Area
         &mut None::<NoopMeasurer>,
-        &mut demo_dom,
+        &mut demo_tree,
     );
 
     println!("\nSecond measurement");

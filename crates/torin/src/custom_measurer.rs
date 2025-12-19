@@ -1,13 +1,13 @@
-use std::sync::Arc;
+use std::{
+    any::Any,
+    rc::Rc,
+};
 
 use crate::{
-    dom_adapter::NodeKey,
     geometry::Size2D,
     node::Node,
-    prelude::{
-        Area,
-        SendAnyMap,
-    },
+    prelude::Area,
+    tree_adapter::NodeKey,
 };
 
 pub trait LayoutMeasurer<Key: NodeKey> {
@@ -16,13 +16,20 @@ pub trait LayoutMeasurer<Key: NodeKey> {
         node_id: Key,
         node: &Node,
         size: &Size2D,
-    ) -> Option<(Size2D, Arc<SendAnyMap>)>;
+    ) -> Option<(Size2D, Rc<dyn Any>)>;
 
-    fn should_measure(&mut self, node_id: Key) -> bool;
+    fn should_hook_measurement(&mut self, node_id: Key) -> bool;
 
     fn should_measure_inner_children(&mut self, node_id: Key) -> bool;
 
-    fn notify_layout_references(&self, _node_id: Key, _area: Area, _inner_sizes: Size2D) {}
+    fn notify_layout_references(
+        &mut self,
+        _node_id: Key,
+        _area: Area,
+        _visible_area: Area,
+        _inner_sizes: Size2D,
+    ) {
+    }
 }
 
 // No-op measurer, use it when you don't need one.
@@ -34,11 +41,11 @@ impl LayoutMeasurer<usize> for NoopMeasurer {
         _node_id: usize,
         _node: &Node,
         _size: &Size2D,
-    ) -> Option<(Size2D, Arc<SendAnyMap>)> {
+    ) -> Option<(Size2D, Rc<dyn Any>)> {
         None
     }
 
-    fn should_measure(&mut self, _node_id: usize) -> bool {
+    fn should_hook_measurement(&mut self, _node_id: usize) -> bool {
         false
     }
 

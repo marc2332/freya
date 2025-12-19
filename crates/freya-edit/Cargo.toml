@@ -1,0 +1,28 @@
+[package]
+name = "freya-edit"
+version = "0.4.0-alpha.5"
+description = "Text Editing APIs for Freya"
+edition = "2024"
+readme = "../../README.md"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+homepage = "https://github.com/marc2332/freya"
+repository = "https://github.com/marc2332/freya"
+keywords = ["freya"]
+categories = ["gui"]
+
+[features]
+skia-engine = ["freya-core/skia-engine"]
+
+[dependencies]
+freya-clipboard = { workspace = true }
+freya-core = { workspace = true }
+torin = { workspace = true }
+
+ropey = { workspace = true }
+bitflags = { workspace = true }
+keyboard-types = { workspace = true }
+
+[dev-dependencies]
+freya = { path = "../freya" }
+freya-testing = { path = "../freya-testing" }

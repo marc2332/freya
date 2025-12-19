@@ -14,8 +14,8 @@ pub fn same_height_different_parent() {
     //   /     \
     // 4-5     6-7
 
-    let mut mocked_dom = TestingDOM::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1],
@@ -25,7 +25,7 @@ pub fn same_height_different_parent() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![2, 3],
@@ -35,7 +35,7 @@ pub fn same_height_different_parent() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(1),
         vec![4, 5],
@@ -45,7 +45,7 @@ pub fn same_height_different_parent() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         3,
         Some(1),
         vec![6, 7],
@@ -55,7 +55,7 @@ pub fn same_height_different_parent() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         4,
         Some(2),
         vec![],
@@ -65,7 +65,7 @@ pub fn same_height_different_parent() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         5,
         Some(2),
         vec![],
@@ -75,7 +75,7 @@ pub fn same_height_different_parent() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         6,
         Some(3),
         vec![],
@@ -85,7 +85,7 @@ pub fn same_height_different_parent() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         7,
         Some(3),
         vec![],
@@ -100,7 +100,7 @@ pub fn same_height_different_parent() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     // 5 get 7 get invalidated, which will force Torin to find a root candidate that
@@ -115,7 +115,7 @@ pub fn same_height_different_parent() {
     layout.invalidate(5);
     layout.invalidate(7);
 
-    layout.find_best_root(&mut mocked_dom);
+    layout.find_best_root(&mut mocked_tree);
 
     assert_eq!(layout.get_root_candidate(), RootNodeCandidate::Valid(1));
 }
@@ -131,8 +131,8 @@ pub fn same_height_same_parent() {
     //   /     \
     // 4-5     6-7
 
-    let mut mocked_dom = TestingDOM::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1],
@@ -142,7 +142,7 @@ pub fn same_height_same_parent() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![2, 3],
@@ -152,7 +152,7 @@ pub fn same_height_same_parent() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(1),
         vec![4, 5],
@@ -162,7 +162,7 @@ pub fn same_height_same_parent() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         3,
         Some(1),
         vec![6, 7],
@@ -172,7 +172,7 @@ pub fn same_height_same_parent() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         4,
         Some(2),
         vec![],
@@ -182,7 +182,7 @@ pub fn same_height_same_parent() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         5,
         Some(2),
         vec![],
@@ -192,7 +192,7 @@ pub fn same_height_same_parent() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         6,
         Some(3),
         vec![],
@@ -202,7 +202,7 @@ pub fn same_height_same_parent() {
             Direction::Vertical,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         7,
         Some(3),
         vec![],
@@ -217,7 +217,7 @@ pub fn same_height_same_parent() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     // 6 and 7 get invalidated, which will force Torin to find a root candidate that
@@ -232,7 +232,7 @@ pub fn same_height_same_parent() {
     layout.invalidate(6);
     layout.invalidate(7);
 
-    layout.find_best_root(&mut mocked_dom);
+    layout.find_best_root(&mut mocked_tree);
 
     assert_eq!(layout.get_root_candidate(), RootNodeCandidate::Valid(3));
 }

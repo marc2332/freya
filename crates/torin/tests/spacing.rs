@@ -7,8 +7,8 @@ use torin::{
 pub fn spacing() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1, 2],
@@ -19,7 +19,7 @@ pub fn spacing() {
             Length::new(40.0),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![],
@@ -29,7 +29,7 @@ pub fn spacing() {
             Direction::Horizontal,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(0),
         vec![3, 4],
@@ -40,7 +40,7 @@ pub fn spacing() {
             Length::new(50.0),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         3,
         Some(2),
         vec![],
@@ -50,7 +50,7 @@ pub fn spacing() {
             Direction::Horizontal,
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         4,
         Some(2),
         vec![],
@@ -65,26 +65,26 @@ pub fn spacing() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
-        layout.get(1).unwrap().area,
+        layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(0.0, 240.0), Size2D::new(600.0, 600.0)),
     );
 
     assert_eq!(
-        layout.get(3).unwrap().area,
+        layout.get(&3).unwrap().area,
         Rect::new(Point2D::new(0.0, 240.0), Size2D::new(300.0, 300.0)),
     );
 
     assert_eq!(
-        layout.get(4).unwrap().area,
+        layout.get(&4).unwrap().area,
         Rect::new(Point2D::new(350.0, 240.0), Size2D::new(200.0, 200.0)),
     );
 }

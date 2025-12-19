@@ -1,0 +1,24 @@
+[package]
+name = "freya-sdk"
+version = "0.4.0-alpha.5"
+edition = "2024"
+description = "Generic utils for Freya apps."
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://github.com/marc2332/freya"
+repository = "https://github.com/marc2332/freya"
+keywords = ["freya"]
+categories = ["gui"]
+
+[features]
+tokio = ["dep:tokio"]
+all = ["tokio"]
+skia-engine = ["freya-core/skia-engine"]
+
+[dependencies]
+freya-core = { workspace = true }
+async-io = { workspace = true }
+
+# Tokio
+tokio = { workspace = true, features = ["sync"], optional = true }

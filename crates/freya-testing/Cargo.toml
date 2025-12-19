@@ -1,0 +1,31 @@
+[package]
+name = "freya-testing"
+version = "0.4.0-alpha.5"
+description = "Headless testing APIs for Freya"
+edition = "2024"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui"]
+categories = ["gui", "asynchronous"]
+
+[package.metadata.docs.rs]
+features = ["freya-engine/mocked-engine"]
+
+[features]
+mocked-engine = ["freya-engine/mocked-engine"]
+skia-engine = ["freya-engine/skia-engine"]
+
+[dependencies]
+freya-core = { workspace = true, features = ["debug-integrity"] }
+freya-engine = { workspace = true }
+torin = { workspace = true }
+ragnarok = { workspace = true }
+freya-components = { workspace = true }
+freya-clipboard = { workspace = true }
+futures-channel = { workspace = true }
+
+# Accessibility
+accesskit = { workspace = true }

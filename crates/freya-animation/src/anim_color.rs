@@ -1,0 +1,168 @@
+use std::time::Duration;
+
+use freya_core::prelude::Color;
+
+use crate::{
+    easing::{
+        Function,
+        apply_value,
+    },
+    hook::{
+        AnimDirection,
+        AnimatedValue,
+        Ease,
+        ReadAnimatedValue,
+    },
+};
+
+/// Animate a color.
+#[derive(Clone, PartialEq, Default)]
+pub struct AnimColor {
+    origin: Color,
+    destination: Color,
+    time: Duration,
+    ease: Ease,
+    function: Function,
+
+    value: Color,
+}
+
+impl AnimColor {
+    pub fn new(origin: impl Into<Color>, destination: impl Into<Color>) -> Self {
+        let origin = origin.into();
+        Self {
+            origin,
+            destination: destination.into(),
+            time: Duration::default(),
+            ease: Ease::default(),
+            function: Function::default(),
+
+            value: origin,
+        }
+    }
+
+    /// Set the animation duration using milliseconds. Use `Self::duration` if you want to specify the duration in another form.
+    pub fn time(mut self, time: u64) -> Self {
+        self.time = Duration::from_millis(time);
+        self
+    }
+
+    /// Set the animation duration using milliseconds.
+    pub fn duration(mut self, duration: Duration) -> Self {
+        self.time = duration;
+        self
+    }
+
+    /// Set the easing type. See `Ease` for all the types.
+    pub fn ease(mut self, ease: Ease) -> Self {
+        self.ease = ease;
+        self
+    }
+
+    /// Set the easing function. See `Function` for all the types.
+    pub fn function(mut self, function: Function) -> Self {
+        self.function = function;
+        self
+    }
+
+    /// Read the value of the [AnimColor] as a String.
+    pub fn value(&self) -> Color {
+        self.value
+    }
+}
+
+impl From<&AnimColor> for Color {
+    fn from(value: &AnimColor) -> Self {
+        value.value()
+    }
+}
+
+impl AnimatedValue for AnimColor {
+    fn prepare(&mut self, direction: AnimDirection) {
+        match direction {
+            AnimDirection::Forward => self.value = self.origin,
+            AnimDirection::Reverse => {
+                self.value = self.destination;
+            }
+        }
+    }
+
+    fn is_finished(&self, index: u128, direction: AnimDirection) -> bool {
+        match direction {
+            AnimDirection::Forward => {
+                index >= self.time.as_millis()
+                    && self.value.r() == self.destination.r()
+                    && self.value.g() == self.destination.g()
+                    && self.value.b() == self.destination.b()
+                    && self.value.a() == self.destination.a()
+            }
+            AnimDirection::Reverse => {
+                index >= self.time.as_millis()
+                    && self.value.r() == self.origin.r()
+                    && self.value.g() == self.origin.g()
+                    && self.value.b() == self.origin.b()
+                    && self.value.a() == self.origin.a()
+            }
+        }
+    }
+
+    fn advance(&mut self, index: u128, direction: AnimDirection) {
+        let (origin, destination) = match direction {
+            AnimDirection::Forward => (self.origin, self.destination),
+            AnimDirection::Reverse => (self.destination, self.origin),
+        };
+        let r = apply_value(
+            origin.r() as f32,
+            destination.r() as f32,
+            index.min(self.time.as_millis()),
+            self.time,
+            self.ease,
+            self.function,
+        );
+        let g = apply_value(
+            origin.g() as f32,
+            destination.g() as f32,
+            index.min(self.time.as_millis()),
+            self.time,
+            self.ease,
+            self.function,
+        );
+        let b = apply_value(
+            origin.b() as f32,
+            destination.b() as f32,
+            index.min(self.time.as_millis()),
+            self.time,
+            self.ease,
+            self.function,
+        );
+        let a = apply_value(
+            origin.a() as f32,
+            destination.a() as f32,
+            index.min(self.time.as_millis()),
+            self.time,
+            self.ease,
+            self.function,
+        );
+        self.value = Color::from_argb(a as u8, r as u8, g as u8, b as u8);
+    }
+
+    fn finish(&mut self, direction: AnimDirection) {
+        self.advance(self.time.as_millis(), direction);
+    }
+
+    /// Reverses the `origin` and the `destination` of the [AnimColor].
+    fn into_reversed(self) -> Self {
+        Self {
+            origin: self.destination,
+            destination: self.origin,
+            ..self
+        }
+    }
+}
+
+impl ReadAnimatedValue for AnimColor {
+    type Output = Color;
+    fn value(&self) -> Self::Output {
+        self.value()
+    }
+}

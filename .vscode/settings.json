@@ -1,7 +1,0 @@
-// {
-//     "rust-analyzer.cargo.features": [
-//         "tracing-subscriber",
-//         "docs",
-//         "fade-cached-incremental-areas"
-//     ]
-// }
