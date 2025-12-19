@@ -13,7 +13,7 @@ jobs:
   skia-bindings-sync:
     runs-on: ubuntu-latest
     concurrency:
-      group: rust-sync
+      group: rust-sync-${{ github.ref_name }}
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v5

@@ -13,7 +13,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     concurrency:
-      group: rust-build
+      group: rust-build-${{ github.ref_name }}
       cancel-in-progress: true
 
     steps:
