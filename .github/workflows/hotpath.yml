@@ -87,7 +87,7 @@ jobs:
             --head-metrics '${{ steps.head_alloc_metrics.outputs.metrics }}' \
             --base-metrics '${{ steps.base_alloc_metrics.outputs.metrics }}' \
             --pr-number '${{ github.event.pull_request.number }}' \
-            --github-token '$GH_TOKEN'
+            --github-token $GH_TOKEN
 
       - name: Post PR comment - timing mode
         env:
@@ -95,7 +95,7 @@ jobs:
         run: |
           set -euo pipefail
           hotpath-ci profile-pr \
-            --head-metrics '${{ steps.head_timing_metrics.outputs.metrics }}' \
+            --head-metrics '${{ steps.head_timing_meetrics.outputs.metrics }}' \
             --base-metrics '${{ steps.base_timing_metrics.outputs.metrics }}' \
             --pr-number '${{ github.event.pull_request.number }}' \
-            --github-token '$GH_TOKEN'
+            --github-token $GH_TOKEN
