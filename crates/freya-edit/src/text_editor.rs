@@ -14,28 +14,69 @@ use keyboard_types::{
 use crate::editor_history::EditorHistory;
 
 /// Holds the position of a cursor in a text
-#[derive(Clone, Default, PartialEq, Debug)]
-pub struct TextCursor(usize);
+#[derive(Clone, PartialEq, Debug)]
+pub enum TextSelection {
+    Cursor(usize),
+    Range { from: usize, to: usize },
+}
 
-impl TextCursor {
-    /// Construct a new [TextCursor]
-    pub fn new(pos: usize) -> Self {
-        Self(pos)
+impl TextSelection {
+    /// Create a new [TextSelection::Cursor]
+    pub fn new_cursor(pos: usize) -> Self {
+        Self::Cursor(pos)
+    }
+
+    /// Create a new [TextSelection::Range]
+    pub fn new_range((from, to): (usize, usize)) -> Self {
+        Self::Range { from, to }
     }
 
     /// Get the position
     pub fn pos(&self) -> usize {
-        self.0
+        self.end()
     }
 
-    /// Set the position
-    pub fn set(&mut self, pos: usize) {
-        self.0 = pos;
+    /// Set the selection as a cursor
+    pub fn set_as_cursor(&mut self) {
+        *self = Self::Cursor(self.end())
     }
 
-    /// Write the position
-    pub fn write(&mut self) -> &mut usize {
-        &mut self.0
+    /// Set the selection as a range
+    pub fn set_as_range(&mut self) {
+        *self = Self::Range {
+            from: self.start(),
+            to: self.end(),
+        }
+    }
+
+    /// Get the start of the cursor position.
+    pub fn start(&self) -> usize {
+        match self {
+            Self::Cursor(pos) => *pos,
+            Self::Range { from, .. } => *from,
+        }
+    }
+
+    /// Get the end of the cursor position.
+    pub fn end(&self) -> usize {
+        match self {
+            Self::Cursor(pos) => *pos,
+            Self::Range { to, .. } => *to,
+        }
+    }
+
+    /// Move the end position of the cursor.
+    pub fn move_to(&mut self, position: usize) {
+        match self {
+            Self::Cursor(pos) => *pos = position,
+            Self::Range { to, .. } => {
+                *to = position;
+            }
+        }
+    }
+
+    pub fn is_range(&self) -> bool {
+        matches!(self, Self::Range { .. })
     }
 }
 
@@ -114,11 +155,11 @@ pub trait TextEditor {
     /// Total of utf16 code units
     fn len_utf16_cu(&self) -> usize;
 
-    /// Get a readable cursor
-    fn cursor(&self) -> &TextCursor;
+    /// Get a readable text selection
+    fn selection(&self) -> &TextSelection;
 
-    /// Get a mutable cursor
-    fn cursor_mut(&mut self) -> &mut TextCursor;
+    /// Get a mutable reference to text selection
+    fn selection_mut(&mut self) -> &mut TextSelection;
 
     /// Get the cursor row
     fn cursor_row(&self) -> usize {
@@ -137,11 +178,6 @@ pub trait TextEditor {
         pos - line_char
     }
 
-    /// Get the cursor row and col
-    fn cursor_row_and_col(&self) -> (usize, usize) {
-        (self.cursor_row(), self.cursor_col())
-    }
-
     /// Move the cursor 1 line down
     fn cursor_down(&mut self) -> bool {
         let old_row = self.cursor_row();
@@ -154,14 +190,14 @@ pub trait TextEditor {
                 let new_row_char = self.char_to_utf16_cu(self.line_to_char(new_row));
                 let new_row_len = self.line(new_row).unwrap().utf16_len();
                 let new_col = old_col.min(new_row_len.saturating_sub(1));
-                self.cursor_mut().set(new_row_char + new_col);
+                self.selection_mut().move_to(new_row_char + new_col);
 
                 true
             }
             Ordering::Equal => {
                 let end = self.len_utf16_cu();
                 // Reached max
-                self.cursor_mut().set(end);
+                self.selection_mut().move_to(end);
 
                 true
             }
@@ -182,13 +218,13 @@ pub trait TextEditor {
         if pos > 0 {
             // Reached max
             if old_row == 0 {
-                self.cursor_mut().set(0);
+                self.selection_mut().move_to(0);
             } else {
                 let new_row = old_row - 1;
                 let new_row_char = self.char_to_utf16_cu(self.line_to_char(new_row));
                 let new_row_len = self.line(new_row).unwrap().utf16_len();
                 let new_col = old_col.min(new_row_len.saturating_sub(1));
-                self.cursor_mut().set(new_row_char + new_col);
+                self.selection_mut().move_to(new_row_char + new_col);
             }
 
             true
@@ -200,7 +236,8 @@ pub trait TextEditor {
     /// Move the cursor 1 char to the right
     fn cursor_right(&mut self) -> bool {
         if self.cursor_pos() < self.len_utf16_cu() {
-            *self.cursor_mut().write() += 1;
+            let to = self.selection().end() + 1;
+            self.selection_mut().move_to(to);
 
             true
         } else {
@@ -211,7 +248,8 @@ pub trait TextEditor {
     /// Move the cursor 1 char to the left
     fn cursor_left(&mut self) -> bool {
         if self.cursor_pos() > 0 {
-            *self.cursor_mut().write() -= 1;
+            let to = self.selection().end() - 1;
+            self.selection_mut().move_to(to);
 
             true
         } else {
@@ -221,12 +259,12 @@ pub trait TextEditor {
 
     /// Get the cursor position
     fn cursor_pos(&self) -> usize {
-        self.cursor().pos()
+        self.selection().pos()
     }
 
-    /// Set the cursor position
-    fn set_cursor_pos(&mut self, pos: usize) {
-        self.cursor_mut().set(pos);
+    /// Move the cursor position
+    fn move_cursor_to(&mut self, pos: usize) {
+        self.selection_mut().move_to(pos);
     }
 
     // Check if has any selection at all
@@ -245,13 +283,7 @@ pub trait TextEditor {
     fn set_selection(&mut self, selected: (usize, usize));
 
     // Measure a new text selection
-    fn measure_new_selection(&self, from: usize, to: usize, editor_id: usize) -> (usize, usize);
-
-    // Measure a new cursor
-    fn measure_new_cursor(&self, to: usize, editor_id: usize) -> TextCursor;
-
-    // Update the selection with a new cursor
-    fn expand_selection_to_cursor(&mut self);
+    fn measure_selection(&self, to: usize, editor_id: usize) -> TextSelection;
 
     // Process a Keyboard event
     fn process_key(
@@ -265,6 +297,7 @@ pub trait TextEditor {
         let mut event = TextEvent::empty();
 
         let selection = self.get_selection();
+        let skip_arrows_movement = !modifiers.contains(Modifiers::SHIFT) && selection.is_some();
 
         match key {
             Key::Shift => {}
@@ -275,62 +308,46 @@ pub trait TextEditor {
             }
             Key::ArrowDown => {
                 if modifiers.contains(Modifiers::SHIFT) {
-                    self.expand_selection_to_cursor();
+                    self.selection_mut().set_as_range();
                 } else {
-                    self.clear_selection();
+                    self.selection_mut().set_as_cursor();
                 }
 
-                if self.cursor_down() {
+                if !skip_arrows_movement && self.cursor_down() {
                     event.insert(TextEvent::CURSOR_CHANGED);
-                }
-
-                if modifiers.contains(Modifiers::SHIFT) {
-                    self.expand_selection_to_cursor();
                 }
             }
             Key::ArrowLeft => {
                 if modifiers.contains(Modifiers::SHIFT) {
-                    self.expand_selection_to_cursor();
+                    self.selection_mut().set_as_range();
                 } else {
-                    self.clear_selection();
+                    self.selection_mut().set_as_cursor();
                 }
 
-                if self.cursor_left() {
+                if !skip_arrows_movement && self.cursor_left() {
                     event.insert(TextEvent::CURSOR_CHANGED);
-                }
-
-                if modifiers.contains(Modifiers::SHIFT) {
-                    self.expand_selection_to_cursor();
                 }
             }
             Key::ArrowRight => {
                 if modifiers.contains(Modifiers::SHIFT) {
-                    self.expand_selection_to_cursor();
+                    self.selection_mut().set_as_range();
                 } else {
-                    self.clear_selection();
+                    self.selection_mut().set_as_cursor();
                 }
 
-                if self.cursor_right() {
+                if !skip_arrows_movement && self.cursor_right() {
                     event.insert(TextEvent::CURSOR_CHANGED);
-                }
-
-                if modifiers.contains(Modifiers::SHIFT) {
-                    self.expand_selection_to_cursor();
                 }
             }
             Key::ArrowUp => {
                 if modifiers.contains(Modifiers::SHIFT) {
-                    self.expand_selection_to_cursor();
+                    self.selection_mut().set_as_range();
                 } else {
-                    self.clear_selection();
+                    self.selection_mut().set_as_cursor();
                 }
 
-                if self.cursor_up() {
+                if !skip_arrows_movement && self.cursor_up() {
                     event.insert(TextEvent::CURSOR_CHANGED);
-                }
-
-                if modifiers.contains(Modifiers::SHIFT) {
-                    self.expand_selection_to_cursor();
                 }
             }
             Key::Backspace if allow_changes => {
@@ -339,12 +356,12 @@ pub trait TextEditor {
 
                 if let Some((start, end)) = selection {
                     self.remove(start..end);
-                    self.set_cursor_pos(start);
+                    self.move_cursor_to(start);
                     event.insert(TextEvent::TEXT_CHANGED);
                 } else if cursor_pos > 0 {
                     // Remove the character to the left if there is any
                     let removed_text_len = self.remove(cursor_pos - 1..cursor_pos);
-                    self.set_cursor_pos(cursor_pos - removed_text_len);
+                    self.move_cursor_to(cursor_pos - removed_text_len);
                     event.insert(TextEvent::TEXT_CHANGED);
                 }
             }
@@ -354,7 +371,7 @@ pub trait TextEditor {
 
                 if let Some((start, end)) = selection {
                     self.remove(start..end);
-                    self.set_cursor_pos(start);
+                    self.move_cursor_to(start);
                     event.insert(TextEvent::TEXT_CHANGED);
                 } else if cursor_pos < self.len_utf16_cu() {
                     // Remove the character to the right if there is any
@@ -375,7 +392,7 @@ pub trait TextEditor {
                 let text = " ".repeat(self.get_identation().into());
                 let cursor_pos = self.cursor_pos();
                 self.insert(&text, cursor_pos);
-                self.set_cursor_pos(cursor_pos + text.chars().count());
+                self.move_cursor_to(cursor_pos + text.chars().count());
 
                 event.insert(TextEvent::TEXT_CHANGED);
             }
@@ -391,7 +408,7 @@ pub trait TextEditor {
                         let selection = self.get_selection_range();
                         if let Some((start, end)) = selection {
                             self.remove(start..end);
-                            self.set_cursor_pos(start);
+                            self.move_cursor_to(start);
                             event.insert(TextEvent::TEXT_CHANGED);
                         }
 
@@ -424,7 +441,7 @@ pub trait TextEditor {
                             let text = self.get_selected_text().unwrap();
                             self.remove(start..end);
                             Clipboard::set(text).ok();
-                            self.set_cursor_pos(start);
+                            self.move_cursor_to(start);
                             event.insert(TextEvent::TEXT_CHANGED);
                         }
                     }
@@ -435,12 +452,12 @@ pub trait TextEditor {
                             let selection = self.get_selection_range();
                             if let Some((start, end)) = selection {
                                 self.remove(start..end);
-                                self.set_cursor_pos(start);
+                                self.move_cursor_to(start);
                             }
                             let cursor_pos = self.cursor_pos();
                             self.insert(&copied_text, cursor_pos);
                             let last_idx = copied_text.encode_utf16().count() + cursor_pos;
-                            self.set_cursor_pos(last_idx);
+                            self.move_cursor_to(last_idx);
                             event.insert(TextEvent::TEXT_CHANGED);
                         }
                     }
@@ -450,7 +467,7 @@ pub trait TextEditor {
                         let undo_result = self.undo();
 
                         if let Some(idx) = undo_result {
-                            self.set_cursor_pos(idx);
+                            self.move_cursor_to(idx);
                             event.insert(TextEvent::TEXT_CHANGED);
                         }
                     }
@@ -460,7 +477,7 @@ pub trait TextEditor {
                         let redo_result = self.redo();
 
                         if let Some(idx) = redo_result {
-                            self.set_cursor_pos(idx);
+                            self.move_cursor_to(idx);
                             event.insert(TextEvent::TEXT_CHANGED);
                         }
                     }
@@ -470,7 +487,7 @@ pub trait TextEditor {
                         let selection = self.get_selection_range();
                         if let Some((start, end)) = selection {
                             self.remove(start..end);
-                            self.set_cursor_pos(start);
+                            self.move_cursor_to(start);
                             event.insert(TextEvent::TEXT_CHANGED);
                         }
 
@@ -478,13 +495,13 @@ pub trait TextEditor {
                             // Inserts a character
                             let cursor_pos = self.cursor_pos();
                             let inserted_text_len = self.insert_char(ch, cursor_pos);
-                            self.set_cursor_pos(cursor_pos + inserted_text_len);
+                            self.move_cursor_to(cursor_pos + inserted_text_len);
                             event.insert(TextEvent::TEXT_CHANGED);
                         } else {
                             // Inserts a text
                             let cursor_pos = self.cursor_pos();
                             let inserted_text_len = self.insert(character, cursor_pos);
-                            self.set_cursor_pos(cursor_pos + inserted_text_len);
+                            self.move_cursor_to(cursor_pos + inserted_text_len);
                             event.insert(TextEvent::TEXT_CHANGED);
                         }
                     }
