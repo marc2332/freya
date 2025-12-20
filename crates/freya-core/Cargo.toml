@@ -69,8 +69,6 @@ freya-engine = { path = "../freya-engine", features = ["skia-engine"] }
 
 [features]
 hotpath = ["hotpath/hotpath"]
-hotpath-alloc = ["hotpath/hotpath-alloc"]
-hotpath-off = ["hotpath/hotpath-off"]
 debug-integrity = []
 devtools = ["serde"]
 serde = ["dep:serde"]
