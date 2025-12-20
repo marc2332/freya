@@ -62,21 +62,55 @@ impl EditableEvent<'_> {
                 let mut text_editor = editor.write();
                 text_editor.clear_selection();
 
-                let char_position = paragraph.get_glyph_position_at_coordinate(
-                    location.mul(*scale_factor).to_i32().to_tuple(),
-                );
-                let new_cursor =
-                    text_editor.measure_new_cursor(char_position.position as usize, editor_id);
+                match EventsCombos::pressed(location) {
+                    PressEventType::Triple => {
+                        let char_position = paragraph.get_glyph_position_at_coordinate(
+                            location.mul(*scale_factor).to_i32().to_tuple(),
+                        );
+                        let new_cursor = text_editor
+                            .measure_new_cursor(char_position.position as usize, editor_id);
 
-                // Only update and clear the selection if the cursor has changed
-                if *text_editor.cursor() != new_cursor {
-                    *text_editor.cursor_mut() = new_cursor;
-                    if let TextDragging::FromCursorToPoint { cursor: from, .. } = &*dragging.peek()
-                    {
-                        let to = text_editor.cursor_pos();
-                        text_editor.set_selection((*from, to));
-                    } else {
-                        text_editor.clear_selection();
+                        // Get the line start char and its length
+                        let line = text_editor.rope().char_to_line(new_cursor.pos());
+                        let line_char = text_editor.rope().line_to_char(line);
+                        let line_len = text_editor.rope().line(line).len_utf16_cu();
+
+                        // Select the whole line
+                        text_editor.set_selection((line_char, line_char + line_len));
+                    }
+                    PressEventType::Double => {
+                        let char_position = paragraph.get_glyph_position_at_coordinate(
+                            location.mul(*scale_factor).to_i32().to_tuple(),
+                        );
+                        let new_cursor = text_editor
+                            .measure_new_cursor(char_position.position as usize, editor_id);
+
+                        // Find word boundaries
+                        let selection = text_editor.find_word_boundaries(new_cursor.pos());
+
+                        // Set cursor to end of word and select the word
+                        *text_editor.cursor_mut() = new_cursor.clone();
+                        text_editor.set_selection(selection);
+                    }
+                    PressEventType::Single => {
+                        let char_position = paragraph.get_glyph_position_at_coordinate(
+                            location.mul(*scale_factor).to_i32().to_tuple(),
+                        );
+                        let new_cursor = text_editor
+                            .measure_new_cursor(char_position.position as usize, editor_id);
+
+                        // Only update and clear the selection if the cursor has changed
+                        if *text_editor.cursor() != new_cursor {
+                            *text_editor.cursor_mut() = new_cursor;
+                            if let TextDragging::FromCursorToPoint { cursor: from, .. } =
+                                &*dragging.peek()
+                            {
+                                let to = text_editor.cursor_pos();
+                                text_editor.set_selection((*from, to));
+                            } else {
+                                text_editor.clear_selection();
+                            }
+                        }
                     }
                 }
             }

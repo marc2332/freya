@@ -695,6 +695,310 @@ fn highlights_shift_click_single_line_multiple_editors() {
 }
 
 #[test]
+fn double_click_select_word() {
+    let mut utils = launch_test(|| {
+        let mut editable = use_editable(
+            || "Hello Rustaceans\nHello World".to_string(),
+            EditableConfig::new,
+            EditableMode::MultipleLinesSingleEditor,
+        );
+        let holder = use_state(ParagraphHolder::default);
+        let editor = editable.editor().read();
+        let cursor_pos = editor.cursor_pos();
+
+        let on_mouse_down = move |e: Event<MouseEventData>| {
+            editable.process_event(EditableEvent::Down {
+                location: e.element_location,
+                editor_id: 0,
+                holder: &holder.read(),
+            });
+        };
+
+        let on_global_key_down = move |e: Event<KeyboardEventData>| {
+            editable.process_event(EditableEvent::KeyDown {
+                key: &e.key,
+                modifiers: e.modifiers,
+            });
+        };
+
+        rect()
+            .font_family("NotoSans")
+            .width(Size::fill())
+            .height(Size::fill())
+            .background((255, 255, 255))
+            .on_mouse_down(on_mouse_down)
+            .child(
+                paragraph()
+                    .holder(holder.read().clone())
+                    .height(Size::percent(50.0))
+                    .width(Size::fill())
+                    .cursor_index(cursor_pos)
+                    .cursor_color((0, 0, 0))
+                    .on_global_key_down(on_global_key_down)
+                    .highlights(editor.get_visible_selection(0).map(|h| vec![h]))
+                    .span(Span::new(editor.to_string())),
+            )
+            .child(
+                label()
+                    .color((0, 0, 0))
+                    .height(Size::percent(50.0))
+                    .text(format!("{}:{}", editor.cursor_row(), editor.cursor_col())),
+            )
+    });
+    utils.set_fonts(HashMap::from_iter([(
+        "NotoSans",
+        include_bytes!("./NotoSans-Regular.ttf").as_slice(),
+    )]));
+    utils.set_default_fonts(&["NotoSans".into()]);
+
+    // Double click on "Rustaceans" (around position 50, 3)
+    utils.click_cursor((50.0, 3.0));
+    utils.click_cursor((50.0, 3.0));
+
+    let highlights = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.highlights.clone()));
+
+    // Should select "Rustaceans" (positions 6-16)
+    assert_eq!(highlights, Some(vec![(6, 16)]));
+}
+
+#[test]
+fn triple_click_select_line() {
+    let mut utils = launch_test(|| {
+        let mut editable = use_editable(
+            || "Hello Rustaceans\nHello World".to_string(),
+            EditableConfig::new,
+            EditableMode::MultipleLinesSingleEditor,
+        );
+        let holder = use_state(ParagraphHolder::default);
+        let editor = editable.editor().read();
+        let cursor_pos = editor.cursor_pos();
+
+        let on_mouse_down = move |e: Event<MouseEventData>| {
+            editable.process_event(EditableEvent::Down {
+                location: e.element_location,
+                editor_id: 0,
+                holder: &holder.read(),
+            });
+        };
+
+        let on_global_key_down = move |e: Event<KeyboardEventData>| {
+            editable.process_event(EditableEvent::KeyDown {
+                key: &e.key,
+                modifiers: e.modifiers,
+            });
+        };
+
+        rect()
+            .font_family("NotoSans")
+            .width(Size::fill())
+            .height(Size::fill())
+            .background((255, 255, 255))
+            .on_mouse_down(on_mouse_down)
+            .child(
+                paragraph()
+                    .holder(holder.read().clone())
+                    .height(Size::percent(50.0))
+                    .width(Size::fill())
+                    .cursor_index(cursor_pos)
+                    .cursor_color((0, 0, 0))
+                    .on_global_key_down(on_global_key_down)
+                    .highlights(editor.get_visible_selection(0).map(|h| vec![h]))
+                    .span(Span::new(editor.to_string())),
+            )
+            .child(
+                label()
+                    .color((0, 0, 0))
+                    .height(Size::percent(50.0))
+                    .text(format!("{}:{}", editor.cursor_row(), editor.cursor_col())),
+            )
+    });
+    utils.set_fonts(HashMap::from_iter([(
+        "NotoSans",
+        include_bytes!("./NotoSans-Regular.ttf").as_slice(),
+    )]));
+    utils.set_default_fonts(&["NotoSans".into()]);
+
+    // Triple click on first line
+    utils.click_cursor((50.0, 3.0));
+    utils.click_cursor((50.0, 3.0));
+    utils.click_cursor((50.0, 3.0));
+
+    let highlights = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.highlights.clone()));
+
+    // Should select entire first line "Hello Rustaceans\n" (positions 0-17)
+    assert_eq!(highlights, Some(vec![(0, 17)]));
+}
+
+#[test]
+fn double_click_select_word_single_line_multiple_editors() {
+    let mut utils = launch_test(|| {
+        let mut editable = use_editable(
+            || "Hello Rustaceans\nHello World".to_string(),
+            EditableConfig::new,
+            EditableMode::SingleLineMultipleEditors,
+        );
+
+        let editor = editable.editor().read();
+
+        let on_global_key_down = move |e: Event<KeyboardEventData>| {
+            editable.process_event(EditableEvent::KeyDown {
+                key: &e.key,
+                modifiers: e.modifiers,
+            });
+        };
+
+        rect()
+            .font_family("NotoSans")
+            .width(Size::fill())
+            .height(Size::fill())
+            .background((255, 255, 255))
+            .on_global_key_down(on_global_key_down)
+            .children_iter(editor.lines().enumerate().map(move |(i, line)| {
+                let line = line.text.to_string();
+                from_fn((), line, move |line| {
+                    let holder = use_state(ParagraphHolder::default);
+                    let editor = editable.editor().read();
+
+                    let is_selected = editor.cursor_row() == i;
+                    let cursor_index = if is_selected {
+                        Some(editor.cursor_col())
+                    } else {
+                        None
+                    };
+
+                    let on_mouse_down = move |e: Event<MouseEventData>| {
+                        editable.process_event(EditableEvent::Down {
+                            location: e.element_location,
+                            editor_id: i,
+                            holder: &holder.read(),
+                        });
+                    };
+
+                    paragraph()
+                        .holder(holder.read().clone())
+                        .width(Size::fill())
+                        .height(Size::px(30.0))
+                        .max_lines(1)
+                        .cursor_index(cursor_index)
+                        .cursor_color((0, 0, 0))
+                        .on_mouse_down(on_mouse_down)
+                        .highlights(editor.get_visible_selection(i).map(|h| vec![h]))
+                        .span(Span::new(line.clone()))
+                        .into()
+                })
+            }))
+            .child(
+                label()
+                    .color((0, 0, 0))
+                    .height(Size::percent(50.0))
+                    .text(format!("{}:{}", editor.cursor_row(), editor.cursor_col())),
+            )
+    });
+    utils.set_fonts(HashMap::from_iter([(
+        "NotoSans",
+        include_bytes!("./NotoSans-Regular.ttf").as_slice(),
+    )]));
+    utils.set_default_fonts(&["NotoSans".into()]);
+
+    // Double click on "World" in second line
+    utils.click_cursor((50.0, 35.0));
+    utils.click_cursor((50.0, 35.0));
+
+    let highlights = utils.find_many(|_, e| {
+        let para = Paragraph::try_downcast(e)?;
+        Some(para.highlights.clone())
+    });
+
+    // Second line should have "World" selected (positions 6-11)
+    assert_eq!(highlights[1], vec![(6, 11)]);
+}
+
+#[test]
+fn triple_click_select_line_single_line_multiple_editors() {
+    let mut utils = launch_test(|| {
+        let mut editable = use_editable(
+            || "Hello Rustaceans\nHello World".to_string(),
+            EditableConfig::new,
+            EditableMode::SingleLineMultipleEditors,
+        );
+
+        let editor = editable.editor().read();
+
+        let on_global_key_down = move |e: Event<KeyboardEventData>| {
+            editable.process_event(EditableEvent::KeyDown {
+                key: &e.key,
+                modifiers: e.modifiers,
+            });
+        };
+
+        rect()
+            .font_family("NotoSans")
+            .width(Size::fill())
+            .height(Size::fill())
+            .background((255, 255, 255))
+            .on_global_key_down(on_global_key_down)
+            .children_iter(editor.lines().enumerate().map(move |(i, line)| {
+                let line = line.text.to_string();
+                from_fn((), line, move |line| {
+                    let holder = use_state(ParagraphHolder::default);
+                    let editor = editable.editor().read();
+
+                    let is_selected = editor.cursor_row() == i;
+                    let cursor_index = if is_selected {
+                        Some(editor.cursor_col())
+                    } else {
+                        None
+                    };
+
+                    let on_mouse_down = move |e: Event<MouseEventData>| {
+                        editable.process_event(EditableEvent::Down {
+                            location: e.element_location,
+                            editor_id: i,
+                            holder: &holder.read(),
+                        });
+                    };
+
+                    paragraph()
+                        .holder(holder.read().clone())
+                        .width(Size::fill())
+                        .height(Size::px(30.0))
+                        .max_lines(1)
+                        .cursor_index(cursor_index)
+                        .cursor_color((0, 0, 0))
+                        .on_mouse_down(on_mouse_down)
+                        .highlights(editor.get_visible_selection(i).map(|h| vec![h]))
+                        .span(Span::new(line.clone()))
+                        .into()
+                })
+            }))
+            .child(
+                label()
+                    .color((0, 0, 0))
+                    .height(Size::percent(50.0))
+                    .text(format!("{}:{}", editor.cursor_row(), editor.cursor_col())),
+            )
+    });
+    utils.set_fonts(HashMap::from_iter([(
+        "NotoSans",
+        include_bytes!("./NotoSans-Regular.ttf").as_slice(),
+    )]));
+    utils.set_default_fonts(&["NotoSans".into()]);
+
+    // Triple click on second line
+    utils.click_cursor((50.0, 35.0));
+    utils.click_cursor((50.0, 35.0));
+    utils.click_cursor((50.0, 35.0));
+
+    let highlights = utils.find_many(|_, e| {
+        let para = Paragraph::try_downcast(e)?;
+        Some(para.highlights.clone())
+    });
+
+    // Second line should be fully selected "Hello World" (positions 0-11)
+    assert_eq!(highlights[1], vec![(0, 11)]);
+}
+
+#[test]
 fn highlight_all_text() {
     let mut utils = launch_test(|| {
         let mut editable = use_editable(

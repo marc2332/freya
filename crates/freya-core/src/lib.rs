@@ -8,6 +8,7 @@ pub mod element;
 pub mod elements;
 pub mod event_handler;
 pub mod events;
+pub mod events_combos;
 pub mod extended_hashmap;
 pub mod helpers;
 pub mod hooks;
@@ -98,6 +99,7 @@ pub mod prelude {
         },
         events::data::*,
         events::*,
+        events_combos::*,
         hooks::use_id::*,
         layers::Layer,
         lifecycle::{
