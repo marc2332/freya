@@ -7,7 +7,7 @@ jobs:
   hotpath:
     runs-on: ubuntu-latest
     concurrency:
-      group: hotpath
+      group: hotpath-${{ github.ref_name }}
       cancel-in-progress: true
     permissions:
       pull-requests: write

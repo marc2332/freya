@@ -13,7 +13,7 @@ jobs:
     name: run benchmark
     runs-on: ubuntu-latest
     concurrency:
-      group: benchmarks
+      group: benchmarks-${{ github.ref_name }}
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v6
