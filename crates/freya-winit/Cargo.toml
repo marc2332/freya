@@ -73,8 +73,6 @@ freya = { path = "../freya" }
 
 [features]
 hotpath = ["hotpath/hotpath"]
-hotpath-alloc = ["hotpath/hotpath-alloc"]
-hotpath-off = ["hotpath/hotpath-off"]
 vulkan = ["dep:ash", "dep:ash-window", "freya-engine/vulkan"]
 skia-engine = ["freya-engine/skia-engine"]
 tray = ["dep:tray-icon", "dep:gtk", "dep:objc2-core-foundation"]

@@ -83,25 +83,19 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          HEAD_METRICS=$(cat /tmp/metrics/head_alloc.json)
-          BASE_METRICS=$(cat /tmp/metrics/base_alloc.json)
-          PR_NUMBER=$(cat /tmp/metrics/pr_number.txt)
           hotpath-ci profile-pr \
-            --head-metrics "$HEAD_METRICS" \
-            --base-metrics "$BASE_METRICS" \
-            --github-token "$GH_TOKEN" \
-            --pr-number "$PR_NUMBER"
+            --head-metrics '${{ steps.head_alloc_metrics.outputs.metrics }}' \
+            --base-metrics '${{ steps.base_alloc_metrics.outputs.metrics }}' \
+            --pr-number '${{ github.event.pull_request.number }}' \
+            --github-token $GH_TOKEN
 
       - name: Post PR comment - timing mode
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          HEAD_METRICS=$(cat /tmp/metrics/head_timing.json)
-          BASE_METRICS=$(cat /tmp/metrics/base_timing.json)
-          PR_NUMBER=$(cat /tmp/metrics/pr_number.txt)
           hotpath-ci profile-pr \
-            --head-metrics "$HEAD_METRICS" \
-            --base-metrics "$BASE_METRICS" \
-            --github-token "$GH_TOKEN" \
-            --pr-number "$PR_NUMBER"
+            --head-metrics '${{ steps.head_timing_metrics.outputs.metrics }}' \
+            --base-metrics '${{ steps.base_timing_metrics.outputs.metrics }}' \
+            --pr-number '${{ github.event.pull_request.number }}' \
+            --github-token $GH_TOKEN
