@@ -9,11 +9,7 @@ fn main() {
 
 fn app() -> impl IntoElement {
     let holder = use_state(ParagraphHolder::default);
-    let mut editable = use_editable(
-        || "Hello, World!".to_string(),
-        EditableConfig::new,
-        EditableMode::MultipleLinesSingleEditor,
-    );
+    let mut editable = use_editable(|| "Hello, World!".to_string(), EditableConfig::new);
     let focus = use_focus();
 
     paragraph()
@@ -31,14 +27,14 @@ fn app() -> impl IntoElement {
             focus.request_focus();
             editable.process_event(EditableEvent::Down {
                 location: e.element_location,
-                editor_id: 0,
+                editor_line: EditorLine::SingleParagraph,
                 holder: &holder.read(),
             });
         })
         .on_mouse_move(move |e: Event<MouseEventData>| {
             editable.process_event(EditableEvent::Move {
                 location: e.element_location,
-                editor_id: 0,
+                editor_line: EditorLine::SingleParagraph,
                 holder: &holder.read(),
             });
         })

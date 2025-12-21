@@ -5,12 +5,8 @@ publish = false
 
 [features]
 hotpath = ["freya-core/hotpath", "ragnarok/hotpath", "freya-winit/hotpath"]
-hotpath-alloc = [
-  "hotpath/hotpath-alloc",
-]
-hotpath-off = [
-  "hotpath/hotpath-off",
-]
+hotpath-alloc = ["hotpath/hotpath-alloc"]
+hotpath-off = ["hotpath/hotpath-off"]
 devtools = ["freya/devtools"]
 performance = ["freya/performance"]
 plot = ["freya/plot"]

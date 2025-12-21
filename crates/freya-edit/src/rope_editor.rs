@@ -11,12 +11,12 @@ use ropey::{
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::{
+    EditorLine,
     TextSelection,
     editor_history::{
         EditorHistory,
         HistoryChange,
     },
-    mode::EditableMode,
     text_editor::{
         Line,
         TextEditor,
@@ -28,7 +28,6 @@ pub struct RopeEditor {
     pub(crate) rope: Rope,
     pub(crate) selection: TextSelection,
     pub(crate) identation: u8,
-    pub(crate) mode: EditableMode,
     pub(crate) history: EditorHistory,
 }
 
@@ -44,14 +43,12 @@ impl RopeEditor {
         text: String,
         selection: TextSelection,
         identation: u8,
-        mode: EditableMode,
         history: EditorHistory,
     ) -> Self {
         Self {
             rope: Rope::from_str(&text),
             selection,
             identation,
-            mode,
             history,
         }
     }
@@ -181,66 +178,68 @@ impl TextEditor for RopeEditor {
         }
     }
 
-    fn get_visible_selection(&self, editor_id: usize) -> Option<(usize, usize)> {
+    fn get_visible_selection(&self, line_index: EditorLine) -> Option<(usize, usize)> {
         let (selected_from, selected_to) = match self.selection {
             TextSelection::Cursor(_) => return None,
             TextSelection::Range { from, to } => (from, to),
         };
 
-        if self.mode == EditableMode::SingleLineMultipleEditors {
-            let selected_from_row = self.char_to_line(self.utf16_cu_to_char(selected_from));
-            let selected_to_row = self.char_to_line(self.utf16_cu_to_char(selected_to));
+        match line_index {
+            EditorLine::Paragraph(line_index) => {
+                let selected_from_row = self.char_to_line(self.utf16_cu_to_char(selected_from));
+                let selected_to_row = self.char_to_line(self.utf16_cu_to_char(selected_to));
 
-            let editor_row_idx = self.char_to_utf16_cu(self.line_to_char(editor_id));
-            let selected_from_row_idx = self.char_to_utf16_cu(self.line_to_char(selected_from_row));
-            let selected_to_row_idx = self.char_to_utf16_cu(self.line_to_char(selected_to_row));
+                let editor_row_idx = self.char_to_utf16_cu(self.line_to_char(line_index));
+                let selected_from_row_idx =
+                    self.char_to_utf16_cu(self.line_to_char(selected_from_row));
+                let selected_to_row_idx = self.char_to_utf16_cu(self.line_to_char(selected_to_row));
 
-            let selected_from_col_idx = selected_from - selected_from_row_idx;
-            let selected_to_col_idx = selected_to - selected_to_row_idx;
+                let selected_from_col_idx = selected_from - selected_from_row_idx;
+                let selected_to_col_idx = selected_to - selected_to_row_idx;
 
-            // Between starting line and endling line
-            if (editor_id > selected_from_row && editor_id < selected_to_row)
-                || (editor_id < selected_from_row && editor_id > selected_to_row)
-            {
-                let len = self.line(editor_id).unwrap().utf16_len();
-                return Some((0, len));
-            }
+                // Between starting line and endling line
+                if (line_index > selected_from_row && line_index < selected_to_row)
+                    || (line_index < selected_from_row && line_index > selected_to_row)
+                {
+                    let len = self.line(line_index).unwrap().utf16_len();
+                    return Some((0, len));
+                }
 
-            match selected_from_row.cmp(&selected_to_row) {
-                // Selection direction is from bottom -> top
-                Ordering::Greater => {
-                    if selected_from_row == editor_id {
-                        // Starting line
-                        Some((0, selected_from_col_idx))
-                    } else if selected_to_row == editor_id {
-                        // Ending line
-                        let len = self.line(selected_to_row).unwrap().utf16_len();
-                        Some((selected_to_col_idx, len))
-                    } else {
-                        None
+                match selected_from_row.cmp(&selected_to_row) {
+                    // Selection direction is from bottom -> top
+                    Ordering::Greater => {
+                        if selected_from_row == line_index {
+                            // Starting line
+                            Some((0, selected_from_col_idx))
+                        } else if selected_to_row == line_index {
+                            // Ending line
+                            let len = self.line(selected_to_row).unwrap().utf16_len();
+                            Some((selected_to_col_idx, len))
+                        } else {
+                            None
+                        }
                     }
-                }
-                // Selection direction is from top -> bottom
-                Ordering::Less => {
-                    if selected_from_row == editor_id {
-                        // Starting line
-                        let len = self.line(selected_from_row).unwrap().utf16_len();
-                        Some((selected_from_col_idx, len))
-                    } else if selected_to_row == editor_id {
-                        // Ending line
-                        Some((0, selected_to_col_idx))
-                    } else {
-                        None
+                    // Selection direction is from top -> bottom
+                    Ordering::Less => {
+                        if selected_from_row == line_index {
+                            // Starting line
+                            let len = self.line(selected_from_row).unwrap().utf16_len();
+                            Some((selected_from_col_idx, len))
+                        } else if selected_to_row == line_index {
+                            // Ending line
+                            Some((0, selected_to_col_idx))
+                        } else {
+                            None
+                        }
                     }
+                    Ordering::Equal if selected_from_row == line_index => {
+                        // Starting and endline line are the same
+                        Some((selected_from - editor_row_idx, selected_to - editor_row_idx))
+                    }
+                    _ => None,
                 }
-                Ordering::Equal if selected_from_row == editor_id => {
-                    // Starting and endline line are the same
-                    Some((selected_from - editor_row_idx, selected_to - editor_row_idx))
-                }
-                _ => None,
             }
-        } else {
-            Some((selected_from, selected_to))
+            EditorLine::SingleParagraph => Some((selected_from, selected_to)),
         }
     }
 
@@ -258,15 +257,18 @@ impl TextEditor for RopeEditor {
         self.selection_mut().move_to(end);
     }
 
-    fn measure_selection(&self, to: usize, editor_id: usize) -> TextSelection {
+    fn measure_selection(&self, to: usize, line_index: EditorLine) -> TextSelection {
         let mut selection = self.selection().clone();
 
-        if self.mode == EditableMode::SingleLineMultipleEditors {
-            let row_char = self.line_to_char(editor_id);
-            let pos = self.char_to_utf16_cu(row_char) + to;
-            selection.move_to(pos);
-        } else {
-            selection.move_to(to);
+        match line_index {
+            EditorLine::Paragraph(line_index) => {
+                let row_char = self.line_to_char(line_index);
+                let pos = self.char_to_utf16_cu(row_char) + to;
+                selection.move_to(pos);
+            }
+            EditorLine::SingleParagraph => {
+                selection.move_to(to);
+            }
         }
 
         selection

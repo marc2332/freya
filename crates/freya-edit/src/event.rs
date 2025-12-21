@@ -8,6 +8,7 @@ use torin::prelude::CursorPoint;
 
 use crate::{
     EditableConfig,
+    EditorLine,
     TextSelection,
     rope_editor::RopeEditor,
     text_editor::{
@@ -20,12 +21,12 @@ pub enum EditableEvent<'a> {
     Release,
     Move {
         location: CursorPoint,
-        editor_id: usize,
+        editor_line: EditorLine,
         holder: &'a ParagraphHolder,
     },
     Down {
         location: CursorPoint,
-        editor_id: usize,
+        editor_line: EditorLine,
         holder: &'a ParagraphHolder,
     },
     KeyDown {
@@ -47,7 +48,7 @@ impl EditableEvent<'_> {
         match self {
             EditableEvent::Down {
                 location,
-                editor_id,
+                editor_line,
                 holder,
             } => {
                 let holder = holder.0.borrow();
@@ -74,7 +75,7 @@ impl EditableEvent<'_> {
                             location.mul(*scale_factor).to_i32().to_tuple(),
                         );
                         let press_selection = text_editor
-                            .measure_selection(char_position.position as usize, editor_id);
+                            .measure_selection(char_position.position as usize, editor_line);
 
                         // Get the line start char and its length
                         let line = text_editor.rope().char_to_line(press_selection.pos());
@@ -95,7 +96,7 @@ impl EditableEvent<'_> {
                             location.mul(*scale_factor).to_i32().to_tuple(),
                         );
                         let press_selection = text_editor
-                            .measure_selection(char_position.position as usize, editor_id);
+                            .measure_selection(char_position.position as usize, editor_line);
 
                         // Find word boundaries
                         let range = text_editor.find_word_boundaries(press_selection.pos());
@@ -113,7 +114,7 @@ impl EditableEvent<'_> {
                             location.mul(*scale_factor).to_i32().to_tuple(),
                         );
                         let new_selection = text_editor
-                            .measure_selection(char_position.position as usize, editor_id);
+                            .measure_selection(char_position.position as usize, editor_line);
 
                         // Move the cursor
                         if current_selection != new_selection {
@@ -124,7 +125,7 @@ impl EditableEvent<'_> {
             }
             EditableEvent::Move {
                 location,
-                editor_id,
+                editor_line,
                 holder,
             } => {
                 if dragging.peek().clicked {
@@ -147,7 +148,7 @@ impl EditableEvent<'_> {
 
                     let current_selection = editor.peek().selection().clone();
 
-                    let new_selection = editor.peek().measure_selection(to, editor_id);
+                    let new_selection = editor.peek().measure_selection(to, editor_line);
 
                     // Update the cursor if it has changed
                     if current_selection != new_selection {

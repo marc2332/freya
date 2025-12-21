@@ -13,7 +13,6 @@ fn multiple_lines_single_editor() {
         let mut editable = use_editable(
             || "Hello Rustaceans\nHello Rustaceans".to_string(),
             EditableConfig::new,
-            EditableMode::MultipleLinesSingleEditor,
         );
         let holder = use_state(ParagraphHolder::default);
         let editor = editable.editor().read();
@@ -22,7 +21,7 @@ fn multiple_lines_single_editor() {
         let on_mouse_down = move |e: Event<MouseEventData>| {
             editable.process_event(EditableEvent::Down {
                 location: e.element_location,
-                editor_id: 0,
+                editor_line: EditorLine::SingleParagraph,
                 holder: &holder.read(),
             });
         };
@@ -132,7 +131,6 @@ fn single_line_multiple_editors() {
         let mut editable = use_editable(
             || "Hello Rustaceans\nHello World".to_string(),
             EditableConfig::new,
-            EditableMode::SingleLineMultipleEditors,
         );
 
         let editor = editable.editor().read();
@@ -157,7 +155,7 @@ fn single_line_multiple_editors() {
                     let on_mouse_down = move |e: Event<MouseEventData>| {
                         editable.process_event(EditableEvent::Down {
                             location: e.element_location,
-                            editor_id: 0,
+                            editor_line: EditorLine::SingleParagraph,
                             holder: &holder.read(),
                         });
                     };
@@ -214,7 +212,6 @@ fn highlight_multiple_lines_single_editor() {
         let mut editable = use_editable(
             || "Hello Rustaceans\nHello Rustaceans".to_string(),
             EditableConfig::new,
-            EditableMode::MultipleLinesSingleEditor,
         );
         let holder = use_state(ParagraphHolder::default);
         let editor = editable.editor().read();
@@ -223,14 +220,14 @@ fn highlight_multiple_lines_single_editor() {
         let on_mouse_down = move |e: Event<MouseEventData>| {
             editable.process_event(EditableEvent::Down {
                 location: e.element_location,
-                editor_id: 0,
+                editor_line: EditorLine::SingleParagraph,
                 holder: &holder.read(),
             });
         };
         let on_mouse_move = move |e: Event<MouseEventData>| {
             editable.process_event(EditableEvent::Move {
                 location: e.element_location,
-                editor_id: 0,
+                editor_line: EditorLine::SingleParagraph,
                 holder: &holder.read(),
             });
         };
@@ -248,7 +245,11 @@ fn highlight_multiple_lines_single_editor() {
             .child(
                 paragraph()
                     .holder(holder.read().clone())
-                    .highlights(editor.get_visible_selection(0).map(|h| vec![h]))
+                    .highlights(
+                        editor
+                            .get_visible_selection(EditorLine::SingleParagraph)
+                            .map(|h| vec![h]),
+                    )
                     .width(Size::fill())
                     .height(Size::percent(50.0))
                     .cursor_index(cursor_pos)
@@ -288,7 +289,6 @@ fn highlights_single_line_multiple_editors() {
         let mut editable = use_editable(
             || "Hello Rustaceans\nHello Rustaceans".to_string(),
             EditableConfig::new,
-            EditableMode::SingleLineMultipleEditors,
         );
 
         let editor = editable.editor().read();
@@ -321,14 +321,14 @@ fn highlights_single_line_multiple_editors() {
                     let on_mouse_move = move |e: Event<MouseEventData>| {
                         editable.process_event(EditableEvent::Move {
                             location: e.element_location,
-                            editor_id: i,
+                            editor_line: EditorLine::Paragraph(i),
                             holder: &holder.read(),
                         });
                     };
                     let on_mouse_down = move |e: Event<MouseEventData>| {
                         editable.process_event(EditableEvent::Down {
                             location: e.element_location,
-                            editor_id: i,
+                            editor_line: EditorLine::Paragraph(i),
                             holder: &holder.read(),
                         });
                     };
@@ -342,7 +342,11 @@ fn highlights_single_line_multiple_editors() {
                         .cursor_color((0, 0, 0))
                         .on_mouse_down(on_mouse_down)
                         .on_mouse_move(on_mouse_move)
-                        .highlights(editor.get_visible_selection(i).map(|h| vec![h]))
+                        .highlights(
+                            editor
+                                .get_visible_selection(EditorLine::Paragraph(i))
+                                .map(|h| vec![h]),
+                        )
                         .span(Span::new(line.clone()))
                         .into()
                 })
@@ -380,11 +384,7 @@ fn highlights_single_line_multiple_editors() {
 #[test]
 fn special_text_editing() {
     let mut utils = launch_test(|| {
-        let mut editable = use_editable(
-            || "你好世界\n👋".to_string(),
-            EditableConfig::new,
-            EditableMode::MultipleLinesSingleEditor,
-        );
+        let mut editable = use_editable(|| "你好世界\n👋".to_string(), EditableConfig::new);
         let holder = use_state(ParagraphHolder::default);
         let editor = editable.editor().read();
         let cursor_pos = editor.cursor_pos();
@@ -392,7 +392,7 @@ fn special_text_editing() {
         let on_mouse_down = move |e: Event<MouseEventData>| {
             editable.process_event(EditableEvent::Down {
                 location: e.element_location,
-                editor_id: 0,
+                editor_line: EditorLine::SingleParagraph,
                 holder: &holder.read(),
             });
         };
@@ -443,7 +443,6 @@ fn backspace_remove() {
         let mut editable = use_editable(
             || "Hello Rustaceans\nHello Rustaceans".to_string(),
             EditableConfig::new,
-            EditableMode::MultipleLinesSingleEditor,
         );
         let holder = use_state(ParagraphHolder::default);
         let editor = editable.editor().read();
@@ -452,7 +451,7 @@ fn backspace_remove() {
         let on_mouse_down = move |e: Event<MouseEventData>| {
             editable.process_event(EditableEvent::Down {
                 location: e.element_location,
-                editor_id: 0,
+                editor_line: EditorLine::SingleParagraph,
                 holder: &holder.read(),
             });
         };
@@ -506,7 +505,6 @@ fn highlight_shift_click_multiple_lines_single_editor() {
         let mut editable = use_editable(
             || "Hello Rustaceans\nHello Rustaceans".to_string(),
             EditableConfig::new,
-            EditableMode::MultipleLinesSingleEditor,
         );
 
         let holder = use_state(ParagraphHolder::default);
@@ -516,7 +514,7 @@ fn highlight_shift_click_multiple_lines_single_editor() {
         let on_mouse_down = move |e: Event<MouseEventData>| {
             editable.process_event(EditableEvent::Down {
                 location: e.element_location,
-                editor_id: 0,
+                editor_line: EditorLine::SingleParagraph,
                 holder: &holder.read(),
             });
         };
@@ -524,7 +522,7 @@ fn highlight_shift_click_multiple_lines_single_editor() {
         let on_mouse_move = move |e: Event<MouseEventData>| {
             editable.process_event(EditableEvent::Move {
                 location: e.element_location,
-                editor_id: 0,
+                editor_line: EditorLine::SingleParagraph,
                 holder: &holder.read(),
             });
         };
@@ -551,7 +549,11 @@ fn highlight_shift_click_multiple_lines_single_editor() {
                     .height(Size::percent(50.0))
                     .cursor_index(cursor_pos)
                     .cursor_color((0, 0, 0))
-                    .highlights(editor.get_visible_selection(0).map(|h| vec![h]))
+                    .highlights(
+                        editor
+                            .get_visible_selection(EditorLine::SingleParagraph)
+                            .map(|h| vec![h]),
+                    )
                     .on_mouse_down(on_mouse_down)
                     .on_mouse_move(on_mouse_move)
                     .on_global_key_down(on_global_key_down)
@@ -593,7 +595,6 @@ fn highlights_shift_click_single_line_multiple_editors() {
         let mut editable = use_editable(
             || "Hello Rustaceans\nHello Rustaceans".to_string(),
             EditableConfig::new,
-            EditableMode::SingleLineMultipleEditors,
         );
         let editor = editable.editor().read();
 
@@ -617,7 +618,10 @@ fn highlights_shift_click_single_line_multiple_editors() {
                         let line = line.text.to_string();
                         from_fn((), line, move |line| {
                             let holder = use_state(ParagraphHolder::default);
-                            let highlights = editable.editor().read().get_visible_selection(i);
+                            let highlights = editable
+                                .editor()
+                                .read()
+                                .get_visible_selection(EditorLine::Paragraph(i));
 
                             let is_line_selected = editable.editor().read().cursor_row() == i;
                             let character_index = if is_line_selected {
@@ -629,7 +633,7 @@ fn highlights_shift_click_single_line_multiple_editors() {
                             let on_mouse_down = move |e: Event<MouseEventData>| {
                                 editable.process_event(EditableEvent::Down {
                                     location: e.element_location,
-                                    editor_id: i,
+                                    editor_line: EditorLine::Paragraph(i),
                                     holder: &holder.read(),
                                 });
                             };
@@ -637,7 +641,7 @@ fn highlights_shift_click_single_line_multiple_editors() {
                             let on_mouse_move = move |e: Event<MouseEventData>| {
                                 editable.process_event(EditableEvent::Move {
                                     location: e.element_location,
-                                    editor_id: i,
+                                    editor_line: EditorLine::Paragraph(i),
                                     holder: &holder.read(),
                                 });
                             };
@@ -700,7 +704,6 @@ fn double_click_select_word() {
         let mut editable = use_editable(
             || "Hello Rustaceans\nHello World".to_string(),
             EditableConfig::new,
-            EditableMode::MultipleLinesSingleEditor,
         );
         let holder = use_state(ParagraphHolder::default);
         let editor = editable.editor().read();
@@ -709,7 +712,7 @@ fn double_click_select_word() {
         let on_mouse_down = move |e: Event<MouseEventData>| {
             editable.process_event(EditableEvent::Down {
                 location: e.element_location,
-                editor_id: 0,
+                editor_line: EditorLine::SingleParagraph,
                 holder: &holder.read(),
             });
         };
@@ -735,7 +738,11 @@ fn double_click_select_word() {
                     .cursor_index(cursor_pos)
                     .cursor_color((0, 0, 0))
                     .on_global_key_down(on_global_key_down)
-                    .highlights(editor.get_visible_selection(0).map(|h| vec![h]))
+                    .highlights(
+                        editor
+                            .get_visible_selection(EditorLine::SingleParagraph)
+                            .map(|h| vec![h]),
+                    )
                     .span(Span::new(editor.to_string())),
             )
             .child(
@@ -767,7 +774,6 @@ fn triple_click_select_line() {
         let mut editable = use_editable(
             || "Hello Rustaceans\nHello World".to_string(),
             EditableConfig::new,
-            EditableMode::MultipleLinesSingleEditor,
         );
         let holder = use_state(ParagraphHolder::default);
         let editor = editable.editor().read();
@@ -776,7 +782,7 @@ fn triple_click_select_line() {
         let on_mouse_down = move |e: Event<MouseEventData>| {
             editable.process_event(EditableEvent::Down {
                 location: e.element_location,
-                editor_id: 0,
+                editor_line: EditorLine::SingleParagraph,
                 holder: &holder.read(),
             });
         };
@@ -802,7 +808,11 @@ fn triple_click_select_line() {
                     .cursor_index(cursor_pos)
                     .cursor_color((0, 0, 0))
                     .on_global_key_down(on_global_key_down)
-                    .highlights(editor.get_visible_selection(0).map(|h| vec![h]))
+                    .highlights(
+                        editor
+                            .get_visible_selection(EditorLine::SingleParagraph)
+                            .map(|h| vec![h]),
+                    )
                     .span(Span::new(editor.to_string())),
             )
             .child(
@@ -835,7 +845,6 @@ fn double_click_select_word_single_line_multiple_editors() {
         let mut editable = use_editable(
             || "Hello Rustaceans\nHello World".to_string(),
             EditableConfig::new,
-            EditableMode::SingleLineMultipleEditors,
         );
 
         let editor = editable.editor().read();
@@ -869,7 +878,7 @@ fn double_click_select_word_single_line_multiple_editors() {
                     let on_mouse_down = move |e: Event<MouseEventData>| {
                         editable.process_event(EditableEvent::Down {
                             location: e.element_location,
-                            editor_id: i,
+                            editor_line: EditorLine::Paragraph(i),
                             holder: &holder.read(),
                         });
                     };
@@ -882,7 +891,11 @@ fn double_click_select_word_single_line_multiple_editors() {
                         .cursor_index(cursor_index)
                         .cursor_color((0, 0, 0))
                         .on_mouse_down(on_mouse_down)
-                        .highlights(editor.get_visible_selection(i).map(|h| vec![h]))
+                        .highlights(
+                            editor
+                                .get_visible_selection(EditorLine::Paragraph(i))
+                                .map(|h| vec![h]),
+                        )
                         .span(Span::new(line.clone()))
                         .into()
                 })
@@ -919,7 +932,6 @@ fn triple_click_select_line_single_line_multiple_editors() {
         let mut editable = use_editable(
             || "Hello Rustaceans\nHello World".to_string(),
             EditableConfig::new,
-            EditableMode::SingleLineMultipleEditors,
         );
 
         let editor = editable.editor().read();
@@ -953,7 +965,7 @@ fn triple_click_select_line_single_line_multiple_editors() {
                     let on_mouse_down = move |e: Event<MouseEventData>| {
                         editable.process_event(EditableEvent::Down {
                             location: e.element_location,
-                            editor_id: i,
+                            editor_line: EditorLine::Paragraph(i),
                             holder: &holder.read(),
                         });
                     };
@@ -966,7 +978,11 @@ fn triple_click_select_line_single_line_multiple_editors() {
                         .cursor_index(cursor_index)
                         .cursor_color((0, 0, 0))
                         .on_mouse_down(on_mouse_down)
-                        .highlights(editor.get_visible_selection(i).map(|h| vec![h]))
+                        .highlights(
+                            editor
+                                .get_visible_selection(EditorLine::Paragraph(i))
+                                .map(|h| vec![h]),
+                        )
                         .span(Span::new(line.clone()))
                         .into()
                 })
@@ -1004,7 +1020,6 @@ fn highlight_all_text() {
         let mut editable = use_editable(
             || "Hello Rustaceans\nHello Rustaceans".to_string(),
             EditableConfig::new,
-            EditableMode::MultipleLinesSingleEditor,
         );
 
         let holder = use_state(ParagraphHolder::default);
@@ -1014,7 +1029,7 @@ fn highlight_all_text() {
         let on_mouse_down = move |e: Event<MouseEventData>| {
             editable.process_event(EditableEvent::Down {
                 location: e.element_location,
-                editor_id: 0,
+                editor_line: EditorLine::SingleParagraph,
                 holder: &holder.read(),
             });
         };
@@ -1022,7 +1037,7 @@ fn highlight_all_text() {
         let on_mouse_move = move |e: Event<MouseEventData>| {
             editable.process_event(EditableEvent::Move {
                 location: e.element_location,
-                editor_id: 0,
+                editor_line: EditorLine::SingleParagraph,
                 holder: &holder.read(),
             });
         };
@@ -1049,7 +1064,11 @@ fn highlight_all_text() {
                     .height(Size::percent(50.0))
                     .cursor_index(cursor_pos)
                     .cursor_color((0, 0, 0))
-                    .highlights(editor.get_visible_selection(0).map(|h| vec![h]))
+                    .highlights(
+                        editor
+                            .get_visible_selection(EditorLine::SingleParagraph)
+                            .map(|h| vec![h]),
+                    )
                     .on_mouse_down(on_mouse_down)
                     .on_mouse_move(on_mouse_move)
                     .on_global_key_down(on_global_key_down)
@@ -1094,7 +1113,6 @@ fn replace_text() {
         let mut editable = use_editable(
             || "Hello Rustaceans\nHello Rustaceans".to_string(),
             EditableConfig::new,
-            EditableMode::MultipleLinesSingleEditor,
         );
 
         let holder = use_state(ParagraphHolder::default);
@@ -1104,7 +1122,7 @@ fn replace_text() {
         let on_mouse_down = move |e: Event<MouseEventData>| {
             editable.process_event(EditableEvent::Down {
                 location: e.element_location,
-                editor_id: 0,
+                editor_line: EditorLine::SingleParagraph,
                 holder: &holder.read(),
             });
         };
@@ -1112,7 +1130,7 @@ fn replace_text() {
         let on_mouse_move = move |e: Event<MouseEventData>| {
             editable.process_event(EditableEvent::Move {
                 location: e.element_location,
-                editor_id: 0,
+                editor_line: EditorLine::SingleParagraph,
                 holder: &holder.read(),
             });
         };
@@ -1143,7 +1161,11 @@ fn replace_text() {
                     .cursor_index(cursor_pos)
                     .cursor_color((0, 0, 0))
                     .on_global_key_down(on_global_key_down)
-                    .highlights(editor.get_visible_selection(0).map(|h| vec![h]))
+                    .highlights(
+                        editor
+                            .get_visible_selection(EditorLine::SingleParagraph)
+                            .map(|h| vec![h]),
+                    )
                     .span(Span::new(editor.to_string())),
             )
             .child(
@@ -1188,11 +1210,7 @@ fn replace_text() {
 #[test]
 fn navigate_empty_lines() {
     let mut utils = launch_test(|| {
-        let mut editable = use_editable(
-            || "".to_string(),
-            EditableConfig::new,
-            EditableMode::MultipleLinesSingleEditor,
-        );
+        let mut editable = use_editable(|| "".to_string(), EditableConfig::new);
         let holder = use_state(ParagraphHolder::default);
         let editor = editable.editor().read();
         let cursor_pos = editor.cursor_pos();
