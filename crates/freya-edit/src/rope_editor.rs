@@ -178,13 +178,13 @@ impl TextEditor for RopeEditor {
         }
     }
 
-    fn get_visible_selection(&self, line_index: EditorLine) -> Option<(usize, usize)> {
+    fn get_visible_selection(&self, editor_line: EditorLine) -> Option<(usize, usize)> {
         let (selected_from, selected_to) = match self.selection {
             TextSelection::Cursor(_) => return None,
             TextSelection::Range { from, to } => (from, to),
         };
 
-        match line_index {
+        match editor_line {
             EditorLine::Paragraph(line_index) => {
                 let selected_from_row = self.char_to_line(self.utf16_cu_to_char(selected_from));
                 let selected_to_row = self.char_to_line(self.utf16_cu_to_char(selected_to));

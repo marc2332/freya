@@ -280,8 +280,8 @@ pub trait TextEditor {
     // Return the selected text
     fn get_selection(&self) -> Option<(usize, usize)>;
 
-    // Return the visible selected text from a given editor Id
-    fn get_visible_selection(&self, line_index: EditorLine) -> Option<(usize, usize)>;
+    // Return the visible selected text for the given editor line
+    fn get_visible_selection(&self, editor_line: EditorLine) -> Option<(usize, usize)>;
 
     // Remove the selection
     fn clear_selection(&mut self);
