@@ -252,7 +252,7 @@ impl Render for Input {
                         // If it is not valid then undo the latest change and discard all the redos
                         let undo_result = editor.undo();
                         if let Some(idx) = undo_result {
-                            editor.set_cursor_pos(idx);
+                            editor.move_cursor_to(idx);
                         }
                         editor.editor_history().clear_redos();
                     }

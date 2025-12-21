@@ -18,7 +18,6 @@ fn app() -> impl IntoElement {
 
     paragraph()
         .a11y_id(focus.a11y_id())
-        .color((0, 0, 0))
         .cursor_index(editable.editor().read().cursor_pos())
         .highlights(
             editable
@@ -43,7 +42,7 @@ fn app() -> impl IntoElement {
                 holder: &holder.read(),
             });
         })
-        .on_mouse_up(move |_| editable.process_event(EditableEvent::Release))
+        .on_global_mouse_up(move |_| editable.process_event(EditableEvent::Release))
         .on_key_down(move |e: Event<KeyboardEventData>| {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,

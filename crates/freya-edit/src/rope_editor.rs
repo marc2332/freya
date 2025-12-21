@@ -11,6 +11,7 @@ use ropey::{
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::{
+    TextSelection,
     editor_history::{
         EditorHistory,
         HistoryChange,
@@ -18,7 +19,6 @@ use crate::{
     mode::EditableMode,
     text_editor::{
         Line,
-        TextCursor,
         TextEditor,
     },
 };
@@ -26,10 +26,9 @@ use crate::{
 /// TextEditor implementing a Rope
 pub struct RopeEditor {
     pub(crate) rope: Rope,
-    pub(crate) cursor: TextCursor,
+    pub(crate) selection: TextSelection,
     pub(crate) identation: u8,
     pub(crate) mode: EditableMode,
-    pub(crate) selected: Option<(usize, usize)>,
     pub(crate) history: EditorHistory,
 }
 
@@ -43,16 +42,15 @@ impl RopeEditor {
     // Create a new [`RopeEditor`]
     pub fn new(
         text: String,
-        cursor: TextCursor,
+        selection: TextSelection,
         identation: u8,
         mode: EditableMode,
         history: EditorHistory,
     ) -> Self {
         Self {
             rope: Rope::from_str(&text),
-            cursor,
+            selection,
             identation,
-            selected: None,
             mode,
             history,
         }
@@ -164,33 +162,30 @@ impl TextEditor for RopeEditor {
         self.rope.len_utf16_cu()
     }
 
-    fn cursor(&self) -> &TextCursor {
-        &self.cursor
+    fn selection(&self) -> &TextSelection {
+        &self.selection
     }
 
-    fn cursor_mut(&mut self) -> &mut TextCursor {
-        &mut self.cursor
-    }
-
-    fn expand_selection_to_cursor(&mut self) {
-        let pos = self.cursor_pos();
-        if let Some(selected) = self.selected.as_mut() {
-            selected.1 = pos;
-        } else {
-            self.selected = Some((self.cursor_pos(), self.cursor_pos()))
-        }
+    fn selection_mut(&mut self) -> &mut TextSelection {
+        &mut self.selection
     }
 
     fn has_any_selection(&self) -> bool {
-        self.selected.is_some()
+        self.selection.is_range()
     }
 
     fn get_selection(&self) -> Option<(usize, usize)> {
-        self.selected
+        match self.selection {
+            TextSelection::Cursor(_) => None,
+            TextSelection::Range { from, to } => Some((from, to)),
+        }
     }
 
     fn get_visible_selection(&self, editor_id: usize) -> Option<(usize, usize)> {
-        let (selected_from, selected_to) = self.selected?;
+        let (selected_from, selected_to) = match self.selection {
+            TextSelection::Cursor(_) => return None,
+            TextSelection::Range { from, to } => (from, to),
+        };
 
         if self.mode == EditableMode::SingleLineMultipleEditors {
             let selected_from_row = self.char_to_line(self.utf16_cu_to_char(selected_from));
@@ -253,42 +248,32 @@ impl TextEditor for RopeEditor {
         self.rope.remove(0..);
         self.rope.insert(0, text);
         if self.cursor_pos() > text.len() {
-            self.set_cursor_pos(text.len());
+            self.move_cursor_to(text.len());
         }
     }
 
     fn clear_selection(&mut self) {
-        self.selected = None;
+        let end = self.selection().end();
+        self.selection_mut().set_as_cursor();
+        self.selection_mut().move_to(end);
     }
 
-    fn measure_new_selection(&self, from: usize, to: usize, editor_id: usize) -> (usize, usize) {
-        if self.mode == EditableMode::SingleLineMultipleEditors {
-            let row_idx = self.line_to_char(editor_id);
-            let row_idx = self.char_to_utf16_cu(row_idx);
-            if let Some((start, _)) = self.selected {
-                (start, row_idx + to)
-            } else {
-                (row_idx + from, row_idx + to)
-            }
-        } else if let Some((start, _)) = self.selected {
-            (start, to)
-        } else {
-            (from, to)
-        }
-    }
+    fn measure_selection(&self, to: usize, editor_id: usize) -> TextSelection {
+        let mut selection = self.selection().clone();
 
-    fn measure_new_cursor(&self, to: usize, editor_id: usize) -> TextCursor {
         if self.mode == EditableMode::SingleLineMultipleEditors {
             let row_char = self.line_to_char(editor_id);
             let pos = self.char_to_utf16_cu(row_char) + to;
-            TextCursor::new(pos)
+            selection.move_to(pos);
         } else {
-            TextCursor::new(to)
+            selection.move_to(to);
         }
+
+        selection
     }
 
-    fn set_selection(&mut self, selected: (usize, usize)) {
-        self.selected = Some(selected);
+    fn set_selection(&mut self, (from, to): (usize, usize)) {
+        self.selection = TextSelection::Range { from, to };
     }
 
     fn get_selected_text(&self) -> Option<String> {
@@ -301,7 +286,10 @@ impl TextEditor for RopeEditor {
     }
 
     fn get_selection_range(&self) -> Option<(usize, usize)> {
-        let (start, end) = self.selected?;
+        let (start, end) = match self.selection {
+            TextSelection::Cursor(_) => return None,
+            TextSelection::Range { from, to } => (from, to),
+        };
 
         // Use left-to-right selection
         let (start, end) = if start < end {

@@ -9,7 +9,7 @@ use crate::{
     TextDragging,
     editor_history::EditorHistory,
     rope_editor::RopeEditor,
-    text_editor::TextCursor,
+    text_editor::TextSelection,
 };
 
 /// Manage an editable text.
@@ -25,12 +25,12 @@ impl UseEditable {
     pub fn create(content: String, config: EditableConfig, mode: EditableMode) -> Self {
         let editor = State::create(RopeEditor::new(
             content,
-            TextCursor::default(),
+            TextSelection::new_cursor(0),
             config.identation,
             mode,
             EditorHistory::new(Duration::from_millis(10)),
         ));
-        let dragging = State::create(TextDragging::None);
+        let dragging = State::create(TextDragging::default());
 
         UseEditable {
             editor,
