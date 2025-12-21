@@ -202,11 +202,7 @@ impl Render for Input {
         let holder = use_state(ParagraphHolder::default);
         let mut area = use_state(Area::default);
         let mut status = use_state(InputStatus::default);
-        let mut editable = use_editable(
-            || self.value.to_string(),
-            EditableConfig::new,
-            EditableMode::MultipleLinesSingleEditor,
-        );
+        let mut editable = use_editable(|| self.value.to_string(), EditableConfig::new);
         let mut is_dragging = use_state(|| false);
         let mut ime_preedit = use_state(|| None);
 
@@ -282,7 +278,7 @@ impl Render for Input {
                 let location = (global_location - area.min()).to_point();
                 editable.process_event(EditableEvent::Down {
                     location,
-                    editor_id: 0,
+                    editor_line: EditorLine::SingleParagraph,
                     holder: &holder.read(),
                 });
             }
@@ -295,7 +291,7 @@ impl Render for Input {
             if !display_placeholder {
                 editable.process_event(EditableEvent::Down {
                     location: e.element_location(),
-                    editor_id: 0,
+                    editor_line: EditorLine::SingleParagraph,
                     holder: &holder.read(),
                 });
             }
@@ -309,7 +305,7 @@ impl Render for Input {
                 location.y -= area.read().min_y() as f64;
                 editable.process_event(EditableEvent::Move {
                     location,
-                    editor_id: 0,
+                    editor_line: EditorLine::SingleParagraph,
                     holder: &holder.read(),
                 });
             }
@@ -360,7 +356,10 @@ impl Render for Input {
                 (
                     theme.hover_background,
                     Some(editable.editor().read().cursor_pos()),
-                    editable.editor().read().get_visible_selection(0),
+                    editable
+                        .editor()
+                        .read()
+                        .get_visible_selection(EditorLine::SingleParagraph),
                 )
             } else {
                 (theme.background, None, None)

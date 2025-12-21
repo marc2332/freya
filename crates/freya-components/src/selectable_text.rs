@@ -40,7 +40,6 @@ impl Render for SelectableText {
         let mut editable = use_editable(
             || self.value.to_string(),
             move || EditableConfig::new().with_allow_changes(false),
-            EditableMode::MultipleLinesSingleEditor,
         );
         let mut status = use_state(SelectableTextStatus::default);
         let focus = use_focus();
@@ -51,14 +50,17 @@ impl Render for SelectableText {
             editable.editor_mut().write().editor_history().clear();
         }
 
-        let highlights = editable.editor().read().get_visible_selection(0);
+        let highlights = editable
+            .editor()
+            .read()
+            .get_visible_selection(EditorLine::SingleParagraph);
 
         let on_pointer_down = move |e: Event<PointerEventData>| {
             e.stop_propagation();
             drag_origin.set(Some(e.global_location() - e.element_location()));
             editable.process_event(EditableEvent::Down {
                 location: e.element_location(),
-                editor_id: 0,
+                editor_line: EditorLine::SingleParagraph,
                 holder: &holder.read(),
             });
             focus.request_focus();
@@ -73,7 +75,7 @@ impl Render for SelectableText {
                 element_location.y -= drag_origin.y;
                 editable.process_event(EditableEvent::Move {
                     location: e.element_location,
-                    editor_id: 0,
+                    editor_line: EditorLine::SingleParagraph,
                     holder: &holder.read(),
                 });
             }

@@ -13,6 +13,13 @@ use keyboard_types::{
 
 use crate::editor_history::EditorHistory;
 
+pub enum EditorLine {
+    /// Only one `paragraph` element exists in the whole editor.
+    SingleParagraph,
+    /// There are multiple `paragraph` elements in the editor, one per line.
+    Paragraph(usize),
+}
+
 /// Holds the position of a cursor in a text
 #[derive(Clone, PartialEq, Debug)]
 pub enum TextSelection {
@@ -273,8 +280,8 @@ pub trait TextEditor {
     // Return the selected text
     fn get_selection(&self) -> Option<(usize, usize)>;
 
-    // Return the visible selected text from a given editor Id
-    fn get_visible_selection(&self, editor_id: usize) -> Option<(usize, usize)>;
+    // Return the visible selected text for the given editor line
+    fn get_visible_selection(&self, editor_line: EditorLine) -> Option<(usize, usize)>;
 
     // Remove the selection
     fn clear_selection(&mut self);
@@ -283,7 +290,7 @@ pub trait TextEditor {
     fn set_selection(&mut self, selected: (usize, usize));
 
     // Measure a new text selection
-    fn measure_selection(&self, to: usize, editor_id: usize) -> TextSelection;
+    fn measure_selection(&self, to: usize, editor_line: EditorLine) -> TextSelection;
 
     // Process a Keyboard event
     fn process_key(

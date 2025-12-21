@@ -5,7 +5,6 @@ use freya_core::prelude::*;
 use crate::{
     EditableConfig,
     EditableEvent,
-    EditableMode,
     TextDragging,
     editor_history::EditorHistory,
     rope_editor::RopeEditor,
@@ -22,12 +21,11 @@ pub struct UseEditable {
 
 impl UseEditable {
     /// Manually create an editable content instead of using [use_editable].
-    pub fn create(content: String, config: EditableConfig, mode: EditableMode) -> Self {
+    pub fn create(content: String, config: EditableConfig) -> Self {
         let editor = State::create(RopeEditor::new(
             content,
             TextSelection::new_cursor(0),
             config.identation,
-            mode,
             EditorHistory::new(Duration::from_millis(10)),
         ));
         let dragging = State::create(TextDragging::default());
@@ -64,7 +62,6 @@ impl UseEditable {
 pub fn use_editable(
     content: impl FnOnce() -> String,
     config: impl FnOnce() -> EditableConfig,
-    mode: EditableMode,
 ) -> UseEditable {
-    use_hook(|| UseEditable::create(content(), config(), mode))
+    use_hook(|| UseEditable::create(content(), config()))
 }

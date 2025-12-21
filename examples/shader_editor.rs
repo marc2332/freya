@@ -53,11 +53,7 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    let editable = use_editable(
-        || SHADER.trim().to_string(),
-        EditableConfig::new,
-        EditableMode::SingleLineMultipleEditors,
-    );
+    let editable = use_editable(|| SHADER.trim().to_string(), EditableConfig::new);
 
     rect()
         .horizontal()
@@ -143,7 +139,7 @@ impl Render for EditingLine {
         let on_mouse_down = move |e: Event<MouseEventData>| {
             editable.process_event(EditableEvent::Down {
                 location: e.element_location,
-                editor_id: line_index,
+                editor_line: EditorLine::Paragraph(line_index),
                 holder: &holder.read(),
             });
         };
@@ -151,12 +147,15 @@ impl Render for EditingLine {
         let on_mouse_move = move |e: Event<MouseEventData>| {
             editable.process_event(EditableEvent::Move {
                 location: e.element_location,
-                editor_id: line_index,
+                editor_line: EditorLine::Paragraph(line_index),
                 holder: &holder.read(),
             });
         };
 
-        let highlights = editable.editor().read().get_visible_selection(line_index);
+        let highlights = editable
+            .editor()
+            .read()
+            .get_visible_selection(EditorLine::Paragraph(line_index));
 
         rect()
             .width(Size::fill())
