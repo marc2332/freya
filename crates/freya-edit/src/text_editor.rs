@@ -516,4 +516,6 @@ pub trait TextEditor {
     fn get_selection_range(&self) -> Option<(usize, usize)>;
 
     fn get_identation(&self) -> u8;
+
+    fn find_word_boundaries(&self, pos: usize) -> (usize, usize);
 }

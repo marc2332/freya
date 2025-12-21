@@ -22,6 +22,7 @@ torin = { workspace = true }
 ropey = { workspace = true }
 bitflags = { workspace = true }
 keyboard-types = { workspace = true }
+unicode-segmentation = "1.11"
 
 [dev-dependencies]
 freya = { path = "../freya" }

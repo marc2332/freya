@@ -8,6 +8,7 @@ use ropey::{
     Rope,
     iter::Lines,
 };
+use unicode_segmentation::UnicodeSegmentation;
 
 use crate::{
     editor_history::{
@@ -326,6 +327,44 @@ impl TextEditor for RopeEditor {
 
     fn get_identation(&self) -> u8 {
         self.identation
+    }
+
+    fn find_word_boundaries(&self, pos: usize) -> (usize, usize) {
+        let pos_char = self.utf16_cu_to_char(pos);
+        let len_chars = self.rope.len_chars();
+
+        if len_chars == 0 {
+            return (pos, pos);
+        }
+
+        // Get the line containing the cursor
+        let line_idx = self.rope.char_to_line(pos_char);
+        let line_char = self.rope.line_to_char(line_idx);
+        let line = self.rope.line(line_idx);
+
+        let line_str: std::borrow::Cow<str> = line.into();
+        let pos_in_line = pos_char - line_char;
+
+        // Find word boundaries within the line
+        let mut char_offset = 0;
+        for word in line_str.split_word_bounds() {
+            let word_char_len = word.chars().count();
+            let word_start = char_offset;
+            let word_end = char_offset + word_char_len;
+
+            if pos_in_line >= word_start && pos_in_line < word_end {
+                let start_char = line_char + word_start;
+                let end_char = line_char + word_end;
+                return (
+                    self.char_to_utf16_cu(start_char),
+                    self.char_to_utf16_cu(end_char),
+                );
+            }
+
+            char_offset = word_end;
+        }
+
+        (pos, pos)
     }
 }
 
