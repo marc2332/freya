@@ -11,6 +11,9 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia"]
 categories = ["gui", "asynchronous"]
 
+[package.metadata.docs.rs]
+features = ["freya-core/mocked-engine"]
+
 [features]
 server = [
   "dep:hyper",
