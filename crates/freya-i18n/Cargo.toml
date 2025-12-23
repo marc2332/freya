@@ -8,6 +8,9 @@ license = "MIT"
 repository = "https://github.com/marc2332/freya"
 categories = ["accessibility", "gui", "localization", "internationalization"]
 
+[package.metadata.docs.rs]
+features = ["freya-core/mocked-engine"]
+
 [features]
 discovery = ["walkdir"]
 skia-engine = ["freya-core/skia-engine"]

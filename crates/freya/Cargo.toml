@@ -12,7 +12,7 @@ keywords = ["gui", "ui", "desktop", "skia"]
 categories = ["gui", "asynchronous"]
 
 [package.metadata.docs.rs]
-features = ["freya-engine/mocked-engine", "all-debug"]
+features = ["all-publish"]
 no-default-features = true
 
 [features]
@@ -22,6 +22,7 @@ skia-engine = ["freya-engine/skia-engine"]
 mocked-engine = ["freya-engine/mocked-engine"]
 # Shortcuts
 all = ["router", "i18n", "remote-asset", "engine", "plot", "gif", "tray"]
+all-publish = ["all", "performance", "mocked-engine"]
 all-debug = ["all", "performance", "vulkan"]
 all-tests = ["router", "i18n", "remote-asset", "engine", "plot", "gif"]
 docs = ["all-debug"]

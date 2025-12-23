@@ -9,6 +9,9 @@ readme = "./README.md"
 repository = "https://github.com/marc2332/freya/"
 keywords = ["gui", "ui", "desktop", "skia", "freya"]
 
+[package.metadata.docs.rs]
+features = ["freya-core/mocked-engine"]
+
 [features]
 skia-engine = ["freya-core/skia-engine"]
 

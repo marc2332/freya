@@ -11,6 +11,9 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["freya"]
 categories = ["gui"]
 
+[package.metadata.docs.rs]
+features = ["freya-core/mocked-engine"]
+
 [features]
 tokio = ["dep:tokio"]
 all = ["tokio"]

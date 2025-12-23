@@ -12,7 +12,7 @@ keywords = ["gui"]
 categories = ["gui", "asynchronous"]
 
 [package.metadata.docs.rs]
-features = ["freya-engine/mocked-engine"]
+features = ["freya-core/mocked-engine"]
 
 [dependencies]
 freya-core = { workspace = true }
