@@ -235,6 +235,15 @@ pub enum Interactive {
     No,
 }
 
+impl From<bool> for Interactive {
+    fn from(value: bool) -> Self {
+        match value {
+            true => Interactive::Yes,
+            false => Interactive::No,
+        }
+    }
+}
+
 #[derive(PartialEq, Default, Debug, Clone)]
 pub struct EffectState {
     pub overflow: Overflow,
