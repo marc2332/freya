@@ -125,6 +125,14 @@ impl Button {
         }
     }
 
+    pub fn get_layout_variant(&self) -> &ButtonLayoutVariant {
+        &self.layout_variant
+    }
+
+    pub fn get_theme_layout(&self) -> Option<&ButtonLayoutThemePartial> {
+        self.theme_layout.as_ref()
+    }
+
     pub fn enabled(mut self, enabled: impl Into<bool>) -> Self {
         self.enabled = enabled.into();
         self
@@ -231,6 +239,7 @@ impl Render for Button {
         };
 
         rect()
+            .overflow(Overflow::Clip)
             .a11y_id(focus.a11y_id())
             .a11y_focusable(self.enabled)
             .a11y_role(AccessibilityRole::Button)

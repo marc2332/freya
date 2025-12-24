@@ -167,5 +167,10 @@ pub mod sdk {
     pub use freya_sdk::*;
 }
 
+#[cfg(feature = "material-design")]
+pub mod material_design {
+    pub use freya_material_design::prelude::*;
+}
+
 #[cfg(doc)]
 pub mod _docs;
