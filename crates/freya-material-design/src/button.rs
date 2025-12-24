@@ -20,7 +20,7 @@ use crate::ripple::Ripple;
 /// # Example
 ///
 /// ```rust
-/// # use freya::prelude::*;
+/// # use freya::prelude::{material_design::*, *};
 /// fn app() -> impl IntoElement {
 ///     Button::new()
 ///         .on_press(|_| println!("Pressed!"))
