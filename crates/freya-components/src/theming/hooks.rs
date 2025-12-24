@@ -40,7 +40,7 @@ pub fn use_theme() -> State<Theme> {
 /// Primarily used by built-in components that have no control of whether they will inherit a [`Theme`] or not.
 pub fn get_theme_or_default() -> ReadState<Theme> {
     try_consume_context::<State<Theme>>()
-        .map(|theme| ReadState::State(theme))
+        .map(ReadState::State)
         .unwrap_or_else(|| ReadState::Owned(Theme::default()))
 }
 
