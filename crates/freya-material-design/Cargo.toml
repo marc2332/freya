@@ -1,0 +1,29 @@
+[package]
+name = "freya-material-design"
+version = "0.4.0-alpha.6"
+edition = "2024"
+description = "Material Design Components for Freya apps"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "ui", "desktop", "skia"]
+categories = ["gui", "asynchronous"]
+
+[package.metadata.docs.rs]
+features = ["freya-core/mocked-engine", "docs"]
+
+[features]
+skia-engine = ["freya-engine/skia-engine"]
+
+[dependencies]
+freya-core = { workspace = true }
+freya-animation = { workspace = true }
+torin = { workspace = true }
+freya-engine = { workspace = true }
+freya-components = { workspace = true }
+
+[dev-dependencies]
+freya = { path = "../freya", features = ["material-design"] }
+freya-testing = { path = "../freya-testing" }
