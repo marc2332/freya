@@ -5,6 +5,7 @@ pub mod cache;
 pub mod checkbox;
 pub mod chip;
 pub mod context_menu;
+pub mod cursor_area;
 pub mod drag_drop;
 pub mod draggable_canvas;
 pub mod element_expansions;
