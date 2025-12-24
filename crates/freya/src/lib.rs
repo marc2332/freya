@@ -92,6 +92,7 @@ pub mod components {
         checkbox::*,
         chip::*,
         context_menu::*,
+        cursor_area::*,
         drag_drop::*,
         draggable_canvas::*,
         element_expansions::*,
