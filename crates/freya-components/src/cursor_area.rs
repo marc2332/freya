@@ -72,7 +72,7 @@ impl Render for CursorArea {
 
         use_drop(move || {
             if hovering() {
-                Cursor::set(CursorIcon::Default);
+                Cursor::set(CursorIcon::default());
             }
         });
 
@@ -83,7 +83,7 @@ impl Render for CursorArea {
 
         let on_pointer_leave = move |_: Event<PointerEventData>| {
             hovering.set(false);
-            Cursor::set(CursorIcon::Default);
+            Cursor::set(CursorIcon::default());
         };
 
         rect()
