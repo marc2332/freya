@@ -220,7 +220,8 @@ macro_rules! define_theme {
 macro_rules! get_theme {
     ($theme_prop:expr, $theme_name:ident) => {{
         let theme = $crate::theming::hooks::get_theme_or_default();
-        let mut requested_theme = theme.$theme_name;
+        let theme = theme.read();
+        let mut requested_theme = theme.$theme_name.clone();
 
         if let Some(theme_override) = $theme_prop {
             requested_theme.apply_optional(&theme_override);
