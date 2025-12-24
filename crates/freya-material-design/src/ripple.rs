@@ -22,7 +22,7 @@ struct RippleInstance {
 /// The ripple expands from the click position and fades out.
 ///
 /// ```rust
-/// # use freya::prelude::{material_design::*, *};
+/// # use freya::{material_design::*, prelude::*};
 /// fn app() -> impl IntoElement {
 ///     Ripple::new().child(
 ///         rect()
