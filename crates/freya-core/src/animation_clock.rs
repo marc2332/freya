@@ -61,12 +61,6 @@ impl AnimationClock {
 
     pub fn correct_elapsed_duration(&self, elapsed: Duration) -> Duration {
         let scaled_secs = elapsed.as_secs_f32() * self.speed();
-        println!(
-            "{} vs {} | {}",
-            elapsed.as_secs_f32(),
-            scaled_secs,
-            self.speed()
-        );
         Duration::from_secs_f32(scaled_secs)
     }
 }
