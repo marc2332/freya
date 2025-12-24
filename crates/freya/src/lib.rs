@@ -31,6 +31,7 @@
 //! - `sdk`: Reexport `freya-sdk` under `freya::sdk`
 //! - `gif`: Enables the `GifViewer` component.
 //! - `plot`: Enables the `plot` element.
+//! - `material-design`: Reexport `freya-material-design` under `freya::material_design`.
 
 pub mod prelude {
     cfg_if::cfg_if! {
