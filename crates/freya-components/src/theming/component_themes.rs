@@ -24,6 +24,10 @@ use crate::{
     radio_item::RadioItem,
     resizable_container::ResizableHandle,
     scrollviews::ScrollBar,
+    segmented_button::{
+        ButtonSegment,
+        SegmentedButton,
+    },
     select::Select,
     sidebar::{
         SideBar,
@@ -68,6 +72,8 @@ pub struct Theme {
     pub chip: ChipThemePreference,
     pub menu_item: MenuItemThemePreference,
     pub menu_container: MenuContainerThemePreference,
+    pub button_segment: ButtonSegmentThemePreference,
+    pub segmented_button: SegmentedButtonThemePreference,
 }
 
 impl Default for Theme {
@@ -406,5 +412,33 @@ define_theme! {
         select_border_fill: Color,
         corner_radius: CornerRadius,
         color: Color,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub ButtonSegment {
+        %[fields]
+        background: Color,
+        hover_background: Color,
+        disabled_background: Color,
+        selected_background: Color,
+        focus_background: Color,
+        padding: Gaps,
+        selected_padding: Gaps,
+        width: Size,
+        height: Size,
+        color: Color,
+        selected_icon_fill: Color,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub SegmentedButton {
+        %[fields]
+        background: Color,
+        border_fill: Color,
+        corner_radius: CornerRadius,
     }
 }
