@@ -16,8 +16,8 @@ use freya_engine::prelude::{
     PaintStyle,
     SkRect,
 };
+pub use freya_plotters_backend::*;
 pub use plotters;
-pub use skia_plotters_backend::*;
 
 type Callback = Rc<RefCell<dyn FnMut(&mut RenderContext)>>;
 

@@ -36,6 +36,7 @@ members = [
   "./crates/freya-icons",
   "./crates/freya-sdk",
   "./crates/freya-material-design",
+  "./crates/freya-plotters-backend",
   "./examples/website",
 ]
 
@@ -65,6 +66,7 @@ freya-sdk = { path = "./crates/freya-sdk", features = [
   "all",
 ], version = "0.4.0-alpha.7" }
 freya-material-design = { path = "./crates/freya-material-design", version = "0.4.0-alpha.7" }
+freya-plotters-backend = { path = "./crates/freya-plotters-backend", version = "0.4.0-alpha.7" }
 
 # core
 generational-box = "0.6.2"

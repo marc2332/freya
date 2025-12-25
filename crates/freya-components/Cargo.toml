@@ -17,7 +17,7 @@ features = ["freya-core/mocked-engine", "docs"]
 [features]
 router = ["dep:open", "dep:freya-router"]
 remote-asset = ["dep:ureq"]
-plot = ["dep:plotters", "dep:skia-plotters-backend"]
+plot = ["dep:plotters", "dep:freya-plotters-backend"]
 docs = ["dep:embed-doc-image"]
 gif = ["dep:gif"]
 skia-engine = ["freya-engine/skia-engine"]
@@ -67,7 +67,7 @@ plotters = { version = "0.3.7", default-features = false, features = [
   "full_palette",
   "colormaps",
 ], optional = true }
-skia-plotters-backend = { version = "0.2", optional = true }
+freya-plotters-backend = { workspace = true, optional = true }
 
 # GIF
 gif = { version = "0.13.3", optional = true }
