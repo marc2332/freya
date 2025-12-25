@@ -377,7 +377,9 @@ impl ElementExt for ParagraphElement {
         paragraph.paint(context.canvas, area.origin.to_tuple());
 
         // Draw cursor
-        if let Some(cursor_index) = self.cursor_index {
+        if let Some(cursor_index) = self.cursor_index
+            && self.highlights.is_empty()
+        {
             let cursor_rects = paragraph.get_rects_for_range(
                 cursor_index..cursor_index + 1,
                 RectHeightStyle::Tight,

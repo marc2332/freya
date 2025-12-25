@@ -19,6 +19,7 @@ use torin::{
 };
 
 use crate::{
+    cursor_blink::use_cursor_blink,
     get_theme,
     scrollviews::ScrollView,
     theming::component_themes::InputThemePartial,
@@ -205,6 +206,9 @@ impl Render for Input {
         let mut editable = use_editable(|| self.value.to_string(), EditableConfig::new);
         let mut is_dragging = use_state(|| false);
         let mut ime_preedit = use_state(|| None);
+        let theme = get_theme!(&self.theme, input);
+        let (mut movement_timeout, cursor_color) =
+            use_cursor_blink(focus_status() != FocusStatus::Not, theme.color);
 
         let enabled = use_reactive(&self.enabled);
         use_drop(move || {
@@ -212,8 +216,6 @@ impl Render for Input {
                 Cursor::set(CursorIcon::default());
             }
         });
-
-        let theme = get_theme!(&self.theme, input);
 
         let display_placeholder = self.value.is_empty() && self.placeholder.is_some();
         let on_change = self.on_change.clone();
@@ -231,6 +233,7 @@ impl Render for Input {
         let on_key_down = move |e: Event<KeyboardEventData>| {
             if e.key != Key::Enter && e.key != Key::Tab {
                 e.stop_propagation();
+                movement_timeout.reset();
                 editable.process_event(EditableEvent::KeyDown {
                     key: &e.key,
                     modifiers: e.modifiers,
@@ -272,6 +275,7 @@ impl Render for Input {
         let on_input_pointer_down = move |e: Event<PointerEventData>| {
             e.stop_propagation();
             is_dragging.set(true);
+            movement_timeout.reset();
             if !display_placeholder {
                 let area = area.read().to_f64();
                 let global_location = e.global_location().clamp(area.min(), area.max());
@@ -288,6 +292,7 @@ impl Render for Input {
         let on_pointer_down = move |e: Event<PointerEventData>| {
             e.stop_propagation();
             is_dragging.set(true);
+            movement_timeout.reset();
             if !display_placeholder {
                 editable.process_event(EditableEvent::Down {
                     location: e.element_location(),
@@ -437,7 +442,7 @@ impl Render for Input {
                             })
                             .margin(theme.inner_margin)
                             .cursor_index(cursor_index)
-                            .cursor_color(color)
+                            .cursor_color(cursor_color)
                             .color(color)
                             .max_lines(1)
                             .highlights(text_selection.map(|h| vec![h]))

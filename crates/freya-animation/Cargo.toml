@@ -20,6 +20,7 @@ skia-engine = ["freya-core/skia-engine"]
 [dependencies]
 freya-core = { workspace = true }
 easer = { workspace = true }
+async-io = { workspace = true }
 
 [dev-dependencies]
 freya = { path = "../freya" }

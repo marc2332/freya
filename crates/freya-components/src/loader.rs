@@ -69,7 +69,7 @@ impl Render for CircularLoader {
 
         let animation = use_animation(|conf| {
             conf.on_creation(OnCreation::Run);
-            conf.on_finish(OnFinish::Restart);
+            conf.on_finish(OnFinish::restart());
             AnimNum::new(0.0, 360.0).time(650)
         });
 

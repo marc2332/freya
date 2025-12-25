@@ -107,7 +107,8 @@ impl<T: PartialEq + 'static + Clone + std::hash::Hash + Eq + Debug> Render for P
 
         let mut animation = use_animation_with_dependencies(
             &(self.function, self.duration, self.ease),
-            move |_conf, (function, duration, ease)| {
+            move |conf, (function, duration, ease)| {
+                conf.on_change(OnChange::Nothing);
                 let from_size = previous_size
                     .read()
                     .unwrap_or(init_size.unwrap_or_default());
