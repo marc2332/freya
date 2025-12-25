@@ -29,7 +29,8 @@ jobs:
         uses: Swatinem/rust-cache@v2
         if: github.ref != 'refs/heads/main'
         with:
-          prefix-key: "rust"
+          shared-key: "rust-ubuntu-latest"
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Install linux dependencies
         if: runner.os == 'Linux'
         run: |
