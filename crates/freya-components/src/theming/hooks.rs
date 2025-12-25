@@ -1,5 +1,6 @@
 use freya_core::{
     prelude::{
+        ReadState,
         State,
         provide_context,
         provide_context_for_scope_id,
@@ -37,10 +38,10 @@ pub fn use_theme() -> State<Theme> {
 /// Subscribe to [`Theme`] changes, default theme will be used if there is no provided [`Theme`].
 ///
 /// Primarily used by built-in components that have no control of whether they will inherit a [`Theme`] or not.
-pub fn get_theme_or_default() -> Theme {
+pub fn get_theme_or_default() -> ReadState<Theme> {
     try_consume_context::<State<Theme>>()
-        .map(|theme| theme.read().to_owned())
-        .unwrap_or_default()
+        .map(ReadState::State)
+        .unwrap_or_else(|| ReadState::Owned(Theme::default()))
 }
 
 /// Indicates what type of surface to use.
