@@ -1,8 +1,8 @@
 [package]
 name = "ragnarok"
 description = "UI Events processor. Originally made for Freya but works for other libraries."
-version = "0.1.0"
-edition = "2021"
+version = "0.4.0-alpha.7"
+edition = "2024"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
 readme = "./README.md"
@@ -13,6 +13,12 @@ categories = ["gui"]
 
 [dependencies]
 euclid = { workspace = true }
-itertools = "0.13.0"
+itertools = { workspace = true }
 tracing = { workspace = true }
 rustc-hash = { workspace = true }
+
+# Performance
+hotpath = { workspace = true }
+
+[features]
+hotpath = ["hotpath/hotpath"]

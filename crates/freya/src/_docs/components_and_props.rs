@@ -1,110 +1,81 @@
 //! # Components
 //!
-//! Freya apps are composed of components, these are functions that might or not receive some input as **Props** and return the UI as **Element**.
+//! Freya apps are composed of components, these are structs that implement the [Render](freya_core::prelude::Render) trait.
 //!
 //! > You can learn more about how the UI is defined in the [UI](crate::_docs::ui) chapter.
 //!
-//! This is how a simple root component looks like:
+//! For convenience the root component can be a `Fn() -> Element` instead of a struct that implements `Render`.
+//!
+//! ### `fn() -> Element`
 //!
 //! ```rust
 //! # use freya::prelude::*;
-//! // Usually, the root component of a Freya app is named `app`,
-//! // but it is not a requirement
-//! fn app() -> Element {
-//!     rsx!(
-//!         label {
-//!             "Hello, World!"
-//!         }
-//!     )
+//! fn app() -> impl IntoElement {
+//!     "Hello, World!"
 //! }
 //! ```
-//! This is perfectly fine but we might consider splitting the app in multiple components as it grows. This would allow to have reusable components
-//! and also help maintaining and scaling the app.
 //!
-//! Lets create a reusable component:
+//!  ### `Render` trait
 //!
 //! ```rust
 //! # use freya::prelude::*;
+//! #[derive(PartialEq)]
+//! struct App;
+//!
+//! impl Render for App {
+//!     fn render(&self) -> impl IntoElement {
+//!         "Hello, World!"
+//!     }
+//! }
+//! ```
+//!
+//! To separate the UI of our app you may create more components.
+//!
+//! ```rust
+//! # use freya::prelude::*;
+//! # use std::borrow::Cow;
 //!
 //! // Reusable component that we might call as many times we want
-//! #[component]
-//! fn TextLabel(text: String) -> Element {
-//!     rsx!(
-//!         label {
-//!             "{text}"
-//!         }
-//!     )
+//! #[derive(PartialEq)]
+//! struct TextLabel(Cow<'static, str>);
+//! impl Render for TextLabel {
+//!     fn render(&self) -> impl IntoElement {
+//!         label().text(self.0.clone())
+//!     }
 //! }
 //!
-//! fn app() -> Element {
-//!     rsx!(
-//!         // By declaring this element using `TextLabel`
-//!         // we are declaring an instance of the component
-//!         TextLabel {
-//!             text: "Number 1"
-//!         }
-//!         label {
-//!             "Number 2"
-//!         }
-//!         // Another instance of the same component
-//!         TextLabel {
-//!             text: "Number 3"
-//!         }
-//!     )
-//! }
-//! ```
-//!
-//! Notice how we anotate our `TextLabel` component with the macro `#[component]`, this will transform every argument of the function (just `text: String` in this case) to a component prop.
-//!
-//! For more complex components you might want to put the props in an external struct intead of using the `#[components]` macro:
-//!
-//! ```rust
-//! # use freya::prelude::*;
-//! #[derive(Props, PartialEq, Clone)]
-//! struct TextLabelProps {
-//!     text: String
-//! }
-//!
-//! fn TextLabel(TextLabelProps { text }: TextLabelProps) -> Element {
-//!     rsx!(
-//!         label {
-//!             "{text}"
-//!         }
-//!     )
+//! fn app() -> impl IntoElement {
+//!     rect()
+//!         .child(TextLabel("Number 1".into()))
+//!         .child("Number 2")
+//!         .child(TextLabel("Number 3".into()))
 //! }
 //! ```
 //!
 //! ## Renders
 //!
-//! Components renders are just when component function runs, this can happen in multiple scanarios:
+//! "Components renders" are simply when the component's `render` function runs, this can happen in multiple scanarios:
 //!
-//! 1. The component just got instanciated for the first time
-//! 2. A signal that this component is reading, got written
-//! 3. The component props changed
+//! 1. The component just got instanciated for the first time (also called mounted in other UI libraries)
+//! 2. A state that this component is reading (thus subscribed to), got written
+//! 3. The component data changed (this is why `PartialEq` is required)
 //!
-//! > **Note:** The naming of `render` might give you the impression that it means the app will effectively rerender again, it has nothing to do with it, in fact, a component might render (run its function) a thousand times but generate the exact same RSX, if that was the case Freya would not render it again.
+//! > **Note:** The naming of `render` might give you the impression that it means the window canvas will effectively rerender again, it has nothing to do with it, in fact, a component might render (run its function) a thousand times but generate the exact same UI, if that was the case Freya would not render the canvas again.
 //!
 //! Consider this simple component:
 //!
 //! ```rust
 //! # use freya::prelude::*;
-//! #[component]
-//! fn CoolComp() -> Element {
-//!     let mut count = use_signal(|| 0);
+//! #[derive(PartialEq)]
+//! struct CoolComp;
+//! impl Render for CoolComp {
+//!     // One run of this function is the same saying as one render of this component
+//!     fn render(&self) -> impl IntoElement {
+//!         let mut count = use_state(|| 0);
 //!
-//!     // One run of this function is the same as one render of this component
-//!
-//!     rsx!(
-//!         label {
-//!             // Update the signal value
-//!             onclick: move |_| count += 1,
-//!
-//!             // By embedding the count in this text the component is subscribed to any change of the `count` siganal
-//!             "Increase {count}"
-//!             // So, everytime the `count` signal is written, the component rerenders.
-//!         }
-//!     )
+//!         label()
+//!             .on_mouse_up(move |_| *count.write() += 1)
+//!             .text(format!("Increase {}", count.read()))
+//!     }
 //! }
 //! ```
-//!
-//! #### You can now learn about [Hooks](crate::_docs::hooks).

@@ -1,20 +1,26 @@
 [package]
 name = "torin"
 description = "UI layout Library designed for Freya."
-version = "0.4.0"
-edition = "2021"
+version = "0.4.0-alpha.7"
+edition = "2024"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
 readme = "./README.md"
 homepage = "https://freyaui.dev/"
 repository = "https://github.com/marc2332/freya"
-keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
+keywords = ["gui", "ui", "desktop", "skia", "freya"]
 categories = ["gui", "caching"]
+
+[features]
+serde = ["dep:serde", "euclid/serde"]
 
 [dependencies]
 tracing = { workspace = true }
 euclid = { workspace = true }
 rustc-hash = { workspace = true }
+itertools = { workspace = true }
+
+serde = { version = "1.0", optional = true }
 
 [dev-dependencies]
 criterion = "0.5.1"

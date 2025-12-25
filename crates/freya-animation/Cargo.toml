@@ -1,0 +1,27 @@
+[package]
+name = "freya-animation"
+version = "0.4.0-alpha.7"
+description = "Animation APIs for Freya"
+edition = "2024"
+readme = "../../README.md"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+homepage = "https://github.com/marc2332/freya"
+repository = "https://github.com/marc2332/freya"
+keywords = ["freya"]
+categories = ["gui"]
+
+[package.metadata.docs.rs]
+features = ["freya-core/mocked-engine"]
+
+[features]
+skia-engine = ["freya-core/skia-engine"]
+
+[dependencies]
+freya-core = { workspace = true }
+easer = { workspace = true }
+async-io = { workspace = true }
+
+[dev-dependencies]
+freya = { path = "../freya" }
+freya-testing = { path = "../freya-testing" }

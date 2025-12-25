@@ -1,0 +1,20 @@
+[package]
+name = "freya-icons"
+version = "0.4.0-alpha.7"
+edition = "2024"
+description = "Icons library for Freya."
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui"]
+categories = ["gui", "asynchronous"]
+
+[features]
+# Icons
+all = ["lucide"]
+lucide = []
+
+[dependencies]
+bytes = { workspace = true }

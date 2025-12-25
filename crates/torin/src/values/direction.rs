@@ -1,4 +1,5 @@
-#[derive(PartialEq, Eq, Clone, Debug, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(PartialEq, Eq, Clone, Debug, Default, Copy)]
 pub enum Direction {
     #[default]
     Vertical,

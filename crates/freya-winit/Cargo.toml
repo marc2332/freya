@@ -1,0 +1,78 @@
+[package]
+name = "freya-winit"
+version = "0.4.0-alpha.7"
+description = "Winit renderer for Freya"
+edition = "2024"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui"]
+categories = ["gui", "asynchronous"]
+
+[package.metadata.docs.rs]
+features = ["freya-core/mocked-engine"]
+
+[dependencies]
+freya-core = { workspace = true }
+freya-components = { workspace = true }
+torin = { workspace = true }
+
+# Rendering
+bytes = { workspace = true }
+
+# Rendering OpenGL
+gl = { workspace = true }
+glutin = { workspace = true }
+glutin-winit = { workspace = true }
+
+# Rendering VUlkan
+ash = { workspace = true, optional = true }
+ash-window = { workspace = true, optional = true }
+
+# Window
+raw-window-handle = { workspace = true }
+winit = { workspace = true }
+freya-engine = { workspace = true }
+
+# Events
+ragnarok = { workspace = true }
+keyboard-types = { workspace = true }
+
+# Accessibility
+accesskit_winit = { workspace = true }
+accesskit = { workspace = true }
+
+# Other
+futures-lite = { workspace = true }
+futures-channel = { workspace = true }
+futures-util = { workspace = true }
+rustc-hash = { workspace = true }
+
+# Performance
+hotpath = { workspace = true }
+
+# Images
+image = { workspace = true }
+
+# Tray
+tray-icon = { workspace = true, optional = true }
+
+# Clipboard
+freya-clipboard = { workspace = true }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+gtk = { version = "0.18.2", optional = true }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2-core-foundation = { version = "0.3.2", optional = true }
+
+[dev-dependencies]
+freya = { path = "../freya" }
+
+[features]
+hotpath = ["hotpath/hotpath"]
+vulkan = ["dep:ash", "dep:ash-window", "freya-engine/vulkan"]
+skia-engine = ["freya-engine/skia-engine"]
+tray = ["dep:tray-icon", "dep:gtk", "dep:objc2-core-foundation"]

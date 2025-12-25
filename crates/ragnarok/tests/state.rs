@@ -146,7 +146,7 @@ impl SourceEvent for TestSourceEvent {
         matches!(self, Self::MouseMove { .. })
     }
 
-    fn try_cursor(&self) -> Option<ragnarok::CursorPoint> {
+    fn try_location(&self) -> Option<ragnarok::CursorPoint> {
         match self {
             Self::MouseDown { cursor } => Some(*cursor),
             Self::MouseMove { cursor } => Some(*cursor),
@@ -269,35 +269,37 @@ impl EventsMeasurer for TestMeasurer {
 
     type Source = TestSourceEvent;
 
-    fn get_layers(&self) -> std::collections::hash_map::Iter<'_, i16, Vec<Self::Key>> {
-        self.layers.iter()
+    fn get_layers(&self) -> impl Iterator<Item = (&i16, impl Iterator<Item = &Self::Key>)> {
+        self.layers
+            .iter()
+            .map(|(layer, nodes)| (layer, nodes.iter()))
     }
 
-    fn get_listeners_of(&self, name: &Self::Name) -> Vec<Self::Key> {
-        self.listeners.get(name).cloned().unwrap_or_default()
+    fn get_listeners_of(&self, name: &Self::Name) -> impl Iterator<Item = &Self::Key> {
+        self.listeners.get(name).into_iter().flatten()
     }
 
-    fn is_point_inside(&self, key: Self::Key, cursor: ragnarok::CursorPoint) -> bool {
-        self.areas.get(&key).unwrap().contains(cursor.to_f32())
+    fn is_point_inside(&self, key: &Self::Key, cursor: ragnarok::CursorPoint) -> bool {
+        self.areas.get(key).unwrap().contains(cursor.to_f32())
     }
 
-    fn is_node_parent_of(&self, key: Self::Key, parent: Self::Key) -> bool {
-        self.children.get(&parent).unwrap().contains(&key)
+    fn is_node_parent_of(&self, key: &Self::Key, parent: Self::Key) -> bool {
+        self.children.get(&parent).unwrap().contains(key)
     }
 
-    fn is_listening_to(&self, key: Self::Key, name: &Self::Name) -> bool {
+    fn is_listening_to(&self, key: &Self::Key, name: &Self::Name) -> bool {
         let Some(listeners) = self.listeners.get(name) else {
             return false;
         };
-        listeners.contains(&key)
+        listeners.contains(key)
     }
 
-    fn is_node_transparent(&self, _key: Self::Key) -> bool {
+    fn is_node_transparent(&self, _key: &Self::Key) -> bool {
         false
     }
 
-    fn try_area_of(&self, key: Self::Key) -> Option<ragnarok::Area> {
-        self.areas.get(&key).cloned()
+    fn try_area_of(&self, key: &Self::Key) -> Option<ragnarok::Area> {
+        self.areas.get(key).cloned()
     }
 
     fn new_emmitable_event(

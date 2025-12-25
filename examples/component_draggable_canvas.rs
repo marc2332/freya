@@ -1,0 +1,14 @@
+use freya::prelude::*;
+
+fn main() {
+    launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
+}
+
+fn app() -> impl IntoElement {
+    rect().expanded().child(
+        DraggableCanvas::new()
+            .width(Size::fill())
+            .height(Size::fill())
+            .child(Draggable::new().child(Button::new().child("Hello, World!"))),
+    )
+}

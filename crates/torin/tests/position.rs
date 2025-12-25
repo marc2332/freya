@@ -8,8 +8,8 @@ use torin::{
 pub fn absolute() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1],
@@ -19,7 +19,7 @@ pub fn absolute() {
             Gaps::new(20.0, 20.0, 20.0, 20.0),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![2, 3, 4, 5],
@@ -29,7 +29,7 @@ pub fn absolute() {
             Gaps::new(30.0, 30.0, 30.0, 30.0),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(1),
         vec![],
@@ -44,7 +44,7 @@ pub fn absolute() {
             })),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         3,
         Some(1),
         vec![],
@@ -59,7 +59,7 @@ pub fn absolute() {
             })),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         4,
         Some(1),
         vec![],
@@ -74,7 +74,7 @@ pub fn absolute() {
             })),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         5,
         Some(1),
         vec![],
@@ -94,23 +94,23 @@ pub fn absolute() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(100.0, 150.0), Size2D::new(200.0, 200.0)),
     );
     assert_eq!(
-        layout.get(3).unwrap().area.round(),
+        layout.get(&3).unwrap().area.round(),
         Rect::new(Point2D::new(700.0, 150.0), Size2D::new(200.0, 200.0)),
     );
     assert_eq!(
-        layout.get(4).unwrap().area.round(),
+        layout.get(&4).unwrap().area.round(),
         Rect::new(Point2D::new(700.0, 650.0), Size2D::new(200.0, 200.0)),
     );
     assert_eq!(
-        layout.get(5).unwrap().area.round(),
+        layout.get(&5).unwrap().area.round(),
         Rect::new(Point2D::new(100.0, 650.0), Size2D::new(200.0, 200.0)),
     );
 }
@@ -119,8 +119,8 @@ pub fn absolute() {
 pub fn global() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TestingDOM::default();
-    mocked_dom.add(
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
         0,
         None,
         vec![1],
@@ -130,7 +130,7 @@ pub fn global() {
             Gaps::new(20.0, 20.0, 20.0, 20.0),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         1,
         Some(0),
         vec![2, 3, 4, 5],
@@ -140,7 +140,7 @@ pub fn global() {
             Gaps::new(30.0, 30.0, 30.0, 30.0),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         2,
         Some(1),
         vec![],
@@ -155,7 +155,7 @@ pub fn global() {
             })),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         3,
         Some(1),
         vec![],
@@ -170,7 +170,7 @@ pub fn global() {
             })),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         4,
         Some(1),
         vec![],
@@ -185,7 +185,7 @@ pub fn global() {
             })),
         ),
     );
-    mocked_dom.add(
+    mocked_tree.add(
         5,
         Some(1),
         vec![],
@@ -205,23 +205,23 @@ pub fn global() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mut mocked_dom,
+        &mut mocked_tree,
     );
 
     assert_eq!(
-        layout.get(2).unwrap().area,
+        layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(50.0, 100.0), Size2D::new(200.0, 200.0)),
     );
     assert_eq!(
-        layout.get(3).unwrap().area.round(),
+        layout.get(&3).unwrap().area.round(),
         Rect::new(Point2D::new(750.0, 100.0), Size2D::new(200.0, 200.0)),
     );
     assert_eq!(
-        layout.get(4).unwrap().area.round(),
+        layout.get(&4).unwrap().area.round(),
         Rect::new(Point2D::new(750.0, 700.0), Size2D::new(200.0, 200.0)),
     );
     assert_eq!(
-        layout.get(5).unwrap().area.round(),
+        layout.get(&5).unwrap().area.round(),
         Rect::new(Point2D::new(50.0, 700.0), Size2D::new(200.0, 200.0)),
     );
 }

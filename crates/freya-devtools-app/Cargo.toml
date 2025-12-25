@@ -1,0 +1,32 @@
+[package]
+name = "freya-devtools-app"
+version = "0.4.0-alpha.7"
+description = "Devtools App for Freya app"
+edition = "2024"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "ui", "desktop", "skia"]
+categories = ["gui", "asynchronous"]
+
+[features]
+skia-engine = ["freya-core/skia-engine"]
+
+[dependencies]
+freya = { workspace = true, features = ["router"] }
+freya-core = { workspace = true }
+freya-router = { workspace = true }
+
+freya-radio = { workspace = true }
+freya-devtools = { workspace = true }
+
+accesskit = { workspace = true }
+serde_json = "1"
+
+async-tungstenite = { version = "0.31" }
+futures-util = { workspace = true }
+smol = "2.0.2"
+tungstenite = { version = "0.27", features = ["handshake"] }
+async-lock = { version = "3.4.1" }

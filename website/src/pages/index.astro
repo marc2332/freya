@@ -3,40 +3,42 @@ import { Code } from "astro:components";
 import Layout from "../layouts/Layout.astro";
 
 const EXAMPLE_CODE = `
-fn app() -> Element {
-    let mut count = use_signal(|| 0);
+fn app() -> impl IntoElement {
+    let mut count = use_state(|| 4);
 
-    rsx!(
-        rect {
-            height: "50%",
-            width: "100%",
-            main_align: "center",
-            cross_align: "center",
-            background: "rgb(0, 119, 182)",
-            color: "white",
-            shadow: "0 4 20 5 rgb(0, 0, 0, 80)",
-            label {
-                font_size: "75",
-                font_weight: "bold",
-                "{count}"
-            }
-        }
-        rect {
-            height: "50%",
-            width: "100%",
-            main_align: "center",
-            cross_align: "center",
-            direction: "horizontal",
-            Button {
-                onclick: move |_| count += 1,
-                label { "Increase" }
-            }
-            Button {
-                onclick: move |_| count -= 1,
-                label { "Decrease" }
-            }
-        }
-    )
+    let counter = rect()
+        .width(Size::fill())
+        .height(Size::percent(50.))
+        .center()
+        .color((255, 255, 255))
+        .background((15, 163, 242))
+        .font_weight(FontWeight::BOLD)
+        .font_size(75.)
+        .shadow((0., 4., 20., 4., (0, 0, 0, 80)))
+        .child(count.read().to_string());
+
+    let actions = rect()
+        .horizontal()
+        .width(Size::fill())
+        .height(Size::percent(50.))
+        .center()
+        .spacing(8.0)
+        .child(
+            Button::new()
+                .on_press(move |_| {
+                    *count.write() += 1;
+                })
+                .child("Increase"),
+        )
+        .child(
+            Button::new()
+                .on_press(move |_| {
+                    *count.write() -= 1;
+                })
+                .child("Decrease"),
+        );
+
+    rect().child(counter).child(actions)
 }
 `.trim();
 ---
@@ -58,7 +60,7 @@ fn app() -> Element {
         </div>
         <div class="flex justify-center flex-col items-center">
             <video muted autoplay playsinline loop >
-                <source src="/demo.mp4" type="video/mp4" >
+                <source src="/demo.webm" type="video/webm" >
             </video>
             <a class="w-36 bg-custom-purple p-2 text-center rounded-lg text-white hover:bg-custom-purple-dark transition-colors delay-[10]" href="https://github.com/marc2332/freya#want-to-try-it-">Run locally</a>
         </div>

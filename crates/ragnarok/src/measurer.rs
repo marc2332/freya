@@ -1,11 +1,6 @@
-use std::collections::hash_map::Iter;
-
 use itertools::Itertools;
 
 use crate::{
-    measure_emmitable_events,
-    measure_potential_events,
-    measure_source_global_events,
     Area,
     CursorPoint,
     EmmitableEvent,
@@ -14,6 +9,9 @@ use crate::{
     NodesState,
     ProcessedEvents,
     SourceEvent,
+    measure_emmitable_events,
+    measure_potential_events,
+    measure_source_global_events,
 };
 
 pub trait EventsMeasurer
@@ -25,15 +23,15 @@ where
     type Emmitable: EmmitableEvent<Key = Self::Key, Name = Self::Name>;
     type Source: SourceEvent<Name = Self::Name>;
 
-    fn get_layers(&self) -> Iter<'_, i16, Vec<Self::Key>>;
-    fn get_listeners_of(&self, name: &Self::Name) -> Vec<Self::Key>;
+    fn get_layers(&self) -> impl Iterator<Item = (&i16, impl Iterator<Item = &Self::Key>)>;
+    fn get_listeners_of(&self, name: &Self::Name) -> impl Iterator<Item = &Self::Key>;
 
-    fn is_point_inside(&self, key: Self::Key, cursor: CursorPoint) -> bool;
-    fn is_node_parent_of(&self, key: Self::Key, parent: Self::Key) -> bool;
-    fn is_listening_to(&self, key: Self::Key, name: &Self::Name) -> bool;
-    fn is_node_transparent(&self, key: Self::Key) -> bool;
+    fn is_point_inside(&self, key: &Self::Key, cursor: CursorPoint) -> bool;
+    fn is_node_parent_of(&self, key: &Self::Key, parent: Self::Key) -> bool;
+    fn is_listening_to(&self, key: &Self::Key, name: &Self::Name) -> bool;
+    fn is_node_transparent(&self, key: &Self::Key) -> bool;
 
-    fn try_area_of(&self, key: Self::Key) -> Option<Area>;
+    fn try_area_of(&self, key: &Self::Key) -> Option<Area>;
 
     fn new_emmitable_event(
         &self,
@@ -51,6 +49,8 @@ impl<T: EventsMeasurer + private::Sealed> EventsMeasurerRunner for T {
     type Key = T::Key;
     type Emmitable = T::Emmitable;
     type Source = T::Source;
+
+    #[cfg_attr(feature = "hotpath", hotpath::measure)]
     fn run(
         &mut self,
         source_events: &mut Vec<Self::Source>,

@@ -1,0 +1,102 @@
+name: Hotpath
+
+on:
+  pull_request:
+
+jobs:
+  hotpath:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: hotpath-${{ github.ref_name }}
+      cancel-in-progress: true
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+          submodules: true
+      - name: Fetch all remote branches (including main)
+        run: |
+          git fetch --all --prune
+      - uses: dtolnay/rust-toolchain@1.90
+      - name: Install just
+        uses: taiki-e/install-action@just
+      - name: Install hotpath-ci CLI
+        run: cargo install hotpath --bin hotpath-ci --features=ci
+      - name: Set up cargo cache
+        uses: Swatinem/rust-cache@v2
+        if: github.ref != 'refs/heads/main'
+        with:
+          shared-key: "rust-ubuntu-latest"
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Install linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev
+      - id: head_timing_metrics
+        env:
+          HOTPATH_JSON: true
+        run: |
+          # Extract timing metrics from head branch
+          {
+            echo 'metrics<<EOF'
+            just ps-ci | grep '^{"hotpath_profiling_mode"'
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+      - id: base_timing_metrics
+        env:
+          HOTPATH_JSON: true
+        run: |
+          # Extract timing metrics from base branch
+          git checkout ${{ github.event.pull_request.base.ref }}
+          {
+            echo 'metrics<<EOF'
+            just ps-ci | grep '^{"hotpath_profiling_mode"'
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+          git checkout ${{ github.event.pull_request.head.ref }}
+      - id: head_alloc_metrics
+        env:
+          HOTPATH_JSON: true
+        run: |
+          # Extract alloc metrics from head branch
+          {
+            echo 'metrics<<EOF'
+            just pa-ci | grep '^{"hotpath_profiling_mode"'
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+      - id: base_alloc_metrics
+        env:
+          HOTPATH_JSON: true
+        run: |
+          # Extract alloc metrics from base branch
+          git checkout ${{ github.event.pull_request.base.ref }}
+          {
+            echo 'metrics<<EOF'
+            just pa-ci | grep '^{"hotpath_profiling_mode"'
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+          git checkout ${{ github.event.pull_request.head.ref }}
+      - name: Post PR comment - alloc mode
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          hotpath-ci profile-pr \
+            --head-metrics '${{ steps.head_alloc_metrics.outputs.metrics }}' \
+            --base-metrics '${{ steps.base_alloc_metrics.outputs.metrics }}' \
+            --pr-number '${{ github.event.pull_request.number }}' \
+            --github-token $GH_TOKEN
+
+      - name: Post PR comment - timing mode
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          hotpath-ci profile-pr \
+            --head-metrics '${{ steps.head_timing_metrics.outputs.metrics }}' \
+            --base-metrics '${{ steps.base_timing_metrics.outputs.metrics }}' \
+            --pr-number '${{ github.event.pull_request.number }}' \
+            --github-token $GH_TOKEN

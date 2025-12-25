@@ -1,0 +1,30 @@
+[package]
+name = "freya-radio"
+version = "0.4.0-alpha.7"
+edition = "2024"
+description = "Fully-typed global state management with a topics subscription system for Freya 🧬"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui"]
+categories = ["gui", "asynchronous"]
+
+[package.metadata.docs.rs]
+features = ["freya-core/mocked-engine"]
+
+[features]
+tracing = ["dep:tracing", "dep:itertools"]
+skia-engine = ["freya-core/skia-engine"]
+
+[dependencies]
+freya-core = { workspace = true }
+
+# Logging
+itertools = { workspace = true, optional = true }
+tracing = { workspace = true, optional = true }
+
+[dev-dependencies]
+freya = { path = "../freya" }
+freya-testing = { path = "../freya-testing" }

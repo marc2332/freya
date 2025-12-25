@@ -1,0 +1,80 @@
+[package]
+name = "freya-components"
+version = "0.4.0-alpha.7"
+edition = "2024"
+description = "Components for Freya apps"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "ui", "desktop", "skia"]
+categories = ["gui", "asynchronous"]
+
+[package.metadata.docs.rs]
+features = ["freya-core/mocked-engine", "docs"]
+
+[features]
+router = ["dep:open", "dep:freya-router"]
+remote-asset = ["dep:ureq"]
+plot = ["dep:plotters", "dep:skia-plotters-backend"]
+docs = ["dep:embed-doc-image"]
+gif = ["dep:gif"]
+skia-engine = ["freya-engine/skia-engine"]
+
+[dependencies]
+freya-core = { workspace = true }
+freya-animation = { workspace = true }
+torin = { workspace = true }
+freya-engine = { workspace = true }
+freya-edit = { workspace = true }
+freya-sdk = { workspace = true }
+tracing = { workspace = true }
+
+# Theming
+paste = "1.0.15"
+
+# Router
+open = { version = "5", optional = true }
+freya-router = { workspace = true, optional = true }
+
+# Cache
+async-io = { workspace = true }
+
+# Remote Image
+ureq = { version = "3.1.2", optional = true }
+
+# Image viewer
+blocking = { version = "1.6.2" }
+bytes = { version = "1.10.1" }
+
+# Other
+cfg-if = "1.0"
+
+# Errors
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# Docs
+embed-doc-image = { version = "0.1.4", optional = true }
+
+# Plot
+plotters = { version = "0.3.7", default-features = false, features = [
+  "chrono",
+  "image",
+  "all_series",
+  "all_elements",
+  "full_palette",
+  "colormaps",
+], optional = true }
+skia-plotters-backend = { version = "0.2", optional = true }
+
+# GIF
+gif = { version = "0.13.3", optional = true }
+
+# Accessibility
+accesskit = { workspace = true }
+
+[dev-dependencies]
+freya = { path = "../freya" }
+freya-testing = { path = "../freya-testing" }

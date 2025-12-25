@@ -1,0 +1,77 @@
+[package]
+name = "freya-core"
+version = "0.4.0-alpha.7"
+description = "Reactivity runtime, tree management, accessibility integration, rendering pipeline and more, for Freya"
+edition = "2024"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+
+[package.metadata.docs.rs]
+features = ["mocked-engine"]
+
+[dependencies]
+# Core
+generational-box = { workspace = true }
+tracing = { workspace = true }
+rustc-hash = { workspace = true }
+bitflags = { workspace = true }
+pathgraph = { workspace = true }
+# Core/async
+futures-util = { workspace = true }
+futures-channel = { workspace = true }
+futures-lite = { workspace = true }
+
+# Animations
+async-broadcast = { workspace = true }
+
+# Text
+keyboard-types = { workspace = true }
+
+# Layout
+torin = { workspace = true }
+smallvec = "1.15.1"
+
+# Layers
+itertools = { workspace = true }
+
+# Rendering
+freya-engine = { workspace = true }
+
+# Events
+ragnarok = { workspace = true }
+
+# accessibility
+accesskit = { workspace = true }
+
+# Performance
+hotpath = { workspace = true }
+
+# SVG
+bytes = "1.10.1"
+
+# Extensions
+paste = "1.0.15"
+
+# Devtools
+serde = { version = "1", optional = true }
+
+# Cursor styling
+cursor-icon = "1.2.0"
+
+[dev-dependencies]
+freya = { path = "../freya" }
+freya-testing = { path = "../freya-testing" }
+freya-core = { path = "../freya-core", features = ["debug-integrity", "test"] }
+freya-engine = { path = "../freya-engine", features = ["skia-engine"] }
+
+[features]
+hotpath = ["hotpath/hotpath"]
+debug-integrity = []
+devtools = ["serde"]
+serde = ["dep:serde"]
+test = []
+mocked-engine = ["freya-engine/mocked-engine"]
+skia-engine = ["freya-engine/skia-engine"]

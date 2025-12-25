@@ -1,4 +1,4 @@
-use itertools::sorted;
+use itertools::Itertools;
 
 use crate::{
     EmmitableEvent,
@@ -36,7 +36,7 @@ pub fn measure_source_global_events<
 
                 for listener in listeners {
                     let event = events_measurer.new_emmitable_event(
-                        listener,
+                        *listener,
                         global_event_name,
                         source_event.clone(),
                         None,
@@ -67,10 +67,13 @@ pub fn measure_potential_events<
     let mut potential_events = PotentialEvents::default();
 
     // Walk layer by layer from the bottom to the top
-    for (layer, layer_nodes) in sorted(events_measurer.get_layers()) {
-        for node_id in layer_nodes.iter() {
+    for (layer, layer_nodes) in events_measurer
+        .get_layers()
+        .sorted_by(|(layer, _), (layer_b, _)| layer.cmp(layer_b))
+    {
+        for node_id in layer_nodes {
             for source_event in source_events {
-                let Some(cursor) = source_event.try_cursor() else {
+                let Some(cursor) = source_event.try_location() else {
                     if focus_id == Some(*node_id) {
                         let potential_event = PotentialEvent {
                             node_key: *node_id,
@@ -86,7 +89,7 @@ pub fn measure_potential_events<
                     continue;
                 };
 
-                if !events_measurer.is_point_inside(*node_id, cursor) {
+                if !events_measurer.is_point_inside(node_id, cursor) {
                     continue;
                 }
 
@@ -138,23 +141,23 @@ pub fn measure_emmitable_events<
 
             // Iterate over the potential events in reverse so the ones in higher layers appeat first
             for PotentialEvent {
-                node_key: node_id,
+                node_key,
                 name,
                 source_event,
                 ..
             } in potential_events.iter().rev()
             {
-                if let Some(child_node) = child_node {
-                    if !events_measurer.is_node_parent_of(child_node, *node_id) {
-                        continue;
-                    }
+                if let Some(child_node) = child_node
+                    && !events_measurer.is_node_parent_of(&child_node, *node_key)
+                {
+                    continue;
                 }
 
-                if events_measurer.is_listening_to(*node_id, &derived_event_name) {
-                    let area = events_measurer.try_area_of(*node_id);
+                if events_measurer.is_listening_to(node_key, &derived_event_name) {
+                    let area = events_measurer.try_area_of(node_key);
                     if let Some(area) = area {
                         let emmitable_event = events_measurer.new_emmitable_event(
-                            *node_id,
+                            *node_key,
                             derived_event_name,
                             source_event.clone(),
                             Some(area),
@@ -169,11 +172,11 @@ pub fn measure_emmitable_events<
                     }
                 }
 
-                if !events_measurer.is_node_transparent(*node_id) && !name.does_go_through_solid() {
+                if !events_measurer.is_node_transparent(node_key) && !name.does_go_through_solid() {
                     // If the background isn't transparent,
                     // we must make sure that next nodes are parent of it
                     // This only matters for events that bubble up (e.g. cursor click events)
-                    child_node = Some(*node_id);
+                    child_node = Some(*node_key);
                 }
             }
         }
