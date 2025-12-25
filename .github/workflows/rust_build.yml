@@ -30,9 +30,9 @@ jobs:
       uses: taiki-e/install-action@just
     - name: Set up cargo cache
       uses: Swatinem/rust-cache@v2
-      if: github.ref != 'refs/heads/main'
       with:
-        prefix-key: "rust"
+        shared-key: "rust-ubuntu-latest"
+        save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: Install linux dependencies
       if: runner.os == 'Linux'
       run: sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev
