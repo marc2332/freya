@@ -115,6 +115,7 @@ pub mod components {
         radio_item::*,
         resizable_container::*,
         scrollviews::*,
+        segmented_button::*,
         select::*,
         selectable_text::*,
         sidebar::*,
