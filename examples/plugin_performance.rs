@@ -20,7 +20,7 @@ fn main() {
 fn app() -> impl IntoElement {
     let animation = use_animation(|conf| {
         conf.on_creation(OnCreation::Run);
-        conf.on_finish(OnFinish::Reverse);
+        conf.on_finish(OnFinish::reverse());
         AnimNum::new(0., 650.)
             .time(400)
             .ease(Ease::InOut)

@@ -10,7 +10,7 @@ fn main() {
 fn app() -> impl IntoElement {
     let animation = use_animation(|conf| {
         conf.on_creation(OnCreation::Run);
-        conf.on_finish(OnFinish::Reverse);
+        conf.on_finish(OnFinish::reverse());
         AnimColor::new((246, 240, 240), (205, 86, 86)).time(400)
     });
 

@@ -97,7 +97,7 @@ impl Render for OverflowedContent {
 
         let duration = self.duration;
         let animation = use_animation(move |conf| {
-            conf.on_finish(OnFinish::Restart);
+            conf.on_finish(OnFinish::restart());
 
             AnimNum::new(0., 100.)
                 .duration(duration)

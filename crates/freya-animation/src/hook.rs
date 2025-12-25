@@ -1,8 +1,12 @@
 use std::{
     ops::Deref,
-    time::Instant,
+    time::{
+        Duration,
+        Instant,
+    },
 };
 
+use async_io::Timer;
 use freya_core::prelude::*;
 
 #[derive(Default, PartialEq, Clone, Debug)]
@@ -54,9 +58,46 @@ pub enum OnFinish {
     #[default]
     Nothing,
     /// Runs the animation in reverse direction.
-    Reverse,
+    Reverse {
+        /// Delay before reversing.
+        delay: Duration,
+    },
     /// Runs the animation in the same direction again.
-    Restart,
+    Restart {
+        /// Delay before restarting.
+        delay: Duration,
+    },
+}
+
+impl OnFinish {
+    /// Creates a new [OnFinish::Nothing] variant.
+    pub fn nothing() -> Self {
+        Self::Nothing
+    }
+
+    /// Creates a new [OnFinish::Reverse] variant with no delay.
+    pub fn reverse() -> Self {
+        Self::Reverse {
+            delay: Duration::ZERO,
+        }
+    }
+
+    /// Creates a new [OnFinish::Reverse] variant with a delay.
+    pub fn reverse_with_delay(delay: Duration) -> Self {
+        Self::Reverse { delay }
+    }
+
+    /// Creates a new [OnFinish::Restart] variant with no delay.
+    pub fn restart() -> Self {
+        Self::Restart {
+            delay: Duration::ZERO,
+        }
+    }
+
+    /// Creates a new [OnFinish::Restart] variant with a delay.
+    pub fn restart_with_delay(delay: Duration) -> Self {
+        Self::Restart { delay }
+    }
 }
 
 /// What to do once the animation gets created.
@@ -85,6 +126,8 @@ pub enum OnChange {
     Finish,
     /// Reruns the animation.
     Rerun,
+    /// Does nothing at all.
+    Nothing,
 }
 
 pub trait ReadAnimatedValue: Clone + 'static {
@@ -145,6 +188,19 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
     /// Runs the animation in reverse direction.
     pub fn reverse(&mut self) {
         self.run(AnimDirection::Reverse)
+    }
+
+    /// Reset the animation with the initial state.
+    pub fn reset(&mut self) {
+        if let Some(task) = self.task.write().take() {
+            task.cancel();
+        }
+
+        self.animated_value
+            .write()
+            .prepare(*self.last_direction.peek());
+
+        *self.has_run_yet.write() = true;
     }
 
     /// Finish the animation with the final state.
@@ -216,33 +272,40 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 
                 index += elapsed.as_millis();
 
-                let mut animated_value = animated_value.write();
+                let is_finished = {
+                    let mut animated_value = animated_value.write();
+                    let is_finished = animated_value.is_finished(index, direction);
+                    // Advance the animations
+                    animated_value.advance(index, direction);
 
-                let is_finished = animated_value.is_finished(index, direction);
-
-                // Advance the animations
-                animated_value.advance(index, direction);
-
-                prev_frame = Instant::now();
+                    is_finished
+                };
 
                 if is_finished {
-                    if OnFinish::Reverse == on_finish {
-                        // Toggle direction
-                        direction.toggle();
-                    }
-                    match on_finish {
-                        OnFinish::Restart | OnFinish::Reverse => {
-                            index = 0;
-
-                            // Restart the animation
-                            animated_value.prepare(direction);
+                    let delay = match on_finish {
+                        OnFinish::Reverse { delay } => {
+                            // Toggle direction
+                            direction.toggle();
+                            delay
                         }
+                        OnFinish::Restart { delay } => delay,
                         OnFinish::Nothing => {
                             // Stop if all the animations are finished
                             break;
                         }
+                    };
+
+                    if !delay.is_zero() {
+                        Timer::after(delay).await;
                     }
+
+                    index = 0;
+
+                    // Restart/reverse the animation
+                    animated_value.write().prepare(direction);
                 }
+
+                prev_frame = Instant::now();
             }
 
             is_running.set(false);
@@ -287,6 +350,9 @@ pub fn use_animation<Animated: AnimatedValue>(
             OnChange::Rerun if current_gen > 0 => {
                 let last_direction = *animation.last_direction.peek();
                 animation.run(last_direction);
+            }
+            OnChange::Reset if current_gen > 0 => {
+                animation.reset();
             }
             _ => {}
         });
@@ -341,6 +407,9 @@ pub fn use_animation_with_dependencies<Animated: AnimatedValue, D: 'static + Clo
             OnChange::Rerun if current_gen > 0 => {
                 let last_direction = *animation.last_direction.peek();
                 animation.run(last_direction);
+            }
+            OnChange::Reset if current_gen > 0 => {
+                animation.reset();
             }
             _ => {}
         });
