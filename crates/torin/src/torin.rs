@@ -354,6 +354,7 @@ impl<Key: NodeKey> Torin<Key> {
             root_id,
             &root,
             layout_node.inner_area.as_parent(),
+            layout_node.inner_area.as_parent(),
             available_area,
             true,
             false,

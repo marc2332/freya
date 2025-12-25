@@ -308,12 +308,12 @@ pub fn sibling_increments_area() {
 
     assert_eq!(
         layout.get(&0).unwrap().area,
-        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(300.0, 200.0)),
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(500.0, 200.0)),
     );
 
     assert_eq!(
         layout.get(&2).unwrap().area,
-        Rect::new(Point2D::new(0.0, 100.0), Size2D::new(150.0, 100.0)),
+        Rect::new(Point2D::new(0.0, 100.0), Size2D::new(500.0, 100.0)),
     );
 }
 
