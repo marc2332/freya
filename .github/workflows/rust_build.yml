@@ -23,7 +23,9 @@ jobs:
         android: true
         dotnet: true
         haskell: true
+        large-packages: false
         docker-images: true
+        swap-storage: true
     - uses: actions/checkout@v6
       with:
         fetch-depth: 2
