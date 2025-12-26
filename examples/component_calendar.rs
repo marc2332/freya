@@ -21,7 +21,7 @@ fn app() -> impl IntoElement {
             ),
         )
         .child(match selected() {
-            Some(date) => format!("Selected: {}/{}/{}", date.month, date.day, date.year),
+            Some(date) => format!("Selected: {}/{}/{}", date.day, date.month, date.year),
             None => "No date selected".to_string(),
         })
 }
