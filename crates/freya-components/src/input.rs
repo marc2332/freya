@@ -88,7 +88,7 @@ impl InputValidator {
 ///             Input::new()
 ///                 .placeholder("Type your name")
 ///                 .value(value.read().clone())
-///                 .onchange(move |v| value.set(v)),
+///                 .on_change(move |v| value.set(v)),
 ///         )
 ///         .child(format!("Your name is {}", value.read()))
 /// }
@@ -261,8 +261,8 @@ impl Render for Input {
                     true
                 };
 
-                if apply_change && let Some(onchange) = &on_change {
-                    onchange.call(text);
+                if apply_change && let Some(on_change) = &on_change {
+                    on_change.call(text);
                 }
             }
         };
