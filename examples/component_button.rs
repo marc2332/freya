@@ -14,11 +14,12 @@ fn app() -> impl IntoElement {
         .child(rect().spacing(6.).children(disabled_buttons()))
 }
 
-fn buttons() -> [Element; 9] {
+fn buttons() -> [Element; 12] {
     [
         Button::new().child("Hello, World!").into(),
         Button::new().child("Hello, World!").filled().into(),
         Button::new().child("Hello, World!").outline().into(),
+        Button::new().child("Hello, World!").flat().into(),
         Button::new().child("Hello, World!").expanded().into(),
         Button::new()
             .child("Hello, World!")
@@ -29,6 +30,11 @@ fn buttons() -> [Element; 9] {
             .child("Hello, World!")
             .expanded()
             .outline()
+            .into(),
+        Button::new()
+            .child("Hello, World!")
+            .expanded()
+            .flat()
             .into(),
         Button::new().child("Hello, World!").compact().into(),
         Button::new()
@@ -41,10 +47,11 @@ fn buttons() -> [Element; 9] {
             .compact()
             .outline()
             .into(),
+        Button::new().child("Hello, World!").compact().flat().into(),
     ]
 }
 
-fn disabled_buttons() -> [Element; 9] {
+fn disabled_buttons() -> [Element; 12] {
     [
         Button::new().child("Hello, World!").enabled(false).into(),
         Button::new()
@@ -60,6 +67,11 @@ fn disabled_buttons() -> [Element; 9] {
         Button::new()
             .child("Hello, World!")
             .enabled(false)
+            .flat()
+            .into(),
+        Button::new()
+            .child("Hello, World!")
+            .enabled(false)
             .expanded()
             .into(),
         Button::new()
@@ -77,6 +89,12 @@ fn disabled_buttons() -> [Element; 9] {
         Button::new()
             .child("Hello, World!")
             .enabled(false)
+            .expanded()
+            .flat()
+            .into(),
+        Button::new()
+            .child("Hello, World!")
+            .enabled(false)
             .compact()
             .into(),
         Button::new()
@@ -90,6 +108,12 @@ fn disabled_buttons() -> [Element; 9] {
             .enabled(false)
             .compact()
             .outline()
+            .into(),
+        Button::new()
+            .child("Hello, World!")
+            .enabled(false)
+            .compact()
+            .flat()
             .into(),
     ]
 }
