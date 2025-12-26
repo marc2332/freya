@@ -32,21 +32,9 @@
 //! - `gif`: Enables the `GifViewer` component.
 //! - `plot`: Enables the `plot` element.
 //! - `material-design`: Reexport `freya-material-design` under `freya::material_design`.
+//! - `calendar`: Enables the `Calendar` component.
 
 pub mod prelude {
-    cfg_if::cfg_if! {
-        if #[cfg(feature = "router")] {
-            pub use freya_components::activable_route::*;
-            pub use freya_components::link::*;
-            pub use freya_components::native_router::*;
-            pub use freya_components::animated_router::*;
-        }
-    }
-    cfg_if::cfg_if! {
-        if #[cfg(feature = "plot")] {
-            pub use freya_components::plot::*;
-        }
-    }
     pub use freya_core::prelude::*;
     pub use freya_winit::{
         WinitPlatformExt,
@@ -86,6 +74,18 @@ pub mod elements {
 pub mod components {
     #[cfg(feature = "gif")]
     pub use freya_components::gif_viewer::*;
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "router")] {
+            pub use freya_components::activable_route::*;
+            pub use freya_components::link::*;
+            pub use freya_components::native_router::*;
+            pub use freya_components::animated_router::*;
+        }
+    }
+    #[cfg(feature = "calendar")]
+    pub use freya_components::calendar::*;
+    #[cfg(feature = "gif")]
+    pub use freya_components::plot::*;
     pub use freya_components::{
         accordion::*,
         activable_route_context::*,

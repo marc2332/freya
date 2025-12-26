@@ -30,10 +30,20 @@ all = [
   "gif",
   "tray",
   "material-design",
+  "calendar",
 ]
 all-publish = ["all", "performance", "mocked-engine"]
 all-debug = ["all", "performance", "vulkan"]
-all-tests = ["router", "i18n", "remote-asset", "engine", "plot", "gif"]
+all-tests = [
+  "router",
+  "i18n",
+  "remote-asset",
+  "engine",
+  "plot",
+  "gif",
+  "material-design",
+  "calendar",
+]
 docs = ["all-debug"]
 # Features
 router = ["dep:freya-router", "freya-components/router"]
@@ -44,6 +54,7 @@ devtools = ["dep:freya-devtools", "freya-core/devtools"]
 performance = ["freya-performance-plugin"]
 plot = ["freya-components/plot"]
 gif = ["freya-components/gif"]
+calendar = ["freya-components/calendar"]
 vulkan = ["freya-winit/vulkan"]
 sdk = ["dep:freya-sdk"]
 tray = ["freya-winit/tray", "dep:tray-icon"]
