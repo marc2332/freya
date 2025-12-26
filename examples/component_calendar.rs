@@ -11,7 +11,6 @@ fn app() -> impl IntoElement {
     rect()
         .expanded()
         .center()
-        .spacing(16.)
         .child(
             rect().height(Size::px(325.)).child(
                 Calendar::new()
@@ -21,12 +20,8 @@ fn app() -> impl IntoElement {
                     .on_view_change(move |date| view_date.set(date)),
             ),
         )
-        .child(
-            label()
-                .text(match selected() {
-                    Some(date) => format!("Selected: {}/{}/{}", date.month, date.day, date.year),
-                    None => "No date selected".to_string(),
-                })
-                .font_size(16.),
-        )
+        .child(match selected() {
+            Some(date) => format!("Selected: {}/{}/{}", date.month, date.day, date.year),
+            None => "No date selected".to_string(),
+        })
 }
