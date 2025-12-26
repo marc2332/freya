@@ -52,6 +52,7 @@ pub struct Theme {
     pub button: ButtonColorsThemePreference,
     pub filled_button: ButtonColorsThemePreference,
     pub outline_button: ButtonColorsThemePreference,
+    pub flat_button: ButtonColorsThemePreference,
     pub accordion: AccordionThemePreference,
     pub switch: SwitchThemePreference,
     pub scrollbar: ScrollBarThemePreference,

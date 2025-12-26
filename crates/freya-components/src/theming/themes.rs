@@ -127,6 +127,13 @@ pub(crate) const BASE_THEME: Theme = Theme {
         focus_border_fill: Preference::Reference("secondary"),
         color: Preference::Reference("primary"),
     },
+    flat_button: ButtonColorsThemePreference {
+        background: Preference::Specific(Color::TRANSPARENT),
+        hover_background: Preference::Reference("surface_tertiary"),
+        border_fill: Preference::Specific(Color::TRANSPARENT),
+        focus_border_fill: Preference::Reference("border"),
+        color: Preference::Reference("text_primary"),
+    },
     accordion: AccordionThemePreference {
         color: Preference::Reference("text_primary"),
         background: Preference::Reference("surface_tertiary"),

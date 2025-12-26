@@ -65,11 +65,11 @@ cfg_if::cfg_if! {
 /// | ------------- | ------------- | ------------- | ------------- |
 /// | ![Switch Preview][gallery_toggled_switch] | ![Button Preview][gallery_button] | ![Filled Button Preview][gallery_filled_button] | ![Outline Button Preview][gallery_outline_button] |
 /// | [Switch](switch::Switch)        | [Button](button::Button)        | [Filled Button](button::Button)        | [Outline Button](button::Button)        |
-/// | ![Slider Preview][gallery_slider] | ![Checkbox Preview][gallery_checkbox] | ![RadioItem Preview][gallery_radio] | ![Input Preview][gallery_input] |
-/// | [Slider](slider::Slider)        | [Checkbox](checkbox::Checkbox)        | [RadioItem](radio_item::RadioItem)        | [Input](input::Input)        |
+/// | ![Flat Button Preview][gallery_flat_button] | ![Slider Preview][gallery_slider] | ![Checkbox Preview][gallery_checkbox] | ![RadioItem Preview][gallery_radio] |
+/// | [Flat Button](button::Button)        | [Slider](slider::Slider)        | [Checkbox](checkbox::Checkbox)        | [RadioItem](radio_item::RadioItem)        |
 /// | ![ProgressBar Preview][gallery_progressbar] | ![Select Preview][gallery_select] | ![GifViewer Preview][gallery_gif_viewer] | ![Accordion Preview][gallery_accordion] |
-/// | [ProgressBar](progressbar::ProgressBar)        | [Select](select::Select)        |  [GifViewer](gif_viewer::GifViewer) | [Accordion](accordion::Accordion) |
-/// | ![Floating Tab Preview][gallery_floating_tab] | ![ImageViewer Preview][gallery_image_viewer] |  ![ScrollView Preview][gallery_scrollview] |  ![VirtualScrollView Preview][gallery_virtual_scrollview] |
+/// | [ProgressBar](progressbar::ProgressBar)        | [Select](select::Select)        | [GifViewer](gif_viewer::GifViewer) | [Accordion](accordion::Accordion) |
+/// | ![Floating Tab Preview][gallery_floating_tab] | ![ImageViewer Preview][gallery_image_viewer] | ![ScrollView Preview][gallery_scrollview] | ![VirtualScrollView Preview][gallery_virtual_scrollview] |
 /// | [FloatingTab](floating_tab::FloatingTab)        | [ImageViewer](image_viewer::ImageViewer) | [ScrollView](scrollviews::ScrollView) | [VirtualScrollView](scrollviews::VirtualScrollView) |
 /// | ![Circular Loader Preview][gallery_circular_loader] | ![SegmentedButton Preview][gallery_segmented_button] | ![Tooltip Preview][gallery_tooltip] |  |
 /// | [CircularLoader](loader::CircularLoader)        | [SegmentedButton](segmented_button::SegmentedButton) | [Tooltip](tooltip::Tooltip) | |
@@ -93,5 +93,6 @@ cfg_if::cfg_if! {
     doc = embed_doc_image::embed_image!("gallery_tooltip", "images/gallery_tooltip.png"),
     doc = embed_doc_image::embed_image!("gallery_gif_viewer", "images/gallery_gif_viewer.png"),
     doc = embed_doc_image::embed_image!("gallery_segmented_button", "images/gallery_segmented_button.png"),
+    doc = embed_doc_image::embed_image!("gallery_flat_button", "images/gallery_flat_button.png"),
 )]
 pub fn gallery() {}
