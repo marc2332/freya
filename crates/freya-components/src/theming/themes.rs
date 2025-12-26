@@ -317,7 +317,6 @@ pub(crate) const BASE_THEME: Theme = Theme {
         corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
         padding: Preference::Specific(Gaps::new_all(12.)),
         day_corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
-        nav_button_background: Preference::Specific(Color::TRANSPARENT),
         nav_button_hover_background: Preference::Reference("hover"),
     },
 };

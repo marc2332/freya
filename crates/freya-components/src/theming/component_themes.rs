@@ -463,7 +463,6 @@ define_theme! {
         corner_radius: CornerRadius,
         padding: Gaps,
         day_corner_radius: CornerRadius,
-        nav_button_background: Color,
         nav_button_hover_background: Color,
     }
 }

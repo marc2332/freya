@@ -90,9 +90,6 @@ pub enum CalendarDayStatus {
 
 /// A calendar component for date selection.
 ///
-/// # Styling
-/// Inherits the [`CalendarTheme`](crate::theming::component_themes::CalendarTheme) theme.
-///
 /// # Example
 ///
 /// ```rust
@@ -186,7 +183,6 @@ impl Render for Calendar {
             corner_radius,
             padding,
             day_corner_radius,
-            nav_button_background,
             nav_button_hover_background,
         } = theme;
 
@@ -338,7 +334,6 @@ impl Render for Calendar {
                     .content(Content::flex())
                     .child(
                         NavButton::new()
-                            .background(nav_button_background)
                             .hover_background(nav_button_hover_background)
                             .on_press(on_prev)
                             .child(
@@ -360,7 +355,6 @@ impl Render for Calendar {
                     )
                     .child(
                         NavButton::new()
-                            .background(nav_button_background)
                             .hover_background(nav_button_hover_background)
                             .on_press(on_next)
                             .child(
@@ -382,7 +376,6 @@ impl Render for Calendar {
 
 #[derive(Clone, PartialEq)]
 struct NavButton {
-    background: Color,
     hover_background: Color,
     children: Vec<Element>,
     on_press: Option<EventHandler<Event<PressEventData>>>,
@@ -391,16 +384,10 @@ struct NavButton {
 impl NavButton {
     fn new() -> Self {
         Self {
-            background: Color::TRANSPARENT,
             hover_background: Color::TRANSPARENT,
             children: Vec::new(),
             on_press: None,
         }
-    }
-
-    fn background(mut self, background: Color) -> Self {
-        self.background = background;
-        self
     }
 
     fn hover_background(mut self, hover_background: Color) -> Self {
@@ -423,10 +410,9 @@ impl ChildrenExt for NavButton {
 impl Render for NavButton {
     fn render(&self) -> impl IntoElement {
         Button::new()
-            .filled()
+            .flat()
             .width(Size::px(32.))
             .height(Size::px(32.))
-            .background(self.background)
             .hover_background(self.hover_background)
             .map(self.on_press.clone(), |el, on_press| el.on_press(on_press))
             .children(self.children.clone())
@@ -504,7 +490,7 @@ impl KeyExt for CalendarDay {
 impl Render for CalendarDay {
     fn render(&self) -> impl IntoElement {
         Button::new()
-            .filled()
+            .flat()
             .padding(0.)
             .enabled(self.enabled)
             .width(Size::px(36.))
