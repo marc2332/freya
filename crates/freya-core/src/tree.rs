@@ -15,6 +15,7 @@ use freya_engine::prelude::{
     FontMgr,
 };
 use futures_channel::mpsc::UnboundedSender;
+use itertools::Itertools;
 use rustc_hash::{
     FxHashMap,
     FxHashSet,
@@ -217,7 +218,13 @@ impl Tree {
                 }
             }
 
-            for (node_id, parent_node_id, index_inside_parent, element) in mutations.added {
+            for (node_id, parent_node_id, index_inside_parent, element) in mutations
+                .added
+                .into_iter()
+                .sorted_by_key(|(_, parent_node_id, index_inside_parent, _)| {
+                    (*parent_node_id, *index_inside_parent)
+                })
+            {
                 let parent_height = *self.heights.entry(parent_node_id).or_default();
 
                 self.parents.insert(node_id, parent_node_id);
