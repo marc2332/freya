@@ -1054,3 +1054,70 @@ fn element_diffing13() {
     let mutations = runner.sync_and_update();
     tree.apply_mutations(mutations);
 }
+
+#[test]
+fn tree_unordered_mutations() {
+    fn app() -> Element {
+        let mut show = use_state(|| false);
+        rect()
+            .on_mouse_up(move |_| show.toggle())
+            .maybe_child(show().then(|| from_fn_captured(|| counter())))
+            .child(rect().key(1))
+            .child(rect().key(2))
+            .maybe_child(show().then(|| rect()))
+            .into()
+    }
+
+    fn counter() -> Element {
+        rect().into()
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+
+    let mutations = runner.sync_and_update();
+    assert!(!mutations.added.is_empty());
+    assert!(mutations.modified.is_empty());
+    assert!(mutations.removed.is_empty());
+    tree.apply_mutations(mutations);
+    assert_eq!(
+        tree.children,
+        convert_ids(FxHashMap::from_iter([(1, vec![2]), (2, vec![3, 4]),]))
+    );
+    assert_eq!(
+        runner
+            .scopes
+            .get(&ScopeId::ROOT)
+            .unwrap()
+            .borrow()
+            .nodes
+            .size(),
+        4
+    );
+
+    runner.handle_event(
+        2,
+        EventName::MouseUp,
+        EventType::Mouse(MouseEventData::default()),
+        false,
+    );
+    let mutations = runner.sync_and_update();
+    assert!(!mutations.added.is_empty());
+    assert!(!mutations.modified.is_empty());
+    assert!(mutations.removed.is_empty());
+    tree.apply_mutations(mutations);
+    assert_eq!(
+        tree.children,
+        convert_ids(FxHashMap::from_iter([(1, vec![2]), (2, vec![7, 3, 4, 6]),]))
+    );
+    assert_eq!(
+        runner
+            .scopes
+            .get(&ScopeId::ROOT)
+            .unwrap()
+            .borrow()
+            .nodes
+            .size(),
+        6
+    );
+}
