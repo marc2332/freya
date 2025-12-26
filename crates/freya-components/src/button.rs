@@ -14,6 +14,7 @@ pub enum ButtonStyleVariant {
     Normal,
     Filled,
     Outline,
+    Flat,
 }
 
 #[derive(Clone, PartialEq)]
@@ -69,15 +70,32 @@ pub enum ButtonLayoutVariant {
 /// #   rect().center().expanded().child(app())
 /// # }, (250., 250.).into(), "./images/gallery_outline_button.png");
 /// ```
+/// ## **Flat**
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> impl IntoElement {
+///     Button::new()
+///         .on_press(|_| println!("Pressed!"))
+///         .flat()
+///         .child("Press me")
+/// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rect().center().expanded().child(app())
+/// # }, (250., 250.).into(), "./images/gallery_flat_button.png");
+/// ```
 ///
 /// # Preview
 /// ![Button Preview][button]
 /// ![Outline Button Preview][outline_button]
 /// ![Filled Button Preview][filled_button]
+/// ![Flat Button Preview][flat_button]
 #[cfg_attr(feature = "docs",
     doc = embed_doc_image::embed_image!("button", "images/gallery_button.png"),
     doc = embed_doc_image::embed_image!("filled_button", "images/gallery_filled_button.png"),
     doc = embed_doc_image::embed_image!("outline_button", "images/gallery_outline_button.png"),
+    doc = embed_doc_image::embed_image!("flat_button", "images/gallery_flat_button.png"),
 )]
 #[derive(Clone, PartialEq)]
 pub struct Button {
@@ -191,6 +209,11 @@ impl Button {
         self.style_variant(ButtonStyleVariant::Outline)
     }
 
+    /// Shortcut for [Self::style_variant] and [ButtonStyleVariant::Flat].
+    pub fn flat(self) -> Self {
+        self.style_variant(ButtonStyleVariant::Flat)
+    }
+
     /// Shortcut for [Self::corner_radius] with `99`.
     pub fn rounded(self) -> Self {
         self.corner_radius(99.)
@@ -214,6 +237,7 @@ impl Render for Button {
             ButtonStyleVariant::Normal => get_theme!(&self.theme_colors, button),
             ButtonStyleVariant::Outline => get_theme!(&self.theme_colors, outline_button),
             ButtonStyleVariant::Filled => get_theme!(&self.theme_colors, filled_button),
+            ButtonStyleVariant::Flat => get_theme!(&self.theme_colors, flat_button),
         };
         let theme_layout = match self.layout_variant {
             ButtonLayoutVariant::Normal => get_theme!(&self.theme_layout, button_layout),
