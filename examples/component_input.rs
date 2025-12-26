@@ -16,7 +16,7 @@ fn app() -> impl IntoElement {
                 .auto_focus(true)
                 .placeholder("Type your name")
                 .value(value.read().clone())
-                .onchange(move |v| value.set(v)),
+                .on_change(move |v| value.set(v)),
         )
         .child(
             Input::new()

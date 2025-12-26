@@ -55,11 +55,11 @@ impl KeyExt for Slider {
 }
 
 impl Slider {
-    pub fn new(handler: impl FnMut(f64) + 'static) -> Self {
+    pub fn new(on_moved: impl Into<EventHandler<f64>>) -> Self {
         Self {
             theme: None,
             value: 0.0,
-            on_moved: EventHandler::new(handler),
+            on_moved: on_moved.into(),
             size: Size::fill(),
             direction: Direction::Horizontal,
             enabled: true,

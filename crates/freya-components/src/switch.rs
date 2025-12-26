@@ -88,8 +88,8 @@ impl Switch {
         self
     }
 
-    pub fn on_toggle(mut self, on_toggle: impl FnMut(()) + 'static) -> Self {
-        self.on_toggle = Some(EventHandler::new(on_toggle));
+    pub fn on_toggle(mut self, on_toggle: impl Into<EventHandler<()>>) -> Self {
+        self.on_toggle = Some(on_toggle.into());
         self
     }
 
