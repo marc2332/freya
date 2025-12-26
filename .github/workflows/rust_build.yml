@@ -18,8 +18,12 @@ jobs:
 
     steps:
     - name: Remove unused programs
-      run: |
-        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+      uses: jlumbroso/free-disk-space@main
+      with:
+        android: true
+        dotnet: true
+        haskell: true
+        docker-images: true
     - uses: actions/checkout@v6
       with:
         fetch-depth: 2
