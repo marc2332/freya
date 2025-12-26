@@ -49,8 +49,8 @@ impl Tile {
         self
     }
 
-    pub fn on_select(mut self, on_select: impl FnMut(()) + 'static) -> Self {
-        self.on_select = Some(EventHandler::new(on_select));
+    pub fn on_select(mut self, on_select: impl Into<EventHandler<()>>) -> Self {
+        self.on_select = Some(on_select.into());
         self
     }
 

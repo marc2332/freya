@@ -160,13 +160,13 @@ impl Input {
         self
     }
 
-    pub fn onchange(mut self, handler: impl FnMut(String) + 'static) -> Self {
-        self.on_change = Some(EventHandler::new(handler));
+    pub fn on_change(mut self, on_change: impl Into<EventHandler<String>>) -> Self {
+        self.on_change = Some(on_change.into());
         self
     }
 
-    pub fn onvalidate(mut self, handler: impl FnMut(InputValidator) + 'static) -> Self {
-        self.on_validate = Some(EventHandler::new(handler));
+    pub fn on_validate(mut self, on_validate: impl Into<EventHandler<InputValidator>>) -> Self {
+        self.on_validate = Some(on_validate.into());
         self
     }
 

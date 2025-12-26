@@ -148,16 +148,16 @@ impl Button {
         self
     }
 
-    pub fn on_press(mut self, on_press: impl FnMut(Event<PressEventData>) + 'static) -> Self {
-        self.on_press = Some(EventHandler::new(on_press));
+    pub fn on_press(mut self, on_press: impl Into<EventHandler<Event<PressEventData>>>) -> Self {
+        self.on_press = Some(on_press.into());
         self
     }
 
     pub fn on_secondary_press(
         mut self,
-        on_secondary_press: impl FnMut(Event<PressEventData>) + 'static,
+        on_secondary_press: impl Into<EventHandler<Event<PressEventData>>>,
     ) -> Self {
-        self.on_secondary_press = Some(EventHandler::new(on_secondary_press));
+        self.on_secondary_press = Some(on_secondary_press.into());
         self
     }
 
