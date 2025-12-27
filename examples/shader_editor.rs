@@ -15,7 +15,6 @@ use freya_core::integration::{
     ElementExt,
     RenderContext,
 };
-use freya_performance_plugin::PerformanceOverlayPlugin;
 use skia_safe::{
     Data,
     Paint,
@@ -45,11 +44,7 @@ const SHADER: &str = "
  ";
 
 fn main() {
-    launch(
-        LaunchConfig::new()
-            .with_window(WindowConfig::new(app).with_size(900., 600.))
-            .with_plugin(PerformanceOverlayPlugin::default()),
-    )
+    launch(LaunchConfig::new().with_window(WindowConfig::new(app).with_size(900., 600.)))
 }
 
 fn app() -> impl IntoElement {

@@ -4,6 +4,7 @@ use freya_core::{
     elements::paragraph::ParagraphHolderInner,
     prelude::*,
 };
+use keyboard_types::NamedKey;
 use torin::prelude::CursorPoint;
 
 use crate::{
@@ -163,7 +164,7 @@ impl EditableEvent<'_> {
             EditableEvent::KeyDown { key, modifiers } => {
                 match key {
                     // Handle dragging
-                    Key::Shift => {
+                    Key::Named(NamedKey::Shift) => {
                         dragging.write().shift = true;
                     }
                     // Handle editing
@@ -185,7 +186,7 @@ impl EditableEvent<'_> {
                 }
             }
             EditableEvent::KeyUp { key, .. } => {
-                if *key == Key::Shift {
+                if *key == Key::Named(NamedKey::Shift) {
                     dragging.write().shift = false;
                 }
             }

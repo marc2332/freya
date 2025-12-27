@@ -37,9 +37,8 @@ use crate::{
 ///
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
-/// #   rect()
-///         .spacing(8.).center().expanded().child(app())
-/// # }, (250., 250.).into(), "./images/gallery_radio.png");
+/// #   rect().spacing(8.).center().expanded().child(app())
+/// # }, "./images/gallery_radio.png").render();
 /// ```
 ///
 /// # Preview

@@ -12,22 +12,22 @@ pub fn integration(app: FpRender) -> impl IntoElement {
     let mut context = use_hook(ContextMenu::get);
 
     let on_global_key_down = move |e: Event<KeyboardEventData>| match e.key {
-        Key::Tab if e.modifiers.contains(Modifiers::SHIFT) => {
+        Key::Named(NamedKey::Tab) if e.modifiers.contains(Modifiers::SHIFT) => {
             platform.send(UserEvent::FocusAccessibilityNode(
                 AccessibilityFocusStrategy::Backward(AccessibilityFocusMovement::OutsideGroup),
             ));
         }
-        Key::Tab => {
+        Key::Named(NamedKey::Tab) => {
             platform.send(UserEvent::FocusAccessibilityNode(
                 AccessibilityFocusStrategy::Forward(AccessibilityFocusMovement::OutsideGroup),
             ));
         }
-        Key::ArrowUp => {
+        Key::Named(NamedKey::ArrowUp) => {
             platform.send(UserEvent::FocusAccessibilityNode(
                 AccessibilityFocusStrategy::Backward(AccessibilityFocusMovement::InsideGroup),
             ));
         }
-        Key::ArrowDown => {
+        Key::Named(NamedKey::ArrowDown) => {
             platform.send(UserEvent::FocusAccessibilityNode(
                 AccessibilityFocusStrategy::Forward(AccessibilityFocusMovement::InsideGroup),
             ));

@@ -114,7 +114,7 @@ pub fn virtual_scroll_view_scrollbar() {
 
     // Scroll up with arrows
     for _ in 0..11 {
-        test.press_key(Key::ArrowUp);
+        test.press_key(Key::Named(NamedKey::ArrowUp));
     }
 
     let content = scrollview.children()[0].children()[0].children();
@@ -129,7 +129,7 @@ pub fn virtual_scroll_view_scrollbar() {
     }
 
     // Scroll to the bottom with arrows
-    test.press_key(Key::End);
+    test.press_key(Key::Named(NamedKey::End));
 
     let content = scrollview.children()[0].children()[0].children();
     assert_eq!(content.len(), 10);
@@ -298,7 +298,7 @@ pub fn virtual_scroll_view_keyboard_navigation() {
 
     // Press ArrowDown multiple times
     for _ in 0..5 {
-        test.press_key(Key::ArrowDown);
+        test.press_key(Key::Named(NamedKey::ArrowDown));
     }
 
     let content = scrollview.children()[0].children()[0].children();
@@ -311,7 +311,7 @@ pub fn virtual_scroll_view_keyboard_navigation() {
 
     // Press ArrowUp to scroll back up
     for _ in 0..3 {
-        test.press_key(Key::ArrowUp);
+        test.press_key(Key::Named(NamedKey::ArrowUp));
     }
 
     let content = scrollview.children()[0].children()[0].children();
@@ -322,7 +322,7 @@ pub fn virtual_scroll_view_keyboard_navigation() {
     );
 
     // Press End to jump to bottom
-    test.press_key(Key::End);
+    test.press_key(Key::Named(NamedKey::End));
 
     let content = scrollview.children()[0].children()[0].children();
 
@@ -335,7 +335,7 @@ pub fn virtual_scroll_view_keyboard_navigation() {
     );
 
     // Press Home to jump to top
-    test.press_key(Key::Home);
+    test.press_key(Key::Named(NamedKey::Home));
 
     let content = scrollview.children()[0].children()[0].children();
 
@@ -402,7 +402,7 @@ pub fn virtual_scroll_view_keyboard_navigation_horizontal() {
 
     // Press ArrowRight multiple times
     for _ in 0..5 {
-        test.press_key(Key::ArrowRight);
+        test.press_key(Key::Named(NamedKey::ArrowRight));
     }
 
     let content = scrollview.children()[0].children()[0].children();
@@ -415,7 +415,7 @@ pub fn virtual_scroll_view_keyboard_navigation_horizontal() {
 
     // Press ArrowLeft to scroll back
     for _ in 0..3 {
-        test.press_key(Key::ArrowLeft);
+        test.press_key(Key::Named(NamedKey::ArrowLeft));
     }
 
     let content = scrollview.children()[0].children()[0].children();
@@ -426,7 +426,7 @@ pub fn virtual_scroll_view_keyboard_navigation_horizontal() {
     );
 
     // Press End to jump to the right
-    test.press_key(Key::End);
+    test.press_key(Key::Named(NamedKey::End));
 
     let content = scrollview.children()[0].children()[0].children();
 
@@ -438,7 +438,7 @@ pub fn virtual_scroll_view_keyboard_navigation_horizontal() {
     );
 
     // Press Home to jump to the left
-    test.press_key(Key::Home);
+    test.press_key(Key::Named(NamedKey::Home));
 
     let content = scrollview.children()[0].children()[0].children();
 

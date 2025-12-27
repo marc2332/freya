@@ -144,7 +144,7 @@ impl Render for Popup {
             let close = self.close_on_escape_key;
             let req = request_to_close.clone();
             move |e: Event<KeyboardEventData>| {
-                if close && e.key == Key::Escape {
+                if close && e.key == Key::Named(NamedKey::Escape) {
                     req();
                 }
             }

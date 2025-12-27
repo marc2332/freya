@@ -152,32 +152,32 @@ pub fn handle_key_event(
     // TODO(tropix126): Handle spacebar and spacebar + shift as Home and End
 
     match key {
-        Key::ArrowUp => {
+        Key::Named(NamedKey::ArrowUp) => {
             y = get_corrected_scroll_position(inner_height, viewport_height, y + y_line_delta)
         }
-        Key::ArrowDown => {
+        Key::Named(NamedKey::ArrowDown) => {
             y = get_corrected_scroll_position(inner_height, viewport_height, y - y_line_delta)
         }
-        Key::PageUp => {
+        Key::Named(NamedKey::PageUp) => {
             y = get_corrected_scroll_position(inner_height, viewport_height, y + y_line_delta)
         }
-        Key::PageDown => {
+        Key::Named(NamedKey::PageDown) => {
             y = get_corrected_scroll_position(inner_height, viewport_height, y - y_line_delta)
         }
-        Key::ArrowLeft => {
+        Key::Named(NamedKey::ArrowLeft) => {
             x = get_corrected_scroll_position(inner_width, viewport_width, x + x_line_delta)
         }
-        Key::ArrowRight => {
+        Key::Named(NamedKey::ArrowRight) => {
             x = get_corrected_scroll_position(inner_width, viewport_width, x - x_line_delta)
         }
-        Key::Home => {
+        Key::Named(NamedKey::Home) => {
             if direction == Direction::Vertical {
                 y = 0.0;
             } else {
                 x = 0.0;
             }
         }
-        Key::End => {
+        Key::Named(NamedKey::End) => {
             if direction == Direction::Vertical {
                 y = -inner_height;
             } else {

@@ -1,6 +1,7 @@
 use keyboard_types::{
     Key,
     Modifiers,
+    NamedKey,
 };
 
 use crate::{
@@ -73,7 +74,7 @@ impl Focus {
 
     pub fn is_pressed(event: &KeyboardEventData) -> bool {
         let is_space = matches!(event.key, Key::Character(ref s) if s == " ");
-        let is_enter = event.key == Key::Enter;
+        let is_enter = event.key == Key::Named(NamedKey::Enter);
 
         if cfg!(target_os = "macos") {
             let screen_reader = ScreenReader::get();

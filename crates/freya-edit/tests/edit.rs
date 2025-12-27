@@ -92,34 +92,34 @@ fn multiple_lines_single_editor() {
     let cursor = utils.find(|_, element| Some(Label::try_downcast(element)?.text.to_string()));
     assert_eq!(cursor.as_deref(), Some("0:0"));
 
-    utils.press_key(Key::ArrowDown);
+    utils.press_key(Key::Named(NamedKey::ArrowDown));
 
     let cursor = utils.find(|_, element| Some(Label::try_downcast(element)?.text.to_string()));
     assert_eq!(cursor.as_deref(), Some("1:0"));
 
-    utils.press_key(Key::ArrowRight);
+    utils.press_key(Key::Named(NamedKey::ArrowRight));
 
     let cursor = utils.find(|_, element| Some(Label::try_downcast(element)?.text.to_string()));
     assert_eq!(cursor.as_deref(), Some("1:1"));
 
-    utils.press_key(Key::ArrowUp);
+    utils.press_key(Key::Named(NamedKey::ArrowUp));
 
     let cursor = utils.find(|_, element| Some(Label::try_downcast(element)?.text.to_string()));
     assert_eq!(cursor.as_deref(), Some("0:1"));
 
-    utils.press_key(Key::ArrowUp);
+    utils.press_key(Key::Named(NamedKey::ArrowUp));
 
     let cursor = utils.find(|_, element| Some(Label::try_downcast(element)?.text.to_string()));
     assert_eq!(cursor.as_deref(), Some("0:0"));
 
-    utils.press_key(Key::ArrowDown);
-    utils.press_key(Key::ArrowDown);
+    utils.press_key(Key::Named(NamedKey::ArrowDown));
+    utils.press_key(Key::Named(NamedKey::ArrowDown));
 
     let cursor = utils.find(|_, element| Some(Label::try_downcast(element)?.text.to_string()));
     assert_eq!(cursor.as_deref(), Some("1:16"));
 
-    utils.press_key(Key::ArrowUp);
-    utils.press_key(Key::ArrowUp);
+    utils.press_key(Key::Named(NamedKey::ArrowUp));
+    utils.press_key(Key::Named(NamedKey::ArrowUp));
 
     let cursor = utils.find(|_, element| Some(Label::try_downcast(element)?.text.to_string()));
     assert_eq!(cursor.as_deref(), Some("0:0"));
@@ -490,7 +490,7 @@ fn backspace_remove() {
     let content = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.to_string()));
     assert!(content.unwrap().contains("🦀"));
 
-    utils.press_key(Key::Backspace);
+    utils.press_key(Key::Named(NamedKey::Backspace));
 
     let content = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.to_string()));
     assert_eq!(
@@ -576,7 +576,7 @@ fn highlight_shift_click_multiple_lines_single_editor() {
     utils.press_cursor((35.0, 3.0));
     utils.move_cursor((35.0, 3.0));
 
-    utils.press_key(Key::Shift);
+    utils.press_key(Key::Named(NamedKey::Shift));
 
     utils.move_cursor((80.0, 40.0));
     utils.release_cursor((80.0, 40.0));
@@ -683,7 +683,7 @@ fn highlights_shift_click_single_line_multiple_editors() {
     utils.press_cursor((35.0, 3.0));
     utils.move_cursor((35.0, 3.0));
 
-    utils.press_key(Key::Shift);
+    utils.press_key(Key::Named(NamedKey::Shift));
 
     utils.move_cursor((80.0, 35.0));
     utils.release_cursor((80.0, 35.0));
@@ -1195,7 +1195,7 @@ fn replace_text() {
     let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
     assert_eq!(cursor.as_deref(), Some("0:5"));
 
-    utils.press_key(Key::Shift);
+    utils.press_key(Key::Named(NamedKey::Shift));
     utils.move_cursor((80.0, 3.0));
     utils.release_cursor((80.0, 3.0));
 
@@ -1253,8 +1253,8 @@ fn navigate_empty_lines() {
     let content = utils.find(|_, e| Some(Paragraph::try_downcast(e)?.to_string()));
     assert_eq!(content.as_deref(), Some("\n"));
 
-    utils.press_key(Key::ArrowUp);
-    utils.press_key(Key::ArrowDown);
+    utils.press_key(Key::Named(NamedKey::ArrowUp));
+    utils.press_key(Key::Named(NamedKey::ArrowDown));
 
     let cursor = utils.find(|_, e| Some(Label::try_downcast(e)?.text.to_string()));
     assert!(cursor.is_some());

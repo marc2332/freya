@@ -39,6 +39,7 @@ pub mod prelude {
         Code,
         Key,
         Modifiers,
+        NamedKey,
     };
 
     pub use crate::{

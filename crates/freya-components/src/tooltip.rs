@@ -43,7 +43,7 @@ use crate::{
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
 /// #   rect().center().expanded().child(app())
-/// # }, (250., 250.).into(), "./images/gallery_tooltip.png");
+/// # }, "./images/gallery_tooltip.png").render();
 /// ```
 ///
 /// # Preview
