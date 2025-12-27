@@ -49,7 +49,7 @@ pub fn button_keyboard_press_test() {
     assert!(label.is_some());
 
     // Focus the button by clicking it
-    test.press_key(Key::Tab);
+    test.press_key(Key::Named(NamedKey::Tab));
     test.sync_and_update();
     test.sync_and_update();
     test.sync_and_update();
@@ -61,7 +61,7 @@ pub fn button_keyboard_press_test() {
     assert!(label.is_some());
 
     // Press Enter key while button is focused
-    test.press_key(Key::Enter);
+    test.press_key(Key::Named(NamedKey::Enter));
 
     let label = test.find(|_, element| {
         Label::try_downcast(element).filter(|label| label.text.as_ref() == "true")

@@ -9,6 +9,7 @@ use freya_clipboard::clipboard::Clipboard;
 use keyboard_types::{
     Key,
     Modifiers,
+    NamedKey,
 };
 
 use crate::editor_history::EditorHistory;
@@ -307,13 +308,13 @@ pub trait TextEditor {
         let skip_arrows_movement = !modifiers.contains(Modifiers::SHIFT) && selection.is_some();
 
         match key {
-            Key::Shift => {}
-            Key::Control => {}
-            Key::Alt => {}
-            Key::Escape => {
+            Key::Named(NamedKey::Shift) => {}
+            Key::Named(NamedKey::Control) => {}
+            Key::Named(NamedKey::Alt) => {}
+            Key::Named(NamedKey::Escape) => {
                 self.clear_selection();
             }
-            Key::ArrowDown => {
+            Key::Named(NamedKey::ArrowDown) => {
                 if modifiers.contains(Modifiers::SHIFT) {
                     self.selection_mut().set_as_range();
                 } else {
@@ -324,7 +325,7 @@ pub trait TextEditor {
                     event.insert(TextEvent::CURSOR_CHANGED);
                 }
             }
-            Key::ArrowLeft => {
+            Key::Named(NamedKey::ArrowLeft) => {
                 if modifiers.contains(Modifiers::SHIFT) {
                     self.selection_mut().set_as_range();
                 } else {
@@ -335,7 +336,7 @@ pub trait TextEditor {
                     event.insert(TextEvent::CURSOR_CHANGED);
                 }
             }
-            Key::ArrowRight => {
+            Key::Named(NamedKey::ArrowRight) => {
                 if modifiers.contains(Modifiers::SHIFT) {
                     self.selection_mut().set_as_range();
                 } else {
@@ -346,7 +347,7 @@ pub trait TextEditor {
                     event.insert(TextEvent::CURSOR_CHANGED);
                 }
             }
-            Key::ArrowUp => {
+            Key::Named(NamedKey::ArrowUp) => {
                 if modifiers.contains(Modifiers::SHIFT) {
                     self.selection_mut().set_as_range();
                 } else {
@@ -357,7 +358,7 @@ pub trait TextEditor {
                     event.insert(TextEvent::CURSOR_CHANGED);
                 }
             }
-            Key::Backspace if allow_changes => {
+            Key::Named(NamedKey::Backspace) if allow_changes => {
                 let cursor_pos = self.cursor_pos();
                 let selection = self.get_selection_range();
 
@@ -372,7 +373,7 @@ pub trait TextEditor {
                     event.insert(TextEvent::TEXT_CHANGED);
                 }
             }
-            Key::Delete if allow_changes => {
+            Key::Named(NamedKey::Delete) if allow_changes => {
                 let cursor_pos = self.cursor_pos();
                 let selection = self.get_selection_range();
 
@@ -386,7 +387,7 @@ pub trait TextEditor {
                     event.insert(TextEvent::TEXT_CHANGED);
                 }
             }
-            Key::Enter if allow_changes => {
+            Key::Named(NamedKey::Enter) if allow_changes => {
                 // Breaks the line
                 let cursor_pos = self.cursor_pos();
                 self.insert_char('\n', cursor_pos);
@@ -394,7 +395,7 @@ pub trait TextEditor {
 
                 event.insert(TextEvent::TEXT_CHANGED);
             }
-            Key::Tab if allow_tabs && allow_changes => {
+            Key::Named(NamedKey::Tab) if allow_tabs && allow_changes => {
                 // Inserts a tab
                 let text = " ".repeat(self.get_identation().into());
                 let cursor_pos = self.cursor_pos();

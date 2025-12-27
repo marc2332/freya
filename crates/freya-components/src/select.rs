@@ -180,10 +180,10 @@ impl Render for Select {
         };
 
         let on_global_key_down = move |e: Event<KeyboardEventData>| match e.key {
-            Key::Escape => {
+            Key::Named(NamedKey::Escape) => {
                 open.set_if_modified(false);
             }
-            Key::Enter if focus.is_focused() => {
+            Key::Named(NamedKey::Enter) if focus.is_focused() => {
                 open.toggle();
             }
             _ => {}

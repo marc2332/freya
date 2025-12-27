@@ -85,7 +85,7 @@ async-broadcast = "0.7.2"
 
 # Text editing
 ropey = "1.6.1"
-keyboard-types = "0.7.0"
+keyboard-types = "0.8.0"
 
 # Layout
 euclid = "0.22.9"

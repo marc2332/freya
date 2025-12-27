@@ -84,7 +84,7 @@ pub fn scroll_view_scrollbar() {
 
     // Scroll up with arrows
     for _ in 0..5 {
-        test.press_key(Key::ArrowUp);
+        test.press_key(Key::Named(NamedKey::ArrowUp));
     }
 
     assert!(content[0].is_visible());
@@ -93,7 +93,7 @@ pub fn scroll_view_scrollbar() {
     assert!(!content[3].is_visible());
 
     // Scroll to the bottom with arrows
-    test.press_key(Key::End);
+    test.press_key(Key::Named(NamedKey::End));
 
     assert!(!content[0].is_visible());
     assert!(content[1].is_visible());
