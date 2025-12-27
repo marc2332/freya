@@ -71,8 +71,8 @@ cfg_if::cfg_if! {
 /// | [ProgressBar](progressbar::ProgressBar)        | [Select](select::Select)        | [GifViewer](gif_viewer::GifViewer) | [Accordion](accordion::Accordion) |
 /// | ![Floating Tab Preview][gallery_floating_tab] | ![ImageViewer Preview][gallery_image_viewer] | ![ScrollView Preview][gallery_scrollview] | ![VirtualScrollView Preview][gallery_virtual_scrollview] |
 /// | [FloatingTab](floating_tab::FloatingTab)        | [ImageViewer](image_viewer::ImageViewer) | [ScrollView](scrollviews::ScrollView) | [VirtualScrollView](scrollviews::VirtualScrollView) |
-/// | ![Circular Loader Preview][gallery_circular_loader] | ![SegmentedButton Preview][gallery_segmented_button] | ![Tooltip Preview][gallery_tooltip] |  |
-/// | [CircularLoader](loader::CircularLoader)        | [SegmentedButton](segmented_button::SegmentedButton) | [Tooltip](tooltip::Tooltip) | |
+/// | ![Circular Loader Preview][gallery_circular_loader] | ![SegmentedButton Preview][gallery_segmented_button] | ![Tooltip Preview][gallery_tooltip] | ![Calendar Preview][gallery_calendar]  |
+/// | [CircularLoader](loader::CircularLoader)        | [SegmentedButton](segmented_button::SegmentedButton) | [Tooltip](tooltip::Tooltip) |[Calendar](calendar::Calendar) |
 #[cfg_attr(feature = "docs",
     doc = embed_doc_image::embed_image!("gallery_button", "images/gallery_button.png"),
     doc = embed_doc_image::embed_image!("gallery_filled_button", "images/gallery_filled_button.png"),
@@ -94,5 +94,6 @@ cfg_if::cfg_if! {
     doc = embed_doc_image::embed_image!("gallery_gif_viewer", "images/gallery_gif_viewer.png"),
     doc = embed_doc_image::embed_image!("gallery_segmented_button", "images/gallery_segmented_button.png"),
     doc = embed_doc_image::embed_image!("gallery_flat_button", "images/gallery_flat_button.png"),
+    doc = embed_doc_image::embed_image!("gallery_calendar", "images/gallery_calendar.png"),
 )]
 pub fn gallery() {}
