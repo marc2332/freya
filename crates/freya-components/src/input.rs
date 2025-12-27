@@ -231,7 +231,7 @@ impl Render for Input {
         };
 
         let on_key_down = move |e: Event<KeyboardEventData>| {
-            if e.key != Key::Enter && e.key != Key::Tab {
+            if e.key != Key::Named(NamedKey::Enter) && e.key != Key::Named(NamedKey::Tab) {
                 e.stop_propagation();
                 movement_timeout.reset();
                 editable.process_event(EditableEvent::KeyDown {

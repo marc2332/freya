@@ -96,7 +96,7 @@ pub fn slider_keyboard_horizontal() {
 
     // Press ArrowRight to increase value
     for _ in 0..5 {
-        test.press_key(Key::ArrowRight);
+        test.press_key(Key::Named(NamedKey::ArrowRight));
     }
 
     let label = test
@@ -115,7 +115,7 @@ pub fn slider_keyboard_horizontal() {
 
     // Press ArrowLeft to decrease value
     for _ in 0..3 {
-        test.press_key(Key::ArrowLeft);
+        test.press_key(Key::Named(NamedKey::ArrowLeft));
     }
 
     let label = test
@@ -193,7 +193,7 @@ pub fn slider_keyboard_vertical() {
 
     // Press ArrowUp to increase value (vertical slider)
     for _ in 0..5 {
-        test.press_key(Key::ArrowUp);
+        test.press_key(Key::Named(NamedKey::ArrowUp));
     }
 
     let label = test
@@ -212,7 +212,7 @@ pub fn slider_keyboard_vertical() {
 
     // Press ArrowDown to decrease value
     for _ in 0..3 {
-        test.press_key(Key::ArrowDown);
+        test.press_key(Key::Named(NamedKey::ArrowDown));
     }
 
     let label = test
@@ -266,7 +266,7 @@ pub fn slider_disabled() {
     assert_eq!(value, 50.0);
 
     // Try keyboard input
-    test.press_key(Key::ArrowRight);
+    test.press_key(Key::Named(NamedKey::ArrowRight));
 
     let label = test
         .find(|node, element| {

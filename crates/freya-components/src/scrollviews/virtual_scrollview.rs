@@ -364,10 +364,10 @@ impl<D: 'static, B: Fn(usize, &D) -> Element + 'static> Render for VirtualScroll
 
         let on_key_down = move |e: Event<KeyboardEventData>| {
             if !scroll_with_arrows
-                && (e.key == Key::ArrowUp
-                    || e.key == Key::ArrowRight
-                    || e.key == Key::ArrowDown
-                    || e.key == Key::ArrowLeft)
+                && (e.key == Key::Named(NamedKey::ArrowUp)
+                    || e.key == Key::Named(NamedKey::ArrowRight)
+                    || e.key == Key::Named(NamedKey::ArrowDown)
+                    || e.key == Key::Named(NamedKey::ArrowLeft))
             {
                 return;
             }
@@ -395,18 +395,18 @@ impl<D: 'static, B: Fn(usize, &D) -> Element + 'static> Render for VirtualScroll
 
         let on_global_key_down = move |e: Event<KeyboardEventData>| {
             let data = e;
-            if data.key == Key::Shift {
+            if data.key == Key::Named(NamedKey::Shift) {
                 pressing_shift.set(true);
-            } else if data.key == Key::Alt {
+            } else if data.key == Key::Named(NamedKey::Alt) {
                 pressing_alt.set(true);
             }
         };
 
         let on_global_key_up = move |e: Event<KeyboardEventData>| {
             let data = e;
-            if data.key == Key::Shift {
+            if data.key == Key::Named(NamedKey::Shift) {
                 pressing_shift.set(false);
-            } else if data.key == Key::Alt {
+            } else if data.key == Key::Named(NamedKey::Alt) {
                 pressing_alt.set(false);
             }
         };
