@@ -47,7 +47,7 @@ fn main() {
         }
     }
 
-    let (mut runner, _) = TestingRunner::new(app, Size2D::new(500., 500.), |_| {});
+    let (mut runner, _) = TestingRunner::new(app, Size2D::new(500., 500.), |_| {}, 1.);
     runner.render_to_file("./demo-1.png");
     runner.click_cursor((270., 100.));
     runner.render_to_file("./demo-2.png");

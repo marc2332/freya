@@ -48,11 +48,13 @@ pub mod prelude {
     pub use crate::*;
 }
 
+type DocRunnerHook = Box<dyn FnOnce(&mut TestingRunner)>;
+
 pub struct DocRunner {
     app: FpRender,
     size: Size2D,
     scale_factor: f64,
-    hook: Option<Box<dyn FnOnce(&mut TestingRunner)>>,
+    hook: Option<DocRunnerHook>,
     image_path: PathBuf,
 }
 
