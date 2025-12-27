@@ -457,16 +457,6 @@ impl TestingRunner {
             .expect("Failed to encode the snapshot.")
     }
 
-    /// Set the scale factor for rendering and event handling.
-    pub fn set_scale_factor(&mut self, scale_factor: f64) {
-        self.scale_factor = scale_factor;
-    }
-
-    /// Get the current scale factor.
-    pub fn scale_factor(&self) -> f64 {
-        self.scale_factor
-    }
-
     pub fn render_to_file(&mut self, path: impl Into<PathBuf>) {
         let path = path.into();
 
