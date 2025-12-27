@@ -120,9 +120,12 @@ fn touch_events() {
             .into()
     }
 
-    let (mut test, state) = TestingRunner::new(app, (500., 500.).into(), |runner| {
-        runner.provide_root_context(|| State::create(0))
-    });
+    let (mut test, state) = TestingRunner::new(
+        app,
+        (500., 500.).into(),
+        |runner| runner.provide_root_context(|| State::create(0)),
+        1.,
+    );
     test.sync_and_update();
 
     assert_eq!(*state.peek(), 0);
@@ -184,9 +187,12 @@ fn pointer_events() {
             .into()
     }
 
-    let (mut test, state) = TestingRunner::new(app, (500., 500.).into(), |runner| {
-        runner.provide_root_context(|| State::create(0))
-    });
+    let (mut test, state) = TestingRunner::new(
+        app,
+        (500., 500.).into(),
+        |runner| runner.provide_root_context(|| State::create(0)),
+        1.,
+    );
     test.sync_and_update();
 
     assert_eq!(*state.peek(), 0);

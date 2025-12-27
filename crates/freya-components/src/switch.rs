@@ -31,13 +31,13 @@ use crate::{
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
 /// #   rect().center().expanded().child(Switch::new().toggled(true))
-/// # }, (250., 250.).into(), "./images/gallery_toggled_switch.png");
+/// # }, "./images/gallery_toggled_switch.png").render();
 /// #
 /// # // NOT TOGGLED
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
 /// #   rect().center().expanded().child(Switch::new().toggled(false))
-/// # }, (250., 250.).into(), "./images/gallery_not_toggled_switch.png");
+/// # }, "./images/gallery_not_toggled_switch.png").render();
 /// ```
 /// # Preview
 ///

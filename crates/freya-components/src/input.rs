@@ -96,7 +96,7 @@ impl InputValidator {
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
 /// #   rect().center().expanded().child(Input::new() .value("Ferris"))
-/// # }, (250., 250.).into(), "./images/gallery_input.png");
+/// # }, "./images/gallery_input.png").render();
 /// ```
 /// # Preview
 /// ![Input Preview][input]

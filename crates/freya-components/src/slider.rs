@@ -30,7 +30,7 @@ pub enum SliderStatus {
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
 /// #   rect().padding(48.).center().expanded().child(app())
-/// # }, (250., 250.).into(), "./images/gallery_slider.png");
+/// # }, "./images/gallery_slider.png").render();
 /// ```
 /// # Preview
 /// ![Slider Preview][slider]
