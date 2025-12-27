@@ -10,6 +10,12 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "plot", "backend", "skia", "plotters"]
 categories = ["gui"]
 
+[package.metadata.docs.rs]
+features = ["freya-engine/mocked-engine"]
+
+[features]
+skia-engine = ["freya-engine/skia-engine"]
+
 [dependencies]
 freya-engine = { workspace = true }
 plotters-backend = "0.3.7"
