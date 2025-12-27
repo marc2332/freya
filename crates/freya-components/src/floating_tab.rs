@@ -53,12 +53,9 @@ impl ChildrenExt for FloatingTab {
 /// }
 ///
 /// # use freya_testing::prelude::*;
-/// # launch_doc_hook(|| {
+/// # launch_doc(|| {
 /// #   rect().center().expanded().child(app())
-/// # }, (250., 250.).into(), "./images/gallery_floating_tab.png", |t| {
-/// #   t.move_cursor((125., 115.));
-/// #   t.sync_and_update();
-/// # });
+/// # }, "./images/gallery_floating_tab.png").with_hook(|t| { t.move_cursor((125., 115.)); t.sync_and_update(); }).with_scale_factor(1.).render();
 /// ```
 ///
 /// # Preview

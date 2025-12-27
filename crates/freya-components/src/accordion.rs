@@ -38,9 +38,9 @@ use crate::{
 ///
 /// # use freya_testing::prelude::*;
 /// # use std::time::Duration;
-/// # launch_doc_hook(|| {
+/// # launch_doc(|| {
 /// #   rect().child(app())
-/// # }, (250., 250.).into(), "./images/gallery_accordion.png", |t| {
+/// # }, "./images/gallery_accordion.png").with_hook(|t| {
 /// #   t.click_cursor((125., 115.));
 /// #   t.poll(Duration::from_millis(1), Duration::from_millis(300));
 /// #   t.sync_and_update();

@@ -38,7 +38,7 @@ pub enum ButtonLayoutVariant {
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
 /// #   rect().center().expanded().child(app())
-/// # }, (250., 250.).into(), "./images/gallery_button.png");
+/// # }, "./images/gallery_button.png").render();
 /// ```
 /// ## **Filled**
 ///
@@ -53,7 +53,7 @@ pub enum ButtonLayoutVariant {
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
 /// #   rect().center().expanded().child(app())
-/// # }, (250., 250.).into(), "./images/gallery_filled_button.png");
+/// # }, "./images/gallery_filled_button.png").render();
 /// ```
 /// ## **Outline**
 ///
@@ -68,7 +68,7 @@ pub enum ButtonLayoutVariant {
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
 /// #   rect().center().expanded().child(app())
-/// # }, (250., 250.).into(), "./images/gallery_outline_button.png");
+/// # }, "./images/gallery_outline_button.png").render();
 /// ```
 /// ## **Flat**
 ///
@@ -83,7 +83,7 @@ pub enum ButtonLayoutVariant {
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
 /// #   rect().center().expanded().child(app())
-/// # }, (250., 250.).into(), "./images/gallery_flat_button.png");
+/// # }, "./images/gallery_flat_button.png").render();
 /// ```
 ///
 /// # Preview

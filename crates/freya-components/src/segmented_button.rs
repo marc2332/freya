@@ -230,7 +230,7 @@ impl Render for ButtonSegment {
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
 /// #   rect().center().expanded().child(app())
-/// # }, (250., 250.).into(), "./images/gallery_segmented_button.png");
+/// # }, "./images/gallery_segmented_button.png").render();
 /// ```
 ///
 /// # Preview

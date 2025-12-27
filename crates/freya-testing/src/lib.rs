@@ -48,23 +48,56 @@ pub mod prelude {
     pub use crate::*;
 }
 
-pub fn launch_doc(app: impl Into<FpRender>, size: Size2D, path: impl Into<PathBuf>) {
-    launch_doc_hook(app, size, path, |_| {})
+pub struct DocRunner {
+    app: FpRender,
+    size: Size2D,
+    scale_factor: f64,
+    hook: Option<Box<dyn FnOnce(&mut TestingRunner)>>,
+    image_path: PathBuf,
 }
 
-pub fn launch_doc_hook(
-    app: impl Into<FpRender>,
-    size: Size2D,
-    path: impl Into<PathBuf>,
-    hook: impl FnOnce(&mut TestingRunner),
-) {
-    let (mut test, _) = TestingRunner::new(app, size, |_| {});
-    hook(&mut test);
-    test.render_to_file(path);
+impl DocRunner {
+    pub fn render(self) {
+        let (mut test, _) = TestingRunner::new(self.app, self.size, |_| {}, self.scale_factor);
+        if let Some(hook) = self.hook {
+            (hook)(&mut test);
+        }
+        test.render_to_file(self.image_path);
+    }
+
+    pub fn with_hook(mut self, hook: impl FnOnce(&mut TestingRunner) + 'static) -> Self {
+        self.hook = Some(Box::new(hook));
+        self
+    }
+
+    pub fn with_image_path(mut self, image_path: PathBuf) -> Self {
+        self.image_path = image_path;
+        self
+    }
+
+    pub fn with_scale_factor(mut self, scale_factor: f64) -> Self {
+        self.scale_factor = scale_factor;
+        self
+    }
+
+    pub fn with_size(mut self, size: Size2D) -> Self {
+        self.size = size;
+        self
+    }
+}
+
+pub fn launch_doc(app: impl Into<FpRender>, path: impl Into<PathBuf>) -> DocRunner {
+    DocRunner {
+        app: app.into(),
+        size: Size2D::new(250., 250.),
+        scale_factor: 1.0,
+        hook: None,
+        image_path: path.into(),
+    }
 }
 
 pub fn launch_test(app: impl Into<FpRender>) -> TestingRunner {
-    TestingRunner::new(app, Size2D::new(500., 500.), |_| {}).0
+    TestingRunner::new(app, Size2D::new(500., 500.), |_| {}, 1.0).0
 }
 
 pub struct TestingRunner {
@@ -87,6 +120,7 @@ pub struct TestingRunner {
     ticker_sender: RenderingTickerSender,
 
     default_fonts: Vec<Cow<'static, str>>,
+    scale_factor: f64,
 }
 
 impl TestingRunner {
@@ -94,6 +128,7 @@ impl TestingRunner {
         app: impl Into<FpRender>,
         size: Size2D,
         hook: impl FnOnce(&mut Runner) -> T,
+        scale_factor: f64,
     ) -> (Self, T) {
         let (events_sender, events_receiver) = futures_channel::mpsc::unbounded();
         let app = app.into();
@@ -183,6 +218,7 @@ impl TestingRunner {
             ticker_sender,
 
             default_fonts: default_fonts(),
+            scale_factor,
         };
 
         runner.sync_and_update();
@@ -216,7 +252,7 @@ impl TestingRunner {
             &self.font_collection,
             &self.font_manager,
             &self.events_sender,
-            1.0,
+            self.scale_factor,
             &self.default_fonts,
         );
         self.tree.borrow_mut().accessibility_diff.clear();
@@ -262,7 +298,7 @@ impl TestingRunner {
             &self.font_collection,
             &self.font_manager,
             &self.events_sender,
-            1.0,
+            self.scale_factor,
             &self.default_fonts,
         );
 
@@ -307,7 +343,7 @@ impl TestingRunner {
     pub fn send_event(&mut self, platform_event: PlatformEvent) {
         let mut events_measurer_adapter = EventsMeasurerAdapter {
             tree: &mut self.tree.borrow_mut(),
-            scale_factor: 1.0,
+            scale_factor: self.scale_factor,
         };
         let processed_events = events_measurer_adapter.run(
             &mut vec![platform_event],
@@ -409,7 +445,7 @@ impl TestingRunner {
             font_manager: &self.font_manager,
             tree: &self.tree.borrow(),
             canvas: surface.canvas(),
-            scale_factor: 1.0,
+            scale_factor: self.scale_factor,
             background: Color::WHITE,
         };
         render_pipeline.render();
@@ -419,6 +455,16 @@ impl TestingRunner {
         image
             .encode(context.as_mut(), EncodedImageFormat::PNG, None)
             .expect("Failed to encode the snapshot.")
+    }
+
+    /// Set the scale factor for rendering and event handling.
+    pub fn set_scale_factor(&mut self, scale_factor: f64) {
+        self.scale_factor = scale_factor;
+    }
+
+    /// Get the current scale factor.
+    pub fn scale_factor(&self) -> f64 {
+        self.scale_factor
     }
 
     pub fn render_to_file(&mut self, path: impl Into<PathBuf>) {

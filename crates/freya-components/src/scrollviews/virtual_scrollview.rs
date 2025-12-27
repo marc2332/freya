@@ -51,9 +51,9 @@ use crate::scrollviews::{
 /// }
 ///
 /// # use freya_testing::prelude::*;
-/// # launch_doc_hook(|| {
+/// # launch_doc(|| {
 /// #   rect().center().expanded().child(app())
-/// # }, (250., 250.).into(), "./images/gallery_virtual_scrollview.png", |t| {
+/// # }, "./images/gallery_virtual_scrollview.png").with_hook(|t| {
 /// #   t.move_cursor((125., 115.));
 /// #   t.sync_and_update();
 /// # });
