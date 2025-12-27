@@ -32,7 +32,7 @@ all = [
   "material-design",
   "calendar",
 ]
-all-publish = ["all", "performance", "mocked-engine"]
+all-publish = ["all", "performance", "mocked-engine", "freya-components/docs"]
 all-debug = ["all", "performance", "vulkan"]
 all-tests = [
   "router",
