@@ -4,6 +4,8 @@ use torin::{
     size::Size,
 };
 
+#[cfg(feature = "calendar")]
+use crate::calendar::Calendar;
 #[cfg(feature = "router")]
 use crate::link::Link;
 use crate::{
@@ -75,6 +77,8 @@ pub struct Theme {
     pub menu_container: MenuContainerThemePreference,
     pub button_segment: ButtonSegmentThemePreference,
     pub segmented_button: SegmentedButtonThemePreference,
+    #[cfg(feature = "calendar")]
+    pub calendar: CalendarThemePreference,
 }
 
 impl Default for Theme {
@@ -441,5 +445,24 @@ define_theme! {
         background: Color,
         border_fill: Color,
         corner_radius: CornerRadius,
+    }
+}
+
+#[cfg(feature = "calendar")]
+define_theme! {
+    %[component]
+    pub Calendar {
+        %[fields]
+        background: Color,
+        day_background: Color,
+        day_hover_background: Color,
+        day_selected_background: Color,
+        color: Color,
+        day_other_month_color: Color,
+        header_color: Color,
+        corner_radius: CornerRadius,
+        padding: Gaps,
+        day_corner_radius: CornerRadius,
+        nav_button_hover_background: Color,
     }
 }

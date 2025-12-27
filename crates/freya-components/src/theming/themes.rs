@@ -4,6 +4,8 @@ use torin::{
     size::Size,
 };
 
+#[cfg(feature = "calendar")]
+use crate::theming::component_themes::CalendarThemePreference;
 #[cfg(feature = "router")]
 use crate::theming::component_themes::LinkThemePreference;
 use crate::theming::{
@@ -302,6 +304,20 @@ pub(crate) const BASE_THEME: Theme = Theme {
         background: Preference::Reference("surface_tertiary"),
         border_fill: Preference::Reference("border"),
         corner_radius: Preference::Specific(CornerRadius::new_all(99.)),
+    },
+    #[cfg(feature = "calendar")]
+    calendar: CalendarThemePreference {
+        background: Preference::Reference("surface_tertiary"),
+        day_background: Preference::Specific(Color::TRANSPARENT),
+        day_hover_background: Preference::Reference("hover"),
+        day_selected_background: Preference::Reference("surface_primary"),
+        color: Preference::Reference("text_primary"),
+        day_other_month_color: Preference::Reference("text_placeholder"),
+        header_color: Preference::Reference("text_primary"),
+        corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
+        padding: Preference::Specific(Gaps::new_all(12.)),
+        day_corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
+        nav_button_hover_background: Preference::Reference("hover"),
     },
 };
 

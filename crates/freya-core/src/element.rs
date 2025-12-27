@@ -46,6 +46,7 @@ use crate::{
     prelude::{
         FileEventData,
         ImePreeditEventData,
+        MaybeExt,
     },
     text_cache::TextCache,
     tree::{
@@ -283,6 +284,8 @@ where
         DiffKey::U64(Self::render as *const () as u64)
     }
 }
+
+impl<T> MaybeExt for T where T: Render {}
 
 impl<T: Render + PartialEq> From<T> for Element {
     fn from(value: T) -> Self {
