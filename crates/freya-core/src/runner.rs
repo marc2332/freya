@@ -828,7 +828,7 @@ impl Runner {
         }
 
         // Collect a set of branches to remove in cascade
-        let mut selected_roots: HashMap<Box<[u32]>, HashSet<Box<[u32]>>> = HashMap::default();
+        let mut selected_roots: HashMap<&[u32], HashSet<&[u32]>> = HashMap::default();
         let mut scope_removal_buffer = vec![];
 
         // Given some removals like:
@@ -877,7 +877,7 @@ impl Runner {
                     // Skip if this removed path is already covered by a previously selected root
                     for (root, inner) in &mut selected_roots {
                         if is_descendant(removed, root) {
-                            inner.insert(removed.clone());
+                            inner.insert(removed);
                             continue 'remove;
                         }
                     }
@@ -886,9 +886,9 @@ impl Runner {
                     selected_roots.retain(|root, _| !is_descendant(root, removed));
 
                     selected_roots
-                        .entry(Box::from(&removed[..removed.len() - 1]))
+                        .entry(&removed[..removed.len() - 1])
                         .or_default()
-                        .insert(removed.clone());
+                        .insert(removed);
                 }
             } else {
                 unreachable!()
@@ -899,7 +899,7 @@ impl Runner {
         for (root, removed) in selected_roots {
             scope.borrow_mut().nodes.retain(
                 &root,
-                |p, _| !removed.contains(p),
+                |p, _| !removed.contains(&p[..]),
                 |_, &PathNode { scope_id, node_id }| {
                     if let Some(scope_id) = scope_id {
                         // Queue scope to be removed
