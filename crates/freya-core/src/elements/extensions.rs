@@ -730,6 +730,50 @@ where
     }
 }
 
+pub trait StyleExt
+where
+    Self: Sized,
+{
+    fn get_style(&mut self) -> &mut StyleState;
+
+    fn background<S: Into<Color>>(mut self, background: S) -> Self {
+        self.get_style().background = Fill::Color(background.into());
+        self
+    }
+
+    fn background_conic_gradient<S: Into<ConicGradient>>(mut self, background: S) -> Self {
+        self.get_style().background = Fill::ConicGradient(Box::new(background.into()));
+        self
+    }
+
+    fn background_linear_gradient<S: Into<LinearGradient>>(mut self, background: S) -> Self {
+        self.get_style().background = Fill::LinearGradient(Box::new(background.into()));
+        self
+    }
+
+    fn background_radial_gradient<S: Into<RadialGradient>>(mut self, background: S) -> Self {
+        self.get_style().background = Fill::RadialGradient(Box::new(background.into()));
+        self
+    }
+
+    fn border(mut self, border: impl Into<Option<Border>>) -> Self {
+        if let Some(border) = border.into() {
+            self.get_style().borders.push(border);
+        }
+        self
+    }
+
+    fn shadow(mut self, shadow: impl Into<Shadow>) -> Self {
+        self.get_style().shadows.push(shadow.into());
+        self
+    }
+
+    fn corner_radius(mut self, corner_radius: impl Into<CornerRadius>) -> Self {
+        self.get_style().corner_radius = corner_radius.into();
+        self
+    }
+}
+
 pub trait MaybeExt
 where
     Self: Sized,

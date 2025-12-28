@@ -3,6 +3,7 @@ pub mod animation_clock;
 pub mod current_context;
 pub mod cursor;
 pub mod data;
+pub mod debug;
 pub mod diff_key;
 pub mod element;
 pub mod elements;
@@ -42,6 +43,7 @@ pub mod prelude {
         NamedKey,
     };
 
+    pub use crate::debug::*;
     pub use crate::{
         accessibility::{
             focus::*,
