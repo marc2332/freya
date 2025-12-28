@@ -37,13 +37,7 @@ use crate::{
     layers::Layer,
     prelude::*,
     style::{
-        fill::Fill,
         font_size::FontSize,
-        gradient::{
-            ConicGradient,
-            LinearGradient,
-            RadialGradient,
-        },
         scale::Scale,
         shadow::{
             Shadow,
@@ -580,6 +574,12 @@ impl TextStyleExt for Rect {
     }
 }
 
+impl StyleExt for Rect {
+    fn get_style(&mut self) -> &mut StyleState {
+        &mut self.element.style
+    }
+}
+
 impl MaybeExt for Rect {}
 
 impl LayerExt for Rect {
@@ -641,13 +641,6 @@ impl Rect {
         (element as &dyn Any).downcast_ref::<RectElement>().cloned()
     }
 
-    pub fn border(mut self, border: impl Into<Option<Border>>) -> Self {
-        if let Some(border) = border.into() {
-            self.element.style.borders.push(border);
-        }
-        self
-    }
-
     pub fn color(mut self, color: impl Into<Color>) -> Self {
         self.element.text_style_data.color = Some(color.into());
         self
@@ -655,11 +648,6 @@ impl Rect {
 
     pub fn font_size(mut self, font_size: impl Into<FontSize>) -> Self {
         self.element.text_style_data.font_size = Some(font_size.into());
-        self
-    }
-
-    pub fn shadow(mut self, shadow: impl Into<Shadow>) -> Self {
-        self.element.style.shadows.push(shadow.into());
         self
     }
 
@@ -676,31 +664,6 @@ impl Rect {
             .effect
             .get_or_insert_with(Default::default)
             .rotation = rotation.into();
-        self
-    }
-
-    pub fn background<S: Into<Color>>(mut self, background: S) -> Self {
-        self.element.style.background = Fill::Color(background.into());
-        self
-    }
-
-    pub fn background_conic_gradient<S: Into<ConicGradient>>(mut self, background: S) -> Self {
-        self.element.style.background = Fill::ConicGradient(Box::new(background.into()));
-        self
-    }
-
-    pub fn background_linear_gradient<S: Into<LinearGradient>>(mut self, background: S) -> Self {
-        self.element.style.background = Fill::LinearGradient(Box::new(background.into()));
-        self
-    }
-
-    pub fn background_radial_gradient<S: Into<RadialGradient>>(mut self, background: S) -> Self {
-        self.element.style.background = Fill::RadialGradient(Box::new(background.into()));
-        self
-    }
-
-    pub fn corner_radius(mut self, corner_radius: impl Into<CornerRadius>) -> Self {
-        self.element.style.corner_radius = corner_radius.into();
         self
     }
 
