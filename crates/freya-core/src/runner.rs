@@ -898,8 +898,8 @@ impl Runner {
         // Traverse each chosen branch root and queue nested scopes
         for (root, removed) in selected_roots {
             scope.borrow_mut().nodes.retain(
-                &root,
-                |p, _| !removed.contains(&p[..]),
+                root,
+                |p, _| !removed.contains(p),
                 |_, &PathNode { scope_id, node_id }| {
                     if let Some(scope_id) = scope_id {
                         // Queue scope to be removed
