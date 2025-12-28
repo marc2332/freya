@@ -1,6 +1,9 @@
 #[cfg(debug_assertions)]
 use crate::prelude::Color;
-use crate::prelude::{Border, StyleExt};
+use crate::prelude::{
+    Border,
+    StyleExt,
+};
 
 pub trait DebugExt
 where

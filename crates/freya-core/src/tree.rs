@@ -99,10 +99,20 @@ pub struct Tree {
 
 impl Debug for Tree {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!(
-            "Parents: {:#?}\nChildren: {:#?}\nHeights: {:#?}",
-            self.parents, self.children, self.heights,
-        ))
+        f.debug_struct("Tree")
+            .field("children", &self.children.capacity())
+            .field("parents", &self.parents.capacity())
+            .field("elements", &self.elements.capacity())
+            .field("heights", &self.heights.capacity())
+            .field("listeners", &self.listeners.capacity())
+            .field("layer_state", &self.layer_state.capacity())
+            .field("layout_size", &self.layout.size())
+            .field("layers", &self.layers.capacity())
+            .field("effect_state", &self.effect_state.capacity())
+            .field("accessibility_state", &self.accessibility_state.capacity())
+            .field("text_style_state", &self.text_style_state.capacity())
+            .field("text_cache", &self.text_cache)
+            .finish()
     }
 }
 
@@ -514,25 +524,6 @@ impl Tree {
         });
 
         MutationsApplyResult { needs_render }
-    }
-
-    #[cfg(debug_assertions)]
-    pub fn print_metrics(&self) {
-        println!("children: {}", self.children.capacity());
-        println!("parents: {}", self.parents.capacity());
-        println!("elements: {}", self.elements.capacity());
-        println!("heights: {}", self.heights.capacity());
-        println!("listeners: {}", self.listeners.capacity());
-        println!("layer_state: {}", self.layer_state.capacity());
-        println!("layout: {}", self.layout.size());
-        println!("layers: {}", self.layers.capacity());
-        println!("effect_state: {}", self.effect_state.capacity());
-        println!(
-            "accessibility_state: {}",
-            self.accessibility_state.capacity()
-        );
-        println!("text_style_state: {}", self.text_style_state.capacity());
-        self.text_cache.print_metrics();
     }
 
     /// Walk to the ancestor of `base` with the same height of `target`

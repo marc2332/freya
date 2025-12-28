@@ -155,7 +155,7 @@ freya-devtools = { workspace = true, features = ["server", "client"] }
 skia-safe = { workspace = true }
 
 tracing = { workspace = true }
-tracing-subscriber = "0.3.19"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 
 rand = "0.9"
 

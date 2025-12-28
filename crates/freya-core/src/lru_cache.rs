@@ -114,10 +114,14 @@ impl<V, ID: Hash + Eq> LRUCache<V, ID> {
         self.map.clear();
         self.users.clear();
     }
+}
 
-    pub fn print_metrics(&self) {
-        println!("Cached Values {}", self.map.len());
-        println!("Cache Users {}", self.users.len());
+impl<V, ID: Hash> std::fmt::Debug for LRUCache<V, ID> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("LRUCache")
+            .field("cached_values", &self.map.len())
+            .field("cached_users", &self.users.len())
+            .finish()
     }
 }
 

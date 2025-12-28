@@ -118,6 +118,19 @@ pub struct Runner {
     pub(crate) receiver: futures_channel::mpsc::UnboundedReceiver<Message>,
 }
 
+impl Debug for Runner {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Runner")
+            .field("dirty_scopes", &self.dirty_scopes.len())
+            .field("dirty_tasks", &self.dirty_tasks.len())
+            .field("node_to_scope", &self.node_to_scope.len())
+            .field("scopes", &self.scopes.len())
+            .field("scopes_storages", &self.scopes_storages.borrow().len())
+            .field("tasks", &self.tasks.borrow().len())
+            .finish()
+    }
+}
+
 impl Drop for Runner {
     fn drop(&mut self) {
         // Graceful shutdown of scopes based on their height, starting from the deepest
@@ -585,16 +598,6 @@ impl Runner {
                 },
             );
         }
-    }
-
-    #[cfg(debug_assertions)]
-    pub fn print_metrics(&self) {
-        println!("dirty_scopes: {}", self.dirty_scopes.len());
-        println!("dirty_tasks: {}", self.dirty_tasks.len());
-        println!("node_to_scope: {}", self.node_to_scope.len());
-        println!("scopes: {}", self.scopes.len());
-        println!("scopes_storages: {}", self.scopes_storages.borrow().len());
-        println!("tasks: {}", self.tasks.borrow().len());
     }
 
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
