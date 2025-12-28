@@ -129,7 +129,7 @@ impl AppWindow {
                 window_attributes.with_max_inner_size(LogicalSize::<f64>::from(max_size));
         }
         if let Some(window_attributes_hook) = window_config.window_attributes_hook.take() {
-            window_attributes = window_attributes_hook(window_attributes);
+            window_attributes = window_attributes_hook(window_attributes, active_event_loop);
         }
         let (driver, mut window) =
             GraphicsDriver::new(active_event_loop, window_attributes, &window_config);

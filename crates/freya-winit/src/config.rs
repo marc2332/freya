@@ -11,10 +11,13 @@ use freya_core::{
     prelude::Color,
 };
 use image::ImageReader;
-use winit::window::{
-    Icon,
-    Window,
-    WindowAttributes,
+use winit::{
+    event_loop::ActiveEventLoop,
+    window::{
+        Icon,
+        Window,
+        WindowAttributes,
+    },
 };
 
 use crate::plugins::{
@@ -22,7 +25,8 @@ use crate::plugins::{
     PluginsManager,
 };
 
-pub type WindowBuilderHook = Box<dyn FnOnce(WindowAttributes) -> WindowAttributes + Send + Sync>;
+pub type WindowBuilderHook =
+    Box<dyn FnOnce(WindowAttributes, &ActiveEventLoop) -> WindowAttributes + Send + Sync>;
 pub type WindowHandleHook = Box<dyn FnOnce(&mut Window) + Send + Sync>;
 
 /// Configuration for a Window.
@@ -149,7 +153,7 @@ impl WindowConfig {
     /// Register a Window Attributes hook.
     pub fn with_window_attributes(
         mut self,
-        window_attributes_hook: impl FnOnce(WindowAttributes) -> WindowAttributes
+        window_attributes_hook: impl FnOnce(WindowAttributes, &ActiveEventLoop) -> WindowAttributes
         + 'static
         + Send
         + Sync,
