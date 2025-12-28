@@ -1518,23 +1518,18 @@ impl MipmapMode {
     pub const Last: MipmapMode = MipmapMode::Linear;
 }
 
-pub struct Path;
+pub struct PathBuilder;
 
-impl Path {
+impl PathBuilder {
     pub fn new() -> Self {
         unimplemented!("This is mocked")
     }
 
-    pub fn bounds(&self) -> &Rect {
+    pub fn detach(self) -> Path {
         unimplemented!("This is mocked")
     }
 
-    pub fn add_path(
-        &mut self,
-        _src: &Path,
-        _d: impl Into<Point>,
-        _mode: Option<&PathAddPathMode>,
-    ) -> &mut Self {
+    pub fn add_path(&mut self, _src: &Path) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -1555,11 +1550,11 @@ impl Path {
         unimplemented!("This is mocked")
     }
 
-    pub fn r_arc_to_rotated(
+    pub fn r_arc_to(
         &mut self,
         _r: impl Into<Point>,
         _x_axis_rotate: f32,
-        _large_arc: ArcSize,
+        _large_arc: BuilderArcSize,
         _sweep: PathDirection,
         _d: impl Into<Point>,
     ) -> &mut Self {
@@ -1574,6 +1569,7 @@ impl Path {
         &mut self,
         _rrect: impl AsRef<RRect>,
         _dir_start: Option<(PathDirection, usize)>,
+        _start_index: Option<usize>,
     ) -> &mut Self {
         unimplemented!("This is mocked")
     }
@@ -1583,6 +1579,18 @@ impl Path {
     }
 
     pub fn set_fill_type(&mut self, _ft: PathFillType) -> &mut Self {
+        unimplemented!("This is mocked")
+    }
+}
+
+pub struct Path;
+
+impl Path {
+    pub fn new() -> Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn bounds(&self) -> &Rect {
         unimplemented!("This is mocked")
     }
 }
@@ -1641,6 +1649,13 @@ impl RRect {
 #[repr(i32)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum ArcSize {
+    Small = 0,
+    Large = 1,
+}
+
+#[repr(i32)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum BuilderArcSize {
     Small = 0,
     Large = 1,
 }

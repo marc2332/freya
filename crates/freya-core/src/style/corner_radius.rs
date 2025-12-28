@@ -47,7 +47,7 @@ impl CornerRadius {
 
     // https://github.com/aloisdeniel/figma_squircle/blob/main/lib/src/path_smooth_corners.dart
     pub fn smoothed_path(&self, rect: RRect) -> Path {
-        let mut path = Path::new();
+        let mut path = PathBuilder::new();
 
         let width = rect.width();
         let height = rect.height();
@@ -63,10 +63,10 @@ impl CornerRadius {
                     (width - (p - a - b), 0.0),
                     (width - (p - a - b - c), d),
                 )
-                .r_arc_to_rotated(
+                .r_arc_to(
                     (radius, radius),
                     0.0,
-                    SkArcSize::Small,
+                    BuilderArcSize::Small,
                     PathDirection::CW,
                     (l, l),
                 )
@@ -92,10 +92,10 @@ impl CornerRadius {
                     (width, height - (p - a - b)),
                     (width - d, height - (p - a - b - c)),
                 )
-                .r_arc_to_rotated(
+                .r_arc_to(
                     (radius, radius),
                     0.0,
-                    ArcSize::Small,
+                    BuilderArcSize::Small,
                     PathDirection::CW,
                     (-l, l),
                 )
@@ -119,10 +119,10 @@ impl CornerRadius {
                     (p - a - b, height),
                     (p - a - b - c, height - d),
                 )
-                .r_arc_to_rotated(
+                .r_arc_to(
                     (radius, radius),
                     0.0,
-                    ArcSize::Small,
+                    BuilderArcSize::Small,
                     PathDirection::CW,
                     (-l, -l),
                 )
@@ -142,10 +142,10 @@ impl CornerRadius {
 
             path.line_to((0.0, f32::min(height / 2.0, p)))
                 .cubic_to((0.0, p - a), (0.0, p - a - b), (d, p - a - b - c))
-                .r_arc_to_rotated(
+                .r_arc_to(
                     (radius, radius),
                     0.0,
-                    ArcSize::Small,
+                    BuilderArcSize::Small,
                     PathDirection::CW,
                     (l, -l),
                 )
@@ -158,8 +158,7 @@ impl CornerRadius {
             path.line_to((0.0, 0.0));
         }
 
-        path.close();
-        path
+        path.detach()
     }
 
     pub fn pretty(&self) -> String {
