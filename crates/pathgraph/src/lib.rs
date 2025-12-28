@@ -392,10 +392,10 @@ impl<V> PathGraph<V> {
         mut retainer: impl FnMut(&[u32], &V) -> bool,
         mut traverser: impl FnMut(&[u32], &V),
     ) {
-        if let Some(entry) = &mut self.entry {
-            if !entry.retain(target, true, vec![], &mut retainer, &mut traverser) {
-                let _ = self.entry.take();
-            }
+        if let Some(entry) = &mut self.entry
+            && !entry.retain(target, true, vec![], &mut retainer, &mut traverser)
+        {
+            let _ = self.entry.take();
         }
     }
 
