@@ -896,23 +896,18 @@ impl Runner {
 
         // Traverse each chosen branch root and queue nested scopes
         for (root, removed) in selected_roots {
-            scope
-                .borrow_mut()
-                .nodes
-                .retain(&root, |p, &PathNode { scope_id, node_id }| {
-                    if removed.iter().any(|r| is_descendant(p, r)) {
-                        if let Some(scope_id) = scope_id {
-                            // Queue scopes to be removed
-                            scope_removal_buffer.push(self.scopes.get(&scope_id).cloned().unwrap());
-                        } else {
-                            self.node_to_scope.remove(&node_id).unwrap();
-                        }
-
-                        false
+            scope.borrow_mut().nodes.retain(
+                &root,
+                |p, _| !removed.iter().any(|r| is_descendant(p, r)),
+                |_, &PathNode { scope_id, node_id }| {
+                    if let Some(scope_id) = scope_id {
+                        // Queue scope to be removed
+                        scope_removal_buffer.push(self.scopes.get(&scope_id).cloned().unwrap());
                     } else {
-                        true
+                        self.node_to_scope.remove(&node_id).unwrap();
                     }
-                });
+                },
+            );
         }
 
         let mut scope_removal_queue = VecDeque::new();

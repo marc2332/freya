@@ -199,22 +199,30 @@ impl<V> PathGraphEntry<V> {
     pub fn retain(
         &mut self,
         target: &[u32],
+        parent_is_retained: bool,
         mut path: Vec<u32>,
         retainer: &mut impl FnMut(&[u32], &V) -> bool,
+        traverser: &mut impl FnMut(&[u32], &V),
     ) -> bool {
-        let mut retain = true;
+        let mut retain = parent_is_retained;
         if path.starts_with(target)
             && let Some(value) = self.value.as_ref()
         {
-            retain = retainer(&path, value);
+            if parent_is_retained {
+                retain = retainer(&path, value);
+            }
+
+            if !retain {
+                traverser(&path, value);
+            }
         }
 
         let mut i = 0;
         self.items.retain_mut(|item| {
-            let mut retain = true;
+            let mut retain = retain;
             path.push(i as u32);
             if target.starts_with(&path) || path.starts_with(target) {
-                retain = item.retain(target, path.clone(), retainer);
+                retain = item.retain(target, retain, path.clone(), retainer, traverser);
             }
             path.pop();
             i += 1;
@@ -378,9 +386,14 @@ impl<V> PathGraph<V> {
         }
     }
 
-    pub fn retain(&mut self, target: &[u32], mut retainer: impl FnMut(&[u32], &V) -> bool) {
+    pub fn retain(
+        &mut self,
+        target: &[u32],
+        mut retainer: impl FnMut(&[u32], &V) -> bool,
+        mut traverser: impl FnMut(&[u32], &V),
+    ) {
         if let Some(entry) = &mut self.entry {
-            if !entry.retain(target, vec![], &mut retainer) {
+            if !entry.retain(target, true, vec![], &mut retainer, &mut traverser) {
                 let _ = self.entry.take();
             }
         }
