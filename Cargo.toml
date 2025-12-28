@@ -94,7 +94,7 @@ euclid = "0.22.9"
 itertools = "0.14.0"
 
 # Rendering
-skia-safe = { version = "0.90.0", features = ["gl", "textlayout", "svg"] }
+skia-safe = { version = "0.91.1", features = ["gl", "textlayout", "svg"] }
 bytes = "1.10.1"
 
 # Desktop renderer
@@ -132,7 +132,7 @@ tokio = { version = "1.0", default-features = false }
 
 # Rendering
 [target."cfg(target_os = \"linux\")".dependencies.skia-safe]
-version = "0.90.0"
+version = "0.91.1"
 features = ["gl", "textlayout", "svg", "x11", "wayland"]
 
 

@@ -9,6 +9,7 @@ use freya_engine::prelude::{
     ClipOp,
     Paint,
     PaintStyle,
+    PathBuilder,
     SkBlurStyle,
     SkMaskFilter,
     SkPath,
@@ -116,11 +117,11 @@ impl RectElement {
         canvas: &Canvas,
         path: &mut SkPath,
         rounded_rect: SkRRect,
-        area: Area,
+        _area: Area,
         shadow: &Shadow,
         corner_radius: &CornerRadius,
     ) {
-        let mut shadow_path = SkPath::new();
+        let mut shadow_path = PathBuilder::new();
         let mut shadow_paint = Paint::default();
         shadow_paint.set_anti_alias(true);
         shadow_paint.set_color(shadow.color);
@@ -151,13 +152,9 @@ impl RectElement {
 
         // Add either the RRect or smoothed path based on whether smoothing is used.
         if corner_radius.smoothing > 0.0 {
-            shadow_path.add_path(
-                &corner_radius.smoothed_path(rounded_rect.with_outset(outset)),
-                SkPoint::new(area.min_x(), area.min_y()) - outset,
-                None,
-            );
+            shadow_path.add_path(&corner_radius.smoothed_path(rounded_rect.with_outset(outset)));
         } else {
-            shadow_path.add_rrect(rounded_rect.with_outset(outset), None);
+            shadow_path.add_rrect(rounded_rect.with_outset(outset), None, None);
         }
 
         // Offset our path by the shadow's x and y coordinates.
@@ -173,6 +170,7 @@ impl RectElement {
             },
             true,
         );
+        let shadow_path = shadow_path.detach();
         canvas.draw_path(&shadow_path, &shadow_paint);
         canvas.restore();
     }
@@ -328,21 +326,14 @@ impl RectElement {
         };
 
         if base_corner_radius.smoothing > 0.0 {
-            let mut path = SkPath::new();
+            let mut path = PathBuilder::new();
             path.set_fill_type(SkPathFillType::EvenOdd);
 
-            path.add_path(
-                &outer_corner_radius.smoothed_path(outer_rrect),
-                SkPoint::new(outer_rrect.rect().x(), outer_rrect.rect().y()),
-                None,
-            );
+            path.add_path(&outer_corner_radius.smoothed_path(outer_rrect));
 
-            path.add_path(
-                &inner_corner_radius.smoothed_path(inner_rrect),
-                SkPoint::new(inner_rrect.rect().x(), inner_rrect.rect().y()),
-                None,
-            );
+            path.add_path(&inner_corner_radius.smoothed_path(inner_rrect));
 
+            let path = path.detach();
             BorderShape::Path(path)
         } else {
             BorderShape::DRRect(outer_rrect, inner_rrect)
@@ -482,21 +473,9 @@ impl ElementExt for RectElement {
     }
 
     fn is_point_inside(&self, context: EventMeasurementContext) -> bool {
-        let style = self.style();
         let area = context.layout_node.visible_area();
         let cursor = context.cursor.to_f32();
-        let corner_radius = style.corner_radius;
-        let mut path = SkPath::new();
         let rounded_rect = self.container_rect(&area, context.scale_factor as f32);
-        if corner_radius.smoothing > 0.0 {
-            path.add_path(
-                &corner_radius.smoothed_path(rounded_rect),
-                (area.min_x(), area.min_y()),
-                None,
-            );
-        } else {
-            path.add_rrect(rounded_rect, None);
-        }
         rounded_rect.contains(SkRect::new(
             cursor.x,
             cursor.y,
@@ -506,23 +485,9 @@ impl ElementExt for RectElement {
     }
 
     fn clip(&self, context: ClipContext) {
-        let style = self.style();
         let area = context.visible_area;
-        let corner_radius = style.corner_radius.with_scale(context.scale_factor as f32);
-
-        let mut path = SkPath::new();
 
         let rounded_rect = self.container_rect(area, context.scale_factor as f32);
-
-        if corner_radius.smoothing > 0.0 {
-            path.add_path(
-                &corner_radius.smoothed_path(rounded_rect),
-                (area.min_x(), area.min_y()),
-                None,
-            );
-        } else {
-            path.add_rrect(rounded_rect, None);
-        }
 
         context
             .canvas
@@ -535,7 +500,7 @@ impl ElementExt for RectElement {
         let area = context.layout_node.area;
         let corner_radius = style.corner_radius.with_scale(context.scale_factor as f32);
 
-        let mut path = SkPath::new();
+        let mut path = PathBuilder::new();
         let mut paint = Paint::default();
         paint.set_anti_alias(true);
         paint.set_style(PaintStyle::Fill);
@@ -544,15 +509,12 @@ impl ElementExt for RectElement {
         // Container
         let rounded_rect = self.container_rect(&area, context.scale_factor as f32);
         if corner_radius.smoothing > 0.0 {
-            path.add_path(
-                &corner_radius.smoothed_path(rounded_rect),
-                (area.min_x(), area.min_y()),
-                None,
-            );
+            path.add_path(&corner_radius.smoothed_path(rounded_rect));
         } else {
-            path.add_rrect(rounded_rect, None);
+            path.add_rrect(rounded_rect, None, None);
         }
 
+        let mut path = path.detach();
         context.canvas.draw_path(&path, &paint);
 
         // Shadows

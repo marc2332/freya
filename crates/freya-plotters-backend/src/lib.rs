@@ -176,14 +176,14 @@ impl DrawingBackend for SkiaBackend<'_> {
             color.rgb.1,
             color.rgb.2,
         ));
-        let mut path = Path::new();
+        let mut path = PathBuilder::new();
         let first = vert_buf[0];
         path.move_to(first);
 
         for pos in &vert_buf[1..] {
             path.line_to(*pos);
         }
-        path.close();
+        let path = path.detach();
         self.canvas.draw_path(&path, &paint);
 
         Ok(())
