@@ -36,13 +36,7 @@ use crate::{
     layers::Layer,
     prelude::*,
     style::{
-        fill::Fill,
         font_size::FontSize,
-        gradient::{
-            ConicGradient,
-            LinearGradient,
-            RadialGradient,
-        },
         scale::Scale,
         shadow::{
             Shadow,
