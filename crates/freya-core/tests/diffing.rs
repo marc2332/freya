@@ -96,6 +96,7 @@ fn mutations() {
             (7, vec![8, 9]),
         ]))
     );
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 
     // Nothing
     let mutations = runner.sync_and_update();
@@ -112,6 +113,7 @@ fn mutations() {
             (7, vec![8, 9]),
         ]))
     );
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 
     // Addition
     runner.handle_event(
@@ -134,6 +136,7 @@ fn mutations() {
             (7, vec![8, 9]),
         ]))
     );
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 
     // Removal
     runner.handle_event(
@@ -156,6 +159,7 @@ fn mutations() {
             (7, vec![8]),
         ]))
     );
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 }
 
 #[test]
@@ -310,6 +314,7 @@ fn state_reconcillation2() {
             .size(),
         9
     );
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 
     runner.handle_event(
         3,
@@ -345,6 +350,7 @@ fn state_reconcillation2() {
             .size(),
         10
     );
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 
     runner.handle_event(
         4,
@@ -389,6 +395,7 @@ fn state_reconcillation2() {
             .size(),
         8
     );
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 }
 
 #[test]
@@ -428,6 +435,7 @@ fn scopes_smart_rerun() {
 
     let mutations = runner.sync_and_update();
     tree.apply_mutations(mutations);
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
     assert_eq!(COUNTER.load(Ordering::Relaxed), 1);
 
     runner.handle_event(
@@ -448,6 +456,7 @@ fn scopes_smart_rerun() {
     assert!(mutations.removed.is_empty());
     tree.apply_mutations(mutations);
     assert_eq!(COUNTER.load(Ordering::Relaxed), 2);
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 }
 
 #[test]
@@ -747,6 +756,7 @@ fn element_diffing8() {
     assert_eq!(mutations.moved.len(), 1);
     assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 1);
     tree.apply_mutations(mutations);
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 
     let mut runner = Runner::new(app);
     let mut tree = Tree::default();
@@ -761,6 +771,7 @@ fn element_diffing8() {
     assert_eq!(mutations.moved.len(), 1);
     assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 2);
     tree.apply_mutations(mutations);
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 }
 
 #[test]
@@ -779,6 +790,7 @@ fn element_diffing9() {
     let mut state = runner.provide_root_context(|| State::create(false));
     let mutations = runner.sync_and_update();
     tree.apply_mutations(mutations);
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 
     state.set(true);
     let mutations = runner.sync_and_update();
@@ -787,6 +799,7 @@ fn element_diffing9() {
     assert!(mutations.removed.is_empty());
     assert!(mutations.moved.is_empty());
     tree.apply_mutations(mutations);
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 }
 
 #[test]
@@ -1094,6 +1107,7 @@ fn tree_unordered_mutations() {
             .size(),
         4
     );
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 
     runner.handle_event(
         2,
@@ -1120,4 +1134,5 @@ fn tree_unordered_mutations() {
             .size(),
         6
     );
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 }

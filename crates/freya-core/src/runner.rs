@@ -106,7 +106,7 @@ pub struct Runner {
     pub(crate) dirty_scopes: FxHashSet<ScopeId>,
     pub(crate) dirty_tasks: VecDeque<TaskId>,
 
-    pub(crate) node_to_scope: FxHashMap<NodeId, ScopeId>,
+    pub node_to_scope: FxHashMap<NodeId, ScopeId>,
 
     pub(crate) node_id_counter: NodeId,
     pub(crate) scope_id_counter: ScopeId,
