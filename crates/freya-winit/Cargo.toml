@@ -18,6 +18,7 @@ features = ["freya-core/mocked-engine"]
 freya-core = { workspace = true }
 freya-components = { workspace = true }
 torin = { workspace = true }
+tracing = { workspace = true }
 
 # Rendering
 bytes = { workspace = true }
@@ -76,3 +77,4 @@ hotpath = ["hotpath/hotpath"]
 vulkan = ["dep:ash", "dep:ash-window", "freya-engine/vulkan"]
 skia-engine = ["freya-engine/skia-engine"]
 tray = ["dep:tray-icon", "dep:gtk", "dep:objc2-core-foundation"]
+tracing = []

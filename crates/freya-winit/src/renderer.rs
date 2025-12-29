@@ -326,6 +326,12 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 },
                                 PluginHandle::new(&self.proxy),
                             );
+                            #[cfg(debug_assertions)]
+                            {
+                                tracing::info!("Updated app tree.");
+                                tracing::info!("{:#?}", app.tree);
+                                tracing::info!("{:#?}", app.runner);
+                            }
                         }
                         NativeWindowEventAction::Accessibility(
                             accesskit_winit::WindowEvent::AccessibilityDeactivated,
