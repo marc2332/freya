@@ -4,6 +4,7 @@ use std::{
     cmp::Ordering,
     collections::{
         HashMap,
+        HashSet,
         VecDeque,
     },
     fmt::Debug,
@@ -105,7 +106,7 @@ pub struct Runner {
     pub(crate) dirty_scopes: FxHashSet<ScopeId>,
     pub(crate) dirty_tasks: VecDeque<TaskId>,
 
-    pub(crate) node_to_scope: FxHashMap<NodeId, ScopeId>,
+    pub node_to_scope: FxHashMap<NodeId, ScopeId>,
 
     pub(crate) node_id_counter: NodeId,
     pub(crate) scope_id_counter: ScopeId,
@@ -827,7 +828,7 @@ impl Runner {
         }
 
         // Collect a set of branches to remove in cascade
-        let mut selected_roots: HashMap<Box<[u32]>, Vec<Box<[u32]>>> = HashMap::default();
+        let mut selected_roots: HashMap<&[u32], HashSet<&[u32]>> = HashMap::default();
         let mut scope_removal_buffer = vec![];
 
         // Given some removals like:
@@ -876,7 +877,7 @@ impl Runner {
                     // Skip if this removed path is already covered by a previously selected root
                     for (root, inner) in &mut selected_roots {
                         if is_descendant(removed, root) {
-                            inner.push(removed.clone());
+                            inner.insert(removed);
                             continue 'remove;
                         }
                     }
@@ -885,9 +886,9 @@ impl Runner {
                     selected_roots.retain(|root, _| !is_descendant(root, removed));
 
                     selected_roots
-                        .entry(Box::from(&removed[..removed.len() - 1]))
+                        .entry(&removed[..removed.len() - 1])
                         .or_default()
-                        .push(removed.clone());
+                        .insert(removed);
                 }
             } else {
                 unreachable!()
@@ -896,20 +897,18 @@ impl Runner {
 
         // Traverse each chosen branch root and queue nested scopes
         for (root, removed) in selected_roots {
-            scope
-                .borrow()
-                .nodes
-                .traverse(&root, |p, &PathNode { scope_id, .. }| {
-                    if let Some(scope_id) = scope_id
-                        && removed.iter().any(|r| is_descendant(p, r))
-                    {
-                        // Queue scopes to be removed
+            scope.borrow_mut().nodes.retain(
+                root,
+                |p, _| !removed.contains(p),
+                |_, &PathNode { scope_id, node_id }| {
+                    if let Some(scope_id) = scope_id {
+                        // Queue scope to be removed
                         scope_removal_buffer.push(self.scopes.get(&scope_id).cloned().unwrap());
+                    } else {
+                        self.node_to_scope.remove(&node_id).unwrap();
                     }
-                });
-            for removed in removed {
-                scope.borrow_mut().nodes.remove(&removed);
-            }
+                },
+            );
         }
 
         let mut scope_removal_queue = VecDeque::new();
