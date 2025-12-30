@@ -195,6 +195,9 @@ impl From<Plot> for Element {
     }
 }
 
+/// Create a new `Plot` element.
+///
+/// See the available methods in [Plot].
 pub fn plot(on_render: RenderCallback) -> Plot {
     Plot::new(on_render)
 }

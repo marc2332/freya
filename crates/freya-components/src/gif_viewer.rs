@@ -91,6 +91,9 @@ use crate::{
 /// ```
 #[derive(PartialEq, Clone)]
 pub enum GifSource {
+    /// Remote GIF loaded from a URI.
+    ///
+    /// Requires the `remote-asset` feature.
     #[cfg(feature = "remote-asset")]
     Uri(Uri),
 

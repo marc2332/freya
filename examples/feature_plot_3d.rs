@@ -26,7 +26,7 @@ fn main() {
 }
 
 fn on_render(ctx: &mut RenderContext, (cursor_x, cursor_y): (f64, f64)) {
-    let backend = SkiaBackend::new(
+    let backend = PlotSkiaBackend::new(
         ctx.canvas,
         ctx.font_collection,
         ctx.layout_node.area.size.to_i32().to_tuple(),
