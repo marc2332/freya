@@ -1,6 +1,6 @@
 [package]
 name = "freya-sdk"
-version = "0.4.0-alpha.7"
+version = "0.4.0-alpha.8"
 edition = "2024"
 description = "Generic utils for Freya apps."
 license = "MIT"
