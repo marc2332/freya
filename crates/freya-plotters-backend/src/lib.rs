@@ -15,23 +15,23 @@ use plotters_backend::{
 };
 
 #[derive(Debug)]
-pub struct SkiaBackendError;
+pub struct PlotSkiaBackendError;
 
-impl std::fmt::Display for SkiaBackendError {
+impl std::fmt::Display for PlotSkiaBackendError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str("Skia backend error.")
     }
 }
 
-impl Error for SkiaBackendError {}
+impl Error for PlotSkiaBackendError {}
 
-pub struct SkiaBackend<'a> {
+pub struct PlotSkiaBackend<'a> {
     size: (i32, i32),
     canvas: &'a Canvas,
     font_collection: &'a mut FontCollection,
 }
 
-impl<'a> SkiaBackend<'a> {
+impl<'a> PlotSkiaBackend<'a> {
     pub fn new(
         canvas: &'a Canvas,
         font_collection: &'a mut FontCollection,
@@ -45,8 +45,8 @@ impl<'a> SkiaBackend<'a> {
     }
 }
 
-impl DrawingBackend for SkiaBackend<'_> {
-    type ErrorType = SkiaBackendError;
+impl DrawingBackend for PlotSkiaBackend<'_> {
+    type ErrorType = PlotSkiaBackendError;
 
     fn draw_line<S: BackendStyle>(
         &mut self,

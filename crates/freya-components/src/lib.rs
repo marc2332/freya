@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "docs", feature(doc_cfg))]
+
 pub mod accordion;
 pub mod activable_route_context;
 pub mod button;

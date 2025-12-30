@@ -31,6 +31,7 @@ all = [
   "tray",
   "material-design",
   "calendar",
+  "sdk",
 ]
 all-publish = ["all", "performance", "mocked-engine", "freya-components/docs"]
 all-debug = ["all", "performance", "vulkan"]

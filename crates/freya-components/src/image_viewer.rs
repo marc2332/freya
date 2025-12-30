@@ -63,6 +63,9 @@ use crate::{
 /// ```
 #[derive(PartialEq, Clone)]
 pub enum ImageSource {
+    /// Remote image loaded from a URI.
+    ///
+    /// Requires the `remote-asset` feature.
     #[cfg(feature = "remote-asset")]
     Uri(Uri),
 
@@ -89,6 +92,7 @@ impl<const N: usize> From<(&'static str, &'static [u8; N])> for ImageSource {
     }
 }
 
+#[cfg_attr(feature = "docs", doc(cfg(feature = "remote-asset")))]
 #[cfg(feature = "remote-asset")]
 impl From<Uri> for ImageSource {
     fn from(uri: Uri) -> Self {
@@ -96,6 +100,7 @@ impl From<Uri> for ImageSource {
     }
 }
 
+#[cfg_attr(feature = "docs", doc(cfg(feature = "remote-asset")))]
 #[cfg(feature = "remote-asset")]
 impl From<&'static str> for ImageSource {
     fn from(src: &'static str) -> Self {
