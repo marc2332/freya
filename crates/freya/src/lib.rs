@@ -35,6 +35,7 @@
 //! - `plot`: Enables the [plot](prelude::plot) element.
 //! - `material-design`: Reexport `freya-material-design` under [material_design].
 //! - `calendar`: Enables the [Calendar](components::Calendar) component.
+//! - `hotpath`: Enables Freya's internal tracking using hotpath.
 
 pub mod prelude {
     pub use freya_core::prelude::*;

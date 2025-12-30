@@ -4,7 +4,7 @@ edition = "2024"
 publish = false
 
 [features]
-hotpath = ["freya-core/hotpath", "ragnarok/hotpath", "freya-winit/hotpath"]
+hotpath = ["freya/hotpath"]
 hotpath-alloc = ["hotpath/hotpath-alloc"]
 hotpath-off = ["hotpath/hotpath-off"]
 devtools = ["freya/devtools"]
