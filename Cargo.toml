@@ -171,8 +171,8 @@ hotpath = { workspace = true }
 
 itertools = { workspace = true }
 
-# SDK examples
-tokio = { workspace = true }
+# SDK examples and Tokio Integration
+tokio = { workspace = true, features = ["rt", "rt-multi-thread"] }
 
 # File picker example
 rfd = "0.16.0"
