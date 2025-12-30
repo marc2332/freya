@@ -60,6 +60,7 @@ vulkan = ["freya-winit/vulkan"]
 sdk = ["dep:freya-sdk"]
 tray = ["freya-winit/tray", "dep:tray-icon"]
 material-design = ["dep:freya-material-design"]
+hotpath = ["freya-core/hotpath", "freya-winit/hotpath"]
 
 [dependencies]
 freya-core = { workspace = true }
