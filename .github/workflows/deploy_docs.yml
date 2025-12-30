@@ -31,7 +31,7 @@ jobs:
           sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev
 
       - name: cargo doc
-        run: cargo doc --no-deps --workspace --features docs
+        run: RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc --no-deps --workspace --features "all, docs"
 
       - name: Upload to Deno Deploy
         uses: denoland/deployctl@v1
