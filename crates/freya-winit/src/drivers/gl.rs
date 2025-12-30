@@ -245,8 +245,8 @@ impl OpenGLDriver {
 
         self.gl_surface.resize(
             &self.gl_context,
-            NonZeroU32::new(size.width).unwrap(),
-            NonZeroU32::new(size.height).unwrap(),
+            NonZeroU32::new(size.width.max(1)).unwrap(),
+            NonZeroU32::new(size.height.max(1)).unwrap(),
         );
 
         self.surface = surface;
