@@ -1,7 +1,7 @@
 use freya_animation::{
     easing::Function,
     hook::{AnimatedValue, Ease, OnChange, OnCreation, ReadAnimatedValue, use_animation},
-    prelude::{AnimNum},
+    prelude::AnimNum,
 };
 use freya_core::prelude::*;
 use freya_edit::Clipboard;
@@ -154,17 +154,14 @@ impl Render for ColorPicker {
         let on_global_mouse_move = {
             let on_change = self.on_change.clone();
             move |e: Event<MouseEventData>| {
+                let coords = e.global_location;
+                let area = area.read().to_f64();
+                let rel_x = ((coords.x - area.min_x()) / area.width()).clamp(0., 1.) as f32;
+                let rel_y = ((coords.y - area.min_y()) / area.height()).clamp(0., 1.) as f32;
                 if *pressing.read() {
-                    let coords = e.global_location;
-                    let area = area.read().to_f64();
-                    let rel_x = ((coords.x - area.min_x()) / area.width()).clamp(0., 1.) as f32;
-                    let rel_y = ((coords.y - area.min_y()) / area.height()).clamp(0., 1.) as f32;
                     color.with_mut(|mut color| *color = color.with_s(rel_x).with_v(1.0 - rel_y));
                     on_change.call(color());
                 } else if *pressing_hue.read() {
-                    let coords = e.global_location;
-                    let area = hue_area.read().to_f64();
-                    let rel_x = ((coords.x - area.min_x()) / area.width()).clamp(0., 1.) as f32;
                     color.with_mut(|mut color| *color = color.with_h(rel_x * 360.0));
                     on_change.call(color());
                 }
@@ -172,11 +169,12 @@ impl Render for ColorPicker {
         };
 
         let on_global_mouse_up = move |_| {
+            // Only close the popup if it wasnt being pressed and it is open
             if is_open && !pressing() && !pressing_hue() {
                 open.set(false);
             }
-            pressing.set(false);
-            pressing_hue.set(false);
+            pressing.set_if_modified(false);
+            pressing_hue.set_if_modified(false);
         };
 
         let animation = use_animation(move |conf| {
@@ -287,7 +285,9 @@ impl Render for ColorPicker {
                 .width(Size::px(0.))
                 .height(Size::px(0.))
                 .opacity(opacity)
-                .maybe(opacity > 0., |el| el.child(rect().scale(scale).child(popup))),
+                .maybe(opacity > 0., |el| {
+                    el.child(rect().scale(scale).child(popup))
+                }),
         )
     }
 
