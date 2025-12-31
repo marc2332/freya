@@ -142,8 +142,8 @@ impl Render for ColorPicker {
             );
 
         // Minimum perceptible floor to avoid full desaturation/black when dragging
-        const MIN_S: f32 = 0.01;
-        const MIN_V: f32 = 0.01;
+        const MIN_S: f32 = 0.07;
+        const MIN_V: f32 = 0.07;
 
         let on_sv_pointer_down = {
             let on_change = self.on_change.clone();
