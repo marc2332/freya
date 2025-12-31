@@ -8,6 +8,7 @@ pub mod cache;
 pub mod calendar;
 pub mod checkbox;
 pub mod chip;
+pub mod color_picker;
 pub mod context_menu;
 pub mod cursor_area;
 pub mod cursor_blink;
