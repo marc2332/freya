@@ -1,17 +1,32 @@
 use freya_animation::{
     easing::Function,
-    hook::{AnimatedValue, Ease, OnChange, OnCreation, ReadAnimatedValue, use_animation},
+    hook::{
+        AnimatedValue,
+        Ease,
+        OnChange,
+        OnCreation,
+        ReadAnimatedValue,
+        use_animation,
+    },
     prelude::AnimNum,
 };
 use freya_core::prelude::*;
 use freya_edit::Clipboard;
-use torin::prelude::{Alignment, Area, Position, Size};
+use torin::prelude::{
+    Alignment,
+    Area,
+    Position,
+    Size,
+};
 
 use crate::{
     button::Button,
     context_menu::ContextMenu,
     get_theme,
-    menu::{Menu, MenuButton},
+    menu::{
+        Menu,
+        MenuButton,
+    },
     theming::component_themes::ColorPickerThemePartial,
 };
 
@@ -126,15 +141,22 @@ impl Render for ColorPicker {
                     ),
             );
 
+        // Minimum perceptible floor to avoid full desaturation/black when dragging
+        const MIN_S: f32 = 0.01;
+        const MIN_V: f32 = 0.01;
+
         let on_sv_pointer_down = {
             let on_change = self.on_change.clone();
             move |e: Event<PointerEventData>| {
                 pressing.set(true);
                 let coords = e.element_location();
                 let area = area.read().to_f64();
-                let rel_x = ((coords.x - area.min_x()) / area.width()).clamp(0., 1.) as f32;
-                let rel_y = ((coords.y - area.min_y()) / area.height()).clamp(0., 1.) as f32;
-                color.with_mut(|mut color| *color = color.with_s(rel_x).with_v(1.0 - rel_y));
+                let rel_x = (((coords.x - area.min_x()) / area.width()).clamp(0., 1.)) as f32;
+                let rel_y = (((coords.y - area.min_y()) / area.height())
+                    .clamp(MIN_V as f64, 1. - MIN_V as f64)) as f32;
+                let sat = rel_x.max(MIN_S);
+                let v = (1.0 - rel_y).clamp(MIN_V, 1.0 - MIN_V);
+                color.with_mut(|mut color| *color = color.with_s(sat).with_v(v));
                 on_change.call(color());
             }
         };
@@ -145,7 +167,7 @@ impl Render for ColorPicker {
                 pressing_hue.set(true);
                 let coords = e.global_location();
                 let area = hue_area.read().to_f64();
-                let rel_x = ((coords.x - area.min_x()) / area.width()).clamp(0., 1.) as f32;
+                let rel_x = ((coords.x - area.min_x()) / area.width()).clamp(0.01, 1.) as f32;
                 color.with_mut(|mut color| *color = color.with_h(rel_x * 360.0));
                 on_change.call(color());
             }
@@ -154,14 +176,21 @@ impl Render for ColorPicker {
         let on_global_mouse_move = {
             let on_change = self.on_change.clone();
             move |e: Event<MouseEventData>| {
-                let coords = e.global_location;
-                let area = area.read().to_f64();
-                let rel_x = ((coords.x - area.min_x()) / area.width()).clamp(0., 1.) as f32;
-                let rel_y = ((coords.y - area.min_y()) / area.height()).clamp(0., 1.) as f32;
                 if *pressing.read() {
-                    color.with_mut(|mut color| *color = color.with_s(rel_x).with_v(1.0 - rel_y));
+                    let coords = e.global_location;
+                    let area = area.read().to_f64();
+                    let rel_x = (((coords.x - area.min_x()) / area.width()).clamp(0., 1.)) as f32;
+                    let rel_y = (((coords.y - area.min_y()) / area.height())
+                        .clamp(MIN_V as f64, 1. - MIN_V as f64))
+                        as f32;
+                    let sat = rel_x.max(MIN_S);
+                    let v = (1.0 - rel_y).clamp(MIN_V, 1.0 - MIN_V);
+                    color.with_mut(|mut color| *color = color.with_s(sat).with_v(v));
                     on_change.call(color());
                 } else if *pressing_hue.read() {
+                    let coords = e.global_location;
+                    let area = hue_area.read().to_f64();
+                    let rel_x = ((coords.x - area.min_x()) / area.width()).clamp(0.01, 1.) as f32;
                     color.with_mut(|mut color| *color = color.with_h(rel_x * 360.0));
                     on_change.call(color());
                 }
