@@ -1,3 +1,8 @@
+#![cfg_attr(
+    all(not(debug_assertions), target_os = "windows"),
+    windows_subsystem = "windows"
+)]
+
 use freya::prelude::*;
 
 #[cfg_attr(feature = "hotpath", hotpath::main(percentiles = [25, 70, 95, 99]))]
