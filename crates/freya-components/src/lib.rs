@@ -14,6 +14,7 @@ pub mod cursor_blink;
 pub mod drag_drop;
 pub mod draggable_canvas;
 pub mod element_expansions;
+pub mod flex_wrap;
 pub mod floating_tab;
 pub mod icons;
 pub mod image_viewer;
