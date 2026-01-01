@@ -9,14 +9,13 @@
 //! See `examples/feature_icons.rs` for a live example.
 //!
 //! ```rust
-//! use freya::prelude::*;
+//! # use freya::prelude::*;
 //! # #[cfg(feature = "lucide")]
 //! fn app() -> impl IntoElement {
 //!     svg(freya_icons::lucide::antenna())
 //!         .color((120, 50, 255))
 //!         .width(Size::px(48.))
 //!         .height(Size::px(48.))
-//!         .center()
 //! }
 //! ```
 

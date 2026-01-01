@@ -4,7 +4,7 @@
 //!
 //! ```rust
 //! use freya::{
-//!     material_design::prelude::*,
+//!     material_design::*,
 //!     prelude::*,
 //! };
 //!

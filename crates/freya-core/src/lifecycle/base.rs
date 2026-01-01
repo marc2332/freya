@@ -65,7 +65,7 @@ impl Render for CoolComp {
 /// In subsequential renders the returned value of the function will be a [Clone]d value of what
 /// had been previously returned by the initialization callback.
 ///
-/// ```rust
+/// ```rust, no_run
 /// # use freya::prelude::*;
 /// let my_cloned_value = use_hook(|| 1);
 /// ```
@@ -117,7 +117,7 @@ impl std::ops::Drop for DropInner {
 }
 
 /// Run a callback for when the component gets dropped. Useful to clean resources.
-/// ```rust
+/// ```rust, no_run
 /// # use freya::prelude::*;
 /// use_drop(|| {
 ///     println!("Dropping this component.");

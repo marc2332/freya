@@ -21,14 +21,7 @@
 //! ```rust
 //! # use freya::prelude::*;
 //! # use freya_i18n::prelude::*;
-//!
 //! // main.rs
-//!
-//! fn main() {
-//!     # return;
-//!     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
-//! }
-//!
 //! #[derive(PartialEq)]
 //! struct Body;
 //!
@@ -61,11 +54,11 @@
 //!         I18nConfig::new(langid!("en-US"))
 //!             .with_locale(Locale::new_static(
 //!                 langid!("en-US"),
-//!                 include_str!("./en-US.ftl"),
+//!                 include_str!("../../../examples/i18n/en-US.ftl"),
 //!             ))
 //!             .with_locale(Locale::new_dynamic(
 //!                 langid!("es-ES"),
-//!                 "./es-ES.ftl",
+//!                 "../../../examples/i18n/es-ES.ftl",
 //!             ))
 //!     });
 //!

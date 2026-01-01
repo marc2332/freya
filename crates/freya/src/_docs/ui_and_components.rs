@@ -7,11 +7,13 @@
 //!
 //! ```rust, no_run
 //! # use freya::prelude::*;
+//! # fn app() -> impl IntoElement {
 //! rect()
 //!     .background((255, 0, 0))
 //!     .width(Size::fill())
 //!     .height(Size::px(100.))
 //!     .on_mouse_up(|_| println!("Clicked!"))
+//! # }
 //! ```
 //!
 //! You can also split your UI In reusable pieces called **Components**, these are structs that implement the [Render](freya_core::prelude::Render) trait.
@@ -46,7 +48,7 @@
 //!
 //! If you wanted to pas data from your **main** function to your **root** component you would need to make it use a struct component, like this:
 //!
-//! ```rust
+//! ```rust, no_run
 //! # use freya::prelude::*;
 //! fn main() {
 //!     launch(

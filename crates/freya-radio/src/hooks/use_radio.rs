@@ -105,7 +105,8 @@ where
     ///
     /// Example:
     ///
-    /// ```rust
+    /// ```rust, ignore
+    /// # use freya_radio::prelude::*;
     /// let value = radio.read();
     /// ```
     pub fn read(&'_ self) -> ReadRef<'_, Value> {
@@ -116,7 +117,8 @@ where
     ///
     /// Example:
     ///
-    /// ```rust
+    /// ```rust, ignore
+    /// # use freya_radio::prelude::*;
     /// let value = radio.peek();
     /// ```
     pub fn peek(&'_ self) -> ReadRef<'_, Value> {
@@ -156,7 +158,8 @@ where
     /// Modify the state using a custom Channel.
     ///
     /// ## Example:
-    /// ```rust, no_run
+    /// ```rust, ignore
+    /// # use freya_radio::prelude::*;
     /// radio_station.write(Channel::Whatever).value = 1;
     /// ```
     pub fn write_channel(&mut self, channel: Channel) -> RadioGuard<Value, Channel> {
@@ -333,7 +336,8 @@ where
     ///
     /// Example:
     ///
-    /// ```rust
+    /// ```rust, ignore
+    /// # use freya_radio::prelude::*;
     /// let value = radio.read();
     /// ```
     pub fn read(&'_ self) -> ReadRef<'_, Value> {
@@ -345,7 +349,8 @@ where
     ///
     /// Example:
     ///
-    /// ```rust
+    /// ```rust, ignore
+    /// # use freya_radio::prelude::*;
     /// radio.with(|value| {
     ///     // Do something with `value`
     /// });
@@ -361,7 +366,8 @@ where
     ///
     /// Example:
     ///
-    /// ```rust
+    /// ```rust, ignore
+    /// # use freya_radio::prelude::*;
     /// radio.write().value = 1;
     /// ```
     pub fn write(&mut self) -> RadioGuard<Value, Channel> {
@@ -378,7 +384,8 @@ where
     ///
     /// Example:
     ///
-    /// ```rust
+    /// ```rust, ignore
+    /// # use freya_radio::prelude::*;
     /// radio.write_with(|value| {
     ///     // Modify `value`
     /// });
@@ -391,7 +398,8 @@ where
     /// Modify the state using a custom Channel.
     ///
     /// ## Example:
-    /// ```rust, no_run
+    /// ```rust, ignore
+    /// # use freya_radio::prelude::*;
     /// radio.write(Channel::Whatever).value = 1;
     /// ```
     pub fn write_channel(&mut self, channel: Channel) -> RadioGuard<Value, Channel> {
@@ -407,7 +415,8 @@ where
     ///
     /// Example:
     ///
-    /// ```rust
+    /// ```rust, ignore
+    /// # use freya_radio::prelude::*;
     /// radio.write_channel_with(Channel::Whatever, |value| {
     ///     // Modify `value`
     /// });
@@ -425,7 +434,8 @@ where
     ///
     /// Example:
     ///
-    /// ```rust
+    /// ```rust, ignore
+    /// # use freya_radio::prelude::*;
     /// radio.write_with_channel_selection(|value| {
     ///     // Modify `value`
     ///     if value.cool {

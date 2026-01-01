@@ -336,7 +336,8 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 ///
 /// ```rust, no_run
 /// # use freya::prelude::*;
-/// fn app() -> Element {
+/// # use freya::animation::*;
+/// fn app() -> impl IntoElement {
 ///     let animation = use_animation(|conf| {
 ///         conf.on_creation(OnCreation::Run);
 ///         AnimNum::new(0., 100.).time(50)
@@ -355,7 +356,8 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 ///
 /// ```rust, no_run
 /// # use freya::prelude::*;
-/// fn app() -> Element {
+/// # use freya::animation::*;
+/// fn app() -> impl IntoElement {
 ///     let animation = use_animation(|conf| {
 ///         conf.on_creation(OnCreation::Run);
 ///         (
@@ -377,13 +379,16 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 ///
 /// ```rust, no_run
 /// # use freya::prelude::*;
-/// fn app() -> Element {
+/// # use freya::animation::*;
+/// fn app() -> impl IntoElement {
 ///     let animation = use_animation(|conf| {
-///         conf.on_finish(OnFinish::Restart);
-///         ...
+///         conf.on_finish(OnFinish::restart());
+///         // ...
+///         # AnimNum::new(0., 1.)
 ///     });
 ///
-///     ...
+///     // ...
+///     # rect()
 /// }
 /// ```
 ///
@@ -391,15 +396,17 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 ///
 /// ```rust, no_run
 /// # use freya::prelude::*;
-/// fn app() -> Element {
+/// # use freya::animation::*;
+/// fn app() -> impl IntoElement {
 ///     let value = use_state(|| 100.);
 ///
-///     let animation = use_animation(|conf| {
+///     let animation = use_animation(move |conf| {
 ///         conf.on_change(OnChange::Rerun);
-///         AnimNum::new(0., value()).time(50),
+///         AnimNum::new(0., value()).time(50)
 ///     });
 ///
-///     ...
+///     // ...
+///     # rect()
 /// }
 /// ```
 ///
@@ -462,13 +469,16 @@ pub fn use_animation<Animated: AnimatedValue>(
 ///
 /// ```rust, no_run
 /// # use freya::prelude::*;
-/// fn app() -> Element {
+/// # use freya::animation::*;
+/// fn app() -> impl IntoElement {
+///     # let other_value = 1.;
 ///     let animation = use_animation_with_dependencies(&other_value, |conf, other_value| {
 ///         conf.on_change(OnChange::Rerun);
-///         AnimNum::new(0., *other_value).time(50),
+///         AnimNum::new(0., *other_value).time(50)
 ///     });
 ///
-///     ...
+///     // ...
+///     # rect()
 /// }
 /// ```
 pub fn use_animation_with_dependencies<Animated: AnimatedValue, D: 'static + Clone + PartialEq>(

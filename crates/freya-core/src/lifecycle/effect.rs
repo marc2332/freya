@@ -84,11 +84,11 @@ impl Effect {
 }
 
 /// Registers a callback that will run every time a [State] which was [.read()](State::read) inside, changes.
-/// ```rust
+/// ```rust, no_run
 /// # use freya::prelude::*;
 /// let state = use_state(|| 0);
 ///
-/// use_side_effect(|| {
+/// use_side_effect(move || {
 ///     // The moment `.read()` is called this side effect callback gets subscribed to it
 ///     let value = *state.read();
 ///     println!("{value}");

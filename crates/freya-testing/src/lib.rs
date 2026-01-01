@@ -14,7 +14,7 @@
 //!
 //! fn app() -> impl IntoElement {
 //!     let mut state = use_consume::<State<i32>>();
-//!     rect().on_mouse_up(move |_| *state.write() += 1).into()
+//!     rect().on_mouse_up(move |_| *state.write() += 1)
 //! }
 //!
 //! fn main() {
@@ -55,9 +55,8 @@ use freya_components::{
     cache::AssetCacher,
     integration::integration,
 };
-use freya_core::integration::*;
-pub use freya_core::{
-    events::platform::*,
+use freya_core::{
+    integration::*,
     prelude::*,
 };
 use freya_engine::prelude::{
@@ -80,9 +79,15 @@ use torin::prelude::{
 };
 
 pub mod prelude {
+    pub use freya_core::{
+        events::platform::*,
+        prelude::*,
+    };
+
     pub use crate::{
         DocRunner,
         TestingRunner,
+        launch_doc,
         launch_test,
     };
 }

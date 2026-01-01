@@ -29,3 +29,6 @@ futures-channel = { workspace = true }
 
 # Accessibility
 accesskit = { workspace = true }
+
+[dev-dependencies]
+freya = { path = "../freya" }

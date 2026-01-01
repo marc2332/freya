@@ -313,9 +313,10 @@ impl<T> State<Option<T>> {
 /// Creates a reactive value initialized with the returned value of the `init` callback that we pass to it.
 /// A `State<T>` is a combination of `Rc<RefCell<T>>` + `Copy` and reactive semantics.
 /// It allow us to store a value into a reactive pointer and share this to other components to let them read or even write to it.
-/// ```rust
+/// ```rust, no_run
 /// # use freya::prelude::*;
-/// let state = use_state(|| 0);
+/// # fn app() -> impl IntoElement {
+/// let mut state = use_state(|| 0);
 ///
 /// rect()
 ///     .expanded()
@@ -326,6 +327,7 @@ impl<T> State<Option<T>> {
 ///     })
 ///     // Read the state and subscribe to it
 ///     .child(state.read().to_string())
+/// # }
 /// ```
 pub fn use_state<T: 'static>(init: impl FnOnce() -> T) -> State<T> {
     use_hook(|| State::create(init()))

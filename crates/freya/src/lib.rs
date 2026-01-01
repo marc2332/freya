@@ -183,6 +183,11 @@ pub mod components {
 pub mod text_edit {
     pub use freya_edit::*;
 }
+
+pub mod clipboard {
+    pub use freya_clipboard::prelude::*;
+}
+
 pub mod animation {
     pub use freya_animation::prelude::*;
 }

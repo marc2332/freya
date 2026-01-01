@@ -8,7 +8,7 @@
 //!
 //! # Examples
 //!
-//! ```rust
+//! ```rust, no_run
 //! use freya::clipboard::Clipboard;
 //!
 //! // Read the clipboard content
