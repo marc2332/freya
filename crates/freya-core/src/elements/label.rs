@@ -1,3 +1,5 @@
+//! Draw text with [label()]. Its a simplified version of [crate::elements::paragraph].
+
 use std::{
     any::Any,
     borrow::Cow,
@@ -51,7 +53,7 @@ use crate::{
     tree::DiffModifies,
 };
 
-/// Draw text with [label]. Its a simplified version of [crate::elements::paragraph].
+/// Draw text with [label()]. Its a simplified version of [crate::elements::paragraph].
 ///
 /// See the available methods in [Label].
 ///

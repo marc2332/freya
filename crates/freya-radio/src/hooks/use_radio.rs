@@ -105,7 +105,7 @@ where
     ///
     /// Example:
     ///
-    /// ```rs
+    /// ```rust
     /// let value = radio.read();
     /// ```
     pub fn read(&'_ self) -> ReadRef<'_, Value> {
@@ -116,7 +116,7 @@ where
     ///
     /// Example:
     ///
-    /// ```rs
+    /// ```rust
     /// let value = radio.peek();
     /// ```
     pub fn peek(&'_ self) -> ReadRef<'_, Value> {
@@ -156,7 +156,7 @@ where
     /// Modify the state using a custom Channel.
     ///
     /// ## Example:
-    /// ```rs, no_run
+    /// ```rust, no_run
     /// radio_station.write(Channel::Whatever).value = 1;
     /// ```
     pub fn write_channel(&mut self, channel: Channel) -> RadioGuard<Value, Channel> {
@@ -333,7 +333,7 @@ where
     ///
     /// Example:
     ///
-    /// ```rs
+    /// ```rust
     /// let value = radio.read();
     /// ```
     pub fn read(&'_ self) -> ReadRef<'_, Value> {
@@ -345,7 +345,7 @@ where
     ///
     /// Example:
     ///
-    /// ```rs
+    /// ```rust
     /// radio.with(|value| {
     ///     // Do something with `value`
     /// });
@@ -361,7 +361,7 @@ where
     ///
     /// Example:
     ///
-    /// ```rs
+    /// ```rust
     /// radio.write().value = 1;
     /// ```
     pub fn write(&mut self) -> RadioGuard<Value, Channel> {
@@ -378,7 +378,7 @@ where
     ///
     /// Example:
     ///
-    /// ```rs
+    /// ```rust
     /// radio.write_with(|value| {
     ///     // Modify `value`
     /// });
@@ -391,7 +391,7 @@ where
     /// Modify the state using a custom Channel.
     ///
     /// ## Example:
-    /// ```rs, no_run
+    /// ```rust, no_run
     /// radio.write(Channel::Whatever).value = 1;
     /// ```
     pub fn write_channel(&mut self, channel: Channel) -> RadioGuard<Value, Channel> {
@@ -407,7 +407,7 @@ where
     ///
     /// Example:
     ///
-    /// ```rs
+    /// ```rust
     /// radio.write_channel_with(Channel::Whatever, |value| {
     ///     // Modify `value`
     /// });
@@ -425,7 +425,7 @@ where
     ///
     /// Example:
     ///
-    /// ```rs
+    /// ```rust
     /// radio.write_with_channel_selection(|value| {
     ///     // Modify `value`
     ///     if value.cool {

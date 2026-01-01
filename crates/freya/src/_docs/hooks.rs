@@ -1,6 +1,6 @@
 //! # Hooks
 //!
-//! Hooks are special functions that let you tap into Freya's reactivity and lifecycle system.
+//! **Hooks** are special functions that let you tap into Freya's reactivity and lifecycle system.
 //! They can **only** be called at the top level of your component's `render` method (not inside event handlers, loops, or conditionals).
 //!
 //! Hooks are always prefixed with `use_`, for example: [`use_animation`](crate::animation::use_animation), [`use_state`](crate::prelude::use_state), etc.

@@ -13,6 +13,18 @@ use crate::{
     reactive_context::ReactiveContext,
 };
 
+/// Registers a callback that will run every time a [State] which was [.read()](State::read) inside, changes.
+/// It also returning a type that will get cached after the callback runs, thus allowing this to be used as a way to cache expensive values.
+/// ```rust
+/// # use freya::prelude::*;
+/// let state = use_state(|| 0);
+///
+/// let expensive_value = use_memo(|| {
+///     // The moment `.read()` is called this side effect callback gets subscribed to it
+///     let value = *state.read();
+///     value * 2
+/// });
+/// ```
 pub fn use_memo<T: 'static + PartialEq>(callback: impl FnMut() -> T + 'static) -> Memo<T> {
     use_hook(|| Memo::create(callback))
 }

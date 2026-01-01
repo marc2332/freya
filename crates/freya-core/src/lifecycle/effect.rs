@@ -83,7 +83,17 @@ impl Effect {
     }
 }
 
-/// Registers a callback that will run every time a [crate::lifecycle::state::State] which was [crate::lifecycle::state::State::read] inside, changes.
+/// Registers a callback that will run every time a [State] which was [.read()](State::read) inside, changes.
+/// ```rust
+/// # use freya::prelude::*;
+/// let state = use_state(|| 0);
+///
+/// use_side_effect(|| {
+///     // The moment `.read()` is called this side effect callback gets subscribed to it
+///     let value = *state.read();
+///     println!("{value}");
+/// });
+/// ```
 pub fn use_side_effect(callback: impl FnMut() + 'static) {
     use_hook(|| Effect::create(callback));
 }

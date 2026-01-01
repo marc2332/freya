@@ -32,9 +32,23 @@ all = [
   "material-design",
   "calendar",
   "sdk",
+  "icons",
 ]
-all-publish = ["all", "performance", "mocked-engine", "freya-components/docs"]
-all-debug = ["all", "performance", "vulkan"]
+all-publish = [
+  "all",
+  "performance",
+  "mocked-engine",
+  "freya-components/docs",
+  "dep:freya-testing",
+  "dep:freya-plotters-backend",
+]
+all-debug = [
+  "all",
+  "performance",
+  "vulkan",
+  "dep:freya-testing",
+  "dep:freya-plotters-backend",
+]
 all-tests = [
   "router",
   "i18n",
@@ -61,29 +75,26 @@ sdk = ["dep:freya-sdk"]
 tray = ["freya-winit/tray", "dep:tray-icon"]
 material-design = ["dep:freya-material-design"]
 hotpath = ["freya-core/hotpath", "freya-winit/hotpath"]
+icons = ["dep:freya-icons"]
 
 [dependencies]
 freya-core = { workspace = true }
 freya-winit = { workspace = true }
 torin = { workspace = true }
 freya-edit = { workspace = true }
+freya-clipboard = { workspace = true }
 freya-components = { workspace = true }
 freya-animation = { workspace = true }
 freya-engine = { workspace = true }
 freya-devtools = { workspace = true, optional = true, features = ["server"] }
 freya-sdk = { workspace = true, optional = true }
-
-# Router
+freya-icons = { workspace = true, optional = true }
 freya-router = { workspace = true, optional = true }
-
-# i18n
 freya-i18n = { workspace = true, optional = true }
-
-# Performance
 freya-performance-plugin = { workspace = true, optional = true }
-
-# Material Design
 freya-material-design = { workspace = true, optional = true }
+freya-testing = { workspace = true, optional = true }
+freya-plotters-backend = { workspace = true, optional = true }
 
 # Tray
 tray-icon = { workspace = true, optional = true }

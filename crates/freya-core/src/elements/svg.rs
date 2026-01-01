@@ -1,3 +1,5 @@
+//! Use [svg()] to render SVG in your app.
+
 use std::{
     any::Any,
     borrow::Cow,

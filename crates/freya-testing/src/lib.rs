@@ -1,3 +1,38 @@
+//! Testing utilities for Freya applications.
+//!
+//! Simulate your app execution in a headless environment.
+//!
+//! Use [launch_test] or [TestingRunner] to instantiate a headless testing runner.
+//!
+//! # Examples
+//!
+//! Basic usage:
+//!
+//! ```rust,no_run
+//! use freya::prelude::*;
+//! use freya_testing::TestingRunner;
+//!
+//! fn app() -> impl IntoElement {
+//!     let mut state = use_consume::<State<i32>>();
+//!     rect().on_mouse_up(move |_| *state.write() += 1).into()
+//! }
+//!
+//! fn main() {
+//!     let (mut test, state) = TestingRunner::new(
+//!         app,
+//!         (300., 300.).into(),
+//!         |runner| runner.provide_root_context(|| State::create(0)),
+//!         1.,
+//!     );
+//!     test.sync_and_update();
+//!     // Simulate a mouse click
+//!     test.click_cursor((15., 15.));
+//!     assert_eq!(*state.peek(), 1);
+//! }
+//! ```
+//!
+//! For a runnable example see `examples/testing_events.rs` in the repository.
+
 use std::{
     borrow::Cow,
     cell::RefCell,
@@ -45,7 +80,11 @@ use torin::prelude::{
 };
 
 pub mod prelude {
-    pub use crate::*;
+    pub use crate::{
+        DocRunner,
+        TestingRunner,
+        launch_test,
+    };
 }
 
 type DocRunnerHook = Box<dyn FnOnce(&mut TestingRunner)>;
