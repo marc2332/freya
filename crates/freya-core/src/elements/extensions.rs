@@ -178,6 +178,7 @@ pub trait ContentExt {
     fn normal() -> Content;
     fn fit() -> Content;
     fn flex() -> Content;
+    fn wrap() -> Content;
 }
 
 impl ContentExt for Content {
@@ -191,6 +192,10 @@ impl ContentExt for Content {
 
     fn flex() -> Content {
         Content::Flex
+    }
+
+    fn wrap() -> Content {
+        Content::Wrap
     }
 }
 
