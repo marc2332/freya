@@ -73,6 +73,8 @@ pub fn try_consume_context_from_scope_id<T: Clone + 'static>(
     })
 }
 
+/// Store the given value in this component instance.
+/// Any descendant component of this component calling [use_consume] or [consume_context] will have access to it.
 pub fn use_provide_context<T: Clone + 'static>(init: impl FnOnce() -> T) -> T {
     use_hook(|| {
         let ctx = init();
@@ -81,10 +83,12 @@ pub fn use_provide_context<T: Clone + 'static>(init: impl FnOnce() -> T) -> T {
     })
 }
 
+/// Get access to a value stored in this component instance or some ancestor.
 pub fn use_consume<T: Clone + 'static>() -> T {
     use_hook(|| consume_context())
 }
 
+/// Try to get access to a value stored in this component instance or some ancestor.
 pub fn use_try_consume<T: Clone + 'static>() -> Option<T> {
     use_hook(|| try_consume_context())
 }

@@ -6,7 +6,7 @@ use freya_i18n::{
     },
     t,
 };
-use freya_testing::*;
+use freya_testing::prelude::*;
 use unic_langid::{
     LanguageIdentifier,
     langid,

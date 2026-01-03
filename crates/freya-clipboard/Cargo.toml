@@ -19,3 +19,6 @@ skia-engine = ["freya-core/skia-engine"]
 [dependencies]
 copypasta = "0.10"
 freya-core = { workspace = true }
+
+[dev-dependencies]
+freya = { path = "../freya" }

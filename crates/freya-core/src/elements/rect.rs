@@ -1,3 +1,5 @@
+//! [rect()] acts as a generic container to contain other elements inside, like a box.
+
 use std::{
     any::Any,
     borrow::Cow,
@@ -47,7 +49,7 @@ use crate::{
     tree::DiffModifies,
 };
 
-/// [rect] acts as a generic container to contain other elements inside, like a box.
+/// [rect()] acts as a generic container to contain other elements inside, like a box.
 ///
 /// Its the equivalent of `view`/`div`/`container` in other UI models.
 ///

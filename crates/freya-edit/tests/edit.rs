@@ -5,7 +5,7 @@ use freya::{
     prelude::*,
 };
 use freya_edit::*;
-use freya_testing::*;
+use freya_testing::prelude::*;
 
 #[test]
 fn multiple_lines_single_editor() {

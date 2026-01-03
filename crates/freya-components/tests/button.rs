@@ -1,6 +1,6 @@
 use freya::prelude::Button;
 use freya_core::prelude::*;
-use freya_testing::*;
+use freya_testing::prelude::*;
 
 #[test]
 pub fn button_test() {

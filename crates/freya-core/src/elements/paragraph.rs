@@ -1,3 +1,5 @@
+//! [paragraph()] makes it possible to render rich text with different styles. Its a more personalizable API than [crate::elements::label].
+
 use std::{
     any::Any,
     borrow::Cow,
@@ -57,7 +59,7 @@ use crate::{
     tree::DiffModifies,
 };
 
-/// [paragraph] makes it possible to render rich text with different styles. Its a more personalizable api than [crate::elements::label].
+/// [paragraph()] makes it possible to render rich text with different styles. Its a more personalizable API than [crate::elements::label].
 ///
 /// See the available methods in [Paragraph].
 ///

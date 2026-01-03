@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use freya::prelude::*;
 use freya_animation::prelude::*;
-use freya_testing::*;
+use freya_testing::prelude::*;
 
 #[test]
 pub fn track_progress() {

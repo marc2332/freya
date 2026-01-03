@@ -10,7 +10,7 @@ use freya_i18n::{
     te,
     tid,
 };
-use freya_testing::*;
+use freya_testing::prelude::*;
 use unic_langid::{
     LanguageIdentifier,
     langid,

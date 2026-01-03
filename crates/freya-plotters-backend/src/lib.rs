@@ -1,3 +1,14 @@
+//! Plotters backend for Freya using Skia.
+//!
+//! This crate implements a `DrawingBackend` for the `plotters` library which
+//! renders into Freya's Skia-based canvas.
+//!
+//! Requires the `plot` feature in `freya`.
+//!
+//! # Example
+//!
+//! See `examples/feature_plot_3d.rs`.
+
 use std::error::Error;
 
 use freya_engine::prelude::*;

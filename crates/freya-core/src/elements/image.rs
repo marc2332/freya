@@ -1,3 +1,5 @@
+//! [image()] makes it possible to render a Skia image into the canvas.
+
 use std::{
     any::Any,
     borrow::Cow,
