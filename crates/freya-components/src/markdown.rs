@@ -266,9 +266,9 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                 }
                 TagEnd::Paragraph => {
                     if in_blockquote {
-                        blockquote_spans.extend(current_spans.drain(..));
+                       blockquote_spans.append(&mut current_spans)
                     } else if in_list_item {
-                        current_list_item.extend(current_spans.drain(..));
+                      current_list_item.append(&mut current_spans)
                     } else if in_paragraph {
                         in_paragraph = false;
                         elements.push(MarkdownElement::Paragraph {
@@ -335,7 +335,7 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
             },
             Event::Text(text) => {
                 if in_code_block {
-                    code_block_content.push_str(&text.trim());
+                    code_block_content.push_str(text.trim());
                 } else if in_table_cell {
                     let span = TextSpan {
                         text: text.to_string(),
