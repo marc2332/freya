@@ -157,12 +157,6 @@ impl fmt::Debug for WithWindowCallback {
 #[derive(Clone)]
 pub struct LaunchProxy(pub EventLoopProxy<NativeEvent>);
 
-impl Clone for LaunchProxy {
-    fn clone(&self) -> Self {
-        LaunchProxy(self.0.clone())
-    }
-}
-
 impl LaunchProxy {
     /// Send a callback to the renderer to get access to [RendererContext].
     pub fn with<F, T: Send + 'static>(&self, f: F) -> futures_channel::oneshot::Receiver<T>
