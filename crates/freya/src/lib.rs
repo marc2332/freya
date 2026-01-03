@@ -36,6 +36,7 @@
 //! - `material-design`: Reexport `freya-material-design` under [material_design].
 //! - `calendar`: Enables the [Calendar](components::Calendar) component.
 //! - `hotpath`: Enables Freya's internal usage of hotpath.
+//! - `markdown`: Enables the [MarkdownViewer](components::MarkdownViewer) component.
 
 pub mod prelude {
     pub use freya_core::prelude::*;
@@ -78,6 +79,9 @@ pub mod components {
     #[cfg_attr(feature = "docs", doc(cfg(feature = "gif")))]
     #[cfg(feature = "gif")]
     pub use freya_components::gif_viewer::*;
+    #[cfg_attr(feature = "docs", doc(cfg(feature = "markdown")))]
+    #[cfg(feature = "markdown")]
+    pub use freya_components::markdown::*;
     cfg_if::cfg_if! {
         if #[cfg(feature = "router")] {
             #[cfg_attr(feature = "docs", doc(cfg(feature = "router")))]

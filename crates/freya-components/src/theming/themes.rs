@@ -8,6 +8,8 @@ use torin::{
 use crate::theming::component_themes::CalendarThemePreference;
 #[cfg(feature = "router")]
 use crate::theming::component_themes::LinkThemePreference;
+#[cfg(feature = "markdown")]
+use crate::theming::component_themes::MarkdownViewerThemePreference;
 use crate::theming::{
     component_themes::{
         AccordionThemePreference,
@@ -251,6 +253,16 @@ pub(crate) const BASE_THEME: Theme = Theme {
         divider_fill: Preference::Reference("surface_primary"),
         corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
         color: Preference::Reference("text_primary"),
+    },
+
+    #[cfg(feature = "markdown")]
+    markdown_viewer: MarkdownViewerThemePreference {
+        color: Preference::Reference("text_primary"),
+        background_code: Preference::Reference("surface_tertiary"),
+        color_code: Preference::Reference("text_primary"),
+        background_blockquote: Preference::Reference("surface_tertiary"),
+        border_blockquote: Preference::Reference("surface_primary"),
+        background_divider: Preference::Reference("border"),
     },
     chip: ChipThemePreference {
         background: Preference::Reference("background"),

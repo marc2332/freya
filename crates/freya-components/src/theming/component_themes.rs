@@ -8,6 +8,8 @@ use torin::{
 use crate::calendar::Calendar;
 #[cfg(feature = "router")]
 use crate::link::Link;
+#[cfg(feature = "markdown")]
+use crate::markdown::MarkdownViewer;
 use crate::{
     accordion::Accordion,
     button::Button,
@@ -72,6 +74,8 @@ pub struct Theme {
     pub select: SelectThemePreference,
     pub popup: PopupThemePreference,
     pub table: TableThemePreference,
+    #[cfg(feature = "markdown")]
+    pub markdown_viewer: MarkdownViewerThemePreference,
     pub chip: ChipThemePreference,
     pub menu_item: MenuItemThemePreference,
     pub menu_container: MenuContainerThemePreference,
@@ -367,6 +371,20 @@ define_theme! {
         divider_fill: Color,
         corner_radius: CornerRadius,
         color: Color,
+    }
+}
+
+#[cfg(feature = "markdown")]
+define_theme! {
+    %[component]
+    pub MarkdownViewer {
+        %[fields]
+        color: Color,
+        background_code: Color,
+        color_code: Color,
+        background_blockquote: Color,
+        border_blockquote: Color,
+        background_divider: Color,
     }
 }
 

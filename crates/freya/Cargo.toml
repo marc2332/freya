@@ -32,6 +32,7 @@ all = [
   "material-design",
   "calendar",
   "sdk",
+  "markdown",
 ]
 all-publish = ["all", "performance", "mocked-engine", "freya-components/docs"]
 all-debug = ["all", "performance", "vulkan"]
@@ -44,6 +45,7 @@ all-tests = [
   "gif",
   "material-design",
   "calendar",
+  "markdown",
 ]
 docs = ["all-debug"]
 # Features
@@ -56,6 +58,7 @@ performance = ["freya-performance-plugin"]
 plot = ["freya-components/plot"]
 gif = ["freya-components/gif"]
 calendar = ["freya-components/calendar"]
+markdown = ["freya-components/markdown"]
 vulkan = ["freya-winit/vulkan"]
 sdk = ["dep:freya-sdk"]
 tray = ["freya-winit/tray", "dep:tray-icon"]
