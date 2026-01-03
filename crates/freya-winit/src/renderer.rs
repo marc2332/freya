@@ -36,7 +36,10 @@ use winit::{
         TouchPhase,
         WindowEvent,
     },
-    event_loop::EventLoopProxy,
+    event_loop::{
+        ActiveEventLoop,
+        EventLoopProxy,
+    },
     window::{
         Theme,
         Window,
@@ -76,8 +79,59 @@ pub struct WinitRenderer {
     pub screen_reader: ScreenReader,
     pub font_manager: FontMgr,
     pub font_collection: FontCollection,
-    pub futures: Vec<Pin<Box<dyn Future<Output = ()>>>>,
+    pub futures: Vec<Pin<Box<dyn std::future::Future<Output = ()>>>>,
     pub waker: Waker,
+}
+
+pub struct RendererContext<'a> {
+    pub windows: &'a mut FxHashMap<WindowId, AppWindow>,
+    pub proxy: &'a mut EventLoopProxy<NativeEvent>,
+    pub plugins: &'a mut PluginsManager,
+    pub fallback_fonts: &'a mut Vec<Cow<'static, str>>,
+    pub screen_reader: &'a mut ScreenReader,
+    pub font_manager: &'a mut FontMgr,
+    pub font_collection: &'a mut FontCollection,
+    pub(crate) active_event_loop: &'a ActiveEventLoop,
+}
+
+impl RendererContext<'_> {
+    pub fn launch_window(&mut self, window_config: WindowConfig) -> WindowId {
+        let app_window = AppWindow::new(
+            window_config,
+            self.active_event_loop,
+            self.proxy,
+            self.plugins,
+            self.font_collection,
+            self.font_manager,
+            self.fallback_fonts,
+            self.screen_reader.clone(),
+        );
+
+        let window_id = app_window.window.id();
+
+        self.proxy
+            .send_event(NativeEvent::Window(NativeWindowEvent {
+                window_id,
+                action: NativeWindowEventAction::PollRunner,
+            }))
+            .ok();
+
+        self.windows.insert(window_id, app_window);
+
+        window_id
+    }
+
+    pub fn windows(&self) -> &FxHashMap<WindowId, AppWindow> {
+        self.windows
+    }
+
+    pub fn windows_mut(&mut self) -> &mut FxHashMap<WindowId, AppWindow> {
+        self.windows
+    }
+
+    pub fn exit(&mut self) {
+        self.active_event_loop.exit();
+    }
 }
 
 #[derive(Debug)]
@@ -96,6 +150,30 @@ pub struct WithWindowCallback(pub(crate) Box<dyn FnOnce(&mut Window)>);
 impl fmt::Debug for WithWindowCallback {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("WithWindowCallback")
+    }
+}
+
+/// Proxy wrapper provided to launch tasks so they can post callbacks executed inside the renderer.
+#[derive(Clone)]
+pub struct LaunchProxy(pub EventLoopProxy<NativeEvent>);
+
+impl LaunchProxy {
+    /// Send a callback to the renderer to get access to [RendererContext].
+    pub fn with<F, T: Send + 'static>(&self, f: F) -> futures_channel::oneshot::Receiver<T>
+    where
+        F: FnOnce(&mut RendererContext) -> T + Send + 'static,
+    {
+        let (tx, rx) = futures_channel::oneshot::channel::<T>();
+        let cb = Box::new(move |ctx: &mut RendererContext| {
+            let res = (f)(ctx);
+            let _ = tx.send(res);
+        });
+        let _ = self
+            .0
+            .send_event(NativeEvent::Generic(NativeGenericEvent::RendererCallback(
+                cb,
+            )));
+        rx
     }
 }
 
@@ -132,9 +210,18 @@ pub struct NativeTrayEvent {
     pub action: NativeTrayEventAction,
 }
 
-#[derive(Debug)]
 pub enum NativeGenericEvent {
     PollFutures,
+    RendererCallback(Box<dyn FnOnce(&mut RendererContext) + Send + 'static>),
+}
+
+impl fmt::Debug for NativeGenericEvent {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            NativeGenericEvent::PollFutures => f.write_str("PollFutures"),
+            NativeGenericEvent::RendererCallback(_) => f.write_str("RendererCallback"),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -208,61 +295,76 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
         event: NativeEvent,
     ) {
         match event {
+            NativeEvent::Generic(NativeGenericEvent::RendererCallback(cb)) => {
+                let mut renderer_context = RendererContext {
+                    fallback_fonts: &mut self.fallback_fonts,
+                    active_event_loop,
+                    windows: &mut self.windows,
+                    proxy: &mut self.proxy,
+                    plugins: &mut self.plugins,
+                    screen_reader: &mut self.screen_reader,
+                    font_manager: &mut self.font_manager,
+                    font_collection: &mut self.font_collection,
+                };
+                (cb)(&mut renderer_context);
+            }
             NativeEvent::Generic(NativeGenericEvent::PollFutures) => {
                 let mut cx = std::task::Context::from_waker(&self.waker);
                 self.futures
                     .retain_mut(|fut| fut.poll(&mut cx).is_pending());
             }
             #[cfg(feature = "tray")]
-            NativeEvent::Tray(NativeTrayEvent { action }) => match action {
-                NativeTrayEventAction::TrayEvent(icon_event) => {
-                    use crate::tray::{
-                        TrayContext,
-                        TrayEvent,
-                    };
-                    if let Some((tray_context, tray_handler)) =
-                        TrayContext::new(active_event_loop, self)
-                    {
-                        (tray_handler)(TrayEvent::Icon(icon_event), tray_context)
+            NativeEvent::Tray(NativeTrayEvent { action }) => {
+                let renderer_context = RendererContext {
+                    fallback_fonts: &mut self.fallback_fonts,
+                    active_event_loop,
+                    windows: &mut self.windows,
+                    proxy: &mut self.proxy,
+                    plugins: &mut self.plugins,
+                    screen_reader: &mut self.screen_reader,
+                    font_manager: &mut self.font_manager,
+                    font_collection: &mut self.font_collection,
+                };
+                match action {
+                    NativeTrayEventAction::TrayEvent(icon_event) => {
+                        use crate::tray::TrayEvent;
+                        if let Some(tray_handler) = &mut self.tray.1 {
+                            (tray_handler)(TrayEvent::Icon(icon_event), renderer_context)
+                        }
+                    }
+                    NativeTrayEventAction::MenuEvent(menu_event) => {
+                        use crate::tray::TrayEvent;
+                        if let Some(tray_handler) = &mut self.tray.1 {
+                            (tray_handler)(TrayEvent::Menu(menu_event), renderer_context)
+                        }
+                    }
+                    NativeTrayEventAction::LaunchWindow(data) => {
+                        let window_config = data
+                            .0
+                            .downcast::<WindowConfig>()
+                            .expect("Expected WindowConfig");
+                        let app_window = AppWindow::new(
+                            *window_config,
+                            active_event_loop,
+                            &self.proxy,
+                            &mut self.plugins,
+                            &self.font_collection,
+                            &self.font_manager,
+                            &self.fallback_fonts,
+                            self.screen_reader.clone(),
+                        );
+
+                        self.proxy
+                            .send_event(NativeEvent::Window(NativeWindowEvent {
+                                window_id: app_window.window.id(),
+                                action: NativeWindowEventAction::PollRunner,
+                            }))
+                            .ok();
+
+                        self.windows.insert(app_window.window.id(), app_window);
                     }
                 }
-                NativeTrayEventAction::MenuEvent(menu_event) => {
-                    use crate::tray::{
-                        TrayContext,
-                        TrayEvent,
-                    };
-                    if let Some((tray_context, tray_handler)) =
-                        TrayContext::new(active_event_loop, self)
-                    {
-                        (tray_handler)(TrayEvent::Menu(menu_event), tray_context)
-                    }
-                }
-                NativeTrayEventAction::LaunchWindow(data) => {
-                    let window_config = data
-                        .0
-                        .downcast::<WindowConfig>()
-                        .expect("Expected WindowConfig");
-                    let app_window = AppWindow::new(
-                        *window_config,
-                        active_event_loop,
-                        &self.proxy,
-                        &mut self.plugins,
-                        &self.font_collection,
-                        &self.font_manager,
-                        &self.fallback_fonts,
-                        self.screen_reader.clone(),
-                    );
-
-                    self.proxy
-                        .send_event(NativeEvent::Window(NativeWindowEvent {
-                            window_id: app_window.window.id(),
-                            action: NativeWindowEventAction::PollRunner,
-                        }))
-                        .ok();
-
-                    self.windows.insert(app_window.window.id(), app_window);
-                }
-            },
+            }
             NativeEvent::Window(NativeWindowEvent { action, window_id }) => {
                 if let Some(app) = &mut self.windows.get_mut(&window_id) {
                     match action {

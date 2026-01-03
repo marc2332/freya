@@ -45,6 +45,7 @@ pub mod prelude {
             LaunchConfig,
             WindowConfig,
         },
+        renderer::RendererContext,
     };
 
     pub use crate::components::*;
