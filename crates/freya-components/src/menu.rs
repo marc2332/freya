@@ -87,6 +87,7 @@ impl RenderOwned for Menu {
         use_provide_context(|| ROOT_MENU);
 
         rect()
+            .layer(Layer::Overlay)
             .corner_radius(8.0)
             .on_press(move |ev: Event<PressEventData>| {
                 ev.stop_propagation();
@@ -323,7 +324,7 @@ impl RenderOwned for MenuItem {
 #[derive(Default, Clone, PartialEq)]
 pub struct MenuButton {
     children: Vec<Element>,
-    on_press: Option<EventHandler<()>>,
+    on_press: Option<EventHandler<Event<PressEventData>>>,
     key: DiffKey,
 }
 
@@ -344,7 +345,7 @@ impl MenuButton {
         Self::default()
     }
 
-    pub fn on_press(mut self, on_press: impl Into<EventHandler<()>>) -> Self {
+    pub fn on_press(mut self, on_press: impl Into<EventHandler<Event<PressEventData>>>) -> Self {
         self.on_press = Some(on_press.into());
         self
     }
@@ -357,11 +358,7 @@ impl RenderOwned for MenuButton {
 
         MenuItem::new()
             .on_pointer_enter(move |_| close_menus_until(&mut menus, parent_menu_id))
-            .on_press(move |_| {
-                if let Some(on_press) = &self.on_press {
-                    on_press.call(());
-                }
-            })
+            .map(self.on_press.clone(), |el, on_press| el.on_press(on_press))
             .children(self.children)
     }
 
