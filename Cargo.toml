@@ -69,7 +69,7 @@ freya-material-design = { path = "./crates/freya-material-design", version = "0.
 freya-plotters-backend = { path = "./crates/freya-plotters-backend", version = "0.4.0-alpha.8" }
 
 # core
-generational-box = "0.6.2"
+generational-box = "0.7.0"
 tracing = "0.1.41"
 rustc-hash = "2.1.1"
 bitflags = "2.9.3"
@@ -114,8 +114,8 @@ ash = "^0.38"
 ash-window = "0.13.0"
 
 # accessibility
-accesskit = "0.21.0"
-accesskit_winit = "0.29.0"
+accesskit = "0.22.0"
+accesskit_winit = "0.30.0"
 
 # Performance
 hotpath = "0.9"
