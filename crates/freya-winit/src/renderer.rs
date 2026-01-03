@@ -154,6 +154,7 @@ impl fmt::Debug for WithWindowCallback {
 }
 
 /// Proxy wrapper provided to launch tasks so they can post callbacks executed inside the renderer.
+#[derive(Clone)]
 pub struct LaunchProxy(pub EventLoopProxy<NativeEvent>);
 
 impl Clone for LaunchProxy {
