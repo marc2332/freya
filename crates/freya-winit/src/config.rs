@@ -183,6 +183,9 @@ pub type TrayIconGetter = Box<dyn FnOnce() -> tray_icon::TrayIcon + Send>;
 pub type TrayHandler =
     Box<dyn FnMut(crate::tray_icon::TrayEvent, crate::renderer::RendererContext)>;
 
+pub type TaskHandler =
+    Box<dyn FnOnce(crate::renderer::LaunchProxy) -> Pin<Box<dyn Future<Output = ()>>> + 'static>;
+
 /// Launch configuration.
 pub struct LaunchConfig {
     pub(crate) windows_configs: Vec<WindowConfig>,
@@ -191,11 +194,7 @@ pub struct LaunchConfig {
     pub(crate) plugins: PluginsManager,
     pub(crate) embedded_fonts: EmbeddedFonts,
     pub(crate) fallback_fonts: Vec<Cow<'static, str>>,
-    pub(crate) tasks: Vec<
-        Box<
-            dyn FnOnce(crate::renderer::LaunchProxy) -> Pin<Box<dyn Future<Output = ()>>> + 'static,
-        >,
-    >,
+    pub(crate) tasks: Vec<TaskHandler>,
 }
 
 impl Default for LaunchConfig {
