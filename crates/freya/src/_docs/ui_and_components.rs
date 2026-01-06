@@ -16,7 +16,7 @@
 //! # }
 //! ```
 //!
-//! You can also split your UI In reusable pieces called **Components**, these are structs that implement the [Render](freya_core::prelude::Render) trait.
+//! You can also split your UI in reusable pieces called **Components**, these are structs that implement the [Render](freya_core::prelude::Render) trait.
 //!
 //! ### [Render](freya_core::prelude::Render) trait
 //!
