@@ -796,7 +796,7 @@ where
                             }
                         } else {
                             // Otherwise just keep adding each child size
-                            used_area.size.width += initial_phase_size.width;
+                            used_area.size.height += initial_phase_size.height;
                         }
                     }
                     Direction::Horizontal => {
