@@ -1,6 +1,6 @@
 //! # i18n
 //!
-//! You may add i18n (localization) support to your Freya app by using [**freya-i18n**](https://crates.io/crates/freya-i18n) crate.
+//! You may add i18n (localization) support to your Freya app by using the [**freya-i18n**](https://crates.io/crates/freya-i18n) crate.
 //! You can also enable its reexport by turning on the `i18n` feature in `freya`.
 //!
 //! ```fluent
