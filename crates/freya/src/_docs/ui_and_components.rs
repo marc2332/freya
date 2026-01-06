@@ -1,7 +1,7 @@
 //! # UI and Components
 //!
 //! Freya uses a [declarative](https://en.wikipedia.org/wiki/Declarative_programming) model for the UI.
-//! This means that you dont instanciate e.g Buttons, you simply declare them and Freya will take care of running them and painting them on screen.
+//! This means that you dont instantiate e.g Buttons, you simply declare them and Freya will take care of running them and painting them on screen.
 //!
 //! Example of how the UI is declared:
 //!
@@ -93,13 +93,13 @@
 //!
 //! Notice how all these component are returning an [`Element`](freya_core::prelude::Element), this is because `rect()` gives you a [`Rect`](freya_core::elements::rect::Rect) which implements `Into<Element>` / `IntoElement`, same happens for the rest of elements.
 //! So, in other words, the [`Element`](freya_core::prelude::Element) contains the UI of that component.
-//! Every time the component render function2 reruns a new UI is created and later diffed by Freya internally.
+//! Every time the component render function reruns a new UI is created and later diffed by Freya internally.
 //!
 //! ## Renders
 //!
 //! "Components renders" are simply when the component's `render` function runs, this can happen in multiple scenarios:
 //!
-//! 1. The component just got instanciated for the first time (also called mounted in other UI libraries)
+//! 1. The component just got instantiated for the first time (also called mounted in other UI libraries)
 //! 2. A state that this component is reading (thus subscribed to), got mutated
 //! 3. The component data (also called props) changed (this is why `PartialEq` is required)
 //!
@@ -113,13 +113,13 @@
 //! struct CoolComp;
 //!
 //! impl Render for CoolComp {
-//!     // One run of this function is the same saying as one render of this component
+//!     // One run of this function is the same as saying one render of this component
 //!     fn render(&self) -> impl IntoElement {
 //!         let mut count = use_state(|| 0);
 //!
 //!         label()
 //!             .on_mouse_up(move |_| *count.write() += 1)
-//!             // Here we subscribe to `count` becase we called .read() on it
+//!             // Here we subscribe to `count` because we called .read() on it
 //!             .text(format!("Increase {}", count.read()))
 //!     }
 //! }
