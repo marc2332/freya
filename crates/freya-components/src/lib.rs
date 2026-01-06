@@ -98,5 +98,6 @@ cfg_if::cfg_if! {
     doc = embed_doc_image::embed_image!("gallery_segmented_button", "images/gallery_segmented_button.png"),
     doc = embed_doc_image::embed_image!("gallery_flat_button", "images/gallery_flat_button.png"),
     doc = embed_doc_image::embed_image!("gallery_calendar", "images/gallery_calendar.png"),
+    doc = embed_doc_image::embed_image!("gallery_color_picker", "images/gallery_color_picker.png"),
 )]
 pub fn gallery() {}

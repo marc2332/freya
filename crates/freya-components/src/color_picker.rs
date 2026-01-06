@@ -32,7 +32,28 @@ use crate::{
 
 /// HSV-based gradient color picker.
 ///
-/// Click preview to open a popup with a saturation/value gradient area and a hue bar.
+/// ## Example
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> impl IntoElement {
+///     let mut color = use_state(|| Color::from_hsv(0.0, 1.0, 1.0));
+///     rect()
+///         .center()
+///         .expanded()
+///         .child(ColorPicker::new(move |c| color.set(c)).value(color()))
+/// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #     rect().center().expanded().child(app())
+/// # }, "./images/gallery_color_picker.png").render();
+/// ```
+///
+/// # Preview
+/// ![ColorPicker Preview][gallery_color_picker]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("gallery_color_picker", "images/gallery_color_picker.png"),
+)]
 #[derive(Clone, PartialEq)]
 pub struct ColorPicker {
     pub(crate) theme: Option<ColorPickerThemePartial>,
@@ -149,7 +170,7 @@ impl Render for ColorPicker {
             let on_change = self.on_change.clone();
             move |e: Event<PointerEventData>| {
                 pressing.set(true);
-                let coords = e.element_location();
+                let coords = e.global_location();
                 let area = area.read().to_f64();
                 let rel_x = (((coords.x - area.min_x()) / area.width()).clamp(0., 1.)) as f32;
                 let rel_y = (((coords.y - area.min_y()) / area.height())
