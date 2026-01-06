@@ -10,11 +10,12 @@ mod reexport_test {
     };
 }
 
+use freya::prelude::*;
 use freya_i18n::prelude::{
     I18nConfig,
     use_init_i18n,
 };
-use freya_testing::*;
+use freya_testing::prelude::*;
 use unic_langid::langid;
 
 #[test]
