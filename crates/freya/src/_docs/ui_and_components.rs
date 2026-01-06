@@ -91,13 +91,13 @@
 //! }
 //! ```
 //!
-//! Notice how all these component area returning an [`Element`](freya_core::prelude::Element), this is because `rect()` gives you a [`Rect`](freya_core::elements::rect::Rect) which implements `Into<Element>` / `IntoElement`, same happens for the rest of elements.
+//! Notice how all these component are returning an [`Element`](freya_core::prelude::Element), this is because `rect()` gives you a [`Rect`](freya_core::elements::rect::Rect) which implements `Into<Element>` / `IntoElement`, same happens for the rest of elements.
 //! So, in other words, the [`Element`](freya_core::prelude::Element) contains the UI of that component.
 //! Every time the component render function2 reruns a new UI is created and later diffed by Freya internally.
 //!
 //! ## Renders
 //!
-//! "Components renders" are simply when the component's `render` function runs, this can happen in multiple scanarios:
+//! "Components renders" are simply when the component's `render` function runs, this can happen in multiple scenarios:
 //!
 //! 1. The component just got instanciated for the first time (also called mounted in other UI libraries)
 //! 2. A state that this component is reading (thus subscribed to), got mutated
