@@ -5,7 +5,6 @@
 use freya::{
     prelude::*,
     tray::{
-        TrayContext,
         TrayEvent,
         TrayIconBuilder,
         menu::{
@@ -32,7 +31,7 @@ fn main() {
             .build()
             .unwrap()
     };
-    let tray_handler = |ev, mut ctx: TrayContext| match ev {
+    let tray_handler = |ev, mut ctx: RendererContext| match ev {
         TrayEvent::Menu(MenuEvent { id }) if id == "3" => {
             ctx.launch_window(WindowConfig::new(app).with_size(500., 450.));
         }
