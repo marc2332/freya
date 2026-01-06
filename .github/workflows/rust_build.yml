@@ -17,15 +17,7 @@ jobs:
       cancel-in-progress: true
 
     steps:
-    - name: Remove unused programs
-      uses: jlumbroso/free-disk-space@main
-      with:
-        android: true
-        dotnet: true
-        haskell: true
-        large-packages: false
-        docker-images: true
-        swap-storage: true
+
     - uses: actions/checkout@v6
       with:
         fetch-depth: 2
