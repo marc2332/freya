@@ -46,7 +46,7 @@
 //! }
 //! ```
 //!
-//! If you wanted to pas data from your **main** function to your **root** component you would need to make it use a struct component, like this:
+//! If you wanted to pass data from your **main** function to your **root** component you would need to make it use a struct component, like this:
 //!
 //! ```rust, no_run
 //! # use freya::prelude::*;
