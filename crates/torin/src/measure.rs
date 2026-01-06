@@ -856,7 +856,7 @@ where
         }
     }
 
-    /// Align the content of this node."}](null)
+    /// Align the content of this node.
     fn align_content(
         available_area: &mut AreaOf<Available>,
         inner_area: &AreaOf<Inner>,
