@@ -328,7 +328,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 /// - Sequential animations: [AnimSequential](crate::prelude::AnimSequential)
 /// - Anything as long as you implement the [AnimatedValue] trait.
 ///
-/// For each animated value you will need specify the duration, optionally an ease function or what type of easing you want.
+/// For each animated value you will need to specify the duration, optionally an ease function or what type of easing you want.
 ///
 /// # Example
 ///
