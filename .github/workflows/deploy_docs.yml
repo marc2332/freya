@@ -27,7 +27,7 @@ jobs:
           prefix-key: "docs"
 
       - name: cargo doc
-        run: RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc --no-deps --workspace --features "all, docs"
+        run: RUSTDOCFLAGS="--cfg docsrs" cargo +nightly-2025-09-25 doc --no-deps --workspace --features "all, docs"
 
       - name: Upload to Deno Deploy
         uses: denoland/deployctl@v1
