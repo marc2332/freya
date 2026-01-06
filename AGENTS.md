@@ -23,9 +23,10 @@ The `./website` folder contains the Astro website.
 - Don't use `super::` for imports, prefer `crate::`
 - Don't put unnecessary comments, if you are adding/refactoring a feature prefer to write doc comments `///` with a proper but not big explanation.
 
-## Instructions conventions
+## General instructions
 
 - When working in one feature try to do as less commits as possible
   - If you commit something and then you change it again then redo the old commit
 - When doing commits ask for confirmation
 - Before committing and being finished make sure to run the formatter, linter and tests
+- Never leave debug logs after finishing
