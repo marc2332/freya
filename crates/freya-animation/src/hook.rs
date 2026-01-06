@@ -318,7 +318,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
 }
 /// Animate your UI easily.
 ///
-/// [`use_animation`] takes an callback to initialize the animated values and related configuration.
+/// [`use_animation`] takes a callback to initialize the animated values and related configuration.
 ///
 /// To animate a group of values at once you can just return a tuple of them.
 ///
