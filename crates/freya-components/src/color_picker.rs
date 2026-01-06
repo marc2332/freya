@@ -1,17 +1,32 @@
 use freya_animation::{
     easing::Function,
-    hook::{AnimatedValue, Ease, OnChange, OnCreation, ReadAnimatedValue, use_animation},
+    hook::{
+        AnimatedValue,
+        Ease,
+        OnChange,
+        OnCreation,
+        ReadAnimatedValue,
+        use_animation,
+    },
     prelude::AnimNum,
 };
 use freya_core::prelude::*;
 use freya_edit::Clipboard;
-use torin::prelude::{Alignment, Area, Position, Size};
+use torin::prelude::{
+    Alignment,
+    Area,
+    Position,
+    Size,
+};
 
 use crate::{
     button::Button,
     context_menu::ContextMenu,
     get_theme,
-    menu::{Menu, MenuButton},
+    menu::{
+        Menu,
+        MenuButton,
+    },
     theming::component_themes::ColorPickerThemePartial,
 };
 
@@ -24,14 +39,14 @@ use crate::{
 /// fn app() -> impl IntoElement {
 ///     let mut color = use_state(|| Color::from_hsv(0.0, 1.0, 1.0));
 ///     rect()
-///         .center()
-///         .expanded()
+///         .padding(6.)
 ///         .child(ColorPicker::new(move |c| color.set(c)).value(color()))
 /// }
 /// # use freya_testing::prelude::*;
+/// # use std::time::Duration;
 /// # launch_doc(|| {
-/// #     rect().center().expanded().child(app())
-/// # }, "./images/gallery_color_picker.png").render();
+/// #     rect().padding(6.).child(app())
+/// # }, "./images/gallery_color_picker.png").with_hook(|t| { t.move_cursor((15., 15.)); t.click_cursor((15., 15.)); t.poll(Duration::from_millis(1), Duration::from_millis(250)); }).with_scale_factor(0.85).render();
 /// ```
 ///
 /// # Preview
