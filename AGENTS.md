@@ -29,4 +29,7 @@ The `./website` folder contains the Astro website.
   - If you commit something and then you change it again then redo the old commit
 - When doing commits ask for confirmation
 - Before committing and being finished make sure to run the formatter, linter and tests
-- Never leave debug logs after finishing
+- Never leave debug logs after finishin
+- Never push to any branch, much less the `main` branch or using `--force`
+- Never hardcode secrets or any other sensitive data
+- Avoid creating temporary branches unless told
