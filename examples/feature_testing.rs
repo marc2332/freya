@@ -29,7 +29,6 @@ fn main() {
     println!("Initial: {}", *state.peek());
 
     // Simulate a click by sending mouse down/up events at a point inside the window
-    // Simulate a click with the testing helper
     test.click_cursor((15., 15.));
 
     println!("After click: {}", *state.peek());
