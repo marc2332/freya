@@ -11,7 +11,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     concurrency:
       group: rust-lint-${{ github.ref_name }}
       cancel-in-progress: true
