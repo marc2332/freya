@@ -60,7 +60,7 @@ impl Render for CoolComp {
 }
 ";
 
-/// This is the foundational hook used by all. Its simple, it accepts an initialization callback
+/// This is the foundational hook used by all. It's simple, it accepts an initialization callback
 /// whose return value will be stored in this component instance until its dropped.
 /// In subsequent renders the returned value of the function will be a [Clone]d value of what
 /// had been previously returned by the initialization callback.
