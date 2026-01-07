@@ -28,16 +28,16 @@
 macro_rules! te {
     ($id:expr, $( $name:ident : $value:expr ),* ) => {
         {
-            let mut params_map = freya_i18n::fluent::FluentArgs::new();
+            let mut params_map = $crate::fluent::FluentArgs::new();
             $(
                 params_map.set(stringify!($name), $value);
             )*
-            freya_i18n::prelude::I18n::get().try_translate_with_args($id, Some(&params_map))
+            $crate::prelude::I18n::get().try_translate_with_args($id, Some(&params_map))
         }
     };
 
     ($id:expr ) => {{
-            freya_i18n::prelude::I18n::get().try_translate($id)
+            $crate::prelude::I18n::get().try_translate($id)
     }};
 }
 
@@ -60,11 +60,11 @@ macro_rules! te {
 #[macro_export]
 macro_rules! t {
     ($id:expr, $( $name:ident : $value:expr ),* ) => {
-        freya_i18n::te!($id, $( $name : $value ),*).unwrap_or_else(|e| panic!("{}", e.to_string()))
+        $crate::te!($id, $( $name : $value ),*).unwrap_or_else(|e| panic!("{}", e.to_string()))
     };
 
     ($id:expr ) => {{
-        freya_i18n::te!($id).unwrap_or_else(|e| panic!("{}", e.to_string()))
+        $crate::te!($id).unwrap_or_else(|e| panic!("{}", e.to_string()))
     }};
 }
 
@@ -86,10 +86,10 @@ macro_rules! t {
 #[macro_export]
 macro_rules! tid {
     ($id:expr, $( $name:ident : $value:expr ),* ) => {
-        freya_i18n::te!($id, $( $name : $value ),*).unwrap_or_else(|e| e.to_string())
+        $crate::te!($id, $( $name : $value ),*).unwrap_or_else(|e| e.to_string())
     };
 
     ($id:expr ) => {{
-        freya_i18n::te!($id).unwrap_or_else(|e| e.to_string())
+        $crate::te!($id).unwrap_or_else(|e| e.to_string())
     }};
 }
