@@ -57,7 +57,7 @@
 //! - `i18n`: Reexport [freya_i18n] under [i18n]
 //! - `remote-asset`: Enables support for **HTTP** asset sources for [ImageViewer](components::ImageViewer) and [GifViewer](components::GifViewer) components.
 //! - `tray`: Enables tray support using the [tray_icon] crate.
-//! - `sdk`: Reexport [freya_sdk] under [sdk]
+//! - `sdk`: Reexport [freya_sdk] under [sdk].
 //! - `gif`: Enables the [GifViewer](components::GifViewer) component.
 //! - `plot`: Enables the [plot](prelude::plot) element.
 //! - `material-design`: Reexport [freya_material_design] under [material_design].
@@ -69,6 +69,7 @@
 //! - `performance`: Enables the performance overlay plugin.
 //! - `vulkan`: Enables Vulkan rendering support.
 //! - `hotpath`: Enables Freya's internal usage of hotpath.
+//! - `radio`: Reexport `freya-radio` under [radio].
 
 pub mod prelude {
     pub use freya_core::prelude::*;
@@ -93,6 +94,13 @@ pub mod prelude {
         let launch_config = launch_config
             .with_plugin(freya_performance_plugin::PerformanceOverlayPlugin::default());
         freya_winit::launch(launch_config)
+    }
+
+    /// Reexport `freya-radio` when the `radio` feature is enabled.
+    #[cfg(feature = "radio")]
+    #[cfg_attr(feature = "docs", doc(cfg(feature = "radio")))]
+    pub mod radio {
+        pub use freya_radio::prelude::*;
     }
     pub use torin::{
         alignment::Alignment,

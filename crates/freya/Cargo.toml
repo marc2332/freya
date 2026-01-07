@@ -48,6 +48,7 @@ all-debug = [
   "vulkan",
   "dep:freya-testing",
   "dep:freya-plotters-backend",
+  "radio",
 ]
 all-tests = [
   "router",
@@ -58,6 +59,7 @@ all-tests = [
   "gif",
   "material-design",
   "calendar",
+  "radio",
 ]
 docs = ["all-debug"]
 # Features
@@ -76,6 +78,7 @@ tray = ["freya-winit/tray", "dep:tray-icon"]
 material-design = ["dep:freya-material-design"]
 hotpath = ["freya-core/hotpath", "freya-winit/hotpath"]
 icons = ["dep:freya-icons"]
+radio = ["dep:freya-radio"]
 
 [dependencies]
 freya-core = { workspace = true }
@@ -91,6 +94,9 @@ freya-sdk = { workspace = true, optional = true }
 freya-icons = { workspace = true, optional = true }
 freya-router = { workspace = true, optional = true }
 freya-i18n = { workspace = true, optional = true }
+freya-radio = { workspace = true, optional = true }
+
+# Performance
 freya-performance-plugin = { workspace = true, optional = true }
 freya-material-design = { workspace = true, optional = true }
 freya-testing = { workspace = true, optional = true }

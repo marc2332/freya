@@ -37,6 +37,7 @@ members = [
   "./crates/freya-sdk",
   "./crates/freya-material-design",
   "./crates/freya-plotters-backend",
+  "./crates/freya-query",
   "./examples/website",
 ]
 
@@ -67,6 +68,7 @@ freya-sdk = { path = "./crates/freya-sdk", features = [
 ], version = "0.4.0-alpha.8" }
 freya-material-design = { path = "./crates/freya-material-design", version = "0.4.0-alpha.8" }
 freya-plotters-backend = { path = "./crates/freya-plotters-backend", version = "0.4.0-alpha.8" }
+freya-query = { path = "./crates/freya-query", version = "0.4.0-alpha.8" }
 
 # core
 generational-box = "0.6.2"
@@ -78,6 +80,7 @@ futures-util = "0.3.31"
 futures-channel = "0.3.31"
 futures-lite = "2.6.1"
 async-io = "2.5.0"
+
 
 # Animations
 easer = "0.3.0"
@@ -135,6 +138,9 @@ tokio = { version = "1.0", default-features = false }
 version = "0.91.1"
 features = ["gl", "textlayout", "svg", "x11", "wayland"]
 
+
+[dependencies]
+freya-query = { workspace = true }
 
 [dev-dependencies]
 freya = { workspace = true, features = ["all"] }
