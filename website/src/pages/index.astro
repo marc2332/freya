@@ -58,8 +58,8 @@ fn app() -> impl IntoElement {
         <div class="text-xs">
             <Code code={EXAMPLE_CODE} lang="rs" />
         </div>
-        <div class="flex justify-center flex-col items-center">
-            <video muted autoplay playsinline loop >
+        <div class="flex justify-center flex-col items-center gap-y-8">
+            <video muted autoplay playsinline loop class="rounded-xl" >
                 <source src="/demo.webm" type="video/webm" >
             </video>
             <a class="w-36 bg-custom-purple p-2 text-center rounded-lg text-white hover:bg-custom-purple-dark transition-colors delay-[10]" href="https://github.com/marc2332/freya#want-to-try-it-">Run locally</a>
