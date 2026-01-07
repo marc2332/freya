@@ -32,6 +32,7 @@ all = [
   "material-design",
   "calendar",
   "sdk",
+  "radio",
 ]
 all-publish = ["all", "performance", "mocked-engine", "freya-components/docs"]
 all-debug = ["all", "performance", "vulkan"]
@@ -44,6 +45,7 @@ all-tests = [
   "gif",
   "material-design",
   "calendar",
+  "radio",
 ]
 docs = ["all-debug"]
 # Features
@@ -61,6 +63,7 @@ sdk = ["dep:freya-sdk"]
 tray = ["freya-winit/tray", "dep:tray-icon"]
 material-design = ["dep:freya-material-design"]
 hotpath = ["freya-core/hotpath", "freya-winit/hotpath"]
+radio = ["dep:freya-radio"]
 
 [dependencies]
 freya-core = { workspace = true }
@@ -78,6 +81,9 @@ freya-router = { workspace = true, optional = true }
 
 # i18n
 freya-i18n = { workspace = true, optional = true }
+
+# Radio
+freya-radio = { workspace = true, optional = true }
 
 # Performance
 freya-performance-plugin = { workspace = true, optional = true }

@@ -1,6 +1,10 @@
+use std::{
+    cell::RefCell,
+    rc::Rc,
+};
+
 use freya_query::prelude::*;
 use freya_testing::prelude::*;
-use std::{cell::RefCell, rc::Rc};
 
 #[derive(Clone, PartialEq, Hash, Eq)]
 struct GetUserName(Captured<Rc<RefCell<String>>>);
@@ -33,27 +37,16 @@ impl MutationCapability for SetUserName {
     type Err = ();
     type Keys = (usize, String);
 
-    fn run(
-        &self,
-        keys: &Self::Keys,
-    ) -> impl core::future::Future<Output = Result<Self::Ok, Self::Err>> {
+    async fn run(&self, keys: &Self::Keys) -> Result<Self::Ok, Self::Err> {
         let client = self.0.clone();
         let keys = keys.clone();
-        async move {
-            *client.borrow_mut() = keys.1;
-            Ok(())
-        }
+        *client.borrow_mut() = keys.1;
+        Ok(())
     }
 
-    fn on_settled(
-        &self,
-        keys: &Self::Keys,
-        _result: &Result<Self::Ok, Self::Err>,
-    ) -> impl core::future::Future<Output = ()> {
+    async fn on_settled(&self, keys: &Self::Keys, _result: &Result<Self::Ok, Self::Err>) {
         let user_id = keys.0;
-        async move {
-            QueriesStorage::<GetUserName>::invalidate_matching(user_id).await;
-        }
+        QueriesStorage::<GetUserName>::invalidate_matching(user_id).await;
     }
 }
 
