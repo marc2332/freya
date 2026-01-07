@@ -30,13 +30,14 @@
 //! - `performance`: Enables the performance overlay plugin.
 //! - `vulkan`: Enables Vulkan rendering support.
 //! - `tray`: Enables tray support using the [tray_icon] crate.
-//! - `sdk`: Reexport `freya-sdk` under [sdk]
+//! - `sdk`: Reexport `freya-sdk` under [sdk].
 //! - `gif`: Enables the [GifViewer](components::GifViewer) component.
 //! - `plot`: Enables the [plot](prelude::plot) element.
 //! - `material-design`: Reexport `freya-material-design` under [material_design].
 //! - `calendar`: Enables the [Calendar](components::Calendar) component.
 //! - `hotpath`: Enables Freya's internal usage of hotpath.
 //! - `markdown`: Enables the [MarkdownViewer](components::MarkdownViewer) component.
+//! - `radio`: Reexport `freya-radio` under [radio].
 
 pub mod prelude {
     pub use freya_core::prelude::*;
@@ -46,6 +47,7 @@ pub mod prelude {
             LaunchConfig,
             WindowConfig,
         },
+        renderer::RendererContext,
     };
 
     pub use crate::components::*;
@@ -56,6 +58,13 @@ pub mod prelude {
         let launch_config = launch_config
             .with_plugin(freya_performance_plugin::PerformanceOverlayPlugin::default());
         freya_winit::launch(launch_config)
+    }
+
+    /// Reexport `freya-radio` when the `radio` feature is enabled.
+    #[cfg(feature = "radio")]
+    #[cfg_attr(feature = "docs", doc(cfg(feature = "radio")))]
+    pub mod radio {
+        pub use freya_radio::prelude::*;
     }
     pub use torin::{
         alignment::Alignment,
