@@ -17,6 +17,7 @@ use crate::theming::{
         CheckboxThemePreference,
         ChipThemePreference,
         CircularLoaderThemePreference,
+        ColorPickerThemePreference,
         ColorsSheet,
         FloatingTabThemePreference,
         InputThemePreference,
@@ -227,6 +228,11 @@ pub(crate) const BASE_THEME: Theme = Theme {
         thumb_background: Preference::Reference("secondary"),
         thumb_inner_background: Preference::Reference("primary"),
         border_fill: Preference::Reference("surface_primary"),
+    },
+    color_picker: ColorPickerThemePreference {
+        background: Preference::Reference("surface_tertiary"),
+        border_fill: Preference::Reference("border"),
+        color: Preference::Reference("text_primary"),
     },
     select: SelectThemePreference {
         width: Preference::Specific(Size::Inner),
