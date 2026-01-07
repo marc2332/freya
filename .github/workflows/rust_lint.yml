@@ -11,7 +11,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     concurrency:
       group: rust-lint-${{ github.ref_name }}
       cancel-in-progress: true
@@ -26,8 +26,9 @@ jobs:
       with:
         components: rustfmt, clippy
     - name: Install nightly rust toolchain
-      uses: dtolnay/rust-toolchain@nightly
+      uses: dtolnay/rust-toolchain@master
       with:
+        toolchain: nightly-2025-09-25
         components: rustfmt
     - name: Install just
       uses: taiki-e/install-action@just
@@ -39,9 +40,6 @@ jobs:
       with:
         shared-key: "rust-ubuntu-latest"
         save-if: ${{ github.ref == 'refs/heads/main' }}
-    - name: Install linux dependencies
-      if: runner.os == 'Linux'
-      run: sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev
     - name: Lint
       run: just c
     - name: Format
