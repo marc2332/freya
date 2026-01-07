@@ -83,11 +83,6 @@ impl ColorPicker {
         }
     }
 
-    pub fn theme(mut self, theme: ColorPickerThemePartial) -> Self {
-        self.theme = Some(theme);
-        self
-    }
-
     pub fn value(mut self, value: Color) -> Self {
         self.value = value;
         self
