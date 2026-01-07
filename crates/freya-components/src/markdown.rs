@@ -277,7 +277,6 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                 }
                 TagEnd::CodeBlock => {
                     in_code_block = false;
-                    println!(">{code_block_content:?}<");
                     elements.push(MarkdownElement::CodeBlock {
                         code: code_block_content.clone(),
                         language: code_block_language.take(),

@@ -78,11 +78,6 @@ fn app() -> impl IntoElement {
         ScrollView::new()
             .width(Size::fill())
             .height(Size::fill())
-            .child(
-                MarkdownViewer::new(MARKDOWN_CONTENT)
-                    .padding(16.)
-                    .width(Size::fill())
-                    .height(Size::fill()),
-            ),
+            .child(MarkdownViewer::new(MARKDOWN_CONTENT).padding(18.)),
     )
 }
