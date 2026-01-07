@@ -75,8 +75,14 @@ The markdown viewer makes it easy to render rich text content in your Freya appl
 
 fn app() -> impl IntoElement {
     rect().expanded().child(
-        ScrollableMarkdownViewer::new(MARKDOWN_CONTENT)
+        ScrollView::new()
             .width(Size::fill())
-            .height(Size::fill()),
+            .height(Size::fill())
+            .child(
+                MarkdownViewer::new(MARKDOWN_CONTENT)
+                    .padding(16.)
+                    .width(Size::fill())
+                    .height(Size::fill()),
+            ),
     )
 }
