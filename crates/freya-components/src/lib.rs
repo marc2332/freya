@@ -76,6 +76,8 @@ cfg_if::cfg_if! {
 /// | [FloatingTab](floating_tab::FloatingTab)        | [ImageViewer](image_viewer::ImageViewer) | [ScrollView](scrollviews::ScrollView) | [VirtualScrollView](scrollviews::VirtualScrollView) |
 /// | ![Circular Loader Preview][gallery_circular_loader] | ![SegmentedButton Preview][gallery_segmented_button] | ![Tooltip Preview][gallery_tooltip] | ![Calendar Preview][gallery_calendar]  |
 /// | [CircularLoader](loader::CircularLoader)        | [SegmentedButton](segmented_button::SegmentedButton) | [Tooltip](tooltip::Tooltip) |[Calendar](calendar::Calendar) |
+/// | ![ColorPicker Preview][gallery_color_picker] | ![Flat Button Preview][gallery_flat_button] | ![Slider Preview][gallery_slider] | ![Checkbox Preview][gallery_checkbox] |
+/// | [ColorPicker](color_picker::ColorPicker) | [Flat Button](button::Button) | [Slider](slider::Slider) | [Checkbox](checkbox::Checkbox) |
 #[cfg_attr(feature = "docs",
     doc = embed_doc_image::embed_image!("gallery_button", "images/gallery_button.png"),
     doc = embed_doc_image::embed_image!("gallery_filled_button", "images/gallery_filled_button.png"),
