@@ -19,7 +19,6 @@ use crate::image_viewer::{
     ImageViewer,
 };
 use crate::{
-    scrollviews::ScrollView,
     table::{
         Table,
         TableBody,
@@ -266,9 +265,9 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                 }
                 TagEnd::Paragraph => {
                     if in_blockquote {
-                       blockquote_spans.append(&mut current_spans)
+                        blockquote_spans.append(&mut current_spans)
                     } else if in_list_item {
-                      current_list_item.append(&mut current_spans)
+                        current_list_item.append(&mut current_spans)
                     } else if in_paragraph {
                         in_paragraph = false;
                         elements.push(MarkdownElement::Paragraph {
@@ -602,75 +601,6 @@ impl Render for MarkdownViewer {
         }
 
         container
-    }
-
-    fn render_key(&self) -> DiffKey {
-        self.key.clone().or(self.default_key())
-    }
-}
-
-/// A scrollable markdown viewer component.
-///
-/// Wraps `MarkdownViewer` in a `ScrollView` for handling long content.
-///
-/// # Example
-///
-/// ```rust
-/// # use freya::prelude::*;
-/// fn app() -> impl IntoElement {
-///     ScrollableMarkdownViewer::new("# Long Markdown Content\n\n...")
-///         .width(Size::fill())
-///         .height(Size::fill())
-/// }
-/// ```
-#[derive(PartialEq)]
-pub struct ScrollableMarkdownViewer {
-    content: Cow<'static, str>,
-    width: Size,
-    height: Size,
-    key: DiffKey,
-}
-
-impl ScrollableMarkdownViewer {
-    pub fn new(content: impl Into<Cow<'static, str>>) -> Self {
-        Self {
-            content: content.into(),
-            width: Size::fill(),
-            height: Size::fill(),
-            key: DiffKey::None,
-        }
-    }
-
-    pub fn key(mut self, key: impl Into<DiffKey>) -> Self {
-        self.key = key.into();
-        self
-    }
-
-    pub fn width(mut self, width: Size) -> Self {
-        self.width = width;
-        self
-    }
-
-    pub fn height(mut self, height: Size) -> Self {
-        self.height = height;
-        self
-    }
-}
-
-impl KeyExt for ScrollableMarkdownViewer {
-    fn write_key(&mut self) -> &mut DiffKey {
-        &mut self.key
-    }
-}
-
-impl Render for ScrollableMarkdownViewer {
-    fn render(&self) -> impl IntoElement {
-        ScrollView::new()
-            .width(self.width.clone())
-            .height(self.height.clone())
-            .children([MarkdownViewer::new(self.content.clone())
-                .padding(16.)
-                .into()])
     }
 
     fn render_key(&self) -> DiffKey {
