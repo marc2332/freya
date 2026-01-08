@@ -22,7 +22,7 @@ impl Property {
     }
 }
 
-impl Render for Property {
+impl Component for Property {
     fn render(&self) -> impl IntoElement {
         rect()
             .overflow(Overflow::Clip)
@@ -55,7 +55,7 @@ impl GradientProperty {
     }
 }
 
-impl Render for GradientProperty {
+impl Component for GradientProperty {
     fn render(&self) -> impl IntoElement {
         paragraph()
             .line_height(1.9)
@@ -86,7 +86,7 @@ impl ColorProperty {
     }
 }
 
-impl Render for ColorProperty {
+impl Component for ColorProperty {
     fn render(&self) -> impl IntoElement {
         rect()
             .overflow(Overflow::Clip)
@@ -140,7 +140,7 @@ impl ShadowProperty {
     }
 }
 
-impl Render for ShadowProperty {
+impl Component for ShadowProperty {
     fn render(&self) -> impl IntoElement {
         rect()
             .overflow(Overflow::Clip)
@@ -193,7 +193,7 @@ impl BorderProperty {
     }
 }
 
-impl Render for BorderProperty {
+impl Component for BorderProperty {
     fn render(&self) -> impl IntoElement {
         rect()
             .overflow(Overflow::Clip)
@@ -247,7 +247,7 @@ impl TextShadowProperty {
     }
 }
 
-impl Render for TextShadowProperty {
+impl Component for TextShadowProperty {
     fn render(&self) -> impl IntoElement {
         let color = self.text_shadow.color;
 

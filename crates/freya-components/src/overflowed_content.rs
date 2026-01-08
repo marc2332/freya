@@ -1,8 +1,19 @@
 use std::time::Duration;
 
-use freya_animation::prelude::{AnimDirection, AnimNum, Ease, Function, OnFinish, use_animation};
+use freya_animation::prelude::{
+    AnimDirection,
+    AnimNum,
+    Ease,
+    Function,
+    OnFinish,
+    use_animation,
+};
 use freya_core::prelude::*;
-use torin::{node::Node, prelude::Area, size::Size};
+use torin::{
+    node::Node,
+    prelude::Area,
+    size::Size,
+};
 
 /// Animate the content of a container when the content overflows.
 ///
@@ -87,7 +98,7 @@ impl OverflowedContent {
     }
 }
 
-impl Render for OverflowedContent {
+impl Component for OverflowedContent {
     fn render(&self) -> impl IntoElement {
         let mut label_size = use_state(Area::default);
         let mut rect_size = use_state(Area::default);

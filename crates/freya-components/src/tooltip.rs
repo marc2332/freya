@@ -76,7 +76,7 @@ impl Tooltip {
     }
 }
 
-impl Render for Tooltip {
+impl Component for Tooltip {
     fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, tooltip);
         let TooltipTheme {
@@ -153,7 +153,7 @@ impl TooltipContainer {
     }
 }
 
-impl Render for TooltipContainer {
+impl Component for TooltipContainer {
     fn render(&self) -> impl IntoElement {
         let mut is_hovering = use_state(|| false);
         let mut size = use_state(Area::default);

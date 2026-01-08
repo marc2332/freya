@@ -54,7 +54,7 @@ impl ChildrenExt for DraggableCanvas {
     }
 }
 
-impl Render for DraggableCanvas {
+impl Component for DraggableCanvas {
     fn render(&self) -> impl IntoElement {
         let mut layout = use_state(Area::default);
         use_provide_context(move || DraggableCanvasLayout(layout));
@@ -109,7 +109,7 @@ impl ChildrenExt for Draggable {
     }
 }
 
-impl Render for Draggable {
+impl Component for Draggable {
     fn render(&self) -> impl IntoElement {
         let mut position = use_state(|| self.initial_position);
         let mut dragging_position = use_state::<Option<CursorPoint>>(|| None);

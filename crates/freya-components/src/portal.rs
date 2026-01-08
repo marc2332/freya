@@ -84,7 +84,7 @@ impl<T> KeyExt for Portal<T> {
     }
 }
 
-impl<T: PartialEq + 'static + Clone + std::hash::Hash + Eq + Debug> Render for Portal<T> {
+impl<T: PartialEq + 'static + Clone + std::hash::Hash + Eq + Debug> Component for Portal<T> {
     fn render(&self) -> impl IntoElement {
         let mut positions = use_hook(|| match try_consume_context::<PortalsMap<T>>() {
             Some(ctx) => ctx,

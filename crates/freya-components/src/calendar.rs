@@ -177,7 +177,7 @@ impl KeyExt for Calendar {
     }
 }
 
-impl Render for Calendar {
+impl Component for Calendar {
     fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, calendar);
 
@@ -416,7 +416,7 @@ impl ChildrenExt for NavButton {
     }
 }
 
-impl Render for NavButton {
+impl Component for NavButton {
     fn render(&self) -> impl IntoElement {
         Button::new()
             .flat()
@@ -496,7 +496,7 @@ impl KeyExt for CalendarDay {
     }
 }
 
-impl Render for CalendarDay {
+impl Component for CalendarDay {
     fn render(&self) -> impl IntoElement {
         Button::new()
             .flat()

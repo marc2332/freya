@@ -64,7 +64,7 @@ impl ProgressBar {
     }
 }
 
-impl Render for ProgressBar {
+impl Component for ProgressBar {
     fn render(&self) -> impl IntoElement {
         let progressbar_theme = get_theme!(&self.theme, progressbar);
 

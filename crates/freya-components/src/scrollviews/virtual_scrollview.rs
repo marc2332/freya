@@ -6,7 +6,9 @@ use std::{
 use freya_core::prelude::*;
 use freya_sdk::timeout::use_timeout;
 use torin::{
-    node::Node, prelude::Direction, size::Size
+    node::Node,
+    prelude::Direction,
+    size::Size,
 };
 
 use crate::scrollviews::{
@@ -231,7 +233,7 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
     }
 }
 
-impl<D: 'static, B: Fn(usize, &D) -> Element + 'static> Render for VirtualScrollView<D, B> {
+impl<D: 'static, B: Fn(usize, &D) -> Element + 'static> Component for VirtualScrollView<D, B> {
     fn render(self: &VirtualScrollView<D, B>) -> impl IntoElement {
         let focus = use_focus();
         let mut timeout = use_timeout(|| Duration::from_millis(800));

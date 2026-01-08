@@ -46,7 +46,7 @@ fn app() -> impl IntoElement {
 
 #[derive(PartialEq)]
 struct ListComp(usize);
-impl Render for ListComp {
+impl Component for ListComp {
     fn render(&self) -> impl IntoElement {
         let list_n = self.0;
         let mut radio = use_radio::<Data, DataChannel>(DataChannel::SpecificListItemUpdate(list_n));

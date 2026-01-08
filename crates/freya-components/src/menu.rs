@@ -77,7 +77,7 @@ impl Menu {
     }
 }
 
-impl RenderOwned for Menu {
+impl ComponentOwned for Menu {
     fn render(self) -> impl IntoElement {
         // Provide the menus ID generator
         use_provide_context(|| State::create(ROOT_MENU.0));
@@ -141,7 +141,7 @@ impl MenuContainer {
     }
 }
 
-impl RenderOwned for MenuContainer {
+impl ComponentOwned for MenuContainer {
     fn render(self) -> impl IntoElement {
         let focus = use_focus();
         let theme = get_theme!(self.theme, menu_container);
@@ -238,7 +238,7 @@ impl ChildrenExt for MenuItem {
     }
 }
 
-impl RenderOwned for MenuItem {
+impl ComponentOwned for MenuItem {
     fn render(self) -> impl IntoElement {
         let theme = get_theme!(self.theme, menu_item);
         let mut hovering = use_state(|| false);
@@ -351,7 +351,7 @@ impl MenuButton {
     }
 }
 
-impl RenderOwned for MenuButton {
+impl ComponentOwned for MenuButton {
     fn render(self) -> impl IntoElement {
         let mut menus = use_consume::<State<Vec<MenuId>>>();
         let parent_menu_id = use_consume::<MenuId>();
@@ -409,7 +409,7 @@ impl ChildrenExt for SubMenu {
     }
 }
 
-impl RenderOwned for SubMenu {
+impl ComponentOwned for SubMenu {
     fn render(self) -> impl IntoElement {
         let parent_menu_id = use_consume::<MenuId>();
         let mut menus = use_consume::<State<Vec<MenuId>>>();

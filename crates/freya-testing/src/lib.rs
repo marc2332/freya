@@ -95,7 +95,7 @@ pub mod prelude {
 type DocRunnerHook = Box<dyn FnOnce(&mut TestingRunner)>;
 
 pub struct DocRunner {
-    app: FpRender,
+    app: AppComponent,
     size: Size2D,
     scale_factor: f64,
     hook: Option<DocRunnerHook>,
@@ -132,7 +132,7 @@ impl DocRunner {
     }
 }
 
-pub fn launch_doc(app: impl Into<FpRender>, path: impl Into<PathBuf>) -> DocRunner {
+pub fn launch_doc(app: impl Into<AppComponent>, path: impl Into<PathBuf>) -> DocRunner {
     DocRunner {
         app: app.into(),
         size: Size2D::new(250., 250.),
@@ -142,7 +142,7 @@ pub fn launch_doc(app: impl Into<FpRender>, path: impl Into<PathBuf>) -> DocRunn
     }
 }
 
-pub fn launch_test(app: impl Into<FpRender>) -> TestingRunner {
+pub fn launch_test(app: impl Into<AppComponent>) -> TestingRunner {
     TestingRunner::new(app, Size2D::new(500., 500.), |_| {}, 1.0).0
 }
 
@@ -171,7 +171,7 @@ pub struct TestingRunner {
 
 impl TestingRunner {
     pub fn new<T>(
-        app: impl Into<FpRender>,
+        app: impl Into<AppComponent>,
         size: Size2D,
         hook: impl FnOnce(&mut Runner) -> T,
         scale_factor: f64,

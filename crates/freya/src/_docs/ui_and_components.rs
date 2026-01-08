@@ -16,28 +16,28 @@
 //! # }
 //! ```
 //!
-//! You can also split your UI in reusable pieces called **Components**, these are structs that implement the [Render](freya_core::prelude::Render) trait.
+//! You can also split your UI in reusable pieces called **Components**.
 //!
-//! ### [Render](freya_core::prelude::Render) trait
+//! ### [Component](freya_core::prelude::Component) trait
 //!
-//! For normal components you may use the [Render](freya_core::prelude::Render) trait.
+//! For normal components you may use the [Component](freya_core::prelude::Component) trait.
 //!
 //! ```rust
 //! # use freya::prelude::*;
 //! #[derive(PartialEq)]
 //! struct App;
 //!
-//! impl Render for App {
+//! impl Component for App {
 //!     fn render(&self) -> impl IntoElement {
 //!         "Hello, World!"
 //!     }
 //! }
 //! ```
 //!
-//! ## Root Component
-//! The root component is the component passed to [WindowConfig](crate::prelude::WindowConfig).
+//! ## App/Root Component
+//! The app/root component is the component passed to [WindowConfig](crate::prelude::WindowConfig).
 //!
-//! For convenience it can be a `Fn() -> Element` instead of a struct that implements [Render](freya_core::prelude::Render).
+//! For convenience it can be a `Fn() -> Element` instead of a struct that implements [Component](freya_core::prelude::Component).
 //!
 //! ```rust
 //! # use freya::prelude::*;
@@ -53,7 +53,7 @@
 //! fn main() {
 //!     launch(
 //!         LaunchConfig::new()
-//!             .with_window(WindowConfig::new(FpRender::from_render(App { number: 1 }))),
+//!             .with_window(WindowConfig::new(AppComponent::new(App { number: 1 }))),
 //!     )
 //! }
 //!
@@ -62,7 +62,7 @@
 //!     number: u8,
 //! }
 //!
-//! impl Render for App {
+//! impl Component for App {
 //!     fn render(&self) -> impl IntoElement {
 //!         label().text(self.number.to_string())
 //!     }
@@ -77,7 +77,7 @@
 //! // Reusable component that we might call as many times we want
 //! #[derive(PartialEq)]
 //! struct TextLabel(Cow<'static, str>);
-//! impl Render for TextLabel {
+//! impl Component for TextLabel {
 //!     fn render(&self) -> impl IntoElement {
 //!         label().text(self.0.clone())
 //!     }
@@ -112,7 +112,7 @@
 //! #[derive(PartialEq)]
 //! struct CoolComp;
 //!
-//! impl Render for CoolComp {
+//! impl Component for CoolComp {
 //!     // One run of this function is the same as saying one render of this component
 //!     fn render(&self) -> impl IntoElement {
 //!         let mut count = use_state(|| 0);

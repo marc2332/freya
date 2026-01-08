@@ -61,7 +61,7 @@ impl Link {
     }
 }
 
-impl Render for Link {
+impl Component for Link {
     fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, link);
         let mut is_hovering = use_state(|| false);

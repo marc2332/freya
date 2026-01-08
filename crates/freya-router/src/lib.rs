@@ -19,7 +19,7 @@
 //!
 //! #[derive(PartialEq)]
 //! struct Layout;
-//! impl Render for Layout {
+//! impl Component for Layout {
 //!     fn render(&self) -> impl IntoElement {
 //!         rect().center().expanded().child(outlet::<Route>())
 //!     }
@@ -27,7 +27,7 @@
 //!
 //! #[derive(PartialEq)]
 //! struct Home;
-//! impl Render for Home {
+//! impl Component for Home {
 //!     fn render(&self) -> impl IntoElement {
 //!         Link::new(Route::Settings).child("Go Settings")
 //!     }
@@ -35,7 +35,7 @@
 //!
 //! #[derive(PartialEq)]
 //! struct Settings;
-//! impl Render for Settings {
+//! impl Component for Settings {
 //!     fn render(&self) -> impl IntoElement {
 //!         Link::new(Route::Home).child("Go Home")
 //!     }

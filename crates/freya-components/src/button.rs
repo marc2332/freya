@@ -220,7 +220,7 @@ impl Button {
     }
 }
 
-impl Render for Button {
+impl Component for Button {
     fn render(&self) -> impl IntoElement {
         let mut hovering = use_state(|| false);
         let focus = use_focus();

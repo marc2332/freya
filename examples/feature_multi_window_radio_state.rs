@@ -9,9 +9,8 @@ fn main() {
     let radio_station = RadioStation::create_global(Data::default());
 
     launch(
-        LaunchConfig::new().with_window(WindowConfig::new(FpRender::from_render(App {
-            radio_station,
-        }))),
+        LaunchConfig::new()
+            .with_window(WindowConfig::new(AppComponent::new(App { radio_station }))),
     )
 }
 
@@ -31,7 +30,7 @@ struct App {
     radio_station: RadioStation<Data, DataChannel>,
 }
 
-impl Render for App {
+impl Component for App {
     fn render(&self) -> impl IntoElement {
         use_share_radio(move || self.radio_station);
 
@@ -39,7 +38,7 @@ impl Render for App {
         let on_press = move |_| {
             spawn(async move {
                 let _ = Platform::get()
-                    .launch_window(WindowConfig::new(FpRender::from_render(SubApp {
+                    .launch_window(WindowConfig::new(AppComponent::new(SubApp {
                         radio_station,
                     })))
                     .await;
@@ -57,7 +56,7 @@ struct SubApp {
     radio_station: RadioStation<Data, DataChannel>,
 }
 
-impl Render for SubApp {
+impl Component for SubApp {
     fn render(&self) -> impl IntoElement {
         use_share_radio(move || self.radio_station);
         let mut radio = use_radio(DataChannel::Count);

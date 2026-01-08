@@ -8,7 +8,7 @@ use crate::prelude::Routable;
 /// # use freya_core::prelude::*;
 /// # #[derive(PartialEq)]
 /// # struct Index;
-/// # impl Render for Index {
+/// # impl Component for Index {
 /// #    fn render(&self) -> impl IntoElement {
 /// #        rect()
 /// #    }

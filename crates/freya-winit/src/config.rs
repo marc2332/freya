@@ -36,7 +36,7 @@ pub type WindowHandleHook = Box<dyn FnOnce(&mut Window) + Send + Sync>;
 /// Configuration for a Window.
 pub struct WindowConfig {
     /// Root component for the window app.
-    pub(crate) app: FpRender,
+    pub(crate) app: AppComponent,
     /// Size of the Window.
     pub(crate) size: (f64, f64),
     /// Minimum size of the Window.
@@ -79,11 +79,11 @@ impl Debug for WindowConfig {
 
 impl WindowConfig {
     /// Create a window with the given app.
-    pub fn new(app: impl Into<FpRender>) -> Self {
+    pub fn new(app: impl Into<AppComponent>) -> Self {
         Self::new_with_defaults(app.into())
     }
 
-    fn new_with_defaults(app: impl Into<FpRender>) -> Self {
+    fn new_with_defaults(app: impl Into<AppComponent>) -> Self {
         Self {
             app: app.into(),
             size: (700.0, 500.0),

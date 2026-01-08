@@ -50,7 +50,7 @@ impl NodesTree {
     }
 }
 
-impl Render for NodesTree {
+impl Component for NodesTree {
     fn render(&self) -> impl IntoElement {
         let mut radio = use_radio(DevtoolsChannel::UpdatedTree);
 

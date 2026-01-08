@@ -49,7 +49,7 @@ impl<T: Clone + PartialEq + 'static> DragZone<T> {
     }
 }
 
-impl<T: Clone + PartialEq> Render for DragZone<T> {
+impl<T: Clone + PartialEq> Component for DragZone<T> {
     fn render(&self) -> impl IntoElement {
         let mut drags = use_drag::<T>();
         let mut position = use_state::<Option<CursorPoint>>(|| None);
@@ -119,7 +119,7 @@ impl<T: PartialEq + Clone + 'static> DropZone<T> {
     }
 }
 
-impl<T: Clone + PartialEq + 'static> Render for DropZone<T> {
+impl<T: Clone + PartialEq + 'static> Component for DropZone<T> {
     fn render(&self) -> impl IntoElement {
         let mut drags = use_drag::<T>();
         let on_drop = self.on_drop.clone();

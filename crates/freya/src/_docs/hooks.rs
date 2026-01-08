@@ -18,7 +18,7 @@
 //! # use freya::prelude::*;
 //! #[derive(PartialEq)]
 //! struct MyComponent(bool);
-//! impl Render for MyComponent {
+//! impl Component for MyComponent {
 //!     fn render(&self) -> impl IntoElement {
 //!         if self.0 {
 //!             let state = use_state(|| self.0);
@@ -34,7 +34,7 @@
 //! # use freya::prelude::*;
 //! #[derive(PartialEq)]
 //! struct MyComponent(bool);
-//! impl Render for MyComponent {
+//! impl Component for MyComponent {
 //!     fn render(&self) -> impl IntoElement {
 //!         let state = use_state(|| self.0);
 //!         rect()
@@ -47,7 +47,7 @@
 //! # use freya::prelude::*;
 //! #[derive(PartialEq)]
 //! struct MyComponent(bool);
-//! impl Render for MyComponent {
+//! impl Component for MyComponent {
 //!     fn render(&self) -> impl IntoElement {
 //!         rect()
 //!     }
@@ -62,7 +62,7 @@
 //! ```rust
 //! # use freya::prelude::*;
 //! struct MyComponent;
-//! impl Render for MyComponent {
+//! impl Component for MyComponent {
 //!     fn render(&self) -> impl IntoElement {
 //!         let on_mouse_up = |_| {
 //!             let state = use_state(|| false); // ❌ Not allowed here
@@ -76,7 +76,7 @@
 //! ```rust
 //! # use freya::prelude::*;
 //! struct MyComponent;
-//! impl Render for MyComponent {
+//! impl Component for MyComponent {
 //!     fn render(&self) -> impl IntoElement {
 //!         let mut state = use_state(|| false);
 //!         let on_mouse_up = move |_| {
@@ -95,7 +95,7 @@
 //! ```rust
 //! # use freya::prelude::*;
 //! struct MyComponent;
-//! impl Render for MyComponent {
+//! impl Component for MyComponent {
 //!     fn render(&self) -> impl IntoElement {
 //!         for i in 0..5 {
 //!             let state = use_state(|| i); // ❌ Not allowed in a loop
@@ -109,7 +109,7 @@
 //! ```rust
 //! # use freya::prelude::*;
 //! struct MyComponent;
-//! impl Render for MyComponent {
+//! impl Component for MyComponent {
 //!     fn render(&self) -> impl IntoElement {
 //!         let state = use_state(|| (0..5).collect::<Vec<_>>());
 //!         rect().child("Hello, World!")

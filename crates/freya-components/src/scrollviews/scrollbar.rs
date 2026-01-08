@@ -32,7 +32,7 @@ pub struct ScrollBar {
     pub thumb: ScrollThumb,
 }
 
-impl RenderOwned for ScrollBar {
+impl ComponentOwned for ScrollBar {
     fn render(self) -> impl IntoElement {
         let scrollbar_theme = get_theme!(&self.theme, scrollbar);
 

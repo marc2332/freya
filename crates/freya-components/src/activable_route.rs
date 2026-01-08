@@ -35,7 +35,7 @@ impl<T> ActivableRoute<T> {
     }
 }
 
-impl<T: PartialEq + Clone + 'static + Routable> Render for ActivableRoute<T> {
+impl<T: PartialEq + Clone + 'static + Routable> Component for ActivableRoute<T> {
     fn render(&self) -> impl IntoElement {
         let current_route = use_route::<T>();
 
