@@ -70,15 +70,21 @@ pub struct VirtualScrollView<D, B: Fn(usize, &D) -> Element> {
     builder_data: D,
     item_size: f32,
     length: i32,
-    width: Size,
-    height: Size,
+    layout: LayoutData,
     show_scrollbar: bool,
-    direction: Direction,
     scroll_with_arrows: bool,
     scroll_controller: Option<ScrollController>,
     invert_scroll_wheel: bool,
     key: DiffKey,
 }
+
+impl<D: PartialEq, B: Fn(usize, &D) -> Element> LayoutExt for VirtualScrollView<D, B> {
+    fn get_layout(&mut self) -> &mut LayoutData {
+        &mut self.layout
+    }
+}
+
+impl<D: PartialEq, B: Fn(usize, &D) -> Element> ContainerSizeExt for VirtualScrollView<D, B> {}
 
 impl<D: PartialEq, B: Fn(usize, &D) -> Element> KeyExt for VirtualScrollView<D, B> {
     fn write_key(&mut self) -> &mut DiffKey {
@@ -91,10 +97,8 @@ impl<D: PartialEq, B: Fn(usize, &D) -> Element> PartialEq for VirtualScrollView<
         self.builder_data == other.builder_data
             && self.item_size == other.item_size
             && self.length == other.length
-            && self.width == other.width
-            && self.height == other.height
+            && self.layout == other.layout
             && self.show_scrollbar == other.show_scrollbar
-            && self.direction == other.direction
             && self.scroll_with_arrows == other.scroll_with_arrows
             && self.scroll_controller == other.scroll_controller
             && self.invert_scroll_wheel == other.invert_scroll_wheel
@@ -108,10 +112,13 @@ impl<B: Fn(usize, &()) -> Element> VirtualScrollView<(), B> {
             builder_data: (),
             item_size: 0.,
             length: 0,
-            width: Size::fill(),
-            height: Size::fill(),
+            layout: {
+                let mut l = LayoutData::default();
+                l.layout.width = Size::fill();
+                l.layout.height = Size::fill();
+                l
+            },
             show_scrollbar: true,
-            direction: Direction::Vertical,
             scroll_with_arrows: true,
             scroll_controller: None,
             invert_scroll_wheel: false,
@@ -119,19 +126,19 @@ impl<B: Fn(usize, &()) -> Element> VirtualScrollView<(), B> {
         }
     }
 
-    pub fn new_controlled(
-        builder: B,
-        scroll_controller: ScrollController,
-    ) -> VirtualScrollView<(), B> {
-        VirtualScrollView::<(), B> {
+    pub fn new_controlled(builder: B, scroll_controller: ScrollController) -> Self {
+        Self {
             builder,
             builder_data: (),
             item_size: 0.,
             length: 0,
-            width: Size::fill(),
-            height: Size::fill(),
+            layout: {
+                let mut l = LayoutData::default();
+                l.layout.width = Size::fill();
+                l.layout.height = Size::fill();
+                l
+            },
             show_scrollbar: true,
-            direction: Direction::Vertical,
             scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
             invert_scroll_wheel: false,
@@ -147,10 +154,13 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
             builder_data,
             item_size: 0.,
             length: 0,
-            width: Size::fill(),
-            height: Size::fill(),
+            layout: {
+                let mut layout = LayoutData::default();
+                layout.layout.width = Size::fill();
+                layout.layout.height = Size::fill();
+                layout
+            },
             show_scrollbar: true,
-            direction: Direction::Vertical,
             scroll_with_arrows: true,
             scroll_controller: None,
             invert_scroll_wheel: false,
@@ -168,10 +178,13 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
             builder_data,
             item_size: 0.,
             length: 0,
-            width: Size::fill(),
-            height: Size::fill(),
+            layout: {
+                let mut layout = LayoutData::default();
+                layout.layout.width = Size::fill();
+                layout.layout.height = Size::fill();
+                layout
+            },
             show_scrollbar: true,
-            direction: Direction::Vertical,
             scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
             invert_scroll_wheel: false,
@@ -184,18 +197,8 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
         self
     }
 
-    pub fn width(mut self, width: Size) -> Self {
-        self.width = width;
-        self
-    }
-
-    pub fn height(mut self, height: Size) -> Self {
-        self.height = height;
-        self
-    }
-
     pub fn direction(mut self, direction: Direction) -> Self {
-        self.direction = direction;
+        self.layout.layout.direction = direction;
         self
     }
 
@@ -240,9 +243,10 @@ impl<D: 'static, B: Fn(usize, &D) -> Element + 'static> Render for VirtualScroll
             .scroll_controller
             .unwrap_or_else(|| use_scroll_controller(ScrollConfig::default));
         let (scrolled_x, scrolled_y) = scroll_controller.into();
-        let direction = self.direction;
+        let layout = &self.layout.layout;
+        let direction = layout.direction;
 
-        let (inner_width, inner_height) = match self.direction {
+        let (inner_width, inner_height) = match direction {
             Direction::Vertical => (
                 size.read().inner_sizes.width,
                 self.item_size * self.length as f32,
@@ -276,8 +280,10 @@ impl<D: 'static, B: Fn(usize, &D) -> Element + 'static> Render for VirtualScroll
             corrected_scrolled_y,
         );
 
-        let (container_width, content_width) = get_container_sizes(self.width.clone());
-        let (container_height, content_height) = get_container_sizes(self.height.clone());
+        let (container_width, content_width) =
+            get_container_sizes(self.layout.layout.width.clone());
+        let (container_height, content_height) =
+            get_container_sizes(self.layout.layout.height.clone());
 
         let scroll_with_arrows = self.scroll_with_arrows;
         let invert_scroll_wheel = self.invert_scroll_wheel;
@@ -411,7 +417,7 @@ impl<D: 'static, B: Fn(usize, &D) -> Element + 'static> Render for VirtualScroll
             }
         };
 
-        let (viewport_size, scroll_position) = if self.direction == Direction::vertical() {
+        let (viewport_size, scroll_position) = if direction == Direction::vertical() {
             (size.read().area.height(), corrected_scrolled_y)
         } else {
             (size.read().area.width(), corrected_scrolled_x)
@@ -429,7 +435,7 @@ impl<D: 'static, B: Fn(usize, &D) -> Element + 'static> Render for VirtualScroll
             .map(|i| (self.builder)(i, &self.builder_data))
             .collect::<Vec<Element>>();
 
-        let (offset_x, offset_y) = match self.direction {
+        let (offset_x, offset_y) = match direction {
             Direction::Vertical => {
                 let offset_y_min =
                     (-corrected_scrolled_y / self.item_size).floor() * self.item_size;
@@ -447,8 +453,8 @@ impl<D: 'static, B: Fn(usize, &D) -> Element + 'static> Render for VirtualScroll
         };
 
         rect()
-            .width(self.width.clone())
-            .height(self.height.clone())
+            .width(layout.width.clone())
+            .height(layout.height.clone())
             .a11y_id(focus.a11y_id())
             .a11y_focusable(false)
             .a11y_role(AccessibilityRole::ScrollView)
@@ -471,7 +477,7 @@ impl<D: 'static, B: Fn(usize, &D) -> Element + 'static> Render for VirtualScroll
                     .horizontal()
                     .child(
                         rect()
-                            .direction(self.direction)
+                            .direction(direction)
                             .width(content_width)
                             .height(content_height)
                             .offset_x(offset_x)

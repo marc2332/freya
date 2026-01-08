@@ -35,11 +35,18 @@ use torin::{
 #[derive(Clone, PartialEq)]
 pub struct OverflowedContent {
     children: Vec<Element>,
-    width: Size,
-    height: Size,
+    layout: LayoutData,
     duration: Duration,
     key: DiffKey,
 }
+
+impl LayoutExt for OverflowedContent {
+    fn get_layout(&mut self) -> &mut LayoutData {
+        &mut self.layout
+    }
+}
+
+impl ContainerSizeExt for OverflowedContent {}
 
 impl Default for OverflowedContent {
     fn default() -> Self {
@@ -61,22 +68,24 @@ impl KeyExt for OverflowedContent {
 
 impl OverflowedContent {
     pub fn new() -> Self {
+        let mut layout = LayoutData::default();
+        layout.layout.width = Size::fill();
+        layout.layout.height = Size::auto();
         Self {
             children: Vec::new(),
-            width: Size::fill(),
-            height: Size::auto(),
+            layout,
             duration: Duration::from_secs(4),
             key: DiffKey::None,
         }
     }
 
     pub fn width(mut self, width: impl Into<Size>) -> Self {
-        self.width = width.into();
+        self.layout.layout.width = width.into();
         self
     }
 
     pub fn height(mut self, height: impl Into<Size>) -> Self {
-        self.height = height.into();
+        self.layout.layout.height = height.into();
         self
     }
 
@@ -119,8 +128,8 @@ impl Render for OverflowedContent {
         };
 
         rect()
-            .width(self.width.clone())
-            .height(self.height.clone())
+            .width(self.layout.layout.width.clone())
+            .height(self.layout.layout.height.clone())
             .offset_x(-offset_x)
             .overflow(Overflow::Clip)
             .on_sized(move |e: Event<SizedEventData>| rect_size.set(e.area))
