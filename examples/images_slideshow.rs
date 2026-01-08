@@ -77,7 +77,7 @@ impl ChildrenExt for Card {
     }
 }
 
-impl Render for Card {
+impl Component for Card {
     fn render(&self) -> impl IntoElement {
         let animations = use_animation_with_dependencies(&self.selected, move |conf, selected| {
             conf.on_change(OnChange::Rerun);

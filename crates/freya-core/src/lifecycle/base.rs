@@ -15,7 +15,7 @@ The following is not allowed and will result in this runtime error.
 #[derive(PartialEq)]
 struct CoolComp(u8);
 
-impl Render for CoolComp {
+impl Component for CoolComp {
     fn render(&self) -> impl IntoElement {
         if self.0 == 2 {
             let state = use_state(|| 5);
@@ -32,7 +32,7 @@ The following is not allowed and will result in this runtime error.
 #[derive(PartialEq)]
 struct CoolComp(u8);
 
-impl Render for CoolComp {
+impl Component for CoolComp {
     fn render(&self) -> impl IntoElement {
         for i in 0..self.0 {
             let state = use_state(|| 5);
@@ -49,7 +49,7 @@ The following is not allowed and will result in this runtime error.
 #[derive(PartialEq)]
 struct CoolComp(u8);
 
-impl Render for CoolComp {
+impl Component for CoolComp {
     fn render(&self) -> impl IntoElement {
         use_side_effect(|| {
             let state = use_state(|| 5);

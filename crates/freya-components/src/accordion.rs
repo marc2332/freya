@@ -83,7 +83,7 @@ impl ChildrenExt for Accordion {
     }
 }
 
-impl Render for Accordion {
+impl Component for Accordion {
     fn render(self: &Accordion) -> impl IntoElement {
         let header = use_focus();
         let accordion_theme = get_theme!(&self.theme, accordion);

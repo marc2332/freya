@@ -36,7 +36,7 @@ struct FromRouteToCurrent {
     area: State<Area>,
 }
 
-impl Render for FromRouteToCurrent {
+impl Component for FromRouteToCurrent {
     fn render(&self) -> impl IntoElement {
         let mut animated_router = use_animated_router::<Route>();
         let animations = use_animation_with_dependencies(
@@ -114,7 +114,7 @@ fn expanded(scale: f32, corner_radius: f32, content: impl Into<Element>) -> Rect
 #[derive(Clone, PartialEq)]
 struct AnimatedOutlet;
 
-impl Render for AnimatedOutlet {
+impl Component for AnimatedOutlet {
     fn render(&self) -> impl IntoElement {
         let mut area = use_state(Area::default);
         let animated_router = use_animated_router();
@@ -158,7 +158,7 @@ impl Render for AnimatedOutlet {
 #[derive(Clone, PartialEq)]
 struct AppContainer;
 
-impl Render for AppContainer {
+impl Component for AppContainer {
     fn render(&self) -> impl IntoElement {
         NativeRouter::new().child(AnimatedRouter::<Route>::new(
             rect()
@@ -192,7 +192,7 @@ fn bottom_tab<R: Routable + PartialEq>(route: R, exact: bool, label: &'static st
 #[derive(PartialEq)]
 struct Home;
 
-impl Render for Home {
+impl Component for Home {
     fn render(&self) -> impl IntoElement {
         label().text("👋 Hello, World!")
     }
@@ -201,7 +201,7 @@ impl Render for Home {
 #[derive(PartialEq)]
 struct SecondPage;
 
-impl Render for SecondPage {
+impl Component for SecondPage {
     fn render(&self) -> impl IntoElement {
         label().text("🌌 Second Page")
     }
@@ -210,7 +210,7 @@ impl Render for SecondPage {
 #[derive(PartialEq)]
 struct ThirdPage;
 
-impl Render for ThirdPage {
+impl Component for ThirdPage {
     fn render(&self) -> impl IntoElement {
         label().text("🦀 Third Page")
     }

@@ -99,7 +99,7 @@ impl Switch {
     }
 }
 
-impl Render for Switch {
+impl Component for Switch {
     fn render(self: &Switch) -> impl IntoElement {
         let theme = get_theme!(&self.theme, switch);
         let mut hovering = use_state(|| false);

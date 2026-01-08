@@ -9,7 +9,7 @@ pub struct NodeInspectorComputedLayout {
     pub window_id: u64,
 }
 
-impl Render for NodeInspectorComputedLayout {
+impl Component for NodeInspectorComputedLayout {
     fn render(&self) -> impl IntoElement {
         let Some(node) = use_node_info(self.node_id, self.window_id) else {
             return rect().into_element();

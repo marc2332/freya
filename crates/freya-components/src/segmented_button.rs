@@ -103,7 +103,7 @@ impl KeyExt for ButtonSegment {
     }
 }
 
-impl Render for ButtonSegment {
+impl Component for ButtonSegment {
     fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, button_segment);
         let mut status = use_state(|| ButtonSegmentStatus::Idle);
@@ -278,7 +278,7 @@ impl KeyExt for SegmentedButton {
     }
 }
 
-impl Render for SegmentedButton {
+impl Component for SegmentedButton {
     fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, segmented_button);
 

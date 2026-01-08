@@ -34,7 +34,7 @@ impl SelectableText {
     }
 }
 
-impl Render for SelectableText {
+impl Component for SelectableText {
     fn render(&self) -> impl IntoElement {
         let holder = use_state(ParagraphHolder::default);
         let mut editable = use_editable(

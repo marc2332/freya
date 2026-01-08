@@ -82,7 +82,7 @@ impl KeyExt for Chip {
     }
 }
 
-impl Render for Chip {
+impl Component for Chip {
     fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, chip);
         let mut status = use_state(|| ChipStatus::Idle);

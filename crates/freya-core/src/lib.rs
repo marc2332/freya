@@ -61,12 +61,12 @@ pub mod prelude {
         diff_key::DiffKey,
         element::RenderContext,
         element::{
+            AppComponent,
+            Component,
+            ComponentKey,
+            ComponentOwned,
             Element,
-            FpRender,
             IntoElement,
-            Render,
-            RenderKey,
-            RenderOwned,
         },
         elements::{
             extensions::*,

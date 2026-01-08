@@ -25,7 +25,7 @@
 //! #[derive(PartialEq)]
 //! struct Body;
 //!
-//! impl Render for Body {
+//! impl Component for Body {
 //!     fn render(&self) -> impl IntoElement {
 //!         // Access to the i18n state
 //!         let mut i18n = I18n::get();

@@ -3,10 +3,12 @@ use std::time::Duration;
 use freya_core::prelude::*;
 use freya_sdk::timeout::use_timeout;
 use torin::{
-    node::Node, prelude::{
+    node::Node,
+    prelude::{
         Direction,
         Length,
-    }, size::Size
+    },
+    size::Size,
 };
 
 use crate::scrollviews::{
@@ -148,7 +150,7 @@ impl LayoutExt for ScrollView {
 
 impl ContainerSizeExt for ScrollView {}
 
-impl Render for ScrollView {
+impl Component for ScrollView {
     fn render(self: &ScrollView) -> impl IntoElement {
         let focus = use_focus();
         let mut timeout = use_timeout(|| Duration::from_millis(800));

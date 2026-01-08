@@ -1,6 +1,8 @@
 use freya_core::prelude::*;
 use torin::{
-    gaps::Gaps, node::Node, size::Size
+    gaps::Gaps,
+    node::Node,
+    size::Size,
 };
 
 #[derive(Clone, PartialEq)]
@@ -56,7 +58,7 @@ impl ArrowIcon {
     }
 }
 
-impl Render for ArrowIcon {
+impl Component for ArrowIcon {
     fn render(&self) -> impl IntoElement {
         svg(Bytes::from_static(r#"
             <svg viewBox="0 0 18 12" fill="none" xmlns="http://www.w3.org/2000/svg">

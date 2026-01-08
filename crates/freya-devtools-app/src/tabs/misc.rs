@@ -10,7 +10,7 @@ use crate::state::DevtoolsChannel;
 
 #[derive(PartialEq)]
 pub struct Misc;
-impl Render for Misc {
+impl Component for Misc {
     fn render(&self) -> impl IntoElement {
         let mut radio = use_radio(DevtoolsChannel::Misc);
 

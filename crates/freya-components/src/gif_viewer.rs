@@ -244,7 +244,7 @@ impl AccessibilityExt for GifViewer {
     }
 }
 
-impl Render for GifViewer {
+impl Component for GifViewer {
     fn render(&self) -> impl IntoElement {
         let asset_config = AssetConfiguration::new(&self.source, AssetAge::default());
         let asset_data = use_asset(&asset_config);

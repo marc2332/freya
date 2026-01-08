@@ -101,7 +101,7 @@ impl Select {
     }
 }
 
-impl Render for Select {
+impl Component for Select {
     fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, select);
         let focus = use_focus();

@@ -231,7 +231,7 @@ impl ChildrenExt for ImageViewer {
     }
 }
 
-impl Render for ImageViewer {
+impl Component for ImageViewer {
     fn render(&self) -> impl IntoElement {
         let asset_config = AssetConfiguration::new(&self.source, AssetAge::default());
         let asset = use_asset(&asset_config);

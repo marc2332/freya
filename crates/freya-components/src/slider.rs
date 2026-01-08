@@ -98,7 +98,7 @@ impl Slider {
     }
 }
 
-impl Render for Slider {
+impl Component for Slider {
     fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, slider);
         let focus = use_focus();

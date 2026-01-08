@@ -60,7 +60,7 @@ impl Tile {
     }
 }
 
-impl Render for Tile {
+impl Component for Tile {
     fn render(&self) -> impl IntoElement {
         let mut status = use_state(|| TileStatus::Idle);
 
