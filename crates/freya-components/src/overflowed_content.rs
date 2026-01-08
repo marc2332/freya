@@ -1,18 +1,8 @@
 use std::time::Duration;
 
-use freya_animation::prelude::{
-    AnimDirection,
-    AnimNum,
-    Ease,
-    Function,
-    OnFinish,
-    use_animation,
-};
+use freya_animation::prelude::{AnimDirection, AnimNum, Ease, Function, OnFinish, use_animation};
 use freya_core::prelude::*;
-use torin::{
-    prelude::Area,
-    size::Size,
-};
+use torin::{node::Node, prelude::Area, size::Size};
 
 /// Animate the content of a container when the content overflows.
 ///
@@ -68,12 +58,14 @@ impl KeyExt for OverflowedContent {
 
 impl OverflowedContent {
     pub fn new() -> Self {
-        let mut layout = LayoutData::default();
-        layout.width = Size::fill();
-        layout.height = Size::auto();
         Self {
             children: Vec::new(),
-            layout,
+            layout: Node {
+                width: Size::fill(),
+                height: Size::fill(),
+                ..Default::default()
+            }
+            .into(),
             duration: Duration::from_secs(4),
             key: DiffKey::None,
         }

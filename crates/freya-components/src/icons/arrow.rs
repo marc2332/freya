@@ -1,7 +1,6 @@
 use freya_core::prelude::*;
 use torin::{
-    gaps::Gaps,
-    size::Size,
+    gaps::Gaps, node::Node, size::Size
 };
 
 #[derive(Clone, PartialEq)]
@@ -28,11 +27,13 @@ impl ContainerSizeExt for ArrowIcon {}
 
 impl ArrowIcon {
     pub fn new() -> Self {
-        let mut layout = LayoutData::default();
-        layout.width = Size::px(10.);
-        layout.height = Size::px(10.);
         Self {
-            layout,
+            layout: Node {
+                width: Size::px(10.),
+                height: Size::px(10.),
+                ..Default::default()
+            }
+            .into(),
             margin: Gaps::new_all(0.),
             fill: Color::BLACK,
             rotate: None,

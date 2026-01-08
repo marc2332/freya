@@ -54,6 +54,12 @@ pub struct LayoutData {
     pub layout: torin::node::Node,
 }
 
+impl From<torin::node::Node> for LayoutData {
+    fn from(layout: torin::node::Node) -> Self {
+        LayoutData { layout }
+    }
+}
+
 impl Deref for LayoutData {
     type Target = torin::node::Node;
 
