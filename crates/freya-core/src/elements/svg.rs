@@ -171,7 +171,7 @@ impl ElementExt for SvgElement {
         if let Ok(mut svg_dom) = svg_dom {
             svg_dom.set_container_size(context.area_size.to_i32().to_tuple());
             let mut root = svg_dom.root();
-            match self.layout.layout.width {
+            match self.layout.width {
                 Size::Pixels(px) => {
                     root.set_width(svg::Length::new(px.get(), svg::LengthUnit::PX));
                 }
@@ -183,7 +183,7 @@ impl ElementExt for SvgElement {
                 }
                 _ => {}
             }
-            match self.layout.layout.height {
+            match self.layout.height {
                 Size::Pixels(px) => {
                     root.set_height(svg::Length::new(px.get(), svg::LengthUnit::PX));
                 }

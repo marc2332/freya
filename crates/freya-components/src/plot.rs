@@ -81,12 +81,12 @@ impl ElementExt for PlotElement {
             diff.insert(DiffModifies::EFFECT);
         }
 
-        if !self.layout.layout.self_layout_eq(&rect.layout.layout) {
+        if !self.layout.self_layout_eq(&rect.layout.layout) {
             diff.insert(DiffModifies::STYLE);
             diff.insert(DiffModifies::LAYOUT);
         }
 
-        if !self.layout.layout.inner_layout_eq(&rect.layout.layout) {
+        if !self.layout.inner_layout_eq(&rect.layout.layout) {
             diff.insert(DiffModifies::STYLE);
             diff.insert(DiffModifies::INNER_LAYOUT);
         }

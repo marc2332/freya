@@ -69,8 +69,8 @@ impl KeyExt for OverflowedContent {
 impl OverflowedContent {
     pub fn new() -> Self {
         let mut layout = LayoutData::default();
-        layout.layout.width = Size::fill();
-        layout.layout.height = Size::auto();
+        layout.width = Size::fill();
+        layout.height = Size::auto();
         Self {
             children: Vec::new(),
             layout,
@@ -80,12 +80,12 @@ impl OverflowedContent {
     }
 
     pub fn width(mut self, width: impl Into<Size>) -> Self {
-        self.layout.layout.width = width.into();
+        self.layout.width = width.into();
         self
     }
 
     pub fn height(mut self, height: impl Into<Size>) -> Self {
-        self.layout.layout.height = height.into();
+        self.layout.height = height.into();
         self
     }
 
@@ -128,8 +128,8 @@ impl Render for OverflowedContent {
         };
 
         rect()
-            .width(self.layout.layout.width.clone())
-            .height(self.layout.layout.height.clone())
+            .width(self.layout.width.clone())
+            .height(self.layout.height.clone())
             .offset_x(-offset_x)
             .overflow(Overflow::Clip)
             .on_sized(move |e: Event<SizedEventData>| rect_size.set(e.area))

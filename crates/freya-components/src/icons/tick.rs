@@ -28,8 +28,8 @@ impl Default for TickIcon {
 impl TickIcon {
     pub fn new() -> Self {
         let mut layout = LayoutData::default();
-        layout.layout.width = Size::px(10.);
-        layout.layout.height = Size::px(10.);
+        layout.width = Size::px(10.);
+        layout.height = Size::px(10.);
         Self {
             layout,
             margin: Gaps::new_all(0.),
@@ -59,8 +59,8 @@ impl Render for TickIcon {
         "#
             .as_bytes(),
         ))
-        .width(self.layout.layout.width.clone())
-        .height(self.layout.layout.height.clone())
+        .width(self.layout.width.clone())
+        .height(self.layout.height.clone())
         .fill(self.fill)
     }
 }

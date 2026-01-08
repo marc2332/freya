@@ -1,6 +1,10 @@
 use std::{
     borrow::Cow,
     hash::Hash,
+    ops::{
+        Deref,
+        DerefMut,
+    },
     rc::Rc,
 };
 
@@ -48,6 +52,20 @@ use crate::{
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct LayoutData {
     pub layout: torin::node::Node,
+}
+
+impl Deref for LayoutData {
+    type Target = torin::node::Node;
+
+    fn deref(&self) -> &Self::Target {
+        &self.layout
+    }
+}
+
+impl DerefMut for LayoutData {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.layout
+    }
 }
 
 #[derive(Debug, Default, Clone, PartialEq)]
