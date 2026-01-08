@@ -1,6 +1,6 @@
 [package]
 name = "freya-radio"
-version = "0.4.0-alpha.8"
+version = "0.4.0-rc.1"
 edition = "2024"
 description = "Fully-typed global state management with a topics subscription system for Freya 🧬"
 license = "MIT"
