@@ -255,7 +255,7 @@ impl Component for AppComponent {
 ///
 /// impl Component for ReusableCounter {
 ///     fn render(&self) -> impl IntoElement {
-///         let number = use_state(|| self.init_number);
+///         let mut number = use_state(|| self.init_number);
 ///         label()
 ///             .on_press(move |_| {
 ///                 *number.write() += 1;
