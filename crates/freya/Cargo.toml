@@ -33,6 +33,7 @@ all = [
   "calendar",
   "sdk",
   "icons",
+  "radio",
 ]
 all-publish = [
   "all",
@@ -48,7 +49,6 @@ all-debug = [
   "vulkan",
   "dep:freya-testing",
   "dep:freya-plotters-backend",
-  "radio",
 ]
 all-tests = [
   "router",

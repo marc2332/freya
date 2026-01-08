@@ -63,13 +63,13 @@
 //! - `material-design`: Reexport [freya_material_design] under [material_design].
 //! - `calendar`: Enables the [Calendar](components::Calendar) component.
 //! - `icons`: Reexport of [freya_icons] under [icons].
+//! - `radio`: Reexport [freya_radio] under [radio].
 //!
 //! ## Misc features
 //! - `devtools`: Enables devtools support.
 //! - `performance`: Enables the performance overlay plugin.
 //! - `vulkan`: Enables Vulkan rendering support.
 //! - `hotpath`: Enables Freya's internal usage of hotpath.
-//! - `radio`: Reexport `freya-radio` under [radio].
 
 pub mod prelude {
     pub use freya_core::prelude::*;
@@ -96,12 +96,6 @@ pub mod prelude {
         freya_winit::launch(launch_config)
     }
 
-    /// Reexport `freya-radio` when the `radio` feature is enabled.
-    #[cfg(feature = "radio")]
-    #[cfg_attr(feature = "docs", doc(cfg(feature = "radio")))]
-    pub mod radio {
-        pub use freya_radio::prelude::*;
-    }
     pub use torin::{
         alignment::Alignment,
         content::Content,
@@ -250,6 +244,13 @@ pub mod material_design {
 #[cfg(feature = "icons")]
 pub mod icons {
     pub use freya_icons::*;
+}
+
+/// Reexport `freya-radio` when the `radio` feature is enabled.
+#[cfg(feature = "radio")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "radio")))]
+pub mod radio {
+    pub use freya_radio::prelude::*;
 }
 
 #[cfg(doc)]
