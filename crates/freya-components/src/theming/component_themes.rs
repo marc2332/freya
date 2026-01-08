@@ -397,6 +397,15 @@ define_theme! {
         background_blockquote: Color,
         border_blockquote: Color,
         background_divider: Color,
+        heading_h1: f32,
+        heading_h2: f32,
+        heading_h3: f32,
+        heading_h4: f32,
+        heading_h5: f32,
+        heading_h6: f32,
+        paragraph_size: f32,
+        code_font_size: f32,
+        table_font_size: f32,
     }
 }
 

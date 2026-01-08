@@ -398,18 +398,6 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
     elements
 }
 
-/// Convert a heading level to font size.
-fn heading_font_size(level: HeadingLevel) -> f32 {
-    match level {
-        HeadingLevel::H1 => 32.0,
-        HeadingLevel::H2 => 28.0,
-        HeadingLevel::H3 => 24.0,
-        HeadingLevel::H4 => 20.0,
-        HeadingLevel::H5 => 18.0,
-        HeadingLevel::H6 => 16.0,
-    }
-}
-
 /// Render text spans as a paragraph element.
 fn render_spans(spans: &[TextSpan], base_font_size: f32, code_color: Option<Color>) -> Paragraph {
     let mut p = paragraph().font_size(base_font_size);
@@ -449,6 +437,15 @@ impl Component for MarkdownViewer {
             background_blockquote,
             border_blockquote,
             background_divider,
+            heading_h1,
+            heading_h2,
+            heading_h3,
+            heading_h4,
+            heading_h5,
+            heading_h6,
+            paragraph_size,
+            code_font_size,
+            table_font_size,
         } = crate::get_theme!(&self.theme, markdown_viewer);
 
         let mut container = rect().vertical().layout(self.layout.clone()).spacing(12.);
@@ -456,14 +453,23 @@ impl Component for MarkdownViewer {
         for (idx, element) in elements.into_iter().enumerate() {
             let child: Element = match element {
                 MarkdownElement::Heading { level, spans } => {
-                    let font_size = heading_font_size(level);
+                    let font_size = match level {
+                        HeadingLevel::H1 => heading_h1,
+                        HeadingLevel::H2 => heading_h2,
+                        HeadingLevel::H3 => heading_h3,
+                        HeadingLevel::H4 => heading_h4,
+                        HeadingLevel::H5 => heading_h5,
+                        HeadingLevel::H6 => heading_h6,
+                    };
                     render_spans(&spans, font_size, Some(color))
                         .font_weight(FontWeight::BOLD)
                         .key(idx)
                         .into()
                 }
                 MarkdownElement::Paragraph { spans } => {
-                    render_spans(&spans, 16.0, Some(color)).key(idx).into()
+                    render_spans(&spans, paragraph_size, Some(color))
+                        .key(idx)
+                        .into()
                 }
                 MarkdownElement::CodeBlock { code, .. } => rect()
                     .key(idx)
@@ -475,7 +481,7 @@ impl Component for MarkdownViewer {
                         label()
                             .text(code)
                             .font_family("monospace")
-                            .font_size(14.)
+                            .font_size(code_font_size)
                             .color(color_code),
                     )
                     .into(),
@@ -492,8 +498,8 @@ impl Component for MarkdownViewer {
                             .horizontal()
                             .cross_align(Alignment::Start)
                             .spacing(8.)
-                            .child(label().text("•").font_size(16.))
-                            .child(render_spans(&item_spans, 16., Some(color_code)));
+                            .child(label().text("•").font_size(paragraph_size))
+                            .child(render_spans(&item_spans, paragraph_size, Some(color_code)));
 
                         list = list.child(item_content);
                     }
@@ -514,8 +520,12 @@ impl Component for MarkdownViewer {
                             .horizontal()
                             .cross_align(Alignment::Start)
                             .spacing(8.)
-                            .child(label().text(format!("{}.", number)).font_size(16.))
-                            .child(render_spans(&item_spans, 16., Some(color_code)));
+                            .child(
+                                label()
+                                    .text(format!("{}.", number))
+                                    .font_size(paragraph_size),
+                            )
+                            .child(render_spans(&item_spans, paragraph_size, Some(color_code)));
 
                         list = list.child(item_content);
                     }
@@ -554,7 +564,8 @@ impl Component for MarkdownViewer {
                     )
                     .background(background_blockquote)
                     .child(
-                        render_spans(&spans, 16., Some(color_code)).font_slant(FontSlant::Italic),
+                        render_spans(&spans, paragraph_size, Some(color_code))
+                            .font_slant(FontSlant::Italic),
                     )
                     .into(),
                 MarkdownElement::HorizontalRule => rect()
@@ -571,7 +582,7 @@ impl Component for MarkdownViewer {
                     for (col_idx, header_spans) in headers.into_iter().enumerate() {
                         header_row = header_row.child(
                             TableCell::new().key(col_idx).child(
-                                render_spans(&header_spans, 14., Some(color_code))
+                                render_spans(&header_spans, table_font_size, Some(color_code))
                                     .font_weight(FontWeight::BOLD),
                             ),
                         );
@@ -582,12 +593,9 @@ impl Component for MarkdownViewer {
                     for (row_idx, row) in rows.into_iter().enumerate() {
                         let mut table_row = TableRow::new().key(row_idx);
                         for (col_idx, cell_spans) in row.into_iter().enumerate() {
-                            table_row =
-                                table_row.child(TableCell::new().key(col_idx).child(render_spans(
-                                    &cell_spans,
-                                    14.,
-                                    Some(color_code),
-                                )));
+                            table_row = table_row.child(TableCell::new().key(col_idx).child(
+                                render_spans(&cell_spans, table_font_size, Some(color_code)),
+                            ));
                         }
                         body = body.child(table_row);
                     }
