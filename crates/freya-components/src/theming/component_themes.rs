@@ -15,6 +15,7 @@ use crate::{
     button::Button,
     checkbox::Checkbox,
     chip::Chip,
+    color_picker::ColorPicker,
     define_theme,
     floating_tab::FloatingTab,
     input::Input,
@@ -71,6 +72,7 @@ pub struct Theme {
     pub resizable_handle: ResizableHandleThemePreference,
     pub floating_tab: FloatingTabThemePreference,
     pub slider: SliderThemePreference,
+    pub color_picker: ColorPickerThemePreference,
     pub select: SelectThemePreference,
     pub popup: PopupThemePreference,
     pub table: TableThemePreference,
@@ -331,6 +333,16 @@ define_theme! {
         background: Color,
         thumb_background: Color,
         thumb_inner_background: Color,
+        border_fill: Color,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub ColorPicker {
+        %[fields]
+        background: Color,
+        color: Color,
         border_fill: Color,
     }
 }

@@ -115,6 +115,7 @@ pub mod components {
         button::*,
         checkbox::*,
         chip::*,
+        color_picker::*,
         context_menu::*,
         cursor_area::*,
         drag_drop::*,

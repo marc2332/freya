@@ -24,7 +24,7 @@ pub fn image_viewer_load_and_render() {
     // Initially should show a loading indicator (CircularLoader)
     let loader_rect = test.find(|node, element| {
         Rect::try_downcast(element)
-            .filter(|rect| rect.layout.layout.main_alignment == Alignment::Center)
+            .filter(|rect| rect.layout.main_alignment == Alignment::Center)
             .map(|_| node)
     });
 
