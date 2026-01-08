@@ -438,7 +438,7 @@ fn render_spans(spans: &[TextSpan], base_font_size: f32, code_color: Option<Colo
     p
 }
 
-impl Render for MarkdownViewer {
+impl Component for MarkdownViewer {
     fn render(&self) -> impl IntoElement {
         let elements = parse_markdown(&self.content);
 
