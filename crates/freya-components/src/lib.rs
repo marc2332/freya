@@ -64,6 +64,12 @@ cfg_if::cfg_if! {
     }
 }
 
+cfg_if::cfg_if! {
+    if #[cfg(feature = "markdown")] {
+        pub mod markdown;
+    }
+}
+
 /// | 1 | 2 | 3 | 4 |
 /// | ------------- | ------------- | ------------- | ------------- |
 /// | ![Switch Preview][gallery_toggled_switch] | ![Button Preview][gallery_button] | ![Filled Button Preview][gallery_filled_button] | ![Outline Button Preview][gallery_outline_button] |

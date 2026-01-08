@@ -22,6 +22,7 @@ docs = ["dep:embed-doc-image"]
 gif = ["dep:gif"]
 skia-engine = ["freya-engine/skia-engine"]
 calendar = ["dep:chrono"]
+markdown = ["dep:pulldown-cmark"]
 
 [dependencies]
 freya-core = { workspace = true }
@@ -76,9 +77,13 @@ freya-plotters-backend = { workspace = true, optional = true }
 # GIF
 gif = { version = "0.13.3", optional = true }
 
+# Markdown
+pulldown-cmark = { version = "0.13", optional = true }
+
 # Accessibility
 accesskit = { workspace = true }
 
 [dev-dependencies]
 freya = { path = "../freya" }
 freya-testing = { path = "../freya-testing" }
+pulldown-cmark = "0.13"

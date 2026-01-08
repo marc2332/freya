@@ -32,6 +32,7 @@ all = [
   "material-design",
   "calendar",
   "sdk",
+  "markdown",
   "icons",
   "radio",
 ]
@@ -59,6 +60,7 @@ all-tests = [
   "gif",
   "material-design",
   "calendar",
+  "markdown",
   "radio",
 ]
 docs = ["all-debug"]
@@ -72,6 +74,7 @@ performance = ["freya-performance-plugin"]
 plot = ["freya-components/plot"]
 gif = ["freya-components/gif"]
 calendar = ["freya-components/calendar"]
+markdown = ["freya-components/markdown"]
 vulkan = ["freya-winit/vulkan"]
 sdk = ["dep:freya-sdk"]
 tray = ["freya-winit/tray", "dep:tray-icon"]

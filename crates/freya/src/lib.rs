@@ -64,6 +64,7 @@
 //! - `calendar`: Enables the [Calendar](components::Calendar) component.
 //! - `icons`: Reexport of [freya_icons] under [icons].
 //! - `radio`: Reexport [freya_radio] under [radio].
+//! - `markdown`: Enables the [MarkdownViewer](components::MarkdownViewer) component.
 //!
 //! ## Misc features
 //! - `devtools`: Enables devtools support.
@@ -118,6 +119,9 @@ pub mod components {
     #[cfg_attr(feature = "docs", doc(cfg(feature = "gif")))]
     #[cfg(feature = "gif")]
     pub use freya_components::gif_viewer::*;
+    #[cfg_attr(feature = "docs", doc(cfg(feature = "markdown")))]
+    #[cfg(feature = "markdown")]
+    pub use freya_components::markdown::*;
     cfg_if::cfg_if! {
         if #[cfg(feature = "router")] {
             #[cfg_attr(feature = "docs", doc(cfg(feature = "router")))]

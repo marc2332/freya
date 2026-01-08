@@ -308,7 +308,7 @@ pub struct Table {
 impl Default for Table {
     fn default() -> Self {
         Self {
-            height: Size::fill(),
+            height: Size::Inner,
             theme: None,
             columns: 1,
             children: vec![],
