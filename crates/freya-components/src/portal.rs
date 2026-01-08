@@ -25,8 +25,7 @@ pub struct Portal<T> {
     function: Function,
     duration: Duration,
     ease: Ease,
-    width: Size,
-    height: Size,
+    layout: LayoutData,
     show: bool,
 }
 
@@ -45,8 +44,7 @@ impl<T> Portal<T> {
             function: Function::default(),
             duration: Duration::from_millis(750),
             ease: Ease::default(),
-            width: Size::auto(),
-            height: Size::auto(),
+            layout: LayoutData::default(),
             show: true,
         }
     }
@@ -66,21 +64,19 @@ impl<T> Portal<T> {
         self
     }
 
-    pub fn width(mut self, width: Size) -> Self {
-        self.width = width;
-        self
-    }
-
-    pub fn height(mut self, height: Size) -> Self {
-        self.height = height;
-        self
-    }
-
     pub fn show(mut self, show: bool) -> Self {
         self.show = show;
         self
     }
 }
+
+impl<T> LayoutExt for Portal<T> {
+    fn get_layout(&mut self) -> &mut LayoutData {
+        &mut self.layout
+    }
+}
+
+impl<T> ContainerSizeExt for Portal<T> {}
 
 impl<T> KeyExt for Portal<T> {
     fn write_key(&mut self) -> &mut DiffKey {
@@ -160,8 +156,8 @@ impl<T: PartialEq + 'static + Clone + std::hash::Hash + Eq + Debug> Render for P
                     });
                 }
             })
-            .width(self.width.clone())
-            .height(self.height.clone())
+            .width(self.layout.layout.width.clone())
+            .height(self.layout.layout.height.clone())
             .child(
                 rect()
                     .offset_x(offset_x)

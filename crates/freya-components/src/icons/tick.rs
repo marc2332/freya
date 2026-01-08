@@ -6,11 +6,18 @@ use torin::{
 
 #[derive(Clone, PartialEq)]
 pub struct TickIcon {
-    width: Size,
-    height: Size,
+    layout: LayoutData,
     margin: Gaps,
     fill: Color,
 }
+
+impl LayoutExt for TickIcon {
+    fn get_layout(&mut self) -> &mut LayoutData {
+        &mut self.layout
+    }
+}
+
+impl ContainerSizeExt for TickIcon {}
 
 impl Default for TickIcon {
     fn default() -> Self {
@@ -20,22 +27,14 @@ impl Default for TickIcon {
 
 impl TickIcon {
     pub fn new() -> Self {
+        let mut layout = LayoutData::default();
+        layout.layout.width = Size::px(10.);
+        layout.layout.height = Size::px(10.);
         Self {
-            width: Size::px(10.),
-            height: Size::px(10.),
+            layout,
             margin: Gaps::new_all(0.),
             fill: Color::BLACK,
         }
-    }
-
-    pub fn width(mut self, width: impl Into<Size>) -> Self {
-        self.width = width.into();
-        self
-    }
-
-    pub fn height(mut self, height: impl Into<Size>) -> Self {
-        self.height = height.into();
-        self
     }
 
     pub fn margin(mut self, margin: impl Into<Gaps>) -> Self {
@@ -60,8 +59,8 @@ impl Render for TickIcon {
         "#
             .as_bytes(),
         ))
-        .width(self.width.clone())
-        .height(self.height.clone())
+        .width(self.layout.layout.width.clone())
+        .height(self.layout.layout.height.clone())
         .fill(self.fill)
     }
 }
