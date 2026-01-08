@@ -11,6 +11,12 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["freya", "async", "state", "synchronization"]
 categories = ["gui", "asynchronous"]
 
+[package.metadata.docs.rs]
+features = ["freya-core/mocked-engine"]
+
+[features]
+skia-engine = ["freya-core/skia-engine"]
+
 [dependencies]
 freya-core = { workspace = true }
 futures-util = { workspace = true }
