@@ -3,11 +3,10 @@ use std::time::Duration;
 use freya_core::prelude::*;
 use freya_sdk::timeout::use_timeout;
 use torin::{
-    prelude::{
+    node::Node, prelude::{
         Direction,
         Length,
-    },
-    size::Size,
+    }, size::Size
 };
 
 use crate::scrollviews::{
@@ -81,12 +80,14 @@ impl KeyExt for ScrollView {
 
 impl Default for ScrollView {
     fn default() -> Self {
-        let mut layout = LayoutData::default();
-        layout.layout.width = Size::fill();
-        layout.layout.height = Size::fill();
         Self {
             children: Vec::default(),
-            layout,
+            layout: Node {
+                width: Size::fill(),
+                height: Size::fill(),
+                ..Default::default()
+            }
+            .into(),
             show_scrollbar: true,
             scroll_with_arrows: true,
             scroll_controller: None,
@@ -119,12 +120,12 @@ impl ScrollView {
     }
 
     pub fn direction(mut self, direction: Direction) -> Self {
-        self.layout.layout.direction = direction;
+        self.layout.direction = direction;
         self
     }
 
     pub fn spacing(mut self, spacing: impl Into<f32>) -> Self {
-        self.layout.layout.spacing = Length::new(spacing.into());
+        self.layout.spacing = Length::new(spacing.into());
         self
     }
 

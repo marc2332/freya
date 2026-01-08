@@ -1,18 +1,8 @@
 use std::time::Duration;
 
-use freya_animation::prelude::{
-    AnimDirection,
-    AnimNum,
-    Ease,
-    Function,
-    OnFinish,
-    use_animation,
-};
+use freya_animation::prelude::{AnimDirection, AnimNum, Ease, Function, OnFinish, use_animation};
 use freya_core::prelude::*;
-use torin::{
-    prelude::Area,
-    size::Size,
-};
+use torin::{node::Node, prelude::Area, size::Size};
 
 /// Animate the content of a container when the content overflows.
 ///
@@ -68,24 +58,26 @@ impl KeyExt for OverflowedContent {
 
 impl OverflowedContent {
     pub fn new() -> Self {
-        let mut layout = LayoutData::default();
-        layout.layout.width = Size::fill();
-        layout.layout.height = Size::auto();
         Self {
             children: Vec::new(),
-            layout,
+            layout: Node {
+                width: Size::fill(),
+                height: Size::fill(),
+                ..Default::default()
+            }
+            .into(),
             duration: Duration::from_secs(4),
             key: DiffKey::None,
         }
     }
 
     pub fn width(mut self, width: impl Into<Size>) -> Self {
-        self.layout.layout.width = width.into();
+        self.layout.width = width.into();
         self
     }
 
     pub fn height(mut self, height: impl Into<Size>) -> Self {
-        self.layout.layout.height = height.into();
+        self.layout.height = height.into();
         self
     }
 
@@ -128,8 +120,8 @@ impl Render for OverflowedContent {
         };
 
         rect()
-            .width(self.layout.layout.width.clone())
-            .height(self.layout.layout.height.clone())
+            .width(self.layout.width.clone())
+            .height(self.layout.height.clone())
             .offset_x(-offset_x)
             .overflow(Overflow::Clip)
             .on_sized(move |e: Event<SizedEventData>| rect_size.set(e.area))

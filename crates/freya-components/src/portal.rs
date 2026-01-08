@@ -156,8 +156,8 @@ impl<T: PartialEq + 'static + Clone + std::hash::Hash + Eq + Debug> Render for P
                     });
                 }
             })
-            .width(self.layout.layout.width.clone())
-            .height(self.layout.layout.height.clone())
+            .width(self.layout.width.clone())
+            .height(self.layout.height.clone())
             .child(
                 rect()
                     .offset_x(offset_x)

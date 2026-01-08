@@ -6,8 +6,7 @@ use std::{
 use freya_core::prelude::*;
 use freya_sdk::timeout::use_timeout;
 use torin::{
-    prelude::Direction,
-    size::Size,
+    node::Node, prelude::Direction, size::Size
 };
 
 use crate::scrollviews::{
@@ -154,12 +153,12 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
             builder_data,
             item_size: 0.,
             length: 0,
-            layout: {
-                let mut layout = LayoutData::default();
-                layout.layout.width = Size::fill();
-                layout.layout.height = Size::fill();
-                layout
-            },
+            layout: Node {
+                width: Size::fill(),
+                height: Size::fill(),
+                ..Default::default()
+            }
+            .into(),
             show_scrollbar: true,
             scroll_with_arrows: true,
             scroll_controller: None,
@@ -178,12 +177,13 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
             builder_data,
             item_size: 0.,
             length: 0,
-            layout: {
-                let mut layout = LayoutData::default();
-                layout.layout.width = Size::fill();
-                layout.layout.height = Size::fill();
-                layout
-            },
+
+            layout: Node {
+                width: Size::fill(),
+                height: Size::fill(),
+                ..Default::default()
+            }
+            .into(),
             show_scrollbar: true,
             scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
@@ -198,7 +198,7 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
     }
 
     pub fn direction(mut self, direction: Direction) -> Self {
-        self.layout.layout.direction = direction;
+        self.layout.direction = direction;
         self
     }
 
@@ -280,10 +280,8 @@ impl<D: 'static, B: Fn(usize, &D) -> Element + 'static> Render for VirtualScroll
             corrected_scrolled_y,
         );
 
-        let (container_width, content_width) =
-            get_container_sizes(self.layout.layout.width.clone());
-        let (container_height, content_height) =
-            get_container_sizes(self.layout.layout.height.clone());
+        let (container_width, content_width) = get_container_sizes(self.layout.width.clone());
+        let (container_height, content_height) = get_container_sizes(self.layout.height.clone());
 
         let scroll_with_arrows = self.scroll_with_arrows;
         let invert_scroll_wheel = self.invert_scroll_wheel;
