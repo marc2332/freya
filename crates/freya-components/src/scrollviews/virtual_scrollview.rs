@@ -153,12 +153,12 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
             builder_data,
             item_size: 0.,
             length: 0,
-            layout: {
-                let mut layout = Node::default();
-                layout.width = Size::fill();
-                layout.height = Size::fill();
-                layout.into()
-            },
+            layout: Node {
+                width: Size::fill(),
+                height: Size::fill(),
+                ..Default::default()
+            }
+            .into(),
             show_scrollbar: true,
             scroll_with_arrows: true,
             scroll_controller: None,
