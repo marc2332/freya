@@ -1,16 +1,22 @@
 use freya_core::prelude::*;
 use torin::{
-    gaps::Gaps,
-    size::Size,
+    gaps::Gaps, node::Node, size::Size
 };
 
 #[derive(Clone, PartialEq)]
 pub struct TickIcon {
-    width: Size,
-    height: Size,
+    layout: LayoutData,
     margin: Gaps,
     fill: Color,
 }
+
+impl LayoutExt for TickIcon {
+    fn get_layout(&mut self) -> &mut LayoutData {
+        &mut self.layout
+    }
+}
+
+impl ContainerSizeExt for TickIcon {}
 
 impl Default for TickIcon {
     fn default() -> Self {
@@ -21,21 +27,16 @@ impl Default for TickIcon {
 impl TickIcon {
     pub fn new() -> Self {
         Self {
-            width: Size::px(10.),
-            height: Size::px(10.),
+
+            layout: Node {
+                width: Size::px(10.),
+                height: Size::px(10.),
+                ..Default::default()
+            }
+            .into(),
             margin: Gaps::new_all(0.),
             fill: Color::BLACK,
         }
-    }
-
-    pub fn width(mut self, width: impl Into<Size>) -> Self {
-        self.width = width.into();
-        self
-    }
-
-    pub fn height(mut self, height: impl Into<Size>) -> Self {
-        self.height = height.into();
-        self
     }
 
     pub fn margin(mut self, margin: impl Into<Gaps>) -> Self {
@@ -60,8 +61,8 @@ impl Render for TickIcon {
         "#
             .as_bytes(),
         ))
-        .width(self.width.clone())
-        .height(self.height.clone())
+        .width(self.layout.width.clone())
+        .height(self.layout.height.clone())
         .fill(self.fill)
     }
 }

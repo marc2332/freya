@@ -19,6 +19,7 @@ pub mod prelude {
         Color4f as SkColor4f,
         Corner as SkCorner,
         Data as SkData,
+        HSV as SkHSV,
         Image as SkImage,
         MaskFilter as SkMaskFilter,
         Matrix as SkMatrix,

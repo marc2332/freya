@@ -3,6 +3,7 @@ use std::ops::Mul;
 use freya_engine::prelude::{
     SkColor,
     SkColor4f,
+    SkHSV,
     SkRGB,
 };
 
@@ -126,6 +127,10 @@ impl Color {
         Self::from_argb(255, r, g, b)
     }
 
+    pub fn from_hsv(h: f32, s: f32, v: f32) -> Self {
+        SkHSV { h, s, v }.to_color(255).into()
+    }
+
     pub fn from_hex(hex: &str) -> Option<Self> {
         let s = if let Some(stripped) = hex.strip_prefix('#') {
             stripped
@@ -185,13 +190,50 @@ impl Color {
         color.to_rgb()
     }
 
-    pub fn pretty(&self) -> String {
+    pub fn to_hsv(self) -> SkHSV {
+        let color: SkColor = self.into();
+        color.to_hsv()
+    }
+
+    pub fn with_h(self, h: f32) -> Color {
+        let color: SkColor = self.into();
+        let hsv = color.to_hsv();
+        Self::from_hsv(h, hsv.s, hsv.v)
+    }
+
+    pub fn with_s(self, s: f32) -> Color {
+        let color: SkColor = self.into();
+        let hsv = color.to_hsv();
+        Self::from_hsv(hsv.h, s, hsv.v)
+    }
+
+    pub fn with_v(self, v: f32) -> Color {
+        let color: SkColor = self.into();
+        let hsv = color.to_hsv();
+        Self::from_hsv(hsv.h, hsv.s, v)
+    }
+
+    pub fn to_hex_string(&self) -> String {
         format!(
-            "({:?}, {:?}, {:?}, {:?})",
+            "#{:02X}{:02X}{:02X}{:02X}",
+            self.a(),
+            self.r(),
+            self.g(),
+            self.b(),
+        )
+    }
+
+    pub fn to_rgb_string(&self) -> String {
+        format!(
+            "rgb({:?}, {:?}, {:?}, {:?})",
             self.r(),
             self.g(),
             self.b(),
             self.a() as f32 / 100.
         )
+    }
+
+    pub fn pretty(&self) -> String {
+        self.to_rgb_string()
     }
 }

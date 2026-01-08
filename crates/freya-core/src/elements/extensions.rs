@@ -469,8 +469,9 @@ where
         self.get_layout().layout.cross_alignment = cross_align;
         self
     }
-    fn spacing(mut self, spacing: f32) -> Self {
-        self.get_layout().layout.spacing = torin::geometry::Length::new(spacing);
+
+    fn spacing(mut self, spacing: impl Into<f32>) -> Self {
+        self.get_layout().layout.spacing = Length::new(spacing.into());
         self
     }
 
@@ -506,15 +507,10 @@ where
     }
 }
 
-pub trait ContainerExt
+pub trait ContainerSizeExt
 where
     Self: LayoutExt,
 {
-    fn position(mut self, position: impl Into<Position>) -> Self {
-        self.get_layout().layout.position = position.into();
-        self
-    }
-
     fn width(mut self, width: impl Into<Size>) -> Self {
         self.get_layout().layout.width = width.into();
         self
@@ -522,6 +518,25 @@ where
 
     fn height(mut self, height: impl Into<Size>) -> Self {
         self.get_layout().layout.height = height.into();
+        self
+    }
+
+    /// Expand both `width` and `height` using [Size::fill()].
+    fn expanded(mut self) -> Self {
+        self.get_layout().layout.width = Size::fill();
+        self.get_layout().layout.height = Size::fill();
+        self
+    }
+}
+
+impl<T: ContainerExt> ContainerSizeExt for T {}
+
+pub trait ContainerExt
+where
+    Self: LayoutExt,
+{
+    fn position(mut self, position: impl Into<Position>) -> Self {
+        self.get_layout().layout.position = position.into();
         self
     }
 
@@ -562,12 +577,6 @@ where
 
     fn visible_height(mut self, visible_height: impl Into<VisibleSize>) -> Self {
         self.get_layout().layout.visible_height = visible_height.into();
-        self
-    }
-
-    fn expanded(mut self) -> Self {
-        self.get_layout().layout.width = Size::fill();
-        self.get_layout().layout.height = Size::fill();
         self
     }
 }
