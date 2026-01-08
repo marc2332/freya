@@ -1,5 +1,5 @@
 use freya_core::{
-    element::FpRender,
+    element::AppComponent,
     layers::Layer,
     prelude::*,
 };
@@ -7,7 +7,7 @@ use torin::prelude::Position;
 
 use crate::context_menu::ContextMenu;
 
-pub fn integration(app: FpRender) -> impl IntoElement {
+pub fn integration(app: AppComponent) -> impl IntoElement {
     let platform = use_hook(Platform::get);
     let mut context = use_hook(ContextMenu::get);
 

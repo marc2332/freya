@@ -19,7 +19,7 @@ pub struct ScrollThumb {
     pub size: f32,
 }
 
-impl RenderOwned for ScrollThumb {
+impl ComponentOwned for ScrollThumb {
     fn render(mut self) -> impl IntoElement {
         let scrollbar_theme = get_theme!(&self.theme, scrollbar);
         let mut state = use_state(|| ScrollThumbState::Idle);

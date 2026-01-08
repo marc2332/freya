@@ -196,7 +196,7 @@ impl Input {
     }
 }
 
-impl Render for Input {
+impl Component for Input {
     fn render(&self) -> impl IntoElement {
         let focus = use_focus();
         let focus_status = use_focus_status(focus);

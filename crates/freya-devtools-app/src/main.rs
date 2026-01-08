@@ -121,7 +121,7 @@ pub fn app() -> impl IntoElement {
 
 #[derive(PartialEq)]
 struct NavBar;
-impl Render for NavBar {
+impl Component for NavBar {
     fn render(&self) -> impl IntoElement {
         SideBar::new()
             .width(Size::px(100.))
@@ -189,7 +189,7 @@ struct LayoutForNodeInspector {
     node_id: NodeId,
 }
 
-impl Render for LayoutForNodeInspector {
+impl Component for LayoutForNodeInspector {
     fn render(&self) -> impl IntoElement {
         let LayoutForNodeInspector { window_id, node_id } = *self;
 
@@ -243,7 +243,7 @@ impl Render for LayoutForNodeInspector {
 #[derive(PartialEq)]
 struct LayoutForTreeInspector;
 
-impl Render for LayoutForTreeInspector {
+impl Component for LayoutForTreeInspector {
     fn render(&self) -> impl IntoElement {
         let route = use_route::<Route>();
         let radio = use_radio(DevtoolsChannel::Global);
@@ -288,7 +288,7 @@ impl Render for LayoutForTreeInspector {
 #[derive(PartialEq)]
 struct TreeInspector;
 
-impl Render for TreeInspector {
+impl Component for TreeInspector {
     fn render(&self) -> impl IntoElement {
         rect()
     }

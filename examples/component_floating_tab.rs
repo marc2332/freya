@@ -26,7 +26,7 @@ pub enum Route {
 
 #[derive(PartialEq)]
 struct AppBotomBar;
-impl Render for AppBotomBar {
+impl Component for AppBotomBar {
     fn render(&self) -> impl IntoElement {
         NativeRouter::new().child(
             rect()
@@ -66,7 +66,7 @@ impl Render for AppBotomBar {
 
 #[derive(PartialEq)]
 struct Home;
-impl Render for Home {
+impl Component for Home {
     fn render(&self) -> impl IntoElement {
         "Home Page!"
     }
@@ -74,7 +74,7 @@ impl Render for Home {
 
 #[derive(PartialEq)]
 struct Settings;
-impl Render for Settings {
+impl Component for Settings {
     fn render(&self) -> impl IntoElement {
         "Settings Page!"
     }

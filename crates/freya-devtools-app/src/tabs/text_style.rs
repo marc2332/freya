@@ -13,7 +13,7 @@ pub struct NodeInspectorTextStyle {
     pub window_id: u64,
 }
 
-impl Render for NodeInspectorTextStyle {
+impl Component for NodeInspectorTextStyle {
     fn render(&self) -> impl IntoElement {
         let Some(node) = use_node_info(self.node_id, self.window_id) else {
             return rect().into_element();

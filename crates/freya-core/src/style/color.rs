@@ -7,6 +7,13 @@ use freya_engine::prelude::{
     SkRGB,
 };
 
+/// Represents one color.
+/// You may create [Color]s using
+/// - [Color::from_rgb],
+/// - [Color::from_argb],
+/// - [Color::from_af32rgb],
+/// - [Color::new],
+/// - Or using tuples like `(255, 0, 150)`, `(133, 133, 133, 0.5)` (alpha as `f32` in 0.0..=1.0), or `(200, 100, 50, 180)` (alpha as `u8` in 0..=255)
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Hash)]
 pub struct Color(u32);

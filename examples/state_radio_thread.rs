@@ -36,9 +36,7 @@ fn main() {
                     radio_station.write_channel(DataChannel::Count).count += 1;
                 }
             })
-            .with_window(WindowConfig::new(FpRender::from_render(App {
-                radio_station,
-            }))),
+            .with_window(WindowConfig::new(AppComponent::new(App { radio_station }))),
     )
 }
 
@@ -58,7 +56,7 @@ struct App {
     radio_station: RadioStation<Data, DataChannel>,
 }
 
-impl Render for App {
+impl Component for App {
     fn render(&self) -> impl IntoElement {
         use_share_radio(move || self.radio_station);
         let mut radio = use_radio(DataChannel::Count);

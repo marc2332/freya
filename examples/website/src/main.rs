@@ -48,7 +48,7 @@ fn app() -> Element {
 
 #[derive(PartialEq)]
 struct Home;
-impl Render for Home {
+impl Component for Home {
     fn render(&self) -> impl IntoElement {
         rect()
             .cross_align(Alignment::Center)
@@ -161,7 +161,7 @@ impl Render for Home {
 
 #[derive(PartialEq)]
 struct Navigation;
-impl Render for Navigation {
+impl Component for Navigation {
     fn render(&self) -> impl IntoElement {
         rect()
             .direction(Direction::Horizontal)
@@ -187,7 +187,7 @@ impl Render for Navigation {
 
 #[derive(PartialEq)]
 struct Counter;
-impl Render for Counter {
+impl Component for Counter {
     fn render(&self) -> impl IntoElement {
         use_init_theme(|| LIGHT_THEME);
         let mut count = use_state(|| 4);
@@ -235,7 +235,7 @@ impl Render for Counter {
 
 #[derive(PartialEq)]
 struct Code;
-impl Render for Code {
+impl Component for Code {
     fn render(&self) -> impl IntoElement {
         let code = use_hook(move || {
             use tree_sitter_highlight::HighlightConfiguration;

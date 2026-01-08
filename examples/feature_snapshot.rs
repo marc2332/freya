@@ -12,13 +12,13 @@ fn main() {
         rect()
             .expanded()
             .spacing(24.0)
-            .child(Component(20))
-            .child(Component(60))
+            .child(CoolComponent(20))
+            .child(CoolComponent(60))
     }
 
     #[derive(PartialEq)]
-    struct Component(u8);
-    impl Render for Component {
+    struct CoolComponent(u8);
+    impl Component for CoolComponent {
         fn render(&self) -> impl IntoElement {
             let mut value = use_state(|| 40);
             rect()

@@ -20,7 +20,7 @@ fn app() -> impl IntoElement {
 
 #[derive(PartialEq)]
 struct CoolComponent(i32);
-impl Render for CoolComponent {
+impl Component for CoolComponent {
     fn render(&self) -> impl IntoElement {
         let mut state = use_state(|| self.0);
 

@@ -94,7 +94,7 @@ impl ColorPicker {
     }
 }
 
-impl Render for ColorPicker {
+impl Component for ColorPicker {
     fn render(&self) -> impl IntoElement {
         let mut open = use_state(|| false);
         let mut color = use_state(|| self.value);

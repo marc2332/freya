@@ -1,6 +1,8 @@
 use freya_core::prelude::*;
 use torin::{
-    gaps::Gaps, node::Node, size::Size
+    gaps::Gaps,
+    node::Node,
+    size::Size,
 };
 
 #[derive(Clone, PartialEq)]
@@ -27,7 +29,6 @@ impl Default for TickIcon {
 impl TickIcon {
     pub fn new() -> Self {
         Self {
-
             layout: Node {
                 width: Size::px(10.),
                 height: Size::px(10.),
@@ -50,7 +51,7 @@ impl TickIcon {
     }
 }
 
-impl Render for TickIcon {
+impl Component for TickIcon {
     fn render(&self) -> impl IntoElement {
         svg(Bytes::from_static(
             r#"

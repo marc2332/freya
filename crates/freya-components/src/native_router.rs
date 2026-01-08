@@ -24,7 +24,7 @@ impl NativeRouter {
     }
 }
 
-impl Render for NativeRouter {
+impl Component for NativeRouter {
     fn render(&self) -> impl IntoElement {
         rect()
             .on_global_mouse_up(|e: Event<MouseEventData>| match e.button {
