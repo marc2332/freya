@@ -138,7 +138,7 @@ impl ElementExt for PlotElement {
 
     fn render(&self, mut context: RenderContext) {
         let style = self.style();
-        let area = context.layout_node.area;
+        let area = context.layout_node.visible_area();
 
         let mut paint = Paint::default();
         paint.set_anti_alias(true);
