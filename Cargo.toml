@@ -80,7 +80,12 @@ futures-util = "0.3.31"
 futures-channel = "0.3.31"
 futures-lite = "2.6.1"
 async-io = "2.5.0"
-
+blocking = "1.6.2"
+ureq = "3.1.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+url = "2.5"
+open = "5.1"
 
 # Animations
 easer = "0.3.0"
@@ -179,6 +184,14 @@ itertools = { workspace = true }
 
 # SDK examples and Tokio Integration
 tokio = { workspace = true, features = ["rt", "rt-multi-thread"] }
+
+# Hacker News example
+serde = { workspace = true }
+serde_json = { workspace = true }
+url = { workspace = true }
+open = { workspace = true }
+ureq = { workspace = true }
+blocking = { workspace = true }
 
 [profile.release]
 lto = true

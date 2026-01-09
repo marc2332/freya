@@ -40,17 +40,17 @@ paste = "1.0.15"
 chrono = { version = "0.4", optional = true }
 
 # Router
-open = { version = "5", optional = true }
+open = { workspace = true, optional = true }
 freya-router = { workspace = true, optional = true }
 
 # Cache
 async-io = { workspace = true }
 
 # Remote Image
-ureq = { version = "3.1.2", optional = true }
+ureq = { workspace = true, optional = true }
 
 # Image viewer
-blocking = { version = "1.6.2" }
+blocking = { workspace = true }
 bytes = { version = "1.10.1" }
 
 # Other
