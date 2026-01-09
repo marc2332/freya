@@ -86,13 +86,13 @@ fn app() -> impl IntoElement {
             .content(Content::Flex)
             .spacing(12.0)
             .padding(12.0)
-            .child(column(tasks.clone(), TaskStatus::Todo, "To Do".to_string()))
+            .child(column(tasks, TaskStatus::Todo, "To Do".to_string()))
             .child(column(
-                tasks.clone(),
+                tasks,
                 TaskStatus::InProgress,
                 "In Progress".to_string(),
             ))
-            .child(column(tasks.clone(), TaskStatus::Done, "Done".to_string())),
+            .child(column(tasks, TaskStatus::Done, "Done".to_string())),
     )
 }
 
