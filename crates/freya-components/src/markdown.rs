@@ -170,8 +170,6 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
     let mut in_blockquote = false;
     let mut blockquote_spans: Vec<TextSpan> = Vec::new();
 
-    let mut _in_table = false;
-    let mut _in_table_row = false;
     let mut in_table_cell = false;
     let mut table_headers: Vec<Vec<TextSpan>> = Vec::new();
     let mut table_rows: Vec<Vec<Vec<TextSpan>>> = Vec::new();
@@ -238,14 +236,12 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                     });
                 }
                 Tag::Table(_) => {
-                    _in_table = true;
                     table_headers.clear();
                     table_rows.clear();
                     current_table_row.clear();
                 }
                 Tag::TableHead => {}
                 Tag::TableRow => {
-                    _in_table_row = true;
                     current_table_row.clear();
                 }
                 Tag::TableCell => {
@@ -308,7 +304,6 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                     });
                 }
                 TagEnd::Table => {
-                    _in_table = false;
                     elements.push(MarkdownElement::Table {
                         headers: table_headers.clone(),
                         rows: table_rows.clone(),
@@ -320,7 +315,6 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                     current_table_row.clear();
                 }
                 TagEnd::TableRow => {
-                    _in_table_row = false;
                     // TableRow only appears in body rows, not in TableHead
                     table_rows.push(current_table_row.clone());
                     current_table_row.clear();

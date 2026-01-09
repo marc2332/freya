@@ -19,10 +19,7 @@ fn parse_heading_and_paragraph() {
     // Check heading text
     assert!(paragraphs.iter().any(|p| {
         let para = Paragraph::try_downcast(&*p.element()).unwrap();
-        para.spans
-            .get(0)
-            .map(|s| s.text == "Hello")
-            .unwrap()
+        para.spans.get(0).map(|s| s.text == "Hello").unwrap()
     }));
 
     // Check paragraph contains the text
