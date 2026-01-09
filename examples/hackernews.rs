@@ -8,7 +8,6 @@ use std::time::{
     UNIX_EPOCH,
 };
 
-use blocking;
 use freya::prelude::*;
 use freya_query::prelude::*;
 use serde::{
