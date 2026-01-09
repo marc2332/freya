@@ -62,7 +62,7 @@ impl Component for TickIcon {
         ))
         .width(self.layout.width.clone())
         .height(self.layout.height.clone())
-        .margin(self.layout.margin.clone())
+        .margin(self.layout.margin)
         .fill(self.fill)
     }
 }
