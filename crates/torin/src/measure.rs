@@ -62,39 +62,38 @@ where
 {
     /// Translate all the children of the given Node by the specified X and Y offsets.
     fn recursive_translate(&mut self, node_id: Key, offset_x: Length, offset_y: Length) {
-        let mut buffer = self
-            .tree_adapter
-            .children_of(&node_id)
-            .into_iter()
-            .map(|id| (node_id, id))
-            .collect::<Vec<(Key, Key)>>();
-        while let Some((parent, child)) = buffer.pop() {
+        let mut buffer = self.tree_adapter.children_of(&node_id);
+        while let Some(child) = buffer.pop() {
             let node = self
                 .tree_adapter
                 .get_node(&child)
                 .expect("Node does not exist");
+
             let translate = match node.position {
                 Position::Global(_) => false,
-                Position::Absolute(_) => parent != node_id,
-                Position::Stacked(_) => true,
+                Position::Stacked(_) | Position::Absolute(_) => true,
             };
+
             if translate {
                 let layout_node = self
                     .layout
                     .get_mut(&child)
                     .expect("Cached node does not exist");
-
                 layout_node.area.origin.x += offset_x.get();
                 layout_node.area.origin.y += offset_y.get();
                 layout_node.inner_area.origin.x += offset_x.get();
                 layout_node.inner_area.origin.y += offset_y.get();
 
-                buffer.extend(
-                    self.tree_adapter
-                        .children_of(&child)
-                        .into_iter()
-                        .map(|id| (node_id, id)),
-                );
+                if let Some(measurer) = self.measurer {
+                    measurer.notify_layout_references(
+                        child,
+                        layout_node.area,
+                        layout_node.visible_area(),
+                        layout_node.inner_sizes,
+                    );
+                }
+
+                buffer.extend(self.tree_adapter.children_of(&child));
             }
         }
     }
@@ -375,6 +374,7 @@ where
                 offset_y: node.offset_y,
                 inner_area,
                 data: node_data,
+                inner_sizes,
             };
 
             // In case of any layout listener, notify it with the new areas.
