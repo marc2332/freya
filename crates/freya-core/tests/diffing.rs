@@ -17,6 +17,7 @@ use freya_core::{
     },
 };
 use rustc_hash::FxHashMap;
+use torin::size::Size;
 
 struct RawIdMap(FxHashMap<u64, Vec<u64>>);
 
@@ -1133,6 +1134,89 @@ fn tree_unordered_mutations() {
             .nodes
             .size(),
         6
+    );
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+}
+
+#[test]
+fn tree_mutations_root_components() {
+    #[derive(PartialEq)]
+    struct OtherCoolComp;
+
+    impl Component for OtherCoolComp {
+        fn render(&self) -> impl IntoElement {
+            "Hello, World!"
+        }
+    }
+
+    #[derive(PartialEq)]
+    struct CoolComp(u8);
+
+    impl Component for CoolComp {
+        fn render(&self) -> impl IntoElement {
+            let mut count = use_state(|| 1);
+
+            if count() > 1 {
+                OtherCoolComp.into()
+            } else {
+                rect()
+                    .on_mouse_up(move |_| {
+                        *count.write() += 1;
+                    })
+                    .width(Size::px(100.))
+                    .height(Size::px(100.))
+                    .background((255, 0, 0))
+                    .child(self.0.to_string())
+                    .into_element()
+            }
+        }
+    }
+
+    fn app() -> Element {
+        rect()
+            .spacing(6.)
+            .child(CoolComp(1))
+            .child(CoolComp(2))
+            .into()
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+
+    let mutations = runner.sync_and_update();
+    assert!(!mutations.added.is_empty());
+    assert!(mutations.modified.is_empty());
+    assert!(mutations.removed.is_empty());
+    tree.apply_mutations(mutations);
+    assert_eq!(
+        tree.children,
+        convert_ids(FxHashMap::from_iter([
+            (1, vec![2]),
+            (2, vec![5, 7]),
+            (5, vec![6]),
+            (7, vec![8]),
+        ]))
+    );
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+
+    runner.handle_event(
+        7,
+        EventName::MouseUp,
+        EventType::Mouse(MouseEventData::default()),
+        false,
+    );
+    let mutations = runner.sync_and_update();
+    assert!(!mutations.added.is_empty());
+    assert!(mutations.modified.is_empty());
+    assert!(!mutations.removed.is_empty());
+    tree.apply_mutations(mutations);
+    assert_eq!(
+        tree.children,
+        convert_ids(FxHashMap::from_iter([
+            (1, vec![2]),
+            (2, vec![5, 10]),
+            (5, vec![6])
+        ]))
     );
     assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 }

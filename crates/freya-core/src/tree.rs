@@ -158,7 +158,7 @@ impl Tree {
         }
 
         hotpath::measure_block!("mutations run", {
-            for remove in mutations.removed {
+            for remove in mutations.removed.into_iter().sorted() {
                 let node_id = remove.node_id();
                 let mut buff = vec![remove];
                 let Some(parent_id) = self.parents.get(&node_id).copied() else {
