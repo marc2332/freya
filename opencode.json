@@ -1,0 +1,15 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "formatter": {
+    "cargo fmt": {
+      "command": [
+        "rustfmt",
+        "+nightly-2025-09-25",
+        "--error-on-unformatted",
+        "--unstable-features",
+        "$FILE"
+      ],
+      "extensions": [".rs"]
+    }
+  }
+}
