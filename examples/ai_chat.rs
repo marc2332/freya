@@ -3,8 +3,12 @@
     windows_subsystem = "windows"
 )]
 
+use std::{env, rc::Rc};
+
 use euclid::Length;
 use freya::prelude::*;
+use rig::{completion::Prompt, providers::openai::{self, Client}};
+use tokio::runtime::Builder;
 
 #[derive(Clone, Debug)]
 struct Message {
@@ -13,10 +17,7 @@ struct Message {
 }
 
 fn main() {
-    let rt = tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .build()
-        .unwrap();
+    let rt = Builder::new_multi_thread().enable_all().build().unwrap();
     let _rt = rt.enter();
     launch(LaunchConfig::new().with_window(WindowConfig::new(app).with_size(800., 600.)))
 }
@@ -32,24 +33,39 @@ fn app() -> impl IntoElement {
     let mut input_value = use_state(|| String::new());
 
     let send_message = move |_| {
-        let mut input_value = input_value.write();
-        if input_value.trim().is_empty() {
+        let user_message = input_value.read().clone();
+        if user_message.trim().is_empty() {
             return;
         }
 
         // Add user message
         messages.write().push(Message {
             role: "user".to_string(),
-            content: input_value.clone(),
+            content: user_message.clone(),
         });
 
         // Clear input
-        *input_value = String::new();
+        *input_value.write() = String::new();
 
-        // Add mock AI response
-        messages.write().push(Message {
-            role: "assistant".to_string(),
-            content: format!("Hello! You said: '{}'. This is a mock AI response. To integrate real AI, add your preferred model here (e.g., Ollama, OpenAI).", *input_value),
+        // Add AI response using rig-core
+        let user_msg = user_message.clone();
+        spawn(async move {
+            let client = openai::Client::from_env();
+            let agent = client.agent("gpt-4.1").build();
+            match agent.prompt(&user_msg).await {
+                Ok(response) => {
+                    messages.write().push(Message {
+                        role: "assistant".to_string(),
+                        content: response,
+                    });
+                }
+                Err(e) => {
+                    messages.write().push(Message {
+                        role: "assistant".to_string(),
+                        content: format!("Error: {}", e),
+                    });
+                }
+            }
         });
     };
 
@@ -117,11 +133,7 @@ fn app() -> impl IntoElement {
                         .placeholder("Type your message...")
                         .width(Size::Flex(Length::new(1.))),
                 )
-                .child(
-                    Button::new()
-                        .on_press(send_message)
-                        .child("Send"),
-                )
+                .child(Button::new().on_press(send_message).child("Send")),
         );
 
     rect()
