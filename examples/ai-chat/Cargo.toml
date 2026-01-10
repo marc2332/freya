@@ -1,0 +1,10 @@
+[package]
+name = "ai-chat"
+publish = false
+edition = "2024"
+
+[dependencies]
+freya = { workspace = true, features = ["markdown"] }
+euclid = { workspace = true }
+rig-core = { git = "https://github.com/0xPlaygrounds/rig", rev = "e80a0cafc4f0e356800e5735d4a0a011153f8fcf" }
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "time"] }

@@ -3,11 +3,6 @@
     windows_subsystem = "windows"
 )]
 
-use std::{
-    env,
-    rc::Rc,
-};
-
 use euclid::Length;
 use freya::prelude::*;
 use rig::{
@@ -16,16 +11,19 @@ use rig::{
         ProviderClient,
     },
     completion::Prompt,
-    providers::openai::{
-        self,
-        Client,
-    },
+    providers::openai,
 };
 use tokio::runtime::Builder;
 
+#[derive(Clone, Debug, PartialEq)]
+enum Role {
+    AI,
+    User,
+}
+
 #[derive(Clone, Debug)]
 struct Message {
-    role: String,
+    role: Role,
     content: String,
 }
 
@@ -38,7 +36,7 @@ fn main() {
 fn app() -> impl IntoElement {
     let mut messages = use_state(|| {
         vec![Message {
-            role: "assistant".to_string(),
+            role: Role::AI,
             content: "Hello! I'm a AI chat. Type a message and press Send to see a response."
                 .to_string(),
         }]
@@ -53,7 +51,7 @@ fn app() -> impl IntoElement {
 
         // Add user message
         messages.write().push(Message {
-            role: "user".to_string(),
+            role: Role::User,
             content: user_message.clone(),
         });
 
@@ -68,13 +66,13 @@ fn app() -> impl IntoElement {
             match agent.prompt(&user_msg).await {
                 Ok(response) => {
                     messages.write().push(Message {
-                        role: "assistant".to_string(),
+                        role: Role::AI,
                         content: response,
                     });
                 }
                 Err(e) => {
                     messages.write().push(Message {
-                        role: "assistant".to_string(),
+                        role: Role::AI,
                         content: format!("Error: {}", e),
                     });
                 }
@@ -85,7 +83,7 @@ fn app() -> impl IntoElement {
     let chat_area = rect().width(Size::fill()).height(Size::flex(1.)).child(
         ScrollView::new().child(rect().width(Size::fill()).padding(16.).children_iter(
             messages.read().iter().map(|msg| {
-                let is_user = msg.role == "user";
+                let is_user = msg.role == Role::User;
                 let bg_color = if is_user {
                     (59, 130, 246)
                 } else {
@@ -110,7 +108,7 @@ fn app() -> impl IntoElement {
                         rect()
                             .padding(12.)
                             .background(bg_color)
-                            .corner_radius(8.)
+                            .corner_radius(16.)
                             .color((255, 255, 255))
                             .text_align(text_align)
                             .child(if is_user {
@@ -126,8 +124,8 @@ fn app() -> impl IntoElement {
 
     let input_area = rect()
         .width(Size::fill())
-        .height(Size::px(50.))
-        .padding(10.)
+        .height(Size::px(60.))
+        .padding(12.)
         .child(
             rect()
                 .horizontal()
