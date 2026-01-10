@@ -18,6 +18,11 @@ use crate::image_viewer::{
     ImageSource,
     ImageViewer,
 };
+#[cfg(feature = "router")]
+use crate::link::{
+    Link,
+    LinkTooltip,
+};
 use crate::{
     table::{
         Table,
@@ -39,6 +44,7 @@ use crate::{
 /// - Lists (ordered and unordered)
 /// - Tables
 /// - Images
+/// - Links
 /// - Blockquotes
 /// - Horizontal rules
 ///
@@ -115,6 +121,11 @@ enum MarkdownElement {
         url: String,
         alt: String,
     },
+    Link {
+        url: String,
+        title: Option<String>,
+        text: Vec<TextSpan>,
+    },
     Blockquote {
         spans: Vec<TextSpan>,
     },
@@ -176,6 +187,11 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
     let mut current_table_row: Vec<Vec<TextSpan>> = Vec::new();
     let mut current_cell_spans: Vec<TextSpan> = Vec::new();
 
+    let mut in_link = false;
+    let mut link_url: Option<String> = None;
+    let mut link_title: Option<String> = None;
+    let mut link_spans: Vec<TextSpan> = Vec::new();
+
     let mut bold = false;
     let mut italic = false;
     let mut strikethrough = false;
@@ -234,6 +250,14 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                         url: dest_url.to_string(),
                         alt: title.to_string(),
                     });
+                }
+                Tag::Link {
+                    dest_url, title, ..
+                } => {
+                    in_link = true;
+                    link_url = Some(dest_url.to_string());
+                    link_title = Some(title.to_string());
+                    link_spans.clear();
                 }
                 Tag::Table(_) => {
                     table_headers.clear();
@@ -323,6 +347,16 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                     in_table_cell = false;
                     current_table_row.push(current_cell_spans.clone());
                 }
+                TagEnd::Link => {
+                    in_link = false;
+                    if let Some(url) = link_url.take() {
+                        elements.push(MarkdownElement::Link {
+                            url,
+                            title: link_title.take(),
+                            text: link_spans.clone(),
+                        });
+                    }
+                }
                 _ => {}
             },
             Event::Text(text) => {
@@ -349,6 +383,8 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                         blockquote_spans.push(span);
                     } else if in_list_item && !in_paragraph {
                         current_list_item.push(span);
+                    } else if in_link {
+                        link_spans.push(span);
                     } else {
                         current_spans.push(span);
                     }
@@ -368,6 +404,8 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                     blockquote_spans.push(span);
                 } else if in_list_item {
                     current_list_item.push(span);
+                } else if in_link {
+                    link_spans.push(span);
                 } else {
                     current_spans.push(span);
                 }
@@ -378,6 +416,8 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                     blockquote_spans.push(span);
                 } else if in_list_item {
                     current_list_item.push(span);
+                } else if in_link {
+                    link_spans.push(span);
                 } else {
                     current_spans.push(span);
                 }
@@ -545,6 +585,29 @@ impl Component for MarkdownViewer {
                 #[cfg(not(feature = "remote-asset"))]
                 MarkdownElement::Image { alt, .. } => {
                     label().key(idx).text(format!("[Image: {}]", alt)).into()
+                }
+                MarkdownElement::Link { url, title, text } => {
+                    #[cfg(feature = "router")]
+                    {
+                        let mut tooltip = LinkTooltip::Default;
+                        if let Some(title) = title {
+                            if !title.is_empty() {
+                                tooltip = LinkTooltip::Custom(title);
+                            }
+                        }
+
+                        Link::new(url)
+                            .tooltip(tooltip)
+                            .child(render_spans(&text, paragraph_size, Some(color)))
+                            .key(idx)
+                            .into()
+                    }
+                    #[cfg(not(feature = "router"))]
+                    {
+                        render_spans(&text, paragraph_size, Some(color))
+                            .key(idx)
+                            .into()
+                    }
                 }
                 MarkdownElement::Blockquote { spans } => rect()
                     .key(idx)

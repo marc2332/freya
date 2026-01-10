@@ -16,6 +16,8 @@ This is a demonstration of the **MarkdownViewer** component in Freya.
 
 [![](https://avatars.githubusercontent.com/u/38158676?v=4)]()
 
+[Freya Website](https://freyaui.dev)
+
 ## Features
 
 The markdown viewer supports:
