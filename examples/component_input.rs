@@ -11,6 +11,7 @@ fn main() {
 
 fn app() -> impl IntoElement {
     let mut value = use_state(String::new);
+    let mut submitted = use_state(String::new);
 
     rect()
         .expanded()
@@ -21,7 +22,8 @@ fn app() -> impl IntoElement {
                 .auto_focus(true)
                 .placeholder("Type your name")
                 .value(value.read().clone())
-                .on_change(move |v| value.set(v)),
+                .on_change(move |v| value.set(v))
+                .on_submit(move |v| submitted.set(v)),
         )
         .child(
             Input::new()
@@ -30,4 +32,5 @@ fn app() -> impl IntoElement {
                 .value(value.read().clone()),
         )
         .child(format!("Your name is {}", value.read()))
+        .child(format!("Submitted: {}", submitted.read()))
 }
