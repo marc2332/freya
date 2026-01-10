@@ -180,6 +180,9 @@ itertools = { workspace = true }
 # SDK examples and Tokio Integration
 tokio = { workspace = true, features = ["rt", "rt-multi-thread"] }
 
+# File picker example
+rfd = "0.17"
+
 [profile.release]
 lto = true
 opt-level = 3
