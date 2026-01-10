@@ -178,7 +178,8 @@ hotpath = { workspace = true }
 itertools = { workspace = true }
 
 # SDK examples and Tokio Integration
-tokio = { workspace = true, features = ["rt", "rt-multi-thread"] }
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "time"] }
+euclid = "0.22.9"
 
 [profile.release]
 lto = true
