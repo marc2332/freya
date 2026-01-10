@@ -1,9 +1,8 @@
 #[cfg(debug_assertions)]
+use crate::prelude::Border;
+#[cfg(debug_assertions)]
 use crate::prelude::Color;
-use crate::prelude::{
-    Border,
-    StyleExt,
-};
+use crate::prelude::StyleExt;
 
 pub trait DebugExt
 where
@@ -13,13 +12,14 @@ where
 }
 
 impl<T: StyleExt> DebugExt for T {
-    fn debug(mut self) -> Self {
-        #[cfg(debug_assertions)]
-        {
-            self = self
-                .border(Border::new().width(2.).fill(Color::RED))
-                .shadow((0., 0., 10., 5., (0, 0, 0, 0.2)));
-        }
+    #[cfg(debug_assertions)]
+    fn debug(self) -> Self {
+        self.border(Border::new().width(2.).fill(Color::RED))
+            .shadow((0., 0., 10., 5., (0, 0, 0, 0.2)))
+    }
+
+    #[cfg(not(debug_assertions))]
+    fn debug(self) -> Self {
         self
     }
 }

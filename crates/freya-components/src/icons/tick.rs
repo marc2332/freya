@@ -8,7 +8,6 @@ use torin::{
 #[derive(Clone, PartialEq)]
 pub struct TickIcon {
     layout: LayoutData,
-    margin: Gaps,
     fill: Color,
 }
 
@@ -35,13 +34,12 @@ impl TickIcon {
                 ..Default::default()
             }
             .into(),
-            margin: Gaps::new_all(0.),
             fill: Color::BLACK,
         }
     }
 
     pub fn margin(mut self, margin: impl Into<Gaps>) -> Self {
-        self.margin = margin.into();
+        self.layout.margin = margin.into();
         self
     }
 
@@ -64,6 +62,7 @@ impl Component for TickIcon {
         ))
         .width(self.layout.width.clone())
         .height(self.layout.height.clone())
+        .margin(self.layout.margin)
         .fill(self.fill)
     }
 }

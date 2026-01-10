@@ -493,7 +493,7 @@ impl ElementExt for RectElement {
     fn render(&self, context: RenderContext) {
         let style = self.style();
 
-        let area = context.layout_node.area;
+        let area = context.layout_node.visible_area();
         let corner_radius = style.corner_radius.with_scale(context.scale_factor as f32);
 
         let mut path = PathBuilder::new();

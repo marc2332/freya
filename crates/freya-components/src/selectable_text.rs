@@ -74,7 +74,7 @@ impl Component for SelectableText {
                 element_location.x -= drag_origin.x;
                 element_location.y -= drag_origin.y;
                 editable.process_event(EditableEvent::Move {
-                    location: e.element_location,
+                    location: element_location,
                     editor_line: EditorLine::SingleParagraph,
                     holder: &holder.read(),
                 });
