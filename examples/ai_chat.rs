@@ -3,11 +3,24 @@
     windows_subsystem = "windows"
 )]
 
-use std::{env, rc::Rc};
+use std::{
+    env,
+    rc::Rc,
+};
 
 use euclid::Length;
 use freya::prelude::*;
-use rig::{completion::Prompt, providers::openai::{self, Client}};
+use rig::{
+    client::{
+        CompletionClient,
+        ProviderClient,
+    },
+    completion::Prompt,
+    providers::openai::{
+        self,
+        Client,
+    },
+};
 use tokio::runtime::Builder;
 
 #[derive(Clone, Debug)]
@@ -26,7 +39,7 @@ fn app() -> impl IntoElement {
     let mut messages = use_state(|| {
         vec![Message {
             role: "assistant".to_string(),
-            content: "Hello! I'm a mock AI chat. Type a message and press Send to see a response."
+            content: "Hello! I'm a AI chat. Type a message and press Send to see a response."
                 .to_string(),
         }]
     });
@@ -51,7 +64,7 @@ fn app() -> impl IntoElement {
         let user_msg = user_message.clone();
         spawn(async move {
             let client = openai::Client::from_env();
-            let agent = client.agent("gpt-4.1").build();
+            let agent = client.agent("gpt-5.2").build();
             match agent.prompt(&user_msg).await {
                 Ok(response) => {
                     messages.write().push(Message {
@@ -69,59 +82,57 @@ fn app() -> impl IntoElement {
         });
     };
 
-    let chat_area = rect()
-        .width(Size::fill())
-        .height(Size::fill())
-        .background((30, 30, 30))
-        .child(
-            ScrollView::new().child(rect().width(Size::fill()).padding(16.).children_iter(
-                messages.read().iter().map(|msg| {
-                    let is_user = msg.role == "user";
-                    let bg_color = if is_user {
-                        (59, 130, 246)
-                    } else {
-                        (55, 65, 81)
-                    };
-                    let align = if is_user {
-                        Alignment::End
-                    } else {
-                        Alignment::Start
-                    };
-                    let text_align = if is_user {
-                        TextAlign::End
-                    } else {
-                        TextAlign::Start
-                    };
+    let chat_area = rect().width(Size::fill()).height(Size::flex(1.)).child(
+        ScrollView::new().child(rect().width(Size::fill()).padding(16.).children_iter(
+            messages.read().iter().map(|msg| {
+                let is_user = msg.role == "user";
+                let bg_color = if is_user {
+                    (59, 130, 246)
+                } else {
+                    (55, 65, 81)
+                };
+                let align = if is_user {
+                    Alignment::End
+                } else {
+                    Alignment::Start
+                };
+                let text_align = if is_user {
+                    TextAlign::End
+                } else {
+                    TextAlign::Start
+                };
 
-                    rect()
-                        .width(Size::fill())
-                        .margin(8.)
-                        .cross_align(align)
-                        .child(
-                            rect()
-                                .padding(12.)
-                                .background(bg_color)
-                                .corner_radius(8.)
-                                .color((255, 255, 255))
-                                .text_align(text_align)
-                                .child(msg.content.clone()),
-                        )
-                        .into()
-                }),
-            )),
-        );
+                rect()
+                    .width(Size::fill())
+                    .margin(8.)
+                    .cross_align(align)
+                    .child(
+                        rect()
+                            .padding(12.)
+                            .background(bg_color)
+                            .corner_radius(8.)
+                            .color((255, 255, 255))
+                            .text_align(text_align)
+                            .child(if is_user {
+                                SelectableText::new(msg.content.clone()).into_element()
+                            } else {
+                                MarkdownViewer::new(msg.content.clone()).into_element()
+                            }),
+                    )
+                    .into()
+            }),
+        )),
+    );
 
     let input_area = rect()
         .width(Size::fill())
-        .height(Size::Pixels(Length::new(60.)))
-        .background((40, 40, 40))
+        .height(Size::px(50.))
         .padding(10.)
-        .position(Position::new_absolute().bottom(0.).left(0.).right(0.))
         .child(
             rect()
                 .horizontal()
-                .width(Size::fill())
-                .height(Size::fill())
+                .expanded()
+                .cross_align(Alignment::Center)
                 .spacing(8.)
                 .content(Content::Flex)
                 .child(
@@ -130,16 +141,28 @@ fn app() -> impl IntoElement {
                         .on_change(move |value| {
                             *input_value.write() = value;
                         })
+                        .background((65, 65, 65))
+                        .hover_background((75, 75, 75))
+                        .border_fill(Color::TRANSPARENT)
+                        .color((200, 200, 200))
                         .placeholder("Type your message...")
                         .width(Size::Flex(Length::new(1.))),
                 )
-                .child(Button::new().on_press(send_message).child("Send")),
+                .child(
+                    Button::new()
+                        .background((65, 65, 65))
+                        .hover_background((75, 75, 75))
+                        .border_fill(Color::TRANSPARENT)
+                        .color((200, 200, 200))
+                        .on_press(send_message)
+                        .child("Send"),
+                ),
         );
 
     rect()
-        .width(Size::fill())
-        .height(Size::fill())
-        .background((50, 50, 50))
+        .expanded()
+        .content(Content::Flex)
+        .background((30, 30, 30))
         .child(chat_area)
         .child(input_area)
 }

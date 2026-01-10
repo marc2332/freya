@@ -180,7 +180,7 @@ itertools = { workspace = true }
 # SDK examples and Tokio Integration
 tokio = { workspace = true, features = ["rt", "rt-multi-thread", "time"] }
 euclid = "0.22.9"
-rig-core = "0.1"
+rig-core = { git = "https://github.com/0xPlaygrounds/rig", rev = "e80a0cafc4f0e356800e5735d4a0a011153f8fcf" }
 
 [profile.release]
 lto = true
