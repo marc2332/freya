@@ -590,10 +590,10 @@ impl Component for MarkdownViewer {
                     #[cfg(feature = "router")]
                     {
                         let mut tooltip = LinkTooltip::Default;
-                        if let Some(title) = title {
-                            if !title.is_empty() {
-                                tooltip = LinkTooltip::Custom(title);
-                            }
+                        if let Some(title) = title
+                            && !title.is_empty()
+                        {
+                            tooltip = LinkTooltip::Custom(title);
                         }
 
                         Link::new(url)
