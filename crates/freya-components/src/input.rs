@@ -79,6 +79,7 @@ impl InputValidator {
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
 ///     let mut value = use_state(String::new);
+///     let mut submitted = use_state(String::new);
 ///
 ///     rect()
 ///         .expanded()
@@ -88,9 +89,11 @@ impl InputValidator {
 ///             Input::new()
 ///                 .placeholder("Type your name")
 ///                 .value(value.read().clone())
-///                 .on_change(move |v| value.set(v)),
+///                 .on_change(move |v| value.set(v))
+///                 .on_submit(move |v| submitted.set(v)),
 ///         )
 ///         .child(format!("Your name is {}", value.read()))
+///         .child(format!("Submitted: {}", submitted.read()))
 /// }
 ///
 /// # use freya_testing::prelude::*;
@@ -110,6 +113,7 @@ pub struct Input {
     placeholder: Option<Cow<'static, str>>,
     on_change: Option<EventHandler<String>>,
     on_validate: Option<EventHandler<InputValidator>>,
+    on_submit: Option<EventHandler<String>>,
     mode: InputMode,
     auto_focus: bool,
     width: Size,
@@ -137,6 +141,7 @@ impl Input {
             placeholder: None,
             on_change: None,
             on_validate: None,
+            on_submit: None,
             mode: InputMode::default(),
             auto_focus: false,
             width: Size::px(150.),
@@ -167,6 +172,11 @@ impl Input {
 
     pub fn on_validate(mut self, on_validate: impl Into<EventHandler<InputValidator>>) -> Self {
         self.on_validate = Some(on_validate.into());
+        self
+    }
+
+    pub fn on_submit(mut self, on_submit: impl Into<EventHandler<String>>) -> Self {
+        self.on_submit = Some(on_submit.into());
         self
     }
 
@@ -220,6 +230,7 @@ impl Component for Input {
         let display_placeholder = self.value.is_empty() && self.placeholder.is_some();
         let on_change = self.on_change.clone();
         let on_validate = self.on_validate.clone();
+        let on_submit = self.on_submit.clone();
 
         if &*self.value != editable.editor().read().rope() {
             editable.editor_mut().write().set(&self.value);
@@ -231,38 +242,45 @@ impl Component for Input {
         };
 
         let on_key_down = move |e: Event<KeyboardEventData>| {
-            if e.key != Key::Named(NamedKey::Enter) && e.key != Key::Named(NamedKey::Tab) {
-                e.stop_propagation();
-                movement_timeout.reset();
-                editable.process_event(EditableEvent::KeyDown {
-                    key: &e.key,
-                    modifiers: e.modifiers,
-                });
-                let text = editable.editor().peek().to_string();
-
-                let apply_change = if let Some(on_validate) = &on_validate {
-                    let editor = editable.editor_mut();
-                    let mut editor = editor.write();
-                    let validator = InputValidator::new(text.clone());
-                    on_validate.call(validator.clone());
-                    let is_valid = validator.is_valid();
-
-                    if !is_valid {
-                        // If it is not valid then undo the latest change and discard all the redos
-                        let undo_result = editor.undo();
-                        if let Some(idx) = undo_result {
-                            editor.move_cursor_to(idx);
-                        }
-                        editor.editor_history().clear_redos();
+            match &e.key {
+                // On submit
+                Key::Named(NamedKey::Enter) => {
+                    if let Some(on_submit) = &on_submit {
+                        let text = editable.editor().peek().to_string();
+                        on_submit.call(text);
                     }
+                }
+                // On change
+                key => {
+                    if *key != Key::Named(NamedKey::Enter) && *key != Key::Named(NamedKey::Tab) {
+                        e.stop_propagation();
+                        movement_timeout.reset();
+                        editable.process_event(EditableEvent::KeyDown {
+                            key: &e.key,
+                            modifiers: e.modifiers,
+                        });
+                        let text = editable.editor().read().rope().to_string();
 
-                    is_valid
-                } else {
-                    true
-                };
+                        let apply_change = match &on_validate {
+                            Some(on_validate) => {
+                                let mut editor = editable.editor_mut().write();
+                                let validator = InputValidator::new(text.clone());
+                                on_validate.call(validator.clone());
+                                if !validator.is_valid() {
+                                    if let Some(idx) = editor.undo() {
+                                        editor.move_cursor_to(idx);
+                                    }
+                                    editor.editor_history().clear_redos();
+                                }
+                                validator.is_valid()
+                            }
+                            None => true,
+                        };
 
-                if apply_change && let Some(on_change) = &on_change {
-                    on_change.call(text);
+                        if apply_change && let Some(on_change) = &on_change {
+                            on_change.call(text);
+                        }
+                    }
                 }
             }
         };
