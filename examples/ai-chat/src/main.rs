@@ -3,7 +3,6 @@
     windows_subsystem = "windows"
 )]
 
-use euclid::Length;
 use freya::prelude::*;
 use rig::{
     client::{
@@ -144,7 +143,7 @@ fn app() -> impl IntoElement {
                         .border_fill(Color::TRANSPARENT)
                         .color((200, 200, 200))
                         .placeholder("Type your message...")
-                        .width(Size::Flex(Length::new(1.))),
+                        .width(Size::flex(1.)),
                 )
                 .child(
                     Button::new()
