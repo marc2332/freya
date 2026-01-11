@@ -39,6 +39,7 @@ members = [
   "./crates/freya-plotters-backend",
   "./crates/freya-query",
   "./examples/website",
+  "./examples/ai-chat",
 ]
 
 [workspace.dependencies]
@@ -178,7 +179,7 @@ hotpath = { workspace = true }
 itertools = { workspace = true }
 
 # SDK examples and Tokio Integration
-tokio = { workspace = true, features = ["rt", "rt-multi-thread"] }
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "time"] }
 
 # File picker example
 rfd = "0.17"
