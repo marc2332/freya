@@ -57,7 +57,7 @@ impl SideBar {
     }
 }
 
-impl Render for SideBar {
+impl Component for SideBar {
     fn render(&self) -> impl IntoElement {
         let SideBarTheme {
             spacing,
@@ -154,7 +154,7 @@ impl SideBarItem {
     }
 }
 
-impl Render for SideBarItem {
+impl Component for SideBarItem {
     fn render(&self) -> impl IntoElement {
         let SideBarItemTheme {
             margin,

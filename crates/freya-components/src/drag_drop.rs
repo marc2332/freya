@@ -26,6 +26,13 @@ pub struct DragZone<T: Clone + 'static + PartialEq> {
     data: T,
     /// Show the children when dragging. Defaults to `true`.
     show_while_dragging: bool,
+    key: DiffKey,
+}
+
+impl<T: Clone + PartialEq + 'static> KeyExt for DragZone<T> {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
 }
 
 impl<T: Clone + PartialEq + 'static> DragZone<T> {
@@ -35,6 +42,7 @@ impl<T: Clone + PartialEq + 'static> DragZone<T> {
             children: children.into(),
             drag_element: None,
             show_while_dragging: true,
+            key: DiffKey::default(),
         }
     }
 
@@ -49,7 +57,7 @@ impl<T: Clone + PartialEq + 'static> DragZone<T> {
     }
 }
 
-impl<T: Clone + PartialEq> Render for DragZone<T> {
+impl<T: Clone + PartialEq> Component for DragZone<T> {
     fn render(&self) -> impl IntoElement {
         let mut drags = use_drag::<T>();
         let mut position = use_state::<Option<CursorPoint>>(|| None);
@@ -98,6 +106,10 @@ impl<T: Clone + PartialEq> Render for DragZone<T> {
                     .then(|| self.children.clone()),
             )
     }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
+    }
 }
 
 #[derive(PartialEq, Clone)]
@@ -106,6 +118,13 @@ pub struct DropZone<T: 'static + PartialEq + Clone> {
     on_drop: EventHandler<T>,
     width: Size,
     height: Size,
+    key: DiffKey,
+}
+
+impl<T: Clone + PartialEq + 'static> KeyExt for DropZone<T> {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
 }
 
 impl<T: PartialEq + Clone + 'static> DropZone<T> {
@@ -115,11 +134,12 @@ impl<T: PartialEq + Clone + 'static> DropZone<T> {
             on_drop: on_drop.into(),
             width: Size::auto(),
             height: Size::auto(),
+            key: DiffKey::default(),
         }
     }
 }
 
-impl<T: Clone + PartialEq + 'static> Render for DropZone<T> {
+impl<T: Clone + PartialEq + 'static> Component for DropZone<T> {
     fn render(&self) -> impl IntoElement {
         let mut drags = use_drag::<T>();
         let on_drop = self.on_drop.clone();
@@ -139,5 +159,9 @@ impl<T: Clone + PartialEq + 'static> Render for DropZone<T> {
             .width(self.width.clone())
             .height(self.height.clone())
             .child(self.children.clone())
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
     }
 }

@@ -173,9 +173,7 @@ pub trait ComponentProps: Any {
 pub enum Element {
     Component {
         key: DiffKey,
-
         comp: Rc<dyn Fn(Rc<dyn ComponentProps>) -> Element>,
-
         props: Rc<dyn ComponentProps>,
     },
     Element {
@@ -207,44 +205,66 @@ impl<T: Into<Element>> IntoElement for T {
     }
 }
 
+/// [AppComponent] is a wrapper for [Component]s that returns true in equality checks.
 #[derive(Clone)]
-pub struct FpRender {
+pub struct AppComponent {
     render: Rc<dyn Fn() -> Element + 'static>,
 }
 
-impl FpRender {
-    pub fn from_render(render: impl Render + 'static) -> Self {
+impl AppComponent {
+    pub fn new(render: impl Component + 'static) -> Self {
         Self {
             render: Rc::new(move || render.render().into_element()),
         }
     }
 }
 
-impl PartialEq for FpRender {
+impl PartialEq for AppComponent {
     fn eq(&self, _other: &Self) -> bool {
         true
     }
 }
 
-impl<F, E> From<F> for FpRender
+impl<F, E> From<F> for AppComponent
 where
     F: Fn() -> E + 'static,
     E: IntoElement,
 {
     fn from(render: F) -> Self {
-        FpRender {
+        AppComponent {
             render: Rc::new(move || render().into_element()),
         }
     }
 }
 
-impl Render for FpRender {
+impl Component for AppComponent {
     fn render(&self) -> impl IntoElement {
         (self.render)()
     }
 }
 
-pub trait Render: RenderKey + 'static {
+/// Encapsulate reusable pieces of UI by using the [Component] trait.
+/// Every [Component] creates a new layer of state in the app,
+/// meaning that implementors of [Component] can make use of hooks in their [Component::render] method.
+/// ```rust, no_run
+/// # use freya::prelude::*;
+/// #[derive(PartialEq)]
+/// struct ReusableCounter {
+///     pub init_number: u8,
+/// }
+///
+/// impl Component for ReusableCounter {
+///     fn render(&self) -> impl IntoElement {
+///         let mut number = use_state(|| self.init_number);
+///         label()
+///             .on_press(move |_| {
+///                 *number.write() += 1;
+///             })
+///             .text(number.read().to_string())
+///     }
+/// }
+/// ```
+pub trait Component: ComponentKey + 'static {
     fn render(&self) -> impl IntoElement;
 
     fn render_key(&self) -> DiffKey {
@@ -252,7 +272,7 @@ pub trait Render: RenderKey + 'static {
     }
 }
 
-pub trait RenderOwned: RenderKey + 'static {
+pub trait ComponentOwned: ComponentKey + 'static {
     fn render(self) -> impl IntoElement;
 
     fn render_key(&self) -> DiffKey {
@@ -260,34 +280,34 @@ pub trait RenderOwned: RenderKey + 'static {
     }
 }
 
-pub trait RenderKey {
+pub trait ComponentKey {
     fn default_key(&self) -> DiffKey;
 }
 
-impl<T> Render for T
+impl<T> Component for T
 where
-    T: RenderOwned + Clone,
+    T: ComponentOwned + Clone,
 {
     fn render(&self) -> impl IntoElement {
-        <Self as RenderOwned>::render(self.clone())
+        <Self as ComponentOwned>::render(self.clone())
     }
     fn render_key(&self) -> DiffKey {
-        <Self as RenderOwned>::render_key(self)
+        <Self as ComponentOwned>::render_key(self)
     }
 }
 
-impl<T> RenderKey for T
+impl<T> ComponentKey for T
 where
-    T: Render,
+    T: Component,
 {
     fn default_key(&self) -> DiffKey {
         DiffKey::U64(Self::render as *const () as u64)
     }
 }
 
-impl<T> MaybeExt for T where T: Render {}
+impl<T> MaybeExt for T where T: Component {}
 
-impl<T: Render + PartialEq> From<T> for Element {
+impl<T: Component + PartialEq> From<T> for Element {
     fn from(value: T) -> Self {
         from_fn_standalone_borrowed_keyed(value.render_key(), value, |v| v.render().into_element())
     }

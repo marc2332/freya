@@ -54,12 +54,33 @@ use crate::{
     tree::DiffModifies,
 };
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum MutationRemove {
     /// Because elements always have a different parent we can easily get their position relatively to their parent
     Element { id: NodeId, index: u32 },
     /// In the other hand, roots of Scopes are manually connected to their parent scopes, so getting their index is not worth the effort.
     Scope { id: NodeId },
+}
+
+impl PartialOrd for MutationRemove {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for MutationRemove {
+    fn cmp(&self, other: &Self) -> Ordering {
+        use MutationRemove::*;
+        match (self, other) {
+            // Order Element removals by index descending (so larger indices come first)
+            (Element { index: a, .. }, Element { index: b, .. }) => b.cmp(a),
+            // Elements come before Scopes
+            (Element { .. }, Scope { .. }) => Ordering::Less,
+            (Scope { .. }, Element { .. }) => Ordering::Greater,
+            // Order Scopes by id descending as well
+            (Scope { id: a }, Scope { id: b }) => b.cmp(a),
+        }
+    }
 }
 
 impl MutationRemove {
@@ -799,6 +820,66 @@ impl Runner {
         }
     }
 
+    /// Recursively traverse up in the scopes tree until a suitable (non-root) slot is found to put an element.
+    /// Returns a parent node id and a slot index pointing to one of its children.
+    fn find_scope_root_parent_info(
+        &self,
+        parent_id: Option<ScopeId>,
+        parent_node_id: NodeId,
+        scope_id: ScopeId,
+    ) -> (NodeId, u32) {
+        let mut index_inside_parent = 0;
+
+        if let Some(parent_id) = parent_id {
+            let mut buffer = Some((parent_id, parent_node_id, scope_id));
+            while let Some((parent_id, parent_node_id, scope_id)) = buffer.take() {
+                let parent_scope = self.scopes.get(&parent_id).unwrap();
+                let parent_scope = parent_scope.borrow();
+
+                let scope = self.scopes.get(&scope_id).unwrap();
+                let scope = scope.borrow();
+
+                let path_node_parent = parent_scope.nodes.find(|v| {
+                    if let Some(v) = v {
+                        v.node_id == parent_node_id
+                    } else {
+                        false
+                    }
+                });
+
+                if let Some(path_node_parent) = path_node_parent {
+                    if let Some(scope_id) = path_node_parent.scope_id {
+                        if let Some(parent_id) = parent_scope.parent_id {
+                            // The found element turns out to be a component so go to it to continue looking
+                            buffer.replace((
+                                parent_id,
+                                parent_scope.parent_node_id_in_parent,
+                                scope_id,
+                            ));
+                        } else {
+                            assert_eq!(scope_id, ScopeId::ROOT);
+                        }
+                    } else {
+                        // Found an Element parent so we get the index from the path
+                        index_inside_parent = *scope.path_in_parent.last().unwrap();
+                        return (parent_node_id, index_inside_parent);
+                    }
+                } else if let Some(new_parent_id) = parent_scope.parent_id {
+                    // If no element was found we go to the parent scope
+                    buffer.replace((
+                        new_parent_id,
+                        parent_scope.parent_node_id_in_parent,
+                        parent_id,
+                    ));
+                }
+            }
+        } else {
+            assert_eq!(scope_id, ScopeId::ROOT);
+        }
+
+        (parent_node_id, index_inside_parent)
+    }
+
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     fn apply_diff(
         &mut self,
@@ -871,10 +952,21 @@ impl Runner {
                     scope_removal_buffer.push(self.scopes.get(&scope_id).cloned().unwrap());
                     scope.borrow_mut().nodes.remove(removed);
                 } else {
+                    let index_inside_parent = if removed.as_ref() == [0] {
+                        let parent_id = scope.borrow().parent_id;
+                        let scope_id = scope.borrow().id;
+                        let parent_node_id = scope.borrow().parent_node_id_in_parent;
+                        self.find_scope_root_parent_info(parent_id, parent_node_id, scope_id)
+                            .1
+                    } else {
+                        // Only do it for non-scope-roots because the root is is always in the same postion therefore it doesnt make sense to resync from its parent
+                        removed[removed.len() - 1]
+                    };
+
                     // plain element removal
                     mutations.removed.push(MutationRemove::Element {
                         id: node_id,
-                        index: *removed.last().unwrap(),
+                        index: index_inside_parent,
                     });
 
                     // Skip if this removed path is already covered by a previously selected root
@@ -1007,63 +1099,10 @@ impl Runner {
             .rev()
         {
             let (parent_node_id, index_inside_parent) = if added.as_ref() == [0] {
-                // For the [0] elements of scopes (their roots) we traverse recursively to ancestor
-                // scopes until we find an element that does not a ScopeId in its path node,
-                // or in other words its not a Component but an Element, this way we can figure out a suitable tree index
-
-                let mut index_inside_parent = 0;
-
                 let parent_id = scope.borrow().parent_id;
                 let scope_id = scope.borrow().id;
                 let parent_node_id = scope.borrow().parent_node_id_in_parent;
-
-                if let Some(parent_id) = parent_id {
-                    let mut buffer = Some((parent_id, parent_node_id, scope_id));
-                    while let Some((parent_id, parent_node_id, scope_id)) = buffer.take() {
-                        let parent_scope = self.scopes.get(&parent_id).unwrap();
-                        let parent_scope = parent_scope.borrow();
-
-                        let scope = self.scopes.get(&scope_id).unwrap();
-                        let scope = scope.borrow();
-
-                        let path_node_parent = parent_scope.nodes.find(|v| {
-                            if let Some(v) = v {
-                                v.node_id == parent_node_id
-                            } else {
-                                false
-                            }
-                        });
-
-                        if let Some(path_node_parent) = path_node_parent {
-                            if let Some(scope_id) = path_node_parent.scope_id {
-                                if let Some(parent_id) = parent_scope.parent_id {
-                                    // The found element turns out to be a component so go to it to continue looking
-                                    buffer.replace((
-                                        parent_id,
-                                        parent_scope.parent_node_id_in_parent,
-                                        scope_id,
-                                    ));
-                                } else {
-                                    assert_eq!(scope_id, ScopeId::ROOT);
-                                }
-                            } else {
-                                // Found an Element parent so we get the index from the path
-                                index_inside_parent = *scope.path_in_parent.last().unwrap();
-                            }
-                        } else if let Some(new_parent_id) = parent_scope.parent_id {
-                            // If no element was found we go to the parent scope
-                            buffer.replace((
-                                new_parent_id,
-                                parent_scope.parent_node_id_in_parent,
-                                parent_id,
-                            ));
-                        }
-                    }
-                } else {
-                    assert_eq!(scope_id, ScopeId::ROOT);
-                }
-
-                (parent_node_id, index_inside_parent)
+                self.find_scope_root_parent_info(parent_id, parent_node_id, scope_id)
             } else {
                 // Only do it for non-scope-roots because the root is is always in the same postion therefore it doesnt make sense to resync from its parent
                 parents_to_resync_scopes.insert(Box::from(&added[..added.len() - 1]));

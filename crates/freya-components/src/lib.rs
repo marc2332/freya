@@ -8,6 +8,7 @@ pub mod cache;
 pub mod calendar;
 pub mod checkbox;
 pub mod chip;
+pub mod color_picker;
 pub mod context_menu;
 pub mod cursor_area;
 pub mod cursor_blink;
@@ -63,6 +64,12 @@ cfg_if::cfg_if! {
     }
 }
 
+cfg_if::cfg_if! {
+    if #[cfg(feature = "markdown")] {
+        pub mod markdown;
+    }
+}
+
 /// | 1 | 2 | 3 | 4 |
 /// | ------------- | ------------- | ------------- | ------------- |
 /// | ![Switch Preview][gallery_toggled_switch] | ![Button Preview][gallery_button] | ![Filled Button Preview][gallery_filled_button] | ![Outline Button Preview][gallery_outline_button] |
@@ -75,6 +82,8 @@ cfg_if::cfg_if! {
 /// | [FloatingTab](floating_tab::FloatingTab)        | [ImageViewer](image_viewer::ImageViewer) | [ScrollView](scrollviews::ScrollView) | [VirtualScrollView](scrollviews::VirtualScrollView) |
 /// | ![Circular Loader Preview][gallery_circular_loader] | ![SegmentedButton Preview][gallery_segmented_button] | ![Tooltip Preview][gallery_tooltip] | ![Calendar Preview][gallery_calendar]  |
 /// | [CircularLoader](loader::CircularLoader)        | [SegmentedButton](segmented_button::SegmentedButton) | [Tooltip](tooltip::Tooltip) |[Calendar](calendar::Calendar) |
+/// | ![ColorPicker Preview][gallery_color_picker] | ![Flat Button Preview][gallery_flat_button] | ![Slider Preview][gallery_slider] | ![Checkbox Preview][gallery_checkbox] |
+/// | [ColorPicker](color_picker::ColorPicker) | [Flat Button](button::Button) | [Slider](slider::Slider) | [Checkbox](checkbox::Checkbox) |
 #[cfg_attr(feature = "docs",
     doc = embed_doc_image::embed_image!("gallery_button", "images/gallery_button.png"),
     doc = embed_doc_image::embed_image!("gallery_filled_button", "images/gallery_filled_button.png"),
@@ -97,5 +106,6 @@ cfg_if::cfg_if! {
     doc = embed_doc_image::embed_image!("gallery_segmented_button", "images/gallery_segmented_button.png"),
     doc = embed_doc_image::embed_image!("gallery_flat_button", "images/gallery_flat_button.png"),
     doc = embed_doc_image::embed_image!("gallery_calendar", "images/gallery_calendar.png"),
+    doc = embed_doc_image::embed_image!("gallery_color_picker", "images/gallery_color_picker.png"),
 )]
 pub fn gallery() {}

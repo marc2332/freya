@@ -1,6 +1,6 @@
 [package]
 name = "freya"
-version = "0.4.0-alpha.8"
+version = "0.4.0-rc.2"
 description = "Cross-platform and non-web GUI Library powered by Skia."
 edition = "2024"
 license = "MIT"
@@ -32,9 +32,25 @@ all = [
   "material-design",
   "calendar",
   "sdk",
+  "markdown",
+  "icons",
+  "radio",
 ]
-all-publish = ["all", "performance", "mocked-engine", "freya-components/docs"]
-all-debug = ["all", "performance", "vulkan"]
+all-publish = [
+  "all",
+  "performance",
+  "mocked-engine",
+  "freya-components/docs",
+  "dep:freya-testing",
+  "dep:freya-plotters-backend",
+]
+all-debug = [
+  "all",
+  "performance",
+  "vulkan",
+  "dep:freya-testing",
+  "dep:freya-plotters-backend",
+]
 all-tests = [
   "router",
   "i18n",
@@ -44,6 +60,8 @@ all-tests = [
   "gif",
   "material-design",
   "calendar",
+  "markdown",
+  "radio",
 ]
 docs = ["all-debug"]
 # Features
@@ -56,34 +74,36 @@ performance = ["freya-performance-plugin"]
 plot = ["freya-components/plot"]
 gif = ["freya-components/gif"]
 calendar = ["freya-components/calendar"]
+markdown = ["freya-components/markdown"]
 vulkan = ["freya-winit/vulkan"]
 sdk = ["dep:freya-sdk"]
 tray = ["freya-winit/tray", "dep:tray-icon"]
 material-design = ["dep:freya-material-design"]
 hotpath = ["freya-core/hotpath", "freya-winit/hotpath"]
+icons = ["dep:freya-icons"]
+radio = ["dep:freya-radio"]
 
 [dependencies]
 freya-core = { workspace = true }
 freya-winit = { workspace = true }
 torin = { workspace = true }
 freya-edit = { workspace = true }
+freya-clipboard = { workspace = true }
 freya-components = { workspace = true }
 freya-animation = { workspace = true }
 freya-engine = { workspace = true }
 freya-devtools = { workspace = true, optional = true, features = ["server"] }
 freya-sdk = { workspace = true, optional = true }
-
-# Router
+freya-icons = { workspace = true, optional = true }
 freya-router = { workspace = true, optional = true }
-
-# i18n
 freya-i18n = { workspace = true, optional = true }
+freya-radio = { workspace = true, optional = true }
 
 # Performance
 freya-performance-plugin = { workspace = true, optional = true }
-
-# Material Design
 freya-material-design = { workspace = true, optional = true }
+freya-testing = { workspace = true, optional = true }
+freya-plotters-backend = { workspace = true, optional = true }
 
 # Tray
 tray-icon = { workspace = true, optional = true }

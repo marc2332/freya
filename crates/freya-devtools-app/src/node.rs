@@ -15,10 +15,10 @@ pub struct NodeElement {
     pub on_collapse_all: EventHandler<()>,
 }
 
-impl Render for NodeElement {
+impl Component for NodeElement {
     fn render_key(&self) -> DiffKey
     where
-        Self: RenderKey,
+        Self: ComponentKey,
     {
         DiffKey::from(&(self.node_id, self.window_id))
     }

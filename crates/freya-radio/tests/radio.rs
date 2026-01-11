@@ -86,7 +86,7 @@ pub fn radio_multiple_subscribers_same_channel() {
 
     #[derive(PartialEq)]
     struct IncrementButton {}
-    impl Render for IncrementButton {
+    impl Component for IncrementButton {
         fn render(&self) -> impl IntoElement {
             let mut radio = use_radio::<Counter, CounterChannel>(CounterChannel::Increment);
 
@@ -100,7 +100,7 @@ pub fn radio_multiple_subscribers_same_channel() {
 
     #[derive(PartialEq)]
     struct CounterDisplay {}
-    impl Render for CounterDisplay {
+    impl Component for CounterDisplay {
         fn render(&self) -> impl IntoElement {
             let radio = use_radio::<Counter, CounterChannel>(CounterChannel::Increment);
             label().text(format!("Display 1: {}", radio.read().count))
@@ -109,7 +109,7 @@ pub fn radio_multiple_subscribers_same_channel() {
 
     #[derive(PartialEq)]
     struct AnotherCounterDisplay {}
-    impl Render for AnotherCounterDisplay {
+    impl Component for AnotherCounterDisplay {
         fn render(&self) -> impl IntoElement {
             let radio = use_radio::<Counter, CounterChannel>(CounterChannel::Increment);
             label().text(format!("Display 2: {}", radio.read().count))
@@ -169,7 +169,7 @@ pub fn radio_channel_isolation() {
 
     #[derive(PartialEq)]
     struct IncrementButton {}
-    impl Render for IncrementButton {
+    impl Component for IncrementButton {
         fn render(&self) -> impl IntoElement {
             let mut radio = use_radio::<Counter, CounterChannel>(CounterChannel::Increment);
 
@@ -183,7 +183,7 @@ pub fn radio_channel_isolation() {
 
     #[derive(PartialEq)]
     struct DecrementButton {}
-    impl Render for DecrementButton {
+    impl Component for DecrementButton {
         fn render(&self) -> impl IntoElement {
             let mut radio = use_radio::<Counter, CounterChannel>(CounterChannel::Decrement);
 
@@ -197,7 +197,7 @@ pub fn radio_channel_isolation() {
 
     #[derive(PartialEq)]
     struct IncrementDisplay {}
-    impl Render for IncrementDisplay {
+    impl Component for IncrementDisplay {
         fn render(&self) -> impl IntoElement {
             let radio = use_radio::<Counter, CounterChannel>(CounterChannel::Increment);
             label().text(format!("Inc: {}", radio.read().count))
@@ -206,7 +206,7 @@ pub fn radio_channel_isolation() {
 
     #[derive(PartialEq)]
     struct DecrementDisplay {}
-    impl Render for DecrementDisplay {
+    impl Component for DecrementDisplay {
         fn render(&self) -> impl IntoElement {
             let radio = use_radio::<Counter, CounterChannel>(CounterChannel::Decrement);
             label().text(format!("Dec: {}", radio.read().count))
@@ -313,7 +313,7 @@ pub fn radio_derived_channels() {
 
     #[derive(PartialEq)]
     struct ResetButton {}
-    impl Render for ResetButton {
+    impl Component for ResetButton {
         fn render(&self) -> impl IntoElement {
             let mut radio = use_radio::<Counter, CounterChannel>(CounterChannel::Reset);
 
@@ -327,7 +327,7 @@ pub fn radio_derived_channels() {
 
     #[derive(PartialEq)]
     struct IncrementDisplay {}
-    impl Render for IncrementDisplay {
+    impl Component for IncrementDisplay {
         fn render(&self) -> impl IntoElement {
             let radio = use_radio::<Counter, CounterChannel>(CounterChannel::Increment);
             label().text(format!("Inc: {}", radio.read().count))
@@ -336,7 +336,7 @@ pub fn radio_derived_channels() {
 
     #[derive(PartialEq)]
     struct DecrementDisplay {}
-    impl Render for DecrementDisplay {
+    impl Component for DecrementDisplay {
         fn render(&self) -> impl IntoElement {
             let radio = use_radio::<Counter, CounterChannel>(CounterChannel::Decrement);
             label().text(format!("Dec: {}", radio.read().count))

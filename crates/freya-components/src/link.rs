@@ -37,11 +37,19 @@ pub struct Link {
     children: Vec<Element>,
     /// A text hint to show when hovering over the link.
     tooltip: LinkTooltip,
+    /// Key for the component.
+    key: DiffKey,
 }
 
 impl ChildrenExt for Link {
     fn get_children(&mut self) -> &mut Vec<Element> {
         &mut self.children
+    }
+}
+
+impl KeyExt for Link {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
     }
 }
 
@@ -52,6 +60,7 @@ impl Link {
             children: Vec::new(),
             tooltip: LinkTooltip::Default,
             theme: None,
+            key: DiffKey::None,
         }
     }
 
@@ -61,7 +70,7 @@ impl Link {
     }
 }
 
-impl Render for Link {
+impl Component for Link {
     fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, link);
         let mut is_hovering = use_state(|| false);
@@ -120,5 +129,9 @@ impl Render for Link {
         } else {
             link.into()
         }
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
     }
 }

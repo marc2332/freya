@@ -1,6 +1,6 @@
 use freya_core::prelude::{
+    Component,
     IntoElement,
-    Render,
     provide_context,
     try_consume_context,
     use_hook,
@@ -57,7 +57,7 @@ impl<R: Routable> PartialEq for ChildRouter<R> {
     }
 }
 
-impl<R: Routable> Render for ChildRouter<R> {
+impl<R: Routable> Component for ChildRouter<R> {
     fn render(&self) -> impl IntoElement {
         use_hook(|| {
             provide_context(ChildRouteMapping {

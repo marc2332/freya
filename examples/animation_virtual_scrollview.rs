@@ -43,7 +43,7 @@ struct AnimatedContainer {
     children: Element,
 }
 
-impl Render for AnimatedContainer {
+impl Component for AnimatedContainer {
     fn render(&self) -> impl IntoElement {
         let animation = use_animation(|conf| {
             conf.on_creation(OnCreation::Run);

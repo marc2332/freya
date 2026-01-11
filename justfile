@@ -1,6 +1,6 @@
 f:
     taplo fmt
-    cargo +nightly fmt --all -- --error-on-unformatted --unstable-features
+    cargo +nightly-2025-09-25 fmt --all -- --error-on-unformatted --unstable-features
 
 c:
     taplo check
@@ -18,10 +18,13 @@ t-layout:
     cargo nextest run --package torin
 
 d:
-    RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc --workspace --features "all, docs" --open
+    RUSTDOCFLAGS="--cfg docsrs" cargo +nightly-2025-09-25 doc --workspace --features "all, docs" --open
 
 tc:
     cargo nextest run --workspace --exclude examples --features all-tests
+
+t-core:
+   cargo nextest run --package freya-core
 
 pe:
     cargo run --example dev_perf --release

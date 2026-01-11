@@ -95,7 +95,7 @@ impl Ripple {
     }
 }
 
-impl Render for Ripple {
+impl Component for Ripple {
     fn render(&self) -> impl IntoElement {
         let mut container_area = use_state(Area::default);
         let mut ripples = use_state::<Vec<RippleInstance>>(Vec::new);
@@ -167,7 +167,7 @@ impl KeyExt for RippleCircle {
     }
 }
 
-impl Render for RippleCircle {
+impl Component for RippleCircle {
     fn render(&self) -> impl IntoElement {
         let id = self.id;
         let mut ripples = self.ripples;

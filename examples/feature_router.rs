@@ -22,7 +22,7 @@ fn app() -> impl IntoElement {
 
 #[derive(PartialEq)]
 struct Layout;
-impl Render for Layout {
+impl Component for Layout {
     fn render(&self) -> impl IntoElement {
         rect().center().expanded().child(outlet::<Route>())
     }
@@ -30,7 +30,7 @@ impl Render for Layout {
 
 #[derive(PartialEq)]
 struct Home {}
-impl Render for Home {
+impl Component for Home {
     fn render(&self) -> impl IntoElement {
         Button::new()
             .on_press(|_| {
@@ -42,7 +42,7 @@ impl Render for Home {
 
 #[derive(PartialEq)]
 struct Settings {}
-impl Render for Settings {
+impl Component for Settings {
     fn render(&self) -> impl IntoElement {
         Button::new()
             .on_press(|_| {

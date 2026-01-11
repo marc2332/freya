@@ -7,6 +7,7 @@ use std::sync::Arc;
 use crate::{
     config::LaunchConfig,
     renderer::{
+        LaunchProxy,
         NativeEvent,
         NativeGenericEvent,
         WinitRenderer,
@@ -94,6 +95,11 @@ pub fn launch(launch_config: LaunchConfig) {
         #[cfg(feature = "tray")]
         tray: launch_config.tray,
         resumed: false,
+        futures: launch_config
+            .tasks
+            .into_iter()
+            .map(|task| task(LaunchProxy(proxy.clone())))
+            .collect::<Vec<_>>(),
         proxy,
         font_manager: font_mgr,
         font_collection,
@@ -101,7 +107,6 @@ pub fn launch(launch_config: LaunchConfig) {
         plugins: launch_config.plugins,
         fallback_fonts: launch_config.fallback_fonts,
         screen_reader,
-        futures: launch_config.futures,
         waker,
     };
 

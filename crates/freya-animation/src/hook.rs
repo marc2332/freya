@@ -316,7 +316,101 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
         task.write().replace(animation_task);
     }
 }
-
+/// Animate your UI easily.
+///
+/// [`use_animation`] takes a callback to initialize the animated values and related configuration.
+///
+/// To animate a group of values at once you can just return a tuple of them.
+///
+/// Currently supports animating:
+/// - Numeric values (e.g width): [AnimNum](crate::prelude::AnimNum)
+/// - Colors using [AnimColor](crate::prelude::AnimColor)
+/// - Sequential animations: [AnimSequential](crate::prelude::AnimSequential)
+/// - Anything as long as you implement the [AnimatedValue] trait.
+///
+/// For each animated value you will need to specify the duration, optionally an ease function or what type of easing you want.
+///
+/// # Example
+///
+/// Here is an example that animates a value from `0.0` to `100.0` in `50` milliseconds.
+///
+/// ```rust, no_run
+/// # use freya::prelude::*;
+/// # use freya::animation::*;
+/// fn app() -> impl IntoElement {
+///     let animation = use_animation(|conf| {
+///         conf.on_creation(OnCreation::Run);
+///         AnimNum::new(0., 100.).time(50)
+///     });
+///
+///     let width = animation.get().value();
+///
+///     rect()
+///         .width(Size::px(width))
+///         .height(Size::fill())
+///         .background(Color::BLUE)
+/// }
+/// ```
+///
+/// You are not limited to just one animation per call, you can have as many as you want.
+///
+/// ```rust, no_run
+/// # use freya::prelude::*;
+/// # use freya::animation::*;
+/// fn app() -> impl IntoElement {
+///     let animation = use_animation(|conf| {
+///         conf.on_creation(OnCreation::Run);
+///         (
+///             AnimNum::new(0., 100.).time(50),
+///             AnimColor::new(Color::RED, Color::BLUE).time(50),
+///         )
+///     });
+///
+///     let (width, color) = animation.get().value();
+///
+///     rect()
+///         .width(Size::px(width))
+///         .height(Size::fill())
+///         .background(color)
+/// }
+/// ```
+///
+/// You can also tweak what to do once the animation has finished with [`AnimConfiguration::on_finish`].
+///
+/// ```rust, no_run
+/// # use freya::prelude::*;
+/// # use freya::animation::*;
+/// fn app() -> impl IntoElement {
+///     let animation = use_animation(|conf| {
+///         conf.on_finish(OnFinish::restart());
+///         // ...
+///         # AnimNum::new(0., 1.)
+///     });
+///
+///     // ...
+///     # rect()
+/// }
+/// ```
+///
+/// You can subscribe your animation to reactive [state](freya_core::prelude::use_state) values, these are considered dependencies.
+///
+/// ```rust, no_run
+/// # use freya::prelude::*;
+/// # use freya::animation::*;
+/// fn app() -> impl IntoElement {
+///     let value = use_state(|| 100.);
+///
+///     let animation = use_animation(move |conf| {
+///         conf.on_change(OnChange::Rerun);
+///         AnimNum::new(0., value()).time(50)
+///     });
+///
+///     // ...
+///     # rect()
+/// }
+/// ```
+///
+/// You may also use [use_animation_with_dependencies] to pass non-reactive dependencies as well.
 pub fn use_animation<Animated: AnimatedValue>(
     mut run: impl 'static + FnMut(&mut AnimConfiguration) -> Animated,
 ) -> UseAnimation<Animated> {
@@ -371,6 +465,22 @@ pub fn use_animation<Animated: AnimatedValue>(
     })
 }
 
+/// Like [use_animation] but supports passing manual dependencies.
+///
+/// ```rust, no_run
+/// # use freya::prelude::*;
+/// # use freya::animation::*;
+/// fn app() -> impl IntoElement {
+///     # let other_value = 1.;
+///     let animation = use_animation_with_dependencies(&other_value, |conf, other_value| {
+///         conf.on_change(OnChange::Rerun);
+///         AnimNum::new(0., *other_value).time(50)
+///     });
+///
+///     // ...
+///     # rect()
+/// }
+/// ```
 pub fn use_animation_with_dependencies<Animated: AnimatedValue, D: 'static + Clone + PartialEq>(
     dependencies: &D,
     mut run: impl 'static + FnMut(&mut AnimConfiguration, &D) -> Animated,

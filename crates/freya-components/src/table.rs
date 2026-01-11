@@ -42,7 +42,7 @@ impl KeyExt for TableArrow {
     }
 }
 
-impl Render for TableArrow {
+impl Component for TableArrow {
     fn render(&self) -> impl IntoElement {
         let TableTheme { arrow_fill, .. } = get_theme!(None::<TableThemePartial>, table);
         let rotate = match self.order_direction {
@@ -82,7 +82,7 @@ impl KeyExt for TableHead {
     }
 }
 
-impl Render for TableHead {
+impl Component for TableHead {
     fn render(&self) -> impl IntoElement {
         rect().width(Size::fill()).children(self.children.clone())
     }
@@ -115,7 +115,7 @@ impl KeyExt for TableBody {
     }
 }
 
-impl Render for TableBody {
+impl Component for TableBody {
     fn render(&self) -> impl IntoElement {
         rect().width(Size::fill()).children(self.children.clone())
     }
@@ -156,7 +156,7 @@ impl KeyExt for TableRow {
     }
 }
 
-impl Render for TableRow {
+impl Component for TableRow {
     fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, table);
         let mut state = use_state(|| TableRowState::Idle);
@@ -260,7 +260,7 @@ impl KeyExt for TableCell {
     }
 }
 
-impl Render for TableCell {
+impl Component for TableCell {
     fn render(&self) -> impl IntoElement {
         let config = use_try_consume::<TableConfig>().unwrap_or(TableConfig::new(1));
         let width_percent = 100.0 / (config.columns as f32);
@@ -308,7 +308,7 @@ pub struct Table {
 impl Default for Table {
     fn default() -> Self {
         Self {
-            height: Size::fill(),
+            height: Size::Inner,
             theme: None,
             columns: 1,
             children: vec![],
@@ -359,7 +359,7 @@ impl TableConfig {
     }
 }
 
-impl Render for Table {
+impl Component for Table {
     fn render(&self) -> impl IntoElement {
         let TableTheme {
             background,

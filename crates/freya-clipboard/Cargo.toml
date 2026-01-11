@@ -1,6 +1,6 @@
 [package]
 name = "freya-clipboard"
-version = "0.4.0-alpha.8"
+version = "0.4.0-rc.2"
 edition = "2024"
 description = "Clipboard integration for Freya."
 license = "MIT"
@@ -19,3 +19,6 @@ skia-engine = ["freya-core/skia-engine"]
 [dependencies]
 copypasta = "0.10"
 freya-core = { workspace = true }
+
+[dev-dependencies]
+freya = { path = "../freya" }

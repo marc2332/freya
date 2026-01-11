@@ -5,46 +5,86 @@
 #![cfg_attr(feature = "docs", feature(doc_cfg))]
 //! # Freya
 //!
-//! **Freya** is a declarative, cross-platform GUI Rust library, powered by 🎨 [Skia](https://skia.org/).
+//! **Freya** is a declarative, cross-platform GUI 🦀 Rust library, powered by 🎨 [Skia](https://skia.org/).
+//!
+//! #### Example
+//!
+//! ```rust, no_run
+//! # use freya::prelude::*;
+//! fn main() {
+//!     // *Start* your app with a window and its root component
+//!     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
+//! }
+//!
+//! fn app() -> impl IntoElement {
+//!     // Define a reactive *state*
+//!     let mut count = use_state(|| 0);
+//!
+//!     // Declare the *UI*
+//!     rect()
+//!         .width(Size::fill())
+//!         .height(Size::fill())
+//!         .background((35, 35, 35))
+//!         .color(Color::WHITE)
+//!         .padding(Gaps::new_all(12.))
+//!         .on_mouse_up(move |_| *count.write() += 1)
+//!         .child(format!("Click to increase -> {}", count.read()))
+//! }
+//! ```
 //!
 //! ### Basics
-//! - [Introduction](self::_docs::introduction)
-//! - [UI](self::_docs::ui)
+//! - [UI and Components](self::_docs::ui_and_components)
 //! - [Elements](self::elements)
-//! - [Components and Props](self::_docs::components_and_props)
 //! - [Hooks](self::_docs::hooks)
+//! - [Development Setup](self::_docs::development_setup)
 //!
 //! ### Learn
-//! - [Development Setup](self::_docs::development_setup)
-//! - [i18n](self::_docs::i18n)
 //! - [Built-in Components](crate::components)
 //! - [Built-in Components Gallery](crate::components::gallery)
+//! - [i18n](freya_i18n)
+//! - [Animation](freya_animation::prelude::use_animation)
+//! - [Routing](freya_router)
+//! - [Clipboard](freya_clipboard)
+//! - [Icons](freya_icons)
+//! - [Material Design](freya_material_design)
+//! - [Plotters](freya_plotters_backend)
+//! - [Testing](freya_testing)
 //!
 //! ## Features flags
 //!
 //! - `all`: Enables all the features listed below
-//! - `router`: Reexport `freya-router` under [router]
-//! - `i18n`: Reexport `freya-i18n` under [i18n]
+//! - `router`: Reexport [freya_router] under [router]
+//! - `i18n`: Reexport [freya_i18n] under [i18n]
 //! - `remote-asset`: Enables support for **HTTP** asset sources for [ImageViewer](components::ImageViewer) and [GifViewer](components::GifViewer) components.
+//! - `tray`: Enables tray support using the [tray_icon] crate.
+//! - `sdk`: Reexport [freya_sdk] under [sdk].
+//! - `gif`: Enables the [GifViewer](components::GifViewer) component.
+//! - `plot`: Enables the [plot](prelude::plot) element.
+//! - `material-design`: Reexport [freya_material_design] under [material_design].
+//! - `calendar`: Enables the [Calendar](components::Calendar) component.
+//! - `icons`: Reexport of [freya_icons] under [icons].
+//! - `radio`: Reexport [freya_radio] under [radio].
+//! - `markdown`: Enables the [MarkdownViewer](components::MarkdownViewer) component.
+//!
+//! ## Misc features
 //! - `devtools`: Enables devtools support.
 //! - `performance`: Enables the performance overlay plugin.
 //! - `vulkan`: Enables Vulkan rendering support.
-//! - `tray`: Enables tray support using the [tray_icon] crate.
-//! - `sdk`: Reexport `freya-sdk` under [sdk]
-//! - `gif`: Enables the [GifViewer](components::GifViewer) component.
-//! - `plot`: Enables the [plot](prelude::plot) element.
-//! - `material-design`: Reexport `freya-material-design` under [material_design].
-//! - `calendar`: Enables the [Calendar](components::Calendar) component.
 //! - `hotpath`: Enables Freya's internal usage of hotpath.
 
 pub mod prelude {
     pub use freya_core::prelude::*;
+    pub use freya_edit::{
+        Clipboard,
+        ClipboardError,
+    };
     pub use freya_winit::{
         WinitPlatformExt,
         config::{
             LaunchConfig,
             WindowConfig,
         },
+        renderer::RendererContext,
     };
 
     pub use crate::components::*;
@@ -56,6 +96,7 @@ pub mod prelude {
             .with_plugin(freya_performance_plugin::PerformanceOverlayPlugin::default());
         freya_winit::launch(launch_config)
     }
+
     pub use torin::{
         alignment::Alignment,
         content::Content,
@@ -78,6 +119,9 @@ pub mod components {
     #[cfg_attr(feature = "docs", doc(cfg(feature = "gif")))]
     #[cfg(feature = "gif")]
     pub use freya_components::gif_viewer::*;
+    #[cfg_attr(feature = "docs", doc(cfg(feature = "markdown")))]
+    #[cfg(feature = "markdown")]
+    pub use freya_components::markdown::*;
     cfg_if::cfg_if! {
         if #[cfg(feature = "router")] {
             #[cfg_attr(feature = "docs", doc(cfg(feature = "router")))]
@@ -102,6 +146,7 @@ pub mod components {
         button::*,
         checkbox::*,
         chip::*,
+        color_picker::*,
         context_menu::*,
         cursor_area::*,
         drag_drop::*,
@@ -146,6 +191,11 @@ pub mod components {
 pub mod text_edit {
     pub use freya_edit::*;
 }
+
+pub mod clipboard {
+    pub use freya_clipboard::prelude::*;
+}
+
 pub mod animation {
     pub use freya_animation::prelude::*;
 }
@@ -192,6 +242,19 @@ pub mod sdk {
 #[cfg(feature = "material-design")]
 pub mod material_design {
     pub use freya_material_design::prelude::*;
+}
+
+#[cfg_attr(feature = "docs", doc(cfg(feature = "icons")))]
+#[cfg(feature = "icons")]
+pub mod icons {
+    pub use freya_icons::*;
+}
+
+/// Reexport `freya-radio` when the `radio` feature is enabled.
+#[cfg(feature = "radio")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "radio")))]
+pub mod radio {
+    pub use freya_radio::prelude::*;
 }
 
 #[cfg(doc)]

@@ -1,6 +1,6 @@
 [package]
 name = "freya-testing"
-version = "0.4.0-alpha.8"
+version = "0.4.0-rc.2"
 description = "Headless testing APIs for Freya"
 edition = "2024"
 license = "MIT"
@@ -29,3 +29,6 @@ futures-channel = { workspace = true }
 
 # Accessibility
 accesskit = { workspace = true }
+
+[dev-dependencies]
+freya = { path = "../freya" }

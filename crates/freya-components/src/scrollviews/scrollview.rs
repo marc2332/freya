@@ -3,7 +3,11 @@ use std::time::Duration;
 use freya_core::prelude::*;
 use freya_sdk::timeout::use_timeout;
 use torin::{
-    prelude::Direction,
+    node::Node,
+    prelude::{
+        Direction,
+        Length,
+    },
     size::Size,
 };
 
@@ -56,11 +60,8 @@ use crate::scrollviews::{
 #[derive(Clone, PartialEq)]
 pub struct ScrollView {
     children: Vec<Element>,
-    width: Size,
-    height: Size,
+    layout: LayoutData,
     show_scrollbar: bool,
-    direction: Direction,
-    spacing: f32,
     scroll_with_arrows: bool,
     scroll_controller: Option<ScrollController>,
     invert_scroll_wheel: bool,
@@ -83,11 +84,13 @@ impl Default for ScrollView {
     fn default() -> Self {
         Self {
             children: Vec::default(),
-            width: Size::fill(),
-            height: Size::fill(),
+            layout: Node {
+                width: Size::fill(),
+                height: Size::fill(),
+                ..Default::default()
+            }
+            .into(),
             show_scrollbar: true,
-            direction: Direction::Vertical,
-            spacing: 0.,
             scroll_with_arrows: true,
             scroll_controller: None,
             invert_scroll_wheel: false,
@@ -104,11 +107,8 @@ impl ScrollView {
     pub fn new_controlled(scroll_controller: ScrollController) -> Self {
         Self {
             children: Vec::default(),
-            width: Size::fill(),
-            height: Size::fill(),
+            layout: LayoutData::default(),
             show_scrollbar: true,
-            direction: Direction::Vertical,
-            spacing: 0.,
             scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
             invert_scroll_wheel: false,
@@ -121,23 +121,13 @@ impl ScrollView {
         self
     }
 
-    pub fn width(mut self, width: Size) -> Self {
-        self.width = width;
-        self
-    }
-
-    pub fn height(mut self, height: Size) -> Self {
-        self.height = height;
-        self
-    }
-
     pub fn direction(mut self, direction: Direction) -> Self {
-        self.direction = direction;
+        self.layout.direction = direction;
         self
     }
 
     pub fn spacing(mut self, spacing: impl Into<f32>) -> Self {
-        self.spacing = spacing.into();
+        self.layout.spacing = Length::new(spacing.into());
         self
     }
 
@@ -152,7 +142,15 @@ impl ScrollView {
     }
 }
 
-impl Render for ScrollView {
+impl LayoutExt for ScrollView {
+    fn get_layout(&mut self) -> &mut LayoutData {
+        &mut self.layout
+    }
+}
+
+impl ContainerSizeExt for ScrollView {}
+
+impl Component for ScrollView {
     fn render(self: &ScrollView) -> impl IntoElement {
         let focus = use_focus();
         let mut timeout = use_timeout(|| Duration::from_millis(800));
@@ -164,7 +162,8 @@ impl Render for ScrollView {
             .scroll_controller
             .unwrap_or_else(|| use_scroll_controller(ScrollConfig::default));
         let (scrolled_x, scrolled_y) = scroll_controller.into();
-        let direction = self.direction;
+        let layout = &self.layout.layout;
+        let direction = layout.direction;
 
         scroll_controller.use_apply(
             size.read().inner_sizes.width,
@@ -206,8 +205,8 @@ impl Render for ScrollView {
             corrected_scrolled_y,
         );
 
-        let (container_width, content_width) = get_container_sizes(self.width.clone());
-        let (container_height, content_height) = get_container_sizes(self.height.clone());
+        let (container_width, content_width) = get_container_sizes(layout.width.clone());
+        let (container_height, content_height) = get_container_sizes(layout.height.clone());
 
         let scroll_with_arrows = self.scroll_with_arrows;
         let invert_scroll_wheel = self.invert_scroll_wheel;
@@ -342,8 +341,8 @@ impl Render for ScrollView {
         };
 
         rect()
-            .width(self.width.clone())
-            .height(self.height.clone())
+            .width(layout.width.clone())
+            .height(layout.height.clone())
             .a11y_id(focus.a11y_id())
             .a11y_focusable(false)
             .a11y_role(AccessibilityRole::ScrollView)
@@ -366,12 +365,12 @@ impl Render for ScrollView {
                     .horizontal()
                     .child(
                         rect()
-                            .direction(self.direction)
+                            .direction(direction)
                             .width(content_width)
                             .height(content_height)
                             .offset_x(corrected_scrolled_x)
                             .offset_y(corrected_scrolled_y)
-                            .spacing(self.spacing)
+                            .spacing(layout.spacing.get())
                             .overflow(Overflow::Clip)
                             .on_sized(move |e: Event<SizedEventData>| {
                                 size.set_if_modified(e.clone())

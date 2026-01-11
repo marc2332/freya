@@ -65,7 +65,7 @@ impl CursorArea {
     }
 }
 
-impl Render for CursorArea {
+impl Component for CursorArea {
     fn render(&self) -> impl IntoElement {
         let mut hovering = use_state(|| false);
         let cursor_icon = self.cursor_icon;

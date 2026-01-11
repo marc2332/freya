@@ -15,7 +15,7 @@ The following is not allowed and will result in this runtime error.
 #[derive(PartialEq)]
 struct CoolComp(u8);
 
-impl Render for CoolComp {
+impl Component for CoolComp {
     fn render(&self) -> impl IntoElement {
         if self.0 == 2 {
             let state = use_state(|| 5);
@@ -32,7 +32,7 @@ The following is not allowed and will result in this runtime error.
 #[derive(PartialEq)]
 struct CoolComp(u8);
 
-impl Render for CoolComp {
+impl Component for CoolComp {
     fn render(&self) -> impl IntoElement {
         for i in 0..self.0 {
             let state = use_state(|| 5);
@@ -49,7 +49,7 @@ The following is not allowed and will result in this runtime error.
 #[derive(PartialEq)]
 struct CoolComp(u8);
 
-impl Render for CoolComp {
+impl Component for CoolComp {
     fn render(&self) -> impl IntoElement {
         use_side_effect(|| {
             let state = use_state(|| 5);
@@ -60,6 +60,18 @@ impl Render for CoolComp {
 }
 ";
 
+/// This is the foundational hook used by all. It's simple, it accepts an initialization callback
+/// whose return value will be stored in this component instance until its dropped.
+/// In subsequent renders the returned value of the function will be a [Clone]d value of what
+/// had been previously returned by the initialization callback.
+///
+/// ```rust, no_run
+/// # use freya::prelude::*;
+/// let my_cloned_value = use_hook(|| 1);
+/// ```
+///
+/// In order to maintain the concept of "instance", other hooks use [State::create](crate::prelude::State::create) to store their values.
+/// One could also use `Rc<RefCell<T>>` but then you would not be able to make your hook values `Copy`.
 pub fn use_hook<T: Clone + 'static>(init: impl FnOnce() -> T) -> T {
     if let Some(value) = CurrentContext::with(|context| {
         let mut scopes_storages = context.scopes_storages.borrow_mut();
@@ -104,6 +116,13 @@ impl std::ops::Drop for DropInner {
     }
 }
 
+/// Run a callback for when the component gets dropped. Useful to clean resources.
+/// ```rust, no_run
+/// # use freya::prelude::*;
+/// use_drop(|| {
+///     println!("Dropping this component.");
+/// });
+/// ```
 pub fn use_drop(drop: impl FnOnce() + 'static) {
     use_hook(|| Rc::new(DropInner(Some(Box::new(drop)))));
 }

@@ -63,7 +63,7 @@ fn app() -> impl IntoElement {
 #[derive(PartialEq)]
 struct ShaderEditor(UseEditable);
 
-impl Render for ShaderEditor {
+impl Component for ShaderEditor {
     fn render(&self) -> impl IntoElement {
         let mut editable = self.0;
 
@@ -108,7 +108,7 @@ struct EditingLine {
     editable: UseEditable,
 }
 
-impl Render for EditingLine {
+impl Component for EditingLine {
     fn render_key(&self) -> DiffKey {
         (&self.line_index).into()
     }
@@ -190,7 +190,7 @@ impl Render for EditingLine {
 #[derive(PartialEq)]
 struct ShaderView(UseEditable);
 
-impl Render for ShaderView {
+impl Component for ShaderView {
     fn render(&self) -> impl IntoElement {
         let editable = self.0;
 

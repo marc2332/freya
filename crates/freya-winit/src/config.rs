@@ -1,6 +1,7 @@
 use std::{
     borrow::Cow,
     fmt::Debug,
+    future::Future,
     io::Cursor,
     pin::Pin,
 };
@@ -20,9 +21,12 @@ use winit::{
     },
 };
 
-use crate::plugins::{
-    FreyaPlugin,
-    PluginsManager,
+use crate::{
+    plugins::{
+        FreyaPlugin,
+        PluginsManager,
+    },
+    renderer::LaunchProxy,
 };
 
 pub type WindowBuilderHook =
@@ -32,7 +36,7 @@ pub type WindowHandleHook = Box<dyn FnOnce(&mut Window) + Send + Sync>;
 /// Configuration for a Window.
 pub struct WindowConfig {
     /// Root component for the window app.
-    pub(crate) app: FpRender,
+    pub(crate) app: AppComponent,
     /// Size of the Window.
     pub(crate) size: (f64, f64),
     /// Minimum size of the Window.
@@ -75,11 +79,11 @@ impl Debug for WindowConfig {
 
 impl WindowConfig {
     /// Create a window with the given app.
-    pub fn new(app: impl Into<FpRender>) -> Self {
+    pub fn new(app: impl Into<AppComponent>) -> Self {
         Self::new_with_defaults(app.into())
     }
 
-    fn new_with_defaults(app: impl Into<FpRender>) -> Self {
+    fn new_with_defaults(app: impl Into<AppComponent>) -> Self {
         Self {
             app: app.into(),
             size: (700.0, 500.0),
@@ -176,7 +180,11 @@ pub type EmbeddedFonts = Vec<(Cow<'static, str>, Bytes)>;
 #[cfg(feature = "tray")]
 pub type TrayIconGetter = Box<dyn FnOnce() -> tray_icon::TrayIcon + Send>;
 #[cfg(feature = "tray")]
-pub type TrayHandler = Box<dyn FnMut(crate::tray_icon::TrayEvent, crate::tray_icon::TrayContext)>;
+pub type TrayHandler =
+    Box<dyn FnMut(crate::tray_icon::TrayEvent, crate::renderer::RendererContext)>;
+
+pub type TaskHandler =
+    Box<dyn FnOnce(crate::renderer::LaunchProxy) -> Pin<Box<dyn Future<Output = ()>>> + 'static>;
 
 /// Launch configuration.
 pub struct LaunchConfig {
@@ -186,7 +194,7 @@ pub struct LaunchConfig {
     pub(crate) plugins: PluginsManager,
     pub(crate) embedded_fonts: EmbeddedFonts,
     pub(crate) fallback_fonts: Vec<Cow<'static, str>>,
-    pub(crate) futures: Vec<Pin<Box<dyn Future<Output = ()>>>>,
+    pub(crate) tasks: Vec<TaskHandler>,
 }
 
 impl Default for LaunchConfig {
@@ -198,7 +206,7 @@ impl Default for LaunchConfig {
             plugins: PluginsManager::default(),
             embedded_fonts: Default::default(),
             fallback_fonts: default_fonts(),
-            futures: Vec::new(),
+            tasks: Vec::new(),
         }
     }
 }
@@ -248,7 +256,8 @@ impl LaunchConfig {
     pub fn with_tray(
         mut self,
         tray_icon: impl FnOnce() -> tray_icon::TrayIcon + 'static + Send,
-        tray_handler: impl FnMut(crate::tray_icon::TrayEvent, crate::tray_icon::TrayContext) + 'static,
+        tray_handler: impl FnMut(crate::tray_icon::TrayEvent, crate::renderer::RendererContext)
+        + 'static,
     ) -> Self {
         self.tray = (Some(Box::new(tray_icon)), Some(Box::new(tray_handler)));
         self
@@ -282,9 +291,17 @@ impl LaunchConfig {
         self
     }
 
-    /// Register a single-thread future / async task.
-    pub fn with_future(mut self, future: impl Future<Output = ()> + 'static) -> Self {
-        self.futures.push(Box::pin(future));
+    /// Register a single-thread launch task.
+    /// The task receives a [LaunchProxy] that can be used to get access to [RendererContext](crate::renderer::RendererContext).
+    /// The provided callback should return a `'static` future which will be scheduled on the renderer
+    /// thread and polled until completion.
+    pub fn with_future<F, Fut>(mut self, task: F) -> Self
+    where
+        F: FnOnce(LaunchProxy) -> Fut + 'static,
+        Fut: Future<Output = ()> + 'static,
+    {
+        self.tasks
+            .push(Box::new(move |proxy| Box::pin(task(proxy))));
         self
     }
 }

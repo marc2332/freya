@@ -43,7 +43,7 @@ struct List {
     pub state: State<Vec<i32>>,
 }
 
-impl RenderOwned for List {
+impl ComponentOwned for List {
     fn render_key(&self) -> DiffKey {
         DiffKey::from(&self.id)
     }

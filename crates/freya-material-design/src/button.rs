@@ -75,7 +75,7 @@ impl RippleButton {
     }
 }
 
-impl Render for RippleButton {
+impl Component for RippleButton {
     fn render(&self) -> impl IntoElement {
         let mut button = self.button.clone();
 

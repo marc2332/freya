@@ -35,7 +35,7 @@ impl PopupBackground {
     }
 }
 
-impl Render for PopupBackground {
+impl Component for PopupBackground {
     fn render(&self) -> impl IntoElement {
         let animation = use_animation(|conf| {
             conf.on_creation(OnCreation::Run);
@@ -111,7 +111,7 @@ impl ChildrenExt for Popup {
     }
 }
 
-impl Render for Popup {
+impl Component for Popup {
     fn render(&self) -> impl IntoElement {
         let animations = use_animation(|conf| {
             conf.on_creation(OnCreation::Run);
@@ -189,7 +189,7 @@ impl PopupTitle {
     }
 }
 
-impl Render for PopupTitle {
+impl Component for PopupTitle {
     fn render(&self) -> impl IntoElement {
         rect().font_size(18.).padding(8.).child(
             label()
@@ -223,7 +223,7 @@ impl ChildrenExt for PopupContent {
     }
 }
 
-impl Render for PopupContent {
+impl Component for PopupContent {
     fn render(&self) -> impl IntoElement {
         rect()
             .font_size(15.)
@@ -256,7 +256,7 @@ impl ChildrenExt for PopupButtons {
     }
 }
 
-impl Render for PopupButtons {
+impl Component for PopupButtons {
     fn render(&self) -> impl IntoElement {
         rect()
             .width(Size::fill())

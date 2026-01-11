@@ -1,6 +1,6 @@
 [package]
 name = "freya-components"
-version = "0.4.0-alpha.8"
+version = "0.4.0-rc.2"
 edition = "2024"
 description = "Components for Freya apps"
 license = "MIT"
@@ -22,6 +22,7 @@ docs = ["dep:embed-doc-image"]
 gif = ["dep:gif"]
 skia-engine = ["freya-engine/skia-engine"]
 calendar = ["dep:chrono"]
+markdown = ["dep:pulldown-cmark"]
 
 [dependencies]
 freya-core = { workspace = true }
@@ -39,17 +40,17 @@ paste = "1.0.15"
 chrono = { version = "0.4", optional = true }
 
 # Router
-open = { version = "5", optional = true }
+open = { workspace = true, optional = true }
 freya-router = { workspace = true, optional = true }
 
 # Cache
 async-io = { workspace = true }
 
 # Remote Image
-ureq = { version = "3.1.2", optional = true }
+ureq = { workspace = true, optional = true }
 
 # Image viewer
-blocking = { version = "1.6.2" }
+blocking = { workspace = true }
 bytes = { version = "1.10.1" }
 
 # Other
@@ -76,9 +77,13 @@ freya-plotters-backend = { workspace = true, optional = true }
 # GIF
 gif = { version = "0.13.3", optional = true }
 
+# Markdown
+pulldown-cmark = { version = "0.13", optional = true }
+
 # Accessibility
 accesskit = { workspace = true }
 
 [dev-dependencies]
 freya = { path = "../freya" }
 freya-testing = { path = "../freya-testing" }
+pulldown-cmark = "0.13"

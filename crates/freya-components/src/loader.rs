@@ -62,7 +62,7 @@ impl CircularLoader {
     }
 }
 
-impl Render for CircularLoader {
+impl Component for CircularLoader {
     fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, circular_loader);
 

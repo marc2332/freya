@@ -77,7 +77,7 @@ impl Menu {
     }
 }
 
-impl RenderOwned for Menu {
+impl ComponentOwned for Menu {
     fn render(self) -> impl IntoElement {
         // Provide the menus ID generator
         use_provide_context(|| State::create(ROOT_MENU.0));
@@ -87,6 +87,7 @@ impl RenderOwned for Menu {
         use_provide_context(|| ROOT_MENU);
 
         rect()
+            .layer(Layer::Overlay)
             .corner_radius(8.0)
             .on_press(move |ev: Event<PressEventData>| {
                 ev.stop_propagation();
@@ -140,7 +141,7 @@ impl MenuContainer {
     }
 }
 
-impl RenderOwned for MenuContainer {
+impl ComponentOwned for MenuContainer {
     fn render(self) -> impl IntoElement {
         let focus = use_focus();
         let theme = get_theme!(self.theme, menu_container);
@@ -237,7 +238,7 @@ impl ChildrenExt for MenuItem {
     }
 }
 
-impl RenderOwned for MenuItem {
+impl ComponentOwned for MenuItem {
     fn render(self) -> impl IntoElement {
         let theme = get_theme!(self.theme, menu_item);
         let mut hovering = use_state(|| false);
@@ -323,7 +324,7 @@ impl RenderOwned for MenuItem {
 #[derive(Default, Clone, PartialEq)]
 pub struct MenuButton {
     children: Vec<Element>,
-    on_press: Option<EventHandler<()>>,
+    on_press: Option<EventHandler<Event<PressEventData>>>,
     key: DiffKey,
 }
 
@@ -344,24 +345,20 @@ impl MenuButton {
         Self::default()
     }
 
-    pub fn on_press(mut self, on_press: impl Into<EventHandler<()>>) -> Self {
+    pub fn on_press(mut self, on_press: impl Into<EventHandler<Event<PressEventData>>>) -> Self {
         self.on_press = Some(on_press.into());
         self
     }
 }
 
-impl RenderOwned for MenuButton {
+impl ComponentOwned for MenuButton {
     fn render(self) -> impl IntoElement {
         let mut menus = use_consume::<State<Vec<MenuId>>>();
         let parent_menu_id = use_consume::<MenuId>();
 
         MenuItem::new()
             .on_pointer_enter(move |_| close_menus_until(&mut menus, parent_menu_id))
-            .on_press(move |_| {
-                if let Some(on_press) = &self.on_press {
-                    on_press.call(());
-                }
-            })
+            .map(self.on_press.clone(), |el, on_press| el.on_press(on_press))
             .children(self.children)
     }
 
@@ -412,7 +409,7 @@ impl ChildrenExt for SubMenu {
     }
 }
 
-impl RenderOwned for SubMenu {
+impl ComponentOwned for SubMenu {
     fn render(self) -> impl IntoElement {
         let parent_menu_id = use_consume::<MenuId>();
         let mut menus = use_consume::<State<Vec<MenuId>>>();

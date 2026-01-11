@@ -8,11 +8,14 @@ use torin::{
 use crate::calendar::Calendar;
 #[cfg(feature = "router")]
 use crate::link::Link;
+#[cfg(feature = "markdown")]
+use crate::markdown::MarkdownViewer;
 use crate::{
     accordion::Accordion,
     button::Button,
     checkbox::Checkbox,
     chip::Chip,
+    color_picker::ColorPicker,
     define_theme,
     floating_tab::FloatingTab,
     input::Input,
@@ -69,9 +72,12 @@ pub struct Theme {
     pub resizable_handle: ResizableHandleThemePreference,
     pub floating_tab: FloatingTabThemePreference,
     pub slider: SliderThemePreference,
+    pub color_picker: ColorPickerThemePreference,
     pub select: SelectThemePreference,
     pub popup: PopupThemePreference,
     pub table: TableThemePreference,
+    #[cfg(feature = "markdown")]
+    pub markdown_viewer: MarkdownViewerThemePreference,
     pub chip: ChipThemePreference,
     pub menu_item: MenuItemThemePreference,
     pub menu_container: MenuContainerThemePreference,
@@ -333,6 +339,16 @@ define_theme! {
 
 define_theme! {
     %[component]
+    pub ColorPicker {
+        %[fields]
+        background: Color,
+        color: Color,
+        border_fill: Color,
+    }
+}
+
+define_theme! {
+    %[component]
     pub Select {
         %[fields]
         width: Size,
@@ -367,6 +383,29 @@ define_theme! {
         divider_fill: Color,
         corner_radius: CornerRadius,
         color: Color,
+    }
+}
+
+#[cfg(feature = "markdown")]
+define_theme! {
+    %[component]
+    pub MarkdownViewer {
+        %[fields]
+        color: Color,
+        background_code: Color,
+        color_code: Color,
+        background_blockquote: Color,
+        border_blockquote: Color,
+        background_divider: Color,
+        heading_h1: f32,
+        heading_h2: f32,
+        heading_h3: f32,
+        heading_h4: f32,
+        heading_h5: f32,
+        heading_h6: f32,
+        paragraph_size: f32,
+        code_font_size: f32,
+        table_font_size: f32,
     }
 }
 

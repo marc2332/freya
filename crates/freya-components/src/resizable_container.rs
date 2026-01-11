@@ -178,7 +178,7 @@ impl ResizableContainer {
     }
 }
 
-impl Render for ResizableContainer {
+impl Component for ResizableContainer {
     fn render(&self) -> impl IntoElement {
         let mut size = use_state(Area::default);
         use_provide_context(|| size);
@@ -258,7 +258,7 @@ impl ResizablePanel {
     }
 }
 
-impl Render for ResizablePanel {
+impl Component for ResizablePanel {
     fn render(&self) -> impl IntoElement {
         let mut registry = use_consume::<State<ResizableContext>>();
 
@@ -335,7 +335,7 @@ impl ResizableHandle {
     }
 }
 
-impl Render for ResizableHandle {
+impl Component for ResizableHandle {
     fn render(&self) -> impl IntoElement {
         let ResizableHandleTheme {
             background,

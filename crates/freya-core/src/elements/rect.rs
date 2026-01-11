@@ -1,3 +1,5 @@
+//! [rect()] acts as a generic container to contain other elements inside, like a box.
+
 use std::{
     any::Any,
     borrow::Cow,
@@ -47,7 +49,7 @@ use crate::{
     tree::DiffModifies,
 };
 
-/// [rect] acts as a generic container to contain other elements inside, like a box.
+/// [rect()] acts as a generic container to contain other elements inside, like a box.
 ///
 /// Its the equivalent of `view`/`div`/`container` in other UI models.
 ///
@@ -409,12 +411,12 @@ impl ElementExt for RectElement {
             diff.insert(DiffModifies::EFFECT);
         }
 
-        if !self.layout.layout.self_layout_eq(&rect.layout.layout) {
+        if !self.layout.self_layout_eq(&rect.layout.layout) {
             diff.insert(DiffModifies::STYLE);
             diff.insert(DiffModifies::LAYOUT);
         }
 
-        if !self.layout.layout.inner_layout_eq(&rect.layout.layout) {
+        if !self.layout.inner_layout_eq(&rect.layout.layout) {
             diff.insert(DiffModifies::STYLE);
             diff.insert(DiffModifies::INNER_LAYOUT);
         }
@@ -491,7 +493,7 @@ impl ElementExt for RectElement {
     fn render(&self, context: RenderContext) {
         let style = self.style();
 
-        let area = context.layout_node.area;
+        let area = context.layout_node.visible_area();
         let corner_radius = style.corner_radius.with_scale(context.scale_factor as f32);
 
         let mut path = PathBuilder::new();
