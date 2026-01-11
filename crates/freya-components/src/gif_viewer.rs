@@ -276,20 +276,20 @@ impl Component for GifViewer {
 
                 while let Ok(Some(frame)) = decoder.read_next_frame() {
                     // Handle disposal of previous frame
-                    if let Some(prev_frame) = frames.last() {
-                        if prev_frame.dispose == DisposalMethod::Background {
-                            let canvas = surface.canvas();
-                            let clear_rect = Rect::from_xywh(
-                                prev_frame.left,
-                                prev_frame.top,
-                                prev_frame.width,
-                                prev_frame.height,
-                            );
-                            canvas.save();
-                            canvas.clip_rect(clear_rect, None, false);
-                            canvas.clear(Color::TRANSPARENT);
-                            canvas.restore();
-                        }
+                    if let Some(prev_frame) = frames.last()
+                        && prev_frame.dispose == DisposalMethod::Background
+                    {
+                        let canvas = surface.canvas();
+                        let clear_rect = Rect::from_xywh(
+                            prev_frame.left,
+                            prev_frame.top,
+                            prev_frame.width,
+                            prev_frame.height,
+                        );
+                        canvas.save();
+                        canvas.clip_rect(clear_rect, None, false);
+                        canvas.clear(Color::TRANSPARENT);
+                        canvas.restore();
                     }
 
                     // Decode frame image
@@ -385,16 +385,13 @@ impl Component for GifViewer {
             if let Some(Asset::Cached(asset)) = asset_cacher.subscribe_asset(&asset_config) {
                 if let Some(bytes) = asset.downcast_ref::<Bytes>().cloned() {
                     let asset_task = spawn(async move {
-                        match stream_gif(bytes).await {
-                            Err(err) => {
-                                *status.write() = Status::Errored(err.to_string());
-                                #[cfg(debug_assertions)]
-                                tracing::error!(
-                                    "Failed to render GIF by ID <{}>, error: {err:?}",
-                                    asset_config.id
-                                );
-                            }
-                            _ => {}
+                        if let Err(err) = stream_gif(bytes).await {
+                            *status.write() = Status::Errored(err.to_string());
+                            #[cfg(debug_assertions)]
+                            tracing::error!(
+                                "Failed to render GIF by ID <{}>, error: {err:?}",
+                                asset_config.id
+                            );
                         }
                     });
                     assets_tasks.write().push(asset_task);
