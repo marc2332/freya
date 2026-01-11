@@ -2,7 +2,10 @@
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
 )]
-use freya::{prelude::*, winit::dpi::LogicalPosition};
+use freya::{
+    prelude::*,
+    winit::dpi::LogicalPosition,
+};
 
 fn main() {
     let (width, height) = (600, 600);
