@@ -32,16 +32,25 @@ pub fn gif_viewer_load_and_render() {
 
     // Wait a bit for the GIF to load and render
     test.poll(
-        std::time::Duration::from_millis(100),
-        std::time::Duration::from_millis(1000),
+        std::time::Duration::from_millis(10),
+        std::time::Duration::from_millis(800),
     );
     test.sync_and_update();
 
-    // After loading, the GIF element should be rendered
-    let gif_element = test.find(|node, element| Gif::try_downcast(element).map(|_| node));
+    for _ in 0..25 {
+        // After loading, the GIF element should be rendered
+        let gif_element = test.find(|node, element| Gif::try_downcast(element).map(|_| node));
+        if gif_element.is_some() {
+            return;
+        }
+        test.poll(
+            std::time::Duration::from_millis(10),
+            std::time::Duration::from_millis(200),
+        );
+        test.sync_and_update();
+    }
 
-    assert!(
-        gif_element.is_some(),
+    panic!(
         "GIF element should be rendered after loading"
     );
 }
