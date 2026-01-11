@@ -16,12 +16,16 @@ Examples:
 All the rust crates are located in the `./crates` folder, all those starting with freya- are related to Freya, the others are used by Freya as well but are generic, for example Torin.
 Rust examples are located in the `./examples` folder.
 The `./website` folder contains the Astro website.
+Documentation is located in `./crates/freya/src/_docs`.
 
 ## Rust
 
 - Avoid unwrap() in library / examples code unless it is completely necessary, prefer to handle errors explicitly. Its fine in tests though.
 - Don't use `super::` for imports, prefer `crate::`
 - Don't put unnecessary comments, if you are adding/refactoring a feature prefer to write doc comments `///` with a proper but not big explanation.
+- Always implement the `KeyExt` trait for components to enable key-based reconciliation.
+- Use `#[derive(PartialEq)]` for component structs to enable proper diffing and updates.
+- Use `use freya_core::prelude::*;` to import common types and traits in component files.
 
 ## General instructions
 
