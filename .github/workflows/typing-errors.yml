@@ -10,11 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Spell check with typos
+        uses: crate-ci/typos@v1.42.0
         with:
-          node-version: '20'
-      - name: Install cspell
-        run: npm install -g cspell
-      - name: Run cspell
-        run: cspell --no-progress --gitignore "**/*"
+          isolated: true
+          files: |
+            **/*
