@@ -31,7 +31,7 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash + std::fmt::D
 /// # Example
 ///
 /// ```rust, no_run
-/// use freya_radio::prelude::*;
+/// # use freya_radio::prelude::*;
 ///
 /// # struct Data;
 ///
@@ -53,7 +53,7 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
     /// # Example
     ///
     /// ```rust, no_run
-    /// use freya_radio::prelude::*;
+    /// # use freya_radio::prelude::*;
     ///
     /// # struct Data;
     ///
@@ -88,9 +88,8 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
 /// ## Basic usage
 ///
 /// ```rust, no_run
-/// /// # use freya::prelude::*;
+/// # use freya::prelude::*;
 /// # use freya_radio::prelude::*;
-/// use freya_radio::prelude::*;
 ///
 /// #[derive(Default)]
 /// struct AppState {
@@ -123,9 +122,8 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
 /// ## Global radio station for multi-window apps
 ///
 /// ```rust, ignore
-/// /// # use freya::prelude::*;
+/// # use freya::prelude::*;
 /// # use freya_radio::prelude::*;
-/// use freya_radio::prelude::*;
 ///
 /// let radio_station = RadioStation::create_global(AppState::default);
 ///
@@ -177,9 +175,8 @@ where
     /// # Example
     ///
     /// ```rust, ignore
-    /// /// # use freya::prelude::*;
+    /// # use freya::prelude::*;
     /// # use freya_radio::prelude::*;
-    /// use freya_radio::prelude::*;
     ///
     /// let radio_station = RadioStation::create_global(AppState::default);
     ///
@@ -395,9 +392,8 @@ where
 /// ## Basic usage
 ///
 /// ```rust, ignore
-/// /// # use freya::prelude::*;
+/// # use freya::prelude::*;
 /// # use freya_radio::prelude::*;
-/// use freya_radio::prelude::*;
 ///
 /// #[derive(PartialEq)]
 /// struct MyComponent {}
@@ -420,9 +416,8 @@ where
 /// ## Using reducers
 ///
 /// ```rust, ignore
-/// /// # use freya::prelude::*;
+/// # use freya::prelude::*;
 /// # use freya_radio::prelude::*;
-/// use freya_radio::prelude::*;
 ///
 /// #[derive(Clone)]
 /// struct CounterState {
@@ -757,9 +752,8 @@ impl<Channel> ChannelSelection<Channel> {
 /// # Example
 ///
 /// ```rust, ignore
-/// /// # use freya::prelude::*;
+/// # use freya::prelude::*;
 /// # use freya_radio::prelude::*;
-/// use freya_radio::prelude::*;
 ///
 /// fn app() -> impl IntoElement {
 ///     let radio_station = RadioStation::create_global(AppState::default);
@@ -786,9 +780,8 @@ where
 /// # Example
 ///
 /// ```rust, ignore
-/// /// # use freya::prelude::*;
+/// # use freya::prelude::*;
 /// # use freya_radio::prelude::*;
-/// use freya_radio::prelude::*;
 ///
 /// fn app() -> impl IntoElement {
 ///     use_init_radio_station::<AppState, AppChannel>(AppState::default);
@@ -840,9 +833,8 @@ where
 /// # Example
 ///
 /// ```rust, ignore
-/// /// # use freya::prelude::*;
+/// # use freya::prelude::*;
 /// # use freya_radio::prelude::*;
-/// use freya_radio::prelude::*;
 ///
 /// fn app() -> impl IntoElement {
 ///     use_init_radio_station::<AppState, AppChannel>(AppState::default);
@@ -876,7 +868,7 @@ where
 /// # Example
 ///
 /// ```rust, ignore
-/// use freya_radio::prelude::*;
+/// # use freya_radio::prelude::*;
 ///
 /// #[derive(Clone)]
 /// struct Counter {
