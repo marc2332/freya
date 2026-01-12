@@ -202,21 +202,21 @@ impl EmmitableEvent for TestEmmitableEvent {
 }
 
 struct TestExecutor {
-    emmited: Vec<TestEmmitableEvent>,
+    emitted: Vec<TestEmmitableEvent>,
     handler: fn(&TestEmmitableEvent) -> bool,
 }
 
 impl TestExecutor {
     pub fn new(handler: fn(&TestEmmitableEvent) -> bool) -> Self {
         Self {
-            emmited: Vec::default(),
+            emitted: Vec::default(),
             handler,
         }
     }
 
     pub fn without_handler() -> Self {
         Self {
-            emmited: Vec::default(),
+            emitted: Vec::default(),
             handler: |_| true,
         }
     }
@@ -233,7 +233,7 @@ impl EventsExecutor for TestExecutor {
 
     fn emit_event(&mut self, event: Self::Emmitable) -> bool {
         let allowed = (self.handler)(&event);
-        self.emmited.push(event);
+        self.emitted.push(event);
         allowed
     }
 }
@@ -520,7 +520,7 @@ fn state_updates_without_listeners() {
 }
 
 #[test]
-fn cancel_emmited_events_on_capture() {
+fn cancel_emitted_events_on_capture() {
     let mut test_measurer = TestMeasurer::default();
     let mut nodes_state = NodesState::default();
 

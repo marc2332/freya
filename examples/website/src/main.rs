@@ -243,13 +243,13 @@ impl Component for Code {
             let mut rust_config = HighlightConfiguration::new(
                 tree_sitter_rust::LANGUAGE.into(),
                 "rust",
-                tree_sitter_rust::HIGHLIGHTS_QUERY,
+                tree_sitter_rust::HIGHLIGHTTS_QUERY,
                 tree_sitter_rust::INJECTIONS_QUERY,
                 tree_sitter_rust::TAGS_QUERY,
             )
             .unwrap();
 
-            rust_config.configure(&HIGHLIGH_TAGS);
+            rust_config.configure(&HIGHLIGHT_TAGS);
 
             let mut highlighter = Highlighter::new();
 
@@ -267,14 +267,14 @@ impl Component for Code {
             for event in highlights {
                 match event.unwrap() {
                     HighlightEvent::Source { start, end } => {
-                        // Prepare the whole block even if it's splitted across multiple lines.
-                        let data_begining = rope.byte_slice(start..end);
+                        // Prepare the whole block even if it's split across multiple lines.
+                        let data_beginning = rope.byte_slice(start..end);
                         let starting_line = rope.char_to_line(start);
 
                         let mut back = String::new();
                         let mut line = starting_line;
 
-                        for (i, d) in data_begining.chars().enumerate() {
+                        for (i, d) in data_beginning.chars().enumerate() {
                             if d != '\n' {
                                 back.push(d);
                             }
@@ -288,7 +288,7 @@ impl Component for Code {
                     }
                     HighlightEvent::HighlightStart(s) => {
                         // Specify the type of the block
-                        prepared_block.0 = SyntaxType::from(HIGHLIGH_TAGS[s.0]);
+                        prepared_block.0 = SyntaxType::from(HIGHLIGHT_TAGS[s.0]);
                     }
                     HighlightEvent::HighlightEnd => {
                         // Push all the block chunks to their specified line
@@ -377,7 +377,7 @@ const CODE: &str = r#"fn app() -> impl IntoElement {
     rect().child(counter).child(actions)
 }"#;
 
-const HIGHLIGH_TAGS: [&str; 23] = [
+const HIGHLIGHT_TAGS: [&str; 23] = [
     "constructor",
     "attribute",
     "constant",

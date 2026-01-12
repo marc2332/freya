@@ -1,0 +1,6 @@
+[files]
+extend-exclude = ["**/*.gif"]
+
+[default.extend-words]
+langid = "langid"
+easer = "easer"

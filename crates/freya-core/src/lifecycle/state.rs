@@ -47,8 +47,8 @@ impl<T: 'static> MutView<'static, T> for State<T> {
     }
 
     fn write_if(&mut self, with: impl FnOnce(WriteRef<'static, T>) -> bool) {
-        let chnaged = with(self.key.write());
-        if chnaged {
+        let changed = with(self.key.write());
+        if changed {
             self.subscribers.write().borrow_mut().retain(|s| s.notify());
         }
     }

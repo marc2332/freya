@@ -14,5 +14,6 @@ jobs:
         uses: crate-ci/typos@v1.42.0
         with:
           isolated: true
+          config: ./_typos.toml
           files: |
             **/*

@@ -496,7 +496,7 @@ where
         let mut initial_phase_available_area = *available_area;
 
         // Initial phase: Measure the size and position of the children if the parent has a
-        // non-start cross alignment, non-start main aligment of a fit-content.
+        // non-start cross alignment, non-start main alignment of a fit-content.
         if needs_initial_phase {
             //  Measure the children
             for child_id in &children {

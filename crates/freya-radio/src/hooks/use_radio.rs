@@ -545,7 +545,7 @@ where
 
 /// Consume the state and subscribe using the given `channel`
 /// Any mutation using this radio will notify other subscribers to the same `channel`,
-/// unless you explicitely pass a custom channel using other methods as [`Radio::write_channel()`]
+/// unless you explicitly pass a custom channel using other methods as [`Radio::write_channel()`]
 pub fn use_radio<Value, Channel>(channel: Channel) -> Radio<Value, Channel>
 where
     Channel: RadioChannel<Value>,

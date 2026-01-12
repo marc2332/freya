@@ -43,7 +43,7 @@ impl Timeout {
 }
 
 /// Create a timeout with a given [Duration].
-/// This is useful to dinamically render a UI if only the timeout has not elapsed yet.
+/// This is useful to dynamically render a UI if only the timeout has not elapsed yet.
 ///
 /// You can reset it by calling [Timeout::reset],
 /// use [Timeout::elapsed] to check if it has timed out or not.

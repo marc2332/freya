@@ -10,7 +10,7 @@ use crate::{
     SourceEvent,
 };
 
-/// For every source event and its derivated events, a global equivalent event is emitted.
+/// For every source event and its derived events, a global equivalent event is emitted.
 pub fn measure_source_global_events<
     Key: NodeKey,
     Name: NameOfEvent,

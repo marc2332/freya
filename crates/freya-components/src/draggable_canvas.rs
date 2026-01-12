@@ -91,7 +91,7 @@ impl Draggable {
         }
     }
 
-    pub fn inital_position(mut self, initial_position: impl Into<CursorPoint>) -> Self {
+    pub fn initial_position(mut self, initial_position: impl Into<CursorPoint>) -> Self {
         self.initial_position = initial_position.into();
         self
     }
