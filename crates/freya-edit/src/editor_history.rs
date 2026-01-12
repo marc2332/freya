@@ -278,7 +278,7 @@ mod test {
         assert_eq!(rope.to_string(), "Hello World\n!!!!");
         assert_eq!(history.any_pending_changes(), 2);
 
-        // Dischard any changes that could have been redone
+        // Discharged any changes that could have been redone
         rope.insert_char(0, '.');
         history.push_change(HistoryChange::InsertChar {
             idx: 0,

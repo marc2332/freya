@@ -15,5 +15,4 @@ jobs:
         with:
           isolated: true
           config: ./_typos.toml
-          files: |
-            **/*
+          files: .

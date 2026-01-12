@@ -1,6 +1,75 @@
 [files]
-extend-exclude = ["**/*.gif"]
+extend-exclude = [
+  "**/*.gif",
+  "**/*.png",
+  "**/*.jpg",
+  "**/*.jpeg",
+  "**/*.webp",
+  "**/*.GIF",
+  "**/*.PNG",
+  "**/*.JPG",
+  "**/*.JPEG",
+  "**/*.WEBP",
+  "**/*.webm",
+  "**/*.WEBM",
+  "**/*.mp4",
+  "**/*.MP4",
+  "**/*.ttf",
+  "**/*.TTF",
+  "**/*.otf",
+  "**/*.OTF",
+  "**/*.woff",
+  "**/*.WOFF",
+  "**/*.woff2",
+  "**/*.WOFF2",
+  "**/*.eot",
+  "**/*.EOT",
+  "**/*.ttc",
+  "**/*.TTC",
+  "**/external/**/**/*",
+  "justfile",
+]
+
+[type.image]
+extend-glob = [
+  "*.png",
+  "*.PNG",
+  "*.gif",
+  "*.GIF",
+  "*.jpg",
+  "*.JPG",
+  "*.jpeg",
+  "*.JPEG",
+  "*.webp",
+  "*.WEBP",
+  "*.webm",
+  "*.WEBM",
+]
+check-file = false
+
+[type.video]
+extend-glob = ["*.mp4", "*.MP4"]
+check-file = false
+
+[type.font]
+extend-glob = [
+  "*.ttf",
+  "*.TTF",
+  "*.otf",
+  "*.OTF",
+  "*.woff",
+  "*.WOFF",
+  "*.woff2",
+  "*.WOFF2",
+  "*.eot",
+  "*.EOT",
+  "*.ttc",
+  "*.TTC",
+]
+check-file = false
 
 [default.extend-words]
 langid = "langid"
 easer = "easer"
+Ded = "Ded"
+trik = "trik"     # geom3trik

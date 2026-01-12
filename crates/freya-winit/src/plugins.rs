@@ -128,7 +128,7 @@ pub enum PluginEvent<'a> {
         tree: &'a Tree,
     },
 
-    /// After measuring the layout.
+    /// After measuringg the layout.
     FinishedMeasuringLayout {
         window: &'a Window,
         tree: &'a Tree,

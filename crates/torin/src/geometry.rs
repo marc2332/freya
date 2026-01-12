@@ -18,7 +18,7 @@ pub type Length = euclid::Length<f32, ()>;
 
 /// Area used by a Node, including its margins.
 pub type Area = euclid::Rect<f32, ()>;
-/// Remaining area avaiable to the children of a Node.
+/// Remaining area available to the children of a Node.
 pub struct Available;
 /// Area used by the parent of a Node.
 pub struct Parent;

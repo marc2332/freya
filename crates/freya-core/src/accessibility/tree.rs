@@ -283,7 +283,7 @@ impl AccessibilityTree {
         };
         let mut target_node = node_id;
         let mut emmitable_events = Vec::new();
-        // Iterate over the inherited scrollables from the closes to the farest
+        // Iterate over the inherited scrollables from the closes to the farthest
         for closest_scrollable in effect_state.scrollables.iter().rev() {
             // Every scrollable has a target node, the first scrollable target is the focused node that we want to make visible,
             // the rest scrollables will in the other hand just have the previous scrollable as target
