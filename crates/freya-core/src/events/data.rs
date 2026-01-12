@@ -162,7 +162,7 @@ impl WheelEventData {
 pub enum TouchPhase {
     Started,
     Moved,
-    ENewDed,
+    Ended,
     Cancelled,
 }
 
