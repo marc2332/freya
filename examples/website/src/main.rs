@@ -243,7 +243,7 @@ impl Component for Code {
             let mut rust_config = HighlightConfiguration::new(
                 tree_sitter_rust::LANGUAGE.into(),
                 "rust",
-                tree_sitter_rust::HIGHLIGHTTS_QUERY,
+                tree_sitter_rust::HIGHLIGHTS_QUERY,
                 tree_sitter_rust::INJECTIONS_QUERY,
                 tree_sitter_rust::TAGS_QUERY,
             )
