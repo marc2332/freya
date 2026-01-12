@@ -88,7 +88,8 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
 /// ## Basic usage
 ///
 /// ```rust, no_run
-/// use freya::prelude::*;
+/// /// # use freya::prelude::*;
+/// # use freya_radio::prelude::*;
 /// use freya_radio::prelude::*;
 ///
 /// #[derive(Default)]
@@ -122,18 +123,17 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
 /// ## Global radio station for multi-window apps
 ///
 /// ```rust, ignore
-/// use freya::prelude::*;
+/// /// # use freya::prelude::*;
+/// # use freya_radio::prelude::*;
 /// use freya_radio::prelude::*;
 ///
-/// fn main() {
-///     let radio_station = RadioStation::create_global(AppState::default);
+/// let radio_station = RadioStation::create_global(AppState::default);
 ///
-///     launch(
-///         LaunchConfig::new()
-///             .with_window(WindowConfig::new(Window1 { radio_station }))
-///             .with_window(WindowConfig::new(Window2 { radio_station })),
-///     );
-/// }
+/// launch(
+///     LaunchConfig::new()
+///         .with_window(WindowConfig::new(Window1 { radio_station }))
+///         .with_window(WindowConfig::new(Window2 { radio_station })),
+/// );
 /// ```
 pub struct RadioStation<Value, Channel>
 where
@@ -177,18 +177,17 @@ where
     /// # Example
     ///
     /// ```rust, ignore
-    /// use freya::prelude::*;
+    /// /// # use freya::prelude::*;
+    /// # use freya_radio::prelude::*;
     /// use freya_radio::prelude::*;
     ///
-    /// fn main() {
-    ///     let radio_station = RadioStation::create_global(AppState::default);
+    /// let radio_station = RadioStation::create_global(AppState::default);
     ///
-    ///     launch(
-    ///         LaunchConfig::new()
-    ///             .with_window(WindowConfig::new(Window1 { radio_station }))
-    ///             .with_window(WindowConfig::new(Window2 { radio_station })),
-    ///     );
-    /// }
+    /// launch(
+    ///     LaunchConfig::new()
+    ///         .with_window(WindowConfig::new(Window1 { radio_station }))
+    ///         .with_window(WindowConfig::new(Window2 { radio_station })),
+    /// );
     /// ```
     pub fn create_global(init_value: Value) -> Self {
         RadioStation {
@@ -396,7 +395,8 @@ where
 /// ## Basic usage
 ///
 /// ```rust, ignore
-/// use freya::prelude::*;
+/// /// # use freya::prelude::*;
+/// # use freya_radio::prelude::*;
 /// use freya_radio::prelude::*;
 ///
 /// #[derive(PartialEq)]
@@ -420,7 +420,8 @@ where
 /// ## Using reducers
 ///
 /// ```rust, ignore
-/// use freya::prelude::*;
+/// /// # use freya::prelude::*;
+/// # use freya_radio::prelude::*;
 /// use freya_radio::prelude::*;
 ///
 /// #[derive(Clone)]
@@ -756,7 +757,8 @@ impl<Channel> ChannelSelection<Channel> {
 /// # Example
 ///
 /// ```rust, ignore
-/// use freya::prelude::*;
+/// /// # use freya::prelude::*;
+/// # use freya_radio::prelude::*;
 /// use freya_radio::prelude::*;
 ///
 /// fn app() -> impl IntoElement {
@@ -784,7 +786,8 @@ where
 /// # Example
 ///
 /// ```rust, ignore
-/// use freya::prelude::*;
+/// /// # use freya::prelude::*;
+/// # use freya_radio::prelude::*;
 /// use freya_radio::prelude::*;
 ///
 /// fn app() -> impl IntoElement {
@@ -837,7 +840,8 @@ where
 /// # Example
 ///
 /// ```rust, ignore
-/// use freya::prelude::*;
+/// /// # use freya::prelude::*;
+/// # use freya_radio::prelude::*;
 /// use freya_radio::prelude::*;
 ///
 /// fn app() -> impl IntoElement {
