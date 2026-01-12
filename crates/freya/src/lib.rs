@@ -36,6 +36,7 @@
 //! - [UI and Components](self::_docs::ui_and_components)
 //! - [Elements](self::elements)
 //! - [Hooks](self::_docs::hooks)
+//! - [State](self::_docs::state_management)
 //! - [Development Setup](self::_docs::development_setup)
 //!
 //! ### Learn
