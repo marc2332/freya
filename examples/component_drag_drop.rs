@@ -14,7 +14,7 @@ fn app() -> impl IntoElement {
     rect()
         .content(Content::flex())
         .horizontal()
-        .children_iter((0..3).map(|i| {
+        .children((0..3).map(|i| {
             rect()
                 .center()
                 .width(Size::flex(1.))

@@ -35,7 +35,7 @@ fn app() -> impl IntoElement {
         .spacing(5.)
         .width(Size::fill())
         .padding(5.)
-        .children_iter(
+        .children(
             [
                 "https://images.dog.ceo/breeds/dachshund/dachshund-2033796_640.jpg",
                 "https://images.dog.ceo/breeds/cavapoo/doggo4.jpg",

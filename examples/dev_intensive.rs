@@ -55,6 +55,6 @@ fn app() -> impl IntoElement {
         rect()
             .width(Size::fill())
             .height(Size::fill())
-            .children_iter(items),
+            .children(items),
     )
 }

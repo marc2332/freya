@@ -93,7 +93,7 @@ fn app() -> impl IntoElement {
         Table::new(3)
             .child(
                 TableHead::new().child(
-                    TableRow::new().children_iter(columns.into_iter().enumerate().map(
+                    TableRow::new().children(columns.into_iter().enumerate().map(
                         |(n, (text, order_by))| {
                             TableCell::new()
                                 .key(n)
@@ -109,11 +109,11 @@ fn app() -> impl IntoElement {
                     )),
                 ),
             )
-            .child(TableBody::new().child(ScrollView::new().children_iter(
+            .child(TableBody::new().child(ScrollView::new().children(
                 filtered_data.enumerate().map(|(i, items)| {
                     TableRow::new()
                         .key(i)
-                        .children_iter(items.iter().enumerate().map(|(n, item)| {
+                        .children(items.iter().enumerate().map(|(n, item)| {
                             TableCell::new().key(n).child(item.to_string()).into()
                         }))
                         .into()

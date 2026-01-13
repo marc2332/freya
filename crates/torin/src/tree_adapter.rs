@@ -14,6 +14,7 @@ use crate::{
         Gaps,
         Inner,
         Length,
+        Size2D,
     },
 };
 
@@ -26,6 +27,9 @@ pub struct LayoutNode {
 
     /// Area inside this Node
     pub inner_area: AreaOf<Inner>,
+
+    /// Accumulated sizes inside this Node
+    pub inner_sizes: Size2D,
 
     /// Outer margin
     pub margin: Gaps,

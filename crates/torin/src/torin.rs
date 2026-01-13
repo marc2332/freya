@@ -3,7 +3,6 @@ use std::{
     mem,
 };
 
-pub use euclid::Rect;
 use itertools::Itertools;
 use rustc_hash::FxHashMap;
 
@@ -20,6 +19,7 @@ use crate::{
         AvailableAreaModel,
         Gaps,
         Length,
+        Size2D,
     },
     tree_adapter::{
         LayoutNode,
@@ -57,12 +57,12 @@ impl<Key: NodeKey> RootNodeCandidate<Key> {
     ) {
         if let RootNodeCandidate::Valid(current_candidate) = self {
             if current_candidate != proposed_candidate {
-                let mut continue_waking = true;
+                let mut continue_walking = true;
                 let closest_parent = tree_adapter.closest_common_parent(
                     proposed_candidate,
                     current_candidate,
                     |id| {
-                        if !continue_waking {
+                        if !continue_walking {
                             return;
                         }
                         let reason = dirty.get(&id);
@@ -77,7 +77,7 @@ impl<Key: NodeKey> RootNodeCandidate<Key> {
                             {
                                 // No need to continue checking if we encountered an ascendant
                                 // that is dirty but not with [DirtyReason::InnerLayout]
-                                continue_waking = false;
+                                continue_walking = false;
                             }
                             _ => {}
                         }
@@ -317,6 +317,7 @@ impl<Key: NodeKey> Torin<Key> {
             .unwrap_or(LayoutNode {
                 area: root_area,
                 inner_area: root_area.as_inner(),
+                inner_sizes: Size2D::default(),
                 margin: Gaps::default(),
                 offset_x: Length::default(),
                 offset_y: Length::default(),

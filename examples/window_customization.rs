@@ -2,10 +2,7 @@
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
 )]
-use freya::{
-    prelude::*,
-    winit::dpi::LogicalPosition,
-};
+use freya::{prelude::*, winit::dpi::LogicalPosition};
 
 fn main() {
     let (width, height) = (600, 600);
@@ -18,11 +15,18 @@ fn main() {
                 .with_transparency(true)
                 .with_window_attributes(move |attributes, el| {
                     // Centers the window
-                    let size = el.primary_monitor().unwrap().size();
-                    attributes.with_position(LogicalPosition {
-                        x: size.width as i32 / 2 - width / 2,
-                        y: size.height as i32 / 2 - height / 2,
-                    })
+                    if let Some(monitor) = el
+                        .primary_monitor()
+                        .or_else(|| el.available_monitors().next())
+                    {
+                        let size = monitor.size();
+                        attributes.with_position(LogicalPosition {
+                            x: size.width as i32 / 2 - width / 2,
+                            y: size.height as i32 / 2 - height / 2,
+                        })
+                    } else {
+                        attributes
+                    }
                 })
                 .with_window_handle(|window| {
                     let _ = window.set_cursor_hittest(false);

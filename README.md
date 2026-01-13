@@ -90,6 +90,8 @@ Make sure to have [Development Setup](https://docs.rs/freya/0.3/freya/_docs/deve
 
 Clone this repo and run:
 
+> **Note:** After cloning, make sure to initialize and update the git submodules: `git submodule update --init --recursive`
+
 ```shell
 cargo run --example counter
 ```

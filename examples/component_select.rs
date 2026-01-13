@@ -22,7 +22,7 @@ fn app() -> impl IntoElement {
     rect().center().expanded().horizontal().spacing(6.).child(
         Select::new()
             .selected_item(values[selected_select()].to_string())
-            .children_iter(values.iter().enumerate().map(|(i, val)| {
+            .children(values.iter().enumerate().map(|(i, val)| {
                 MenuItem::new()
                     .selected(selected_select() == i)
                     .on_press(move |_| selected_select.set(i))

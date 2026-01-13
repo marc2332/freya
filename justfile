@@ -18,7 +18,7 @@ t-layout:
     cargo nextest run --package torin
 
 d:
-    RUSTDOCFLAGS="--cfg docsrs" cargo +nightly-2025-09-25 doc --workspace --features "all, docs" --open
+    RUSTDOCFLAGS="--cfg docsrs" cargo +nightly-2025-09-25 doc --no-deps --workspace --features "all, docs" --open
 
 tc:
     cargo nextest run --workspace --exclude examples --features all-tests

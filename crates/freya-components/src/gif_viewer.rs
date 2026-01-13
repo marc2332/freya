@@ -1,7 +1,6 @@
 use std::{
     any::Any,
     borrow::Cow,
-    cell::RefCell,
     collections::HashMap,
     fs,
     hash::{
@@ -244,66 +243,101 @@ impl AccessibilityExt for GifViewer {
     }
 }
 
+enum Status {
+    Playing(usize),
+    Decoding,
+    Errored(String),
+}
+
 impl Component for GifViewer {
     fn render(&self) -> impl IntoElement {
         let asset_config = AssetConfiguration::new(&self.source, AssetAge::default());
         let asset_data = use_asset(&asset_config);
-        let mut asset = use_state::<Option<GifData>>(|| None);
+        let mut status = use_state(|| Status::Decoding);
+        let mut cached_frames = use_state::<Option<Rc<CachedGifFrames>>>(|| None);
         let mut asset_cacher = use_hook(AssetCacher::get);
         let mut assets_tasks = use_state::<Vec<TaskHandle>>(Vec::new);
 
         let mut stream_gif = async move |bytes: Bytes| -> anyhow::Result<()> {
-            loop {
+            // Decode and pre-composite all frames upfront
+            let frames_data = unblock(move || -> anyhow::Result<Vec<CachedFrame>> {
                 let mut decoder_options = gif::DecodeOptions::new();
                 decoder_options.set_color_output(gif::ColorOutput::RGBA);
                 let cursor = std::io::Cursor::new(&bytes);
-                let mut decoder = decoder_options.read_info(cursor.clone())?;
-                let surface = raster_n32_premul((decoder.width() as i32, decoder.height() as i32))
-                    .context("Failed to create GIF surface")?;
-                loop {
-                    match decoder.read_next_frame() {
-                        Ok(Some(frame)) => {
-                            // Render new frame
-                            let row_bytes = (frame.width * 4) as usize;
-                            let data = unsafe { Data::new_bytes(&frame.buffer) };
-                            let isize = ISize::new(frame.width as i32, frame.height as i32);
-                            let gif = unblock(move || {
-                                raster_from_data(
-                                    &ImageInfo::new(
-                                        isize,
-                                        ColorType::RGBA8888,
-                                        AlphaType::Unpremul,
-                                        None,
-                                    ),
-                                    data,
-                                    row_bytes,
-                                )
-                                .context("Failed to crate GIF Frame.")
-                            })
-                            .await?;
-                            *asset.write() = Some(GifData {
-                                holder: Rc::new(RefCell::new(gif)),
-                                surface: Rc::new(RefCell::new(surface.clone())),
-                                dispose: frame.dispose,
-                                left: frame.left as f32,
-                                top: frame.top as f32,
-                                width: frame.width as f32,
-                                height: frame.height as f32,
-                            });
+                let mut decoder = decoder_options.read_info(cursor)?;
+                let width = decoder.width() as i32;
+                let height = decoder.height() as i32;
 
-                            let duration = Duration::from_millis(frame.delay as u64 * 10);
-                            Timer::after(duration).await;
-                        }
+                // Create a surface for compositing frames
+                let mut surface =
+                    raster_n32_premul((width, height)).context("Failed to create GIF surface")?;
 
-                        Ok(None) => {
-                            // No more framess, so we repeat
-                            break;
-                        }
-                        // TODO: Something went wrong
-                        Err(_e) => {
-                            break;
-                        }
+                let mut frames: Vec<CachedFrame> = Vec::new();
+
+                while let Ok(Some(frame)) = decoder.read_next_frame() {
+                    // Handle disposal of previous frame
+                    if let Some(prev_frame) = frames.last()
+                        && prev_frame.dispose == DisposalMethod::Background
+                    {
+                        let canvas = surface.canvas();
+                        let clear_rect = Rect::from_xywh(
+                            prev_frame.left,
+                            prev_frame.top,
+                            prev_frame.width,
+                            prev_frame.height,
+                        );
+                        canvas.save();
+                        canvas.clip_rect(clear_rect, None, false);
+                        canvas.clear(Color::TRANSPARENT);
+                        canvas.restore();
                     }
+
+                    // Decode frame image
+                    let row_bytes = (frame.width * 4) as usize;
+                    let data = unsafe { Data::new_bytes(&frame.buffer) };
+                    let isize = ISize::new(frame.width as i32, frame.height as i32);
+                    let frame_image = raster_from_data(
+                        &ImageInfo::new(isize, ColorType::RGBA8888, AlphaType::Unpremul, None),
+                        data,
+                        row_bytes,
+                    )
+                    .context("Failed to create GIF Frame.")?;
+
+                    // Composite frame onto surface
+                    surface.canvas().draw_image(
+                        &frame_image,
+                        (frame.left as f32, frame.top as f32),
+                        None,
+                    );
+
+                    // Take a snapshot of the fully composed frame
+                    let composed_image = surface.image_snapshot();
+
+                    frames.push(CachedFrame {
+                        image: composed_image,
+                        dispose: frame.dispose,
+                        left: frame.left as f32,
+                        top: frame.top as f32,
+                        width: frame.width as f32,
+                        height: frame.height as f32,
+                        delay: Duration::from_millis(frame.delay as u64 * 10),
+                    });
+                }
+
+                Ok(frames)
+            })
+            .await?;
+
+            let frames = Rc::new(CachedGifFrames {
+                frames: frames_data,
+            });
+            *cached_frames.write() = Some(frames.clone());
+
+            // Now loop through cached frames
+            loop {
+                for (i, frame) in frames.frames.iter().enumerate() {
+                    *status.write() = Status::Playing(i);
+                    Timer::after(frame.delay).await;
                 }
             }
         };
@@ -351,13 +385,13 @@ impl Component for GifViewer {
             if let Some(Asset::Cached(asset)) = asset_cacher.subscribe_asset(&asset_config) {
                 if let Some(bytes) = asset.downcast_ref::<Bytes>().cloned() {
                     let asset_task = spawn(async move {
-                        match stream_gif(bytes).await {
+                        if let Err(err) = stream_gif(bytes).await {
+                            *status.write() = Status::Errored(err.to_string());
                             #[cfg(debug_assertions)]
-                            Err(err) => tracing::error!(
+                            tracing::error!(
                                 "Failed to render GIF by ID <{}>, error: {err:?}",
                                 asset_config.id
-                            ),
-                            _ => {}
+                            );
                         }
                     });
                     assets_tasks.write().push(asset_task);
@@ -371,14 +405,22 @@ impl Component for GifViewer {
             }
         });
 
-        match (asset_data, asset.read().clone()) {
-            (Asset::Cached(_), Some(asset)) => gif(asset)
-                .accessibility(self.accessibility.clone())
-                .a11y_role(AccessibilityRole::Image)
-                .a11y_focusable(true)
-                .layout(self.layout.clone())
-                .image_data(self.image_data.clone())
-                .into_element(),
+        match (asset_data, cached_frames.read().as_ref()) {
+            (Asset::Cached(_), Some(frames)) => match &*status.read() {
+                Status::Playing(frame_idx) => gif(frames.clone(), *frame_idx)
+                    .accessibility(self.accessibility.clone())
+                    .a11y_role(AccessibilityRole::Image)
+                    .a11y_focusable(true)
+                    .layout(self.layout.clone())
+                    .image_data(self.image_data.clone())
+                    .into_element(),
+                Status::Decoding => rect()
+                    .layout(self.layout.clone())
+                    .center()
+                    .child(CircularLoader::new())
+                    .into_element(),
+                Status::Errored(err) => err.clone().into_element(),
+            },
             (Asset::Cached(_), _) | (Asset::Pending | Asset::Loading, _) => rect()
                 .layout(self.layout.clone())
                 .center()
@@ -414,11 +456,12 @@ impl From<Gif> for Element {
     }
 }
 
-fn gif(gif_data: GifData) -> Gif {
+fn gif(frames: Rc<CachedGifFrames>, frame_idx: usize) -> Gif {
     Gif {
         key: DiffKey::None,
         element: GifElement {
-            gif_data,
+            frames,
+            frame_idx,
             accessibility: AccessibilityData::default(),
             layout: LayoutData::default(),
             event_handlers: HashMap::default(),
@@ -460,13 +503,24 @@ impl AccessibilityExt for Gif {
 }
 impl MaybeExt for Gif {}
 
-#[derive(PartialEq, Clone)]
+#[derive(Clone)]
 pub struct GifElement {
     accessibility: AccessibilityData,
     layout: LayoutData,
     event_handlers: FxHashMap<EventName, EventHandlerType>,
-    gif_data: GifData,
+    frames: Rc<CachedGifFrames>,
+    frame_idx: usize,
     image_data: ImageData,
+}
+
+impl PartialEq for GifElement {
+    fn eq(&self, other: &Self) -> bool {
+        self.accessibility == other.accessibility
+            && self.layout == other.layout
+            && self.image_data == other.image_data
+            && Rc::ptr_eq(&self.frames, &other.frames)
+            && self.frame_idx == other.frame_idx
+    }
 }
 
 impl ElementExt for GifElement {
@@ -492,7 +546,7 @@ impl ElementExt for GifElement {
             diff.insert(DiffModifies::LAYOUT);
         }
 
-        if self.gif_data != image.gif_data {
+        if self.frame_idx != image.frame_idx || !Rc::ptr_eq(&self.frames, &image.frames) {
             diff.insert(DiffModifies::LAYOUT);
             diff.insert(DiffModifies::STYLE);
         }
@@ -529,7 +583,8 @@ impl ElementExt for GifElement {
     }
 
     fn measure(&self, context: LayoutContext) -> Option<(Size2D, Rc<dyn Any>)> {
-        let image = self.gif_data.holder.borrow();
+        let frame = &self.frames.frames[self.frame_idx];
+        let image = &frame.image;
 
         let image_width = image.width() as f32;
         let image_height = image.height() as f32;
@@ -583,29 +638,11 @@ impl ElementExt for GifElement {
             context.layout_node.area.max_y(),
         );
 
-        let frame = self.gif_data.holder.borrow();
+        let current_frame = &self.frames.frames[self.frame_idx];
 
-        if self.gif_data.dispose == DisposalMethod::Background {
-            let rect = Rect::from_xywh(
-                self.gif_data.left,
-                self.gif_data.top,
-                self.gif_data.width,
-                self.gif_data.height,
-            );
-            context.canvas.save();
-            context.canvas.clip_rect(rect, None, false);
-            context.canvas.clear(Color::TRANSPARENT);
-            context.canvas.restore();
-        }
-
-        self.gif_data.surface.borrow_mut().canvas().draw_image(
-            &*frame,
-            (self.gif_data.left, self.gif_data.top),
-            None,
-        );
-
+        // Simply render the pre-composed frame image directly
         context.canvas.draw_image_rect_with_sampling_options(
-            self.gif_data.surface.borrow_mut().image_snapshot(),
+            &current_frame.image,
             None,
             rect,
             sampling,
@@ -614,19 +651,16 @@ impl ElementExt for GifElement {
     }
 }
 
-#[derive(Clone)]
-struct GifData {
-    holder: Rc<RefCell<SkImage>>,
-    surface: Rc<RefCell<freya_engine::prelude::Surface>>,
+struct CachedFrame {
+    image: SkImage,
     dispose: DisposalMethod,
     left: f32,
     top: f32,
     width: f32,
     height: f32,
+    delay: Duration,
 }
 
-impl PartialEq for GifData {
-    fn eq(&self, other: &Self) -> bool {
-        Rc::ptr_eq(&self.holder, &other.holder)
-    }
+struct CachedGifFrames {
+    frames: Vec<CachedFrame>,
 }
