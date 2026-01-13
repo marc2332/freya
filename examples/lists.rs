@@ -26,7 +26,7 @@ fn app() -> impl IntoElement {
         .horizontal()
         .spacing(24.0)
         .background((0, 0, 0))
-        .children_iter(
+        .children(
             state
                 .read()
                 .iter()
@@ -51,7 +51,7 @@ impl ComponentOwned for List {
     fn render(mut self) -> impl IntoElement {
         let mut count = use_state(|| 2);
 
-        rect().children_iter(
+        rect().children(
             (0..count())
                 .map(|i| {
                     rect()

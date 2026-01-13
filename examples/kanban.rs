@@ -115,7 +115,7 @@ fn column(mut tasks: State<Vec<Task>>, status: TaskStatus, title: String) -> imp
                         .font_size(18.0)
                         .font_weight(FontWeight::BOLD),
                 )
-                .children_iter(
+                .children(
                     tasks
                         .read()
                         .iter()

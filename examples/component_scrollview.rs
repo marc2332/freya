@@ -15,7 +15,7 @@ fn app() -> impl IntoElement {
                 rect()
                     .spacing(6.)
                     .padding(6.)
-                    .children_iter((0..30).map(|_| {
+                    .children((0..30).map(|_| {
                         rect()
                             .width(Size::fill())
                             .height(Size::px(80.))
@@ -30,7 +30,7 @@ fn app() -> impl IntoElement {
                     .direction(Direction::Horizontal)
                     .spacing(6.)
                     .padding(6.)
-                    .children_iter((0..30).map(|_| {
+                    .children((0..30).map(|_| {
                         rect()
                             .width(Size::px(80.))
                             .height(Size::fill())
