@@ -5,6 +5,7 @@ pub enum Content {
     Normal,
     Fit,
     Flex,
+    Wrap,
 }
 
 impl Content {
@@ -15,6 +16,14 @@ impl Content {
     pub fn is_flex(&self) -> bool {
         self == &Self::Flex
     }
+
+    pub fn is_wrap(&self) -> bool {
+        self == &Self::Wrap
+    }
+
+    pub fn allows_alignments(&self) -> bool {
+        matches!(self, Self::Normal | Self::Flex | Self::Fit)
+    }
 }
 
 impl Content {
@@ -23,6 +32,7 @@ impl Content {
             Self::Normal => "normal".to_owned(),
             Self::Fit => "fit".to_owned(),
             Self::Flex => "flex".to_owned(),
+            Self::Wrap => "wrap".to_owned(),
         }
     }
 }

@@ -21,11 +21,11 @@ fn app() -> impl IntoElement {
     let cols = 30;
     let rows = 30;
 
-    rect().children_iter((0..rows).map(|row| {
+    rect().children((0..rows).map(|row| {
         rect()
             .height(Size::percent(100. / rows as f32))
             .horizontal()
-            .children_iter((0..cols).map(|col| {
+            .children((0..cols).map(|col| {
                 rect()
                     .key((row, col))
                     .width(Size::percent(100. / cols as f32))

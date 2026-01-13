@@ -22,7 +22,7 @@ fn app() -> impl IntoElement {
             rect()
                 .spacing(8.)
                 .horizontal()
-                .children_iter((0..3).map(|i| {
+                .children((0..3).map(|i| {
                     Chip::new()
                         .key(i)
                         .selected(selected.read().contains(&i))
@@ -41,7 +41,7 @@ fn app() -> impl IntoElement {
             rect()
                 .spacing(8.)
                 .horizontal()
-                .children_iter((0..3).map(|i| {
+                .children((0..3).map(|i| {
                     Chip::new()
                         .key(i)
                         .enabled(selected.read().contains(&i))

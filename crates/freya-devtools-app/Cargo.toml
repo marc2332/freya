@@ -23,7 +23,7 @@ freya-radio = { workspace = true }
 freya-devtools = { workspace = true }
 
 accesskit = { workspace = true }
-serde_json = "1"
+serde_json = { workspace = true }
 
 async-tungstenite = { version = "0.31" }
 futures-util = { workspace = true }

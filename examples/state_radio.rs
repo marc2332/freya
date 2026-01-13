@@ -34,7 +34,7 @@ fn app() -> impl IntoElement {
     rect()
         .horizontal()
         .child(Button::new().on_press(on_press).child("Add new list"))
-        .children_iter(
+        .children(
             radio
                 .read()
                 .lists
@@ -59,7 +59,7 @@ impl Component for ListComp {
                     .on_press(move |_| radio.write().lists[list_n].push("Hello, World".to_string()))
                     .child("New Item"),
             )
-            .children_iter(
+            .children(
                 radio.read().lists[list_n]
                     .iter()
                     .enumerate()

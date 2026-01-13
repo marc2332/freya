@@ -16,7 +16,7 @@ fn app() -> impl IntoElement {
         .center()
         .expanded()
         .spacing(4.)
-        .children_iter((0..3).map(|_| {
+        .children((0..3).map(|_| {
             Accordion::new()
                 .header("Click to expand!")
                 .child(LOREM_IPSUM)

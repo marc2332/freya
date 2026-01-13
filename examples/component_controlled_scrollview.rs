@@ -18,7 +18,7 @@ fn app() -> impl IntoElement {
             ScrollView::new_controlled(scroll_controller)
                 .width(Size::flex(1.))
                 .spacing(6.)
-                .children_iter((0..30).map(|_| {
+                .children((0..30).map(|_| {
                     rect()
                         .width(Size::fill())
                         .height(Size::px(80.))
@@ -30,7 +30,7 @@ fn app() -> impl IntoElement {
             ScrollView::new_controlled(scroll_controller)
                 .width(Size::flex(1.))
                 .spacing(6.)
-                .children_iter((0..30).map(|_| {
+                .children((0..30).map(|_| {
                     rect()
                         .width(Size::fill())
                         .height(Size::px(80.))

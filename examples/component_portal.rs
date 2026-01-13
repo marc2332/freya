@@ -116,11 +116,11 @@ fn app() -> impl IntoElement {
         .child(
             rect()
                 .spacing(6.)
-                .children_iter(grid.read().cells.chunks(grid.read().size).map(|row| {
+                .children(grid.read().cells.chunks(grid.read().size).map(|row| {
                     rect()
                         .spacing(6.)
                         .horizontal()
-                        .children_iter(row.iter().map(|cell| {
+                        .children(row.iter().map(|cell| {
                             Portal::new(cell.id)
                                 .key(cell.id)
                                 .width(Size::px(size))
