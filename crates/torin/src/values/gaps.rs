@@ -22,7 +22,7 @@ impl From<f32> for Gaps {
 
 impl From<(f32, f32)> for Gaps {
     fn from((vertical, horizontal): (f32, f32)) -> Self {
-        Gaps::new(vertical, horizontal, vertical, horizontal)
+        Gaps::new_symmetric(vertical, horizontal)
     }
 }
 
