@@ -22,7 +22,7 @@ impl From<f32> for Gaps {
 
 impl From<(f32, f32)> for Gaps {
     fn from((vertical, horizontal): (f32, f32)) -> Self {
-        Gaps::new(vertical, horizontal, vertical, horizontal)
+        Gaps::new_symmetric(vertical, horizontal)
     }
 }
 
@@ -44,6 +44,10 @@ impl Gaps {
 
     pub const fn new_all(gaps: f32) -> Self {
         Self::new(gaps, gaps, gaps, gaps)
+    }
+
+    pub const fn new_symmetric(vertical: f32, horizontal: f32) -> Self {
+        Self::new(vertical, horizontal, vertical, horizontal)
     }
 
     pub fn fill_vertical(&mut self, value: f32) {
