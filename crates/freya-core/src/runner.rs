@@ -959,7 +959,7 @@ impl Runner {
                         self.find_scope_root_parent_info(parent_id, parent_node_id, scope_id)
                             .1
                     } else {
-                        // Only do it for non-scope-roots because the root is is always in the same postion therefore it doesnt make sense to resync from its parent
+                        // Only do it for non-scope-roots because the root is is always in the same position therefore it doesnt make sense to resync from its parent
                         removed[removed.len() - 1]
                     };
 
@@ -1104,7 +1104,7 @@ impl Runner {
                 let parent_node_id = scope.borrow().parent_node_id_in_parent;
                 self.find_scope_root_parent_info(parent_id, parent_node_id, scope_id)
             } else {
-                // Only do it for non-scope-roots because the root is is always in the same postion therefore it doesnt make sense to resync from its parent
+                // Only do it for non-scope-roots because the root is is always in the same position therefore it doesnt make sense to resync from its parent
                 parents_to_resync_scopes.insert(Box::from(&added[..added.len() - 1]));
                 (
                     scope

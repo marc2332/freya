@@ -207,7 +207,7 @@ impl RectElement {
         //
         // Let's call this the outer border path.
         let (outer_rrect, outer_corner_radius) = {
-            // Calculuate the outer corner radius for the border.
+            // Calculate the outer corner radius for the border.
             let corner_radius = CornerRadius {
                 top_left: Self::outer_border_path_corner_radius(
                     border_alignment,
@@ -265,7 +265,7 @@ impl RectElement {
 
         // After the outer path, we will then move to the inner bounds of the border.
         let (inner_rrect, inner_corner_radius) = {
-            // Calculuate the inner corner radius for the border.
+            // Calculate the inner corner radius for the border.
             let corner_radius = CornerRadius {
                 top_left: Self::inner_border_path_corner_radius(
                     border_alignment,

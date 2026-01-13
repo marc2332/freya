@@ -32,7 +32,7 @@ pub struct LayoutMetadata {
     pub root_area: Area,
 }
 
-/// Contains the best Root node candidate from where to start measuring
+/// Contains the best Root node candidate from where to start measuringg
 #[derive(PartialEq, Debug, Clone)]
 pub enum RootNodeCandidate<Key: NodeKey> {
     /// A valid Node ID
@@ -110,7 +110,7 @@ pub struct Torin<Key: NodeKey> {
     /// Invalid registered nodes since previous layout measurement
     pub dirty: FxHashMap<Key, DirtyReason>,
 
-    /// Best Root node candidate from where to start measuring
+    /// Best Root node candidate from where to start measuringg
     pub root_node_candidate: RootNodeCandidate<Key>,
 }
 
@@ -273,7 +273,7 @@ impl<Key: NodeKey> Torin<Key> {
         self.root_node_candidate.clone()
     }
 
-    /// Find the best root Node from where to start measuring
+    /// Find the best root Node from where to start measuringg
     pub fn find_best_root(&mut self, tree_adapter: &mut impl TreeAdapter<Key>) {
         if self.results.is_empty() {
             return;
@@ -298,7 +298,7 @@ impl<Key: NodeKey> Torin<Key> {
         measurer: &mut Option<impl LayoutMeasurer<Key>>,
         tree_adapter: &mut impl TreeAdapter<Key>,
     ) {
-        // If there are previosuly cached results
+        // If there are previously cached results
         // But no dirty nodes, we can simply skip the measurement
         // as this means no changes has been made to the layout
         if self.dirty.is_empty() && !self.results.is_empty() {

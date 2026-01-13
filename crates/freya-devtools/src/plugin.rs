@@ -92,8 +92,7 @@ impl DevtoolsPlugin {
         let mut new_nodes = Vec::new();
 
         tree.traverse_depth(|node_id| {
-            // Ignore root elemen
-            // if node.height() >= 1 {
+            // Ignore root element
             let height = tree.heights.get(&node_id).cloned().unwrap();
             let parent_id = tree.parents.get(&node_id).cloned();
             let layout_node = tree.layout.get(&node_id).cloned().unwrap();
@@ -120,7 +119,6 @@ impl DevtoolsPlugin {
                 area: layout_node.area.div(scale_factor),
                 inner_area: layout_node.inner_area.div(scale_factor),
             });
-            // }
         });
 
         // Update nodes snapshot

@@ -217,7 +217,7 @@ fn is_ftl_file(entry: &std::path::Path) -> bool {
 
 /// Initialize the i18n provider.
 ///
-/// See [I18n::new] for a manual I18n initilization where you can also handle errors.
+/// See [I18n::new] for a manual I18n initialization where you can also handle errors.
 pub fn use_init_i18n(init: impl FnOnce() -> I18nConfig) -> I18n {
     use_provide_context(move || {
         // Coverage false -ve: See https://github.com/xd009642/tarpaulin/issues/1675

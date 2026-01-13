@@ -17,7 +17,7 @@ fn app() -> impl IntoElement {
 #[derive(Routable, Clone, PartialEq)]
 #[rustfmt::skip]
 pub enum Route {
-    #[layout(AppBotomBar)]
+    #[layout(AppBottomBar)]
         #[route("/")]
         Home,
         #[route("/settings")]
@@ -25,8 +25,8 @@ pub enum Route {
 }
 
 #[derive(PartialEq)]
-struct AppBotomBar;
-impl Component for AppBotomBar {
+struct AppBottomBar;
+impl Component for AppBottomBar {
     fn render(&self) -> impl IntoElement {
         NativeRouter::new().child(
             rect()

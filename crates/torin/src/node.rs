@@ -18,7 +18,7 @@ use crate::{
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(PartialEq, Clone, Debug, Default)]
 pub struct Node {
-    /// Dimentions
+    /// Dimensions
     pub width: Size,
     pub height: Size,
 

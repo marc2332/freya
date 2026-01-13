@@ -335,7 +335,7 @@ where
                     true,
                 );
 
-                // Re apply min max values after measurin with inner sized
+                // Re apply min max values after measuring with inner sized
                 // Margins are set to 0 because area.size already contains the margins
                 if node.width.inner_sized() {
                     parent_area.size.width = node.width.min_max(
@@ -497,7 +497,7 @@ where
         let mut initial_phase_available_area = *available_area;
 
         // Initial phase: Measure the size and position of the children if the parent has a
-        // non-start cross alignment, non-start main aligment of a fit-content.
+        // non-start cross alignment, non-start main alignment of a fit-content.
         if needs_initial_phase {
             //  Measure the children
             for child_id in &children {
@@ -965,11 +965,11 @@ where
         inner_area: &mut AreaOf<Inner>,
         inner_sizes: &mut Size2D,
         child_area: &Area,
-        is_last_sibiling: bool,
+        is_last_sibilin: bool,
         phase: Phase,
     ) {
         // Only apply the spacing to elements after `i > 0` and `i < len - 1`
-        let spacing = if is_last_sibiling {
+        let spacing = if is_last_sibilin {
             Length::default()
         } else {
             parent_node.spacing

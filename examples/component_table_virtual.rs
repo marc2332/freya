@@ -75,7 +75,7 @@ fn app() -> impl IntoElement {
     };
 
     let mut on_column_head_click = move |column_order: &OrderBy| {
-        // Change order diection
+        // Change order direction
         if &*order.read() == column_order {
             if *order_direction.read() == OrderDirection::Up {
                 order_direction.set(OrderDirection::Down)
