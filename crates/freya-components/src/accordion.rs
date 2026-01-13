@@ -28,7 +28,7 @@ use crate::{
 ///        .center()
 ///        .expanded()
 ///        .spacing(4.)
-///        .children_iter((0..2).map(|_| {
+///        .children((0..2).map(|_| {
 ///            Accordion::new()
 ///                .header("Click to expand!")
 ///                .child(LOREM_IPSUM)

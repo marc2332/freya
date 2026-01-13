@@ -217,9 +217,9 @@ impl VisibleSizeExt for VisibleSize {
 pub trait ChildrenExt: Sized {
     fn get_children(&mut self) -> &mut Vec<Element>;
 
-    fn children(mut self, children_iter: impl IntoIterator<Item = Element>) -> Self        
+    fn children(mut self, children: impl IntoIterator<Item = Element>) -> Self        
     {
-        self.get_children().extend(children_iter);
+        self.get_children().extend(children);
         self
     }
 

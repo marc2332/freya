@@ -31,7 +31,7 @@ pub enum ButtonSegmentStatus {
 /// # use std::collections::HashSet;
 /// fn app() -> impl IntoElement {
 ///     let mut selected = use_state(|| HashSet::from([1]));
-///     SegmentedButton::new().children_iter((0..2).map(|i| {
+///     SegmentedButton::new().children((0..2).map(|i| {
 ///         ButtonSegment::new()
 ///             .key(i)
 ///             .selected(selected.read().contains(&i))
@@ -212,7 +212,7 @@ impl Component for ButtonSegment {
 /// # use std::collections::HashSet;
 /// fn app() -> impl IntoElement {
 ///     let mut selected = use_state(|| HashSet::from([1]));
-///     SegmentedButton::new().children_iter((0..2).map(|i| {
+///     SegmentedButton::new().children((0..2).map(|i| {
 ///         ButtonSegment::new()
 ///             .key(i)
 ///             .selected(selected.read().contains(&i))
