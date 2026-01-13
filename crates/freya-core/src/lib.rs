@@ -153,10 +153,7 @@ pub mod integration {
         animation_clock::AnimationClock,
         data::*,
         element::*,
-        elements::{
-            extensions::*,
-            label::LabelElement,
-        },
+        elements::extensions::*,
         events::{
             data::*,
             executor::*,

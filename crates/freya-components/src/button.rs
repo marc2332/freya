@@ -213,10 +213,11 @@ impl Button {
     pub fn flat(self) -> Self {
         self.style_variant(ButtonStyleVariant::Flat)
     }
+}
 
-    /// Shortcut for [Self::corner_radius] with `99`.
-    pub fn rounded(self) -> Self {
-        self.corner_radius(99.)
+impl CornerRadiusExt for Button {
+    fn with_corner_radius(self, corner_radius: f32) -> Self {
+        self.corner_radius(corner_radius)
     }
 }
 

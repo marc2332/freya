@@ -781,40 +781,66 @@ where
         self.get_style().corner_radius = corner_radius.into();
         self
     }
+}
+
+impl<T: StyleExt> CornerRadiusExt for T {
+    fn with_corner_radius(mut self, corner_radius: f32) -> Self {
+        self.get_style().corner_radius = CornerRadius::new_all(corner_radius);
+        self
+    }
+}
+
+pub trait CornerRadiusExt: Sized {
+    fn with_corner_radius(self, corner_radius: f32) -> Self;
 
     /// Shortcut for `corner_radius(0.)` - removes border radius.
     fn rounded_none(self) -> Self {
-        self.corner_radius(0.)
+        self.with_corner_radius(0.)
     }
 
     /// Shortcut for `corner_radius(6.)` - default border radius.
     fn rounded(self) -> Self {
-        self.corner_radius(6.)
+        self.with_corner_radius(6.)
     }
 
     /// Shortcut for `corner_radius(4.)` - small border radius.
     fn rounded_sm(self) -> Self {
-        self.corner_radius(4.)
+        self.with_corner_radius(4.)
     }
 
     /// Shortcut for `corner_radius(6.)` - medium border radius.
     fn rounded_md(self) -> Self {
-        self.corner_radius(6.)
+        self.with_corner_radius(6.)
     }
 
     /// Shortcut for `corner_radius(8.)` - large border radius.
     fn rounded_lg(self) -> Self {
-        self.corner_radius(8.)
+        self.with_corner_radius(8.)
     }
 
     /// Shortcut for `corner_radius(12.)` - extra large border radius.
     fn rounded_xl(self) -> Self {
-        self.corner_radius(12.)
+        self.with_corner_radius(12.)
+    }
+
+    /// Shortcut for `corner_radius(16.)` - extra large border radius.
+    fn rounded_2xl(self) -> Self {
+        self.with_corner_radius(16.)
+    }
+
+    /// Shortcut for `corner_radius(24.)` - extra large border radius.
+    fn rounded_3xl(self) -> Self {
+        self.with_corner_radius(24.)
+    }
+
+    /// Shortcut for `corner_radius(32.)` - extra large border radius.
+    fn rounded_4xl(self) -> Self {
+        self.with_corner_radius(32.)
     }
 
     /// Shortcut for `corner_radius(99.)` - fully rounded (pill shape).
     fn rounded_full(self) -> Self {
-        self.corner_radius(99.)
+        self.with_corner_radius(99.)
     }
 }
 
