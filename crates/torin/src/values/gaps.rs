@@ -46,6 +46,10 @@ impl Gaps {
         Self::new(gaps, gaps, gaps, gaps)
     }
 
+    pub const fn new_symmetric(vertical: f32, horizontal: f32) -> Self {
+        Self::new(vertical, horizontal, vertical, horizontal)
+    }
+
     pub fn fill_vertical(&mut self, value: f32) {
         self.top = Length::new(value);
         self.bottom = Length::new(value);
