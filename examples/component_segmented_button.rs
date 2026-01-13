@@ -17,7 +17,7 @@ fn app() -> impl IntoElement {
         .center()
         .expanded()
         .spacing(16.)
-        .child(SegmentedButton::new().children_iter((0..4).map(|i| {
+        .child(SegmentedButton::new().children((0..4).map(|i| {
             ButtonSegment::new()
                 .key(i)
                 .selected(selected.read().contains(&i))

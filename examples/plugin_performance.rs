@@ -29,7 +29,7 @@ fn app() -> impl IntoElement {
 
     let progress = animation.get().value();
 
-    rect().expanded().center().children_iter((0..32).map(|i| {
+    rect().expanded().center().children((0..32).map(|i| {
         rect()
             .key(i)
             .offset_x(progress - i as f32 * 10.)

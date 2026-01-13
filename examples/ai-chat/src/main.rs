@@ -80,7 +80,7 @@ fn app() -> impl IntoElement {
     };
 
     let chat_area = rect().width(Size::fill()).height(Size::flex(1.)).child(
-        ScrollView::new().child(rect().width(Size::fill()).padding(16.).children_iter(
+        ScrollView::new().child(rect().width(Size::fill()).padding(16.).children(
             messages.read().iter().map(|msg| {
                 let is_user = msg.role == Role::User;
                 let bg_color = if is_user {

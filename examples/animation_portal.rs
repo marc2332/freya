@@ -78,7 +78,7 @@ fn app() -> impl IntoElement {
         .expanded()
         .horizontal()
         .maybe_child(show_popup().map(|i| popup(i, show_popup)))
-        .children_iter((0..5).map(|i| {
+        .children((0..5).map(|i| {
             rect()
                 .key(i)
                 .spacing(6.)

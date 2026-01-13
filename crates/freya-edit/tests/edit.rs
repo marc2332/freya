@@ -147,7 +147,7 @@ fn single_line_multiple_editors() {
             .height(Size::fill())
             .background((255, 255, 255))
             .on_global_key_down(on_global_key_down)
-            .children_iter(editor.lines().map(|line| {
+            .children(editor.lines().map(|line| {
                 let holder = use_state(ParagraphHolder::default);
                 let cursor_col = editor.cursor_col();
                 let line = line.text.to_string();
@@ -305,7 +305,7 @@ fn highlights_single_line_multiple_editors() {
             .height(Size::fill())
             .background((255, 255, 255))
             .on_global_key_down(on_global_key_down)
-            .children_iter(editor.lines().enumerate().map(move |(i, line)| {
+            .children(editor.lines().enumerate().map(move |(i, line)| {
                 let line = line.to_string();
                 from_fn((), line, move |line| {
                     let holder = use_state(ParagraphHolder::default);
@@ -862,7 +862,7 @@ fn double_click_select_word_single_line_multiple_editors() {
             .height(Size::fill())
             .background((255, 255, 255))
             .on_global_key_down(on_global_key_down)
-            .children_iter(editor.lines().enumerate().map(move |(i, line)| {
+            .children(editor.lines().enumerate().map(move |(i, line)| {
                 let line = line.text.to_string();
                 from_fn((), line, move |line| {
                     let holder = use_state(ParagraphHolder::default);
@@ -949,7 +949,7 @@ fn triple_click_select_line_single_line_multiple_editors() {
             .height(Size::fill())
             .background((255, 255, 255))
             .on_global_key_down(on_global_key_down)
-            .children_iter(editor.lines().enumerate().map(move |(i, line)| {
+            .children(editor.lines().enumerate().map(move |(i, line)| {
                 let line = line.text.to_string();
                 from_fn((), line, move |line| {
                     let holder = use_state(ParagraphHolder::default);

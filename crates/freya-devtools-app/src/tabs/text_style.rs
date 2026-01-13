@@ -20,7 +20,7 @@ impl Component for NodeInspectorTextStyle {
         };
 
         ScrollView::new()
-            .children_iter(
+            .children(
                 node.state
                     .text_style_attributes()
                     .into_iter()

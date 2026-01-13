@@ -260,7 +260,7 @@ impl Component for Calendar {
                 .child(label().text(*day_name).color(header_color).font_size(12.))
                 .into()
         });
-        rows.push(rect().horizontal().children_iter(header_cells).into());
+        rows.push(rect().horizontal().children(header_cells).into());
 
         let mut current_day: i32 = 1 - first_day as i32;
         let total_days = first_day + days_in_month;
