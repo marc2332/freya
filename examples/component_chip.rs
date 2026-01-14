@@ -18,43 +18,33 @@ fn app() -> impl IntoElement {
         .center()
         .expanded()
         .spacing(8.)
-        .child(
-            rect()
-                .spacing(8.)
-                .horizontal()
-                .children((0..3).map(|i| {
-                    Chip::new()
-                        .key(i)
-                        .selected(selected.read().contains(&i))
-                        .on_press(move |_| {
-                            if selected.read().contains(&i) {
-                                selected.write().remove(&i);
-                            } else {
-                                selected.write().insert(i);
-                            }
-                        })
-                        .child(format!("Value {i}"))
-                        .into()
-                })),
-        )
-        .child(
-            rect()
-                .spacing(8.)
-                .horizontal()
-                .children((0..3).map(|i| {
-                    Chip::new()
-                        .key(i)
-                        .enabled(selected.read().contains(&i))
-                        .selected(!selected.read().contains(&i))
-                        .on_press(move |_| {
-                            if selected.read().contains(&i) {
-                                selected.write().remove(&i);
-                            } else {
-                                selected.write().insert(i);
-                            }
-                        })
-                        .child(format!("Value {i}"))
-                        .into()
-                })),
-        )
+        .child(rect().spacing(8.).horizontal().children((0..3).map(|i| {
+            Chip::new()
+                .key(i)
+                .selected(selected.read().contains(&i))
+                .on_press(move |_| {
+                    if selected.read().contains(&i) {
+                        selected.write().remove(&i);
+                    } else {
+                        selected.write().insert(i);
+                    }
+                })
+                .child(format!("Value {i}"))
+                .into()
+        })))
+        .child(rect().spacing(8.).horizontal().children((0..3).map(|i| {
+            Chip::new()
+                .key(i)
+                .enabled(selected.read().contains(&i))
+                .selected(!selected.read().contains(&i))
+                .on_press(move |_| {
+                    if selected.read().contains(&i) {
+                        selected.write().remove(&i);
+                    } else {
+                        selected.write().insert(i);
+                    }
+                })
+                .child(format!("Value {i}"))
+                .into()
+        })))
 }

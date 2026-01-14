@@ -50,7 +50,5 @@ pub fn gif_viewer_load_and_render() {
         test.sync_and_update();
     }
 
-    panic!(
-        "GIF element should be rendered after loading"
-    );
+    panic!("GIF element should be rendered after loading");
 }
