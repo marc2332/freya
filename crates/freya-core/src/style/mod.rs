@@ -1,6 +1,7 @@
 pub mod border;
 pub mod color;
 pub mod corner_radius;
+pub mod cursor;
 pub mod default_fonts;
 pub mod fill;
 pub mod font_size;
