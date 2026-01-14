@@ -5,8 +5,10 @@ use freya_core::{
         Color,
         CornerRadius,
         Fill,
+        FontSlant,
         Shadow,
         TextAlign,
+        TextHeightBehavior,
         TextOverflow,
         TextShadow,
     },
@@ -19,6 +21,7 @@ use torin::{
     alignment::Alignment,
     direction::Direction,
     gaps::Gaps,
+    geometry::Length,
     prelude::{
         Area,
         AreaOf,
@@ -104,6 +107,7 @@ impl NodeStateAttributes for NodeState {
                 AttributeType::Measure(self.layout.offset_y.get()),
             ),
             ("content", AttributeType::Content(&self.layout.content)),
+            ("spacing", AttributeType::Length(self.layout.spacing)),
         ]
     }
     fn style_attributes(&'_ self) -> Vec<(&'_ str, AttributeType<'_>)> {
@@ -156,6 +160,22 @@ impl NodeStateAttributes for NodeState {
                 "text_overflow",
                 AttributeType::TextOverflow(&self.text_style.text_overflow),
             ),
+            (
+                "text_height",
+                AttributeType::TextHeightBehavior(&self.text_style.text_height),
+            ),
+            (
+                "font_slant",
+                AttributeType::FontSlant(self.text_style.font_slant),
+            ),
+            (
+                "font_weight",
+                AttributeType::Measure(self.text_style.font_weight.into()),
+            ),
+            (
+                "font_width",
+                AttributeType::Measure(self.text_style.font_width.into()),
+            ),
         ];
 
         for shadow in self.style.shadows.iter() {
@@ -190,4 +210,7 @@ pub enum AttributeType<'a> {
     Border(&'a Border),
     TextAlignment(&'a TextAlign),
     TextOverflow(&'a TextOverflow),
+    TextHeightBehavior(&'a TextHeightBehavior),
+    FontSlant(FontSlant),
+    Length(Length),
 }

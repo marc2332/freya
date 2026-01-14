@@ -20,11 +20,27 @@ impl FontWidth {
     pub const EXPANDED: Self = Self(7);
     pub const EXTRA_EXPANDED: Self = Self(8);
     pub const ULTRA_EXPANDED: Self = Self(9);
+
+    pub fn get(self) -> i32 {
+        self.0
+    }
 }
 
 impl From<i32> for FontWidth {
-    fn from(weight: i32) -> Self {
-        FontWidth(weight)
+    fn from(width: i32) -> Self {
+        FontWidth(width)
+    }
+}
+
+impl From<FontWidth> for i32 {
+    fn from(width: FontWidth) -> i32 {
+        width.0
+    }
+}
+
+impl From<FontWidth> for f32 {
+    fn from(width: FontWidth) -> f32 {
+        width.0 as f32
     }
 }
 
