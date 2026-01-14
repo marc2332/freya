@@ -49,6 +49,5 @@ pub fn attribute_element(name: &str, attribute: AttributeType<'_>) -> Option<Ele
         AttributeType::TextOverflow(text_overflow) => {
             Some(Property::new(name, text_overflow.pretty()).into())
         }
-        _ => unreachable!(),
     }
 }
