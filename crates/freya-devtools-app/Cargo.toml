@@ -22,6 +22,8 @@ freya-router = { workspace = true }
 freya-radio = { workspace = true }
 freya-devtools = { workspace = true }
 
+torin = { workspace = true }
+
 accesskit = { workspace = true }
 serde_json = { workspace = true }
 

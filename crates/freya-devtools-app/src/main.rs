@@ -35,8 +35,9 @@ mod state;
 mod tabs;
 
 use async_tungstenite::tungstenite::protocol::Message;
+use hooks::use_node_info;
 use tabs::{
-    computed_layout::*,
+    computed_layout::computed_layout,
     layout::*,
     misc::*,
     style::*,
@@ -155,8 +156,6 @@ pub enum Route {
                         NodeInspectorStyle { node_id: NodeId, window_id: u64 },
                         #[route("/layout")]
                         NodeInspectorLayout { node_id: NodeId, window_id: u64 },
-                        #[route("/computed-layout")]
-                        NodeInspectorComputedLayout { node_id: NodeId, window_id: u64 },
                         #[route("/text-style")]
                         NodeInspectorTextStyle { node_id: NodeId, window_id: u64 },
 }
@@ -165,7 +164,6 @@ impl Route {
     pub fn node_id(&self) -> Option<NodeId> {
         match self {
             Self::NodeInspectorStyle { node_id, .. }
-            | Self::NodeInspectorComputedLayout { node_id, .. }
             | Self::NodeInspectorLayout { node_id, .. }
             | Self::NodeInspectorTextStyle { node_id, .. } => Some(*node_id),
             _ => None,
@@ -175,7 +173,6 @@ impl Route {
     pub fn window_id(&self) -> Option<u64> {
         match self {
             Self::NodeInspectorStyle { window_id, .. }
-            | Self::NodeInspectorComputedLayout { window_id, .. }
             | Self::NodeInspectorLayout { window_id, .. }
             | Self::NodeInspectorTextStyle { window_id, .. } => Some(*window_id),
             _ => None,
@@ -193,8 +190,67 @@ impl Component for LayoutForNodeInspector {
     fn render(&self) -> impl IntoElement {
         let LayoutForNodeInspector { window_id, node_id } = *self;
 
+        let Some(node_info) = use_node_info(node_id, window_id) else {
+            return rect();
+        };
+
+        let inner_area = format!(
+            "{}x{}",
+            node_info.inner_area.width().round(),
+            node_info.inner_area.height().round()
+        );
+        let area = format!(
+            "{}x{}",
+            node_info.area.width().round(),
+            node_info.area.height().round()
+        );
+        let padding = node_info.state.layout.padding;
+        let margin = node_info.state.layout.margin;
+
         rect()
             .expanded()
+            .child(
+                ScrollView::new()
+                    .show_scrollbar(false)
+                    .height(Size::px(280.))
+                    .child(
+                        rect()
+                            .padding(16.)
+                            .width(Size::fill())
+                            .cross_align(Alignment::Center)
+                            .child(
+                                rect()
+                                    .width(Size::fill())
+                                    .max_width(Size::px(300.))
+                                    .spacing(6.)
+                                    .child(
+                                        rect()
+                                            .horizontal()
+                                            .spacing(6.)
+                                            .child(
+                                                paragraph()
+                                                    .height(Size::px(20.))
+                                                    .span(Span::new(area))
+                                                    .span(
+                                                        Span::new(" area").color((200, 200, 200)),
+                                                    ),
+                                            )
+                                            .child(
+                                                paragraph()
+                                                    .height(Size::px(20.))
+                                                    .span(Span::new(
+                                                        node_info.children_len.to_string(),
+                                                    ))
+                                                    .span(
+                                                        Span::new(" children")
+                                                            .color((200, 200, 200)),
+                                                    ),
+                                            ),
+                                    )
+                                    .child(computed_layout(inner_area, padding, margin)),
+                            ),
+                    ),
+            )
             .child(
                 ScrollView::new()
                     .show_scrollbar(false)
@@ -222,17 +278,6 @@ impl Component for LayoutForNodeInspector {
                                         FloatingTab::new()
                                             .child(label().text("Text Style").max_lines(1)),
                                     ),
-                            ))
-                            .child(ActivableRoute::new(
-                                Route::NodeInspectorComputedLayout { node_id, window_id },
-                                Link::new(Route::NodeInspectorComputedLayout {
-                                    node_id,
-                                    window_id,
-                                })
-                                .child(
-                                    FloatingTab::new()
-                                        .child(label().text("Computed Layout").max_lines(1)),
-                                ),
                             )),
                     ),
             )
