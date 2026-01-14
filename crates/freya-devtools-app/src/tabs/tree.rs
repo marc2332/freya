@@ -153,12 +153,6 @@ impl Component for NodesTree {
                     on_selected: EventHandler::new(move |_| {
                         on_selected.call((window_id, node_id));
                         match RouterContext::get().current::<Route>() {
-                            Route::NodeInspectorComputedLayout { .. } => {
-                                Navigator::get().push(Route::NodeInspectorComputedLayout {
-                                    node_id,
-                                    window_id,
-                                });
-                            }
                             Route::NodeInspectorStyle { .. } => {
                                 Navigator::get()
                                     .push(Route::NodeInspectorStyle { node_id, window_id });

@@ -1,189 +1,124 @@
 use freya::prelude::*;
-use freya_core::integration::NodeId;
+use torin::gaps::Gaps;
 
-use crate::hooks::use_node_info;
-
-#[derive(PartialEq)]
-pub struct NodeInspectorComputedLayout {
-    pub node_id: NodeId,
-    pub window_id: u64,
-}
-
-impl Component for NodeInspectorComputedLayout {
-    fn render(&self) -> impl IntoElement {
-        let Some(node) = use_node_info(self.node_id, self.window_id) else {
-            return rect().into_element();
-        };
-
-        let inner_area = format!(
-            "{}x{}",
-            node.inner_area.width().round(),
-            node.inner_area.height().round()
-        );
-        let area = format!(
-            "{}x{}",
-            node.area.width().round(),
-            node.area.height().round()
-        );
-        let paddings = node.state.layout.padding;
-        let margins = node.state.layout.margin;
-
-        ScrollView::new()
-            .show_scrollbar(true)
+pub fn computed_layout(inner_area: String, padding: Gaps, margin: Gaps) -> impl IntoElement {
+    rect().width(Size::fill()).max_width(Size::px(300.)).child(
+        rect()
+            .width(Size::fill())
+            .height(Size::px(220.))
+            .main_align(Alignment::center())
+            .cross_align(Alignment::center())
+            .background((40, 40, 40))
+            .content(Content::Flex)
+            .corner_radius(CornerRadius::new_all(5.))
+            .child(
+                TooltipContainer::new(Tooltip::new("Top margin")).child(
+                    label()
+                        .text_align(TextAlign::Center)
+                        .width(Size::px(25.))
+                        .height(Size::px(25.))
+                        .text(format!("{}", margin.top())),
+                ),
+            )
             .child(
                 rect()
-                    .padding(20.)
-                    .cross_align(Alignment::center())
+                    .direction(Direction::Horizontal)
+                    .height(Size::flex(1.))
                     .width(Size::fill())
+                    .cross_align(Alignment::center())
+                    .content(Content::Flex)
+                    .child(
+                        TooltipContainer::new(Tooltip::new("Left margin")).child(
+                            label()
+                                .text_align(TextAlign::Center)
+                                .width(Size::px(25.))
+                                .height(Size::px(25.))
+                                .text(format!("{}", margin.left())),
+                        ),
+                    )
                     .child(
                         rect()
-                            .width(Size::fill())
-                            .max_width(Size::px(300.))
+                            .width(Size::flex(1.))
+                            .height(Size::fill())
+                            .content(Content::Flex)
+                            .cross_align(Alignment::Center)
+                            .background((71, 180, 240))
+                            .corner_radius(CornerRadius::new_all(5.))
                             .child(
-                                label()
-                                    .height(Size::px(25.))
-                                    .text(format!("Area: {area}"))
+                                TooltipContainer::new(Tooltip::new("Top padding")).child(
+                                    label()
+                                        .text_align(TextAlign::Center)
+                                        .width(Size::px(25.))
+                                        .height(Size::px(25.))
+                                        .text(format!("{}", padding.top())),
+                                ),
                             )
                             .child(
                                 rect()
-                                    .width(Size::fill())
-                                    .height(Size::px(250.))
-                                    .main_align(Alignment::center())
-                                    .cross_align(Alignment::center())
-                                    .background((197, 46, 139))
+                                    .direction(Direction::Horizontal)
+                                    .height(Size::flex(1.))
                                     .content(Content::Flex)
-                                    .corner_radius(CornerRadius::new_all(5.))
+                                    .cross_align(Alignment::center())
                                     .child(
-                                        // Top margin
-                                        TooltipContainer::new(Tooltip::new("Top margin"))
-                                            .child(
-                                                label()
-                                                    .text_align(TextAlign::Center)
-                                                    .width(Size::px(25.))
-                                                    .height(Size::px(25.))
-                                                    .text(format!("{}", margins.top()))
-                                            )
+                                        TooltipContainer::new(Tooltip::new("Left padding")).child(
+                                            label()
+                                                .text_align(TextAlign::Center)
+                                                .width(Size::px(25.))
+                                                .height(Size::px(25.))
+                                                .text(format!("{}", padding.left())),
+                                        ),
                                     )
                                     .child(
                                         rect()
-                                            .direction(Direction::Horizontal)
-                                            .height(Size::flex(1.))
-                                            .width(Size::fill())
+                                            .width(Size::flex(1.))
+                                            .height(Size::fill())
+                                            .main_align(Alignment::center())
                                             .cross_align(Alignment::center())
-                                            .content(Content::Flex)
+                                            .background((40, 40, 40))
+                                            .corner_radius(CornerRadius::new_all(5.))
                                             .child(
-                                                // Left margin
-                                                TooltipContainer::new(Tooltip::new("Left margin"))
-                                                    .child(
-                                                        label()
-                                                            .text_align(TextAlign::Center)
-                                                            .width(Size::px(25.))
-                                                            .height(Size::px(25.))
-                                                            .text(format!("{}", margins.left()))
-                                                    )
-                                            )
-                                            .child(
-                                                rect()
-                                                    .width(Size::flex(1.))
-                                                    .height(Size::fill())
-                                                    .content(Content::Flex)
-                                                    .cross_align(Alignment::Center)
-                                                    .background((71, 180, 240))
-                                                    .corner_radius(CornerRadius::new_all(5.))
-                                                    .child(
-                                                        // Top padding
-                                                        TooltipContainer::new(Tooltip::new("Top padding"))
-                                                            .child(
-                                                                label()
-                                                                    .text_align(TextAlign::Center)
-                                                                    .width(Size::px(25.))
-                                                                    .height(Size::px(25.))
-                                                                    .text(format!("{}", paddings.top()))
-                                                            )
-                                                    )
-                                                    .child(
-                                                        rect()
-                                                            .direction(Direction::Horizontal)
-                                                            .height(Size::flex(1.))
-                                                            .content(Content::Flex)
-                                                            .cross_align(Alignment::center())
-                                                            .child(
-                                                                // Left padding
-                                                                TooltipContainer::new(Tooltip::new("Left padding"))
-                                                                    .child(
-                                                                        label()
-                                                                            .text_align(TextAlign::Center)
-                                                                            .width(Size::px(25.))
-                                                                            .height(Size::px(25.))
-                                                                            .text(format!("{}", paddings.left()))
-                                                                    )
-                                                            )
-                                                            .child(
-                                                                rect()
-                                                                    .width(Size::flex(1.))
-                                                                    .height(Size::fill())
-                                                                    .main_align(Alignment::center())
-                                                                    .cross_align(Alignment::center())
-                                                                    .background((40, 40, 40))
-                                                                    .corner_radius(CornerRadius::new_all(5.))
-                                                                    .child(
-                                                                        TooltipContainer::new(Tooltip::new("Inner area"))
-                                                                            .child(
-                                                                                label()
-                                                                                    .text(inner_area.clone())
-                                                                            )
-                                                                    )
-                                                            )
-                                                            .child(
-                                                                // Right padding
-                                                               TooltipContainer::new(Tooltip::new("Right padding"))
-                                                                    .child(
-                                                                        label()
-                                                                            .text_align(TextAlign::Center)
-                                                                            .width(Size::px(25.))
-                                                                            .height(Size::px(25.))
-                                                                            .text(format!("{}", paddings.right()))
-                                                                    )
-                                                            )
-                                                    )
-                                                    .child(
-                                                        // Bottom padding
-                                                       TooltipContainer::new(Tooltip::new("Bottom padding"))
-                                                            .child(
-                                                                label()
-                                                                    .text_align(TextAlign::Center)
-                                                                    .width(Size::px(25.))
-                                                                    .height(Size::px(25.))
-                                                                    .text(format!("{}", paddings.bottom()))
-                                                            )
-                                                    )
-                                            )
-                                            .child(
-                                                // Right margin
-                                                TooltipContainer::new(Tooltip::new("Right margin"))
-                                                    .child(
-                                                        label()
-                                                            .text_align(TextAlign::Center)
-                                                            .width(Size::px(25.))
-                                                            .height(Size::px(25.))
-                                                            .text(format!("{}", margins.right()))
-                                                    )
-                                            )
+                                                TooltipContainer::new(Tooltip::new("Inner area"))
+                                                    .child(label().text(inner_area)),
+                                            ),
                                     )
                                     .child(
-                                        // Bottom margin
-                                        TooltipContainer::new(Tooltip::new("Bottom margin"))
-                                            .child(
-                                                label()
-                                                            .text_align(TextAlign::Center)
-                                                    .width(Size::px(25.))
-                                                    .height(Size::px(25.))
-                                                    .text(format!("{}", margins.bottom())),
-                                            )
-                                    )
+                                        TooltipContainer::new(Tooltip::new("Right padding")).child(
+                                            label()
+                                                .text_align(TextAlign::Center)
+                                                .width(Size::px(25.))
+                                                .height(Size::px(25.))
+                                                .text(format!("{}", padding.right())),
+                                        ),
+                                    ),
                             )
+                            .child(
+                                TooltipContainer::new(Tooltip::new("Bottom padding")).child(
+                                    label()
+                                        .text_align(TextAlign::Center)
+                                        .width(Size::px(25.))
+                                        .height(Size::px(25.))
+                                        .text(format!("{}", padding.bottom())),
+                                ),
+                            ),
                     )
+                    .child(
+                        TooltipContainer::new(Tooltip::new("Right margin")).child(
+                            label()
+                                .text_align(TextAlign::Center)
+                                .width(Size::px(25.))
+                                .height(Size::px(25.))
+                                .text(format!("{}", margin.right())),
+                        ),
+                    ),
             )
-            .into()
-    }
+            .child(
+                TooltipContainer::new(Tooltip::new("Bottom margin")).child(
+                    label()
+                        .text_align(TextAlign::Center)
+                        .width(Size::px(25.))
+                        .height(Size::px(25.))
+                        .text(format!("{}", margin.bottom())),
+                ),
+            ),
+    )
 }
