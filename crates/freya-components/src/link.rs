@@ -119,7 +119,7 @@ impl Component for Link {
             .on_press(on_press)
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
-            .map(color, |rect, color| rect.color(color))
+            .maybe_some(color, |rect, color| rect.color(color))
             .children(self.children.clone());
 
         if let Some(tooltip_text) = tooltip_text {

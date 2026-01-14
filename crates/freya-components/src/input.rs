@@ -465,7 +465,7 @@ impl Component for Input {
                             .max_lines(1)
                             .highlights(text_selection.map(|h| vec![h]))
                             .span(text.to_string())
-                            .map(preedit_text, |el, preedit_text| el.span(preedit_text)),
+                            .maybe_some(preedit_text, |el, preedit_text| el.span(preedit_text)),
                     ),
             )
     }

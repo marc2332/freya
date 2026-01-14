@@ -111,7 +111,7 @@ impl Component for FloatingTab {
             .a11y_role(AccessibilityRole::Tab)
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
-            .map(self.on_press.clone(), |el, on_press| el.on_press(on_press))
+            .maybe_some(self.on_press.clone(), |el, on_press| el.on_press(on_press))
             .width(width)
             .height(height)
             .center()

@@ -358,7 +358,7 @@ impl ComponentOwned for MenuButton {
 
         MenuItem::new()
             .on_pointer_enter(move |_| close_menus_until(&mut menus, parent_menu_id))
-            .map(self.on_press.clone(), |el, on_press| el.on_press(on_press))
+            .maybe_some(self.on_press.clone(), |el, on_press| el.on_press(on_press))
             .children(self.children)
     }
 

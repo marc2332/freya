@@ -316,7 +316,7 @@ impl Component for Calendar {
                             .hover_background(hover_background)
                             .color(color)
                             .corner_radius(day_corner_radius)
-                            .map(on_change, |el, on_change| {
+                            .maybe_some(on_change, |el, on_change| {
                                 el.on_press(move |_| on_change.call(date))
                             })
                             .into(),
@@ -423,7 +423,7 @@ impl Component for NavButton {
             .width(Size::px(32.))
             .height(Size::px(32.))
             .hover_background(self.hover_background)
-            .map(self.on_press.clone(), |el, on_press| el.on_press(on_press))
+            .maybe_some(self.on_press.clone(), |el, on_press| el.on_press(on_press))
             .children(self.children.clone())
     }
 }
@@ -507,7 +507,7 @@ impl Component for CalendarDay {
             .background(self.background)
             .hover_background(self.hover_background)
             .maybe(self.enabled, |el| {
-                el.map(self.on_press.clone(), |el, on_press| el.on_press(on_press))
+                el.maybe_some(self.on_press.clone(), |el, on_press| el.on_press(on_press))
             })
             .child(
                 label()

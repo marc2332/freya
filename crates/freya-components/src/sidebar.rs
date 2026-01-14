@@ -193,7 +193,7 @@ impl Component for SideBarItem {
         rect()
             .a11y_focusable(true)
             .a11y_role(AccessibilityRole::Link)
-            .map(self.on_press.clone(), |rect, on_press| {
+            .maybe_some(self.on_press.clone(), |rect, on_press| {
                 rect.on_press(on_press)
             })
             .on_pointer_enter(on_pointer_enter)

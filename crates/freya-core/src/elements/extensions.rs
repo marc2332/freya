@@ -846,16 +846,34 @@ pub trait MaybeExt
 where
     Self: Sized,
 {
-    fn maybe(self, bool: impl Into<bool>, then: impl FnOnce(Self) -> Self) -> Self {
-        if bool.into() { then(self) } else { self }
+    /// Imperatively modify self with the given closure.
+    fn map<U>(self, f: impl FnOnce(Self) -> U) -> U
+    {
+        f(self)
     }
 
-    fn map<T>(self, data: Option<T>, then: impl FnOnce(Self, T) -> Self) -> Self {
-        if let Some(data) = data {
-            then(self, data)
+    /// Conditionally modify self with the given closure.
+    fn maybe(self, condition: impl Into<bool>, then: impl FnOnce(Self) -> Self) -> Self {
+        if condition.into() { then(self) } else { self }
+    }
+
+    /// Conditionally modify self with the given closure.
+    fn maybe_else(self, condition: impl Into<bool>, then: impl FnOnce(Self) -> Self, else_fn: impl FnOnce(Self) -> Self) -> Self {
+        if condition.into() { then(self) } else { else_fn(self) }
+    }
+
+    /// Conditionally unwrap and modify self with the given closure, if the given option is Some.
+    fn maybe_some<T>(self, option: Option<T>, then: impl FnOnce(Self, T) -> Self) -> Self {
+        if let Some(value) = option {
+            then(self, value)
         } else {
             self
         }
+    }
+
+    /// Conditionally unwrap and modify self with the given closure, if the given option is None.
+    fn maybe_none<T>(self, option: &Option<T>, then: impl FnOnce(Self) -> Self) -> Self {
+        if option.is_none() { then(self) } else { self }
     }
 }
 

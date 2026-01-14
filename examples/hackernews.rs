@@ -132,7 +132,7 @@ impl Component for StoryItem {
                             .child(score_text)
                             .child(comment_text),
                     )
-                    .map(url, |el, url| {
+                    .maybe_some(url, |el, url| {
                         el.on_press(move |_| {
                             let _ = open::that(&url);
                         })
