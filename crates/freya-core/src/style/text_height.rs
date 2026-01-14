@@ -17,6 +17,15 @@ impl TextHeightBehavior {
             Self::All | Self::DisableFirstAscent | Self::DisableLastDescent
         )
     }
+
+    pub fn pretty(&self) -> String {
+        match self {
+            Self::All => "All".to_string(),
+            Self::DisableFirstAscent => "DisableFirstAscent".to_string(),
+            Self::DisableLastDescent => "DisableLastDescent".to_string(),
+            Self::DisableAll => "DisableAll".to_string(),
+        }
+    }
 }
 
 impl From<TextHeightBehavior> for SkTextHeightBehavior {

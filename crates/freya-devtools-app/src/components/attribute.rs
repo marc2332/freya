@@ -49,5 +49,12 @@ pub fn attribute_element(name: &str, attribute: AttributeType<'_>) -> Option<Ele
         AttributeType::TextOverflow(text_overflow) => {
             Some(Property::new(name, text_overflow.pretty()).into())
         }
+        AttributeType::Length(length) => Some(Property::new(name, length.get().to_string()).into()),
+        AttributeType::TextHeightBehavior(text_height) => {
+            Some(Property::new(name, text_height.pretty()).into())
+        }
+        AttributeType::FontSlant(font_slant) => {
+            Some(Property::new(name, font_slant.pretty()).into())
+        }
     }
 }

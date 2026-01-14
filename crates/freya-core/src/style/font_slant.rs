@@ -9,6 +9,16 @@ pub enum FontSlant {
     Oblique = 2,
 }
 
+impl FontSlant {
+    pub fn pretty(&self) -> String {
+        match self {
+            Self::Upright => "Upright".to_string(),
+            Self::Italic => "Italic".to_string(),
+            Self::Oblique => "Oblique".to_string(),
+        }
+    }
+}
+
 impl From<FontSlant> for SkSlant {
     fn from(value: FontSlant) -> Self {
         match value {
