@@ -382,8 +382,7 @@ impl ElementExt for ParagraphElement {
         if let Some(cursor_index) = self.cursor_index
             && self.highlights.is_empty()
             && self.cursor_style == CursorStyle::Block
-        {
-            if let Some(cursor_rect) = paragraph
+            && let Some(cursor_rect) = paragraph
                 .get_rects_for_range(
                     cursor_index..cursor_index + 1,
                     RectHeightStyle::Tight,
@@ -410,22 +409,21 @@ impl ElementExt for ParagraphElement {
                         None
                     }
                 })
-            {
-                let width = (cursor_rect.right - cursor_rect.left).max(6.0);
-                let cursor_rect = SkRect::new(
-                    area.min_x() + cursor_rect.left,
-                    area.min_y() + cursor_rect.top,
-                    area.min_x() + cursor_rect.left + width,
-                    area.min_y() + cursor_rect.bottom,
-                );
+        {
+            let width = (cursor_rect.right - cursor_rect.left).max(6.0);
+            let cursor_rect = SkRect::new(
+                area.min_x() + cursor_rect.left,
+                area.min_y() + cursor_rect.top,
+                area.min_x() + cursor_rect.left + width,
+                area.min_y() + cursor_rect.bottom,
+            );
 
-                let mut paint = Paint::default();
-                paint.set_anti_alias(true);
-                paint.set_style(PaintStyle::Fill);
-                paint.set_color(self.cursor_style_data.color);
+            let mut paint = Paint::default();
+            paint.set_anti_alias(true);
+            paint.set_style(PaintStyle::Fill);
+            paint.set_color(self.cursor_style_data.color);
 
-                context.canvas.draw_rect(cursor_rect, &paint);
-            }
+            context.canvas.draw_rect(cursor_rect, &paint);
         }
 
         // Draw text
