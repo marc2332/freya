@@ -30,7 +30,10 @@ use crate::{
         Layers,
     },
     node_id::NodeId,
-    prelude::AccessibilityFocusStrategy,
+    prelude::{
+        AccessibilityFocusStrategy,
+        CursorStyle,
+    },
     style::{
         border::Border,
         color::Color,
@@ -97,6 +100,7 @@ pub struct StyleState {
 pub struct CursorStyleData {
     pub color: Color,
     pub highlight_color: Color,
+    pub style: CursorStyle,
 }
 
 impl Default for CursorStyleData {
@@ -104,6 +108,7 @@ impl Default for CursorStyleData {
         Self {
             color: Color::BLACK,
             highlight_color: Color::from_rgb(87, 108, 188),
+            style: CursorStyle::default(),
         }
     }
 }
