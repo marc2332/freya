@@ -296,6 +296,35 @@ impl Component for TableCell {
     }
 }
 
+/// A table component with rows and columns.
+///
+/// # Example
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> impl IntoElement {
+///     Table::new(2)
+///         .child(TableHead::new().child(TableCell::new().child("Header 1")))
+///         .child(TableHead::new().child(TableCell::new().child("Header 2")))
+///         .child(TableBody::new().child(TableRow::new().child(TableCell::new().child("Data 1"))))
+///         .child(TableBody::new().child(TableRow::new().child(TableCell::new().child("Data 2"))))
+/// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rect().center().expanded().child(
+/// #       Table::new(2)
+/// #           .child(TableHead::new().child(TableCell::new().child("Header 1")))
+/// #           .child(TableHead::new().child(TableCell::new().child("Header 2")))
+/// #           .child(TableBody::new().child(TableRow::new().child(TableCell::new().child("Data 1"))))
+/// #   )
+/// # }, "./images/gallery_table.png").render();
+/// ```
+///
+/// # Preview
+/// ![Table Preview][table]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("table", "images/gallery_table.png"),
+)]
 #[derive(PartialEq)]
 pub struct Table {
     pub height: Size,
