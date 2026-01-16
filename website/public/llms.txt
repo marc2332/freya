@@ -1,0 +1,90 @@
+# Freya
+
+> Freya is a cross-platform and non-web GUI library for Rust powered by Skia.
+
+Important notes:
+- Freya 0.4+ uses its own reactive core, no longer based on Dioxus
+- Cross-platform support for Windows, Linux, and macOS
+- Built-in component library with testing, animations, and accessibility
+
+## Features
+
+- **Component Model**: Separate UI pieces by turning them into reusable components that. Each component takes some **Input**, might manage some inner **State** and ultimately returns a **UI**.
+- **Headless Testing**: Easily test your UI logic in a headless environment, supports all the normal features. In fact most of the internal components and features are tested with it.
+- **i18n (Language Translation)**: Easily translate your apps with `freya-i18` using the Fluent language.
+- **Shaders**: Render from simple to complex shaders using the Skia Shaders language (SlSl).
+- **a11y (Accessibility)**: You can make your UI elements accessible by using the a11y attributes.
+- **Built-in Components**: Freya comes with a set of ready-to-use components, these include ScrollViews, VirtualScrollViews, Buttons, Switch, Slider, etc.
+- **Animations**: Easily animate your UI whether its a size or a color. You have full control over its behavior.
+- **Text Editing**: Freya supports from simple to rich text editing. You can even make cloned editors, virtualized editors, etc.
+- **Cross-platform**: Your app will render and behave the same in Windows, Linux and MacOS.
+- **Efficient Global State**: Efficiently manage a global state based on topics subscription using `freya-radio`.
+- **Icons**: Easily add icons to your app using `freya-icons`, currently only supports Lucide.
+- **Devtools**: Inspect your app UI tree to to debug, or see performance state.
+- **Routing**: Manage your app UI in separate routes using `freya-router`.
+
+## Example: Counter
+
+```rust
+fn app() -> impl IntoElement {
+    let mut count = use_state(|| 4);
+
+    let counter = rect()
+        .width(Size::fill())
+        .height(Size::percent(50.))
+        .center()
+        .color((255, 255, 255))
+        .background((15, 163, 242))
+        .font_weight(FontWeight::BOLD)
+        .font_size(75.)
+        .shadow((0., 4., 20., 4., (0, 0, 0, 80)))
+        .child(count.read().to_string());
+
+    let actions = rect()
+        .horizontal()
+        .width(Size::fill())
+        .height(Size::percent(50.))
+        .center()
+        .spacing(8.0)
+        .child(
+            Button::new()
+                .on_press(move |_| {
+                    *count.write() += 1;
+                })
+                .child("Increase"),
+        )
+        .child(
+            Button::new()
+                .on_press(move |_| {
+                    *count.write() -= 1;
+                })
+                .child("Decrease"),
+        );
+
+    rect().child(counter).child(actions)
+}
+```
+
+## Docs
+
+- [Stable Documentation](https://docs.rs/freya/): Official Rust API documentation
+- [Development Setup](https://docs.rs/freya/latest/freya/_docs/development_setup/index.html): Getting started guide
+- [UI and Components](https://docs.rs/freya/latest/freya/_docs/ui_and_components.html): UI patterns and components guide
+- [Hooks](https://docs.rs/freya/latest/freya/_docs/hooks.html): Hooks reference
+- [State Management](https://docs.rs/freya/latest/freya/_docs/state_management.html): State management guide
+
+## Examples
+
+- [Counter Example](https://github.com/marc2332/freya/blob/main/examples/counter.rs): Basic counter with state management
+- [All Examples](https://github.com/marc2332/freya/tree/main/examples): Complete collection of examples including components, animations, layouts, and more
+- [Freya Template](https://github.com/marc2332/freya-template): Starter template for new projects
+
+## Community
+
+- [Website](https://freyaui.dev): Official website with tutorials and guides
+- [Discord Server](https://discord.gg/sYejxCdewG): Community chat and support
+
+## Optional
+
+- [Contributing Guide](https://github.com/marc2332/freya/blob/main/CONTRIBUTING.md): Guidelines for contributors
+- [GitHub Repository](https://github.com/marc2332/freya): Source code and issues
