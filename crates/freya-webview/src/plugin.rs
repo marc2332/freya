@@ -192,14 +192,12 @@ impl FreyaPlugin for WebViewPlugin {
                                     Ok(r) => r.size != rect.size || r.position != rect.position,
                                     _ => true,
                                 };
-                                if resize {
-                                    if let Err(e) = state.webview.set_bounds(rect) {
-                                        tracing::error!(
-                                            "WebViewPlugin: Failed to set bounds for {:?}: {}",
-                                            id,
-                                            e
-                                        );
-                                    }
+                                if resize && let Err(e) = state.webview.set_bounds(rect) {
+                                    tracing::error!(
+                                        "WebViewPlugin: Failed to set bounds for {:?}: {}",
+                                        id,
+                                        e
+                                    );
                                 }
                             } else {
                                 self.create_webview(window, id, &config, &area);
@@ -227,15 +225,13 @@ impl FreyaPlugin for WebViewPlugin {
                 self.webviews.clear();
             }
 
+            #[cfg(target_os = "linux")]
             PluginEvent::AfterRedraw { window, .. } => {
                 // Advance GTK event loop on Linux to process WebView events
-                #[cfg(target_os = "linux")]
-                {
-                    self.advance_gtk_event_loop();
-                    // If we have WebViews, continuously request redraws to keep GTK events flowing
-                    if !self.webviews.is_empty() {
-                        window.request_redraw();
-                    }
+                self.advance_gtk_event_loop();
+                // If we have WebViews, continuously request redraws to keep GTK events flowing
+                if !self.webviews.is_empty() {
+                    window.request_redraw();
                 }
             }
 

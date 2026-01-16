@@ -24,7 +24,7 @@ impl Default for WebViewId {
 }
 
 /// Configuration for a WebView instance.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Default)]
 pub struct WebViewConfig {
     /// The URL to load in the WebView.
     pub url: String,
@@ -32,14 +32,4 @@ pub struct WebViewConfig {
     pub transparent: bool,
     /// Custom user agent string.
     pub user_agent: Option<String>,
-}
-
-impl Default for WebViewConfig {
-    fn default() -> Self {
-        Self {
-            url: String::new(),
-            transparent: false,
-            user_agent: None,
-        }
-    }
 }
