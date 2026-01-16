@@ -51,7 +51,7 @@ fn app() -> impl IntoElement {
             rect()
                 .width(Size::fill())
                 .height(Size::px(45.))
-                .padding(Gaps::new(4., 8., 0., 8.))
+                .padding(4.)
                 .background((50, 50, 50))
                 .horizontal()
                 .cross_align(Alignment::Center)
@@ -77,19 +77,24 @@ fn app() -> impl IntoElement {
                         })
                         .corner_radius(4.)
                         .child(
-                            rect().horizontal().child(title).child(
-                                Button::new()
-                                    .flat()
-                                    .compact()
-                                    .on_press(move |e: Event<PressEventData>| {
-                                        e.prevent_default();
-                                        e.stop_propagation();
-                                        tabs.write().retain(|t| t.id != tab_id);
-                                        active_tab.set(0);
-                                        WebViewManager::close(WebViewId(tab_id as u64));
-                                    })
-                                    .child("X"),
-                            ),
+                            rect()
+                                .horizontal()
+                                .center()
+                                .font_size(14.)
+                                .child(title)
+                                .child(
+                                    Button::new()
+                                        .flat()
+                                        .compact()
+                                        .on_press(move |e: Event<PressEventData>| {
+                                            e.prevent_default();
+                                            e.stop_propagation();
+                                            tabs.write().retain(|t| t.id != tab_id);
+                                            active_tab.set(0);
+                                            WebViewManager::close(WebViewId(tab_id as u64));
+                                        })
+                                        .child("X"),
+                                ),
                         )
                         .into()
                 }))
@@ -108,7 +113,7 @@ fn app() -> impl IntoElement {
                         .background((60, 60, 60))
                         .color(Color::WHITE)
                         .corner_radius(4.)
-                        .child("+"),
+                        .child(label().text("+").font_size(16.)),
                 ),
         )
         .child(
