@@ -1,14 +1,14 @@
 //! WebView plugin for managing WRY WebViews.
 
-use std::collections::{
-    HashMap,
-    HashSet,
-};
+use std::collections::HashMap;
 
-use freya_winit::plugins::{
-    FreyaPlugin,
-    PluginEvent,
-    PluginHandle,
+use freya_winit::{
+    plugins::{
+        FreyaPlugin,
+        PluginEvent,
+        PluginHandle,
+    },
+    winit::window::Window,
 };
 use torin::prelude::Area;
 use wry::{
@@ -18,7 +18,10 @@ use wry::{
 };
 
 use crate::{
-    element::WebView,
+    lifecycle::{
+        WebViewEvents,
+        WebViewLifecycleEvent,
+    },
     registry::{
         WebViewConfig,
         WebViewId,
@@ -28,8 +31,6 @@ use crate::{
 /// State for a managed WebView.
 struct WebViewState {
     webview: WryWebView,
-    config: WebViewConfig,
-    last_area: Option<Area>,
 }
 
 /// Plugin for managing WebView instances.
@@ -38,6 +39,7 @@ struct WebViewState {
 /// elements are added and destroying them when elements are removed.
 pub struct WebViewPlugin {
     webviews: HashMap<WebViewId, WebViewState>,
+    events: WebViewEvents,
     #[cfg(target_os = "linux")]
     gtk_initialized: bool,
 }
@@ -53,6 +55,7 @@ impl WebViewPlugin {
     pub fn new() -> Self {
         Self {
             webviews: HashMap::new(),
+            events: WebViewEvents::default(),
             #[cfg(target_os = "linux")]
             gtk_initialized: false,
         }
@@ -85,9 +88,69 @@ impl WebViewPlugin {
             false
         }
     }
+
+    fn create_webview(
+        &mut self,
+        window: &Window,
+        id: WebViewId,
+        config: &WebViewConfig,
+        area: &Area,
+    ) {
+        tracing::debug!(
+            "WebViewPlugin: Creating WebView {:?} with URL {}",
+            id,
+            config.url
+        );
+
+        let mut builder = WebViewBuilder::new();
+
+        if !config.url.is_empty() {
+            builder = builder.with_url(&config.url);
+        }
+
+        if config.transparent {
+            builder = builder.with_transparent(true);
+        }
+
+        if let Some(ref user_agent) = config.user_agent {
+            builder = builder.with_user_agent(user_agent);
+        }
+
+        // Set initial bounds
+        let bounds = Rect {
+            position: wry::dpi::Position::Logical(area.origin.to_f64().to_tuple().into()),
+            size: wry::dpi::Size::Logical(area.size.to_f64().to_tuple().into()),
+        };
+        tracing::info!(
+            "WebViewPlugin: Creating WebView with bounds: pos=({}, {}), size=({}, {})",
+            area.min_x(),
+            area.min_y(),
+            area.width(),
+            area.height()
+        );
+        builder = builder.with_bounds(bounds).with_visible(true);
+
+        // Build the WebView as a child of the window
+        match builder.build_as_child(window) {
+            Ok(webview) => {
+                // Ensure visibility after creation
+                let _ = webview.set_visible(true);
+
+                self.webviews.insert(id, WebViewState { webview });
+                tracing::debug!("WebViewPlugin: WebView {:?} created successfully", id);
+            }
+            Err(e) => {
+                tracing::error!("WebViewPlugin: Failed to create WebView {:?}: {}", id, e);
+            }
+        }
+    }
 }
 
 impl FreyaPlugin for WebViewPlugin {
+    fn inject_root_context(&mut self, runner: &mut freya_core::runner::Runner) {
+        runner.provide_root_context(|| self.events.clone());
+    }
+
     fn on_event(&mut self, event: &PluginEvent, _handle: PluginHandle) {
         match event {
             PluginEvent::WindowCreated { .. } => {
@@ -97,167 +160,61 @@ impl FreyaPlugin for WebViewPlugin {
                 self.ensure_gtk_initialized();
             }
 
-            PluginEvent::FinishedMeasuringLayout { window, tree, .. } => {
-                // Collect all WebView elements currently in the tree
-                let mut current_webviews: HashMap<WebViewId, (WebViewConfig, Area)> =
-                    HashMap::new();
+            PluginEvent::FinishedMeasuringLayout { window, .. } => {
+                // First, drain all lifecycle events from the channel into a vec
+                let events: Vec<WebViewLifecycleEvent> =
+                    self.events.lock().unwrap().drain(..).collect();
 
-                tracing::info!(
-                    "WebViewPlugin: Scanning {} elements in tree",
-                    tree.elements.len()
-                );
-
-                for (node_id, element) in &tree.elements {
-                    let is_webview = WebView::try_downcast(element.as_ref()).is_some();
-                    tracing::debug!(
-                        "WebViewPlugin: Element {:?} is_webview={}",
-                        node_id,
-                        is_webview
-                    );
-                    if let Some(webview_element) = WebView::try_downcast(element.as_ref()) {
-                        if let Some(layout_node) = tree.layout.get(node_id) {
-                            let area = layout_node.visible_area();
-                            tracing::info!(
-                                "WebViewPlugin: Found WebView {:?} at {:?} ({}x{})",
-                                webview_element.webview_id,
-                                (area.min_x(), area.min_y()),
-                                area.width(),
-                                area.height()
-                            );
-                            current_webviews.insert(
-                                webview_element.webview_id,
-                                (webview_element.config.clone(), area),
-                            );
-                        }
-                    }
-                }
-
-                // Track which WebViews we've seen
-                let current_ids: HashSet<WebViewId> = current_webviews.keys().copied().collect();
-                let existing_ids: HashSet<WebViewId> = self.webviews.keys().copied().collect();
-
-                // Create new WebViews
-                for id in current_ids.difference(&existing_ids) {
-                    if let Some((config, area)) = current_webviews.get(id) {
-                        tracing::debug!(
-                            "WebViewPlugin: Creating WebView {:?} with URL {}",
-                            id,
-                            config.url
-                        );
-
-                        let mut builder = WebViewBuilder::new();
-
-                        if !config.url.is_empty() {
-                            builder = builder.with_url(&config.url);
-                        }
-
-                        if config.transparent {
-                            builder = builder.with_transparent(true);
-                        }
-
-                        if let Some(ref user_agent) = config.user_agent {
-                            builder = builder.with_user_agent(user_agent);
-                        }
-
-                        // Set initial bounds
-                        let bounds = Rect {
-                            position: wry::dpi::Position::Logical(wry::dpi::LogicalPosition::new(
-                                area.min_x() as f64,
-                                area.min_y() as f64,
-                            )),
-                            size: wry::dpi::Size::Logical(wry::dpi::LogicalSize::new(
-                                area.width() as f64,
-                                area.height() as f64,
-                            )),
-                        };
-                        tracing::info!(
-                            "WebViewPlugin: Creating WebView with bounds: pos=({}, {}), size=({}, {})",
-                            area.min_x(),
-                            area.min_y(),
-                            area.width(),
-                            area.height()
-                        );
-                        builder = builder.with_bounds(bounds).with_visible(true);
-
-                        // Build the WebView as a child of the window
-                        match builder.build_as_child(window) {
-                            Ok(webview) => {
-                                // Ensure visibility after creation
-                                let _ = webview.set_visible(true);
-
-                                self.webviews.insert(
-                                    *id,
-                                    WebViewState {
-                                        webview,
-                                        config: config.clone(),
-                                        last_area: Some(*area),
-                                    },
-                                );
-                                tracing::debug!(
-                                    "WebViewPlugin: WebView {:?} created successfully",
-                                    id
-                                );
-                            }
-                            Err(e) => {
-                                tracing::error!(
-                                    "WebViewPlugin: Failed to create WebView {:?}: {}",
-                                    id,
-                                    e
-                                );
-                            }
-                        }
-                    }
-                }
-
-                // Update existing WebViews
-                for id in current_ids.intersection(&existing_ids) {
-                    if let (Some((config, area)), Some(state)) =
-                        (current_webviews.get(id), self.webviews.get_mut(id))
-                    {
-                        // Check if bounds changed
-                        let bounds_changed = state.last_area.as_ref() != Some(area);
-
-                        if bounds_changed {
-                            let rect = Rect {
-                                position: wry::dpi::Position::Logical(
-                                    wry::dpi::LogicalPosition::new(
-                                        area.min_x() as f64,
-                                        area.min_y() as f64,
+                // Then process the events
+                for event in events {
+                    match event {
+                        WebViewLifecycleEvent::Resized { id, area, config } => {
+                            tracing::debug!("WebViewPlugin: Received Resized event for {:?}", id);
+                            // Check if this is a pending webview that needs creation
+                            if let Some(state) = self.webviews.get_mut(&id) {
+                                if let Err(e) = state.webview.set_visible(true) {
+                                    tracing::error!(
+                                        "WebViewPlugin: Failed to set invisible {:?}: {}",
+                                        id,
+                                        e
+                                    );
+                                }
+                                let rect = Rect {
+                                    position: wry::dpi::Position::Logical(
+                                        area.origin.to_f64().to_tuple().into(),
                                     ),
-                                ),
-                                size: wry::dpi::Size::Logical(wry::dpi::LogicalSize::new(
-                                    area.width() as f64,
-                                    area.height() as f64,
-                                )),
-                            };
-                            if let Err(e) = state.webview.set_bounds(rect) {
-                                tracing::error!(
-                                    "WebViewPlugin: Failed to set bounds for {:?}: {}",
-                                    id,
-                                    e
-                                );
-                            }
-                            state.last_area = Some(*area);
-                        }
+                                    size: wry::dpi::Size::Logical(
+                                        area.size.to_f64().to_tuple().into(),
+                                    ),
+                                };
 
-                        // Check if URL changed
-                        if config.url != state.config.url && !config.url.is_empty() {
-                            if let Err(e) = state.webview.load_url(&config.url) {
-                                tracing::error!(
-                                    "WebViewPlugin: Failed to load URL for {:?}: {}",
-                                    id,
-                                    e
-                                );
+                                let resize = match state.webview.bounds() {
+                                    Ok(r) => r.size != rect.size || r.position != rect.position,
+                                    _ => true,
+                                };
+                                if resize {
+                                    if let Err(e) = state.webview.set_bounds(rect) {
+                                        tracing::error!(
+                                            "WebViewPlugin: Failed to set bounds for {:?}: {}",
+                                            id,
+                                            e
+                                        );
+                                    }
+                                }
+                            } else {
+                                self.create_webview(window, id, &config, &area);
                             }
-                            state.config.url = config.url.clone();
+                        }
+                        WebViewLifecycleEvent::Close { id } => {
+                            tracing::debug!("WebViewPlugin: Received Dropped event for {:?}", id);
+                            self.webviews.remove(&id);
+                        }
+                        WebViewLifecycleEvent::Hide { id } => {
+                            if let Some(state) = self.webviews.get_mut(&id) {
+                                let _ = state.webview.set_visible(false);
+                            }
                         }
                     }
-                }
-
-                // Remove WebViews that are no longer in the tree
-                for id in existing_ids.difference(&current_ids) {
-                    tracing::debug!("WebViewPlugin: Destroying WebView {:?}", id);
-                    self.webviews.remove(id);
                 }
             }
 

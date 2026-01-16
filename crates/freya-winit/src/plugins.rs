@@ -66,6 +66,12 @@ impl PluginsManager {
             plugin.on_event(&event, handle.clone())
         }
     }
+
+    pub fn inject_root_context(&mut self, runner: &mut freya_core::runner::Runner) {
+        for plugin in self.plugins.borrow_mut().iter_mut() {
+            plugin.inject_root_context(runner);
+        }
+    }
 }
 
 /// Event emitted to Plugins.
@@ -76,6 +82,7 @@ pub enum PluginEvent<'a> {
         font_collection: &'a FontCollection,
         tree: &'a Tree,
         animation_clock: &'a AnimationClock,
+        runner: &'a mut freya_core::runner::Runner,
     },
 
     /// A Window just got closed.
@@ -173,4 +180,9 @@ pub enum PluginEvent<'a> {
 pub trait FreyaPlugin {
     /// React on events emitted by Freya.
     fn on_event(&mut self, event: &PluginEvent, handle: PluginHandle);
+
+    /// Called to inject contexts into the runner before the tree is initialized.
+    /// This allows plugins to provide context that components can consume.
+    #[inline]
+    fn inject_root_context(&mut self, _runner: &mut freya_core::runner::Runner) {}
 }

@@ -18,6 +18,8 @@ torin = { workspace = true }
 rustc-hash = { workspace = true }
 tracing = { workspace = true }
 accesskit = { workspace = true }
+futures-channel = { workspace = true }
+futures-lite.workspace = true
 
 [target.'cfg(target_os = "linux")'.dependencies]
 gtk = "0.18"

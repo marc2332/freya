@@ -25,25 +25,17 @@
 //! }
 //! ```
 
+pub mod component;
 mod element;
-mod plugin;
-mod registry;
-
-pub use element::{
-    WebView,
-    WebViewElement,
-    webview,
-};
-pub use plugin::WebViewPlugin;
-pub use registry::{
-    WebViewConfig,
-    WebViewId,
-};
+pub mod lifecycle;
+pub mod plugin;
+pub mod registry;
 
 /// Prelude module for convenient imports.
 pub mod prelude {
     pub use crate::{
-        element::webview,
+        component::WebViewComponent,
+        lifecycle::WebViewManager,
         plugin::WebViewPlugin,
         registry::{
             WebViewConfig,

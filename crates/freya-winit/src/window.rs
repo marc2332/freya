@@ -216,6 +216,8 @@ impl AppWindow {
 
         runner.provide_root_context(|| tree.accessibility_generator.clone());
 
+        plugins.inject_root_context(&mut runner);
+
         let mutations = runner.sync_and_update();
         tree.apply_mutations(mutations);
         tree.measure_layout(
@@ -259,6 +261,7 @@ impl AppWindow {
                 font_collection,
                 tree: &tree,
                 animation_clock: &animation_clock,
+                runner: &mut runner,
             },
             PluginHandle::new(event_loop_proxy),
         );
