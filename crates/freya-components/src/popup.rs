@@ -81,9 +81,9 @@ impl Component for PopupBackground {
 /// #       Popup::new()
 /// #           .child(rect().width(Size::px(150.)).height(Size::px(80.)).child("Popup content"))
 /// #   )
-/// # }, "./images/gallery_popup.png").render().with_hook(|test| {
+/// # }, "./images/gallery_popup.png").with_hook(|test| {
 /// #   test.poll(std::time::Duration::from_millis(10), std::time::Duration::from_millis(500));
-/// # });
+/// # }).render();
 /// ```
 ///
 /// # Preview
