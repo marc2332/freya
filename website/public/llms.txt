@@ -69,9 +69,11 @@ fn app() -> impl IntoElement {
 
 - [Stable Documentation](https://docs.rs/freya/): Official Rust API documentation
 - [Development Setup](https://docs.rs/freya/latest/freya/_docs/development_setup/index.html): Getting started guide
-- [UI and Components](https://docs.rs/freya/latest/freya/_docs/ui_and_components.html): UI patterns and components guide
-- [Hooks](https://docs.rs/freya/latest/freya/_docs/hooks.html): Hooks reference
-- [State Management](https://docs.rs/freya/latest/freya/_docs/state_management.html): State management guide
+
+## Release Candidate docs
+- [UI and Components](https://docs.rs/freya/0.4.0-rc.2/freya/_docs/ui_and_components/index.html): UI patterns and components guide
+- [Hooks](https://docs.rs/freya/0.4.0-rc.2/freya/_docs/hooks/index.html): Hooks reference
+- [State Management](https://docs.rs/freya/0.4.0-rc.2/freya/_docs/state_management/index.html): State management guide
 
 ## Examples
 
