@@ -210,20 +210,6 @@ impl LayerExt for WebView {
     }
 }
 
-/// Create a new WebView element.
-///
-/// # Example
-///
-/// ```rust,no_run
-/// use freya::prelude::*;
-/// use freya_webview::prelude::*;
-///
-/// fn app() -> impl IntoElement {
-///     webview("https://example.com")
-///         .width(Size::fill())
-///         .height(Size::fill())
-/// }
-/// ```
 pub fn webview(url: impl Into<String>) -> WebView {
     let mut accessibility = AccessibilityData::default();
     accessibility.builder.set_role(accesskit::Role::WebView);
