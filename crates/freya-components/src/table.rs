@@ -304,20 +304,40 @@ impl Component for TableCell {
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
 ///     Table::new(2)
-///         .child(TableHead::new().child(TableCell::new().child("Header 1")))
-///         .child(TableHead::new().child(TableCell::new().child("Header 2")))
-///         .child(TableBody::new().child(TableRow::new().child(TableCell::new().child("Data 1"))))
-///         .child(TableBody::new().child(TableRow::new().child(TableCell::new().child("Data 2"))))
+///         .child(
+///             TableHead::new()
+///                 .child(
+///                     TableRow::new()
+///                         .child(TableCell::new().child("Header 1"))
+///                         .child(TableCell::new().child("Header 2"))
+///                 )
+///         )
+///         .child(
+///             TableBody::new()
+///                 .child(
+///                     TableRow::new()
+///                         .child(TableCell::new().child("Data 1"))
+///                         .child(TableCell::new().child("Data 2"))
+///                 )
+///         )
+///         .child(
+///             TableBody::new()
+///                 .child(
+///                     TableRow::new()
+///                         .child(TableCell::new().child("Data 3"))
+///                         .child(TableCell::new().child("Data 4"))
+///                 )
+///         )
 /// }
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
-/// #   rect().center().expanded().child(
-/// #       Table::new(2)
-/// #           .child(TableHead::new().child(TableCell::new().child("Header 1")))
-/// #           .child(TableHead::new().child(TableCell::new().child("Header 2")))
-/// #           .child(TableBody::new().child(TableRow::new().child(TableCell::new().child("Data 1"))))
+/// #   rect().padding(8.).center().expanded().child(
+/// #       app()
 /// #   )
-/// # }, "./images/gallery_table.png").render();
+/// # }, "./images/gallery_table.png")
+/// #   .with_hook(|t| { t.move_cursor((125., 125.)); t.sync_and_update(); })
+/// #   .with_scale_factor(0.9)
+/// #   .render();
 /// ```
 ///
 /// # Preview

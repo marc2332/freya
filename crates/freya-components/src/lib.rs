@@ -85,10 +85,10 @@ cfg_if::cfg_if! {
 /// | [CircularLoader](loader::CircularLoader)        | [SegmentedButton](segmented_button::SegmentedButton) | [Tooltip](tooltip::Tooltip) | [Calendar](calendar::Calendar) |
 /// | ![ColorPicker Preview][gallery_color_picker] | ![Chip Preview][gallery_chip] | ![Menu Preview][gallery_menu] | |
 /// | [ColorPicker](color_picker::ColorPicker)        | [Chip](chip::Chip)        | [Menu](menu::Menu)        |      |
-/// | ![Popup Preview][gallery_popup] | ![Portal Preview][gallery_portal] | ![ResizableContainer Preview][gallery_resizable_container] | ![Sidebar Preview][gallery_sidebar] |
-/// | [Popup](popup::Popup)        | [Portal](portal::Portal)        | [ResizableContainer](resizable_container::ResizableContainer)        | [Sidebar](sidebar::SideBar)        |
-/// | ![Table Preview][gallery_table] | ![Tile Preview][gallery_tile] | ![Card Preview][gallery_card] | |
-/// | [Table](table::Table)        | [Tile](tile::Tile)        | [Card](card::Card)       |        |
+/// | ![Popup Preview][gallery_popup] | | ![ResizableContainer Preview][gallery_resizable_container] | ![Sidebar Preview][gallery_sidebar] |
+/// | [Popup](popup::Popup)        |        | [ResizableContainer](resizable_container::ResizableContainer)        | [Sidebar](sidebar::SideBar)        |
+/// | ![Table Preview][gallery_table] | | ![Card Preview][gallery_card] | |
+/// | [Table](table::Table)        |        | [Card](card::Card)       |        |
 #[cfg_attr(feature = "docs",
     doc = embed_doc_image::embed_image!("gallery_button", "images/gallery_button.png"),
     doc = embed_doc_image::embed_image!("gallery_filled_button", "images/gallery_filled_button.png"),
