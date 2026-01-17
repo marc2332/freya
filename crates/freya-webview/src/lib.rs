@@ -32,7 +32,7 @@ pub mod registry;
 /// Prelude module for convenient imports.
 pub mod prelude {
     pub use crate::{
-        component::WebViewComponent,
+        component::WebView,
         lifecycle::WebViewManager,
         plugin::WebViewPlugin,
         registry::{

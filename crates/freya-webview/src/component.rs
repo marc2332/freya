@@ -17,15 +17,15 @@ use crate::{
 };
 
 #[derive(Clone)]
-pub struct WebViewComponent {
-    pub webview_id: WebViewId,
-    pub url: String,
-    pub close_on_drop: bool,
-    pub on_created: Option<WebViewCallback>,
+pub struct WebView {
+    webview_id: WebViewId,
+    url: String,
+    close_on_drop: bool,
+    on_created: Option<WebViewCallback>,
     layout: LayoutData,
 }
 
-impl PartialEq for WebViewComponent {
+impl PartialEq for WebView {
     fn eq(&self, other: &Self) -> bool {
         self.webview_id == other.webview_id
             && self.url == other.url
@@ -35,7 +35,7 @@ impl PartialEq for WebViewComponent {
     }
 }
 
-impl WebViewComponent {
+impl WebView {
     pub fn new(url: impl Into<String>) -> Self {
         Self {
             webview_id: WebViewId::new(),
@@ -70,14 +70,14 @@ impl WebViewComponent {
     }
 }
 
-impl LayoutExt for WebViewComponent {
+impl LayoutExt for WebView {
     fn get_layout(&mut self) -> &mut LayoutData {
         &mut self.layout
     }
 }
-impl ContainerExt for WebViewComponent {}
+impl ContainerExt for WebView {}
 
-impl Component for WebViewComponent {
+impl Component for WebView {
     fn render(&self) -> impl IntoElement {
         let lifecycle_sender = consume_root_context::<crate::lifecycle::WebViewEvents>();
 

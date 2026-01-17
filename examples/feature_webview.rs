@@ -114,7 +114,13 @@ fn app() -> impl IntoElement {
                     let url = tab.url.clone();
 
                     if is_active {
-                        Some(WebViewComponent::new(&url).expanded().id(tab.id).into())
+                        Some(
+                            WebView::new(&url)
+                                .expanded()
+                                .id(tab.id)
+                                .close_on_drop(false)
+                                .into(),
+                        )
                     } else {
                         None
                     }
