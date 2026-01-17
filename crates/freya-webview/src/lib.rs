@@ -19,8 +19,7 @@
 //! }
 //!
 //! fn app() -> impl IntoElement {
-//!     WebView::new("https://example.com")
-//!         .expanded()
+//!     WebView::new("https://example.com").expanded()
 //! }
 //! ```
 

@@ -21,7 +21,7 @@ jobs:
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
       - name: Install linux dependencies
         if: runner.os == 'Linux'
-        run: sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev libsoup-3.0-dev
+        run: sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev libwebkit2gtk-4.1-dev
       - name: Install the rust toolchain
         uses: dtolnay/rust-toolchain@1.90
       - run: cargo publish --features skia-engine --workspace --exclude "examples" --exclude "website"
