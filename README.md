@@ -81,6 +81,7 @@ fn app() -> impl IntoElement {
 - **Icons**: Easily add icons to your app using `freya-icons`, currently only supports Lucide.
 - **Devtools**: Inspect your app UI tree to to debug, or see performance state.
 - **Routing**: Manage your app UI in separate routes using `freya-router`.
+- **WebView**: Integrate WebViews into your application using `freya-webview`.
 
 ### Trying it out
 

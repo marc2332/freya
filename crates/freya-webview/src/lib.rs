@@ -1,8 +1,7 @@
 //! WebView support for Freya using WRY.
 //!
 //! This crate provides WebView integration for Freya applications using the WRY library.
-//! WebViews can be embedded in your Freya UI as regular elements that participate in the
-//! layout system.
+//! WebViews can be embedded in your Freya UI as regular elements.
 //!
 //! # Example
 //!

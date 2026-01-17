@@ -50,6 +50,7 @@
 //! - [Material Design](freya_material_design)
 //! - [Plotters](freya_plotters_backend)
 //! - [Testing](freya_testing)
+//! - [WebView](freya_webview)
 //!
 //! ## Features flags
 //!

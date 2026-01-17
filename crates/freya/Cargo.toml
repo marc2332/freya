@@ -35,6 +35,7 @@ all = [
   "markdown",
   "icons",
   "radio",
+  "webview",
 ]
 all-publish = [
   "all",
@@ -62,6 +63,7 @@ all-tests = [
   "calendar",
   "markdown",
   "radio",
+  "webview",
 ]
 docs = ["all-debug"]
 # Features
