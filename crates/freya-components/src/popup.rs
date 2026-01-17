@@ -67,6 +67,30 @@ impl Component for PopupBackground {
 }
 
 /// Floating popup / dialog.
+///
+/// # Example
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> impl IntoElement {
+///     Popup::new().child(rect().child("Popup content"))
+/// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rect().center().expanded().child(
+/// #       Popup::new()
+/// #           .child(rect().width(Size::px(150.)).height(Size::px(80.)).child("Popup content"))
+/// #   )
+/// # }, "./images/gallery_popup.png").with_hook(|test| {
+/// #   test.poll(std::time::Duration::from_millis(10), std::time::Duration::from_millis(500));
+/// # }).render();
+/// ```
+///
+/// # Preview
+/// ![Popup Preview][popup]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("popup", "images/gallery_popup.png"),
+)]
 #[derive(Clone, PartialEq)]
 pub struct Popup {
     pub(crate) theme: Option<PopupThemePartial>,

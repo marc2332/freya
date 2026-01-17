@@ -11,6 +11,16 @@ struct DraggableCanvasLayout(State<Area>);
 #[derive(Clone)]
 struct DraggableCanvasRegistry(State<Vec<usize>>);
 
+/// A canvas container that allows draggable elements within it.
+///
+/// # Example
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> impl IntoElement {
+///     DraggableCanvas::new().child(Draggable::new().child("Draggable item"))
+/// }
+/// ```
 #[derive(PartialEq)]
 pub struct DraggableCanvas {
     children: Vec<Element>,

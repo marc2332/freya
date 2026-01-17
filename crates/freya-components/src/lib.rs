@@ -80,10 +80,14 @@ cfg_if::cfg_if! {
 /// | [ProgressBar](progressbar::ProgressBar)        | [Select](select::Select)        | [GifViewer](gif_viewer::GifViewer) | [Accordion](accordion::Accordion) |
 /// | ![Floating Tab Preview][gallery_floating_tab] | ![ImageViewer Preview][gallery_image_viewer] | ![ScrollView Preview][gallery_scrollview] | ![VirtualScrollView Preview][gallery_virtual_scrollview] |
 /// | [FloatingTab](floating_tab::FloatingTab)        | [ImageViewer](image_viewer::ImageViewer) | [ScrollView](scrollviews::ScrollView) | [VirtualScrollView](scrollviews::VirtualScrollView) |
-/// | ![Circular Loader Preview][gallery_circular_loader] | ![SegmentedButton Preview][gallery_segmented_button] | ![Tooltip Preview][gallery_tooltip] | ![Calendar Preview][gallery_calendar]  |
-/// | [CircularLoader](loader::CircularLoader)        | [SegmentedButton](segmented_button::SegmentedButton) | [Tooltip](tooltip::Tooltip) |[Calendar](calendar::Calendar) |
-/// | ![ColorPicker Preview][gallery_color_picker] | ![Flat Button Preview][gallery_flat_button] | ![Slider Preview][gallery_slider] | ![Checkbox Preview][gallery_checkbox] |
-/// | [ColorPicker](color_picker::ColorPicker) | [Flat Button](button::Button) | [Slider](slider::Slider) | [Checkbox](checkbox::Checkbox) |
+/// | ![Circular Loader Preview][gallery_circular_loader] | ![SegmentedButton Preview][gallery_segmented_button] | ![Tooltip Preview][gallery_tooltip] | ![Calendar Preview][gallery_calendar] |
+/// | [CircularLoader](loader::CircularLoader)        | [SegmentedButton](segmented_button::SegmentedButton) | [Tooltip](tooltip::Tooltip) | [Calendar](calendar::Calendar) |
+/// | ![ColorPicker Preview][gallery_color_picker] | ![Chip Preview][gallery_chip] | ![Menu Preview][gallery_menu] | |
+/// | [ColorPicker](color_picker::ColorPicker)        | [Chip](chip::Chip)        | [Menu](menu::Menu)        |      |
+/// | ![Popup Preview][gallery_popup] | ![Portal Preview][gallery_portal] | ![ResizableContainer Preview][gallery_resizable_container] | ![Sidebar Preview][gallery_sidebar] |
+/// | [Popup](popup::Popup)        | [Portal](portal::Portal)        | [ResizableContainer](resizable_container::ResizableContainer)        | [Sidebar](sidebar::SideBar)        |
+/// | ![Table Preview][gallery_table] | ![Tile Preview][gallery_tile] | | |
+/// | [Table](table::Table)        | [Tile](tile::Tile)        |        |        |
 #[cfg_attr(feature = "docs",
     doc = embed_doc_image::embed_image!("gallery_button", "images/gallery_button.png"),
     doc = embed_doc_image::embed_image!("gallery_filled_button", "images/gallery_filled_button.png"),
@@ -107,5 +111,11 @@ cfg_if::cfg_if! {
     doc = embed_doc_image::embed_image!("gallery_flat_button", "images/gallery_flat_button.png"),
     doc = embed_doc_image::embed_image!("gallery_calendar", "images/gallery_calendar.png"),
     doc = embed_doc_image::embed_image!("gallery_color_picker", "images/gallery_color_picker.png"),
+    doc = embed_doc_image::embed_image!("gallery_chip", "images/gallery_chip.png"),
+    doc = embed_doc_image::embed_image!("gallery_menu", "images/gallery_menu.png"),
+    doc = embed_doc_image::embed_image!("gallery_popup", "images/gallery_popup.png"),
+    doc = embed_doc_image::embed_image!("gallery_resizable_container", "images/gallery_resizable_container.png"),
+    doc = embed_doc_image::embed_image!("gallery_sidebar", "images/gallery_sidebar.png"),
+    doc = embed_doc_image::embed_image!("gallery_table", "images/gallery_table.png"),
 )]
 pub fn gallery() {}

@@ -21,6 +21,25 @@ pub enum ChipStatus {
 
 // TODO: Add layout and style variants
 // TODO: Ability to hide/customize icon
+///
+/// Chip component.
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> impl IntoElement {
+///     Chip::new().child("Chip")
+/// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rect().center().expanded().child(app())
+/// # }, "./images/gallery_chip.png").render();
+/// ```
+///
+/// # Preview
+/// ![Chip Preview][chip]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("chip", "images/gallery_chip.png"),
+)]
 #[derive(PartialEq)]
 pub struct Chip {
     pub(crate) theme: Option<ChipThemePartial>,

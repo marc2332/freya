@@ -11,13 +11,9 @@ fn main() {
 fn app() -> impl IntoElement {
     rect()
         .child(ScrollView::new().height(Size::percent(50.)).child(
-            rect().spacing(6.).padding(6.).children((0..30).map(|_| {
-                rect()
-                    .width(Size::fill())
-                    .height(Size::px(80.))
-                    .background((182, 119, 0))
-                    .into()
-            })),
+            rect().spacing(6.).padding(6.).children(
+                (0..30).map(|_| rect().width(Size::fill()).background((182, 119, 0)).into()),
+            ),
         ))
         .child(
             ScrollView::new().height(Size::percent(50.)).child(
