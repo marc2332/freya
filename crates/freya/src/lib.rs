@@ -81,6 +81,7 @@ pub mod prelude {
     };
     pub use freya_winit::{
         WinitPlatformExt,
+        components::titlebar::*,
         config::{
             LaunchConfig,
             WindowConfig,

@@ -35,13 +35,15 @@ impl EventsCombos {
     pub fn pressed(location: CursorPoint) -> PressEventType {
         let mut combos = Self::get();
         let (event_type, click_count) = match &*combos.last_press.read() {
-            Some((inst, last_location, count))
-                if last_location == &location && inst.elapsed() <= MULTI_PRESS_ELAPSED =>
-            {
-                match count {
-                    1 => (PressEventType::Double, 2),
-                    2 => (PressEventType::Triple, 3),
-                    _ => (PressEventType::Single, 1),
+            Some((inst, last_location, count)) if inst.elapsed() <= MULTI_PRESS_ELAPSED => {
+                if last_location.distance_to(location) <= LOCATION_THRESHOLD {
+                    match count {
+                        1 => (PressEventType::Double, 2),
+                        2 => (PressEventType::Triple, 3),
+                        _ => (PressEventType::Single, 1),
+                    }
+                } else {
+                    (PressEventType::Single, 1)
                 }
             }
             _ => (PressEventType::Single, 1),
@@ -53,6 +55,7 @@ impl EventsCombos {
     }
 }
 
+const LOCATION_THRESHOLD: f64 = 5.0;
 const MULTI_PRESS_ELAPSED: Duration = Duration::from_millis(500);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
