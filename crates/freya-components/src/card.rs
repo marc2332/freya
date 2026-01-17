@@ -3,9 +3,7 @@ use freya_core::prelude::*;
 use crate::{
     get_theme,
     theming::component_themes::{
-        CardColorsThemePartial,
-        CardLayoutThemePartial,
-        CardLayoutThemePartialExt,
+        CardColorsThemePartial, CardLayoutThemePartial, CardLayoutThemePartialExt,
     },
 };
 
@@ -25,44 +23,27 @@ pub enum CardLayoutVariant {
 
 /// A container component with styling variants.
 ///
-/// ## Filled (default)
-///
-/// ```rust
-/// # use freya::prelude::*;
-/// fn app() -> impl IntoElement {
-///     Card::new().child("Hello, World!")
-/// }
-/// ```
-///
-/// ## Outline
-///
-/// ```rust
-/// # use freya::prelude::*;
-/// fn app() -> impl IntoElement {
-///     Card::new().outline().child("Hello, World!")
-/// }
-/// ```
-///
-/// ## Compact
-///
-/// ```rust
-/// # use freya::prelude::*;
-/// fn app() -> impl IntoElement {
-///     Card::new().compact().child("Hello, World!")
-/// }
-/// ```
-///
-/// ## Hoverable
+/// # Example
 ///
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
 ///     Card::new()
-///         .hoverable(true)
-///         .on_press(|_| println!("Pressed!"))
-///         .child("Click me!")
+///         .width(Size::percent(75.))
+///         .height(Size::percent(75.))
+///         .child("Hello, World!")
 /// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rect().center().expanded().child(app())
+/// # }, "./images/gallery_card.png").render();
 /// ```
+///
+/// # Preview
+/// ![Card Preview][card]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("card", "images/gallery_card.png"),
+)]
 #[derive(Clone, PartialEq)]
 pub struct Card {
     pub(crate) theme_colors: Option<CardColorsThemePartial>,
@@ -122,7 +103,7 @@ impl Card {
             theme_layout: None,
             layout: LayoutData::default(),
             accessibility: AccessibilityData::default(),
-            style_variant: CardStyleVariant::Filled,
+            style_variant: CardStyleVariant::Outline,
             layout_variant: CardLayoutVariant::Normal,
             on_press: None,
             elements: Vec::default(),
