@@ -23,6 +23,7 @@ gif = ["dep:gif"]
 skia-engine = ["freya-engine/skia-engine"]
 calendar = ["dep:chrono"]
 markdown = ["dep:pulldown-cmark"]
+titlebar = ["dep:freya-icons"]
 
 [dependencies]
 freya-core = { workspace = true }
@@ -31,6 +32,7 @@ torin = { workspace = true }
 freya-engine = { workspace = true }
 freya-edit = { workspace = true }
 freya-sdk = { workspace = true }
+freya-icons = { workspace = true, optional = true }
 tracing = { workspace = true }
 
 # Theming

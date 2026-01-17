@@ -5,64 +5,47 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    let minimize = EventHandler::new(move |_| {
+    let minimize = move |_| {
         Platform::get().with_window(None, |window| {
             window.set_minimized(true);
         });
-    });
+    };
 
-    let maximize = EventHandler::new(move |_| {
+    let maximize = move |_| {
         Platform::get().with_window(None, |window| {
             let is_max = window.is_maximized();
             window.set_maximized(!is_max);
         });
-    });
+    };
 
-    let close = EventHandler::new(move |_| {
+    let close = move |_| {
         let platform = Platform::get();
         Platform::get().with_window(None, move |window| {
             platform.close_window(window.id());
         });
-    });
+    };
 
     rect()
-        .width(Size::fill())
-        .height(Size::fill())
+        .expanded()
         .vertical()
         .child(
-            Titlebar::new()
-                .title("My App Title")
-                .child(minimize_button(minimize))
-                .child(maximize_button(maximize))
-                .child(close_button(close)),
-        )
-        .child(
             rect()
-                .width(Size::fill())
-                .height(Size::fill())
-                .background(Color::WHITE)
-                .center()
-                .child(label().text("Main content area")),
+                .horizontal()
+                .background((225, 225, 225))
+                .content(Content::Flex)
+                .height(Size::px(32.))
+                .cross_align(Alignment::Center)
+                .padding((0., 0., 0., 8.))
+                .child("Custom Titlebar!")
+                .child(
+                    rect()
+                        .window_drag()
+                        .width(Size::flex(1.))
+                        .height(Size::fill()),
+                )
+                .child(TitlebarButton::new(TitlebarAction::Minimize).on_press(minimize))
+                .child(TitlebarButton::new(TitlebarAction::Maximize).on_press(maximize))
+                .child(TitlebarButton::new(TitlebarAction::Close).on_press(close)),
         )
-}
-
-fn minimize_button(on_press: EventHandler<Event<PressEventData>>) -> Element {
-    TitlebarButton::new()
-        .on_press(on_press)
-        .child(label().text("-").color(Color::BLACK))
-        .into()
-}
-
-fn maximize_button(on_press: EventHandler<Event<PressEventData>>) -> Element {
-    TitlebarButton::new()
-        .on_press(on_press)
-        .child(label().text("□").color(Color::BLACK))
-        .into()
-}
-
-fn close_button(on_press: EventHandler<Event<PressEventData>>) -> Element {
-    TitlebarButton::new()
-        .on_press(on_press)
-        .child(label().text("x").color(Color::BLACK))
-        .into()
+        .child(rect().expanded().center().child("Hello, World!"))
 }

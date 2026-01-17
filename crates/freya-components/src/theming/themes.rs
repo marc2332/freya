@@ -1,4 +1,6 @@
 use freya_core::prelude::*;
+#[cfg(feature = "titlebar")]
+use torin::prelude::Length;
 use torin::{
     gaps::Gaps,
     size::Size,
@@ -10,6 +12,8 @@ use crate::theming::component_themes::CalendarThemePreference;
 use crate::theming::component_themes::LinkThemePreference;
 #[cfg(feature = "markdown")]
 use crate::theming::component_themes::MarkdownViewerThemePreference;
+#[cfg(feature = "titlebar")]
+use crate::theming::component_themes::TitlebarButtonThemePreference;
 use crate::theming::{
     component_themes::{
         AccordionThemePreference,
@@ -345,6 +349,14 @@ pub(crate) const BASE_THEME: Theme = Theme {
         padding: Preference::Specific(Gaps::new_all(12.)),
         day_corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
         nav_button_hover_background: Preference::Reference("hover"),
+    },
+    #[cfg(feature = "titlebar")]
+    titlebar_button: TitlebarButtonThemePreference {
+        background: Preference::Specific(Color::TRANSPARENT),
+        hover_background: Preference::Reference("hover"),
+        corner_radius: Preference::Specific(CornerRadius::new_all(0.0)),
+        width: Preference::Specific(Size::Pixels(Length::new(46.0))),
+        height: Preference::Specific(Size::Fill),
     },
 };
 

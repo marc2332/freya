@@ -14,7 +14,6 @@ use crate::{
     },
 };
 mod accessibility;
-pub mod components;
 pub mod config;
 mod drivers;
 pub mod extensions;

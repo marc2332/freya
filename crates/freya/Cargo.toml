@@ -35,6 +35,7 @@ all = [
   "markdown",
   "icons",
   "radio",
+  "titlebar",
 ]
 all-publish = [
   "all",
@@ -62,6 +63,7 @@ all-tests = [
   "calendar",
   "markdown",
   "radio",
+  "titlebar",
 ]
 docs = ["all-debug"]
 # Features
@@ -82,6 +84,7 @@ material-design = ["dep:freya-material-design"]
 hotpath = ["freya-core/hotpath", "freya-winit/hotpath"]
 icons = ["dep:freya-icons"]
 radio = ["dep:freya-radio"]
+titlebar = ["freya-components/titlebar"]
 
 [dependencies]
 freya-core = { workspace = true }
