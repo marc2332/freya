@@ -19,9 +19,8 @@
 //! }
 //!
 //! fn app() -> impl IntoElement {
-//!     webview("https://example.com")
-//!         .width(Size::fill())
-//!         .height(Size::fill())
+//!     WebView::new("https://example.com")
+//!         .expanded()
 //! }
 //! ```
 
