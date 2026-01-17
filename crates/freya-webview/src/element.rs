@@ -233,6 +233,7 @@ pub fn webview(url: impl Into<String>) -> WebView {
         url: url.into(),
         transparent: false,
         user_agent: None,
+        on_created: None,
     };
 
     WebView {

@@ -1,10 +1,3 @@
-//! WebView example demonstrating a simple tabs system.
-//!
-//! Run with:
-//! ```sh
-//! cargo run --example feature_webview
-//! ```
-
 #![cfg_attr(
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
@@ -25,7 +18,7 @@ fn main() {
 
 #[derive(Clone, PartialEq)]
 struct Tab {
-    id: usize,
+    id: WebViewId,
     title: String,
     url: String,
 }
@@ -34,12 +27,12 @@ fn app() -> impl IntoElement {
     use_init_root_theme(|| DARK_THEME);
     let mut tabs = use_state(|| {
         vec![Tab {
-            id: 0,
+            id: WebViewId::new(),
             title: "Tab 1".to_string(),
             url: "https://duckduckgo.com".to_string(),
         }]
     });
-    let mut active_tab = use_state(|| 0usize);
+    let mut active_tab = use_state(|| tabs.read()[0].id);
 
     rect()
         .width(Size::fill())
@@ -47,7 +40,6 @@ fn app() -> impl IntoElement {
         .background((35, 35, 35))
         .vertical()
         .child(
-            // Tab bar
             rect()
                 .width(Size::fill())
                 .height(Size::px(45.))
@@ -90,8 +82,8 @@ fn app() -> impl IntoElement {
                                             e.prevent_default();
                                             e.stop_propagation();
                                             tabs.write().retain(|t| t.id != tab_id);
-                                            active_tab.set(0);
-                                            WebViewManager::close(WebViewId(tab_id as u64));
+                                            active_tab.set(tabs.read()[0].id);
+                                            WebViewManager::close(tab_id);
                                         })
                                         .child("X"),
                                 ),
@@ -99,13 +91,12 @@ fn app() -> impl IntoElement {
                         .into()
                 }))
                 .child(
-                    // Add tab button
                     Button::new()
                         .on_press(move |_| {
-                            let id = UseId::<WebViewPlugin>::get_in_hook();
+                            let id = WebViewId::new();
                             tabs.write().push(Tab {
                                 id,
-                                title: format!("Tab {}", id + 1),
+                                title: format!("Tab {:?}", id),
                                 url: "https://duckduckgo.com".to_string(),
                             });
                             active_tab.set(id);
@@ -117,7 +108,6 @@ fn app() -> impl IntoElement {
                 ),
         )
         .child(
-            // WebView content area
             rect()
                 .expanded()
                 .children(tabs.read().iter().filter_map(|tab| {
@@ -125,13 +115,7 @@ fn app() -> impl IntoElement {
                     let url = tab.url.clone();
 
                     if is_active {
-                        Some(
-                            WebViewComponent::new(&url)
-                                .width(Size::fill())
-                                .height(Size::fill())
-                                .id(WebViewId(tab.id as u64))
-                                .into(),
-                        )
+                        Some(WebViewComponent::new(&url).expanded().id(tab.id).into())
                     } else {
                         None
                     }

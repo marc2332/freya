@@ -116,6 +116,10 @@ impl WebViewPlugin {
             builder = builder.with_user_agent(user_agent);
         }
 
+        if let Some(ref on_created) = config.on_created {
+            builder = (on_created)(builder)
+        }
+
         // Set initial bounds
         let bounds = Rect {
             position: wry::dpi::Position::Logical(area.origin.to_f64().to_tuple().into()),
@@ -174,7 +178,7 @@ impl FreyaPlugin for WebViewPlugin {
                             if let Some(state) = self.webviews.get_mut(&id) {
                                 if let Err(e) = state.webview.set_visible(true) {
                                     tracing::error!(
-                                        "WebViewPlugin: Failed to set invisible {:?}: {}",
+                                        "WebViewPlugin: Failed to set visible {:?}: {}",
                                         id,
                                         e
                                     );
@@ -204,7 +208,7 @@ impl FreyaPlugin for WebViewPlugin {
                             }
                         }
                         WebViewLifecycleEvent::Close { id } => {
-                            tracing::debug!("WebViewPlugin: Received Dropped event for {:?}", id);
+                            tracing::debug!("WebViewPlugin: Received Close event for {:?}", id);
                             self.webviews.remove(&id);
                         }
                         WebViewLifecycleEvent::Hide { id } => {

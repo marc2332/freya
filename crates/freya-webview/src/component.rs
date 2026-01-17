@@ -13,13 +13,26 @@ use crate::{
         WebViewConfig,
         WebViewId,
     },
+    registry::WebViewCallback,
 };
 
-#[derive(PartialEq, Clone)]
+#[derive(Clone)]
 pub struct WebViewComponent {
     pub webview_id: WebViewId,
     pub url: String,
+    pub close_on_drop: bool,
+    pub on_created: Option<WebViewCallback>,
     layout: LayoutData,
+}
+
+impl PartialEq for WebViewComponent {
+    fn eq(&self, other: &Self) -> bool {
+        self.webview_id == other.webview_id
+            && self.url == other.url
+            && self.close_on_drop == other.close_on_drop
+            && self.on_created.is_none() == other.on_created.is_none()
+            && self.layout == other.layout
+    }
 }
 
 impl WebViewComponent {
@@ -27,6 +40,8 @@ impl WebViewComponent {
         Self {
             webview_id: WebViewId::new(),
             url: url.into(),
+            close_on_drop: true,
+            on_created: None,
             layout: LayoutData::default(),
         }
     }
@@ -38,6 +53,19 @@ impl WebViewComponent {
 
     pub fn id(mut self, id: WebViewId) -> Self {
         self.webview_id = id;
+        self
+    }
+
+    pub fn close_on_drop(mut self, close: bool) -> Self {
+        self.close_on_drop = close;
+        self
+    }
+
+    pub fn on_created(
+        mut self,
+        on_created: impl Fn(wry::WebViewBuilder) -> wry::WebViewBuilder + Send + 'static,
+    ) -> Self {
+        self.on_created = Some(WebViewCallback::new(Box::new(on_created)));
         self
     }
 }
@@ -55,19 +83,24 @@ impl Component for WebViewComponent {
 
         let webview_id = self.webview_id;
         let url = self.url.clone();
+        let close_on_drop = self.close_on_drop;
+        let on_created = self.on_created.clone();
+
         let config = WebViewConfig {
             url: url.clone(),
             transparent: false,
             user_agent: None,
+            on_created,
         };
 
         use_drop({
             let lifecycle_sender = lifecycle_sender.clone();
             move || {
-                lifecycle_sender
-                    .lock()
-                    .unwrap()
-                    .push(WebViewLifecycleEvent::Hide { id: webview_id });
+                lifecycle_sender.lock().unwrap().push(if close_on_drop {
+                    WebViewLifecycleEvent::Close { id: webview_id }
+                } else {
+                    WebViewLifecycleEvent::Hide { id: webview_id }
+                });
             }
         });
 
