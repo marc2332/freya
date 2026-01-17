@@ -13,6 +13,7 @@ use crate::markdown::MarkdownViewer;
 use crate::{
     accordion::Accordion,
     button::Button,
+    card::Card,
     checkbox::Checkbox,
     chip::Chip,
     color_picker::ColorPicker,
@@ -56,6 +57,10 @@ pub struct Theme {
     pub filled_button: ButtonColorsThemePreference,
     pub outline_button: ButtonColorsThemePreference,
     pub flat_button: ButtonColorsThemePreference,
+    pub card_layout: CardLayoutThemePreference,
+    pub compact_card_layout: CardLayoutThemePreference,
+    pub filled_card: CardColorsThemePreference,
+    pub outline_card: CardColorsThemePreference,
     pub accordion: AccordionThemePreference,
     pub switch: SwitchThemePreference,
     pub scrollbar: ScrollBarThemePreference,
@@ -165,6 +170,33 @@ define_theme! {
         border_fill: Color,
         focus_border_fill: Color,
         color: Color,
+    }
+}
+
+define_theme! {
+    for = Card;
+    theme_field = theme_layout;
+
+    %[component]
+    pub CardLayout {
+        %[fields]
+        corner_radius: CornerRadius,
+        padding: Gaps,
+    }
+}
+
+define_theme! {
+    for = Card;
+    theme_field = theme_colors;
+
+    %[component]
+    pub CardColors {
+        %[fields]
+        background: Color,
+        hover_background: Color,
+        border_fill: Color,
+        color: Color,
+        shadow: Color,
     }
 }
 

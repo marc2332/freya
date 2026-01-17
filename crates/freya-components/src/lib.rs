@@ -6,6 +6,7 @@ pub mod button;
 pub mod cache;
 #[cfg(feature = "calendar")]
 pub mod calendar;
+pub mod card;
 pub mod checkbox;
 pub mod chip;
 pub mod color_picker;
