@@ -3,7 +3,9 @@ use freya_core::prelude::*;
 use crate::{
     get_theme,
     theming::component_themes::{
-        CardColorsThemePartial, CardLayoutThemePartial, CardLayoutThemePartialExt,
+        CardColorsThemePartial,
+        CardLayoutThemePartial,
+        CardLayoutThemePartialExt,
     },
 };
 

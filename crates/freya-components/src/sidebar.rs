@@ -21,9 +21,10 @@ use crate::{
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
 ///     SideBar::new()
-///         .bar(rect()
-///             .child(SideBarItem::new().child("Home"))
-///             .child(SideBarItem::new().child("Settings"))
+///         .bar(
+///             rect()
+///                 .child(SideBarItem::new().child("Home"))
+///                 .child(SideBarItem::new().child("Settings")),
 ///         )
 ///         .content(rect().expanded().center().child("Main content"))
 /// }

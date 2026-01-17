@@ -305,28 +305,25 @@ impl Component for TableCell {
 /// fn app() -> impl IntoElement {
 ///     Table::new(2)
 ///         .child(
-///             TableHead::new()
-///                 .child(
-///                     TableRow::new()
-///                         .child(TableCell::new().child("Header 1"))
-///                         .child(TableCell::new().child("Header 2"))
-///                 )
+///             TableHead::new().child(
+///                 TableRow::new()
+///                     .child(TableCell::new().child("Header 1"))
+///                     .child(TableCell::new().child("Header 2")),
+///             ),
 ///         )
 ///         .child(
-///             TableBody::new()
-///                 .child(
-///                     TableRow::new()
-///                         .child(TableCell::new().child("Data 1"))
-///                         .child(TableCell::new().child("Data 2"))
-///                 )
+///             TableBody::new().child(
+///                 TableRow::new()
+///                     .child(TableCell::new().child("Data 1"))
+///                     .child(TableCell::new().child("Data 2")),
+///             ),
 ///         )
 ///         .child(
-///             TableBody::new()
-///                 .child(
-///                     TableRow::new()
-///                         .child(TableCell::new().child("Data 3"))
-///                         .child(TableCell::new().child("Data 4"))
-///                 )
+///             TableBody::new().child(
+///                 TableRow::new()
+///                     .child(TableCell::new().child("Data 3"))
+///                     .child(TableCell::new().child("Data 4")),
+///             ),
 ///         )
 /// }
 /// # use freya_testing::prelude::*;
