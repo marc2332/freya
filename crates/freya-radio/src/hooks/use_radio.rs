@@ -157,11 +157,6 @@ impl<Value, Channel> RadioStation<Value, Channel>
 where
     Channel: RadioChannel<Value>,
 {
-    /// Create a new `RadioStation` with the given initial value.
-    /// This radio station is scoped to the current component tree.
-    /// Use this when the state is only needed within a single window or component hierarchy.
-    ///
-    /// For multi-window applications, use [create_global](Self::create_global) instead.
     pub(crate) fn create(init_value: Value) -> Self {
         RadioStation {
             value: State::create(init_value),
@@ -171,6 +166,8 @@ where
 
     /// Create a global `RadioStation` that lives for the entire application lifetime.
     /// This is useful for sharing state across multiple windows.
+    ///
+    /// You would usually want to call this in your `main` function, not anywhere else.
     ///
     /// # Example
     ///
