@@ -35,10 +35,9 @@ fn app() -> impl IntoElement {
     let mut active_tab = use_state(|| tabs.read()[0].id);
 
     rect()
-        .width(Size::fill())
+        .expanded()
         .height(Size::fill())
         .background((35, 35, 35))
-        .vertical()
         .child(
             rect()
                 .width(Size::fill())
