@@ -469,11 +469,13 @@ impl Tree {
                         );
                         if let [Some(parent_effect_state), Some(effect_state)] = entries {
                             let effect_data = element.effect();
+                            let layer = element.layer();
                             effect_state.update(
                                 *parent_node_id,
                                 parent_effect_state,
                                 *node_id,
                                 effect_data,
+                                layer,
                             );
                         }
                     } else {
