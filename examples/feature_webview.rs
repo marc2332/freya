@@ -67,16 +67,27 @@ fn app() -> impl IntoElement {
                             Color::from_rgb(180, 180, 180)
                         })
                         .corner_radius(4.)
+                        .width(Size::px(120.))
                         .child(
                             rect()
                                 .horizontal()
-                                .center()
+                                .expanded()
+                                .content(Content::flex())
+                                .cross_align(Alignment::Center)
                                 .font_size(14.)
-                                .child(title)
+                                .child(
+                                    label()
+                                        .width(Size::flex(1.))
+                                        .max_lines(1)
+                                        .font_size(14.)
+                                        .text_overflow(TextOverflow::Ellipsis)
+                                        .text(title),
+                                )
                                 .child(
                                     Button::new()
                                         .flat()
                                         .compact()
+                                        .rounded_full()
                                         .on_press(move |e: Event<PressEventData>| {
                                             e.prevent_default();
                                             e.stop_propagation();
@@ -104,8 +115,8 @@ fn app() -> impl IntoElement {
                         })
                         .background((60, 60, 60))
                         .color(Color::WHITE)
-                        .corner_radius(4.)
-                        .child(label().text("+").font_size(16.)),
+                        .rounded_full()
+                        .child(label().text("New").font_size(14.)),
                 ),
         )
         .child(
