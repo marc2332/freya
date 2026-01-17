@@ -79,7 +79,7 @@ impl ContainerExt for WebView {}
 
 impl Component for WebView {
     fn render(&self) -> impl IntoElement {
-        let lifecycle_sender = consume_root_context::<crate::lifecycle::WebViewEvents>();
+        let events = consume_root_context::<crate::lifecycle::WebViewEvents>();
 
         let webview_id = self.webview_id;
         let url = self.url.clone();
@@ -94,9 +94,9 @@ impl Component for WebView {
         };
 
         use_drop({
-            let lifecycle_sender = lifecycle_sender.clone();
+            let events = events.clone();
             move || {
-                lifecycle_sender.lock().unwrap().push(if close_on_drop {
+                events.lock().unwrap().push(if close_on_drop {
                     WebViewLifecycleEvent::Close { id: webview_id }
                 } else {
                     WebViewLifecycleEvent::Hide { id: webview_id }
@@ -107,16 +107,11 @@ impl Component for WebView {
         webview(&url)
             .layout(self.layout.clone())
             .on_sized(move |event: Event<SizedEventData>| {
-                let lifecycle_sender = lifecycle_sender.clone();
-                let area = event.area;
-                lifecycle_sender
-                    .lock()
-                    .unwrap()
-                    .push(WebViewLifecycleEvent::Resized {
-                        id: webview_id,
-                        area,
-                        config: config.clone(),
-                    });
+                events.lock().unwrap().push(WebViewLifecycleEvent::Resized {
+                    id: webview_id,
+                    area: event.area,
+                    config: config.clone(),
+                });
             })
     }
 
