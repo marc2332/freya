@@ -26,6 +26,8 @@ use torin::prelude::{
     CursorPoint,
     Size2D,
 };
+#[cfg(all(feature = "tray", not(target_os = "linux")))]
+use tray_icon::TrayIcon;
 use winit::{
     application::ApplicationHandler,
     event::{
@@ -71,6 +73,8 @@ pub struct WinitRenderer {
         Option<crate::config::TrayIconGetter>,
         Option<crate::config::TrayHandler>,
     ),
+    #[cfg(all(feature = "tray", not(target_os = "linux")))]
+    pub(crate) tray_icon: Option<TrayIcon>,
     pub resumed: bool,
     pub windows: FxHashMap<WindowId, AppWindow>,
     pub proxy: EventLoopProxy<NativeEvent>,
@@ -248,7 +252,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
             {
                 #[cfg(not(target_os = "linux"))]
                 if let Some(tray_icon) = self.tray.0.take() {
-                    let _tray_icon = (tray_icon)();
+                    self.tray_icon = Some((tray_icon)());
                 }
 
                 #[cfg(target_os = "macos")]

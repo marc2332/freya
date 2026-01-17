@@ -94,6 +94,8 @@ pub fn launch(launch_config: LaunchConfig) {
         windows: HashMap::default(),
         #[cfg(feature = "tray")]
         tray: launch_config.tray,
+        #[cfg(all(feature = "tray", not(target_os = "linux")))]
+        tray_icon: None,
         resumed: false,
         futures: launch_config
             .tasks
