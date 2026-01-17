@@ -47,9 +47,8 @@ impl TitlebarButton {
 impl Component for TitlebarButton {
     fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, titlebar_button);
-        let action = self.action.clone();
 
-        let icon = match &action {
+        let icon = match self.action {
             TitlebarAction::Minimize => svg(freya_icons::lucide::minus())
                 .width(Size::px(12.))
                 .height(Size::px(12.)),
