@@ -151,12 +151,11 @@ impl WebViewPlugin {
 }
 
 impl FreyaPlugin for WebViewPlugin {
-    fn inject_root_context(&mut self, runner: &mut freya_core::runner::Runner) {
-        runner.provide_root_context(|| self.events.clone());
-    }
-
-    fn on_event(&mut self, event: &PluginEvent, _handle: PluginHandle) {
+    fn on_event(&mut self, event: &mut PluginEvent, _handle: PluginHandle) {
         match event {
+            PluginEvent::RunnerCreated { runner, .. } => {
+                runner.provide_root_context(|| self.events.clone());
+            }
             PluginEvent::WindowCreated { .. } => {
                 // Window created, initialize GTK on Linux
                 tracing::debug!("WebViewPlugin: Window created");
@@ -212,6 +211,7 @@ impl FreyaPlugin for WebViewPlugin {
                             self.webviews.remove(&id);
                         }
                         WebViewLifecycleEvent::Hide { id } => {
+                            tracing::debug!("WebViewPlugin: Received Hide event for {:?}", id);
                             if let Some(state) = self.webviews.get_mut(&id) {
                                 let _ = state.webview.set_visible(false);
                             }

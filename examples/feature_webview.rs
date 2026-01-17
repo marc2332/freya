@@ -81,8 +81,10 @@ fn app() -> impl IntoElement {
                                             e.prevent_default();
                                             e.stop_propagation();
                                             tabs.write().retain(|t| t.id != tab_id);
-                                            active_tab.set(tabs.read()[0].id);
                                             WebViewManager::close(tab_id);
+                                            if !tabs.read().is_empty() {
+                                                active_tab.set(tabs.read()[0].id);
+                                            }
                                         })
                                         .child("X"),
                                 ),

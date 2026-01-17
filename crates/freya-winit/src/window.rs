@@ -216,7 +216,12 @@ impl AppWindow {
 
         runner.provide_root_context(|| tree.accessibility_generator.clone());
 
-        plugins.inject_root_context(&mut runner);
+        plugins.send(
+            PluginEvent::RunnerCreated {
+                runner: &mut runner,
+            },
+            PluginHandle::new(event_loop_proxy),
+        );
 
         let mutations = runner.sync_and_update();
         tree.apply_mutations(mutations);
