@@ -1,6 +1,12 @@
 use freya_core::{
+    elements::rect::Rect,
     prelude::{
+        Event,
+        EventHandlersExt,
+        EventsCombos,
         Platform,
+        PointerEventData,
+        PressEventType,
         UserEvent,
     },
     user_event::SingleThreadErasedEvent,
@@ -105,6 +111,34 @@ pub trait WinitPlatformExt {
         window_id: Option<WindowId>,
         callback: impl FnOnce(&mut Window) + 'static,
     );
+}
+
+pub trait WindowDragExt {
+    fn window_drag(self) -> Self;
+}
+
+impl WindowDragExt for Rect {
+    fn window_drag(self) -> Self {
+        self.on_pointer_down(move |e: Event<PointerEventData>| {
+            match EventsCombos::pressed(e.global_location()) {
+                PressEventType::Single => {
+                    Platform::get().with_window(None, |window| {
+                        let _ = window.drag_window();
+                    });
+                }
+                PressEventType::Double => {
+                    Platform::get().with_window(None, |window| {
+                        if window.is_maximized() {
+                            window.set_maximized(false);
+                        } else {
+                            window.set_maximized(true);
+                        }
+                    });
+                }
+                _ => {}
+            }
+        })
+    }
 }
 
 impl WinitPlatformExt for Platform {

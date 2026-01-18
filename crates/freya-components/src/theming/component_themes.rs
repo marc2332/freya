@@ -10,9 +10,12 @@ use crate::calendar::Calendar;
 use crate::link::Link;
 #[cfg(feature = "markdown")]
 use crate::markdown::MarkdownViewer;
+#[cfg(feature = "titlebar")]
+use crate::titlebar::TitlebarButton;
 use crate::{
     accordion::Accordion,
     button::Button,
+    card::Card,
     checkbox::Checkbox,
     chip::Chip,
     color_picker::ColorPicker,
@@ -56,6 +59,10 @@ pub struct Theme {
     pub filled_button: ButtonColorsThemePreference,
     pub outline_button: ButtonColorsThemePreference,
     pub flat_button: ButtonColorsThemePreference,
+    pub card_layout: CardLayoutThemePreference,
+    pub compact_card_layout: CardLayoutThemePreference,
+    pub filled_card: CardColorsThemePreference,
+    pub outline_card: CardColorsThemePreference,
     pub accordion: AccordionThemePreference,
     pub switch: SwitchThemePreference,
     pub scrollbar: ScrollBarThemePreference,
@@ -85,6 +92,8 @@ pub struct Theme {
     pub segmented_button: SegmentedButtonThemePreference,
     #[cfg(feature = "calendar")]
     pub calendar: CalendarThemePreference,
+    #[cfg(feature = "titlebar")]
+    pub titlebar_button: TitlebarButtonThemePreference,
 }
 
 impl Default for Theme {
@@ -165,6 +174,33 @@ define_theme! {
         border_fill: Color,
         focus_border_fill: Color,
         color: Color,
+    }
+}
+
+define_theme! {
+    for = Card;
+    theme_field = theme_layout;
+
+    %[component]
+    pub CardLayout {
+        %[fields]
+        corner_radius: CornerRadius,
+        padding: Gaps,
+    }
+}
+
+define_theme! {
+    for = Card;
+    theme_field = theme_colors;
+
+    %[component]
+    pub CardColors {
+        %[fields]
+        background: Color,
+        hover_background: Color,
+        border_fill: Color,
+        color: Color,
+        shadow: Color,
     }
 }
 
@@ -503,5 +539,18 @@ define_theme! {
         padding: Gaps,
         day_corner_radius: CornerRadius,
         nav_button_hover_background: Color,
+    }
+}
+
+#[cfg(feature = "titlebar")]
+define_theme! {
+    %[component]
+    pub TitlebarButton {
+        %[fields]
+        background: Color,
+        hover_background: Color,
+        corner_radius: CornerRadius,
+        width: Size,
+        height: Size,
     }
 }

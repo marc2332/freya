@@ -21,17 +21,22 @@ use crate::{
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
 ///     SideBar::new()
-///         .bar(rect().child("Sidebar"))
-///         .content(rect().child("Main content"))
+///         .bar(
+///             rect()
+///                 .child(SideBarItem::new().child("Home"))
+///                 .child(SideBarItem::new().child("Settings")),
+///         )
+///         .content(rect().expanded().center().child("Main content"))
 /// }
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
 /// #   rect().center().expanded().child(
-/// #       SideBar::new()
-/// #           .bar(rect().width(Size::px(100.)).child("Sidebar"))
-/// #           .content(rect().child("Main content"))
+/// #       app()
 /// #   )
-/// # }, "./images/gallery_sidebar.png").render();
+/// # }, "./images/gallery_sidebar.png")
+/// # .with_hook(|t| { t.move_cursor((20., 20.)); t.sync_and_update(); })
+/// # .with_scale_factor(0.75)
+/// # .render();
 /// ```
 ///
 /// # Preview

@@ -511,6 +511,23 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                     NativeWindowErasedEventAction::CloseWindow(window_id) => {
                                         // Its fine to ignore if the window doesnt exist anymore
                                         let _ = self.windows.remove(&window_id);
+                                        let has_windows = !self.windows.is_empty();
+
+                                        let has_tray = {
+                                            #[cfg(feature = "tray")]
+                                            {
+                                                self.tray.1.is_some()
+                                            }
+                                            #[cfg(not(feature = "tray"))]
+                                            {
+                                                false
+                                            }
+                                        };
+
+                                        // Only exit when there is no window and no tray
+                                        if !has_windows && !has_tray {
+                                            active_event_loop.exit();
+                                        }
                                     }
                                     NativeWindowErasedEventAction::WithWindow {
                                         window_id,

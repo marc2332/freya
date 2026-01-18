@@ -83,6 +83,7 @@ pub struct EffectData {
     pub rotation: Option<f32>,
     pub scale: Option<Scale>,
     pub opacity: Option<f32>,
+    pub blur: Option<f32>,
     pub scrollable: bool,
     pub interactive: Interactive,
 }
@@ -286,6 +287,9 @@ pub struct EffectState {
 
     pub opacities: Rc<[f32]>,
 
+    pub blurs: Rc<[NodeId]>,
+    pub blur: Option<f32>,
+
     pub scrollables: Rc<[NodeId]>,
 
     pub interactive: Interactive,
@@ -298,18 +302,25 @@ impl EffectState {
         parent_effect_state: &Self,
         node_id: NodeId,
         effect_data: Option<Cow<'_, EffectData>>,
+        layer: Layer,
     ) {
         *self = Self {
             overflow: Overflow::default(),
             ..parent_effect_state.clone()
         };
 
-        if parent_effect_state.overflow == Overflow::Clip {
-            let mut clips = parent_effect_state.clips.to_vec();
-            clips.push(parent_node_id);
-            if self.clips.as_ref() != clips {
-                self.clips = Rc::from(clips);
+        match layer {
+            Layer::Overlay => {
+                self.clips = Rc::default();
             }
+            Layer::Relative(_) if parent_effect_state.overflow == Overflow::Clip => {
+                let mut clips = parent_effect_state.clips.to_vec();
+                clips.push(parent_node_id);
+                if self.clips.as_ref() != clips {
+                    self.clips = Rc::from(clips);
+                }
+            }
+            _ => {}
         }
 
         if let Some(effect_data) = effect_data {
@@ -338,6 +349,15 @@ impl EffectState {
                 opacities.push(opacity);
                 if self.opacities.as_ref() != opacities {
                     self.opacities = Rc::from(opacities);
+                }
+            }
+
+            if let Some(blur) = effect_data.blur {
+                let mut blurs = parent_effect_state.blurs.to_vec();
+                blurs.push(node_id);
+                self.blur = Some(blur);
+                if self.blurs.as_ref() != blurs {
+                    self.blurs = Rc::from(blurs);
                 }
             }
 
