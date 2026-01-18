@@ -66,6 +66,7 @@
 //! - `icons`: Reexport of [freya_icons] under [icons].
 //! - `radio`: Reexport [freya_radio] under [radio].
 //! - `markdown`: Enables the [MarkdownViewer](components::MarkdownViewer) component.
+//! - `titlebar`: Enables the [TitlebarButton](components::TitlebarButton) component.
 //!
 //! ## Misc features
 //! - `devtools`: Enables devtools support.
@@ -80,6 +81,7 @@ pub mod prelude {
         ClipboardError,
     };
     pub use freya_winit::{
+        WindowDragExt,
         WinitPlatformExt,
         config::{
             LaunchConfig,
@@ -141,6 +143,8 @@ pub mod components {
     #[cfg_attr(feature = "docs", doc(cfg(feature = "plot")))]
     #[cfg(feature = "plot")]
     pub use freya_components::plot::*;
+    #[cfg(feature = "titlebar")]
+    pub use freya_components::titlebar::*;
     pub use freya_components::{
         accordion::*,
         activable_route_context::*,

@@ -10,6 +10,8 @@ use crate::calendar::Calendar;
 use crate::link::Link;
 #[cfg(feature = "markdown")]
 use crate::markdown::MarkdownViewer;
+#[cfg(feature = "titlebar")]
+use crate::titlebar::TitlebarButton;
 use crate::{
     accordion::Accordion,
     button::Button,
@@ -90,6 +92,8 @@ pub struct Theme {
     pub segmented_button: SegmentedButtonThemePreference,
     #[cfg(feature = "calendar")]
     pub calendar: CalendarThemePreference,
+    #[cfg(feature = "titlebar")]
+    pub titlebar_button: TitlebarButtonThemePreference,
 }
 
 impl Default for Theme {
@@ -535,5 +539,18 @@ define_theme! {
         padding: Gaps,
         day_corner_radius: CornerRadius,
         nav_button_hover_background: Color,
+    }
+}
+
+#[cfg(feature = "titlebar")]
+define_theme! {
+    %[component]
+    pub TitlebarButton {
+        %[fields]
+        background: Color,
+        hover_background: Color,
+        corner_radius: CornerRadius,
+        width: Size,
+        height: Size,
     }
 }

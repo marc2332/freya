@@ -39,6 +39,8 @@ pub mod switch;
 pub mod table;
 pub mod theming;
 pub mod tile;
+#[cfg(feature = "titlebar")]
+pub mod titlebar;
 pub mod tooltip;
 
 #[cfg(feature = "remote-asset")]
