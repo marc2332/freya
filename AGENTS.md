@@ -26,6 +26,7 @@ Documentation is located in `./crates/freya/src/_docs`.
 - Always implement the `KeyExt` trait for components to enable key-based reconciliation.
 - Use `#[derive(PartialEq)]` for component structs to enable proper diffing and updates.
 - Use `use freya_core::prelude::*;` to import common types and traits in component files.
+- Never use `cargo check` just `just c`
 
 ## General instructions
 
