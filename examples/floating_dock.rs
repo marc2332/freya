@@ -9,18 +9,20 @@ use std::{
     process::Command,
 };
 
+#[cfg(target_os = "linux")]
+use freya::winit::platform::x11::{
+    WindowAttributesExtX11,
+    WindowType,
+};
 use freya::{
     prelude::*,
     winit::{
         dpi::LogicalPosition,
-        platform::x11::{
-            WindowAttributesExtX11,
-            WindowType,
-        },
         window::WindowLevel,
     },
 };
 
+#[cfg(target_os = "linux")]
 fn main() {
     launch(
         LaunchConfig::new().with_window(
@@ -39,6 +41,11 @@ fn main() {
                 }),
         ),
     )
+}
+
+#[cfg(not(target_os = "linux"))]
+fn main() {
+    panic!("This example only runs on Linux");
 }
 
 fn app() -> impl IntoElement {
