@@ -13,6 +13,7 @@ pub struct NodeElement {
     pub on_toggle: EventHandler<()>,
     pub on_expand_all: EventHandler<()>,
     pub on_collapse_all: EventHandler<()>,
+    pub on_hover: EventHandler<Option<NodeId>>,
 }
 
 impl Component for NodeElement {
@@ -48,6 +49,28 @@ impl Component for NodeElement {
                 }
             }
         };
+
+        let on_hover_enter = {
+            let on_hover = self.on_hover.clone();
+            let node_id = self.node_id;
+            move |_| on_hover.call(Some(node_id))
+        };
+
+        let on_hover_leave = {
+            let on_hover = self.on_hover.clone();
+            move |_| on_hover.call(None)
+        };
+
+        let arrow_button = self.is_open.map(|is_open| {
+            let arrow_degrees = if is_open { 0. } else { 270. };
+            Button::new()
+                .corner_radius(99.)
+                .border_fill(Color::TRANSPARENT)
+                .padding(Gaps::new_all(6.))
+                .background(Color::TRANSPARENT)
+                .on_press(on_open)
+                .child(ArrowIcon::new().rotate(arrow_degrees).fill(Color::WHITE))
+        });
 
         let on_secondary_press = {
             let on_expand = self.on_toggle.clone();
@@ -98,18 +121,7 @@ impl Component for NodeElement {
             }
         };
 
-        let arrow_button = self.is_open.map(|is_open| {
-            let arrow_degrees = if is_open { 0. } else { 270. };
-            Button::new()
-                .corner_radius(99.)
-                .border_fill(Color::TRANSPARENT)
-                .padding(Gaps::new_all(6.))
-                .background(Color::TRANSPARENT)
-                .on_press(on_open)
-                .child(ArrowIcon::new().rotate(arrow_degrees).fill(Color::WHITE))
-        });
-
-        Button::new()
+        let button = Button::new()
             .corner_radius(99.)
             .width(Size::fill())
             .height(Size::px(27.))
@@ -157,7 +169,12 @@ impl Component for NodeElement {
                                 .color(Color::from_rgb(200, 200, 200)),
                             ),
                     ),
-            )
+            );
+
+        rect()
+            .on_pointer_enter(on_hover_enter)
+            .on_pointer_leave(on_hover_leave)
+            .child(button)
             .into()
     }
 }
