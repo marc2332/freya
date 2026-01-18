@@ -3,14 +3,15 @@
     windows_subsystem = "windows"
 )]
 
+#[cfg(target_os = "linux")]
+use freya::winit::platform::x11::{
+    WindowAttributesExtX11,
+    WindowType,
+};
 use freya::{
     prelude::*,
     winit::{
         dpi::LogicalPosition,
-        platform::x11::{
-            WindowAttributesExtX11,
-            WindowType,
-        },
         window::WindowLevel,
     },
 };
@@ -27,22 +28,23 @@ fn main() {
                 .with_transparency(true)
                 .with_background(Color::TRANSPARENT)
                 .with_window_attributes(move |attributes, el| {
-                    let attributes = attributes
-                        .with_x11_window_type(vec![WindowType::Dock])
-                        .with_window_level(WindowLevel::AlwaysOnTop);
+                    #[cfg(target_os = "linux")]
+                    let attributes = attributes.with_x11_window_type(vec![WindowType::Dock]);
+
+                    let mut attributes = attributes.with_window_level(WindowLevel::AlwaysOnTop);
 
                     if let Some(monitor) = el
                         .primary_monitor()
                         .or_else(|| el.available_monitors().next())
                     {
                         let size = monitor.size();
-                        attributes.with_position(LogicalPosition {
+                        attributes = attributes.with_position(LogicalPosition {
                             x: size.width as i32 / 2 - width / 2,
                             y: 40,
                         })
-                    } else {
-                        attributes
                     }
+
+                    attributes
                 }),
         ),
     )
