@@ -335,13 +335,10 @@ impl Component for LayoutForTreeInspector {
                                 .ok();
                         });
                     }),
-                    on_hover: EventHandler::new(move |node_id| {
+                    on_hover: EventHandler::new(move |(window_id, node_id)| {
                         let message = Message::Text(
                             serde_json::to_string(&IncomingMessage {
-                                action: IncomingMessageAction::HoverNode {
-                                    window_id: selected_window_id.unwrap_or(0),
-                                    node_id,
-                                },
+                                action: IncomingMessageAction::HoverNode { window_id, node_id },
                             })
                             .unwrap()
                             .into(),

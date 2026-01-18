@@ -27,7 +27,7 @@ pub struct NodesTree {
     pub selected_node_id: Option<NodeId>,
     pub selected_window_id: Option<u64>,
     pub on_selected: EventHandler<(u64, NodeId)>,
-    pub on_hover: EventHandler<Option<NodeId>>,
+    pub on_hover: EventHandler<(u64, Option<NodeId>)>,
 }
 
 impl NodesTree {
@@ -174,7 +174,9 @@ impl Component for NodesTree {
                             }
                         }
                     }),
-                    on_hover,
+                    on_hover: EventHandler::new(move |node_id| {
+                        on_hover.call((window_id, node_id));
+                    }),
                     node_id,
                     window_id,
                 }
