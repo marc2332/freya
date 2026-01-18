@@ -87,7 +87,6 @@ cfg_if::cfg_if! {
 /// | [ColorPicker](color_picker::ColorPicker)        | [Chip](chip::Chip)        | [Menu](menu::Menu)        | [Popup](popup::Popup)        |
 /// | ![ResizableContainer Preview][gallery_resizable_container] | ![Sidebar Preview][gallery_sidebar] | ![Table Preview][gallery_table] | ![Card Preview][gallery_card] |
 /// | [ResizableContainer](resizable_container::ResizableContainer)        | [Sidebar](sidebar::SideBar)        | [Table](table::Table)        | [Card](card::Card)       |
-
 #[cfg_attr(feature = "docs",
     doc = embed_doc_image::embed_image!("gallery_button", "images/gallery_button.png"),
     doc = embed_doc_image::embed_image!("gallery_filled_button", "images/gallery_filled_button.png"),
