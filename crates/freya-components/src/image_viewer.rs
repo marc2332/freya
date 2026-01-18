@@ -211,6 +211,7 @@ impl LayoutExt for ImageViewer {
     }
 }
 
+impl ContainerSizeExt for ImageViewer {}
 impl ContainerWithContentExt for ImageViewer {}
 
 impl ImageExt for ImageViewer {
