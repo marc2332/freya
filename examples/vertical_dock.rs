@@ -69,6 +69,24 @@ fn dock_icon(icon_path: PathBuf, name: String) -> Element {
         Color::TRANSPARENT
     };
 
+    let is_svg = icon_path
+        .extension()
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("svg"));
+
+    let icon_element: Element = if is_svg {
+        let svg_data = use_hook(|| {
+            std::fs::read(&icon_path)
+                .map(Bytes::from)
+                .unwrap_or_default()
+        });
+        svg(svg_data).width(Size::px(40.)).height(Size::px(40.)).into()
+    } else {
+        ImageViewer::new(icon_path)
+            .width(Size::px(40.))
+            .height(Size::px(40.))
+            .into()
+    };
+
     rect()
         .center()
         .padding(Gaps::new_all(4.))
@@ -79,11 +97,7 @@ fn dock_icon(icon_path: PathBuf, name: String) -> Element {
         .on_mouse_up(move |_| {
             println!("Clicked: {}", name);
         })
-        .child(
-            ImageViewer::new(icon_path)
-                .width(Size::px(40.))
-                .height(Size::px(40.)),
-        )
+        .child(icon_element)
         .into()
 }
 
@@ -183,27 +197,39 @@ fn find_icon_path(icon_name: &str) -> Option<PathBuf> {
         Some(PathBuf::from("/usr/share/pixmaps")),
     ];
 
-    // Prefer larger icons
+    // Prefer larger icons, and PNG over SVG (ImageViewer handles PNG better)
     let sizes = ["256x256", "128x128", "96x96", "64x64", "48x48", "scalable"];
-    let extensions = ["png", "svg"];
 
-    for dir in icon_dirs.into_iter().flatten() {
+    // First pass: look for PNG files only
+    for dir in icon_dirs.iter().flatten() {
         for size in &sizes {
-            for ext in &extensions {
-                let icon_path = dir.join(size).join("apps").join(format!("{}.{}", icon_name, ext));
-                if icon_path.exists() {
-                    return Some(icon_path);
-                }
+            let icon_path = dir.join(size).join("apps").join(format!("{}.png", icon_name));
+            if icon_path.exists() {
+                return Some(icon_path);
             }
         }
     }
 
-    // Check pixmaps directory (flat structure)
-    for ext in &extensions {
-        let pixmap_path = PathBuf::from("/usr/share/pixmaps").join(format!("{}.{}", icon_name, ext));
-        if pixmap_path.exists() {
-            return Some(pixmap_path);
+    // Check pixmaps for PNG
+    let pixmap_path = PathBuf::from("/usr/share/pixmaps").join(format!("{}.png", icon_name));
+    if pixmap_path.exists() {
+        return Some(pixmap_path);
+    }
+
+    // Second pass: fall back to SVG if no PNG found
+    for dir in icon_dirs.into_iter().flatten() {
+        for size in &sizes {
+            let icon_path = dir.join(size).join("apps").join(format!("{}.svg", icon_name));
+            if icon_path.exists() {
+                return Some(icon_path);
+            }
         }
+    }
+
+    // Check pixmaps for SVG
+    let pixmap_path = PathBuf::from("/usr/share/pixmaps").join(format!("{}.svg", icon_name));
+    if pixmap_path.exists() {
+        return Some(pixmap_path);
     }
 
     None
