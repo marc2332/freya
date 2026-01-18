@@ -1,10 +1,13 @@
 use freya_engine::prelude::{
     Canvas,
+    ClipOp,
     FontCollection,
     FontMgr,
+    SaveLayerRec,
     SkMatrix,
     SkPoint,
     SkRect,
+    blur,
 };
 
 use crate::{
@@ -136,6 +139,40 @@ impl RenderPipeline<'_> {
                         self.canvas.translate((center.x, center.y));
                         self.canvas.scale((scale.x, scale.y));
                         self.canvas.translate((-center.x, -center.y));
+                    }
+
+                    // Apply inherited blur effects
+                    for id in effect_state.blurs.iter() {
+                        let layout_node = self.tree.layout.get(id).unwrap();
+                        let effect = self.tree.effect_state.get(id).unwrap();
+                        let element = self.tree.elements.get(id).unwrap();
+                        let area = layout_node.visible_area();
+                        let style = element.style();
+                        let render_rect = element.render_rect(&area, self.scale_factor as f32);
+                        let blur_radius = effect.blur.unwrap();
+                        let image_filter = blur(
+                            (
+                                blur_radius * self.scale_factor as f32,
+                                blur_radius * self.scale_factor as f32,
+                            ),
+                            None,
+                            None,
+                            render_rect.rect(),
+                        );
+                        if let Some(image_filter) = image_filter {
+                            let rec = SaveLayerRec::default()
+                                .bounds(&rect)
+                                .backdrop(&image_filter);
+                            if style.corner_radius.is_round() {
+                                self.canvas.clip_rrect(render_rect, ClipOp::Intersect, true);
+                                self.canvas.save_layer(&rec);
+                                self.canvas.restore();
+                                self.canvas.restore();
+                            } else {
+                                self.canvas.save_layer(&rec);
+                                self.canvas.restore();
+                            }
+                        }
                     }
                 }
 

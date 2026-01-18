@@ -594,16 +594,6 @@ pub trait ImageExt
 where
     Self: LayoutExt,
 {
-    fn width(mut self, width: Size) -> Self {
-        self.get_layout().layout.width = width;
-        self
-    }
-
-    fn height(mut self, height: Size) -> Self {
-        self.get_layout().layout.height = height;
-        self
-    }
-
     fn get_image_data(&mut self) -> &mut ImageData;
 
     fn image_data(mut self, image_data: ImageData) -> Self {

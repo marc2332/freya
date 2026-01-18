@@ -167,6 +167,10 @@ impl CornerRadius {
             self.top_left, self.top_right, self.bottom_right, self.bottom_left
         )
     }
+
+    pub fn is_round(&self) -> bool {
+        self.top_left > 0. || self.top_right > 0. || self.bottom_right > 0. || self.bottom_left > 0.
+    }
 }
 
 // https://www.figma.com/blog/desperately-seeking-squircles/

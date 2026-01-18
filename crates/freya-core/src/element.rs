@@ -9,12 +9,17 @@ use freya_engine::prelude::{
     Canvas,
     FontCollection,
     FontMgr,
+    SkRRect,
+    SkRect,
 };
 use rustc_hash::FxHashMap;
-use torin::prelude::{
-    Area,
-    LayoutNode,
-    Size2D,
+use torin::{
+    prelude::{
+        Area,
+        LayoutNode,
+        Size2D,
+    },
+    scaled::Scaled,
 };
 
 use crate::{
@@ -121,6 +126,20 @@ pub trait ElementExt: Any {
     fn clip(&self, _context: ClipContext) {}
 
     fn render(&self, _context: RenderContext) {}
+
+    fn render_rect(&self, area: &Area, scale_factor: f32) -> SkRRect {
+        let style = self.style();
+        let corner_radius = style.corner_radius.with_scale(scale_factor);
+        SkRRect::new_rect_radii(
+            SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
+            &[
+                (corner_radius.top_left, corner_radius.top_left).into(),
+                (corner_radius.top_right, corner_radius.top_right).into(),
+                (corner_radius.bottom_right, corner_radius.bottom_right).into(),
+                (corner_radius.bottom_left, corner_radius.bottom_left).into(),
+            ],
+        )
+    }
 }
 
 #[allow(dead_code)]

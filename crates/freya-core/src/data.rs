@@ -83,6 +83,7 @@ pub struct EffectData {
     pub rotation: Option<f32>,
     pub scale: Option<Scale>,
     pub opacity: Option<f32>,
+    pub blur: Option<f32>,
     pub scrollable: bool,
     pub interactive: Interactive,
 }
@@ -286,6 +287,9 @@ pub struct EffectState {
 
     pub opacities: Rc<[f32]>,
 
+    pub blurs: Rc<[NodeId]>,
+    pub blur: Option<f32>,
+
     pub scrollables: Rc<[NodeId]>,
 
     pub interactive: Interactive,
@@ -345,6 +349,15 @@ impl EffectState {
                 opacities.push(opacity);
                 if self.opacities.as_ref() != opacities {
                     self.opacities = Rc::from(opacities);
+                }
+            }
+
+            if let Some(blur) = effect_data.blur {
+                let mut blurs = parent_effect_state.blurs.to_vec();
+                blurs.push(node_id);
+                self.blur = Some(blur);
+                if self.blurs.as_ref() != blurs {
+                    self.blurs = Rc::from(blurs);
                 }
             }
 
