@@ -41,6 +41,7 @@ pub struct NodeInfo {
     pub parent_id: Option<NodeId>,
     pub children_len: usize,
     pub height: u16,
+    pub layer: i16,
     pub state: NodeState,
     pub area: Area,
     pub inner_area: AreaOf<Inner>,
@@ -213,4 +214,5 @@ pub enum AttributeType<'a> {
     TextHeightBehavior(&'a TextHeightBehavior),
     FontSlant(FontSlant),
     Length(Length),
+    Layer(i16),
 }
