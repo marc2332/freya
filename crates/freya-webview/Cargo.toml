@@ -9,6 +9,9 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "webview"]
 categories = ["gui"]
 
+[features]
+skia-engine = ["freya-core/skia-engine"]
+
 [dependencies]
 freya-core = { workspace = true }
 freya-winit = { workspace = true }
@@ -19,13 +22,10 @@ rustc-hash = { workspace = true }
 tracing = { workspace = true }
 accesskit = { workspace = true }
 futures-channel = { workspace = true }
-futures-lite.workspace = true
+futures-lite = { workspace = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 gtk = "0.18"
 
 [dev-dependencies]
 freya = { path = "../freya" }
-
-[features]
-skia-engine = ["freya-core/skia-engine"]

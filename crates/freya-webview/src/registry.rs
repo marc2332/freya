@@ -43,7 +43,11 @@ impl PartialEq for WebViewConfig {
         self.url == other.url
             && self.transparent == other.transparent
             && self.user_agent == other.user_agent
-            && self.on_created.is_none() == other.on_created.is_none()
+            && match (&self.on_created, &other.on_created) {
+                (None, None) => true,
+                (Some(a), Some(b)) => std::sync::Arc::ptr_eq(a, b),
+                _ => false,
+            }
     }
 }
 

@@ -30,7 +30,11 @@ impl PartialEq for WebView {
         self.webview_id == other.webview_id
             && self.url == other.url
             && self.close_on_drop == other.close_on_drop
-            && self.on_created.is_none() == other.on_created.is_none()
+            && match (&self.on_created, &other.on_created) {
+                (None, None) => true,
+                (Some(a), Some(b)) => std::sync::Arc::ptr_eq(a, b),
+                _ => false,
+            }
             && self.layout == other.layout
     }
 }
@@ -56,6 +60,7 @@ impl WebView {
         self
     }
 
+    /// If you decide to not close the webview on drop you will need to manually close it with [WebViewManager::close](crate::lifecycle::WebViewManager::close).
     pub fn close_on_drop(mut self, close: bool) -> Self {
         self.close_on_drop = close;
         self
