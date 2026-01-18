@@ -3,41 +3,39 @@
     windows_subsystem = "windows"
 )]
 
-use std::env;
-use std::path::PathBuf;
-use std::process::Command;
+use std::{
+    env,
+    path::PathBuf,
+    process::Command,
+};
 
 use freya::{
     prelude::*,
-    winit::{dpi::LogicalPosition, window::WindowLevel},
+    winit::{
+        dpi::LogicalPosition,
+        platform::x11::{
+            WindowAttributesExtX11,
+            WindowType,
+        },
+        window::WindowLevel,
+    },
 };
 
 fn main() {
-    let (width, height) = (64, 800);
     launch(
         LaunchConfig::new().with_window(
             WindowConfig::new(app)
                 .with_title("Dock")
-                .with_size(width as f64, height as f64)
+                .with_size(50., 800.)
                 .with_decorations(false)
                 .with_resizable(false)
-                .with_background(Color::from_rgb(30, 30, 30))
-                .with_window_attributes(move |attributes, el| {
-                    let attributes = attributes.with_window_level(WindowLevel::AlwaysOnTop);
-
-                    // Position on left side of screen, centered vertically
-                    if let Some(monitor) = el
-                        .primary_monitor()
-                        .or_else(|| el.available_monitors().next())
-                    {
-                        let size = monitor.size();
-                        attributes.with_position(LogicalPosition {
-                            x: 0,
-                            y: size.height as i32 / 2 - height / 2,
-                        })
-                    } else {
-                        attributes
-                    }
+                .with_background(Color::TRANSPARENT)
+                .with_transparency(true)
+                .with_window_attributes(move |attributes, _| {
+                    attributes
+                        .with_x11_window_type(vec![WindowType::Dock])
+                        .with_window_level(WindowLevel::AlwaysOnTop)
+                        .with_position(LogicalPosition { x: 54, y: 32 })
                 }),
         ),
     )
@@ -47,58 +45,78 @@ fn app() -> impl IntoElement {
     let apps = use_hook(get_pinned_apps);
 
     rect()
-        .width(Size::fill())
-        .height(Size::fill())
-        .padding(Gaps::new_all(8.))
+        .expanded()
+        .padding(8.)
         .spacing(8.)
-        .background(Color::from_rgb(30, 30, 30))
-        .corner_radius(8.)
+        .background((30, 30, 30, 0.8))
         .children(apps.iter().filter_map(|app| {
             app.icon_path.as_ref().map(|icon_path| {
-                dock_icon(icon_path.clone(), app.name.clone())
+                DockIcon {
+                    icon_path: icon_path.clone(),
+                    name: app.name.clone(),
+                }
+                .into()
             })
         }))
 }
 
-fn dock_icon(icon_path: PathBuf, name: String) -> Element {
-    let mut hovered = use_state(|| false);
+#[derive(PartialEq)]
+struct DockIcon {
+    icon_path: PathBuf,
+    name: String,
+}
 
-    let background = if *hovered.read() {
-        Color::from_rgb(60, 60, 60)
-    } else {
-        Color::TRANSPARENT
-    };
+impl Component for DockIcon {
+    fn render(&self) -> impl IntoElement {
+        let mut hovered = use_state(|| false);
 
-    let is_svg = icon_path
-        .extension()
-        .is_some_and(|ext| ext.eq_ignore_ascii_case("svg"));
+        let is_svg = self
+            .icon_path
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("svg"));
 
-    let icon_element: Element = if is_svg {
-        let svg_data = use_hook(|| {
-            std::fs::read(&icon_path)
-                .map(Bytes::from)
-                .unwrap_or_default()
-        });
-        svg(svg_data).width(Size::px(40.)).height(Size::px(40.)).into()
-    } else {
-        ImageViewer::new(icon_path)
-            .width(Size::px(40.))
-            .height(Size::px(40.))
-            .into()
-    };
+        let icon_element: Element = if is_svg {
+            let icon_path = self.icon_path.clone();
+            let svg_data = use_hook(|| {
+                std::fs::read(&icon_path)
+                    .map(Bytes::from)
+                    .unwrap_or_default()
+            });
+            svg(svg_data)
+                .width(Size::px(28.))
+                .height(Size::px(28.))
+                .into()
+        } else {
+            ImageViewer::new(self.icon_path.clone())
+                .sampling_mode(SamplingMode::Trilinear)
+                .width(Size::px(28.))
+                .height(Size::px(28.))
+                .into()
+        };
 
-    rect()
-        .center()
-        .padding(Gaps::new_all(4.))
-        .corner_radius(8.)
-        .background(background)
-        .on_pointer_enter(move |_| hovered.set(true))
-        .on_pointer_leave(move |_| hovered.set(false))
-        .on_mouse_up(move |_| {
-            println!("Clicked: {}", name);
-        })
-        .child(icon_element)
-        .into()
+        let name = self.name.clone();
+        let background = if hovered() {
+            Color::from_rgb(60, 60, 60)
+        } else {
+            Color::TRANSPARENT
+        };
+
+        rect()
+            .center()
+            .padding(4.)
+            .corner_radius(8.)
+            .background(background)
+            .on_pointer_enter(move |_| hovered.set(true))
+            .on_pointer_leave(move |_| hovered.set(false))
+            .on_press(move |_| {
+                println!("Clicked: {}", name);
+            })
+            .child(icon_element)
+    }
+
+    fn render_key(&self) -> DiffKey {
+        DiffKey::from(&self.name)
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -151,7 +169,8 @@ fn parse_desktop_file(desktop_id: &str) -> (String, Option<String>) {
         Some(PathBuf::from("/usr/share/applications")),
         Some(PathBuf::from("/var/lib/flatpak/exports/share/applications")),
         home.as_ref().map(|h| h.join(".local/share/applications")),
-        home.as_ref().map(|h| h.join(".local/share/flatpak/exports/share/applications")),
+        home.as_ref()
+            .map(|h| h.join(".local/share/flatpak/exports/share/applications")),
         Some(PathBuf::from("/var/lib/snapd/desktop/applications")),
     ];
 
@@ -191,9 +210,12 @@ fn find_icon_path(icon_name: &str) -> Option<PathBuf> {
 
     let icon_dirs = [
         Some(PathBuf::from("/usr/share/icons/hicolor")),
-        Some(PathBuf::from("/var/lib/flatpak/exports/share/icons/hicolor")),
+        Some(PathBuf::from(
+            "/var/lib/flatpak/exports/share/icons/hicolor",
+        )),
         home.as_ref().map(|h| h.join(".local/share/icons/hicolor")),
-        home.as_ref().map(|h| h.join(".local/share/flatpak/exports/share/icons/hicolor")),
+        home.as_ref()
+            .map(|h| h.join(".local/share/flatpak/exports/share/icons/hicolor")),
         Some(PathBuf::from("/usr/share/pixmaps")),
     ];
 
@@ -203,7 +225,10 @@ fn find_icon_path(icon_name: &str) -> Option<PathBuf> {
     // First pass: look for PNG files only
     for dir in icon_dirs.iter().flatten() {
         for size in &sizes {
-            let icon_path = dir.join(size).join("apps").join(format!("{}.png", icon_name));
+            let icon_path = dir
+                .join(size)
+                .join("apps")
+                .join(format!("{}.png", icon_name));
             if icon_path.exists() {
                 return Some(icon_path);
             }
@@ -219,7 +244,10 @@ fn find_icon_path(icon_name: &str) -> Option<PathBuf> {
     // Second pass: fall back to SVG if no PNG found
     for dir in icon_dirs.into_iter().flatten() {
         for size in &sizes {
-            let icon_path = dir.join(size).join("apps").join(format!("{}.svg", icon_name));
+            let icon_path = dir
+                .join(size)
+                .join("apps")
+                .join(format!("{}.svg", icon_name));
             if icon_path.exists() {
                 return Some(icon_path);
             }
