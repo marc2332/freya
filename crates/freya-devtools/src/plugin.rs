@@ -97,6 +97,7 @@ impl DevtoolsPlugin {
             let parent_id = tree.parents.get(&node_id).cloned();
             let layout_node = tree.layout.get(&node_id).cloned().unwrap();
             let text_style_state = tree.text_style_state.get(&node_id).cloned().unwrap();
+            let layer = tree.layer_state.get(&node_id).map(|s| s.layer).unwrap_or(0);
             let children_len = tree
                 .children
                 .get(&node_id)
@@ -110,6 +111,7 @@ impl DevtoolsPlugin {
                 parent_id,
                 children_len,
                 height,
+                layer,
                 state: NodeState {
                     style: element.style().into_owned(),
                     layout: element.layout().into_owned().layout,
