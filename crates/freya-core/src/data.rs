@@ -298,18 +298,25 @@ impl EffectState {
         parent_effect_state: &Self,
         node_id: NodeId,
         effect_data: Option<Cow<'_, EffectData>>,
+        layer: Layer,
     ) {
         *self = Self {
             overflow: Overflow::default(),
             ..parent_effect_state.clone()
         };
 
-        if parent_effect_state.overflow == Overflow::Clip {
-            let mut clips = parent_effect_state.clips.to_vec();
-            clips.push(parent_node_id);
-            if self.clips.as_ref() != clips {
-                self.clips = Rc::from(clips);
+        match layer {
+            Layer::Overlay => {
+                self.clips = Rc::default();
             }
+            Layer::Relative(_) if parent_effect_state.overflow == Overflow::Clip => {
+                let mut clips = parent_effect_state.clips.to_vec();
+                clips.push(parent_node_id);
+                if self.clips.as_ref() != clips {
+                    self.clips = Rc::from(clips);
+                }
+            }
+            _ => {}
         }
 
         if let Some(effect_data) = effect_data {
