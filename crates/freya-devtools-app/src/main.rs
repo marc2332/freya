@@ -229,6 +229,7 @@ impl Component for LayoutForNodeInspector {
                                             .spacing(6.)
                                             .child(
                                                 paragraph()
+                                                    .max_lines(1)
                                                     .height(Size::px(20.))
                                                     .span(Span::new(area))
                                                     .span(
@@ -237,6 +238,7 @@ impl Component for LayoutForNodeInspector {
                                             )
                                             .child(
                                                 paragraph()
+                                                    .max_lines(1)
                                                     .height(Size::px(20.))
                                                     .span(Span::new(
                                                         node_info.children_len.to_string(),
@@ -244,6 +246,15 @@ impl Component for LayoutForNodeInspector {
                                                     .span(
                                                         Span::new(" children")
                                                             .color((200, 200, 200)),
+                                                    ),
+                                            )
+                                            .child(
+                                                paragraph()
+                                                    .max_lines(1)
+                                                    .height(Size::px(20.))
+                                                    .span(Span::new(node_info.layer.to_string()))
+                                                    .span(
+                                                        Span::new(" layer").color((200, 200, 200)),
                                                     ),
                                             ),
                                     )

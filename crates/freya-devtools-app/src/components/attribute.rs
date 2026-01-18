@@ -56,5 +56,6 @@ pub fn attribute_element(name: &str, attribute: AttributeType<'_>) -> Option<Ele
         AttributeType::FontSlant(font_slant) => {
             Some(Property::new(name, font_slant.pretty()).into())
         }
+        AttributeType::Layer(layer) => Some(Property::new(name, layer.to_string()).into()),
     }
 }
