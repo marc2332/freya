@@ -21,6 +21,11 @@ Running rustfmt in all the workspace:
 just f
 ```
 
+Running tests:
+```sh
+just t
+```
+
 Check the `justfile` for other commands.
 
 ## Architecture Overview
@@ -49,6 +54,9 @@ Freya is split in various crates, each with it's own meaning and purpose, here i
 - `freya-icons`: Provides lots of SVG icons as Freya components.
 - `freya-sdk`: Contains generic utility APIs for Freya, like integrations with Tokio.
 - `freya-query`: Fully-typed, async, reusable cached data management for Freya apps.
+- `freya-webview`: WebView support for Freya using WRY.
+- `freya-material-design`: Material Design Components for Freya apps.
+- `freya-plotters-backend`: Freya's skia-safe backend for plotters.
 
 ## Examples
 All important examples are located in the  `./examples` folder although you might also find some in the form of docs comments in the code itself.
