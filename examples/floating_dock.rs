@@ -3,6 +3,7 @@
     windows_subsystem = "windows"
 )]
 
+#[cfg(target_os = "linux")]
 use std::{
     env,
     path::PathBuf,
@@ -14,6 +15,7 @@ use freya::winit::platform::x11::{
     WindowAttributesExtX11,
     WindowType,
 };
+#[cfg(target_os = "linux")]
 use freya::{
     prelude::*,
     winit::{
@@ -48,6 +50,7 @@ fn main() {
     panic!("This example only runs on Linux");
 }
 
+#[cfg(target_os = "linux")]
 fn app() -> impl IntoElement {
     let apps = use_hook(get_pinned_apps);
 
@@ -67,12 +70,14 @@ fn app() -> impl IntoElement {
         }))
 }
 
+#[cfg(target_os = "linux")]
 #[derive(PartialEq)]
 struct DockIcon {
     icon_path: PathBuf,
     name: String,
 }
 
+#[cfg(target_os = "linux")]
 impl Component for DockIcon {
     fn render(&self) -> impl IntoElement {
         let mut hovered = use_state(|| false);
@@ -126,12 +131,14 @@ impl Component for DockIcon {
     }
 }
 
+#[cfg(target_os = "linux")]
 #[derive(Clone, Debug)]
 struct AppInfo {
     name: String,
     icon_path: Option<PathBuf>,
 }
 
+#[cfg(target_os = "linux")]
 fn get_pinned_apps() -> Vec<AppInfo> {
     let output = Command::new("dconf")
         .args(["read", "/org/gnome/shell/favorite-apps"])
@@ -169,6 +176,7 @@ fn get_pinned_apps() -> Vec<AppInfo> {
         .collect()
 }
 
+#[cfg(target_os = "linux")]
 fn parse_desktop_file(desktop_id: &str) -> (String, Option<String>) {
     let home = env::var("HOME").ok().map(PathBuf::from);
 
@@ -204,6 +212,7 @@ fn parse_desktop_file(desktop_id: &str) -> (String, Option<String>) {
     (desktop_id.trim_end_matches(".desktop").to_string(), None)
 }
 
+#[cfg(target_os = "linux")]
 fn find_icon_path(icon_name: &str) -> Option<PathBuf> {
     // If it's already an absolute path, use it directly
     if icon_name.starts_with('/') {
