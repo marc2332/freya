@@ -16,6 +16,8 @@ use crate::theming::{
         ButtonColorsThemePreference,
         ButtonLayoutThemePreference,
         ButtonSegmentThemePreference,
+        CardColorsThemePreference,
+        CardLayoutThemePreference,
         CheckboxThemePreference,
         ChipThemePreference,
         CircularLoaderThemePreference,
@@ -136,6 +138,28 @@ pub(crate) const BASE_THEME: Theme = Theme {
         border_fill: Preference::Specific(Color::TRANSPARENT),
         focus_border_fill: Preference::Reference("border"),
         color: Preference::Reference("text_primary"),
+    },
+    card_layout: CardLayoutThemePreference {
+        padding: Preference::Specific(Gaps::new(16., 16., 16., 16.)),
+        corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
+    },
+    compact_card_layout: CardLayoutThemePreference {
+        padding: Preference::Specific(Gaps::new(8., 12., 8., 12.)),
+        corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
+    },
+    filled_card: CardColorsThemePreference {
+        background: Preference::Reference("primary"),
+        hover_background: Preference::Reference("tertiary"),
+        border_fill: Preference::Specific(Color::TRANSPARENT),
+        color: Preference::Reference("text_inverse"),
+        shadow: Preference::Reference("shadow"),
+    },
+    outline_card: CardColorsThemePreference {
+        background: Preference::Reference("surface_tertiary"),
+        hover_background: Preference::Reference("hover"),
+        border_fill: Preference::Reference("border"),
+        color: Preference::Reference("text_primary"),
+        shadow: Preference::Reference("shadow"),
     },
     accordion: AccordionThemePreference {
         color: Preference::Reference("text_primary"),

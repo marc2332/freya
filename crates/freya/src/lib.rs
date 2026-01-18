@@ -145,6 +145,7 @@ pub mod components {
         accordion::*,
         activable_route_context::*,
         button::*,
+        card::*,
         checkbox::*,
         chip::*,
         color_picker::*,
