@@ -35,6 +35,7 @@ all = [
   "markdown",
   "icons",
   "radio",
+  "webview",
   "titlebar",
 ]
 all-publish = [
@@ -63,6 +64,7 @@ all-tests = [
   "calendar",
   "markdown",
   "radio",
+  "webview",
   "titlebar",
 ]
 docs = ["all-debug"]
@@ -84,6 +86,7 @@ material-design = ["dep:freya-material-design"]
 hotpath = ["freya-core/hotpath", "freya-winit/hotpath"]
 icons = ["dep:freya-icons"]
 radio = ["dep:freya-radio"]
+webview = ["dep:freya-webview"]
 titlebar = ["freya-components/titlebar"]
 
 [dependencies]
@@ -101,6 +104,7 @@ freya-icons = { workspace = true, optional = true }
 freya-router = { workspace = true, optional = true }
 freya-i18n = { workspace = true, optional = true }
 freya-radio = { workspace = true, optional = true }
+freya-webview = { workspace = true, optional = true }
 
 # Performance
 freya-performance-plugin = { workspace = true, optional = true }

@@ -61,21 +61,26 @@ impl PluginsManager {
         self.plugins.borrow_mut().push(Box::new(plugin))
     }
 
-    pub fn send(&mut self, event: PluginEvent, handle: PluginHandle) {
+    pub fn send(&mut self, mut event: PluginEvent, handle: PluginHandle) {
         for plugin in self.plugins.borrow_mut().iter_mut() {
-            plugin.on_event(&event, handle.clone())
+            plugin.on_event(&mut event, handle.clone())
         }
     }
 }
 
 /// Event emitted to Plugins.
 pub enum PluginEvent<'a> {
+    /// A runner just got created.
+    RunnerCreated {
+        runner: &'a mut Runner,
+    },
     /// A Window just got created.
     WindowCreated {
         window: &'a Window,
         font_collection: &'a FontCollection,
         tree: &'a Tree,
         animation_clock: &'a AnimationClock,
+        runner: &'a mut Runner,
     },
 
     /// A Window just got closed.
@@ -172,5 +177,5 @@ pub enum PluginEvent<'a> {
 /// Skeleton for Freya plugins.
 pub trait FreyaPlugin {
     /// React on events emitted by Freya.
-    fn on_event(&mut self, event: &PluginEvent, handle: PluginHandle);
+    fn on_event(&mut self, event: &mut PluginEvent, handle: PluginHandle);
 }

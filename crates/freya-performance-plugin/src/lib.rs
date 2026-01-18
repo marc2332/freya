@@ -62,7 +62,7 @@ impl PerformanceOverlayPlugin {
 }
 
 impl FreyaPlugin for PerformanceOverlayPlugin {
-    fn on_event(&mut self, event: &PluginEvent, _handle: PluginHandle) {
+    fn on_event(&mut self, event: &mut PluginEvent, _handle: PluginHandle) {
         match event {
             PluginEvent::AfterRedraw { window, .. } => {
                 let metrics = self.get_metrics(window.id());

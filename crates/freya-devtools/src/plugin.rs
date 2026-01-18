@@ -160,7 +160,7 @@ impl DevtoolsPlugin {
 }
 
 impl FreyaPlugin for DevtoolsPlugin {
-    fn on_event(&mut self, event: &PluginEvent, plugin_handle: PluginHandle) {
+    fn on_event(&mut self, event: &mut PluginEvent, plugin_handle: PluginHandle) {
         match event {
             PluginEvent::WindowClosed { window, .. } => {
                 let window_id: u64 = window.id().into();

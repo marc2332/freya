@@ -50,6 +50,7 @@
 //! - [Material Design](freya_material_design)
 //! - [Plotters](freya_plotters_backend)
 //! - [Testing](freya_testing)
+//! - [WebView](freya_webview)
 //!
 //! ## Features flags
 //!
@@ -66,6 +67,7 @@
 //! - `icons`: Reexport of [freya_icons] under [icons].
 //! - `radio`: Reexport [freya_radio] under [radio].
 //! - `markdown`: Enables the [MarkdownViewer](components::MarkdownViewer) component.
+//! - `webview`: Reexport [freya_webview] under [webview].
 //! - `titlebar`: Enables the [TitlebarButton](components::TitlebarButton) component.
 //!
 //! ## Misc features
@@ -261,6 +263,13 @@ pub mod icons {
 #[cfg_attr(feature = "docs", doc(cfg(feature = "radio")))]
 pub mod radio {
     pub use freya_radio::prelude::*;
+}
+
+/// Reexport `freya-webview` when the `webview` feature is enabled.
+#[cfg(feature = "webview")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "webview")))]
+pub mod webview {
+    pub use freya_webview::*;
 }
 
 #[cfg(doc)]
