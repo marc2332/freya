@@ -3,7 +3,9 @@ use freya_core::prelude::*;
 use crate::{
     get_theme,
     theming::component_themes::{
-        CardColorsThemePartial, CardLayoutThemePartial, CardLayoutThemePartialExt,
+        CardColorsThemePartial,
+        CardLayoutThemePartial,
+        CardLayoutThemePartialExt,
     },
 };
 
@@ -170,10 +172,10 @@ impl Component for Card {
         let focus = use_focus();
         let focus_status = use_focus_status(focus);
 
-        let is_interactive = self.hoverable || self.on_press.is_some();
+        let is_hoverable = self.hoverable;
 
         use_drop(move || {
-            if hovering() && is_interactive {
+            if hovering() && is_hoverable {
                 Cursor::set(CursorIcon::default());
             }
         });
@@ -199,13 +201,13 @@ impl Component for Card {
                 .alignment(BorderAlignment::Inner)
         };
 
-        let background = if is_interactive && hovering() {
+        let background = if is_hoverable && hovering() {
             theme_colors.hover_background
         } else {
             theme_colors.background
         };
 
-        let shadow = if is_interactive && hovering() {
+        let shadow = if is_hoverable && hovering() {
             Some(Shadow::new().y(4.).blur(8.).color(theme_colors.shadow))
         } else {
             None
@@ -215,7 +217,7 @@ impl Component for Card {
             .layout(self.layout.clone())
             .overflow(Overflow::Clip)
             .a11y_id(focus.a11y_id())
-            .a11y_focusable(is_interactive)
+            .a11y_focusable(is_hoverable)
             .a11y_role(AccessibilityRole::GenericContainer)
             .accessibility(self.accessibility.clone())
             .background(background)
@@ -224,18 +226,16 @@ impl Component for Card {
             .corner_radius(theme_layout.corner_radius)
             .color(theme_colors.color)
             .map(shadow, |rect, shadow| rect.shadow(shadow))
-            .maybe(self.on_press.is_some(), |rect| {
+            .map(self.on_press.clone(), |rect, on_press| {
                 rect.on_press({
-                    let on_press = self.on_press.clone();
+                    let on_press = on_press.clone();
                     move |e: Event<PressEventData>| {
                         focus.request_focus();
-                        if let Some(handler) = &on_press {
-                            handler.call(e);
-                        }
+                        on_press.call(e);
                     }
                 })
             })
-            .maybe(is_interactive, |rect| {
+            .maybe(is_hoverable, |rect| {
                 rect.on_pointer_enter(move |_| {
                     hovering.set(true);
                     Cursor::set(CursorIcon::Pointer);
