@@ -335,6 +335,26 @@ impl Component for LayoutForTreeInspector {
                                 .ok();
                         });
                     }),
+                    on_hover: EventHandler::new(move |(window_id, node_id)| {
+                        let message = Message::Text(
+                            serde_json::to_string(&IncomingMessage {
+                                action: IncomingMessageAction::HoverNode { window_id, node_id },
+                            })
+                            .unwrap()
+                            .into(),
+                        );
+                        let client = radio.read().client.clone();
+                        spawn(async move {
+                            client
+                                .lock()
+                                .await
+                                .as_mut()
+                                .unwrap()
+                                .send(message)
+                                .await
+                                .ok();
+                        });
+                    }),
                 })),
             )
             .panel(is_expanded_vertical.then(|| ResizablePanel::new(40.).child(outlet::<Route>())))

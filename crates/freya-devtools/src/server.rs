@@ -45,6 +45,7 @@ async fn handle_connection(
     windows: Arc<Mutex<HashMap<u64, WindowState>>>,
     websockets: SharedWebsockets,
     highlighted_node: Arc<Mutex<Option<NodeId>>>,
+    hovered_node: Arc<Mutex<Option<NodeId>>>,
     plugin_handle: PluginHandle,
 ) -> anyhow::Result<()> {
     let ws_stream = accept_async(stream).await.unwrap();
@@ -81,6 +82,15 @@ async fn handle_connection(
                                 },
                             ));
                         }
+                        IncomingMessageAction::HoverNode { window_id, node_id } => {
+                            *hovered_node.lock().unwrap() = node_id;
+                            plugin_handle.send_event_loop_event(NativeEvent::Window(
+                                NativeWindowEvent {
+                                    window_id: window_id.into(),
+                                    action: NativeWindowEventAction::User(UserEvent::RequestRedraw),
+                                },
+                            ));
+                        }
                         IncomingMessageAction::SetSpeedTo { speed } => {
                             for WindowState {
                                 animation_clock, ..
@@ -107,6 +117,7 @@ pub async fn run_server(
     windows: Arc<Mutex<HashMap<u64, WindowState>>>,
     websockets: SharedWebsockets,
     highlighted_node: Arc<Mutex<Option<NodeId>>>,
+    hovered_node: Arc<Mutex<Option<NodeId>>>,
     plugin_handle: PluginHandle,
 ) -> anyhow::Result<()> {
     println!("Running the Devtools Server in [::1]:7354");
@@ -117,6 +128,7 @@ pub async fn run_server(
         let windows = windows.clone();
         let websockets = websockets.clone();
         let highlighted_node = highlighted_node.clone();
+        let hovered_node = hovered_node.clone();
         let plugin_handle = plugin_handle.clone();
         smol::spawn(async move {
             let id = WEBSOCKET_ID.fetch_add(1, Ordering::Relaxed);
@@ -126,6 +138,7 @@ pub async fn run_server(
                 windows,
                 websockets.clone(),
                 highlighted_node,
+                hovered_node,
                 plugin_handle,
             )
             .await
