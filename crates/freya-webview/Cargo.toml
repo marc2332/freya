@@ -15,7 +15,7 @@ skia-engine = ["freya-core/skia-engine"]
 [dependencies]
 freya-core = { workspace = true }
 freya-winit = { workspace = true }
-wry = "0.52"
+wry = "0.54"
 raw-window-handle = { workspace = true }
 torin = { workspace = true }
 rustc-hash = { workspace = true }

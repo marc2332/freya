@@ -77,7 +77,7 @@ plotters = { version = "0.3.7", default-features = false, features = [
 freya-plotters-backend = { workspace = true, optional = true }
 
 # GIF
-gif = { version = "0.13.3", optional = true }
+gif = { version = "0.14.0", optional = true }
 
 # Markdown
 pulldown-cmark = { version = "0.13", optional = true }
