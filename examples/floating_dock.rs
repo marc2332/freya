@@ -191,21 +191,21 @@ fn parse_desktop_file(desktop_id: &str) -> (String, Option<String>) {
 
     for path in search_paths.into_iter().flatten() {
         let desktop_path = path.join(desktop_id);
-        if desktop_path.exists() {
-            if let Ok(content) = std::fs::read_to_string(&desktop_path) {
-                let mut name = desktop_id.trim_end_matches(".desktop").to_string();
-                let mut icon = None;
+        if desktop_path.exists()
+            && let Ok(content) = std::fs::read_to_string(&desktop_path)
+        {
+            let mut name = desktop_id.trim_end_matches(".desktop").to_string();
+            let mut icon = None;
 
-                for line in content.lines() {
-                    if line.starts_with("Name=") && !line.contains('[') {
-                        name = line.trim_start_matches("Name=").to_string();
-                    } else if line.starts_with("Icon=") {
-                        icon = Some(line.trim_start_matches("Icon=").to_string());
-                    }
+            for line in content.lines() {
+                if line.starts_with("Name=") && !line.contains('[') {
+                    name = line.trim_start_matches("Name=").to_string();
+                } else if line.starts_with("Icon=") {
+                    icon = Some(line.trim_start_matches("Icon=").to_string());
                 }
-
-                return (name, icon);
             }
+
+            return (name, icon);
         }
     }
 
