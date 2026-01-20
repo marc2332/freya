@@ -17,9 +17,6 @@ use crate::{
 /// Type alias for the resize sender channel
 type ResizeSender = Arc<Mutex<Option<UnboundedSender<(u16, u16)>>>>;
 
-/// Type alias for the PTY resize sender channel
-type PtyResizeSender = Arc<Mutex<Option<std::sync::mpsc::Sender<(u16, u16)>>>>;
-
 /// Unique identifier for a terminal instance
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TerminalId(pub usize);
@@ -63,10 +60,8 @@ pub struct TerminalHandle {
     pub buffer: Arc<Mutex<TerminalBuffer>>,
     /// Writer for sending input to the PTY
     pub writer: Arc<Mutex<Option<Box<dyn Write + Send>>>>,
-    /// Channel for notifying UI of size changes
+    /// Channel for notifying UI and PTY of resizing
     pub resize_holder: ResizeSender,
-    /// Channel for notifying PTY thread of size changes
-    pub pty_resize_holder: PtyResizeSender,
 }
 
 impl PartialEq for TerminalHandle {
@@ -133,12 +128,6 @@ impl TerminalHandle {
             && let Some(tx) = holder.as_ref()
         {
             let _ = tx.unbounded_send((rows, cols));
-        }
-        // Notify PTY thread to resize
-        if let Ok(holder) = self.pty_resize_holder.lock()
-            && let Some(tx) = holder.as_ref()
-        {
-            let _ = tx.send((rows, cols));
         }
     }
 

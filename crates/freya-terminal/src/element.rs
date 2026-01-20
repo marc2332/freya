@@ -221,19 +221,17 @@ impl ElementExt for TerminalElement {
 
             let mut builder =
                 ParagraphBuilder::new(&ParagraphStyle::default(), context.font_collection.clone());
-            builder.push_style(&text_style);
             for cell in row.iter() {
+                if cell.is_wide_continuation() {
+                    continue;
+                }
                 let text = if cell.has_contents() {
                     cell.contents()
-                } else if cell.is_wide_continuation() {
-                    continue;
                 } else {
                     " "
                 };
-                let mut cell_style = TextStyle::new();
+                let mut cell_style = text_style.clone();
                 cell_style.set_color(map_vt100_fg_color(cell.fgcolor(), self.fg, self.bg));
-                cell_style.set_font_families(&[self.font_family.as_str()]);
-                cell_style.set_font_size(self.font_size);
                 builder.push_style(&cell_style);
                 builder.add_text(text);
             }
@@ -259,23 +257,21 @@ impl ElementExt for TerminalElement {
                     .get(cursor_idx)
                     .map(|cell| {
                         if cell.has_contents() {
-                            cell.contents().to_string()
+                            cell.contents()
                         } else {
-                            " ".to_string()
+                            " "
                         }
                     })
-                    .unwrap_or_else(|| " ".to_string());
+                    .unwrap_or(" ");
 
-                let mut fg_text_style = TextStyle::new();
+                let mut fg_text_style = text_style.clone();
                 fg_text_style.set_color(self.bg);
-                fg_text_style.set_font_size(self.font_size);
-                fg_text_style.set_font_families(&[self.font_family.as_str()]);
                 let mut fg_builder = ParagraphBuilder::new(
                     &ParagraphStyle::default(),
                     context.font_collection.clone(),
                 );
                 fg_builder.push_style(&fg_text_style);
-                fg_builder.add_text(&content);
+                fg_builder.add_text(content);
                 let mut fg_paragraph = fg_builder.build();
                 fg_paragraph.layout((right - left).max(1.0));
                 fg_paragraph.paint(context.canvas, (left, top));
