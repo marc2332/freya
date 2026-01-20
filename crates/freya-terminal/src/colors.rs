@@ -1,23 +1,23 @@
 use freya_core::prelude::Color;
 
-/// ANSI 16-color palette
+/// ANSI 16-color palette (matches WezTerm defaults)
 const ANSI_COLORS: [(u8, u8, u8); 16] = [
     (0, 0, 0),       // Black
-    (128, 0, 0),     // Dark Red
-    (0, 128, 0),     // Dark Green
-    (128, 128, 0),   // Dark Yellow
-    (0, 0, 128),     // Dark Blue
-    (128, 0, 128),   // Dark Magenta
-    (0, 128, 128),   // Dark Cyan
-    (192, 192, 192), // Light Gray
-    (128, 128, 128), // Gray
-    (255, 0, 0),     // Red
-    (0, 255, 0),     // Green
-    (255, 255, 0),   // Yellow
-    (0, 0, 255),     // Blue
-    (255, 0, 255),   // Magenta
-    (0, 255, 255),   // Cyan
-    (255, 255, 255), // White
+    (204, 85, 85),   // Red
+    (85, 204, 85),   // Green
+    (215, 215, 0),   // Yellow
+    (84, 85, 203),   // Blue
+    (204, 85, 204),  // Magenta
+    (122, 202, 202), // Cyan
+    (204, 204, 204), // White
+    (85, 85, 85),    // Bright Black
+    (255, 85, 85),   // Bright Red
+    (85, 255, 85),   // Bright Green
+    (255, 255, 0),   // Bright Yellow
+    (85, 85, 255),   // Bright Blue
+    (255, 85, 255),  // Bright Magenta
+    (85, 255, 255),  // Bright Cyan
+    (255, 255, 255), // Bright White
 ];
 
 /// 6x6x6 RGB cube levels for 256-color palette
