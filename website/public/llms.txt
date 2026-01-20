@@ -23,6 +23,7 @@ Important notes:
 - **Devtools**: Inspect your app UI tree to to debug, or see performance state.
 - **Routing**: Manage your app UI in separate routes using `freya-router`.
 - **WebView**: Integrate WebViews into your application using `freya-webview`.
+- **Terminal**: Integrate terminal emulators into your application using `freya-terminal`.
 
 ## Example: Counter
 
@@ -70,8 +71,6 @@ fn app() -> impl IntoElement {
 
 - [Stable Documentation](https://docs.rs/freya/): Official Rust API documentation
 - [Development Setup](https://docs.rs/freya/latest/freya/_docs/development_setup/index.html): Getting started guide
-
-## Release Candidate docs
 - [UI and Components](https://docs.rs/freya/0.4.0-rc.3/freya/_docs/ui_and_components/index.html): UI patterns and components guide
 - [Elements](https://docs.rs/freya/0.4.0-rc.3/freya/elements/index.html): Core UI elements reference
 - [Hooks](https://docs.rs/freya/0.4.0-rc.3/freya/_docs/hooks/index.html): Hooks reference
@@ -87,6 +86,7 @@ fn app() -> impl IntoElement {
 - [Material Design](https://docs.rs/freya-material-design/0.4.0-rc.3/freya_material_design/): Material Design components
 - [Plotters](https://docs.rs/freya-plotters-backend/0.4.0-rc.3/freya_plotters_backend/): Plotting backend
 - [Testing](https://docs.rs/freya-testing/0.4.0-rc.3/freya_testing/): Testing framework
+- [Terminal](https://docs.rs/freya-terminal/0.4.0-rc.3/freya_terminal/): Terminal emulator integration
 
 ## Examples
 
