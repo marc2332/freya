@@ -144,10 +144,7 @@ impl TerminalHandle {
 
     /// Read the current terminal buffer.
     pub fn read_buffer(&self) -> TerminalBuffer {
-        match self.buffer.lock() {
-            Ok(buffer) => buffer.clone(),
-            Err(_) => TerminalBuffer::default(),
-        }
+        self.buffer.lock().unwrap().clone()
     }
 }
 

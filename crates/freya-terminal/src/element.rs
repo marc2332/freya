@@ -2,10 +2,6 @@ use std::{
     any::Any,
     borrow::Cow,
     rc::Rc,
-    sync::{
-        Arc,
-        Mutex,
-    },
 };
 
 use freya_core::{
@@ -26,10 +22,8 @@ use freya_engine::prelude::{
     SkRect,
     TextStyle,
 };
-use futures_channel::mpsc::UnboundedSender;
 
 use crate::{
-    buffer::TerminalBuffer,
     colors::{
         map_vt100_bg_color,
         map_vt100_fg_color,
@@ -37,29 +31,20 @@ use crate::{
     handle::TerminalHandle,
 };
 
-/// Type alias for the resize sender channel
-type ResizeSender = Arc<Mutex<Option<UnboundedSender<(u16, u16)>>>>;
-
-/// Type alias for the PTY resize sender channel
-type PtyResizeSender = Arc<Mutex<Option<std::sync::mpsc::Sender<(u16, u16)>>>>;
-
 /// Internal terminal rendering element
 #[derive(Clone)]
 pub struct TerminalElement {
-    id: usize,
+    handle: TerminalHandle,
     layout_data: LayoutData,
-    buffer: Arc<Mutex<TerminalBuffer>>,
     font_family: String,
     font_size: f32,
     fg: Color,
     bg: Color,
-    resize_holder: ResizeSender,
-    pty_resize_holder: PtyResizeSender,
 }
 
 impl PartialEq for TerminalElement {
     fn eq(&self, other: &Self) -> bool {
-        self.id == other.id
+        self.handle == other.handle
             && self.font_size == other.font_size
             && self.font_family == other.font_family
             && self.fg == other.fg
@@ -68,22 +53,14 @@ impl PartialEq for TerminalElement {
 }
 
 impl TerminalElement {
-    pub(crate) fn new(
-        id: usize,
-        buffer: Arc<Mutex<TerminalBuffer>>,
-        resize_holder: ResizeSender,
-        pty_resize_holder: PtyResizeSender,
-    ) -> Self {
+    pub(crate) fn new(handle: TerminalHandle) -> Self {
         Self {
-            id,
+            handle,
             layout_data: Default::default(),
-            buffer,
             font_family: "Cascadia Code".to_string(),
             font_size: 14.,
             fg: (220, 220, 220).into(),
             bg: (10, 10, 10).into(),
-            resize_holder,
-            pty_resize_holder,
         }
     }
 
@@ -112,7 +89,9 @@ impl ElementExt for TerminalElement {
 
         let mut diff = DiffModifies::empty();
 
-        if self.font_size != el.font_size || self.font_family != el.font_family || self.id != el.id
+        if self.font_size != el.font_size
+            || self.font_family != el.font_family
+            || self.handle != el.handle
         {
             diff.insert(DiffModifies::STYLE);
             diff.insert(DiffModifies::LAYOUT);
@@ -170,16 +149,7 @@ impl ElementExt for TerminalElement {
             target_rows = 1;
         }
 
-        if let Ok(lock) = self.resize_holder.lock()
-            && let Some(tx) = lock.as_ref()
-        {
-            let _ = tx.unbounded_send((target_rows, target_cols));
-        }
-        if let Ok(lock) = self.pty_resize_holder.lock()
-            && let Some(tx) = lock.as_ref()
-        {
-            let _ = tx.send((target_rows, target_cols));
-        }
+        self.handle.resize(target_rows, target_cols);
 
         Some((
             torin::prelude::Size2D::new(context.area_size.width.max(100.0), height),
@@ -190,7 +160,7 @@ impl ElementExt for TerminalElement {
     fn render(&self, context: freya_core::element::RenderContext) {
         let area = context.layout_node.visible_area();
 
-        let buffer = self.buffer.lock().unwrap();
+        let buffer = self.handle.read_buffer();
 
         let mut paint = Paint::default();
         paint.set_style(PaintStyle::Fill);
@@ -329,7 +299,7 @@ impl From<TerminalElement> for Element {
 /// User-facing Terminal component
 #[derive(Clone, PartialEq)]
 pub struct Terminal {
-    handle: Option<TerminalHandle>,
+    handle: TerminalHandle,
     font_family: String,
     font_size: f32,
     fg: Color,
@@ -339,23 +309,10 @@ pub struct Terminal {
 }
 
 impl Terminal {
-    /// Create a new terminal without a handle (render-only mode)
-    pub fn new() -> Self {
-        Self {
-            handle: None,
-            font_family: "Cascadia Code".to_string(),
-            font_size: 14.,
-            fg: (220, 220, 220).into(),
-            bg: (10, 10, 10).into(),
-            layout: LayoutData::default(),
-            key: DiffKey::default(),
-        }
-    }
-
     /// Create a terminal with a handle for interactive PTY
     pub fn with_handle(handle: TerminalHandle) -> Self {
         Self {
-            handle: Some(handle),
+            handle,
             font_family: "Cascadia Code".to_string(),
             font_size: 14.,
             fg: (220, 220, 220).into(),
@@ -385,35 +342,9 @@ impl Terminal {
     }
 }
 
-impl Default for Terminal {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Component for Terminal {
     fn render(&self) -> impl IntoElement {
-        let id = match &self.handle {
-            Some(h) => h.id.0,
-            None => 1,
-        };
-
-        let buffer = match &self.handle {
-            Some(h) => h.buffer.clone(),
-            None => Arc::new(Mutex::new(TerminalBuffer::default())),
-        };
-
-        let resize_holder = match &self.handle {
-            Some(h) => h.resize_holder.clone(),
-            None => Arc::new(Mutex::new(None)),
-        };
-
-        let pty_resize_holder = match &self.handle {
-            Some(h) => h.pty_resize_holder.clone(),
-            None => Arc::new(Mutex::new(None)),
-        };
-
-        TerminalElement::new(id, buffer, resize_holder, pty_resize_holder)
+        TerminalElement::new(self.handle.clone())
             .font_family(self.font_family.clone())
             .font_size(self.font_size)
             .colors(self.fg, self.bg)
