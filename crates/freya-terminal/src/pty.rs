@@ -54,8 +54,8 @@ pub(crate) fn spawn_pty(command: CommandBuilder) -> Result<TerminalHandle, Termi
             .map_err(|_| TerminalError::NotInitialized)?;
 
         if let Ok(mut reader) = pair.master.try_clone_reader() {
-                let writer = writer.clone();
-    let platform = Platform::get();
+            let writer = writer.clone();
+            let platform = Platform::get();
             spawn({
                 let parser = parser.clone();
                 let buffer = buffer.clone();
