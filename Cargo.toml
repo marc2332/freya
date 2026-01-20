@@ -138,10 +138,6 @@ tokio = { version = "1.0", default-features = false }
 version = "0.91.1"
 features = ["gl", "textlayout", "svg", "x11", "wayland"]
 
-
-[dependencies]
-freya-query = { workspace = true }
-
 [dev-dependencies]
 freya = { workspace = true, features = ["all"] }
 freya-core = { workspace = true, features = ["debug-integrity", "test"] }
@@ -179,6 +175,10 @@ itertools = { workspace = true }
 
 # SDK examples and Tokio Integration
 tokio = { workspace = true, features = ["rt", "rt-multi-thread"] }
+
+portable-pty = "0.9"
+vt100 = "0.16"
+futures-util = { workspace = true }
 
 [profile.release]
 lto = true
