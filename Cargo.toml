@@ -163,6 +163,7 @@ freya-testing = { workspace = true }
 freya-i18n = { workspace = true }
 freya-performance-plugin = { workspace = true }
 freya-radio = { workspace = true }
+freya-query = { workspace = true }
 freya-icons = { workspace = true }
 freya-sdk = { workspace = true }
 freya-devtools = { workspace = true, features = ["server", "client"] }
