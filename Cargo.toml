@@ -149,10 +149,6 @@ tokio = { version = "1.0", default-features = false }
 version = "0.91.1"
 features = ["gl", "textlayout", "svg", "x11", "wayland"]
 
-
-[dependencies]
-freya-query = { workspace = true }
-
 [dev-dependencies]
 freya = { workspace = true, features = ["all"] }
 freya-core = { workspace = true, features = ["debug-integrity", "test"] }
@@ -165,6 +161,7 @@ freya-testing = { workspace = true }
 freya-i18n = { workspace = true }
 freya-performance-plugin = { workspace = true }
 freya-radio = { workspace = true }
+freya-query = { workspace = true }
 freya-icons = { workspace = true }
 freya-sdk = { workspace = true }
 freya-devtools = { workspace = true, features = ["server", "client"] }
