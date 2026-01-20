@@ -74,9 +74,13 @@ impl TerminalElement {
         self
     }
 
-    pub fn colors(mut self, fg: impl Into<Color>, bg: impl Into<Color>) -> Self {
-        self.fg = fg.into();
-        self.bg = bg.into();
+    pub fn foreground(mut self, foreground: impl Into<Color>) -> Self {
+        self.fg = foreground.into();
+        self
+    }
+
+    pub fn background(mut self, background: impl Into<Color>) -> Self {
+        self.bg = background.into();
         self
     }
 }
@@ -291,71 +295,3 @@ impl From<TerminalElement> for Element {
         }
     }
 }
-
-/// User-facing Terminal component
-#[derive(Clone, PartialEq)]
-pub struct Terminal {
-    handle: TerminalHandle,
-    font_family: String,
-    font_size: f32,
-    fg: Color,
-    bg: Color,
-    layout: LayoutData,
-    key: DiffKey,
-}
-
-impl Terminal {
-    /// Create a terminal with a handle for interactive PTY
-    pub fn with_handle(handle: TerminalHandle) -> Self {
-        Self {
-            handle,
-            font_family: "Cascadia Code".to_string(),
-            font_size: 14.,
-            fg: (220, 220, 220).into(),
-            bg: (10, 10, 10).into(),
-            layout: LayoutData::default(),
-            key: DiffKey::default(),
-        }
-    }
-
-    /// Set the font family for the terminal
-    pub fn font_family(mut self, font_family: impl Into<String>) -> Self {
-        self.font_family = font_family.into();
-        self
-    }
-
-    /// Set the font size for the terminal
-    pub fn font_size(mut self, font_size: f32) -> Self {
-        self.font_size = font_size;
-        self
-    }
-
-    /// Set the foreground and background colors
-    pub fn colors(mut self, fg: impl Into<Color>, bg: impl Into<Color>) -> Self {
-        self.fg = fg.into();
-        self.bg = bg.into();
-        self
-    }
-}
-
-impl Component for Terminal {
-    fn render(&self) -> impl IntoElement {
-        TerminalElement::new(self.handle.clone())
-            .font_family(self.font_family.clone())
-            .font_size(self.font_size)
-            .colors(self.fg, self.bg)
-    }
-}
-
-impl KeyExt for Terminal {
-    fn write_key(&mut self) -> &mut DiffKey {
-        &mut self.key
-    }
-}
-
-impl LayoutExt for Terminal {
-    fn get_layout(&mut self) -> &mut LayoutData {
-        &mut self.layout
-    }
-}
-impl ContainerExt for Terminal {}

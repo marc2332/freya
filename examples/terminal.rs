@@ -12,7 +12,7 @@ fn app() -> impl IntoElement {
         let mut cmd = CommandBuilder::new("bash");
         cmd.env("TERM", "xterm-256color");
         cmd.env("COLORTERM", "truecolor");
-        cmd.env("LANG", "en_US.UTF-8");
+        cmd.env("LANG", "en_GB.UTF-8");
         TerminalHandle::new(cmd).unwrap()
     });
 
@@ -32,8 +32,6 @@ fn app() -> impl IntoElement {
                 {
                     if let Key::Character(ch) = &e.key {
                         let _ = handle.read().write(&[ch.as_bytes()[0] & 0x1f]);
-                    } else {
-                        return;
                     }
                 } else if let Some(ch) = e.try_as_str() {
                     let _ = handle.read().write(ch.as_bytes());
@@ -52,6 +50,6 @@ fn app() -> impl IntoElement {
                     });
                 };
             })
-            .child(Terminal::with_handle(handle.read().clone())),
+            .child(Terminal::new(handle.read().clone())),
     )
 }

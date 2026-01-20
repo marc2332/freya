@@ -30,28 +30,16 @@
 
 pub mod buffer;
 pub mod colors;
-mod element;
-mod handle;
-mod parser;
-mod pty;
-
-pub use handle::TerminalHandle;
-
-pub mod component {
-    pub use crate::element::{
-        Terminal,
-        TerminalElement,
-    };
-}
+pub mod component;
+pub mod element;
+pub mod handle;
+pub mod parser;
+pub mod pty;
 
 /// Prelude module for convenient imports.
 pub mod prelude {
     pub use crate::{
-        buffer::TerminalBuffer,
-        component::{
-            Terminal,
-            TerminalElement,
-        },
+        component::Terminal,
         handle::TerminalHandle,
     };
 }
