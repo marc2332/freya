@@ -12,21 +12,21 @@ pub(crate) fn check_for_terminal_queries(
     let mut responses = Vec::new();
 
     // DSR 6n - Cursor Position Report
-    if data.windows(4).any(|w| w == b"\x1b[6n") {
-        if let Ok(p) = parser.read() {
-            let (row, col) = p.screen().cursor_position();
-            let response = format!("\x1b[{};{}R", row + 1, col + 1);
-            responses.push(response.into_bytes());
-        }
+    if data.windows(4).any(|w| w == b"\x1b[6n")
+        && let Ok(p) = parser.read()
+    {
+        let (row, col) = p.screen().cursor_position();
+        let response = format!("\x1b[{};{}R", row + 1, col + 1);
+        responses.push(response.into_bytes());
     }
 
     // DSR ?6n - Extended Cursor Position Report
-    if data.windows(5).any(|w| w == b"\x1b[?6n") {
-        if let Ok(p) = parser.read() {
-            let (row, col) = p.screen().cursor_position();
-            let response = format!("\x1b[?{};{}R", row + 1, col + 1);
-            responses.push(response.into_bytes());
-        }
+    if data.windows(5).any(|w| w == b"\x1b[?6n")
+        && let Ok(p) = parser.read()
+    {
+        let (row, col) = p.screen().cursor_position();
+        let response = format!("\x1b[?{};{}R", row + 1, col + 1);
+        responses.push(response.into_bytes());
     }
 
     // DSR 5n - Device Status Report (terminal OK)

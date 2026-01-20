@@ -118,67 +118,60 @@ pub(crate) fn spawn_pty(command: CommandBuilder) -> Result<TerminalHandle, Termi
     let writer_holder_for_pty = writer_holder.clone();
     blocking::unblock(move || {
         let pty_system = native_pty_system();
-        match pty_system.openpty(PtySize::default()) {
-            Ok(pair) => {
-                if let Ok(w) = pair.master.take_writer() {
-                    *writer_holder_for_pty.lock().unwrap() = Some(w);
-                } else {
-                    return;
-                }
+        if let Ok(pair) = pty_system.openpty(PtySize::default()) {
+            if let Ok(w) = pair.master.take_writer() {
+                *writer_holder_for_pty.lock().unwrap() = Some(w);
+            } else {
+                return;
+            }
 
-                if let Err(_e) = pair.slave.spawn_command(command) {
-                    return;
-                }
+            if let Err(_e) = pair.slave.spawn_command(command) {
+                return;
+            }
 
-                match pair.master.try_clone_reader() {
-                    Ok(mut reader) => {
-                        let master_for_resize = pair.master;
-                        blocking::unblock(move || {
-                            for (rows, cols) in pty_rx {
-                                let size = PtySize {
-                                    rows,
-                                    cols,
-                                    pixel_width: 0,
-                                    pixel_height: 0,
-                                };
-                                let _ = master_for_resize.resize(size);
-                            }
-                        })
-                        .detach();
-
-                        let mut buf = [0u8; 4096];
-                        loop {
-                            match reader.read(&mut buf) {
-                                Ok(0) => break,
-                                Ok(n) => {
-                                    let data = &buf[..n];
-
-                                    if let Ok(mut p) = parser.write() {
-                                        p.process(data);
-                                    }
-
-                                    let responses = check_for_terminal_queries(data, &parser);
-                                    if !responses.is_empty() {
-                                        if let Ok(mut guard) = writer_holder_for_pty.lock() {
-                                            if let Some(w) = guard.as_mut() {
-                                                for response in responses {
-                                                    let _ = w.write_all(&response);
-                                                }
-                                                let _ = w.flush();
-                                            }
-                                        }
-                                    }
-
-                                    let _ = update_tx_clone.unbounded_send(());
-                                }
-                                Err(_) => break,
-                            }
-                        }
+            if let Ok(mut reader) = pair.master.try_clone_reader() {
+                let master_for_resize = pair.master;
+                blocking::unblock(move || {
+                    for (rows, cols) in pty_rx {
+                        let size = PtySize {
+                            rows,
+                            cols,
+                            pixel_width: 0,
+                            pixel_height: 0,
+                        };
+                        let _ = master_for_resize.resize(size);
                     }
-                    Err(_) => {}
+                })
+                .detach();
+
+                let mut buf = [0u8; 4096];
+                loop {
+                    match reader.read(&mut buf) {
+                        Ok(0) => break,
+                        Ok(n) => {
+                            let data = &buf[..n];
+
+                            if let Ok(mut p) = parser.write() {
+                                p.process(data);
+                            }
+
+                            let responses = check_for_terminal_queries(data, &parser);
+                            if !responses.is_empty()
+                                && let Ok(mut guard) = writer_holder_for_pty.lock()
+                                && let Some(w) = guard.as_mut()
+                            {
+                                for response in responses {
+                                    let _ = w.write_all(&response);
+                                }
+                                let _ = w.flush();
+                            }
+
+                            let _ = update_tx_clone.unbounded_send(());
+                        }
+                        Err(_) => break,
+                    }
                 }
             }
-            Err(_) => {}
         }
     })
     .detach();

@@ -51,7 +51,7 @@ pub fn map_vt100_color(
             }
 
             // 6x6x6 RGB cube (216 colors, indices 16-231)
-            if i >= 16 && i <= 231 {
+            if (16..=231).contains(&i) {
                 let v = i - 16;
                 let r = v / 36;
                 let g = (v / 6) % 6;
@@ -60,7 +60,7 @@ pub fn map_vt100_color(
             }
 
             // Grayscale (24 colors, indices 232-255)
-            if i >= 232 && i <= 255 {
+            if (232..=255).contains(&i) {
                 let shade = 8 + ((i - 232) * 10) as u8;
                 return Color::from_rgb(shade, shade, shade);
             }

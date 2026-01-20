@@ -37,6 +37,12 @@ use crate::{
     handle::TerminalHandle,
 };
 
+/// Type alias for the resize sender channel
+type ResizeSender = Arc<Mutex<Option<UnboundedSender<(u16, u16)>>>>;
+
+/// Type alias for the PTY resize sender channel
+type PtyResizeSender = Arc<Mutex<Option<std::sync::mpsc::Sender<(u16, u16)>>>>;
+
 /// Internal terminal rendering element
 #[derive(Clone)]
 pub struct TerminalElement {
@@ -47,8 +53,8 @@ pub struct TerminalElement {
     font_size: f32,
     fg: Color,
     bg: Color,
-    resize_holder: Arc<Mutex<Option<UnboundedSender<(u16, u16)>>>>,
-    pty_resize_holder: Arc<Mutex<Option<std::sync::mpsc::Sender<(u16, u16)>>>>,
+    resize_holder: ResizeSender,
+    pty_resize_holder: PtyResizeSender,
 }
 
 impl PartialEq for TerminalElement {
@@ -65,8 +71,8 @@ impl TerminalElement {
     pub(crate) fn new(
         id: usize,
         buffer: Arc<Mutex<TerminalBuffer>>,
-        resize_holder: Arc<Mutex<Option<UnboundedSender<(u16, u16)>>>>,
-        pty_resize_holder: Arc<Mutex<Option<std::sync::mpsc::Sender<(u16, u16)>>>>,
+        resize_holder: ResizeSender,
+        pty_resize_holder: PtyResizeSender,
     ) -> Self {
         Self {
             id,
@@ -164,15 +170,15 @@ impl ElementExt for TerminalElement {
             target_rows = 1;
         }
 
-        if let Ok(lock) = self.resize_holder.lock() {
-            if let Some(tx) = lock.as_ref() {
-                let _ = tx.unbounded_send((target_rows, target_cols));
-            }
+        if let Ok(lock) = self.resize_holder.lock()
+            && let Some(tx) = lock.as_ref()
+        {
+            let _ = tx.unbounded_send((target_rows, target_cols));
         }
-        if let Ok(lock) = self.pty_resize_holder.lock() {
-            if let Some(tx) = lock.as_ref() {
-                let _ = tx.send((target_rows, target_cols));
-            }
+        if let Ok(lock) = self.pty_resize_holder.lock()
+            && let Some(tx) = lock.as_ref()
+        {
+            let _ = tx.send((target_rows, target_cols));
         }
 
         Some((
@@ -259,7 +265,7 @@ impl ElementExt for TerminalElement {
                 cell_style.set_font_families(&[self.font_family.as_str()]);
                 cell_style.set_font_size(self.font_size);
                 builder.push_style(&cell_style);
-                builder.add_text(&text);
+                builder.add_text(text);
             }
             let mut paragraph = builder.build();
             paragraph.layout(f32::MAX);
@@ -376,6 +382,12 @@ impl Terminal {
         self.fg = fg.into();
         self.bg = bg.into();
         self
+    }
+}
+
+impl Default for Terminal {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

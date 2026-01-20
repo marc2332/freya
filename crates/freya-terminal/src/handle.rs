@@ -14,6 +14,12 @@ use crate::{
     pty::spawn_pty,
 };
 
+/// Type alias for the resize sender channel
+type ResizeSender = Arc<Mutex<Option<UnboundedSender<(u16, u16)>>>>;
+
+/// Type alias for the PTY resize sender channel
+type PtyResizeSender = Arc<Mutex<Option<std::sync::mpsc::Sender<(u16, u16)>>>>;
+
 /// Unique identifier for a terminal instance
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TerminalId(pub usize);
@@ -21,6 +27,12 @@ pub struct TerminalId(pub usize);
 impl TerminalId {
     pub fn new() -> Self {
         Self(UseId::<TerminalId>::get_in_hook())
+    }
+}
+
+impl Default for TerminalId {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -52,9 +64,9 @@ pub struct TerminalHandle {
     /// Writer for sending input to the PTY
     pub writer: Arc<Mutex<Option<Box<dyn Write + Send>>>>,
     /// Channel for notifying UI of size changes
-    pub resize_holder: Arc<Mutex<Option<UnboundedSender<(u16, u16)>>>>,
+    pub resize_holder: ResizeSender,
     /// Channel for notifying PTY thread of size changes
-    pub pty_resize_holder: Arc<Mutex<Option<std::sync::mpsc::Sender<(u16, u16)>>>>,
+    pub pty_resize_holder: PtyResizeSender,
 }
 
 impl PartialEq for TerminalHandle {
@@ -117,16 +129,16 @@ impl TerminalHandle {
     /// ```
     pub fn resize(&self, rows: u16, cols: u16) {
         // Notify UI thread to update parser
-        if let Ok(holder) = self.resize_holder.lock() {
-            if let Some(tx) = holder.as_ref() {
-                let _ = tx.unbounded_send((rows, cols));
-            }
+        if let Ok(holder) = self.resize_holder.lock()
+            && let Some(tx) = holder.as_ref()
+        {
+            let _ = tx.unbounded_send((rows, cols));
         }
         // Notify PTY thread to resize
-        if let Ok(holder) = self.pty_resize_holder.lock() {
-            if let Some(tx) = holder.as_ref() {
-                let _ = tx.send((rows, cols));
-            }
+        if let Ok(holder) = self.pty_resize_holder.lock()
+            && let Some(tx) = holder.as_ref()
+        {
+            let _ = tx.send((rows, cols));
         }
     }
 
