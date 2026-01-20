@@ -697,7 +697,7 @@ fn app() -> impl IntoElement {
                             .direction(Direction::Vertical)
                             .spacing(4.)
                             .padding(4.)
-                            .children_iter(tabs.read().iter().enumerate().map(|(i, tab)| {
+                            .children(tabs.read().iter().enumerate().map(|(i, tab)| {
                                 let tab_idx = i;
                                 let is_active = tab_idx == active_tab_idx;
                                 rect()
