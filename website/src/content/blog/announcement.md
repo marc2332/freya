@@ -192,7 +192,7 @@ async fn simulate_events() {
     let rect = utils.root().get(0);
     let label = rect.get(0);
 
-    // Inital render
+    // Initial render
     utils.wait_for_update().await;
 
     let text = label.get(0);

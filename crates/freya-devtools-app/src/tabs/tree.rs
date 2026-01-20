@@ -27,6 +27,7 @@ pub struct NodesTree {
     pub selected_node_id: Option<NodeId>,
     pub selected_window_id: Option<u64>,
     pub on_selected: EventHandler<(u64, NodeId)>,
+    pub on_hover: EventHandler<(u64, Option<NodeId>)>,
 }
 
 impl NodesTree {
@@ -106,14 +107,16 @@ impl Component for NodesTree {
                 self.selected_node_id,
                 self.selected_window_id,
                 self.on_selected.clone(),
+                self.on_hover.clone(),
             ),
-            move |i, (selected_node_id, selected_window_id, on_selected)| {
+            move |i, (selected_node_id, selected_window_id, on_selected, on_hover)| {
                 let NodeTreeItem {
                     window_id,
                     node_id,
                     is_open,
                 } = items[i];
                 let on_selected = on_selected.clone();
+                let on_hover = on_hover.clone();
                 NodeElement {
                     is_selected: Some(node_id) == *selected_node_id
                         && Some(window_id) == *selected_window_id,
@@ -153,12 +156,6 @@ impl Component for NodesTree {
                     on_selected: EventHandler::new(move |_| {
                         on_selected.call((window_id, node_id));
                         match RouterContext::get().current::<Route>() {
-                            Route::NodeInspectorComputedLayout { .. } => {
-                                Navigator::get().push(Route::NodeInspectorComputedLayout {
-                                    node_id,
-                                    window_id,
-                                });
-                            }
                             Route::NodeInspectorStyle { .. } => {
                                 Navigator::get()
                                     .push(Route::NodeInspectorStyle { node_id, window_id });
@@ -176,6 +173,9 @@ impl Component for NodesTree {
                                     .push(Route::NodeInspectorStyle { node_id, window_id });
                             }
                         }
+                    }),
+                    on_hover: EventHandler::new(move |node_id| {
+                        on_hover.call((window_id, node_id));
                     }),
                     node_id,
                     window_id,

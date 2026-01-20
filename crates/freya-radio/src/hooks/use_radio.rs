@@ -21,14 +21,118 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash + std::fmt::D
     }
 }
 
+/// Defines a channel for radio communication.
+/// Channels are used to subscribe to specific changes in the global state.
+/// Each channel must implement this trait to be used with [`RadioStation`] and [`Radio`].
+///
+/// Channels allow fine-grained control over which components re-render when the state changes.
+/// Components only re-render when a channel they are subscribed to is notified.
+///
+/// # Example
+///
+/// ```rust, no_run
+/// # use freya_radio::prelude::*;
+///
+/// # struct Data;
+///
+/// #[derive(PartialEq, Eq, Clone, Debug, Copy, Hash)]
+/// pub enum DataChannel {
+///     ListCreation,
+///     SpecificListItemUpdate(usize),
+/// }
+///
+/// impl RadioChannel<Data> for DataChannel {}
+/// ```
 #[cfg(not(feature = "tracing"))]
 pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
+    /// Derive additional channels based on the current state value.
+    /// This allows a single write operation to notify multiple channels.
+    ///
+    /// By default, returns a vector containing only `self`.
+    ///
+    /// # Example
+    ///
+    /// ```rust, no_run
+    /// # use freya_radio::prelude::*;
+    ///
+    /// # struct Data;
+    ///
+    /// #[derive(PartialEq, Eq, Clone, Debug, Copy, Hash)]
+    /// pub enum DataChannel {
+    ///     All,
+    ///     Specific(usize),
+    /// }
+    ///
+    /// impl RadioChannel<Data> for DataChannel {
+    ///     fn derive_channel(self, _data: &Data) -> Vec<Self> {
+    ///         match self {
+    ///             DataChannel::All => vec![DataChannel::All],
+    ///             DataChannel::Specific(id) => vec![DataChannel::All, DataChannel::Specific(id)],
+    ///         }
+    ///     }
+    /// }
+    /// ```
     fn derive_channel(self, _radio: &T) -> Vec<Self> {
         vec![self]
     }
 }
 
-/// Holds a global state and all its subscribers.
+/// The central hub for global state management in Freya applications.
+/// A `RadioStation` holds the global state value and manages subscriptions to different channels.
+/// Components can subscribe to specific channels to receive notifications when the state changes.
+///
+/// RadioStations can be shared across multiple windows or components using [`use_share_radio`].
+///
+/// # Examples
+///
+/// ## Basic usage
+///
+/// ```rust, no_run
+/// # use freya::prelude::*;
+/// # use freya_radio::prelude::*;
+///
+/// #[derive(Default)]
+/// struct AppState {
+///     count: i32,
+/// }
+///
+/// #[derive(PartialEq, Eq, Clone, Debug, Copy, Hash)]
+/// enum AppChannel {
+///     Count,
+/// }
+///
+/// impl RadioChannel<AppState> for AppChannel {}
+///
+/// fn app() -> impl IntoElement {
+///     // Create a radio station (scoped to this component tree)
+///     use_init_radio_station::<AppState, AppChannel>(AppState::default);
+///
+///     let mut radio = use_radio(AppChannel::Count);
+///
+///     rect()
+///         .child(label().text(format!("Count: {}", radio.read().count)))
+///         .child(
+///             Button::new()
+///                 .on_press(move |_| radio.write().count += 1)
+///                 .child("Increment"),
+///         )
+/// }
+/// ```
+///
+/// ## Global radio station for multi-window apps
+///
+/// ```rust, ignore
+/// # use freya::prelude::*;
+/// # use freya_radio::prelude::*;
+///
+/// let radio_station = RadioStation::create_global(AppState::default);
+///
+/// launch(
+///     LaunchConfig::new()
+///         .with_window(WindowConfig::new(Window1 { radio_station }))
+///         .with_window(WindowConfig::new(Window2 { radio_station })),
+/// );
+/// ```
 pub struct RadioStation<Value, Channel>
 where
     Channel: RadioChannel<Value>,
@@ -60,7 +164,25 @@ where
         }
     }
 
-    /// Create a [RadioStation] expected to live until the end of the process.
+    /// Create a global `RadioStation` that lives for the entire application lifetime.
+    /// This is useful for sharing state across multiple windows.
+    ///
+    /// You would usually want to call this in your `main` function, not anywhere else.
+    ///
+    /// # Example
+    ///
+    /// ```rust, ignore
+    /// # use freya::prelude::*;
+    /// # use freya_radio::prelude::*;
+    ///
+    /// let radio_station = RadioStation::create_global(AppState::default);
+    ///
+    /// launch(
+    ///     LaunchConfig::new()
+    ///         .with_window(WindowConfig::new(Window1 { radio_station }))
+    ///         .with_window(WindowConfig::new(Window2 { radio_station })),
+    /// );
+    /// ```
     pub fn create_global(init_value: Value) -> Self {
         RadioStation {
             value: State::create_global(init_value),
@@ -101,25 +223,27 @@ where
         }
     }
 
-    /// Read the current state value. This effectively subscribes to any change no matter the channel.
+    /// Read the current state value and subscribe to all channel changes.
+    /// Any component calling this will re-render when any channel is notified.
     ///
-    /// Example:
+    /// # Example
     ///
     /// ```rust, ignore
     /// # use freya_radio::prelude::*;
-    /// let value = radio.read();
+    /// let value = radio_station.read();
     /// ```
     pub fn read(&'_ self) -> ReadRef<'_, Value> {
         self.value.read()
     }
 
-    /// Read the current state value without subscribing.
+    /// Read the current state value without subscribing to changes.
+    /// Components using this will not re-render when the state changes.
     ///
-    /// Example:
+    /// # Example
     ///
     /// ```rust, ignore
     /// # use freya_radio::prelude::*;
-    /// let value = radio.peek();
+    /// let value = radio_station.peek();
     /// ```
     pub fn peek(&'_ self) -> ReadRef<'_, Value> {
         self.value.peek()
@@ -155,12 +279,17 @@ where
         }
     }
 
-    /// Modify the state using a custom Channel.
+    /// Modify the state using a specific channel.
+    /// This will notify all subscribers to that channel (and any derived channels).
     ///
-    /// ## Example:
+    /// Returns a [`RadioGuard`] that allows direct mutation of the state.
+    /// The guard automatically notifies listeners when dropped.
+    ///
+    /// # Example
+    ///
     /// ```rust, ignore
     /// # use freya_radio::prelude::*;
-    /// radio_station.write(Channel::Whatever).value = 1;
+    /// radio_station.write_channel(MyChannel::Update).count += 1;
     /// ```
     pub fn write_channel(&mut self, channel: Channel) -> RadioGuard<Value, Channel> {
         let value = self.value.write_unchecked();
@@ -248,7 +377,85 @@ where
     }
 }
 
-/// `Radio` lets you access the state and is subscribed given it's `Channel`.
+/// A reactive handle to the global state for a specific channel.
+/// `Radio` provides methods to read and write the global state, and automatically subscribes
+/// the current component to re-render when the associated channel is notified.
+///
+/// Each `Radio` instance is tied to a specific channel, allowing fine-grained control
+/// over which components update when the state changes.
+///
+/// # Examples
+///
+/// ## Basic usage
+///
+/// ```rust, ignore
+/// # use freya::prelude::*;
+/// # use freya_radio::prelude::*;
+///
+/// #[derive(PartialEq)]
+/// struct MyComponent {}
+///
+/// impl Component for MyComponent {
+///     fn render(&self) -> impl IntoElement {
+///         let mut radio = use_radio(MyChannel::Count);
+///
+///         rect()
+///             .child(label().text(format!("Count: {}", radio.read().count)))
+///             .child(
+///                 Button::new()
+///                     .on_press(move |_| radio.write().count += 1)
+///                     .child("Increment"),
+///             )
+///     }
+/// }
+/// ```
+///
+/// ## Using reducers
+///
+/// ```rust, ignore
+/// # use freya::prelude::*;
+/// # use freya_radio::prelude::*;
+///
+/// #[derive(Clone)]
+/// struct CounterState {
+///     count: i32,
+/// }
+///
+/// impl DataReducer for CounterState {
+///     type Channel = CounterChannel;
+///     type Action = CounterAction;
+///
+///     fn reduce(&mut self, action: CounterAction) -> ChannelSelection<CounterChannel> {
+///         match action {
+///             CounterAction::Increment => self.count += 1,
+///             CounterAction::Decrement => self.count -= 1,
+///         }
+///         ChannelSelection::Current
+///     }
+/// }
+///
+/// #[derive(PartialEq)]
+/// struct CounterComponent {}
+///
+/// impl Component for CounterComponent {
+///     fn render(&self) -> impl IntoElement {
+///         let mut radio = use_radio(CounterChannel::Count);
+///
+///         rect()
+///             .child(
+///                 Button::new()
+///                     .on_press(move |_| radio.apply(CounterAction::Increment))
+///                     .child("+"),
+///             )
+///             .child(label().text(format!("{}", radio.read().count)))
+///             .child(
+///                 Button::new()
+///                     .on_press(move |_| radio.apply(CounterAction::Decrement))
+///                     .child("-"),
+///             )
+///     }
+/// }
+/// ```
 pub struct Radio<Value, Channel>
 where
     Channel: RadioChannel<Value>,
@@ -332,13 +539,14 @@ where
         }
     }
 
-    /// Read the current state value.
+    /// Read the current state value and subscribe the current component to changes
+    /// on this radio's channel. The component will re-render when this channel is notified.
     ///
-    /// Example:
+    /// # Example
     ///
     /// ```rust, ignore
     /// # use freya_radio::prelude::*;
-    /// let value = radio.read();
+    /// let count = radio.read().count;
     /// ```
     pub fn read(&'_ self) -> ReadRef<'_, Value> {
         self.subscribe_if_not();
@@ -362,13 +570,16 @@ where
         cb(borrow);
     }
 
-    /// Modify the state using the channel this radio was created with.
+    /// Get a mutable reference to the state for writing.
+    /// Changes will notify subscribers to this radio's channel.
     ///
-    /// Example:
+    /// Returns a [`RadioGuard`] that allows direct mutation of the state.
+    ///
+    /// # Example
     ///
     /// ```rust, ignore
     /// # use freya_radio::prelude::*;
-    /// radio.write().value = 1;
+    /// radio.write().count += 1;
     /// ```
     pub fn write(&mut self) -> RadioGuard<Value, Channel> {
         let value = self.antenna.peek().station.value.write_unchecked();
@@ -531,10 +742,23 @@ impl<Channel> ChannelSelection<Channel> {
     }
 }
 
-/// Provide the given [RadioStation] to descendants components, this is the same as when
-/// using [use_init_radio_station] except that you pass an already created one.
+/// Provide an existing [`RadioStation`] to descendant components.
+/// This is useful for sharing the same global state across different parts of the component tree
+/// or across multiple windows.
 ///
-/// This is specially useful to share the same [RadioStation] across different windows.
+/// # Example
+///
+/// ```rust, ignore
+/// # use freya::prelude::*;
+/// # use freya_radio::prelude::*;
+///
+/// fn app() -> impl IntoElement {
+///     let radio_station = RadioStation::create_global(AppState::default);
+///     use_share_radio(move || radio_station);
+///
+///     rect().child(MyComponent {})
+/// }
+/// ```
 pub fn use_share_radio<Value, Channel>(radio: impl FnOnce() -> RadioStation<Value, Channel>)
 where
     Channel: RadioChannel<Value>,
@@ -543,9 +767,42 @@ where
     use_provide_context(radio);
 }
 
-/// Consume the state and subscribe using the given `channel`
-/// Any mutation using this radio will notify other subscribers to the same `channel`,
-/// unless you explicitely pass a custom channel using other methods as [`Radio::write_channel()`]
+/// Subscribe to the global state for a specific channel.
+/// Returns a [`Radio`] handle that allows reading and writing the state.
+/// The current component will re-render whenever the specified channel is notified.
+///
+/// This hook must be called within a component that has access to a [`RadioStation`]
+/// (either through [`use_init_radio_station`] or [`use_share_radio`]).
+///
+/// # Example
+///
+/// ```rust, ignore
+/// # use freya::prelude::*;
+/// # use freya_radio::prelude::*;
+///
+/// fn app() -> impl IntoElement {
+///     use_init_radio_station::<AppState, AppChannel>(AppState::default);
+///
+///     rect().child(Counter {})
+/// }
+///
+/// #[derive(PartialEq)]
+/// struct Counter {}
+///
+/// impl Component for Counter {
+///     fn render(&self) -> impl IntoElement {
+///         let mut radio = use_radio(AppChannel::Count);
+///
+///         rect()
+///             .child(label().text(format!("Count: {}", radio.read().count)))
+///             .child(
+///                 Button::new()
+///                     .on_press(move |_| radio.write().count += 1)
+///                     .child("+"),
+///             )
+///     }
+/// }
+/// ```
 pub fn use_radio<Value, Channel>(channel: Channel) -> Radio<Value, Channel>
 where
     Channel: RadioChannel<Value>,
@@ -565,6 +822,23 @@ where
     radio
 }
 
+/// Initialize a new radio station in the current component tree.
+/// This provides the global state to all descendant components.
+///
+/// Returns the [`RadioStation`] instance for direct access if needed.
+///
+/// # Example
+///
+/// ```rust, ignore
+/// # use freya::prelude::*;
+/// # use freya_radio::prelude::*;
+///
+/// fn app() -> impl IntoElement {
+///     use_init_radio_station::<AppState, AppChannel>(AppState::default);
+///
+///     rect().child(MyComponent {})
+/// }
+/// ```
 pub fn use_init_radio_station<Value, Channel>(
     init_value: impl FnOnce() -> Value,
 ) -> RadioStation<Value, Channel>
@@ -583,6 +857,42 @@ where
     use_consume::<RadioStation<Value, Channel>>()
 }
 
+/// Trait for implementing a reducer pattern on your state.
+/// Reducers allow you to define actions that modify the state in a controlled way.
+///
+/// Implement this trait on your state type to enable the [`RadioReducer`] functionality.
+///
+/// # Example
+///
+/// ```rust, ignore
+/// # use freya_radio::prelude::*;
+///
+/// #[derive(Clone)]
+/// struct Counter {
+///     count: i32,
+/// }
+///
+/// #[derive(Clone)]
+/// enum CounterAction {
+///     Increment,
+///     Decrement,
+///     Set(i32),
+/// }
+///
+/// impl DataReducer for Counter {
+///     type Channel = CounterChannel;
+///     type Action = CounterAction;
+///
+///     fn reduce(&mut self, action: Self::Action) -> ChannelSelection<Self::Channel> {
+///         match action {
+///             CounterAction::Increment => self.count += 1,
+///             CounterAction::Decrement => self.count -= 1,
+///             CounterAction::Set(value) => self.count = value,
+///         }
+///         ChannelSelection::Current
+///     }
+/// }
+/// ```
 pub trait DataReducer {
     type Channel;
     type Action;

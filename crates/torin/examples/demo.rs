@@ -148,7 +148,7 @@ fn main() {
         println!("{id:?} -> {:?}", node.area);
     }
 
-    // Make Torin calculate from what Node it is the most efficiente to start measuring again
+    // Make Torin calculate from what Node it is the most efficiente to start measuringg again
     layout.find_best_root(&mut demo_tree);
 
     // If Torin wasn't able to find a Root candidate, it will just use the ID we pass as fist argument

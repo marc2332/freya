@@ -23,7 +23,7 @@ fn app() -> impl IntoElement {
         .child(
             ImageViewer::new(uri)
                 .width(Size::percent(33.))
-                .a11y_alt("Beatiful landscape."),
+                .a11y_alt("Beautiful landscape."),
         )
         .child(ImageViewer::new(path).width(Size::percent(33.)))
         .child(ImageViewer::new(embedded).width(Size::percent(33.)))

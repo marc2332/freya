@@ -8,6 +8,14 @@ pub enum TileStatus {
     Hovering,
 }
 
+/// # Example
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> impl IntoElement {
+///     Tile::new().child("Tile content")
+/// }
+/// ```
 #[derive(Clone, PartialEq)]
 pub struct Tile {
     children: Vec<Element>,

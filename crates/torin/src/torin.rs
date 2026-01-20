@@ -3,7 +3,6 @@ use std::{
     mem,
 };
 
-pub use euclid::Rect;
 use itertools::Itertools;
 use rustc_hash::FxHashMap;
 
@@ -20,6 +19,7 @@ use crate::{
         AvailableAreaModel,
         Gaps,
         Length,
+        Size2D,
     },
     tree_adapter::{
         LayoutNode,
@@ -32,7 +32,7 @@ pub struct LayoutMetadata {
     pub root_area: Area,
 }
 
-/// Contains the best Root node candidate from where to start measuring
+/// Contains the best Root node candidate from where to start measuringg
 #[derive(PartialEq, Debug, Clone)]
 pub enum RootNodeCandidate<Key: NodeKey> {
     /// A valid Node ID
@@ -57,12 +57,12 @@ impl<Key: NodeKey> RootNodeCandidate<Key> {
     ) {
         if let RootNodeCandidate::Valid(current_candidate) = self {
             if current_candidate != proposed_candidate {
-                let mut continue_waking = true;
+                let mut continue_walking = true;
                 let closest_parent = tree_adapter.closest_common_parent(
                     proposed_candidate,
                     current_candidate,
                     |id| {
-                        if !continue_waking {
+                        if !continue_walking {
                             return;
                         }
                         let reason = dirty.get(&id);
@@ -77,7 +77,7 @@ impl<Key: NodeKey> RootNodeCandidate<Key> {
                             {
                                 // No need to continue checking if we encountered an ascendant
                                 // that is dirty but not with [DirtyReason::InnerLayout]
-                                continue_waking = false;
+                                continue_walking = false;
                             }
                             _ => {}
                         }
@@ -110,7 +110,7 @@ pub struct Torin<Key: NodeKey> {
     /// Invalid registered nodes since previous layout measurement
     pub dirty: FxHashMap<Key, DirtyReason>,
 
-    /// Best Root node candidate from where to start measuring
+    /// Best Root node candidate from where to start measuringg
     pub root_node_candidate: RootNodeCandidate<Key>,
 }
 
@@ -273,7 +273,7 @@ impl<Key: NodeKey> Torin<Key> {
         self.root_node_candidate.clone()
     }
 
-    /// Find the best root Node from where to start measuring
+    /// Find the best root Node from where to start measuringg
     pub fn find_best_root(&mut self, tree_adapter: &mut impl TreeAdapter<Key>) {
         if self.results.is_empty() {
             return;
@@ -298,7 +298,7 @@ impl<Key: NodeKey> Torin<Key> {
         measurer: &mut Option<impl LayoutMeasurer<Key>>,
         tree_adapter: &mut impl TreeAdapter<Key>,
     ) {
-        // If there are previosuly cached results
+        // If there are previously cached results
         // But no dirty nodes, we can simply skip the measurement
         // as this means no changes has been made to the layout
         if self.dirty.is_empty() && !self.results.is_empty() {
@@ -317,6 +317,7 @@ impl<Key: NodeKey> Torin<Key> {
             .unwrap_or(LayoutNode {
                 area: root_area,
                 inner_area: root_area.as_inner(),
+                inner_sizes: Size2D::default(),
                 margin: Gaps::default(),
                 offset_x: Length::default(),
                 offset_y: Length::default(),

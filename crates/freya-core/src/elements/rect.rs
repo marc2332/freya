@@ -95,20 +95,6 @@ impl Default for RectElement {
 }
 
 impl RectElement {
-    pub fn container_rect(&self, area: &Area, scale_factor: f32) -> SkRRect {
-        let style = self.style();
-        let corner_radius = style.corner_radius.with_scale(scale_factor);
-        SkRRect::new_rect_radii(
-            SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
-            &[
-                (corner_radius.top_left, corner_radius.top_left).into(),
-                (corner_radius.top_right, corner_radius.top_right).into(),
-                (corner_radius.bottom_right, corner_radius.bottom_right).into(),
-                (corner_radius.bottom_left, corner_radius.bottom_left).into(),
-            ],
-        )
-    }
-
     pub fn render_shadow(
         canvas: &Canvas,
         path: &mut SkPath,
@@ -207,7 +193,7 @@ impl RectElement {
         //
         // Let's call this the outer border path.
         let (outer_rrect, outer_corner_radius) = {
-            // Calculuate the outer corner radius for the border.
+            // Calculate the outer corner radius for the border.
             let corner_radius = CornerRadius {
                 top_left: Self::outer_border_path_corner_radius(
                     border_alignment,
@@ -265,7 +251,7 @@ impl RectElement {
 
         // After the outer path, we will then move to the inner bounds of the border.
         let (inner_rrect, inner_corner_radius) = {
-            // Calculuate the inner corner radius for the border.
+            // Calculate the inner corner radius for the border.
             let corner_radius = CornerRadius {
                 top_left: Self::inner_border_path_corner_radius(
                     border_alignment,
@@ -471,7 +457,7 @@ impl ElementExt for RectElement {
     fn is_point_inside(&self, context: EventMeasurementContext) -> bool {
         let area = context.layout_node.visible_area();
         let cursor = context.cursor.to_f32();
-        let rounded_rect = self.container_rect(&area, context.scale_factor as f32);
+        let rounded_rect = self.render_rect(&area, context.scale_factor as f32);
         rounded_rect.contains(SkRect::new(
             cursor.x,
             cursor.y,
@@ -483,7 +469,7 @@ impl ElementExt for RectElement {
     fn clip(&self, context: ClipContext) {
         let area = context.visible_area;
 
-        let rounded_rect = self.container_rect(area, context.scale_factor as f32);
+        let rounded_rect = self.render_rect(area, context.scale_factor as f32);
 
         context
             .canvas
@@ -503,7 +489,7 @@ impl ElementExt for RectElement {
         style.background.apply_to_paint(&mut paint, area);
 
         // Container
-        let rounded_rect = self.container_rect(&area, context.scale_factor as f32);
+        let rounded_rect = self.render_rect(&area, context.scale_factor as f32);
         if corner_radius.smoothing > 0.0 {
             path.add_path(&corner_radius.smoothed_path(rounded_rect));
         } else {
@@ -682,6 +668,14 @@ impl Rect {
             .effect
             .get_or_insert_with(Default::default)
             .opacity = Some(opacity.into());
+        self
+    }
+
+    pub fn blur(mut self, blur: impl Into<f32>) -> Self {
+        self.element
+            .effect
+            .get_or_insert_with(Default::default)
+            .blur = Some(blur.into());
         self
     }
 }

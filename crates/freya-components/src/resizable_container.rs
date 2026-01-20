@@ -135,6 +135,32 @@ impl ResizableContext {
     }
 }
 
+/// A container with resizable panels.
+///
+/// # Example
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> impl IntoElement {
+///     ResizableContainer::new()
+///         .panel(ResizablePanel::new(50.).child("Panel 1"))
+///         .panel(ResizablePanel::new(50.).child("Panel 2"))
+/// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rect().center().expanded().child(
+/// #       ResizableContainer::new()
+/// #           .panel(ResizablePanel::new(50.).child("Panel 1"))
+/// #           .panel(ResizablePanel::new(50.).child("Panel 2"))
+/// #   )
+/// # }, "./images/gallery_resizable_container.png").render();
+/// ```
+///
+/// # Preview
+/// ![ResizableContainer Preview][resizable_container]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("resizable_container", "images/gallery_resizable_container.png"),
+)]
 #[derive(PartialEq)]
 pub struct ResizableContainer {
     /// Direction of the container.
@@ -195,7 +221,7 @@ impl Component for ResizableContainer {
             .on_sized(move |e: Event<SizedEventData>| size.set(e.area))
             .expanded()
             .content(Content::flex())
-            .children_iter(self.panels.iter().enumerate().flat_map(|(i, e)| {
+            .children(self.panels.iter().enumerate().flat_map(|(i, e)| {
                 if i > 0 {
                     vec![ResizableHandle::new(i).into(), e.clone().into()]
                 } else {

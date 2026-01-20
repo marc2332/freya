@@ -1,0 +1,31 @@
+[package]
+name = "freya-webview"
+version = "0.4.0-rc.3"
+description = "WebView support for Freya using WRY"
+edition = "2024"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "ui", "desktop", "webview"]
+categories = ["gui"]
+
+[features]
+skia-engine = ["freya-core/skia-engine"]
+
+[dependencies]
+freya-core = { workspace = true }
+freya-winit = { workspace = true }
+wry = "0.52"
+raw-window-handle = { workspace = true }
+torin = { workspace = true }
+rustc-hash = { workspace = true }
+tracing = { workspace = true }
+accesskit = { workspace = true }
+futures-channel = { workspace = true }
+futures-lite = { workspace = true }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+gtk = "0.18"
+
+[dev-dependencies]
+freya = { path = "../freya" }

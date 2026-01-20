@@ -129,7 +129,7 @@ impl Component for Ripple {
             .on_mouse_down(on_mouse_down)
             .on_sized(move |e: Event<SizedEventData>| container_area.set(e.area))
             .children(self.children.clone())
-            .children_iter(ripples.read().iter().map(|ripple| {
+            .children(ripples.read().iter().map(|ripple| {
                 RippleCircle {
                     id: ripple.id,
                     x: ripple.x,

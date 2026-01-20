@@ -84,8 +84,8 @@ impl Border {
         self
     }
 
-    pub fn alignment(mut self, aligment: impl Into<BorderAlignment>) -> Self {
-        self.alignment = aligment.into();
+    pub fn alignment(mut self, alignment: impl Into<BorderAlignment>) -> Self {
+        self.alignment = alignment.into();
         self
     }
 

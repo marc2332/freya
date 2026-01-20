@@ -20,10 +20,15 @@ const ICON: &[u8] = include_bytes!("./freya_icon.png");
 fn main() {
     let tray_icon = || {
         let tray_menu = Menu::new();
-        let _ = tray_menu.append(&MenuItem::new("Open", true, None));
-        let _ = tray_menu.append(&MenuItem::new("Toggle Visibility", true, None));
-        let _ = tray_menu.append(&MenuItem::new("Close All", true, None));
-        let _ = tray_menu.append(&MenuItem::new("Exit", true, None));
+        let _ = tray_menu.append(&MenuItem::with_id("open", "Open", true, None));
+        let _ = tray_menu.append(&MenuItem::with_id(
+            "toggle-visibility",
+            "Toggle Visibility",
+            true,
+            None,
+        ));
+        let _ = tray_menu.append(&MenuItem::with_id("close-all", "Close All", true, None));
+        let _ = tray_menu.append(&MenuItem::with_id("exit", "Exit", true, None));
         TrayIconBuilder::new()
             .with_menu(Box::new(tray_menu))
             .with_tooltip("Freya Tray")
@@ -32,10 +37,10 @@ fn main() {
             .unwrap()
     };
     let tray_handler = |ev, mut ctx: RendererContext| match ev {
-        TrayEvent::Menu(MenuEvent { id }) if id == "3" => {
+        TrayEvent::Menu(MenuEvent { id }) if id == "open" => {
             ctx.launch_window(WindowConfig::new(app).with_size(500., 450.));
         }
-        TrayEvent::Menu(MenuEvent { id }) if id == "4" => {
+        TrayEvent::Menu(MenuEvent { id }) if id == "toggle-visibility" => {
             for window in ctx.windows_mut().values_mut() {
                 if Some(true) == window.window().is_visible() {
                     window.window_mut().set_visible(false);
@@ -44,10 +49,10 @@ fn main() {
                 }
             }
         }
-        TrayEvent::Menu(MenuEvent { id }) if id == "5" => {
+        TrayEvent::Menu(MenuEvent { id }) if id == "close-all" => {
             ctx.windows_mut().drain();
         }
-        TrayEvent::Menu(MenuEvent { id }) if id == "6" => {
+        TrayEvent::Menu(MenuEvent { id }) if id == "exit" => {
             ctx.exit();
         }
         _ => {}

@@ -79,7 +79,7 @@ impl<D> Deref for Event<D> {
 }
 
 impl<D> Event<D> {
-    pub fn map<ND>(self, data: impl FnOnce(D) -> ND) -> Event<ND> {
+    pub fn map<NewD>(self, data: impl FnOnce(D) -> NewD) -> Event<NewD> {
         Event {
             data: data(self.data),
             propagate: self.propagate,
@@ -87,7 +87,7 @@ impl<D> Event<D> {
         }
     }
 
-    pub fn try_map<ND>(self, data: impl FnOnce(D) -> Option<ND>) -> Option<Event<ND>> {
+    pub fn try_map<NewD>(self, data: impl FnOnce(D) -> Option<NewD>) -> Option<Event<NewD>> {
         Some(Event {
             data: data(self.data)?,
             propagate: self.propagate,

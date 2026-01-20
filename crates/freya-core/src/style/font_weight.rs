@@ -30,6 +30,18 @@ impl From<i32> for FontWeight {
     }
 }
 
+impl From<FontWeight> for i32 {
+    fn from(weight: FontWeight) -> i32 {
+        weight.0
+    }
+}
+
+impl From<FontWeight> for f32 {
+    fn from(weight: FontWeight) -> f32 {
+        weight.0 as f32
+    }
+}
+
 impl From<FontWeight> for SkWeight {
     fn from(value: FontWeight) -> Self {
         value.0.into()

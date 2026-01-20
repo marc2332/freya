@@ -13,6 +13,37 @@ use crate::{
     },
 };
 
+/// Sidebar layout component with a bar on one side and content on the other.
+///
+/// # Example
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> impl IntoElement {
+///     SideBar::new()
+///         .bar(
+///             rect()
+///                 .child(SideBarItem::new().child("Home"))
+///                 .child(SideBarItem::new().child("Settings")),
+///         )
+///         .content(rect().expanded().center().child("Main content"))
+/// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rect().center().expanded().child(
+/// #       app()
+/// #   )
+/// # }, "./images/gallery_sidebar.png")
+/// # .with_hook(|t| { t.move_cursor((20., 20.)); t.sync_and_update(); })
+/// # .with_scale_factor(0.75)
+/// # .render();
+/// ```
+///
+/// # Preview
+/// ![Sidebar Preview][sidebar]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("sidebar", "images/gallery_sidebar.png"),
+)]
 #[derive(PartialEq)]
 pub struct SideBar {
     /// Theme override.

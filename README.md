@@ -81,6 +81,7 @@ fn app() -> impl IntoElement {
 - **Icons**: Easily add icons to your app using `freya-icons`, currently only supports Lucide.
 - **Devtools**: Inspect your app UI tree to to debug, or see performance state.
 - **Routing**: Manage your app UI in separate routes using `freya-router`.
+- **WebView**: Integrate WebViews into your application using `freya-webview`.
 
 ### Trying it out
 
@@ -89,6 +90,8 @@ Make sure to have [Development Setup](https://docs.rs/freya/0.3/freya/_docs/deve
 > ⚠️ If you happen to be on Windows using `windows-gnu` and get compile errors, maybe go check this [issue](https://github.com/marc2332/freya/issues/794).
 
 Clone this repo and run:
+
+> **Note:** After cloning, make sure to initialize and update the git submodules: `git submodule update --init --recursive`
 
 ```shell
 cargo run --example counter

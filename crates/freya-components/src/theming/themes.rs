@@ -1,4 +1,6 @@
 use freya_core::prelude::*;
+#[cfg(feature = "titlebar")]
+use torin::prelude::Length;
 use torin::{
     gaps::Gaps,
     size::Size,
@@ -10,12 +12,16 @@ use crate::theming::component_themes::CalendarThemePreference;
 use crate::theming::component_themes::LinkThemePreference;
 #[cfg(feature = "markdown")]
 use crate::theming::component_themes::MarkdownViewerThemePreference;
+#[cfg(feature = "titlebar")]
+use crate::theming::component_themes::TitlebarButtonThemePreference;
 use crate::theming::{
     component_themes::{
         AccordionThemePreference,
         ButtonColorsThemePreference,
         ButtonLayoutThemePreference,
         ButtonSegmentThemePreference,
+        CardColorsThemePreference,
+        CardLayoutThemePreference,
         CheckboxThemePreference,
         ChipThemePreference,
         CircularLoaderThemePreference,
@@ -136,6 +142,28 @@ pub(crate) const BASE_THEME: Theme = Theme {
         border_fill: Preference::Specific(Color::TRANSPARENT),
         focus_border_fill: Preference::Reference("border"),
         color: Preference::Reference("text_primary"),
+    },
+    card_layout: CardLayoutThemePreference {
+        padding: Preference::Specific(Gaps::new(16., 16., 16., 16.)),
+        corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
+    },
+    compact_card_layout: CardLayoutThemePreference {
+        padding: Preference::Specific(Gaps::new(8., 12., 8., 12.)),
+        corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
+    },
+    filled_card: CardColorsThemePreference {
+        background: Preference::Reference("primary"),
+        hover_background: Preference::Reference("tertiary"),
+        border_fill: Preference::Specific(Color::TRANSPARENT),
+        color: Preference::Reference("text_inverse"),
+        shadow: Preference::Reference("shadow"),
+    },
+    outline_card: CardColorsThemePreference {
+        background: Preference::Reference("surface_tertiary"),
+        hover_background: Preference::Reference("hover"),
+        border_fill: Preference::Reference("border"),
+        color: Preference::Reference("text_primary"),
+        shadow: Preference::Reference("shadow"),
     },
     accordion: AccordionThemePreference {
         color: Preference::Reference("text_primary"),
@@ -345,6 +373,14 @@ pub(crate) const BASE_THEME: Theme = Theme {
         padding: Preference::Specific(Gaps::new_all(12.)),
         day_corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
         nav_button_hover_background: Preference::Reference("hover"),
+    },
+    #[cfg(feature = "titlebar")]
+    titlebar_button: TitlebarButtonThemePreference {
+        background: Preference::Specific(Color::TRANSPARENT),
+        hover_background: Preference::Reference("hover"),
+        corner_radius: Preference::Specific(CornerRadius::new_all(0.0)),
+        width: Preference::Specific(Size::Pixels(Length::new(46.0))),
+        height: Preference::Specific(Size::Fill),
     },
 };
 

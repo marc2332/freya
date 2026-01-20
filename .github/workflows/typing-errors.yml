@@ -1,0 +1,18 @@
+name: Typing errors
+
+on:
+  push: {}
+  pull_request: {}
+  workflow_dispatch: {}
+
+jobs:
+  spelling:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Spell check with typos
+        uses: crate-ci/typos@v1.42.0
+        with:
+          isolated: true
+          config: ./_typos.toml
+          files: .

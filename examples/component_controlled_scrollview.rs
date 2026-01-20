@@ -18,24 +18,16 @@ fn app() -> impl IntoElement {
             ScrollView::new_controlled(scroll_controller)
                 .width(Size::flex(1.))
                 .spacing(6.)
-                .children_iter((0..30).map(|_| {
-                    rect()
-                        .width(Size::fill())
-                        .height(Size::px(80.))
-                        .background((182, 119, 0))
-                        .into()
-                })),
+                .children(
+                    (0..30).map(|_| rect().width(Size::fill()).background((182, 119, 0)).into()),
+                ),
         )
         .child(
             ScrollView::new_controlled(scroll_controller)
                 .width(Size::flex(1.))
                 .spacing(6.)
-                .children_iter((0..30).map(|_| {
-                    rect()
-                        .width(Size::fill())
-                        .height(Size::px(80.))
-                        .background((0, 119, 182))
-                        .into()
-                })),
+                .children(
+                    (0..30).map(|_| rect().width(Size::fill()).background((0, 119, 182)).into()),
+                ),
         )
 }

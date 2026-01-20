@@ -43,7 +43,6 @@ pub mod prelude {
         NamedKey,
     };
 
-    pub use crate::debug::*;
     pub use crate::{
         accessibility::{
             focus::*,
@@ -58,6 +57,7 @@ pub mod prelude {
         animation_clock::AnimationClock,
         cursor::*,
         data::*,
+        debug::*,
         diff_key::DiffKey,
         element::RenderContext,
         element::{
@@ -122,6 +122,7 @@ pub mod prelude {
             border::*,
             color::*,
             corner_radius::*,
+            cursor::*,
             fill::*,
             font_slant::*,
             font_weight::*,
@@ -153,10 +154,7 @@ pub mod integration {
         animation_clock::AnimationClock,
         data::*,
         element::*,
-        elements::{
-            extensions::*,
-            label::LabelElement,
-        },
+        elements::extensions::*,
         events::{
             data::*,
             executor::*,

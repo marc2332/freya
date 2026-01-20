@@ -397,7 +397,7 @@ pub trait TextEditor {
             }
             Key::Named(NamedKey::Tab) if allow_tabs && allow_changes => {
                 // Inserts a tab
-                let text = " ".repeat(self.get_identation().into());
+                let text = " ".repeat(self.get_indentation().into());
                 let cursor_pos = self.cursor_pos();
                 self.insert(&text, cursor_pos);
                 self.move_cursor_to(cursor_pos + text.chars().count());
@@ -540,7 +540,7 @@ pub trait TextEditor {
 
     fn get_selection_range(&self) -> Option<(usize, usize)>;
 
-    fn get_identation(&self) -> u8;
+    fn get_indentation(&self) -> u8;
 
     fn find_word_boundaries(&self, pos: usize) -> (usize, usize);
 }

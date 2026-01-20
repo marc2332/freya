@@ -75,7 +75,7 @@ fn app() -> impl IntoElement {
     };
 
     let mut on_column_head_click = move |column_order: &OrderBy| {
-        // Change order diection
+        // Change order direction
         if &*order.read() == column_order {
             if *order_direction.read() == OrderDirection::Up {
                 order_direction.set(OrderDirection::Down)
@@ -95,7 +95,7 @@ fn app() -> impl IntoElement {
         Table::new(3)
             .child(
                 TableHead::new().child(
-                    TableRow::new().children_iter(columns.into_iter().enumerate().map(
+                    TableRow::new().children(columns.into_iter().enumerate().map(
                         |(n, (text, order_by))| {
                             TableCell::new()
                                 .key(n)
@@ -117,7 +117,7 @@ fn app() -> impl IntoElement {
                         let items = &filtered_data[i];
                         TableRow::new()
                             .key(i)
-                            .children_iter(items.iter().enumerate().map(|(n, item)| {
+                            .children(items.iter().enumerate().map(|(n, item)| {
                                 TableCell::new()
                                     .key(n)
                                     .height(Size::px(35.))

@@ -43,7 +43,31 @@ use crate::{
 ///                 )
 ///         }))
 /// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   let mut show_menu = use_state(|| true);
+/// #   rect().center().expanded().child(
+/// #       rect()
+/// #           .child(
+/// #               Button::new()
+/// #                   .on_press(move |_| show_menu.toggle())
+/// #                   .child("Open Menu"),
+/// #           )
+/// #           .maybe_child(show_menu().then(|| {
+/// #               Menu::new()
+/// #                   .on_close(move |_| show_menu.set(false))
+/// #                   .child(MenuButton::new().child("Open"))
+/// #                   .child(MenuButton::new().child("Save"))
+/// #           }))
+/// #   )
+/// # }, "./images/gallery_menu.png").render();
 /// ```
+///
+/// # Preview
+/// ![Menu Preview][menu]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("menu", "images/gallery_menu.png"),
+)]
 #[derive(Default, Clone, PartialEq)]
 pub struct Menu {
     children: Vec<Element>,

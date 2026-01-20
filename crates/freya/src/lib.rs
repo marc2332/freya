@@ -36,6 +36,7 @@
 //! - [UI and Components](self::_docs::ui_and_components)
 //! - [Elements](self::elements)
 //! - [Hooks](self::_docs::hooks)
+//! - [State](self::_docs::state_management)
 //! - [Development Setup](self::_docs::development_setup)
 //!
 //! ### Learn
@@ -49,6 +50,7 @@
 //! - [Material Design](freya_material_design)
 //! - [Plotters](freya_plotters_backend)
 //! - [Testing](freya_testing)
+//! - [WebView](freya_webview)
 //!
 //! ## Features flags
 //!
@@ -65,6 +67,8 @@
 //! - `icons`: Reexport of [freya_icons] under [icons].
 //! - `radio`: Reexport [freya_radio] under [radio].
 //! - `markdown`: Enables the [MarkdownViewer](components::MarkdownViewer) component.
+//! - `webview`: Reexport [freya_webview] under [webview].
+//! - `titlebar`: Enables the [TitlebarButton](components::TitlebarButton) component.
 //!
 //! ## Misc features
 //! - `devtools`: Enables devtools support.
@@ -79,6 +83,7 @@ pub mod prelude {
         ClipboardError,
     };
     pub use freya_winit::{
+        WindowDragExt,
         WinitPlatformExt,
         config::{
             LaunchConfig,
@@ -140,10 +145,13 @@ pub mod components {
     #[cfg_attr(feature = "docs", doc(cfg(feature = "plot")))]
     #[cfg(feature = "plot")]
     pub use freya_components::plot::*;
+    #[cfg(feature = "titlebar")]
+    pub use freya_components::titlebar::*;
     pub use freya_components::{
         accordion::*,
         activable_route_context::*,
         button::*,
+        card::*,
         checkbox::*,
         chip::*,
         color_picker::*,
@@ -255,6 +263,13 @@ pub mod icons {
 #[cfg_attr(feature = "docs", doc(cfg(feature = "radio")))]
 pub mod radio {
     pub use freya_radio::prelude::*;
+}
+
+/// Reexport `freya-webview` when the `webview` feature is enabled.
+#[cfg(feature = "webview")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "webview")))]
+pub mod webview {
+    pub use freya_webview::*;
 }
 
 #[cfg(doc)]

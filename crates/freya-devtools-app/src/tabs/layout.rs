@@ -20,7 +20,7 @@ impl Component for NodeInspectorLayout {
         };
 
         ScrollView::new()
-            .children_iter(
+            .children(
                 node.state
                     .layout_attributes()
                     .into_iter()

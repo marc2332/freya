@@ -27,7 +27,7 @@ use crate::{
 pub struct RopeEditor {
     pub(crate) rope: Rope,
     pub(crate) selection: TextSelection,
-    pub(crate) identation: u8,
+    pub(crate) indentation: u8,
     pub(crate) history: EditorHistory,
 }
 
@@ -42,13 +42,13 @@ impl RopeEditor {
     pub fn new(
         text: String,
         selection: TextSelection,
-        identation: u8,
+        indentation: u8,
         history: EditorHistory,
     ) -> Self {
         Self {
             rope: Rope::from_str(&text),
             selection,
-            identation,
+            indentation,
             history,
         }
     }
@@ -315,8 +315,8 @@ impl TextEditor for RopeEditor {
         &mut self.history
     }
 
-    fn get_identation(&self) -> u8 {
-        self.identation
+    fn get_indentation(&self) -> u8 {
+        self.indentation
     }
 
     fn find_word_boundaries(&self, pos: usize) -> (usize, usize) {

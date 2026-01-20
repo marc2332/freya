@@ -67,12 +67,47 @@ impl Component for PopupBackground {
 }
 
 /// Floating popup / dialog.
+///
+/// # Example
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> impl IntoElement {
+/// Popup::new()
+///     .width(Size::px(250.))
+///     .child(PopupTitle::new("Title".to_string()))
+///     .child(PopupContent::new().child("Hello, World!"))
+///     .child(
+///         PopupButtons::new().child(
+///             Button::new()
+///                 .expanded()
+///                 .filled()
+///                 .child("Accept"),
+///             ),
+///         )
+/// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rect().center().expanded().child(
+/// #      app()
+/// #   )
+/// # }, "./images/gallery_popup.png").with_scale_factor(0.8).with_hook(|test| {
+/// #   test.poll(std::time::Duration::from_millis(10), std::time::Duration::from_millis(500));
+/// # }).render();
+/// ```
+///
+/// # Preview
+/// ![Popup Preview][popup]
+#[cfg_attr(feature = "docs",
+    doc = embed_doc_image::embed_image!("popup", "images/gallery_popup.png"),
+)]
 #[derive(Clone, PartialEq)]
 pub struct Popup {
     pub(crate) theme: Option<PopupThemePartial>,
     children: Vec<Element>,
     on_close_request: Option<EventHandler<()>>,
     close_on_escape_key: bool,
+    width: Size,
     key: DiffKey,
 }
 
@@ -95,12 +130,18 @@ impl Popup {
             children: vec![],
             on_close_request: None,
             close_on_escape_key: true,
+            width: Size::px(500.),
             key: DiffKey::None,
         }
     }
 
     pub fn on_close_request(mut self, on_close_request: impl Into<EventHandler<()>>) -> Self {
         self.on_close_request = Some(on_close_request.into());
+        self
+    }
+
+    pub fn width(mut self, width: impl Into<Size>) -> Self {
+        self.width = width.into();
         self
     }
 }
@@ -159,7 +200,7 @@ impl Component for Popup {
                 .background(background)
                 .color(color)
                 .shadow(Shadow::new().y(4.).blur(5.).color((0, 0, 0, 30)))
-                .width(Size::px(500.))
+                .width(self.width.clone())
                 .height(Size::auto())
                 .spacing(4.)
                 .padding(8.)

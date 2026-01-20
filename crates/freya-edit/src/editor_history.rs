@@ -37,16 +37,16 @@ pub struct EditorHistory {
     // Incremental counter for every transaction.
     pub version: usize,
     /// After how many seconds since the last transaction a change should be grouped with the last transaction.
-    transaction_treshold_groping: Duration,
+    transaction_threshold_groping: Duration,
 }
 
 impl EditorHistory {
-    pub fn new(transaction_treshold_groping: Duration) -> Self {
+    pub fn new(transaction_threshold_groping: Duration) -> Self {
         Self {
             transactions: Vec::default(),
             current_transaction: 0,
             version: 0,
-            transaction_treshold_groping,
+            transaction_threshold_groping,
         }
     }
 
@@ -59,7 +59,7 @@ impl EditorHistory {
             .transactions
             .get_mut(self.current_transaction.saturating_sub(1));
         if let Some(last_transaction) = last_transaction
-            && last_transaction.timestamp.elapsed() <= self.transaction_treshold_groping
+            && last_transaction.timestamp.elapsed() <= self.transaction_threshold_groping
         {
             last_transaction.changes.push(change);
             last_transaction.timestamp = Instant::now();
@@ -278,7 +278,7 @@ mod test {
         assert_eq!(rope.to_string(), "Hello World\n!!!!");
         assert_eq!(history.any_pending_changes(), 2);
 
-        // Dischard any changes that could have been redone
+        // Discharged any changes that could have been redone
         rope.insert_char(0, '.');
         history.push_change(HistoryChange::InsertChar {
             idx: 0,

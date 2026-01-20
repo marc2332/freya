@@ -178,6 +178,7 @@ pub trait ContentExt {
     fn normal() -> Content;
     fn fit() -> Content;
     fn flex() -> Content;
+    fn wrap() -> Content;
 }
 
 impl ContentExt for Content {
@@ -191,6 +192,10 @@ impl ContentExt for Content {
 
     fn flex() -> Content {
         Content::Flex
+    }
+
+    fn wrap() -> Content {
+        Content::Wrap
     }
 }
 
@@ -212,16 +217,8 @@ impl VisibleSizeExt for VisibleSize {
 pub trait ChildrenExt: Sized {
     fn get_children(&mut self) -> &mut Vec<Element>;
 
-    fn children_iter<I>(mut self, children_iter: I) -> Self
-    where
-        I: Iterator<Item = Element>,
-    {
-        self.get_children().extend(children_iter);
-        self
-    }
-
-    fn children<V: Into<Vec<Element>>>(mut self, children: V) -> Self {
-        self.get_children().extend(children.into());
+    fn children(mut self, children: impl IntoIterator<Item = Element>) -> Self {
+        self.get_children().extend(children);
         self
     }
 
@@ -597,16 +594,6 @@ pub trait ImageExt
 where
     Self: LayoutExt,
 {
-    fn width(mut self, width: Size) -> Self {
-        self.get_layout().layout.width = width;
-        self
-    }
-
-    fn height(mut self, height: Size) -> Self {
-        self.get_layout().layout.height = height;
-        self
-    }
-
     fn get_image_data(&mut self) -> &mut ImageData;
 
     fn image_data(mut self, image_data: ImageData) -> Self {
@@ -780,6 +767,67 @@ where
     fn corner_radius(mut self, corner_radius: impl Into<CornerRadius>) -> Self {
         self.get_style().corner_radius = corner_radius.into();
         self
+    }
+}
+
+impl<T: StyleExt> CornerRadiusExt for T {
+    fn with_corner_radius(mut self, corner_radius: f32) -> Self {
+        self.get_style().corner_radius = CornerRadius::new_all(corner_radius);
+        self
+    }
+}
+
+pub trait CornerRadiusExt: Sized {
+    fn with_corner_radius(self, corner_radius: f32) -> Self;
+
+    /// Shortcut for `corner_radius(0.)` - removes border radius.
+    fn rounded_none(self) -> Self {
+        self.with_corner_radius(0.)
+    }
+
+    /// Shortcut for `corner_radius(6.)` - default border radius.
+    fn rounded(self) -> Self {
+        self.with_corner_radius(6.)
+    }
+
+    /// Shortcut for `corner_radius(4.)` - small border radius.
+    fn rounded_sm(self) -> Self {
+        self.with_corner_radius(4.)
+    }
+
+    /// Shortcut for `corner_radius(6.)` - medium border radius.
+    fn rounded_md(self) -> Self {
+        self.with_corner_radius(6.)
+    }
+
+    /// Shortcut for `corner_radius(8.)` - large border radius.
+    fn rounded_lg(self) -> Self {
+        self.with_corner_radius(8.)
+    }
+
+    /// Shortcut for `corner_radius(12.)` - extra large border radius.
+    fn rounded_xl(self) -> Self {
+        self.with_corner_radius(12.)
+    }
+
+    /// Shortcut for `corner_radius(16.)` - extra large border radius.
+    fn rounded_2xl(self) -> Self {
+        self.with_corner_radius(16.)
+    }
+
+    /// Shortcut for `corner_radius(24.)` - extra large border radius.
+    fn rounded_3xl(self) -> Self {
+        self.with_corner_radius(24.)
+    }
+
+    /// Shortcut for `corner_radius(32.)` - extra large border radius.
+    fn rounded_4xl(self) -> Self {
+        self.with_corner_radius(32.)
+    }
+
+    /// Shortcut for `corner_radius(99.)` - fully rounded (pill shape).
+    fn rounded_full(self) -> Self {
+        self.with_corner_radius(99.)
     }
 }
 

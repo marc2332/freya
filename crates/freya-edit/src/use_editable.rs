@@ -25,7 +25,7 @@ impl UseEditable {
         let editor = State::create(RopeEditor::new(
             content,
             TextSelection::new_cursor(0),
-            config.identation,
+            config.indentation,
             EditorHistory::new(Duration::from_millis(10)),
         ));
         let dragging = State::create(TextDragging::default());
