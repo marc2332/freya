@@ -37,6 +37,7 @@ all = [
   "radio",
   "webview",
   "titlebar",
+  "terminal",
 ]
 all-publish = [
   "all",
@@ -88,6 +89,7 @@ icons = ["dep:freya-icons"]
 radio = ["dep:freya-radio"]
 webview = ["dep:freya-webview"]
 titlebar = ["freya-components/titlebar"]
+terminal = ["dep:freya-terminal"]
 
 [dependencies]
 freya-core = { workspace = true }
@@ -105,6 +107,7 @@ freya-router = { workspace = true, optional = true }
 freya-i18n = { workspace = true, optional = true }
 freya-radio = { workspace = true, optional = true }
 freya-webview = { workspace = true, optional = true }
+freya-terminal = { workspace = true, optional = true }
 
 # Performance
 freya-performance-plugin = { workspace = true, optional = true }

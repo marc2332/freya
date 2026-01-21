@@ -51,6 +51,7 @@
 //! - [Plotters](freya_plotters_backend)
 //! - [Testing](freya_testing)
 //! - [WebView](freya_webview)
+//! - [Terminal](freya_terminal)
 //!
 //! ## Features flags
 //!
@@ -69,6 +70,7 @@
 //! - `markdown`: Enables the [MarkdownViewer](components::MarkdownViewer) component.
 //! - `webview`: Reexport [freya_webview] under [webview].
 //! - `titlebar`: Enables the [TitlebarButton](components::TitlebarButton) component.
+//! - `terminal`: Reexport [freya_terminal] under [terminal].
 //!
 //! ## Misc features
 //! - `devtools`: Enables devtools support.
@@ -270,6 +272,13 @@ pub mod radio {
 #[cfg_attr(feature = "docs", doc(cfg(feature = "webview")))]
 pub mod webview {
     pub use freya_webview::*;
+}
+
+/// Reexport `freya-terminal` when the `terminal` feature is enabled.
+#[cfg(feature = "terminal")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "terminal")))]
+pub mod terminal {
+    pub use freya_terminal::prelude::*;
 }
 
 #[cfg(doc)]

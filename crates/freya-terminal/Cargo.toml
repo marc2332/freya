@@ -1,0 +1,33 @@
+[package]
+name = "freya-terminal"
+version = "0.4.0-rc.3"
+description = "Terminal emulator integration for Freya"
+edition = "2024"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "ui", "desktop", "terminal", "pty"]
+categories = ["gui"]
+
+[features]
+skia-engine = ["freya-core/skia-engine"]
+
+[dependencies]
+freya-core = { workspace = true }
+freya-engine = { workspace = true }
+torin = { workspace = true }
+rustc-hash = { workspace = true }
+thiserror = { workspace = true }
+blocking = { workspace = true }
+
+# PTY and VT100
+portable-pty = "0.9"
+vt100 = "0.16"
+
+# Async
+futures-channel = { workspace = true }
+futures-lite = { workspace = true }
+futures-util = { workspace = true }
+
+[dev-dependencies]
+freya = { path = "../freya" }

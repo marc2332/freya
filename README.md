@@ -82,6 +82,7 @@ fn app() -> impl IntoElement {
 - **Devtools**: Inspect your app UI tree to to debug, or see performance state.
 - **Routing**: Manage your app UI in separate routes using `freya-router`.
 - **WebView**: Integrate WebViews into your application using `freya-webview`.
+- **Terminal Emulator**: Integrate terminal emulators (using PTYs) using `freya-terminal`.
 
 ### Trying it out
 

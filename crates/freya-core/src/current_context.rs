@@ -55,6 +55,21 @@ impl CurrentContext {
     pub fn with<T>(with: impl FnOnce(&CurrentContext) -> T) -> T {
         CURRENT_CONTEXT.with(|context| with(context.borrow().as_ref().expect("Your trying to access Freya's current context outside of it, you might be in a separate thread or async task that is not integrated with Freya.")))
     }
+
+    pub fn try_with<T>(with: impl FnOnce(&CurrentContext) -> T) -> Option<T> {
+        CURRENT_CONTEXT
+            .try_with(|context| {
+                if let Ok(context) = context.try_borrow()
+                    && let Some(context) = context.as_ref()
+                {
+                    Some(with(context))
+                } else {
+                    None
+                }
+            })
+            .ok()
+            .flatten()
+    }
 }
 
 thread_local! {

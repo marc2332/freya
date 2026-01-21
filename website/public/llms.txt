@@ -23,6 +23,7 @@ Important notes:
 - **Devtools**: Inspect your app UI tree to to debug, or see performance state.
 - **Routing**: Manage your app UI in separate routes using `freya-router`.
 - **WebView**: Integrate WebViews into your application using `freya-webview`.
+- **Terminal**: Integrate terminal emulators into your application using `freya-terminal`.
 
 ## Example: Counter
 
@@ -87,6 +88,7 @@ fn app() -> impl IntoElement {
 - [Material Design](https://docs.rs/freya-material-design/0.4.0-rc.3/freya_material_design/): Material Design components
 - [Plotters](https://docs.rs/freya-plotters-backend/0.4.0-rc.3/freya_plotters_backend/): Plotting backend
 - [Testing](https://docs.rs/freya-testing/0.4.0-rc.3/freya_testing/): Testing framework
+- [Terminal](https://docs.rs/freya-terminal/0.4.0-rc.3/freya_terminal/): Terminal emulator integration
 
 ## Examples
 

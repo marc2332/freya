@@ -72,6 +72,10 @@ impl TaskHandle {
     pub fn cancel(&self) {
         CurrentContext::with(|context| context.tasks.borrow_mut().remove(&self.0));
     }
+
+    pub fn try_cancel(&self) {
+        CurrentContext::try_with(|context| context.tasks.borrow_mut().remove(&self.0));
+    }
 }
 
 pub struct TaskWaker {
