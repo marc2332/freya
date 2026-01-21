@@ -45,35 +45,35 @@ members = [
 ]
 
 [workspace.dependencies]
-freya = { path = "./crates/freya", version = "0.4.0-rc.3" }
-freya-core = { path = "./crates/freya-core", version = "0.4.0-rc.3" }
-torin = { path = "./crates/torin", version = "0.4.0-rc.3" }
-ragnarok = { path = "./crates/ragnarok", version = "0.4.0-rc.3" }
-freya-clipboard = { path = "./crates/freya-clipboard", version = "0.4.0-rc.3" }
-freya-edit = { path = "./crates/freya-edit", version = "0.4.0-rc.3" }
-freya-winit = { path = "./crates/freya-winit", version = "0.4.0-rc.3" }
-freya-components = { path = "./crates/freya-components", version = "0.4.0-rc.3" }
-pathgraph = { path = "./crates/pathgraph/", version = "0.4.0-rc.3" }
-freya-animation = { path = "./crates/freya-animation", version = "0.4.0-rc.3" }
-freya-router = { path = "./crates/freya-router", version = "0.4.0-rc.3" }
-freya-router-macro = { path = "./crates/freya-router-macro", version = "0.4.0-rc.3" }
-freya-testing = { path = "./crates/freya-testing", version = "0.4.0-rc.3" }
-freya-i18n = { path = "./crates/freya-i18n", version = "0.4.0-rc.3" }
-freya-performance-plugin = { path = "./crates/freya-performance-plugin", version = "0.4.0-rc.3" }
-freya-radio = { path = "./crates/freya-radio", version = "0.4.0-rc.3" }
-freya-engine = { path = "./crates/freya-engine", version = "0.4.0-rc.3" }
-freya-devtools = { path = "./crates/freya-devtools", version = "0.4.0-rc.3" }
+freya = { path = "./crates/freya", version = "0.4.0-rc.4" }
+freya-core = { path = "./crates/freya-core", version = "0.4.0-rc.4" }
+torin = { path = "./crates/torin", version = "0.4.0-rc.4" }
+ragnarok = { path = "./crates/ragnarok", version = "0.4.0-rc.4" }
+freya-clipboard = { path = "./crates/freya-clipboard", version = "0.4.0-rc.4" }
+freya-edit = { path = "./crates/freya-edit", version = "0.4.0-rc.4" }
+freya-winit = { path = "./crates/freya-winit", version = "0.4.0-rc.4" }
+freya-components = { path = "./crates/freya-components", version = "0.4.0-rc.4" }
+pathgraph = { path = "./crates/pathgraph/", version = "0.4.0-rc.4" }
+freya-animation = { path = "./crates/freya-animation", version = "0.4.0-rc.4" }
+freya-router = { path = "./crates/freya-router", version = "0.4.0-rc.4" }
+freya-router-macro = { path = "./crates/freya-router-macro", version = "0.4.0-rc.4" }
+freya-testing = { path = "./crates/freya-testing", version = "0.4.0-rc.4" }
+freya-i18n = { path = "./crates/freya-i18n", version = "0.4.0-rc.4" }
+freya-performance-plugin = { path = "./crates/freya-performance-plugin", version = "0.4.0-rc.4" }
+freya-radio = { path = "./crates/freya-radio", version = "0.4.0-rc.4" }
+freya-engine = { path = "./crates/freya-engine", version = "0.4.0-rc.4" }
+freya-devtools = { path = "./crates/freya-devtools", version = "0.4.0-rc.4" }
 freya-icons = { path = "./crates/freya-icons", features = [
   "all",
-], version = "0.4.0-rc.3" }
+], version = "0.4.0-rc.4" }
 freya-sdk = { path = "./crates/freya-sdk", features = [
   "all",
-], version = "0.4.0-rc.3" }
-freya-material-design = { path = "./crates/freya-material-design", version = "0.4.0-rc.3" }
-freya-plotters-backend = { path = "./crates/freya-plotters-backend", version = "0.4.0-rc.3" }
-freya-query = { path = "./crates/freya-query", version = "0.4.0-rc.3" }
-freya-webview = { path = "./crates/freya-webview", version = "0.4.0-rc.3" }
-freya-terminal = { path = "./crates/freya-terminal", version = "0.4.0-rc.3" }
+], version = "0.4.0-rc.4" }
+freya-material-design = { path = "./crates/freya-material-design", version = "0.4.0-rc.4" }
+freya-plotters-backend = { path = "./crates/freya-plotters-backend", version = "0.4.0-rc.4" }
+freya-query = { path = "./crates/freya-query", version = "0.4.0-rc.4" }
+freya-webview = { path = "./crates/freya-webview", version = "0.4.0-rc.4" }
+freya-terminal = { path = "./crates/freya-terminal", version = "0.4.0-rc.4" }
 
 # core
 generational-box = "0.6.2"

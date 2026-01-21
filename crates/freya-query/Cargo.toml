@@ -1,7 +1,7 @@
 [package]
 name = "freya-query"
 description = "Fully-typed, async, reusable cached data management for Freya 🧬"
-version = "0.4.0-rc.3"
+version = "0.4.0-rc.4"
 edition = "2024"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
