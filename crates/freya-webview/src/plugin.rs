@@ -192,7 +192,7 @@ impl FreyaPlugin for WebViewPlugin {
                                 };
 
                                 let resize = match state.webview.bounds() {
-                                    Ok(r) => r.size != rect.size || r.position != rect.position,
+                                    Ok(r) => r != rect,
                                     _ => true,
                                 };
                                 if resize && let Err(e) = state.webview.set_bounds(rect) {
