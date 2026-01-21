@@ -75,9 +75,6 @@ freya-query = { path = "./crates/freya-query", version = "0.4.0-rc.3" }
 freya-webview = { path = "./crates/freya-webview", version = "0.4.0-rc.3" }
 freya-terminal = { path = "./crates/freya-terminal", version = "0.4.0-rc.3" }
 
-# WebView
-wry = "0.52"
-
 # core
 generational-box = "0.6.2"
 tracing = "0.1.41"
