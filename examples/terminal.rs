@@ -50,7 +50,7 @@ fn app() -> impl IntoElement {
                         let _ = handle.write(ch.as_bytes());
                     } else {
                         let _ = handle.write(match &e.key {
-                            Key::Named(NamedKey::Enter) => b"\n",
+                            Key::Named(NamedKey::Enter) => b"\r",
                             Key::Named(NamedKey::Backspace) => &[0x7f],
                             Key::Named(NamedKey::Delete) => b"\x1b[3~",
                             Key::Named(NamedKey::Tab) => b"\t",
