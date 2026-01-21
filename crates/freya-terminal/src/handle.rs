@@ -6,7 +6,13 @@ use std::{
     },
 };
 
-use freya_core::prelude::UseId;
+use freya_core::{
+    notify::ArcNotify,
+    prelude::{
+        TaskHandle,
+        UseId,
+    },
+};
 use futures_channel::mpsc::UnboundedSender;
 
 use crate::{
@@ -14,8 +20,7 @@ use crate::{
     pty::spawn_pty,
 };
 
-/// Type alias for the resize sender channel
-type ResizeSender = Arc<Mutex<Option<UnboundedSender<(u16, u16)>>>>;
+type ResizeSender = Arc<UnboundedSender<(u16, u16)>>;
 
 /// Unique identifier for a terminal instance
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -46,6 +51,20 @@ pub enum TerminalError {
     NotInitialized,
 }
 
+pub struct TerminalCleaner {
+    pub writer: Arc<Mutex<Option<Box<dyn Write + Send>>>>,
+    pub task: TaskHandle,
+    pub closer_notifier: ArcNotify,
+}
+
+impl Drop for TerminalCleaner {
+    fn drop(&mut self) {
+        *self.writer.lock().unwrap() = None;
+        self.task.try_cancel();
+        self.closer_notifier.notify();
+    }
+}
+
 /// Handle to a running terminal instance.
 ///
 /// The handle allows you to write input to the terminal and resize it.
@@ -61,7 +80,11 @@ pub struct TerminalHandle {
     /// Writer for sending input to the PTY
     pub writer: Arc<Mutex<Option<Box<dyn Write + Send>>>>,
     /// Channel for notifying UI and PTY of resizing
-    pub resize_holder: ResizeSender,
+    pub resize_sender: ResizeSender,
+
+    pub closer_notifier: ArcNotify,
+
+    pub cleaner: Arc<TerminalCleaner>,
 }
 
 impl PartialEq for TerminalHandle {
@@ -123,24 +146,11 @@ impl TerminalHandle {
     /// handle.resize(24, 80);
     /// ```
     pub fn resize(&self, rows: u16, cols: u16) {
-        // Notify UI thread to update parser
-        if let Ok(holder) = self.resize_holder.lock()
-            && let Some(tx) = holder.as_ref()
-        {
-            let _ = tx.unbounded_send((rows, cols));
-        }
+        let _ = self.resize_sender.unbounded_send((rows, cols));
     }
 
     /// Read the current terminal buffer.
     pub fn read_buffer(&self) -> TerminalBuffer {
         self.buffer.lock().unwrap().clone()
-    }
-}
-
-impl Drop for TerminalHandle {
-    fn drop(&mut self) {
-        // PTY is automatically cleaned up when the writer is dropped
-        // The spawned threads also end when their channels close
-        *self.writer.lock().unwrap() = None;
     }
 }
