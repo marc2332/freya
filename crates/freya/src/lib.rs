@@ -51,6 +51,7 @@
 //! - [Plotters](freya_plotters_backend)
 //! - [Testing](freya_testing)
 //! - [WebView](freya_webview)
+//! - [Terminal](freya_terminal)
 //!
 //! ## Features flags
 //!
