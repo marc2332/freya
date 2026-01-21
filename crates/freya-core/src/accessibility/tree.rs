@@ -3,6 +3,7 @@ use accesskit::{
     Node,
     Rect,
     Role,
+    TreeId,
     TreeUpdate,
 };
 use ragnarok::ProcessedEvents;
@@ -85,6 +86,7 @@ impl AccessibilityTree {
         }
 
         TreeUpdate {
+            tree_id: TreeId::ROOT,
             nodes,
             tree: Some(accesskit::Tree::new(ACCESSIBILITY_ROOT_ID)),
             focus: self.focused_id,
@@ -169,6 +171,7 @@ impl AccessibilityTree {
         }
 
         TreeUpdate {
+            tree_id: TreeId::ROOT,
             nodes,
             tree: Some(accesskit::Tree::new(ACCESSIBILITY_ROOT_ID)),
             focus: self.focused_id,

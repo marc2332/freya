@@ -130,8 +130,8 @@ ash = "^0.38"
 ash-window = "0.13.0"
 
 # accessibility
-accesskit = "0.22.0"
-accesskit_winit = "0.30.0"
+accesskit = "0.23.0"
+accesskit_winit = "0.31.0"
 
 # Performance
 hotpath = "0.9"
