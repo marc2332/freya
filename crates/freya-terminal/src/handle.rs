@@ -51,10 +51,14 @@ pub enum TerminalError {
     NotInitialized,
 }
 
-pub struct TerminalCleaner {
-    pub writer: Arc<Mutex<Option<Box<dyn Write + Send>>>>,
-    pub task: TaskHandle,
-    pub closer_notifier: ArcNotify,
+/// Internal cleanup handler for terminal resources.
+pub(crate) struct TerminalCleaner {
+    /// Writer handle for the PTY.
+    pub(crate) writer: Arc<Mutex<Option<Box<dyn Write + Send>>>>,
+    /// Task handle for the terminal reader task.
+    pub(crate) task: TaskHandle,
+    /// Notifier that signals when the terminal should close.
+    pub(crate) closer_notifier: ArcNotify,
 }
 
 impl Drop for TerminalCleaner {
@@ -72,19 +76,20 @@ impl Drop for TerminalCleaner {
 ///
 /// The PTY is automatically closed when the handle is dropped.
 #[derive(Clone)]
+#[allow(dead_code)]
 pub struct TerminalHandle {
-    /// Unique identifier for this terminal
-    pub id: TerminalId,
-    /// Terminal buffer containing current state
-    pub buffer: Arc<Mutex<TerminalBuffer>>,
-    /// Writer for sending input to the PTY
-    pub writer: Arc<Mutex<Option<Box<dyn Write + Send>>>>,
-    /// Channel for notifying UI and PTY of resizing
-    pub resize_sender: ResizeSender,
-
-    pub closer_notifier: ArcNotify,
-
-    pub cleaner: Arc<TerminalCleaner>,
+    /// Unique identifier for this terminal instance.
+    pub(crate) id: TerminalId,
+    /// Terminal buffer containing the current screen state.
+    pub(crate) buffer: Arc<Mutex<TerminalBuffer>>,
+    /// Writer for sending input to the PTY process.
+    pub(crate) writer: Arc<Mutex<Option<Box<dyn Write + Send>>>>,
+    /// Channel for sending resize events to the PTY.
+    pub(crate) resize_sender: ResizeSender,
+    /// Notifier that signals when the terminal/PTY closes.
+    pub(crate) closer_notifier: ArcNotify,
+    /// Handles cleanup when the terminal is dropped.
+    pub(crate) cleaner: Arc<TerminalCleaner>,
 }
 
 impl PartialEq for TerminalHandle {
@@ -152,5 +157,26 @@ impl TerminalHandle {
     /// Read the current terminal buffer.
     pub fn read_buffer(&self) -> TerminalBuffer {
         self.buffer.lock().unwrap().clone()
+    }
+
+    /// Returns a future that completes when the terminal/PTY closes.
+    ///
+    /// This can be used to detect when the shell process exits and update the UI accordingly.
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// use_future(move || async move {
+    ///     terminal_handle.closed().await;
+    ///     // Terminal has exited, update UI state
+    /// });
+    /// ```
+    pub fn closed(&self) -> impl std::future::Future<Output = ()> + '_ {
+        self.closer_notifier.notified()
+    }
+
+    /// Returns the unique identifier for this terminal instance.
+    pub fn id(&self) -> TerminalId {
+        self.id
     }
 }

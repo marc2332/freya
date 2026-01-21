@@ -19,7 +19,7 @@ fn app() -> impl IntoElement {
     use_future(move || async move {
         // Stops rendering the terminal once the pty closes
         let terminal_handle = handle.read().clone().unwrap();
-        terminal_handle.closer_notifier.notified().await;
+        terminal_handle.closed().await;
         let _ = handle.write().take();
     });
 
