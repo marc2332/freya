@@ -74,29 +74,6 @@
 //!     // Terminal has exited, update UI state
 //! });
 //! ```
-//!
-//! ## Customization
-//!
-//! The `Terminal` component supports customization:
-//!
-//! - `Terminal::font_family` - Set the terminal font (default: "Cascadia Code")
-//! - `Terminal::font_size` - Set the font size (default: 14.0)
-//! - `Terminal::foreground` - Set the default foreground color
-//! - `Terminal::background` - Set the default background color
-//!
-//! ## Error Handling
-//!
-//! Terminal operations can fail. Use `TerminalError` to handle errors:
-//!
-//! ```rust,ignore
-//! match TerminalHandle::new(cmd) {
-//!     Ok(handle) => { /* use terminal */ }
-//!     Err(TerminalError::PtyError(msg)) => { /* handle PTY failure */ }
-//!     Err(TerminalError::NotInitialized) => { /* handle init failure */ }
-//!     Err(TerminalError::WriteError(msg)) => { /* handle write failure */ }
-//! }
-//! ```
-
 pub mod buffer;
 pub mod colors;
 pub mod component;
