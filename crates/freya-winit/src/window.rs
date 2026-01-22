@@ -52,7 +52,10 @@ use winit::{
 
 use crate::{
     accessibility::AccessibilityTask,
-    config::WindowConfig,
+    config::{
+        OnCloseHook,
+        WindowConfig,
+    },
     drivers::GraphicsDriver,
     plugins::{
         PluginEvent,
@@ -97,6 +100,8 @@ pub struct AppWindow {
     pub(crate) background: Color,
 
     pub(crate) dropped_file_paths: Vec<PathBuf>,
+
+    pub(crate) on_close: Option<OnCloseHook>,
 }
 
 impl AppWindow {
@@ -137,6 +142,8 @@ impl AppWindow {
         if let Some(window_handle_hook) = window_config.window_handle_hook.take() {
             window_handle_hook(&mut window);
         }
+
+        let on_close = window_config.on_close.take();
 
         let (events_sender, events_receiver) = futures_channel::mpsc::unbounded();
 
@@ -302,6 +309,8 @@ impl AppWindow {
             background: window_config.background,
 
             dropped_file_paths: Vec::new(),
+
+            on_close,
         }
     }
 
