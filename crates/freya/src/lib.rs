@@ -88,6 +88,7 @@ pub mod prelude {
         WindowDragExt,
         WinitPlatformExt,
         config::{
+            CloseDecision,
             LaunchConfig,
             WindowConfig,
         },

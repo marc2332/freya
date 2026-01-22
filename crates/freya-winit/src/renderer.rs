@@ -51,7 +51,10 @@ use winit::{
 
 use crate::{
     accessibility::AccessibilityTask,
-    config::WindowConfig,
+    config::{
+        CloseDecision,
+        WindowConfig,
+    },
     plugins::{
         PluginEvent,
         PluginHandle,
@@ -585,23 +588,52 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     app.tree.layout.reset();
                 }
                 WindowEvent::CloseRequested => {
-                    self.windows.remove(&window_id);
-                    let has_windows = !self.windows.is_empty();
+                    let mut on_close_hook = self
+                        .windows
+                        .get_mut(&window_id)
+                        .and_then(|app| app.on_close.take());
 
-                    let has_tray = {
-                        #[cfg(feature = "tray")]
-                        {
-                            self.tray.1.is_some()
-                        }
-                        #[cfg(not(feature = "tray"))]
-                        {
-                            false
-                        }
+                    let decision = if let Some(ref mut on_close) = on_close_hook {
+                        let renderer_context = RendererContext {
+                            fallback_fonts: &mut self.fallback_fonts,
+                            active_event_loop: event_loop,
+                            windows: &mut self.windows,
+                            proxy: &mut self.proxy,
+                            plugins: &mut self.plugins,
+                            screen_reader: &mut self.screen_reader,
+                            font_manager: &mut self.font_manager,
+                            font_collection: &mut self.font_collection,
+                        };
+                        on_close(renderer_context, window_id)
+                    } else {
+                        CloseDecision::Close
                     };
 
-                    // Only exit when there is no window and no tray
-                    if !has_windows && !has_tray {
-                        event_loop.exit();
+                    if matches!(decision, CloseDecision::KeepOpen) {
+                        if let Some(app) = self.windows.get_mut(&window_id) {
+                            app.on_close = on_close_hook;
+                        }
+                    }
+
+                    if matches!(decision, CloseDecision::Close) {
+                        self.windows.remove(&window_id);
+                        let has_windows = !self.windows.is_empty();
+
+                        let has_tray = {
+                            #[cfg(feature = "tray")]
+                            {
+                                self.tray.1.is_some()
+                            }
+                            #[cfg(not(feature = "tray"))]
+                            {
+                                false
+                            }
+                        };
+
+                        // Only exit when there is no windows and no tray
+                        if !has_windows && !has_tray {
+                            event_loop.exit();
+                        }
                     }
                 }
                 WindowEvent::ModifiersChanged(modifiers) => {

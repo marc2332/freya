@@ -18,6 +18,7 @@ use winit::{
         Icon,
         Window,
         WindowAttributes,
+        WindowId,
     },
 };
 
@@ -32,6 +33,21 @@ use crate::{
 pub type WindowBuilderHook =
     Box<dyn FnOnce(WindowAttributes, &ActiveEventLoop) -> WindowAttributes + Send + Sync>;
 pub type WindowHandleHook = Box<dyn FnOnce(&mut Window) + Send + Sync>;
+
+/// Decision returned by the `on_close` hook to determine whether a window should close.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum CloseDecision {
+    /// Close the window.
+    #[default]
+    Close,
+    /// Keep the window open.
+    KeepOpen,
+}
+
+/// Hook called when a window close is requested.
+/// Returns a [`CloseDecision`] to determine whether the window should actually close.
+pub type OnCloseHook =
+    Box<dyn FnMut(crate::renderer::RendererContext, WindowId) -> CloseDecision + Send>;
 
 /// Configuration for a Window.
 pub struct WindowConfig {
@@ -59,6 +75,8 @@ pub struct WindowConfig {
     pub(crate) window_attributes_hook: Option<WindowBuilderHook>,
     /// Hook function called with the Window.
     pub(crate) window_handle_hook: Option<WindowHandleHook>,
+    /// Hook function called when the window is requested to close.
+    pub(crate) on_close: Option<OnCloseHook>,
 }
 
 impl Debug for WindowConfig {
@@ -97,6 +115,7 @@ impl WindowConfig {
             icon: None,
             window_attributes_hook: None,
             window_handle_hook: None,
+            on_close: None,
         }
     }
 
@@ -172,6 +191,17 @@ impl WindowConfig {
         window_handle_hook: impl FnOnce(&mut Window) + 'static + Send + Sync,
     ) -> Self {
         self.window_handle_hook = Some(Box::new(window_handle_hook));
+        self
+    }
+
+    /// Register an on-close hook that is called when the window is requested to close by the user.
+    pub fn with_on_close(
+        mut self,
+        on_close: impl FnMut(crate::renderer::RendererContext, WindowId) -> CloseDecision
+        + 'static
+        + Send,
+    ) -> Self {
+        self.on_close = Some(Box::new(on_close));
         self
     }
 }
