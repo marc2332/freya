@@ -143,7 +143,7 @@ impl EditableEvent<'_> {
                         .get_glyph_position_at_coordinate(dist_position.to_i32().to_tuple());
                     let to = dist_char.position as usize;
 
-                    if !editor.peek().get_selection().is_some() {
+                    if editor.peek().get_selection().is_none() {
                         editor.write().selection_mut().set_as_range();
                     }
 
