@@ -632,8 +632,6 @@ impl Component for MarkdownViewer {
                     .background(background_divider)
                     .into(),
                 MarkdownElement::Table { headers, rows } => {
-                    let columns = headers.len();
-
                     let mut head = TableHead::new();
                     let mut header_row = TableRow::new();
                     for (col_idx, header_spans) in headers.into_iter().enumerate() {
@@ -657,7 +655,7 @@ impl Component for MarkdownViewer {
                         body = body.child(table_row);
                     }
 
-                    Table::new(columns).key(idx).child(head).child(body).into()
+                    Table::new().key(idx).child(head).child(body).into()
                 }
             };
 
