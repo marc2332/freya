@@ -609,10 +609,10 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         CloseDecision::Close
                     };
 
-                    if matches!(decision, CloseDecision::KeepOpen) {
-                        if let Some(app) = self.windows.get_mut(&window_id) {
-                            app.on_close = on_close_hook;
-                        }
+                    if matches!(decision, CloseDecision::KeepOpen)
+                        && let Some(app) = self.windows.get_mut(&window_id)
+                    {
+                        app.on_close = on_close_hook;
                     }
 
                     if matches!(decision, CloseDecision::Close) {
