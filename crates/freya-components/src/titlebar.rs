@@ -46,25 +46,42 @@ impl TitlebarButton {
 
 impl Component for TitlebarButton {
     fn render(&self) -> impl IntoElement {
+        let mut hovering = use_state(|| false);
         let theme = get_theme!(&self.theme, titlebar_button);
 
-        let icon = match self.action {
-            TitlebarAction::Minimize => svg(freya_icons::lucide::minus())
-                .width(Size::px(12.))
-                .height(Size::px(12.)),
-            TitlebarAction::Maximize => svg(freya_icons::lucide::maximize())
-                .width(Size::px(12.))
-                .height(Size::px(12.)),
-            TitlebarAction::Close => svg(freya_icons::lucide::x())
-                .width(Size::px(12.))
-                .height(Size::px(12.)),
+        let icon_svg = match self.action {
+            TitlebarAction::Minimize => {
+                r#"<svg viewBox="0 0 12 12"><rect x="1" y="5" width="10" height="2" fill="currentColor"/></svg>"#
+            }
+            TitlebarAction::Maximize => {
+                r#"<svg viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>"#
+            }
+            TitlebarAction::Close => {
+                r#"<svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>"#
+            }
+        };
+
+        let icon = svg(Bytes::from_static(icon_svg.as_bytes()))
+            .width(Size::px(12.))
+            .height(Size::px(12.));
+
+        let background = if hovering() {
+            theme.hover_background
+        } else {
+            theme.background
         };
 
         rect()
             .width(theme.width)
             .height(theme.height)
-            .background(theme.background)
+            .background(background)
             .center()
+            .on_pointer_enter(move |_| {
+                hovering.set(true);
+            })
+            .on_pointer_leave(move |_| {
+                hovering.set(false);
+            })
             .map(self.on_press.clone(), |el, on_press| el.on_press(on_press))
             .child(icon)
     }

@@ -76,7 +76,7 @@ freya-webview = { path = "./crates/freya-webview", version = "0.4.0-rc.4" }
 freya-terminal = { path = "./crates/freya-terminal", version = "0.4.0-rc.4" }
 
 # core
-generational-box = "0.6.2"
+generational-box = "0.7"
 tracing = "0.1.41"
 rustc-hash = "2.1.1"
 bitflags = "2.9.3"
