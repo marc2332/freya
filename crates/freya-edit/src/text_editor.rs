@@ -492,9 +492,10 @@ pub trait TextEditor {
                     "z" if meta_or_ctrl && allow_changes => {
                         let undo_result = self.undo();
 
-                        if let Some(idx) = undo_result {
-                            self.move_cursor_to(idx);
+                        if let Some(selection) = undo_result {
+                            *self.selection_mut() = selection;
                             event.insert(TextEvent::TEXT_CHANGED);
+                            event.insert(TextEvent::SELECTION_CHANGED);
                         }
                     }
 
@@ -502,9 +503,10 @@ pub trait TextEditor {
                     "y" if meta_or_ctrl && allow_changes => {
                         let redo_result = self.redo();
 
-                        if let Some(idx) = redo_result {
-                            self.move_cursor_to(idx);
+                        if let Some(selection) = redo_result {
+                            *self.selection_mut() = selection;
                             event.insert(TextEvent::TEXT_CHANGED);
+                            event.insert(TextEvent::SELECTION_CHANGED);
                         }
                     }
 
@@ -537,7 +539,8 @@ pub trait TextEditor {
             _ => {}
         }
 
-        if event.contains(TextEvent::TEXT_CHANGED) {
+        if event.contains(TextEvent::TEXT_CHANGED) && !event.contains(TextEvent::SELECTION_CHANGED)
+        {
             self.clear_selection();
         }
 
@@ -550,9 +553,9 @@ pub trait TextEditor {
 
     fn get_selected_text(&self) -> Option<String>;
 
-    fn undo(&mut self) -> Option<usize>;
+    fn undo(&mut self) -> Option<TextSelection>;
 
-    fn redo(&mut self) -> Option<usize>;
+    fn redo(&mut self) -> Option<TextSelection>;
 
     fn editor_history(&mut self) -> &mut EditorHistory;
 
