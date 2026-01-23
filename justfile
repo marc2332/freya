@@ -45,7 +45,7 @@ ba:
     cargo build --all-targets --all-features
 
 bindings:
-    cargo build --package freya --package freya-testing --features "mocked-engine, all-debug" --no-default-features
+    cargo build --package freya --package freya-testing --features "mocked-engine, all-bindings" --no-default-features
 
 dev-app:
     cargo run --package freya-devtools-app

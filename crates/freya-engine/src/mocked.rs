@@ -423,7 +423,7 @@ pub enum TextAlign {
     End = 5,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct TextStyle;
 
 impl TextStyle {
