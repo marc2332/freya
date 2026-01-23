@@ -92,7 +92,7 @@ fn app() -> impl IntoElement {
     let len = filtered_data.len() as i32;
 
     rect().padding(8.).child(
-        Table::new(3)
+        Table::new()
             .child(
                 TableHead::new().child(
                     TableRow::new().children(columns.into_iter().enumerate().map(

@@ -90,7 +90,8 @@ fn app() -> impl IntoElement {
     };
 
     rect().padding(8.).child(
-        Table::new(3)
+        Table::new()
+            .column_widths([Size::flex(4.), Size::flex(3.), Size::flex(1.)])
             .child(
                 TableHead::new().child(
                     TableRow::new().children(columns.into_iter().enumerate().map(

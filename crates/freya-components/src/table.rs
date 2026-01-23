@@ -1,5 +1,6 @@
 use freya_core::prelude::*;
 use torin::{
+    content::Content,
     gaps::Gaps,
     prelude::Alignment,
     size::Size,
@@ -159,6 +160,7 @@ impl KeyExt for TableRow {
 impl Component for TableRow {
     fn render(&self) -> impl IntoElement {
         let theme = get_theme!(&self.theme, table);
+        let config = use_try_consume::<TableConfig>().unwrap_or_default();
         let mut state = use_state(|| TableRowState::Idle);
         let TableTheme {
             divider_fill,
@@ -180,7 +182,16 @@ impl Component for TableRow {
                 rect()
                     .width(Size::fill())
                     .horizontal()
-                    .children(self.children.clone()),
+                    .content(Content::Flex)
+                    .children(self.children.iter().enumerate().map(|(index, child)| {
+                        let width = config
+                            .column_widths
+                            .as_ref()
+                            .and_then(|widths| widths.get(index).cloned())
+                            .unwrap_or_else(|| Size::flex(1.));
+
+                        rect().width(width).child(child.clone()).into()
+                    })),
             )
             .child(
                 rect()
@@ -262,12 +273,10 @@ impl KeyExt for TableCell {
 
 impl Component for TableCell {
     fn render(&self) -> impl IntoElement {
-        let config = use_try_consume::<TableConfig>().unwrap_or(TableConfig::new(1));
-        let width_percent = 100.0 / (config.columns as f32);
         let mut container = rect()
             .overflow(Overflow::Clip)
             .padding(self.padding)
-            .width(Size::percent(width_percent))
+            .width(Size::fill())
             .main_align(Alignment::End)
             .cross_align(Alignment::Center)
             .height(self.height.clone())
@@ -303,7 +312,7 @@ impl Component for TableCell {
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     Table::new(2)
+///     Table::new()
 ///         .child(
 ///             TableHead::new().child(
 ///                 TableRow::new()
@@ -346,7 +355,7 @@ impl Component for TableCell {
 pub struct Table {
     pub height: Size,
     pub theme: Option<TableThemePartial>,
-    pub columns: usize,
+    pub column_widths: Option<Vec<Size>>,
     pub children: Vec<Element>,
     key: DiffKey,
 }
@@ -356,7 +365,7 @@ impl Default for Table {
         Self {
             height: Size::Inner,
             theme: None,
-            columns: 1,
+            column_widths: None,
             children: vec![],
             key: DiffKey::None,
         }
@@ -364,9 +373,8 @@ impl Default for Table {
 }
 
 impl Table {
-    pub fn new(columns: usize) -> Self {
+    pub fn new() -> Self {
         Self {
-            columns,
             ..Default::default()
         }
     }
@@ -378,6 +386,14 @@ impl Table {
 
     pub fn theme(mut self, theme: TableThemePartial) -> Self {
         self.theme = Some(theme);
+        self
+    }
+
+    /// Set custom widths for each column.
+    ///
+    /// Accepts any [Size], defaults to [Size::Flex].
+    pub fn column_widths(mut self, widths: impl Into<Vec<Size>>) -> Self {
+        self.column_widths = Some(widths.into());
         self
     }
 }
@@ -394,14 +410,20 @@ impl KeyExt for Table {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct TableConfig {
-    pub columns: usize,
+    pub column_widths: Option<Vec<Size>>,
 }
 
 impl TableConfig {
-    pub fn new(columns: usize) -> Self {
-        Self { columns }
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn with_column_widths(column_widths: Vec<Size>) -> Self {
+        Self {
+            column_widths: Some(column_widths),
+        }
     }
 }
 
@@ -415,7 +437,11 @@ impl Component for Table {
             ..
         } = get_theme!(&self.theme, table);
 
-        provide_context(TableConfig::new(self.columns));
+        let config = match &self.column_widths {
+            Some(widths) => TableConfig::with_column_widths(widths.clone()),
+            None => TableConfig::default(),
+        };
+        provide_context(config);
 
         rect()
             .overflow(Overflow::Clip)
