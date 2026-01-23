@@ -12,7 +12,7 @@ keywords = ["gui", "ui", "desktop", "skia"]
 categories = ["gui", "asynchronous"]
 
 [package.metadata.docs.rs]
-features = ["freya-core/mocked-engine", "docs"]
+features = ["freya-core/mocked-engine"]
 
 [features]
 skia-engine = ["freya-engine/skia-engine"]
