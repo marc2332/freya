@@ -22,8 +22,26 @@ use crate::{
     cursor_blink::use_cursor_blink,
     get_theme,
     scrollviews::ScrollView,
-    theming::component_themes::InputThemePartial,
+    theming::component_themes::{
+        InputColorsThemePartial,
+        InputLayoutThemePartial,
+        InputLayoutThemePartialExt,
+    },
 };
+
+#[derive(Clone, PartialEq)]
+pub enum InputStyleVariant {
+    Normal,
+    Filled,
+    Flat,
+}
+
+#[derive(Clone, PartialEq)]
+pub enum InputLayoutVariant {
+    Normal,
+    Compact,
+    Expanded,
+}
 
 #[derive(Default, Clone, PartialEq)]
 pub enum InputMode {
@@ -73,43 +91,57 @@ impl InputValidator {
 
 /// Small box to write some text.
 ///
-/// # Example
+/// ## **Normal**
 ///
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     let mut value = use_state(String::new);
-///     let mut submitted = use_state(String::new);
-///
-///     rect()
-///         .expanded()
-///         .center()
-///         .spacing(6.)
-///         .child(
-///             Input::new()
-///                 .placeholder("Type your name")
-///                 .value(value.read().clone())
-///                 .on_change(move |v| value.set(v))
-///                 .on_submit(move |v| submitted.set(v)),
-///         )
-///         .child(format!("Your name is {}", value.read()))
-///         .child(format!("Submitted: {}", submitted.read()))
+///     Input::new().placeholder("Type here")
 /// }
-///
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
-/// #   rect().center().expanded().child(Input::new() .value("Ferris"))
+/// #   rect().center().expanded().child(app())
 /// # }, "./images/gallery_input.png").render();
 /// ```
+/// ## **Filled**
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> impl IntoElement {
+///     Input::new().placeholder("Type here").filled()
+/// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rect().center().expanded().child(app())
+/// # }, "./images/gallery_filled_input.png").render();
+/// ```
+/// ## **Flat**
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> impl IntoElement {
+///     Input::new().placeholder("Type here").flat()
+/// }
+/// # use freya_testing::prelude::*;
+/// # launch_doc(|| {
+/// #   rect().center().expanded().child(app())
+/// # }, "./images/gallery_flat_input.png").render();
+/// ```
+///
 /// # Preview
 /// ![Input Preview][input]
+/// ![Filled Input Preview][filled_input]
+/// ![Flat Input Preview][flat_input]
 #[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("input", "images/gallery_input.png")
+    doc = embed_doc_image::embed_image!("input", "images/gallery_input.png"),
+    doc = embed_doc_image::embed_image!("filled_input", "images/gallery_filled_input.png"),
+    doc = embed_doc_image::embed_image!("flat_input", "images/gallery_flat_input.png"),
 )]
 #[derive(Clone, PartialEq)]
 pub struct Input {
-    pub(crate) theme: Option<InputThemePartial>,
-    value: Cow<'static, str>,
+    pub(crate) theme_colors: Option<InputColorsThemePartial>,
+    pub(crate) theme_layout: Option<InputLayoutThemePartial>,
+    value: ReadState<String>,
     placeholder: Option<Cow<'static, str>>,
     on_change: Option<EventHandler<String>>,
     on_validate: Option<EventHandler<InputValidator>>,
@@ -119,6 +151,8 @@ pub struct Input {
     width: Size,
     enabled: bool,
     key: DiffKey,
+    style_variant: InputStyleVariant,
+    layout_variant: InputLayoutVariant,
 }
 
 impl KeyExt for Input {
@@ -136,8 +170,9 @@ impl Default for Input {
 impl Input {
     pub fn new() -> Self {
         Input {
-            theme: None,
-            value: Cow::default(),
+            theme_colors: None,
+            theme_layout: None,
+            value: ReadState::Owned(String::new()),
             placeholder: None,
             on_change: None,
             on_validate: None,
@@ -147,6 +182,8 @@ impl Input {
             width: Size::px(150.),
             enabled: true,
             key: DiffKey::default(),
+            style_variant: InputStyleVariant::Normal,
+            layout_variant: InputLayoutVariant::Normal,
         }
     }
 
@@ -155,7 +192,7 @@ impl Input {
         self
     }
 
-    pub fn value(mut self, value: impl Into<Cow<'static, str>>) -> Self {
+    pub fn value(mut self, value: impl Into<ReadState<String>>) -> Self {
         self.value = value.into();
         self
     }
@@ -195,14 +232,55 @@ impl Input {
         self
     }
 
-    pub fn theme(mut self, theme: InputThemePartial) -> Self {
-        self.theme = Some(theme);
+    pub fn theme_colors(mut self, theme: InputColorsThemePartial) -> Self {
+        self.theme_colors = Some(theme);
+        self
+    }
+
+    pub fn theme_layout(mut self, theme: InputLayoutThemePartial) -> Self {
+        self.theme_layout = Some(theme);
         self
     }
 
     pub fn key(mut self, key: impl Into<DiffKey>) -> Self {
         self.key = key.into();
         self
+    }
+
+    pub fn style_variant(mut self, style_variant: impl Into<InputStyleVariant>) -> Self {
+        self.style_variant = style_variant.into();
+        self
+    }
+
+    pub fn layout_variant(mut self, layout_variant: impl Into<InputLayoutVariant>) -> Self {
+        self.layout_variant = layout_variant.into();
+        self
+    }
+
+    /// Shortcut for [Self::style_variant] with [InputStyleVariant::Filled].
+    pub fn filled(self) -> Self {
+        self.style_variant(InputStyleVariant::Filled)
+    }
+
+    /// Shortcut for [Self::style_variant] with [InputStyleVariant::Flat].
+    pub fn flat(self) -> Self {
+        self.style_variant(InputStyleVariant::Flat)
+    }
+
+    /// Shortcut for [Self::layout_variant] with [InputLayoutVariant::Compact].
+    pub fn compact(self) -> Self {
+        self.layout_variant(InputLayoutVariant::Compact)
+    }
+
+    /// Shortcut for [Self::layout_variant] with [InputLayoutVariant::Expanded].
+    pub fn expanded(self) -> Self {
+        self.layout_variant(InputLayoutVariant::Expanded)
+    }
+}
+
+impl CornerRadiusExt for Input {
+    fn with_corner_radius(self, corner_radius: f32) -> Self {
+        self.corner_radius(corner_radius)
     }
 }
 
@@ -213,12 +291,23 @@ impl Component for Input {
         let holder = use_state(ParagraphHolder::default);
         let mut area = use_state(Area::default);
         let mut status = use_state(InputStatus::default);
-        let mut editable = use_editable(|| self.value.to_string(), EditableConfig::new);
+        let mut editable = use_editable(|| self.value.read().to_string(), EditableConfig::new);
         let mut is_dragging = use_state(|| false);
         let mut ime_preedit = use_state(|| None);
-        let theme = get_theme!(&self.theme, input);
+
+        let theme_colors = match self.style_variant {
+            InputStyleVariant::Normal => get_theme!(&self.theme_colors, input),
+            InputStyleVariant::Filled => get_theme!(&self.theme_colors, filled_input),
+            InputStyleVariant::Flat => get_theme!(&self.theme_colors, flat_input),
+        };
+        let theme_layout = match self.layout_variant {
+            InputLayoutVariant::Normal => get_theme!(&self.theme_layout, input_layout),
+            InputLayoutVariant::Compact => get_theme!(&self.theme_layout, compact_input_layout),
+            InputLayoutVariant::Expanded => get_theme!(&self.theme_layout, expanded_input_layout),
+        };
+
         let (mut movement_timeout, cursor_color) =
-            use_cursor_blink(focus_status() != FocusStatus::Not, theme.color);
+            use_cursor_blink(focus_status() != FocusStatus::Not, theme_colors.color);
 
         let enabled = use_reactive(&self.enabled);
         use_drop(move || {
@@ -227,13 +316,13 @@ impl Component for Input {
             }
         });
 
-        let display_placeholder = self.value.is_empty() && self.placeholder.is_some();
+        let display_placeholder = self.value.read().is_empty() && self.placeholder.is_some();
         let on_change = self.on_change.clone();
         let on_validate = self.on_validate.clone();
         let on_submit = self.on_submit.clone();
 
-        if &*self.value != editable.editor().read().rope() {
-            editable.editor_mut().write().set(&self.value);
+        if &*self.value.read() != editable.editor().read().rope() {
+            editable.editor_mut().write().set(&self.value.read());
             editable.editor_mut().write().editor_history().clear();
         }
 
@@ -377,7 +466,7 @@ impl Component for Input {
         let (background, cursor_index, text_selection) =
             if enabled() && focus_status() != FocusStatus::Not {
                 (
-                    theme.hover_background,
+                    theme_colors.hover_background,
                     Some(editable.editor().read().cursor_pos()),
                     editable
                         .editor()
@@ -385,31 +474,32 @@ impl Component for Input {
                         .get_visible_selection(EditorLine::SingleParagraph),
                 )
             } else {
-                (theme.background, None, None)
+                (theme_colors.background, None, None)
             };
 
         let border = if focus_status() == FocusStatus::Keyboard {
             Border::new()
-                .fill(theme.focus_border_fill)
+                .fill(theme_colors.focus_border_fill)
                 .width(2.)
                 .alignment(BorderAlignment::Inner)
         } else {
             Border::new()
-                .fill(theme.border_fill.mul_if(!self.enabled, 0.85))
+                .fill(theme_colors.border_fill.mul_if(!self.enabled, 0.85))
                 .width(1.)
                 .alignment(BorderAlignment::Inner)
         };
 
         let color = if display_placeholder {
-            theme.placeholder_color
+            theme_colors.placeholder_color
         } else {
-            theme.color
+            theme_colors.color
         };
 
+        let value = self.value.read();
         let text = match (self.mode.clone(), &self.placeholder) {
             (_, Some(ph)) if display_placeholder => Cow::Borrowed(ph.as_ref()),
-            (InputMode::Hidden(ch), _) => Cow::Owned(ch.to_string().repeat(self.value.len())),
-            (InputMode::Shown, _) => Cow::Borrowed(self.value.as_ref()),
+            (InputMode::Hidden(ch), _) => Cow::Owned(ch.to_string().repeat(value.len())),
+            (InputMode::Shown, _) => Cow::Borrowed(value.as_ref()),
         };
 
         let preedit_text = (!display_placeholder)
@@ -438,7 +528,7 @@ impl Component for Input {
             .width(self.width.clone())
             .background(background.mul_if(!self.enabled, 0.85))
             .border(border)
-            .corner_radius(theme.corner_radius)
+            .corner_radius(theme_layout.corner_radius)
             .main_align(Alignment::center())
             .cross_align(Alignment::center())
             .child(
@@ -451,14 +541,14 @@ impl Component for Input {
                             .holder(holder.read().clone())
                             .on_sized(move |e: Event<SizedEventData>| area.set(e.visible_area))
                             .min_width(Size::func(move |context| {
-                                Some(context.parent + theme.inner_margin.horizontal())
+                                Some(context.parent + theme_layout.inner_margin.horizontal())
                             }))
                             .maybe(self.enabled, |rect| {
                                 rect.on_pointer_down(on_pointer_down)
                                     .on_global_mouse_up(on_global_mouse_up)
                                     .on_global_mouse_move(on_global_mouse_move)
                             })
-                            .margin(theme.inner_margin)
+                            .margin(theme_layout.inner_margin)
                             .cursor_index(cursor_index)
                             .cursor_color(cursor_color)
                             .color(color)

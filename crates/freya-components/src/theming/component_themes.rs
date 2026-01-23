@@ -73,7 +73,12 @@ pub struct Theme {
     pub link: LinkThemePreference,
     pub tooltip: TooltipThemePreference,
     pub circular_loader: CircularLoaderThemePreference,
-    pub input: InputThemePreference,
+    pub input_layout: InputLayoutThemePreference,
+    pub compact_input_layout: InputLayoutThemePreference,
+    pub expanded_input_layout: InputLayoutThemePreference,
+    pub input: InputColorsThemePreference,
+    pub filled_input: InputColorsThemePreference,
+    pub flat_input: InputColorsThemePreference,
     pub radio: RadioItemThemePreference,
     pub checkbox: CheckboxThemePreference,
     pub resizable_handle: ResizableHandleThemePreference,
@@ -304,15 +309,28 @@ define_theme! {
 }
 
 define_theme! {
+    for = Input;
+    theme_field = theme_layout;
+
     %[component]
-    pub Input {
+    pub InputLayout {
+        %[fields]
+        corner_radius: CornerRadius,
+        inner_margin: Gaps,
+    }
+}
+
+define_theme! {
+    for = Input;
+    theme_field = theme_colors;
+
+    %[component]
+    pub InputColors {
         %[fields]
         background: Color,
         hover_background: Color,
         border_fill: Color,
         focus_border_fill: Color,
-        corner_radius: CornerRadius,
-        inner_margin: Gaps,
         color: Color,
         placeholder_color: Color,
     }

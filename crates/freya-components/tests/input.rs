@@ -12,7 +12,7 @@ pub fn input_test() {
             .child(
                 Input::new()
                     .placeholder("Type your name")
-                    .value(value.read().clone())
+                    .value(value)
                     .on_change(move |v| value.set(v)),
             )
             .child(format!("Your name is {}", value.read()))
