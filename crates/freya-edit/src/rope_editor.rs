@@ -67,6 +67,7 @@ impl TextEditor for RopeEditor {
 
     fn insert_char(&mut self, ch: char, idx: usize) -> usize {
         let idx_utf8 = self.utf16_cu_to_char(idx);
+        let selection = self.selection.clone();
 
         let len_before_insert = self.rope.len_utf16_cu();
         self.rope.insert_char(idx_utf8, ch);
@@ -78,6 +79,7 @@ impl TextEditor for RopeEditor {
             idx,
             ch,
             len: inserted_text_len,
+            selection,
         });
 
         inserted_text_len
@@ -85,6 +87,7 @@ impl TextEditor for RopeEditor {
 
     fn insert(&mut self, text: &str, idx: usize) -> usize {
         let idx_utf8 = self.utf16_cu_to_char(idx);
+        let selection = self.selection.clone();
 
         let len_before_insert = self.rope.len_utf16_cu();
         self.rope.insert(idx_utf8, text);
@@ -96,6 +99,7 @@ impl TextEditor for RopeEditor {
             idx,
             text: text.to_owned(),
             len: inserted_text_len,
+            selection,
         });
 
         inserted_text_len
@@ -105,6 +109,7 @@ impl TextEditor for RopeEditor {
         let range =
             self.utf16_cu_to_char(range_utf16.start)..self.utf16_cu_to_char(range_utf16.end);
         let text = self.rope.slice(range.clone()).to_string();
+        let selection = self.selection.clone();
 
         let len_before_remove = self.rope.len_utf16_cu();
         self.rope.remove(range);
@@ -116,6 +121,7 @@ impl TextEditor for RopeEditor {
             idx: range_utf16.end - removed_text_len,
             text,
             len: removed_text_len,
+            selection,
         });
 
         removed_text_len
@@ -285,11 +291,11 @@ impl TextEditor for RopeEditor {
         Some((start, end))
     }
 
-    fn undo(&mut self) -> Option<usize> {
+    fn undo(&mut self) -> Option<TextSelection> {
         self.history.undo(&mut self.rope)
     }
 
-    fn redo(&mut self) -> Option<usize> {
+    fn redo(&mut self) -> Option<TextSelection> {
         self.history.redo(&mut self.rope)
     }
 

@@ -267,8 +267,8 @@ impl Component for Input {
                                 let validator = InputValidator::new(text.clone());
                                 on_validate.call(validator.clone());
                                 if !validator.is_valid() {
-                                    if let Some(idx) = editor.undo() {
-                                        editor.move_cursor_to(idx);
+                                    if let Some(selection) = editor.undo() {
+                                        *editor.selection_mut() = selection;
                                     }
                                     editor.editor_history().clear_redos();
                                 }
