@@ -30,6 +30,10 @@ use torin::prelude::{
 use tray_icon::TrayIcon;
 use winit::{
     application::ApplicationHandler,
+    dpi::{
+        LogicalPosition,
+        LogicalSize,
+    },
     event::{
         ElementState,
         Ime,
@@ -753,6 +757,13 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 if let Some(mode) = mode {
                                     app.platform.navigation_mode.set(mode);
                                 }
+
+                                let area = layout_node.visible_area();
+                                app.window.set_ime_cursor_area(
+                                    LogicalPosition::new(area.min_x(), area.min_y()),
+                                    LogicalSize::new(area.width(), area.height()),
+                                );
+
                                 app.accessibility_adapter.update_if_active(|| update);
                             }
                             AccessibilityTask::Init => {
@@ -765,6 +776,13 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 app.platform.focused_accessibility_node.set_if_modified(
                                     AccessibilityTree::create_node(node_id, layout_node, &app.tree),
                                 );
+
+                                let area = layout_node.visible_area();
+                                app.window.set_ime_cursor_area(
+                                    LogicalPosition::new(area.min_x(), area.min_y()),
+                                    LogicalSize::new(area.width(), area.height()),
+                                );
+
                                 app.accessibility_adapter.update_if_active(|| update);
                             }
                             AccessibilityTask::None => {}
