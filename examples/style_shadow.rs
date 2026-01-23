@@ -18,11 +18,13 @@ fn app() -> impl IntoElement {
         .child(
             rect()
                 .width(Size::px(80.))
+                .height(Size::px(80.))
                 .shadow(Shadow::new().blur(8.).color((255, 0, 0)).inset()),
         )
         .child(
             rect()
                 .width(Size::px(80.))
+                .height(Size::px(80.))
                 .shadow(Shadow::new().x(24.).y(24.).blur(8.).color((0, 0, 0, 0.3)))
                 .shadow(
                     Shadow::new()

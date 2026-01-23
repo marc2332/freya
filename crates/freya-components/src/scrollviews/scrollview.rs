@@ -106,13 +106,8 @@ impl ScrollView {
 
     pub fn new_controlled(scroll_controller: ScrollController) -> Self {
         Self {
-            children: Vec::default(),
-            layout: LayoutData::default(),
-            show_scrollbar: true,
-            scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
-            invert_scroll_wheel: false,
-            key: DiffKey::None,
+            ..Default::default()
         }
     }
 
