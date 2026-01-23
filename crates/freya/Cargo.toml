@@ -47,6 +47,12 @@ all-publish = [
   "dep:freya-testing",
   "dep:freya-plotters-backend",
 ]
+all-bindings = [
+  "all",
+  "performance",
+  "dep:freya-testing",
+  "dep:freya-plotters-backend",
+]
 all-debug = [
   "all",
   "performance",
