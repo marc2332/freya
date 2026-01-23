@@ -745,20 +745,6 @@ impl<Channel> ChannelSelection<Channel> {
 /// Provide an existing [`RadioStation`] to descendant components.
 /// This is useful for sharing the same global state across different parts of the component tree
 /// or across multiple windows.
-///
-/// # Example
-///
-/// ```rust, ignore
-/// # use freya::prelude::*;
-/// # use freya_radio::prelude::*;
-///
-/// fn app() -> impl IntoElement {
-///     let radio_station = RadioStation::create_global(AppState::default);
-///     use_share_radio(move || radio_station);
-///
-///     rect().child(MyComponent {})
-/// }
-/// ```
 pub fn use_share_radio<Value, Channel>(radio: impl FnOnce() -> RadioStation<Value, Channel>)
 where
     Channel: RadioChannel<Value>,

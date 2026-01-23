@@ -215,20 +215,20 @@ fn is_ftl_file(entry: &std::path::Path) -> bool {
     entry.is_file() && entry.extension().map(|ext| ext == "ftl").unwrap_or(false)
 }
 
+/// Provide an existing [`I18n`] to descendant components.
+/// This is useful for sharing the same global state across different parts of the component tree
+/// or across multiple windows.
+pub fn use_share_i18n(i18n: impl FnOnce() -> I18n) {
+    use_provide_context(i18n);
+}
+
 /// Initialize the i18n provider.
 ///
-/// See [I18n::new] for a manual I18n initialization where you can also handle errors.
+/// See [I18n::create] for a manual I18n initialization where you can also handle errors.
 pub fn use_init_i18n(init: impl FnOnce() -> I18nConfig) -> I18n {
     use_provide_context(move || {
         // Coverage false -ve: See https://github.com/xd009642/tarpaulin/issues/1675
-        let I18nConfig {
-            id,
-            fallback,
-            locale_resources,
-            locales,
-        } = init();
-
-        match I18n::new(id, fallback, locale_resources, locales) {
+        match I18n::create(init()) {
             Ok(i18n) => i18n,
             Err(e) => panic!("Failed to create I18n context: {e}"),
         }
@@ -253,11 +253,13 @@ impl I18n {
         consume_context()
     }
 
-    pub fn new(
-        selected_language: LanguageIdentifier,
-        fallback_language: Option<LanguageIdentifier>,
-        locale_resources: Vec<LocaleResource>,
-        locales: HashMap<LanguageIdentifier, usize>,
+    pub fn create(
+        I18nConfig {
+            id: selected_language,
+            fallback: fallback_language,
+            locale_resources,
+            locales,
+        }: I18nConfig,
     ) -> Result<Self, Error> {
         let bundle = try_create_bundle(
             &selected_language,
@@ -271,6 +273,29 @@ impl I18n {
             locale_resources: State::create(locale_resources),
             locales: State::create(locales),
             active_bundle: State::create(bundle),
+        })
+    }
+
+    pub fn create_global(
+        I18nConfig {
+            id: selected_language,
+            fallback: fallback_language,
+            locale_resources,
+            locales,
+        }: I18nConfig,
+    ) -> Result<Self, Error> {
+        let bundle = try_create_bundle(
+            &selected_language,
+            &fallback_language,
+            &locale_resources,
+            &locales,
+        )?;
+        Ok(Self {
+            selected_language: State::create_global(selected_language),
+            fallback_language: State::create_global(fallback_language),
+            locale_resources: State::create_global(locale_resources),
+            locales: State::create_global(locales),
+            active_bundle: State::create_global(bundle),
         })
     }
 
