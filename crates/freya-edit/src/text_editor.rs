@@ -539,7 +539,8 @@ pub trait TextEditor {
             _ => {}
         }
 
-        if event.contains(TextEvent::TEXT_CHANGED) && !event.contains(TextEvent::SELECTION_CHANGED) {
+        if event.contains(TextEvent::TEXT_CHANGED) && !event.contains(TextEvent::SELECTION_CHANGED)
+        {
             self.clear_selection();
         }
 
