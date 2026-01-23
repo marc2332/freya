@@ -134,7 +134,7 @@ fn app() -> impl IntoElement {
                 .content(Content::Flex)
                 .child(
                     Input::new()
-                        .value(input_value.read().clone())
+                        .value(input_value)
                         .on_change(move |value| {
                             *input_value.write() = value;
                         })

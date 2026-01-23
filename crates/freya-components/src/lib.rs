@@ -89,6 +89,8 @@ cfg_if::cfg_if! {
 /// | [ColorPicker](color_picker::ColorPicker)        | [Chip](chip::Chip)        | [Menu](menu::Menu)        | [Popup](popup::Popup)        |
 /// | ![ResizableContainer Preview][gallery_resizable_container] | ![Sidebar Preview][gallery_sidebar] | ![Table Preview][gallery_table] | ![Card Preview][gallery_card] |
 /// | [ResizableContainer](resizable_container::ResizableContainer)        | [Sidebar](sidebar::SideBar)        | [Table](table::Table)        | [Card](card::Card)       |
+/// | ![Input Preview][gallery_input] | ![Filled Input Preview][gallery_filled_input] | ![Flat Input Preview][gallery_flat_input] |
+/// | [Input](input::Input)        | [Filled Input](input::Input)        | [Flat Input](input::Input)        |
 #[cfg_attr(feature = "docs",
     doc = embed_doc_image::embed_image!("gallery_button", "images/gallery_button.png"),
     doc = embed_doc_image::embed_image!("gallery_filled_button", "images/gallery_filled_button.png"),
@@ -98,6 +100,8 @@ cfg_if::cfg_if! {
     doc = embed_doc_image::embed_image!("gallery_checkbox", "images/gallery_checkbox.png"),
     doc = embed_doc_image::embed_image!("gallery_radio", "images/gallery_radio.png"),
     doc = embed_doc_image::embed_image!("gallery_input", "images/gallery_input.png"),
+    doc = embed_doc_image::embed_image!("gallery_filled_input", "images/gallery_filled_input.png"),
+    doc = embed_doc_image::embed_image!("gallery_flat_input", "images/gallery_flat_input.png"),
     doc = embed_doc_image::embed_image!("gallery_progressbar", "images/gallery_progressbar.png"),
     doc = embed_doc_image::embed_image!("gallery_select", "images/gallery_select.png"),
     doc = embed_doc_image::embed_image!("gallery_accordion", "images/gallery_accordion.png"),
