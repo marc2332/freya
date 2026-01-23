@@ -4,7 +4,10 @@ use std::{
     any::Any,
     borrow::Cow,
     cell::RefCell,
-    fmt::Display,
+    fmt::{
+        Debug,
+        Display,
+    },
     rc::Rc,
 };
 
@@ -90,6 +93,12 @@ pub struct ParagraphHolder(pub Rc<RefCell<Option<ParagraphHolderInner>>>);
 impl PartialEq for ParagraphHolder {
     fn eq(&self, other: &Self) -> bool {
         Rc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+impl Debug for ParagraphHolder {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("ParagraphHolder")
     }
 }
 

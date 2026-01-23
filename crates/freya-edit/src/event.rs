@@ -11,13 +11,13 @@ use crate::{
     EditableConfig,
     EditorLine,
     TextSelection,
-    rope_editor::RopeEditor,
     text_editor::{
         TextEditor,
         TextEvent,
     },
 };
 
+#[derive(Debug)]
 pub enum EditableEvent<'a> {
     Release,
     Move {
@@ -40,9 +40,9 @@ pub enum EditableEvent<'a> {
 }
 
 impl EditableEvent<'_> {
-    pub fn process<'a, 'b>(
+    pub fn process<'a, 'b, T: TextEditor + 'static>(
         self,
-        mut editor: impl MutView<'b, RopeEditor>,
+        mut editor: impl MutView<'b, T>,
         mut dragging: impl MutView<'b, TextDragging>,
         config: &'_ EditableConfig,
     ) {
@@ -79,9 +79,9 @@ impl EditableEvent<'_> {
                             .measure_selection(char_position.position as usize, editor_line);
 
                         // Get the line start char and its length
-                        let line = text_editor.rope().char_to_line(press_selection.pos());
-                        let line_char = text_editor.rope().line_to_char(line);
-                        let line_len = text_editor.rope().line(line).len_utf16_cu();
+                        let line = text_editor.char_to_line(press_selection.pos());
+                        let line_char = text_editor.line_to_char(line);
+                        let line_len = text_editor.line(line).unwrap().utf16_len();
                         let new_selection =
                             TextSelection::new_range((line_char, line_char + line_len));
 
@@ -143,7 +143,7 @@ impl EditableEvent<'_> {
                         .get_glyph_position_at_coordinate(dist_position.to_i32().to_tuple());
                     let to = dist_char.position as usize;
 
-                    if !editor.peek().selection.is_range() {
+                    if editor.peek().get_selection().is_none() {
                         editor.write().selection_mut().set_as_range();
                     }
 
