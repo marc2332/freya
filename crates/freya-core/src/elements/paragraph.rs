@@ -387,9 +387,17 @@ impl ElementExt for ParagraphElement {
             }
         }
 
+        // We exclude those highlights that on the same start and end (e.g the user just started dragging)
+        let visible_highlights = self
+            .highlights
+            .iter()
+            .filter(|highlight| highlight.0 != highlight.1)
+            .count()
+            > 0;
+
         // Draw block cursor behind text if needed
         if let Some(cursor_index) = self.cursor_index
-            && self.highlights.is_empty()
+            && !visible_highlights
             && self.cursor_style == CursorStyle::Block
             && let Some(cursor_rect) = paragraph
                 .get_rects_for_range(
@@ -440,7 +448,7 @@ impl ElementExt for ParagraphElement {
 
         // Draw cursor
         if let Some(cursor_index) = self.cursor_index
-            && self.highlights.is_empty()
+            && !visible_highlights
         {
             let cursor_rects = paragraph.get_rects_for_range(
                 cursor_index..cursor_index + 1,
