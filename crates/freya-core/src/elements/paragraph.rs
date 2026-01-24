@@ -317,7 +317,7 @@ impl ElementExt for ParagraphElement {
                 let mut paragraph = paragraph_builder.build();
                 paragraph.layout(
                     if self.max_lines == Some(1)
-                        && context.text_style_state.text_align == TextAlign::Start
+                        && context.text_style_state.text_align == TextAlign::default()
                         && !paragraph_style.ellipsized()
                     {
                         f32::MAX
@@ -397,7 +397,6 @@ impl ElementExt for ParagraphElement {
 
         // Draw block cursor behind text if needed
         if let Some(cursor_index) = self.cursor_index
-            && !visible_highlights
             && self.cursor_style == CursorStyle::Block
             && let Some(cursor_rect) = paragraph
                 .get_rects_for_range(
