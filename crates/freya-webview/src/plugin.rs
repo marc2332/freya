@@ -65,11 +65,13 @@ impl WebViewPlugin {
     fn ensure_gtk_initialized(&mut self) {
         if !self.gtk_initialized {
             // Initialize GTK for WebKitGTK on Linux
-            if gtk::init().is_ok() {
-                tracing::debug!("WebViewPlugin: GTK initialized");
+            if !gtk::is_initialized() {
                 self.gtk_initialized = true;
-            } else {
-                tracing::error!("WebViewPlugin: Failed to initialize GTK");
+                if gtk::init().is_ok() {
+                    tracing::debug!("WebViewPlugin: GTK initialized");
+                } else {
+                    tracing::error!("WebViewPlugin: Failed to initialize GTK");
+                }
             }
         }
     }
