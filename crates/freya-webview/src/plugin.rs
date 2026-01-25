@@ -40,8 +40,6 @@ struct WebViewState {
 pub struct WebViewPlugin {
     webviews: HashMap<WebViewId, WebViewState>,
     events: WebViewEvents,
-    #[cfg(target_os = "linux")]
-    gtk_initialized: bool,
 }
 
 impl Default for WebViewPlugin {
@@ -56,29 +54,24 @@ impl WebViewPlugin {
         Self {
             webviews: HashMap::new(),
             events: WebViewEvents::default(),
-            #[cfg(target_os = "linux")]
-            gtk_initialized: false,
         }
     }
 
     #[cfg(target_os = "linux")]
     fn ensure_gtk_initialized(&mut self) {
-        if !self.gtk_initialized {
-            // Initialize GTK for WebKitGTK on Linux
-            if !gtk::is_initialized() {
-                self.gtk_initialized = true;
-                if gtk::init().is_ok() {
-                    tracing::debug!("WebViewPlugin: GTK initialized");
-                } else {
-                    tracing::error!("WebViewPlugin: Failed to initialize GTK");
-                }
+        // Initialize GTK for WebKitGTK on Linux
+        if !gtk::is_initialized() {
+            if gtk::init().is_ok() {
+                tracing::debug!("WebViewPlugin: GTK initialized");
+            } else {
+                tracing::error!("WebViewPlugin: Failed to initialize GTK");
             }
         }
     }
 
     #[cfg(target_os = "linux")]
     fn advance_gtk_event_loop(&self) -> bool {
-        if self.gtk_initialized {
+        if gtk::is_initialized() {
             // Process pending GTK events and return true if any were processed
             let mut processed = false;
             while gtk::events_pending() {
