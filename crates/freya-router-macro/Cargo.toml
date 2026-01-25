@@ -1,6 +1,6 @@
 [package]
 name = "freya-router-macro"
-version = "0.4.0-rc.5"
+version = "0.4.0-rc.6"
 authors = ["Evan Almloff", "Marc Espín <mespinsanz@gmail.com>"]
 edition = "2024"
 description = "Macro for Freya Router"

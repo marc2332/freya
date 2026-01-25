@@ -1,6 +1,6 @@
 [package]
 name = "freya-edit"
-version = "0.4.0-rc.5"
+version = "0.4.0-rc.6"
 description = "Text Editing APIs for Freya"
 edition = "2024"
 readme = "../../README.md"
