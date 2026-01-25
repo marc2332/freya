@@ -16,7 +16,7 @@ skia-engine = ["freya-core/skia-engine"]
 
 [dependencies]
 freya = { workspace = true, features = ["router"] }
-freya-core = { workspace = true }
+freya-core = { workspace = true, features = ["debug-integrity"] }
 freya-router = { workspace = true }
 
 freya-radio = { workspace = true }

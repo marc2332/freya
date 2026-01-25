@@ -1220,3 +1220,69 @@ fn tree_mutations_root_components() {
     );
     assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 }
+
+#[test]
+fn conditional_nested_component_removal() {
+    #[derive(PartialEq)]
+    struct Container(Element);
+
+    impl Component for Container {
+        fn render(&self) -> impl IntoElement {
+            rect().child(self.0.clone())
+        }
+    }
+
+    fn app() -> Element {
+        let mut count = use_state(|| 0);
+
+        if *count.read() > 0 {
+            return rect().into();
+        }
+
+        rect()
+            .child(Container("hey".into_element()))
+            .child(
+                rect()
+                    .on_mouse_up(move |_| count.set(1))
+                    .child(Container("hi".into_element())),
+            )
+            .into()
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+
+    // Initial render with components
+    let mutations = runner.sync_and_update();
+    assert!(!mutations.added.is_empty());
+    assert!(mutations.modified.is_empty());
+    assert!(mutations.removed.is_empty());
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+
+    // Initial tree should have multiple nodes
+    let initial_node_count = tree.elements.len();
+    let initial_scope_count = runner.scopes.len();
+    assert!(initial_node_count > 1);
+    assert!(initial_scope_count > 0);
+
+    runner.handle_event(
+        4,
+        EventName::MouseUp,
+        EventType::Mouse(MouseEventData::default()),
+        false,
+    );
+
+    let mutations = runner.sync_and_update();
+    assert!(mutations.added.is_empty());
+    assert!(mutations.modified.is_empty());
+    assert!(!mutations.removed.is_empty());
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+
+    assert_eq!(tree.elements.len(), 2);
+    assert_eq!(tree.children.len(), 2);
+    assert_ne!(runner.scopes.len(), initial_scope_count);
+    assert_eq!(runner.scopes.len(), 1);
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+}

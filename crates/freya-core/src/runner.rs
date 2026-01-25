@@ -947,10 +947,11 @@ impl Runner {
 
             let path_node = scope.borrow().nodes.get(removed).cloned();
             if let Some(PathNode { node_id, scope_id }) = path_node {
-                if let Some(scope_id) = scope_id {
-                    // component -> queue scope removal and remove node
-                    scope_removal_buffer.push(self.scopes.get(&scope_id).cloned().unwrap());
-                    scope.borrow_mut().nodes.remove(removed);
+                if scope_id.is_some() {
+                    selected_roots
+                        .entry(&removed[..removed.len() - 1])
+                        .or_default()
+                        .insert(removed);
                 } else {
                     let index_inside_parent = if removed.as_ref() == [0] {
                         let parent_id = scope.borrow().parent_id;
