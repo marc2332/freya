@@ -117,6 +117,7 @@ impl Component for WebView {
                     area: event.area,
                     config: config.clone(),
                 });
+                Platform::get().send(UserEvent::RequestRedraw);
             })
     }
 

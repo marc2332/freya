@@ -158,7 +158,7 @@ impl FreyaPlugin for WebViewPlugin {
                 self.ensure_gtk_initialized();
             }
 
-            PluginEvent::FinishedMeasuringLayout { window, .. } => {
+            PluginEvent::AfterRedraw { window, .. } => {
                 // First, drain all lifecycle events from the channel into a vec
                 let events: Vec<WebViewLifecycleEvent> =
                     self.events.lock().unwrap().drain(..).collect();
@@ -213,6 +213,16 @@ impl FreyaPlugin for WebViewPlugin {
                         }
                     }
                 }
+
+                #[cfg(target_os = "linux")]
+                {
+                    // Advance GTK event loop on Linux to process WebView events
+                    self.advance_gtk_event_loop();
+                    // If we have WebViews, continuously request redraws to keep GTK events flowing
+                    if !self.webviews.is_empty() {
+                        window.request_redraw();
+                    }
+                }
             }
 
             PluginEvent::WindowClosed { .. } => {
@@ -222,24 +232,6 @@ impl FreyaPlugin for WebViewPlugin {
                     self.webviews.len()
                 );
                 self.webviews.clear();
-            }
-
-            #[cfg(target_os = "linux")]
-            PluginEvent::AfterRedraw { window, .. } => {
-                // Advance GTK event loop on Linux to process WebView events
-                self.advance_gtk_event_loop();
-                // If we have WebViews, continuously request redraws to keep GTK events flowing
-                if !self.webviews.is_empty() {
-                    window.request_redraw();
-                }
-            }
-
-            PluginEvent::BeforeRender { .. } => {
-                // Also advance GTK event loop before rendering
-                #[cfg(target_os = "linux")]
-                {
-                    let _ = self.advance_gtk_event_loop();
-                }
             }
 
             _ => {}
