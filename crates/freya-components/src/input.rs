@@ -185,7 +185,7 @@ impl Input {
             key: DiffKey::default(),
             style_variant: InputStyleVariant::Normal,
             layout_variant: InputLayoutVariant::Normal,
-            text_align: TextAlign::Left,
+            text_align: TextAlign::default(),
         }
     }
 
