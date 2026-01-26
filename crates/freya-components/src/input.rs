@@ -153,6 +153,7 @@ pub struct Input {
     key: DiffKey,
     style_variant: InputStyleVariant,
     layout_variant: InputLayoutVariant,
+    text_align: TextAlign,
 }
 
 impl KeyExt for Input {
@@ -184,6 +185,7 @@ impl Input {
             key: DiffKey::default(),
             style_variant: InputStyleVariant::Normal,
             layout_variant: InputLayoutVariant::Normal,
+            text_align: TextAlign::Left,
         }
     }
 
@@ -239,6 +241,11 @@ impl Input {
 
     pub fn theme_layout(mut self, theme: InputLayoutThemePartial) -> Self {
         self.theme_layout = Some(theme);
+        self
+    }
+
+    pub fn text_align(mut self, text_align: impl Into<TextAlign>) -> Self {
+        self.text_align = text_align.into();
         self
     }
 
@@ -552,6 +559,7 @@ impl Component for Input {
                             .cursor_index(cursor_index)
                             .cursor_color(cursor_color)
                             .color(color)
+                            .text_align(self.text_align)
                             .max_lines(1)
                             .highlights(text_selection.map(|h| vec![h]))
                             .span(text.to_string())
