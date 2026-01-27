@@ -475,6 +475,30 @@ impl Component for Input {
             }
         };
 
+        let on_pointer_press = move |e: Event<PointerEventData>| {
+            e.stop_propagation();
+            e.prevent_default();
+            match *status.read() {
+                InputStatus::Idle if focus.is_focused() => {
+                    editable.process_event(EditableEvent::Release);
+                }
+                InputStatus::Hovering => {
+                    editable.process_event(EditableEvent::Release);
+                }
+                _ => {}
+            };
+
+            if focus.is_focused() {
+                if *is_dragging.read() {
+                    // The input is focused and dragging, but it just clicked so we assume the dragging can stop
+                    is_dragging.set(false);
+                } else {
+                    // The input is focused but not dragging, so the click means it was clicked outside, therefore we can unfocus this input
+                    focus.request_unfocus();
+                }
+            }
+        };
+
         let a11y_id = focus.a11y_id();
 
         let (background, cursor_index, text_selection) =
@@ -531,11 +555,14 @@ impl Component for Input {
             .a11y_auto_focus(self.auto_focus)
             .a11y_alt(text.clone())
             .a11y_role(a11_role)
-            .maybe(self.enabled, |rect| {
-                rect.on_key_up(on_key_up)
+            .maybe(self.enabled, |el| {
+                el.on_key_up(on_key_up)
                     .on_key_down(on_key_down)
                     .on_pointer_down(on_input_pointer_down)
                     .on_ime_preedit(on_ime_preedit)
+                    .on_pointer_press(on_pointer_press)
+                    .on_global_mouse_up(on_global_mouse_up)
+                    .on_global_mouse_move(on_global_mouse_move)
             })
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
@@ -557,10 +584,8 @@ impl Component for Input {
                             .min_width(Size::func(move |context| {
                                 Some(context.parent + theme_layout.inner_margin.horizontal())
                             }))
-                            .maybe(self.enabled, |rect| {
-                                rect.on_pointer_down(on_pointer_down)
-                                    .on_global_mouse_up(on_global_mouse_up)
-                                    .on_global_mouse_move(on_global_mouse_move)
+                            .maybe(self.enabled, |el| {
+                                el.on_pointer_down(on_pointer_down)
                             })
                             .margin(theme_layout.inner_margin)
                             .cursor_index(cursor_index)
