@@ -36,7 +36,7 @@ use crate::{
 
 /// Some layout strategies require two-phase measurements
 /// Example: Alignments or content-fit.
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Phase {
     Initial,
     Final,
@@ -116,6 +116,8 @@ where
         parent_is_dirty: bool,
         // Current phase of measurement
         phase: Phase,
+        // Phase of the parent node
+        parent_phase: Phase,
     ) -> (bool, LayoutNode) {
         let reason = self.layout.dirty.get(&node_id).copied();
 
@@ -208,7 +210,13 @@ where
 
                     let most_fitting_area_size =
                         Size2D::new(most_fitting_width, most_fitting_height);
-                    let res = measurer.measure(node_id, node, &most_fitting_area_size);
+                    let res = measurer.measure(
+                        node_id,
+                        node,
+                        &most_fitting_area_size,
+                        phase,
+                        parent_phase,
+                    );
 
                     // Compute the width and height again using the new custom area sizes
                     #[allow(clippy::float_cmp)]
@@ -333,6 +341,7 @@ where
                     &mut inner_sizes,
                     must_cache_children,
                     true,
+                    phase,
                 );
 
                 // Re apply min max values after measuring with inner sized
@@ -424,6 +433,7 @@ where
                     &mut inner_sizes,
                     must_cache_children,
                     false,
+                    phase,
                 );
             }
 
@@ -446,6 +456,8 @@ where
         must_cache_children: bool,
         // Parent Node is dirty.
         parent_is_dirty: bool,
+        // Phase of the parent node
+        parent_phase: Phase,
     ) {
         let children = self.tree_adapter.children_of(parent_node_id);
 
@@ -524,6 +536,7 @@ where
                     false,
                     parent_is_dirty,
                     Phase::Initial,
+                    parent_phase,
                 );
 
                 child_areas.area.adjust_size(&child_data);
@@ -737,6 +750,7 @@ where
                 must_cache_children,
                 parent_is_dirty,
                 Phase::Final,
+                parent_phase,
             );
 
             // Adjust the size of the area if needed

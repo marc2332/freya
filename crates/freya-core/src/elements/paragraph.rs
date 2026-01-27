@@ -24,7 +24,10 @@ use freya_engine::prelude::{
     TextStyle,
 };
 use rustc_hash::FxHashMap;
-use torin::prelude::Size2D;
+use torin::{
+    measure::Phase,
+    prelude::Size2D,
+};
 
 use crate::{
     data::{
@@ -242,12 +245,28 @@ impl ElementExt for ParagraphElement {
     }
 
     fn measure(&self, context: LayoutContext) -> Option<(Size2D, Rc<dyn Any>)> {
+        let has_ellipsis = context
+            .text_style_state
+            .text_overflow
+            .get_ellipsis()
+            .is_some();
+        let layout_width =
+            if context.phase == Phase::Initial || context.parent_phase == Phase::Initial {
+                f32::MAX
+            } else if self.max_lines == Some(1)
+                && context.text_style_state.text_align == TextAlign::default()
+                && !has_ellipsis
+            {
+                f32::MAX
+            } else {
+                context.area_size.width + 1.0
+            };
         let cached_paragraph = CachedParagraph {
             text_style_state: context.text_style_state,
             spans: &self.spans,
             max_lines: self.max_lines,
             line_height: self.line_height,
-            width: context.area_size.width,
+            width: layout_width,
         };
         let paragraph = context
             .text_cache
@@ -315,16 +334,7 @@ impl ElementExt for ParagraphElement {
                 }
 
                 let mut paragraph = paragraph_builder.build();
-                paragraph.layout(
-                    if self.max_lines == Some(1)
-                        && context.text_style_state.text_align == TextAlign::default()
-                        && !paragraph_style.ellipsized()
-                    {
-                        f32::MAX
-                    } else {
-                        context.area_size.width + 1.0
-                    },
-                );
+                paragraph.layout(layout_width);
                 context
                     .text_cache
                     .insert(context.node_id, &cached_paragraph, paragraph)

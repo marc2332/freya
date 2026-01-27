@@ -360,6 +360,7 @@ impl<Key: NodeKey> Torin<Key> {
             true,
             false,
             Phase::Final,
+            Phase::Final,
         );
 
         // Cache the root Node results if it was modified
