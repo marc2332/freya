@@ -300,7 +300,7 @@ impl CornerRadiusExt for Input {
 
 impl Component for Input {
     fn render(&self) -> impl IntoElement {
-        let focus = use_hook(|| Focus::new_for_id(self.a11y_id.unwrap_or_else(|| Focus::new_id())));
+        let focus = use_hook(|| Focus::new_for_id(self.a11y_id.unwrap_or_else(Focus::new_id)));
         let focus_status = use_focus_status(focus);
         let holder = use_state(ParagraphHolder::default);
         let mut area = use_state(Area::default);
