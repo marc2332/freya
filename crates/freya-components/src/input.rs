@@ -154,6 +154,7 @@ pub struct Input {
     style_variant: InputStyleVariant,
     layout_variant: InputLayoutVariant,
     text_align: TextAlign,
+    a11y_id: Option<AccessibilityId>,
 }
 
 impl KeyExt for Input {
@@ -186,6 +187,7 @@ impl Input {
             style_variant: InputStyleVariant::Normal,
             layout_variant: InputLayoutVariant::Normal,
             text_align: TextAlign::default(),
+            a11y_id: None,
         }
     }
 
@@ -283,6 +285,11 @@ impl Input {
     pub fn expanded(self) -> Self {
         self.layout_variant(InputLayoutVariant::Expanded)
     }
+
+    pub fn a11y_id(mut self, a11y_id: impl Into<AccessibilityId>) -> Self {
+        self.a11y_id = Some(a11y_id.into());
+        self
+    }
 }
 
 impl CornerRadiusExt for Input {
@@ -293,7 +300,7 @@ impl CornerRadiusExt for Input {
 
 impl Component for Input {
     fn render(&self) -> impl IntoElement {
-        let focus = use_focus();
+        let focus = use_hook(|| Focus::new_for_id(self.a11y_id.unwrap_or_else(|| Focus::new_id())));
         let focus_status = use_focus_status(focus);
         let holder = use_state(ParagraphHolder::default);
         let mut area = use_state(Area::default);
