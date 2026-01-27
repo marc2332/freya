@@ -106,6 +106,7 @@ pub struct VulkanDriver {
     swapchain_image_index: u32,
     swapchain_suboptimal: bool,
     swapchain_size: PhysicalSize<u32>,
+    transparent: bool,
     gr_context: DirectContext,
     image_available_semaphore: Semaphore,
     render_finished_semaphore: Semaphore,
@@ -117,7 +118,7 @@ impl VulkanDriver {
     pub fn new(
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
-        _window_config: &WindowConfig,
+        window_config: &WindowConfig,
     ) -> (Self, Window) {
         let window = event_loop
             .create_window(window_attributes)
@@ -156,6 +157,7 @@ impl VulkanDriver {
                 queue_family_index,
                 swapchain_size,
                 None,
+                window_config.transparent,
             );
 
         let gr_context = create_gr_context(
@@ -210,6 +212,7 @@ impl VulkanDriver {
             swapchain_image_index: 0,
             swapchain_suboptimal: false,
             swapchain_size,
+            transparent: window_config.transparent,
             gr_context,
             image_available_semaphore,
             render_finished_semaphore,
@@ -235,6 +238,7 @@ impl VulkanDriver {
                 self.queue_family_index,
                 self.swapchain_size,
                 Some(old_swapchain),
+                self.transparent,
             );
         self.swapchain = swapchain;
         self.swapchain_fns = swapchain_fns;
@@ -506,6 +510,7 @@ fn create_swapchain(
     queue_family_index: u32,
     size: PhysicalSize<u32>,
     old_swapchain: Option<SwapchainKHR>,
+    transparent: bool,
 ) -> (
     SwapchainKHR,
     DeviceSwapchainFns,
@@ -560,6 +565,16 @@ fn create_swapchain(
     };
     let image_count = surface_caps.min_image_count.max(2);
 
+    let composite_alpha = if transparent
+        && surface_caps
+            .supported_composite_alpha
+            .contains(CompositeAlphaFlagsKHR::PRE_MULTIPLIED)
+    {
+        CompositeAlphaFlagsKHR::PRE_MULTIPLIED
+    } else {
+        CompositeAlphaFlagsKHR::OPAQUE
+    };
+
     let create_info = SwapchainCreateInfoKHR::default()
         .surface(surface)
         .min_image_count(image_count)
@@ -576,7 +591,7 @@ fn create_swapchain(
         .image_sharing_mode(SharingMode::EXCLUSIVE)
         .queue_family_indices(std::slice::from_ref(&queue_family_index))
         .pre_transform(surface_caps.current_transform)
-        .composite_alpha(CompositeAlphaFlagsKHR::OPAQUE)
+        .composite_alpha(composite_alpha)
         .present_mode(present_mode)
         .clipped(true)
         .old_swapchain(old_swapchain.unwrap_or(SwapchainKHR::null()));
