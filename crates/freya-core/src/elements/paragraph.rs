@@ -250,17 +250,15 @@ impl ElementExt for ParagraphElement {
             .text_overflow
             .get_ellipsis()
             .is_some();
-        let layout_width =
-            if context.phase == Phase::Initial || context.parent_phase == Phase::Initial {
-                f32::MAX
-            } else if self.max_lines == Some(1)
-                && context.text_style_state.text_align == TextAlign::default()
-                && !has_ellipsis
-            {
-                f32::MAX
-            } else {
-                context.area_size.width + 1.0
-            };
+        let layout_width = if (self.max_lines == Some(1)
+            && context.text_style_state.text_align == TextAlign::default()
+            && !has_ellipsis)
+            || (context.phase == Phase::Initial || context.parent_phase == Phase::Initial)
+        {
+            f32::MAX
+        } else {
+            context.area_size.width + 1.0
+        };
         let cached_paragraph = CachedParagraph {
             text_style_state: context.text_style_state,
             spans: &self.spans,
