@@ -664,7 +664,7 @@ fn app() -> impl IntoElement {
 
 Examine the component tree in real-time.
 
-Enable `devtools` in `freya` and then run the devtools app.
+Enable the `devtools` feature in `freya` and then run the devtools app.
 
 <details>
 <summary>Code</summary>
