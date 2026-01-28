@@ -377,7 +377,7 @@ fn app() -> impl IntoElement {
 
 ### Headless Testing
 
-Test your Freya components in a headless environment without rendering to screen. This is actually used by Freya itself to test all the out of the box components and other APIs.
+Using `freya-testing` you can test your Freya components in a no-window (headless) environment. You can decide to render the app at any moment to a file though. `freya-testing` is actually used by Freya itself to test all the out of the box components and other APIs.
 
 <details>
 <summary>Code</summary>
@@ -389,6 +389,7 @@ fn app() -> impl IntoElement {
     let mut state = use_consume::<State<i32>>();
     rect()
         .expanded()
+        .center()
         .background((240, 240, 240))
         .on_mouse_up(move |_| *state.write() += 1)
         .child(format!("Clicked: {}", state.read()))
@@ -413,6 +414,10 @@ fn main() {
 ```
 
 </details>
+
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/1340796c-f85b-4522-91d2-95d4bc80e7fc">
+</div>
 
 ### Advanced Plotting & Charts
 
