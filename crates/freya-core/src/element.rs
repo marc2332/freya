@@ -14,6 +14,7 @@ use freya_engine::prelude::{
 };
 use rustc_hash::FxHashMap;
 use torin::{
+    measure::Phase,
     prelude::{
         Area,
         LayoutNode,
@@ -147,6 +148,8 @@ pub struct LayoutContext<'a> {
     pub node_id: NodeId,
     pub torin_node: &'a torin::node::Node,
     pub area_size: &'a Size2D,
+    pub phase: Phase,
+    pub parent_phase: Phase,
     pub font_collection: &'a FontCollection,
     pub font_manager: &'a FontMgr,
     pub text_style_state: &'a TextStyleState,
