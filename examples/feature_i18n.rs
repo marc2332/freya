@@ -6,7 +6,7 @@
 use std::path::PathBuf;
 
 use freya::{
-    i18n::prelude::*,
+    i18n::*,
     prelude::*,
 };
 

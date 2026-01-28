@@ -5,7 +5,7 @@
 use std::time::Duration;
 
 use freya::prelude::*;
-use freya_sdk::timeout::use_timeout;
+use freya::sdk::use_timeout;
 use tracing_subscriber::{
     EnvFilter,
     FmtSubscriber,

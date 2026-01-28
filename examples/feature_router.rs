@@ -5,7 +5,7 @@
 
 use freya::{
     prelude::*,
-    router::prelude::{
+    router::{
         Routable,
         RouterConfig,
         RouterContext,
