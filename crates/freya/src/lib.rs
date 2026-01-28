@@ -105,6 +105,9 @@ pub mod prelude {
         freya_winit::launch(launch_config)
     }
 
+    #[cfg_attr(feature = "docs", doc(cfg(feature = "router")))]
+    #[cfg(feature = "router")]
+    pub use freya_router;
     pub use torin::{
         alignment::Alignment,
         content::Content,

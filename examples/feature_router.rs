@@ -3,13 +3,15 @@
     windows_subsystem = "windows"
 )]
 
-use freya::prelude::*;
-use freya_router::prelude::{
-    Routable,
-    RouterConfig,
-    RouterContext,
-    outlet,
-    router,
+use freya::{
+    prelude::*,
+    router::prelude::{
+        Routable,
+        RouterConfig,
+        RouterContext,
+        outlet,
+        router,
+    },
 };
 
 fn main() {

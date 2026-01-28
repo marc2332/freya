@@ -10,8 +10,10 @@
 //! for a runnable demo.
 //!
 //! ```rust
-//! use freya::prelude::*;
-//! use freya_router::prelude::*;
+//! use freya::{
+//!     prelude::*,
+//!     router::prelude::*,
+//! };
 //!
 //! fn app() -> impl IntoElement {
 //!     router::<Route>(|| RouterConfig::default().with_initial_path(Route::Home))
