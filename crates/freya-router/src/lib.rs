@@ -12,7 +12,7 @@
 //! ```rust
 //! use freya::{
 //!     prelude::*,
-//!     router::prelude::*,
+//!     router::*,
 //! };
 //!
 //! fn app() -> impl IntoElement {

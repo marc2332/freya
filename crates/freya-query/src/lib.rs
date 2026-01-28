@@ -25,8 +25,10 @@
 //! ### Queries
 //!
 //! ```rust,no_run
-//! use freya::prelude::*;
-//! use freya_query::prelude::*;
+//! use freya::{
+//!     prelude::*,
+//!     query::*,
+//! };
 //!
 //! # #[derive(Debug)]
 //! # struct User;
@@ -65,8 +67,10 @@
 //! ### Mutations
 //!
 //! ```rust,no_run
-//! use freya::prelude::*;
-//! use freya_query::prelude::*;
+//! use freya::{
+//!     prelude::*,
+//!     query::*,
+//! };
 //!
 //! # struct User;
 //!
@@ -133,7 +137,7 @@
 //! Mutations can invalidate queries to ensure data consistency:
 //!
 //! ```rust, ignore
-//! # use freya_query::prelude::*;
+//! # use freya::query::*;
 //! // Invalidate all user queries
 //! QueriesStorage::<FetchUser>::invalidate_all().await;
 //!
@@ -146,7 +150,7 @@
 //! Control which queries get invalidated by implementing custom matching logic:
 //!
 //! ```rust, no_run
-//! # use freya_query::prelude::*;
+//! # use freya::query::*;
 //! # #[derive(Hash, Clone, Eq, PartialEq)]
 //! # struct FetchUser { id: u32 };
 //! impl QueryCapability for FetchUser {

@@ -584,9 +584,7 @@ impl Component for Input {
                             .min_width(Size::func(move |context| {
                                 Some(context.parent + theme_layout.inner_margin.horizontal())
                             }))
-                            .maybe(self.enabled, |el| {
-                                el.on_pointer_down(on_pointer_down)
-                            })
+                            .maybe(self.enabled, |el| el.on_pointer_down(on_pointer_down))
                             .margin(theme_layout.inner_margin)
                             .cursor_index(cursor_index)
                             .cursor_color(cursor_color)

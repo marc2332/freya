@@ -38,6 +38,7 @@ all = [
   "webview",
   "titlebar",
   "terminal",
+  "query",
 ]
 all-publish = [
   "all",
@@ -73,6 +74,7 @@ all-tests = [
   "radio",
   "webview",
   "titlebar",
+  "query",
 ]
 docs = ["all-debug"]
 # Features
@@ -93,6 +95,7 @@ material-design = ["dep:freya-material-design"]
 hotpath = ["freya-core/hotpath", "freya-winit/hotpath"]
 icons = ["dep:freya-icons"]
 radio = ["dep:freya-radio"]
+query = ["dep:freya-query"]
 webview = ["dep:freya-webview"]
 titlebar = ["freya-components/titlebar"]
 terminal = ["dep:freya-terminal"]
@@ -112,6 +115,7 @@ freya-icons = { workspace = true, optional = true }
 freya-router = { workspace = true, optional = true }
 freya-i18n = { workspace = true, optional = true }
 freya-radio = { workspace = true, optional = true }
+freya-query = { workspace = true, optional = true }
 freya-webview = { workspace = true, optional = true }
 freya-terminal = { workspace = true, optional = true }
 

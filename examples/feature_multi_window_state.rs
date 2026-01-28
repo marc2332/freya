@@ -4,7 +4,10 @@
 )]
 use std::path::PathBuf;
 
-use freya::prelude::*;
+use freya::{
+    prelude::*,
+    radio::*,
+};
 use freya_i18n::{
     i18n::{
         I18n,
@@ -14,7 +17,6 @@ use freya_i18n::{
     prelude::langid,
     t,
 };
-use freya_radio::prelude::*;
 
 fn main() {
     let i18n = I18n::create_global(

@@ -67,6 +67,7 @@
 //! - `calendar`: Enables the [Calendar](components::Calendar) component.
 //! - `icons`: Reexport of [freya_icons] under [icons].
 //! - `radio`: Reexport [freya_radio] under [radio].
+//! - `query`: Reexport [freya_query] under [query].
 //! - `markdown`: Enables the [MarkdownViewer](components::MarkdownViewer) component.
 //! - `webview`: Reexport [freya_webview] under [webview].
 //! - `titlebar`: Enables the [TitlebarButton](components::TitlebarButton) component.
@@ -222,13 +223,13 @@ pub mod plot {
 #[cfg_attr(feature = "docs", doc(cfg(feature = "router")))]
 #[cfg(feature = "router")]
 pub mod router {
-    pub use freya_router::*;
+    pub use freya_router::prelude::*;
 }
 
 #[cfg_attr(feature = "docs", doc(cfg(feature = "i18n")))]
 #[cfg(feature = "i18n")]
 pub mod i18n {
-    pub use freya_i18n::*;
+    pub use freya_i18n::prelude::*;
 }
 
 #[cfg_attr(feature = "docs", doc(cfg(feature = "engine")))]
@@ -254,7 +255,7 @@ pub mod tray {
 #[cfg_attr(feature = "docs", doc(cfg(feature = "sdk")))]
 #[cfg(feature = "sdk")]
 pub mod sdk {
-    pub use freya_sdk::*;
+    pub use freya_sdk::prelude::*;
 }
 
 #[cfg_attr(feature = "docs", doc(cfg(feature = "material-design")))]
@@ -276,11 +277,18 @@ pub mod radio {
     pub use freya_radio::prelude::*;
 }
 
+/// Reexport `freya-query` when the `query` feature is enabled.
+#[cfg(feature = "query")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "query")))]
+pub mod query {
+    pub use freya_query::prelude::*;
+}
+
 /// Reexport `freya-webview` when the `webview` feature is enabled.
 #[cfg(feature = "webview")]
 #[cfg_attr(feature = "docs", doc(cfg(feature = "webview")))]
 pub mod webview {
-    pub use freya_webview::*;
+    pub use freya_webview::prelude::*;
 }
 
 /// Reexport `freya-terminal` when the `terminal` feature is enabled.

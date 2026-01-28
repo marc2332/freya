@@ -8,8 +8,10 @@ use std::time::{
     UNIX_EPOCH,
 };
 
-use freya::prelude::*;
-use freya_query::prelude::*;
+use freya::{
+    prelude::*,
+    query::*,
+};
 use serde::{
     Deserialize,
     Serialize,

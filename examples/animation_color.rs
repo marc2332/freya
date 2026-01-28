@@ -16,23 +16,21 @@ fn app() -> impl IntoElement {
 
     rect()
         .background(&*animation.read())
-        .width(Size::fill())
-        .height(Size::fill())
-        .main_align(Alignment::center())
-        .cross_align(Alignment::center())
+        .expanded()
+        .center()
         .spacing(8.0)
-        .children([
+        .child(
             Button::new()
                 .on_press(move |_| {
                     animation.start();
                 })
-                .child("Start")
-                .into(),
+                .child("Start"),
+        )
+        .child(
             Button::new()
                 .on_press(move |_| {
                     animation.reverse();
                 })
-                .child("Reverse")
-                .into(),
-        ])
+                .child("Reverse"),
+        )
 }
