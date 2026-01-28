@@ -102,6 +102,12 @@ pub enum FocusStatus {
     Keyboard,
 }
 
+impl FocusStatus {
+    pub fn is_focused(&self) -> bool {
+        matches!(self, Self::Pointer | Self::Keyboard)
+    }
+}
+
 pub fn use_focus_status(focus: Focus) -> Memo<FocusStatus> {
     use_memo(move || {
         let platform = Platform::get();
