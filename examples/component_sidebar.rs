@@ -3,8 +3,10 @@
     windows_subsystem = "windows"
 )]
 
-use freya::prelude::*;
-use freya_router::prelude::*;
+use freya::{
+    prelude::*,
+    router::prelude::*,
+};
 
 fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))

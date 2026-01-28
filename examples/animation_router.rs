@@ -6,8 +6,8 @@
 use freya::{
     animation::*,
     prelude::*,
+    router::prelude::*,
 };
-use freya_router::prelude::*;
 
 fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app).with_title("Animated Router")))
