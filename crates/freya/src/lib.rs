@@ -145,15 +145,13 @@ pub mod components {
     #[cfg_attr(feature = "docs", doc(cfg(feature = "calendar")))]
     #[cfg(feature = "calendar")]
     pub use freya_components::calendar::*;
-    #[cfg_attr(feature = "docs", doc(cfg(feature = "plot")))]
-    #[cfg(feature = "plot")]
-    pub use freya_components::plot::*;
     #[cfg(feature = "titlebar")]
     pub use freya_components::titlebar::*;
     pub use freya_components::{
         accordion::*,
         activable_route_context::*,
         button::*,
+        canvas::*,
         card::*,
         checkbox::*,
         chip::*,
@@ -209,6 +207,13 @@ pub mod clipboard {
 
 pub mod animation {
     pub use freya_animation::prelude::*;
+}
+
+#[cfg_attr(feature = "docs", doc(cfg(feature = "plot")))]
+#[cfg(feature = "plot")]
+pub mod plot {
+    pub use freya_plotters_backend::*;
+    pub use plotters;
 }
 
 #[cfg_attr(feature = "docs", doc(cfg(feature = "router")))]

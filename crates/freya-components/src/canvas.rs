@@ -16,8 +16,6 @@ use freya_engine::prelude::{
     PaintStyle,
     SkRect,
 };
-pub use freya_plotters_backend::*;
-pub use plotters;
 
 type Callback = Rc<RefCell<dyn FnMut(&mut RenderContext)>>;
 
@@ -52,16 +50,16 @@ impl<H: FnMut(&mut RenderContext) + 'static> From<H> for RenderCallback {
 }
 
 #[derive(PartialEq, Clone)]
-pub struct PlotElement {
+pub struct CanvasElement {
     pub layout: LayoutData,
     pub event_handlers: FxHashMap<EventName, EventHandlerType>,
     pub effect: Option<EffectData>,
     pub on_render: RenderCallback,
 }
 
-impl PlotElement {}
+impl CanvasElement {}
 
-impl ElementExt for PlotElement {
+impl ElementExt for CanvasElement {
     fn changed(&self, other: &Rc<dyn ElementExt>) -> bool {
         let Some(rect) = (other.as_ref() as &dyn Any).downcast_ref::<Self>() else {
             return false;
@@ -159,34 +157,34 @@ impl ElementExt for PlotElement {
     }
 }
 
-pub struct Plot {
-    element: PlotElement,
+pub struct Canvas {
+    element: CanvasElement,
     elements: Vec<Element>,
     key: DiffKey,
 }
 
-impl ChildrenExt for Plot {
+impl ChildrenExt for Canvas {
     fn get_children(&mut self) -> &mut Vec<Element> {
         &mut self.elements
     }
 }
 
-impl KeyExt for Plot {
+impl KeyExt for Canvas {
     fn write_key(&mut self) -> &mut DiffKey {
         &mut self.key
     }
 }
 
-impl EventHandlersExt for Plot {
+impl EventHandlersExt for Canvas {
     fn get_event_handlers(&mut self) -> &mut FxHashMap<EventName, EventHandlerType> {
         &mut self.element.event_handlers
     }
 }
 
-impl MaybeExt for Plot {}
+impl MaybeExt for Canvas {}
 
-impl From<Plot> for Element {
-    fn from(value: Plot) -> Self {
+impl From<Canvas> for Element {
+    fn from(value: Canvas) -> Self {
         Element::Element {
             key: value.key,
             element: Rc::new(value.element),
@@ -195,17 +193,17 @@ impl From<Plot> for Element {
     }
 }
 
-/// Create a new `Plot` element.
+/// Create a new `Canvas` element.
 ///
-/// See the available methods in [Plot].
-pub fn plot(on_render: RenderCallback) -> Plot {
-    Plot::new(on_render)
+/// See the available methods in [Canvas].
+pub fn canvas(on_render: RenderCallback) -> Canvas {
+    Canvas::new(on_render)
 }
 
-impl Plot {
+impl Canvas {
     pub fn new(on_render: RenderCallback) -> Self {
         Self {
-            element: PlotElement {
+            element: CanvasElement {
                 on_render,
                 layout: LayoutData::default(),
                 event_handlers: HashMap::default(),
@@ -216,17 +214,19 @@ impl Plot {
         }
     }
 
-    pub fn try_downcast(element: &dyn ElementExt) -> Option<PlotElement> {
-        (element as &dyn Any).downcast_ref::<PlotElement>().cloned()
+    pub fn try_downcast(element: &dyn ElementExt) -> Option<CanvasElement> {
+        (element as &dyn Any)
+            .downcast_ref::<CanvasElement>()
+            .cloned()
     }
 }
 
-impl LayoutExt for Plot {
+impl LayoutExt for Canvas {
     fn get_layout(&mut self) -> &mut LayoutData {
         &mut self.element.layout
     }
 }
 
-impl ContainerExt for Plot {}
+impl ContainerExt for Canvas {}
 
-impl ContainerWithContentExt for Plot {}
+impl ContainerWithContentExt for Canvas {}
