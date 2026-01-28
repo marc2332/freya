@@ -12,7 +12,7 @@
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// # use freya::i18n::prelude::*;
+/// # use freya::i18n::*;
 /// # use unic_langid::langid;
 /// # fn example() -> impl IntoElement {
 /// #   let lang = langid!("en-US");
@@ -45,7 +45,7 @@ macro_rules! te {
 ///
 /// ```rust
 /// # use freya::prelude::*;
-/// # use freya::i18n::prelude::*;
+/// # use freya::i18n::*;
 /// # use unic_langid::langid;
 /// # fn example() -> impl IntoElement {
 /// #   let lang = langid!("en-US");

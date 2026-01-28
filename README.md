@@ -511,7 +511,7 @@ Enable with the `i18n` feature.
 
 ```rust
 use freya::prelude::*;
-use freya::i18n::prelude::*;
+use freya::i18n::*;
 
 fn app() -> impl IntoElement {
     let mut i18n = use_init_i18n(|| {
