@@ -25,8 +25,10 @@ fn app() -> impl IntoElement {
     rect()
         .expanded()
         .center()
+        .spacing(6.)
         .child(
             rect()
+                .spacing(6.)
                 .horizontal()
                 .child(Button::new().on_press(change_to_english).child("English"))
                 .child(Button::new().on_press(change_to_spanish).child("Spanish")),
