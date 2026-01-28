@@ -81,8 +81,6 @@ Example of [`component_input.rs`](https://github.com/marc2332/freya/blob/main/ex
   <img src="https://github.com/user-attachments/assets/3dd1b7bf-0c9e-4257-a308-f2e3ca057ff1">
 </div>
 
-[Portal example](https://github.com/marc2332/freya/blob/main/examples/animation_portal.rs)
-
 ### Smooth Animations
 
 Create transitions for colors, sizes, positions, and other visual properties. The animation API gives you full control over timing, easing functions, and animation sequences.
@@ -125,6 +123,7 @@ fn app() -> impl IntoElement {
 </div>
 
 [Portal example](https://github.com/marc2332/freya/blob/main/examples/animation_portal.rs)
+
 [Component Portal](https://github.com/user-attachments/assets/720dd8ec-2a76-4f80-8787-25b3ebb06611)
 
 ### Rich Text Editing
