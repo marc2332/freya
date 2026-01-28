@@ -16,7 +16,7 @@
 
 ### Component Model & Reactive State
 
-Freya's component model allows you to build reusable UI pieces that automatically update when the state they are subscribed changes. Components might manage internal state or subscribe to shared state, and they return their UI. Components are any type that implements the `Component` trait, for the root (`app`) component you can just use a function. Examples of built-in components are `Button` or `Switch`.
+Freya’s component model lets you create reusable UI elements that automatically re-render when the state they depend on changes. Components can hold their own internal state or subscribe to shared state, and they produce UI as their output. Any type that implements the `Component` trait can be a component, while the root (`app`) component can simply be a function. Built-in examples include components like `Button` and `Switch`.
 
 <table>
 <tr>
@@ -69,6 +69,20 @@ fn app() -> impl IntoElement {
 </td>
 </table>
 
+
+### Out of the box components
+
+Freya comes with a set of components out of the box, from simple like `Button`, `Switch`, `Slider` to more complex like `VirtualScrollView`, `Calendar`, `ColorPicker`, etc.
+
+You can check all the examples that start with `component_` in the [examples folder](https://github.com/marc2332/freya/blob/main/examples/).
+
+Example of [`component_input.rs`](https://github.com/marc2332/freya/blob/main/examples/component_input.rs):
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/3dd1b7bf-0c9e-4257-a308-f2e3ca057ff1">
+</div>
+
+[Portal example](https://github.com/marc2332/freya/blob/main/examples/animation_portal.rs)
+
 ### Smooth Animations
 
 Create transitions for colors, sizes, positions, and other visual properties. The animation API gives you full control over timing, easing functions, and animation sequences.
@@ -108,6 +122,8 @@ fn app() -> impl IntoElement {
   <img src="https://github.com/user-attachments/assets/ab0c4637-7c04-4dd3-8c6f-c841d4e163d7">
 </div>
 
+[Portal example](https://github.com/marc2332/freya/blob/main/examples/animation_portal.rs)
+[Component Portal](https://github.com/user-attachments/assets/720dd8ec-2a76-4f80-8787-25b3ebb06611)
 
 ### Rich Text Editing
 
@@ -361,7 +377,7 @@ fn app() -> impl IntoElement {
 
 ### Headless Testing
 
-Test your Freya components in a headless environment without rendering to screen.
+Test your Freya components in a headless environment without rendering to screen. This is actually used by Freya itself to test all the out of the box components and other APIs.
 
 <details>
 <summary>Code</summary>
