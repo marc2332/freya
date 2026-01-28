@@ -20,7 +20,7 @@
 //!
 //! ```rust
 //! # use freya::prelude::*;
-//! # use freya_i18n::prelude::*;
+//! # use freya::i18n::prelude::*;
 //! // main.rs
 //! #[derive(PartialEq)]
 //! struct Body;

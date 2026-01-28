@@ -91,6 +91,8 @@ Create transitions for colors, sizes, positions, and other visual properties. Th
 <summary>Code</summary>
 
 ```rust
+use freya::prelude::*;
+
 fn app() -> impl IntoElement {
     let mut animation = use_animation(|_| AnimColor::new((246, 240, 240), (205, 86, 86)).time(400));
 
@@ -133,6 +135,8 @@ Freya provides text editing capabilities that go beyond simple input fields. You
 <summary>Code</summary>
 
 ```rust
+use freya::prelude::*;
+
 fn app() -> impl IntoElement {
     let holder = use_state(ParagraphHolder::default);
     let mut editable = use_editable(|| "Hello, World!".to_string(), EditableConfig::new);
@@ -189,11 +193,15 @@ fn app() -> impl IntoElement {
 ### Routing & Navigation
 
 Define routes, manage navigation state, and transition between different views.
+Enable with the `router` feature.
 
 <details>
 <summary>Code</summary>
 
 ```rust
+use freya::prelude::*;
+use freya::router::prelude::*;
+
 #[derive(Routable, Clone, PartialEq)]
 #[rustfmt::skip]
 pub enum Route {
@@ -282,11 +290,15 @@ impl Component for Settings {
 ### Global State Management
 
 Freya's `freya-radio` state management system provides efficient global state management through a channels system. Components subscribe to specific "channels" and only receive updates when data is mutated and notified through their channel.
+Enable with the `radio` feature.
 
 <details>
 <summary>Code</summary>
 
 ```rust
+use freya::prelude::*;
+use freya::radio::*;
+
 #[derive(Default)]
 struct Data {
     pub lists: Vec<Vec<String>>,
@@ -360,9 +372,10 @@ Easily integrate icons into your applications, only supports Lucide at the momen
 
 ```rust
 use freya::prelude::*;
+use freya::icons;
 
 fn app() -> impl IntoElement {
-    svg(freya_icons::lucide::antenna())
+    svg(icons::lucide::antenna())
         .color((120, 50, 255))
         .expanded()
 }
@@ -383,7 +396,8 @@ Using `freya-testing` you can test your Freya components in a no-window (headles
 <summary>Code</summary>
 
 ```rust
-use freya_testing::TestingRunner;
+use freya::prelude::*;
+use freya_testing::prelude::*;
 
 fn app() -> impl IntoElement {
     let mut state = use_consume::<State<i32>>();
@@ -422,12 +436,15 @@ fn main() {
 ### Advanced Plotting & Charts
 
 Using the Plotters library, you can create charts, graphs, and data visualizations directly within your application.
+Enable with the `ploters` feature.
 
 <details>
 <summary>Code</summary>
 
 ```rust
-use freya::prelude::plotters::*;
+use freya::prelude::*;
+use freya::plot::*;
+use freya::plot::plotters::*;
 
 fn on_render(ctx: &mut RenderContext, (cursor_x, cursor_y): (f64, f64)) {
     let backend = PlotSkiaBackend::new(
@@ -488,12 +505,14 @@ fn app() -> impl IntoElement {
 ### Internationalization (i18n)
 
 Freya supports internationalization with built-in support for the [Fluent](https://github.com/projectfluent/fluent-rs) localization system. Easily manage translations, pluralization, and locale-specific formatting.
+Enable with the `i18n` feature.
 
 <details>
 <summary>Code</summary>
 
 ```rust
-use freya_i18n::prelude::*;
+use freya::prelude::*;
+use freya::i18n::prelude::*;
 
 fn app() -> impl IntoElement {
     let mut i18n = use_init_i18n(|| {
@@ -528,11 +547,13 @@ fn app() -> impl IntoElement {
 ### Material Design Components
 
 Freya provides Material Design-inspired style modifiers.
+Enable with the `material-design` feature.
 
 <details>
 <summary>Code</summary>
 
 ```rust
+use freya::prelude::*;
 use freya::material_design::*;
 
 fn app() -> impl IntoElement {
@@ -554,11 +575,15 @@ fn app() -> impl IntoElement {
 ### WebView Integration
 
 Integrate web content into your native applications with Freya's WebView support. Embed web applications, or simply display web-based content alongside your native UI components.
+Enable with the `webview` feature.
 
 <details>
 <summary>Code</summary>
 
 ```rust
+use freya::prelude::*;
+use freya::webview::*;
+
 fn app() -> impl IntoElement {
     // Multi-tab webview implementation
     let mut tabs = use_state(|| vec![Tab {
@@ -599,11 +624,15 @@ fn app() -> impl IntoElement {
 ### Terminal Emulation
 
 Freya includes terminal emulation capabilities with full PTY (pseudo-terminal) support. Create integrated terminal applications, SSH clients, or development tools.
+Enable with the `terminal` feature.
 
 <details>
 <summary>Code</summary>
 
 ```rust
+use freya::prelude::*;
+use freya::terminal::*;
+
 fn app() -> impl IntoElement {
     let mut handle = use_state(|| {
         let mut cmd = CommandBuilder::new("bash");
@@ -670,6 +699,8 @@ Enable the `devtools` feature in `freya` and then run the devtools app.
 <summary>Code</summary>
 
 ```rust
+use freya::prelude::*;
+
 fn app() -> impl IntoElement {
     rect()
         .expanded()

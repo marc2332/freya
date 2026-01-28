@@ -5,8 +5,10 @@
 
 use std::path::PathBuf;
 
-use freya::prelude::*;
-use freya_i18n::prelude::*;
+use freya::{
+    i18n::prelude::*,
+    prelude::*,
+};
 
 fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))

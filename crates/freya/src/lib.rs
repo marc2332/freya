@@ -273,7 +273,7 @@ pub mod icons {
 #[cfg(feature = "radio")]
 #[cfg_attr(feature = "docs", doc(cfg(feature = "radio")))]
 pub mod radio {
-    pub use freya_radio::prelude::*;
+    pub use freya::radio::*;
 }
 
 /// Reexport `freya-webview` when the `webview` feature is enabled.

@@ -11,8 +11,10 @@ use std::{
     time::Duration,
 };
 
-use freya::prelude::*;
-use freya_radio::prelude::*;
+use freya::{
+    prelude::*,
+    radio::*,
+};
 use futures_lite::StreamExt;
 
 fn main() {

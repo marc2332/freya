@@ -7,7 +7,10 @@ use std::{
     time::Duration,
 };
 
-use freya::prelude::*;
+use freya::{
+    prelude::*,
+    radio::*,
+};
 use freya_core::integration::NodeId;
 use freya_devtools::{
     IncomingMessage,
@@ -15,7 +18,6 @@ use freya_devtools::{
     OutgoingMessage,
     OutgoingMessageAction,
 };
-use freya_radio::prelude::*;
 use freya_router::prelude::*;
 use futures_util::StreamExt;
 use smol::{

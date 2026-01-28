@@ -31,7 +31,7 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash + std::fmt::D
 /// # Example
 ///
 /// ```rust, no_run
-/// # use freya_radio::prelude::*;
+/// # use freya::radio::*;
 ///
 /// # struct Data;
 ///
@@ -53,7 +53,7 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
     /// # Example
     ///
     /// ```rust, no_run
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     ///
     /// # struct Data;
     ///
@@ -89,7 +89,7 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
 ///
 /// ```rust, no_run
 /// # use freya::prelude::*;
-/// # use freya_radio::prelude::*;
+/// # use freya::radio::*;
 ///
 /// #[derive(Default)]
 /// struct AppState {
@@ -123,7 +123,7 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
 ///
 /// ```rust, ignore
 /// # use freya::prelude::*;
-/// # use freya_radio::prelude::*;
+/// # use freya::radio::*;
 ///
 /// let radio_station = RadioStation::create_global(AppState::default);
 ///
@@ -173,7 +173,7 @@ where
     ///
     /// ```rust, ignore
     /// # use freya::prelude::*;
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     ///
     /// let radio_station = RadioStation::create_global(AppState::default);
     ///
@@ -229,7 +229,7 @@ where
     /// # Example
     ///
     /// ```rust, ignore
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     /// let value = radio_station.read();
     /// ```
     pub fn read(&'_ self) -> ReadRef<'_, Value> {
@@ -242,7 +242,7 @@ where
     /// # Example
     ///
     /// ```rust, ignore
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     /// let value = radio_station.peek();
     /// ```
     pub fn peek(&'_ self) -> ReadRef<'_, Value> {
@@ -288,7 +288,7 @@ where
     /// # Example
     ///
     /// ```rust, ignore
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     /// radio_station.write_channel(MyChannel::Update).count += 1;
     /// ```
     pub fn write_channel(&mut self, channel: Channel) -> RadioGuard<Value, Channel> {
@@ -390,7 +390,7 @@ where
 ///
 /// ```rust, ignore
 /// # use freya::prelude::*;
-/// # use freya_radio::prelude::*;
+/// # use freya::radio::*;
 ///
 /// #[derive(PartialEq)]
 /// struct MyComponent {}
@@ -414,7 +414,7 @@ where
 ///
 /// ```rust, ignore
 /// # use freya::prelude::*;
-/// # use freya_radio::prelude::*;
+/// # use freya::radio::*;
 ///
 /// #[derive(Clone)]
 /// struct CounterState {
@@ -545,7 +545,7 @@ where
     /// # Example
     ///
     /// ```rust, ignore
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     /// let count = radio.read().count;
     /// ```
     pub fn read(&'_ self) -> ReadRef<'_, Value> {
@@ -558,7 +558,7 @@ where
     /// Example:
     ///
     /// ```rust, ignore
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     /// radio.with(|value| {
     ///     // Do something with `value`
     /// });
@@ -578,7 +578,7 @@ where
     /// # Example
     ///
     /// ```rust, ignore
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     /// radio.write().count += 1;
     /// ```
     pub fn write(&mut self) -> RadioGuard<Value, Channel> {
@@ -596,7 +596,7 @@ where
     /// Example:
     ///
     /// ```rust, ignore
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     /// radio.write_with(|value| {
     ///     // Modify `value`
     /// });
@@ -610,7 +610,7 @@ where
     ///
     /// ## Example:
     /// ```rust, ignore
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     /// radio.write(Channel::Whatever).value = 1;
     /// ```
     pub fn write_channel(&mut self, channel: Channel) -> RadioGuard<Value, Channel> {
@@ -627,7 +627,7 @@ where
     /// Example:
     ///
     /// ```rust, ignore
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     /// radio.write_channel_with(Channel::Whatever, |value| {
     ///     // Modify `value`
     /// });
@@ -646,7 +646,7 @@ where
     /// Example:
     ///
     /// ```rust, ignore
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     /// radio.write_with_channel_selection(|value| {
     ///     // Modify `value`
     ///     if value.cool {
@@ -764,7 +764,7 @@ where
 ///
 /// ```rust, ignore
 /// # use freya::prelude::*;
-/// # use freya_radio::prelude::*;
+/// # use freya::radio::*;
 ///
 /// fn app() -> impl IntoElement {
 ///     use_init_radio_station::<AppState, AppChannel>(AppState::default);
@@ -817,7 +817,7 @@ where
 ///
 /// ```rust, ignore
 /// # use freya::prelude::*;
-/// # use freya_radio::prelude::*;
+/// # use freya::radio::*;
 ///
 /// fn app() -> impl IntoElement {
 ///     use_init_radio_station::<AppState, AppChannel>(AppState::default);
@@ -851,7 +851,7 @@ where
 /// # Example
 ///
 /// ```rust, ignore
-/// # use freya_radio::prelude::*;
+/// # use freya::radio::*;
 ///
 /// #[derive(Clone)]
 /// struct Counter {
