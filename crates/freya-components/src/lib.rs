@@ -6,6 +6,7 @@ pub mod button;
 pub mod cache;
 #[cfg(feature = "calendar")]
 pub mod calendar;
+pub mod canvas;
 pub mod card;
 pub mod checkbox;
 pub mod chip;
@@ -52,12 +53,6 @@ cfg_if::cfg_if! {
         pub mod link;
         pub mod native_router;
         pub mod animated_router;
-    }
-}
-
-cfg_if::cfg_if! {
-    if #[cfg(feature = "plot")] {
-        pub mod plot;
     }
 }
 

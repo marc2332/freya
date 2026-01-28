@@ -82,7 +82,7 @@ i18n = ["dep:freya-i18n"]
 engine = []
 devtools = ["dep:freya-devtools", "freya-core/devtools"]
 performance = ["freya-performance-plugin"]
-plot = ["freya-components/plot"]
+plot = ["dep:plotters", "dep:freya-plotters-backend"]
 gif = ["freya-components/gif"]
 calendar = ["freya-components/calendar"]
 markdown = ["freya-components/markdown"]
@@ -119,10 +119,20 @@ freya-terminal = { workspace = true, optional = true }
 freya-performance-plugin = { workspace = true, optional = true }
 freya-material-design = { workspace = true, optional = true }
 freya-testing = { workspace = true, optional = true }
-freya-plotters-backend = { workspace = true, optional = true }
 
 # Tray
 tray-icon = { workspace = true, optional = true }
+
+# Plot
+plotters = { version = "0.3.7", default-features = false, features = [
+  "chrono",
+  "image",
+  "all_series",
+  "all_elements",
+  "full_palette",
+  "colormaps",
+], optional = true }
+freya-plotters-backend = { workspace = true, optional = true }
 
 # Other
 cfg-if = "1.0"
