@@ -115,7 +115,7 @@ pub fn app() -> impl IntoElement {
         .height(Size::fill())
         .color(Color::WHITE)
         .background((15, 15, 15))
-        .child(router(|| {
+        .child(Router::new(|| {
             RouterConfig::<Route>::default().with_initial_path(Route::TreeInspector {})
         }))
 }
@@ -137,7 +137,11 @@ impl Component for NavBar {
                         Link::new(Route::Misc {}).child(SideBarItem::new().child("Misc")),
                     )),
             )
-            .content(rect().padding(Gaps::new_all(8.)).child(outlet::<Route>()))
+            .content(
+                rect()
+                    .padding(Gaps::new_all(8.))
+                    .child(Outlet::<Route>::new()),
+            )
     }
 }
 #[derive(Routable, Clone, PartialEq, Debug)]
@@ -292,7 +296,7 @@ impl Component for LayoutForNodeInspector {
                             )),
                     ),
             )
-            .child(rect().padding((6., 0.)).child(outlet::<Route>()))
+            .child(rect().padding((6., 0.)).child(Outlet::<Route>::new()))
     }
 }
 
@@ -357,7 +361,10 @@ impl Component for LayoutForTreeInspector {
                     }),
                 })),
             )
-            .panel(is_expanded_vertical.then(|| ResizablePanel::new(40.).child(outlet::<Route>())))
+            .panel(
+                is_expanded_vertical
+                    .then(|| ResizablePanel::new(40.).child(Outlet::<Route>::new())),
+            )
     }
 }
 

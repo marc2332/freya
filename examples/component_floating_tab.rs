@@ -13,7 +13,7 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    router::<Route>(RouterConfig::default)
+    Router::<Route>::new(RouterConfig::default)
 }
 
 #[derive(Routable, Clone, PartialEq)]
@@ -38,7 +38,7 @@ impl Component for AppBottomBar {
                         .width(Size::fill())
                         .height(Size::flex(1.))
                         .center()
-                        .child(outlet::<Route>()),
+                        .child(Outlet::<Route>::new()),
                 )
                 .child(
                     rect()
