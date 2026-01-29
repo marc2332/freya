@@ -1,7 +1,7 @@
-use freya::prelude::*;
-use freya_terminal::prelude::*;
-use keyboard_types::Modifiers;
-use portable_pty::CommandBuilder;
+use freya::{
+    prelude::*,
+    terminal::*,
+};
 
 fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))

@@ -5,8 +5,10 @@
 
 use std::path::PathBuf;
 
-use freya::prelude::*;
-use freya_i18n::prelude::*;
+use freya::{
+    i18n::*,
+    prelude::*,
+};
 
 fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
@@ -25,8 +27,10 @@ fn app() -> impl IntoElement {
     rect()
         .expanded()
         .center()
+        .spacing(6.)
         .child(
             rect()
+                .spacing(6.)
                 .horizontal()
                 .child(Button::new().on_press(change_to_english).child("English"))
                 .child(Button::new().on_press(change_to_spanish).child("Spanish")),

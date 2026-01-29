@@ -1,5 +1,7 @@
-use freya::prelude::*;
-use freya_radio::prelude::*;
+use freya::{
+    prelude::*,
+    radio::*,
+};
 use freya_testing::prelude::*;
 
 #[derive(Default)]

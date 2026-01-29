@@ -6,7 +6,7 @@
 use freya::{
     animation::*,
     prelude::*,
-    router::prelude::*,
+    router::*,
 };
 
 fn main() {

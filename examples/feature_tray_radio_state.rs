@@ -4,6 +4,7 @@
 )]
 use freya::{
     prelude::*,
+    radio::*,
     tray::{
         TrayEvent,
         TrayIconBuilder,
@@ -14,7 +15,6 @@ use freya::{
         },
     },
 };
-use freya_radio::prelude::*;
 
 const ICON: &[u8] = include_bytes!("./freya_icon.png");
 
