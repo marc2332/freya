@@ -9,6 +9,12 @@ use crate::prelude::{
 
 pub struct Outlet<R>(PhantomData<R>);
 
+impl<R> Default for Outlet<R> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<R> Outlet<R> {
     pub fn new() -> Self {
         Self(PhantomData)
