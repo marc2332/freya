@@ -16,7 +16,7 @@
 //! };
 //!
 //! fn app() -> impl IntoElement {
-//!     router::<Route>(|| RouterConfig::default().with_initial_path(Route::Home))
+//!     Router::<Route>::new(|| RouterConfig::default().with_initial_path(Route::Home))
 //! }
 //!
 //! #[derive(PartialEq)]
