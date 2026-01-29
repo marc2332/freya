@@ -423,6 +423,9 @@ fn main() {
     // Simulate user interactions
     test.click_cursor((15., 15.));
     assert_eq!(*state.peek(), 1);
+
+    // Render the current ui state to a file
+    test.render_to_file("./demo-1.png");
 }
 ```
 
