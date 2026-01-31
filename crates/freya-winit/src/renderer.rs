@@ -170,9 +170,9 @@ pub struct LaunchProxy(pub EventLoopProxy<NativeEvent>);
 
 impl LaunchProxy {
     /// Send a callback to the renderer to get access to [RendererContext].
-    pub fn with<F, T: Send + 'static>(&self, f: F) -> futures_channel::oneshot::Receiver<T>
+    pub fn with<F, T: 'static>(&self, f: F) -> futures_channel::oneshot::Receiver<T>
     where
-        F: FnOnce(&mut RendererContext) -> T + Send + 'static,
+        F: FnOnce(&mut RendererContext) -> T + 'static,
     {
         let (tx, rx) = futures_channel::oneshot::channel::<T>();
         let cb = Box::new(move |ctx: &mut RendererContext| {
@@ -223,7 +223,7 @@ pub struct NativeTrayEvent {
 
 pub enum NativeGenericEvent {
     PollFutures,
-    RendererCallback(Box<dyn FnOnce(&mut RendererContext) + Send + 'static>),
+    RendererCallback(Box<dyn FnOnce(&mut RendererContext) + 'static>),
 }
 
 impl fmt::Debug for NativeGenericEvent {
@@ -234,6 +234,12 @@ impl fmt::Debug for NativeGenericEvent {
         }
     }
 }
+
+/// # Safety
+/// The values are never sent, received or accessed by other threads other than the main thread.
+/// This is needed to send `Rc<T>` and other non-Send and non-Sync values.
+unsafe impl Send for NativeGenericEvent {}
+unsafe impl Sync for NativeGenericEvent {}
 
 #[derive(Debug)]
 pub enum NativeEvent {
