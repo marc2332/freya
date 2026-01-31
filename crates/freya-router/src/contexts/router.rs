@@ -75,7 +75,7 @@ pub struct RouterContext {
 }
 
 impl RouterContext {
-    pub(crate) fn new<R: Routable + 'static>(cfg: RouterConfig<R>) -> Self {
+    pub(crate) fn create<R: Routable + 'static>(cfg: RouterConfig<R>) -> Self {
         let subscribers = Rc::new(RefCell::new(FxHashSet::default()));
 
         let history = if let Some(initial_path) = cfg.initial_path {
@@ -86,6 +86,28 @@ impl RouterContext {
 
         Self {
             inner: State::create(RouterContextInner {
+                subscribers: subscribers.clone(),
+
+                internal_route: |route| R::from_str(route).is_ok(),
+
+                site_map: R::SITE_MAP,
+
+                history,
+            }),
+        }
+    }
+
+    pub fn create_global<R: Routable + 'static>(cfg: RouterConfig<R>) -> Self {
+        let subscribers = Rc::new(RefCell::new(FxHashSet::default()));
+
+        let history = if let Some(initial_path) = cfg.initial_path {
+            MemoryHistory::with_initial_path(initial_path)
+        } else {
+            MemoryHistory::default()
+        };
+
+        Self {
+            inner: State::create_global(RouterContextInner {
                 subscribers: subscribers.clone(),
 
                 internal_route: |route| R::from_str(route).is_ok(),

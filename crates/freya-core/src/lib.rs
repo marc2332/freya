@@ -99,6 +99,7 @@ pub mod prelude {
         event_handler::{
             Callback,
             EventHandler,
+            NoArgCallback,
         },
         events::data::*,
         events::*,

@@ -7,7 +7,19 @@ use crate::prelude::{
     *,
 };
 
-struct Outlet<R>(PhantomData<R>);
+pub struct Outlet<R>(PhantomData<R>);
+
+impl<R> Default for Outlet<R> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<R> Outlet<R> {
+    pub fn new() -> Self {
+        Self(PhantomData)
+    }
+}
 
 impl<R> PartialEq for Outlet<R> {
     fn eq(&self, _other: &Self) -> bool {
@@ -19,8 +31,4 @@ impl<R: Routable> Component for Outlet<R> {
     fn render(&self) -> impl IntoElement {
         OutletContext::<R>::render()
     }
-}
-
-pub fn outlet<R: Routable + Clone>() -> Element {
-    Outlet::<R>(PhantomData).into()
 }
