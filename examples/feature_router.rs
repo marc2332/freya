@@ -5,13 +5,7 @@
 
 use freya::{
     prelude::*,
-    router::{
-        Routable,
-        RouterConfig,
-        RouterContext,
-        outlet,
-        router,
-    },
+    router::prelude::*,
 };
 
 fn main() {
@@ -19,14 +13,14 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    router::<Route>(|| RouterConfig::default().with_initial_path(Route::Settings))
+    Router::<Route>::new(|| RouterConfig::default().with_initial_path(Route::Settings))
 }
 
 #[derive(PartialEq)]
 struct Layout;
 impl Component for Layout {
     fn render(&self) -> impl IntoElement {
-        rect().center().expanded().child(outlet::<Route>())
+        rect().center().expanded().child(Outlet::<Route>::new())
     }
 }
 

@@ -13,7 +13,7 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    router::<Route>(RouterConfig::default)
+    Router::<Route>::new(RouterConfig::default)
 }
 
 #[derive(Routable, Clone, PartialEq)]
@@ -53,7 +53,7 @@ impl Component for AppSideBar {
                                 .child("Crab 🦀"),
                         ),
                 )
-                .content(rect().expanded().center().child(outlet::<Route>())),
+                .content(rect().expanded().center().child(Outlet::<Route>::new())),
         )
     }
 }
