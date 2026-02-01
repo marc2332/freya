@@ -5,6 +5,7 @@ use std::{
 
 use crate::{
     geometry::Size2D,
+    measure::Phase,
     node::Node,
     prelude::Area,
     tree_adapter::NodeKey,
@@ -16,6 +17,8 @@ pub trait LayoutMeasurer<Key: NodeKey> {
         node_id: Key,
         node: &Node,
         size: &Size2D,
+        phase: Phase,
+        parent_phase: Phase,
     ) -> Option<(Size2D, Rc<dyn Any>)>;
 
     fn should_hook_measurement(&mut self, node_id: Key) -> bool;
@@ -41,6 +44,8 @@ impl LayoutMeasurer<usize> for NoopMeasurer {
         _node_id: usize,
         _node: &Node,
         _size: &Size2D,
+        _phase: Phase,
+        _parent_phase: Phase,
     ) -> Option<(Size2D, Rc<dyn Any>)> {
         None
     }

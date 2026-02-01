@@ -21,6 +21,7 @@ use rustc_hash::{
     FxHashSet,
 };
 use torin::{
+    measure::Phase,
     prelude::{
         Area,
         LayoutMeasurer,
@@ -671,11 +672,15 @@ impl LayoutMeasurer<NodeId> for LayoutMeasurerAdapter<'_> {
         node_id: NodeId,
         torin_node: &torin::node::Node,
         area_size: &Size2D,
+        phase: Phase,
+        parent_phase: Phase,
     ) -> Option<(Size2D, Rc<dyn Any>)> {
         self.elements.get(&node_id)?.measure(LayoutContext {
             node_id,
             torin_node,
             area_size,
+            phase,
+            parent_phase,
             font_collection: self.font_collection,
             font_manager: self.font_manager,
             text_style_state: self.text_style_state.get(&node_id).unwrap(),
