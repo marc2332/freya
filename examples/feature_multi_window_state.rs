@@ -6,8 +6,8 @@ use std::path::PathBuf;
 
 use freya::{
     prelude::*,
-    router::*,
     radio::*,
+    router::*,
 };
 use freya_i18n::{
     i18n::{
