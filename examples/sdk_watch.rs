@@ -21,14 +21,14 @@ fn main() {
         }
     });
 
-    launch(LaunchConfig::new().with_window(WindowConfig::new(AppComponent::new(App { rx }))))
+    launch(LaunchConfig::new().with_window(WindowConfig::new_app(MyApp { rx })))
 }
 
-struct App {
+struct MyApp {
     rx: watch::Receiver<i32>,
 }
 
-impl Component for App {
+impl App for MyApp {
     fn render(&self) -> impl IntoElement {
         use_track_watcher(&self.rx);
 
