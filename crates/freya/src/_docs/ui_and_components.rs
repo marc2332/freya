@@ -37,7 +37,7 @@
 //! ## App/Root Component
 //! The app/root component is the component passed to [WindowConfig](crate::prelude::WindowConfig).
 //!
-//! For convenience it can be a `Fn() -> Element` instead of a struct that implements [Component](freya_core::prelude::Component).
+//! For convenience it can be a `Fn() -> Element` instead of a struct that implements [App](freya_core::prelude::App).
 //!
 //! ```rust
 //! # use freya::prelude::*;
@@ -46,23 +46,19 @@
 //! }
 //! ```
 //!
-//! If you wanted to pass data from your **main** function to your **root** component you would need to make it use a struct component, like this:
+//! If you wanted to pass data from your **main** function to your **root** component you would need to make it use a struct that implements the [App](freya_core::prelude::App) trait, like this:
 //!
 //! ```rust, no_run
 //! # use freya::prelude::*;
 //! fn main() {
-//!     launch(
-//!         LaunchConfig::new()
-//!             .with_window(WindowConfig::new(AppComponent::new(App { number: 1 }))),
-//!     )
+//!     launch(LaunchConfig::new().with_window(WindowConfig::new_app(MyApp { number: 1 })))
 //! }
 //!
-//! #[derive(PartialEq)]
-//! struct App {
+//! struct MyApp {
 //!     number: u8,
 //! }
 //!
-//! impl Component for App {
+//! impl App for MyApp {
 //!     fn render(&self) -> impl IntoElement {
 //!         label().text(self.number.to_string())
 //!     }

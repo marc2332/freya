@@ -224,14 +224,21 @@ impl<T: Into<Element>> IntoElement for T {
     }
 }
 
-/// [AppComponent] is a wrapper for [Component]s that returns true in equality checks.
+/// [App] is a trait for root-level application components.
+/// Types implementing [App] automatically implement [Component] and have a
+/// blanket [PartialEq] implementation that always returns true.
+pub trait App: 'static {
+    fn render(&self) -> impl IntoElement;
+}
+
+/// [AppComponent] is a wrapper for [App] components that returns true in equality checks.
 #[derive(Clone)]
 pub struct AppComponent {
     render: Rc<dyn Fn() -> Element + 'static>,
 }
 
 impl AppComponent {
-    pub fn new(render: impl Component + 'static) -> Self {
+    pub fn new(render: impl App + 'static) -> Self {
         Self {
             render: Rc::new(move || render.render().into_element()),
         }
@@ -283,7 +290,7 @@ impl Component for AppComponent {
 ///     }
 /// }
 /// ```
-pub trait Component: ComponentKey + 'static {
+pub trait Component: ComponentKey + PartialEq + 'static {
     fn render(&self) -> impl IntoElement;
 
     fn render_key(&self) -> DiffKey {
@@ -291,7 +298,7 @@ pub trait Component: ComponentKey + 'static {
     }
 }
 
-pub trait ComponentOwned: ComponentKey + 'static {
+pub trait ComponentOwned: ComponentKey + PartialEq + 'static {
     fn render(self) -> impl IntoElement;
 
     fn render_key(&self) -> DiffKey {
@@ -305,7 +312,7 @@ pub trait ComponentKey {
 
 impl<T> Component for T
 where
-    T: ComponentOwned + Clone,
+    T: ComponentOwned + Clone + PartialEq,
 {
     fn render(&self) -> impl IntoElement {
         <Self as ComponentOwned>::render(self.clone())
@@ -326,7 +333,7 @@ where
 
 impl<T> MaybeExt for T where T: Component {}
 
-impl<T: Component + PartialEq> From<T> for Element {
+impl<T: Component> From<T> for Element {
     fn from(value: T) -> Self {
         from_fn_standalone_borrowed_keyed(value.render_key(), value, |v| v.render().into_element())
     }
