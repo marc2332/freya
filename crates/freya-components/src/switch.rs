@@ -54,7 +54,7 @@ use crate::{
 #[derive(Clone, PartialEq)]
 pub struct Switch {
     pub(crate) theme: Option<SwitchThemePartial>,
-    toggled: ReadState<bool>,
+    toggled: Readable<bool>,
     on_toggle: Option<EventHandler<()>>,
     enabled: bool,
     key: DiffKey,
@@ -83,7 +83,7 @@ impl Switch {
         }
     }
 
-    pub fn toggled(mut self, toggled: impl Into<ReadState<bool>>) -> Self {
+    pub fn toggled(mut self, toggled: impl Into<Readable<bool>>) -> Self {
         self.toggled = toggled.into();
         self
     }

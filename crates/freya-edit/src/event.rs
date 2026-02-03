@@ -40,10 +40,10 @@ pub enum EditableEvent<'a> {
 }
 
 impl EditableEvent<'_> {
-    pub fn process<'a, 'b, T: TextEditor + 'static>(
+    pub fn process<T: TextEditor>(
         self,
-        mut editor: impl MutView<'b, T>,
-        mut dragging: impl MutView<'b, TextDragging>,
+        mut editor: Writable<T>,
+        mut dragging: Writable<TextDragging>,
         config: &'_ EditableConfig,
     ) {
         match self {

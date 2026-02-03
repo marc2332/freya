@@ -5,16 +5,11 @@ use freya_testing::prelude::*;
 #[test]
 pub fn input_test() {
     fn input_app() -> impl IntoElement {
-        let mut value = use_state(String::new);
+        let value = use_state(String::new);
 
         rect()
             .spacing(6.)
-            .child(
-                Input::new()
-                    .placeholder("Type your name")
-                    .value(value)
-                    .on_change(move |v| value.set(v)),
-            )
+            .child(Input::new(value).placeholder("Type your name"))
             .child(format!("Your name is {}", value.read()))
     }
 

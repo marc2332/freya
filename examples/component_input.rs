@@ -20,61 +20,29 @@ fn app() -> impl IntoElement {
         .child(rect().spacing(6.).children(disabled_inputs(text)))
 }
 
-fn inputs(mut text: State<String>) -> [Element; 9] {
+fn inputs(text: State<String>) -> [Element; 9] {
     [
-        Input::new()
-            .value(text)
-            .on_change(move |v| text.set(v))
-            .placeholder("Normal")
-            .into(),
-        Input::new()
-            .value(text)
-            .on_change(move |v| text.set(v))
-            .placeholder("Filled")
-            .filled()
-            .into(),
-        Input::new()
-            .value(text)
-            .on_change(move |v| text.set(v))
-            .placeholder("Flat")
-            .flat()
-            .into(),
-        Input::new()
-            .value(text)
-            .on_change(move |v| text.set(v))
-            .placeholder("Expanded")
-            .expanded()
-            .into(),
-        Input::new()
-            .value(text)
-            .on_change(move |v| text.set(v))
+        Input::new(text).placeholder("Normal").into(),
+        Input::new(text).placeholder("Filled").filled().into(),
+        Input::new(text).placeholder("Flat").flat().into(),
+        Input::new(text).placeholder("Expanded").expanded().into(),
+        Input::new(text)
             .placeholder("Expanded Filled")
             .expanded()
             .filled()
             .into(),
-        Input::new()
-            .value(text)
-            .on_change(move |v| text.set(v))
+        Input::new(text)
             .placeholder("Expanded Flat")
             .expanded()
             .flat()
             .into(),
-        Input::new()
-            .value(text)
-            .on_change(move |v| text.set(v))
-            .placeholder("Compact")
-            .compact()
-            .into(),
-        Input::new()
-            .value(text)
-            .on_change(move |v| text.set(v))
+        Input::new(text).placeholder("Compact").compact().into(),
+        Input::new(text)
             .placeholder("Compact Filled")
             .compact()
             .filled()
             .into(),
-        Input::new()
-            .value(text)
-            .on_change(move |v| text.set(v))
+        Input::new(text)
             .placeholder("Compact Flat")
             .compact()
             .flat()
@@ -82,69 +50,48 @@ fn inputs(mut text: State<String>) -> [Element; 9] {
     ]
 }
 
-fn disabled_inputs(mut text: State<String>) -> [Element; 9] {
+fn disabled_inputs(text: State<String>) -> [Element; 9] {
     [
-        Input::new()
-            .value(text)
-            .on_change(move |v| text.set(v))
-            .placeholder("Normal")
-            .enabled(false)
-            .into(),
-        Input::new()
-            .value(text)
-            .on_change(move |v| text.set(v))
+        Input::new(text).placeholder("Normal").enabled(false).into(),
+        Input::new(text)
             .placeholder("Filled")
             .enabled(false)
             .filled()
             .into(),
-        Input::new()
-            .value(text)
-            .on_change(move |v| text.set(v))
+        Input::new(text)
             .placeholder("Flat")
             .enabled(false)
             .flat()
             .into(),
-        Input::new()
-            .value(text)
-            .on_change(move |v| text.set(v))
+        Input::new(text)
             .placeholder("Expanded")
             .enabled(false)
             .expanded()
             .into(),
-        Input::new()
-            .value(text)
-            .on_change(move |v| text.set(v))
+        Input::new(text)
             .placeholder("Expanded Filled")
             .enabled(false)
             .expanded()
             .filled()
             .into(),
-        Input::new()
-            .value(text)
-            .on_change(move |v| text.set(v))
+        Input::new(text)
             .placeholder("Expanded Flat")
             .enabled(false)
             .expanded()
             .flat()
             .into(),
-        Input::new()
-            .value(text)
-            .on_change(move |v| text.set(v))
+        Input::new(text)
             .placeholder("Compact")
             .enabled(false)
             .compact()
             .into(),
-        Input::new()
-            .value(text)
-            .on_change(move |v| text.set(v))
+        Input::new(text)
             .placeholder("Compact Filled")
             .enabled(false)
             .compact()
             .filled()
             .into(),
-        Input::new()
-            .value(text)
-            .on_change(move |v| text.set(v))
+        Input::new(text)
             .placeholder("Compact Flat")
             .enabled(false)
             .compact()

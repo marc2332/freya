@@ -27,6 +27,8 @@ Documentation is located in `./crates/freya/src/_docs`.
 - Use `#[derive(PartialEq)]` for component structs to enable proper diffing and updates.
 - Use `use freya_core::prelude::*;` to import common types and traits in component files.
 - Never use `cargo check` just `just c`
+- Components are data types (usually structs) that implement `PartialEq` and the `Component` trait 
+- Freya has a built-in `Into<Label>` for `String` and `&str`, so, `label().text("Hey")` could be just simplified to `"Hey"`
 
 ## General instructions
 

@@ -138,7 +138,7 @@ where
     Channel: RadioChannel<Value>,
     Value: 'static,
 {
-    value: State<Value>,
+    pub(crate) value: State<Value>,
     listeners: State<HashMap<Channel, Rc<RefCell<FxHashSet<ReactiveContext>>>>>,
 }
 
@@ -236,6 +236,14 @@ where
         self.value.read()
     }
 
+    pub fn peek_unchecked(&self) -> ReadRef<'static, Value> {
+        self.value.peek()
+    }
+
+    pub fn write_unchecked(&self) -> WriteRef<'static, Value> {
+        self.value.write_unchecked()
+    }
+
     /// Read the current state value without subscribing to changes.
     /// Components using this will not re-render when the state changes.
     ///
@@ -307,7 +315,7 @@ where
     Value: 'static,
 {
     pub(crate) channel: Channel,
-    station: RadioStation<Value, Channel>,
+    pub(crate) station: RadioStation<Value, Channel>,
 }
 
 impl<Value, Channel> RadioAntenna<Value, Channel>
@@ -338,9 +346,9 @@ where
     Channel: RadioChannel<Value>,
     Value: 'static,
 {
-    station: RadioStation<Value, Channel>,
-    channels: Vec<Channel>,
-    value: WriteRef<'static, Value>,
+    pub(crate) station: RadioStation<Value, Channel>,
+    pub(crate) channels: Vec<Channel>,
+    pub(crate) value: WriteRef<'static, Value>,
 }
 
 impl<Value, Channel> Drop for RadioGuard<Value, Channel>
@@ -461,7 +469,7 @@ where
     Channel: RadioChannel<Value>,
     Value: 'static,
 {
-    antenna: State<RadioAntenna<Value, Channel>>,
+    pub(crate) antenna: State<RadioAntenna<Value, Channel>>,
 }
 
 impl<Value, Channel> Clone for Radio<Value, Channel>
@@ -480,41 +488,6 @@ where
 {
     fn eq(&self, other: &Self) -> bool {
         self.antenna == other.antenna
-    }
-}
-
-impl<Value, Channel> MutView<'static, Value> for Radio<Value, Channel>
-where
-    Channel: RadioChannel<Value>,
-{
-    fn read(&mut self) -> ReadRef<'static, Value> {
-        self.subscribe_if_not();
-        self.antenna.peek().station.value.peek()
-    }
-
-    fn peek(&mut self) -> ReadRef<'static, Value> {
-        self.antenna.peek().station.value.peek()
-    }
-
-    fn write(&mut self) -> WriteRef<'static, Value> {
-        let value = self.antenna.peek().station.value.write_unchecked();
-        let channel = self.antenna.peek().channel.clone();
-        for channel in channel.derive_channel(&value) {
-            self.antenna.peek().station.notify_listeners(&channel)
-        }
-        value
-    }
-
-    fn write_if(&mut self, with: impl FnOnce(WriteRef<'static, Value>) -> bool) {
-        let changed = with(self.antenna.peek().station.value.write_unchecked());
-        let channel = changed.then_some(self.antenna.peek().channel.clone());
-        if let Some(channel) = channel {
-            let value = self.antenna.peek().station.value.write_unchecked();
-            for channel in channel.derive_channel(&value) {
-                self.antenna.peek().station.notify_listeners(&channel)
-            }
-            self.antenna.peek().station.cleanup();
-        }
     }
 }
 
