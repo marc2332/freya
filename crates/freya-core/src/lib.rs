@@ -61,7 +61,7 @@ pub mod prelude {
         diff_key::DiffKey,
         element::RenderContext,
         element::{
-            AppComponent,
+            App,
             Component,
             ComponentKey,
             ComponentOwned,

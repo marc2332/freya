@@ -6,14 +6,14 @@
 use freya::prelude::*;
 
 fn main() {
-    launch(LaunchConfig::new().with_window(WindowConfig::new(AppComponent::new(App { value: 4 }))))
+    launch(LaunchConfig::new().with_window(WindowConfig::new_app(MyApp { value: 4 })))
 }
 
-struct App {
+struct MyApp {
     value: u8,
 }
 
-impl Component for App {
+impl App for MyApp {
     fn render(&self) -> impl IntoElement {
         format!("Value is {}", self.value)
     }
