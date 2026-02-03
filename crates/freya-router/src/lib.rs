@@ -10,18 +10,20 @@
 //! for a runnable demo.
 //!
 //! ```rust
-//! use freya::prelude::*;
-//! use freya_router::prelude::*;
+//! use freya::{
+//!     prelude::*,
+//!     router::prelude::*,
+//! };
 //!
 //! fn app() -> impl IntoElement {
-//!     router::<Route>(|| RouterConfig::default().with_initial_path(Route::Home))
+//!     Router::<Route>::new(|| RouterConfig::default().with_initial_path(Route::Home))
 //! }
 //!
 //! #[derive(PartialEq)]
 //! struct Layout;
 //! impl Component for Layout {
 //!     fn render(&self) -> impl IntoElement {
-//!         rect().center().expanded().child(outlet::<Route>())
+//!         rect().center().expanded().child(Outlet::<Route>::new())
 //!     }
 //! }
 //!
@@ -102,8 +104,9 @@ pub mod prelude {
 
     pub use crate::{
         components::{
-            outlet,
-            router,
+            Outlet,
+            Router,
+            use_share_router,
         },
         contexts::*,
         hooks::*,

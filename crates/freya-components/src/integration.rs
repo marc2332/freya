@@ -1,5 +1,5 @@
 use freya_core::{
-    element::AppComponent,
+    integration::AppComponent,
     layers::Layer,
     prelude::*,
 };

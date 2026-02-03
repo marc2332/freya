@@ -20,6 +20,7 @@ use crate::prelude::{
 ///     value: i32,
 /// }
 ///
+/// #[derive(PartialEq)]
 /// struct MyComponent {
 ///     config: Config,
 /// }

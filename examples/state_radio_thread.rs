@@ -36,7 +36,7 @@ fn main() {
                     radio_station.write_channel(DataChannel::Count).count += 1;
                 }
             })
-            .with_window(WindowConfig::new(AppComponent::new(App { radio_station }))),
+            .with_window(WindowConfig::new_app(MyApp { radio_station })),
     )
 }
 
@@ -52,11 +52,11 @@ pub enum DataChannel {
 
 impl RadioChannel<Data> for DataChannel {}
 
-struct App {
+struct MyApp {
     radio_station: RadioStation<Data, DataChannel>,
 }
 
-impl Component for App {
+impl App for MyApp {
     fn render(&self) -> impl IntoElement {
         use_share_radio(move || self.radio_station);
         let mut radio = use_radio(DataChannel::Count);

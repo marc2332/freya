@@ -50,7 +50,7 @@ use crate::theming::{
     macros::Preference,
 };
 
-pub(crate) const BASE_THEME: Theme = Theme {
+pub const BASE_THEME: Theme = Theme {
     name: "base",
     colors: ColorsSheet {
         // Brand & Accent

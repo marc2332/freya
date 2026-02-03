@@ -101,6 +101,11 @@ impl WindowConfig {
         Self::new_with_defaults(app.into())
     }
 
+    /// Create a window using an `App` directly.
+    pub fn new_app(app: impl App + 'static) -> Self {
+        Self::new_with_defaults(AppComponent::new(app))
+    }
+
     fn new_with_defaults(app: impl Into<AppComponent>) -> Self {
         Self {
             app: app.into(),
