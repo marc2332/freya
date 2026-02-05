@@ -43,7 +43,7 @@
 //!
 //! ```rust,no_run
 //! # use freya::prelude::*;
-//! # use freya_radio::prelude::*;
+//! # use freya::radio::*;
 //! #[derive(Default, Clone)]
 //! struct AppState {
 //!     count: i32,
@@ -61,7 +61,7 @@
 //!
 //! ```rust,no_run
 //! # use freya::prelude::*;
-//! # use freya_radio::prelude::*;
+//! # use freya::radio::*;
 //! # #[derive(Default, Clone)]
 //! # struct AppState { count: i32 }
 //! #
@@ -101,7 +101,7 @@
 //!
 //! ```rust,no_run
 //! # use freya::prelude::*;
-//! # use freya_radio::prelude::*;
+//! # use freya::radio::*;
 //! #[derive(Default, Clone)]
 //! struct TodoState {
 //!     todos: Vec<String>,
@@ -179,7 +179,7 @@
 //!
 //! ```rust,no_run
 //! # use freya::prelude::*;
-//! # use freya_radio::prelude::*;
+//! # use freya::radio::*;
 //! #[derive(Default, Clone)]
 //! struct AppState {
 //!     count: i32,
@@ -241,7 +241,7 @@
 //!
 //! ```rust,no_run
 //! # use freya::prelude::*;
-//! # use freya_radio::prelude::*;
+//! # use freya::radio::*;
 //! #[derive(Clone)]
 //! struct CounterState {
 //!     count: i32,

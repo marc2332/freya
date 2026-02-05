@@ -1,7 +1,9 @@
 use std::time::Duration;
 
-use freya::prelude::*;
-use freya_query::prelude::*;
+use freya::{
+    prelude::*,
+    query::*,
+};
 
 #[derive(Clone, PartialEq, Hash, Eq)]
 struct FancyClient {
