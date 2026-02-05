@@ -230,6 +230,7 @@ impl TerminalHandle {
     pub fn clear_selection(&self) {
         let mut buffer = self.buffer.lock().unwrap();
         buffer.selection = None;
+        Platform::get().send(UserEvent::RequestRedraw);
     }
 
     /// Get selected text from the buffer.
