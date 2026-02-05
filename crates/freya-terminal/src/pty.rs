@@ -97,6 +97,7 @@ pub(crate) fn spawn_pty(command: CommandBuilder) -> Result<TerminalHandle, Termi
                                 cursor_col: cur_c as usize,
                                 cols: cols as usize,
                                 rows_count: rows as usize,
+                                selection: None,
                             };
 
                             if let Ok(mut buf) = buffer.lock() {
@@ -129,6 +130,7 @@ pub(crate) fn spawn_pty(command: CommandBuilder) -> Result<TerminalHandle, Termi
                                     cursor_col: cur_c as usize,
                                     cols: cols as usize,
                                     rows_count: rows as usize,
+                                    selection: None,
                                 };
 
                                 if let Ok(mut buf) = buffer.lock() {

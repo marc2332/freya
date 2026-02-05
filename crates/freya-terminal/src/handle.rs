@@ -9,14 +9,19 @@ use std::{
 use freya_core::{
     notify::ArcNotify,
     prelude::{
+        Platform,
         TaskHandle,
         UseId,
+        UserEvent,
     },
 };
 use futures_channel::mpsc::UnboundedSender;
 
 use crate::{
-    buffer::TerminalBuffer,
+    buffer::{
+        TerminalBuffer,
+        TerminalSelection,
+    },
     pty::spawn_pty,
 };
 
@@ -178,5 +183,57 @@ impl TerminalHandle {
     /// Returns the unique identifier for this terminal instance.
     pub fn id(&self) -> TerminalId {
         self.id
+    }
+
+    /// Get the current text selection.
+    pub fn get_selection(&self) -> Option<TerminalSelection> {
+        self.buffer.lock().unwrap().selection.clone()
+    }
+
+    /// Set the text selection.
+    pub fn set_selection(&self, selection: Option<TerminalSelection>) {
+        let mut buffer = self.buffer.lock().unwrap();
+        buffer.selection = selection;
+    }
+
+    /// Start a new selection at the given position.
+    pub fn start_selection(&self, row: usize, col: usize) {
+        let mut buffer = self.buffer.lock().unwrap();
+        let mut selection = TerminalSelection::new(row, col, row, col);
+        selection.dragging = true;
+        buffer.selection = Some(selection);
+        Platform::get().send(UserEvent::RequestRedraw);
+    }
+
+    pub fn update_selection(&self, row: usize, col: usize) {
+        let mut buffer = self.buffer.lock().unwrap();
+        if let Some(selection) = &mut buffer.selection {
+            if selection.dragging {
+                let mut new_selection =
+                    TerminalSelection::new(selection.start_row, selection.start_col, row, col);
+                new_selection.dragging = true;
+                *selection = new_selection;
+                Platform::get().send(UserEvent::RequestRedraw);
+            }
+        }
+    }
+
+    pub fn end_selection(&self) {
+        let mut buffer = self.buffer.lock().unwrap();
+        if let Some(selection) = &mut buffer.selection {
+            selection.dragging = false;
+            Platform::get().send(UserEvent::RequestRedraw);
+        }
+    }
+
+    /// Clear the current selection.
+    pub fn clear_selection(&self) {
+        let mut buffer = self.buffer.lock().unwrap();
+        buffer.selection = None;
+    }
+
+    /// Get selected text from the buffer.
+    pub fn get_selected_text(&self) -> Option<String> {
+        self.buffer.lock().unwrap().get_selected_text()
     }
 }
