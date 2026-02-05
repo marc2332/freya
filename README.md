@@ -12,9 +12,7 @@
 
 > :warning: I recently rewrote a huge percentage of Freya in https://github.com/marc2332/freya/pull/1351, so the `main` branch differs a lot from the latest stable release.
 
-## Feature Showcase ✨
-
-### Component Model & Reactive State
+### Components & State 
 
 Freya’s component model lets you create reusable UI elements that automatically re-render when the state they depend on changes. Components can hold their own internal state or subscribe to shared state, and they produce UI as their output. Any type that implements the `Component` trait can be a component, while the root (`app`) component can simply be a function. Built-in examples include components like `Button` and `Switch`.
 
