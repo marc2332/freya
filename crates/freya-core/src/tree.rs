@@ -411,7 +411,7 @@ impl Tree {
                     if !run_cascade
                         && !self.effect_state.contains_key(&node_id)
                         && let Some(parent) = self.parents.get(&node_id)
-                        && self.effect_state.contains_key(&parent)
+                        && self.effect_state.contains_key(parent)
                     {
                         run_cascade = true;
                     }
