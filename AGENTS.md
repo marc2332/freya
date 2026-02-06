@@ -38,3 +38,4 @@ Documentation is located in `./crates/freya/src/_docs`.
 - Never push to any branch, much less the `main` branch or using `--force`
 - Never hardcode secrets or any other sensitive data
 - Avoid creating temporary branches unless told
+- When you are just starting to work on something you must not run any check or format command right away, leave that for the end and ask the developer for confirmation
