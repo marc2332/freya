@@ -146,6 +146,7 @@ impl Tree {
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     pub fn apply_mutations(&mut self, mutations: Mutations) -> MutationsApplyResult {
         let mut needs_render = !mutations.removed.is_empty();
+        let mut needs_accessibility = !mutations.removed.is_empty();
         let mut dirty = Vec::<(NodeId, DiffModifies)>::default();
 
         #[cfg(debug_assertions)]
@@ -349,6 +350,10 @@ impl Tree {
                     needs_render = true;
                 }
 
+                if !needs_accessibility && (flags.intersects(DiffModifies::ACCESSIBILITY)) {
+                    needs_accessibility = true;
+                }
+
                 if flags.contains(DiffModifies::ACCESSIBILITY) {
                     match self.accessibility_state.get_mut(&node_id) {
                         Some(accessibility_state) => accessibility_state.update(
@@ -534,7 +539,10 @@ impl Tree {
             self.verify_tree_integrity();
         });
 
-        MutationsApplyResult { needs_render }
+        MutationsApplyResult {
+            needs_render,
+            needs_accessibility,
+        }
     }
 
     /// Walk to the ancestor of `base` with the same height of `target`
@@ -661,6 +669,7 @@ bitflags! {
 
 pub struct MutationsApplyResult {
     pub needs_render: bool,
+    pub needs_accessibility: bool,
 }
 
 pub struct LayoutMeasurerAdapter<'a> {

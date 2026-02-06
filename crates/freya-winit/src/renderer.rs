@@ -438,6 +438,11 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 app.process_layout_on_next_render = true;
                                 app.window.request_redraw();
                             }
+                            if result.needs_accessibility {
+                                app.accessibility_tasks_for_next_render |=
+                                    AccessibilityTask::ProcessUpdate { mode: None };
+                                app.window.request_redraw();
+                            }
                             self.plugins.send(
                                 PluginEvent::FinishedUpdatingTree {
                                     window: &app.window,
