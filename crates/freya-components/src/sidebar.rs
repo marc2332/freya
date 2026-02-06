@@ -199,20 +199,12 @@ impl Component for SideBarItem {
         let mut status = use_state(ButtonStatus::default);
         let is_active = use_activable_route();
 
-        use_drop(move || {
-            if status() == ButtonStatus::Hovering {
-                Cursor::set(CursorIcon::default());
-            }
-        });
-
         let on_pointer_enter = move |_| {
             status.set(ButtonStatus::Hovering);
-            Cursor::set(CursorIcon::Pointer);
         };
 
         let on_pointer_leave = move |_| {
             status.set(ButtonStatus::default());
-            Cursor::set(CursorIcon::default());
         };
 
         let background = match *status.read() {
