@@ -1,7 +1,7 @@
 use freya_core::prelude::*;
 use freya_router::prelude::{
     NavigationTarget,
-    Navigator,
+    RouterContext,
 };
 
 use crate::{
@@ -98,7 +98,7 @@ impl Component for Link {
                 if let Some(url) = &url {
                     let _ = open::that(url);
                 } else {
-                    Navigator::get().push(to.clone());
+                    RouterContext::get().push(to.clone());
                 }
             }
         };
