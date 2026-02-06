@@ -1214,7 +1214,20 @@ impl Runner {
             }
         }
 
-        for (modified, flags) in diff.modified {
+        for (modified, flags) in diff
+            .modified
+            .into_iter()
+            .sorted_by(|(a, _), (b, _)| {
+                for (x, y) in a.iter().zip(b.iter()) {
+                    match x.cmp(y) {
+                        Ordering::Equal => continue,
+                        non_eq => return non_eq.reverse(),
+                    }
+                }
+                b.len().cmp(&a.len())
+            })
+            .rev()
+        {
             path_element.with_element(&modified, |element| match element {
                 PathElement::Component { .. } => {
                     // Components never change when being diffed
