@@ -23,7 +23,8 @@ impl<A, R> Clone for Callback<A, R> {
 
 impl<A, R> PartialEq for Callback<A, R> {
     fn eq(&self, _other: &Self) -> bool {
-        true
+        // TODO: Decide whether event handlers should be captured or not.
+        false
     }
 }
 
