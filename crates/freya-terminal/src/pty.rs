@@ -178,7 +178,7 @@ pub(crate) fn spawn_pty(command: CommandBuilder) -> Result<TerminalHandle, Termi
 
     Ok(TerminalHandle {
         closer_notifier: closer_notifier.clone(),
-        cleaner: Arc::new(TerminalCleaner {
+        cleaner: Rc::new(TerminalCleaner {
             writer: writer.clone(),
             task,
             closer_notifier,

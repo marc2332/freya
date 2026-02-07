@@ -93,7 +93,7 @@ pub struct TerminalHandle {
     /// Notifier that signals when the terminal/PTY closes.
     pub(crate) closer_notifier: ArcNotify,
     /// Handles cleanup when the terminal is dropped.
-    pub(crate) cleaner: Arc<TerminalCleaner>,
+    pub(crate) cleaner: Rc<TerminalCleaner>,
 }
 
 impl PartialEq for TerminalHandle {
