@@ -20,7 +20,7 @@ fn main() {
     let (width, height) = (800, 56);
     launch(
         LaunchConfig::new().with_window(
-            WindowConfig::new(AppComponent::new(App {}))
+            WindowConfig::new_app(MyApp {})
                 .with_title("Floating Panel")
                 .with_size(width as f64, height as f64)
                 .with_decorations(false)
@@ -50,10 +50,9 @@ fn main() {
     )
 }
 
-#[derive(PartialEq)]
-struct App;
+struct MyApp;
 
-impl Component for App {
+impl App for MyApp {
     fn render(&self) -> impl IntoElement {
         rect()
             .expanded()

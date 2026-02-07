@@ -7,6 +7,11 @@ c:
     cargo clippy --workspace --examples --features "all-debug" -- -D warnings
     cargo doc --workspace --features "all-debug"
 
+c-ci:
+    taplo check
+    cargo clippy --workspace --examples --features "all-debug, vulkan" -- -D warnings
+    cargo doc --workspace --features "all-debug, vulkan"
+
 e example:
     cargo run --example {{example}}
 

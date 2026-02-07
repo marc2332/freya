@@ -61,6 +61,7 @@
 //! ❌ **Incorrect:**
 //! ```rust
 //! # use freya::prelude::*;
+//! #[derive(PartialEq)]
 //! struct MyComponent;
 //! impl Component for MyComponent {
 //!     fn render(&self) -> impl IntoElement {
@@ -75,6 +76,7 @@
 //! ✅ **Correct:**
 //! ```rust
 //! # use freya::prelude::*;
+//! #[derive(PartialEq)]
 //! struct MyComponent;
 //! impl Component for MyComponent {
 //!     fn render(&self) -> impl IntoElement {
@@ -94,6 +96,7 @@
 //! ❌ **Incorrect:**
 //! ```rust
 //! # use freya::prelude::*;
+//! #[derive(PartialEq)]
 //! struct MyComponent;
 //! impl Component for MyComponent {
 //!     fn render(&self) -> impl IntoElement {
@@ -108,6 +111,7 @@
 //! ✅ **Correct:**
 //! ```rust
 //! # use freya::prelude::*;
+//! #[derive(PartialEq)]
 //! struct MyComponent;
 //! impl Component for MyComponent {
 //!     fn render(&self) -> impl IntoElement {

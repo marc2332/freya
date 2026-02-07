@@ -24,7 +24,7 @@ jobs:
       - name: Install just
         uses: taiki-e/install-action@just
       - name: Install hotpath-ci CLI
-        run: cargo install hotpath --version '^0.9' --bin hotpath-ci --features=ci
+        run: cargo install hotpath --version '^0.10' --bin hotpath-ci --features=ci
       - name: Set up cargo cache
         uses: Swatinem/rust-cache@v2
         if: github.ref != 'refs/heads/main'

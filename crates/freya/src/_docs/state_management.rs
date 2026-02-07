@@ -43,7 +43,7 @@
 //!
 //! ```rust,no_run
 //! # use freya::prelude::*;
-//! # use freya_radio::prelude::*;
+//! # use freya::radio::*;
 //! #[derive(Default, Clone)]
 //! struct AppState {
 //!     count: i32,
@@ -61,7 +61,7 @@
 //!
 //! ```rust,no_run
 //! # use freya::prelude::*;
-//! # use freya_radio::prelude::*;
+//! # use freya::radio::*;
 //! # #[derive(Default, Clone)]
 //! # struct AppState { count: i32 }
 //! #
@@ -101,7 +101,7 @@
 //!
 //! ```rust,no_run
 //! # use freya::prelude::*;
-//! # use freya_radio::prelude::*;
+//! # use freya::radio::*;
 //! #[derive(Default, Clone)]
 //! struct TodoState {
 //!     todos: Vec<String>,
@@ -179,7 +179,7 @@
 //!
 //! ```rust,no_run
 //! # use freya::prelude::*;
-//! # use freya_radio::prelude::*;
+//! # use freya::radio::*;
 //! #[derive(Default, Clone)]
 //! struct AppState {
 //!     count: i32,
@@ -197,12 +197,8 @@
 //!
 //!     launch(
 //!         LaunchConfig::new()
-//!             .with_window(WindowConfig::new(AppComponent::new(Window1 {
-//!                 radio_station,
-//!             })))
-//!             .with_window(WindowConfig::new(AppComponent::new(Window2 {
-//!                 radio_station,
-//!             }))),
+//!             .with_window(WindowConfig::new_app(Window1 { radio_station }))
+//!             .with_window(WindowConfig::new_app(Window2 { radio_station })),
 //!     );
 //! }
 //!
@@ -210,7 +206,7 @@
 //!     radio_station: RadioStation<AppState, AppChannel>,
 //! }
 //!
-//! impl Component for Window1 {
+//! impl App for Window1 {
 //!     fn render(&self) -> impl IntoElement {
 //!         use_share_radio(move || self.radio_station);
 //!         let mut radio = use_radio(AppChannel::Count);
@@ -229,7 +225,7 @@
 //!     radio_station: RadioStation<AppState, AppChannel>,
 //! }
 //!
-//! impl Component for Window2 {
+//! impl App for Window2 {
 //!     fn render(&self) -> impl IntoElement {
 //!         use_share_radio(move || self.radio_station);
 //!         let radio = use_radio(AppChannel::Count);
@@ -245,7 +241,7 @@
 //!
 //! ```rust,no_run
 //! # use freya::prelude::*;
-//! # use freya_radio::prelude::*;
+//! # use freya::radio::*;
 //! #[derive(Clone)]
 //! struct CounterState {
 //!     count: i32,

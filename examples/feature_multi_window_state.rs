@@ -4,7 +4,11 @@
 )]
 use std::path::PathBuf;
 
-use freya::prelude::*;
+use freya::{
+    prelude::*,
+    radio::*,
+    router::*,
+};
 use freya_i18n::{
     i18n::{
         I18n,
@@ -14,8 +18,6 @@ use freya_i18n::{
     prelude::langid,
     t,
 };
-use freya_radio::prelude::*;
-use freya_router::prelude::*;
 
 fn main() {
     let i18n = I18n::create_global(
@@ -28,11 +30,11 @@ fn main() {
     let router = RouterContext::create_global::<Route>(RouterConfig::default());
 
     launch(
-        LaunchConfig::new().with_window(WindowConfig::new(AppComponent::new(App {
+        LaunchConfig::new().with_window(WindowConfig::new_app(MyApp {
             radio_station,
             i18n,
             router,
-        }))),
+        })),
     )
 }
 
@@ -48,13 +50,13 @@ pub enum DataChannel {
 
 impl RadioChannel<Data> for DataChannel {}
 
-struct App {
+struct MyApp {
     radio_station: RadioStation<Data, DataChannel>,
     i18n: I18n,
     router: RouterContext,
 }
 
-impl Component for App {
+impl App for MyApp {
     fn render(&self) -> impl IntoElement {
         use_share_radio(move || self.radio_station);
         use_share_i18n(move || self.i18n);
@@ -70,7 +72,7 @@ struct SubApp {
     router: RouterContext,
 }
 
-impl Component for SubApp {
+impl App for SubApp {
     fn render(&self) -> impl IntoElement {
         use_share_radio(move || self.radio_station);
         use_share_i18n(move || self.i18n);
@@ -108,11 +110,11 @@ impl Component for Home {
         let on_press = move |_| {
             spawn(async move {
                 let _ = Platform::get()
-                    .launch_window(WindowConfig::new(AppComponent::new(SubApp {
+                    .launch_window(WindowConfig::new_app(SubApp {
                         radio_station,
                         i18n: I18n::get(),
                         router: RouterContext::get(),
-                    })))
+                    }))
                     .await;
             });
         };
