@@ -164,8 +164,8 @@ impl PathElement {
                         let diff_flags = element1.diff(element2);
                         if !diff_flags.is_empty() {
                             diff.modified.push((path.clone(), diff_flags));
-                        } else if !path.is_empty() && path[path.len() - 1] != path2[path2.len() - 1]
-                        {
+                        }
+                        if !path.is_empty() && path[path.len() - 1] != path2[path2.len() - 1] {
                             diff.moved
                                 .entry(Box::from(path[..path.len() - 1].to_vec()))
                                 .or_default()
