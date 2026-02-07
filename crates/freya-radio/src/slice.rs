@@ -62,6 +62,13 @@ where
     }
 }
 
+impl<Value, SliceValue, Channel> Copy for RadioSlice<Value, SliceValue, Channel>
+where
+    Channel: RadioChannel<Value> + Copy,
+    SliceValue: 'static,
+{
+}
+
 impl<Value, SliceValue, Channel> RadioSlice<Value, SliceValue, Channel>
 where
     Channel: RadioChannel<Value>,
