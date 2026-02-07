@@ -9,7 +9,6 @@ use freya_core::{
     prelude::{
         Platform,
         UserEvent,
-        spawn,
         spawn_forever,
     },
 };
@@ -145,7 +144,7 @@ pub(crate) fn spawn_pty(command: CommandBuilder) -> Result<TerminalHandle, Termi
         }
     });
 
-    spawn({
+    spawn_forever({
         let writer = writer.clone();
         async move {
             loop {
