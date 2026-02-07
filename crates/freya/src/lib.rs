@@ -86,14 +86,14 @@ pub mod prelude {
         ClipboardError,
     };
     pub use freya_winit::{
+        WindowDragExt,
+        WinitPlatformExt,
         config::{
             CloseDecision,
             LaunchConfig,
             WindowConfig,
         },
         renderer::RendererContext,
-        WindowDragExt,
-        WinitPlatformExt,
     };
 
     pub use crate::components::*;
@@ -143,14 +143,14 @@ pub mod components {
             pub use freya_components::animated_router::*;
         }
     }
+    #[cfg_attr(feature = "docs", doc(cfg(feature = "remote-asset")))]
+    #[cfg(feature = "remote-asset")]
+    pub use freya_components::Uri;
     #[cfg_attr(feature = "docs", doc(cfg(feature = "calendar")))]
     #[cfg(feature = "calendar")]
     pub use freya_components::calendar::*;
     #[cfg(feature = "titlebar")]
     pub use freya_components::titlebar::*;
-    #[cfg_attr(feature = "docs", doc(cfg(feature = "remote-asset")))]
-    #[cfg(feature = "remote-asset")]
-    pub use freya_components::Uri;
     pub use freya_components::{
         accordion::*,
         activable_route_context::*,
