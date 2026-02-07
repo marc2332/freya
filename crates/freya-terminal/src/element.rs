@@ -10,7 +10,9 @@ use freya_core::{
     element::{
         Element,
         ElementExt,
+        EventHandlerType,
     },
+    events::name::EventName,
     prelude::*,
     tree::DiffModifies,
 };
@@ -22,6 +24,7 @@ use freya_engine::prelude::{
     SkRect,
     TextStyle,
 };
+use rustc_hash::FxHashMap;
 
 use crate::{
     colors::{
@@ -33,27 +36,31 @@ use crate::{
 
 /// Internal terminal rendering element
 #[derive(Clone)]
-pub struct TerminalElement {
+pub struct Terminal {
     handle: TerminalHandle,
     layout_data: LayoutData,
     font_family: String,
     font_size: f32,
     fg: Color,
     bg: Color,
+    selection_color: Color,
+    on_measured: Option<EventHandler<(f32, f32)>>,
+    event_handlers: FxHashMap<EventName, EventHandlerType>,
 }
 
-impl PartialEq for TerminalElement {
+impl PartialEq for Terminal {
     fn eq(&self, other: &Self) -> bool {
         self.handle == other.handle
             && self.font_size == other.font_size
             && self.font_family == other.font_family
             && self.fg == other.fg
             && self.bg == other.bg
+            && self.event_handlers.len() == other.event_handlers.len()
     }
 }
 
-impl TerminalElement {
-    pub(crate) fn new(handle: TerminalHandle) -> Self {
+impl Terminal {
+    pub fn new(handle: TerminalHandle) -> Self {
         Self {
             handle,
             layout_data: Default::default(),
@@ -61,7 +68,22 @@ impl TerminalElement {
             font_size: 14.,
             fg: (220, 220, 220).into(),
             bg: (10, 10, 10).into(),
+            selection_color: (60, 179, 214, 0.3).into(),
+            on_measured: None,
+            event_handlers: FxHashMap::default(),
         }
+    }
+
+    /// Set the selection highlight color
+    pub fn selection_color(mut self, selection_color: impl Into<Color>) -> Self {
+        self.selection_color = selection_color.into();
+        self
+    }
+
+    /// Set callback for when dimensions are measured (char_width, line_height)
+    pub fn on_measured(mut self, callback: impl Into<EventHandler<(f32, f32)>>) -> Self {
+        self.on_measured = Some(callback.into());
+        self
     }
 
     pub fn font_family(mut self, font_family: impl Into<String>) -> Self {
@@ -85,9 +107,21 @@ impl TerminalElement {
     }
 }
 
-impl ElementExt for TerminalElement {
+impl EventHandlersExt for Terminal {
+    fn get_event_handlers(&mut self) -> &mut FxHashMap<EventName, EventHandlerType> {
+        &mut self.event_handlers
+    }
+}
+
+impl LayoutExt for Terminal {
+    fn get_layout(&mut self) -> &mut LayoutData {
+        &mut self.layout_data
+    }
+}
+
+impl ElementExt for Terminal {
     fn diff(&self, other: &Rc<dyn ElementExt>) -> DiffModifies {
-        let Some(el) = (other.as_ref() as &dyn Any).downcast_ref::<TerminalElement>() else {
+        let Some(el) = (other.as_ref() as &dyn Any).downcast_ref::<Terminal>() else {
             return DiffModifies::all();
         };
 
@@ -96,6 +130,7 @@ impl ElementExt for TerminalElement {
         if self.font_size != el.font_size
             || self.font_family != el.font_family
             || self.handle != el.handle
+            || self.event_handlers.len() != el.event_handlers.len()
         {
             diff.insert(DiffModifies::STYLE);
             diff.insert(DiffModifies::LAYOUT);
@@ -106,6 +141,10 @@ impl ElementExt for TerminalElement {
 
     fn layout(&'_ self) -> Cow<'_, LayoutData> {
         Cow::Borrowed(&self.layout_data)
+    }
+
+    fn events_handlers(&'_ self) -> Option<Cow<'_, FxHashMap<EventName, EventHandlerType>>> {
+        Some(Cow::Borrowed(&self.event_handlers))
     }
 
     fn should_hook_measurement(&self) -> bool {
@@ -155,6 +194,11 @@ impl ElementExt for TerminalElement {
 
         self.handle.resize(target_rows, target_cols);
 
+        // Store dimensions and notify callback
+        if let Some(on_measured) = &self.on_measured {
+            on_measured.call((char_width, line_height));
+        }
+
         Some((
             torin::prelude::Size2D::new(context.area_size.width.max(100.0), height),
             Rc::new(()),
@@ -196,6 +240,34 @@ impl ElementExt for TerminalElement {
         for (row_idx, row) in buffer.rows.iter().enumerate() {
             if y + line_height > area.max_y() {
                 break;
+            }
+
+            if let Some(selection) = &buffer.selection {
+                let (start_row, start_col, end_row, end_col) = selection.normalized();
+                let is_empty_selection = start_row == end_row && start_col == end_col;
+
+                if !is_empty_selection && row_idx >= start_row && row_idx <= end_row {
+                    let sel_start_col = if row_idx == start_row { start_col } else { 0 };
+                    let sel_end_col = if row_idx == end_row {
+                        end_col
+                    } else {
+                        row.len()
+                    };
+
+                    for col_idx in sel_start_col..sel_end_col.min(row.len()) {
+                        let left = area.min_x() + (col_idx as f32) * char_width;
+                        let top = y;
+                        let right = left + char_width;
+                        let bottom = top + line_height;
+
+                        let mut sel_paint = Paint::default();
+                        sel_paint.set_style(PaintStyle::Fill);
+                        sel_paint.set_color(self.selection_color);
+                        context
+                            .canvas
+                            .draw_rect(SkRect::new(left, top, right, bottom), &sel_paint);
+                    }
+                }
             }
 
             for (col_idx, cell) in row.iter().enumerate() {
@@ -286,8 +358,8 @@ impl ElementExt for TerminalElement {
     }
 }
 
-impl From<TerminalElement> for Element {
-    fn from(value: TerminalElement) -> Self {
+impl From<Terminal> for Element {
+    fn from(value: Terminal) -> Self {
         Element::Element {
             key: DiffKey::None,
             element: Rc::new(value),

@@ -76,7 +76,6 @@
 //! ```
 pub mod buffer;
 pub mod colors;
-pub mod component;
 pub mod element;
 pub mod handle;
 pub mod parser;
@@ -87,8 +86,11 @@ pub mod prelude {
     pub use portable_pty::CommandBuilder;
 
     pub use crate::{
-        buffer::TerminalBuffer,
-        component::Terminal,
+        buffer::{
+            TerminalBuffer,
+            TerminalSelection,
+        },
+        element::Terminal,
         handle::{
             TerminalError,
             TerminalHandle,
