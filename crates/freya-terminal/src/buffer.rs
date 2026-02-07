@@ -71,83 +71,51 @@ impl TerminalBuffer {
     /// Get the selected text from the buffer
     pub fn get_selected_text(&self) -> Option<String> {
         let selection = self.selection.as_ref()?;
+
+        if selection.is_empty() {
+            return None;
+        }
+
         let (start_row, start_col, end_row, end_col) = selection.normalized();
 
-        if start_row == end_row {
-            // Single line selection
-            let row = self.rows.get(start_row)?;
-            let start = start_col.min(row.len().saturating_sub(1));
-            let end = end_col.min(row.len());
-            if start < end {
-                let cells: String = row[start..end]
-                    .iter()
-                    .map(|cell| {
-                        if cell.has_contents() {
-                            cell.contents()
-                        } else {
-                            " "
-                        }
-                    })
-                    .collect();
-                Some(cells)
-            } else {
-                Some(String::new())
-            }
-        } else {
-            // Multi-line selection
-            let mut text = String::new();
+        let mut lines = Vec::new();
 
-            // First line (from start_col to end of row)
-            if let Some(row) = self.rows.get(start_row) {
-                let start = start_col.min(row.len().saturating_sub(1));
-                let cells: String = row[start..]
-                    .iter()
-                    .map(|cell| {
-                        if cell.has_contents() {
-                            cell.contents()
-                        } else {
-                            " "
-                        }
-                    })
-                    .collect();
-                text.push_str(&cells);
-            }
-            text.push('\n');
+        for row_idx in start_row..=end_row {
+            let Some(row) = self.rows.get(row_idx) else {
+                continue;
+            };
 
-            // Middle lines (full rows)
-            for row_idx in (start_row + 1)..end_row {
-                if let Some(row) = self.rows.get(row_idx) {
-                    let cells: String = row
-                        .iter()
-                        .map(|cell| {
-                            if cell.has_contents() {
-                                cell.contents()
-                            } else {
-                                " "
-                            }
-                        })
-                        .collect();
-                    text.push_str(&cells);
-                    text.push('\n');
+            let line = match row_idx {
+                _ if start_row == end_row => {
+                    let start = start_col.min(row.len());
+                    let end = end_col.min(row.len());
+                    cells_to_string(&row[start..end])
                 }
-            }
+                _ if row_idx == start_row => {
+                    let start = start_col.min(row.len());
+                    cells_to_string(&row[start..])
+                }
+                _ if row_idx == end_row => cells_to_string(&row[..end_col.min(row.len())]),
+                _ => cells_to_string(row),
+            };
 
-            // Last line (from start to end_col)
-            if let Some(row) = self.rows.get(end_row) {
-                let cells: String = row[..end_col.min(row.len())]
-                    .iter()
-                    .map(|cell| {
-                        if cell.has_contents() {
-                            cell.contents()
-                        } else {
-                            " "
-                        }
-                    })
-                    .collect();
-                text.push_str(&cells);
-            }
-
-            Some(text)
+            lines.push(line);
         }
+
+        Some(lines.join("\n"))
     }
+}
+
+/// Convert a slice of cells to a string, treating empty cells as spaces
+fn cells_to_string(cells: &[Cell]) -> String {
+    cells
+        .iter()
+        .map(|cell| {
+            if cell.has_contents() {
+                cell.contents()
+            } else {
+                " "
+            }
+        })
+        .collect()
 }

@@ -244,11 +244,12 @@ impl ElementExt for Terminal {
 
             if let Some(selection) = &buffer.selection {
                 let (start_row, start_col, end_row, end_col) = selection.normalized();
+                let is_empty_selection = start_row == end_row && start_col == end_col;
 
-                if row_idx >= start_row && row_idx <= end_row {
+                if !is_empty_selection && row_idx >= start_row && row_idx <= end_row {
                     let sel_start_col = if row_idx == start_row { start_col } else { 0 };
                     let sel_end_col = if row_idx == end_row {
-                        end_col + 1
+                        end_col
                     } else {
                         row.len()
                     };
