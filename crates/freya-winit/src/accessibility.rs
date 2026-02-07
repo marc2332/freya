@@ -20,9 +20,6 @@ impl AccessibilityTask {
 
 impl BitOrAssign for AccessibilityTask {
     fn bitor_assign(&mut self, rhs: Self) {
-        match self {
-            Self::None => *self = rhs,
-            _ => {}
-        }
+        if self == &Self::None { *self = rhs }
     }
 }
