@@ -367,7 +367,7 @@ pub const BASE_THEME: Theme = Theme {
         padding: Preference::Specific(Gaps::new_all(4.)),
         shadow: Preference::Reference("shadow"),
         border_fill: Preference::Reference("surface_primary"),
-        corner_radius: Preference::Specific(CornerRadius::new_all(6.)),
+        corner_radius: Preference::Specific(CornerRadius::new_all(8.)),
     },
     button_segment: ButtonSegmentThemePreference {
         background: Preference::Reference("surface_tertiary"),
