@@ -6,8 +6,17 @@ use crate::prelude::*;
 
 /// A type-erased readable state that only exposes the value type `T`.
 ///
-/// This hides the `Value` and `Channel` type parameters from `RadioSlice`,
-/// allowing components to accept state without knowing the global state type.
+/// This abstraction allows components to accept read-only state from any source without
+/// knowing whether it comes from local state ([`use_state`](crate::hooks::use_state)) or
+/// global state (Freya Radio). Unlike [`Writable`](crate::hooks::Writable), this only
+/// provides read access to the underlying value.
+///
+/// # Sources
+///
+/// `Readable` can be created from:
+/// - [`State<T>`](crate::hooks::State) via [`From`] or [`IntoReadable`]
+/// - [`RadioSlice`](crate::hooks::RadioSlice) via [`IntoReadable`]
+/// - [`Writable<T>`](crate::hooks::Writable) via [`From<Writable<T>>`]
 ///
 /// # Example
 ///
@@ -19,6 +28,7 @@ use crate::prelude::*;
 ///
 /// impl Component for Counter {
 ///     fn render(&self) -> impl IntoElement {
+///         // The component only reads the value, never modifies it
 ///         format!("Count: {}", self.count.read())
 ///     }
 /// }
@@ -29,7 +39,9 @@ use crate::prelude::*;
 ///     let slice = radio.slice_current(|s| &s.count);
 ///
 ///     rect()
+///         // Pass local state as Readable
 ///         .child(Counter { count: local.into_readable() })
+///         // Pass global radio slice as Readable
 ///         .child(Counter { count: slice.into_readable() })
 /// }
 /// ```

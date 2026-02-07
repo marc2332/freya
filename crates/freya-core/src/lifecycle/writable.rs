@@ -6,31 +6,42 @@ use crate::prelude::*;
 
 /// A type-erased writable state that only exposes the value type `T`.
 ///
-/// This hides the `Value` and `Channel` type parameters from `RadioSlice`,
-/// allowing components to accept state without knowing the global state type.
+/// This abstraction allows components to accept state from any source without knowing
+/// whether it comes from local state ([`use_state`](crate::hooks::use_state)) or
+/// global state (Freya Radio). It hides the implementation details, providing a
+/// uniform interface for reading and writing values.
+///
+/// # Sources
+///
+/// `Writable` can be created from:
+/// - [`State<T>`](crate::hooks::State) via [`From`] or [`IntoWritable`]
+/// - [`RadioSliceMut`](crate::hooks::RadioSliceMut) via [`IntoWritable`]
 ///
 /// # Example
 ///
 /// ```rust, ignore
 /// #[derive(PartialEq)]
-/// struct Counter {
-///     count: Writable<i32>,
+/// struct NameInput {
+///     name: Writable<String>,
 /// }
 ///
-/// impl Component for Counter {
+/// impl Component for NameInput {
 ///     fn render(&self) -> impl IntoElement {
-///         format!("Count: {}", self.count.read())
+///         // The component doesn't care if this is local or global state
+///         Input::new().value(self.name.clone())
 ///     }
 /// }
 ///
 /// fn app() -> impl IntoElement {
-///     let local = use_state(|| 0);
-///     let radio = use_radio(AppChannel::Count);
-///     let slice = radio.slice_current(|s| &s.count);
+///     let local = use_state(|| "Alice".to_string());
+///     let radio = use_radio(AppChannel::Name);
+///     let slice = radio.slice_mut_current(|s| &mut s.name);
 ///
 ///     rect()
-///         .child(Counter { count: Writable::from_state(local) })
-///         .child(Counter { count: slice.into_writable() })
+///         // Pass local state
+///         .child(NameInput { name: local.into_writable() })
+///         // Pass global radio slice
+///         .child(NameInput { name: slice.into_writable() })
 /// }
 /// ```
 pub struct Writable<T: 'static> {
