@@ -85,37 +85,34 @@ impl TerminalBuffer {
                 continue;
             };
 
-            let line = match row_idx {
+            let cells = match row_idx {
                 _ if start_row == end_row => {
                     let start = start_col.min(row.len());
                     let end = end_col.min(row.len());
-                    cells_to_string(&row[start..end])
+                    &row[start..end]
                 }
                 _ if row_idx == start_row => {
                     let start = start_col.min(row.len());
-                    cells_to_string(&row[start..])
+                    &row[start..]
                 }
-                _ if row_idx == end_row => cells_to_string(&row[..end_col.min(row.len())]),
-                _ => cells_to_string(row),
+                _ if row_idx == end_row => &row[..end_col.min(row.len())],
+                _ => row,
             };
+
+            let line = cells
+                .iter()
+                .map(|cell| {
+                    if cell.has_contents() {
+                        cell.contents()
+                    } else {
+                        " "
+                    }
+                })
+                .collect::<String>();
 
             lines.push(line);
         }
 
         Some(lines.join("\n"))
     }
-}
-
-/// Convert a slice of cells to a string, treating empty cells as spaces
-fn cells_to_string(cells: &[Cell]) -> String {
-    cells
-        .iter()
-        .map(|cell| {
-            if cell.has_contents() {
-                cell.contents()
-            } else {
-                " "
-            }
-        })
-        .collect()
 }
