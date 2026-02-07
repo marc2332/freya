@@ -1,7 +1,7 @@
 //! Routing
 //!
 //! High-level routing utilities for Freya applications. This crate provides
-//! components like [outlet](self::components::outlet) and [router](self::components::router), hooks such as [use_route](self::hooks::use_route), and the
+//! components like [Outlet](self::components::Outlet) and [Router](self::components::Router), hooks such as [use_route](self::hooks::use_route), and the
 //! RouterContext to programmatically interact with navigation state.
 //!
 //! # Example

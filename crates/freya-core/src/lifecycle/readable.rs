@@ -7,16 +7,16 @@ use crate::prelude::*;
 /// A type-erased readable state that only exposes the value type `T`.
 ///
 /// This abstraction allows components to accept read-only state from any source without
-/// knowing whether it comes from local state ([`use_state`](crate::hooks::use_state)) or
-/// global state (Freya Radio). Unlike [`Writable`](crate::hooks::Writable), this only
+/// knowing whether it comes from local state ([`use_state`]) or
+/// global state (Freya Radio). Unlike [`Writable`], this only
 /// provides read access to the underlying value.
 ///
 /// # Sources
 ///
 /// `Readable` can be created from:
-/// - [`State<T>`](crate::hooks::State) via [`From`] or [`IntoReadable`]
-/// - [`RadioSlice`](crate::hooks::RadioSlice) via [`IntoReadable`]
-/// - [`Writable<T>`](crate::hooks::Writable) via [`From<Writable<T>>`]
+/// - [`State<T>`] via [`From`] or [`IntoReadable`]
+/// - `RadioSlice` via `IntoReadable`
+/// - [`Writable<T>`] via [`From<Writable<T>>`]
 ///
 /// # Example
 ///

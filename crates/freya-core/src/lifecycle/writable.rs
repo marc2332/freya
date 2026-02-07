@@ -7,15 +7,15 @@ use crate::prelude::*;
 /// A type-erased writable state that only exposes the value type `T`.
 ///
 /// This abstraction allows components to accept state from any source without knowing
-/// whether it comes from local state ([`use_state`](crate::hooks::use_state)) or
+/// whether it comes from local state ([`use_state`]) or
 /// global state (Freya Radio). It hides the implementation details, providing a
 /// uniform interface for reading and writing values.
 ///
 /// # Sources
 ///
 /// `Writable` can be created from:
-/// - [`State<T>`](crate::hooks::State) via [`From`] or [`IntoWritable`]
-/// - [`RadioSliceMut`](crate::hooks::RadioSliceMut) via [`IntoWritable`]
+/// - [`State<T>`] via [`From`] or [`IntoWritable`]
+/// - `RadioSliceMut` via `IntoWritable`
 ///
 /// # Example
 ///
