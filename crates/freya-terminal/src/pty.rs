@@ -1,10 +1,7 @@
 use std::{
-    io::Read,
-    sync::{
-        Arc,
-        Mutex,
-        RwLock,
-    },
+    cell::RefCell,
+    rc::Rc,
+    sync::Arc,
 };
 
 use freya_core::{
@@ -12,10 +9,14 @@ use freya_core::{
     prelude::{
         Platform,
         UserEvent,
+        spawn,
         spawn_forever,
     },
 };
-use futures_lite::StreamExt;
+use futures_lite::{
+    AsyncReadExt,
+    StreamExt,
+};
 use futures_util::FutureExt;
 use portable_pty::{
     CommandBuilder,
@@ -41,9 +42,9 @@ pub(crate) fn spawn_pty(command: CommandBuilder) -> Result<TerminalHandle, Termi
     let (resize_tx, mut resize_rx) = futures_channel::mpsc::unbounded::<(u16, u16)>();
 
     let id = TerminalId::new();
-    let buffer = Arc::new(Mutex::new(TerminalBuffer::default()));
-    let parser = Arc::new(RwLock::new(Parser::new(24, 80, 1000)));
-    let writer = Arc::new(Mutex::new(None::<Box<dyn std::io::Write + Send>>));
+    let buffer = Rc::new(RefCell::new(TerminalBuffer::default()));
+    let parser = Rc::new(RefCell::new(Parser::new(24, 80, 1000)));
+    let writer = Rc::new(RefCell::new(None::<Box<dyn std::io::Write + Send>>));
     let closer_notifier = ArcNotify::new();
 
     let pty_system = native_pty_system();
@@ -54,15 +55,16 @@ pub(crate) fn spawn_pty(command: CommandBuilder) -> Result<TerminalHandle, Termi
         .master
         .take_writer()
         .map_err(|_| TerminalError::NotInitialized)?;
-    *writer.lock().unwrap() = Some(master_writer);
+    *writer.borrow_mut() = Some(master_writer);
 
     pair.slave
         .spawn_command(command)
         .map_err(|_| TerminalError::NotInitialized)?;
-    let mut reader = pair
+    let reader = pair
         .master
         .try_clone_reader()
         .map_err(|_| TerminalError::NotInitialized)?;
+    let mut reader = blocking::Unblock::new(reader);
     let platform = Platform::get();
     let task = spawn_forever({
         let parser = parser.clone();
@@ -75,22 +77,49 @@ pub(crate) fn spawn_pty(command: CommandBuilder) -> Result<TerminalHandle, Termi
                     update = update_rx.next().fuse() => {
                         if update.is_none() {
                             // Channel closed - PTY exited
-                            *writer.lock().unwrap() = None;
+                            *writer.borrow_mut() = None;
                             closer_notifier.notify();
                             platform.send(UserEvent::RequestRedraw);
                             break;
                         }
-                        if let Ok(p) = parser.read() {
-                            let (rows, cols) = p.screen().size();
+                        let parser = parser.borrow();
+                        let (rows, cols) = parser.screen().size();
+                        let rows_vec: Vec<Vec<vt100::Cell>> = (0..rows)
+                            .map(|r| {
+                                (0..cols)
+                                    .map(|c| parser.screen().cell(r, c).unwrap().clone())
+                                    .collect()
+                            })
+                            .collect();
+
+                        let (cur_r, cur_c) = parser.screen().cursor_position();
+                        let new_buffer = TerminalBuffer {
+                            rows: rows_vec,
+                            cursor_row: cur_r as usize,
+                            cursor_col: cur_c as usize,
+                            cols: cols as usize,
+                            rows_count: rows as usize,
+                            selection: None,
+                        };
+                        *buffer.borrow_mut() = new_buffer;
+                        platform.send(UserEvent::RequestRedraw);
+                    }
+                    resize = resize_rx.next().fuse() => {
+                        if let Some((rows, cols)) = resize {
+                            parser.borrow_mut().screen_mut().set_size(rows, cols);
+
+                            // Resize parser
+                            let parser = parser.borrow();
+                            let (rows, cols) = parser.screen().size();
                             let rows_vec: Vec<Vec<vt100::Cell>> = (0..rows)
                                 .map(|r| {
                                     (0..cols)
-                                        .map(|c| p.screen().cell(r, c).unwrap().clone())
+                                        .map(|c| parser.screen().cell(r, c).unwrap().clone())
                                         .collect()
                                 })
                                 .collect();
 
-                            let (cur_r, cur_c) = p.screen().cursor_position();
+                            let (cur_r, cur_c) = parser.screen().cursor_position();
                             let new_buffer = TerminalBuffer {
                                 rows: rows_vec,
                                 cursor_row: cur_r as usize,
@@ -99,44 +128,7 @@ pub(crate) fn spawn_pty(command: CommandBuilder) -> Result<TerminalHandle, Termi
                                 rows_count: rows as usize,
                                 selection: None,
                             };
-
-                            if let Ok(mut buf) = buffer.lock() {
-                                *buf = new_buffer;
-                                platform.send(UserEvent::RequestRedraw);
-                            }
-                        }
-                    }
-                    resize = resize_rx.next().fuse() => {
-                        if let Some((rows, cols)) = resize {
-                            if let Ok(mut p) = parser.write() {
-                                p.screen_mut().set_size(rows, cols);
-                            }
-
-                            // Resize parser
-                            if let Ok(p) = parser.read() {
-                                let (rows, cols) = p.screen().size();
-                                let rows_vec: Vec<Vec<vt100::Cell>> = (0..rows)
-                                    .map(|r| {
-                                        (0..cols)
-                                            .map(|c| p.screen().cell(r, c).unwrap().clone())
-                                            .collect()
-                                    })
-                                    .collect();
-
-                                let (cur_r, cur_c) = p.screen().cursor_position();
-                                let new_buffer = TerminalBuffer {
-                                    rows: rows_vec,
-                                    cursor_row: cur_r as usize,
-                                    cursor_col: cur_c as usize,
-                                    cols: cols as usize,
-                                    rows_count: rows as usize,
-                                    selection: None,
-                                };
-
-                                if let Ok(mut buf) = buffer.lock() {
-                                    *buf = new_buffer;
-                                }
-                            }
+                            *buffer.borrow_mut() = new_buffer;
 
                             // Resize PTY
                             let size = PtySize {
@@ -153,29 +145,27 @@ pub(crate) fn spawn_pty(command: CommandBuilder) -> Result<TerminalHandle, Termi
         }
     });
 
-    blocking::unblock({
+    spawn({
         let writer = writer.clone();
-        move || {
-            let mut buf = [0u8; 4096];
+        async move {
             loop {
-                match reader.read(&mut buf) {
+                let mut buf = [0u8; 4096];
+
+                match reader.read(&mut buf).await {
                     Ok(0) => break,
                     Ok(n) => {
                         let data = &buf[..n];
 
-                        if let Ok(mut p) = parser.write() {
-                            p.process(data);
-                        }
+                        parser.borrow_mut().process(data);
 
-                        let responses = check_for_terminal_queries(data, &parser);
+                        let responses = check_for_terminal_queries(data, &parser.borrow());
                         if !responses.is_empty()
-                            && let Ok(mut guard) = writer.lock()
-                            && let Some(w) = guard.as_mut()
+                            && let Some(writer) = &mut *writer.borrow_mut()
                         {
                             for response in responses {
-                                let _ = w.write_all(&response);
+                                let _ = writer.write_all(&response);
                             }
-                            let _ = w.flush();
+                            let _ = writer.flush();
                         }
 
                         let _ = update_tx.unbounded_send(());
@@ -184,8 +174,8 @@ pub(crate) fn spawn_pty(command: CommandBuilder) -> Result<TerminalHandle, Termi
                 }
             }
         }
-    })
-    .detach();
+    });
+
     Ok(TerminalHandle {
         closer_notifier: closer_notifier.clone(),
         cleaner: Arc::new(TerminalCleaner {
