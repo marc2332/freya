@@ -96,7 +96,8 @@ impl InputValidator {
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     Input::new().placeholder("Type here")
+///     let value = use_state(String::new);
+///     Input::new(value).placeholder("Type here")
 /// }
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
@@ -108,7 +109,8 @@ impl InputValidator {
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     Input::new().placeholder("Type here").filled()
+///     let value = use_state(String::new);
+///     Input::new(value).placeholder("Type here").filled()
 /// }
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
@@ -120,7 +122,8 @@ impl InputValidator {
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     Input::new().placeholder("Type here").flat()
+///     let value = use_state(String::new);
+///     Input::new(value).placeholder("Type here").flat()
 /// }
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
@@ -141,9 +144,8 @@ impl InputValidator {
 pub struct Input {
     pub(crate) theme_colors: Option<InputColorsThemePartial>,
     pub(crate) theme_layout: Option<InputLayoutThemePartial>,
-    value: ReadState<String>,
+    value: Writable<String>,
     placeholder: Option<Cow<'static, str>>,
-    on_change: Option<EventHandler<String>>,
     on_validate: Option<EventHandler<InputValidator>>,
     on_submit: Option<EventHandler<String>>,
     mode: InputMode,
@@ -163,20 +165,13 @@ impl KeyExt for Input {
     }
 }
 
-impl Default for Input {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Input {
-    pub fn new() -> Self {
+    pub fn new(value: impl Into<Writable<String>>) -> Self {
         Input {
             theme_colors: None,
             theme_layout: None,
-            value: ReadState::Owned(String::new()),
+            value: value.into(),
             placeholder: None,
-            on_change: None,
             on_validate: None,
             on_submit: None,
             mode: InputMode::default(),
@@ -196,18 +191,8 @@ impl Input {
         self
     }
 
-    pub fn value(mut self, value: impl Into<ReadState<String>>) -> Self {
-        self.value = value.into();
-        self
-    }
-
     pub fn placeholder(mut self, placeholder: impl Into<Cow<'static, str>>) -> Self {
         self.placeholder = Some(placeholder.into());
-        self
-    }
-
-    pub fn on_change(mut self, on_change: impl Into<EventHandler<String>>) -> Self {
-        self.on_change = Some(on_change.into());
         self
     }
 
@@ -308,6 +293,7 @@ impl Component for Input {
         let mut editable = use_editable(|| self.value.read().to_string(), EditableConfig::new);
         let mut is_dragging = use_state(|| false);
         let mut ime_preedit = use_state(|| None);
+        let mut value = self.value.clone();
 
         let theme_colors = match self.style_variant {
             InputStyleVariant::Normal => get_theme!(&self.theme_colors, input),
@@ -330,13 +316,12 @@ impl Component for Input {
             }
         });
 
-        let display_placeholder = self.value.read().is_empty() && self.placeholder.is_some();
-        let on_change = self.on_change.clone();
+        let display_placeholder = value.read().is_empty() && self.placeholder.is_some();
         let on_validate = self.on_validate.clone();
         let on_submit = self.on_submit.clone();
 
-        if &*self.value.read() != editable.editor().read().rope() {
-            editable.editor_mut().write().set(&self.value.read());
+        if &*value.read() != editable.editor().read().rope() {
+            editable.editor_mut().write().set(&value.read());
             editable.editor_mut().write().editor_history().clear();
         }
 
@@ -380,8 +365,8 @@ impl Component for Input {
                             None => true,
                         };
 
-                        if apply_change && let Some(on_change) = &on_change {
-                            on_change.call(text);
+                        if apply_change {
+                            *value.write() = text;
                         }
                     }
                 }
