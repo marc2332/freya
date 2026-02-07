@@ -28,7 +28,7 @@ use crate::prelude::*;
 /// impl Component for NameInput {
 ///     fn render(&self) -> impl IntoElement {
 ///         // The component doesn't care if this is local or global state
-///         Input::new().value(self.name.clone())
+///         Input::new(self.name.clone())
 ///     }
 /// }
 ///

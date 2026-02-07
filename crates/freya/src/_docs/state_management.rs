@@ -337,7 +337,7 @@
 //! impl Component for NameInput {
 //!     fn render(&self) -> impl IntoElement {
 //!         // Can read and write to the state
-//!         Input::new().value(self.name.clone())
+//!         Input::new(self.name.clone())
 //!     }
 //! }
 //!
