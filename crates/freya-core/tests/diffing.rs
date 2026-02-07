@@ -1286,3 +1286,59 @@ fn conditional_nested_component_removal() {
     assert_eq!(runner.scopes.len(), 1);
     assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 }
+
+#[test]
+fn effect_cascade_in_new_nodes_with_parent_effects() {
+    fn app() -> Element {
+        let mut toggled = use_state(|| false);
+
+        let child: Element = if toggled() {
+            label().text("Hello").into()
+        } else {
+            rect().into()
+        };
+
+        rect()
+            .opacity(0.5)
+            .on_mouse_up(move |_| toggled.toggle())
+            .child(child)
+            .into()
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+
+    let mutations = runner.sync_and_update();
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+
+    assert!(tree.effect_state.contains_key(&2u64.into()));
+    assert_eq!(
+        tree.effect_state.get(&2u64.into()).unwrap().opacities.len(),
+        1
+    );
+    assert!(tree.effect_state.contains_key(&3u64.into()));
+    assert_eq!(
+        tree.effect_state.get(&3u64.into()).unwrap().opacities.len(),
+        1
+    );
+
+    runner.handle_event(
+        2,
+        EventName::MouseUp,
+        EventType::Mouse(MouseEventData::default()),
+        false,
+    );
+    let mutations = runner.sync_and_update();
+    assert!(!mutations.modified.is_empty());
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+
+    assert!(tree.effect_state.contains_key(&3u64.into()));
+    assert_eq!(
+        tree.effect_state.get(&3u64.into()).unwrap().opacities.len(),
+        1
+    );
+}

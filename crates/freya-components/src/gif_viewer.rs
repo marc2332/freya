@@ -633,12 +633,9 @@ impl ElementExt for GifElement {
             SamplingMode::CatmullRom => SamplingOptions::from(CubicResampler::catmull_rom()),
         };
 
-        let rect = SkRect::new(
-            context.layout_node.area.min_x(),
-            context.layout_node.area.min_y(),
-            context.layout_node.area.max_x(),
-            context.layout_node.area.max_y(),
-        );
+        let area = context.layout_node.visible_area();
+
+        let rect = SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
 
         let current_frame = &self.frames.frames[self.frame_idx];
 

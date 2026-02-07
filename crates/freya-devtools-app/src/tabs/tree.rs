@@ -4,10 +4,7 @@ use freya::prelude::*;
 use freya_core::integration::NodeId;
 use freya_devtools::NodeInfo;
 use freya_radio::prelude::use_radio;
-use freya_router::prelude::{
-    Navigator,
-    RouterContext,
-};
+use freya_router::prelude::RouterContext;
 
 use crate::{
     Route,
@@ -157,19 +154,19 @@ impl Component for NodesTree {
                         on_selected.call((window_id, node_id));
                         match RouterContext::get().current::<Route>() {
                             Route::NodeInspectorStyle { .. } => {
-                                Navigator::get()
+                                RouterContext::get()
                                     .push(Route::NodeInspectorStyle { node_id, window_id });
                             }
                             Route::NodeInspectorTextStyle { .. } => {
-                                Navigator::get()
+                                RouterContext::get()
                                     .push(Route::NodeInspectorTextStyle { node_id, window_id });
                             }
                             Route::NodeInspectorLayout { .. } => {
-                                Navigator::get()
+                                RouterContext::get()
                                     .push(Route::NodeInspectorLayout { node_id, window_id });
                             }
                             _ => {
-                                Navigator::get()
+                                RouterContext::get()
                                     .push(Route::NodeInspectorStyle { node_id, window_id });
                             }
                         }

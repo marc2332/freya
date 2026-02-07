@@ -14,8 +14,10 @@
 //! ## Basic Usage
 //!
 //! ```rust,no_run
-//! use freya::prelude::*;
-//! use freya_radio::prelude::*;
+//! use freya::{
+//!     prelude::*,
+//!     radio::*,
+//! };
 //!
 //! #[derive(Default, Clone)]
 //! struct AppState {

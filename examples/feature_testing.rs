@@ -11,6 +11,7 @@ fn app() -> impl IntoElement {
 
     rect()
         .expanded()
+        .center()
         .background((240, 240, 240))
         .on_mouse_up(move |_| *state.write() += 1)
         .child(format!("Clicked: {}", state.read()))
@@ -26,10 +27,12 @@ fn main() {
     );
 
     test.sync_and_update();
-    println!("Initial: {}", *state.peek());
+    assert_eq!(*state.peek(), 0);
 
     // Simulate a click by sending mouse down/up events at a point inside the window
     test.click_cursor((15., 15.));
+    assert_eq!(*state.peek(), 1);
 
-    println!("After click: {}", *state.peek());
+    // Render the current ui state to a file
+    test.render_to_file("./demo-1.png");
 }

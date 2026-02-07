@@ -288,7 +288,10 @@ impl ElementExt for LabelElement {
         let layout_data = context.layout_node.data.as_ref().unwrap();
         let paragraph = layout_data.downcast_ref::<SkParagraph>().unwrap();
 
-        paragraph.paint(context.canvas, context.layout_node.area.origin.to_tuple());
+        paragraph.paint(
+            context.canvas,
+            context.layout_node.visible_area().origin.to_tuple(),
+        );
     }
 }
 
