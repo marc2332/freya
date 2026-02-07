@@ -2,7 +2,7 @@
 //!
 //! High-level routing utilities for Freya applications. This crate provides
 //! components like [outlet](self::components::outlet) and [router](self::components::router), hooks such as [use_route](self::hooks::use_route), and the
-//! `Navigator` context to programmatically interact with navigation state.
+//! RouterContext to programmatically interact with navigation state.
 //!
 //! # Example
 //!
@@ -74,15 +74,12 @@ pub mod components {
 }
 
 mod contexts {
-    pub(crate) mod navigator;
     pub(crate) mod outlet;
     pub use outlet::{
         OutletContext,
         use_outlet_context,
     };
     pub(crate) mod router;
-    pub use navigator::*;
-    pub(crate) use router::*;
     pub use router::{
         GenericRouterContext,
         ParseRouteError,
