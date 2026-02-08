@@ -217,14 +217,14 @@ impl Component for ResizableContainer {
         let mut size = use_state(Area::default);
         use_provide_context(|| size);
 
-        use_hook(|| {
-            provide_context(self.controller.clone().unwrap_or_else(|| {
+        use_provide_context(|| {
+            self.controller.clone().unwrap_or_else(|| {
                 State::create(ResizableContext {
                     direction: self.direction,
                     ..Default::default()
                 })
                 .into_writable()
-            }))
+            })
         });
 
         rect()
