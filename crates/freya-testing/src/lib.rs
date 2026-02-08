@@ -338,7 +338,9 @@ impl TestingRunner {
         }
 
         let mutations = self.runner.sync_and_update();
-        self.tree.borrow_mut().apply_mutations(mutations);
+        self.runner.run_in(|| {
+            self.tree.borrow_mut().apply_mutations(mutations);
+        });
         self.tree.borrow_mut().measure_layout(
             self.size,
             &self.font_collection,

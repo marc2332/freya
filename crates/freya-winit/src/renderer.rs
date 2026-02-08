@@ -433,7 +433,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 PluginHandle::new(&self.proxy),
                             );
                             let mutations = app.runner.sync_and_update();
-                            let result = app.tree.apply_mutations(mutations);
+                            let result = app.runner.run_in(|| app.tree.apply_mutations(mutations));
                             if result.needs_render {
                                 app.process_layout_on_next_render = true;
                                 app.window.request_redraw();
