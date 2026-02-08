@@ -13,7 +13,7 @@ fn app() -> impl IntoElement {
         cmd.env("TERM", "xterm-256color");
         cmd.env("COLORTERM", "truecolor");
         cmd.env("LANG", "en_GB.UTF-8");
-        TerminalHandle::new(cmd).ok()
+        TerminalHandle::new(TerminalId::new(), cmd).ok()
     });
 
     use_future(move || async move {

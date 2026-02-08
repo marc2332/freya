@@ -59,8 +59,9 @@ pub enum TerminalError {
 pub(crate) struct TerminalCleaner {
     /// Writer handle for the PTY.
     pub(crate) writer: Rc<RefCell<Option<Box<dyn Write + Send>>>>,
-    /// Task handle for the terminal reader task.
-    pub(crate) task: TaskHandle,
+    /// Async tasks
+    pub(crate) reader_task: TaskHandle,
+    pub(crate) pty_task: TaskHandle,
     /// Notifier that signals when the terminal should close.
     pub(crate) closer_notifier: ArcNotify,
 }
@@ -68,7 +69,8 @@ pub(crate) struct TerminalCleaner {
 impl Drop for TerminalCleaner {
     fn drop(&mut self) {
         *self.writer.borrow_mut() = None;
-        self.task.try_cancel();
+        self.reader_task.try_cancel();
+        self.pty_task.try_cancel();
         self.closer_notifier.notify();
     }
 }
@@ -114,10 +116,13 @@ impl TerminalHandle {
     /// let mut cmd = CommandBuilder::new("bash");
     /// cmd.env("TERM", "xterm-256color");
     ///
-    /// let handle = TerminalHandle::new(cmd).unwrap();
+    /// let handle = TerminalHandle::new(TerminalId::new(), cmd).unwrap();
     /// ```
-    pub fn new(command: portable_pty::CommandBuilder) -> Result<Self, TerminalError> {
-        spawn_pty(command)
+    pub fn new(
+        id: TerminalId,
+        command: portable_pty::CommandBuilder,
+    ) -> Result<Self, TerminalError> {
+        spawn_pty(id, command)
     }
 
     /// Write data to the terminal.
