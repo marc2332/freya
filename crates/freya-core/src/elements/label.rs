@@ -351,7 +351,6 @@ impl Label {
 
     pub fn text(mut self, text: impl Into<Cow<'static, str>>) -> Self {
         let text = text.into();
-        self.element.accessibility.builder.set_value(text.clone());
         self.element.text = text;
         self
     }
