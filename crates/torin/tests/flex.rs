@@ -1,8 +1,65 @@
+use std::{
+    any::Any,
+    rc::Rc,
+};
+
 use euclid::Length;
 use torin::{
     prelude::*,
     test_utils::*,
 };
+
+struct PhaseTrackingMeasurer {
+    target: usize,
+    saw_initial: bool,
+    saw_final: bool,
+}
+
+impl PhaseTrackingMeasurer {
+    fn new(target: usize) -> Self {
+        Self {
+            target,
+            saw_initial: false,
+            saw_final: false,
+        }
+    }
+}
+
+impl LayoutMeasurer<usize> for PhaseTrackingMeasurer {
+    fn measure(
+        &mut self,
+        node_id: usize,
+        _node: &Node,
+        _size: &Size2D,
+        phase: Phase,
+        _parent_phase: Phase,
+    ) -> Option<(Size2D, Rc<dyn Any>)> {
+        if node_id != self.target {
+            return None;
+        }
+
+        let size = match phase {
+            Phase::Initial => {
+                self.saw_initial = true;
+                Size2D::new(80.0, 20.0)
+            }
+            Phase::Final => {
+                self.saw_final = true;
+                Size2D::new(80.0, 60.0)
+            }
+        };
+
+        Some((size, Rc::new(())))
+    }
+
+    fn should_hook_measurement(&mut self, node_id: usize) -> bool {
+        node_id == self.target
+    }
+
+    fn should_measure_inner_children(&mut self, _node_id: usize) -> bool {
+        _node_id != self.target
+    }
+}
 
 #[test]
 pub fn flex_generic() {
@@ -494,4 +551,44 @@ pub fn flex_root_candidate_resolution() {
         layout.get(&3).unwrap().area.round(),
         Rect::new(Point2D::new(0.0, 150.0), Size2D::new(100.0, 50.0)),
     );
+}
+
+#[test]
+pub fn flex_cross_alignment_uses_initial_measurement() {
+    let mut layout = Torin::<usize>::new();
+    let mut measurer = Some(PhaseTrackingMeasurer::new(1));
+
+    let mut mocked_tree = TestingTree::default();
+
+    let mut parent = Node::from_size_and_content(
+        Size::Pixels(Length::new(200.0)),
+        Size::Pixels(Length::new(100.0)),
+        Content::Flex,
+    );
+    parent.direction = Direction::Horizontal;
+    parent.cross_alignment = Alignment::Center;
+    parent.main_alignment = Alignment::Start;
+
+    mocked_tree.add(0, None, vec![1], parent);
+    mocked_tree.add(
+        1,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(Size::Inner, Size::Inner, Direction::Vertical),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 100.0)),
+        &mut measurer,
+        &mut mocked_tree,
+    );
+
+    let child_area = layout.get(&1).unwrap().area;
+    assert_eq!(child_area.origin.y, 40.0);
+    assert_eq!(child_area.size.height, 60.0);
+
+    let measurer = measurer.as_ref().unwrap();
+    assert!(measurer.saw_initial);
+    assert!(measurer.saw_final);
 }
