@@ -29,6 +29,7 @@ use crate::{
     prelude::{
         AccessibilityFocusMovement,
         EventType,
+        Paragraph,
         WheelEventData,
         WheelSource,
     },
@@ -373,10 +374,17 @@ impl AccessibilityTree {
             for child in children {
                 let children_element = tree.elements.get(child).unwrap();
                 // TODO: Maybe support paragraphs too, or use a new trait
-                let Some(label) = Label::try_downcast(children_element.as_ref()) else {
-                    continue;
+                if let Some(label) = Label::try_downcast(children_element.as_ref()) {
+                    accessibility_data.builder.set_label(label.text);
+                } else if let Some(paragraph) = Paragraph::try_downcast(children_element.as_ref()) {
+                    accessibility_data.builder.set_label(
+                        paragraph
+                            .spans
+                            .iter()
+                            .map(|span| span.text)
+                            .collect::<String>(),
+                    );
                 };
-                accessibility_data.builder.set_label(label.text);
             }
         }
 
