@@ -381,7 +381,7 @@ impl AccessibilityTree {
                         paragraph
                             .spans
                             .iter()
-                            .map(|span| span.text)
+                            .map(|span| span.text.to_string())
                             .collect::<String>(),
                     );
                 };
