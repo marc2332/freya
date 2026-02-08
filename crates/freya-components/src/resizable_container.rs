@@ -133,6 +133,12 @@ impl ResizableContext {
 
         changed_panels
     }
+
+    pub fn reset(&mut self) {
+        for panel in &mut self.panels {
+            panel.size = panel.initial_size;
+        }
+    }
 }
 
 /// A container with resizable panels.
@@ -161,13 +167,11 @@ impl ResizableContext {
 #[cfg_attr(feature = "docs",
     doc = embed_doc_image::embed_image!("resizable_container", "images/gallery_resizable_container.png"),
 )]
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub struct ResizableContainer {
-    /// Direction of the container.
-    /// Default to [Direction::Vertical].
     direction: Direction,
-    /// Inner children for the [ResizableContainer()].
     panels: Vec<ResizablePanel>,
+    controller: Option<Writable<ResizableContext>>,
 }
 
 impl Default for ResizableContainer {
@@ -181,6 +185,7 @@ impl ResizableContainer {
         Self {
             direction: Direction::Vertical,
             panels: vec![],
+            controller: None,
         }
     }
 
@@ -193,13 +198,16 @@ impl ResizableContainer {
         if let Some(panel) = panel.into() {
             self.panels.push(panel);
         }
-
         self
     }
 
     pub fn panels_iter(mut self, panels: impl Iterator<Item = ResizablePanel>) -> Self {
         self.panels.extend(panels);
+        self
+    }
 
+    pub fn controller(mut self, controller: impl Into<Writable<ResizableContext>>) -> Self {
+        self.controller = Some(controller.into());
         self
     }
 }
@@ -210,9 +218,12 @@ impl Component for ResizableContainer {
         use_provide_context(|| size);
 
         use_provide_context(|| {
-            State::create(ResizableContext {
-                direction: self.direction,
-                ..Default::default()
+            self.controller.clone().unwrap_or_else(|| {
+                State::create(ResizableContext {
+                    direction: self.direction,
+                    ..Default::default()
+                })
+                .into_writable()
             })
         });
 
@@ -286,26 +297,28 @@ impl ResizablePanel {
 
 impl Component for ResizablePanel {
     fn render(&self) -> impl IntoElement {
-        let mut registry = use_consume::<State<ResizableContext>>();
+        let registry = use_consume::<Writable<ResizableContext>>();
 
-        let id = use_hook(|| {
-            let id = UseId::<ResizableContext>::get_in_hook();
-
-            let panel = Panel {
-                initial_size: self.initial_size,
-                size: self.initial_size,
-                min_size: self.min_size.unwrap_or(self.initial_size * 0.25),
-                id,
-            };
-
-            registry.write().push_panel(panel, self.order);
-
-            id
+        let id = use_hook({
+            let mut registry = registry.clone();
+            move || {
+                let id = UseId::<ResizableContext>::get_in_hook();
+                let panel = Panel {
+                    initial_size: self.initial_size,
+                    size: self.initial_size,
+                    min_size: self.min_size.unwrap_or(self.initial_size * 0.25),
+                    id,
+                };
+                registry.write().push_panel(panel, self.order);
+                id
+            }
         });
 
-        use_drop(move || {
-            // Safe to ignore any error as we are dropping
-            let _ = registry.write().remove_panel(id);
+        use_drop({
+            let mut registry = registry.clone();
+            move || {
+                let _ = registry.write().remove_panel(id);
+            }
         });
 
         let registry = registry.read();
@@ -371,7 +384,7 @@ impl Component for ResizableHandle {
         let mut size = use_state(Area::default);
         let mut clicking = use_state(|| false);
         let mut status = use_state(HandleStatus::default);
-        let mut registry = use_consume::<State<ResizableContext>>();
+        let registry = use_consume::<Writable<ResizableContext>>();
         let container_size = use_consume::<State<Area>>();
         let mut allow_resizing = use_state(|| false);
 
@@ -400,36 +413,39 @@ impl Component for ResizableHandle {
             Cursor::set(cursor);
         };
 
-        let on_capture_global_mouse_move = move |e: Event<MouseEventData>| {
-            if *clicking.read() {
-                e.prevent_default();
+        let on_capture_global_mouse_move = {
+            let mut registry = registry.clone();
+            move |e: Event<MouseEventData>| {
+                if *clicking.read() {
+                    e.prevent_default();
 
-                if !*allow_resizing.read() {
-                    return;
-                }
-
-                let coordinates = e.global_location;
-                let mut registry = registry.write();
-
-                let total_size = registry.panels.iter().fold(0., |acc, p| acc + p.size);
-
-                let distance = match registry.direction {
-                    Direction::Horizontal => {
-                        let container_width = container_size.read().width();
-                        let displacement = coordinates.x as f32 - size.read().min_x();
-                        total_size / container_width * displacement
+                    if !*allow_resizing.read() {
+                        return;
                     }
-                    Direction::Vertical => {
-                        let container_height = container_size.read().height();
-                        let displacement = coordinates.y as f32 - size.read().min_y();
-                        total_size / container_height * displacement
+
+                    let coordinates = e.global_location;
+                    let mut registry = registry.write();
+
+                    let total_size = registry.panels.iter().fold(0., |acc, p| acc + p.size);
+
+                    let distance = match registry.direction {
+                        Direction::Horizontal => {
+                            let container_width = container_size.read().width();
+                            let displacement = coordinates.x as f32 - size.read().min_x();
+                            total_size / container_width * displacement
+                        }
+                        Direction::Vertical => {
+                            let container_height = container_size.read().height();
+                            let displacement = coordinates.y as f32 - size.read().min_y();
+                            total_size / container_height * displacement
+                        }
+                    };
+
+                    let changed_panels = registry.apply_resize(panel_index, distance);
+
+                    if changed_panels {
+                        allow_resizing.set(false);
                     }
-                };
-
-                let changed_panels = registry.apply_resize(panel_index, distance);
-
-                if changed_panels {
-                    allow_resizing.set(false);
                 }
             }
         };
