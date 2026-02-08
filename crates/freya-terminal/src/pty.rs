@@ -36,11 +36,13 @@ use crate::{
 };
 
 /// Spawn a PTY and return a TerminalHandle
-pub(crate) fn spawn_pty(command: CommandBuilder) -> Result<TerminalHandle, TerminalError> {
+pub(crate) fn spawn_pty(
+    id: TerminalId,
+    command: CommandBuilder,
+) -> Result<TerminalHandle, TerminalError> {
     let (update_tx, mut update_rx) = futures_channel::mpsc::unbounded::<()>();
     let (resize_tx, mut resize_rx) = futures_channel::mpsc::unbounded::<(u16, u16)>();
 
-    let id = TerminalId::new();
     let buffer = Rc::new(RefCell::new(TerminalBuffer::default()));
     let parser = Rc::new(RefCell::new(Parser::new(24, 80, 1000)));
     let writer = Rc::new(RefCell::new(None::<Box<dyn std::io::Write + Send>>));
@@ -65,7 +67,7 @@ pub(crate) fn spawn_pty(command: CommandBuilder) -> Result<TerminalHandle, Termi
         .map_err(|_| TerminalError::NotInitialized)?;
     let mut reader = blocking::Unblock::new(reader);
     let platform = Platform::get();
-    let task = spawn_forever({
+    let reader_task = spawn_forever({
         let parser = parser.clone();
         let buffer = buffer.clone();
         let closer_notifier = closer_notifier.clone();
@@ -73,7 +75,7 @@ pub(crate) fn spawn_pty(command: CommandBuilder) -> Result<TerminalHandle, Termi
         async move {
             loop {
                 futures_util::select! {
-                    update = update_rx.next().fuse() => {
+                     update = update_rx.next().fuse() => {
                         if update.is_none() {
                             // Channel closed - PTY exited
                             *writer.borrow_mut() = None;
@@ -144,7 +146,7 @@ pub(crate) fn spawn_pty(command: CommandBuilder) -> Result<TerminalHandle, Termi
         }
     });
 
-    spawn_forever({
+    let pty_task = spawn_forever({
         let writer = writer.clone();
         async move {
             loop {
@@ -179,7 +181,8 @@ pub(crate) fn spawn_pty(command: CommandBuilder) -> Result<TerminalHandle, Termi
         closer_notifier: closer_notifier.clone(),
         cleaner: Rc::new(TerminalCleaner {
             writer: writer.clone(),
-            task,
+            reader_task,
+            pty_task,
             closer_notifier,
         }),
         id,
