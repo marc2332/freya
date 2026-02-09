@@ -121,7 +121,7 @@ pub mod prelude {
         },
         position::Position,
         size::Size,
-        visible_size::VisibleSize
+        visible_size::VisibleSize,
     };
 }
 pub mod elements {
