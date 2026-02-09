@@ -107,6 +107,7 @@ impl<D> Event<D> {
         *self.default.borrow_mut() = false;
     }
 
+    #[must_use]
     pub fn get_prevent_default(&self) -> Rc<RefCell<bool>> {
         self.default.clone()
     }
