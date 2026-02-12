@@ -31,7 +31,7 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash + std::fmt::D
 /// # Example
 ///
 /// ```rust, no_run
-/// # use freya_radio::prelude::*;
+/// # use freya::radio::*;
 ///
 /// # struct Data;
 ///
@@ -53,7 +53,7 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
     /// # Example
     ///
     /// ```rust, no_run
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     ///
     /// # struct Data;
     ///
@@ -89,7 +89,7 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
 ///
 /// ```rust, no_run
 /// # use freya::prelude::*;
-/// # use freya_radio::prelude::*;
+/// # use freya::radio::*;
 ///
 /// #[derive(Default)]
 /// struct AppState {
@@ -123,7 +123,7 @@ pub trait RadioChannel<T>: 'static + PartialEq + Eq + Clone + Hash {
 ///
 /// ```rust, ignore
 /// # use freya::prelude::*;
-/// # use freya_radio::prelude::*;
+/// # use freya::radio::*;
 ///
 /// let radio_station = RadioStation::create_global(AppState::default);
 ///
@@ -138,7 +138,7 @@ where
     Channel: RadioChannel<Value>,
     Value: 'static,
 {
-    value: State<Value>,
+    pub(crate) value: State<Value>,
     listeners: State<HashMap<Channel, Rc<RefCell<FxHashSet<ReactiveContext>>>>>,
 }
 
@@ -173,7 +173,7 @@ where
     ///
     /// ```rust, ignore
     /// # use freya::prelude::*;
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     ///
     /// let radio_station = RadioStation::create_global(AppState::default);
     ///
@@ -229,11 +229,19 @@ where
     /// # Example
     ///
     /// ```rust, ignore
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     /// let value = radio_station.read();
     /// ```
     pub fn read(&'_ self) -> ReadRef<'_, Value> {
         self.value.read()
+    }
+
+    pub fn peek_unchecked(&self) -> ReadRef<'static, Value> {
+        self.value.peek()
+    }
+
+    pub fn write_unchecked(&self) -> WriteRef<'static, Value> {
+        self.value.write_unchecked()
     }
 
     /// Read the current state value without subscribing to changes.
@@ -242,7 +250,7 @@ where
     /// # Example
     ///
     /// ```rust, ignore
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     /// let value = radio_station.peek();
     /// ```
     pub fn peek(&'_ self) -> ReadRef<'_, Value> {
@@ -288,7 +296,7 @@ where
     /// # Example
     ///
     /// ```rust, ignore
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     /// radio_station.write_channel(MyChannel::Update).count += 1;
     /// ```
     pub fn write_channel(&mut self, channel: Channel) -> RadioGuard<Value, Channel> {
@@ -307,7 +315,7 @@ where
     Value: 'static,
 {
     pub(crate) channel: Channel,
-    station: RadioStation<Value, Channel>,
+    pub(crate) station: RadioStation<Value, Channel>,
 }
 
 impl<Value, Channel> RadioAntenna<Value, Channel>
@@ -338,9 +346,9 @@ where
     Channel: RadioChannel<Value>,
     Value: 'static,
 {
-    station: RadioStation<Value, Channel>,
-    channels: Vec<Channel>,
-    value: WriteRef<'static, Value>,
+    pub(crate) station: RadioStation<Value, Channel>,
+    pub(crate) channels: Vec<Channel>,
+    pub(crate) value: WriteRef<'static, Value>,
 }
 
 impl<Value, Channel> Drop for RadioGuard<Value, Channel>
@@ -390,7 +398,7 @@ where
 ///
 /// ```rust, ignore
 /// # use freya::prelude::*;
-/// # use freya_radio::prelude::*;
+/// # use freya::radio::*;
 ///
 /// #[derive(PartialEq)]
 /// struct MyComponent {}
@@ -414,7 +422,7 @@ where
 ///
 /// ```rust, ignore
 /// # use freya::prelude::*;
-/// # use freya_radio::prelude::*;
+/// # use freya::radio::*;
 ///
 /// #[derive(Clone)]
 /// struct CounterState {
@@ -461,7 +469,7 @@ where
     Channel: RadioChannel<Value>,
     Value: 'static,
 {
-    antenna: State<RadioAntenna<Value, Channel>>,
+    pub(crate) antenna: State<RadioAntenna<Value, Channel>>,
 }
 
 impl<Value, Channel> Clone for Radio<Value, Channel>
@@ -480,41 +488,6 @@ where
 {
     fn eq(&self, other: &Self) -> bool {
         self.antenna == other.antenna
-    }
-}
-
-impl<Value, Channel> MutView<'static, Value> for Radio<Value, Channel>
-where
-    Channel: RadioChannel<Value>,
-{
-    fn read(&mut self) -> ReadRef<'static, Value> {
-        self.subscribe_if_not();
-        self.antenna.peek().station.value.peek()
-    }
-
-    fn peek(&mut self) -> ReadRef<'static, Value> {
-        self.antenna.peek().station.value.peek()
-    }
-
-    fn write(&mut self) -> WriteRef<'static, Value> {
-        let value = self.antenna.peek().station.value.write_unchecked();
-        let channel = self.antenna.peek().channel.clone();
-        for channel in channel.derive_channel(&value) {
-            self.antenna.peek().station.notify_listeners(&channel)
-        }
-        value
-    }
-
-    fn write_if(&mut self, with: impl FnOnce(WriteRef<'static, Value>) -> bool) {
-        let changed = with(self.antenna.peek().station.value.write_unchecked());
-        let channel = changed.then_some(self.antenna.peek().channel.clone());
-        if let Some(channel) = channel {
-            let value = self.antenna.peek().station.value.write_unchecked();
-            for channel in channel.derive_channel(&value) {
-                self.antenna.peek().station.notify_listeners(&channel)
-            }
-            self.antenna.peek().station.cleanup();
-        }
     }
 }
 
@@ -545,7 +518,7 @@ where
     /// # Example
     ///
     /// ```rust, ignore
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     /// let count = radio.read().count;
     /// ```
     pub fn read(&'_ self) -> ReadRef<'_, Value> {
@@ -558,7 +531,7 @@ where
     /// Example:
     ///
     /// ```rust, ignore
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     /// radio.with(|value| {
     ///     // Do something with `value`
     /// });
@@ -578,7 +551,7 @@ where
     /// # Example
     ///
     /// ```rust, ignore
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     /// radio.write().count += 1;
     /// ```
     pub fn write(&mut self) -> RadioGuard<Value, Channel> {
@@ -596,7 +569,7 @@ where
     /// Example:
     ///
     /// ```rust, ignore
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     /// radio.write_with(|value| {
     ///     // Modify `value`
     /// });
@@ -610,7 +583,7 @@ where
     ///
     /// ## Example:
     /// ```rust, ignore
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     /// radio.write(Channel::Whatever).value = 1;
     /// ```
     pub fn write_channel(&mut self, channel: Channel) -> RadioGuard<Value, Channel> {
@@ -627,7 +600,7 @@ where
     /// Example:
     ///
     /// ```rust, ignore
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     /// radio.write_channel_with(Channel::Whatever, |value| {
     ///     // Modify `value`
     /// });
@@ -646,7 +619,7 @@ where
     /// Example:
     ///
     /// ```rust, ignore
-    /// # use freya_radio::prelude::*;
+    /// # use freya::radio::*;
     /// radio.write_with_channel_selection(|value| {
     ///     // Modify `value`
     ///     if value.cool {
@@ -764,7 +737,7 @@ where
 ///
 /// ```rust, ignore
 /// # use freya::prelude::*;
-/// # use freya_radio::prelude::*;
+/// # use freya::radio::*;
 ///
 /// fn app() -> impl IntoElement {
 ///     use_init_radio_station::<AppState, AppChannel>(AppState::default);
@@ -817,7 +790,7 @@ where
 ///
 /// ```rust, ignore
 /// # use freya::prelude::*;
-/// # use freya_radio::prelude::*;
+/// # use freya::radio::*;
 ///
 /// fn app() -> impl IntoElement {
 ///     use_init_radio_station::<AppState, AppChannel>(AppState::default);
@@ -851,7 +824,7 @@ where
 /// # Example
 ///
 /// ```rust, ignore
-/// # use freya_radio::prelude::*;
+/// # use freya::radio::*;
 ///
 /// #[derive(Clone)]
 /// struct Counter {

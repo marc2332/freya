@@ -4,6 +4,7 @@
 )]
 use freya::{
     prelude::*,
+    radio::*,
     tray::{
         TrayEvent,
         TrayIconBuilder,
@@ -14,7 +15,6 @@ use freya::{
         },
     },
 };
-use freya_radio::prelude::*;
 
 const ICON: &[u8] = include_bytes!("./freya_icon.png");
 
@@ -23,7 +23,7 @@ fn main() {
 
     launch(
         LaunchConfig::new()
-            .with_window(WindowConfig::new(AppComponent::new(App { radio_station })))
+            .with_window(WindowConfig::new_app(MyApp { radio_station }))
             .with_tray(
                 move || {
                     let tray_menu = Menu::new();
@@ -57,11 +57,11 @@ pub enum DataChannel {
 
 impl RadioChannel<Data> for DataChannel {}
 
-struct App {
+struct MyApp {
     radio_station: RadioStation<Data, DataChannel>,
 }
 
-impl Component for App {
+impl App for MyApp {
     fn render(&self) -> impl IntoElement {
         use_share_radio(move || self.radio_station);
         let mut radio = use_radio(DataChannel::Count);

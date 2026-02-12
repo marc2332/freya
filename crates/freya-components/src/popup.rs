@@ -221,11 +221,11 @@ impl Component for Popup {
 /// Popup title.
 #[derive(PartialEq)]
 pub struct PopupTitle {
-    text: ReadState<String>,
+    text: Readable<String>,
 }
 
 impl PopupTitle {
-    pub fn new(text: impl Into<ReadState<String>>) -> Self {
+    pub fn new(text: impl Into<Readable<String>>) -> Self {
         Self { text: text.into() }
     }
 }

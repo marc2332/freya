@@ -133,11 +133,7 @@ fn app() -> impl IntoElement {
                 .spacing(8.)
                 .content(Content::Flex)
                 .child(
-                    Input::new()
-                        .value(input_value)
-                        .on_change(move |value| {
-                            *input_value.write() = value;
-                        })
+                    Input::new(input_value)
                         .background((65, 65, 65))
                         .hover_background((75, 75, 75))
                         .border_fill(Color::TRANSPARENT)

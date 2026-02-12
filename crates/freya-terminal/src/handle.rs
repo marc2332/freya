@@ -1,22 +1,26 @@
 use std::{
+    cell::RefCell,
     io::Write,
-    sync::{
-        Arc,
-        Mutex,
-    },
+    rc::Rc,
+    sync::Arc,
 };
 
 use freya_core::{
     notify::ArcNotify,
     prelude::{
+        Platform,
         TaskHandle,
         UseId,
+        UserEvent,
     },
 };
 use futures_channel::mpsc::UnboundedSender;
 
 use crate::{
-    buffer::TerminalBuffer,
+    buffer::{
+        TerminalBuffer,
+        TerminalSelection,
+    },
     pty::spawn_pty,
 };
 
@@ -54,17 +58,19 @@ pub enum TerminalError {
 /// Internal cleanup handler for terminal resources.
 pub(crate) struct TerminalCleaner {
     /// Writer handle for the PTY.
-    pub(crate) writer: Arc<Mutex<Option<Box<dyn Write + Send>>>>,
-    /// Task handle for the terminal reader task.
-    pub(crate) task: TaskHandle,
+    pub(crate) writer: Rc<RefCell<Option<Box<dyn Write + Send>>>>,
+    /// Async tasks
+    pub(crate) reader_task: TaskHandle,
+    pub(crate) pty_task: TaskHandle,
     /// Notifier that signals when the terminal should close.
     pub(crate) closer_notifier: ArcNotify,
 }
 
 impl Drop for TerminalCleaner {
     fn drop(&mut self) {
-        *self.writer.lock().unwrap() = None;
-        self.task.try_cancel();
+        *self.writer.borrow_mut() = None;
+        self.reader_task.try_cancel();
+        self.pty_task.try_cancel();
         self.closer_notifier.notify();
     }
 }
@@ -81,15 +87,15 @@ pub struct TerminalHandle {
     /// Unique identifier for this terminal instance.
     pub(crate) id: TerminalId,
     /// Terminal buffer containing the current screen state.
-    pub(crate) buffer: Arc<Mutex<TerminalBuffer>>,
+    pub(crate) buffer: Rc<RefCell<TerminalBuffer>>,
     /// Writer for sending input to the PTY process.
-    pub(crate) writer: Arc<Mutex<Option<Box<dyn Write + Send>>>>,
+    pub(crate) writer: Rc<RefCell<Option<Box<dyn Write + Send>>>>,
     /// Channel for sending resize events to the PTY.
     pub(crate) resize_sender: ResizeSender,
     /// Notifier that signals when the terminal/PTY closes.
     pub(crate) closer_notifier: ArcNotify,
     /// Handles cleanup when the terminal is dropped.
-    pub(crate) cleaner: Arc<TerminalCleaner>,
+    pub(crate) cleaner: Rc<TerminalCleaner>,
 }
 
 impl PartialEq for TerminalHandle {
@@ -110,10 +116,13 @@ impl TerminalHandle {
     /// let mut cmd = CommandBuilder::new("bash");
     /// cmd.env("TERM", "xterm-256color");
     ///
-    /// let handle = TerminalHandle::new(cmd).unwrap();
+    /// let handle = TerminalHandle::new(TerminalId::new(), cmd).unwrap();
     /// ```
-    pub fn new(command: portable_pty::CommandBuilder) -> Result<Self, TerminalError> {
-        spawn_pty(command)
+    pub fn new(
+        id: TerminalId,
+        command: portable_pty::CommandBuilder,
+    ) -> Result<Self, TerminalError> {
+        spawn_pty(id, command)
     }
 
     /// Write data to the terminal.
@@ -126,18 +135,15 @@ impl TerminalHandle {
     /// handle.write(b"ls -la\n").unwrap();
     /// ```
     pub fn write(&self, data: &[u8]) -> Result<(), TerminalError> {
-        match self.writer.lock() {
-            Ok(mut guard) => match guard.as_mut() {
-                Some(w) => {
-                    w.write_all(data)
-                        .map_err(|e| TerminalError::WriteError(e.to_string()))?;
-                    w.flush()
-                        .map_err(|e| TerminalError::WriteError(e.to_string()))?;
-                    Ok(())
-                }
-                None => Err(TerminalError::NotInitialized),
-            },
-            Err(_) => Err(TerminalError::WriteError("Lock poisoned".to_string())),
+        match &mut *self.writer.borrow_mut() {
+            Some(w) => {
+                w.write_all(data)
+                    .map_err(|e| TerminalError::WriteError(e.to_string()))?;
+                w.flush()
+                    .map_err(|e| TerminalError::WriteError(e.to_string()))?;
+                Ok(())
+            }
+            None => Err(TerminalError::NotInitialized),
         }
     }
 
@@ -156,7 +162,7 @@ impl TerminalHandle {
 
     /// Read the current terminal buffer.
     pub fn read_buffer(&self) -> TerminalBuffer {
-        self.buffer.lock().unwrap().clone()
+        self.buffer.borrow().clone()
     }
 
     /// Returns a future that completes when the terminal/PTY closes.
@@ -178,5 +184,53 @@ impl TerminalHandle {
     /// Returns the unique identifier for this terminal instance.
     pub fn id(&self) -> TerminalId {
         self.id
+    }
+
+    /// Get the current text selection.
+    pub fn get_selection(&self) -> Option<TerminalSelection> {
+        self.buffer.borrow().selection.clone()
+    }
+
+    /// Set the text selection.
+    pub fn set_selection(&self, selection: Option<TerminalSelection>) {
+        self.buffer.borrow_mut().selection = selection;
+    }
+
+    /// Start a new selection at the given position.
+    pub fn start_selection(&self, row: usize, col: usize) {
+        let mut selection = TerminalSelection::new(row, col, row, col);
+        selection.dragging = true;
+        self.buffer.borrow_mut().selection = Some(selection);
+        Platform::get().send(UserEvent::RequestRedraw);
+    }
+
+    pub fn update_selection(&self, row: usize, col: usize) {
+        if let Some(selection) = &mut self.buffer.borrow_mut().selection
+            && selection.dragging
+        {
+            let mut new_selection =
+                TerminalSelection::new(selection.start_row, selection.start_col, row, col);
+            new_selection.dragging = true;
+            *selection = new_selection;
+            Platform::get().send(UserEvent::RequestRedraw);
+        }
+    }
+
+    pub fn end_selection(&self) {
+        if let Some(selection) = &mut self.buffer.borrow_mut().selection {
+            selection.dragging = false;
+            Platform::get().send(UserEvent::RequestRedraw);
+        }
+    }
+
+    /// Clear the current selection.
+    pub fn clear_selection(&self) {
+        self.buffer.borrow_mut().selection = None;
+        Platform::get().send(UserEvent::RequestRedraw);
+    }
+
+    /// Get selected text from the buffer.
+    pub fn get_selected_text(&self) -> Option<String> {
+        self.buffer.borrow_mut().get_selected_text()
     }
 }

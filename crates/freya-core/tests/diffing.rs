@@ -1286,3 +1286,191 @@ fn conditional_nested_component_removal() {
     assert_eq!(runner.scopes.len(), 1);
     assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 }
+
+#[test]
+fn effect_cascade_in_new_nodes_with_parent_effects() {
+    fn app() -> Element {
+        let mut toggled = use_state(|| false);
+
+        let child: Element = if toggled() {
+            label().text("Hello").into()
+        } else {
+            rect().into()
+        };
+
+        rect()
+            .opacity(0.5)
+            .on_mouse_up(move |_| toggled.toggle())
+            .child(child)
+            .into()
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+
+    let mutations = runner.sync_and_update();
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+
+    assert!(tree.effect_state.contains_key(&2u64.into()));
+    assert_eq!(
+        tree.effect_state.get(&2u64.into()).unwrap().opacities.len(),
+        1
+    );
+    assert!(tree.effect_state.contains_key(&3u64.into()));
+    assert_eq!(
+        tree.effect_state.get(&3u64.into()).unwrap().opacities.len(),
+        1
+    );
+
+    runner.handle_event(
+        2,
+        EventName::MouseUp,
+        EventType::Mouse(MouseEventData::default()),
+        false,
+    );
+    let mutations = runner.sync_and_update();
+    assert!(!mutations.modified.is_empty());
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+
+    assert!(tree.effect_state.contains_key(&3u64.into()));
+    assert_eq!(
+        tree.effect_state.get(&3u64.into()).unwrap().opacities.len(),
+        1
+    );
+}
+
+#[test]
+fn modified_with_removed_sibling() {
+    fn app() -> Element {
+        let state = use_consume::<State<bool>>();
+
+        if state() {
+            rect()
+                .child(rect().key(1).padding(10.))
+                .child(rect().key(2).padding(20.))
+                .into()
+        } else {
+            // Key 1 is removed, key 2 changes padding (triggers modification)
+            rect().child(rect().key(2).padding(30.)).into()
+        }
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+    let mut state = runner.provide_root_context(|| State::create(true));
+    let mutations = runner.sync_and_update();
+    tree.apply_mutations(mutations);
+
+    state.set(false);
+    let mutations = runner.sync_and_update();
+    assert!(!mutations.modified.is_empty());
+    assert!(!mutations.removed.is_empty());
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+}
+
+#[test]
+fn modified_and_moved_element() {
+    fn app() -> Element {
+        let state = use_consume::<State<bool>>();
+
+        if state() {
+            // A at [0,0] with child X, B at [0,1]
+            rect()
+                .child(rect().key(1).padding(10.).child(rect().key(10).padding(5.)))
+                .child(rect().key(2).padding(20.))
+                .into()
+        } else {
+            // Swap A and B, both are modified (padding changed)
+            // B at [0,0] (was [0,1]), A at [0,1] (was [0,0]), X at [0,1,0]
+            // Since both are modified, no movement is recorded.
+            // scope.nodes still has A at [0,0] (with child) and B at [0,1] (no child)
+            // Modification at [0,1,0] navigates to old B which has no children -> panic
+            rect()
+                .child(rect().key(2).padding(99.))
+                .child(
+                    rect()
+                        .key(1)
+                        .padding(88.)
+                        .child(rect().key(10).padding(77.)),
+                )
+                .into()
+        }
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+    let mut state = runner.provide_root_context(|| State::create(true));
+    let mutations = runner.sync_and_update();
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+
+    state.set(false);
+    let mutations = runner.sync_and_update();
+    assert!(!mutations.modified.is_empty());
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+}
+
+#[test]
+fn modified_and_moved_both_siblings_with_nested_child() {
+    // When two siblings SWAP positions and BOTH are modified, no movements
+    // are recorded (the diff emits `modified` instead of `moved` when content
+    // changes). This means `scope.nodes` is never rearranged.
+    //
+    // If one of the swapped elements has a child that is also modified,
+    // the modification path (from the new tree) points into the wrong
+    // subtree in `scope.nodes`, causing `scope.nodes.get(&path)` to return
+    // `None` (the other sibling has no children at that position).
+    fn app() -> Element {
+        let state = use_consume::<State<bool>>();
+
+        if state() {
+            // Old tree:
+            //   root
+            //     A (key=1, padding=10) — has child X
+            //       X (key=3, padding=30)
+            //     B (key=2, padding=20) — no children
+            rect()
+                .child(rect().key(1).padding(10.).child(rect().key(3).padding(30.)))
+                .child(rect().key(2).padding(20.))
+                .into()
+        } else {
+            // New tree: A and B swap positions, both modified.
+            // X (child of A) is also modified.
+            //   root
+            //     B (key=2, padding=99) — moved to [0,0], modified
+            //     A (key=1, padding=88) — moved to [0,1], modified
+            //       X (key=3, padding=77) — at [0,1,0], modified
+            //
+            // No movements are recorded because both A and B are modified.
+            // scope.nodes still has A at [0,0] and B at [0,1].
+            // Modification of X at path [0,1,0] navigates to B (at old
+            // position 1), which has no children → None → panic!
+            rect()
+                .child(rect().key(2).padding(99.))
+                .child(rect().key(1).padding(88.).child(rect().key(3).padding(77.)))
+                .into()
+        }
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+    let mut state = runner.provide_root_context(|| State::create(true));
+    let mutations = runner.sync_and_update();
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+
+    state.set(false);
+    let mutations = runner.sync_and_update();
+    assert!(!mutations.modified.is_empty());
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+}

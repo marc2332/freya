@@ -106,6 +106,11 @@ impl<D> Event<D> {
     pub fn prevent_default(&self) {
         *self.default.borrow_mut() = false;
     }
+
+    #[must_use]
+    pub fn get_prevent_default(&self) -> Rc<RefCell<bool>> {
+        self.default.clone()
+    }
 }
 
 /// Data of a Sized event.

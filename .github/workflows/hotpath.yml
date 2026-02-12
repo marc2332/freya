@@ -24,7 +24,7 @@ jobs:
       - name: Install just
         uses: taiki-e/install-action@just
       - name: Install hotpath-ci CLI
-        run: cargo install hotpath --bin hotpath-ci --features=ci
+        run: cargo install hotpath --version '^0.10' --bin hotpath-ci --features=ci
       - name: Set up cargo cache
         uses: Swatinem/rust-cache@v2
         if: github.ref != 'refs/heads/main'
@@ -37,7 +37,7 @@ jobs:
           sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev libwebkit2gtk-4.1-dev
       - id: head_timing_metrics
         env:
-          HOTPATH_JSON: true
+          HOTPATH_OUTPUT_FORMAT: json
         run: |
           # Extract timing metrics from head branch
           {
@@ -47,7 +47,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
       - id: base_timing_metrics
         env:
-          HOTPATH_JSON: true
+          HOTPATH_OUTPUT_FORMAT: json
         run: |
           # Extract timing metrics from base branch
           git checkout ${{ github.event.pull_request.base.ref }}
@@ -59,7 +59,7 @@ jobs:
           git checkout ${{ github.event.pull_request.head.ref }}
       - id: head_alloc_metrics
         env:
-          HOTPATH_JSON: true
+          HOTPATH_OUTPUT_FORMAT: json
         run: |
           # Extract alloc metrics from head branch
           {
@@ -69,7 +69,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
       - id: base_alloc_metrics
         env:
-          HOTPATH_JSON: true
+          HOTPATH_OUTPUT_FORMAT: json
         run: |
           # Extract alloc metrics from base branch
           git checkout ${{ github.event.pull_request.base.ref }}

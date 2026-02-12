@@ -49,7 +49,11 @@ impl UseEditable {
 
     /// Process a [`EditableEvent`] event.
     pub fn process_event(&mut self, edit_event: EditableEvent) {
-        edit_event.process(self.editor, self.dragging, &self.config);
+        edit_event.process(
+            self.editor.into_writable(),
+            self.dragging.into_writable(),
+            &self.config,
+        );
     }
 }
 

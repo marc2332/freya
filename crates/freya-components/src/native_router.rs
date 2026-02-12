@@ -1,5 +1,5 @@
 use freya_core::prelude::*;
-use freya_router::prelude::Navigator;
+use freya_router::prelude::RouterContext;
 
 #[derive(PartialEq)]
 pub struct NativeRouter {
@@ -28,8 +28,8 @@ impl Component for NativeRouter {
     fn render(&self) -> impl IntoElement {
         rect()
             .on_global_mouse_up(|e: Event<MouseEventData>| match e.button {
-                Some(MouseButton::Back) => Navigator::get().go_back(),
-                Some(MouseButton::Forward) => Navigator::get().go_forward(),
+                Some(MouseButton::Back) => RouterContext::get().go_back(),
+                Some(MouseButton::Forward) => RouterContext::get().go_forward(),
                 _ => {}
             })
             .children(self.children.clone())

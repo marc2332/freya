@@ -288,7 +288,10 @@ impl ElementExt for LabelElement {
         let layout_data = context.layout_node.data.as_ref().unwrap();
         let paragraph = layout_data.downcast_ref::<SkParagraph>().unwrap();
 
-        paragraph.paint(context.canvas, context.layout_node.area.origin.to_tuple());
+        paragraph.paint(
+            context.canvas,
+            context.layout_node.visible_area().origin.to_tuple(),
+        );
     }
 }
 
@@ -348,7 +351,6 @@ impl Label {
 
     pub fn text(mut self, text: impl Into<Cow<'static, str>>) -> Self {
         let text = text.into();
-        self.element.accessibility.builder.set_value(text.clone());
         self.element.text = text;
         self
     }

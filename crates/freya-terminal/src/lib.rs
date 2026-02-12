@@ -28,7 +28,7 @@
 //!     let mut handle = use_state(|| {
 //!         let mut cmd = CommandBuilder::new("bash");
 //!         cmd.env("TERM", "xterm-256color");
-//!         TerminalHandle::new(cmd).ok()
+//!         TerminalHandle::new(TerminalId::new(), cmd).ok()
 //!     });
 //!
 //!     let focus = use_focus();
@@ -76,7 +76,6 @@
 //! ```
 pub mod buffer;
 pub mod colors;
-pub mod component;
 pub mod element;
 pub mod handle;
 pub mod parser;
@@ -87,8 +86,11 @@ pub mod prelude {
     pub use portable_pty::CommandBuilder;
 
     pub use crate::{
-        buffer::TerminalBuffer,
-        component::Terminal,
+        buffer::{
+            TerminalBuffer,
+            TerminalSelection,
+        },
+        element::Terminal,
         handle::{
             TerminalError,
             TerminalHandle,

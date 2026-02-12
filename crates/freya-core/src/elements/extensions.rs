@@ -276,8 +276,16 @@ macro_rules! event_handlers {
     };
 }
 
-pub trait EventHandlersExt: Sized + LayoutExt {
+pub trait EventHandlersExt: Sized {
     fn get_event_handlers(&mut self) -> &mut FxHashMap<EventName, EventHandlerType>;
+
+    fn with_event_handlers(
+        mut self,
+        event_handlers: FxHashMap<EventName, EventHandlerType>,
+    ) -> Self {
+        *self.get_event_handlers() = event_handlers;
+        self
+    }
 
     event_handlers! {
         Mouse,
@@ -349,7 +357,10 @@ pub trait EventHandlersExt: Sized + LayoutExt {
         ime_preedit => EventName::ImePreedit;
     }
 
-    fn on_sized(mut self, on_sized: impl Into<EventHandler<Event<SizedEventData>>>) -> Self {
+    fn on_sized(mut self, on_sized: impl Into<EventHandler<Event<SizedEventData>>>) -> Self
+    where
+        Self: LayoutExt,
+    {
         self.get_event_handlers()
             .insert(EventName::Sized, EventHandlerType::Sized(on_sized.into()));
         self.get_layout().layout.has_layout_references = true;

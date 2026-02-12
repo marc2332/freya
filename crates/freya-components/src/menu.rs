@@ -302,9 +302,12 @@ impl ComponentOwned for MenuItem {
         };
 
         let on_press = move |e: Event<PressEventData>| {
-            focus.request_focus();
+            let prevent_default = e.get_prevent_default();
             if let Some(on_press) = &self.on_press {
                 on_press.call(e);
+            }
+            if *prevent_default.borrow() {
+                focus.request_focus();
             }
         };
 

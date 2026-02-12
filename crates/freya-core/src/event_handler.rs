@@ -23,7 +23,8 @@ impl<A, R> Clone for Callback<A, R> {
 
 impl<A, R> PartialEq for Callback<A, R> {
     fn eq(&self, _other: &Self) -> bool {
-        true
+        // TODO: Decide whether event handlers should be captured or not.
+        false
     }
 }
 
@@ -32,6 +33,37 @@ impl<A, R, H: FnMut(A) -> R + 'static> From<H> for Callback<A, R> {
         Callback::new(value)
     }
 }
+
+pub struct NoArgCallback<R>(Rc<RefCell<dyn FnMut() -> R>>);
+
+impl<R> NoArgCallback<R> {
+    pub fn new(callback: impl FnMut() -> R + 'static) -> Self {
+        Self(Rc::new(RefCell::new(callback)))
+    }
+
+    pub fn call(&self) -> R {
+        (self.0.borrow_mut())()
+    }
+}
+
+impl<R> Clone for NoArgCallback<R> {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
+impl<R> PartialEq for NoArgCallback<R> {
+    fn eq(&self, _other: &Self) -> bool {
+        true
+    }
+}
+
+impl<R, H: FnMut() -> R + 'static> From<H> for NoArgCallback<R> {
+    fn from(value: H) -> Self {
+        NoArgCallback::new(value)
+    }
+}
+
 pub struct EventHandler<T>(Rc<RefCell<dyn FnMut(T)>>);
 
 impl<T> EventHandler<T> {

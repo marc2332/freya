@@ -1,6 +1,6 @@
 [package]
 name = "freya-components"
-version = "0.4.0-rc.6"
+version = "0.4.0-rc.7"
 edition = "2024"
 description = "Components for Freya apps"
 license = "MIT"
@@ -17,7 +17,6 @@ features = ["freya-core/mocked-engine", "docs"]
 [features]
 router = ["dep:open", "dep:freya-router"]
 remote-asset = ["dep:ureq"]
-plot = ["dep:plotters", "dep:freya-plotters-backend"]
 docs = ["dep:embed-doc-image"]
 gif = ["dep:gif"]
 skia-engine = ["freya-engine/skia-engine"]
@@ -64,17 +63,6 @@ thiserror = { workspace = true }
 
 # Docs
 embed-doc-image = { version = "0.1.4", optional = true }
-
-# Plot
-plotters = { version = "0.3.7", default-features = false, features = [
-  "chrono",
-  "image",
-  "all_series",
-  "all_elements",
-  "full_palette",
-  "colormaps",
-], optional = true }
-freya-plotters-backend = { workspace = true, optional = true }
 
 # GIF
 gif = { version = "0.13.3", optional = true }

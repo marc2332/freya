@@ -61,7 +61,7 @@ pub mod prelude {
         diff_key::DiffKey,
         element::RenderContext,
         element::{
-            AppComponent,
+            App,
             Component,
             ComponentKey,
             ComponentOwned,
@@ -99,6 +99,7 @@ pub mod prelude {
         event_handler::{
             Callback,
             EventHandler,
+            NoArgCallback,
         },
         events::data::*,
         events::*,
@@ -112,8 +113,10 @@ pub mod prelude {
             future_task::*,
             memo::*,
             reactive::*,
+            readable::*,
             state::*,
             task::*,
+            writable::*,
         },
         platform::*,
         reactive_context::ReactiveContext,

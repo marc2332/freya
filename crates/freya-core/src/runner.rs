@@ -691,6 +691,19 @@ impl Runner {
         mutations
     }
 
+    pub fn run_in<T>(&self, run: impl FnOnce() -> T) -> T {
+        CurrentContext::run(
+            CurrentContext {
+                scope_id: ScopeId::ROOT,
+                scopes_storages: self.scopes_storages.clone(),
+                tasks: self.tasks.clone(),
+                task_id_counter: self.task_id_counter.clone(),
+                sender: self.sender.clone(),
+            },
+            run,
+        )
+    }
+
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     fn run_scope(
         &mut self,

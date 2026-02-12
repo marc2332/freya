@@ -1,7 +1,7 @@
-use freya::prelude::*;
-use freya_terminal::prelude::*;
-use keyboard_types::Modifiers;
-use portable_pty::CommandBuilder;
+use freya::{
+    prelude::*,
+    terminal::*,
+};
 
 fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
@@ -13,17 +13,18 @@ fn app() -> impl IntoElement {
         cmd.env("TERM", "xterm-256color");
         cmd.env("COLORTERM", "truecolor");
         cmd.env("LANG", "en_GB.UTF-8");
-        TerminalHandle::new(cmd).ok()
+        TerminalHandle::new(TerminalId::new(), cmd).ok()
     });
 
     use_future(move || async move {
-        // Stops rendering the terminal once the pty closes
+        // Stops rendering the terminal once the pty closes on its own
         let terminal_handle = handle.read().clone().unwrap();
         terminal_handle.closed().await;
         let _ = handle.write().take();
     });
 
     let focus = use_focus();
+    let mut dimensions = use_state(|| (0.0, 0.0));
 
     rect()
         .expanded()
@@ -32,13 +33,46 @@ fn app() -> impl IntoElement {
         .color((245, 245, 245))
         .child(if let Some(handle) = handle.read().clone() {
             rect()
-                .child(Terminal::new(handle.clone()))
+                .child(
+                    Terminal::new(handle.clone())
+                        .on_measured(move |(char_width, line_height)| {
+                            dimensions.set((char_width, line_height));
+                        })
+                        .on_mouse_down({
+                            let handle = handle.clone();
+                            move |e: Event<MouseEventData>| {
+                                focus.request_focus();
+                                let (char_width, line_height) = dimensions();
+                                let col =
+                                    (e.element_location.x / char_width as f64).floor() as usize;
+                                let row =
+                                    (e.element_location.y / line_height as f64).floor() as usize;
+                                handle.start_selection(row, col);
+                            }
+                        })
+                        .on_mouse_move({
+                            let handle = handle.clone();
+                            move |e: Event<MouseEventData>| {
+                                let (char_width, line_height) = dimensions();
+                                let col =
+                                    (e.element_location.x / char_width as f64).floor() as usize;
+                                let row =
+                                    (e.element_location.y / line_height as f64).floor() as usize;
+                                handle.update_selection(row, col);
+                            }
+                        })
+                        .on_mouse_up({
+                            let handle = handle.clone();
+                            move |_| {
+                                handle.end_selection();
+                            }
+                        }),
+                )
                 .expanded()
                 .background((10, 10, 10))
                 .padding(6.)
                 .a11y_id(focus.a11y_id())
                 .a11y_auto_focus(true)
-                .on_mouse_down(move |_| focus.request_focus())
                 .on_key_down(move |e: Event<KeyboardEventData>| {
                     if e.modifiers.contains(Modifiers::CONTROL)
                         && matches!(&e.key, Key::Character(ch) if ch.len() == 1)

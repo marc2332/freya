@@ -1,30 +1,21 @@
-use std::sync::Arc;
-
 use vt100::Parser;
 
 /// Check for terminal queries in PTY output and return appropriate responses.
 ///
 /// This handles DSR, DA, and other queries that shells like nushell send.
-pub(crate) fn check_for_terminal_queries(
-    data: &[u8],
-    parser: &Arc<std::sync::RwLock<Parser>>,
-) -> Vec<Vec<u8>> {
+pub(crate) fn check_for_terminal_queries(data: &[u8], parser: &Parser) -> Vec<Vec<u8>> {
     let mut responses = Vec::new();
 
     // DSR 6n - Cursor Position Report
-    if data.windows(4).any(|w| w == b"\x1b[6n")
-        && let Ok(p) = parser.read()
-    {
-        let (row, col) = p.screen().cursor_position();
+    if data.windows(4).any(|w| w == b"\x1b[6n") {
+        let (row, col) = parser.screen().cursor_position();
         let response = format!("\x1b[{};{}R", row + 1, col + 1);
         responses.push(response.into_bytes());
     }
 
     // DSR ?6n - Extended Cursor Position Report
-    if data.windows(5).any(|w| w == b"\x1b[?6n")
-        && let Ok(p) = parser.read()
-    {
-        let (row, col) = p.screen().cursor_position();
+    if data.windows(5).any(|w| w == b"\x1b[?6n") {
+        let (row, col) = parser.screen().cursor_position();
         let response = format!("\x1b[?{};{}R", row + 1, col + 1);
         responses.push(response.into_bytes());
     }

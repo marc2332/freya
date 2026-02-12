@@ -41,6 +41,6 @@ jobs:
         shared-key: "rust-ubuntu-latest"
         save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: Lint
-      run: just c
+      run: just c-ci
     - name: Format
       run: just f

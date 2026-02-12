@@ -233,7 +233,9 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
     }
 }
 
-impl<D: 'static, B: Fn(usize, &D) -> Element + 'static> Component for VirtualScrollView<D, B> {
+impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
+    for VirtualScrollView<D, B>
+{
     fn render(self: &VirtualScrollView<D, B>) -> impl IntoElement {
         let focus = use_focus();
         let mut timeout = use_timeout(|| Duration::from_millis(800));

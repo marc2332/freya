@@ -27,6 +27,8 @@ Documentation is located in `./crates/freya/src/_docs`.
 - Use `#[derive(PartialEq)]` for component structs to enable proper diffing and updates.
 - Use `use freya_core::prelude::*;` to import common types and traits in component files.
 - Never use `cargo check` just `just c`
+- Components are data types (usually structs) that implement `PartialEq` and the `Component` trait 
+- Freya has a built-in `Into<Label>` for `String` and `&str`, so, `label().text("Hey")` could be just simplified to `"Hey"`
 
 ## General instructions
 
@@ -38,3 +40,5 @@ Documentation is located in `./crates/freya/src/_docs`.
 - Never push to any branch, much less the `main` branch or using `--force`
 - Never hardcode secrets or any other sensitive data
 - Avoid creating temporary branches unless told
+- When you are just starting to work on something you must not run any check or format command right away, leave that for the end and ask the developer for confirmation
+- Most hooks APIs like `use_state` return `Copy` values like `State`, when moving these around there is no need to `.clone()` them as they are `Copy` already.

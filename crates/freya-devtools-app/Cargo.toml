@@ -1,6 +1,6 @@
 [package]
 name = "freya-devtools-app"
-version = "0.4.0-rc.6"
+version = "0.4.0-rc.7"
 description = "Devtools App for Freya app"
 edition = "2024"
 license = "MIT"
@@ -15,7 +15,7 @@ categories = ["gui", "asynchronous"]
 skia-engine = ["freya-core/skia-engine"]
 
 [dependencies]
-freya = { workspace = true, features = ["router"] }
+freya = { workspace = true, features = ["router", "radio"] }
 freya-core = { workspace = true, features = ["debug-integrity"] }
 freya-router = { workspace = true }
 

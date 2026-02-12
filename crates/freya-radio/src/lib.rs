@@ -14,8 +14,10 @@
 //! ## Basic Usage
 //!
 //! ```rust,no_run
-//! use freya::prelude::*;
-//! use freya_radio::prelude::*;
+//! use freya::{
+//!     prelude::*,
+//!     radio::*,
+//! };
 //!
 //! #[derive(Default, Clone)]
 //! struct AppState {
@@ -65,7 +67,28 @@
 //! See the examples in the repository for more advanced usage patterns.
 
 pub mod hooks;
+pub mod slice;
 
 pub mod prelude {
-    pub use crate::hooks::*;
+    pub use freya_core::lifecycle::{
+        readable::{
+            IntoReadable,
+            Readable,
+        },
+        writable::{
+            IntoWritable,
+            Writable,
+        },
+    };
+
+    pub use crate::{
+        hooks::*,
+        slice::{
+            RadioSlice,
+            RadioSliceMut,
+        },
+    };
 }
+
+mod readable;
+mod writable;

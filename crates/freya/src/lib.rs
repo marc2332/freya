@@ -62,11 +62,12 @@
 //! - `tray`: Enables tray support using the [tray_icon] crate.
 //! - `sdk`: Reexport [freya_sdk] under [sdk].
 //! - `gif`: Enables the [GifViewer](components::GifViewer) component.
-//! - `plot`: Enables the [plot](prelude::plot) element.
+//! - `plot`: Reexport of plotters under [plot].
 //! - `material-design`: Reexport [freya_material_design] under [material_design].
 //! - `calendar`: Enables the [Calendar](components::Calendar) component.
 //! - `icons`: Reexport of [freya_icons] under [icons].
 //! - `radio`: Reexport [freya_radio] under [radio].
+//! - `query`: Reexport [freya_query] under [query].
 //! - `markdown`: Enables the [MarkdownViewer](components::MarkdownViewer) component.
 //! - `webview`: Reexport [freya_webview] under [webview].
 //! - `titlebar`: Enables the [TitlebarButton](components::TitlebarButton) component.
@@ -105,6 +106,9 @@ pub mod prelude {
         freya_winit::launch(launch_config)
     }
 
+    #[cfg_attr(feature = "docs", doc(cfg(feature = "router")))]
+    #[cfg(feature = "router")]
+    pub use freya_router;
     pub use torin::{
         alignment::Alignment,
         content::Content,
@@ -117,6 +121,7 @@ pub mod prelude {
         },
         position::Position,
         size::Size,
+        visible_size::VisibleSize,
     };
 }
 pub mod elements {
@@ -145,15 +150,13 @@ pub mod components {
     #[cfg_attr(feature = "docs", doc(cfg(feature = "calendar")))]
     #[cfg(feature = "calendar")]
     pub use freya_components::calendar::*;
-    #[cfg_attr(feature = "docs", doc(cfg(feature = "plot")))]
-    #[cfg(feature = "plot")]
-    pub use freya_components::plot::*;
     #[cfg(feature = "titlebar")]
     pub use freya_components::titlebar::*;
     pub use freya_components::{
         accordion::*,
         activable_route_context::*,
         button::*,
+        canvas::*,
         card::*,
         checkbox::*,
         chip::*,
@@ -211,16 +214,23 @@ pub mod animation {
     pub use freya_animation::prelude::*;
 }
 
+#[cfg_attr(feature = "docs", doc(cfg(feature = "plot")))]
+#[cfg(feature = "plot")]
+pub mod plot {
+    pub use freya_plotters_backend::*;
+    pub use plotters;
+}
+
 #[cfg_attr(feature = "docs", doc(cfg(feature = "router")))]
 #[cfg(feature = "router")]
 pub mod router {
-    pub use freya_router::*;
+    pub use freya_router::prelude::*;
 }
 
 #[cfg_attr(feature = "docs", doc(cfg(feature = "i18n")))]
 #[cfg(feature = "i18n")]
 pub mod i18n {
-    pub use freya_i18n::*;
+    pub use freya_i18n::prelude::*;
 }
 
 #[cfg_attr(feature = "docs", doc(cfg(feature = "engine")))]
@@ -246,7 +256,7 @@ pub mod tray {
 #[cfg_attr(feature = "docs", doc(cfg(feature = "sdk")))]
 #[cfg(feature = "sdk")]
 pub mod sdk {
-    pub use freya_sdk::*;
+    pub use freya_sdk::prelude::*;
 }
 
 #[cfg_attr(feature = "docs", doc(cfg(feature = "material-design")))]
@@ -268,11 +278,18 @@ pub mod radio {
     pub use freya_radio::prelude::*;
 }
 
+/// Reexport `freya-query` when the `query` feature is enabled.
+#[cfg(feature = "query")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "query")))]
+pub mod query {
+    pub use freya_query::prelude::*;
+}
+
 /// Reexport `freya-webview` when the `webview` feature is enabled.
 #[cfg(feature = "webview")]
 #[cfg_attr(feature = "docs", doc(cfg(feature = "webview")))]
 pub mod webview {
-    pub use freya_webview::*;
+    pub use freya_webview::prelude::*;
 }
 
 /// Reexport `freya-terminal` when the `terminal` feature is enabled.

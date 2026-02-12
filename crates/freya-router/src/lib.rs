@@ -1,8 +1,8 @@
 //! Routing
 //!
 //! High-level routing utilities for Freya applications. This crate provides
-//! components like [outlet](self::components::outlet) and [router](self::components::router), hooks such as [use_route](self::hooks::use_route), and the
-//! `Navigator` context to programmatically interact with navigation state.
+//! components like [Outlet](self::components::Outlet) and [Router](self::components::Router), hooks such as [use_route](self::hooks::use_route), and the
+//! RouterContext to programmatically interact with navigation state.
 //!
 //! # Example
 //!
@@ -10,18 +10,20 @@
 //! for a runnable demo.
 //!
 //! ```rust
-//! use freya::prelude::*;
-//! use freya_router::prelude::*;
+//! use freya::{
+//!     prelude::*,
+//!     router::*,
+//! };
 //!
 //! fn app() -> impl IntoElement {
-//!     router::<Route>(|| RouterConfig::default().with_initial_path(Route::Home))
+//!     Router::<Route>::new(|| RouterConfig::default().with_initial_path(Route::Home))
 //! }
 //!
 //! #[derive(PartialEq)]
 //! struct Layout;
 //! impl Component for Layout {
 //!     fn render(&self) -> impl IntoElement {
-//!         rect().center().expanded().child(outlet::<Route>())
+//!         rect().center().expanded().child(Outlet::<Route>::new())
 //!     }
 //! }
 //!
@@ -72,15 +74,12 @@ pub mod components {
 }
 
 mod contexts {
-    pub(crate) mod navigator;
     pub(crate) mod outlet;
     pub use outlet::{
         OutletContext,
         use_outlet_context,
     };
     pub(crate) mod router;
-    pub use navigator::*;
-    pub(crate) use router::*;
     pub use router::{
         GenericRouterContext,
         ParseRouteError,
@@ -102,8 +101,9 @@ pub mod prelude {
 
     pub use crate::{
         components::{
-            outlet,
-            router,
+            Outlet,
+            Router,
+            use_share_router,
         },
         contexts::*,
         hooks::*,

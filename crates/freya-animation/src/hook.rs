@@ -180,6 +180,11 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
         self.animated_value.read()
     }
 
+    /// Get the last configured direction used to animation.
+    pub fn direction(&self) -> ReadRef<'static, AnimDirection> {
+        self.last_direction.read()
+    }
+
     /// Runs the animation normally.
     pub fn start(&mut self) {
         self.run(AnimDirection::Forward)

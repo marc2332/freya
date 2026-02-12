@@ -1,5 +1,9 @@
 use std::{
     cell::RefCell,
+    fmt::{
+        Debug,
+        Display,
+    },
     mem::MaybeUninit,
     ops::Deref,
     rc::Rc,
@@ -18,41 +22,6 @@ use crate::{
     reactive_context::ReactiveContext,
     scope_id::ScopeId,
 };
-
-pub trait MutView<'a, T: 'static> {
-    fn read(&mut self) -> ReadRef<'a, T>;
-
-    fn peek(&mut self) -> ReadRef<'a, T>;
-
-    fn write(&mut self) -> WriteRef<'a, T>;
-
-    fn write_if(&mut self, with: impl FnOnce(WriteRef<'a, T>) -> bool);
-}
-
-impl<T: 'static> MutView<'static, T> for State<T> {
-    fn read(&mut self) -> ReadRef<'static, T> {
-        if let Some(mut rc) = ReactiveContext::try_current() {
-            rc.subscribe(&self.subscribers.read());
-        }
-        self.key.read()
-    }
-
-    fn peek(&mut self) -> ReadRef<'static, T> {
-        self.key.read()
-    }
-
-    fn write(&mut self) -> WriteRef<'static, T> {
-        self.subscribers.write().borrow_mut().retain(|s| s.notify());
-        self.key.write()
-    }
-
-    fn write_if(&mut self, with: impl FnOnce(WriteRef<'static, T>) -> bool) {
-        let changed = with(self.key.write());
-        if changed {
-            self.subscribers.write().borrow_mut().retain(|s| s.notify());
-        }
-    }
-}
 
 /// A reactive state container that holds a value of type `T` and manages subscriptions to changes.
 ///
@@ -270,54 +239,30 @@ impl<T: std::ops::Not<Output = T> + Clone + 'static> State<T> {
     }
 }
 
-type ReadStateFunc<T> = Rc<dyn Fn() -> ReadRef<'static, T>>;
-
-/// Given a type `T` you may pass an owned value, a `State<T>` or a function returning a `ReadRef<T>`
-#[derive(Clone)]
-pub enum ReadState<T: 'static> {
-    State(State<T>),
-    Func(ReadStateFunc<T>),
-    Owned(T),
-}
-
-impl<T> From<T> for ReadState<T> {
-    fn from(value: T) -> Self {
-        ReadState::Owned(value)
-    }
-}
-
-impl<T> From<State<T>> for ReadState<T> {
-    fn from(value: State<T>) -> Self {
-        ReadState::State(value)
-    }
-}
-
-impl<T: PartialEq> PartialEq for ReadState<T> {
-    fn eq(&self, other: &ReadState<T>) -> bool {
-        match (self, other) {
-            (Self::State(a), Self::State(b)) => a == b,
-            (Self::Func(a), Self::Func(b)) => Rc::ptr_eq(a, b),
-            (Self::Owned(a), Self::Owned(b)) => a == b,
-            _ => false,
-        }
-    }
-}
-impl<T: 'static> ReadState<T> {
-    pub fn read(&'_ self) -> ReadStateCow<'_, T> {
-        match self {
-            Self::Func(f) => ReadStateCow::Ref(f()),
-            Self::State(s) => ReadStateCow::Ref(s.read()),
-            Self::Owned(o) => ReadStateCow::Borrowed(o),
-        }
-    }
-}
-
-pub enum ReadStateCow<'a, T: 'static> {
+pub enum ReadableRef<T: 'static> {
     Ref(ReadRef<'static, T>),
-    Borrowed(&'a T),
+    Borrowed(Rc<T>),
 }
 
-impl<'a, T> Deref for ReadStateCow<'a, T> {
+impl<T: 'static + Debug> Debug for ReadableRef<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Ref(r) => r.fmt(f),
+            Self::Borrowed(r) => r.deref().fmt(f),
+        }
+    }
+}
+
+impl<T: 'static + Display> Display for ReadableRef<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Ref(r) => r.fmt(f),
+            Self::Borrowed(r) => r.deref().fmt(f),
+        }
+    }
+}
+
+impl<T> Deref for ReadableRef<T> {
     type Target = T;
     fn deref(&self) -> &Self::Target {
         match self {
@@ -458,9 +403,7 @@ impl<T> State<T> {
     /// This method should only be used when you cannot obtain a mutable reference
     /// to the `State` but still need to modify it. Prefer `write()` when possible.
     pub fn write_unchecked(&self) -> WriteRef<'static, T> {
-        for subscriber in self.subscribers.write().borrow_mut().iter() {
-            subscriber.notify();
-        }
+        self.subscribers.write().borrow_mut().retain(|s| s.notify());
         self.key.write()
     }
 
@@ -651,6 +594,18 @@ impl<T> State<T> {
         let key = owner.insert(value);
         let subscribers = owner.insert(Rc::default());
         State { key, subscribers }
+    }
+
+    /// Subscribe the current reactive context to this state's changes.
+    pub(crate) fn subscribe(&self) {
+        if let Some(mut rc) = ReactiveContext::try_current() {
+            rc.subscribe(&self.subscribers.read());
+        }
+    }
+
+    /// Notify all subscribers that the state has changed.
+    pub(crate) fn notify(&self) {
+        self.subscribers.write().borrow_mut().retain(|s| s.notify());
     }
 }
 

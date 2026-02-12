@@ -1,6 +1,6 @@
 [package]
 name = "freya"
-version = "0.4.0-rc.6"
+version = "0.4.0-rc.7"
 description = "Cross-platform and non-web GUI Library powered by Skia."
 edition = "2024"
 license = "MIT"
@@ -38,6 +38,7 @@ all = [
   "webview",
   "titlebar",
   "terminal",
+  "query",
 ]
 all-publish = [
   "all",
@@ -56,7 +57,6 @@ all-bindings = [
 all-debug = [
   "all",
   "performance",
-  "vulkan",
   "dep:freya-testing",
   "dep:freya-plotters-backend",
 ]
@@ -73,6 +73,7 @@ all-tests = [
   "radio",
   "webview",
   "titlebar",
+  "query",
 ]
 docs = ["all-debug"]
 # Features
@@ -82,7 +83,7 @@ i18n = ["dep:freya-i18n"]
 engine = []
 devtools = ["dep:freya-devtools", "freya-core/devtools"]
 performance = ["freya-performance-plugin"]
-plot = ["freya-components/plot"]
+plot = ["dep:plotters", "dep:freya-plotters-backend"]
 gif = ["freya-components/gif"]
 calendar = ["freya-components/calendar"]
 markdown = ["freya-components/markdown"]
@@ -93,6 +94,7 @@ material-design = ["dep:freya-material-design"]
 hotpath = ["freya-core/hotpath", "freya-winit/hotpath"]
 icons = ["dep:freya-icons"]
 radio = ["dep:freya-radio"]
+query = ["dep:freya-query"]
 webview = ["dep:freya-webview"]
 titlebar = ["freya-components/titlebar"]
 terminal = ["dep:freya-terminal"]
@@ -112,6 +114,7 @@ freya-icons = { workspace = true, optional = true }
 freya-router = { workspace = true, optional = true }
 freya-i18n = { workspace = true, optional = true }
 freya-radio = { workspace = true, optional = true }
+freya-query = { workspace = true, optional = true }
 freya-webview = { workspace = true, optional = true }
 freya-terminal = { workspace = true, optional = true }
 
@@ -119,10 +122,20 @@ freya-terminal = { workspace = true, optional = true }
 freya-performance-plugin = { workspace = true, optional = true }
 freya-material-design = { workspace = true, optional = true }
 freya-testing = { workspace = true, optional = true }
-freya-plotters-backend = { workspace = true, optional = true }
 
 # Tray
 tray-icon = { workspace = true, optional = true }
+
+# Plot
+plotters = { version = "0.3.7", default-features = false, features = [
+  "chrono",
+  "image",
+  "all_series",
+  "all_elements",
+  "full_palette",
+  "colormaps",
+], optional = true }
+freya-plotters-backend = { workspace = true, optional = true }
 
 # Other
 cfg-if = "1.0"

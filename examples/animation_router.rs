@@ -6,15 +6,15 @@
 use freya::{
     animation::*,
     prelude::*,
+    router::*,
 };
-use freya_router::prelude::*;
 
 fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app).with_title("Animated Router")))
 }
 
 fn app() -> impl IntoElement {
-    router::<Route>(RouterConfig::default)
+    Router::<Route>::new(RouterConfig::default)
 }
 
 #[derive(Routable, Clone, PartialEq)]
@@ -84,7 +84,7 @@ impl Component for FromRouteToCurrent {
         let width = self.area.read().width();
         let offset = width - (offset * width);
 
-        let to = outlet::<Route>().into_element();
+        let to = Outlet::<Route>::new().into_element();
         let (left, right) = if self.left_to_right {
             (self.from.clone(), to)
         } else {
@@ -150,7 +150,7 @@ impl Component for AnimatedOutlet {
                     area,
                 }
                 .into_element(),
-                None => expanded(1., 0., outlet::<Route>()).into_element(),
+                None => expanded(1., 0., Outlet::<Route>::new()).into_element(),
             })
     }
 }

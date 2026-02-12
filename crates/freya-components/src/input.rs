@@ -96,7 +96,8 @@ impl InputValidator {
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     Input::new().placeholder("Type here")
+///     let value = use_state(String::new);
+///     Input::new(value).placeholder("Type here")
 /// }
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
@@ -108,7 +109,8 @@ impl InputValidator {
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     Input::new().placeholder("Type here").filled()
+///     let value = use_state(String::new);
+///     Input::new(value).placeholder("Type here").filled()
 /// }
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
@@ -120,7 +122,8 @@ impl InputValidator {
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     Input::new().placeholder("Type here").flat()
+///     let value = use_state(String::new);
+///     Input::new(value).placeholder("Type here").flat()
 /// }
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
@@ -141,9 +144,8 @@ impl InputValidator {
 pub struct Input {
     pub(crate) theme_colors: Option<InputColorsThemePartial>,
     pub(crate) theme_layout: Option<InputLayoutThemePartial>,
-    value: ReadState<String>,
+    value: Writable<String>,
     placeholder: Option<Cow<'static, str>>,
-    on_change: Option<EventHandler<String>>,
     on_validate: Option<EventHandler<InputValidator>>,
     on_submit: Option<EventHandler<String>>,
     mode: InputMode,
@@ -154,6 +156,7 @@ pub struct Input {
     style_variant: InputStyleVariant,
     layout_variant: InputLayoutVariant,
     text_align: TextAlign,
+    a11y_id: Option<AccessibilityId>,
 }
 
 impl KeyExt for Input {
@@ -162,20 +165,13 @@ impl KeyExt for Input {
     }
 }
 
-impl Default for Input {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Input {
-    pub fn new() -> Self {
+    pub fn new(value: impl Into<Writable<String>>) -> Self {
         Input {
             theme_colors: None,
             theme_layout: None,
-            value: ReadState::Owned(String::new()),
+            value: value.into(),
             placeholder: None,
-            on_change: None,
             on_validate: None,
             on_submit: None,
             mode: InputMode::default(),
@@ -186,6 +182,7 @@ impl Input {
             style_variant: InputStyleVariant::Normal,
             layout_variant: InputLayoutVariant::Normal,
             text_align: TextAlign::default(),
+            a11y_id: None,
         }
     }
 
@@ -194,18 +191,8 @@ impl Input {
         self
     }
 
-    pub fn value(mut self, value: impl Into<ReadState<String>>) -> Self {
-        self.value = value.into();
-        self
-    }
-
     pub fn placeholder(mut self, placeholder: impl Into<Cow<'static, str>>) -> Self {
         self.placeholder = Some(placeholder.into());
-        self
-    }
-
-    pub fn on_change(mut self, on_change: impl Into<EventHandler<String>>) -> Self {
-        self.on_change = Some(on_change.into());
         self
     }
 
@@ -283,6 +270,11 @@ impl Input {
     pub fn expanded(self) -> Self {
         self.layout_variant(InputLayoutVariant::Expanded)
     }
+
+    pub fn a11y_id(mut self, a11y_id: impl Into<AccessibilityId>) -> Self {
+        self.a11y_id = Some(a11y_id.into());
+        self
+    }
 }
 
 impl CornerRadiusExt for Input {
@@ -293,7 +285,7 @@ impl CornerRadiusExt for Input {
 
 impl Component for Input {
     fn render(&self) -> impl IntoElement {
-        let focus = use_focus();
+        let focus = use_hook(|| Focus::new_for_id(self.a11y_id.unwrap_or_else(Focus::new_id)));
         let focus_status = use_focus_status(focus);
         let holder = use_state(ParagraphHolder::default);
         let mut area = use_state(Area::default);
@@ -301,6 +293,7 @@ impl Component for Input {
         let mut editable = use_editable(|| self.value.read().to_string(), EditableConfig::new);
         let mut is_dragging = use_state(|| false);
         let mut ime_preedit = use_state(|| None);
+        let mut value = self.value.clone();
 
         let theme_colors = match self.style_variant {
             InputStyleVariant::Normal => get_theme!(&self.theme_colors, input),
@@ -323,13 +316,12 @@ impl Component for Input {
             }
         });
 
-        let display_placeholder = self.value.read().is_empty() && self.placeholder.is_some();
-        let on_change = self.on_change.clone();
+        let display_placeholder = value.read().is_empty() && self.placeholder.is_some();
         let on_validate = self.on_validate.clone();
         let on_submit = self.on_submit.clone();
 
-        if &*self.value.read() != editable.editor().read().rope() {
-            editable.editor_mut().write().set(&self.value.read());
+        if &*value.read() != editable.editor().read().rope() {
+            editable.editor_mut().write().set(&value.read());
             editable.editor_mut().write().editor_history().clear();
         }
 
@@ -373,8 +365,8 @@ impl Component for Input {
                             None => true,
                         };
 
-                        if apply_change && let Some(on_change) = &on_change {
-                            on_change.call(text);
+                        if apply_change {
+                            *value.write() = text;
                         }
                     }
                 }
@@ -468,6 +460,30 @@ impl Component for Input {
             }
         };
 
+        let on_pointer_press = move |e: Event<PointerEventData>| {
+            e.stop_propagation();
+            e.prevent_default();
+            match *status.read() {
+                InputStatus::Idle if focus.is_focused() => {
+                    editable.process_event(EditableEvent::Release);
+                }
+                InputStatus::Hovering => {
+                    editable.process_event(EditableEvent::Release);
+                }
+                _ => {}
+            };
+
+            if focus.is_focused() {
+                if *is_dragging.read() {
+                    // The input is focused and dragging, but it just clicked so we assume the dragging can stop
+                    is_dragging.set(false);
+                } else {
+                    // The input is focused but not dragging, so the click means it was clicked outside, therefore we can unfocus this input
+                    focus.request_unfocus();
+                }
+            }
+        };
+
         let a11y_id = focus.a11y_id();
 
         let (background, cursor_index, text_selection) =
@@ -524,11 +540,14 @@ impl Component for Input {
             .a11y_auto_focus(self.auto_focus)
             .a11y_alt(text.clone())
             .a11y_role(a11_role)
-            .maybe(self.enabled, |rect| {
-                rect.on_key_up(on_key_up)
+            .maybe(self.enabled, |el| {
+                el.on_key_up(on_key_up)
                     .on_key_down(on_key_down)
                     .on_pointer_down(on_input_pointer_down)
                     .on_ime_preedit(on_ime_preedit)
+                    .on_pointer_press(on_pointer_press)
+                    .on_global_mouse_up(on_global_mouse_up)
+                    .on_global_mouse_move(on_global_mouse_move)
             })
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
@@ -550,11 +569,7 @@ impl Component for Input {
                             .min_width(Size::func(move |context| {
                                 Some(context.parent + theme_layout.inner_margin.horizontal())
                             }))
-                            .maybe(self.enabled, |rect| {
-                                rect.on_pointer_down(on_pointer_down)
-                                    .on_global_mouse_up(on_global_mouse_up)
-                                    .on_global_mouse_move(on_global_mouse_move)
-                            })
+                            .maybe(self.enabled, |el| el.on_pointer_down(on_pointer_down))
                             .margin(theme_layout.inner_margin)
                             .cursor_index(cursor_index)
                             .cursor_color(cursor_color)

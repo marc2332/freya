@@ -2,27 +2,30 @@
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
 )]
-use freya::prelude::{
-    plotters::{
-        chart::ChartBuilder,
-        prelude::{
-            IntoDrawingArea,
-            IntoLinspace,
-            PathElement,
-            Rectangle,
-        },
-        series::{
-            LineSeries,
-            SurfaceSeries,
-        },
-        style::{
-            BLACK,
-            BLUE,
-            Color,
-            WHITE,
+use freya::{
+    plot::{
+        PlotSkiaBackend,
+        plotters::{
+            chart::ChartBuilder,
+            prelude::{
+                IntoDrawingArea,
+                IntoLinspace,
+                PathElement,
+                Rectangle,
+            },
+            series::{
+                LineSeries,
+                SurfaceSeries,
+            },
+            style::{
+                BLACK,
+                BLUE,
+                Color,
+                WHITE,
+            },
         },
     },
-    *,
+    prelude::*,
 };
 
 fn main() {
@@ -108,7 +111,7 @@ fn app() -> impl IntoElement {
         }
     };
 
-    plot(RenderCallback::new(move |context| {
+    canvas(RenderCallback::new(move |context| {
         on_render(context, cursor_position().to_tuple());
     }))
     .expanded()

@@ -1,4 +1,7 @@
-use std::mem;
+use std::{
+    mem,
+    ops::BitOrAssign,
+};
 
 use freya_core::prelude::NavigationMode;
 
@@ -12,5 +15,13 @@ pub enum AccessibilityTask {
 impl AccessibilityTask {
     pub fn take(&mut self) -> Self {
         mem::replace(self, Self::None)
+    }
+}
+
+impl BitOrAssign for AccessibilityTask {
+    fn bitor_assign(&mut self, rhs: Self) {
+        if self == &Self::None {
+            *self = rhs
+        }
     }
 }

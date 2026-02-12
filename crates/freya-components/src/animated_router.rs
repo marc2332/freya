@@ -57,7 +57,7 @@ impl<R> AnimatedRouter<R> {
     }
 }
 
-/// Provide a mechanism for [freya_router::prelude::outlet] to animate between route changes.
+/// Provide a mechanism for [freya_router::prelude::Outlet] to animate between route changes.
 ///
 /// See the `animated_router.rs` example to see how to use it.
 impl<R: Routable + 'static + PartialEq> Component for AnimatedRouter<R> {
