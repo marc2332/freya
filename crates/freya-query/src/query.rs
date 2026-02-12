@@ -249,7 +249,7 @@ impl<Q: QueryCapability> QueriesStorage<Q> {
         }
 
         // Spawn clean up task if there no more reactive contexts
-        if query_data.reactive_contexts.borrow().is_empty() {
+        if query_data.reactive_contexts.borrow().len() == 1 {
             *query_data.clean_task.borrow_mut() = Some(spawn_forever(async move {
                 // Wait as long as the stale time is configured
                 Timer::after(query.clean_time).await;
@@ -685,7 +685,14 @@ pub fn use_query<Q: QueryCapability>(query: Query<Q>) -> UseQuery<Q> {
         }
     });
 
-    UseQuery {
+    let query = UseQuery {
         query: current_query,
-    }
+    };
+
+    // Used to consider this use_query call as a subscriber without rerunning the component
+    use_side_effect(move || {
+        let _ = query.read();
+    });
+
+    query
 }
