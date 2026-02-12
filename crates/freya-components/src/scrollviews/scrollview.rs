@@ -135,6 +135,16 @@ impl ScrollView {
         self.invert_scroll_wheel = invert_scroll_wheel.into();
         self
     }
+
+    pub fn max_width(mut self, max_width: impl Into<Size>) -> Self {
+        self.layout.maximum_width = max_width.into();
+        self
+    }
+
+    pub fn max_height(mut self, max_height: impl Into<Size>) -> Self {
+        self.layout.maximum_height = max_height.into();
+        self
+    }
 }
 
 impl LayoutExt for ScrollView {
@@ -206,8 +216,11 @@ impl Component for ScrollView {
         let scroll_with_arrows = self.scroll_with_arrows;
         let invert_scroll_wheel = self.invert_scroll_wheel;
 
-        let on_global_mouse_up = move |_| {
-            clicking_scrollbar.set_if_modified(None);
+        let on_capture_global_mouse_up = move |e: Event<MouseEventData>| {
+            if clicking_scrollbar.read().is_some() {
+                e.prevent_default();
+                clicking_scrollbar.set(None);
+            }
         };
 
         let on_wheel = move |e: Event<WheelEventData>| {
@@ -338,6 +351,8 @@ impl Component for ScrollView {
         rect()
             .width(layout.width.clone())
             .height(layout.height.clone())
+            .max_width(layout.maximum_width.clone())
+            .max_height(layout.maximum_height.clone())
             .a11y_id(focus.a11y_id())
             .a11y_focusable(false)
             .a11y_role(AccessibilityRole::ScrollView)
@@ -347,7 +362,7 @@ impl Component for ScrollView {
             })
             .scrollable(true)
             .on_wheel(on_wheel)
-            .on_global_mouse_up(on_global_mouse_up)
+            .on_capture_global_mouse_up(on_capture_global_mouse_up)
             .on_mouse_move(on_mouse_move)
             .on_capture_global_mouse_move(on_capture_global_mouse_move)
             .on_key_down(on_key_down)
@@ -355,14 +370,16 @@ impl Component for ScrollView {
             .on_global_key_down(on_global_key_down)
             .child(
                 rect()
-                    .width(container_width)
-                    .height(container_height)
+                    .width(container_width.clone())
+                    .height(container_height.clone())
                     .horizontal()
                     .child(
                         rect()
                             .direction(direction)
                             .width(content_width)
-                            .height(content_height)
+                            .height(content_height.clone())
+                            .max_width(layout.maximum_width.clone())
+                            .max_height(layout.maximum_height.clone())
                             .offset_x(corrected_scrolled_x)
                             .offset_y(corrected_scrolled_y)
                             .spacing(layout.spacing.get())
@@ -378,6 +395,7 @@ impl Component for ScrollView {
                             clicking_scrollbar,
                             axis: Axis::Y,
                             offset: scrollbar_y,
+                            size: Size::px(size.read().area.height()),
                             thumb: ScrollThumb {
                                 theme: None,
                                 clicking_scrollbar,
@@ -393,6 +411,7 @@ impl Component for ScrollView {
                     clicking_scrollbar,
                     axis: Axis::X,
                     offset: scrollbar_x,
+                    size: Size::px(size.read().area.width()),
                     thumb: ScrollThumb {
                         theme: None,
                         clicking_scrollbar,
