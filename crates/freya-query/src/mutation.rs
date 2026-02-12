@@ -188,7 +188,7 @@ impl<Q: MutationCapability> MutationsStorage<Q> {
         let mutation_data = storage.get_mut(&mutation).unwrap();
 
         // Spawn clean up task if there no more reactive contexts
-        if mutation_data.reactive_contexts.borrow().is_empty() {
+        if mutation_data.reactive_contexts.borrow().len() == 1 {
             *mutation_data.clean_task.borrow_mut() = Some(spawn_forever(async move {
                 // Wait as long as the stale time is configured
                 Timer::after(mutation.clean_time).await;
@@ -384,7 +384,14 @@ pub fn use_mutation<Q: MutationCapability>(mutation: Mutation<Q>) -> UseMutation
         }
     });
 
-    UseMutation {
+    let mutation = UseMutation {
         mutation: current_mutation,
-    }
+    };
+
+    // Used to consider this use_mutation call as a subscriber without rerunning the component
+    use_side_effect(move || {
+        let _ = mutation.read();
+    });
+
+    mutation
 }

@@ -1,0 +1,9 @@
+[package]
+name = "state_query_sqlite"
+publish = false
+edition = "2024"
+
+[dependencies]
+freya = { workspace = true, features = ["query"] }
+rusqlite = { workspace = true }
+blocking = { workspace = true }
