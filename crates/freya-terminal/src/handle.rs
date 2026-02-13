@@ -1,8 +1,10 @@
 use std::{
-    cell::RefCell,
+    cell::{
+        Ref,
+        RefCell,
+    },
     io::Write,
     rc::Rc,
-    sync::Arc,
 };
 
 use freya_core::{
@@ -15,16 +17,21 @@ use freya_core::{
     },
 };
 use futures_channel::mpsc::UnboundedSender;
+use vt100::Parser;
 
 use crate::{
     buffer::{
         TerminalBuffer,
         TerminalSelection,
     },
-    pty::spawn_pty,
+    pty::{
+        ScrollCommand,
+        spawn_pty,
+    },
 };
 
-type ResizeSender = Arc<UnboundedSender<(u16, u16)>>;
+type ResizeSender = Rc<UnboundedSender<(u16, u16)>>;
+type ScrollSender = Rc<UnboundedSender<ScrollCommand>>;
 
 /// Unique identifier for a terminal instance
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -88,10 +95,14 @@ pub struct TerminalHandle {
     pub(crate) id: TerminalId,
     /// Terminal buffer containing the current screen state.
     pub(crate) buffer: Rc<RefCell<TerminalBuffer>>,
+    /// VT100 parser for accessing full scrollback content.
+    pub(crate) parser: Rc<RefCell<Parser>>,
     /// Writer for sending input to the PTY process.
     pub(crate) writer: Rc<RefCell<Option<Box<dyn Write + Send>>>>,
     /// Channel for sending resize events to the PTY.
     pub(crate) resize_sender: ResizeSender,
+    /// Channel for sending scroll commands to the PTY.
+    pub(crate) scroll_sender: ScrollSender,
     /// Notifier that signals when the terminal/PTY closes.
     pub(crate) closer_notifier: ArcNotify,
     /// Handles cleanup when the terminal is dropped.
@@ -105,7 +116,7 @@ impl PartialEq for TerminalHandle {
 }
 
 impl TerminalHandle {
-    /// Create a new terminal with the specified command.
+    /// Create a new terminal with the specified command and default scrollback size (1000 lines).
     ///
     /// # Example
     ///
@@ -116,13 +127,14 @@ impl TerminalHandle {
     /// let mut cmd = CommandBuilder::new("bash");
     /// cmd.env("TERM", "xterm-256color");
     ///
-    /// let handle = TerminalHandle::new(TerminalId::new(), cmd).unwrap();
+    /// let handle = TerminalHandle::new(TerminalId::new(), cmd, None).unwrap();
     /// ```
     pub fn new(
         id: TerminalId,
         command: portable_pty::CommandBuilder,
+        scrollback_length: Option<usize>,
     ) -> Result<Self, TerminalError> {
-        spawn_pty(id, command)
+        spawn_pty(id, command, scrollback_length.unwrap_or(1000))
     }
 
     /// Write data to the terminal.
@@ -141,6 +153,12 @@ impl TerminalHandle {
                     .map_err(|e| TerminalError::WriteError(e.to_string()))?;
                 w.flush()
                     .map_err(|e| TerminalError::WriteError(e.to_string()))?;
+                {
+                    let mut buf = self.buffer.borrow_mut();
+                    buf.selection = None;
+                    buf.scroll_offset = 0;
+                }
+                let _ = self.scroll_sender.unbounded_send(ScrollCommand::ToBottom);
                 Ok(())
             }
             None => Err(TerminalError::NotInitialized),
@@ -160,9 +178,55 @@ impl TerminalHandle {
         let _ = self.resize_sender.unbounded_send((rows, cols));
     }
 
+    /// Scroll the terminal by the specified delta.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// # use freya_terminal::prelude::*;
+    /// # let handle: TerminalHandle = unimplemented!();
+    /// handle.scroll(-3); // Scroll up 3 lines
+    /// handle.scroll(3); // Scroll down 3 lines
+    /// ```
+    pub fn scroll(&self, delta: i32) {
+        let mut buffer = self.buffer.borrow_mut();
+        let new_offset = (buffer.scroll_offset as i64 + delta as i64).max(0) as usize;
+        buffer.scroll_offset = new_offset.min(buffer.total_scrollback);
+        let _ = self
+            .scroll_sender
+            .unbounded_send(ScrollCommand::Delta(delta));
+    }
+
+    /// Scroll the terminal to the bottom.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// # use freya_terminal::prelude::*;
+    /// # let handle: TerminalHandle = unimplemented!();
+    /// handle.scroll_to_bottom();
+    /// ```
+    pub fn scroll_to_bottom(&self) {
+        self.buffer.borrow_mut().scroll_offset = 0;
+        let _ = self.scroll_sender.unbounded_send(ScrollCommand::ToBottom);
+    }
+
+    /// Get the current scrollback position (scroll offset from buffer).
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// # use freya_terminal::prelude::*;
+    /// # let handle: TerminalHandle = unimplemented!();
+    /// let position = handle.scrollback_position();
+    /// ```
+    pub fn scrollback_position(&self) -> usize {
+        self.buffer.borrow().scroll_offset
+    }
+
     /// Read the current terminal buffer.
-    pub fn read_buffer(&self) -> TerminalBuffer {
-        self.buffer.borrow().clone()
+    pub fn read_buffer(&'_ self) -> Ref<'_, TerminalBuffer> {
+        self.buffer.borrow()
     }
 
     /// Returns a future that completes when the terminal/PTY closes.
@@ -196,22 +260,30 @@ impl TerminalHandle {
         self.buffer.borrow_mut().selection = selection;
     }
 
-    /// Start a new selection at the given position.
     pub fn start_selection(&self, row: usize, col: usize) {
-        let mut selection = TerminalSelection::new(row, col, row, col);
-        selection.dragging = true;
-        self.buffer.borrow_mut().selection = Some(selection);
+        let mut buffer = self.buffer.borrow_mut();
+        let scroll = buffer.scroll_offset;
+        buffer.selection = Some(TerminalSelection {
+            dragging: true,
+            start_row: row,
+            start_col: col,
+            start_scroll: scroll,
+            end_row: row,
+            end_col: col,
+            end_scroll: scroll,
+        });
         Platform::get().send(UserEvent::RequestRedraw);
     }
 
     pub fn update_selection(&self, row: usize, col: usize) {
-        if let Some(selection) = &mut self.buffer.borrow_mut().selection
+        let mut buffer = self.buffer.borrow_mut();
+        let scroll = buffer.scroll_offset;
+        if let Some(selection) = &mut buffer.selection
             && selection.dragging
         {
-            let mut new_selection =
-                TerminalSelection::new(selection.start_row, selection.start_col, row, col);
-            new_selection.dragging = true;
-            *selection = new_selection;
+            selection.end_row = row;
+            selection.end_col = col;
+            selection.end_scroll = scroll;
             Platform::get().send(UserEvent::RequestRedraw);
         }
     }
@@ -229,8 +301,66 @@ impl TerminalHandle {
         Platform::get().send(UserEvent::RequestRedraw);
     }
 
-    /// Get selected text from the buffer.
     pub fn get_selected_text(&self) -> Option<String> {
-        self.buffer.borrow_mut().get_selected_text()
+        let buffer = self.buffer.borrow();
+        let selection = buffer.selection.clone()?;
+        if selection.is_empty() {
+            return None;
+        }
+
+        let scroll = buffer.scroll_offset;
+        let (display_start, start_col, display_end, end_col) = selection.display_positions(scroll);
+
+        let mut parser = self.parser.borrow_mut();
+        let saved_scrollback = parser.screen().scrollback();
+        let (_rows, cols) = parser.screen().size();
+
+        let mut lines = Vec::new();
+
+        for d in display_start..=display_end {
+            let cp = d - scroll as i64;
+            let needed_scrollback = (-cp).max(0) as usize;
+            let viewport_row = cp.max(0) as u16;
+
+            parser.screen_mut().set_scrollback(needed_scrollback);
+
+            let row_cells: Vec<_> = (0..cols)
+                .filter_map(|c| parser.screen().cell(viewport_row, c).cloned())
+                .collect();
+
+            let is_single = display_start == display_end;
+            let is_first = d == display_start;
+            let is_last = d == display_end;
+
+            let cells = if is_single {
+                let s = start_col.min(row_cells.len());
+                let e = end_col.min(row_cells.len());
+                &row_cells[s..e]
+            } else if is_first {
+                let s = start_col.min(row_cells.len());
+                &row_cells[s..]
+            } else if is_last {
+                &row_cells[..end_col.min(row_cells.len())]
+            } else {
+                &row_cells
+            };
+
+            let line: String = cells
+                .iter()
+                .map(|cell| {
+                    if cell.has_contents() {
+                        cell.contents()
+                    } else {
+                        " "
+                    }
+                })
+                .collect::<String>();
+
+            lines.push(line);
+        }
+
+        parser.screen_mut().set_scrollback(saved_scrollback);
+
+        Some(lines.join("\n"))
     }
 }

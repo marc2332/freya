@@ -28,7 +28,7 @@
 //!     let mut handle = use_state(|| {
 //!         let mut cmd = CommandBuilder::new("bash");
 //!         cmd.env("TERM", "xterm-256color");
-//!         TerminalHandle::new(TerminalId::new(), cmd).ok()
+//!         TerminalHandle::new(TerminalId::new(), cmd, None).ok()
 //!     });
 //!
 //!     let focus = use_focus();
@@ -96,5 +96,6 @@ pub mod prelude {
             TerminalHandle,
             TerminalId,
         },
+        pty::ScrollCommand,
     };
 }
