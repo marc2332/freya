@@ -139,16 +139,15 @@ impl Component for Select {
 
         // Close the select when the focused accessibility node changes and its not the select or any of its children
         use_side_effect(move || {
-            if let Some(member_of) = Platform::get()
-                .focused_accessibility_node
-                .read()
-                .member_of()
-            {
-                if member_of != focus.a11y_id() {
+            let platform = Platform::get();
+            if *platform.navigation_mode.read() == NavigationMode::Keyboard {
+                if let Some(member_of) = platform.focused_accessibility_node.read().member_of() {
+                    if member_of != focus.a11y_id() {
+                        open.set_if_modified(false);
+                    }
+                } else {
                     open.set_if_modified(false);
                 }
-            } else {
-                open.set_if_modified(false);
             }
         });
 
