@@ -474,13 +474,7 @@ impl Component for Input {
             };
 
             if focus.is_focused() {
-                if *is_dragging.read() {
-                    // The input is focused and dragging, but it just clicked so we assume the dragging can stop
-                    is_dragging.set(false);
-                } else {
-                    // The input is focused but not dragging, so the click means it was clicked outside, therefore we can unfocus this input
-                    focus.request_unfocus();
-                }
+                is_dragging.set_if_modified(false);
             }
         };
 
