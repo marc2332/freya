@@ -249,6 +249,9 @@ impl LayerState {
                 .saturating_add(relative_layer)
                 .saturating_add(1),
             Layer::Overlay => parent_layer.layer.saturating_add(i16::MAX / 16),
+            Layer::RelativeOverlay(relative_layer) => {
+                (relative_layer.min(1) as i16).saturating_mul(i16::MAX / 16)
+            }
         };
         layers.insert_node_in_layer(node_id, self.layer);
     }
