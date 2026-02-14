@@ -39,10 +39,10 @@ impl ComponentOwned for ScrollBar {
 
         let mut state = use_state(|| ScrollBarState::Idle);
 
-        let (cross_size, opacity) = match *state.read() {
-            _ if self.clicking_scrollbar.read().is_some() => (16., 160),
-            ScrollBarState::Idle => (5., 0),
-            ScrollBarState::Hovering => (16., 160),
+        let (cross_size, cross_offset, opacity) = match *state.read() {
+            _ if self.clicking_scrollbar.read().is_some() => (16., 0., 160),
+            ScrollBarState::Idle => (12., 3., 0),
+            ScrollBarState::Hovering => (16., 0., 160),
         };
 
         let (
@@ -61,7 +61,7 @@ impl ComponentOwned for ScrollBar {
                 0.,
                 -16.,
                 self.offset,
-                0.,
+                cross_offset,
                 self.size.clone(),
                 Size::px(cross_size),
             ),
@@ -70,7 +70,7 @@ impl ComponentOwned for ScrollBar {
                 self.size.clone(),
                 -16.,
                 0.,
-                0.,
+                cross_offset,
                 self.offset,
                 Size::px(cross_size),
                 self.size.clone(),
