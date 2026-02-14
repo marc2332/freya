@@ -10,3 +10,4 @@ bacon.toml
 **/.DS_Store
 *demo-*.png
 other
+state_query_sqlite_data

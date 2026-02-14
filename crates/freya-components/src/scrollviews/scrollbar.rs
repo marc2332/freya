@@ -29,6 +29,7 @@ pub struct ScrollBar {
     pub clicking_scrollbar: State<Option<(Axis, f64)>>,
     pub axis: Axis,
     pub offset: f32,
+    pub size: Size,
     pub thumb: ScrollThumb,
 }
 
@@ -38,7 +39,7 @@ impl ComponentOwned for ScrollBar {
 
         let mut state = use_state(|| ScrollBarState::Idle);
 
-        let (size, cross_offset, opacity) = match *state.read() {
+        let (cross_size, cross_offset, opacity) = match *state.read() {
             _ if self.clicking_scrollbar.read().is_some() => (16., 0., 160),
             ScrollBarState::Idle => (12., 3., 0),
             ScrollBarState::Hovering => (16., 0., 160),
@@ -55,24 +56,24 @@ impl ComponentOwned for ScrollBar {
             inner_height,
         ) = match self.axis {
             Axis::X => (
-                Size::fill(),
+                self.size.clone(),
                 Size::px(16.),
                 0.,
                 -16.,
                 self.offset,
                 cross_offset,
-                Size::fill(),
-                Size::px(size),
+                self.size.clone(),
+                Size::px(cross_size),
             ),
             Axis::Y => (
                 Size::px(16.),
-                Size::fill(),
+                self.size.clone(),
                 -16.,
                 0.,
                 cross_offset,
                 self.offset,
-                Size::px(size),
-                Size::fill(),
+                Size::px(cross_size),
+                self.size.clone(),
             ),
         };
 

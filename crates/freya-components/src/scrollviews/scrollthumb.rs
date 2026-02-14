@@ -54,6 +54,11 @@ impl ComponentOwned for ScrollThumb {
                         .set(Some((self.axis, e.element_location().y)));
                 }
             })
+            .on_pointer_press(move |e: Event<PointerEventData>| {
+                e.prevent_default();
+                e.stop_propagation();
+                self.clicking_scrollbar.set(None);
+            })
             .child(
                 rect()
                     .width(Size::fill())
