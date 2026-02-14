@@ -338,6 +338,11 @@ impl Component for Input {
                         on_submit.call(text);
                     }
                 }
+                // On unfocus
+                Key::Named(NamedKey::Escape) => {
+                    focus.request_unfocus();
+                    Cursor::set(CursorIcon::default());
+                }
                 // On change
                 key => {
                     if *key != Key::Named(NamedKey::Enter) && *key != Key::Named(NamedKey::Tab) {
