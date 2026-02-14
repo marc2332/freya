@@ -231,6 +231,16 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
         self.scroll_controller = scroll_controller.into();
         self
     }
+
+    pub fn max_width(mut self, max_width: impl Into<Size>) -> Self {
+        self.layout.maximum_width = max_width.into();
+        self
+    }
+
+    pub fn max_height(mut self, max_height: impl Into<Size>) -> Self {
+        self.layout.maximum_height = max_height.into();
+        self
+    }
 }
 
 impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
@@ -290,8 +300,11 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
         let scroll_with_arrows = self.scroll_with_arrows;
         let invert_scroll_wheel = self.invert_scroll_wheel;
 
-        let on_global_mouse_up = move |_| {
-            clicking_scrollbar.set_if_modified(None);
+        let on_capture_global_mouse_up = move |e: Event<MouseEventData>| {
+            if clicking_scrollbar.read().is_some() {
+                e.prevent_default();
+                clicking_scrollbar.set(None);
+            }
         };
 
         let on_wheel = move |e: Event<WheelEventData>| {
@@ -466,7 +479,7 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
             })
             .scrollable(true)
             .on_wheel(on_wheel)
-            .on_global_mouse_up(on_global_mouse_up)
+            .on_capture_global_mouse_up(on_capture_global_mouse_up)
             .on_mouse_move(on_mouse_move)
             .on_capture_global_mouse_move(on_capture_global_mouse_move)
             .on_key_down(on_key_down)
@@ -474,8 +487,8 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
             .on_global_key_down(on_global_key_down)
             .child(
                 rect()
-                    .width(container_width)
-                    .height(container_height)
+                    .width(container_width.clone())
+                    .height(container_height.clone())
                     .horizontal()
                     .child(
                         rect()
@@ -496,6 +509,7 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
                             clicking_scrollbar,
                             axis: Axis::Y,
                             offset: scrollbar_y,
+                            size: Size::px(size.read().area.height()),
                             thumb: ScrollThumb {
                                 theme: None,
                                 clicking_scrollbar,
@@ -511,6 +525,7 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
                     clicking_scrollbar,
                     axis: Axis::X,
                     offset: scrollbar_x,
+                    size: Size::px(size.read().area.width()),
                     thumb: ScrollThumb {
                         theme: None,
                         clicking_scrollbar,
