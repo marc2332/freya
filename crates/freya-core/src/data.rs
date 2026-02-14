@@ -244,8 +244,11 @@ impl LayerState {
 
         // New
         self.layer = match relative_layer {
-            Layer::Relative(relative_layer) => parent_layer.layer + relative_layer + 1,
-            Layer::Overlay => i16::MAX / 2,
+            Layer::Relative(relative_layer) => parent_layer
+                .layer
+                .saturating_add(relative_layer)
+                .saturating_add(1),
+            Layer::Overlay => parent_layer.layer.saturating_add(i16::MAX / 16),
         };
         layers.insert_node_in_layer(node_id, self.layer);
     }
