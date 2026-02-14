@@ -4,49 +4,33 @@ use vt100::Cell;
 #[derive(Clone, PartialEq, Default, Debug)]
 pub struct TerminalSelection {
     pub dragging: bool,
-    /// Start row of selection
     pub start_row: usize,
-    /// Start column of selection
     pub start_col: usize,
-    /// End row of selection
+    pub start_scroll: usize,
     pub end_row: usize,
-    /// End column of selection
     pub end_col: usize,
+    pub end_scroll: usize,
 }
 
 impl TerminalSelection {
-    /// Create a new selection from start to end positions
-    pub fn new(start_row: usize, start_col: usize, end_row: usize, end_col: usize) -> Self {
-        Self {
-            dragging: false,
-            start_row,
-            start_col,
-            end_row,
-            end_col,
+    /// Get normalized display positions for rendering at the given scroll offset.
+    pub fn display_positions(&self, current_scroll: usize) -> (i64, usize, i64, usize) {
+        let current_scroll = current_scroll as i64;
+        let start_display = self.start_row as i64 - self.start_scroll as i64 + current_scroll;
+        let end_display = self.end_row as i64 - self.end_scroll as i64 + current_scroll;
+        if start_display < end_display
+            || (start_display == end_display && self.start_col <= self.end_col)
+        {
+            (start_display, self.start_col, end_display, self.end_col)
+        } else {
+            (end_display, self.end_col, start_display, self.start_col)
         }
     }
 
-    /// Normalize selection so start is always before end (top-left to bottom-right)
-    pub fn normalized(&self) -> (usize, usize, usize, usize) {
-        let (start_row, start_col, end_row, end_col) = if self.start_row < self.end_row
-            || (self.start_row == self.end_row && self.start_col <= self.end_col)
-        {
-            (self.start_row, self.start_col, self.end_row, self.end_col)
-        } else {
-            (self.end_row, self.end_col, self.start_row, self.start_col)
-        };
-        (start_row, start_col, end_row, end_col)
-    }
-
-    /// Check if a cell is within the selection
-    pub fn contains(&self, row: usize, col: usize) -> bool {
-        let (start_row, start_col, end_row, end_col) = self.normalized();
-        row >= start_row && row <= end_row && col >= start_col && col <= end_col
-    }
-
-    /// Check if selection is empty (zero length)
     pub fn is_empty(&self) -> bool {
-        self.start_row == self.end_row && self.start_col == self.end_col
+        let start_content = self.start_row as i64 - self.start_scroll as i64;
+        let end_content = self.end_row as i64 - self.end_scroll as i64;
+        start_content == end_content && self.start_col == self.end_col
     }
 }
 
@@ -65,10 +49,13 @@ pub struct TerminalBuffer {
     pub rows_count: usize,
     /// Current text selection
     pub selection: Option<TerminalSelection>,
+    /// Current scroll offset from the bottom (0 = no scroll, at latest output)
+    pub scroll_offset: usize,
+    /// Total number of scrollback lines available
+    pub total_scrollback: usize,
 }
 
 impl TerminalBuffer {
-    /// Get the selected text from the buffer
     pub fn get_selected_text(&self) -> Option<String> {
         let selection = self.selection.as_ref()?;
 
@@ -76,27 +63,31 @@ impl TerminalBuffer {
             return None;
         }
 
-        let (start_row, start_col, end_row, end_col) = selection.normalized();
+        let (start_display, start_col, end_display, end_col) =
+            selection.display_positions(self.scroll_offset);
 
         let mut lines = Vec::new();
 
-        for row_idx in start_row..=end_row {
-            let Some(row) = self.rows.get(row_idx) else {
+        let first = start_display.max(0) as usize;
+        let last = (end_display as usize).min(self.rows_count.saturating_sub(1));
+
+        for row_index in first..=last {
+            let Some(row) = self.rows.get(row_index) else {
                 continue;
             };
 
-            let cells = match row_idx {
-                _ if start_row == end_row => {
-                    let start = start_col.min(row.len());
-                    let end = end_col.min(row.len());
-                    &row[start..end]
-                }
-                _ if row_idx == start_row => {
-                    let start = start_col.min(row.len());
-                    &row[start..]
-                }
-                _ if row_idx == end_row => &row[..end_col.min(row.len())],
-                _ => row,
+            let row_index = row_index as i64;
+            let cells = if start_display == end_display {
+                let start = start_col.min(row.len());
+                let end = end_col.min(row.len());
+                &row[start..end]
+            } else if row_index == start_display {
+                let start = start_col.min(row.len());
+                &row[start..]
+            } else if row_index == end_display {
+                &row[..end_col.min(row.len())]
+            } else {
+                row
             };
 
             let line = cells

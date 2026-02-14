@@ -243,12 +243,13 @@ impl ElementExt for Terminal {
             }
 
             if let Some(selection) = &buffer.selection {
-                let (start_row, start_col, end_row, end_col) = selection.normalized();
-                let is_empty_selection = start_row == end_row && start_col == end_col;
+                let (display_start, start_col, display_end, end_col) =
+                    selection.display_positions(buffer.scroll_offset);
+                let row_i = row_idx as i64;
 
-                if !is_empty_selection && row_idx >= start_row && row_idx <= end_row {
-                    let sel_start_col = if row_idx == start_row { start_col } else { 0 };
-                    let sel_end_col = if row_idx == end_row {
+                if !selection.is_empty() && row_i >= display_start && row_i <= display_end {
+                    let sel_start_col = if row_i == display_start { start_col } else { 0 };
+                    let sel_end_col = if row_i == display_end {
                         end_col
                     } else {
                         row.len()
@@ -315,7 +316,7 @@ impl ElementExt for Terminal {
             paragraph.layout(f32::MAX);
             paragraph.paint(context.canvas, (area.min_x(), y));
 
-            if row_idx == buffer.cursor_row {
+            if row_idx == buffer.cursor_row && buffer.scroll_offset == 0 {
                 let cursor_idx = buffer.cursor_col;
                 let left = area.min_x() + (cursor_idx as f32) * char_width;
                 let top = y;
@@ -354,6 +355,57 @@ impl ElementExt for Terminal {
             }
 
             y += line_height;
+        }
+
+        // Scroll indicator
+        if buffer.total_scrollback > 0 {
+            let viewport_height = area.height();
+            let total_rows = buffer.rows_count + buffer.total_scrollback;
+            let total_content_height = total_rows as f32 * line_height;
+
+            let scrollbar_height =
+                (viewport_height * viewport_height / total_content_height).max(20.0);
+            let track_height = viewport_height - scrollbar_height;
+
+            let scroll_ratio = if buffer.total_scrollback > 0 {
+                buffer.scroll_offset as f32 / buffer.total_scrollback as f32
+            } else {
+                0.0
+            };
+
+            let thumb_y_offset = track_height * (1.0 - scroll_ratio);
+
+            let scrollbar_width = 4.0;
+            let scrollbar_x = area.max_x() - scrollbar_width;
+            let scrollbar_y = area.min_y() + thumb_y_offset;
+
+            let corner_radius = 2.0;
+            let mut track_paint = Paint::default();
+            track_paint.set_anti_alias(true);
+            track_paint.set_style(PaintStyle::Fill);
+            track_paint.set_color(Color::from_argb(50, 0, 0, 0));
+            context.canvas.draw_round_rect(
+                SkRect::new(scrollbar_x, area.min_y(), area.max_x(), area.max_y()),
+                corner_radius,
+                corner_radius,
+                &track_paint,
+            );
+
+            let mut thumb_paint = Paint::default();
+            thumb_paint.set_anti_alias(true);
+            thumb_paint.set_style(PaintStyle::Fill);
+            thumb_paint.set_color(Color::from_argb(60, 255, 255, 255));
+            context.canvas.draw_round_rect(
+                SkRect::new(
+                    scrollbar_x,
+                    scrollbar_y,
+                    area.max_x(),
+                    scrollbar_y + scrollbar_height,
+                ),
+                corner_radius,
+                corner_radius,
+                &thumb_paint,
+            );
         }
     }
 }
