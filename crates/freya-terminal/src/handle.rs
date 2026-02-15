@@ -5,6 +5,7 @@ use std::{
     },
     io::Write,
     rc::Rc,
+    time::Instant,
 };
 
 use freya_core::{
@@ -105,6 +106,10 @@ pub struct TerminalHandle {
     pub(crate) scroll_sender: ScrollSender,
     /// Notifier that signals when the terminal/PTY closes.
     pub(crate) closer_notifier: ArcNotify,
+    /// Notifier that signals when new output is received from the PTY.
+    pub(crate) output_notifier: ArcNotify,
+    /// Tracks when user last wrote input to the PTY.
+    pub(crate) last_write_time: Rc<RefCell<Instant>>,
     /// Handles cleanup when the terminal is dropped.
     pub(crate) cleaner: Rc<TerminalCleaner>,
 }
@@ -158,6 +163,7 @@ impl TerminalHandle {
                     buf.selection = None;
                     buf.scroll_offset = 0;
                 }
+                *self.last_write_time.borrow_mut() = Instant::now();
                 let _ = self.scroll_sender.unbounded_send(ScrollCommand::ToBottom);
                 Ok(())
             }
@@ -243,6 +249,17 @@ impl TerminalHandle {
     /// ```
     pub fn closed(&self) -> impl std::future::Future<Output = ()> + '_ {
         self.closer_notifier.notified()
+    }
+
+    /// Returns a future that completes when new output is received from the PTY.
+    ///
+    /// Can be called repeatedly in a loop to detect ongoing output activity.
+    pub fn output_received(&self) -> impl std::future::Future<Output = ()> + '_ {
+        self.output_notifier.notified()
+    }
+
+    pub fn last_write_elapsed(&self) -> std::time::Duration {
+        self.last_write_time.borrow().elapsed()
     }
 
     /// Returns the unique identifier for this terminal instance.
