@@ -1,6 +1,7 @@
 use std::{
     cell::RefCell,
     rc::Rc,
+    time::Instant,
 };
 
 use freya_core::{
@@ -94,6 +95,7 @@ pub(crate) fn spawn_pty(
     let parser = Rc::new(RefCell::new(Parser::new(24, 80, scrollback_size)));
     let writer = Rc::new(RefCell::new(None::<Box<dyn std::io::Write + Send>>));
     let closer_notifier = ArcNotify::new();
+    let output_notifier = ArcNotify::new();
 
     let pty_system = native_pty_system();
     let pair = pty_system
@@ -119,6 +121,7 @@ pub(crate) fn spawn_pty(
         let buffer = buffer.clone();
         let closer_notifier = closer_notifier.clone();
         let writer = writer.clone();
+        let output_notifier = output_notifier.clone();
         async move {
             loop {
                 futures_util::select! {
@@ -249,6 +252,8 @@ pub(crate) fn spawn_pty(
         writer,
         resize_sender: Rc::new(resize_tx),
         scroll_sender: Rc::new(scroll_tx),
+        output_notifier,
+        last_write_time: Rc::new(RefCell::new(Instant::now())),
         pressed_button: Rc::new(RefCell::new(None)),
     })
 }

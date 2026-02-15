@@ -5,6 +5,7 @@ use std::{
     },
     io::Write,
     rc::Rc,
+    time::Instant,
 };
 
 use freya_core::{
@@ -114,6 +115,10 @@ pub struct TerminalHandle {
     pub(crate) closer_notifier: ArcNotify,
     /// Handles cleanup when the terminal is dropped.
     pub(crate) cleaner: Rc<TerminalCleaner>,
+    /// Notifier that signals when new output is received from the PTY.
+    pub(crate) output_notifier: ArcNotify,
+    /// Tracks when user last wrote input to the PTY.
+    pub(crate) last_write_time: Rc<RefCell<Instant>>,
     /// Currently pressed mouse button (for drag/motion tracking).
     pub(crate) pressed_button: Rc<RefCell<Option<TerminalMouseButton>>>,
 }
@@ -160,6 +165,7 @@ impl TerminalHandle {
         let mut buffer = self.buffer.borrow_mut();
         buffer.selection = None;
         buffer.scroll_offset = 0;
+        *self.last_write_time.borrow_mut() = Instant::now();
         let _ = self.scroll_sender.unbounded_send(ScrollCommand::ToBottom);
         Ok(())
     }
@@ -384,6 +390,17 @@ impl TerminalHandle {
     /// Read the current terminal buffer.
     pub fn read_buffer(&'_ self) -> Ref<'_, TerminalBuffer> {
         self.buffer.borrow()
+    }
+
+    /// Returns a future that completes when new output is received from the PTY.
+    ///
+    /// Can be called repeatedly in a loop to detect ongoing output activity.
+    pub fn output_received(&self) -> impl std::future::Future<Output = ()> + '_ {
+        self.output_notifier.notified()
+    }
+
+    pub fn last_write_elapsed(&self) -> std::time::Duration {
+        self.last_write_time.borrow().elapsed()
     }
 
     /// Returns a future that completes when the terminal/PTY closes.
