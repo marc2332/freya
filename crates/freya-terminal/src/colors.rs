@@ -26,20 +26,9 @@ const RGB_LEVELS: [u8; 6] = [0u8, 95u8, 135u8, 175u8, 215u8, 255u8];
 /// Map VT100 color to Skia Color
 ///
 /// If `is_bg` is true, Default maps to background color instead of foreground
-pub fn map_vt100_color(
-    c: vt100::Color,
-    is_bg: bool,
-    default_fg: Color,
-    default_bg: Color,
-) -> Color {
+pub fn map_vt100_color(c: vt100::Color, default: Color) -> Color {
     match c {
-        vt100::Color::Default => {
-            if is_bg {
-                default_bg
-            } else {
-                default_fg
-            }
-        }
+        vt100::Color::Default => default,
         vt100::Color::Rgb(r, g, b) => Color::from_rgb(r, g, b),
         vt100::Color::Idx(idx) => {
             let i = idx as usize;
@@ -66,17 +55,7 @@ pub fn map_vt100_color(
             }
 
             // Fallback
-            if is_bg { default_bg } else { default_fg }
+            default
         }
     }
-}
-
-/// Map VT100 foreground color to Skia Color
-pub fn map_vt100_fg_color(c: vt100::Color, default_fg: Color, _default_bg: Color) -> Color {
-    map_vt100_color(c, false, default_fg, _default_bg)
-}
-
-/// Map VT100 background color to Skia Color
-pub fn map_vt100_bg_color(c: vt100::Color, _default_fg: Color, default_bg: Color) -> Color {
-    map_vt100_color(c, true, _default_fg, default_bg)
 }

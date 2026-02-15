@@ -48,7 +48,12 @@ fn app() -> impl IntoElement {
                                     (e.element_location.x / char_width as f64).floor() as usize;
                                 let row =
                                     (e.element_location.y / line_height as f64).floor() as usize;
-                                handle.start_selection(row, col);
+                                let button = match e.button {
+                                    Some(MouseButton::Middle) => TerminalMouseButton::Middle,
+                                    Some(MouseButton::Right) => TerminalMouseButton::Right,
+                                    _ => TerminalMouseButton::Left,
+                                };
+                                handle.mouse_down(row, col, button);
                             }
                         })
                         .on_mouse_move({
@@ -60,19 +65,33 @@ fn app() -> impl IntoElement {
                                 let row =
                                     (e.element_location.y / line_height as f64).floor() as usize;
                                 handle.update_selection(row, col);
+                                handle.mouse_move(row, col);
                             }
                         })
                         .on_mouse_up({
                             let handle = handle.clone();
-                            move |_| {
-                                handle.end_selection();
+                            move |e: Event<MouseEventData>| {
+                                let (char_width, line_height) = dimensions();
+                                let col =
+                                    (e.element_location.x / char_width as f64).floor() as usize;
+                                let row =
+                                    (e.element_location.y / line_height as f64).floor() as usize;
+                                let button = match e.button {
+                                    Some(MouseButton::Middle) => TerminalMouseButton::Middle,
+                                    Some(MouseButton::Right) => TerminalMouseButton::Right,
+                                    _ => TerminalMouseButton::Left,
+                                };
+                                handle.mouse_up(row, col, button);
                             }
                         })
                         .on_wheel({
                             let handle = handle.clone();
                             move |e: Event<WheelEventData>| {
-                                let delta = if e.delta_y < 0.0 { -3 } else { 3 };
-                                handle.scroll(delta);
+                                let (char_width, line_height) = dimensions();
+                                let (mouse_x, mouse_y) = e.element_location.to_tuple();
+                                let col = (mouse_x / char_width as f64).floor() as usize;
+                                let row = (mouse_y / line_height as f64).floor() as usize;
+                                handle.wheel(e.delta_y, row, col);
                             }
                         }),
                 )

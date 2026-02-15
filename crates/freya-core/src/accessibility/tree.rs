@@ -11,7 +11,10 @@ use rustc_hash::{
     FxHashMap,
     FxHashSet,
 };
-use torin::prelude::LayoutNode;
+use torin::prelude::{
+    CursorPoint,
+    LayoutNode,
+};
 
 use crate::{
     accessibility::{
@@ -325,6 +328,8 @@ impl AccessibilityTree {
                         delta_x as f64,
                         delta_y as f64,
                         WheelSource::Custom,
+                        CursorPoint::default(),
+                        CursorPoint::default(),
                     )),
                     bubbles: false,
                 });
