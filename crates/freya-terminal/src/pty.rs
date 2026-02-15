@@ -121,7 +121,6 @@ pub(crate) fn spawn_pty(
         let buffer = buffer.clone();
         let closer_notifier = closer_notifier.clone();
         let writer = writer.clone();
-        let output_notifier = output_notifier.clone();
         async move {
             loop {
                 futures_util::select! {
@@ -209,6 +208,7 @@ pub(crate) fn spawn_pty(
     let pty_task = spawn_forever({
         let writer = writer.clone();
         let parser = parser.clone();
+        let output_notifier = output_notifier.clone();
         async move {
             loop {
                 let mut buf = [0u8; 4096];
@@ -231,6 +231,7 @@ pub(crate) fn spawn_pty(
                         }
 
                         let _ = update_tx.unbounded_send(());
+                        output_notifier.notify();
                     }
                     Err(_) => break,
                 }
