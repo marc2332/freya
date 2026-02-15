@@ -151,14 +151,24 @@ pub struct WheelEventData {
     pub source: WheelSource,
     pub delta_x: f64,
     pub delta_y: f64,
+    pub global_location: CursorPoint,
+    pub element_location: CursorPoint,
 }
 
 impl WheelEventData {
-    pub fn new(delta_x: f64, delta_y: f64, source: WheelSource) -> Self {
+    pub fn new(
+        delta_x: f64,
+        delta_y: f64,
+        source: WheelSource,
+        global_location: CursorPoint,
+        element_location: CursorPoint,
+    ) -> Self {
         Self {
             delta_x,
             delta_y,
             source,
+            global_location,
+            element_location,
         }
     }
 }

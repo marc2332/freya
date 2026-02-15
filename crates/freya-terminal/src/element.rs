@@ -27,10 +27,7 @@ use freya_engine::prelude::{
 use rustc_hash::FxHashMap;
 
 use crate::{
-    colors::{
-        map_vt100_bg_color,
-        map_vt100_fg_color,
-    },
+    colors::map_vt100_color,
     handle::TerminalHandle,
 };
 
@@ -275,7 +272,7 @@ impl ElementExt for Terminal {
                 if cell.is_wide_continuation() {
                     continue;
                 }
-                let cell_bg = map_vt100_bg_color(cell.bgcolor(), self.fg, self.bg);
+                let cell_bg = map_vt100_color(cell.bgcolor(), self.bg);
                 if cell_bg != self.bg {
                     let left = area.min_x() + (col_idx as f32) * char_width;
                     let top = y;
@@ -308,7 +305,7 @@ impl ElementExt for Terminal {
                     " "
                 };
                 let mut cell_style = text_style.clone();
-                cell_style.set_color(map_vt100_fg_color(cell.fgcolor(), self.fg, self.bg));
+                cell_style.set_color(map_vt100_color(cell.fgcolor(), self.fg));
                 builder.push_style(&cell_style);
                 builder.add_text(text);
             }

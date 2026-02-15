@@ -74,6 +74,10 @@
 //!     // Terminal has exited, update UI state
 //! });
 //! ```
+//!
+//! ## Advance usage
+//!
+//! Check the `feature_terminal.rs` example in the repository.
 pub mod buffer;
 pub mod colors;
 pub mod element;
@@ -96,6 +100,7 @@ pub mod prelude {
             TerminalHandle,
             TerminalId,
         },
+        parser::TerminalMouseButton,
         pty::ScrollCommand,
     };
 }

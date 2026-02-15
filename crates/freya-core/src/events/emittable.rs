@@ -175,14 +175,30 @@ impl EmmitableEvent {
                 name: platform_event_name,
                 scroll,
                 source,
+                cursor,
                 ..
-            } => Self {
-                node_id,
-                name,
-                source_event: platform_event_name.into(),
-                data: EventType::Wheel(WheelEventData::new(scroll.x, scroll.y, source)),
-                bubbles,
-            },
+            } => {
+                let global_location = cursor / scale_factor;
+                let element_x =
+                    (cursor.x - node_area.unwrap_or_default().min_x() as f64) / scale_factor;
+                let element_y =
+                    (cursor.y - node_area.unwrap_or_default().min_y() as f64) / scale_factor;
+                let element_location = CursorPoint::new(element_x, element_y);
+
+                Self {
+                    node_id,
+                    name,
+                    source_event: platform_event_name.into(),
+                    data: EventType::Wheel(WheelEventData::new(
+                        scroll.x,
+                        scroll.y,
+                        source,
+                        global_location,
+                        element_location,
+                    )),
+                    bubbles,
+                }
+            }
             PlatformEvent::Touch {
                 name: platform_event_name,
                 location,
