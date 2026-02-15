@@ -23,6 +23,7 @@ use torin::{
 };
 
 use crate::{
+    context_menu::ContextMenu,
     get_theme,
     theming::component_themes::{
         TooltipTheme,
@@ -197,6 +198,8 @@ impl Component for TooltipContainer {
             TooltipPosition::Besides => Direction::horizontal(),
         };
 
+        let is_visible = opacity > 0. && !ContextMenu::is_open();
+
         rect()
             .a11y_focusable(false)
             .a11y_role(AccessibilityRole::Tooltip)
@@ -211,10 +214,10 @@ impl Component for TooltipContainer {
                     .height(Size::px(0.))
                     .layer(Layer::Overlay)
                     .opacity(opacity)
-                    .overflow(if opacity == 0. {
-                        Overflow::Clip
-                    } else {
+                    .overflow(if is_visible {
                         Overflow::None
+                    } else {
+                        Overflow::Clip
                     })
                     .child({
                         match self.position {
