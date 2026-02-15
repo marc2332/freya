@@ -316,7 +316,7 @@ impl TestingRunner {
     }
 
     pub fn sync_and_update(&mut self) {
-        while let Ok(Some(events_chunk)) = self.events_receiver.try_recv() {
+        while let Ok(events_chunk) = self.events_receiver.try_recv() {
             match events_chunk {
                 EventsChunk::Processed(processed_events) => {
                     let events_executor_adapter = EventsExecutorAdapter {
