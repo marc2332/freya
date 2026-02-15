@@ -192,6 +192,7 @@ pub fn Input(
     if &*value != editable.editor().read().rope() {
         editable.editor_mut().write().set(&value);
         editable.editor_mut().write().editor_history().clear();
+        editable.editor_mut().write().clear_selection();
     }
 
     use_drop(move || {
