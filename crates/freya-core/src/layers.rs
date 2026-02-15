@@ -14,6 +14,7 @@ use crate::node_id::NodeId;
 pub enum Layer {
     Relative(i16),
     Overlay,
+    RelativeOverlay(u8),
 }
 
 impl Default for Layer {
