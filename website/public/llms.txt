@@ -73,22 +73,22 @@ fn app() -> impl IntoElement {
 - [Development Setup](https://docs.rs/freya/latest/freya/_docs/development_setup/index.html): Getting started guide
 
 ## Release Candidate docs
-- [UI and Components](https://docs.rs/freya/0.4.0-rc.7/freya/_docs/ui_and_components/index.html): UI patterns and components guide
-- [Elements](https://docs.rs/freya/0.4.0-rc.7/freya/elements/index.html): Core UI elements reference
-- [Hooks](https://docs.rs/freya/0.4.0-rc.7/freya/_docs/hooks/index.html): Hooks reference
-- [State Management](https://docs.rs/freya/0.4.0-rc.7/freya/_docs/state_management/index.html): State management guide
-- [Development Setup](https://docs.rs/freya/0.4.0-rc.7/freya/_docs/development_setup/index.html): Getting started guide
-- [Built-in Components](https://docs.rs/freya/0.4.0-rc.7/freya/components/index.html): Available components
-- [Built-in Components Gallery](https://docs.rs/freya/0.4.0-rc.7/freya/components/gallery/index.html): Component examples
-- [i18n](https://docs.rs/freya-i18n/0.4.0-rc.7/freya_i18n/): Internationalization support
-- [Animation](https://docs.rs/freya-animation/0.4.0-rc.7/freya_animation/): Animation utilities
-- [Routing](https://docs.rs/freya-router/0.4.0-rc.7/freya_router/): Navigation routing
-- [Clipboard](https://docs.rs/freya-clipboard/0.4.0-rc.7/freya_clipboard/): Clipboard operations
-- [Icons](https://docs.rs/freya-icons/0.4.0-rc.7/freya_icons/): Icon library
-- [Material Design](https://docs.rs/freya-material-design/0.4.0-rc.7/freya_material_design/): Material Design components
-- [Plotters](https://docs.rs/freya-plotters-backend/0.4.0-rc.7/freya_plotters_backend/): Plotting backend
-- [Testing](https://docs.rs/freya-testing/0.4.0-rc.7/freya_testing/): Testing framework
-- [Terminal](https://docs.rs/freya-terminal/0.4.0-rc.7/freya_terminal/): Terminal emulator integration
+- [UI and Components](https://docs.rs/freya/0.4.0-rc.8/freya/_docs/ui_and_components/index.html): UI patterns and components guide
+- [Elements](https://docs.rs/freya/0.4.0-rc.8/freya/elements/index.html): Core UI elements reference
+- [Hooks](https://docs.rs/freya/0.4.0-rc.8/freya/_docs/hooks/index.html): Hooks reference
+- [State Management](https://docs.rs/freya/0.4.0-rc.8/freya/_docs/state_management/index.html): State management guide
+- [Development Setup](https://docs.rs/freya/0.4.0-rc.8/freya/_docs/development_setup/index.html): Getting started guide
+- [Built-in Components](https://docs.rs/freya/0.4.0-rc.8/freya/components/index.html): Available components
+- [Built-in Components Gallery](https://docs.rs/freya/0.4.0-rc.8/freya/components/gallery/index.html): Component examples
+- [i18n](https://docs.rs/freya-i18n/0.4.0-rc.8/freya_i18n/): Internationalization support
+- [Animation](https://docs.rs/freya-animation/0.4.0-rc.8/freya_animation/): Animation utilities
+- [Routing](https://docs.rs/freya-router/0.4.0-rc.8/freya_router/): Navigation routing
+- [Clipboard](https://docs.rs/freya-clipboard/0.4.0-rc.8/freya_clipboard/): Clipboard operations
+- [Icons](https://docs.rs/freya-icons/0.4.0-rc.8/freya_icons/): Icon library
+- [Material Design](https://docs.rs/freya-material-design/0.4.0-rc.8/freya_material_design/): Material Design components
+- [Plotters](https://docs.rs/freya-plotters-backend/0.4.0-rc.8/freya_plotters_backend/): Plotting backend
+- [Testing](https://docs.rs/freya-testing/0.4.0-rc.8/freya_testing/): Testing framework
+- [Terminal](https://docs.rs/freya-terminal/0.4.0-rc.8/freya_terminal/): Terminal emulator integration
 
 ## Examples
 

@@ -1,6 +1,6 @@
 [package]
 name = "freya-terminal"
-version = "0.4.0-rc.7"
+version = "0.4.0-rc.8"
 description = "Terminal emulator integration for Freya"
 edition = "2024"
 license = "MIT"
