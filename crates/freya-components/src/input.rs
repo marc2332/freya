@@ -323,6 +323,7 @@ impl Component for Input {
         if &*value.read() != editable.editor().read().rope() {
             editable.editor_mut().write().set(&value.read());
             editable.editor_mut().write().editor_history().clear();
+            editable.editor_mut().write().clear_selection();
         }
 
         let on_ime_preedit = move |e: Event<ImePreeditEventData>| {
