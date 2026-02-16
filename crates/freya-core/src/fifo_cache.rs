@@ -30,10 +30,10 @@ where
         if self.map.contains_key(&key) {
             self.map.insert(key, value);
         } else {
-            if self.order.len() >= self.capacity {
-                if let Some(old_key) = self.order.pop_front() {
-                    self.map.remove(&old_key);
-                }
+            if self.order.len() >= self.capacity
+                && let Some(old_key) = self.order.pop_front()
+            {
+                self.map.remove(&old_key);
             }
             self.order.push_back(key.clone());
             self.map.insert(key, value);
