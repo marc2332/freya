@@ -18,6 +18,7 @@ use freya_core::{
     },
 };
 use futures_channel::mpsc::UnboundedSender;
+use keyboard_types::Modifiers;
 use vt100::Parser;
 
 use crate::{
@@ -121,6 +122,8 @@ pub struct TerminalHandle {
     pub(crate) last_write_time: Rc<RefCell<Instant>>,
     /// Currently pressed mouse button (for drag/motion tracking).
     pub(crate) pressed_button: Rc<RefCell<Option<TerminalMouseButton>>>,
+    /// Current modifier keys state (shift, ctrl, alt, etc.).
+    pub(crate) modifiers: Rc<RefCell<Modifiers>>,
 }
 
 impl PartialEq for TerminalHandle {
@@ -261,7 +264,18 @@ impl TerminalHandle {
     ///
     /// When dragging, the held button is encoded in the motion event so TUI apps
     /// can implement their own text selection.
+    ///
+    /// If shift is held and a button is pressed, updates the text selection instead
+    /// of sending events to the PTY.
     pub fn mouse_move(&self, row: usize, col: usize) {
+        let is_dragging = self.pressed_button.borrow().is_some();
+
+        if self.modifiers.borrow().contains(Modifiers::SHIFT) && is_dragging {
+            // Shift+drag updates text selection (raw mode, bypasses PTY)
+            self.update_selection(row, col);
+            return;
+        }
+
         let parser = self.parser.borrow();
         let mouse_mode = parser.screen().mouse_protocol_mode();
         let encoding = parser.screen().mouse_protocol_encoding();
@@ -279,6 +293,12 @@ impl TerminalHandle {
                     let _ = self.write_raw(seq.as_bytes());
                 }
             }
+            vt100::MouseProtocolMode::None => {
+                // No mouse tracking - do text selection if dragging
+                if is_dragging {
+                    self.update_selection(row, col);
+                }
+            }
             _ => {}
         }
     }
@@ -294,10 +314,16 @@ impl TerminalHandle {
     /// When the running application has enabled mouse tracking (e.g. vim,
     /// helix, htop), this sends the press escape sequence to the PTY.
     /// Otherwise it starts a text selection.
+    ///
+    /// If shift is held, text selection is always performed regardless of
+    /// the application's mouse tracking state.
     pub fn mouse_down(&self, row: usize, col: usize, button: TerminalMouseButton) {
         *self.pressed_button.borrow_mut() = Some(button);
 
-        if self.is_mouse_tracking_enabled() {
+        if self.modifiers.borrow().contains(Modifiers::SHIFT) {
+            // Shift+drag always does raw text selection
+            self.start_selection(row, col);
+        } else if self.is_mouse_tracking_enabled() {
             let encoding = self.parser.borrow().screen().mouse_protocol_encoding();
             let seq = encode_mouse_press(row, col, button, encoding);
             let _ = self.write_raw(seq.as_bytes());
@@ -312,8 +338,17 @@ impl TerminalHandle {
     /// release escape sequence to the PTY. Only `PressRelease`, `ButtonMotion`,
     /// and `AnyMotion` modes receive release events — `Press` mode does not.
     /// Otherwise it ends the current text selection.
+    ///
+    /// If shift is held, always ends the text selection instead of sending
+    /// events to the PTY.
     pub fn mouse_up(&self, row: usize, col: usize, button: TerminalMouseButton) {
         *self.pressed_button.borrow_mut() = None;
+
+        if self.modifiers.borrow().contains(Modifiers::SHIFT) {
+            // Shift+drag ends text selection
+            self.end_selection();
+            return;
+        }
 
         let parser = self.parser.borrow();
         let mouse_mode = parser.screen().mouse_protocol_mode();
@@ -422,6 +457,19 @@ impl TerminalHandle {
     /// Returns the unique identifier for this terminal instance.
     pub fn id(&self) -> TerminalId {
         self.id
+    }
+
+    /// Track whether shift is currently pressed.
+    ///
+    /// This should be called from your key event handlers to track shift state
+    /// for shift+drag text selection.
+    pub fn shift_pressed(&self, pressed: bool) {
+        let mut mods = self.modifiers.borrow_mut();
+        if pressed {
+            mods.insert(Modifiers::SHIFT);
+        } else {
+            mods.remove(Modifiers::SHIFT);
+        }
     }
 
     /// Get the current text selection.

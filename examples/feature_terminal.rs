@@ -64,7 +64,6 @@ fn app() -> impl IntoElement {
                                     (e.element_location.x / char_width as f64).floor() as usize;
                                 let row =
                                     (e.element_location.y / line_height as f64).floor() as usize;
-                                handle.update_selection(row, col);
                                 handle.mouse_move(row, col);
                             }
                         })
@@ -100,6 +99,14 @@ fn app() -> impl IntoElement {
                 .padding(6.)
                 .a11y_id(focus.a11y_id())
                 .a11y_auto_focus(true)
+                .on_key_up({
+                    let handle = handle.clone();
+                    move |e: Event<KeyboardEventData>| {
+                        if e.key == Key::Named(NamedKey::Shift) {
+                            handle.shift_pressed(false);
+                        }
+                    }
+                })
                 .on_key_down(move |e: Event<KeyboardEventData>| {
                     let mods = e.modifiers;
                     let ctrl_shift = mods.contains(Modifiers::CONTROL | Modifiers::SHIFT);
@@ -127,6 +134,9 @@ fn app() -> impl IntoElement {
                         }
                         Key::Named(NamedKey::Delete) => {
                             let _ = handle.write(b"\x1b[3~");
+                        }
+                        Key::Named(NamedKey::Shift) => {
+                            handle.shift_pressed(true);
                         }
                         Key::Named(NamedKey::Tab) => {
                             let _ = handle.write(b"\t");

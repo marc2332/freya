@@ -17,6 +17,7 @@ use futures_lite::{
     StreamExt,
 };
 use futures_util::FutureExt;
+use keyboard_types::Modifiers;
 use portable_pty::{
     CommandBuilder,
     PtySize,
@@ -256,5 +257,6 @@ pub(crate) fn spawn_pty(
         output_notifier,
         last_write_time: Rc::new(RefCell::new(Instant::now())),
         pressed_button: Rc::new(RefCell::new(None)),
+        modifiers: Rc::new(RefCell::new(Modifiers::empty())),
     })
 }
