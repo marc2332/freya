@@ -255,5 +255,6 @@ pub(crate) fn spawn_pty(
         scroll_sender: Rc::new(scroll_tx),
         output_notifier,
         last_write_time: Rc::new(RefCell::new(Instant::now())),
+        pressed_button: Rc::new(RefCell::new(None)),
     })
 }

@@ -25,6 +25,13 @@ use crate::{
         TerminalBuffer,
         TerminalSelection,
     },
+    parser::{
+        TerminalMouseButton,
+        encode_mouse_move,
+        encode_mouse_press,
+        encode_mouse_release,
+        encode_wheel_event,
+    },
     pty::{
         ScrollCommand,
         spawn_pty,
@@ -106,12 +113,14 @@ pub struct TerminalHandle {
     pub(crate) scroll_sender: ScrollSender,
     /// Notifier that signals when the terminal/PTY closes.
     pub(crate) closer_notifier: ArcNotify,
+    /// Handles cleanup when the terminal is dropped.
+    pub(crate) cleaner: Rc<TerminalCleaner>,
     /// Notifier that signals when new output is received from the PTY.
     pub(crate) output_notifier: ArcNotify,
     /// Tracks when user last wrote input to the PTY.
     pub(crate) last_write_time: Rc<RefCell<Instant>>,
-    /// Handles cleanup when the terminal is dropped.
-    pub(crate) cleaner: Rc<TerminalCleaner>,
+    /// Currently pressed mouse button (for drag/motion tracking).
+    pub(crate) pressed_button: Rc<RefCell<Option<TerminalMouseButton>>>,
 }
 
 impl PartialEq for TerminalHandle {
@@ -152,19 +161,23 @@ impl TerminalHandle {
     /// handle.write(b"ls -la\n").unwrap();
     /// ```
     pub fn write(&self, data: &[u8]) -> Result<(), TerminalError> {
+        self.write_raw(data)?;
+        let mut buffer = self.buffer.borrow_mut();
+        buffer.selection = None;
+        buffer.scroll_offset = 0;
+        *self.last_write_time.borrow_mut() = Instant::now();
+        let _ = self.scroll_sender.unbounded_send(ScrollCommand::ToBottom);
+        Ok(())
+    }
+
+    /// Write data to the PTY without resetting scroll or selection state.
+    fn write_raw(&self, data: &[u8]) -> Result<(), TerminalError> {
         match &mut *self.writer.borrow_mut() {
             Some(w) => {
                 w.write_all(data)
                     .map_err(|e| TerminalError::WriteError(e.to_string()))?;
                 w.flush()
                     .map_err(|e| TerminalError::WriteError(e.to_string()))?;
-                {
-                    let mut buf = self.buffer.borrow_mut();
-                    buf.selection = None;
-                    buf.scroll_offset = 0;
-                }
-                *self.last_write_time.borrow_mut() = Instant::now();
-                let _ = self.scroll_sender.unbounded_send(ScrollCommand::ToBottom);
                 Ok(())
             }
             None => Err(TerminalError::NotInitialized),
@@ -230,9 +243,164 @@ impl TerminalHandle {
         self.buffer.borrow().scroll_offset
     }
 
+    /// Send a wheel event to the PTY.
+    ///
+    /// This sends mouse wheel events as escape sequences to the running process.
+    /// Uses the currently active mouse protocol encoding based on what
+    /// the application has requested via DECSET sequences.
+    pub fn send_wheel_to_pty(&self, row: usize, col: usize, delta_y: f64) {
+        let encoding = self.parser.borrow().screen().mouse_protocol_encoding();
+        let seq = encode_wheel_event(row, col, delta_y, encoding);
+        let _ = self.write_raw(seq.as_bytes());
+    }
+
+    /// Send a mouse move/drag event to the PTY based on the active mouse mode.
+    ///
+    /// - `AnyMotion` (DECSET 1003): sends motion events regardless of button state.
+    /// - `ButtonMotion` (DECSET 1002): sends motion events only while a button is held.
+    ///
+    /// When dragging, the held button is encoded in the motion event so TUI apps
+    /// can implement their own text selection.
+    pub fn mouse_move(&self, row: usize, col: usize) {
+        let parser = self.parser.borrow();
+        let mouse_mode = parser.screen().mouse_protocol_mode();
+        let encoding = parser.screen().mouse_protocol_encoding();
+
+        let held = *self.pressed_button.borrow();
+
+        match mouse_mode {
+            vt100::MouseProtocolMode::AnyMotion => {
+                let seq = encode_mouse_move(row, col, held, encoding);
+                let _ = self.write_raw(seq.as_bytes());
+            }
+            vt100::MouseProtocolMode::ButtonMotion => {
+                if let Some(button) = held {
+                    let seq = encode_mouse_move(row, col, Some(button), encoding);
+                    let _ = self.write_raw(seq.as_bytes());
+                }
+            }
+            _ => {}
+        }
+    }
+
+    /// Returns whether the running application has enabled mouse tracking.
+    fn is_mouse_tracking_enabled(&self) -> bool {
+        let parser = self.parser.borrow();
+        parser.screen().mouse_protocol_mode() != vt100::MouseProtocolMode::None
+    }
+
+    /// Handle a mouse button press event.
+    ///
+    /// When the running application has enabled mouse tracking (e.g. vim,
+    /// helix, htop), this sends the press escape sequence to the PTY.
+    /// Otherwise it starts a text selection.
+    pub fn mouse_down(&self, row: usize, col: usize, button: TerminalMouseButton) {
+        *self.pressed_button.borrow_mut() = Some(button);
+
+        if self.is_mouse_tracking_enabled() {
+            let encoding = self.parser.borrow().screen().mouse_protocol_encoding();
+            let seq = encode_mouse_press(row, col, button, encoding);
+            let _ = self.write_raw(seq.as_bytes());
+        } else {
+            self.start_selection(row, col);
+        }
+    }
+
+    /// Handle a mouse button release event.
+    ///
+    /// When the running application has enabled mouse tracking, this sends the
+    /// release escape sequence to the PTY. Only `PressRelease`, `ButtonMotion`,
+    /// and `AnyMotion` modes receive release events — `Press` mode does not.
+    /// Otherwise it ends the current text selection.
+    pub fn mouse_up(&self, row: usize, col: usize, button: TerminalMouseButton) {
+        *self.pressed_button.borrow_mut() = None;
+
+        let parser = self.parser.borrow();
+        let mouse_mode = parser.screen().mouse_protocol_mode();
+        let encoding = parser.screen().mouse_protocol_encoding();
+
+        match mouse_mode {
+            vt100::MouseProtocolMode::PressRelease
+            | vt100::MouseProtocolMode::ButtonMotion
+            | vt100::MouseProtocolMode::AnyMotion => {
+                let seq = encode_mouse_release(row, col, button, encoding);
+                let _ = self.write_raw(seq.as_bytes());
+            }
+            vt100::MouseProtocolMode::Press => {
+                // Press-only mode doesn't send release events
+            }
+            vt100::MouseProtocolMode::None => {
+                self.end_selection();
+            }
+        }
+    }
+
+    /// Number of arrow key presses to send per wheel tick in alternate scroll mode.
+    const ALTERNATE_SCROLL_LINES: usize = 3;
+
+    /// Handle a wheel event intelligently.
+    ///
+    /// The behavior depends on the terminal state:
+    /// - If viewing scrollback history: scrolls the scrollback buffer.
+    /// - If mouse tracking is enabled (e.g., vim, helix): sends wheel escape
+    ///   sequences to the PTY.
+    /// - If on the alternate screen without mouse tracking (e.g., gitui, less):
+    ///   sends arrow key sequences to the PTY (alternate scroll mode, like
+    ///   wezterm/kitty/alacritty).
+    /// - Otherwise (normal shell): scrolls the scrollback buffer.
+    pub fn wheel(&self, delta_y: f64, row: usize, col: usize) {
+        let scroll_delta = if delta_y > 0.0 { 3 } else { -3 };
+        let scroll_offset = self.buffer.borrow().scroll_offset;
+        let (mouse_mode, alt_screen, app_cursor) = {
+            let parser = self.parser.borrow();
+            let screen = parser.screen();
+            (
+                screen.mouse_protocol_mode(),
+                screen.alternate_screen(),
+                screen.application_cursor(),
+            )
+        };
+
+        if scroll_offset > 0 {
+            // User is viewing scrollback history
+            let delta = scroll_delta;
+            self.scroll(delta);
+        } else if mouse_mode != vt100::MouseProtocolMode::None {
+            // App has enabled mouse tracking (vim, helix, etc.)
+            self.send_wheel_to_pty(row, col, delta_y);
+        } else if alt_screen {
+            // Alternate screen without mouse tracking (gitui, less, etc.)
+            // Send arrow key presses, matching wezterm/kitty/alacritty behavior
+            let key = match (delta_y > 0.0, app_cursor) {
+                (true, true) => "\x1bOA",
+                (true, false) => "\x1b[A",
+                (false, true) => "\x1bOB",
+                (false, false) => "\x1b[B",
+            };
+            for _ in 0..Self::ALTERNATE_SCROLL_LINES {
+                let _ = self.write_raw(key.as_bytes());
+            }
+        } else {
+            // Normal screen, no mouse tracking — scroll scrollback
+            let delta = scroll_delta;
+            self.scroll(delta);
+        }
+    }
+
     /// Read the current terminal buffer.
     pub fn read_buffer(&'_ self) -> Ref<'_, TerminalBuffer> {
         self.buffer.borrow()
+    }
+
+    /// Returns a future that completes when new output is received from the PTY.
+    ///
+    /// Can be called repeatedly in a loop to detect ongoing output activity.
+    pub fn output_received(&self) -> impl std::future::Future<Output = ()> + '_ {
+        self.output_notifier.notified()
+    }
+
+    pub fn last_write_elapsed(&self) -> std::time::Duration {
+        self.last_write_time.borrow().elapsed()
     }
 
     /// Returns a future that completes when the terminal/PTY closes.
@@ -249,17 +417,6 @@ impl TerminalHandle {
     /// ```
     pub fn closed(&self) -> impl std::future::Future<Output = ()> + '_ {
         self.closer_notifier.notified()
-    }
-
-    /// Returns a future that completes when new output is received from the PTY.
-    ///
-    /// Can be called repeatedly in a loop to detect ongoing output activity.
-    pub fn output_received(&self) -> impl std::future::Future<Output = ()> + '_ {
-        self.output_notifier.notified()
-    }
-
-    pub fn last_write_elapsed(&self) -> std::time::Duration {
-        self.last_write_time.borrow().elapsed()
     }
 
     /// Returns the unique identifier for this terminal instance.
