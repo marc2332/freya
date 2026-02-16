@@ -22,6 +22,7 @@ torin = { workspace = true }
 rustc-hash = { workspace = true }
 thiserror = { workspace = true }
 blocking = { workspace = true }
+keyboard-types = { workspace = true }
 
 # PTY and VT100
 portable-pty = "0.9"
