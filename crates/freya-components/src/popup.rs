@@ -45,7 +45,7 @@ impl Component for PopupBackground {
         let on_press = self.on_press.clone();
 
         rect()
-            .layer(2000)
+            .layer(Layer::Overlay)
             .position(Position::new_global())
             .child(
                 rect()
