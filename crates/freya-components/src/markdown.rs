@@ -95,6 +95,7 @@ impl LayoutExt for MarkdownViewer {
 impl ContainerExt for MarkdownViewer {}
 
 /// Represents different markdown elements for rendering.
+#[allow(dead_code)]
 #[derive(Clone)]
 enum MarkdownElement {
     Heading {
@@ -586,28 +587,26 @@ impl Component for MarkdownViewer {
                 MarkdownElement::Image { alt, .. } => {
                     label().key(idx).text(format!("[Image: {}]", alt)).into()
                 }
+                #[cfg(feature = "router")]
                 MarkdownElement::Link { url, title, text } => {
-                    #[cfg(feature = "router")]
+                    let mut tooltip = LinkTooltip::Default;
+                    if let Some(title) = title
+                        && !title.is_empty()
                     {
-                        let mut tooltip = LinkTooltip::Default;
-                        if let Some(title) = title
-                            && !title.is_empty()
-                        {
-                            tooltip = LinkTooltip::Custom(title);
-                        }
+                        tooltip = LinkTooltip::Custom(title);
+                    }
 
-                        Link::new(url)
-                            .tooltip(tooltip)
-                            .child(render_spans(&text, paragraph_size, Some(color)))
-                            .key(idx)
-                            .into()
-                    }
-                    #[cfg(not(feature = "router"))]
-                    {
-                        render_spans(&text, paragraph_size, Some(color))
-                            .key(idx)
-                            .into()
-                    }
+                    Link::new(url)
+                        .tooltip(tooltip)
+                        .child(render_spans(&text, paragraph_size, Some(color)))
+                        .key(idx)
+                        .into()
+                }
+                #[cfg(not(feature = "router"))]
+                MarkdownElement::Link { text, .. } => {
+                    render_spans(&text, paragraph_size, Some(color))
+                        .key(idx)
+                        .into()
                 }
                 MarkdownElement::Blockquote { spans } => rect()
                     .key(idx)
