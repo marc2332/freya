@@ -11,6 +11,7 @@ pub mod event_handler;
 pub mod events;
 pub mod events_combos;
 pub mod extended_hashmap;
+pub mod fifo_cache;
 pub mod helpers;
 pub mod hooks;
 pub mod layers;
