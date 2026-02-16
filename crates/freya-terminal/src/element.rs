@@ -1,6 +1,11 @@
 use std::{
     any::Any,
     borrow::Cow,
+    cell::RefCell,
+    hash::{
+        Hash,
+        Hasher,
+    },
     rc::Rc,
 };
 
@@ -13,6 +18,7 @@ use freya_core::{
         EventHandlerType,
     },
     events::name::EventName,
+    fifo_cache::FifoCache,
     prelude::*,
     tree::DiffModifies,
 };
@@ -21,10 +27,14 @@ use freya_engine::prelude::{
     PaintStyle,
     ParagraphBuilder,
     ParagraphStyle,
+    SkParagraph,
     SkRect,
     TextStyle,
 };
-use rustc_hash::FxHashMap;
+use rustc_hash::{
+    FxHashMap,
+    FxHasher,
+};
 
 use crate::{
     colors::map_vt100_color,
@@ -198,12 +208,19 @@ impl ElementExt for Terminal {
 
         Some((
             torin::prelude::Size2D::new(context.area_size.width.max(100.0), height),
-            Rc::new(()),
+            Rc::new(RefCell::new(FifoCache::<u64, Rc<SkParagraph>>::new())),
         ))
     }
 
     fn render(&self, context: freya_core::element::RenderContext) {
         let area = context.layout_node.visible_area();
+        let cache = context
+            .layout_node
+            .data
+            .as_ref()
+            .unwrap()
+            .downcast_ref::<RefCell<FifoCache<u64, Rc<SkParagraph>>>>()
+            .unwrap();
 
         let buffer = self.handle.read_buffer();
 
@@ -293,25 +310,43 @@ impl ElementExt for Terminal {
                 }
             }
 
-            let mut builder =
-                ParagraphBuilder::new(&ParagraphStyle::default(), context.font_collection.clone());
+            let mut state = FxHasher::default();
             for cell in row.iter() {
                 if cell.is_wide_continuation() {
                     continue;
                 }
-                let text = if cell.has_contents() {
-                    cell.contents()
-                } else {
-                    " "
-                };
-                let mut cell_style = text_style.clone();
-                cell_style.set_color(map_vt100_color(cell.fgcolor(), self.fg));
-                builder.push_style(&cell_style);
-                builder.add_text(text);
+                let color = map_vt100_color(cell.fgcolor(), self.fg);
+                cell.contents().hash(&mut state);
+                color.hash(&mut state);
             }
-            let mut paragraph = builder.build();
-            paragraph.layout(f32::MAX);
-            paragraph.paint(context.canvas, (area.min_x(), y));
+
+            let key = state.finish();
+            if let Some(paragraph) = cache.borrow().get(&key) {
+                paragraph.paint(context.canvas, (area.min_x(), y));
+            } else {
+                let mut builder = ParagraphBuilder::new(
+                    &ParagraphStyle::default(),
+                    context.font_collection.clone(),
+                );
+                for cell in row.iter() {
+                    if cell.is_wide_continuation() {
+                        continue;
+                    }
+                    let text = if cell.has_contents() {
+                        cell.contents()
+                    } else {
+                        " "
+                    };
+                    let mut cell_style = text_style.clone();
+                    cell_style.set_color(map_vt100_color(cell.fgcolor(), self.fg));
+                    builder.push_style(&cell_style);
+                    builder.add_text(text);
+                }
+                let mut paragraph = builder.build();
+                paragraph.layout(f32::MAX);
+                paragraph.paint(context.canvas, (area.min_x(), y));
+                cache.borrow_mut().insert(key, Rc::new(paragraph));
+            }
 
             if row_idx == buffer.cursor_row && buffer.scroll_offset == 0 {
                 let cursor_idx = buffer.cursor_col;
