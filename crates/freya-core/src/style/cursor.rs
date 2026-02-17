@@ -21,3 +21,25 @@ impl CursorStyle {
         }
     }
 }
+
+/// Determines how the cursor and highlights are positioned within a Paragraph.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Default)]
+pub enum CursorMode {
+    /// Cursor and highlights use the paragraph's visible_area.
+    /// VerticalAlign affects cursor/highlight positions.
+    #[default]
+    Fit,
+    /// Cursor and highlights use the paragraph's inner_area.
+    /// VerticalAlign does NOT affect cursor/highlight positions.
+    Expanded,
+}
+
+impl CursorMode {
+    pub fn pretty(&self) -> String {
+        match self {
+            Self::Fit => "fit".to_string(),
+            Self::Expanded => "expanded".to_string(),
+        }
+    }
+}

@@ -4,6 +4,7 @@ use freya_core::{
         Border,
         Color,
         CornerRadius,
+        CursorMode,
         Fill,
         FontSlant,
         Shadow,
@@ -11,6 +12,7 @@ use freya_core::{
         TextHeightBehavior,
         TextOverflow,
         TextShadow,
+        VerticalAlign,
     },
 };
 use serde::{
@@ -215,4 +217,6 @@ pub enum AttributeType<'a> {
     FontSlant(FontSlant),
     Length(Length),
     Layer(i16),
+    CursorMode(CursorMode),
+    VerticalAlign(VerticalAlign),
 }
