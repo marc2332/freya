@@ -248,6 +248,7 @@ where
         for channel in self.channel.clone().derive_channel(&value) {
             self.station.notify_listeners(&channel)
         }
+        self.station.cleanup();
     }
 
     /// Write the slice value.

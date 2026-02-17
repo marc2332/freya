@@ -111,11 +111,12 @@ impl<T: 'static> Writable<T> {
         (self.write_fn)()
     }
 
-    pub fn write_if(&mut self, with: impl FnOnce(WriteRef<'static, T>) -> bool) {
-        let changed = with(self.write());
+    pub fn write_if(&mut self, with: impl FnOnce(WriteRef<'static, T>) -> bool) -> bool {
+        let changed = with((self.write_fn)());
         if changed {
             self.notify();
         }
+        changed
     }
 
     /// Subscribe to changes.
