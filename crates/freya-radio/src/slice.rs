@@ -4,6 +4,7 @@ use std::{
         RefMut,
     },
     marker::PhantomData,
+    rc::Rc,
 };
 
 use freya_core::prelude::*;
@@ -33,7 +34,7 @@ where
 {
     channel: Channel,
     station: RadioStation<Value, Channel>,
-    selector: fn(&'_ Value) -> &SliceValue,
+    selector: Rc<dyn Fn(&Value) -> &SliceValue>,
     _marker: PhantomData<SliceValue>,
 }
 
@@ -46,7 +47,7 @@ where
         Self {
             channel: self.channel.clone(),
             station: self.station,
-            selector: self.selector,
+            selector: self.selector.clone(),
             _marker: PhantomData,
         }
     }
@@ -62,13 +63,6 @@ where
     }
 }
 
-impl<Value, SliceValue, Channel> Copy for RadioSlice<Value, SliceValue, Channel>
-where
-    Channel: RadioChannel<Value> + Copy,
-    SliceValue: 'static,
-{
-}
-
 impl<Value, SliceValue, Channel> RadioSlice<Value, SliceValue, Channel>
 where
     Channel: RadioChannel<Value>,
@@ -77,12 +71,12 @@ where
     pub(crate) fn new(
         channel: Channel,
         station: RadioStation<Value, Channel>,
-        selector: fn(&'_ Value) -> &SliceValue,
+        selector: impl Fn(&Value) -> &SliceValue + 'static,
     ) -> RadioSlice<Value, SliceValue, Channel> {
         RadioSlice {
             channel,
             station,
-            selector,
+            selector: Rc::new(selector),
             _marker: PhantomData,
         }
     }
@@ -147,7 +141,7 @@ where
 {
     channel: Channel,
     pub(crate) station: RadioStation<Value, Channel>,
-    selector: fn(&mut Value) -> &mut SliceValue,
+    selector: Rc<dyn Fn(&mut Value) -> &mut SliceValue>,
     _marker: PhantomData<SliceValue>,
 }
 
@@ -160,17 +154,10 @@ where
         Self {
             channel: self.channel.clone(),
             station: self.station,
-            selector: self.selector,
+            selector: self.selector.clone(),
             _marker: PhantomData,
         }
     }
-}
-
-impl<Value, SliceValue, Channel> Copy for RadioSliceMut<Value, SliceValue, Channel>
-where
-    Channel: RadioChannel<Value> + Copy,
-    SliceValue: 'static,
-{
 }
 
 impl<Value, SliceValue, Channel> PartialEq for RadioSliceMut<Value, SliceValue, Channel>
@@ -191,12 +178,12 @@ where
     pub(crate) fn new(
         channel: Channel,
         station: RadioStation<Value, Channel>,
-        selector: fn(&mut Value) -> &mut SliceValue,
+        selector: impl Fn(&mut Value) -> &mut SliceValue + 'static,
     ) -> RadioSliceMut<Value, SliceValue, Channel> {
         RadioSliceMut {
             channel,
             station,
-            selector,
+            selector: Rc::new(selector),
             _marker: PhantomData,
         }
     }
@@ -251,7 +238,8 @@ where
     /// Write the slice value without notifying.
     pub fn write_unchecked_no_notify(&'_ self) -> WriteRef<'static, SliceValue> {
         let value = self.station.value.write_unchecked();
-        value.map(|v| RefMut::map(v, self.selector))
+        let selector = self.selector.clone();
+        value.map(|v| RefMut::map(v, |v| selector(v)))
     }
 
     /// Notify listeners for this slice's channel.
@@ -260,6 +248,7 @@ where
         for channel in self.channel.clone().derive_channel(&value) {
             self.station.notify_listeners(&channel)
         }
+        self.station.cleanup();
     }
 
     /// Write the slice value.
@@ -271,7 +260,7 @@ where
 impl<Value, Channel> Radio<Value, Channel>
 where
     Channel: RadioChannel<Value>,
-    Value: Clone + 'static,
+    Value: 'static,
 {
     /// Create a read-only slice of a specific portion of the state.
     ///
@@ -280,10 +269,10 @@ where
     /// ```rust, ignore
     /// let count_slice = radio.slice(AppChannel::Count, |state| &state.count);
     /// ```
-    pub fn slice<SliceValue: Clone>(
+    pub fn slice<SliceValue>(
         &self,
         channel: Channel,
-        selector: fn(&Value) -> &SliceValue,
+        selector: impl Fn(&Value) -> &SliceValue + 'static,
     ) -> RadioSlice<Value, SliceValue, Channel> {
         let station = self.antenna.peek().station;
         RadioSlice::new(channel, station, selector)
@@ -296,9 +285,9 @@ where
     /// ```rust, ignore
     /// let count_slice = radio.slice_current(|state| &state.count);
     /// ```
-    pub fn slice_current<SliceValue: Clone>(
+    pub fn slice_current<SliceValue>(
         &self,
-        selector: fn(&Value) -> &SliceValue,
+        selector: impl Fn(&Value) -> &SliceValue + 'static,
     ) -> RadioSlice<Value, SliceValue, Channel> {
         let channel = self.antenna.peek().channel.clone();
         self.slice(channel, selector)
@@ -311,10 +300,10 @@ where
     /// ```rust, ignore
     /// let mut count_slice = radio.slice_mut(AppChannel::Count, |state| &mut state.count);
     /// ```
-    pub fn slice_mut<SliceValue: Clone>(
+    pub fn slice_mut<SliceValue>(
         &self,
         channel: Channel,
-        selector: fn(&mut Value) -> &mut SliceValue,
+        selector: impl Fn(&mut Value) -> &mut SliceValue + 'static,
     ) -> RadioSliceMut<Value, SliceValue, Channel> {
         let station = self.antenna.peek().station;
         RadioSliceMut::new(channel, station, selector)
@@ -327,9 +316,9 @@ where
     /// ```rust, ignore
     /// let mut count_slice = radio.slice_mut_current(|state| &mut state.count);
     /// ```
-    pub fn slice_mut_current<SliceValue: Clone>(
+    pub fn slice_mut_current<SliceValue>(
         &self,
-        selector: fn(&mut Value) -> &mut SliceValue,
+        selector: impl Fn(&mut Value) -> &mut SliceValue + 'static,
     ) -> RadioSliceMut<Value, SliceValue, Channel> {
         let channel = self.antenna.peek().channel.clone();
         self.slice_mut(channel, selector)

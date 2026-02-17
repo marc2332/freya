@@ -29,7 +29,7 @@ fn app() -> impl IntoElement {
     let radio = use_radio::<MyState, AppChannel>(AppChannel::CounterA);
     let local_state = use_state(|| MyState { count: 10 });
 
-    let mut slice_state = radio.slice_mut_current(|s| &mut s.count);
+    let slice_state = radio.slice_mut_current(|s| &mut s.count);
 
     rect()
         .spacing(20.0)
@@ -38,8 +38,11 @@ fn app() -> impl IntoElement {
                 .padding(8.0)
                 .background((240, 240, 240))
                 .child("Slice of Radio")
-                .on_press(move |_| {
-                    *slice_state.write() += 1;
+                .on_press({
+                    let mut slice_state = slice_state.clone();
+                    move |_| {
+                        *slice_state.write() += 1;
+                    }
                 })
                 .child(CounterDisplay {
                     count: slice_state.into_readable(),
