@@ -1,5 +1,4 @@
 use std::{
-    cmp::Ordering,
     fmt::Display,
     ops::Range,
 };
@@ -10,7 +9,6 @@ use ropey::{
 };
 
 use crate::{
-    EditorLine,
     TextSelection,
     editor_history::{
         EditorHistory,
