@@ -57,8 +57,12 @@ use crate::{
         MaybeExt,
         TextAlign,
         TextStyleExt,
+        VerticalAlign,
     },
-    style::cursor::CursorStyle,
+    style::cursor::{
+        CursorMode,
+        CursorStyle,
+    },
     text_cache::CachedParagraph,
     tree::DiffModifies,
 };
@@ -123,6 +127,8 @@ pub struct ParagraphElement {
     pub line_height: Option<f32>,
     pub relative_layer: Layer,
     pub cursor_style: CursorStyle,
+    pub cursor_mode: CursorMode,
+    pub vertical_align: VerticalAlign,
 }
 
 impl Default for ParagraphElement {
@@ -143,6 +149,8 @@ impl Default for ParagraphElement {
             line_height: Default::default(),
             relative_layer: Default::default(),
             cursor_style: CursorStyle::default(),
+            cursor_mode: CursorMode::default(),
+            vertical_align: VerticalAlign::default(),
         }
     }
 }
@@ -198,7 +206,11 @@ impl ElementExt for ParagraphElement {
             diff.insert(DiffModifies::EVENT_HANDLERS);
         }
 
-        if self.cursor_index != paragraph.cursor_index || self.highlights != paragraph.highlights {
+        if self.cursor_index != paragraph.cursor_index
+            || self.highlights != paragraph.highlights
+            || self.cursor_mode != paragraph.cursor_mode
+            || self.vertical_align != paragraph.vertical_align
+        {
             diff.insert(DiffModifies::STYLE);
         }
 
@@ -358,7 +370,28 @@ impl ElementExt for ParagraphElement {
     fn render(&self, context: RenderContext) {
         let paragraph = self.sk_paragraph.0.borrow();
         let ParagraphHolderInner { paragraph, .. } = paragraph.as_ref().unwrap();
-        let area = context.layout_node.visible_area();
+        let visible_area = context.layout_node.visible_area();
+
+        let cursor_area = match self.cursor_mode {
+            CursorMode::Fit => visible_area,
+            CursorMode::Expanded => context.layout_node.area,
+        };
+
+        let paragraph_height = paragraph.height();
+        let area_height = visible_area.height();
+        let vertical_offset = match self.vertical_align {
+            VerticalAlign::Start => 0.0,
+            VerticalAlign::Center => (area_height - paragraph_height).max(0.0) / 2.0,
+        };
+
+        let cursor_vertical_offset = match self.cursor_mode {
+            CursorMode::Fit => vertical_offset,
+            CursorMode::Expanded => 0.0,
+        };
+        let cursor_vertical_size_offset = match self.cursor_mode {
+            CursorMode::Fit => 0.,
+            CursorMode::Expanded => vertical_offset * 2.,
+        };
 
         // Draw highlights
         for (from, to) in self.highlights.iter() {
@@ -374,14 +407,12 @@ impl ElementExt for ParagraphElement {
             highlights_paint.set_style(PaintStyle::Fill);
             highlights_paint.set_color(self.cursor_style_data.highlight_color);
 
-            // TODO: Add a expanded option for highlights and cursor
-
             for rect in rects {
                 let rect = SkRect::new(
-                    area.min_x() + rect.rect.left,
-                    area.min_y() + rect.rect.top,
-                    area.min_x() + rect.rect.right,
-                    area.min_y() + rect.rect.bottom,
+                    cursor_area.min_x() + rect.rect.left,
+                    cursor_area.min_y() + rect.rect.top + cursor_vertical_offset,
+                    cursor_area.min_x() + rect.rect.right,
+                    cursor_area.min_y() + rect.rect.bottom + cursor_vertical_size_offset,
                 );
                 context.canvas.draw_rect(rect, &highlights_paint);
             }
@@ -428,10 +459,10 @@ impl ElementExt for ParagraphElement {
         {
             let width = (cursor_rect.right - cursor_rect.left).max(6.0);
             let cursor_rect = SkRect::new(
-                area.min_x() + cursor_rect.left,
-                area.min_y() + cursor_rect.top,
-                area.min_x() + cursor_rect.left + width,
-                area.min_y() + cursor_rect.bottom,
+                cursor_area.min_x() + cursor_rect.left,
+                cursor_area.min_y() + cursor_rect.top + cursor_vertical_offset,
+                cursor_area.min_x() + cursor_rect.left + width,
+                cursor_area.min_y() + cursor_rect.bottom + cursor_vertical_size_offset,
             );
 
             let mut paint = Paint::default();
@@ -442,8 +473,11 @@ impl ElementExt for ParagraphElement {
             context.canvas.draw_rect(cursor_rect, &paint);
         }
 
-        // Draw text
-        paragraph.paint(context.canvas, area.origin.to_tuple());
+        // Draw text (always uses visible_area with vertical_offset)
+        paragraph.paint(
+            context.canvas,
+            (visible_area.min_x(), visible_area.min_y() + vertical_offset),
+        );
 
         // Draw cursor
         if let Some(cursor_index) = self.cursor_index
@@ -478,10 +512,11 @@ impl ElementExt for ParagraphElement {
                     CursorStyle::Underline => {
                         let thickness = 2.0_f32;
                         let underline_rect = SkRect::new(
-                            area.min_x() + cursor_rect.left,
-                            area.min_y() + cursor_rect.bottom - thickness,
-                            area.min_x() + cursor_rect.right,
-                            area.min_y() + cursor_rect.bottom,
+                            cursor_area.min_x() + cursor_rect.left,
+                            cursor_area.min_y() + cursor_rect.bottom - thickness
+                                + cursor_vertical_offset,
+                            cursor_area.min_x() + cursor_rect.right,
+                            cursor_area.min_y() + cursor_rect.bottom + cursor_vertical_size_offset,
                         );
 
                         let mut paint = Paint::default();
@@ -493,10 +528,10 @@ impl ElementExt for ParagraphElement {
                     }
                     CursorStyle::Line => {
                         let cursor_rect = SkRect::new(
-                            area.min_x() + cursor_rect.left,
-                            area.min_y() + cursor_rect.top,
-                            area.min_x() + cursor_rect.left + 2.,
-                            area.min_y() + cursor_rect.bottom,
+                            cursor_area.min_x() + cursor_rect.left,
+                            cursor_area.min_y() + cursor_rect.top + cursor_vertical_offset,
+                            cursor_area.min_x() + cursor_rect.left + 2.,
+                            cursor_area.min_y() + cursor_rect.bottom + cursor_vertical_size_offset,
                         );
 
                         let mut paint = Paint::default();
@@ -630,6 +665,22 @@ impl Paragraph {
 
     pub fn line_height(mut self, line_height: impl Into<Option<f32>>) -> Self {
         self.element.line_height = line_height.into();
+        self
+    }
+
+    /// Set the cursor mode for the paragraph.
+    /// - `CursorMode::Fit`: cursor/highlights use the paragraph's visible_area. VerticalAlign affects cursor positions.
+    /// - `CursorMode::Expanded`: cursor/highlights use the paragraph's inner_area. VerticalAlign does NOT affect cursor positions.
+    pub fn cursor_mode(mut self, cursor_mode: impl Into<CursorMode>) -> Self {
+        self.element.cursor_mode = cursor_mode.into();
+        self
+    }
+
+    /// Set the vertical alignment for the paragraph text.
+    /// This affects how the text is rendered within the paragraph area, but cursor/highlight behavior
+    /// depends on the `cursor_mode` setting.
+    pub fn vertical_align(mut self, vertical_align: impl Into<VerticalAlign>) -> Self {
+        self.element.vertical_align = vertical_align.into();
         self
     }
 }

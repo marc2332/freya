@@ -15,3 +15,4 @@ pub mod text_align;
 pub mod text_height;
 pub mod text_overflow;
 pub mod text_shadow;
+pub mod vertical_align;

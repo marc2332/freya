@@ -138,6 +138,7 @@ pub mod prelude {
             text_height::*,
             text_overflow::*,
             text_shadow::*,
+            vertical_align::*,
         },
         user_event::UserEvent,
     };

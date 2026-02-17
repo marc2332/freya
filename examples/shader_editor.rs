@@ -176,6 +176,8 @@ impl Component for EditingLine {
                     .on_mouse_down(on_mouse_down)
                     .on_mouse_move(on_mouse_move)
                     .cursor_index(cursor_index)
+                    .vertical_align(VerticalAlign::Center)
+                    .cursor_mode(CursorMode::Expanded)
                     .highlights(highlights.map(|h| vec![h]))
                     .width(Size::fill())
                     .height(Size::fill())

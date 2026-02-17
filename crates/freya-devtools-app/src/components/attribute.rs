@@ -57,5 +57,11 @@ pub fn attribute_element(name: &str, attribute: AttributeType<'_>) -> Option<Ele
             Some(Property::new(name, font_slant.pretty()).into())
         }
         AttributeType::Layer(layer) => Some(Property::new(name, layer.to_string()).into()),
+        AttributeType::CursorMode(cursor_mode) => {
+            Some(Property::new(name, cursor_mode.pretty()).into())
+        }
+        AttributeType::VerticalAlign(vertical_align) => {
+            Some(Property::new(name, vertical_align.pretty()).into())
+        }
     }
 }
