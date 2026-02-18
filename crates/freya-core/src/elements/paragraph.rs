@@ -410,7 +410,7 @@ impl ElementExt for ParagraphElement {
             highlights_paint.set_style(PaintStyle::Fill);
             highlights_paint.set_color(self.cursor_style_data.highlight_color);
 
-            if rects.is_empty() {
+            if rects.is_empty() && *from == 0 {
                 let avg_line_height =
                     paragraph.height() / paragraph.get_line_metrics().len().max(1) as f32;
                 let rect = SkRect::new(
