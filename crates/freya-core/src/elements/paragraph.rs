@@ -395,6 +395,9 @@ impl ElementExt for ParagraphElement {
 
         // Draw highlights
         for (from, to) in self.highlights.iter() {
+            if from == to {
+                continue;
+            }
             let (from, to) = { if from < to { (from, to) } else { (to, from) } };
             let rects = paragraph.get_rects_for_range(
                 *from..*to,
@@ -407,11 +410,24 @@ impl ElementExt for ParagraphElement {
             highlights_paint.set_style(PaintStyle::Fill);
             highlights_paint.set_color(self.cursor_style_data.highlight_color);
 
+            if rects.is_empty() && *from == 0 {
+                let avg_line_height =
+                    paragraph.height() / paragraph.get_line_metrics().len().max(1) as f32;
+                let rect = SkRect::new(
+                    cursor_area.min_x(),
+                    cursor_area.min_y() + cursor_vertical_offset,
+                    cursor_area.min_x() + 6.,
+                    cursor_area.min_y() + avg_line_height + cursor_vertical_size_offset,
+                );
+
+                context.canvas.draw_rect(rect, &highlights_paint);
+            }
+
             for rect in rects {
                 let rect = SkRect::new(
                     cursor_area.min_x() + rect.rect.left,
                     cursor_area.min_y() + rect.rect.top + cursor_vertical_offset,
-                    cursor_area.min_x() + rect.rect.right,
+                    cursor_area.min_x() + rect.rect.right.max(6.),
                     cursor_area.min_y() + rect.rect.bottom + cursor_vertical_size_offset,
                 );
                 context.canvas.draw_rect(rect, &highlights_paint);
@@ -443,7 +459,7 @@ impl ElementExt for ParagraphElement {
                         .get_glyph_position_at_coordinate((f32::MAX, f32::MAX))
                         .position as usize;
                     let last_rects = paragraph.get_rects_for_range(
-                        (text_len - 1)..text_len,
+                        text_len.saturating_sub(1)..text_len,
                         RectHeightStyle::Tight,
                         RectWidthStyle::Tight,
                     );
@@ -453,7 +469,9 @@ impl ElementExt for ParagraphElement {
                         caret.left = caret.right;
                         Some(caret)
                     } else {
-                        None
+                        let avg_line_height =
+                            paragraph.height() / paragraph.get_line_metrics().len().max(1) as f32;
+                        Some(SkRect::new(0., 0., 6., avg_line_height))
                     }
                 })
         {
