@@ -242,6 +242,8 @@ impl TestingRunner {
         font_collection.set_dynamic_font_manager(font_manager.clone());
         font_collection.paragraph_cache_mut().turn_on(false);
 
+        runner.provide_root_context(|| font_collection.clone());
+
         let nodes_state = NodesState::default();
         let accessibility = AccessibilityTree::default();
 
