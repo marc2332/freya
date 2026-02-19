@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 pub trait NameOfEvent:
     Clone + PartialEq + Eq + std::hash::Hash + Copy + std::fmt::Debug + Eq + Ord
 {
@@ -21,13 +23,15 @@ pub trait NameOfEvent:
     fn new_leave() -> Self;
 
     /// Get a set of events derived from this event. For example, mouse movement derives into mouse movement + mouse enter.
-    fn get_derived_events(&self) -> Vec<Self>;
+    fn get_derived_events(&self) -> HashSet<Self>;
     /// Get a set of global events derived from this event.
-    fn get_global_events(&self) -> Vec<Self> {
-        Vec::new()
+    fn get_global_events(&self) -> HashSet<Self> {
+        HashSet::new()
     }
     /// Get a set of events that will be discarded once this event is cancelled.
-    fn get_cancellable_events(&self) -> Vec<Self> {
-        vec![*self]
+    fn get_cancellable_events(&self) -> HashSet<Self> {
+        let mut set = HashSet::new();
+        set.insert(*self);
+        set
     }
 }

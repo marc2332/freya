@@ -1,4 +1,4 @@
-#[derive(Clone, Copy, PartialEq, Debug, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub enum EventName {
     // Platform Mouse
     MouseUp,
@@ -43,7 +43,7 @@ pub enum EventName {
     ImePreedit,
 }
 
-impl Eq for EventName {}
+use std::collections::HashSet;
 
 impl PartialOrd for EventName {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
@@ -92,55 +92,79 @@ impl EventName {
 }
 
 impl ragnarok::NameOfEvent for EventName {
-    fn get_global_events(&self) -> Vec<Self> {
-        let mut events = Vec::new();
+    fn get_global_events(&self) -> HashSet<Self> {
         match self {
-            Self::MouseUp => events.extend([Self::GlobalMouseUp, Self::CaptureGlobalMouseUp]),
-            Self::MouseDown => events.push(Self::GlobalMouseDown),
-            Self::MouseMove => events.extend([Self::GlobalMouseMove, Self::CaptureGlobalMouseMove]),
+            Self::MouseUp => [Self::GlobalMouseUp, Self::CaptureGlobalMouseUp]
+                .into_iter()
+                .collect(),
+            Self::MouseDown => HashSet::from([Self::GlobalMouseDown]),
+            Self::MouseMove => [Self::GlobalMouseMove, Self::CaptureGlobalMouseMove]
+                .into_iter()
+                .collect(),
 
-            Self::KeyDown => events.push(Self::GlobalKeyDown),
-            Self::KeyUp => events.push(Self::GlobalKeyUp),
+            Self::KeyDown => HashSet::from([Self::GlobalKeyDown]),
+            Self::KeyUp => HashSet::from([Self::GlobalKeyUp]),
 
-            Self::GlobalFileHover => events.push(Self::GlobalFileHover),
-            Self::GlobalFileHoverCancelled => events.push(Self::GlobalFileHoverCancelled),
+            Self::GlobalFileHover => HashSet::from([Self::GlobalFileHover]),
+            Self::GlobalFileHoverCancelled => HashSet::from([Self::GlobalFileHoverCancelled]),
+            _ => HashSet::new(),
+        }
+    }
+
+    fn get_derived_events(&self) -> HashSet<Self> {
+        let mut events = HashSet::new();
+
+        events.insert(*self);
+
+        match self {
+            Self::MouseMove | Self::TouchMove => {
+                events.insert(Self::PointerEnter);
+            }
+            Self::MouseDown | Self::TouchStart => {
+                events.insert(Self::PointerDown);
+            }
+            Self::MouseUp | Self::TouchEnd => {
+                events.insert(Self::PointerPress);
+            }
             _ => {}
         }
+
         events
     }
 
-    fn get_derived_events(&self) -> Vec<Self> {
-        let mut events = Vec::new();
+    fn get_cancellable_events(&self) -> HashSet<Self> {
+        let mut events = HashSet::new();
 
-        events.push(*self);
-
-        match self {
-            Self::MouseMove | Self::TouchMove => events.extend([Self::PointerEnter]),
-            Self::MouseDown | Self::TouchStart => events.extend([Self::PointerDown]),
-            Self::MouseUp | Self::TouchEnd => events.extend([Self::PointerPress]),
-            _ => {}
-        }
-
-        events
-    }
-
-    fn get_cancellable_events(&self) -> Vec<Self> {
-        let mut events = Vec::new();
-
-        events.push(*self);
+        events.insert(*self);
 
         match self {
-            Self::KeyDown => events.extend([Self::GlobalKeyDown]),
-            Self::KeyUp => events.extend([Self::GlobalKeyUp]),
+            Self::KeyDown => {
+                events.insert(Self::GlobalKeyDown);
+            }
+            Self::KeyUp => {
+                events.insert(Self::GlobalKeyUp);
+            }
 
-            Self::MouseUp | Self::PointerPress => events.extend([Self::GlobalMouseUp]),
-            Self::MouseDown | Self::PointerDown => events.extend([Self::GlobalMouseDown]),
+            Self::MouseUp | Self::PointerPress => {
+                events.insert(Self::GlobalMouseUp);
+            }
+            Self::MouseDown | Self::PointerDown => {
+                events.insert(Self::GlobalMouseDown);
+            }
 
             Self::CaptureGlobalMouseMove => {
-                events.extend([Self::MouseMove, Self::PointerEnter, Self::GlobalMouseMove])
+                [Self::MouseMove, Self::PointerEnter, Self::GlobalMouseMove]
+                    .into_iter()
+                    .for_each(|e| {
+                        events.insert(e);
+                    });
             }
             Self::CaptureGlobalMouseUp => {
-                events.extend([Self::MouseUp, Self::PointerPress, Self::GlobalMouseUp])
+                [Self::MouseUp, Self::PointerPress, Self::GlobalMouseUp]
+                    .into_iter()
+                    .for_each(|e| {
+                        events.insert(e);
+                    });
             }
 
             _ => {}
