@@ -30,8 +30,6 @@ pub trait NameOfEvent:
     }
     /// Get a set of events that will be discarded once this event is cancelled.
     fn get_cancellable_events(&self) -> HashSet<Self> {
-        let mut set = HashSet::new();
-        set.insert(*self);
-        set
+        HashSet::from([*self])
     }
 }

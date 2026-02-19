@@ -94,13 +94,9 @@ impl EventName {
 impl ragnarok::NameOfEvent for EventName {
     fn get_global_events(&self) -> HashSet<Self> {
         match self {
-            Self::MouseUp => [Self::GlobalMouseUp, Self::CaptureGlobalMouseUp]
-                .into_iter()
-                .collect(),
+            Self::MouseUp => HashSet::from([Self::GlobalMouseUp, Self::CaptureGlobalMouseUp]),
             Self::MouseDown => HashSet::from([Self::GlobalMouseDown]),
-            Self::MouseMove => [Self::GlobalMouseMove, Self::CaptureGlobalMouseMove]
-                .into_iter()
-                .collect(),
+            Self::MouseMove => HashSet::from([Self::GlobalMouseMove, Self::CaptureGlobalMouseMove]),
 
             Self::KeyDown => HashSet::from([Self::GlobalKeyDown]),
             Self::KeyUp => HashSet::from([Self::GlobalKeyUp]),
@@ -153,18 +149,10 @@ impl ragnarok::NameOfEvent for EventName {
             }
 
             Self::CaptureGlobalMouseMove => {
-                [Self::MouseMove, Self::PointerEnter, Self::GlobalMouseMove]
-                    .into_iter()
-                    .for_each(|e| {
-                        events.insert(e);
-                    });
+                events.extend([Self::MouseMove, Self::PointerEnter, Self::GlobalMouseMove]);
             }
             Self::CaptureGlobalMouseUp => {
-                [Self::MouseUp, Self::PointerPress, Self::GlobalMouseUp]
-                    .into_iter()
-                    .for_each(|e| {
-                        events.insert(e);
-                    });
+                events.extend([Self::MouseUp, Self::PointerPress, Self::GlobalMouseUp]);
             }
 
             _ => {}
