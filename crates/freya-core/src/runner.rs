@@ -1071,6 +1071,7 @@ impl Runner {
                     sender: self.sender.clone(),
                 },
                 || {
+                    // TODO: Scopes could also maintain its own registry of assigned tasks
                     self.tasks
                         .borrow_mut()
                         .retain(|_task_id, task| task.borrow().scope_id != scope.id);
@@ -1078,11 +1079,6 @@ impl Runner {
                     let _scope = self.scopes_storages.borrow_mut().remove(&scope.id);
                 },
             );
-
-            // TODO: Scopes could also maintain its own registry of assigned tasks
-            self.tasks
-                .borrow_mut()
-                .retain(|_task_id, task| task.borrow().scope_id != scope.id);
         }
 
         // Given some additions like:
