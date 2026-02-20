@@ -108,6 +108,7 @@ pub struct Button {
     style_variant: ButtonStyleVariant,
     layout_variant: ButtonLayoutVariant,
     enabled: bool,
+    focusable: bool,
 }
 
 impl Default for Button {
@@ -139,6 +140,7 @@ impl Button {
             on_secondary_press: None,
             elements: Vec::default(),
             enabled: true,
+            focusable: true,
             key: DiffKey::None,
         }
     }
@@ -153,6 +155,11 @@ impl Button {
 
     pub fn enabled(mut self, enabled: impl Into<bool>) -> Self {
         self.enabled = enabled.into();
+        self
+    }
+
+    pub fn focusable(mut self, focusable: impl Into<bool>) -> Self {
+        self.focusable = focusable.into();
         self
     }
 
@@ -266,7 +273,7 @@ impl Component for Button {
         rect()
             .overflow(Overflow::Clip)
             .a11y_id(focus.a11y_id())
-            .a11y_focusable(self.enabled)
+            .a11y_focusable(self.enabled && self.focusable)
             .a11y_role(AccessibilityRole::Button)
             .background(background.mul_if(!self.enabled, 0.9))
             .border(border)
