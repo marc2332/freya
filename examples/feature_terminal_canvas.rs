@@ -12,8 +12,6 @@ use freya::{
 };
 use portable_pty::CommandBuilder;
 
-static PANEL_COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-
 #[derive(Default, Clone)]
 struct AppState {
     panels: Vec<PanelData>,
@@ -21,7 +19,7 @@ struct AppState {
 
 #[derive(PartialEq, Clone)]
 struct PanelData {
-    id: u64,
+    id: usize,
     x: f64,
     y: f64,
 }
@@ -29,7 +27,6 @@ struct PanelData {
 #[derive(PartialEq, Eq, Clone, Debug, Copy, Hash)]
 enum AppChannel {
     Panels,
-    PanelClose(u64),
 }
 
 impl RadioChannel<AppState> for AppChannel {}
@@ -44,10 +41,9 @@ fn app() -> impl IntoElement {
     let mut radio = use_radio::<AppState, AppChannel>(AppChannel::Panels);
 
     let on_press = move |_| {
-        let id = PANEL_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let offset = (id as f64) * 50.0;
+        let offset = radio.read().panels.len() as f64 * 50.0;
         radio.write().panels.push(PanelData {
-            id,
+            id: UseId::<PanelData>::get_in_hook(),
             x: 100.0 + offset,
             y: 100.0 + offset,
         });
@@ -57,14 +53,14 @@ fn app() -> impl IntoElement {
         .expanded()
         .background((20, 20, 20))
         .child(
-            rect().child(DraggableCanvas::new().expanded().child(rect().children(
-                radio.read().panels.iter().map(|panel| {
+            DraggableCanvas::new()
+                .expanded()
+                .children(radio.read().panels.iter().map(|panel| {
                     TerminalPanel {
                         data: panel.clone(),
                     }
                     .into()
-                }),
-            ))),
+                })),
         )
         .child(
             rect()
@@ -95,7 +91,7 @@ struct TerminalPanel {
 impl Component for TerminalPanel {
     fn render(&self) -> impl IntoElement {
         let panel_id = self.data.id;
-        let mut radio = use_radio::<AppState, AppChannel>(AppChannel::PanelClose(panel_id));
+        let mut radio = use_radio::<AppState, AppChannel>(AppChannel::Panels);
 
         let on_close = move |_| {
             radio.write().panels.retain(|p| p.id != panel_id);
@@ -140,7 +136,6 @@ impl Component for TerminalPanel {
                             .width(1.0)
                             .alignment(BorderAlignment::Inner),
                     )
-                    .shadow((0., 4., 10., 4., (0, 0, 0, 80)))
                     .child(
                         rect()
                             .horizontal()
@@ -151,7 +146,6 @@ impl Component for TerminalPanel {
                                     .on_press(on_close)
                                     .padding(4.)
                                     .rounded_full()
-                                    .focusable(false)
                                     .child(
                                         svg(icons::lucide::x())
                                             .width(Size::px(16.))
@@ -162,6 +156,12 @@ impl Component for TerminalPanel {
                     )
                     .child(if let Some(handle) = handle.read().clone() {
                         rect()
+                            .expanded()
+                            .background(background)
+                            .padding(6.)
+                            .a11y_id(focus.a11y_id())
+                            .a11y_auto_focus(true)
+                            .a11y_focusable(true)
                             .child(
                                 Terminal::new(handle.clone())
                                     .on_measured(move |(char_width, line_height)| {
@@ -240,12 +240,6 @@ impl Component for TerminalPanel {
                                         }
                                     }),
                             )
-                            .expanded()
-                            .background(background)
-                            .padding(6.)
-                            .a11y_id(focus.a11y_id())
-                            .a11y_auto_focus(true)
-                            .a11y_focusable(true)
                             .on_key_up({
                                 let handle = handle.clone();
                                 move |e: Event<KeyboardEventData>| {
@@ -320,5 +314,9 @@ impl Component for TerminalPanel {
                         "Terminal exited".into_element()
                     }),
             )
+    }
+
+    fn render_key(&self) -> DiffKey {
+        DiffKey::from(&self.data.id)
     }
 }
