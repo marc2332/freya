@@ -170,6 +170,9 @@ impl Drop for Runner {
                     sender: self.sender.clone(),
                 },
                 || {
+                    self.tasks
+                        .borrow_mut()
+                        .retain(|_task_id, task| task.borrow().scope_id != scope_id);
                     let _scope = self.scopes_storages.borrow_mut().remove(&scope_id);
                 },
             );
@@ -1068,6 +1071,9 @@ impl Runner {
                     sender: self.sender.clone(),
                 },
                 || {
+                    self.tasks
+                        .borrow_mut()
+                        .retain(|_task_id, task| task.borrow().scope_id != scope.id);
                     // This is very important, the scope storage must be dropped after the borrow in `scopes_storages` has been released
                     let _scope = self.scopes_storages.borrow_mut().remove(&scope.id);
                 },
