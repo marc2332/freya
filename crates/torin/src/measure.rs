@@ -401,7 +401,6 @@ where
             let mut inner_sizes = Size2D::default();
             let mut area = layout_node.area.as_parent();
             let mut inner_area = layout_node.inner_area.as_inner();
-            inner_area.move_with_offsets(&node.offset_x, &node.offset_y);
             let mut available_area = inner_area.as_available();
 
             let measure_inner_children = if let Some(measurer) = self.measurer {
