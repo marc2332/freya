@@ -338,12 +338,13 @@ impl<Key: NodeKey> Torin<Key> {
 
         let layout_metadata = LayoutMetadata { root_area };
 
-        let mut available_area = layout_node.inner_area.as_available();
+        let mut inner_area = layout_node.inner_area.as_inner();
         if let Some(root_parent_id) = root_parent_id {
             let root_parent = tree_adapter.get_node(&root_parent_id).unwrap();
-            available_area.move_with_offsets(&root_parent.offset_x, &root_parent.offset_y);
+            inner_area.move_with_offsets(&root_parent.offset_x, &root_parent.offset_y);
         }
 
+        let available_area = inner_area.as_available();
         let mut measure_context = MeasureContext {
             layout: self,
             layout_metadata,
@@ -354,8 +355,7 @@ impl<Key: NodeKey> Torin<Key> {
         let (root_revalidated, mut root_layout_node) = measure_context.measure_node(
             root_id,
             &root,
-            layout_node.inner_area.as_parent(),
-            layout_node.inner_area.as_parent(),
+            inner_area.as_parent(),
             available_area,
             true,
             false,
