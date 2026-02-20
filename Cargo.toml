@@ -92,7 +92,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 url = "2.5"
 open = "5.1"
-rusqlite = { version = "0.32", features = ["bundled"] }
+rusqlite = { version = "0.38", features = ["bundled"] }
 
 # Animations
 easer = "0.3.0"
@@ -109,7 +109,7 @@ euclid = "0.22.9"
 itertools = "0.14.0"
 
 # Rendering
-skia-safe = { version = "0.91.1", features = ["gl", "textlayout", "svg"] }
+skia-safe = { version = "0.93.0", features = ["gl", "textlayout", "svg"] }
 bytes = "1.10.1"
 
 # Desktop renderer
@@ -129,11 +129,11 @@ ash = "^0.38"
 ash-window = "0.13.0"
 
 # accessibility
-accesskit = "0.23.0"
-accesskit_winit = "0.31.0"
+accesskit = "0.24.0"
+accesskit_winit = "0.32.0"
 
 # Performance
-hotpath = "0.10"
+hotpath = "0.11"
 
 # Errors
 anyhow = "1.0.100"
@@ -147,7 +147,7 @@ tokio = { version = "1.0", default-features = false }
 
 # Rendering
 [target."cfg(target_os = \"linux\")".dependencies.skia-safe]
-version = "0.91.1"
+version = "0.93.0"
 features = ["gl", "textlayout", "svg", "x11", "wayland"]
 
 [dev-dependencies]
@@ -174,7 +174,7 @@ skia-safe = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 
-rand = "0.9"
+rand = "0.10"
 
 async-io = { workspace = true }
 futures-lite = { workspace = true }

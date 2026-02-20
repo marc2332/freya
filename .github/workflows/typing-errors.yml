@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Spell check with typos
-        uses: crate-ci/typos@v1.42.0
+        uses: crate-ci/typos@v1.43.5
         with:
           isolated: true
           config: ./_typos.toml
