@@ -87,10 +87,8 @@ impl MetalDriver {
                     let view = unsafe { (appkit.ns_view.as_ptr() as *mut NSView).as_ref() }
                         .expect("NSView pointer is null");
 
-                    unsafe {
-                        view.setWantsLayer(true);
-                        view.setLayer(Some(&layer.clone()));
-                    }
+                    view.setWantsLayer(true);
+                    view.setLayer(Some(&layer.clone()));
                 }
                 _ => panic!("Metal driver only supports AppKit (macOS) windows"),
             };

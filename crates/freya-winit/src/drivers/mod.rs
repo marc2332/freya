@@ -41,6 +41,7 @@ impl GraphicsDriver {
         }
 
         #[cfg(feature = "vulkan")]
+        #[allow(unreachable_code)]
         {
             let (driver, window) =
                 vulkan::VulkanDriver::new(event_loop, window_attributes, window_config);
