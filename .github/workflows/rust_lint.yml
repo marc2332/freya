@@ -42,5 +42,7 @@ jobs:
         save-if: ${{ github.ref == 'refs/heads/main' }}
     - name: Lint
       run: just c-ci
+    - name: Lint Metal
+      run: just c-ci-metal
     - name: Format
       run: just f

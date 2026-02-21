@@ -1,4 +1,6 @@
 mod gl;
+#[cfg(all(feature = "metal", target_os = "macos"))]
+mod metal;
 #[cfg(feature = "vulkan")]
 mod vulkan;
 
@@ -17,6 +19,8 @@ use crate::config::WindowConfig;
 #[allow(clippy::large_enum_variant)]
 pub enum GraphicsDriver {
     OpenGl(gl::OpenGLDriver),
+    #[cfg(all(feature = "metal", target_os = "macos"))]
+    Metal(metal::MetalDriver),
     #[cfg(feature = "vulkan")]
     Vulkan(vulkan::VulkanDriver),
 }
@@ -27,6 +31,15 @@ impl GraphicsDriver {
         window_attributes: WindowAttributes,
         window_config: &WindowConfig,
     ) -> (Self, Window) {
+        // Metal takes priority on macOS (native, best performance)
+        #[cfg(all(feature = "metal", target_os = "macos"))]
+        {
+            let (driver, window) =
+                metal::MetalDriver::new(event_loop, window_attributes, window_config);
+
+            return (Self::Metal(driver), window);
+        }
+
         #[cfg(feature = "vulkan")]
         {
             let (driver, window) =
@@ -50,6 +63,8 @@ impl GraphicsDriver {
     ) {
         match self {
             Self::OpenGl(gl) => gl.present(window, render),
+            #[cfg(all(feature = "metal", target_os = "macos"))]
+            Self::Metal(mtl) => mtl.present(size, window, render),
             #[cfg(feature = "vulkan")]
             Self::Vulkan(vk) => vk.present(size, window, render),
             _ => unimplemented!("Enable `gl` or `vulkan` features."),
@@ -60,6 +75,8 @@ impl GraphicsDriver {
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
         match self {
             Self::OpenGl(gl) => gl.resize(size),
+            #[cfg(all(feature = "metal", target_os = "macos"))]
+            Self::Metal(mtl) => mtl.resize(size),
             #[cfg(feature = "vulkan")]
             Self::Vulkan(vk) => vk.resize(size),
             _ => unimplemented!("Enable `gl` or `vulkan` features."),

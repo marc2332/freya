@@ -18,6 +18,7 @@ features = ["mocked-engine"]
 mocked-engine = []
 skia-engine = ["dep:skia-safe"]
 vulkan = ["skia-safe/vulkan"]
+metal = ["skia-safe/metal"]
 
 [dependencies]
 bitflags = { workspace = true }
@@ -28,6 +29,11 @@ glutin = { workspace = true }
 workspace = true
 optional = true
 features = ["gl", "textlayout", "svg", "x11", "wayland"]
+
+[target."cfg(target_os = \"macos\")".dependencies.skia-safe]
+workspace = true
+optional = true
+features = ["gl", "textlayout", "svg", "metal"]
 
 [dev-dependencies]
 freya-engine = { path = "./", features = ["skia-engine"] }

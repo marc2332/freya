@@ -11,6 +11,7 @@ devtools = ["freya/devtools"]
 performance = ["freya/performance"]
 plot = ["freya/plot"]
 vulkan = ["freya-winit/vulkan"]
+metal = ["freya-winit/metal"]
 
 [workspace]
 members = [
