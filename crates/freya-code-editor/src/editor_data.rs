@@ -269,7 +269,7 @@ impl TextEditor for CodeEditorData {
         let new_end_line_byte = self.rope.line_to_byte(new_end_line);
         let new_end_col = new_end_byte - new_end_line_byte;
 
-        self.pending_edit = Some(InputEdit::new(
+        self.pending_edit = Some(InputEdit::new_edit(
             start_byte,
             start_byte,
             new_end_byte,
@@ -312,7 +312,7 @@ impl TextEditor for CodeEditorData {
         let new_end_line_byte = self.rope.line_to_byte(new_end_line);
         let new_end_col = new_end_byte - new_end_line_byte;
 
-        self.pending_edit = Some(InputEdit::new(
+        self.pending_edit = Some(InputEdit::new_edit(
             start_byte,
             start_byte,
             new_end_byte,
@@ -354,7 +354,7 @@ impl TextEditor for CodeEditorData {
         let removed_text_len = len_before_remove - len_after_remove;
 
         // After removal, new_end == start (the removed range collapses to a point).
-        self.pending_edit = Some(InputEdit::new(
+        self.pending_edit = Some(InputEdit::new_edit(
             start_byte,
             old_end_byte,
             start_byte,

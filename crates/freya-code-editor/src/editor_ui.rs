@@ -216,8 +216,8 @@ impl Component for CodeEditor {
                     VirtualScrollView::new(move |line_index, _| {
                         EditorLineUI {
                             editor: editor.clone(),
-                            font_size: font_size,
-                            line_height: line_height,
+                            font_size,
+                            line_height,
                             line_index,
                         }
                         .into()

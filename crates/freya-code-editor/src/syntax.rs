@@ -100,6 +100,10 @@ impl SyntaxBlocks {
         self.blocks.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.blocks.is_empty()
+    }
+
     pub fn clear(&mut self) {
         self.blocks.clear();
     }
@@ -117,6 +121,12 @@ pub struct SyntaxHighlighter {
     config: Option<LangConfig>,
     cursor: QueryCursor,
     language_id: LanguageId,
+}
+
+impl Default for SyntaxHighlighter {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl SyntaxHighlighter {
@@ -157,10 +167,10 @@ impl SyntaxHighlighter {
     ) {
         syntax_blocks.clear();
 
-        if let Some(input_edit) = edit {
-            if let Some(tree) = &mut self.tree {
-                tree.edit(&input_edit);
-            }
+        if let Some(input_edit) = edit
+            && let Some(tree) = &mut self.tree
+        {
+            tree.edit(&input_edit);
         }
 
         let new_tree = {
@@ -192,7 +202,7 @@ impl SyntaxHighlighter {
 }
 
 pub trait InputEditExt {
-    fn new(
+    fn new_edit(
         start_byte: usize,
         old_end_byte: usize,
         new_end_byte: usize,
@@ -203,7 +213,7 @@ pub trait InputEditExt {
 }
 
 impl InputEditExt for InputEdit {
-    fn new(
+    fn new_edit(
         start_byte: usize,
         old_end_byte: usize,
         new_end_byte: usize,
