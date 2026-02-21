@@ -31,4 +31,4 @@ jobs:
           shared-key: "rust-${{ matrix.os }}"
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Make sure the mocked Skia bindings are on sync
-        run: cargo build --package freya --package freya-testing --features "mocked-engine" --no-default-features
+        run: cargo build --package freya --package freya-testing --features "mocked-engine, all-bindings" --no-default-features

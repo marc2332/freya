@@ -1089,6 +1089,16 @@ impl Canvas {
         unimplemented!("This is mocked")
     }
 
+    pub fn draw_round_rect(
+        &self,
+        rect: impl AsRef<Rect>,
+        rx: f32,
+        ry: f32,
+        paint: &Paint,
+    ) -> &Self {
+        unimplemented!("This is mocked")
+    }
+
     pub fn draw_image_nine(
         &self,
         _image: Image,
