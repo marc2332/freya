@@ -22,7 +22,10 @@ use objc2_metal::{
     MTLDrawable,
     MTLPixelFormat,
 };
-use objc2_quartz_core::CAMetalLayer;
+use objc2_quartz_core::{
+    CAMetalDrawable,
+    CAMetalLayer,
+};
 use raw_window_handle::{
     HasWindowHandle,
     RawWindowHandle,
