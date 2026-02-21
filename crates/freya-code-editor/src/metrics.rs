@@ -14,6 +14,12 @@ pub struct EditorMetrics {
     pub(crate) highlighter: SyntaxHighlighter,
 }
 
+impl Default for EditorMetrics {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl EditorMetrics {
     pub fn new() -> Self {
         Self {
