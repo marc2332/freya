@@ -1,5 +1,16 @@
+use freya_animation::{
+    easing::Function,
+    hook::{
+        Ease,
+        use_animation_transition,
+    },
+    prelude::AnimNum,
+};
 use freya_core::prelude::*;
-use torin::size::Size;
+use torin::{
+    prelude::Alignment,
+    size::Size,
+};
 
 use crate::{
     get_theme,
@@ -68,16 +79,23 @@ impl Component for ProgressBar {
     fn render(&self) -> impl IntoElement {
         let progressbar_theme = get_theme!(&self.theme, progressbar);
 
-        let progress = self.progress.clamp(0., 100.);
+        let progress = use_reactive(&self.progress.clamp(0., 100.));
+        let animation = use_animation_transition(progress, |from, to| {
+            AnimNum::new(from, to)
+                .time(500)
+                .ease(Ease::Out)
+                .function(Function::Expo)
+        });
 
         rect()
-            .a11y_alt(format!("Progress {progress}%"))
+            .a11y_alt(format!("Progress {}%", progress()))
             .a11y_focusable(true)
             .a11y_role(AccessibilityRole::ProgressIndicator)
             .horizontal()
             .width(self.width.clone())
             .height(Size::px(progressbar_theme.height))
             .corner_radius(99.)
+            .overflow(Overflow::Clip)
             .background(progressbar_theme.background)
             .border(
                 Border::new()
@@ -89,7 +107,8 @@ impl Component for ProgressBar {
             .child(
                 rect()
                     .horizontal()
-                    .width(Size::percent(progress))
+                    .width(Size::percent(&*animation.read()))
+                    .cross_align(Alignment::Center)
                     .height(Size::fill())
                     .corner_radius(99.)
                     .background(progressbar_theme.progress_background)
