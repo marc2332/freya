@@ -108,6 +108,7 @@ pub struct Button {
     style_variant: ButtonStyleVariant,
     layout_variant: ButtonLayoutVariant,
     enabled: bool,
+    focusable: bool,
 }
 
 impl Default for Button {
@@ -139,6 +140,7 @@ impl Button {
             on_secondary_press: None,
             elements: Vec::default(),
             enabled: true,
+            focusable: true,
             key: DiffKey::None,
         }
     }
@@ -153,6 +155,11 @@ impl Button {
 
     pub fn enabled(mut self, enabled: impl Into<bool>) -> Self {
         self.enabled = enabled.into();
+        self
+    }
+
+    pub fn focusable(mut self, focusable: impl Into<bool>) -> Self {
+        self.focusable = focusable.into();
         self
     }
 
@@ -266,7 +273,7 @@ impl Component for Button {
         rect()
             .overflow(Overflow::Clip)
             .a11y_id(focus.a11y_id())
-            .a11y_focusable(self.enabled)
+            .a11y_focusable(self.enabled && self.focusable)
             .a11y_role(AccessibilityRole::Button)
             .background(background.mul_if(!self.enabled, 0.9))
             .border(border)
@@ -277,33 +284,34 @@ impl Component for Button {
             .color(theme_colors.color.mul_if(!self.enabled, 0.9))
             .center()
             .maybe(self.enabled, |rect| {
-                rect.on_all_press({
-                    let on_press = self.on_press.clone();
-                    let on_secondary_press = self.on_secondary_press.clone();
-                    move |e: Event<PressEventData>| {
-                        focus.request_focus();
-                        match e.data() {
-                            PressEventData::Mouse(data) => match data.button {
-                                Some(MouseButton::Left) => {
+                rect.on_pointer_down(|e: Event<PointerEventData>| e.stop_propagation())
+                    .on_all_press({
+                        let on_press = self.on_press.clone();
+                        let on_secondary_press = self.on_secondary_press.clone();
+                        move |e: Event<PressEventData>| {
+                            focus.request_focus();
+                            match e.data() {
+                                PressEventData::Mouse(data) => match data.button {
+                                    Some(MouseButton::Left) => {
+                                        if let Some(handler) = &on_press {
+                                            handler.call(e);
+                                        }
+                                    }
+                                    Some(MouseButton::Right) => {
+                                        if let Some(handler) = &on_secondary_press {
+                                            handler.call(e);
+                                        }
+                                    }
+                                    _ => {}
+                                },
+                                PressEventData::Touch(_) | PressEventData::Keyboard(_) => {
                                     if let Some(handler) = &on_press {
                                         handler.call(e);
                                     }
                                 }
-                                Some(MouseButton::Right) => {
-                                    if let Some(handler) = &on_secondary_press {
-                                        handler.call(e);
-                                    }
-                                }
-                                _ => {}
-                            },
-                            PressEventData::Touch(_) | PressEventData::Keyboard(_) => {
-                                if let Some(handler) = &on_press {
-                                    handler.call(e);
-                                }
                             }
                         }
-                    }
-                })
+                    })
             })
             .on_pointer_enter(move |_| {
                 hovering.set(true);

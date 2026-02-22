@@ -116,6 +116,68 @@ pub fn absolute() {
 }
 
 #[test]
+pub fn absolute_inside_offset_container() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_tree = TestingTree::default();
+    mocked_tree.add(
+        0,
+        None,
+        vec![1],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(1000.0)),
+            Size::Pixels(Length::new(1000.0)),
+            Direction::Vertical,
+        ),
+    );
+
+    mocked_tree.add(
+        1,
+        Some(0),
+        vec![2],
+        Node::from_size_and_offset(
+            Size::Pixels(Length::new(200.0)),
+            Size::Pixels(Length::new(200.0)),
+            Length::new(30.0),
+            Length::new(10.0),
+        ),
+    );
+
+    mocked_tree.add(
+        2,
+        Some(1),
+        vec![],
+        Node::from_size_and_position(
+            Size::Pixels(Length::new(50.0)),
+            Size::Pixels(Length::new(50.0)),
+            Position::Absolute(Box::new(PositionSides {
+                top: Some(20.0),
+                right: None,
+                bottom: None,
+                left: Some(40.0),
+            })),
+        ),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        &mut measurer,
+        &mut mocked_tree,
+    );
+
+    assert_eq!(
+        layout.get(&1).unwrap().area,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
+    );
+
+    assert_eq!(
+        layout.get(&2).unwrap().area,
+        Rect::new(Point2D::new(70.0, 30.0), Size2D::new(50.0, 50.0)),
+    );
+}
+
+#[test]
 pub fn global() {
     let (mut layout, mut measurer) = test_utils();
 
