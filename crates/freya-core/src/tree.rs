@@ -655,15 +655,15 @@ impl Tree {
 bitflags! {
     #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct DiffModifies: u32 {
-        const LAYOUT = 1;
-        const STYLE = 2;
-        const ACCESSIBILITY = 3;
-        const EVENT_HANDLERS = 4;
-        const LAYER = 5;
-        const TEXT_STYLE = 6;
-        const EFFECT = 7;
-        const INNER_LAYOUT = 8;
-        const REORDER_LAYOUT = 9;
+        const LAYOUT = 1 << 0;
+        const STYLE = 1 << 1;
+        const ACCESSIBILITY = 1 << 2;
+        const EVENT_HANDLERS = 1 << 3;
+        const LAYER = 1 << 4;
+        const TEXT_STYLE = 1 << 5;
+        const EFFECT = 1 << 6;
+        const INNER_LAYOUT = 1 << 7;
+        const REORDER_LAYOUT = 1 << 8;
     }
 }
 
