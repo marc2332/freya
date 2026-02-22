@@ -23,6 +23,7 @@ pub struct EditorLineUI {
     pub(crate) font_size: f32,
     pub(crate) line_height: f32,
     pub(crate) line_index: usize,
+    pub(crate) read_only: bool,
 }
 
 impl Component for EditorLineUI {
@@ -35,6 +36,7 @@ impl Component for EditorLineUI {
             font_size,
             line_height,
             line_index,
+            read_only,
         } = self.clone();
 
         let holder = use_state(ParagraphHolder::default);
@@ -85,7 +87,11 @@ impl Component for EditorLineUI {
             });
         };
 
-        let cursor_index = is_line_selected.then(|| editor_data.cursor_col());
+        let cursor_index = if read_only {
+            None
+        } else {
+            is_line_selected.then(|| editor_data.cursor_col())
+        };
         let gutter_color = if is_line_selected {
             (235, 235, 235)
         } else {

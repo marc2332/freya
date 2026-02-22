@@ -16,6 +16,7 @@ pub struct CodeEditor {
     editor: Writable<CodeEditorData>,
     font_size: f32,
     line_height: f32,
+    read_only: bool,
     a11y_id: AccessibilityId,
 }
 
@@ -28,6 +29,7 @@ impl CodeEditor {
             editor: editor.into(),
             font_size: 14.0,
             line_height: 1.4,
+            read_only: false,
             a11y_id,
         }
     }
@@ -42,6 +44,12 @@ impl CodeEditor {
         self.line_height = height;
         self
     }
+
+    /// Sets whether the editor is read-only.
+    pub fn read_only(mut self, read_only: bool) -> Self {
+        self.read_only = read_only;
+        self
+    }
 }
 
 impl Component for CodeEditor {
@@ -50,6 +58,7 @@ impl Component for CodeEditor {
             editor,
             font_size,
             line_height,
+            read_only,
             a11y_id,
         } = self.clone();
         let editor_tab = editor.read();
@@ -209,8 +218,9 @@ impl Component for CodeEditor {
                 .a11y_auto_focus(true)
                 .a11y_focusable(true)
                 .a11y_id(focus.a11y_id())
-                .on_key_down(on_key_down)
-                .on_key_up(on_key_up)
+                .maybe(!read_only, |el| {
+                    el.on_key_down(on_key_down).on_key_up(on_key_up)
+                })
                 .on_mouse_down(on_mouse_down)
                 .child(
                     VirtualScrollView::new(move |line_index, _| {
@@ -219,6 +229,7 @@ impl Component for CodeEditor {
                             font_size,
                             line_height,
                             line_index,
+                            read_only,
                         }
                         .into()
                     })
