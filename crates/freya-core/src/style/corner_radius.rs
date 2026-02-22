@@ -66,7 +66,7 @@ impl CornerRadius {
                 .r_arc_to(
                     (radius, radius),
                     0.0,
-                    BuilderArcSize::Small,
+                    ArcSize::Small,
                     PathDirection::CW,
                     (l, l),
                 )
@@ -95,7 +95,7 @@ impl CornerRadius {
                 .r_arc_to(
                     (radius, radius),
                     0.0,
-                    BuilderArcSize::Small,
+                    ArcSize::Small,
                     PathDirection::CW,
                     (-l, l),
                 )
@@ -122,7 +122,7 @@ impl CornerRadius {
                 .r_arc_to(
                     (radius, radius),
                     0.0,
-                    BuilderArcSize::Small,
+                    ArcSize::Small,
                     PathDirection::CW,
                     (-l, -l),
                 )
@@ -145,7 +145,7 @@ impl CornerRadius {
                 .r_arc_to(
                     (radius, radius),
                     0.0,
-                    BuilderArcSize::Small,
+                    ArcSize::Small,
                     PathDirection::CW,
                     (l, -l),
                 )
