@@ -76,10 +76,10 @@ impl From<Color> for SkColor {
 impl From<Color> for SkColor4f {
     fn from(value: Color) -> Self {
         SkColor4f::new(
-            value.r() as f32,
-            value.g() as f32,
-            value.b() as f32,
-            value.a() as f32,
+            value.r() as f32 / 255.0,
+            value.g() as f32 / 255.0,
+            value.b() as f32 / 255.0,
+            value.a() as f32 / 255.0,
         )
     }
 }

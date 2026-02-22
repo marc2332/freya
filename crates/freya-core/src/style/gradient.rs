@@ -75,8 +75,15 @@ impl LinearGradient {
     }
 
     pub fn into_shader(&self, bounds: Area) -> Option<Shader> {
-        let colors: Vec<SkColor> = self.stops.iter().map(|stop| stop.color.into()).collect();
+        let colors: Vec<SkColor4f> = self
+            .stops
+            .iter()
+            .map(|stop| SkColor4f::from(stop.color))
+            .collect();
         let offsets: Vec<f32> = self.stops.iter().map(|stop| stop.offset).collect();
+
+        let grad_colors = Colors::new(&colors[..], Some(&offsets[..]), TileMode::Clamp, None);
+        let grad = Gradient::new(grad_colors, Flags::default());
 
         let (dy, dx) = (self.angle.to_radians() + FRAC_PI_2).sin_cos();
         let farthest_corner = SkPoint::new(
@@ -88,15 +95,12 @@ impl LinearGradient {
         let endpoint = farthest_corner + SkPoint::new(-u * dy, u * dx);
 
         let origin = SkPoint::new(bounds.min_x(), bounds.min_y());
-        Shader::linear_gradient(
+        shaders::linear_gradient(
             (
                 SkPoint::new(bounds.width(), bounds.height()) - endpoint + origin,
                 endpoint + origin,
             ),
-            GradientShaderColors::Colors(&colors[..]),
-            Some(&offsets[..]),
-            TileMode::Clamp,
-            None,
+            &grad,
             None,
         )
     }
@@ -145,18 +149,24 @@ impl RadialGradient {
     }
 
     pub fn into_shader(&self, bounds: Area) -> Option<Shader> {
-        let colors: Vec<SkColor> = self.stops.iter().map(|stop| stop.color.into()).collect();
+        let colors: Vec<SkColor4f> = self
+            .stops
+            .iter()
+            .map(|stop| SkColor4f::from(stop.color))
+            .collect();
         let offsets: Vec<f32> = self.stops.iter().map(|stop| stop.offset).collect();
 
         let center = bounds.center();
 
-        Shader::radial_gradient(
-            SkPoint::new(center.x, center.y),
-            bounds.width().max(bounds.height()) / 2.0,
-            GradientShaderColors::Colors(&colors[..]),
-            Some(&offsets[..]),
-            TileMode::Clamp,
-            None,
+        let grad_colors = Colors::new(&colors[..], Some(&offsets[..]), TileMode::Clamp, None);
+        let grad = Gradient::new(grad_colors, Flags::default());
+
+        shaders::radial_gradient(
+            (
+                SkPoint::new(center.x, center.y),
+                bounds.width().max(bounds.height()) / 2.0,
+            ),
+            &grad,
             None,
         )
     }
@@ -218,7 +228,11 @@ impl ConicGradient {
     }
 
     pub fn into_shader(&self, bounds: Area) -> Option<Shader> {
-        let colors: Vec<SkColor> = self.stops.iter().map(|stop| stop.color.into()).collect();
+        let colors: Vec<SkColor4f> = self
+            .stops
+            .iter()
+            .map(|stop| SkColor4f::from(stop.color))
+            .collect();
         let offsets: Vec<f32> = self.stops.iter().map(|stop| stop.offset).collect();
 
         let center = bounds.center();
@@ -226,13 +240,15 @@ impl ConicGradient {
         let matrix =
             Matrix::rotate_deg_pivot(-90.0 + self.angle.unwrap_or(0.0), (center.x, center.y));
 
-        Shader::sweep_gradient(
-            (center.x, center.y),
-            GradientShaderColors::Colors(&colors[..]),
-            Some(&offsets[..]),
-            TileMode::Clamp,
-            self.angles,
-            None,
+        let grad_colors = Colors::new(&colors[..], Some(&offsets[..]), TileMode::Clamp, None);
+        let grad = Gradient::new(grad_colors, Flags::default());
+
+        let (start_angle, end_angle) = self.angles.unwrap_or((0.0, 360.0));
+
+        shaders::sweep_gradient(
+            SkPoint::new(center.x, center.y),
+            (start_angle, end_angle),
+            &grad,
             Some(&matrix),
         )
     }
