@@ -14,10 +14,7 @@ pub mod prelude {
             BASE_FONT_SIZE,
             MAX_FONT_SIZE,
         },
-        editor_data::{
-            CodeEditorData,
-            CodeEditorMetadata,
-        },
+        editor_data::CodeEditorData,
         editor_line::EditorLineUI,
         editor_ui::CodeEditor,
         languages::LanguageId,

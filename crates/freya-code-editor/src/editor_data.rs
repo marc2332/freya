@@ -5,7 +5,6 @@ use std::{
         Mul,
         Range,
     },
-    path::PathBuf,
     time::Duration,
 };
 
@@ -23,41 +22,7 @@ use crate::{
     syntax::InputEditExt,
 };
 
-#[derive(Clone, PartialEq, Debug)]
-pub struct CodeEditorMetadata {
-    pub path: PathBuf,
-    pub title: Option<String>,
-}
-
-impl CodeEditorMetadata {
-    pub fn content_id(&self) -> Option<String> {
-        self.path
-            .file_name()
-            .map(|n| n.to_str().unwrap().to_owned())
-    }
-
-    pub fn title(&self) -> String {
-        self.title
-            .clone()
-            .or_else(|| self.content_id())
-            .unwrap_or_else(|| "Untitled".to_string())
-    }
-
-    pub fn path(&self) -> &PathBuf {
-        &self.path
-    }
-
-    pub fn language_id(&self) -> LanguageId {
-        if let Some(ext) = self.path.extension() {
-            LanguageId::parse(ext.to_str().unwrap())
-        } else {
-            LanguageId::default()
-        }
-    }
-}
-
 pub struct CodeEditorData {
-    pub(crate) metadata: CodeEditorMetadata,
     pub(crate) history: EditorHistory,
     pub rope: Rope,
     pub(crate) selection: TextSelection,
@@ -65,13 +30,13 @@ pub struct CodeEditorData {
     pub(crate) metrics: EditorMetrics,
     pub(crate) dragging: TextDragging,
     pub(crate) scrolls: (i32, i32),
-    pending_edit: Option<InputEdit>,
+    pub(crate) pending_edit: Option<InputEdit>,
+    pub language_id: LanguageId,
 }
 
 impl CodeEditorData {
-    pub fn new(metadata: CodeEditorMetadata, rope: Rope) -> Self {
+    pub fn new(rope: Rope, language_id: LanguageId) -> Self {
         Self {
-            metadata,
             rope,
             selection: TextSelection::new_cursor(0),
             history: EditorHistory::new(Duration::from_secs(1)),
@@ -80,6 +45,7 @@ impl CodeEditorData {
             dragging: TextDragging::default(),
             scrolls: (0, 0),
             pending_edit: None,
+            language_id,
         }
     }
 
@@ -91,22 +57,13 @@ impl CodeEditorData {
         self.last_saved_history_change = self.history.current_change();
     }
 
-    pub fn path(&self) -> &PathBuf {
-        self.metadata.path()
-    }
-
     pub fn parse(&mut self) {
-        let language_id = self.metadata.language_id();
         let edit = self.pending_edit.take();
-        self.metrics.run_parser(&self.rope, language_id, edit);
+        self.metrics.run_parser(&self.rope, self.language_id, edit);
     }
 
     pub fn measure(&mut self, font_size: f32) {
         self.metrics.measure_longest_line(font_size, &self.rope);
-    }
-
-    pub fn metadata(&self) -> &CodeEditorMetadata {
-        &self.metadata
     }
 
     pub fn process(&mut self, font_size: f32, edit_event: EditableEvent) -> bool {

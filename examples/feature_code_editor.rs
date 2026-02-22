@@ -21,7 +21,7 @@ fn app() -> impl IntoElement {
     let editor = use_state(|| {
         let path = PathBuf::from("./crates/freya-code-editor/src/editor_ui.rs");
         let rope = Rope::from_str(&std::fs::read_to_string(&path).unwrap());
-        let mut editor = CodeEditorData::new(CodeEditorMetadata { path, title: None }, rope);
+        let mut editor = CodeEditorData::new(rope, LanguageId::Rust);
         editor.parse();
         editor.measure(14.);
         editor
