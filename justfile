@@ -12,6 +12,10 @@ c-ci:
     cargo clippy --workspace --examples --features "all-debug, vulkan" -- -D warnings
     cargo doc --workspace --features "all-debug, vulkan"
 
+c-ci-metal:
+    taplo check
+    cargo clippy --workspace --examples --features "all-debug, metal" -- -D warnings
+
 e example:
     cargo run --example {{example}}
 
