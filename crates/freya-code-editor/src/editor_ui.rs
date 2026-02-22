@@ -27,7 +27,7 @@ impl CodeEditor {
         Self {
             editor: editor.into(),
             font_size: 14.0,
-            line_height: 1.2,
+            line_height: 1.4,
             a11y_id,
         }
     }

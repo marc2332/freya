@@ -27,5 +27,5 @@ fn app() -> impl IntoElement {
         editor
     });
 
-    CodeEditor::new(editor, focus.a11y_id()).font_size(16.)
+    CodeEditor::new(editor, focus.a11y_id())
 }
