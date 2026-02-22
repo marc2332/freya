@@ -187,6 +187,39 @@ fn app() -> impl IntoElement {
 </div>
 
 
+
+### Code Editor
+
+Create and control text Code Editors. It is state agnostic so as long as it can be turned into a `Writable` it will work. Uses Rope for text editing and tree-sitter for syntax highlighting. 
+Enable with the `code-editor` feature.
+
+<details>
+<summary>Code</summary>
+
+```rust
+fn app() -> impl IntoElement {
+    use_init_theme(|| DARK_THEME);
+    let focus = use_focus();
+    let editor = use_state(|| {
+        let path = PathBuf::from("./crates/freya-code-editor/src/editor_ui.rs");
+        let rope = Rope::from_str(&std::fs::read_to_string(&path).unwrap());
+        let mut editor = CodeEditorData::new(rope, LanguageId::Rust);
+        editor.parse();
+        editor.measure(14.);
+        editor
+    });
+
+    CodeEditor::new(editor, focus.a11y_id())
+}
+```
+
+</details>
+
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/4d6c4571-ae74-4c24-a05f-9c715b6b3438">
+</div>
+
+
 ### Routing & Navigation
 
 Define routes, manage navigation state, and transition between different views.

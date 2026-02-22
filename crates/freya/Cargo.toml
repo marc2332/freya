@@ -39,6 +39,7 @@ all = [
   "titlebar",
   "terminal",
   "query",
+  "code-editor",
 ]
 all-publish = [
   "all",
@@ -98,6 +99,7 @@ query = ["dep:freya-query"]
 webview = ["dep:freya-webview"]
 titlebar = ["freya-components/titlebar"]
 terminal = ["dep:freya-terminal"]
+code-editor = ["dep:freya-code-editor"]
 
 [dependencies]
 freya-core = { workspace = true }
@@ -117,6 +119,7 @@ freya-radio = { workspace = true, optional = true }
 freya-query = { workspace = true, optional = true }
 freya-webview = { workspace = true, optional = true }
 freya-terminal = { workspace = true, optional = true }
+freya-code-editor = { workspace = true, optional = true }
 
 # Performance
 freya-performance-plugin = { workspace = true, optional = true }

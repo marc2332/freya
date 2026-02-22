@@ -40,6 +40,7 @@ members = [
   "./crates/freya-query",
   "./crates/freya-webview",
   "./crates/freya-terminal",
+  "./crates/freya-code-editor",
   "./examples/website",
   "./examples/ai-chat",
   "./examples/state_query_sqlite",
@@ -75,6 +76,7 @@ freya-plotters-backend = { path = "./crates/freya-plotters-backend", version = "
 freya-query = { path = "./crates/freya-query", version = "0.4.0-rc.9" }
 freya-webview = { path = "./crates/freya-webview", version = "0.4.0-rc.9" }
 freya-terminal = { path = "./crates/freya-terminal", version = "0.4.0-rc.9" }
+freya-code-editor = { path = "./crates/freya-code-editor", version = "0.4.0-rc.9" }
 
 # core
 generational-box = "0.7"
@@ -168,6 +170,7 @@ freya-sdk = { workspace = true }
 freya-devtools = { workspace = true, features = ["server", "client"] }
 freya-webview = { workspace = true }
 freya-terminal = { workspace = true }
+freya-code-editor = { workspace = true }
 
 skia-safe = { workspace = true }
 
