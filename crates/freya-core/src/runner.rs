@@ -963,12 +963,7 @@ impl Runner {
 
             let path_node = scope.borrow().nodes.get(removed).cloned();
             if let Some(PathNode { node_id, scope_id }) = path_node {
-                if scope_id.is_some() {
-                    selected_roots
-                        .entry(&removed[..removed.len() - 1])
-                        .or_default()
-                        .insert(removed);
-                } else {
+                if scope_id.is_none() {
                     let index_inside_parent = if removed.as_ref() == [0] {
                         let parent_id = scope.borrow().parent_id;
                         let scope_id = scope.borrow().id;
@@ -985,30 +980,38 @@ impl Runner {
                         id: node_id,
                         index: index_inside_parent,
                     });
-
-                    // Skip if this removed path is already covered by a previously selected root
-                    for (root, inner) in &mut selected_roots {
-                        if is_descendant(removed, root) {
-                            inner.insert(removed);
-                            continue 'remove;
-                        }
-                    }
-
-                    // Remove any previously selected roots that are descendants of this new (higher) removed path
-                    selected_roots.retain(|root, _| !is_descendant(root, removed));
-
-                    selected_roots
-                        .entry(&removed[..removed.len() - 1])
-                        .or_default()
-                        .insert(removed);
                 }
+
+                // Skip if this removed path is already covered by a previously selected root
+                for (root, inner) in &mut selected_roots {
+                    if is_descendant(removed, root) {
+                        inner.insert(removed);
+                        continue 'remove;
+                    }
+                }
+
+                // Remove any previously selected roots that are descendants of this new (higher) removed path
+                selected_roots.retain(|root, _| !is_descendant(root, removed));
+
+                selected_roots
+                    .entry(&removed[..removed.len() - 1])
+                    .or_default()
+                    .insert(removed);
             } else {
                 unreachable!()
             }
         }
 
         // Traverse each chosen branch root and queue nested scopes
-        for (root, removed) in selected_roots {
+        for (root, removed) in selected_roots.iter().sorted_by(|(a, _), (b, _)| {
+            for (x, y) in a.iter().zip(b.iter()) {
+                match x.cmp(y) {
+                    Ordering::Equal => continue,
+                    non_eq => return non_eq.reverse(),
+                }
+            }
+            b.len().cmp(&a.len())
+        }) {
             scope.borrow_mut().nodes.retain(
                 root,
                 |p, _| !removed.contains(p),
