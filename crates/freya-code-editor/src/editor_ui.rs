@@ -22,7 +22,7 @@ pub struct CodeEditor {
 impl CodeEditor {
     /// Creates a new editor UI component with the given writable data.
     ///
-    /// Default values are applied for font size, line height and accessibility id.
+    /// Default values are applied for font size and line height.
     pub fn new(editor: impl Into<Writable<CodeEditorData>>, a11y_id: AccessibilityId) -> Self {
         Self {
             editor: editor.into(),
