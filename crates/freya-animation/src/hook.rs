@@ -650,8 +650,8 @@ impl_tuple_call!(
 ///
 ///     rect()
 ///         .background(&*animation.read())
-///         .width(100.)
-///         .height(100.)
+///         .width(Size::px(100.))
+///         .height(Size::px(100.))
 /// }
 /// ```
 pub fn use_animation_transition<Animated: AnimatedValue, T: Clone + PartialEq + 'static>(
