@@ -140,14 +140,10 @@ impl ragnarok::NameOfEvent for EventName {
             Self::KeyUp => {
                 events.insert(Self::GlobalKeyUp);
             }
-
-            Self::MouseUp | Self::PointerPress => {
-                events.insert(Self::GlobalMouseUp);
-            }
-            Self::MouseDown | Self::PointerDown => {
-                events.insert(Self::GlobalMouseDown);
-            }
-
+            Self::MouseUp => events.extend([Self::PointerPress, Self::GlobalMouseUp]),
+            Self::PointerPress => events.extend([Self::MouseUp, Self::GlobalMouseUp]),
+            Self::MouseDown => events.extend([Self::PointerDown, Self::GlobalMouseDown]),
+            Self::PointerDown => events.extend([Self::MouseDown, Self::GlobalMouseDown]),
             Self::CaptureGlobalMouseMove => {
                 events.extend([Self::MouseMove, Self::PointerEnter, Self::GlobalMouseMove]);
             }
