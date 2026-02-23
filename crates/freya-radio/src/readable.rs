@@ -32,7 +32,7 @@ impl<T: 'static> RadioReadable<T> for Readable<T> {
                 let slice = slice.clone();
                 move || ReadableRef::Ref(slice.read_unchecked())
             }),
-            Box::new(move || ReadableRef::Ref(slice.read_unchecked())),
+            Box::new(move || ReadableRef::Ref(slice.peek_unchecked())),
         )
     }
 }
