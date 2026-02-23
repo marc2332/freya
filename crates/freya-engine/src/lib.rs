@@ -13,7 +13,6 @@ pub mod prelude {
     }
 
     pub use source::{
-        ArcSize as SkArcSize,
         BlurStyle as SkBlurStyle,
         Color as SkColor,
         Color4f as SkColor4f,
