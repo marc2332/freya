@@ -25,7 +25,6 @@ fn app() -> impl IntoElement {
         .background(&*animation.read())
         .expanded()
         .center()
-        .spacing(8.0)
         .child(
             Button::new()
                 .on_press(move |_| {
