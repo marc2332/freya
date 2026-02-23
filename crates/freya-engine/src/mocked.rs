@@ -184,6 +184,7 @@ impl Shader {
     }
 }
 
+#[derive(Copy, Clone)]
 pub enum TileMode {
     Clamp = 0,
     Repeat = 1,
@@ -195,6 +196,142 @@ bitflags! {
     #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct GradientFlags: u32 {
         const INTERPOLATE_COLORS_IN_PREMUL = 1;
+    }
+}
+
+bitflags! {
+    #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct Flags: u32 {
+        const INTERPOLATE_COLORS_IN_PREMUL = 1;
+    }
+}
+
+impl Default for Flags {
+    fn default() -> Self {
+        Self::empty()
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[repr(C)]
+pub struct Interpolation {
+    pub in_premul: bool,
+    pub color_space: u8,
+    pub hue_method: u8,
+}
+
+impl Default for Interpolation {
+    fn default() -> Self {
+        Self {
+            in_premul: false,
+            color_space: 0,
+            hue_method: 0,
+        }
+    }
+}
+
+impl From<Flags> for Interpolation {
+    fn from(flags: Flags) -> Self {
+        Self {
+            in_premul: flags.contains(Flags::INTERPOLATE_COLORS_IN_PREMUL),
+            color_space: 0,
+            hue_method: 0,
+        }
+    }
+}
+
+pub struct Colors<'a> {
+    colors: &'a [Color4f],
+    pos: Option<&'a [f32]>,
+    tile_mode: TileMode,
+    color_space: Option<ColorSpace>,
+}
+
+impl<'a> Colors<'a> {
+    pub fn new(
+        colors: &'a [Color4f],
+        pos: Option<&'a [f32]>,
+        tile_mode: TileMode,
+        color_space: impl Into<Option<ColorSpace>>,
+    ) -> Self {
+        Self {
+            colors,
+            pos,
+            tile_mode,
+            color_space: color_space.into(),
+        }
+    }
+
+    pub fn colors(&self) -> &'a [Color4f] {
+        self.colors
+    }
+
+    pub fn positions(&self) -> Option<&'a [f32]> {
+        self.pos
+    }
+
+    pub fn tile_mode(&self) -> TileMode {
+        self.tile_mode
+    }
+
+    pub fn color_space(&self) -> Option<&ColorSpace> {
+        self.color_space.as_ref()
+    }
+}
+
+pub struct Gradient<'a> {
+    colors: Colors<'a>,
+    interpolation: Interpolation,
+}
+
+impl<'a> Gradient<'a> {
+    pub fn new(colors: Colors<'a>, interpolation: impl Into<Interpolation>) -> Self {
+        Self {
+            colors,
+            interpolation: interpolation.into(),
+        }
+    }
+
+    pub fn colors(&self) -> &Colors<'a> {
+        &self.colors
+    }
+
+    pub fn interpolation(&self) -> &Interpolation {
+        &self.interpolation
+    }
+}
+
+pub mod shaders {
+    use super::{
+        Gradient,
+        Matrix,
+        Point,
+        Shader,
+    };
+
+    pub fn linear_gradient<'a>(
+        _points: (impl Into<Point>, impl Into<Point>),
+        _gradient: &Gradient<'a>,
+        _local_matrix: impl Into<Option<&'a Matrix>>,
+    ) -> Option<Shader> {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn radial_gradient<'a>(
+        _center_radius: (impl Into<Point>, f32),
+        _gradient: &Gradient<'a>,
+        _local_matrix: impl Into<Option<&'a Matrix>>,
+    ) -> Option<Shader> {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn sweep_gradient<'a>(
+        _center: impl Into<Point>,
+        _angles: (f32, f32),
+        _gradient: &Gradient<'a>,
+        _local_matrix: impl Into<Option<&'a Matrix>>,
+    ) -> Option<Shader> {
+        unimplemented!("This is mocked")
     }
 }
 
@@ -1564,7 +1701,7 @@ impl PathBuilder {
         &mut self,
         _r: impl Into<Point>,
         _x_axis_rotate: f32,
-        _large_arc: BuilderArcSize,
+        _large_arc: ArcSize,
         _sweep: PathDirection,
         _d: impl Into<Point>,
     ) -> &mut Self {
@@ -1659,13 +1796,6 @@ impl RRect {
 #[repr(i32)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum ArcSize {
-    Small = 0,
-    Large = 1,
-}
-
-#[repr(i32)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub enum BuilderArcSize {
     Small = 0,
     Large = 1,
 }
