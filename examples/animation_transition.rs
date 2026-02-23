@@ -8,7 +8,6 @@ use freya::{
 };
 use rand::Rng;
 
-/// Convenience helper used only by this example
 fn random_color() -> Color {
     let mut rng = rand::rng();
     Color::from_rgb(rng.random(), rng.random(), rng.random())
