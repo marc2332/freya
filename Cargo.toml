@@ -41,7 +41,6 @@ members = [
   "./crates/freya-webview",
   "./crates/freya-terminal",
   "./crates/freya-code-editor",
-  "./examples/website",
   "./examples/ai-chat",
   "./examples/state_query_sqlite",
 ]

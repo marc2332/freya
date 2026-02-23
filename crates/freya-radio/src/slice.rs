@@ -232,11 +232,11 @@ where
     /// Write the slice value, with 'static lifetime.
     pub fn write_unchecked(&'_ self) -> WriteRef<'static, SliceValue> {
         self.notify();
-        self.write_unchecked_no_notify()
+        self.write_silently()
     }
 
     /// Write the slice value without notifying.
-    pub fn write_unchecked_no_notify(&'_ self) -> WriteRef<'static, SliceValue> {
+    pub fn write_silently(&'_ self) -> WriteRef<'static, SliceValue> {
         let value = self.station.value.write_unchecked();
         let selector = self.selector.clone();
         value.map(|v| RefMut::map(v, |v| selector(v)))

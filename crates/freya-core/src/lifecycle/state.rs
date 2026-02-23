@@ -407,6 +407,15 @@ impl<T> State<T> {
         self.key.write()
     }
 
+    /// Get a mutable reference without requiring a mutable borrow of the State.
+    ///
+    /// This does not notify subscribers of this `State`.
+    ///
+    /// You probably want to use [State::write] instead.
+    pub fn write_silently(&'_ self) -> WriteRef<'static, T> {
+        self.key.write()
+    }
+
     /// Replace the current state value with a new one.
     ///
     /// This method completely replaces the existing value with the provided one

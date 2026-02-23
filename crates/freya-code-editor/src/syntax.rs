@@ -15,64 +15,64 @@ use tree_sitter::{
     Tree,
 };
 
-use crate::languages::LanguageId;
+use crate::{
+    editor_theme::SyntaxTheme,
+    languages::LanguageId,
+};
 
-const DEFAULT_COLOR: Color = Color::from_rgb(235, 219, 178);
-const SPACE_MARK_COLOR: Color = Color::from_af32rgb(0.2, 223, 191, 142);
-
-fn capture_color(name: &str) -> Color {
+fn capture_color(name: &str, theme: &SyntaxTheme) -> Color {
     match name {
-        "attribute" => (131, 165, 152).into(),
-        "boolean" => (211, 134, 155).into(),
-        "comment" | "comment.documentation" => (146, 131, 116).into(),
-        "constant" | "constant.builtin" => (211, 134, 155).into(),
-        "constructor" => (250, 189, 47).into(),
-        "escape" => (254, 128, 25).into(),
-        "function" | "function.builtin" => (152, 192, 124).into(),
-        "function.macro" => (131, 165, 152).into(),
-        "function.method" => (152, 192, 124).into(),
-        "keyword" => (251, 73, 52).into(),
-        "label" => (211, 134, 155).into(),
-        "module" => (250, 189, 47).into(),
-        "number" => (211, 134, 155).into(),
-        "operator" => (104, 157, 96).into(),
-        "property" => (152, 192, 124).into(),
-        "punctuation" => (104, 157, 96).into(),
-        "punctuation.bracket" => (254, 128, 25).into(),
-        "punctuation.delimiter" => (104, 157, 96).into(),
-        "punctuation.special" => (131, 165, 152).into(),
-        "string" => (184, 187, 38).into(),
-        "string.escape" => (254, 128, 25).into(),
-        "string.special" | "string.special.key" | "string.special.symbol" => (184, 187, 38).into(),
-        "tag" => (131, 165, 152).into(),
-        "text.literal" => (235, 219, 178).into(),
-        "text.reference" => (131, 165, 152).into(),
-        "text.title" => (250, 189, 47).into(),
-        "text.uri" => (104, 157, 96).into(),
-        "text.emphasis" | "text.strong" => (235, 219, 178).into(),
-        "type" | "type.builtin" => (250, 189, 47).into(),
-        "variable" => (235, 219, 178).into(),
-        "variable.builtin" => (211, 134, 155).into(),
-        "variable.parameter" => (235, 219, 178).into(),
-        _ => DEFAULT_COLOR,
+        "attribute" => theme.attribute,
+        "boolean" => theme.boolean,
+        "comment" | "comment.documentation" => theme.comment,
+        "constant" | "constant.builtin" => theme.constant,
+        "constructor" => theme.constructor,
+        "escape" => theme.escape,
+        "function" | "function.builtin" => theme.function,
+        "function.macro" => theme.function_macro,
+        "function.method" => theme.function_method,
+        "keyword" => theme.keyword,
+        "label" => theme.label,
+        "module" => theme.module,
+        "number" => theme.number,
+        "operator" => theme.operator,
+        "property" => theme.property,
+        "punctuation" => theme.punctuation,
+        "punctuation.bracket" => theme.punctuation_bracket,
+        "punctuation.delimiter" => theme.punctuation_delimiter,
+        "punctuation.special" => theme.punctuation_special,
+        "string" => theme.string,
+        "string.escape" => theme.string_escape,
+        "string.special" | "string.special.key" | "string.special.symbol" => theme.string_special,
+        "tag" => theme.tag,
+        "text.literal" => theme.text_literal,
+        "text.reference" => theme.text_reference,
+        "text.title" => theme.text_title,
+        "text.uri" => theme.text_uri,
+        "text.emphasis" | "text.strong" => theme.text_emphasis,
+        "type" | "type.builtin" => theme.type_,
+        "variable" => theme.variable,
+        "variable.builtin" => theme.variable_builtin,
+        "variable.parameter" => theme.variable_parameter,
+        _ => theme.text,
     }
 }
 
 /// Tries exact match, then strips trailing dot-segments for hierarchical fallback.
-fn resolve_capture_color(name: &str) -> Color {
-    let color = capture_color(name);
-    if color != DEFAULT_COLOR {
+fn resolve_capture_color(name: &str, theme: &SyntaxTheme) -> Color {
+    let color = capture_color(name, theme);
+    if color != theme.text {
         return color;
     }
     let mut candidate = name;
     while let Some(pos) = candidate.rfind('.') {
         candidate = &candidate[..pos];
-        let c = capture_color(candidate);
-        if c != DEFAULT_COLOR {
+        let c = capture_color(candidate, theme);
+        if c != theme.text {
             return c;
         }
     }
-    DEFAULT_COLOR
+    theme.text
 }
 
 pub enum TextNode {
@@ -140,14 +140,14 @@ impl SyntaxHighlighter {
         }
     }
 
-    pub fn set_language(&mut self, language_id: LanguageId) {
+    pub fn set_language(&mut self, language_id: LanguageId, theme: &SyntaxTheme) {
         if self.language_id == language_id {
             return;
         }
         self.language_id = language_id;
         self.tree = None;
 
-        self.config = language_id.lang_config();
+        self.config = language_id.lang_config(theme);
         if let Some(cfg) = &self.config {
             let _ = self.parser.set_language(&cfg.language);
         }
@@ -164,6 +164,7 @@ impl SyntaxHighlighter {
         rope: &Rope,
         syntax_blocks: &mut SyntaxBlocks,
         edit: Option<InputEdit>,
+        theme: &SyntaxTheme,
     ) {
         syntax_blocks.clear();
 
@@ -190,13 +191,13 @@ impl SyntaxHighlighter {
 
         if let Some(new_tree) = new_tree {
             if let Some(cfg) = &self.config {
-                build_syntax_blocks(&new_tree, cfg, &mut self.cursor, rope, syntax_blocks);
+                build_syntax_blocks(&new_tree, cfg, &mut self.cursor, rope, syntax_blocks, theme);
             } else {
-                build_plain_blocks(rope, syntax_blocks);
+                build_plain_blocks(rope, syntax_blocks, theme);
             }
             self.tree = Some(new_tree);
         } else {
-            build_plain_blocks(rope, syntax_blocks);
+            build_plain_blocks(rope, syntax_blocks, theme);
         }
     }
 }
@@ -244,6 +245,7 @@ fn build_syntax_blocks(
     cursor: &mut QueryCursor,
     rope: &Rope,
     syntax_blocks: &mut SyntaxBlocks,
+    theme: &SyntaxTheme,
 ) {
     let root = tree.root_node();
     cursor.set_byte_range(0..usize::MAX);
@@ -266,10 +268,15 @@ fn build_syntax_blocks(
     }
 
     spans.sort_by_key(|s| s.start_byte);
-    build_lines_from_spans(rope, &spans, syntax_blocks);
+    build_lines_from_spans(rope, &spans, syntax_blocks, theme);
 }
 
-fn build_lines_from_spans(rope: &Rope, spans: &[Span], syntax_blocks: &mut SyntaxBlocks) {
+fn build_lines_from_spans(
+    rope: &Rope,
+    spans: &[Span],
+    syntax_blocks: &mut SyntaxBlocks,
+    theme: &SyntaxTheme,
+) {
     let total_lines = rope.len_lines();
     let mut span_idx = 0;
 
@@ -302,7 +309,7 @@ fn build_lines_from_spans(rope: &Rope, spans: &[Span], syntax_blocks: &mut Synta
         }
 
         let mut byte_colors: SmallVec<[Color; 256]> =
-            smallvec::smallvec![DEFAULT_COLOR; content_bytes];
+            smallvec::smallvec![theme.text; content_bytes];
 
         let mut si = span_idx;
         while si < spans.len() && spans[si].start_byte < content_end_byte {
@@ -342,7 +349,7 @@ fn build_lines_from_spans(rope: &Rope, spans: &[Span], syntax_blocks: &mut Synta
                 if is_whitespace {
                     let len = end_char - start_char;
                     line_spans.push((
-                        SPACE_MARK_COLOR,
+                        theme.whitespace,
                         TextNode::LineOfChars {
                             len,
                             char: '\u{00B7}',
@@ -362,13 +369,13 @@ fn build_lines_from_spans(rope: &Rope, spans: &[Span], syntax_blocks: &mut Synta
     }
 }
 
-fn build_plain_blocks(rope: &Rope, syntax_blocks: &mut SyntaxBlocks) {
+fn build_plain_blocks(rope: &Rope, syntax_blocks: &mut SyntaxBlocks, theme: &SyntaxTheme) {
     for (n, line) in rope.lines().enumerate() {
         let mut line_blocks = SmallVec::default();
         let start = rope.line_to_char(n);
         let end = line.len_chars();
         if end > 0 {
-            line_blocks.push((DEFAULT_COLOR, TextNode::Range(start..start + end)));
+            line_blocks.push((theme.text, TextNode::Range(start..start + end)));
         }
         syntax_blocks.push_line(line_blocks);
     }
@@ -421,7 +428,7 @@ impl<'a> Iterator for RopeChunkIter<'a> {
 }
 
 impl LanguageId {
-    fn lang_config(&self) -> Option<LangConfig> {
+    fn lang_config(&self, theme: &SyntaxTheme) -> Option<LangConfig> {
         let (language, highlights_query) = match self {
             LanguageId::Rust => (
                 tree_sitter_rust::LANGUAGE.into(),
@@ -446,7 +453,7 @@ impl LanguageId {
         let capture_colors: Vec<Color> = query
             .capture_names()
             .iter()
-            .map(|name| resolve_capture_color(name))
+            .map(|name| resolve_capture_color(name, theme))
             .collect();
 
         Some(LangConfig {

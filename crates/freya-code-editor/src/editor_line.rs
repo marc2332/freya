@@ -14,6 +14,7 @@ use torin::{
 
 use crate::{
     editor_data::CodeEditorData,
+    editor_theme::EditorTheme,
     syntax::TextNode,
 };
 
@@ -24,6 +25,9 @@ pub struct EditorLineUI {
     pub(crate) line_height: f32,
     pub(crate) line_index: usize,
     pub(crate) read_only: bool,
+    pub(crate) gutter: bool,
+    pub(crate) show_whitespace: bool,
+    pub(crate) theme: Readable<EditorTheme>,
 }
 
 impl Component for EditorLineUI {
@@ -37,11 +41,15 @@ impl Component for EditorLineUI {
             line_height,
             line_index,
             read_only,
+            gutter,
+            show_whitespace,
+            theme,
         } = self.clone();
 
         let holder = use_state(ParagraphHolder::default);
 
         let editor_data = editor.read();
+        let theme = theme.read();
 
         let longest_width = editor_data.metrics.longest_width;
         let line = editor_data.metrics.syntax_blocks.get_line(line_index);
@@ -65,15 +73,6 @@ impl Component for EditorLineUI {
             }
         };
 
-        let on_mouse_up = {
-            let mut editor = editor.clone();
-            move |_: Event<MouseEventData>| {
-                editor.write_if(|mut editor_editor| {
-                    editor_editor.process(font_size, EditableEvent::Release)
-                });
-            }
-        };
-
         let on_mouse_move = move |e: Event<MouseEventData>| {
             editor.write_if(|mut editor_editor| {
                 editor_editor.process(
@@ -93,9 +92,9 @@ impl Component for EditorLineUI {
             is_line_selected.then(|| editor_data.cursor_col())
         };
         let gutter_color = if is_line_selected {
-            (235, 235, 235)
+            theme.gutter_selected
         } else {
-            (135, 135, 135)
+            theme.gutter_unselected
         };
         let visible_selection = match editor_data.get_selection() {
             None => false,
@@ -103,7 +102,7 @@ impl Component for EditorLineUI {
             _ => false,
         };
         let line_background = if is_line_selected && !visible_selection {
-            (55, 55, 55).into()
+            theme.line_selected_background
         } else {
             Color::TRANSPARENT
         };
@@ -113,44 +112,49 @@ impl Component for EditorLineUI {
             .height(Size::px(line_height))
             .background(line_background)
             .font_size(font_size)
-            .child(
-                rect()
-                    .width(Size::px(gutter_width))
-                    .height(Size::fill())
-                    .padding(Gaps::new(0., 0., 0., 20.))
-                    .main_align(Alignment::Center)
-                    .child(
-                        label()
-                            .color(gutter_color)
-                            .text(format!("{} ", line_index + 1)),
-                    ),
-            )
+            .maybe(gutter, |el| {
+                el.child(
+                    rect()
+                        .width(Size::px(gutter_width))
+                        .height(Size::fill())
+                        .padding(Gaps::new(0., 0., 0., 20.))
+                        .main_align(Alignment::Center)
+                        .child(
+                            label()
+                                .color(gutter_color)
+                                .text(format!("{} ", line_index + 1)),
+                        ),
+                )
+            })
             .child(
                 paragraph()
                     .holder(holder.read().clone())
                     .on_mouse_down(on_mouse_down)
-                    .on_mouse_up(on_mouse_up)
                     .on_mouse_move(on_mouse_move)
-                    .cursor_color(Color::WHITE)
+                    .cursor_color(theme.cursor)
                     .cursor_style(CursorStyle::Block)
                     .cursor_index(cursor_index)
                     .cursor_mode(CursorMode::Expanded)
                     .vertical_align(VerticalAlign::Center)
                     .highlights(highlights.map(|h| vec![h]))
-                    .highlight_color((80, 80, 80))
+                    .highlight_color(theme.highlight)
                     .width(Size::px(longest_width))
                     .min_width(Size::fill())
                     .height(Size::fill())
                     .font_family("Jetbrains Mono")
                     .max_lines(1)
-                    .color((255, 255, 255))
+                    .color(theme.text)
                     .spans_iter(line.iter().map(|span| {
                         let text: Cow<str> = match &span.1 {
                             TextNode::Range(word_pos) => {
                                 editor_data.rope.slice(word_pos.clone()).into()
                             }
                             TextNode::LineOfChars { len, char } => {
-                                Cow::Owned(char.to_string().repeat(*len))
+                                if show_whitespace {
+                                    Cow::Owned(char.to_string().repeat(*len))
+                                } else {
+                                    Cow::Owned(" ".repeat(*len))
+                                }
                             }
                         };
                         Span::new(Cow::Owned(text.to_string())).color(span.0)

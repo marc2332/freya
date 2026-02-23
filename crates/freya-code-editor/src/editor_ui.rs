@@ -9,6 +9,10 @@ use freya_edit::EditableEvent;
 use crate::{
     editor_data::CodeEditorData,
     editor_line::EditorLineUI,
+    editor_theme::{
+        DEFAULT_EDITOR_THEME,
+        EditorTheme,
+    },
 };
 
 #[derive(PartialEq, Clone)]
@@ -17,7 +21,10 @@ pub struct CodeEditor {
     font_size: f32,
     line_height: f32,
     read_only: bool,
+    gutter: bool,
+    show_whitespace: bool,
     a11y_id: AccessibilityId,
+    theme: Readable<EditorTheme>,
 }
 
 impl CodeEditor {
@@ -30,7 +37,10 @@ impl CodeEditor {
             font_size: 14.0,
             line_height: 1.4,
             read_only: false,
+            gutter: true,
+            show_whitespace: true,
             a11y_id,
+            theme: DEFAULT_EDITOR_THEME.into(),
         }
     }
 
@@ -50,6 +60,24 @@ impl CodeEditor {
         self.read_only = read_only;
         self
     }
+
+    /// Sets whether the gutter (line numbers) is visible.
+    pub fn gutter(mut self, gutter: bool) -> Self {
+        self.gutter = gutter;
+        self
+    }
+
+    /// Sets whether leading whitespace characters are rendered visually.
+    pub fn show_whitespace(mut self, show_whitespace: bool) -> Self {
+        self.show_whitespace = show_whitespace;
+        self
+    }
+
+    /// Sets the editor theme.
+    pub fn theme(mut self, theme: impl IntoReadable<EditorTheme>) -> Self {
+        self.theme = theme.into_readable();
+        self
+    }
 }
 
 impl Component for CodeEditor {
@@ -59,11 +87,13 @@ impl Component for CodeEditor {
             font_size,
             line_height,
             read_only,
+            gutter,
+            show_whitespace,
             a11y_id,
+            theme,
         } = self.clone();
-        let editor_tab = editor.read();
 
-        let editor_data = &editor_tab;
+        let editor_data = editor.read();
 
         let focus = Focus::new_for_id(a11y_id);
 
@@ -213,7 +243,16 @@ impl Component for CodeEditor {
             }
         };
 
-        rect().expanded().background((29, 32, 33)).child(
+        let on_global_mouse_up = {
+            let mut editor = editor.clone();
+            move |_: Event<MouseEventData>| {
+                editor.write_if(|mut editor_editor| {
+                    editor_editor.process(font_size, EditableEvent::Release)
+                });
+            }
+        };
+
+        rect().expanded().background(theme.read().background).child(
             rect()
                 .a11y_auto_focus(true)
                 .a11y_focusable(true)
@@ -221,6 +260,7 @@ impl Component for CodeEditor {
                 .maybe(!read_only, |el| {
                     el.on_key_down(on_key_down).on_key_up(on_key_up)
                 })
+                .on_global_mouse_up(on_global_mouse_up)
                 .on_mouse_down(on_mouse_down)
                 .child(
                     VirtualScrollView::new(move |line_index, _| {
@@ -230,6 +270,9 @@ impl Component for CodeEditor {
                             line_height,
                             line_index,
                             read_only,
+                            gutter,
+                            show_whitespace,
+                            theme: theme.clone(),
                         }
                         .into()
                     })

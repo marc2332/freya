@@ -28,7 +28,7 @@ impl<T: 'static> RadioWritable<T> for Writable<T> {
             }),
             Box::new({
                 let slice = slice.clone();
-                move || slice.write_unchecked_no_notify()
+                move || slice.write_silently()
             }),
             Box::new({
                 let slice = slice.clone();

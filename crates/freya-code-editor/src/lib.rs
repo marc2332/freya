@@ -1,6 +1,7 @@
 pub mod constants;
 pub mod editor_data;
 pub mod editor_line;
+pub mod editor_theme;
 pub mod editor_ui;
 pub mod languages;
 pub mod metrics;
@@ -16,6 +17,12 @@ pub mod prelude {
         },
         editor_data::CodeEditorData,
         editor_line::EditorLineUI,
+        editor_theme::{
+            DEFAULT_EDITOR_THEME,
+            DEFAULT_SYNTAX_THEME,
+            EditorTheme,
+            SyntaxTheme,
+        },
         editor_ui::CodeEditor,
         languages::LanguageId,
         metrics::EditorMetrics,
