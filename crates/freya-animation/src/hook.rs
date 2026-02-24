@@ -646,7 +646,7 @@ impl_tuple_call!(
 /// fn app() -> impl IntoElement {
 ///     let color = use_state(|| Color::RED);
 ///     let animation =
-///         use_animation_transition(color, |from, to| AnimColor::new(from, to).time(500));
+///         use_animation_transition(color, |from: Color, to| AnimColor::new(from, to).time(500));
 ///
 ///     rect()
 ///         .background(&*animation.read())
