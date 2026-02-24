@@ -1,0 +1,34 @@
+[package]
+name = "freya-code-editor"
+description = "Composable Code Editor APIs for Freya"
+version = "0.4.0-rc.9"
+edition = "2024"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["freya"]
+categories = ["gui"]
+
+[package.metadata.docs.rs]
+features = ["freya-core/mocked-engine"]
+
+[features]
+skia-engine = ["freya-core/skia-engine"]
+
+[dependencies]
+freya-core = { workspace = true }
+freya-engine = { workspace = true }
+freya-edit = { workspace = true }
+freya-components = { workspace = true }
+torin = { workspace = true }
+ropey = { workspace = true }
+
+smallvec = "1.15.1"
+tree-sitter = "0.26"
+tree-sitter-rust = "0.24"
+tree-sitter-md = "0.5"
+tree-sitter-json = "0.24"
+tree-sitter-toml-ng = "0.7"
+rustc-hash = { workspace = true }

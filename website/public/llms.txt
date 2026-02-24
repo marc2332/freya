@@ -17,6 +17,7 @@ Important notes:
 - **Built-in Components**: Freya comes with a set of ready-to-use components, these include ScrollViews, VirtualScrollViews, Buttons, Switch, Slider, etc.
 - **Animations**: Easily animate your UI whether its a size or a color. You have full control over its behavior.
 - **Text Editing**: Freya supports from simple to rich text editing. You can even make cloned editors, virtualized editors, etc.
+- **Code Editor**: A dedicated code editor component available in `freya-code-editor`.
 - **Cross-platform**: Your app will render and behave the same in Windows, Linux and MacOS.
 - **Efficient Global State**: Efficiently manage a global state based on topics subscription using `freya-radio`.
 - **Icons**: Easily add icons to your app using `freya-icons`, currently only supports Lucide.
@@ -89,6 +90,7 @@ fn app() -> impl IntoElement {
 - [Plotters](https://docs.rs/freya-plotters-backend/0.4.0-rc.9/freya_plotters_backend/): Plotting backend
 - [Testing](https://docs.rs/freya-testing/0.4.0-rc.9/freya_testing/): Testing framework
 - [Terminal](https://docs.rs/freya-terminal/0.4.0-rc.9/freya_terminal/): Terminal emulator integration
+- [Code Editor](https://docs.rs/freya-code-editor/0.4.0-rc.9/freya_code_editor/): Code editor component
 
 ## Examples
 

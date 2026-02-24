@@ -72,6 +72,7 @@
 //! - `webview`: Reexport [freya_webview] under [webview].
 //! - `titlebar`: Enables the [TitlebarButton](components::TitlebarButton) component.
 //! - `terminal`: Reexport [freya_terminal] under [terminal].
+//! - `code-editor`: Reexport [freya_code_editor] under [code_editor].
 //!
 //! ## Misc features
 //! - `devtools`: Enables devtools support.
@@ -297,6 +298,13 @@ pub mod webview {
 #[cfg_attr(feature = "docs", doc(cfg(feature = "terminal")))]
 pub mod terminal {
     pub use freya_terminal::prelude::*;
+}
+
+/// Reexport `freya-code-editor` when the `code-editor` feature is enabled.
+#[cfg(feature = "code-editor")]
+#[cfg_attr(feature = "docs", doc(cfg(feature = "code-editor")))]
+pub mod code_editor {
+    pub use freya_code_editor::prelude::*;
 }
 
 #[cfg(doc)]

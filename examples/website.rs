@@ -4,12 +4,9 @@
 )]
 
 use freya::{
+    code_editor::*,
     prelude::*,
     text_edit::Rope,
-};
-use tree_sitter_highlight::{
-    HighlightEvent,
-    Highlighter,
 };
 
 fn main() {
@@ -50,6 +47,24 @@ fn app() -> Element {
 struct Home;
 impl Component for Home {
     fn render(&self) -> impl IntoElement {
+        let editor_focus = use_focus();
+        let editor_theme = use_state(|| EditorTheme {
+            background: Color::TRANSPARENT,
+            line_selected_background: Color::TRANSPARENT,
+            ..Default::default()
+        });
+        let editor = use_state(move || {
+            let rope = Rope::from_str(CODE);
+            let mut editor = CodeEditorData::new(rope, LanguageId::Rust);
+            editor.set_theme(SyntaxTheme {
+                comment: (230, 230, 230).into(),
+                ..Default::default()
+            });
+            editor.parse();
+            editor.measure(14.);
+            editor
+        });
+
         rect()
             .cross_align(Alignment::Center)
             .width(Size::fill())
@@ -59,17 +74,14 @@ impl Component for Home {
                     .direction(Direction::Horizontal)
                     .cross_align(Alignment::Center)
                     .spacing(12.0)
-                    .child(svg(Bytes::from_static(include_bytes!("./freya_icon.svg"))).width(Size::px(150.)).height(Size::px(150.)))
+                    .child(svg(Bytes::from_static(include_bytes!("./website/freya_icon.svg"))).width(Size::px(150.)).height(Size::px(150.)))
                     .child(
                         rect()
                             .spacing(16.0)
                             .child(
                                 paragraph()
                                     .width(Size::px(500.0))
-                                    .span(Span::new("Build native & cross-platform GUI applications using 🦀 Rust. Powered by 🧬 "))
-                                    .span(Span::new("Dioxus "))
-                                    .span(Span::new(" and 🎨 "))
-                                    .span(Span::new("Skia.")),
+                                    .span("Build cross-platform GUI applications using 🦀 Rust.\nPowered by 🎨 Skia.")
                             )
                             .child(
                                 rect()
@@ -127,7 +139,14 @@ impl Component for Home {
                                     .width(Size::func(|c| Some(c.parent / 2. - 20.)))
                                     .height(Size::fill())
                                     .cross_align(Alignment::Center)
-                                    .child(Code),
+                                    .child(
+                                        CodeEditor::new(editor, editor_focus.a11y_id())
+                                            .theme(editor_theme)
+                                            .read_only(true)
+                                            .gutter(false)
+                                            .line_height(1.2)
+                                            .show_whitespace(false)
+                                        ),
                             )
                             .child(
                                 rect()
@@ -169,14 +188,18 @@ impl Component for Navigation {
             .cross_align(Alignment::Center)
             .color((214, 211, 209))
             .child(
-                svg(Bytes::from_static(include_bytes!("./freya_icon.svg")))
-                    .width(Size::px(50.))
-                    .height(Size::px(50.)),
+                svg(Bytes::from_static(include_bytes!(
+                    "./website/freya_icon.svg"
+                )))
+                .width(Size::px(50.))
+                .height(Size::px(50.)),
             )
             .child(
-                svg(Bytes::from_static(include_bytes!("./freya_logo.svg")))
-                    .width(Size::px(50.))
-                    .height(Size::px(50.)),
+                svg(Bytes::from_static(include_bytes!(
+                    "./website/freya_logo.svg"
+                )))
+                .width(Size::px(50.))
+                .height(Size::px(50.)),
             )
             .child(Link::new("https://freyaui.dev/blog").child("Blog"))
             .child(Link::new("https://book.freyaui.dev/").child("Book"))
@@ -233,112 +256,6 @@ impl Component for Counter {
     }
 }
 
-#[derive(PartialEq)]
-struct Code;
-impl Component for Code {
-    fn render(&self) -> impl IntoElement {
-        let code = use_hook(move || {
-            use tree_sitter_highlight::HighlightConfiguration;
-
-            let mut rust_config = HighlightConfiguration::new(
-                tree_sitter_rust::LANGUAGE.into(),
-                "rust",
-                tree_sitter_rust::HIGHLIGHTS_QUERY,
-                tree_sitter_rust::INJECTIONS_QUERY,
-                tree_sitter_rust::TAGS_QUERY,
-            )
-            .unwrap();
-
-            rust_config.configure(&HIGHLIGHT_TAGS);
-
-            let mut highlighter = Highlighter::new();
-
-            let highlights = highlighter
-                .highlight(&rust_config, CODE.as_bytes(), None, |_| None)
-                .unwrap();
-
-            let rope = Rope::from_str(CODE);
-
-            let mut syntax_blocks = SyntaxBlocks::default();
-
-            let mut prepared_block: (SyntaxType, Vec<(usize, String)>) =
-                (SyntaxType::Unknown, Vec::new());
-
-            for event in highlights {
-                match event.unwrap() {
-                    HighlightEvent::Source { start, end } => {
-                        // Prepare the whole block even if it's split across multiple lines.
-                        let data_beginning = rope.byte_slice(start..end);
-                        let starting_line = rope.char_to_line(start);
-
-                        let mut back = String::new();
-                        let mut line = starting_line;
-
-                        for (i, d) in data_beginning.chars().enumerate() {
-                            if d != '\n' {
-                                back.push(d);
-                            }
-
-                            if start + i == end - 1 || d == '\n' {
-                                prepared_block.1.push((line, back.clone()));
-                                line += 1;
-                                back.clear();
-                            }
-                        }
-                    }
-                    HighlightEvent::HighlightStart(s) => {
-                        // Specify the type of the block
-                        prepared_block.0 = SyntaxType::from(HIGHLIGHT_TAGS[s.0]);
-                    }
-                    HighlightEvent::HighlightEnd => {
-                        // Push all the block chunks to their specified line
-                        for (i, d) in prepared_block.1 {
-                            if syntax_blocks.get(i).is_none() {
-                                syntax_blocks.push(Vec::new());
-                            }
-                            let line = syntax_blocks.last_mut().unwrap();
-                            line.push((prepared_block.0.clone(), d));
-                        }
-                        // Clear the prepared block
-                        prepared_block = (SyntaxType::Unknown, Vec::new());
-                    }
-                }
-            }
-
-            // Mark all the remaining text as not readable
-            if !prepared_block.1.is_empty() {
-                for (i, d) in prepared_block.1 {
-                    if syntax_blocks.get(i).is_none() {
-                        syntax_blocks.push(Vec::new());
-                    }
-                    let line = syntax_blocks.last_mut().unwrap();
-                    line.push((SyntaxType::Unknown, d));
-                }
-            }
-
-            syntax_blocks
-        });
-
-        let mut container = rect();
-
-        for (line_n, line) in code.iter().enumerate() {
-            let mut p = paragraph()
-                .key(line_n)
-                .font_size(12.0)
-                .font_family("Jetbrains Mono");
-            // .line_height(1.3);
-
-            for (syntax_type, text) in line.iter() {
-                p = p.span(Span::new(text.clone()).color(syntax_type.color()));
-            }
-
-            container = container.child(p);
-        }
-
-        container
-    }
-}
-
 const CODE: &str = r#"fn app() -> impl IntoElement {
     let mut count = use_state(|| 4);
 
@@ -376,77 +293,3 @@ const CODE: &str = r#"fn app() -> impl IntoElement {
 
     rect().child(counter).child(actions)
 }"#;
-
-const HIGHLIGHT_TAGS: [&str; 23] = [
-    "constructor",
-    "attribute",
-    "constant",
-    "constant.builtin",
-    "function.builtin",
-    "function",
-    "function.method",
-    "keyword",
-    "operator",
-    "property",
-    "punctuation",
-    "punctuation.bracket",
-    "punctuation.delimiter",
-    "string",
-    "string.special",
-    "tag",
-    "type",
-    "type.builtin",
-    "variable",
-    "variable.builtin",
-    "variable.parameter",
-    "number",
-    "comment",
-];
-
-#[derive(Clone, Debug)]
-pub enum SyntaxType {
-    Number,
-    String,
-    Keyword,
-    Operator,
-    Variable,
-    Function,
-    Comment,
-    Punctuation,
-    Unknown,
-}
-
-impl SyntaxType {
-    pub fn color(&self) -> Color {
-        match self {
-            SyntaxType::Number => Color::from_hex("#9ECBFF").unwrap(),
-            SyntaxType::String => Color::from_hex("#9ECBFF").unwrap(),
-            SyntaxType::Keyword => Color::from_hex("#F97583").unwrap(),
-            SyntaxType::Operator => Color::from_hex("#F97583").unwrap(),
-            SyntaxType::Variable => Color::WHITE,
-            SyntaxType::Function => Color::from_hex("#B392F0").unwrap(),
-            SyntaxType::Comment => Color::GREEN,
-            SyntaxType::Punctuation => Color::WHITE,
-            SyntaxType::Unknown => Color::WHITE,
-        }
-    }
-}
-
-impl From<&str> for SyntaxType {
-    fn from(s: &str) -> Self {
-        match s {
-            "keyword" => SyntaxType::Keyword,
-            "variable" => SyntaxType::Variable,
-            "operator" => SyntaxType::Operator,
-            "string" => SyntaxType::String,
-            "number" => SyntaxType::Number,
-            "function" => SyntaxType::Function,
-            "constructor" => SyntaxType::Function,
-            "comment" => SyntaxType::Comment,
-            "punctuation.bracket" => SyntaxType::Punctuation,
-            _ => SyntaxType::Unknown,
-        }
-    }
-}
-
-pub type SyntaxBlocks = Vec<Vec<(SyntaxType, String)>>;

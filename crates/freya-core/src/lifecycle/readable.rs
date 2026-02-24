@@ -124,6 +124,12 @@ impl<T: 'static> IntoReadable<T> for State<T> {
     }
 }
 
+impl<T: 'static> IntoReadable<T> for T {
+    fn into_readable(self) -> Readable<T> {
+        Readable::from_value(self)
+    }
+}
+
 impl<T> From<State<T>> for Readable<T> {
     fn from(value: State<T>) -> Self {
         value.into_readable()
