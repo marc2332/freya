@@ -105,11 +105,10 @@ use crate::{
 ///
 /// # Global State
 ///
-/// For state that persists across the entire application lifecycle:
+/// For state that persists across the entire application lifecycle, you can crate it in your `main` function:
 ///
 /// ```rust,no_run
 /// # use freya::prelude::*;
-/// // Create global state (use sparingly)
 /// let global_count = State::create_global(0);
 /// ```
 ///
@@ -683,17 +682,6 @@ impl<T> State<Option<T>> {
 ///             .on_press(move |_| *count.write() += 1),
 ///     )
 /// }
-/// ```
-///
-/// # Advanced Usage
-///
-/// ```rust,no_run
-/// # use freya::prelude::*;
-/// // Complex initialization
-/// let mut user_data = use_state(|| {
-///     // Expensive computation or data loading
-///     String::from("default_preferences")
-/// });
 /// ```
 ///
 /// # See Also
