@@ -21,11 +21,10 @@ fn app() -> impl IntoElement {
     };
 
     rect()
-        .width(Size::fill())
-        .height(Size::fill())
+        .expanded()
         .horizontal()
-        .spacing(24.0)
-        .background((0, 0, 0))
+        .spacing(12.0)
+        .padding(12.0)
         .children(
             state
                 .read()
