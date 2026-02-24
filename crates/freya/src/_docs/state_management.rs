@@ -5,7 +5,7 @@
 //! ### Available APIs
 //! - Local state ([`use_state`](crate::prelude::use_state)): State of components that is not trivial to be shared with the whole app, example: hovering a button.
 //! - [freya_radio]: App-level state with nested data and fine gradined updates, example: You have a system of tabs where each tab has an independent yet global state.
-//! - `Readable`/`Writable`: When you want to receive some kind of reactive state without knowing its specific backing storage, example:
+//! - `Readable`/`Writable`: When you want to receive some kind of reactive state without knowing its specific backing storage, example: a reusable component.
 //!
 //! ## Local State
 //!
