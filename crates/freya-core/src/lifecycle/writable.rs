@@ -73,7 +73,7 @@ impl<T: 'static> Writable<T> {
     pub fn from_state(state: State<T>) -> Self {
         Self {
             peek_fn: Rc::new(move || state.peek()),
-            write_fn: Rc::new(move || state.write_unchecked()),
+            write_fn: Rc::new(move || state.write_silently()),
             subscribe_fn: Rc::new(move || state.subscribe()),
             notify_fn: Rc::new(move || state.notify()),
         }
