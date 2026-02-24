@@ -19,13 +19,13 @@ use crate::prelude::{
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
 ///     let value = use_state(|| 0);
-///     let values = use_previous_and_current(value);
+///     let values: State<(i32, i32)> = use_previous_and_current(value);
 ///
-///     rect().child(label().text(format!(
+///     rect().child(format!(
 ///         "Previous: {}, Current: {}",
 ///         values.read().0,
 ///         values.read().1
-///     )))
+///     ))
 /// }
 /// ```
 pub fn use_previous_and_current<T: 'static + Clone + PartialEq>(
