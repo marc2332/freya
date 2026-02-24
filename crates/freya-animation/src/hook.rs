@@ -632,3 +632,37 @@ impl_tuple_call!(
     (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11),
     (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12)
 );
+
+/// Create a transition animation that animates from the previous value to the current value.
+///
+/// This hook tracks the previous and current values of a reactive value and creates
+/// an animation that transitions between them when the value changes.
+///
+/// # Example
+///
+/// ```rust, no_run
+/// # use freya::prelude::*;
+/// # use freya::animation::*;
+/// fn app() -> impl IntoElement {
+///     let color = use_state(|| Color::RED);
+///     let animation =
+///         use_animation_transition(color, |from, to| AnimColor::new(from, to).time(500));
+///
+///     rect()
+///         .background(&*animation.read())
+///         .width(Size::px(100.))
+///         .height(Size::px(100.))
+/// }
+/// ```
+pub fn use_animation_transition<Animated: AnimatedValue, T: Clone + PartialEq + 'static>(
+    value: impl IntoReadable<T>,
+    mut run: impl 'static + FnMut(T, T) -> Animated,
+) -> UseAnimation<Animated> {
+    let values = use_previous_and_current(value);
+    use_animation(move |conf| {
+        conf.on_change(OnChange::Rerun);
+        conf.on_creation(OnCreation::Run);
+        let (from, to) = values.read().clone();
+        run(from, to)
+    })
+}

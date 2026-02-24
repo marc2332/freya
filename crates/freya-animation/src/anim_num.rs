@@ -74,6 +74,12 @@ impl From<&AnimNum> for f32 {
     }
 }
 
+impl From<AnimNum> for f32 {
+    fn from(value: AnimNum) -> Self {
+        value.value()
+    }
+}
+
 impl AnimatedValue for AnimNum {
     fn prepare(&mut self, direction: AnimDirection) {
         match direction {
