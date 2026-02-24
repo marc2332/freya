@@ -19,7 +19,8 @@ fn main() {
 
 fn app() -> impl IntoElement {
     let mut color = use_state(random_color);
-    let animation = use_animation_transition(color, |from, to| AnimColor::new(from, to).time(500));
+    let animation =
+        use_animation_transition(color, |from: Color, to| AnimColor::new(from, to).time(500));
 
     rect()
         .background(&*animation.read())
