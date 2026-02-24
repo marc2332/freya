@@ -1,17 +1,20 @@
 //! # State Management
 //!
 //! Freya provides several options for managing state in your applications.
-//! This guide covers local state with [`use_state`](crate::prelude::use_state) and global state with **Freya Radio**.
+//!
+//! ### Available APIs
+//! - Local state ([`use_state`](crate::prelude::use_state)): State of components that is not trivial to be shared with the whole app, example: hovering a button.
+//! - [freya_radio]: App-level state with nested data and fine gradined updates, example: You have a system of tabs where each tab has an independent yet global state.
+//! - `Readable`/`Writable`: When you want to receive some kind of reactive state without knowing its specific backing storage, example:
 //!
 //! ## Local State
 //!
 //! Local state is managed with the [`use_state`](crate::prelude::use_state) hook.
-//! It's perfect for component-specific state that doesn't need to be shared.
 //!
 //! ```rust,no_run
 //! # use freya::prelude::*;
 //! #[derive(PartialEq)]
-//! struct Counter {}
+//! struct Counter;
 //!
 //! impl Component for Counter {
 //!     fn render(&self) -> impl IntoElement {
@@ -24,6 +27,29 @@
 //!         )
 //!     }
 //! }
+//! ```
+//!
+//! You can pass it to descendant components too:
+//!
+//! ```rust,no_run
+//! # use freya::prelude::*;
+//! #[derive(PartialEq)]
+//! struct Counter;
+//!
+//! impl Component for Counter {
+//!     fn render(&self) -> impl IntoElement {
+//!         let mut count = use_state(|| 0);
+//!
+//!         rect().child(AnotherCounter(count)).child(
+//!             Button::new()
+//!                 .on_press(move |_| *count.write() += 1)
+//!                 .child("+"),
+//!         )
+//!     }
+//! }
+//!
+//! #[derive(PartialEq)]
+//! struct AnotherCounter(State<i32>);
 //! ```
 //!
 //! ## Global State with Freya Radio 🧬
@@ -328,7 +354,6 @@
 //! # enum AppChannel { Name }
 //! #
 //! # impl RadioChannel<AppState> for AppChannel {}
-//!
 //! #[derive(PartialEq)]
 //! struct NameInput {
 //!     name: Writable<String>,
@@ -381,7 +406,6 @@
 //! # enum AppChannel { Count }
 //! #
 //! # impl RadioChannel<AppState> for AppChannel {}
-//!
 //! #[derive(PartialEq)]
 //! struct Counter {
 //!     count: Readable<i32>,
