@@ -407,12 +407,14 @@ impl<T> State<T> {
         self.key.write()
     }
 
-    /// Get a mutable reference without requiring a mutable borrow of the State.
+    /// Get a mutable reference without notifying subscribers.
     ///
-    /// This does not notify subscribers of this `State`.
+    /// This method provides write access without triggering any re-renders.
+    /// The caller is responsible for calling `notify()` if subscribers should be notified.
     ///
-    /// You probably want to use [State::write] instead.
-    pub fn write_silently(&'_ self) -> WriteRef<'static, T> {
+    /// This is primarily used internally by `Writable::write_if()` to enable conditional
+    /// notifications based on whether the value actually changed.
+    pub(crate) fn write_silently(&self) -> WriteRef<'static, T> {
         self.key.write()
     }
 
