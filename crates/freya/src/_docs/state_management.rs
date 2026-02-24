@@ -50,6 +50,11 @@
 //!
 //! #[derive(PartialEq)]
 //! struct AnotherCounter(State<i32>);
+//! impl Component for AnotherCounter {
+//!     fn render(&self) -> impl IntoElement {
+//!         self.0.read().to_string()
+//!     }
+//! }
 //! ```
 //!
 //! ## Global State with Freya Radio 🧬
