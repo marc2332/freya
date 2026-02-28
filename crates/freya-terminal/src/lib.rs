@@ -101,6 +101,5 @@ pub mod prelude {
             TerminalId,
         },
         parser::TerminalMouseButton,
-        pty::ScrollCommand,
     };
 }

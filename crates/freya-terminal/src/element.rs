@@ -48,8 +48,8 @@ pub struct Terminal {
     layout_data: LayoutData,
     font_family: String,
     font_size: f32,
-    fg: Color,
-    bg: Color,
+    foreground: Color,
+    background: Color,
     selection_color: Color,
     on_measured: Option<EventHandler<(f32, f32)>>,
     event_handlers: FxHashMap<EventName, EventHandlerType>,
@@ -60,8 +60,8 @@ impl PartialEq for Terminal {
         self.handle == other.handle
             && self.font_size == other.font_size
             && self.font_family == other.font_family
-            && self.fg == other.fg
-            && self.bg == other.bg
+            && self.foreground == other.foreground
+            && self.background == other.background
             && self.event_handlers.len() == other.event_handlers.len()
     }
 }
@@ -73,8 +73,8 @@ impl Terminal {
             layout_data: Default::default(),
             font_family: "Cascadia Code".to_string(),
             font_size: 14.,
-            fg: (220, 220, 220).into(),
-            bg: (10, 10, 10).into(),
+            foreground: (220, 220, 220).into(),
+            background: (10, 10, 10).into(),
             selection_color: (60, 179, 214, 0.3).into(),
             on_measured: None,
             event_handlers: FxHashMap::default(),
@@ -104,12 +104,12 @@ impl Terminal {
     }
 
     pub fn foreground(mut self, foreground: impl Into<Color>) -> Self {
-        self.fg = foreground.into();
+        self.foreground = foreground.into();
         self
     }
 
     pub fn background(mut self, background: impl Into<Color>) -> Self {
-        self.bg = background.into();
+        self.background = background.into();
         self
     }
 }
@@ -128,19 +128,25 @@ impl LayoutExt for Terminal {
 
 impl ElementExt for Terminal {
     fn diff(&self, other: &Rc<dyn ElementExt>) -> DiffModifies {
-        let Some(el) = (other.as_ref() as &dyn Any).downcast_ref::<Terminal>() else {
+        let Some(terminal) = (other.as_ref() as &dyn Any).downcast_ref::<Terminal>() else {
             return DiffModifies::all();
         };
 
         let mut diff = DiffModifies::empty();
 
-        if self.font_size != el.font_size
-            || self.font_family != el.font_family
-            || self.handle != el.handle
-            || self.event_handlers.len() != el.event_handlers.len()
+        if self.font_size != terminal.font_size
+            || self.font_family != terminal.font_family
+            || self.handle != terminal.handle
+            || self.event_handlers.len() != terminal.event_handlers.len()
         {
             diff.insert(DiffModifies::STYLE);
             diff.insert(DiffModifies::LAYOUT);
+        }
+
+        if self.background != terminal.foreground
+            || self.selection_color != terminal.selection_color
+        {
+            diff.insert(DiffModifies::STYLE);
         }
 
         diff
@@ -226,14 +232,14 @@ impl ElementExt for Terminal {
 
         let mut paint = Paint::default();
         paint.set_style(PaintStyle::Fill);
-        paint.set_color(self.bg);
+        paint.set_color(self.background);
         context.canvas.draw_rect(
             SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
             &paint,
         );
 
         let mut text_style = TextStyle::new();
-        text_style.set_color(self.fg);
+        text_style.set_color(self.foreground);
         text_style.set_font_families(&[self.font_family.as_str()]);
         text_style.set_font_size(self.font_size);
 
@@ -289,8 +295,8 @@ impl ElementExt for Terminal {
                 if cell.is_wide_continuation() {
                     continue;
                 }
-                let cell_bg = map_vt100_color(cell.bgcolor(), self.bg);
-                if cell_bg != self.bg {
+                let cell_bg = map_vt100_color(cell.bgcolor(), self.background);
+                if cell_bg != self.background {
                     let left = area.min_x() + (col_idx as f32) * char_width;
                     let top = y;
                     let cell_width = if cell.is_wide() {
@@ -315,7 +321,7 @@ impl ElementExt for Terminal {
                 if cell.is_wide_continuation() {
                     continue;
                 }
-                let color = map_vt100_color(cell.fgcolor(), self.fg);
+                let color = map_vt100_color(cell.fgcolor(), self.foreground);
                 cell.contents().hash(&mut state);
                 color.hash(&mut state);
             }
@@ -338,7 +344,7 @@ impl ElementExt for Terminal {
                         " "
                     };
                     let mut cell_style = text_style.clone();
-                    cell_style.set_color(map_vt100_color(cell.fgcolor(), self.fg));
+                    cell_style.set_color(map_vt100_color(cell.fgcolor(), self.foreground));
                     builder.push_style(&cell_style);
                     builder.add_text(text);
                 }
@@ -357,7 +363,7 @@ impl ElementExt for Terminal {
 
                 let mut cursor_paint = Paint::default();
                 cursor_paint.set_style(PaintStyle::Fill);
-                cursor_paint.set_color(self.fg);
+                cursor_paint.set_color(self.foreground);
                 context
                     .canvas
                     .draw_rect(SkRect::new(left, top, right, bottom), &cursor_paint);
@@ -374,7 +380,7 @@ impl ElementExt for Terminal {
                     .unwrap_or(" ");
 
                 let mut fg_text_style = text_style.clone();
-                fg_text_style.set_color(self.bg);
+                fg_text_style.set_color(self.background);
                 let mut fg_builder = ParagraphBuilder::new(
                     &ParagraphStyle::default(),
                     context.font_collection.clone(),
