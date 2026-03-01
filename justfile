@@ -9,8 +9,8 @@ c:
 
 c-ci:
     taplo check
-    cargo clippy --workspace --examples --features "all-debug, vulkan" -- -D warnings
-    cargo doc --workspace --features "all-debug, vulkan"
+    cargo clippy --workspace --examples --features "all-debug, vulkan, metal" -- -D warnings
+    cargo doc --workspace --features "all-debug, vulkan, metal"
 
 e example:
     cargo run --example {{example}}

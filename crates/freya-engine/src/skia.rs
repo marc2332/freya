@@ -1,3 +1,5 @@
+#[cfg(feature = "metal")]
+pub use skia_safe::gpu::mtl;
 #[cfg(feature = "vulkan")]
 pub use skia_safe::gpu::vk;
 pub use skia_safe::{

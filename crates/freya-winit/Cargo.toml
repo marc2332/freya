@@ -68,6 +68,10 @@ gtk = { version = "0.18.2", optional = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2-core-foundation = { version = "0.3.2", optional = true }
+objc2 = { version = "0.6", optional = true }
+objc2-metal = { version = "0.3", optional = true }
+objc2-quartz-core = { version = "0.3", optional = true }
+objc2-app-kit = { version = "0.3", optional = true }
 
 [dev-dependencies]
 freya = { path = "../freya" }
@@ -75,6 +79,14 @@ freya = { path = "../freya" }
 [features]
 hotpath = ["hotpath/hotpath"]
 vulkan = ["dep:ash", "dep:ash-window", "freya-engine/vulkan"]
+metal = [
+  "dep:objc2",
+  "dep:objc2-metal",
+  "dep:objc2-quartz-core",
+  "dep:objc2-app-kit",
+  "dep:objc2-core-foundation",
+  "freya-engine/metal",
+]
 skia-engine = ["freya-engine/skia-engine"]
 tray = ["dep:tray-icon", "dep:gtk", "dep:objc2-core-foundation"]
 tracing = []
