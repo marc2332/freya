@@ -93,7 +93,9 @@ pub(crate) fn spawn_pty(
     let writer = Rc::new(RefCell::new(None::<Box<dyn std::io::Write + Send>>));
     let closer_notifier = ArcNotify::new();
     let output_notifier = ArcNotify::new();
+    let title_notifier = ArcNotify::new();
     let cwd: Rc<RefCell<Option<PathBuf>>> = Rc::new(RefCell::new(None));
+    let title: Rc<RefCell<Option<String>>> = Rc::new(RefCell::new(None));
 
     let pty_system = native_pty_system();
     let pair = pty_system
@@ -150,6 +152,8 @@ pub(crate) fn spawn_pty(
         let parser = parser.clone();
         let output_notifier = output_notifier.clone();
         let cwd = cwd.clone();
+        let title = title.clone();
+        let title_notifier = title_notifier.clone();
         async move {
             let mut tw_parser = TermwizParser::new();
             loop {
@@ -186,10 +190,8 @@ pub(crate) fn spawn_pty(
                                     let response = format!("\x1b[{};{}R", row + 1, col + 1);
                                     responses.push(response.into_bytes());
                                 }
-                                Action::OperatingSystemCommand(osc) => {
-                                    if let OperatingSystemCommand::CurrentWorkingDirectory(url) =
-                                        *osc
-                                    {
+                                Action::OperatingSystemCommand(osc) => match *osc {
+                                    OperatingSystemCommand::CurrentWorkingDirectory(url) => {
                                         // Strip file:// prefix if present
                                         let path =
                                             if let Some(stripped) = url.strip_prefix("file://") {
@@ -208,7 +210,13 @@ pub(crate) fn spawn_pty(
                                             };
                                         *cwd.borrow_mut() = Some(path);
                                     }
-                                }
+                                    OperatingSystemCommand::SetWindowTitle(t)
+                                    | OperatingSystemCommand::SetIconNameAndWindowTitle(t) => {
+                                        *title.borrow_mut() = Some(t);
+                                        title_notifier.notify();
+                                    }
+                                    _ => {}
+                                },
                                 _ => {}
                             }
                         }
@@ -245,6 +253,8 @@ pub(crate) fn spawn_pty(
         writer,
         master,
         cwd,
+        title,
+        title_notifier,
         output_notifier,
         last_write_time: Rc::new(RefCell::new(Instant::now())),
         pressed_button: Rc::new(RefCell::new(None)),
