@@ -4,6 +4,7 @@ use std::{
         RefCell,
     },
     io::Write,
+    path::PathBuf,
     rc::Rc,
     time::Instant,
 };
@@ -17,8 +18,11 @@ use freya_core::{
         UserEvent,
     },
 };
-use futures_channel::mpsc::UnboundedSender;
 use keyboard_types::Modifiers;
+use portable_pty::{
+    MasterPty,
+    PtySize,
+};
 use vt100::Parser;
 
 use crate::{
@@ -34,13 +38,11 @@ use crate::{
         encode_wheel_event,
     },
     pty::{
-        ScrollCommand,
+        extract_buffer,
+        query_max_scrollback,
         spawn_pty,
     },
 };
-
-type ResizeSender = Rc<UnboundedSender<(u16, u16)>>;
-type ScrollSender = Rc<UnboundedSender<ScrollCommand>>;
 
 /// Unique identifier for a terminal instance
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -108,10 +110,10 @@ pub struct TerminalHandle {
     pub(crate) parser: Rc<RefCell<Parser>>,
     /// Writer for sending input to the PTY process.
     pub(crate) writer: Rc<RefCell<Option<Box<dyn Write + Send>>>>,
-    /// Channel for sending resize events to the PTY.
-    pub(crate) resize_sender: ResizeSender,
-    /// Channel for sending scroll commands to the PTY.
-    pub(crate) scroll_sender: ScrollSender,
+    /// PTY master handle for resizing.
+    pub(crate) master: Rc<RefCell<Box<dyn MasterPty + Send>>>,
+    /// Current working directory reported by the shell via OSC 7.
+    pub(crate) cwd: Rc<RefCell<Option<PathBuf>>>,
     /// Notifier that signals when the terminal/PTY closes.
     pub(crate) closer_notifier: ArcNotify,
     /// Handles cleanup when the terminal is dropped.
@@ -154,6 +156,22 @@ impl TerminalHandle {
         spawn_pty(id, command, scrollback_length.unwrap_or(1000))
     }
 
+    /// Refresh the terminal buffer from the parser, preserving selection state.
+    fn refresh_buffer(&self) {
+        let mut parser = self.parser.borrow_mut();
+        let total_scrollback = query_max_scrollback(&mut parser);
+
+        let mut buffer = self.buffer.borrow_mut();
+        buffer.scroll_offset = buffer.scroll_offset.min(total_scrollback);
+
+        parser.screen_mut().set_scrollback(buffer.scroll_offset);
+        let mut new_buffer = extract_buffer(&parser, buffer.scroll_offset, total_scrollback);
+        parser.screen_mut().set_scrollback(0);
+
+        new_buffer.selection = buffer.selection.take();
+        *buffer = new_buffer;
+    }
+
     /// Write data to the terminal.
     ///
     /// # Example
@@ -168,8 +186,9 @@ impl TerminalHandle {
         let mut buffer = self.buffer.borrow_mut();
         buffer.selection = None;
         buffer.scroll_offset = 0;
+        drop(buffer);
         *self.last_write_time.borrow_mut() = Instant::now();
-        let _ = self.scroll_sender.unbounded_send(ScrollCommand::ToBottom);
+        self.scroll_to_bottom();
         Ok(())
     }
 
@@ -197,7 +216,14 @@ impl TerminalHandle {
     /// handle.resize(24, 80);
     /// ```
     pub fn resize(&self, rows: u16, cols: u16) {
-        let _ = self.resize_sender.unbounded_send((rows, cols));
+        self.parser.borrow_mut().screen_mut().set_size(rows, cols);
+        self.refresh_buffer();
+        let _ = self.master.borrow().resize(PtySize {
+            rows,
+            cols,
+            pixel_width: 0,
+            pixel_height: 0,
+        });
     }
 
     /// Scroll the terminal by the specified delta.
@@ -211,12 +237,18 @@ impl TerminalHandle {
     /// handle.scroll(3); // Scroll down 3 lines
     /// ```
     pub fn scroll(&self, delta: i32) {
-        let mut buffer = self.buffer.borrow_mut();
-        let new_offset = (buffer.scroll_offset as i64 + delta as i64).max(0) as usize;
-        buffer.scroll_offset = new_offset.min(buffer.total_scrollback);
-        let _ = self
-            .scroll_sender
-            .unbounded_send(ScrollCommand::Delta(delta));
+        if self.parser.borrow().screen().alternate_screen() {
+            return;
+        }
+
+        {
+            let mut buffer = self.buffer.borrow_mut();
+            let new_offset = (buffer.scroll_offset as i64 + delta as i64).max(0) as usize;
+            buffer.scroll_offset = new_offset.min(buffer.total_scrollback);
+        }
+
+        self.refresh_buffer();
+        Platform::get().send(UserEvent::RequestRedraw);
     }
 
     /// Scroll the terminal to the bottom.
@@ -229,8 +261,13 @@ impl TerminalHandle {
     /// handle.scroll_to_bottom();
     /// ```
     pub fn scroll_to_bottom(&self) {
+        if self.parser.borrow().screen().alternate_screen() {
+            return;
+        }
+
         self.buffer.borrow_mut().scroll_offset = 0;
-        let _ = self.scroll_sender.unbounded_send(ScrollCommand::ToBottom);
+        self.refresh_buffer();
+        Platform::get().send(UserEvent::RequestRedraw);
     }
 
     /// Get the current scrollback position (scroll offset from buffer).
@@ -244,6 +281,13 @@ impl TerminalHandle {
     /// ```
     pub fn scrollback_position(&self) -> usize {
         self.buffer.borrow().scroll_offset
+    }
+
+    /// Get the current working directory reported by the shell via OSC 7.
+    ///
+    /// Returns `None` if the shell hasn't reported a CWD yet.
+    pub fn cwd(&self) -> Option<PathBuf> {
+        self.cwd.borrow().clone()
     }
 
     /// Send a wheel event to the PTY.
