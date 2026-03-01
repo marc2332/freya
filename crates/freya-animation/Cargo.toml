@@ -1,6 +1,6 @@
 [package]
 name = "freya-animation"
-version = "0.4.0-rc.10"
+version = "0.4.0-rc.11"
 description = "Animation APIs for Freya"
 edition = "2024"
 readme = "../../README.md"
