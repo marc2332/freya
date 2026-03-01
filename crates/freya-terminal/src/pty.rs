@@ -1,5 +1,6 @@
 use std::{
     cell::RefCell,
+    path::PathBuf,
     rc::Rc,
     time::Instant,
 };
@@ -12,16 +13,23 @@ use freya_core::{
         spawn_forever,
     },
 };
-use futures_lite::{
-    AsyncReadExt,
-    StreamExt,
-};
-use futures_util::FutureExt;
+use futures_lite::AsyncReadExt;
 use keyboard_types::Modifiers;
 use portable_pty::{
     CommandBuilder,
+    MasterPty,
     PtySize,
     native_pty_system,
+};
+use termwiz::escape::{
+    Action,
+    CSI,
+    OperatingSystemCommand,
+    csi::{
+        Cursor,
+        Device,
+    },
+    parser::Parser as TermwizParser,
 };
 use vt100::Parser;
 
@@ -33,21 +41,11 @@ use crate::{
         TerminalHandle,
         TerminalId,
     },
-    parser::check_for_terminal_queries,
 };
-
-/// Command to control terminal scrollback position.
-#[derive(Debug, Clone)]
-pub enum ScrollCommand {
-    /// Scroll by a relative number of lines (positive = up, negative = down)
-    Delta(i32),
-    /// Jump to the bottom (most recent output)
-    ToBottom,
-}
 
 /// Query the maximum scrollback available without disturbing the viewport.
 /// Saves current scrollback, queries max, and restores.
-fn query_max_scrollback(parser: &mut Parser) -> usize {
+pub(crate) fn query_max_scrollback(parser: &mut Parser) -> usize {
     let saved = parser.screen().scrollback();
     parser.screen_mut().set_scrollback(usize::MAX);
     let max = parser.screen().scrollback();
@@ -56,7 +54,7 @@ fn query_max_scrollback(parser: &mut Parser) -> usize {
 }
 
 /// Extract visible cells from the parser at the current scrollback position.
-fn extract_buffer(
+pub(crate) fn extract_buffer(
     parser: &Parser,
     scroll_offset: usize,
     total_scrollback: usize,
@@ -82,21 +80,20 @@ fn extract_buffer(
     }
 }
 
-/// Spawn a PTY and return a TerminalHandle
+/// Spawn a PTY and return a TerminalHandle.
 pub(crate) fn spawn_pty(
     id: TerminalId,
     command: CommandBuilder,
     scrollback_size: usize,
 ) -> Result<TerminalHandle, TerminalError> {
     let (update_tx, mut update_rx) = futures_channel::mpsc::unbounded::<()>();
-    let (resize_tx, mut resize_rx) = futures_channel::mpsc::unbounded::<(u16, u16)>();
-    let (scroll_tx, mut scroll_rx) = futures_channel::mpsc::unbounded::<ScrollCommand>();
 
     let buffer = Rc::new(RefCell::new(TerminalBuffer::default()));
     let parser = Rc::new(RefCell::new(Parser::new(24, 80, scrollback_size)));
     let writer = Rc::new(RefCell::new(None::<Box<dyn std::io::Write + Send>>));
     let closer_notifier = ArcNotify::new();
     let output_notifier = ArcNotify::new();
+    let cwd: Rc<RefCell<Option<PathBuf>>> = Rc::new(RefCell::new(None));
 
     let pty_system = native_pty_system();
     let pair = pty_system
@@ -116,6 +113,9 @@ pub(crate) fn spawn_pty(
         .try_clone_reader()
         .map_err(|_| TerminalError::NotInitialized)?;
     let mut reader = blocking::Unblock::new(reader);
+
+    let master: Rc<RefCell<Box<dyn MasterPty + Send>>> = Rc::new(RefCell::new(pair.master));
+
     let platform = Platform::get();
     let reader_task = spawn_forever({
         let parser = parser.clone();
@@ -123,86 +123,25 @@ pub(crate) fn spawn_pty(
         let closer_notifier = closer_notifier.clone();
         let writer = writer.clone();
         async move {
-            loop {
-                futures_util::select! {
-                     update = update_rx.next().fuse() => {
-                        if update.is_none() {
-                            *writer.borrow_mut() = None;
-                            closer_notifier.notify();
-                            platform.send(UserEvent::RequestRedraw);
-                            break;
-                        }
-                        let mut parser = parser.borrow_mut();
-                        let total_scrollback = query_max_scrollback(&mut parser);
+            use futures_lite::StreamExt;
+            while let Some(()) = update_rx.next().await {
+                let mut parser = parser.borrow_mut();
+                let total_scrollback = query_max_scrollback(&mut parser);
 
-                        let mut buffer = buffer.borrow_mut();
-                        parser.screen_mut().set_scrollback(buffer.scroll_offset);
-                        let mut new_buffer = extract_buffer(&parser, buffer.scroll_offset, total_scrollback);
-                        parser.screen_mut().set_scrollback(0);
+                let mut buffer = buffer.borrow_mut();
+                parser.screen_mut().set_scrollback(buffer.scroll_offset);
+                let mut new_buffer =
+                    extract_buffer(&parser, buffer.scroll_offset, total_scrollback);
+                parser.screen_mut().set_scrollback(0);
 
-                        new_buffer.selection = buffer.selection.take();
-                        *buffer = new_buffer;
-                        platform.send(UserEvent::RequestRedraw);
-                    }
-                    resize = resize_rx.next().fuse() => {
-                        if let Some((rows, cols)) = resize {
-                            let mut parser = parser.borrow_mut();
-                            parser.screen_mut().set_size(rows, cols);
-
-                            let total_scrollback = query_max_scrollback(&mut parser);
-                            let mut buffer = buffer.borrow_mut();
-                            buffer.scroll_offset = buffer.scroll_offset.min(total_scrollback);
-
-                            parser.screen_mut().set_scrollback(buffer.scroll_offset);
-                            let mut new_buffer = extract_buffer(&parser, buffer.scroll_offset, total_scrollback);
-                            parser.screen_mut().set_scrollback(0);
-
-                            new_buffer.selection = buffer.selection.take();
-                            *buffer = new_buffer;
-
-                            let (rows, cols) = parser.screen().size();
-                            let _ = pair.master.resize(PtySize {
-                                rows,
-                                cols,
-                                pixel_width: 0,
-                                pixel_height: 0,
-                            });
-                        }
-                    }
-                    scroll = scroll_rx.next().fuse() => {
-                        if let Some(cmd) = scroll {
-                            let mut parser = parser.borrow_mut();
-
-                            if parser.screen().alternate_screen() {
-                                continue;
-                            }
-
-                            let total_scrollback = query_max_scrollback(&mut parser);
-
-                            let mut buffer = buffer.borrow_mut();
-                            let offset = {
-                                match cmd {
-                                    ScrollCommand::Delta(_) => {
-                                        buffer.scroll_offset = buffer.scroll_offset.min(total_scrollback);
-                                    }
-                                    ScrollCommand::ToBottom => {
-                                        buffer.scroll_offset = 0;
-                                    }
-                                }
-                                buffer.scroll_offset
-                            };
-
-                            parser.screen_mut().set_scrollback(offset);
-                            let mut new_buffer = extract_buffer(&parser, offset, total_scrollback);
-                            parser.screen_mut().set_scrollback(0);
-
-                            new_buffer.selection = buffer.selection.take();
-                            *buffer = new_buffer;
-                            platform.send(UserEvent::RequestRedraw);
-                        }
-                    }
-                }
+                new_buffer.selection = buffer.selection.take();
+                *buffer = new_buffer;
+                platform.send(UserEvent::RequestRedraw);
             }
+            // Channel closed — PTY exited
+            *writer.borrow_mut() = None;
+            closer_notifier.notify();
+            platform.send(UserEvent::RequestRedraw);
         }
     });
 
@@ -210,7 +149,9 @@ pub(crate) fn spawn_pty(
         let writer = writer.clone();
         let parser = parser.clone();
         let output_notifier = output_notifier.clone();
+        let cwd = cwd.clone();
         async move {
+            let mut tw_parser = TermwizParser::new();
             loop {
                 let mut buf = [0u8; 4096];
 
@@ -221,7 +162,57 @@ pub(crate) fn spawn_pty(
 
                         parser.borrow_mut().process(data);
 
-                        let responses = check_for_terminal_queries(data, &parser.borrow());
+                        // Use termwiz to detect terminal queries and OSC sequences
+                        let actions = tw_parser.parse_as_vec(data);
+                        let mut responses: Vec<Vec<u8>> = Vec::new();
+
+                        for action in actions {
+                            match action {
+                                Action::CSI(CSI::Device(dev)) => match *dev {
+                                    Device::RequestPrimaryDeviceAttributes => {
+                                        responses.push(b"\x1b[?62;22c".to_vec());
+                                    }
+                                    Device::RequestSecondaryDeviceAttributes => {
+                                        responses.push(b"\x1b[>0;0;0c".to_vec());
+                                    }
+                                    Device::StatusReport => {
+                                        responses.push(b"\x1b[0n".to_vec());
+                                    }
+                                    _ => {}
+                                },
+                                Action::CSI(CSI::Cursor(Cursor::RequestActivePositionReport)) => {
+                                    let p = parser.borrow();
+                                    let (row, col) = p.screen().cursor_position();
+                                    let response = format!("\x1b[{};{}R", row + 1, col + 1);
+                                    responses.push(response.into_bytes());
+                                }
+                                Action::OperatingSystemCommand(osc) => {
+                                    if let OperatingSystemCommand::CurrentWorkingDirectory(url) =
+                                        *osc
+                                    {
+                                        // Strip file:// prefix if present
+                                        let path =
+                                            if let Some(stripped) = url.strip_prefix("file://") {
+                                                // file:///path or file://hostname/path
+                                                if let Some(rest) = stripped.strip_prefix('/') {
+                                                    PathBuf::from(format!("/{rest}"))
+                                                } else if let Some((_host, path)) =
+                                                    stripped.split_once('/')
+                                                {
+                                                    PathBuf::from(format!("/{path}"))
+                                                } else {
+                                                    PathBuf::from(stripped)
+                                                }
+                                            } else {
+                                                PathBuf::from(url)
+                                            };
+                                        *cwd.borrow_mut() = Some(path);
+                                    }
+                                }
+                                _ => {}
+                            }
+                        }
+
                         if !responses.is_empty()
                             && let Some(writer) = &mut *writer.borrow_mut()
                         {
@@ -252,8 +243,8 @@ pub(crate) fn spawn_pty(
         buffer,
         parser,
         writer,
-        resize_sender: Rc::new(resize_tx),
-        scroll_sender: Rc::new(scroll_tx),
+        master,
+        cwd,
         output_notifier,
         last_write_time: Rc::new(RefCell::new(Instant::now())),
         pressed_button: Rc::new(RefCell::new(None)),

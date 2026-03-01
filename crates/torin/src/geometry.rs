@@ -30,7 +30,7 @@ pub trait AvailableAreaModel {
     fn move_with_offsets(&mut self, offset_x: &Length, offset_y: &Length);
 }
 
-impl AvailableAreaModel for AreaOf<Available> {
+impl AvailableAreaModel for AreaOf<Inner> {
     fn move_with_offsets(&mut self, offset_x: &Length, offset_y: &Length) {
         self.origin.x += offset_x.get();
         self.origin.y += offset_y.get();

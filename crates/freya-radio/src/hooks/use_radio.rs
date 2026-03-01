@@ -240,10 +240,6 @@ where
         self.value.peek()
     }
 
-    pub fn write_unchecked(&self) -> WriteRef<'static, Value> {
-        self.value.write_unchecked()
-    }
-
     /// Read the current state value without subscribing to changes.
     /// Components using this will not re-render when the state changes.
     ///

@@ -252,14 +252,14 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
         let platform = Platform::get();
         let animation_clock = AnimationClock::get();
 
+        // Prepare the animations with the the proper direction
+        animated_value.write().prepare(direction);
+
         let animation_task = spawn(async move {
             platform.send(UserEvent::RequestRedraw);
 
             let mut index = 0u128;
             let mut prev_frame = Instant::now();
-
-            // Prepare the animations with the the proper direction
-            animated_value.write().prepare(direction);
 
             if !peek_has_run_yet {
                 *has_run_yet.write() = true;
@@ -436,24 +436,23 @@ pub fn use_animation<Animated: AnimatedValue>(
             last_direction,
         };
 
-        Effect::create_sync(move || {
+        Effect::create_sync_with_gen(move |current_gen| {
             let mut anim_conf = AnimConfiguration::default();
             animated_value.set(run(&mut anim_conf));
             *config.write() = anim_conf;
-        });
-
-        Effect::create_sync_with_gen(move |current_gen| match config.read().on_change {
-            OnChange::Finish if current_gen > 0 => {
-                animation.finish();
+            match config.peek().on_change {
+                OnChange::Finish if current_gen > 0 => {
+                    animation.finish();
+                }
+                OnChange::Rerun if current_gen > 0 => {
+                    let last_direction = *animation.last_direction.peek();
+                    animation.run(last_direction);
+                }
+                OnChange::Reset if current_gen > 0 => {
+                    animation.reset();
+                }
+                _ => {}
             }
-            OnChange::Rerun if current_gen > 0 => {
-                let last_direction = *animation.last_direction.peek();
-                animation.run(last_direction);
-            }
-            OnChange::Reset if current_gen > 0 => {
-                animation.reset();
-            }
-            _ => {}
         });
 
         match config.peek().on_creation {
@@ -508,25 +507,25 @@ pub fn use_animation_with_dependencies<Animated: AnimatedValue, D: 'static + Clo
             last_direction,
         };
 
-        Effect::create_sync(move || {
+        Effect::create_sync_with_gen(move |current_gen| {
             let dependencies = dependencies.read();
             let mut anim_conf = AnimConfiguration::default();
             animated_value.set(run(&mut anim_conf, &dependencies));
             *config.write() = anim_conf;
-        });
 
-        Effect::create_sync_with_gen(move |current_gen| match config.read().on_change {
-            OnChange::Finish if current_gen > 0 => {
-                animation.finish();
+            match config.peek().on_change {
+                OnChange::Finish if current_gen > 0 => {
+                    animation.finish();
+                }
+                OnChange::Rerun if current_gen > 0 => {
+                    let last_direction = *animation.last_direction.peek();
+                    animation.run(last_direction);
+                }
+                OnChange::Reset if current_gen > 0 => {
+                    animation.reset();
+                }
+                _ => {}
             }
-            OnChange::Rerun if current_gen > 0 => {
-                let last_direction = *animation.last_direction.peek();
-                animation.run(last_direction);
-            }
-            OnChange::Reset if current_gen > 0 => {
-                animation.reset();
-            }
-            _ => {}
         });
 
         match config.peek().on_creation {
@@ -632,3 +631,37 @@ impl_tuple_call!(
     (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11),
     (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12)
 );
+
+/// Create a transition animation that animates from the previous value to the current value.
+///
+/// This hook tracks the previous and current values of a reactive value and creates
+/// an animation that transitions between them when the value changes.
+///
+/// # Example
+///
+/// ```rust, no_run
+/// # use freya::prelude::*;
+/// # use freya::animation::*;
+/// fn app() -> impl IntoElement {
+///     let color = use_state(|| Color::RED);
+///     let animation =
+///         use_animation_transition(color, |from: Color, to| AnimColor::new(from, to).time(500));
+///
+///     rect()
+///         .background(&*animation.read())
+///         .width(Size::px(100.))
+///         .height(Size::px(100.))
+/// }
+/// ```
+pub fn use_animation_transition<Animated: AnimatedValue, T: Clone + PartialEq + 'static>(
+    value: impl IntoReadable<T>,
+    mut run: impl 'static + FnMut(T, T) -> Animated,
+) -> UseAnimation<Animated> {
+    let values = use_previous_and_current(value);
+    use_animation(move |conf| {
+        conf.on_change(OnChange::Rerun);
+        conf.on_creation(OnCreation::Run);
+        let (from, to) = values.read().clone();
+        run(from, to)
+    })
+}

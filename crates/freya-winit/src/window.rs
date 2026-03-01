@@ -224,6 +224,8 @@ impl AppWindow {
 
         runner.provide_root_context(|| tree.accessibility_generator.clone());
 
+        runner.provide_root_context(|| font_collection.clone());
+
         plugins.send(
             PluginEvent::RunnerCreated {
                 runner: &mut runner,

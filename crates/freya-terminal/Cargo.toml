@@ -1,6 +1,6 @@
 [package]
 name = "freya-terminal"
-version = "0.4.0-rc.9"
+version = "0.4.0-rc.10"
 description = "Terminal emulator integration for Freya"
 edition = "2024"
 license = "MIT"
@@ -27,11 +27,11 @@ keyboard-types = { workspace = true }
 # PTY and VT100
 portable-pty = "0.9"
 vt100 = "0.16"
+termwiz = "0.22"
 
 # Async
 futures-channel = { workspace = true }
 futures-lite = { workspace = true }
-futures-util = { workspace = true }
 
 [dev-dependencies]
 freya = { path = "../freya" }

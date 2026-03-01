@@ -1474,3 +1474,54 @@ fn modified_and_moved_both_siblings_with_nested_child() {
     tree.verify_tree_integrity();
     assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 }
+
+#[test]
+fn ordered_scope_mutations_diffing() {
+    fn second(_: &()) -> Element {
+        "text".into()
+    }
+    fn app() -> Element {
+        let mut enable = use_state(|| false);
+
+        rect()
+            .expanded()
+            .background((255, 255, 255))
+            .on_mouse_up(move |_| enable.toggle())
+            .maybe_child(enable().then(|| "hi"))
+            .child(rect().key(0).child(from_fn_standalone_borrowed_keyed(
+                DiffKey::from(&enable()),
+                (),
+                second,
+            )))
+            .into_element()
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+
+    let mutations = runner.sync_and_update();
+    tree.apply_mutations(mutations);
+
+    runner.handle_event(
+        NodeId::from(2),
+        EventName::MouseUp,
+        EventType::Mouse(MouseEventData::default()),
+        false,
+    );
+    let mutations = runner.sync_and_update();
+    assert_eq!(mutations.added.len(), 2);
+    tree.apply_mutations(mutations);
+
+    runner.handle_event(
+        NodeId::from(2),
+        EventName::MouseUp,
+        EventType::Mouse(MouseEventData::default()),
+        false,
+    );
+    let mutations = runner.sync_and_update();
+    assert_eq!(mutations.added.len(), 1);
+    assert_eq!(mutations.removed.len(), 2);
+    tree.apply_mutations(mutations);
+
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+}

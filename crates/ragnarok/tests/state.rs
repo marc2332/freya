@@ -98,29 +98,34 @@ impl NameOfEvent for EventName {
         Self::MouseLeave
     }
 
-    fn get_derived_events(&self) -> Vec<Self> {
-        let mut events = vec![*self];
+    fn get_derived_events(&self) -> HashSet<Self> {
+        let mut events = HashSet::new();
+        events.insert(*self);
         #[allow(clippy::single_match)]
         match self {
-            Self::MouseMove => events.push(Self::MouseEnter),
+            Self::MouseMove => {
+                events.insert(Self::MouseEnter);
+            }
             _ => {}
         }
 
         events
     }
 
-    fn get_global_events(&self) -> Vec<Self> {
+    fn get_global_events(&self) -> HashSet<Self> {
         match self {
-            Self::MouseMove => vec![Self::CaptureGlobalMouseMove],
-            _ => Vec::new(),
+            Self::MouseMove => HashSet::from([Self::CaptureGlobalMouseMove]),
+            _ => HashSet::new(),
         }
     }
 
-    fn get_cancellable_events(&self) -> Vec<Self> {
-        let mut events = vec![*self];
-        #[allow(clippy::single_match)]
+    fn get_cancellable_events(&self) -> HashSet<Self> {
+        let mut events = HashSet::new();
+        events.insert(*self);
         match self {
-            Self::CaptureGlobalMouseMove => events.extend([Self::MouseMove, Self::MouseEnter]),
+            Self::CaptureGlobalMouseMove => {
+                events.extend([Self::MouseMove, Self::MouseEnter]);
+            }
             _ => {}
         }
         events

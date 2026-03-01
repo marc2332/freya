@@ -104,8 +104,6 @@ where
         &mut self,
         node_id: Key,
         node: &Node,
-        // Area occupied by it's parent
-        parent_area: AreaOf<Parent>,
         // Initial area occupied by it's parent
         initial_parent_area: AreaOf<Parent>,
         // Area that is available to use by the children of the parent
@@ -303,7 +301,7 @@ where
             // Create the areas
             let area_origin = node.position.get_origin(
                 &available_parent_area,
-                &parent_area,
+                &initial_parent_area,
                 area_size,
                 &self.layout_metadata.root_area,
             );
@@ -312,14 +310,13 @@ where
                 .without_gaps(&node.padding)
                 .without_gaps(&node.margin)
                 .as_inner();
+            inner_area.move_with_offsets(&node.offset_x, &node.offset_y);
 
             let mut inner_sizes = Size2D::default();
 
             if measure_inner_children && phase_measure_inner_children {
                 // Create an area containing the available space inside the inner area
                 let mut available_area = inner_area.as_available();
-
-                available_area.move_with_offsets(&node.offset_x, &node.offset_y);
 
                 let mut parent_area = area.as_parent();
 
@@ -402,11 +399,9 @@ where
                 .clone();
 
             let mut inner_sizes = Size2D::default();
-            let mut available_area = layout_node.inner_area.as_available();
             let mut area = layout_node.area.as_parent();
             let mut inner_area = layout_node.inner_area.as_inner();
-
-            available_area.move_with_offsets(&node.offset_x, &node.offset_y);
+            let mut available_area = inner_area.as_available();
 
             let measure_inner_children = if let Some(measurer) = self.measurer {
                 measurer.should_measure_inner_children(node_id)
@@ -513,12 +508,9 @@ where
 
                 let is_last_child = last_child == Some(*child_id);
 
-                let inner_area = initial_phase_inner_area;
-
                 let (_, mut child_areas) = self.measure_node(
                     *child_id,
                     &child_data,
-                    inner_area.as_parent(),
                     initial_area.as_parent(),
                     initial_phase_available_area,
                     false,
@@ -731,7 +723,6 @@ where
             let (child_revalidated, mut child_areas) = self.measure_node(
                 child_id,
                 &child_data,
-                inner_area.as_parent(),
                 initial_area.as_parent(),
                 adapted_available_area,
                 must_cache_children,

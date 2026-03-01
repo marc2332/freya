@@ -105,11 +105,10 @@ use crate::{
 ///
 /// # Global State
 ///
-/// For state that persists across the entire application lifecycle:
+/// For state that persists across the entire application lifecycle, you can crate it in your `main` function:
 ///
 /// ```rust,no_run
 /// # use freya::prelude::*;
-/// // Create global state (use sparingly)
 /// let global_count = State::create_global(0);
 /// ```
 ///
@@ -407,6 +406,17 @@ impl<T> State<T> {
         self.key.write()
     }
 
+    /// Get a mutable reference without notifying subscribers.
+    ///
+    /// This method provides write access without triggering any re-renders.
+    /// The caller is responsible for calling `notify()` if subscribers should be notified.
+    ///
+    /// This is primarily used internally by `Writable::write_if()` to enable conditional
+    /// notifications based on whether the value actually changed.
+    pub(crate) fn write_silently(&self) -> WriteRef<'static, T> {
+        self.key.write()
+    }
+
     /// Replace the current state value with a new one.
     ///
     /// This method completely replaces the existing value with the provided one
@@ -672,17 +682,6 @@ impl<T> State<Option<T>> {
 ///             .on_press(move |_| *count.write() += 1),
 ///     )
 /// }
-/// ```
-///
-/// # Advanced Usage
-///
-/// ```rust,no_run
-/// # use freya::prelude::*;
-/// // Complex initialization
-/// let mut user_data = use_state(|| {
-///     // Expensive computation or data loading
-///     String::from("default_preferences")
-/// });
 /// ```
 ///
 /// # See Also
