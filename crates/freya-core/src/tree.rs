@@ -411,15 +411,13 @@ impl Tree {
                 }
                 if flags.intersects(DiffModifies::EFFECT) {
                     let element = self.elements.get(&node_id).unwrap();
-                    let mut run_cascade = element.effect().is_some();
-                    // Also need to run the effect cascade is the node is new (hence the effect flag) but doesnt have effect data and it has a parent with effects
-                    if !run_cascade
-                        && !self.effect_state.contains_key(&node_id)
-                        && let Some(parent) = self.parents.get(&node_id)
-                        && self.effect_state.contains_key(parent)
-                    {
-                        run_cascade = true;
-                    }
+                    // Has data or the parent has state
+                    let run_cascade = element.effect().is_some()
+                        || self
+                            .parents
+                            .get(&node_id)
+                            .map(|parent| self.effect_state.contains_key(parent))
+                            .unwrap_or_default();
                     if run_cascade {
                         handle_cascade(&mut effects_cascades);
                     }
