@@ -180,6 +180,7 @@ pub struct ImageViewer {
     layout: LayoutData,
     image_data: ImageData,
     accessibility: AccessibilityData,
+    effect: EffectData,
 
     children: Vec<Element>,
 
@@ -193,6 +194,7 @@ impl ImageViewer {
             layout: LayoutData::default(),
             image_data: ImageData::default(),
             accessibility: AccessibilityData::default(),
+            effect: EffectData::default(),
             children: Vec::new(),
             key: DiffKey::None,
         }
@@ -229,6 +231,12 @@ impl AccessibilityExt for ImageViewer {
 impl ChildrenExt for ImageViewer {
     fn get_children(&mut self) -> &mut Vec<Element> {
         &mut self.children
+    }
+}
+
+impl EffectExt for ImageViewer {
+    fn get_effect(&mut self) -> &mut EffectData {
+        &mut self.effect
     }
 }
 
@@ -289,6 +297,7 @@ impl Component for ImageViewer {
                     .a11y_focusable(true)
                     .layout(self.layout.clone())
                     .image_data(self.image_data.clone())
+                    .effect(self.effect.clone())
                     .children(self.children.clone())
                     .into_element()
             }

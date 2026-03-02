@@ -3,6 +3,7 @@ use freya::{
     prelude::*,
     terminal::*,
 };
+use futures_util::FutureExt;
 
 fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
@@ -18,10 +19,23 @@ fn app() -> impl IntoElement {
     });
 
     use_future(move || async move {
-        // Stops rendering the terminal once the pty closes on its own
-        let terminal_handle = handle.read().clone().unwrap();
-        terminal_handle.closed().await;
-        let _ = handle.write().take();
+        if let Some(terminal_handle) = handle.read().clone() {
+            loop {
+                futures_util::select! {
+                    _ = terminal_handle.closed().fuse() => {
+                        let _ = handle.write().take();
+                        break;
+                    }
+                    _ = terminal_handle.title_changed().fuse() => {
+                        if let Some(new_title) = terminal_handle.title() {
+                            Platform::get().with_window(None, move |window| {
+                                window.set_title(&new_title);
+                            });
+                        }
+                    }
+                }
+            }
+        }
     });
 
     let focus = use_focus();
@@ -81,6 +95,12 @@ fn app() -> impl IntoElement {
                                     _ => TerminalMouseButton::Left,
                                 };
                                 handle.mouse_up(row, col, button);
+                            }
+                        })
+                        .on_global_mouse_up({
+                            let handle = handle.clone();
+                            move |_| {
+                                handle.release();
                             }
                         })
                         .on_wheel({

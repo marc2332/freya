@@ -114,12 +114,16 @@ pub struct TerminalHandle {
     pub(crate) master: Rc<RefCell<Box<dyn MasterPty + Send>>>,
     /// Current working directory reported by the shell via OSC 7.
     pub(crate) cwd: Rc<RefCell<Option<PathBuf>>>,
+    /// Window title reported by the shell via OSC 0 or OSC 2.
+    pub(crate) title: Rc<RefCell<Option<String>>>,
     /// Notifier that signals when the terminal/PTY closes.
     pub(crate) closer_notifier: ArcNotify,
     /// Handles cleanup when the terminal is dropped.
     pub(crate) cleaner: Rc<TerminalCleaner>,
     /// Notifier that signals when new output is received from the PTY.
     pub(crate) output_notifier: ArcNotify,
+    /// Notifier that signals when the window title changes via OSC 0 or OSC 2.
+    pub(crate) title_notifier: ArcNotify,
     /// Tracks when user last wrote input to the PTY.
     pub(crate) last_write_time: Rc<RefCell<Instant>>,
     /// Currently pressed mouse button (for drag/motion tracking).
@@ -290,6 +294,13 @@ impl TerminalHandle {
         self.cwd.borrow().clone()
     }
 
+    /// Get the window title reported by the shell via OSC 0 or OSC 2.
+    ///
+    /// Returns `None` if the shell hasn't reported a title yet.
+    pub fn title(&self) -> Option<String> {
+        self.title.borrow().clone()
+    }
+
     /// Send a wheel event to the PTY.
     ///
     /// This sends mouse wheel events as escape sequences to the running process.
@@ -417,6 +428,15 @@ impl TerminalHandle {
     /// Number of arrow key presses to send per wheel tick in alternate scroll mode.
     const ALTERNATE_SCROLL_LINES: usize = 3;
 
+    /// Handle a mouse button release from outside the terminal viewport.
+    ///
+    /// Clears the pressed state and ends any active text selection without
+    /// sending an encoded event to the PTY.
+    pub fn release(&self) {
+        *self.pressed_button.borrow_mut() = None;
+        self.end_selection();
+    }
+
     /// Handle a wheel event intelligently.
     ///
     /// The behavior depends on the terminal state:
@@ -476,6 +496,13 @@ impl TerminalHandle {
     /// Can be called repeatedly in a loop to detect ongoing output activity.
     pub fn output_received(&self) -> impl std::future::Future<Output = ()> + '_ {
         self.output_notifier.notified()
+    }
+
+    /// Returns a future that completes when the window title changes via OSC 0 or OSC 2.
+    ///
+    /// Can be called repeatedly in a loop to react to title updates from the shell.
+    pub fn title_changed(&self) -> impl std::future::Future<Output = ()> + '_ {
+        self.title_notifier.notified()
     }
 
     pub fn last_write_elapsed(&self) -> std::time::Duration {
