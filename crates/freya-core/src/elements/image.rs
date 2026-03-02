@@ -46,6 +46,7 @@ use crate::{
         ChildrenExt,
         ContainerExt,
         ContainerWithContentExt,
+        EffectExt,
         EventHandlersExt,
         ImageExt,
         KeyExt,
@@ -72,6 +73,7 @@ pub fn image(image_holder: ImageHolder) -> Image {
             event_handlers: HashMap::default(),
             image_data: ImageData::default(),
             relative_layer: Layer::default(),
+            effect: None,
         },
         elements: Vec::new(),
     }
@@ -130,6 +132,7 @@ pub struct ImageElement {
     pub image_holder: ImageHolder,
     pub image_data: ImageData,
     pub relative_layer: Layer,
+    pub effect: Option<EffectData>,
 }
 
 impl ElementExt for ImageElement {
@@ -164,6 +167,10 @@ impl ElementExt for ImageElement {
             diff.insert(DiffModifies::STYLE);
         }
 
+        if self.effect != image.effect {
+            diff.insert(DiffModifies::STYLE);
+        }
+
         diff
     }
 
@@ -172,7 +179,7 @@ impl ElementExt for ImageElement {
     }
 
     fn effect(&'_ self) -> Option<Cow<'_, EffectData>> {
-        None
+        self.effect.as_ref().map(Cow::Borrowed)
     }
 
     fn style(&'_ self) -> Cow<'_, StyleState> {
@@ -340,6 +347,12 @@ impl ChildrenExt for Image {
 impl LayerExt for Image {
     fn get_layer(&mut self) -> &mut Layer {
         &mut self.element.relative_layer
+    }
+}
+
+impl EffectExt for Image {
+    fn get_effect(&mut self) -> &mut EffectData {
+        self.element.effect.get_or_insert_with(EffectData::default)
     }
 }
 

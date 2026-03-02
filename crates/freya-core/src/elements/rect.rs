@@ -606,6 +606,16 @@ impl InteractiveExt for Rect {
     }
 }
 
+impl EffectExt for Rect {
+    fn get_effect(&mut self) -> &mut EffectData {
+        if self.element.effect.is_none() {
+            self.element.effect = Some(EffectData::default())
+        }
+
+        self.element.effect.as_mut().unwrap()
+    }
+}
+
 impl From<Rect> for Element {
     fn from(value: Rect) -> Self {
         Element::Element {
