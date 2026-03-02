@@ -4,7 +4,7 @@
 )]
 
 use freya::prelude::*;
-use rand::Rng;
+use rand::RngExt;
 
 fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
