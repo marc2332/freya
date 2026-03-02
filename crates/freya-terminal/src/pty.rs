@@ -131,12 +131,18 @@ pub(crate) fn spawn_pty(
                 let total_scrollback = query_max_scrollback(&mut parser);
 
                 let mut buffer = buffer.borrow_mut();
+                let old_total_scrollback = buffer.total_scrollback;
+                let delta = total_scrollback.saturating_sub(old_total_scrollback);
                 parser.screen_mut().set_scrollback(buffer.scroll_offset);
                 let mut new_buffer =
                     extract_buffer(&parser, buffer.scroll_offset, total_scrollback);
                 parser.screen_mut().set_scrollback(0);
 
-                new_buffer.selection = buffer.selection.take();
+                new_buffer.selection = buffer.selection.take().map(|mut selection| {
+                    selection.start_scroll = selection.start_scroll.saturating_add(delta);
+                    selection.end_scroll = selection.end_scroll.saturating_add(delta);
+                    selection
+                });
                 *buffer = new_buffer;
                 platform.send(UserEvent::RequestRedraw);
             }
