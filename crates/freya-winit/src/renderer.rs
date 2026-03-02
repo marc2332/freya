@@ -1027,6 +1027,26 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         .unwrap();
                     app.position = CursorPoint::from((location.x, location.y));
                 }
+                WindowEvent::Ime(Ime::Commit(text)) => {
+                    let platform_event = PlatformEvent::Keyboard {
+                        name: KeyboardEventName::KeyDown,
+                        key: keyboard_types::Key::Character(text),
+                        code: keyboard_types::Code::Unidentified,
+                        modifiers: winit_mappings::map_winit_modifiers(app.modifiers_state),
+                    };
+                    let mut events_measurer_adapter = EventsMeasurerAdapter {
+                        tree: &mut app.tree,
+                        scale_factor: app.window.scale_factor(),
+                    };
+                    let processed_events = events_measurer_adapter.run(
+                        &mut vec![platform_event],
+                        &mut app.nodes_state,
+                        app.accessibility.focused_node_id(),
+                    );
+                    app.events_sender
+                        .unbounded_send(EventsChunk::Processed(processed_events))
+                        .unwrap();
+                }
                 WindowEvent::Ime(Ime::Preedit(text, pos)) => {
                     let platform_event = PlatformEvent::ImePreedit {
                         name: ImeEventName::Preedit,
