@@ -1031,7 +1031,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     let platform_event = PlatformEvent::Keyboard {
                         name: KeyboardEventName::KeyDown,
                         key: keyboard_types::Key::Character(text),
-                        code: keyboard_types::Code::Backquote,
+                        code: keyboard_types::Code::Unidentified,
                         modifiers: winit_mappings::map_winit_modifiers(app.modifiers_state),
                     };
                     let mut events_measurer_adapter = EventsMeasurerAdapter {
