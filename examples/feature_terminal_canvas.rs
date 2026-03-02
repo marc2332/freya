@@ -274,7 +274,6 @@ impl Component for TerminalPanel {
                                     }
                                     Key::Named(NamedKey::Enter) => {
                                         if mods.contains(Modifiers::SHIFT) {
-                                            // Kitty keyboard protocol: Shift+Enter
                                             let _ = handle.write(b"\x1b[13;2u");
                                         } else {
                                             let _ = handle.new_line();
