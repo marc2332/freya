@@ -592,18 +592,6 @@ where
         }
 
         if needs_initial_phase {
-            if parent_node.content.is_wrap() {
-                Self::wrap_adjust_initial(
-                    &children,
-                    parent_node,
-                    &initial_phase_sizes,
-                    &mut initial_phase_inner_sizes,
-                    &mut initial_phase_available_area,
-                    &mut initial_phase_parent_area,
-                    &mut initial_phase_inner_area,
-                );
-            }
-
             if parent_node.main_alignment.is_not_start() && parent_node.content.allows_alignments()
             {
                 // Adjust the available and inner areas of the Main axis
@@ -709,10 +697,12 @@ where
 
             if parent_node.content.is_wrap() {
                 let initial_phase_size = initial_phase_sizes.get(&child_id);
-                Self::wrap_handle_final(
+                // Wrap this child
+                Self::wrap_child(
                     parent_node,
                     initial_phase_size,
                     &initial_available_area,
+                    parent_area,
                     available_area,
                     &mut adapted_available_area,
                     *inner_sizes,
@@ -756,67 +746,11 @@ where
         }
     }
 
-    // In order to make the elements wrap in the second phase we need to
-    // update the available area to have the proper width/height as if nodes had been wrapped already
-    fn wrap_adjust_initial(
-        children: &[Key],
-        parent_node: &Node,
-        initial_phase_sizes: &FxHashMap<Key, Size2D>,
-        initial_phase_inner_sizes: &mut Size2D,
-        available_area: &mut AreaOf<Available>,
-        parent_area: &mut AreaOf<Parent>,
-        _initial_phase_inner_area: &mut AreaOf<Inner>,
-    ) {
-        let mut used_area = Area::zero();
-        let break_size = *initial_phase_inner_sizes;
-        for child_id in children {
-            let initial_phase_size = initial_phase_sizes.get(child_id);
-            if let Some(initial_phase_size) = initial_phase_size {
-                match parent_node.direction {
-                    Direction::Vertical => {
-                        if available_area.height() - used_area.height() - initial_phase_size.height
-                            < 0.
-                        {
-                            // Break the line if there is no enough space
-                            used_area.size.height = initial_phase_size.height;
-                            available_area.size.width += break_size.width;
-                            // Keep increasing for every break
-                            initial_phase_inner_sizes.width += break_size.width;
-                            if parent_node.width.inner_sized() {
-                                parent_area.size.width += break_size.width;
-                            }
-                        } else {
-                            // Otherwise just keep adding each child size
-                            used_area.size.height += initial_phase_size.height;
-                        }
-                    }
-                    Direction::Horizontal => {
-                        if available_area.width() - used_area.width() - initial_phase_size.width
-                            < 0.
-                        {
-                            // Break the line if there is no enough space
-                            used_area.size.width = initial_phase_size.width;
-                            available_area.size.height += break_size.height;
-                            // Keep increasing for every break
-                            initial_phase_inner_sizes.height += break_size.height;
-                            if parent_node.height.inner_sized() {
-                                parent_area.size.height += break_size.height;
-                            }
-                        } else {
-                            // Otherwise just keep adding each child size
-                            used_area.size.width += initial_phase_size.width;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    /// Handle wrapping adjustments for a single child during the final phase.
-    fn wrap_handle_final(
+    fn wrap_child(
         parent_node: &Node,
         initial_phase_size: Option<&Size2D>,
         initial_available_area: &AreaOf<Available>,
+        parent_area: &mut AreaOf<Parent>,
         available_area: &mut AreaOf<Available>,
         adapted_available_area: &mut AreaOf<Available>,
         inner_sizes: Size2D,
@@ -831,6 +765,7 @@ where
                         adapted_available_area.origin.y = initial_available_area.origin.y;
                         adapted_available_area.size.height = initial_available_area.size.height;
                         adapted_available_area.origin.x += inner_sizes.width;
+                        parent_area.size.width += inner_sizes.width;
                     }
                 }
                 Direction::Horizontal => {
@@ -841,6 +776,7 @@ where
                         adapted_available_area.origin.x = initial_available_area.origin.x;
                         adapted_available_area.size.width = initial_available_area.size.width;
                         adapted_available_area.origin.y += inner_sizes.height;
+                        parent_area.size.height += inner_sizes.height;
                     }
                 }
             }
