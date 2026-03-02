@@ -199,31 +199,6 @@ impl ImageViewer {
             key: DiffKey::None,
         }
     }
-
-    pub fn overflow(mut self, overflow: impl Into<Overflow>) -> Self {
-        self.effect.overflow = overflow.into();
-        self
-    }
-
-    pub fn blur(mut self, blur: impl Into<f32>) -> Self {
-        self.effect.blur = Some(blur.into());
-        self
-    }
-
-    pub fn rotation(mut self, rotation: impl Into<f32>) -> Self {
-        self.effect.rotation = Some(rotation.into());
-        self
-    }
-
-    pub fn opacity(mut self, opacity: impl Into<f32>) -> Self {
-        self.effect.opacity = Some(opacity.into());
-        self
-    }
-
-    pub fn scale(mut self, scale: impl Into<Scale>) -> Self {
-        self.effect.scale = Some(scale.into());
-        self
-    }
 }
 
 impl KeyExt for ImageViewer {
@@ -256,6 +231,12 @@ impl AccessibilityExt for ImageViewer {
 impl ChildrenExt for ImageViewer {
     fn get_children(&mut self) -> &mut Vec<Element> {
         &mut self.children
+    }
+}
+
+impl EffectExt for ImageViewer {
+    fn get_effect(&mut self) -> &mut EffectData {
+        &mut self.effect
     }
 }
 
