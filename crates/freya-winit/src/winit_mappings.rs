@@ -49,7 +49,7 @@ pub fn map_winit_key(key: &winit::keyboard::Key) -> Key {
         winit::keyboard::Key::Unidentified(winit::keyboard::NativeKey::Xkb(0xFE50)) => {
             Key::Character("`".to_string())
         }
-
+        winit::keyboard::Key::Dead(Some('`')) => Key::Character("`".to_string()),
         winit::keyboard::Key::Named(named_key) => match named_key {
             winit::keyboard::NamedKey::Space => Key::Character(" ".to_string()),
 

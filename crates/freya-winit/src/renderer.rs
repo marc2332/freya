@@ -777,9 +777,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                     LogicalPosition::new(area.min_x(), area.min_y()),
                                     LogicalSize::new(area.width(), area.height()),
                                 );
-                                app.window.set_ime_allowed(
-                                    app.accessibility.focused_node_needs_ime(&app.tree),
-                                );
 
                                 app.accessibility_adapter.update_if_active(|| update);
                             }
@@ -798,9 +795,6 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 app.window.set_ime_cursor_area(
                                     LogicalPosition::new(area.min_x(), area.min_y()),
                                     LogicalSize::new(area.width(), area.height()),
-                                );
-                                app.window.set_ime_allowed(
-                                    app.accessibility.focused_node_needs_ime(&app.tree),
                                 );
 
                                 app.accessibility_adapter.update_if_active(|| update);
@@ -1032,6 +1026,26 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         .unbounded_send(EventsChunk::Processed(processed_events))
                         .unwrap();
                     app.position = CursorPoint::from((location.x, location.y));
+                }
+                WindowEvent::Ime(Ime::Commit(text)) => {
+                    let platform_event = PlatformEvent::Keyboard {
+                        name: KeyboardEventName::KeyDown,
+                        key: keyboard_types::Key::Character(text),
+                        code: keyboard_types::Code::Backquote,
+                        modifiers: winit_mappings::map_winit_modifiers(app.modifiers_state),
+                    };
+                    let mut events_measurer_adapter = EventsMeasurerAdapter {
+                        tree: &mut app.tree,
+                        scale_factor: app.window.scale_factor(),
+                    };
+                    let processed_events = events_measurer_adapter.run(
+                        &mut vec![platform_event],
+                        &mut app.nodes_state,
+                        app.accessibility.focused_node_id(),
+                    );
+                    app.events_sender
+                        .unbounded_send(EventsChunk::Processed(processed_events))
+                        .unwrap();
                 }
                 WindowEvent::Ime(Ime::Preedit(text, pos)) => {
                     let platform_event = PlatformEvent::ImePreedit {
