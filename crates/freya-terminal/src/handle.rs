@@ -417,6 +417,15 @@ impl TerminalHandle {
     /// Number of arrow key presses to send per wheel tick in alternate scroll mode.
     const ALTERNATE_SCROLL_LINES: usize = 3;
 
+    /// Handle a mouse button release from outside the terminal viewport.
+    ///
+    /// Clears the pressed state and ends any active text selection without
+    /// sending an encoded event to the PTY.
+    pub fn release(&self) {
+        *self.pressed_button.borrow_mut() = None;
+        self.end_selection();
+    }
+
     /// Handle a wheel event intelligently.
     ///
     /// The behavior depends on the terminal state:
