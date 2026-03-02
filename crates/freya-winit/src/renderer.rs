@@ -777,6 +777,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                     LogicalPosition::new(area.min_x(), area.min_y()),
                                     LogicalSize::new(area.width(), area.height()),
                                 );
+                                app.window.set_ime_allowed(
+                                    app.accessibility.focused_node_needs_ime(&app.tree),
+                                );
 
                                 app.accessibility_adapter.update_if_active(|| update);
                             }
@@ -795,6 +798,9 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                 app.window.set_ime_cursor_area(
                                     LogicalPosition::new(area.min_x(), area.min_y()),
                                     LogicalSize::new(area.width(), area.height()),
+                                );
+                                app.window.set_ime_allowed(
+                                    app.accessibility.focused_node_needs_ime(&app.tree),
                                 );
 
                                 app.accessibility_adapter.update_if_active(|| update);

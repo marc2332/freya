@@ -65,6 +65,21 @@ impl AccessibilityTree {
         self.map.get(&self.focused_id).cloned()
     }
 
+    /// Returns whether the currently focused node requires IME input.
+    pub fn focused_node_needs_ime(&self, tree: &Tree) -> bool {
+        if self.focused_id == ACCESSIBILITY_ROOT_ID {
+            return false;
+        }
+        let Some(node_id) = self.focused_node_id() else {
+            return false;
+        };
+        let element = tree.elements.get(&node_id).unwrap();
+        matches!(
+            element.accessibility().builder.role(),
+            Role::TextInput | Role::MultilineTextInput | Role::PasswordInput
+        )
+    }
+
     /// Initialize the Accessibility Tree
     pub fn init(&mut self, tree: &mut Tree) -> TreeUpdate {
         tree.accessibility_diff.clear();
