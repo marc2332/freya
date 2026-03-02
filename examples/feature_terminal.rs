@@ -97,6 +97,12 @@ fn app() -> impl IntoElement {
                                 handle.mouse_up(row, col, button);
                             }
                         })
+                        .on_global_mouse_up({
+                            let handle = handle.clone();
+                            move |_| {
+                                handle.release();
+                            }
+                        })
                         .on_wheel({
                             let handle = handle.clone();
                             move |e: Event<WheelEventData>| {
