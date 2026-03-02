@@ -192,6 +192,22 @@ impl TerminalHandle {
         Ok(())
     }
 
+    /// Send a newline (`\r`) to the terminal, equivalent to pressing Enter.
+    pub fn new_line(&self) -> Result<(), TerminalError> {
+        self.write(b"\r")
+    }
+
+    /// Paste text into the terminal, wrapping with bracketed paste sequences
+    /// (`\x1b[200~` / `\x1b[201~`) when the running application has enabled that mode,
+    /// otherwise newlines are converted to `\r`.
+    pub fn paste(&self, text: &str) -> Result<(), TerminalError> {
+        if self.parser.borrow().screen().bracketed_paste() {
+            self.write(format!("\x1b[200~{text}\x1b[201~").as_bytes())
+        } else {
+            self.write(text.replace('\n', "\r").as_bytes())
+        }
+    }
+
     /// Write data to the PTY without resetting scroll or selection state.
     fn write_raw(&self, data: &[u8]) -> Result<(), TerminalError> {
         match &mut *self.writer.borrow_mut() {

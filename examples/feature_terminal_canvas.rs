@@ -266,14 +266,19 @@ impl Component for TerminalPanel {
                                         if ctrl_shift && ch.eq_ignore_ascii_case("v") =>
                                     {
                                         if let Ok(text) = Clipboard::get() {
-                                            let _ = handle.write(text.as_bytes());
+                                            let _ = handle.paste(&text);
                                         }
                                     }
                                     Key::Character(ch) if ctrl && ch.len() == 1 => {
                                         let _ = handle.write(&[ch.as_bytes()[0] & 0x1f]);
                                     }
                                     Key::Named(NamedKey::Enter) => {
-                                        let _ = handle.write(b"\r");
+                                        if mods.contains(Modifiers::SHIFT) {
+                                            // Kitty keyboard protocol: Shift+Enter
+                                            let _ = handle.write(b"\x1b[13;2u");
+                                        } else {
+                                            let _ = handle.new_line();
+                                        }
                                     }
                                     Key::Named(NamedKey::Backspace) => {
                                         let _ = handle.write(&[0x7f]);
