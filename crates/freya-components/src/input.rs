@@ -500,7 +500,7 @@ impl Component for Input {
                 (theme_colors.background, None, None)
             };
 
-        let border = if focus_status() == FocusStatus::Keyboard {
+        let border = if focus_status() == FocusStatus::Keyboard || focus_status() == FocusStatus::Pointer {
             Border::new()
                 .fill(theme_colors.focus_border_fill)
                 .width(2.)
