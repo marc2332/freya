@@ -37,6 +37,7 @@
 //! - [Elements](self::elements)
 //! - [Hooks](self::_docs::hooks)
 //! - [State](self::_docs::state_management)
+//! - [Layers](self::_docs::layers)
 //! - [Development Setup](self::_docs::development_setup)
 //!
 //! ### Learn
