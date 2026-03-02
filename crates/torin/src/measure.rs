@@ -697,7 +697,8 @@ where
 
             if parent_node.content.is_wrap() {
                 let initial_phase_size = initial_phase_sizes.get(&child_id);
-                Self::wrap_handle_final(
+                // Wrap this child
+                Self::wrap_child(
                     parent_node,
                     initial_phase_size,
                     &initial_available_area,
@@ -745,8 +746,7 @@ where
         }
     }
 
-    /// Handle wrapping adjustments for a single child during the final phase.
-    fn wrap_handle_final(
+    fn wrap_child(
         parent_node: &Node,
         initial_phase_size: Option<&Size2D>,
         initial_available_area: &AreaOf<Available>,
