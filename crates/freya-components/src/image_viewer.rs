@@ -180,6 +180,7 @@ pub struct ImageViewer {
     layout: LayoutData,
     image_data: ImageData,
     accessibility: AccessibilityData,
+    effect: EffectData,
 
     children: Vec<Element>,
 
@@ -193,9 +194,35 @@ impl ImageViewer {
             layout: LayoutData::default(),
             image_data: ImageData::default(),
             accessibility: AccessibilityData::default(),
+            effect: EffectData::default(),
             children: Vec::new(),
             key: DiffKey::None,
         }
+    }
+
+    pub fn overflow(mut self, overflow: impl Into<Overflow>) -> Self {
+        self.effect.overflow = overflow.into();
+        self
+    }
+
+    pub fn blur(mut self, blur: impl Into<f32>) -> Self {
+        self.effect.blur = Some(blur.into());
+        self
+    }
+
+    pub fn rotation(mut self, rotation: impl Into<f32>) -> Self {
+        self.effect.rotation = Some(rotation.into());
+        self
+    }
+
+    pub fn opacity(mut self, opacity: impl Into<f32>) -> Self {
+        self.effect.opacity = Some(opacity.into());
+        self
+    }
+
+    pub fn scale(mut self, scale: impl Into<Scale>) -> Self {
+        self.effect.scale = Some(scale.into());
+        self
     }
 }
 
@@ -289,6 +316,7 @@ impl Component for ImageViewer {
                     .a11y_focusable(true)
                     .layout(self.layout.clone())
                     .image_data(self.image_data.clone())
+                    .effect(self.effect.clone())
                     .children(self.children.clone())
                     .into_element()
             }
