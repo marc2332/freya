@@ -6,7 +6,7 @@
 //!
 //! - [`Layer::Relative(i16)`](freya_core::prelude::Layer::Relative) *(default)*: offset relative to the parent's layer. Positive values render higher, negative values render lower.
 //! - [`Layer::Overlay`](freya_core::prelude::Layer::Overlay): jumps to a very high layer, useful for modals or tooltips that must appear above everything.
-//! - [`Layer::RelativeOverlay(u8)`](freya_core::prelude::Layer::RelativeOverlay): similar to `Overlay` but clamped to 0 or 1.
+//! - [`Layer::RelativeOverlay(u8)`](freya_core::prelude::Layer::RelativeOverlay): similar to `Overlay` but you have multiple overlay layers options.
 //!
 //! ```rust,no_run
 //! # use freya::prelude::*;
