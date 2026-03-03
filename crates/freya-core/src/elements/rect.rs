@@ -457,12 +457,16 @@ impl ElementExt for RectElement {
     fn is_point_inside(&self, context: EventMeasurementContext) -> bool {
         let area = context.layout_node.visible_area();
         let cursor = context.cursor.to_f32();
-        let rounded_rect = self.render_rect(&area, context.scale_factor as f32);
+        let local_area = Area::new((0., 0.).into(), area.size);
+        let rounded_rect = self.render_rect(&local_area, context.scale_factor as f32);
+        let local_cursor_x = cursor.x - area.min_x();
+        let local_cursor_y = cursor.y - area.min_y();
+
         rounded_rect.contains(SkRect::new(
-            cursor.x,
-            cursor.y,
-            cursor.x + 0.0001,
-            cursor.y + 0.0001,
+            local_cursor_x,
+            local_cursor_y,
+            local_cursor_x + 0.0001,
+            local_cursor_y + 0.0001,
         ))
     }
 

@@ -237,3 +237,131 @@ fn pointer_events() {
 
     assert_eq!(*state.peek(), 6);
 }
+
+#[test]
+fn pointer_enter_leave_at_large_coordinates() {
+    fn app() -> Element {
+        let mut state = use_consume::<State<i32>>();
+        rect()
+            .expanded()
+            .background((255, 255, 255))
+            .children([
+                rect()
+                    .width(freya::prelude::Size::percent(100.))
+                    .height(freya::prelude::Size::px(3000.))
+                    .into(),
+                rect()
+                    .width(freya::prelude::Size::px(100.))
+                    .height(freya::prelude::Size::px(100.))
+                    .background((0, 0, 0))
+                    .on_pointer_enter(move |_| *state.write() += 1)
+                    .on_pointer_leave(move |_| *state.write() += 10)
+                    .into(),
+            ])
+            .into()
+    }
+
+    let (mut test, state) = TestingRunner::new(
+        app,
+        (4000., 4000.).into(),
+        |runner| runner.provide_root_context(|| State::create(0)),
+        1.,
+    );
+    test.sync_and_update();
+
+    test.move_cursor((10., 10.));
+    test.sync_and_update();
+    assert_eq!(*state.peek(), 0);
+
+    test.move_cursor((50., 3050.));
+    test.sync_and_update();
+    assert_eq!(*state.peek(), 1);
+
+    test.move_cursor((60., 3060.));
+    test.sync_and_update();
+    assert_eq!(*state.peek(), 1);
+
+    test.move_cursor((10., 10.));
+    test.sync_and_update();
+    assert_eq!(*state.peek(), 11);
+}
+
+#[test]
+fn large_coordinate_hover_does_not_trigger_other_elements() {
+    #[derive(Clone, Copy)]
+    struct NearCounter(State<i32>);
+
+    #[derive(Clone, Copy)]
+    struct FarCounter(State<i32>);
+
+    fn app() -> Element {
+        let mut near = use_consume::<NearCounter>().0;
+        let mut far = use_consume::<FarCounter>().0;
+        rect()
+            .expanded()
+            .background((255, 255, 255))
+            .children([
+                rect()
+                    .width(freya::prelude::Size::px(100.))
+                    .height(freya::prelude::Size::px(100.))
+                    .background((0, 0, 0))
+                    .on_pointer_enter(move |_| *near.write() += 1)
+                    .on_pointer_leave(move |_| *near.write() += 10)
+                    .into(),
+                rect()
+                    .width(freya::prelude::Size::percent(100.))
+                    .height(freya::prelude::Size::px(2900.))
+                    .into(),
+                rect()
+                    .width(freya::prelude::Size::px(100.))
+                    .height(freya::prelude::Size::px(100.))
+                    .background((40, 40, 40))
+                    .on_pointer_enter(move |_| *far.write() += 1)
+                    .on_pointer_leave(move |_| *far.write() += 10)
+                    .into(),
+            ])
+            .into()
+    }
+
+    let (mut test, (near, far)) = TestingRunner::new(
+        app,
+        (4000., 4000.).into(),
+        |runner| {
+            let near = runner.provide_root_context(|| NearCounter(State::create(0)));
+            let far = runner.provide_root_context(|| FarCounter(State::create(0)));
+            (near, far)
+        },
+        1.,
+    );
+    test.sync_and_update();
+
+    test.move_cursor((200., 200.));
+    test.sync_and_update();
+    assert_eq!(*near.0.peek(), 0);
+    assert_eq!(*far.0.peek(), 0);
+
+    test.move_cursor((50., 50.));
+    test.sync_and_update();
+    assert_eq!(*near.0.peek(), 1);
+    assert_eq!(*far.0.peek(), 0);
+
+    test.move_cursor((200., 200.));
+    test.sync_and_update();
+    assert_eq!(*near.0.peek(), 11);
+    assert_eq!(*far.0.peek(), 0);
+
+    test.move_cursor((50., 3050.));
+    test.sync_and_update();
+    assert_eq!(*near.0.peek(), 11);
+    assert_eq!(*far.0.peek(), 1);
+
+    test.move_cursor((60., 3060.));
+    test.sync_and_update();
+    assert_eq!(*near.0.peek(), 11);
+    assert_eq!(*far.0.peek(), 1);
+
+    test.move_cursor((200., 200.));
+    test.sync_and_update();
+    assert_eq!(*near.0.peek(), 11);
+    assert_eq!(*far.0.peek(), 11);
+}
