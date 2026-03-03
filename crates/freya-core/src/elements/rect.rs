@@ -95,6 +95,24 @@ impl Default for RectElement {
 }
 
 impl RectElement {
+    #[inline]
+    fn next_representable(value: f32) -> f32 {
+        if !value.is_finite() {
+            return value;
+        }
+
+        if value == 0.0 {
+            return f32::from_bits(1);
+        }
+
+        let bits = value.to_bits();
+        if value.is_sign_negative() {
+            f32::from_bits(bits - 1)
+        } else {
+            f32::from_bits(bits + 1)
+        }
+    }
+
     pub fn render_shadow(
         canvas: &Canvas,
         path: &mut SkPath,
@@ -461,12 +479,14 @@ impl ElementExt for RectElement {
         let rounded_rect = self.render_rect(&local_area, context.scale_factor as f32);
         let local_cursor_x = cursor.x - area.min_x();
         let local_cursor_y = cursor.y - area.min_y();
+        let local_cursor_next_x = Self::next_representable(local_cursor_x);
+        let local_cursor_next_y = Self::next_representable(local_cursor_y);
 
         rounded_rect.contains(SkRect::new(
             local_cursor_x,
             local_cursor_y,
-            local_cursor_x + 0.0001,
-            local_cursor_y + 0.0001,
+            local_cursor_next_x,
+            local_cursor_next_y,
         ))
     }
 
