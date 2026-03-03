@@ -61,10 +61,10 @@ use crate::{
 /// ```rust, no_run
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     svg(Bytes::from_static(include_bytes!("../../../../logo.svg")))
+///     svg(include_bytes!("../../../../logo.svg"))
 /// }
 /// ```
-pub fn svg(bytes: Bytes) -> Svg {
+pub fn svg(bytes: impl Into<Bytes>) -> Svg {
     let mut accessibility = AccessibilityData::default();
     accessibility.builder.set_role(accesskit::Role::SvgRoot);
 
@@ -74,7 +74,7 @@ pub fn svg(bytes: Bytes) -> Svg {
             accessibility,
             layout: LayoutData::default(),
             event_handlers: HashMap::default(),
-            bytes,
+            bytes: bytes.into(),
             effect: None,
             color: Color::BLACK,
             stroke: None,
