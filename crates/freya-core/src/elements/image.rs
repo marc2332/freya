@@ -54,6 +54,7 @@ use crate::{
         LayoutExt,
         MaybeExt,
     },
+    style::corner_radius::CornerRadius,
     tree::DiffModifies,
 };
 
@@ -74,6 +75,7 @@ pub fn image(image_holder: ImageHolder) -> Image {
             image_data: ImageData::default(),
             relative_layer: Layer::default(),
             effect: None,
+            corner_radius: None,
         },
         elements: Vec::new(),
     }
@@ -133,6 +135,7 @@ pub struct ImageElement {
     pub image_data: ImageData,
     pub relative_layer: Layer,
     pub effect: Option<EffectData>,
+    pub corner_radius: Option<CornerRadius>,
 }
 
 impl ElementExt for ImageElement {
@@ -167,7 +170,7 @@ impl ElementExt for ImageElement {
             diff.insert(DiffModifies::STYLE);
         }
 
-        if self.effect != image.effect {
+        if self.effect != image.effect || self.corner_radius != image.corner_radius {
             diff.insert(DiffModifies::STYLE);
         }
 
@@ -183,7 +186,10 @@ impl ElementExt for ImageElement {
     }
 
     fn style(&'_ self) -> Cow<'_, StyleState> {
-        Cow::Owned(StyleState::default())
+        Cow::Owned(StyleState {
+            corner_radius: self.corner_radius.unwrap_or_default(),
+            ..StyleState::default()
+        })
     }
 
     fn text_style(&'_ self) -> Cow<'_, TextStyleData> {
@@ -234,12 +240,8 @@ impl ElementExt for ImageElement {
     }
 
     fn clip(&self, context: ClipContext) {
-        let area = context.visible_area;
-        context.canvas.clip_rect(
-            SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
-            ClipOp::Intersect,
-            true,
-        );
+        let rrect = self.render_rect(context.visible_area, context.scale_factor as f32);
+        context.canvas.clip_rrect(rrect, ClipOp::Intersect, true);
     }
 
     fn render(&self, context: RenderContext) {
@@ -260,8 +262,6 @@ impl ElementExt for ImageElement {
             area.min_x() + size.width,
             area.min_y() + size.height,
         );
-        let clip_rect = SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
-
         if self.image_data.image_cover == ImageCover::Center {
             let width_offset = (size.width - area.width()) / 2.;
             let height_offset = (size.height - area.height()) / 2.;
@@ -273,7 +273,10 @@ impl ElementExt for ImageElement {
         }
 
         context.canvas.save();
-        context.canvas.clip_rect(clip_rect, ClipOp::Intersect, true);
+        let clip_rrect = self.render_rect(&area, context.scale_factor as f32);
+        context
+            .canvas
+            .clip_rrect(clip_rrect, ClipOp::Intersect, true);
 
         let sampling = match self.image_data.sampling_mode {
             SamplingMode::Nearest => SamplingOptions::new(FilterMode::Nearest, MipmapMode::None),
@@ -367,5 +370,10 @@ impl Image {
         (element as &dyn Any)
             .downcast_ref::<ImageElement>()
             .cloned()
+    }
+
+    pub fn corner_radius(mut self, corner_radius: impl Into<CornerRadius>) -> Self {
+        self.element.corner_radius = Some(corner_radius.into());
+        self
     }
 }
