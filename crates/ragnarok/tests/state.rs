@@ -29,6 +29,8 @@ enum EventName {
     KeyboardDown,
 
     CaptureGlobalMouseMove,
+
+    TouchReleased,
 }
 
 impl PartialOrd for EventName {
@@ -138,6 +140,7 @@ enum TestSourceEvent {
     MouseDown { cursor: CursorPoint },
     MouseMove { cursor: CursorPoint },
     MouseUp { cursor: CursorPoint },
+    TouchReleased { cursor: CursorPoint },
 }
 
 impl SourceEvent for TestSourceEvent {
@@ -151,11 +154,16 @@ impl SourceEvent for TestSourceEvent {
         matches!(self, Self::MouseMove { .. })
     }
 
+    fn is_touch_released(&self) -> bool {
+        matches!(self, Self::TouchReleased { .. })
+    }
+
     fn try_location(&self) -> Option<ragnarok::CursorPoint> {
         match self {
             Self::MouseDown { cursor } => Some(*cursor),
             Self::MouseMove { cursor } => Some(*cursor),
             Self::MouseUp { cursor } => Some(*cursor),
+            Self::TouchReleased { cursor } => Some(*cursor),
         }
     }
 
@@ -164,6 +172,7 @@ impl SourceEvent for TestSourceEvent {
             Self::MouseMove { .. } => EventName::MouseMove,
             Self::MouseDown { .. } => EventName::MouseDown,
             Self::MouseUp { .. } => EventName::MouseUp,
+            Self::TouchReleased { .. } => EventName::TouchReleased,
         }
     }
 }

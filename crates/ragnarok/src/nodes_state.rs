@@ -77,7 +77,7 @@ impl<Key: NodeKey> NodesState<Key> {
         });
 
         // Any movement event at all
-        let source_movement_event = source_events.iter().find(|e| e.is_moved());
+        let source_movement_event = source_events.iter().find(|e| e.is_moved() || e.is_touch_released());
 
         // Hovered Nodes
         self.hovered_nodes.retain(|node_key| {
