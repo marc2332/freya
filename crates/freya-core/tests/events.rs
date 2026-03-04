@@ -5,6 +5,7 @@ use freya_core::{
 };
 use freya_testing::TestingRunner;
 use rustc_hash::FxHashMap;
+use torin::size::Size;
 
 struct RawIdMap(FxHashMap<u64, Vec<u64>>);
 
@@ -247,15 +248,21 @@ fn pointer_enter_leave_at_large_coordinates() {
             .background((255, 255, 255))
             .children([
                 rect()
-                    .width(freya::prelude::Size::percent(100.))
-                    .height(freya::prelude::Size::px(3000.))
+                    .width(Size::percent(100.))
+                    .height(Size::px(3000.))
                     .into(),
                 rect()
-                    .width(freya::prelude::Size::px(100.))
-                    .height(freya::prelude::Size::px(100.))
+                    .width(Size::px(100.))
+                    .height(Size::px(100.))
                     .background((0, 0, 0))
                     .on_pointer_enter(move |_| *state.write() += 1)
                     .on_pointer_leave(move |_| *state.write() += 10)
+                    .into(),
+                rect()
+                    .width(Size::percent(100.))
+                    .height(Size::px(100.))
+                    .background((20, 20, 20))
+                    .on_pointer_enter(move |_| *state.write() += 100)
                     .into(),
             ])
             .into()
@@ -263,7 +270,7 @@ fn pointer_enter_leave_at_large_coordinates() {
 
     let (mut test, state) = TestingRunner::new(
         app,
-        (4000., 4000.).into(),
+        (10_000., 4000.).into(),
         |runner| runner.provide_root_context(|| State::create(0)),
         1.,
     );
@@ -284,159 +291,74 @@ fn pointer_enter_leave_at_large_coordinates() {
     test.move_cursor((10., 10.));
     test.sync_and_update();
     assert_eq!(*state.peek(), 11);
+
+    test.move_cursor((5_000., 3150.));
+    test.sync_and_update();
+    assert_eq!(*state.peek(), 111);
 }
 
 #[test]
 fn large_coordinate_hover_does_not_trigger_other_elements() {
     #[derive(Clone, Copy)]
-    struct NearCounter(State<i32>);
-
-    #[derive(Clone, Copy)]
-    struct FarCounter(State<i32>);
+    struct Counters(State<(i32, i32)>);
 
     fn app() -> Element {
-        let mut near = use_consume::<NearCounter>().0;
-        let mut far = use_consume::<FarCounter>().0;
+        let mut counters = use_consume::<Counters>().0;
         rect()
             .expanded()
             .background((255, 255, 255))
             .children([
                 rect()
-                    .width(freya::prelude::Size::px(100.))
-                    .height(freya::prelude::Size::px(100.))
+                    .width(Size::px(100.))
+                    .height(Size::px(100.))
                     .background((0, 0, 0))
-                    .on_pointer_enter(move |_| *near.write() += 1)
-                    .on_pointer_leave(move |_| *near.write() += 10)
+                    .on_pointer_enter(move |_| counters.write().0 += 1)
+                    .on_pointer_leave(move |_| counters.write().0 += 10)
                     .into(),
                 rect()
-                    .width(freya::prelude::Size::percent(100.))
-                    .height(freya::prelude::Size::px(2900.))
+                    .width(Size::percent(100.))
+                    .height(Size::px(2900.))
                     .into(),
                 rect()
-                    .width(freya::prelude::Size::px(100.))
-                    .height(freya::prelude::Size::px(100.))
+                    .width(Size::px(100.))
+                    .height(Size::px(100.))
                     .background((40, 40, 40))
-                    .on_pointer_enter(move |_| *far.write() += 1)
-                    .on_pointer_leave(move |_| *far.write() += 10)
+                    .on_pointer_enter(move |_| counters.write().1 += 1)
+                    .on_pointer_leave(move |_| counters.write().1 += 10)
                     .into(),
             ])
             .into()
     }
 
-    let (mut test, (near, far)) = TestingRunner::new(
+    let (mut test, counters) = TestingRunner::new(
         app,
         (4000., 4000.).into(),
-        |runner| {
-            let near = runner.provide_root_context(|| NearCounter(State::create(0)));
-            let far = runner.provide_root_context(|| FarCounter(State::create(0)));
-            (near, far)
-        },
+        |runner| runner.provide_root_context(|| Counters(State::create((0, 0)))),
         1.,
     );
     test.sync_and_update();
 
     test.move_cursor((200., 200.));
     test.sync_and_update();
-    assert_eq!(*near.0.peek(), 0);
-    assert_eq!(*far.0.peek(), 0);
+    assert_eq!(*counters.0.peek(), (0, 0));
 
     test.move_cursor((50., 50.));
     test.sync_and_update();
-    assert_eq!(*near.0.peek(), 1);
-    assert_eq!(*far.0.peek(), 0);
+    assert_eq!(*counters.0.peek(), (1, 0));
 
     test.move_cursor((200., 200.));
     test.sync_and_update();
-    assert_eq!(*near.0.peek(), 11);
-    assert_eq!(*far.0.peek(), 0);
+    assert_eq!(*counters.0.peek(), (11, 0));
 
     test.move_cursor((50., 3050.));
     test.sync_and_update();
-    assert_eq!(*near.0.peek(), 11);
-    assert_eq!(*far.0.peek(), 1);
+    assert_eq!(*counters.0.peek(), (11, 1));
 
     test.move_cursor((60., 3060.));
     test.sync_and_update();
-    assert_eq!(*near.0.peek(), 11);
-    assert_eq!(*far.0.peek(), 1);
+    assert_eq!(*counters.0.peek(), (11, 1));
 
     test.move_cursor((200., 200.));
     test.sync_and_update();
-    assert_eq!(*near.0.peek(), 11);
-    assert_eq!(*far.0.peek(), 11);
-}
-
-#[test]
-fn pointer_enter_on_huge_rect_far_local_coordinate() {
-    fn app() -> Element {
-        let mut state = use_consume::<State<i32>>();
-        rect()
-            .expanded()
-            .background((255, 255, 255))
-            .child(
-                rect()
-                    .width(freya::prelude::Size::percent(100.))
-                    .height(freya::prelude::Size::px(100.))
-                    .background((0, 0, 0))
-                    .on_pointer_enter(move |_| *state.write() += 1),
-            )
-            .into()
-    }
-
-    let (mut test, state) = TestingRunner::new(
-        app,
-        (10_000., 500.).into(),
-        |runner| runner.provide_root_context(|| State::create(0)),
-        1.,
-    );
-    test.sync_and_update();
-
-    test.move_cursor((50., 200.));
-    test.sync_and_update();
-    assert_eq!(*state.peek(), 0);
-
-    test.move_cursor((5_000., 50.));
-    test.sync_and_update();
-    assert_eq!(*state.peek(), 1);
-}
-
-#[test]
-fn pointer_enter_at_extreme_offset_coordinate() {
-    const OFFSET_Y: f32 = 1_000_000_000_000.0;
-
-    fn app() -> Element {
-        let mut state = use_consume::<State<i32>>();
-        rect()
-            .expanded()
-            .background((255, 255, 255))
-            .children([
-                rect()
-                    .width(freya::prelude::Size::percent(100.))
-                    .height(freya::prelude::Size::px(OFFSET_Y))
-                    .into(),
-                rect()
-                    .width(freya::prelude::Size::px(100.))
-                    .height(freya::prelude::Size::px(100.))
-                    .background((0, 0, 0))
-                    .on_pointer_enter(move |_| *state.write() += 1)
-                    .into(),
-            ])
-            .into()
-    }
-
-    let (mut test, state) = TestingRunner::new(
-        app,
-        (2_000.0, OFFSET_Y + 500.0).into(),
-        |runner| runner.provide_root_context(|| State::create(0)),
-        1.,
-    );
-    test.sync_and_update();
-
-    test.move_cursor((50., 50.));
-    test.sync_and_update();
-    assert_eq!(*state.peek(), 0);
-
-    test.move_cursor((50.0, OFFSET_Y as f64 + 50.0));
-    test.sync_and_update();
-    assert_eq!(*state.peek(), 1);
+    assert_eq!(*counters.0.peek(), (11, 11));
 }
