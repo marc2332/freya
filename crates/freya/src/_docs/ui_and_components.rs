@@ -120,3 +120,60 @@
 //!     }
 //! }
 //! ```
+//!
+//! ## Components vs Utility Functions
+//!
+//! Not every piece of reusable UI needs to be a full [Component](freya_core::prelude::Component).
+//! Sometimes a plain Rust function is simpler and more appropriate.
+//!
+//! ### Plain utility functions
+//!
+//! When you just want to reuse or encapsulate a chunk of UI with no internal state, a plain
+//! function is the simplest option — no boilerplate, no trait to implement.
+//!
+//! ```rust
+//! # use freya::prelude::*;
+//! fn colored_label(color: Color, text: &str) -> impl IntoElement {
+//!     label().color(color).text(text.to_string())
+//! }
+//!
+//! fn app() -> impl IntoElement {
+//!     rect()
+//!         .child(colored_label(Color::RED, "Error"))
+//!         .child(colored_label(Color::GREEN, "Success"))
+//! }
+//! ```
+//!
+//! ### Components with state or render optimization
+//!
+//! Use a [Component](freya_core::prelude::Component) when you need local state, as hooks like
+//! `use_state` only work inside a component's `render` method. Components also enable render
+//! optimization: because [Component](freya_core::prelude::Component) requires [`PartialEq`],
+//! Freya can skip re-running `render` and diffing the entire subtree when the component's data
+//! hasn't changed, something a plain function cannot do.
+//!
+//!
+//! ```rust
+//! # use freya::prelude::*;
+//! // This cannot be a plain function: it owns local state via `use_state`.
+//! // Also, if `initial` doesn't change between parent renders, Freya skips re-rendering
+//! // this component and its entire subtree entirely.
+//! #[derive(PartialEq)]
+//! struct Counter {
+//!     initial: i32,
+//! }
+//!
+//! impl Component for Counter {
+//!     fn render(&self) -> impl IntoElement {
+//!         let mut count = use_state(|| self.initial);
+//!
+//!         label()
+//!             .on_mouse_up(move |_| *count.write() += 1)
+//!             .text(format!("Count: {}", count.read()))
+//!     }
+//! }
+//!
+//! fn app() -> impl IntoElement {
+//!     Counter { initial: 0 }
+//! }
+//! ```
