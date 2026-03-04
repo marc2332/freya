@@ -72,6 +72,7 @@ use crate::{
         map_winit_touch_phase,
     },
 };
+use crate::drivers::GraphicsDriver;
 
 /// Returns `true` for accessibility roles that require IME input (text fields, terminals, etc.).
 fn is_ime_role(role: AccessibilityRole) -> bool {
@@ -324,6 +325,30 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
             let _ = self
                 .proxy
                 .send_event(NativeEvent::Generic(NativeGenericEvent::PollFutures));
+        } else {
+            let old_windows: Vec<_> = self.windows.drain().collect();
+            for (_, mut app_window) in old_windows {
+                let (new_driver, new_window) = GraphicsDriver::new(
+                    active_event_loop,
+                    app_window.attributes.clone(),
+                    &app_window.window_config,
+                );
+
+                let new_id = new_window.id();
+                app_window.driver = new_driver;
+                app_window.window = new_window;
+                app_window.process_layout_on_next_render = true;
+                app_window.tree.layout.reset();
+
+                self.windows.insert(new_id, app_window);
+
+                self.proxy
+                    .send_event(NativeEvent::Window(NativeWindowEvent {
+                        window_id: new_id,
+                        action: NativeWindowEventAction::PollRunner,
+                    }))
+                    .ok();
+            }
         }
     }
 
