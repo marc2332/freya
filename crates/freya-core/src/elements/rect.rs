@@ -459,16 +459,13 @@ impl ElementExt for RectElement {
         let cursor = context.cursor.to_f32();
         let local_area = Area::new((0., 0.).into(), area.size);
         let rounded_rect = self.render_rect(&local_area, context.scale_factor as f32);
-        let local_cursor_x = cursor.x - area.min_x();
-        let local_cursor_y = cursor.y - area.min_y();
-        let local_cursor_next_x = local_cursor_x.next_up();
-        let local_cursor_next_y = local_cursor_y.next_up();
-
+        let local_x = cursor.x - area.min_x();
+        let local_y = cursor.y - area.min_y();
         rounded_rect.contains(SkRect::new(
-            local_cursor_x,
-            local_cursor_y,
-            local_cursor_next_x,
-            local_cursor_next_y,
+            local_x,
+            local_y,
+            local_x.next_up(),
+            local_y.next_up(),
         ))
     }
 
