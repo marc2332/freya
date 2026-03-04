@@ -181,6 +181,7 @@ pub struct ImageViewer {
     image_data: ImageData,
     accessibility: AccessibilityData,
     effect: EffectData,
+    corner_radius: Option<CornerRadius>,
 
     children: Vec<Element>,
 
@@ -195,6 +196,7 @@ impl ImageViewer {
             image_data: ImageData::default(),
             accessibility: AccessibilityData::default(),
             effect: EffectData::default(),
+            corner_radius: None,
             children: Vec::new(),
             key: DiffKey::None,
         }
@@ -237,6 +239,13 @@ impl ChildrenExt for ImageViewer {
 impl EffectExt for ImageViewer {
     fn get_effect(&mut self) -> &mut EffectData {
         &mut self.effect
+    }
+}
+
+impl ImageViewer {
+    pub fn corner_radius(mut self, corner_radius: impl Into<CornerRadius>) -> Self {
+        self.corner_radius = Some(corner_radius.into());
+        self
     }
 }
 
@@ -299,6 +308,9 @@ impl Component for ImageViewer {
                     .image_data(self.image_data.clone())
                     .effect(self.effect.clone())
                     .children(self.children.clone())
+                    .map(self.corner_radius, |img, corner_radius| {
+                        img.corner_radius(corner_radius)
+                    })
                     .into_element()
             }
             Asset::Pending | Asset::Loading => rect()
