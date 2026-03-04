@@ -165,7 +165,7 @@ fn app() -> impl IntoElement {
                 holder: &holder.read(),
             });
         })
-        .on_global_mouse_up(move |_| editable.process_event(EditableEvent::Release))
+        .on_global_pointer_up(move |_| editable.process_event(EditableEvent::Release))
         .on_key_down(move |e: Event<KeyboardEventData>| {
             editable.process_event(EditableEvent::KeyDown {
                 key: &e.key,

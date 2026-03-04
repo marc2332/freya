@@ -413,9 +413,9 @@ impl Component for ResizableHandle {
             Cursor::set(cursor);
         };
 
-        let on_capture_global_mouse_move = {
+        let on_capture_global_pointer_move = {
             let mut registry = registry.clone();
-            move |e: Event<MouseEventData>| {
+            move |e: Event<PointerEventData>| {
                 if *clicking.read() {
                     e.prevent_default();
 
@@ -423,7 +423,7 @@ impl Component for ResizableHandle {
                         return;
                     }
 
-                    let coordinates = e.global_location;
+                    let coordinates = e.global_location();
                     let mut registry = registry.write();
 
                     let total_size = registry.panels.iter().fold(0., |acc, p| acc + p.size);
@@ -456,7 +456,7 @@ impl Component for ResizableHandle {
             clicking.set(true);
         };
 
-        let on_global_mouse_up = move |_| {
+        let on_global_pointer_press = move |_: Event<PointerEventData>| {
             if *clicking.read() {
                 if *status.peek() != HandleStatus::Hovering {
                     Cursor::set(CursorIcon::default());
@@ -486,9 +486,9 @@ impl Component for ResizableHandle {
                 allow_resizing.set(true);
             })
             .on_pointer_down(on_pointer_down)
-            .on_global_mouse_up(on_global_mouse_up)
+            .on_global_pointer_press(on_global_pointer_press)
             .on_pointer_enter(on_pointer_enter)
-            .on_capture_global_mouse_move(on_capture_global_mouse_move)
+            .on_capture_global_pointer_move(on_capture_global_pointer_move)
             .on_pointer_leave(on_pointer_leave)
     }
 }

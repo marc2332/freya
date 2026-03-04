@@ -97,9 +97,9 @@ fn app() -> impl IntoElement {
                                 handle.mouse_up(row, col, button);
                             }
                         })
-                        .on_global_mouse_up({
+                        .on_global_pointer_press({
                             let handle = handle.clone();
-                            move |_| {
+                            move |_: Event<PointerEventData>| {
                                 handle.release();
                             }
                         })

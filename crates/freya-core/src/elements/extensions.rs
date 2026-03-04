@@ -298,12 +298,18 @@ pub trait EventHandlersExt: Sized {
         mouse_up => EventName::MouseUp;
         mouse_move => EventName::MouseMove;
 
-        global_mouse_up => EventName::GlobalMouseUp;
-        global_mouse_down => EventName::GlobalMouseDown;
-        global_mouse_move => EventName::GlobalMouseMove;
+    }
 
-        capture_global_mouse_move => EventName::CaptureGlobalMouseMove;
-        capture_global_mouse_up => EventName::CaptureGlobalMouseUp;
+    event_handlers! {
+        Pointer,
+        PointerEventData;
+
+        global_pointer_press => EventName::GlobalPointerPress;
+        global_pointer_down => EventName::GlobalPointerDown;
+        global_pointer_move => EventName::GlobalPointerMove;
+
+        capture_global_pointer_move => EventName::CaptureGlobalPointerMove;
+        capture_global_pointer_press => EventName::CaptureGlobalPointerPress;
     }
 
     event_handlers! {

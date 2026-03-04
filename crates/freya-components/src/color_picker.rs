@@ -192,11 +192,11 @@ impl Component for ColorPicker {
             }
         };
 
-        let on_global_mouse_move = {
+        let on_global_pointer_move = {
             let on_change = self.on_change.clone();
-            move |e: Event<MouseEventData>| {
+            move |e: Event<PointerEventData>| {
                 if *pressing.read() {
-                    let coords = e.global_location;
+                    let coords = e.global_location();
                     let area = area.read().to_f64();
                     let rel_x = (((coords.x - area.min_x()) / area.width()).clamp(0., 1.)) as f32;
                     let rel_y = (((coords.y - area.min_y()) / area.height())
@@ -207,7 +207,7 @@ impl Component for ColorPicker {
                     color.with_mut(|mut color| *color = color.with_s(sat).with_v(v));
                     on_change.call(color());
                 } else if *pressing_hue.read() {
-                    let coords = e.global_location;
+                    let coords = e.global_location();
                     let area = hue_area.read().to_f64();
                     let rel_x = ((coords.x - area.min_x()) / area.width()).clamp(0.01, 1.) as f32;
                     color.with_mut(|mut color| *color = color.with_h(rel_x * 360.0));
@@ -216,7 +216,7 @@ impl Component for ColorPicker {
             }
         };
 
-        let on_global_mouse_up = move |_| {
+        let on_global_pointer_press = move |_| {
             // Only close the popup if it wasnt being pressed and it is open
             if is_open && !pressing() && !pressing_hue() {
                 open.set(false);
@@ -248,8 +248,8 @@ impl Component for ColorPicker {
         let (scale, opacity) = animation.read().value();
 
         let popup = rect()
-            .on_global_mouse_move(on_global_mouse_move)
-            .on_global_mouse_up(on_global_mouse_up)
+            .on_global_pointer_move(on_global_pointer_move)
+            .on_global_pointer_press(on_global_pointer_press)
             .width(self.width.clone())
             .padding(8.)
             .corner_radius(6.)

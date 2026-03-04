@@ -175,14 +175,14 @@ impl Component for Slider {
             }
         };
 
-        let on_global_mouse_up = move |_| {
+        let on_global_pointer_press = move |_: Event<PointerEventData>| {
             clicking.set(false);
         };
 
-        let on_global_mouse_move = move |e: Event<MouseEventData>| {
+        let on_global_pointer_move = move |e: Event<PointerEventData>| {
             e.stop_propagation();
             if *clicking.peek() {
-                let coordinates = e.global_location;
+                let coordinates = e.global_location();
                 let percentage = if direction_is_vertical {
                     let y = coordinates.y - size.read().min_y() as f64 - 8.0;
                     100. - (y / (size.read().height() as f64 - 15.0) * 100.0)
@@ -281,8 +281,8 @@ impl Component for Slider {
             .maybe(self.enabled, |rect| {
                 rect.on_key_down(on_key_down)
                     .on_pointer_down(on_pointer_down)
-                    .on_global_mouse_move(on_global_mouse_move)
-                    .on_global_mouse_up(on_global_mouse_up)
+                    .on_global_pointer_move(on_global_pointer_move)
+                    .on_global_pointer_press(on_global_pointer_press)
             })
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)

@@ -27,7 +27,7 @@ impl NativeRouter {
 impl Component for NativeRouter {
     fn render(&self) -> impl IntoElement {
         rect()
-            .on_global_mouse_up(|e: Event<MouseEventData>| match e.button {
+            .on_global_pointer_press(|e: Event<PointerEventData>| match e.button() {
                 Some(MouseButton::Back) => RouterContext::get().go_back(),
                 Some(MouseButton::Forward) => RouterContext::get().go_forward(),
                 _ => {}
