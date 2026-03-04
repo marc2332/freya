@@ -68,7 +68,8 @@ pub fn launch(launch_config: LaunchConfig) {
     };
     use winit::event_loop::EventLoop;
 
-    let mut event_loop_builder = EventLoop::<NativeEvent>::with_user_event();
+    let mut event_loop_builder = launch_config.event_loop_builder
+        .unwrap_or_else(|| EventLoop::<NativeEvent>::with_user_event());
 
     let event_loop = event_loop_builder
         .build()

@@ -21,7 +21,7 @@ use winit::{
         WindowId,
     },
 };
-
+use winit::event_loop::EventLoopBuilder;
 use crate::{
     plugins::{
         FreyaPlugin,
@@ -29,6 +29,7 @@ use crate::{
     },
     renderer::LaunchProxy,
 };
+use crate::renderer::NativeEvent;
 
 pub type WindowBuilderHook =
     Box<dyn FnOnce(WindowAttributes, &ActiveEventLoop) -> WindowAttributes + Send + Sync>;
@@ -230,6 +231,7 @@ pub struct LaunchConfig {
     pub(crate) embedded_fonts: EmbeddedFonts,
     pub(crate) fallback_fonts: Vec<Cow<'static, str>>,
     pub(crate) tasks: Vec<TaskHandler>,
+    pub(crate) event_loop_builder: Option<EventLoopBuilder<NativeEvent>>,
 }
 
 impl Default for LaunchConfig {
@@ -242,6 +244,7 @@ impl Default for LaunchConfig {
             embedded_fonts: Default::default(),
             fallback_fonts: default_fonts(),
             tasks: Vec::new(),
+            event_loop_builder: None,
         }
     }
 }
@@ -337,6 +340,11 @@ impl LaunchConfig {
     {
         self.tasks
             .push(Box::new(move |proxy| Box::pin(task(proxy))));
+        self
+    }
+
+    pub fn with_event_loop_builder(mut self, event_loop_builder: EventLoopBuilder<NativeEvent>) -> Self {
+        self.event_loop_builder.replace(event_loop_builder);
         self
     }
 }
