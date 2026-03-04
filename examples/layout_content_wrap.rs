@@ -45,7 +45,8 @@ fn app() -> impl IntoElement {
         .content(Content::Flex)
         .child(
             rect()
-                .content(Content::Wrap)
+                .content(Content::wrap_spacing(10.))
+                .spacing(10.)
                 .width(Size::fill())
                 .height(Size::flex(1.))
                 .horizontal()
@@ -53,7 +54,7 @@ fn app() -> impl IntoElement {
         )
         .child(
             rect()
-                .content(Content::Wrap)
+                .content(Content::wrap())
                 .width(Size::fill())
                 .height(Size::flex(1.))
                 .children(cards()),

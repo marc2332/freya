@@ -1,11 +1,14 @@
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(PartialEq, Eq, Clone, Debug, Default)]
+#[derive(PartialEq, Clone, Debug, Default)]
 pub enum Content {
     #[default]
     Normal,
     Fit,
     Flex,
-    Wrap,
+    /// Wraps children to the next line/column, with an optional gap between wrapped lines.
+    Wrap {
+        wrap_spacing: Option<f32>,
+    },
 }
 
 impl Content {
@@ -18,7 +21,7 @@ impl Content {
     }
 
     pub fn is_wrap(&self) -> bool {
-        self == &Self::Wrap
+        matches!(self, Self::Wrap { .. })
     }
 
     pub fn allows_alignments(&self) -> bool {
@@ -32,7 +35,7 @@ impl Content {
             Self::Normal => "normal".to_owned(),
             Self::Fit => "fit".to_owned(),
             Self::Flex => "flex".to_owned(),
-            Self::Wrap => "wrap".to_owned(),
+            Self::Wrap { .. } => "wrap".to_owned(),
         }
     }
 }
