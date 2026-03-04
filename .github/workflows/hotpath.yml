@@ -40,6 +40,7 @@ jobs:
           HOTPATH_OUTPUT_FORMAT: json
         run: |
           # Extract timing metrics from head branch
+          git checkout ${{ github.event.pull_request.head.sha }}
           {
             echo 'metrics<<EOF'
             just ps-ci | grep '^{"hotpath_profiling_mode"'
@@ -50,18 +51,18 @@ jobs:
           HOTPATH_OUTPUT_FORMAT: json
         run: |
           # Extract timing metrics from base branch
-          git checkout ${{ github.event.pull_request.base.ref }}
+          git checkout ${{ github.event.pull_request.base.sha }}
           {
             echo 'metrics<<EOF'
             just ps-ci | grep '^{"hotpath_profiling_mode"'
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
-          git checkout ${{ github.event.pull_request.head.ref }}
       - id: head_alloc_metrics
         env:
           HOTPATH_OUTPUT_FORMAT: json
         run: |
           # Extract alloc metrics from head branch
+          git checkout ${{ github.event.pull_request.head.sha }}
           {
             echo 'metrics<<EOF'
             just pa-ci | grep '^{"hotpath_profiling_mode"'
@@ -72,13 +73,12 @@ jobs:
           HOTPATH_OUTPUT_FORMAT: json
         run: |
           # Extract alloc metrics from base branch
-          git checkout ${{ github.event.pull_request.base.ref }}
+          git checkout ${{ github.event.pull_request.base.sha }}
           {
             echo 'metrics<<EOF'
             just pa-ci | grep '^{"hotpath_profiling_mode"'
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
-          git checkout ${{ github.event.pull_request.head.ref }}
       - name: Post PR comment - alloc mode
         env:
           GH_TOKEN: ${{ github.token }}

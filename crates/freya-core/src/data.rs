@@ -293,7 +293,6 @@ pub struct EffectState {
 
     pub opacities: Rc<[f32]>,
 
-    pub blurs: Rc<[NodeId]>,
     pub blur: Option<f32>,
 
     pub scrollables: Rc<[NodeId]>,
@@ -312,6 +311,9 @@ impl EffectState {
     ) {
         *self = Self {
             overflow: Overflow::default(),
+            blur: None,
+            rotation: None,
+            scale: None,
             ..parent_effect_state.clone()
         };
 
@@ -331,6 +333,7 @@ impl EffectState {
 
         if let Some(effect_data) = effect_data {
             self.overflow = effect_data.overflow;
+            self.blur = effect_data.blur;
 
             if let Some(rotation) = effect_data.rotation {
                 let mut rotations = parent_effect_state.rotations.to_vec();
@@ -355,15 +358,6 @@ impl EffectState {
                 opacities.push(opacity);
                 if self.opacities.as_ref() != opacities {
                     self.opacities = Rc::from(opacities);
-                }
-            }
-
-            if let Some(blur) = effect_data.blur {
-                let mut blurs = parent_effect_state.blurs.to_vec();
-                blurs.push(node_id);
-                self.blur = Some(blur);
-                if self.blurs.as_ref() != blurs {
-                    self.blurs = Rc::from(blurs);
                 }
             }
 

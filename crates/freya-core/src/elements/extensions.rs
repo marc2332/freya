@@ -31,7 +31,9 @@ use torin::{
 use crate::{
     data::{
         AccessibilityData,
+        EffectData,
         LayoutData,
+        Overflow,
         TextStyleData,
     },
     diff_key::DiffKey,
@@ -63,6 +65,7 @@ use crate::{
         font_slant::FontSlant,
         font_weight::FontWeight,
         font_width::FontWidth,
+        scale::Scale,
         text_height::TextHeightBehavior,
         text_overflow::TextOverflow,
         text_shadow::TextShadow,
@@ -891,6 +894,40 @@ where
 
     fn interactive(mut self, interactive: impl Into<Interactive>) -> Self {
         self.get_effect().interactive = interactive.into();
+        self
+    }
+}
+
+pub trait EffectExt: Sized {
+    fn get_effect(&mut self) -> &mut EffectData;
+
+    fn effect(mut self, effect: EffectData) -> Self {
+        *self.get_effect() = effect;
+        self
+    }
+
+    fn overflow(mut self, overflow: impl Into<Overflow>) -> Self {
+        self.get_effect().overflow = overflow.into();
+        self
+    }
+
+    fn blur(mut self, blur: impl Into<f32>) -> Self {
+        self.get_effect().blur = Some(blur.into());
+        self
+    }
+
+    fn rotation(mut self, rotation: impl Into<f32>) -> Self {
+        self.get_effect().rotation = Some(rotation.into());
+        self
+    }
+
+    fn opacity(mut self, opacity: impl Into<f32>) -> Self {
+        self.get_effect().opacity = Some(opacity.into());
+        self
+    }
+
+    fn scale(mut self, scale: impl Into<Scale>) -> Self {
+        self.get_effect().scale = Some(scale.into());
         self
     }
 }

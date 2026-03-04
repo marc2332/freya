@@ -46,6 +46,10 @@ pub fn map_winit_key(key: &winit::keyboard::Key) -> Key {
     match key {
         winit::keyboard::Key::Character(c) => Key::Character(c.to_string()),
 
+        winit::keyboard::Key::Unidentified(winit::keyboard::NativeKey::Xkb(0xFE50)) => {
+            Key::Character("`".to_string())
+        }
+        winit::keyboard::Key::Dead(Some('`')) => Key::Character("`".to_string()),
         winit::keyboard::Key::Named(named_key) => match named_key {
             winit::keyboard::NamedKey::Space => Key::Character(" ".to_string()),
 
@@ -348,6 +352,7 @@ pub fn map_winit_physical_key(key: &winit::keyboard::PhysicalKey) -> Code {
             winit::keyboard::KeyCode::Copy => Code::Copy,
             winit::keyboard::KeyCode::Paste => Code::Paste,
             winit::keyboard::KeyCode::Cut => Code::Cut,
+            winit::keyboard::KeyCode::Backquote => Code::Backquote,
             _ => Code::Unidentified,
         }
     } else {
