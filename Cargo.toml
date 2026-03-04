@@ -177,7 +177,7 @@ skia-safe = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 
-rand = "0.9"
+rand = "0.10"
 
 async-io = { workspace = true }
 futures-lite = { workspace = true }
