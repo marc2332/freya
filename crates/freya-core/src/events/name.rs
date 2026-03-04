@@ -25,6 +25,10 @@ pub enum EventName {
     GlobalPointerPress,
     GlobalPointerDown,
 
+    GlobalTouchMove,
+    GlobalTouchEnd,
+    GlobalTouchStart,
+
     GlobalKeyDown,
     GlobalKeyUp,
 
@@ -33,6 +37,9 @@ pub enum EventName {
 
     CaptureGlobalPointerMove,
     CaptureGlobalPointerPress,
+
+    CaptureGlobalTouchMove,
+    CaptureGlobalTouchEnd,
 
     Wheel,
 

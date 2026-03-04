@@ -345,6 +345,13 @@ pub trait EventHandlersExt: Sized {
         touch_start => EventName::TouchStart;
         touch_move => EventName::TouchMove;
         touch_end => EventName::TouchEnd;
+
+        global_touch_end => EventName::GlobalTouchEnd;
+        global_touch_start => EventName::GlobalTouchStart;
+        global_touch_move => EventName::GlobalTouchMove;
+
+        capture_global_touch_move => EventName::CaptureGlobalTouchMove;
+        capture_global_touch_end => EventName::CaptureGlobalTouchEnd;
     }
 
     event_handlers! {
