@@ -220,7 +220,7 @@ impl Component for ResizableContainer {
         let direction = use_reactive(&self.direction);
         use_provide_context(|| {
             self.controller.clone().unwrap_or_else(|| {
-                let state = State::create(ResizableContext {
+                let mut state = State::create(ResizableContext {
                     direction: self.direction,
                     ..Default::default()
                 });
