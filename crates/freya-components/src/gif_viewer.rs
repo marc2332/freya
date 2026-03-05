@@ -160,15 +160,6 @@ impl Hash for GifSource {
 }
 
 impl GifSource {
-    /// Returns the unique ID of this source.
-    pub fn id(&self) -> u64 {
-        let mut hasher = DefaultHasher::default();
-        self.hash(&mut hasher);
-        hasher.finish()
-    }
-}
-
-impl GifSource {
     pub async fn bytes(&self) -> anyhow::Result<Bytes> {
         let source = self.clone();
         blocking::unblock(move || {
@@ -271,7 +262,7 @@ enum Status {
 
 impl Component for GifViewer {
     fn render(&self) -> impl IntoElement {
-        let asset_config = AssetConfiguration::new(self.source.id(), AssetAge::default());
+        let asset_config = AssetConfiguration::new(&self.source, AssetAge::default());
         let asset_data = use_asset(&asset_config);
         let mut status = use_state(|| Status::Decoding);
         let mut cached_frames = use_state::<Option<Rc<CachedGifFrames>>>(|| None);
