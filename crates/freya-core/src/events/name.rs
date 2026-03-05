@@ -25,10 +25,6 @@ pub enum EventName {
     GlobalPointerPress,
     GlobalPointerDown,
 
-    GlobalTouchMove,
-    GlobalTouchEnd,
-    GlobalTouchStart,
-
     GlobalKeyDown,
     GlobalKeyUp,
 
@@ -37,9 +33,6 @@ pub enum EventName {
 
     CaptureGlobalPointerMove,
     CaptureGlobalPointerPress,
-
-    CaptureGlobalTouchMove,
-    CaptureGlobalTouchEnd,
 
     Wheel,
 
@@ -235,7 +228,7 @@ impl ragnarok::NameOfEvent for EventName {
     }
 
     fn is_pressed(&self) -> bool {
-        matches!(self, Self::MouseDown | Self::PointerDown | Self::TouchStart)
+        matches!(self, Self::MouseDown | Self::PointerDown)
     }
 
     fn is_released(&self) -> bool {

@@ -345,13 +345,6 @@ pub trait EventHandlersExt: Sized {
         touch_start => EventName::TouchStart;
         touch_move => EventName::TouchMove;
         touch_end => EventName::TouchEnd;
-
-        global_touch_end => EventName::GlobalTouchEnd;
-        global_touch_start => EventName::GlobalTouchStart;
-        global_touch_move => EventName::GlobalTouchMove;
-
-        capture_global_touch_move => EventName::CaptureGlobalTouchMove;
-        capture_global_touch_end => EventName::CaptureGlobalTouchEnd;
     }
 
     event_handlers! {
@@ -413,14 +406,14 @@ pub trait EventHandlersExt: Sized {
                 }
             }
         })
-        .on_key_down({
-            let on_press = on_press.clone();
-            move |e: Event<KeyboardEventData>| {
-                if Focus::is_pressed(&e) {
-                    on_press.call(e.map(PressEventData::Keyboard))
+            .on_key_down({
+                let on_press = on_press.clone();
+                move |e: Event<KeyboardEventData>| {
+                    if Focus::is_pressed(&e) {
+                        on_press.call(e.map(PressEventData::Keyboard))
+                    }
                 }
-            }
-        })
+            })
     }
 
     /// Also called the context menu click in other platforms.
@@ -465,14 +458,14 @@ pub trait EventHandlersExt: Sized {
                 }
             }
         })
-        .on_key_down({
-            let on_press = on_press.clone();
-            move |e: Event<KeyboardEventData>| {
-                if Focus::is_pressed(&e) {
-                    on_press.call(e.map(PressEventData::Keyboard))
+            .on_key_down({
+                let on_press = on_press.clone();
+                move |e: Event<KeyboardEventData>| {
+                    if Focus::is_pressed(&e) {
+                        on_press.call(e.map(PressEventData::Keyboard))
+                    }
                 }
-            }
-        })
+            })
     }
 }
 
