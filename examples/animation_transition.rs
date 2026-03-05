@@ -6,7 +6,7 @@ use freya::{
     animation::*,
     prelude::*,
 };
-use rand::Rng;
+use rand::RngExt;
 
 fn random_color() -> Color {
     let mut rng = rand::rng();

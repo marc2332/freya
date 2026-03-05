@@ -54,6 +54,35 @@ use crate::{
     tree::DiffModifies,
 };
 
+/// SVG bytes that can be constructed from [`Bytes`], [`Vec<u8>`], `&'static [u8]`,
+/// or `&'static [u8; N]` (the type returned by [`include_bytes!`]).
+#[derive(Clone, PartialEq)]
+pub struct SvgBytes(Bytes);
+
+impl From<Bytes> for SvgBytes {
+    fn from(bytes: Bytes) -> Self {
+        Self(bytes)
+    }
+}
+
+impl From<Vec<u8>> for SvgBytes {
+    fn from(bytes: Vec<u8>) -> Self {
+        Self(Bytes::from(bytes))
+    }
+}
+
+impl From<&'static [u8]> for SvgBytes {
+    fn from(bytes: &'static [u8]) -> Self {
+        Self(Bytes::from_static(bytes))
+    }
+}
+
+impl<const N: usize> From<&'static [u8; N]> for SvgBytes {
+    fn from(bytes: &'static [u8; N]) -> Self {
+        Self(Bytes::from_static(bytes))
+    }
+}
+
 /// Use [svg()] to render SVG in your app.
 ///
 /// See the available methods in [Svg].
@@ -61,10 +90,10 @@ use crate::{
 /// ```rust, no_run
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     svg(Bytes::from_static(include_bytes!("../../../../logo.svg")))
+///     svg(include_bytes!("../../../../logo.svg"))
 /// }
 /// ```
-pub fn svg(bytes: Bytes) -> Svg {
+pub fn svg(bytes: impl Into<SvgBytes>) -> Svg {
     let mut accessibility = AccessibilityData::default();
     accessibility.builder.set_role(accesskit::Role::SvgRoot);
 
@@ -74,7 +103,7 @@ pub fn svg(bytes: Bytes) -> Svg {
             accessibility,
             layout: LayoutData::default(),
             event_handlers: HashMap::default(),
-            bytes,
+            bytes: bytes.into(),
             effect: None,
             color: Color::BLACK,
             stroke: None,
@@ -89,7 +118,7 @@ pub struct SvgElement {
     pub accessibility: AccessibilityData,
     pub layout: LayoutData,
     pub event_handlers: FxHashMap<EventName, EventHandlerType>,
-    pub bytes: Bytes,
+    pub bytes: SvgBytes,
     pub color: Color,
     pub stroke: Option<Color>,
     pub fill: Option<Color>,
@@ -169,7 +198,7 @@ impl ElementExt for SvgElement {
 
     fn measure(&self, context: LayoutContext) -> Option<(Size2D, Rc<dyn Any>)> {
         let resource_provider = LocalResourceProvider::new(context.font_manager);
-        let svg_dom = svg::Dom::from_bytes(&self.bytes, resource_provider);
+        let svg_dom = svg::Dom::from_bytes(&self.bytes.0, resource_provider);
         if let Ok(mut svg_dom) = svg_dom {
             svg_dom.set_container_size(context.area_size.to_i32().to_tuple());
             let mut root = svg_dom.root();

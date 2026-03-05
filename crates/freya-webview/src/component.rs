@@ -82,9 +82,17 @@ impl LayoutExt for WebView {
 }
 impl ContainerExt for WebView {}
 
+const WEBVIEW_CONTEXT_ERROR: &str = "
+Error: Make sure to register the WebViewPlugin in your LaunchConfig:
+
+LaunchConfig::new()
+    .with_plugin(WebViewPlugin::new())
+";
+
 impl Component for WebView {
     fn render(&self) -> impl IntoElement {
-        let events = consume_root_context::<crate::lifecycle::WebViewEvents>();
+        let events = try_consume_root_context::<crate::lifecycle::WebViewEvents>()
+            .expect(WEBVIEW_CONTEXT_ERROR);
 
         let webview_id = self.webview_id;
         let url = self.url.clone();

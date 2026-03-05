@@ -131,8 +131,8 @@ ash = "^0.38"
 ash-window = "0.13.0"
 
 # accessibility
-accesskit = "0.23.0"
-accesskit_winit = "0.31.0"
+accesskit = "0.24.0"
+accesskit_winit = "0.32.0"
 
 # Performance
 hotpath = "0.10"
@@ -177,7 +177,7 @@ skia-safe = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 
-rand = "0.9"
+rand = "0.10"
 
 async-io = { workspace = true }
 futures-lite = { workspace = true }

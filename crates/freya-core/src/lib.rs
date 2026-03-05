@@ -94,6 +94,7 @@ pub mod prelude {
             },
             svg::{
                 Svg,
+                SvgBytes,
                 svg,
             },
         },
