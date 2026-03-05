@@ -454,15 +454,20 @@ impl ElementExt for RectElement {
         Some(Cow::Borrowed(&self.event_handlers))
     }
 
+    /// Checks if the cursor point is inside the rounded rectangle of this element, 
+    /// using local coordinates relative to the element's visible area for improved precision with large absolute coordinates.
     fn is_point_inside(&self, context: EventMeasurementContext) -> bool {
         let area = context.layout_node.visible_area();
         let cursor = context.cursor.to_f32();
-        let rounded_rect = self.render_rect(&area, context.scale_factor as f32);
+        let local_area = Area::new((0., 0.).into(), area.size);
+        let rounded_rect = self.render_rect(&local_area, context.scale_factor as f32);
+        let local_x = cursor.x - area.min_x();
+        let local_y = cursor.y - area.min_y();
         rounded_rect.contains(SkRect::new(
-            cursor.x,
-            cursor.y,
-            cursor.x + 0.0001,
-            cursor.y + 0.0001,
+            local_x,
+            local_y,
+            local_x.next_up(),
+            local_y.next_up(),
         ))
     }
 
