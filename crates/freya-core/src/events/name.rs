@@ -78,7 +78,7 @@ impl EventName {
         )
     }
 
-    /// Check if this is a global pointer event (produces [`PointerEventData`])
+    /// Check if this is a global pointer event
     pub fn is_global_pointer(&self) -> bool {
         matches!(
             self,
