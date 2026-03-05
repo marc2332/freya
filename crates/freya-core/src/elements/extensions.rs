@@ -182,6 +182,7 @@ pub trait ContentExt {
     fn fit() -> Content;
     fn flex() -> Content;
     fn wrap() -> Content;
+    fn wrap_spacing(spacing: f32) -> Content;
 }
 
 impl ContentExt for Content {
@@ -198,7 +199,13 @@ impl ContentExt for Content {
     }
 
     fn wrap() -> Content {
-        Content::Wrap
+        Content::Wrap { wrap_spacing: None }
+    }
+
+    fn wrap_spacing(spacing: f32) -> Content {
+        Content::Wrap {
+            wrap_spacing: Some(spacing),
+        }
     }
 }
 

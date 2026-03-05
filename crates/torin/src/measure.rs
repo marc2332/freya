@@ -17,6 +17,7 @@ use crate::{
         AreaOf,
         Available,
         AvailableAreaModel,
+        Content,
         Direction,
         Inner,
         LayoutMetadata,
@@ -695,11 +696,11 @@ where
                 }
             }
 
-            if parent_node.content.is_wrap() {
+            if let Content::Wrap { wrap_spacing } = parent_node.content {
                 let initial_phase_size = initial_phase_sizes.get(&child_id);
-                // Wrap this child
                 Self::wrap_child(
-                    parent_node,
+                    wrap_spacing.unwrap_or_default(),
+                    parent_node.direction,
                     initial_phase_size,
                     &initial_available_area,
                     parent_area,
@@ -746,8 +747,10 @@ where
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn wrap_child(
-        parent_node: &Node,
+        wrap_spacing: f32,
+        direction: Direction,
         initial_phase_size: Option<&Size2D>,
         initial_available_area: &AreaOf<Available>,
         parent_area: &mut AreaOf<Parent>,
@@ -756,27 +759,29 @@ where
         inner_sizes: Size2D,
     ) {
         if let Some(initial_phase_size) = initial_phase_size {
-            match parent_node.direction {
+            match direction {
                 Direction::Vertical => {
                     if adapted_available_area.height() - initial_phase_size.height < 0. {
+                        let advance = inner_sizes.width + wrap_spacing;
                         available_area.origin.y = initial_available_area.origin.y;
                         available_area.size.height = initial_available_area.size.height;
-                        available_area.origin.x += inner_sizes.width;
+                        available_area.origin.x += advance;
                         adapted_available_area.origin.y = initial_available_area.origin.y;
                         adapted_available_area.size.height = initial_available_area.size.height;
-                        adapted_available_area.origin.x += inner_sizes.width;
-                        parent_area.size.width += inner_sizes.width;
+                        adapted_available_area.origin.x += advance;
+                        parent_area.size.width += advance;
                     }
                 }
                 Direction::Horizontal => {
                     if adapted_available_area.width() - initial_phase_size.width < 0. {
+                        let advance = inner_sizes.height + wrap_spacing;
                         available_area.origin.x = initial_available_area.origin.x;
                         available_area.size.width = initial_available_area.size.width;
-                        available_area.origin.y += inner_sizes.height;
+                        available_area.origin.y += advance;
                         adapted_available_area.origin.x = initial_available_area.origin.x;
                         adapted_available_area.size.width = initial_available_area.size.width;
-                        adapted_available_area.origin.y += inner_sizes.height;
-                        parent_area.size.height += inner_sizes.height;
+                        adapted_available_area.origin.y += advance;
+                        parent_area.size.height += advance;
                     }
                 }
             }
