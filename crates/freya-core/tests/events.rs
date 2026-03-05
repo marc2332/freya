@@ -5,6 +5,7 @@ use freya_core::{
 };
 use freya_testing::TestingRunner;
 use rustc_hash::FxHashMap;
+use torin::size::Size;
 
 struct RawIdMap(FxHashMap<u64, Vec<u64>>);
 
@@ -236,4 +237,128 @@ fn pointer_events() {
     test.sync_and_update();
 
     assert_eq!(*state.peek(), 6);
+}
+
+#[test]
+fn pointer_enter_leave_at_large_coordinates() {
+    fn app() -> Element {
+        let mut state = use_consume::<State<i32>>();
+        rect()
+            .expanded()
+            .background((255, 255, 255))
+            .children([
+                rect()
+                    .width(Size::percent(100.))
+                    .height(Size::px(3000.))
+                    .into(),
+                rect()
+                    .width(Size::px(100.))
+                    .height(Size::px(100.))
+                    .background((0, 0, 0))
+                    .on_pointer_enter(move |_| *state.write() += 1)
+                    .on_pointer_leave(move |_| *state.write() += 10)
+                    .into(),
+                rect()
+                    .width(Size::percent(100.))
+                    .height(Size::px(100.))
+                    .background((20, 20, 20))
+                    .on_pointer_enter(move |_| *state.write() += 100)
+                    .into(),
+            ])
+            .into()
+    }
+
+    let (mut test, state) = TestingRunner::new(
+        app,
+        (10_000., 4000.).into(),
+        |runner| runner.provide_root_context(|| State::create(0)),
+        1.,
+    );
+    test.sync_and_update();
+
+    test.move_cursor((10., 10.));
+    test.sync_and_update();
+    assert_eq!(*state.peek(), 0);
+
+    test.move_cursor((50., 3050.));
+    test.sync_and_update();
+    assert_eq!(*state.peek(), 1);
+
+    test.move_cursor((60., 3060.));
+    test.sync_and_update();
+    assert_eq!(*state.peek(), 1);
+
+    test.move_cursor((10., 10.));
+    test.sync_and_update();
+    assert_eq!(*state.peek(), 11);
+
+    test.move_cursor((5_000., 3150.));
+    test.sync_and_update();
+    assert_eq!(*state.peek(), 111);
+}
+
+#[test]
+fn large_coordinate_hover_does_not_trigger_other_elements() {
+    #[derive(Clone, Copy)]
+    struct Counters(State<(i32, i32)>);
+
+    fn app() -> Element {
+        let mut counters = use_consume::<Counters>().0;
+        rect()
+            .expanded()
+            .background((255, 255, 255))
+            .children([
+                rect()
+                    .width(Size::px(100.))
+                    .height(Size::px(100.))
+                    .background((0, 0, 0))
+                    .on_pointer_enter(move |_| counters.write().0 += 1)
+                    .on_pointer_leave(move |_| counters.write().0 += 10)
+                    .into(),
+                rect()
+                    .width(Size::percent(100.))
+                    .height(Size::px(2900.))
+                    .into(),
+                rect()
+                    .width(Size::px(100.))
+                    .height(Size::px(100.))
+                    .background((40, 40, 40))
+                    .on_pointer_enter(move |_| counters.write().1 += 1)
+                    .on_pointer_leave(move |_| counters.write().1 += 10)
+                    .into(),
+            ])
+            .into()
+    }
+
+    let (mut test, counters) = TestingRunner::new(
+        app,
+        (4000., 4000.).into(),
+        |runner| runner.provide_root_context(|| Counters(State::create((0, 0)))),
+        1.,
+    );
+    test.sync_and_update();
+
+    test.move_cursor((200., 200.));
+    test.sync_and_update();
+    assert_eq!(*counters.0.peek(), (0, 0));
+
+    test.move_cursor((50., 50.));
+    test.sync_and_update();
+    assert_eq!(*counters.0.peek(), (1, 0));
+
+    test.move_cursor((200., 200.));
+    test.sync_and_update();
+    assert_eq!(*counters.0.peek(), (11, 0));
+
+    test.move_cursor((50., 3050.));
+    test.sync_and_update();
+    assert_eq!(*counters.0.peek(), (11, 1));
+
+    test.move_cursor((60., 3060.));
+    test.sync_and_update();
+    assert_eq!(*counters.0.peek(), (11, 1));
+
+    test.move_cursor((200., 200.));
+    test.sync_and_update();
+    assert_eq!(*counters.0.peek(), (11, 11));
 }
