@@ -314,7 +314,7 @@ impl AppWindow {
 
             animation_clock,
 
-            background: window_config.background.clone(),
+            background: window_config.background,
 
             dropped_file_paths: Vec::new(),
 
