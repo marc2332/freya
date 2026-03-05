@@ -177,7 +177,7 @@ impl Component for Slider {
         let on_global_pointer_move = move |e: Event<PointerEventData>| {
             e.stop_propagation();
             if *clicking.peek() {
-                let coordinates = e.global_location;
+                let coordinates = e.global_location();
                 on_moved.call(calc_percentage(
                     coordinates.x - size.read().min_x() as f64,
                     coordinates.y - size.read().min_y() as f64,
