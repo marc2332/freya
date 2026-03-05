@@ -46,6 +46,20 @@ pub mod tray {
 pub fn launch(launch_config: LaunchConfig) {
     use std::collections::HashMap;
 
+    #[cfg(not(debug_assertions))]
+    {
+        let previous_hook = std::panic::take_hook();
+        std::panic::set_hook(Box::new(move |panic_info| {
+            rfd::MessageDialog::new()
+                .set_title("Fatal Error")
+                .set_description(&panic_info.to_string())
+                .set_level(rfd::MessageLevel::Error)
+                .show();
+            previous_hook(panic_info);
+            std::process::exit(1);
+        }));
+    }
+
     use freya_core::integration::*;
     use freya_engine::prelude::{
         FontCollection,

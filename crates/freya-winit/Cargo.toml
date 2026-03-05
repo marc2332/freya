@@ -51,6 +51,9 @@ futures-channel = { workspace = true }
 futures-util = { workspace = true }
 rustc-hash = { workspace = true }
 
+# Crash handler
+rfd = { workspace = true }
+
 # Performance
 hotpath = { workspace = true }
 
