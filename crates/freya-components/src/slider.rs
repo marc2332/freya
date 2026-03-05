@@ -6,13 +6,6 @@ use crate::{
     theming::component_themes::SliderThemePartial,
 };
 
-#[derive(Debug, Default, PartialEq, Clone, Copy)]
-pub enum SliderStatus {
-    #[default]
-    Idle,
-    Hovering,
-}
-
 /// Slider component.
 ///
 /// You must pass a percentage from 0.0 to 100.0 and listen for value changes with `on_moved` and then decide if this changes are applicable,
@@ -103,13 +96,13 @@ impl Component for Slider {
         let theme = get_theme!(&self.theme, slider);
         let focus = use_focus();
         let focus_status = use_focus_status(focus);
-        let mut status = use_state(SliderStatus::default);
+        let mut hovering = use_state(|| false);
         let mut clicking = use_state(|| false);
         let mut size = use_state(Area::default);
 
         let enabled = use_reactive(&self.enabled);
         use_drop(move || {
-            if status() == SliderStatus::Hovering && enabled() {
+            if hovering() {
                 Cursor::set(CursorIcon::default());
             }
         });
@@ -142,7 +135,7 @@ impl Component for Slider {
         };
 
         let on_pointer_enter = move |_| {
-            *status.write() = SliderStatus::Hovering;
+            hovering.set(true);
             if enabled() {
                 Cursor::set(CursorIcon::Pointer);
             } else {
@@ -152,7 +145,18 @@ impl Component for Slider {
 
         let on_pointer_leave = move |_| {
             Cursor::set(CursorIcon::default());
-            *status.write() = SliderStatus::Idle;
+            hovering.set(false);
+        };
+
+        let calc_percentage = move |x: f64, y: f64| -> f64 {
+            let pct = if direction_is_vertical {
+                let y = y - 8.0;
+                100. - (y / (size.read().height() as f64 - 15.0) * 100.0)
+            } else {
+                let x = x - 8.0;
+                x / (size.read().width() as f64 - 15.) * 100.0
+            };
+            pct.clamp(0.0, 100.0)
         };
 
         let on_pointer_down = {
@@ -162,16 +166,7 @@ impl Component for Slider {
                 clicking.set(true);
                 e.stop_propagation();
                 let coordinates = e.element_location();
-                let percentage = if direction_is_vertical {
-                    let y = coordinates.y - 8.0;
-                    100. - (y / (size.read().height() as f64 - 15.0) * 100.0)
-                } else {
-                    let x = coordinates.x - 8.0;
-                    x / (size.read().width() as f64 - 15.) * 100.0
-                };
-                let percentage = percentage.clamp(0.0, 100.0);
-
-                on_moved.call(percentage);
+                on_moved.call(calc_percentage(coordinates.x, coordinates.y));
             }
         };
 
@@ -183,16 +178,10 @@ impl Component for Slider {
             e.stop_propagation();
             if *clicking.peek() {
                 let coordinates = e.global_location;
-                let percentage = if direction_is_vertical {
-                    let y = coordinates.y - size.read().min_y() as f64 - 8.0;
-                    100. - (y / (size.read().height() as f64 - 15.0) * 100.0)
-                } else {
-                    let x = coordinates.x - size.read().min_x() as f64 - 8.0;
-                    x / (size.read().width() as f64 - 15.) * 100.0
-                };
-                let percentage = percentage.clamp(0.0, 100.0);
-
-                on_moved.call(percentage);
+                on_moved.call(calc_percentage(
+                    coordinates.x - size.read().min_x() as f64,
+                    coordinates.y - size.read().min_y() as f64,
+                ));
             }
         };
 
@@ -208,43 +197,39 @@ impl Component for Slider {
                 .alignment(BorderAlignment::Inner)
         };
 
-        let (
-            slider_width,
-            slider_height,
-            track_width,
-            track_height,
-            thumb_offset_x,
-            thumb_offset_y,
-            thumb_main_align,
-            padding,
-        ) = if direction_is_vertical {
-            (
-                Size::px(6.),
-                self.size.clone(),
-                Size::px(6.),
-                Size::func_data(
-                    move |ctx| Some(value as f32 / 100. * (ctx.parent - 15.)),
-                    &(value as i32),
-                ),
-                -6.,
-                3.,
-                Alignment::end(),
-                (0., 8.),
-            )
+        let (slider_width, slider_height) = if direction_is_vertical {
+            (Size::px(6.), self.size.clone())
         } else {
-            (
-                self.size.clone(),
-                Size::px(6.),
-                Size::func_data(
-                    move |ctx| Some(value as f32 / 100. * (ctx.parent - 15.)),
-                    &(value as i32),
-                ),
-                Size::px(6.),
-                -3.,
-                -6.,
-                Alignment::start(),
-                (8., 0.),
-            )
+            (self.size.clone(), Size::px(6.))
+        };
+
+        let track_size = Size::func_data(
+            move |ctx| Some(value as f32 / 100. * (ctx.parent - 15.)),
+            &(value as i32),
+        );
+
+        let (track_width, track_height) = if direction_is_vertical {
+            (Size::px(6.), track_size)
+        } else {
+            (track_size, Size::px(6.))
+        };
+
+        let (thumb_offset_x, thumb_offset_y) = if direction_is_vertical {
+            (-6., 3.)
+        } else {
+            (-3., -6.)
+        };
+
+        let thumb_main_align = if direction_is_vertical {
+            Alignment::end()
+        } else {
+            Alignment::start()
+        };
+
+        let padding = if direction_is_vertical {
+            (0., 8.)
+        } else {
+            (8., 0.)
         };
 
         let thumb = rect()
