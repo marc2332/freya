@@ -454,6 +454,8 @@ impl ElementExt for RectElement {
         Some(Cow::Borrowed(&self.event_handlers))
     }
 
+    /// Checks if the cursor point is inside the rounded rectangle of this element, 
+    /// using local coordinates relative to the element's visible area for improved precision with large absolute coordinates.
     fn is_point_inside(&self, context: EventMeasurementContext) -> bool {
         let area = context.layout_node.visible_area();
         let cursor = context.cursor.to_f32();
