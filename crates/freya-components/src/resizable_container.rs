@@ -217,13 +217,22 @@ impl Component for ResizableContainer {
         let mut size = use_state(Area::default);
         use_provide_context(|| size);
 
+        let direction = use_reactive(&self.direction);
         use_provide_context(|| {
             self.controller.clone().unwrap_or_else(|| {
-                State::create(ResizableContext {
+                let state = State::create(ResizableContext {
                     direction: self.direction,
                     ..Default::default()
-                })
-                .into_writable()
+                });
+
+                Effect::create_sync_with_gen(move |current_gen| {
+                    let direction = direction();
+                    if current_gen > 0 {
+                        state.write().direction = direction;
+                    }
+                });
+
+                state.into_writable()
             })
         });
 
