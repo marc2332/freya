@@ -1,5 +1,6 @@
 use std::{
     cell::RefCell,
+    collections::hash_map::DefaultHasher,
     fs,
     hash::{
         Hash,
@@ -71,24 +72,30 @@ pub enum ImageSource {
 
     Path(PathBuf),
 
-    Bytes(&'static str, Bytes),
+    Bytes(u64, Bytes),
 }
 
 impl From<(&'static str, Bytes)> for ImageSource {
     fn from((id, bytes): (&'static str, Bytes)) -> Self {
-        Self::Bytes(id, bytes)
+        let mut hasher = DefaultHasher::default();
+        id.hash(&mut hasher);
+        Self::Bytes(hasher.finish(), bytes)
     }
 }
 
 impl From<(&'static str, &'static [u8])> for ImageSource {
     fn from((id, bytes): (&'static str, &'static [u8])) -> Self {
-        Self::Bytes(id, Bytes::from_static(bytes))
+        let mut hasher = DefaultHasher::default();
+        id.hash(&mut hasher);
+        Self::Bytes(hasher.finish(), Bytes::from_static(bytes))
     }
 }
 
 impl<const N: usize> From<(&'static str, &'static [u8; N])> for ImageSource {
     fn from((id, bytes): (&'static str, &'static [u8; N])) -> Self {
-        Self::Bytes(id, Bytes::from_static(bytes))
+        let mut hasher = DefaultHasher::default();
+        id.hash(&mut hasher);
+        Self::Bytes(hasher.finish(), Bytes::from_static(bytes))
     }
 }
 

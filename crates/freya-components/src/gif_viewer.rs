@@ -1,7 +1,10 @@
 use std::{
     any::Any,
     borrow::Cow,
-    collections::HashMap,
+    collections::{
+        HashMap,
+        hash_map::DefaultHasher,
+    },
     fs,
     hash::{
         Hash,
@@ -98,24 +101,30 @@ pub enum GifSource {
 
     Path(PathBuf),
 
-    Bytes(&'static str, Bytes),
+    Bytes(u64, Bytes),
 }
 
 impl From<(&'static str, Bytes)> for GifSource {
     fn from((id, bytes): (&'static str, Bytes)) -> Self {
-        Self::Bytes(id, bytes)
+        let mut hasher = DefaultHasher::default();
+        id.hash(&mut hasher);
+        Self::Bytes(hasher.finish(), bytes)
     }
 }
 
 impl From<(&'static str, &'static [u8])> for GifSource {
     fn from((id, bytes): (&'static str, &'static [u8])) -> Self {
-        Self::Bytes(id, Bytes::from_static(bytes))
+        let mut hasher = DefaultHasher::default();
+        id.hash(&mut hasher);
+        Self::Bytes(hasher.finish(), Bytes::from_static(bytes))
     }
 }
 
 impl<const N: usize> From<(&'static str, &'static [u8; N])> for GifSource {
     fn from((id, bytes): (&'static str, &'static [u8; N])) -> Self {
-        Self::Bytes(id, Bytes::from_static(bytes))
+        let mut hasher = DefaultHasher::default();
+        id.hash(&mut hasher);
+        Self::Bytes(hasher.finish(), Bytes::from_static(bytes))
     }
 }
 
@@ -147,6 +156,15 @@ impl Hash for GifSource {
             Self::Path(path) => path.hash(state),
             Self::Bytes(id, _) => id.hash(state),
         }
+    }
+}
+
+impl GifSource {
+    /// Returns the unique ID of this source.
+    pub fn id(&self) -> u64 {
+        let mut hasher = DefaultHasher::default();
+        self.hash(&mut hasher);
+        hasher.finish()
     }
 }
 
@@ -253,7 +271,7 @@ enum Status {
 
 impl Component for GifViewer {
     fn render(&self) -> impl IntoElement {
-        let asset_config = AssetConfiguration::new(&self.source, AssetAge::default());
+        let asset_config = AssetConfiguration::new(self.source.id(), AssetAge::default());
         let asset_data = use_asset(&asset_config);
         let mut status = use_state(|| Status::Decoding);
         let mut cached_frames = use_state::<Option<Rc<CachedGifFrames>>>(|| None);
