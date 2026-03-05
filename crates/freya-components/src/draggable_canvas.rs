@@ -85,7 +85,7 @@ impl Component for DraggableCanvas {
             e.stop_propagation();
         };
 
-        let on_global_mouse_up = move |e: Event<MouseEventData>| {
+        let on_global_pointer_press = move |e: Event<PointerEventData>| {
             if dragging_position.read().is_some() {
                 e.stop_propagation();
                 e.prevent_default();
@@ -106,7 +106,7 @@ impl Component for DraggableCanvas {
             .on_sized(move |e: Event<SizedEventData>| layout.set(e.visible_area))
             .on_mouse_move(on_mouse_move)
             .on_pointer_down(on_pointer_down)
-            .on_global_mouse_up(on_global_mouse_up)
+            .on_global_pointer_press(on_global_pointer_press)
             .on_wheel(on_wheel)
             .offset_x(offset_x as f32)
             .offset_y(offset_y as f32)
@@ -180,9 +180,9 @@ impl Component for Draggable {
             registry.write().retain(|i| *i != id);
         });
 
-        let on_global_mouse_move = move |e: Event<MouseEventData>| {
+        let on_global_pointer_move = move |e: Event<PointerEventData>| {
             if let Some(dragging_position) = dragging_position() {
-                position.set((e.global_location - dragging_position).to_point());
+                position.set((e.global_location() - dragging_position).to_point());
                 e.stop_propagation();
             }
         };
@@ -195,7 +195,7 @@ impl Component for Draggable {
             registry.insert(0, id);
         };
 
-        let on_capture_global_mouse_up = move |e: Event<MouseEventData>| {
+        let on_capture_global_pointer_press = move |e: Event<PointerEventData>| {
             if dragging_position.read().is_some() {
                 e.stop_propagation();
                 e.prevent_default();
@@ -214,9 +214,9 @@ impl Component for Draggable {
             .unwrap_or_default();
 
         rect()
-            .on_global_mouse_move(on_global_mouse_move)
+            .on_global_pointer_move(on_global_pointer_move)
             .on_pointer_down(on_pointer_down)
-            .on_capture_global_mouse_up(on_capture_global_mouse_up)
+            .on_capture_global_pointer_press(on_capture_global_pointer_press)
             .position(Position::new_absolute().left(left).top(top))
             .layer(layer as i16)
             .children(self.children.clone())
@@ -292,16 +292,16 @@ impl Component for ResizableDraggable {
             registry.write().retain(|i| *i != id);
         });
 
-        let on_global_mouse_move = move |e: Event<MouseEventData>| {
+        let on_global_pointer_move = move |e: Event<PointerEventData>| {
             if let Some(dragging_position) = dragging_position() {
-                position.set((e.global_location - dragging_position).to_point());
+                position.set((e.global_location() - dragging_position).to_point());
                 e.stop_propagation();
             }
             if let Some((edge, start_point)) = resizing() {
                 // For now hardcoded, but I could probably just make it customizable
                 const MIN: f32 = 20.;
 
-                let delta = (e.global_location - start_point).to_f32().to_point();
+                let delta = (e.global_location() - start_point).to_f32().to_point();
                 let (current_width, current_height) = size().to_tuple();
                 let new_width = if matches!(edge, ResizeEdge::Right | ResizeEdge::BottomRight) {
                     (current_width + delta.x).max(MIN)
@@ -314,7 +314,7 @@ impl Component for ResizableDraggable {
                     current_height
                 };
                 size.set((new_width, new_height).into());
-                resizing.set(Some((edge, e.global_location)));
+                resizing.set(Some((edge, e.global_location())));
                 e.stop_propagation();
             }
         };
@@ -331,7 +331,7 @@ impl Component for ResizableDraggable {
             registry_write.insert(0, id);
         };
 
-        let on_capture_global_mouse_up = move |e: Event<MouseEventData>| {
+        let on_capture_global_pointer_press = move |e: Event<PointerEventData>| {
             if dragging_position.read().is_some() {
                 e.stop_propagation();
                 e.prevent_default();
@@ -426,9 +426,9 @@ impl Component for ResizableDraggable {
             });
 
         rect()
-            .on_global_mouse_move(on_global_mouse_move)
+            .on_global_pointer_move(on_global_pointer_move)
             .on_pointer_down(on_pointer_down)
-            .on_capture_global_mouse_up(on_capture_global_mouse_up)
+            .on_capture_global_pointer_press(on_capture_global_pointer_press)
             .position(Position::new_absolute().left(left).top(top))
             .width(Size::px(width))
             .height(Size::px(height))

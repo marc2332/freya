@@ -415,9 +415,9 @@ impl Component for Input {
             focus.request_focus();
         };
 
-        let on_global_mouse_move = move |e: Event<MouseEventData>| {
+        let on_global_pointer_move = move |e: Event<PointerEventData>| {
             if focus.is_focused() && *is_dragging.read() {
-                let mut location = e.global_location;
+                let mut location = e.global_location();
                 location.x -= area.read().min_x() as f64;
                 location.y -= area.read().min_y() as f64;
                 editable.process_event(EditableEvent::Move {
@@ -444,7 +444,7 @@ impl Component for Input {
             }
         };
 
-        let on_global_mouse_up = move |_| {
+        let on_global_pointer_press = move |_: Event<PointerEventData>| {
             match *status.read() {
                 InputStatus::Idle if focus.is_focused() => {
                     editable.process_event(EditableEvent::Release);
@@ -546,8 +546,8 @@ impl Component for Input {
                     .on_pointer_down(on_input_pointer_down)
                     .on_ime_preedit(on_ime_preedit)
                     .on_pointer_press(on_pointer_press)
-                    .on_global_mouse_up(on_global_mouse_up)
-                    .on_global_mouse_move(on_global_mouse_move)
+                    .on_global_pointer_press(on_global_pointer_press)
+                    .on_global_pointer_move(on_global_pointer_move)
             })
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)

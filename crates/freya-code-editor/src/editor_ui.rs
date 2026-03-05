@@ -243,9 +243,9 @@ impl Component for CodeEditor {
             }
         };
 
-        let on_global_mouse_up = {
+        let on_global_pointer_press = {
             let mut editor = editor.clone();
-            move |_: Event<MouseEventData>| {
+            move |_: Event<PointerEventData>| {
                 editor.write_if(|mut editor_editor| {
                     editor_editor.process(font_size, EditableEvent::Release)
                 });
@@ -260,7 +260,7 @@ impl Component for CodeEditor {
                 .maybe(!read_only, |el| {
                     el.on_key_down(on_key_down).on_key_up(on_key_up)
                 })
-                .on_global_mouse_up(on_global_mouse_up)
+                .on_global_pointer_press(on_global_pointer_press)
                 .on_mouse_down(on_mouse_down)
                 .child(
                     VirtualScrollView::new(move |line_index, _| {

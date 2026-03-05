@@ -102,10 +102,10 @@ fn on_render(ctx: &mut RenderContext, (cursor_x, cursor_y): (f64, f64)) {
 fn app() -> impl IntoElement {
     let mut cursor_position = use_state(CursorPoint::default);
 
-    let on_global_mouse_move = move |e: Event<MouseEventData>| {
+    let on_global_pointer_move = move |e: Event<PointerEventData>| {
         // Dont move when the cursor goes outside the window
-        if e.global_location.to_tuple() != (-1., -1.) {
-            cursor_position.set(e.global_location);
+        if e.global_location().to_tuple() != (-1., -1.) {
+            cursor_position.set(e.global_location());
             let platform = Platform::get();
             platform.send(UserEvent::RequestRedraw);
         }
@@ -115,5 +115,5 @@ fn app() -> impl IntoElement {
         on_render(context, cursor_position().to_tuple());
     }))
     .expanded()
-    .on_global_mouse_move(on_global_mouse_move)
+    .on_global_pointer_move(on_global_pointer_move)
 }

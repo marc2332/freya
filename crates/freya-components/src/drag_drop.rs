@@ -63,9 +63,9 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
         let mut position = use_state::<Option<CursorPoint>>(|| None);
         let data = self.data.clone();
 
-        let on_global_mouse_move = move |e: Event<MouseEventData>| {
+        let on_global_pointer_move = move |e: Event<PointerEventData>| {
             if position.read().is_some() {
-                position.set(Some(e.global_location));
+                position.set(Some(e.global_location()));
             }
         };
 
@@ -77,7 +77,7 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
             *drags.write() = Some(data.clone());
         };
 
-        let on_global_mouse_up = move |_: Event<MouseEventData>| {
+        let on_global_pointer_press = move |_: Event<PointerEventData>| {
             if position.read().is_some() {
                 position.set(None);
                 *drags.write() = None;
@@ -85,8 +85,8 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
         };
 
         rect()
-            .on_global_mouse_up(on_global_mouse_up)
-            .on_global_mouse_move(on_global_mouse_move)
+            .on_global_pointer_press(on_global_pointer_press)
+            .on_global_pointer_move(on_global_pointer_move)
             .on_pointer_down(on_pointer_down)
             .maybe_child((position.read().zip(self.drag_element.clone())).map(
                 |(position, drag_element)| {

@@ -66,11 +66,11 @@ impl Component for SelectableText {
             focus.request_focus();
         };
 
-        let on_global_mouse_move = move |e: Event<MouseEventData>| {
+        let on_global_pointer_move = move |e: Event<PointerEventData>| {
             if focus.is_focused()
                 && let Some(drag_origin) = drag_origin()
             {
-                let mut element_location = e.element_location;
+                let mut element_location = e.element_location();
                 element_location.x -= drag_origin.x;
                 element_location.y -= drag_origin.y;
                 editable.process_event(EditableEvent::Move {
@@ -81,7 +81,7 @@ impl Component for SelectableText {
             }
         };
 
-        let on_global_mouse_down = move |_| {
+        let on_global_pointer_down = move |_: Event<PointerEventData>| {
             editable.editor_mut().write().clear_selection();
         };
 
@@ -108,7 +108,7 @@ impl Component for SelectableText {
             editable.process_event(EditableEvent::KeyUp { key: &e.key });
         };
 
-        let on_global_mouse_up = move |_| {
+        let on_global_pointer_press = move |_: Event<PointerEventData>| {
             match *status.read() {
                 SelectableTextStatus::Idle if focus.is_focused() => {
                     editable.process_event(EditableEvent::Release);
@@ -134,12 +134,12 @@ impl Component for SelectableText {
             .a11y_id(focus.a11y_id())
             .highlights(highlights.map(|h| vec![h]))
             .on_mouse_up(on_mouse_up)
-            .on_global_mouse_move(on_global_mouse_move)
-            .on_global_mouse_down(on_global_mouse_down)
+            .on_global_pointer_move(on_global_pointer_move)
+            .on_global_pointer_down(on_global_pointer_down)
             .on_pointer_down(on_pointer_down)
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
-            .on_global_mouse_up(on_global_mouse_up)
+            .on_global_pointer_press(on_global_pointer_press)
             .on_key_down(on_key_down)
             .on_key_up(on_key_up)
             .span(Span::new(editable.editor().read().to_string()))

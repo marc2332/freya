@@ -170,7 +170,7 @@ impl Component for Select {
         };
 
         // Close the select if clicked anywhere
-        let on_global_mouse_up = move |_| {
+        let on_global_pointer_press = move |_: Event<PointerEventData>| {
             open.set_if_modified(false);
         };
 
@@ -214,7 +214,7 @@ impl Component for Select {
                     .on_pointer_leave(on_pointer_leave)
                     .on_press(on_press)
                     .on_global_key_down(on_global_key_down)
-                    .on_global_mouse_up(on_global_mouse_up)
+                    .on_global_pointer_press(on_global_pointer_press)
                     .width(theme.width)
                     .margin(theme.margin)
                     .background(background)

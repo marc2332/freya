@@ -67,7 +67,7 @@ impl Component for ShaderEditor {
     fn render(&self) -> impl IntoElement {
         let mut editable = self.0;
 
-        let on_global_mouse_up = move |_: Event<MouseEventData>| {
+        let on_global_pointer_press = move |_: Event<PointerEventData>| {
             editable.process_event(EditableEvent::Release);
         };
 
@@ -83,7 +83,7 @@ impl Component for ShaderEditor {
         };
 
         rect()
-            .on_global_mouse_up(on_global_mouse_up)
+            .on_global_pointer_press(on_global_pointer_press)
             .on_global_key_down(on_global_key_down)
             .on_global_key_up(on_global_key_up)
             .width(Size::percent(50.))

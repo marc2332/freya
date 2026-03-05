@@ -80,7 +80,12 @@ impl EmmitableEvent {
                 cursor,
                 button,
                 ..
-            } if name.is_enter() || name.is_left() || name.is_press() || name.is_down() => {
+            } if name.is_enter()
+                || name.is_left()
+                || name.is_press()
+                || name.is_down()
+                || name.is_global_pointer() =>
+            {
                 let global_location = cursor / scale_factor;
                 let element_x =
                     (cursor.x - node_area.unwrap_or_default().min_x() as f64) / scale_factor;
@@ -108,7 +113,12 @@ impl EmmitableEvent {
                 phase,
                 force,
                 ..
-            } if name.is_enter() || name.is_left() || name.is_press() || name.is_down() => {
+            } if name.is_enter()
+                || name.is_left()
+                || name.is_press()
+                || name.is_down()
+                || name.is_global_pointer() =>
+            {
                 let global_location = location / scale_factor;
                 let element_x =
                     (location.x - node_area.unwrap_or_default().min_x() as f64) / scale_factor;

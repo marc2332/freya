@@ -35,12 +35,12 @@ pub fn integration(app: AppComponent) -> impl IntoElement {
         _ => {}
     };
 
-    let on_global_mouse_move = move |e: Event<MouseEventData>| {
-        context.location.set(e.global_location);
+    let on_global_pointer_move = move |e: Event<PointerEventData>| {
+        context.location.set(e.global_location());
     };
 
     rect()
-        .on_global_mouse_move(on_global_mouse_move)
+        .on_global_pointer_move(on_global_pointer_move)
         .on_global_key_down(on_global_key_down)
         .child(app)
         .maybe_child(context.menu.read().clone().map(|(location, menu)| {
