@@ -74,7 +74,11 @@ impl TaskHandle {
     }
 
     pub fn try_cancel(&self) {
-        CurrentContext::try_with(|context| context.tasks.borrow_mut().remove(&self.0));
+        CurrentContext::try_with(|context| {
+            if let Ok(mut context) = context.tasks.try_borrow_mut() {
+                context.remove(&self.0);
+            }
+        });
     }
 }
 
