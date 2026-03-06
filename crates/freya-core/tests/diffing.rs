@@ -1476,6 +1476,138 @@ fn modified_and_moved_both_siblings_with_nested_child() {
 }
 
 #[test]
+fn nested_move_simultaneous_add() {
+    // Simulates simultaneously adding a titlebar (top level) and a sidebar (nested
+    // inside the now-shifted horizontal pane). Both additions together produce a
+    // `diff.moved` entry whose parent path uses the *new-tree* position ([0,1] for
+    // the horizontal after the titlebar shifts it). Without `resolve_old_path` the
+    // collection phase would look up [0,1] in scope.nodes which still holds the
+    // old tree, causing a panic.
+    //
+    // show=false:
+    //   root
+    //     horizontal (key=1) [0,0]
+    //       content   (key=2) [0,0,0]
+    //
+    // show=true:
+    //   root
+    //     titlebar  (key=0) [0,0] — added
+    //     horizontal(key=1) [0,1] — shifted (moved from 0 in diff)
+    //       sidebar (key=3) [0,1,0] — added
+    //       content (key=2) [0,1,1] — shifted (moved from 0 in diff)
+    fn app() -> Element {
+        let state = use_consume::<State<bool>>();
+        let show = state();
+        rect()
+            .maybe_child(show.then(|| rect().key(0)))
+            .child(
+                rect()
+                    .key(1)
+                    .maybe_child(show.then(|| rect().key(3)))
+                    .child(rect().key(2)),
+            )
+            .into()
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+    let mut state = runner.provide_root_context(|| State::create(false));
+
+    let mutations = runner.sync_and_update();
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+
+    // Add titlebar + sidebar simultaneously.
+    // The PathGraph insertions already shift horizontalrect / content to the right
+    // positions, so moved mutations are empty — but the collection phase must not
+    // panic while resolving the nested parent path.
+    state.set(true);
+    let mutations = runner.sync_and_update();
+    assert_eq!(mutations.added.len(), 2);
+    assert!(mutations.removed.is_empty());
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+
+    // Remove both again.
+    state.set(false);
+    let mutations = runner.sync_and_update();
+    assert_eq!(mutations.removed.len(), 2);
+    assert!(mutations.added.is_empty());
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+}
+
+#[test]
+fn nested_move_pure_swap() {
+    // Exercises the case where siblings are reordered at two nesting levels
+    // simultaneously (no additions or removals). `diff.moved` contains entries
+    // for both the outer and the inner parent. The outer parent key in the inner
+    // entry is a new-tree path, so `resolve_old_path` must translate it back, and
+    // outer parents must be processed before inner ones so that `find_child_path`
+    // finds the children under the already-moved parent.
+    //
+    // state=false:
+    //   root
+    //     A (key=3) [0,0]
+    //     B (key=1) [0,1]
+    //       X (key=5) [0,1,0]
+    //       Y (key=2) [0,1,1]
+    //
+    // state=true (A↔B swapped, X↔Y swapped inside B):
+    //   root
+    //     B (key=1) [0,0]  ← was [0,1]
+    //       Y (key=2) [0,0,0]  ← was [0,1,1]
+    //       X (key=5) [0,0,1]  ← was [0,1,0]
+    //     A (key=3) [0,1]  ← was [0,0]
+    fn app() -> Element {
+        let state = use_consume::<State<bool>>();
+        if state() {
+            rect()
+                .child(rect().key(1).child(rect().key(2)).child(rect().key(5)))
+                .child(rect().key(3))
+                .into()
+        } else {
+            rect()
+                .child(rect().key(3))
+                .child(rect().key(1).child(rect().key(5)).child(rect().key(2)))
+                .into()
+        }
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+    let mut state = runner.provide_root_context(|| State::create(false));
+
+    let mutations = runner.sync_and_update();
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+
+    // Swap A↔B and simultaneously swap X↔Y inside B.
+    state.set(true);
+    let mutations = runner.sync_and_update();
+    assert!(mutations.added.is_empty());
+    assert!(mutations.removed.is_empty());
+    assert!(!mutations.moved.is_empty());
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+
+    // Swap back.
+    state.set(false);
+    let mutations = runner.sync_and_update();
+    assert!(mutations.added.is_empty());
+    assert!(mutations.removed.is_empty());
+    assert!(!mutations.moved.is_empty());
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+}
+
+#[test]
 fn ordered_scope_mutations_diffing() {
     fn second(_: &()) -> Element {
         "text".into()
