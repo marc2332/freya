@@ -46,7 +46,7 @@ pub mod tray {
 pub fn launch(launch_config: LaunchConfig) {
     use std::collections::HashMap;
 
-    #[cfg(not(debug_assertions))]
+    #[cfg(all(not(debug_assertions), not(target_os = "android")))]
     {
         let previous_hook = std::panic::take_hook();
         std::panic::set_hook(Box::new(move |panic_info| {

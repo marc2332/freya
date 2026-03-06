@@ -51,9 +51,6 @@ futures-channel = { workspace = true }
 futures-util = { workspace = true }
 rustc-hash = { workspace = true }
 
-# Crash handler
-rfd = { workspace = true }
-
 # Performance
 hotpath = { workspace = true }
 
@@ -65,6 +62,10 @@ tray-icon = { workspace = true, optional = true }
 
 # Clipboard
 freya-clipboard = { workspace = true }
+
+[target.'cfg(not(target_os = "android"))'.dependencies]
+# Crash handler
+rfd = { workspace = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 gtk = { version = "0.18.2", optional = true }
