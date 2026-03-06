@@ -44,6 +44,7 @@ members = [
   "./crates/freya-code-editor",
   "./examples/ai-chat",
   "./examples/state_query_sqlite",
+  "./examples/android",
 ]
 
 [workspace.dependencies]
