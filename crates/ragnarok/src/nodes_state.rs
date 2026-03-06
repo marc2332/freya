@@ -222,12 +222,11 @@ impl<Key: NodeKey> NodesState<Key> {
                         // Mark the Node as hovered if it wasn't already
                         hovered_nodes.insert(*node_key);
 
-                        if entered_node.is_none() {
-                            if events_measurer
+                        if entered_node.is_none()
+                            && events_measurer
                                 .is_listening_to(node_key, &Name::new_exclusive_enter())
-                            {
-                                entered_node = Some(*node_key);
-                            }
+                        {
+                            entered_node = Some(*node_key);
                         }
 
                         #[cfg(debug_assertions)]
