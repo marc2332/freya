@@ -134,10 +134,7 @@ impl PathElement {
                     if k1 != k2 || diff.removed.iter().any(|p| **p == path2[..path2.len() - 1]) {
                         diff.added.push(path.clone());
                         diff.removed.push(path2.clone());
-                    } else if !path.is_empty()
-                        && path[..path.len() - 1] == path2[..path2.len() - 1]
-                        && path[path.len() - 1] != path2[path2.len() - 1]
-                    {
+                    } else if !path.is_empty() && path[path.len() - 1] != path2[path2.len() - 1] {
                         diff.moved
                             .entry(Box::from(path[..path.len() - 1].to_vec()))
                             .or_default()

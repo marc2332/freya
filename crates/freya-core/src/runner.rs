@@ -1189,9 +1189,6 @@ impl Runner {
             });
         }
 
-        // Process outer (shallower) parents before inner (deeper) ones so that when we
-        // call `find_child_path` for an inner parent, the outer parent has already been
-        // repositioned and the inner parent is reachable at its new-tree path.
         for (parent, movements) in diff.moved.into_iter().sorted_by(|(a, _), (b, _)| {
             for (x, y) in a.iter().zip(b.iter()) {
                 match x.cmp(y) {
