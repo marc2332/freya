@@ -164,9 +164,8 @@ pub fn measure_emmitable_events<
                         );
                         emmitable_events.push(emmitable_event);
 
-                        // Events that bubble will only be emitted once
-                        // Those that don't will be stacked
-                        if name.does_bubble() {
+                        // Events that bubble or are exclusive enter will only be emitted once.
+                        if derived_event_name.does_bubble() {
                             continue 'event;
                         }
                     }
