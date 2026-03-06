@@ -921,6 +921,7 @@ impl Runner {
         for (parent, movements) in &diff.moved {
             parents_to_resync_scopes.insert(parent.clone());
             let paths = moved_nodes.entry(parent.clone()).or_insert_with(|| {
+                println!("{parent:?}");
                 let parent_node_id = scope.borrow().nodes.get(parent).unwrap().node_id;
                 (parent_node_id, FxHashMap::default())
             });
