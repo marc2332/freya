@@ -339,16 +339,16 @@ impl Svg {
         self
     }
 
-    pub fn stroke<R: Into<Option<Color>>>(mut self, stroke: R) -> Self {
-        self.element.stroke = stroke.into();
+    pub fn stroke(mut self, stroke: impl Into<Color>) -> Self {
+        self.element.stroke = Some(stroke.into());
         self
     }
 
-    pub fn rotate<R: Into<Option<f32>>>(mut self, rotation: R) -> Self {
+    pub fn rotate(mut self, rotation: impl Into<f32>) -> Self {
         self.element
             .effect
             .get_or_insert_with(Default::default)
-            .rotation = rotation.into();
+            .rotation = Some(rotation.into());
         self
     }
 }
