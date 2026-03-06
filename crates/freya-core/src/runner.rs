@@ -915,6 +915,7 @@ impl Runner {
             FxHashMap::<Box<[u32]>, (NodeId, FxHashMap<u32, PathNode>)>::default();
         let mut parents_to_resync_scopes = FxHashSet::default();
 
+        println!("{diff:?}");
         // Store the moved nodes so that they can
         // later be rarranged once the removals and additions have been done
         for (parent, movements) in &diff.moved {
