@@ -1,5 +1,8 @@
 # Experimental Android Support
 
+> [!WARNING]
+> Android support is still highly experimental, and it's currently missing soft keyboard and IME support. This means that you won't be able to use Input components, or anything that might rely on keyboard input on Android.
+
 ## Dependencies
 You will need to download the following dependencies before you can build for Android.
 
