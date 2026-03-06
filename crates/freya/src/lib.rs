@@ -198,6 +198,7 @@ pub mod components {
             extensions::*,
             hooks::*,
             themes::*,
+            macros::Preference
         },
         tile::*,
         tooltip::*,
