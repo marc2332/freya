@@ -170,9 +170,16 @@ impl Drop for Runner {
                     sender: self.sender.clone(),
                 },
                 || {
-                    self.tasks
-                        .borrow_mut()
-                        .retain(|_task_id, task| task.borrow().scope_id != scope_id);
+                    let mut _removed_tasks = Vec::new();
+
+                    self.tasks.borrow_mut().retain(|task_id, task| {
+                        if task.borrow().scope_id == scope_id {
+                            _removed_tasks.push((*task_id, task.clone()));
+                            false
+                        } else {
+                            true
+                        }
+                    });
                     let _scope = self.scopes_storages.borrow_mut().remove(&scope_id);
                 },
             );
@@ -550,7 +557,7 @@ impl Runner {
                     || {
                         let poll_result = task.future.poll(&mut cx);
                         if poll_result.is_ready() {
-                            self.tasks.borrow_mut().remove(&task_id);
+                            let _ = self.tasks.borrow_mut().remove(&task_id);
                         }
                     },
                 );
@@ -617,7 +624,7 @@ impl Runner {
                 || {
                     let poll_result = task.future.poll(&mut cx);
                     if poll_result.is_ready() {
-                        self.tasks.borrow_mut().remove(&task_id);
+                        let _ = self.tasks.borrow_mut().remove(&task_id);
                     }
                 },
             );
@@ -1075,9 +1082,16 @@ impl Runner {
                 },
                 || {
                     // TODO: Scopes could also maintain its own registry of assigned tasks
-                    self.tasks
-                        .borrow_mut()
-                        .retain(|_task_id, task| task.borrow().scope_id != scope.id);
+                    let mut _removed_tasks = Vec::new();
+
+                    self.tasks.borrow_mut().retain(|task_id, task| {
+                        if task.borrow().scope_id == scope.id {
+                            _removed_tasks.push((*task_id, task.clone()));
+                            false
+                        } else {
+                            true
+                        }
+                    });
                     // This is very important, the scope storage must be dropped after the borrow in `scopes_storages` has been released
                     let _scope = self.scopes_storages.borrow_mut().remove(&scope.id);
                 },
