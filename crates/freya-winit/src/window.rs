@@ -152,8 +152,8 @@ impl AppWindow {
 
         let (events_sender, events_receiver) = futures_channel::mpsc::unbounded();
 
-        let app_clone = window_config.app.clone();
-        let mut runner = Runner::new(move || integration(app_clone.clone()).into_element());
+        let app = window_config.app.clone();
+        let mut runner = Runner::new(move || integration(app.clone()).into_element());
 
         runner.provide_root_context(|| screen_reader);
 
