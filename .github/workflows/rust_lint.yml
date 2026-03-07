@@ -43,4 +43,4 @@ jobs:
     - name: Lint
       run: just c-ci
     - name: Format
-      run: just f
+      run: just f-check
