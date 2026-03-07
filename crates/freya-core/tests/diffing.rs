@@ -1476,6 +1476,93 @@ fn modified_and_moved_both_siblings_with_nested_child() {
 }
 
 #[test]
+fn nested_move_simultaneous_add() {
+    fn app() -> Element {
+        let state = use_consume::<State<bool>>();
+        let show = state();
+        rect()
+            .maybe_child(show.then(|| rect().key(0)))
+            .child(
+                rect()
+                    .key(1)
+                    .maybe_child(show.then(|| rect().key(3)))
+                    .child(rect().key(2)),
+            )
+            .into()
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+    let mut state = runner.provide_root_context(|| State::create(false));
+
+    let mutations = runner.sync_and_update();
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+
+    state.set(true);
+    let mutations = runner.sync_and_update();
+    assert_eq!(mutations.added.len(), 2);
+    assert!(mutations.removed.is_empty());
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+
+    state.set(false);
+    let mutations = runner.sync_and_update();
+    assert_eq!(mutations.removed.len(), 2);
+    assert!(mutations.added.is_empty());
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+}
+
+#[test]
+fn nested_move_pure_swap() {
+    fn app() -> Element {
+        let state = use_consume::<State<bool>>();
+        if state() {
+            rect()
+                .child(rect().key(1).child(rect().key(2)).child(rect().key(5)))
+                .child(rect().key(3))
+                .into()
+        } else {
+            rect()
+                .child(rect().key(3))
+                .child(rect().key(1).child(rect().key(5)).child(rect().key(2)))
+                .into()
+        }
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+    let mut state = runner.provide_root_context(|| State::create(false));
+
+    let mutations = runner.sync_and_update();
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+
+    state.set(true);
+    let mutations = runner.sync_and_update();
+    assert!(mutations.added.is_empty());
+    assert!(mutations.removed.is_empty());
+    assert!(!mutations.moved.is_empty());
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+
+    state.set(false);
+    let mutations = runner.sync_and_update();
+    assert!(mutations.added.is_empty());
+    assert!(mutations.removed.is_empty());
+    assert!(!mutations.moved.is_empty());
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+}
+
+#[test]
 fn ordered_scope_mutations_diffing() {
     fn second(_: &()) -> Element {
         "text".into()

@@ -916,19 +916,22 @@ impl Runner {
         let mut parents_to_resync_scopes = FxHashSet::default();
 
         // Store the moved nodes so that they can
-        // later be rarranged once the removals and additions have been done
+        // later be rearranged once the removals and additions have been done
         for (parent, movements) in &diff.moved {
             parents_to_resync_scopes.insert(parent.clone());
+            // `parent` is a new-tree path; if the parent itself was moved, its path in the
+            // old nodes tree will differ — resolve it before any lookup.
+            let old_parent = resolve_old_path(parent, &diff.moved);
             let paths = moved_nodes.entry(parent.clone()).or_insert_with(|| {
-                let parent_node_id = scope.borrow().nodes.get(parent).unwrap().node_id;
+                let parent_node_id = scope.borrow().nodes.get(&old_parent).unwrap().node_id;
                 (parent_node_id, FxHashMap::default())
             });
 
             for (from, _to) in movements.iter() {
-                let mut path = parent.to_vec();
-                path.push(*from);
+                let mut old_child_path = old_parent.clone();
+                old_child_path.push(*from);
 
-                let path_node = scope.borrow().nodes.get(&path).cloned().unwrap();
+                let path_node = scope.borrow().nodes.get(&old_child_path).cloned().unwrap();
 
                 paths.1.insert(*from, path_node);
             }
@@ -1193,7 +1196,7 @@ impl Runner {
                     non_eq => return non_eq.reverse(),
                 }
             }
-            b.len().cmp(&a.len())
+            a.len().cmp(&b.len())
         }) {
             parents_to_resync_scopes.insert(parent.clone());
 
@@ -1299,6 +1302,26 @@ pub struct Diff {
     pub removed: Vec<Box<[u32]>>,
 
     pub moved: HashMap<Box<[u32]>, Vec<(u32, u32)>>,
+}
+
+/// Converts a new-tree path to its corresponding old-tree path by checking, for each
+/// segment, whether that position was the destination of a movement in `moved`. If so,
+/// the original (`from`) index is substituted so the result can be used to look up nodes
+/// in the pre-diff nodes tree.
+fn resolve_old_path(new_path: &[u32], moved: &HashMap<Box<[u32]>, Vec<(u32, u32)>>) -> Vec<u32> {
+    let mut old_path = Vec::with_capacity(new_path.len());
+    for i in 0..new_path.len() {
+        let new_parent = &new_path[..i];
+        let new_index = new_path[i];
+        if let Some(movements) = moved.get(new_parent)
+            && let Some(&(from, _)) = movements.iter().find(|(_, to)| *to == new_index)
+        {
+            old_path.push(from);
+            continue;
+        }
+        old_path.push(new_index);
+    }
+    old_path
 }
 
 fn is_descendant(candidate: &[u32], ancestor: &[u32]) -> bool {
