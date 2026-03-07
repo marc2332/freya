@@ -134,23 +134,22 @@ impl<Key: NodeKey> NodesState<Key> {
                 let deepest_changed = new_deepest != Some(old_entered);
                 let still_hovered = !removed_from_hovered.contains(&old_entered);
 
-                if deepest_changed && still_hovered {
-                    if let Some(source_event) = source_movement_event {
-                        let exclusive_leave = Name::new_exclusive_leave();
-                        let is_node_listening =
-                            events_measurer.is_listening_to(&old_entered, &exclusive_leave);
-                        if is_node_listening {
-                            if let Some(area) = events_measurer.try_area_of(&old_entered) {
-                                collateral_emmitable_events.push(
-                                    events_measurer.new_emmitable_event(
-                                        old_entered,
-                                        exclusive_leave,
-                                        source_event.clone(),
-                                        Some(area),
-                                    ),
-                                );
-                            }
-                        }
+                if deepest_changed
+                    && still_hovered
+                    && let Some(source_event) = source_movement_event
+                {
+                    let exclusive_leave = Name::new_exclusive_leave();
+                    let is_node_listening =
+                        events_measurer.is_listening_to(&old_entered, &exclusive_leave);
+                    if is_node_listening
+                        && let Some(area) = events_measurer.try_area_of(&old_entered)
+                    {
+                        collateral_emmitable_events.push(events_measurer.new_emmitable_event(
+                            old_entered,
+                            exclusive_leave,
+                            source_event.clone(),
+                            Some(area),
+                        ));
                     }
                 }
             }
