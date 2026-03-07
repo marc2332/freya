@@ -198,12 +198,7 @@ impl TerminalHandle {
 
     /// Write text to the PTY as a paste operation.
     ///
-    /// If bracketed paste mode (DECSET 2004) is enabled in the terminal,
-    /// the text will be wrapped with paste start/end escape sequences
-    /// (`\x1b[200~` ... `\x1b[201~`), allowing applications to distinguish
-    /// pasted text from typed input.
-    ///
-    /// This also clears the current selection and scrolls to bottom.
+    /// If bracketed paste mode is enabled, wraps the text with `\x1b[200~` ... `\x1b[201~`.
     pub fn paste(&self, text: &str) -> Result<(), TerminalError> {
         let bracketed = self.parser.borrow().screen().bracketed_paste();
 
