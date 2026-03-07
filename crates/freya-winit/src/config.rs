@@ -13,7 +13,10 @@ use freya_core::{
 };
 use image::ImageReader;
 use winit::{
-    event_loop::ActiveEventLoop,
+    event_loop::{
+        ActiveEventLoop,
+        EventLoopBuilder,
+    },
     window::{
         Icon,
         Window,
@@ -21,15 +24,17 @@ use winit::{
         WindowId,
     },
 };
-use winit::event_loop::EventLoopBuilder;
+
 use crate::{
     plugins::{
         FreyaPlugin,
         PluginsManager,
     },
-    renderer::LaunchProxy,
+    renderer::{
+        LaunchProxy,
+        NativeEvent,
+    },
 };
-use crate::renderer::NativeEvent;
 
 pub type WindowBuilderHook =
     Box<dyn FnOnce(WindowAttributes, &ActiveEventLoop) -> WindowAttributes + Send + Sync>;
@@ -343,7 +348,10 @@ impl LaunchConfig {
         self
     }
 
-    pub fn with_event_loop_builder(mut self, event_loop_builder: EventLoopBuilder<NativeEvent>) -> Self {
+    pub fn with_event_loop_builder(
+        mut self,
+        event_loop_builder: EventLoopBuilder<NativeEvent>,
+    ) -> Self {
         self.event_loop_builder.replace(event_loop_builder);
         self
     }

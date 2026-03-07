@@ -46,10 +46,11 @@ use winit::{
     window::{
         Theme,
         Window,
+        WindowAttributes,
         WindowId,
     },
 };
-use winit::window::WindowAttributes;
+
 use crate::{
     accessibility::AccessibilityTask,
     config::{

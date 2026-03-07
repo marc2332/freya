@@ -406,14 +406,14 @@ pub trait EventHandlersExt: Sized {
                 }
             }
         })
-            .on_key_down({
-                let on_press = on_press.clone();
-                move |e: Event<KeyboardEventData>| {
-                    if Focus::is_pressed(&e) {
-                        on_press.call(e.map(PressEventData::Keyboard))
-                    }
+        .on_key_down({
+            let on_press = on_press.clone();
+            move |e: Event<KeyboardEventData>| {
+                if Focus::is_pressed(&e) {
+                    on_press.call(e.map(PressEventData::Keyboard))
                 }
-            })
+            }
+        })
     }
 
     /// Also called the context menu click in other platforms.
@@ -458,14 +458,14 @@ pub trait EventHandlersExt: Sized {
                 }
             }
         })
-            .on_key_down({
-                let on_press = on_press.clone();
-                move |e: Event<KeyboardEventData>| {
-                    if Focus::is_pressed(&e) {
-                        on_press.call(e.map(PressEventData::Keyboard))
-                    }
+        .on_key_down({
+            let on_press = on_press.clone();
+            move |e: Event<KeyboardEventData>| {
+                if Focus::is_pressed(&e) {
+                    on_press.call(e.map(PressEventData::Keyboard))
                 }
-            })
+            }
+        })
     }
 }
 
