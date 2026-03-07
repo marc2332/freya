@@ -1,4 +1,7 @@
-use std::collections::HashSet;
+use std::{
+    collections::HashSet,
+    fmt::Debug,
+};
 
 use rustc_hash::{
     FxHashMap,
@@ -161,15 +164,32 @@ impl<Key: NodeKey> NodesState<Key> {
     pub(crate) fn filter_emmitable_events<
         Emmitable: EmmitableEvent<Key = Key, Name = Name>,
         Name: NameOfEvent,
+        Source: SourceEvent,
     >(
-        &self,
+        &mut self,
         emmitable_events: &mut Vec<Emmitable>,
+        events_measurer: &impl EventsMeasurer<Key = Key, Name = Name>,
+        potential_events: &PotentialEvents<Key, Name, Source>,
     ) {
+        let mut entered_node: Option<Key> = None;
+        for events in potential_events.values() {
+            for PotentialEvent { node_key, name, .. } in events.iter() {
+                match name {
+                    // Update hovered nodes state
+                    name if name.is_moved() => {
+                        if events_measurer.is_listening_to(node_key, &Name::new_exclusive_enter()) {
+                            entered_node = Some(*node_key);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
         emmitable_events.retain(|ev| {
             match ev.name() {
                 // Exclusive enter events deduplicated against `entered_node`.
                 _ if ev.name().is_exclusive_enter() => {
-                    self.entered_node.as_ref() != Some(&ev.key())
+                    entered_node.as_ref() == Some(&ev.key()) && entered_node != self.entered_node
                 }
 
                 // Non-exclusive enter events deduplicated against `hovered_nodes`.
@@ -181,6 +201,7 @@ impl<Key: NodeKey> NodesState<Key> {
                 _ => true,
             }
         });
+        self.entered_node = entered_node;
     }
 
     /// Create the nodes states given the [PotentialEvent]s.
@@ -195,7 +216,6 @@ impl<Key: NodeKey> NodesState<Key> {
     ) -> NodesStatesUpdate<Key> {
         let mut hovered_nodes = FxHashSet::default();
         let mut pressed_nodes = FxHashSet::default();
-        let mut entered_node: Option<Key> = None;
 
         // Update the state of the nodes given the new events.
         for events in potential_events.values() {
@@ -221,13 +241,6 @@ impl<Key: NodeKey> NodesState<Key> {
                         // Mark the Node as hovered if it wasn't already
                         hovered_nodes.insert(*node_key);
 
-                        if entered_node.is_none()
-                            && events_measurer
-                                .is_listening_to(node_key, &Name::new_exclusive_enter())
-                        {
-                            entered_node = Some(*node_key);
-                        }
-
                         #[cfg(debug_assertions)]
                         tracing::info!("Marked as hovered {:?}", node_key);
                     }
@@ -247,7 +260,6 @@ impl<Key: NodeKey> NodesState<Key> {
         NodesStatesUpdate {
             pressed_nodes,
             hovered_nodes,
-            entered_node,
         }
     }
 
@@ -255,16 +267,6 @@ impl<Key: NodeKey> NodesState<Key> {
     pub fn apply_update(&mut self, update: NodesStatesUpdate<Key>) {
         self.hovered_nodes.extend(update.hovered_nodes);
         self.pressed_nodes.extend(update.pressed_nodes);
-
-        if let Some(entered_node) = self.entered_node
-            && !self.hovered_nodes.contains(&entered_node)
-        {
-            self.entered_node = None;
-        }
-
-        if update.entered_node.is_some() {
-            self.entered_node = update.entered_node;
-        }
     }
 
     pub fn is_hovered(&self, key: Key) -> bool {
@@ -280,7 +282,6 @@ impl<Key: NodeKey> NodesState<Key> {
 pub struct NodesStatesUpdate<Key: NodeKey> {
     pressed_nodes: FxHashSet<Key>,
     hovered_nodes: FxHashSet<Key>,
-    entered_node: Option<Key>,
 }
 
 impl<Key: NodeKey> Default for NodesStatesUpdate<Key> {
@@ -288,7 +289,6 @@ impl<Key: NodeKey> Default for NodesStatesUpdate<Key> {
         Self {
             pressed_nodes: HashSet::default(),
             hovered_nodes: HashSet::default(),
-            entered_node: None,
         }
     }
 }

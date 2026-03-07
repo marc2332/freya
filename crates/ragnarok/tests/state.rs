@@ -46,6 +46,8 @@ impl Ord for EventName {
             e if e.is_capture() => std::cmp::Ordering::Less,
             // Left events have more priority over non-left
             e if e.is_left() => std::cmp::Ordering::Less,
+            // Exclusive left events have more priority over non-exclusive-left
+            e if e.is_exclusive_left() => std::cmp::Ordering::Less,
             e => {
                 if e == other {
                     std::cmp::Ordering::Equal
@@ -64,6 +66,10 @@ impl EventName {
 
     pub fn is_left(&self) -> bool {
         matches!(self, Self::MouseLeave | Self::MouseOut)
+    }
+
+    pub fn is_exclusive_left(&self) -> bool {
+        matches!(&self, Self::MouseLeave)
     }
 }
 
@@ -97,10 +103,13 @@ impl NameOfEvent for EventName {
     }
 
     fn does_bubble(&self) -> bool {
-        !matches!(
-            self,
-            Self::MouseLeave | Self::MouseOut | Self::MouseEnter | Self::MouseOver
-        )
+        (!self.is_moved()
+            && !self.is_enter()
+            && !self.is_left()
+            && !self.is_global()
+            && !self.is_capture())
+            || self.is_exclusive_enter()
+            || self.is_exclusive_leave()
     }
 
     fn does_go_through_solid(&self) -> bool {
@@ -128,7 +137,6 @@ impl NameOfEvent for EventName {
                 events.insert(Self::MouseEnter);
                 events.insert(Self::MouseOver);
             }
-            // MouseOut also derives MouseLeave (like PointerOut → PointerLeave chaining)
             Self::MouseOut => {
                 events.insert(Self::MouseLeave);
             }
@@ -424,12 +432,30 @@ fn exclusive_vs_non_exclusive_enter() {
 
     let processed_events = test_measurer.run(
         &mut vec![TestSourceEvent::MouseMove {
+            cursor: (5., 5.).into(),
+        }],
+        &mut nodes_state,
+        None,
+    );
+    nodes_state.apply_update(processed_events.nodes_states_update);
+
+    let emitted: Vec<_> = processed_events.emmitable_events.iter().collect();
+
+    let enter_events: Vec<_> = emitted
+        .iter()
+        .filter(|e| e.name == EventName::MouseEnter)
+        .collect();
+    assert_eq!(enter_events.len(), 1);
+    assert_eq!(enter_events[0].key, 0);
+
+    let processed_events = test_measurer.run(
+        &mut vec![TestSourceEvent::MouseMove {
             cursor: (25., 25.).into(),
         }],
         &mut nodes_state,
         None,
     );
-
+    nodes_state.apply_update(processed_events.nodes_states_update);
     let emitted: Vec<_> = processed_events.emmitable_events.iter().collect();
 
     let enter_events: Vec<_> = emitted
@@ -439,12 +465,47 @@ fn exclusive_vs_non_exclusive_enter() {
     assert_eq!(enter_events.len(), 1);
     assert_eq!(enter_events[0].key, 1);
 
+    let processed_events = test_measurer.run(
+        &mut vec![TestSourceEvent::MouseMove {
+            cursor: (-25., -25.).into(),
+        }],
+        &mut nodes_state,
+        None,
+    );
+    nodes_state.apply_update(processed_events.nodes_states_update);
+
+    let processed_events = test_measurer.run(
+        &mut vec![TestSourceEvent::MouseMove {
+            cursor: (5., 5.).into(),
+        }],
+        &mut nodes_state,
+        None,
+    );
+    nodes_state.apply_update(processed_events.nodes_states_update);
+    let emitted: Vec<_> = processed_events.emmitable_events.iter().collect();
+
     let over_events: Vec<_> = emitted
         .iter()
         .filter(|e| e.name == EventName::MouseOver)
         .collect();
-    assert_eq!(over_events.len(), 2);
-    assert!(over_events.iter().any(|e| e.key == 0));
+    assert_eq!(over_events.len(), 1);
+    assert!(over_events.iter().any(|e| e.key == 0)); // WHAT
+
+    let processed_events = test_measurer.run(
+        &mut vec![TestSourceEvent::MouseMove {
+            cursor: (25., 25.).into(),
+        }],
+        &mut nodes_state,
+        None,
+    );
+    nodes_state.apply_update(processed_events.nodes_states_update);
+    let emitted: Vec<_> = processed_events.emmitable_events.iter().collect();
+
+    let over_events: Vec<_> = emitted
+        .iter()
+        .filter(|e| e.name == EventName::MouseOver)
+        .collect();
+    assert_eq!(over_events.len(), 1);
     assert!(over_events.iter().any(|e| e.key == 1));
 }
 
@@ -651,37 +712,38 @@ fn entered_node_transitions() {
 
     TestExecutor::without_handler().run(&mut nodes_state, processed);
 
-    let processed = test_measurer.run(
+    let processed_events = test_measurer.run(
         &mut vec![TestSourceEvent::MouseMove {
             cursor: (30., 30.).into(),
         }],
         &mut nodes_state,
         None,
     );
+    nodes_state.apply_update(processed_events.nodes_states_update.clone());
 
-    let names: Vec<_> = processed
+    let names: Vec<_> = processed_events
         .emmitable_events
         .iter()
         .map(|e| (e.key, e.name))
         .collect();
 
+    assert_eq!(names.len(), 3);
     assert!(names.contains(&(0, EventName::MouseLeave)));
     assert!(names.contains(&(1, EventName::MouseEnter)));
     assert!(names.contains(&(1, EventName::MouseOver)));
-    assert!(!names.contains(&(0, EventName::MouseOut)));
-    assert!(!names.contains(&(0, EventName::MouseOver)));
 
-    TestExecutor::without_handler().run(&mut nodes_state, processed);
+    TestExecutor::without_handler().run(&mut nodes_state, processed_events);
 
-    let processed = test_measurer.run(
+    let processed_events = test_measurer.run(
         &mut vec![TestSourceEvent::MouseMove {
             cursor: (5., 5.).into(),
         }],
         &mut nodes_state,
         None,
     );
+    nodes_state.apply_update(processed_events.nodes_states_update.clone());
 
-    let names: Vec<_> = processed
+    let names: Vec<_> = processed_events
         .emmitable_events
         .iter()
         .map(|e| (e.key, e.name))
@@ -692,17 +754,18 @@ fn entered_node_transitions() {
     assert!(names.contains(&(0, EventName::MouseEnter)));
     assert!(!names.contains(&(0, EventName::MouseOver)));
 
-    TestExecutor::without_handler().run(&mut nodes_state, processed);
+    TestExecutor::without_handler().run(&mut nodes_state, processed_events);
 
-    let processed = test_measurer.run(
+    let processed_events = test_measurer.run(
         &mut vec![TestSourceEvent::MouseMove {
             cursor: (500., 500.).into(),
         }],
         &mut nodes_state,
         None,
     );
+    nodes_state.apply_update(processed_events.nodes_states_update.clone());
 
-    let names: Vec<_> = processed
+    let names: Vec<_> = processed_events
         .emmitable_events
         .iter()
         .map(|e| (e.key, e.name))
@@ -712,7 +775,7 @@ fn entered_node_transitions() {
     assert!(names.contains(&(0, EventName::MouseLeave)));
     assert!(!names.iter().any(|(k, _)| *k == 1));
 
-    TestExecutor::without_handler().run(&mut nodes_state, processed);
+    TestExecutor::without_handler().run(&mut nodes_state, processed_events);
 
     assert!(!nodes_state.is_hovered(0));
     assert!(!nodes_state.is_hovered(1));

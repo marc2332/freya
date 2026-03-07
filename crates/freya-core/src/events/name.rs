@@ -60,6 +60,8 @@ impl Ord for EventName {
             e if e.is_capture() => std::cmp::Ordering::Less,
             // Left events have more priority over non-left
             e if e.is_left() => std::cmp::Ordering::Less,
+            // Exclusive left events have more priority over non-exclusive-left
+            e if e.is_exclusive_left() => std::cmp::Ordering::Less,
             e => {
                 if e == other {
                     std::cmp::Ordering::Equal
@@ -94,6 +96,10 @@ impl EventName {
 
     pub fn is_left(&self) -> bool {
         matches!(&self, Self::PointerLeave | Self::PointerOut)
+    }
+
+    pub fn is_exclusive_left(&self) -> bool {
+        matches!(&self, Self::PointerLeave)
     }
 
     pub fn is_down(&self) -> bool {
