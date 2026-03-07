@@ -326,6 +326,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                 .proxy
                 .send_event(NativeEvent::Generic(NativeGenericEvent::PollFutures));
         } else {
+            // [Android] Recreate the GraphicsDriver when the app gets brought into the foreground after being suspended,
+            // so we don't end up with a completely black surface with broken rendering.
             let old_windows: Vec<_> = self.windows.drain().collect();
             for (_, mut app_window) in old_windows {
                 let (new_driver, new_window) = GraphicsDriver::new(
