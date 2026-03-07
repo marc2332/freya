@@ -159,11 +159,11 @@ impl Component for TerminalPanel {
                             .expanded()
                             .background(background)
                             .padding(6.)
-                            .a11y_id(focus.a11y_id())
-                            .a11y_auto_focus(true)
-                            .a11y_focusable(true)
                             .child(
                                 Terminal::new(handle.clone())
+                                    .a11y_id(focus.a11y_id())
+                                    .a11y_auto_focus(true)
+                                    .a11y_focusable(true)
                                     .on_measured(move |(char_width, line_height)| {
                                         dimensions.set((char_width, line_height));
                                     })
@@ -244,77 +244,77 @@ impl Component for TerminalPanel {
                                                 (mouse_y / line_height as f64).floor() as usize;
                                             handle.wheel(e.delta_y, row, col);
                                         }
+                                    })
+                                    .on_key_up({
+                                        let handle = handle.clone();
+                                        move |e: Event<KeyboardEventData>| {
+                                            if e.key == Key::Named(NamedKey::Shift) {
+                                                handle.shift_pressed(false);
+                                            }
+                                        }
+                                    })
+                                    .on_key_down(move |e: Event<KeyboardEventData>| {
+                                        let mods = e.modifiers;
+                                        let ctrl_shift =
+                                            mods.contains(Modifiers::CONTROL | Modifiers::SHIFT);
+                                        let ctrl = mods.contains(Modifiers::CONTROL);
+
+                                        match &e.key {
+                                            Key::Character(ch)
+                                                if ctrl_shift && ch.eq_ignore_ascii_case("c") =>
+                                            {
+                                                if let Some(text) = handle.get_selected_text() {
+                                                    let _ = Clipboard::set(text);
+                                                }
+                                            }
+                                            Key::Character(ch)
+                                                if ctrl_shift && ch.eq_ignore_ascii_case("v") =>
+                                            {
+                                                if let Ok(text) = Clipboard::get() {
+                                                    let _ = handle.write(text.as_bytes());
+                                                }
+                                            }
+                                            Key::Character(ch) if ctrl && ch.len() == 1 => {
+                                                let _ = handle.write(&[ch.as_bytes()[0] & 0x1f]);
+                                            }
+                                            Key::Named(NamedKey::Enter) => {
+                                                let _ = handle.write(b"\r");
+                                            }
+                                            Key::Named(NamedKey::Backspace) => {
+                                                let _ = handle.write(&[0x7f]);
+                                            }
+                                            Key::Named(NamedKey::Delete) => {
+                                                let _ = handle.write(b"\x1b[3~");
+                                            }
+                                            Key::Named(NamedKey::Shift) => {
+                                                handle.shift_pressed(true);
+                                            }
+                                            Key::Named(NamedKey::Tab) => {
+                                                let _ = handle.write(b"\t");
+                                            }
+                                            Key::Named(NamedKey::Escape) => {
+                                                let _ = handle.write(&[0x1b]);
+                                            }
+                                            Key::Named(NamedKey::ArrowUp) => {
+                                                let _ = handle.write(b"\x1b[A");
+                                            }
+                                            Key::Named(NamedKey::ArrowDown) => {
+                                                let _ = handle.write(b"\x1b[B");
+                                            }
+                                            Key::Named(NamedKey::ArrowLeft) => {
+                                                let _ = handle.write(b"\x1b[D");
+                                            }
+                                            Key::Named(NamedKey::ArrowRight) => {
+                                                let _ = handle.write(b"\x1b[C");
+                                            }
+                                            _ => {
+                                                if let Some(ch) = e.try_as_str() {
+                                                    let _ = handle.write(ch.as_bytes());
+                                                }
+                                            }
+                                        }
                                     }),
                             )
-                            .on_key_up({
-                                let handle = handle.clone();
-                                move |e: Event<KeyboardEventData>| {
-                                    if e.key == Key::Named(NamedKey::Shift) {
-                                        handle.shift_pressed(false);
-                                    }
-                                }
-                            })
-                            .on_key_down(move |e: Event<KeyboardEventData>| {
-                                let mods = e.modifiers;
-                                let ctrl_shift =
-                                    mods.contains(Modifiers::CONTROL | Modifiers::SHIFT);
-                                let ctrl = mods.contains(Modifiers::CONTROL);
-
-                                match &e.key {
-                                    Key::Character(ch)
-                                        if ctrl_shift && ch.eq_ignore_ascii_case("c") =>
-                                    {
-                                        if let Some(text) = handle.get_selected_text() {
-                                            let _ = Clipboard::set(text);
-                                        }
-                                    }
-                                    Key::Character(ch)
-                                        if ctrl_shift && ch.eq_ignore_ascii_case("v") =>
-                                    {
-                                        if let Ok(text) = Clipboard::get() {
-                                            let _ = handle.write(text.as_bytes());
-                                        }
-                                    }
-                                    Key::Character(ch) if ctrl && ch.len() == 1 => {
-                                        let _ = handle.write(&[ch.as_bytes()[0] & 0x1f]);
-                                    }
-                                    Key::Named(NamedKey::Enter) => {
-                                        let _ = handle.write(b"\r");
-                                    }
-                                    Key::Named(NamedKey::Backspace) => {
-                                        let _ = handle.write(&[0x7f]);
-                                    }
-                                    Key::Named(NamedKey::Delete) => {
-                                        let _ = handle.write(b"\x1b[3~");
-                                    }
-                                    Key::Named(NamedKey::Shift) => {
-                                        handle.shift_pressed(true);
-                                    }
-                                    Key::Named(NamedKey::Tab) => {
-                                        let _ = handle.write(b"\t");
-                                    }
-                                    Key::Named(NamedKey::Escape) => {
-                                        let _ = handle.write(&[0x1b]);
-                                    }
-                                    Key::Named(NamedKey::ArrowUp) => {
-                                        let _ = handle.write(b"\x1b[A");
-                                    }
-                                    Key::Named(NamedKey::ArrowDown) => {
-                                        let _ = handle.write(b"\x1b[B");
-                                    }
-                                    Key::Named(NamedKey::ArrowLeft) => {
-                                        let _ = handle.write(b"\x1b[D");
-                                    }
-                                    Key::Named(NamedKey::ArrowRight) => {
-                                        let _ = handle.write(b"\x1b[C");
-                                    }
-                                    _ => {
-                                        if let Some(ch) = e.try_as_str() {
-                                            let _ = handle.write(ch.as_bytes());
-                                        }
-                                    }
-                                }
-                            })
                             .into_element()
                     } else {
                         "Terminal exited".into_element()

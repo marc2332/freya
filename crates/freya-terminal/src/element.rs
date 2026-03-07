@@ -10,7 +10,10 @@ use std::{
 };
 
 use freya_core::{
-    data::LayoutData,
+    data::{
+        AccessibilityData,
+        LayoutData,
+    },
     diff_key::DiffKey,
     element::{
         Element,
@@ -46,6 +49,7 @@ use crate::{
 pub struct Terminal {
     handle: TerminalHandle,
     layout_data: LayoutData,
+    accessibility: AccessibilityData,
     font_family: String,
     font_size: f32,
     foreground: Color,
@@ -68,9 +72,12 @@ impl PartialEq for Terminal {
 
 impl Terminal {
     pub fn new(handle: TerminalHandle) -> Self {
+        let mut accessibility = AccessibilityData::default();
+        accessibility.builder.set_role(AccessibilityRole::Terminal);
         Self {
             handle,
             layout_data: Default::default(),
+            accessibility,
             font_family: "Cascadia Code".to_string(),
             font_size: 14.,
             foreground: (220, 220, 220).into(),
@@ -126,6 +133,12 @@ impl LayoutExt for Terminal {
     }
 }
 
+impl AccessibilityExt for Terminal {
+    fn get_accessibility_data(&mut self) -> &mut AccessibilityData {
+        &mut self.accessibility
+    }
+}
+
 impl ElementExt for Terminal {
     fn diff(&self, other: &Rc<dyn ElementExt>) -> DiffModifies {
         let Some(terminal) = (other.as_ref() as &dyn Any).downcast_ref::<Terminal>() else {
@@ -149,11 +162,19 @@ impl ElementExt for Terminal {
             diff.insert(DiffModifies::STYLE);
         }
 
+        if self.accessibility != terminal.accessibility {
+            diff.insert(DiffModifies::ACCESSIBILITY);
+        }
+
         diff
     }
 
     fn layout(&'_ self) -> Cow<'_, LayoutData> {
         Cow::Borrowed(&self.layout_data)
+    }
+
+    fn accessibility(&'_ self) -> Cow<'_, AccessibilityData> {
+        Cow::Borrowed(&self.accessibility)
     }
 
     fn events_handlers(&'_ self) -> Option<Cow<'_, FxHashMap<EventName, EventHandlerType>>> {
