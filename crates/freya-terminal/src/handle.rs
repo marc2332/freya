@@ -196,6 +196,29 @@ impl TerminalHandle {
         Ok(())
     }
 
+    /// Write text to the PTY as a paste operation.
+    ///
+    /// If bracketed paste mode (DECSET 2004) is enabled in the terminal,
+    /// the text will be wrapped with paste start/end escape sequences
+    /// (`\x1b[200~` ... `\x1b[201~`), allowing applications to distinguish
+    /// pasted text from typed input.
+    ///
+    /// This also clears the current selection and scrolls to bottom.
+    pub fn paste(&self, text: &str) -> Result<(), TerminalError> {
+        let bracketed = self.parser.borrow().screen().bracketed_paste();
+
+        let mut data = Vec::with_capacity(text.len() + 12);
+        if bracketed {
+            data.extend_from_slice(b"\x1b[200~");
+        }
+        data.extend_from_slice(text.as_bytes());
+        if bracketed {
+            data.extend_from_slice(b"\x1b[201~");
+        }
+
+        self.write(&data)
+    }
+
     /// Write data to the PTY without resetting scroll or selection state.
     fn write_raw(&self, data: &[u8]) -> Result<(), TerminalError> {
         match &mut *self.writer.borrow_mut() {
