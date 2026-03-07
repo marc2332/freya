@@ -1313,11 +1313,11 @@ fn resolve_old_path(new_path: &[u32], moved: &HashMap<Box<[u32]>, Vec<(u32, u32)
     for i in 0..new_path.len() {
         let new_parent = &new_path[..i];
         let new_index = new_path[i];
-        if let Some(movements) = moved.get(new_parent) {
-            if let Some(&(from, _)) = movements.iter().find(|(_, to)| *to == new_index) {
-                old_path.push(from);
-                continue;
-            }
+        if let Some(movements) = moved.get(new_parent)
+            && let Some(&(from, _)) = movements.iter().find(|(_, to)| *to == new_index)
+        {
+            old_path.push(from);
+            continue;
         }
         old_path.push(new_index);
     }
