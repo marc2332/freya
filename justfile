@@ -2,6 +2,10 @@ f:
     taplo fmt
     cargo +nightly-2025-09-25 fmt --all -- --error-on-unformatted --unstable-features
 
+f-check:
+    taplo fmt --check
+    cargo +nightly-2025-09-25 fmt --all --check -- --error-on-unformatted --unstable-features
+
 c:
     taplo check
     cargo clippy --workspace --examples --features "all-debug" -- -D warnings
