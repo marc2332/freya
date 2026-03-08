@@ -76,6 +76,7 @@ pub struct VirtualScrollView<D, B: Fn(usize, &D) -> Element> {
     scroll_with_arrows: bool,
     scroll_controller: Option<ScrollController>,
     invert_scroll_wheel: bool,
+    drag_scrolling: bool,
     key: DiffKey,
 }
 
@@ -123,6 +124,7 @@ impl<B: Fn(usize, &()) -> Element> VirtualScrollView<(), B> {
             scroll_with_arrows: true,
             scroll_controller: None,
             invert_scroll_wheel: false,
+            drag_scrolling: cfg!(target_os = "android"),
             key: DiffKey::None,
         }
     }
@@ -143,6 +145,7 @@ impl<B: Fn(usize, &()) -> Element> VirtualScrollView<(), B> {
             scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
             invert_scroll_wheel: false,
+            drag_scrolling: cfg!(target_os = "android"),
             key: DiffKey::None,
         }
     }
@@ -165,6 +168,7 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
             scroll_with_arrows: true,
             scroll_controller: None,
             invert_scroll_wheel: false,
+            drag_scrolling: cfg!(target_os = "android"),
             key: DiffKey::None,
         }
     }
@@ -190,6 +194,7 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
             scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
             invert_scroll_wheel: false,
+            drag_scrolling: cfg!(target_os = "android"),
             key: DiffKey::None,
         }
     }
@@ -221,6 +226,11 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
 
     pub fn invert_scroll_wheel(mut self, invert_scroll_wheel: impl Into<bool>) -> Self {
         self.invert_scroll_wheel = invert_scroll_wheel.into();
+        self
+    }
+
+    pub fn drag_scrolling(mut self, drag_scrolling: bool) -> Self {
+        self.drag_scrolling = drag_scrolling;
         self
     }
 
@@ -256,9 +266,11 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
         let mut scroll_controller = self
             .scroll_controller
             .unwrap_or_else(|| use_scroll_controller(ScrollConfig::default));
+        let mut dragging_content = use_state::<Option<(f64, f64)>>(|| None);
         let (scrolled_x, scrolled_y) = scroll_controller.into();
         let layout = &self.layout.layout;
         let direction = layout.direction;
+        let drag_scrolling = self.drag_scrolling;
 
         let (inner_width, inner_height) = match direction {
             Direction::Vertical => (
@@ -305,6 +317,10 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
                 e.prevent_default();
                 clicking_scrollbar.set(None);
             }
+
+            if drag_scrolling && dragging_content.read().is_some() {
+                dragging_content.set(None);
+            }
         };
 
         let on_wheel = move |e: Event<WheelEventData>| {
@@ -348,6 +364,23 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
         };
 
         let on_capture_global_pointer_move = move |e: Event<PointerEventData>| {
+            if drag_scrolling {
+                let current_drag = *dragging_content.peek();
+                if let Some((prev_x, prev_y)) = current_drag {
+                    let coords = e.global_location();
+                    let delta_x = (prev_x - coords.x) as f32;
+                    let delta_y = (prev_y - coords.y) as f32;
+
+                    scroll_controller.scroll_to_y((corrected_scrolled_y - delta_y) as i32);
+                    scroll_controller.scroll_to_x((corrected_scrolled_x - delta_x) as i32);
+
+                    dragging_content.set(Some((coords.x, coords.y)));
+                    e.prevent_default();
+                    timeout.reset();
+                    return;
+                }
+            }
+
             let clicking_scrollbar = clicking_scrollbar.peek();
 
             if let Some((Axis::Y, y)) = *clicking_scrollbar {
@@ -467,6 +500,15 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
             }
         };
 
+        let on_pointer_down = move |e: Event<PointerEventData>| {
+            if drag_scrolling {
+                let coords = e.global_location();
+                dragging_content.set(Some((coords.x, coords.y)));
+                focus.request_focus();
+                timeout.reset();
+            }
+        };
+
         rect()
             .width(layout.width.clone())
             .height(layout.height.clone())
@@ -485,6 +527,7 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
             .on_key_down(on_key_down)
             .on_global_key_up(on_global_key_up)
             .on_global_key_down(on_global_key_down)
+            .on_pointer_down(on_pointer_down)
             .child(
                 rect()
                     .width(container_width.clone())

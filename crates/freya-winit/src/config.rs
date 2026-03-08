@@ -13,7 +13,10 @@ use freya_core::{
 };
 use image::ImageReader;
 use winit::{
-    event_loop::ActiveEventLoop,
+    event_loop::{
+        ActiveEventLoop,
+        EventLoopBuilder,
+    },
     window::{
         Icon,
         Window,
@@ -27,7 +30,10 @@ use crate::{
         FreyaPlugin,
         PluginsManager,
     },
-    renderer::LaunchProxy,
+    renderer::{
+        LaunchProxy,
+        NativeEvent,
+    },
 };
 
 pub type WindowBuilderHook =
@@ -230,6 +236,7 @@ pub struct LaunchConfig {
     pub(crate) embedded_fonts: EmbeddedFonts,
     pub(crate) fallback_fonts: Vec<Cow<'static, str>>,
     pub(crate) tasks: Vec<TaskHandler>,
+    pub(crate) event_loop_builder: Option<EventLoopBuilder<NativeEvent>>,
 }
 
 impl Default for LaunchConfig {
@@ -242,6 +249,7 @@ impl Default for LaunchConfig {
             embedded_fonts: Default::default(),
             fallback_fonts: default_fonts(),
             tasks: Vec::new(),
+            event_loop_builder: None,
         }
     }
 }
@@ -337,6 +345,14 @@ impl LaunchConfig {
     {
         self.tasks
             .push(Box::new(move |proxy| Box::pin(task(proxy))));
+        self
+    }
+
+    pub fn with_event_loop_builder(
+        mut self,
+        event_loop_builder: EventLoopBuilder<NativeEvent>,
+    ) -> Self {
+        self.event_loop_builder.replace(event_loop_builder);
         self
     }
 }

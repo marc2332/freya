@@ -46,6 +46,7 @@ use winit::{
     window::{
         Theme,
         Window,
+        WindowAttributes,
         WindowId,
     },
 };
@@ -103,6 +104,9 @@ pub struct AppWindow {
     pub(crate) dropped_file_paths: Vec<PathBuf>,
 
     pub(crate) on_close: Option<OnCloseHook>,
+
+    pub(crate) window_attributes: WindowAttributes,
+    pub(crate) window_config: WindowConfig,
 }
 
 impl AppWindow {
@@ -138,7 +142,7 @@ impl AppWindow {
             window_attributes = window_attributes_hook(window_attributes, active_event_loop);
         }
         let (driver, mut window) =
-            GraphicsDriver::new(active_event_loop, window_attributes, &window_config);
+            GraphicsDriver::new(active_event_loop, window_attributes.clone(), &window_config);
 
         if let Some(window_handle_hook) = window_config.window_handle_hook.take() {
             window_handle_hook(&mut window);
@@ -148,7 +152,8 @@ impl AppWindow {
 
         let (events_sender, events_receiver) = futures_channel::mpsc::unbounded();
 
-        let mut runner = Runner::new(move || integration(window_config.app.clone()).into_element());
+        let app = window_config.app.clone();
+        let mut runner = Runner::new(move || integration(app.clone()).into_element());
 
         runner.provide_root_context(|| screen_reader);
 
@@ -315,6 +320,9 @@ impl AppWindow {
             dropped_file_paths: Vec::new(),
 
             on_close,
+
+            window_attributes,
+            window_config,
         }
     }
 
