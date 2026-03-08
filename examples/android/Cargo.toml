@@ -15,7 +15,7 @@ winit = { version = "0.30.12", features = ["android-game-activity", "rwh_06"] }
 jni = "0.19.0"
 
 [lib]
-path = "src/main.rs"
+path = "src/lib.rs"
 name = "android_example"
 crate-type = ["cdylib", "rlib"]
 
