@@ -105,7 +105,7 @@ pub struct AppWindow {
 
     pub(crate) on_close: Option<OnCloseHook>,
 
-    pub(crate) attributes: WindowAttributes,
+    pub(crate) window_attributes: WindowAttributes,
     pub(crate) window_config: WindowConfig,
 }
 
@@ -321,7 +321,7 @@ impl AppWindow {
 
             on_close,
             
-            attributes: window_attributes,
+            window_attributes: window_attributes,
             window_config,
         }
     }
