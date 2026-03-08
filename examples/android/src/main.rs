@@ -1,10 +1,16 @@
-use freya::prelude::*;
-use freya::prelude::{launch, LaunchConfig, WindowConfig};
-
+use freya::prelude::{
+    LaunchConfig,
+    WindowConfig,
+    launch,
+    *,
+};
 #[cfg(target_os = "android")]
 use {
+    jni::{
+        JNIEnv,
+        JavaVM,
+    },
     winit::platform::android::activity::AndroidApp,
-    jni::{JNIEnv, JavaVM},
 };
 
 fn app() -> impl IntoElement {
@@ -48,25 +54,34 @@ fn app() -> impl IntoElement {
 #[cfg(not(target_os = "android"))]
 fn main() {
     env_logger::init();
-    launch(LaunchConfig::new().with_window(WindowConfig::new(app).with_size(500., 450.).with_resizable(false)))
+    launch(
+        LaunchConfig::new().with_window(
+            WindowConfig::new(app)
+                .with_size(500., 450.)
+                .with_resizable(false),
+        ),
+    )
 }
 
 #[cfg(target_os = "android")]
 #[unsafe(no_mangle)]
 fn android_main(droid_app: AndroidApp) {
-    use winit::platform::android::EventLoopBuilderExtAndroid;
-    use winit::event_loop::EventLoop;
     use freya_winit::renderer::NativeEvent;
+    use winit::{
+        event_loop::EventLoop,
+        platform::android::EventLoopBuilderExtAndroid,
+    };
 
-    android_logger::init_once(android_logger::Config::default().with_max_level(log::LevelFilter::Debug));
+    android_logger::init_once(
+        android_logger::Config::default().with_max_level(log::LevelFilter::Debug),
+    );
 
     let mut event_loop_builder = EventLoop::<NativeEvent>::with_user_event();
     event_loop_builder.with_android_app(droid_app);
 
     launch(
         LaunchConfig::new()
-            .with_window(WindowConfig::new(app)
-                .with_size(500., 450.))
+            .with_window(WindowConfig::new(app).with_size(500., 450.))
             .with_event_loop_builder(event_loop_builder),
     )
 }
