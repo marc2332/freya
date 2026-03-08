@@ -73,6 +73,27 @@ use crate::{
     },
 };
 
+/// Returns `true` for accessibility roles that require IME input (text fields, terminals, etc.).
+fn is_ime_role(role: AccessibilityRole) -> bool {
+    matches!(
+        role,
+        AccessibilityRole::TextInput
+            | AccessibilityRole::MultilineTextInput
+            | AccessibilityRole::PasswordInput
+            | AccessibilityRole::SearchInput
+            | AccessibilityRole::DateInput
+            | AccessibilityRole::DateTimeInput
+            | AccessibilityRole::WeekInput
+            | AccessibilityRole::MonthInput
+            | AccessibilityRole::TimeInput
+            | AccessibilityRole::EmailInput
+            | AccessibilityRole::NumberInput
+            | AccessibilityRole::PhoneNumberInput
+            | AccessibilityRole::UrlInput
+            | AccessibilityRole::Terminal
+    )
+}
+
 pub struct WinitRenderer {
     pub windows_configs: Vec<WindowConfig>,
     #[cfg(feature = "tray")]
@@ -765,9 +786,12 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                     .set_if_modified(update.focus);
                                 let node_id = app.accessibility.focused_node_id().unwrap();
                                 let layout_node = app.tree.layout.get(&node_id).unwrap();
-                                app.platform.focused_accessibility_node.set_if_modified(
-                                    AccessibilityTree::create_node(node_id, layout_node, &app.tree),
-                                );
+                                let focused_node =
+                                    AccessibilityTree::create_node(node_id, layout_node, &app.tree);
+                                app.window.set_ime_allowed(is_ime_role(focused_node.role()));
+                                app.platform
+                                    .focused_accessibility_node
+                                    .set_if_modified(focused_node);
                                 if let Some(mode) = mode {
                                     app.platform.navigation_mode.set(mode);
                                 }
@@ -787,9 +811,12 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                     .set_if_modified(update.focus);
                                 let node_id = app.accessibility.focused_node_id().unwrap();
                                 let layout_node = app.tree.layout.get(&node_id).unwrap();
-                                app.platform.focused_accessibility_node.set_if_modified(
-                                    AccessibilityTree::create_node(node_id, layout_node, &app.tree),
-                                );
+                                let focused_node =
+                                    AccessibilityTree::create_node(node_id, layout_node, &app.tree);
+                                app.window.set_ime_allowed(is_ime_role(focused_node.role()));
+                                app.platform
+                                    .focused_accessibility_node
+                                    .set_if_modified(focused_node);
 
                                 let area = layout_node.visible_area();
                                 app.window.set_ime_cursor_area(

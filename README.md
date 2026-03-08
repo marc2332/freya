@@ -679,12 +679,9 @@ fn app() -> impl IntoElement {
         .center()
         .background((30, 30, 30))
         .color((245, 245, 245))
+        .padding(6.)
         .child(if let Some(handle) = handle.read().clone() {
-            rect()
-                .child(Terminal::new(handle.clone()))
-                .expanded()
-                .background((10, 10, 10))
-                .padding(6.)
+            Terminal::new(handle.clone())
                 .a11y_id(focus.a11y_id())
                 .on_key_down(move |e: Event<KeyboardEventData>| {
                     if e.modifiers.contains(Modifiers::CONTROL)
