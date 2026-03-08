@@ -4,9 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-freya = { workspace = true, features = ["router"] }
+freya = { workspace = true }
 freya-winit = { workspace = true }
-freya-router = { workspace = true }
 env_logger = "0.11.9"
 log = "0.4.29"
 

@@ -9,7 +9,6 @@ use {
 
 fn app() -> impl IntoElement {
     let mut count = use_state(|| 4);
-    let mut float = use_state(|| 0.);
 
     let counter = rect()
         .width(Size::fill())
