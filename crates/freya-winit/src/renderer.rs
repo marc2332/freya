@@ -332,7 +332,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
             for (_, mut app_window) in old_windows {
                 let (new_driver, new_window) = GraphicsDriver::new(
                     active_event_loop,
-                    app_window.window_attributes.clone(),
+                    app_window.attributes.clone(),
                     &app_window.window_config,
                 );
 
