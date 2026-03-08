@@ -530,12 +530,6 @@ fn create_swapchain(
             .unwrap()
     };
 
-    let present_modes = unsafe {
-        surface_fns
-            .get_physical_device_surface_present_modes(physical_device, surface)
-            .unwrap()
-    };
-
     let format = surface_formats
         .iter()
         .find(|f| {
@@ -543,11 +537,7 @@ fn create_swapchain(
         })
         .unwrap();
 
-    let present_mode = present_modes
-        .iter()
-        .cloned()
-        .find(|&m| m == PresentModeKHR::MAILBOX)
-        .unwrap_or(PresentModeKHR::FIFO);
+    let present_mode = PresentModeKHR::FIFO;
 
     let extent = if surface_caps.current_extent.width == u32::MAX {
         Extent2D {
