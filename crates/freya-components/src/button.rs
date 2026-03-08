@@ -236,7 +236,7 @@ impl Component for Button {
 
         let enabled = use_reactive(&self.enabled);
         use_drop(move || {
-            if hovering() && enabled() {
+            if hovering() {
                 Cursor::set(CursorIcon::default());
             }
         });
@@ -312,9 +312,12 @@ impl Component for Button {
                             }
                         }
                     })
+                    .on_pointer_over(move |_| {
+                        hovering.set(true);
+                    })
+                    .on_pointer_out(move |_| hovering.set_if_modified(false))
             })
             .on_pointer_enter(move |_| {
-                hovering.set(true);
                 if enabled() {
                     Cursor::set(CursorIcon::Pointer);
                 } else {
@@ -322,10 +325,7 @@ impl Component for Button {
                 }
             })
             .on_pointer_leave(move |_| {
-                if hovering() {
-                    Cursor::set(CursorIcon::default());
-                    hovering.set(false);
-                }
+                Cursor::set(CursorIcon::default());
             })
             .children(self.elements.clone())
     }

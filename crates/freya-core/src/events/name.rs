@@ -10,6 +10,8 @@ pub enum EventName {
     PointerDown,
     PointerEnter,
     PointerLeave,
+    PointerOver,
+    PointerOut,
 
     // Platform Keyboard
     KeyDown,
@@ -58,6 +60,8 @@ impl Ord for EventName {
             e if e.is_capture() => std::cmp::Ordering::Less,
             // Left events have more priority over non-left
             e if e.is_left() => std::cmp::Ordering::Less,
+            // Exclusive left events have more priority over non-exclusive-left
+            e if e.is_exclusive_left() => std::cmp::Ordering::Less,
             e => {
                 if e == other {
                     std::cmp::Ordering::Equal
@@ -91,6 +95,10 @@ impl EventName {
     }
 
     pub fn is_left(&self) -> bool {
+        matches!(&self, Self::PointerLeave | Self::PointerOut)
+    }
+
+    pub fn is_exclusive_left(&self) -> bool {
         matches!(&self, Self::PointerLeave)
     }
 
@@ -131,12 +139,18 @@ impl ragnarok::NameOfEvent for EventName {
         match self {
             Self::MouseMove | Self::TouchMove => {
                 events.insert(Self::PointerEnter);
+                events.insert(Self::PointerOver);
             }
             Self::MouseDown | Self::TouchStart => {
                 events.insert(Self::PointerDown);
             }
             Self::MouseUp | Self::TouchEnd => {
                 events.insert(Self::PointerPress);
+            }
+            // PointerOut is synthesized as the leave event; it also derives PointerLeave
+            // so that both events are emitted when a node stops being hovered.
+            Self::PointerOut => {
+                events.insert(Self::PointerLeave);
             }
             _ => {}
         }
@@ -169,6 +183,7 @@ impl ragnarok::NameOfEvent for EventName {
                     Self::MouseMove,
                     Self::TouchMove,
                     Self::PointerEnter,
+                    Self::PointerOver,
                     Self::GlobalPointerMove,
                 ]);
             }
@@ -211,11 +226,13 @@ impl ragnarok::NameOfEvent for EventName {
     }
 
     fn does_bubble(&self) -> bool {
-        !self.is_moved()
+        (!self.is_moved()
             && !self.is_enter()
             && !self.is_left()
             && !self.is_global()
-            && !self.is_capture()
+            && !self.is_capture())
+            || self.is_exclusive_enter()
+            || self.is_exclusive_leave()
     }
 
     fn does_go_through_solid(&self) -> bool {
@@ -224,7 +241,7 @@ impl ragnarok::NameOfEvent for EventName {
     }
 
     fn is_enter(&self) -> bool {
-        matches!(&self, Self::PointerEnter)
+        matches!(&self, Self::PointerEnter | Self::PointerOver)
     }
 
     fn is_pressed(&self) -> bool {
@@ -235,7 +252,23 @@ impl ragnarok::NameOfEvent for EventName {
         matches!(&self, Self::PointerPress)
     }
 
+    fn is_exclusive_enter(&self) -> bool {
+        matches!(&self, Self::PointerEnter)
+    }
+
+    fn is_exclusive_leave(&self) -> bool {
+        matches!(&self, Self::PointerLeave)
+    }
+
     fn new_leave() -> Self {
+        Self::PointerOut
+    }
+
+    fn new_exclusive_leave() -> Self {
         Self::PointerLeave
+    }
+
+    fn new_exclusive_enter() -> Self {
+        Self::PointerEnter
     }
 }
