@@ -94,7 +94,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 url = "2.5"
 open = "5.1"
-rusqlite = { version = "0.32", features = ["bundled"] }
+rusqlite = { version = "0.38", features = ["bundled"] }
 
 # Animations
 easer = "0.3.0"
@@ -136,7 +136,7 @@ accesskit = "0.24.0"
 accesskit_winit = "0.32.0"
 
 # Performance
-hotpath = "0.10"
+hotpath = "0.14"
 
 # Errors
 anyhow = "1.0.100"
