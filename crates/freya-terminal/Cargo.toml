@@ -27,7 +27,7 @@ keyboard-types = { workspace = true }
 # PTY and VT100
 portable-pty = "0.9"
 vt100 = "0.16"
-termwiz = "0.22"
+termwiz = "0.23"
 
 # Async
 futures-channel = { workspace = true }
