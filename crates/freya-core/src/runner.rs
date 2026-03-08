@@ -180,6 +180,7 @@ impl Drop for Runner {
                             true
                         }
                     });
+                    drop(_removed_tasks);
                     let _scope = self.scopes_storages.borrow_mut().remove(&scope_id);
                 },
             );
@@ -1095,6 +1096,7 @@ impl Runner {
                             true
                         }
                     });
+                    drop(_removed_tasks);
                     // This is very important, the scope storage must be dropped after the borrow in `scopes_storages` has been released
                     let _scope = self.scopes_storages.borrow_mut().remove(&scope.id);
                 },
