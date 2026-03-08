@@ -320,8 +320,8 @@ impl AppWindow {
             dropped_file_paths: Vec::new(),
 
             on_close,
-            
-            window_attributes: window_attributes,
+
+            window_attributes,
             window_config,
         }
     }
