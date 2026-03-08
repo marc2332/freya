@@ -16,21 +16,21 @@ features = ["mocked-engine"]
 
 [features]
 mocked-engine = []
-skia-engine = ["dep:skia-safe"]
-vulkan = ["skia-safe/vulkan"]
-metal = ["skia-safe/metal"]
+skia-engine = ["dep:freya-skia-safe"]
+vulkan = ["freya-skia-safe/vulkan"]
+metal = ["freya-skia-safe/metal"]
 
 [dependencies]
 bitflags = { workspace = true }
-skia-safe = { workspace = true, optional = true }
+freya-skia-safe = { workspace = true, optional = true }
 glutin = { workspace = true }
 
-[target."cfg(target_os = \"linux\")".dependencies.skia-safe]
+[target."cfg(target_os = \"linux\")".dependencies.freya-skia-safe]
 workspace = true
 optional = true
 features = ["gl", "textlayout", "svg", "x11", "wayland"]
 
-[target."cfg(target_os = \"macos\")".dependencies.skia-safe]
+[target."cfg(target_os = \"macos\")".dependencies.freya-skia-safe]
 workspace = true
 optional = true
 features = ["gl", "textlayout", "svg", "metal"]

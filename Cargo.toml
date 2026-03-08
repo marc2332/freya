@@ -111,7 +111,7 @@ euclid = "0.22.9"
 itertools = "0.14.0"
 
 # Rendering
-skia-safe = { version = "0.93.1", features = ["gl", "textlayout", "svg"] }
+freya-skia-safe = { version = "0.93.2", features = ["gl", "textlayout", "svg"] }
 bytes = "1.10.1"
 rfd = "0.17"
 
@@ -149,8 +149,8 @@ image = "0.25.8"
 tokio = { version = "1.0", default-features = false }
 
 # Rendering
-[target."cfg(target_os = \"linux\")".dependencies.skia-safe]
-version = "0.93.1"
+[target."cfg(target_os = \"linux\")".dependencies.freya-skia-safe]
+version = "0.93.2"
 features = ["gl", "textlayout", "svg", "x11", "wayland"]
 
 [dev-dependencies]
@@ -173,7 +173,7 @@ freya-webview = { workspace = true }
 freya-terminal = { workspace = true }
 freya-code-editor = { workspace = true }
 
-skia-safe = { workspace = true }
+freya-skia-safe = { workspace = true }
 
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
