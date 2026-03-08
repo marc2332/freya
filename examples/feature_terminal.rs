@@ -140,7 +140,7 @@ fn app() -> impl IntoElement {
                         }
                         Key::Character(ch) if ctrl_shift && ch.eq_ignore_ascii_case("v") => {
                             if let Ok(text) = Clipboard::get() {
-                                let _ = handle.write(text.as_bytes());
+                                let _ = handle.paste(&text);
                             }
                         }
                         Key::Character(ch) if ctrl && ch.len() == 1 => {
