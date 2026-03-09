@@ -97,9 +97,6 @@ impl Component for CodeEditor {
 
         let focus = Focus::new_for_id(a11y_id);
 
-        let mut pressing_shift = use_state(|| false);
-        let mut pressing_alt = use_state(|| false);
-
         let scroll_controller = use_hook(|| {
             let notifier = State::create(());
             let requests = State::create(vec![]);
@@ -143,16 +140,6 @@ impl Component for CodeEditor {
         let on_key_up = {
             let mut editor = editor.clone();
             move |e: Event<KeyboardEventData>| {
-                match &e.key {
-                    Key::Named(NamedKey::Shift) => {
-                        pressing_shift.set(false);
-                    }
-                    Key::Named(NamedKey::Alt) => {
-                        pressing_alt.set(false);
-                    }
-                    _ => {}
-                };
-
                 editor.write_if(|mut editor| {
                     editor.process(font_size, EditableEvent::KeyUp { key: &e.key })
                 });
@@ -165,12 +152,6 @@ impl Component for CodeEditor {
                 e.stop_propagation();
 
                 match &e.key {
-                    Key::Named(NamedKey::Shift) => {
-                        pressing_shift.set(true);
-                    }
-                    Key::Named(NamedKey::Alt) => {
-                        pressing_alt.set(true);
-                    }
                     Key::Named(NamedKey::Tab) => {
                         e.prevent_default();
                     }
