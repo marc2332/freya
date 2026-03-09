@@ -43,16 +43,16 @@
 //! ### Learn
 //! - [Built-in Components](crate::components)
 //! - [Built-in Components Gallery](crate::components::gallery)
-//! - [i18n](freya_i18n)
-//! - [Animation](freya_animation::prelude::use_animation)
-//! - [Routing](freya_router)
-//! - [Clipboard](freya_clipboard)
-//! - [Icons](freya_icons)
-//! - [Material Design](freya_material_design)
+//! - [i18n]
+//! - [Animation](crate::animation::use_animation)
+//! - [Routing](router)
+//! - [Clipboard](clipboard)
+//! - [Icons](icons)
+//! - [Material Design](material_design)
 //! - [Plotters](freya_plotters_backend)
 //! - [Testing](freya_testing)
-//! - [WebView](freya_webview)
-//! - [Terminal](freya_terminal)
+//! - [WebView](webview)
+//! - [Terminal](terminal)
 //!
 //! ## Features flags
 //!
