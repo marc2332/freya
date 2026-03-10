@@ -117,7 +117,7 @@ rfd = "0.17"
 
 # Desktop renderer
 raw-window-handle = "0.6.0"
-winit = "0.30.0"
+winit = "0.30.13"
 
 # Tray
 tray-icon = "0.21"
