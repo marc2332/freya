@@ -224,14 +224,37 @@ impl VisibleSizeExt for VisibleSize {
     }
 }
 
+/// Trait for composing child elements.
 pub trait ChildrenExt: Sized {
+    /// Returns a mutable reference to the internal children vector.
+    ///
+    /// # Example
+    /// ```ignore
+    /// impl ChildrenExt for MyElement {
+    ///     fn get_children(&mut self) -> &mut Vec<Element> {
+    ///         &mut self.elements
+    ///     }
+    /// }
+    /// ```
     fn get_children(&mut self) -> &mut Vec<Element>;
 
+    /// Extends the children with an iterable of [`Element`]s.
+    ///
+    /// # Example
+    /// ```ignore
+    /// rect().children(["Hello", "World"].map(|t| label().text(t).into_element()))
+    /// ```
     fn children(mut self, children: impl IntoIterator<Item = Element>) -> Self {
         self.get_children().extend(children);
         self
     }
 
+    /// Appends a child only when the [`Option`] is [`Some`].
+    ///
+    /// # Example
+    /// ```ignore
+    /// rect().maybe_child(show_badge.then(|| label().text("New")))
+    /// ```
     fn maybe_child<C: IntoElement>(mut self, child: Option<C>) -> Self {
         if let Some(child) = child {
             self.get_children().push(child.into_element());
@@ -239,6 +262,12 @@ pub trait ChildrenExt: Sized {
         self
     }
 
+    /// Appends a single child element.
+    ///
+    /// # Example
+    /// ```ignore
+    /// rect().child(label().text("Hello"))
+    /// ```
     fn child<C: IntoElement>(mut self, child: C) -> Self {
         self.get_children().push(child.into_element());
         self
