@@ -43,6 +43,7 @@ all = [
 ]
 all-publish = [
   "all",
+  "docs",
   "performance",
   "mocked-engine",
   "freya-components/docs",
