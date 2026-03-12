@@ -179,7 +179,6 @@ impl ComponentOwned for MenuContainer {
             .a11y_member_of(focus.a11y_id())
             .a11y_focusable(true)
             .a11y_role(AccessibilityRole::Menu)
-            .position(Position::new_absolute())
             .shadow((0.0, 4.0, 10.0, 0., theme.shadow))
             .background(theme.background)
             .corner_radius(theme.corner_radius)
