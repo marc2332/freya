@@ -172,7 +172,16 @@ impl WindowConfig {
         self
     }
 
-    /// Specify Window icon.
+    /// Specify the Window icon. Use [`LaunchConfig::window_icon`] to load the icon from bytes.
+    ///
+    /// # Example
+    /// ```no_run
+    /// # use freya::prelude::*;
+    /// const ICON: &[u8] = include_bytes!("./icon.png");
+    ///
+    /// WindowConfig::new(app).with_icon(LaunchConfig::window_icon(ICON));
+    /// # fn app() -> impl IntoElement { "" }
+    /// ```
     pub fn with_icon(mut self, icon: Icon) -> Self {
         self.icon = Some(icon);
         self
@@ -251,6 +260,7 @@ impl LaunchConfig {
         LaunchConfig::default()
     }
 
+    /// Load a window icon from image bytes. Pass the result to [`WindowConfig::with_icon`].
     pub fn window_icon(icon: &[u8]) -> Icon {
         let reader = ImageReader::new(Cursor::new(icon))
             .with_guessed_format()
