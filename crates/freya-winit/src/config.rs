@@ -177,7 +177,7 @@ impl WindowConfig {
     /// # Example
     /// ```no_run
     /// # use freya::prelude::*;
-    /// const ICON: &[u8] = include_bytes!("./icon.png");
+    /// const ICON: &[u8] = include_bytes!("../../../examples/freya_icon.png");
     ///
     /// WindowConfig::new(app).with_icon(LaunchConfig::window_icon(ICON));
     /// # fn app() -> impl IntoElement { "" }
