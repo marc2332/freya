@@ -151,12 +151,9 @@ impl Component for CodeEditor {
             move |e: Event<KeyboardEventData>| {
                 e.stop_propagation();
 
-                match &e.key {
-                    Key::Named(NamedKey::Tab) => {
-                        e.prevent_default();
-                    }
-                    _ => {}
-                };
+                if let Key::Named(NamedKey::Tab) = &e.key {
+                    e.prevent_default();
+                }
 
                 const LINES_JUMP_ALT: usize = 5;
                 const LINES_JUMP_CONTROL: usize = 3;
