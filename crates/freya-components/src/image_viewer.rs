@@ -89,30 +89,24 @@ pub enum ImageSource {
     Bytes(u64, Bytes),
 }
 
-impl From<(u64, Bytes)> for ImageSource {
-    fn from((id, bytes): (u64, Bytes)) -> Self {
-        Self::Bytes(id, bytes)
-    }
-}
-
-impl From<(&'static str, Bytes)> for ImageSource {
-    fn from((id, bytes): (&'static str, Bytes)) -> Self {
+impl<H: Hash> From<(H, Bytes)> for ImageSource {
+    fn from((id, bytes): (H, Bytes)) -> Self {
         let mut hasher = DefaultHasher::default();
         id.hash(&mut hasher);
         Self::Bytes(hasher.finish(), bytes)
     }
 }
 
-impl From<(&'static str, &'static [u8])> for ImageSource {
-    fn from((id, bytes): (&'static str, &'static [u8])) -> Self {
+impl<H: Hash> From<(H, &'static [u8])> for ImageSource {
+    fn from((id, bytes): (H, &'static [u8])) -> Self {
         let mut hasher = DefaultHasher::default();
         id.hash(&mut hasher);
         Self::Bytes(hasher.finish(), Bytes::from_static(bytes))
     }
 }
 
-impl<const N: usize> From<(&'static str, &'static [u8; N])> for ImageSource {
-    fn from((id, bytes): (&'static str, &'static [u8; N])) -> Self {
+impl<const N: usize, H: Hash> From<(H, &'static [u8; N])> for ImageSource {
+    fn from((id, bytes): (H, &'static [u8; N])) -> Self {
         let mut hasher = DefaultHasher::default();
         id.hash(&mut hasher);
         Self::Bytes(hasher.finish(), Bytes::from_static(bytes))
