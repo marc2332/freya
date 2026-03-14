@@ -71,8 +71,8 @@ use crate::{
 /// # use freya::prelude::*;
 /// # use bytes::Bytes;
 /// fn app() -> impl IntoElement {
-///     let image_data = use_state(|| Bytes::from(vec![/* ... */]));
-///     let source: ImageSource = (0, image_data.read().clone()).into();
+///     let image_data = use_state(|| (0, Bytes::from(vec![/* ... */])));
+///     let source: ImageSource = image_data.read().clone().into();
 ///     ImageViewer::new(source)
 /// }
 /// ```
