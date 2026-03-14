@@ -15,6 +15,7 @@ use freya_edit::Clipboard;
 use torin::prelude::{
     Alignment,
     Area,
+    CursorPoint,
     Position,
     Size,
 };
@@ -94,12 +95,20 @@ impl ColorPicker {
     }
 }
 
+/// Which part of the color picker is being dragged, if any.
+#[derive(Clone, Copy, PartialEq, Default)]
+enum DragTarget {
+    #[default]
+    None,
+    Sv,
+    Hue,
+}
+
 impl Component for ColorPicker {
     fn render(&self) -> impl IntoElement {
         let mut open = use_state(|| false);
         let mut color = use_state(|| self.value);
-        let mut pressing = use_state(|| false);
-        let mut pressing_hue = use_state(|| false);
+        let mut dragging = use_state(DragTarget::default);
         let mut area = use_state(Area::default);
         let mut hue_area = use_state(Area::default);
 
@@ -164,65 +173,61 @@ impl Component for ColorPicker {
         const MIN_S: f32 = 0.07;
         const MIN_V: f32 = 0.07;
 
-        let on_sv_pointer_down = {
+        let mut update_sv = {
             let on_change = self.on_change.clone();
-            move |e: Event<PointerEventData>| {
-                pressing.set(true);
-                let coords = e.global_location();
-                let area = area.read().to_f64();
-                let rel_x = (((coords.x - area.min_x()) / area.width()).clamp(0., 1.)) as f32;
-                let rel_y = (((coords.y - area.min_y()) / area.height())
+            move |coords: CursorPoint| {
+                let sv_area = area.read().to_f64();
+                let rel_x = (((coords.x - sv_area.min_x()) / sv_area.width()).clamp(0., 1.)) as f32;
+                let rel_y = (((coords.y - sv_area.min_y()) / sv_area.height())
                     .clamp(MIN_V as f64, 1. - MIN_V as f64)) as f32;
                 let sat = rel_x.max(MIN_S);
                 let v = (1.0 - rel_y).clamp(MIN_V, 1.0 - MIN_V);
-                color.with_mut(|mut color| *color = color.with_s(sat).with_v(v));
+                let hsv = color.read().to_hsv();
+                color.set(Color::from_hsv(hsv.h, sat, v));
                 on_change.call(color());
+            }
+        };
+
+        let mut update_hue = {
+            let on_change = self.on_change.clone();
+            move |coords: CursorPoint| {
+                let bar_area = hue_area.read().to_f64();
+                let rel_x =
+                    ((coords.x - bar_area.min_x()) / bar_area.width()).clamp(0.01, 1.) as f32;
+                let hsv = color.read().to_hsv();
+                color.set(Color::from_hsv(rel_x * 360.0, hsv.s, hsv.v));
+                on_change.call(color());
+            }
+        };
+
+        let on_sv_pointer_down = {
+            let mut update_sv = update_sv.clone();
+            move |e: Event<PointerEventData>| {
+                dragging.set(DragTarget::Sv);
+                update_sv(e.global_location());
             }
         };
 
         let on_hue_pointer_down = {
-            let on_change = self.on_change.clone();
+            let mut update_hue = update_hue.clone();
             move |e: Event<PointerEventData>| {
-                pressing_hue.set(true);
-                let coords = e.global_location();
-                let area = hue_area.read().to_f64();
-                let rel_x = ((coords.x - area.min_x()) / area.width()).clamp(0.01, 1.) as f32;
-                color.with_mut(|mut color| *color = color.with_h(rel_x * 360.0));
-                on_change.call(color());
+                dragging.set(DragTarget::Hue);
+                update_hue(e.global_location());
             }
         };
 
-        let on_global_pointer_move = {
-            let on_change = self.on_change.clone();
-            move |e: Event<PointerEventData>| {
-                if *pressing.read() {
-                    let coords = e.global_location();
-                    let area = area.read().to_f64();
-                    let rel_x = (((coords.x - area.min_x()) / area.width()).clamp(0., 1.)) as f32;
-                    let rel_y = (((coords.y - area.min_y()) / area.height())
-                        .clamp(MIN_V as f64, 1. - MIN_V as f64))
-                        as f32;
-                    let sat = rel_x.max(MIN_S);
-                    let v = (1.0 - rel_y).clamp(MIN_V, 1.0 - MIN_V);
-                    color.with_mut(|mut color| *color = color.with_s(sat).with_v(v));
-                    on_change.call(color());
-                } else if *pressing_hue.read() {
-                    let coords = e.global_location();
-                    let area = hue_area.read().to_f64();
-                    let rel_x = ((coords.x - area.min_x()) / area.width()).clamp(0.01, 1.) as f32;
-                    color.with_mut(|mut color| *color = color.with_h(rel_x * 360.0));
-                    on_change.call(color());
-                }
-            }
+        let on_global_pointer_move = move |e: Event<PointerEventData>| match *dragging.read() {
+            DragTarget::Sv => update_sv(e.global_location()),
+            DragTarget::Hue => update_hue(e.global_location()),
+            DragTarget::None => {}
         };
 
         let on_global_pointer_press = move |_| {
-            // Only close the popup if it wasnt being pressed and it is open
-            if is_open && !pressing() && !pressing_hue() {
+            // Only close the popup if it wasnt being dragged and it is open
+            if is_open && dragging() == DragTarget::None {
                 open.set(false);
             }
-            pressing.set_if_modified(false);
-            pressing_hue.set_if_modified(false);
+            dragging.set_if_modified(DragTarget::None);
         };
 
         let animation = use_animation(move |conf| {
