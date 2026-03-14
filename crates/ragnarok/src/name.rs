@@ -24,6 +24,11 @@ pub trait NameOfEvent:
     /// Check if this event can go through solid surfaces, e.g keyboard events.
     fn does_go_through_solid(&self) -> bool;
 
+    /// Whether only one emittable event should be created for the deepest matching listener.
+    fn is_emitted_once(&self) -> bool {
+        self.does_bubble()
+    }
+
     /// Check if this leave event corresponds to an exclusive enter
     fn is_exclusive_leave(&self) -> bool {
         false

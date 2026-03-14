@@ -62,6 +62,8 @@ impl Ord for EventName {
             e if e.is_left() => std::cmp::Ordering::Less,
             // Exclusive left events have more priority over non-exclusive-left
             e if e.is_exclusive_left() => std::cmp::Ordering::Less,
+            // Over events have priority over enter events
+            e if e.is_non_exclusive_enter() => std::cmp::Ordering::Less,
             e => {
                 if e == other {
                     std::cmp::Ordering::Equal
@@ -100,6 +102,10 @@ impl EventName {
 
     pub fn is_exclusive_left(&self) -> bool {
         matches!(&self, Self::PointerLeave)
+    }
+
+    pub fn is_non_exclusive_enter(&self) -> bool {
+        matches!(&self, Self::PointerOver)
     }
 
     pub fn is_down(&self) -> bool {
@@ -226,13 +232,15 @@ impl ragnarok::NameOfEvent for EventName {
     }
 
     fn does_bubble(&self) -> bool {
-        (!self.is_moved()
+        !self.is_moved()
             && !self.is_enter()
             && !self.is_left()
             && !self.is_global()
-            && !self.is_capture())
-            || self.is_exclusive_enter()
-            || self.is_exclusive_leave()
+            && !self.is_capture()
+    }
+
+    fn is_emitted_once(&self) -> bool {
+        self.does_bubble() || self.is_exclusive_enter() || self.is_exclusive_leave()
     }
 
     fn does_go_through_solid(&self) -> bool {

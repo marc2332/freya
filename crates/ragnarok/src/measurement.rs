@@ -164,8 +164,8 @@ pub fn measure_emmitable_events<
                         );
                         emmitable_events.push(emmitable_event);
 
-                        // Events that bubble or are exclusive enter will only be emitted once.
-                        if derived_event_name.does_bubble() {
+                        // Only emit once for the deepest matching listener.
+                        if derived_event_name.is_emitted_once() {
                             continue 'event;
                         }
                     }
