@@ -62,6 +62,20 @@ use crate::{
 /// )
 ///     .into();
 /// ```
+///
+/// ### Dynamic bytes
+///
+/// Good for rendering custom allocated images.
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// # use bytes::Bytes;
+/// fn app() -> impl IntoElement {
+///     let image_data = use_state(|| Bytes::from(vec![/* ... */]));
+///     let source: ImageSource = (0, image_data.read().clone()).into();
+///     ImageViewer::new(source)
+/// }
+/// ```
 #[derive(PartialEq, Clone)]
 pub enum ImageSource {
     /// Remote image loaded from a URI.
@@ -73,6 +87,12 @@ pub enum ImageSource {
     Path(PathBuf),
 
     Bytes(u64, Bytes),
+}
+
+impl From<(u64, Bytes)> for ImageSource {
+    fn from((id, bytes): (u64, Bytes)) -> Self {
+        Self::Bytes(id, bytes)
+    }
 }
 
 impl From<(&'static str, Bytes)> for ImageSource {
