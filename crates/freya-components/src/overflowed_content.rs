@@ -1,12 +1,11 @@
 use std::time::Duration;
 
 use freya_animation::prelude::{
+    use_animation,
     AnimDirection,
     AnimNum,
     Ease,
     Function,
-    OnFinish,
-    use_animation,
 };
 use freya_core::prelude::*;
 use torin::{
@@ -23,6 +22,16 @@ pub enum OverflowedContentDirection {
     RightToLeft,
     /// Content starts at the left edge and scrolls to the right.
     LeftToRight,
+}
+
+/// Where the [`OverflowedContent`] animation starts from.
+#[derive(Clone, PartialEq, Default)]
+pub enum OverflowedContentStart {
+    /// Content starts off-screen and enters from the edge.
+    #[default]
+    Edge,
+    /// Content starts visible at its natural position.
+    Visible,
 }
 
 /// Animate the content of a container when the content overflows.
@@ -49,6 +58,7 @@ pub struct OverflowedContent {
     layout: LayoutData,
     duration: Duration,
     direction: OverflowedContentDirection,
+    start: OverflowedContentStart,
     key: DiffKey,
 }
 
@@ -90,6 +100,7 @@ impl OverflowedContent {
             .into(),
             duration: Duration::from_secs(4),
             direction: OverflowedContentDirection::default(),
+            start: OverflowedContentStart::default(),
             key: DiffKey::None,
         }
     }
@@ -121,6 +132,19 @@ impl OverflowedContent {
     pub fn left_to_right(self) -> Self {
         self.direction(OverflowedContentDirection::LeftToRight)
     }
+
+    pub fn start(mut self, start: OverflowedContentStart) -> Self {
+        self.start = start;
+        self
+    }
+
+    pub fn start_edge(self) -> Self {
+        self.start(OverflowedContentStart::Edge)
+    }
+
+    pub fn start_visible(self) -> Self {
+        self.start(OverflowedContentStart::Visible)
+    }
 }
 
 impl Component for OverflowedContent {
@@ -133,29 +157,43 @@ impl Component for OverflowedContent {
         let does_overflow = content_width > container_width;
 
         let duration = self.duration;
-        let animation = use_animation(move |conf| {
-            conf.on_finish(OnFinish::restart());
 
+        let animation = use_animation(move |_| {
             AnimNum::new(0., 100.)
                 .duration(duration)
                 .ease(Ease::InOut)
                 .function(Function::Linear)
         });
 
-        use_side_effect_with_deps(&does_overflow, move |does_overflow| {
-            if *does_overflow {
-                animation.run(AnimDirection::Forward);
-            }
-        });
+        let is_running = *animation.is_running().read();
+        let has_run = *animation.has_run_yet().read();
+
+        use_side_effect_with_deps(
+            &(does_overflow, is_running, has_run),
+            move |&(does_overflow, is_running, has_run)| {
+                if does_overflow && (!has_run || !is_running) {
+                    animation.run(AnimDirection::Forward);
+                }
+            },
+        );
 
         let progress = animation.get().value();
+        let is_first_cycle =
+            *animation.runs().read() <= 1 && self.start == OverflowedContentStart::Visible;
+
         let offset_x = if does_overflow {
-            match self.direction {
-                OverflowedContentDirection::RightToLeft => {
+            match (&self.direction, is_first_cycle) {
+                (OverflowedContentDirection::RightToLeft, false) => {
                     container_width - (content_width + container_width) * progress / 100.
                 }
-                OverflowedContentDirection::LeftToRight => {
+                (OverflowedContentDirection::RightToLeft, true) => {
+                    -(content_width * progress / 100.)
+                }
+                (OverflowedContentDirection::LeftToRight, false) => {
                     (content_width + container_width) * progress / 100. - content_width
+                }
+                (OverflowedContentDirection::LeftToRight, true) => {
+                    container_width * progress / 100.
                 }
             }
         } else {

@@ -16,7 +16,15 @@ fn app() -> impl IntoElement {
             Button::new().child(
                 OverflowedContent::new()
                     .width(Size::px(100.))
-                    .child(label().text("Right to Left (default)").max_lines(1)),
+                    .child(label().text("RTL from edge (default)").max_lines(1)),
+            ),
+        )
+        .child(
+            Button::new().child(
+                OverflowedContent::new()
+                    .width(Size::px(100.))
+                    .start_visible()
+                    .child(label().text("RTL from visible position").max_lines(1)),
             ),
         )
         .child(
@@ -24,7 +32,16 @@ fn app() -> impl IntoElement {
                 OverflowedContent::new()
                     .width(Size::px(100.))
                     .left_to_right()
-                    .child(label().text("Left to Right direction").max_lines(1)),
+                    .child(label().text("LTR from edge position").max_lines(1)),
+            ),
+        )
+        .child(
+            Button::new().child(
+                OverflowedContent::new()
+                    .width(Size::px(100.))
+                    .left_to_right()
+                    .start_visible()
+                    .child(label().text("LTR from visible position").max_lines(1)),
             ),
         )
 }

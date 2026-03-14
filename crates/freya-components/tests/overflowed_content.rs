@@ -63,3 +63,29 @@ pub fn overflowed_content_left_to_right() {
     let rects_end = test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()));
     assert!(!rects_end.is_empty());
 }
+
+#[test]
+pub fn overflowed_content_start_visible() {
+    fn app() -> impl IntoElement {
+        OverflowedContent::new()
+            .duration(Duration::from_millis(50))
+            .width(Size::px(50.))
+            .start_visible()
+            .child(label().text("123456789123456789"))
+    }
+
+    let mut test = launch_test(app);
+
+    let rects = test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()));
+    assert!(!rects.is_empty());
+
+    test.poll(Duration::from_millis(1), Duration::from_millis(25));
+
+    let rects_after = test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()));
+    assert!(!rects_after.is_empty());
+
+    test.poll(Duration::from_millis(1), Duration::from_millis(50));
+
+    let rects_end = test.find_many(|t, e| Rect::try_downcast(e).map(|_| t.layout()));
+    assert!(!rects_end.is_empty());
+}
