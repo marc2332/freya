@@ -9,9 +9,22 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    Button::new().child(
-        OverflowedContent::new()
-            .width(Size::px(100.))
-            .child(label().text("Hello, World! I like Rust!").max_lines(1)),
-    )
+    rect()
+        .padding(20.)
+        .spacing(10.)
+        .child(
+            Button::new().child(
+                OverflowedContent::new()
+                    .width(Size::px(100.))
+                    .child(label().text("Right to Left (default)").max_lines(1)),
+            ),
+        )
+        .child(
+            Button::new().child(
+                OverflowedContent::new()
+                    .width(Size::px(100.))
+                    .left_to_right()
+                    .child(label().text("Left to Right direction").max_lines(1)),
+            ),
+        )
 }

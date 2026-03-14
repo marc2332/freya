@@ -15,6 +15,16 @@ use torin::{
     size::Size,
 };
 
+/// The direction in which [`OverflowedContent`] scrolls.
+#[derive(Clone, PartialEq, Default)]
+pub enum OverflowedContentDirection {
+    /// Content enters from the right edge and scrolls to the left.
+    #[default]
+    RightToLeft,
+    /// Content starts at the left edge and scrolls to the right.
+    LeftToRight,
+}
+
 /// Animate the content of a container when the content overflows.
 ///
 /// This is primarily targeted to text that can't be fully shown in small layouts.
@@ -38,6 +48,7 @@ pub struct OverflowedContent {
     children: Vec<Element>,
     layout: LayoutData,
     duration: Duration,
+    direction: OverflowedContentDirection,
     key: DiffKey,
 }
 
@@ -73,11 +84,12 @@ impl OverflowedContent {
             children: Vec::new(),
             layout: Node {
                 width: Size::fill(),
-                height: Size::fill(),
+                height: Size::Inner,
                 ..Default::default()
             }
             .into(),
             duration: Duration::from_secs(4),
+            direction: OverflowedContentDirection::default(),
             key: DiffKey::None,
         }
     }
@@ -96,16 +108,29 @@ impl OverflowedContent {
         self.duration = duration;
         self
     }
+
+    pub fn direction(mut self, direction: OverflowedContentDirection) -> Self {
+        self.direction = direction;
+        self
+    }
+
+    pub fn right_to_left(self) -> Self {
+        self.direction(OverflowedContentDirection::RightToLeft)
+    }
+
+    pub fn left_to_right(self) -> Self {
+        self.direction(OverflowedContentDirection::LeftToRight)
+    }
 }
 
 impl Component for OverflowedContent {
     fn render(&self) -> impl IntoElement {
-        let mut label_size = use_state(Area::default);
-        let mut rect_size = use_state(Area::default);
+        let mut content_area = use_state(Area::default);
+        let mut container_area = use_state(Area::default);
 
-        let rect_width = rect_size.read().width();
-        let label_width = label_size.read().width();
-        let does_overflow = label_width > rect_width;
+        let container_width = container_area.read().width();
+        let content_width = content_area.read().width();
+        let does_overflow = content_width > container_width;
 
         let duration = self.duration;
         let animation = use_animation(move |conf| {
@@ -125,7 +150,14 @@ impl Component for OverflowedContent {
 
         let progress = animation.get().value();
         let offset_x = if does_overflow {
-            ((label_width + rect_width) * progress / 100.) - rect_width
+            match self.direction {
+                OverflowedContentDirection::RightToLeft => {
+                    container_width - (content_width + container_width) * progress / 100.
+                }
+                OverflowedContentDirection::LeftToRight => {
+                    (content_width + container_width) * progress / 100. - content_width
+                }
+            }
         } else {
             0.
         };
@@ -133,12 +165,12 @@ impl Component for OverflowedContent {
         rect()
             .width(self.layout.width.clone())
             .height(self.layout.height.clone())
-            .offset_x(-offset_x)
             .overflow(Overflow::Clip)
-            .on_sized(move |e: Event<SizedEventData>| rect_size.set(e.area))
+            .on_sized(move |e: Event<SizedEventData>| container_area.set(e.area))
             .child(
                 rect()
-                    .on_sized(move |e: Event<SizedEventData>| label_size.set(e.area))
+                    .offset_x(offset_x)
+                    .on_sized(move |e: Event<SizedEventData>| content_area.set(e.area))
                     .children(self.children.clone()),
             )
     }
