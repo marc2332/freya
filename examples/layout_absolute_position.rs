@@ -8,10 +8,6 @@ fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }
 
-/// Demonstrates absolute positioning with inner-sized elements.
-/// All four colored boxes should be pinned to their respective corners
-/// of the outer gray container, regardless of whether their size
-/// is explicit or determined by their children.
 fn app() -> impl IntoElement {
     rect().expanded().center().child(
         rect()

@@ -303,7 +303,6 @@ pub fn absolute_with_inner_sized_height_and_bottom() {
             Direction::Vertical,
         ),
     );
-    // Fixed-size absolute child with bottom: 0 (baseline, should work)
     mocked_tree.add(
         1,
         Some(0),
@@ -314,7 +313,6 @@ pub fn absolute_with_inner_sized_height_and_bottom() {
             Position::new_absolute().bottom(0.0).left(0.0),
         ),
     );
-    // Inner-sized height absolute child with bottom: 0
     mocked_tree.add(
         2,
         Some(0),
@@ -325,7 +323,6 @@ pub fn absolute_with_inner_sized_height_and_bottom() {
             Position::new_absolute().bottom(0.0).left(50.0),
         ),
     );
-    // Grandchild that gives the parent its height
     mocked_tree.add(
         3,
         Some(2),
@@ -344,19 +341,16 @@ pub fn absolute_with_inner_sized_height_and_bottom() {
         &mut mocked_tree,
     );
 
-    // Fixed-size child: bottom=0 means origin.y = 100 - 0 - 40 = 60
     assert_eq!(
         layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(0.0, 60.0), Size2D::new(40.0, 40.0)),
     );
 
-    // Inner-sized child: should also be at y=60 (100 - 0 - 40)
     assert_eq!(
         layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(50.0, 60.0), Size2D::new(40.0, 40.0)),
     );
 
-    // Grandchild must be translated along with its parent
     assert_eq!(
         layout.get(&3).unwrap().area,
         Rect::new(Point2D::new(50.0, 60.0), Size2D::new(40.0, 40.0)),
@@ -378,7 +372,6 @@ pub fn absolute_with_inner_sized_width_and_right() {
             Direction::Horizontal,
         ),
     );
-    // Inner-sized width absolute child with right: 0
     mocked_tree.add(
         1,
         Some(0),
@@ -389,7 +382,6 @@ pub fn absolute_with_inner_sized_width_and_right() {
             Position::new_absolute().right(0.0).top(0.0),
         ),
     );
-    // Grandchild that gives the parent its width
     mocked_tree.add(
         2,
         Some(1),
@@ -408,13 +400,11 @@ pub fn absolute_with_inner_sized_width_and_right() {
         &mut mocked_tree,
     );
 
-    // Inner-sized width child: right=0 means origin.x = 200 - 0 - 60 = 140
     assert_eq!(
         layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(140.0, 0.0), Size2D::new(60.0, 50.0)),
     );
 
-    // Grandchild must be translated along with its parent
     assert_eq!(
         layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(140.0, 0.0), Size2D::new(60.0, 50.0)),
@@ -436,7 +426,6 @@ pub fn global_with_inner_sized_and_bottom() {
             Direction::Vertical,
         ),
     );
-    // Inner-sized height global child with bottom: 10
     mocked_tree.add(
         1,
         Some(0),
@@ -447,7 +436,6 @@ pub fn global_with_inner_sized_and_bottom() {
             Position::new_global().bottom(10.0).left(20.0),
         ),
     );
-    // Grandchild that gives the parent its height
     mocked_tree.add(
         2,
         Some(1),
@@ -466,13 +454,11 @@ pub fn global_with_inner_sized_and_bottom() {
         &mut mocked_tree,
     );
 
-    // Global inner-sized child: bottom=10 means y = 500 - 10 - 30 = 460
     assert_eq!(
         layout.get(&1).unwrap().area,
         Rect::new(Point2D::new(20.0, 460.0), Size2D::new(80.0, 30.0)),
     );
 
-    // Grandchild must be translated along with its parent
     assert_eq!(
         layout.get(&2).unwrap().area,
         Rect::new(Point2D::new(20.0, 460.0), Size2D::new(80.0, 30.0)),
