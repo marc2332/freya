@@ -590,6 +590,93 @@ where
 
                         acc
                     });
+
+            // Re-measure flex children that have an inner (auto) cross-axis size
+            // with their actual flex-grown main-axis dimensions to get accurate
+            // cross-axis sizes for alignment.
+            //
+            // During the initial phase, Size::Flex resolves to None so flex children
+            // get a near-zero main-axis dimension. This causes inner content
+            // (e.g. text measured by a custom measurer) to wrap differently and
+            // produce an incorrect cross-axis size, which then pollutes both
+            // the per-child alignment sizes and the parent's accumulated cross-axis size.
+            //
+            // See: https://github.com/marc2332/freya/issues/1098
+            if parent_node.cross_alignment.is_not_start() {
+                let cross_axis = AlignAxis::new(&parent_node.direction, AlignmentDirection::Cross);
+
+                for child_id in &children {
+                    let Some(flex_grow) = initial_phase_flex_grows.get(child_id) else {
+                        continue;
+                    };
+                    let Some(child_data) = self.tree_adapter.get_node(child_id) else {
+                        continue;
+                    };
+                    if !child_data.position.is_stacked() {
+                        continue;
+                    }
+
+                    let has_inner_cross = match cross_axis {
+                        AlignAxis::Height => child_data.height.inner_sized(),
+                        AlignAxis::Width => child_data.width.inner_sized(),
+                    };
+                    if !has_inner_cross {
+                        continue;
+                    }
+
+                    let flex_grow_per = flex_grow.get() / flex_grows.get() * 100.;
+                    let mut corrected_available_area = initial_area.as_available();
+
+                    match flex_axis {
+                        AlignAxis::Height => {
+                            corrected_available_area.size.height =
+                                flex_available_height / 100. * flex_grow_per;
+                        }
+                        AlignAxis::Width => {
+                            corrected_available_area.size.width =
+                                flex_available_width / 100. * flex_grow_per;
+                        }
+                    }
+
+                    let (_, mut child_areas) = self.measure_node(
+                        *child_id,
+                        &child_data,
+                        initial_area.as_parent(),
+                        corrected_available_area,
+                        false,
+                        parent_is_dirty,
+                        Phase::Final,
+                    );
+
+                    child_areas.area.adjust_size(&child_data);
+                    initial_phase_sizes.insert(*child_id, child_areas.area.size);
+                }
+
+                // Recompute the parent's cross-axis size from corrected child sizes
+                let max_cross = children
+                    .iter()
+                    .filter_map(|id| initial_phase_sizes.get(id))
+                    .map(|size| match cross_axis {
+                        AlignAxis::Height => size.height,
+                        AlignAxis::Width => size.width,
+                    })
+                    .fold(0.0, f32::max);
+
+                match cross_axis {
+                    AlignAxis::Height if parent_node.height.inner_sized() => {
+                        let gaps = parent_node.padding.vertical() + parent_node.margin.vertical();
+                        initial_phase_parent_area.size.height = max_cross + gaps;
+                        initial_phase_inner_area.size.height = max_cross;
+                    }
+                    AlignAxis::Width if parent_node.width.inner_sized() => {
+                        let gaps =
+                            parent_node.padding.horizontal() + parent_node.margin.horizontal();
+                        initial_phase_parent_area.size.width = max_cross + gaps;
+                        initial_phase_inner_area.size.width = max_cross;
+                    }
+                    _ => {}
+                }
+            }
         }
 
         if needs_initial_phase {
