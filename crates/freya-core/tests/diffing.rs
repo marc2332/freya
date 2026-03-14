@@ -1612,3 +1612,64 @@ fn ordered_scope_mutations_diffing() {
 
     assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 }
+
+#[test]
+fn deeply_nested_component_move() {
+    fn comp3(_: &()) -> Element {
+        rect().into()
+    }
+
+    fn comp2(_: &()) -> Element {
+        from_fn_standalone_borrowed((), comp3)
+    }
+
+    fn comp1(_: &()) -> Element {
+        from_fn_standalone_borrowed((), comp2)
+    }
+
+    fn app() -> Element {
+        let state = use_consume::<State<bool>>();
+        if state() {
+            rect()
+                .child(from_fn_standalone_borrowed_keyed(1, (), comp1))
+                .child(from_fn_standalone_borrowed_keyed(2, (), comp1))
+                .into()
+        } else {
+            rect()
+                .child(from_fn_standalone_borrowed_keyed(2, (), comp1))
+                .child(from_fn_standalone_borrowed_keyed(1, (), comp1))
+                .into()
+        }
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+    let mut state = runner.provide_root_context(|| State::create(true));
+
+    let mutations = runner.sync_and_update();
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+
+    // Swap: key=1 moves from position 0 to 1, key=2 moves from position 1 to 0
+    state.set(false);
+    let mutations = runner.sync_and_update();
+    assert!(mutations.added.is_empty());
+    assert!(mutations.modified.is_empty());
+    assert!(mutations.removed.is_empty());
+    assert!(!mutations.moved.is_empty());
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+
+    // Swap back: verify the move is fully reversible
+    state.set(true);
+    let mutations = runner.sync_and_update();
+    assert!(mutations.added.is_empty());
+    assert!(mutations.modified.is_empty());
+    assert!(mutations.removed.is_empty());
+    assert!(!mutations.moved.is_empty());
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+}

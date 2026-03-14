@@ -267,15 +267,15 @@ impl Tree {
 
             for (parent_node_id, movements) in mutations.moved {
                 let parent = self.children.get_mut(&parent_node_id).unwrap();
-                for (to, node_id) in movements.iter() {
-                    let from = parent.iter().position(|id| id == node_id).unwrap();
+                for (to, node_id) in movements {
+                    let from = parent.iter().position(|id| *id == node_id).unwrap();
 
-                    if from < *to as usize {
-                        parent.insert(*to as usize, *node_id);
+                    if from < to as usize {
+                        parent.insert(to as usize, node_id);
                         parent.remove(from);
                     } else {
                         parent.remove(from);
-                        parent.insert(*to as usize, *node_id);
+                        parent.insert(to as usize, node_id);
                     }
                 }
                 let mut diff = DiffModifies::empty();
