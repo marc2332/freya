@@ -23,8 +23,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.90
       - name: Install just
         uses: taiki-e/install-action@just
-      - name: Install hotpath-ci CLI
-        run: cargo install hotpath --version '^0.10' --bin hotpath-ci --features=ci
+      - name: Install hotpath-utils CLI
+        run: cargo install hotpath --version '^0.14' --bin hotpath-utils --features=ci
       - name: Set up cargo cache
         uses: Swatinem/rust-cache@v2
         if: github.ref != 'refs/heads/main'
@@ -43,7 +43,7 @@ jobs:
           git checkout ${{ github.event.pull_request.head.sha }}
           {
             echo 'metrics<<EOF'
-            just ps-ci | grep '^{"hotpath_profiling_mode"'
+            just ps-ci | grep '^{"profiling_mode"'
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
       - id: base_timing_metrics
@@ -54,7 +54,7 @@ jobs:
           git checkout ${{ github.event.pull_request.base.sha }}
           {
             echo 'metrics<<EOF'
-            just ps-ci | grep '^{"hotpath_profiling_mode"'
+            just ps-ci | grep '^{"profiling_mode"'
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
       - id: head_alloc_metrics
@@ -65,7 +65,7 @@ jobs:
           git checkout ${{ github.event.pull_request.head.sha }}
           {
             echo 'metrics<<EOF'
-            just pa-ci | grep '^{"hotpath_profiling_mode"'
+            just pa-ci | grep '^{"profiling_mode"'
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
       - id: base_alloc_metrics
@@ -76,7 +76,7 @@ jobs:
           git checkout ${{ github.event.pull_request.base.sha }}
           {
             echo 'metrics<<EOF'
-            just pa-ci | grep '^{"hotpath_profiling_mode"'
+            just pa-ci | grep '^{"profiling_mode"'
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
       - name: Post PR comment - alloc mode
@@ -84,7 +84,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          hotpath-ci profile-pr \
+          hotpath-utils profile-pr \
             --head-metrics '${{ steps.head_alloc_metrics.outputs.metrics }}' \
             --base-metrics '${{ steps.base_alloc_metrics.outputs.metrics }}' \
             --pr-number '${{ github.event.pull_request.number }}' \
@@ -95,7 +95,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          hotpath-ci profile-pr \
+          hotpath-utils profile-pr \
             --head-metrics '${{ steps.head_timing_metrics.outputs.metrics }}' \
             --base-metrics '${{ steps.base_timing_metrics.outputs.metrics }}' \
             --pr-number '${{ github.event.pull_request.number }}' \
