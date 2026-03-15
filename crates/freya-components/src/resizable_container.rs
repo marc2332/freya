@@ -58,19 +58,11 @@ impl PanelSize {
         }
     }
 
-    /// Convert a pixel displacement into a delta in this panel's unit system.
-    fn pixel_to_delta(&self, pixels: f32, flex_factor: f32) -> f32 {
+    /// Scale factor to convert between pixels and this panel's unit system.
+    fn flex_scale(&self, flex_factor: f32) -> f32 {
         match self {
-            Self::Pixels(_) => pixels,
-            Self::Percentage(_) => pixels * flex_factor,
-        }
-    }
-
-    /// Convert a delta in this panel's unit system back to pixels.
-    fn delta_to_pixels(&self, delta: f32, flex_factor: f32) -> f32 {
-        match self {
-            Self::Pixels(_) => delta,
-            Self::Percentage(_) => delta / flex_factor.max(f32::MIN_POSITIVE),
+            Self::Pixels(_) => 1.0,
+            Self::Percentage(_) => flex_factor,
         }
     }
 }
@@ -181,44 +173,35 @@ impl ResizableContext {
                 });
         let flex_factor = flex_total / (container_size - px_total - handle_space).max(1.0);
 
-        let (corrected_pixel_distance, behind_range, forward_range) = if pixel_distance >= 0. {
-            (
-                pixel_distance,
-                0..panel_index,
-                panel_index..self.panels.len(),
-            )
+        let abs_distance = pixel_distance.abs();
+        let (behind_range, forward_range) = if pixel_distance >= 0. {
+            (0..panel_index, panel_index..self.panels.len())
         } else {
-            (
-                -pixel_distance,
-                panel_index..self.panels.len(),
-                0..panel_index,
-            )
+            (panel_index..self.panels.len(), 0..panel_index)
         };
 
         let mut acc_pixels = 0.0;
 
-        // Resize panels in the forward direction (shrink)
+        // Shrink forward panels
         for panel in &mut self.panels[forward_range].iter_mut() {
             let old_size = panel.size;
-            let delta = panel
-                .sizing
-                .pixel_to_delta(corrected_pixel_distance, flex_factor);
-            let new_size = (panel.size - delta).clamp(panel.min_size, panel.sizing.max_size());
+            let scale = panel.sizing.flex_scale(flex_factor);
+            let new_size =
+                (panel.size - abs_distance * scale).clamp(panel.min_size, panel.sizing.max_size());
             changed_panels |= panel.size != new_size;
             panel.size = new_size;
-            acc_pixels -= panel
-                .sizing
-                .delta_to_pixels(new_size - old_size, flex_factor);
+            acc_pixels -= (new_size - old_size) / scale.max(f32::MIN_POSITIVE);
 
             if old_size > panel.min_size {
                 break;
             }
         }
 
-        // Resize panels in the behind direction (grow)
+        // Grow behind panel
         if let Some(panel) = &mut self.panels[behind_range].iter_mut().next_back() {
-            let delta = panel.sizing.pixel_to_delta(acc_pixels, flex_factor);
-            let new_size = (panel.size + delta).clamp(panel.min_size, panel.sizing.max_size());
+            let scale = panel.sizing.flex_scale(flex_factor);
+            let new_size =
+                (panel.size + acc_pixels * scale).clamp(panel.min_size, panel.sizing.max_size());
             changed_panels |= panel.size != new_size;
             panel.size = new_size;
         }
