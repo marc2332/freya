@@ -35,59 +35,46 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev libudev-dev libxdo-dev libwebkit2gtk-4.1-dev
-      - id: head_timing_metrics
+      - name: Create metrics directory
+        run: mkdir -p /tmp/metrics
+      - name: Head timing metrics
         env:
           HOTPATH_OUTPUT_FORMAT: json
+          HOTPATH_OUTPUT_PATH: /tmp/metrics/head_timing.json
         run: |
-          # Extract timing metrics from head branch
           git checkout ${{ github.event.pull_request.head.sha }}
-          {
-            echo 'metrics<<EOF'
-            just ps-ci | grep '^{"type":"hotpath_report"'
-            echo 'EOF'
-          } >> "$GITHUB_OUTPUT"
-      - id: base_timing_metrics
+          just ps-ci
+      - name: Base timing metrics
         env:
           HOTPATH_OUTPUT_FORMAT: json
+          HOTPATH_OUTPUT_PATH: /tmp/metrics/base_timing.json
         run: |
-          # Extract timing metrics from base branch
           git checkout ${{ github.event.pull_request.base.sha }}
-          {
-            echo 'metrics<<EOF'
-            just ps-ci | grep '^{"type":"hotpath_report"'
-            echo 'EOF'
-          } >> "$GITHUB_OUTPUT"
-      - id: head_alloc_metrics
+          just ps-ci
+      - name: Head alloc metrics
         env:
           HOTPATH_OUTPUT_FORMAT: json
+          HOTPATH_OUTPUT_PATH: /tmp/metrics/head_alloc.json
         run: |
-          # Extract alloc metrics from head branch
           git checkout ${{ github.event.pull_request.head.sha }}
-          {
-            echo 'metrics<<EOF'
-            just pa-ci | grep '^{"type":"hotpath_report"'
-            echo 'EOF'
-          } >> "$GITHUB_OUTPUT"
-      - id: base_alloc_metrics
+          just pa-ci
+      - name: Base alloc metrics
         env:
           HOTPATH_OUTPUT_FORMAT: json
+          HOTPATH_OUTPUT_PATH: /tmp/metrics/base_alloc.json
         run: |
-          # Extract alloc metrics from base branch
           git checkout ${{ github.event.pull_request.base.sha }}
-          {
-            echo 'metrics<<EOF'
-            just pa-ci | grep '^{"type":"hotpath_report"'
-            echo 'EOF'
-          } >> "$GITHUB_OUTPUT"
+          just pa-ci
       - name: Post PR comment - alloc mode
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           hotpath-utils profile-pr \
-            --head-metrics '${{ steps.head_alloc_metrics.outputs.metrics }}' \
-            --base-metrics '${{ steps.base_alloc_metrics.outputs.metrics }}' \
+            --head-metrics /tmp/metrics/head_alloc.json \
+            --base-metrics /tmp/metrics/base_alloc.json \
             --pr-number '${{ github.event.pull_request.number }}' \
+            --benchmark-id "alloc" \
             --github-token $GH_TOKEN
 
       - name: Post PR comment - timing mode
@@ -96,7 +83,8 @@ jobs:
         run: |
           set -euo pipefail
           hotpath-utils profile-pr \
-            --head-metrics '${{ steps.head_timing_metrics.outputs.metrics }}' \
-            --base-metrics '${{ steps.base_timing_metrics.outputs.metrics }}' \
+            --head-metrics /tmp/metrics/head_timing.json \
+            --base-metrics /tmp/metrics/base_timing.json \
             --pr-number '${{ github.event.pull_request.number }}' \
+            --benchmark-id "timing" \
             --github-token $GH_TOKEN
