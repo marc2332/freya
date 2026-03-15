@@ -33,6 +33,13 @@ use crate::{
 pub type WindowBuilderHook =
     Box<dyn FnOnce(WindowAttributes, &ActiveEventLoop) -> WindowAttributes + Send + Sync>;
 pub type WindowHandleHook = Box<dyn FnOnce(&mut Window) + Send + Sync>;
+pub type EventLoopBuilderHook = Box<
+    dyn for<'a> FnOnce(
+            &'a mut winit::event_loop::EventLoopBuilder<crate::renderer::NativeEvent>,
+        )
+            -> &'a mut winit::event_loop::EventLoopBuilder<crate::renderer::NativeEvent>
+        + Send,
+>;
 
 /// Decision returned by the `on_close` hook to determine whether a window should close.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -172,7 +179,16 @@ impl WindowConfig {
         self
     }
 
-    /// Specify Window icon.
+    /// Specify the Window icon. Use [`LaunchConfig::window_icon`] to load the icon from bytes.
+    ///
+    /// # Example
+    /// ```no_run
+    /// # use freya::prelude::*;
+    /// const ICON: &[u8] = include_bytes!("../../../examples/freya_icon.png");
+    ///
+    /// WindowConfig::new(app).with_icon(LaunchConfig::window_icon(ICON));
+    /// # fn app() -> impl IntoElement { "" }
+    /// ```
     pub fn with_icon(mut self, icon: Icon) -> Self {
         self.icon = Some(icon);
         self
@@ -231,6 +247,7 @@ pub struct LaunchConfig {
     pub(crate) fallback_fonts: Vec<Cow<'static, str>>,
     pub(crate) tasks: Vec<TaskHandler>,
     pub(crate) exit_on_close: bool,
+    pub(crate) event_loop_builder_hook: Option<EventLoopBuilderHook>,
 }
 
 impl Default for LaunchConfig {
@@ -244,6 +261,7 @@ impl Default for LaunchConfig {
             fallback_fonts: default_fonts(),
             tasks: Vec::new(),
             exit_on_close: true,
+            event_loop_builder_hook: None,
         }
     }
 }
@@ -253,6 +271,7 @@ impl LaunchConfig {
         LaunchConfig::default()
     }
 
+    /// Load a window icon from image bytes. Pass the result to [`WindowConfig::with_icon`].
     pub fn window_icon(icon: &[u8]) -> Icon {
         let reader = ImageReader::new(Cursor::new(icon))
             .with_guessed_format()
@@ -346,6 +365,21 @@ impl LaunchConfig {
     {
         self.tasks
             .push(Box::new(move |proxy| Box::pin(task(proxy))));
+        self
+    }
+
+    /// Customize the winit [EventLoopBuilder](winit::event_loop::EventLoopBuilder) before the event loop is created.
+    /// This can be used to configure platform-specific options on the event loop.
+    pub fn with_event_loop_builder(
+        mut self,
+        hook: impl for<'a> FnOnce(
+            &'a mut winit::event_loop::EventLoopBuilder<crate::renderer::NativeEvent>,
+        ) -> &'a mut winit::event_loop::EventLoopBuilder<
+            crate::renderer::NativeEvent,
+        > + Send
+        + 'static,
+    ) -> Self {
+        self.event_loop_builder_hook = Some(Box::new(hook));
         self
     }
 }
