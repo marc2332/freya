@@ -175,7 +175,7 @@ impl ResizableContext {
         let (px_total, flex_total) =
             self.panels
                 .iter()
-                .fold((0.0f32, 0.0f32), |(px, flex), p| match p.sizing {
+                .fold((0.0, 0.0), |(px, flex): (f32, f32), p| match p.sizing {
                     PanelSize::Pixels(_) => (px + p.size, flex),
                     PanelSize::Percentage(_) => (px, flex + p.size),
                 });
