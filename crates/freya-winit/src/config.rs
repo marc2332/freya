@@ -33,8 +33,13 @@ use crate::{
 pub type WindowBuilderHook =
     Box<dyn FnOnce(WindowAttributes, &ActiveEventLoop) -> WindowAttributes + Send + Sync>;
 pub type WindowHandleHook = Box<dyn FnOnce(&mut Window) + Send + Sync>;
-pub type EventLoopBuilderHook =
-    Box<dyn FnOnce(&mut winit::event_loop::EventLoopBuilder<crate::renderer::NativeEvent>) + Send>;
+pub type EventLoopBuilderHook = Box<
+    dyn for<'a> FnOnce(
+            &'a mut winit::event_loop::EventLoopBuilder<crate::renderer::NativeEvent>,
+        )
+            -> &'a mut winit::event_loop::EventLoopBuilder<crate::renderer::NativeEvent>
+        + Send,
+>;
 
 /// Decision returned by the `on_close` hook to determine whether a window should close.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -348,8 +353,11 @@ impl LaunchConfig {
     /// This can be used to configure platform-specific options on the event loop.
     pub fn with_event_loop_builder(
         mut self,
-        hook: impl FnOnce(&mut winit::event_loop::EventLoopBuilder<crate::renderer::NativeEvent>)
-        + Send
+        hook: impl for<'a> FnOnce(
+            &'a mut winit::event_loop::EventLoopBuilder<crate::renderer::NativeEvent>,
+        ) -> &'a mut winit::event_loop::EventLoopBuilder<
+            crate::renderer::NativeEvent,
+        > + Send
         + 'static,
     ) -> Self {
         self.event_loop_builder_hook = Some(Box::new(hook));
