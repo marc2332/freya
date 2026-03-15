@@ -3,6 +3,7 @@ use torin::{
     content::Content,
     prelude::{
         Alignment,
+        Area,
         Position,
     },
     size::Size,
@@ -169,23 +170,46 @@ impl ComponentOwned for MenuContainer {
     fn render(self) -> impl IntoElement {
         let focus = use_focus();
         let theme = get_theme!(self.theme, menu_container);
+        let mut measured = use_state(|| None::<(Area, f32, f32)>);
 
         use_provide_context(move || MenuGroup {
             group_id: focus.a11y_id(),
         });
 
+        let (offset_x, offset_y, opacity) = match *measured.read() {
+            None => (0.0, 0.0, 0.0),
+            Some((area, win_w, win_h)) => (
+                overflow_offset(area.origin.x, area.size.width, win_w),
+                overflow_offset(area.origin.y, area.size.height, win_h),
+                1.0,
+            ),
+        };
+
         rect()
-            .a11y_id(focus.a11y_id())
-            .a11y_member_of(focus.a11y_id())
-            .a11y_focusable(true)
-            .a11y_role(AccessibilityRole::Menu)
-            .shadow((0.0, 4.0, 10.0, 0., theme.shadow))
-            .background(theme.background)
-            .corner_radius(theme.corner_radius)
-            .padding(theme.padding)
-            .border(Border::new().width(1.).fill(theme.border_fill))
             .content(Content::fit())
-            .children(self.children)
+            .opacity(opacity)
+            .offset_x(offset_x)
+            .offset_y(offset_y)
+            .on_sized(move |e: Event<SizedEventData>| {
+                if measured.peek().is_none() {
+                    let window = Platform::get().root_size.peek();
+                    measured.set(Some((e.area, window.width, window.height)));
+                }
+            })
+            .child(
+                rect()
+                    .a11y_id(focus.a11y_id())
+                    .a11y_member_of(focus.a11y_id())
+                    .a11y_focusable(true)
+                    .a11y_role(AccessibilityRole::Menu)
+                    .shadow((0.0, 4.0, 10.0, 0., theme.shadow))
+                    .background(theme.background)
+                    .corner_radius(theme.corner_radius)
+                    .padding(theme.padding)
+                    .border(Border::new().width(1.).fill(theme.border_fill))
+                    .content(Content::fit())
+                    .children(self.children),
+            )
     }
 
     fn render_key(&self) -> DiffKey {
@@ -479,6 +503,17 @@ impl ComponentOwned for SubMenu {
 
     fn render_key(&self) -> DiffKey {
         self.key.clone().or(self.default_key())
+    }
+}
+
+/// Returns a negative offset to shift an element back within the window boundary,
+/// or `0.0` if it already fits.
+fn overflow_offset(origin: f32, size: f32, window: f32) -> f32 {
+    let overflow = origin + size - window;
+    if overflow > 0.0 {
+        -overflow.min(origin)
+    } else {
+        0.0
     }
 }
 
