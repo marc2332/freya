@@ -128,6 +128,7 @@ pub fn launch(launch_config: LaunchConfig) {
         fallback_fonts: launch_config.fallback_fonts,
         screen_reader,
         waker,
+        exit_on_close: launch_config.exit_on_close,
     };
 
     #[cfg(feature = "tray")]

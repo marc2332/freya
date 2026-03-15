@@ -246,6 +246,7 @@ pub struct LaunchConfig {
     pub(crate) embedded_fonts: EmbeddedFonts,
     pub(crate) fallback_fonts: Vec<Cow<'static, str>>,
     pub(crate) tasks: Vec<TaskHandler>,
+    pub(crate) exit_on_close: bool,
     pub(crate) event_loop_builder_hook: Option<EventLoopBuilderHook>,
 }
 
@@ -259,6 +260,7 @@ impl Default for LaunchConfig {
             embedded_fonts: Default::default(),
             fallback_fonts: default_fonts(),
             tasks: Vec::new(),
+            exit_on_close: true,
             event_loop_builder_hook: None,
         }
     }
@@ -342,6 +344,13 @@ impl LaunchConfig {
     /// Register a default font. Will be used if found.
     pub fn with_default_font(mut self, font_name: impl Into<Cow<'static, str>>) -> Self {
         self.fallback_fonts.insert(0, font_name.into());
+        self
+    }
+
+    /// Whether to exit the event loop when all windows are closed. Defaults to `true`.
+    /// Set to `false` to keep the event loop alive even when no windows remain.
+    pub fn with_exit_on_close(mut self, exit_on_close: bool) -> Self {
+        self.exit_on_close = exit_on_close;
         self
     }
 

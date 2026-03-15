@@ -113,6 +113,7 @@ pub struct WinitRenderer {
     pub font_collection: FontCollection,
     pub futures: Vec<Pin<Box<dyn std::future::Future<Output = ()>>>>,
     pub waker: Waker,
+    pub exit_on_close: bool,
 }
 
 pub struct RendererContext<'a> {
@@ -564,7 +565,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                         };
 
                                         // Only exit when there is no window and no tray
-                                        if !has_windows && !has_tray {
+                                        if !has_windows && !has_tray && self.exit_on_close {
                                             active_event_loop.exit();
                                         }
                                     }
@@ -667,7 +668,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         };
 
                         // Only exit when there is no windows and no tray
-                        if !has_windows && !has_tray {
+                        if !has_windows && !has_tray && self.exit_on_close {
                             event_loop.exit();
                         }
                     }
