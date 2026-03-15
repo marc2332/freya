@@ -1,0 +1,53 @@
+---
+export interface Props {
+  title: string;
+  description: string;
+  mediaUrl: string;
+  mediaType: "image" | "video";
+  reverse?: boolean;
+  wide?: boolean;
+}
+
+const {
+  title,
+  description,
+  mediaUrl,
+  mediaType,
+  reverse = false,
+  wide = false,
+} = Astro.props;
+
+const mediaClass = wide ? "w-full lg:w-2/3" : "w-full lg:w-1/2";
+const textClass = wide ? "w-full lg:w-1/3" : "w-full lg:w-1/2";
+---
+
+<section
+  class={`fade-in-section flex flex-col ${reverse ? "lg:flex-row-reverse" : "lg:flex-row"} items-center gap-8 lg:gap-14 py-12 lg:py-20`}
+>
+  <div class={mediaClass}>
+    {
+      mediaType === "video" ? (
+        <video
+          muted
+          autoplay
+          playsinline
+          loop
+          class="rounded-xl w-full border border-stone-800 shadow-lg shadow-black/30"
+        >
+          <source src={mediaUrl} type="video/mp4" />
+        </video>
+      ) : (
+        <img
+          src={mediaUrl}
+          alt={title}
+          class="rounded-xl w-full border border-stone-800 shadow-lg shadow-black/30"
+          loading="lazy"
+        />
+      )
+    }
+  </div>
+  <div class={textClass}>
+    <h2 class="text-2xl lg:text-3xl font-bold mb-4 text-white">{title}</h2>
+    <p class="text-stone-400 text-lg leading-relaxed">{description}</p>
+  </div>
+</section>
