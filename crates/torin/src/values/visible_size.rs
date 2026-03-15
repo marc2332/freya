@@ -3,18 +3,13 @@ use crate::prelude::Length;
 /// Controls the percentage of the measured size that will actually be used in layout,
 /// regardless of the element's own size.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(Default, PartialEq, Clone, Debug)]
 pub enum VisibleSize {
     /// Use the full measured size. This is the default.
+    #[default]
     Full,
     /// Only use a percentage of the measured size in layout.
     InnerPercentage(Length),
-}
-
-impl Default for VisibleSize {
-    fn default() -> Self {
-        Self::Full
-    }
 }
 
 impl VisibleSize {

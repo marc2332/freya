@@ -1,15 +1,10 @@
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+#[derive(Default, Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum CursorStyle {
+    #[default]
     Line = 0,
     Block = 1,
     Underline = 2,
-}
-
-impl Default for CursorStyle {
-    fn default() -> Self {
-        Self::Line
-    }
 }
 
 impl CursorStyle {

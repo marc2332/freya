@@ -1,20 +1,15 @@
 use freya_engine::prelude::SkTextAlign;
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+#[derive(Default, Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum TextAlign {
+    #[default]
     Left = 0,
     Right = 1,
     Center = 2,
     Justify = 3,
     Start = 4,
     End = 5,
-}
-
-impl Default for TextAlign {
-    fn default() -> Self {
-        Self::Left
-    }
 }
 
 impl From<TextAlign> for SkTextAlign {

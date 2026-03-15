@@ -101,7 +101,7 @@ impl PartialEq for SizeFn {
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(Default, PartialEq, Clone, Debug)]
 pub enum Size {
     /// Sizes the element based on its content. This is the default.
     ///
@@ -111,6 +111,7 @@ pub enum Size {
     /// # use torin::prelude::*;
     /// let size = Size::auto();
     /// ```
+    #[default]
     Inner,
 
     /// Expands to fill all the available space from its parent.
@@ -177,12 +178,6 @@ pub enum Size {
     /// let size = Size::flex(1.0);
     /// ```
     Flex(Length),
-}
-
-impl Default for Size {
-    fn default() -> Self {
-        Self::Inner
-    }
 }
 
 impl Size {
