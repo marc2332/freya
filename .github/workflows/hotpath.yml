@@ -15,11 +15,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          fetch-depth: 2
+          fetch-depth: 0
           submodules: true
-      - name: Fetch all remote branches (including main)
-        run: |
-          git fetch --all --prune
       - uses: dtolnay/rust-toolchain@1.94
       - name: Install just
         uses: taiki-e/install-action@just
@@ -75,7 +72,7 @@ jobs:
             --base-metrics /tmp/metrics/base_alloc.json \
             --pr-number '${{ github.event.pull_request.number }}' \
             --benchmark-id "alloc" \
-            --github-token $GH_TOKEN
+            --github-token "$GH_TOKEN"
 
       - name: Post PR comment - timing mode
         env:
@@ -87,4 +84,4 @@ jobs:
             --base-metrics /tmp/metrics/base_timing.json \
             --pr-number '${{ github.event.pull_request.number }}' \
             --benchmark-id "timing" \
-            --github-token $GH_TOKEN
+            --github-token "$GH_TOKEN"
