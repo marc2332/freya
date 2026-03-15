@@ -43,7 +43,7 @@ impl PanelSize {
     }
 
     /// Convert a raw size value to the appropriate layout [Size].
-    fn to_layout_size(&self, value: f32) -> Size {
+    fn to_layout_size(self, value: f32) -> Size {
         match self {
             Self::Pixels(_) => Size::px(value),
             Self::Percentage(_) => Size::flex(value),
