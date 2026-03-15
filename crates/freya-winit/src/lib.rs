@@ -70,6 +70,10 @@ pub fn launch(launch_config: LaunchConfig) {
 
     let mut event_loop_builder = EventLoop::<NativeEvent>::with_user_event();
 
+    if let Some(hook) = launch_config.event_loop_builder_hook {
+        (hook)(&mut event_loop_builder);
+    }
+
     let event_loop = event_loop_builder
         .build()
         .expect("Failed to create event loop.");

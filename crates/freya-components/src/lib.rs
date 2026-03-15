@@ -83,7 +83,7 @@ cfg_if::cfg_if! {
 /// | ![ColorPicker Preview][gallery_color_picker] | ![Chip Preview][gallery_chip] | ![Menu Preview][gallery_menu] | ![Popup Preview][gallery_popup] |
 /// | [ColorPicker](color_picker::ColorPicker)        | [Chip](chip::Chip)        | [Menu](menu::Menu)        | [Popup](popup::Popup)        |
 /// | ![ResizableContainer Preview][gallery_resizable_container] | ![Sidebar Preview][gallery_sidebar] | ![Table Preview][gallery_table] | ![Card Preview][gallery_card] |
-/// | [ResizableContainer](resizable_container::ResizableContainer)        | [Sidebar](sidebar::SideBar)        | [Table](table::Table)        | [Card](card::Card)       |
+/// | [ResizableContainer](resizable_container::ResizableContainer)        | [SideBarItem](sidebar::SideBarItem)        | [Table](table::Table)        | [Card](card::Card)       |
 /// | ![Input Preview][gallery_input] | ![Filled Input Preview][gallery_filled_input] | ![Flat Input Preview][gallery_flat_input] |
 /// | [Input](input::Input)        | [Filled Input](input::Input)        | [Flat Input](input::Input)        |
 #[cfg_attr(feature = "docs",

@@ -11,6 +11,9 @@ export default defineConfig({
   integrations: [tailwind()],
   output: "server",
   adapter: deno(),
+  server: {
+    allowedHosts: [".ngrok-free.app"],
+  },
   markdown: {
     rehypePlugins: [rehypeAccessibleEmojis, rehypeSlug, () => rehypeAutoLinks({
       behavior: "append",

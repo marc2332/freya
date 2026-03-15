@@ -4,29 +4,39 @@ use torin::size::Size;
 use crate::{
     activable_route_context::use_activable_route,
     get_theme,
-    scrollviews::ScrollView,
     theming::component_themes::{
         SideBarItemTheme,
         SideBarItemThemePartial,
-        SideBarTheme,
-        SideBarThemePartial,
     },
 };
+#[derive(Debug, Default, PartialEq, Clone, Copy)]
+pub enum SideBarItemStatus {
+    /// Default state.
+    #[default]
+    Idle,
+    /// User is hovering the sidebar item.
+    Hovering,
+}
 
-/// Sidebar layout component with a bar on one side and content on the other.
+/// Button designed for sidebars.
 ///
 /// # Example
 ///
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     SideBar::new()
-///         .bar(
+///     rect()
+///         .horizontal()
+///         .child(
 ///             rect()
+///                 .theme_background()
+///                 .padding(8.)
+///                 .width(Size::px(150.))
+///                 .height(Size::fill())
 ///                 .child(SideBarItem::new().child("Home"))
 ///                 .child(SideBarItem::new().child("Settings")),
 ///         )
-///         .content(rect().expanded().center().child("Main content"))
+///         .child(rect().expanded().center().child("Main content"))
 /// }
 /// # use freya_testing::prelude::*;
 /// # launch_doc(|| {
@@ -40,98 +50,8 @@ use crate::{
 /// ```
 ///
 /// # Preview
-/// ![Sidebar Preview][sidebar]
-#[cfg_attr(feature = "docs",
-    doc = embed_doc_image::embed_image!("sidebar", "images/gallery_sidebar.png"),
-)]
-#[derive(PartialEq)]
-pub struct SideBar {
-    /// Theme override.
-    pub(crate) theme: Option<SideBarThemePartial>,
-    /// This is what is rendered next to the sidebar.
-    content: Option<Element>,
-    /// This is what is rendered in the sidebar.
-    bar: Option<Element>,
-    /// Width of the sidebar.
-    width: Size,
-}
+/// ![SideBarItem Preview][SideBarItem]
 
-impl Default for SideBar {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl SideBar {
-    pub fn new() -> Self {
-        Self {
-            theme: None,
-            content: None,
-            bar: None,
-            width: Size::px(180.),
-        }
-    }
-
-    pub fn content(mut self, content: impl Into<Element>) -> Self {
-        self.content = Some(content.into());
-        self
-    }
-
-    pub fn bar(mut self, bar: impl Into<Element>) -> Self {
-        self.bar = Some(bar.into());
-        self
-    }
-
-    pub fn width(mut self, width: impl Into<Size>) -> Self {
-        self.width = width.into();
-        self
-    }
-}
-
-impl Component for SideBar {
-    fn render(&self) -> impl IntoElement {
-        let SideBarTheme {
-            spacing,
-            padding,
-            background,
-            color,
-        } = get_theme!(&self.theme, sidebar);
-
-        rect()
-            .horizontal()
-            .width(Size::fill())
-            .height(Size::fill())
-            .color(color)
-            .child(
-                rect()
-                    .overflow(Overflow::Clip)
-                    .width(self.width.clone())
-                    .height(Size::fill())
-                    .background(background)
-                    .child(
-                        ScrollView::new()
-                            .width(self.width.clone())
-                            .spacing(spacing)
-                            .child(rect().padding(padding).maybe_child(self.bar.clone())),
-                    ),
-            )
-            .child(
-                rect()
-                    .overflow(Overflow::Clip)
-                    .expanded()
-                    .maybe_child(self.content.clone()),
-            )
-    }
-}
-
-#[derive(Debug, Default, PartialEq, Clone, Copy)]
-pub enum ButtonStatus {
-    /// Default state.
-    #[default]
-    Idle,
-    /// Mouse is hovering the button.
-    Hovering,
-}
 #[derive(PartialEq)]
 pub struct SideBarItem {
     /// Theme override.
@@ -196,21 +116,21 @@ impl Component for SideBarItem {
             padding,
             color,
         } = get_theme!(&self.theme, sidebar_item);
-        let mut status = use_state(ButtonStatus::default);
+        let mut status = use_state(SideBarItemStatus::default);
         let is_active = use_activable_route();
 
         let on_pointer_enter = move |_| {
-            status.set(ButtonStatus::Hovering);
+            status.set(SideBarItemStatus::Hovering);
         };
 
         let on_pointer_leave = move |_| {
-            status.set(ButtonStatus::default());
+            status.set(SideBarItemStatus::default());
         };
 
         let background = match *status.read() {
             _ if is_active => active_background,
-            ButtonStatus::Hovering => hover_background,
-            ButtonStatus::Idle => background,
+            SideBarItemStatus::Hovering => hover_background,
+            SideBarItemStatus::Idle => background,
         };
 
         rect()
