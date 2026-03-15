@@ -74,7 +74,7 @@ fn app() -> impl IntoElement {
             ResizableContainer::new()
                 .direction(Direction::Horizontal)
                 .panels_iter(webviews.read().iter().enumerate().map(|(i, webview)| {
-                    ResizablePanel::new(50.)
+                    ResizablePanel::new(PanelSize::percent(50.))
                         .key(&webview.id)
                         .order(i)
                         .child(WebView::new(&webview.url).expanded().id(webview.id))

@@ -35,22 +35,26 @@ fn app() -> impl IntoElement {
             ResizableContainer::new()
                 .controller(controller)
                 .panel(
-                    ResizablePanel::new(50.0).min_size(10.).child(
-                        rect()
-                            .expanded()
-                            .center()
-                            .background((100, 150, 200))
-                            .child("Panel 1"),
-                    ),
+                    ResizablePanel::new(PanelSize::percent(50.0))
+                        .min_size(10.)
+                        .child(
+                            rect()
+                                .expanded()
+                                .center()
+                                .background((100, 150, 200))
+                                .child("Panel 1"),
+                        ),
                 )
                 .panel(
-                    ResizablePanel::new(50.0).min_size(10.).child(
-                        rect()
-                            .expanded()
-                            .center()
-                            .background((150, 200, 100))
-                            .child("Panel 2"),
-                    ),
+                    ResizablePanel::new(PanelSize::percent(50.0))
+                        .min_size(10.)
+                        .child(
+                            rect()
+                                .expanded()
+                                .center()
+                                .background((150, 200, 100))
+                                .child("Panel 2"),
+                        ),
                 ),
         )
 }

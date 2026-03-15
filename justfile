@@ -32,6 +32,9 @@ d:
 tc:
     cargo nextest run --workspace --exclude examples --features all-tests
 
+t-components:
+    cargo nextest run --package freya-components --features freya/gif,freya/markdown
+
 t-core:
    cargo nextest run --package freya-core --package ragnarok
 
