@@ -1,4 +1,7 @@
-use std::collections::HashSet;
+use std::{
+    collections::HashSet,
+    fmt::Debug,
+};
 
 use rustc_hash::{
     FxHashMap,
@@ -18,6 +21,7 @@ use crate::{
 pub struct NodesState<Key: NodeKey> {
     pressed_nodes: FxHashSet<Key>,
     hovered_nodes: FxHashSet<Key>,
+    entered_node: Option<Key>,
 }
 
 impl<Key: NodeKey> Default for NodesState<Key> {
@@ -25,6 +29,7 @@ impl<Key: NodeKey> Default for NodesState<Key> {
         Self {
             pressed_nodes: FxHashSet::default(),
             hovered_nodes: FxHashSet::default(),
+            entered_node: None,
         }
     }
 }
@@ -33,8 +38,7 @@ pub type PotentialEvents<Key, Name, Source> =
     FxHashMap<Name, Vec<PotentialEvent<Key, Name, Source>>>;
 
 impl<Key: NodeKey> NodesState<Key> {
-    /// Retain or not the states of the nodes given the [EmmitableEvent]s and based on the sideffects of these removals
-    /// a set of [PotentialEvent]s are returned.
+    /// Retain node states given the [EmmitableEvent]s, emitting leave events as side effects.
     pub(crate) fn retain_states<
         Emmitable: EmmitableEvent<Key = Key, Name = Name>,
         Name: NameOfEvent,
@@ -78,6 +82,7 @@ impl<Key: NodeKey> NodesState<Key> {
 
         // Any movement event at all
         let source_movement_event = source_events.iter().find(|e| e.is_moved());
+        let mut removed_from_hovered = FxHashSet::default();
 
         // Hovered Nodes
         self.hovered_nodes.retain(|node_key| {
@@ -112,12 +117,46 @@ impl<Key: NodeKey> NodesState<Key> {
                         tracing::info!("Unmarked as hovered {:?}", node_key);
                     }
 
-                    // Remove the node from the list of hovered nodes
+                    removed_from_hovered.insert(*node_key);
+
                     return false;
                 }
             }
             true
         });
+
+        // Emit exclusive leave when the deepest node under the cursor changes,
+        // but only if the old node is still hovered (otherwise the regular leave covers it).
+        if source_movement_event.is_some() {
+            let new_deepest = emmitable_events
+                .iter()
+                .find(|e| e.name().is_exclusive_enter())
+                .map(|e| e.key());
+
+            if let Some(old_entered) = self.entered_node {
+                let deepest_changed = new_deepest != Some(old_entered);
+                let still_hovered = !removed_from_hovered.contains(&old_entered);
+
+                if deepest_changed
+                    && still_hovered
+                    && let Some(source_event) = source_movement_event
+                {
+                    let exclusive_leave = Name::new_exclusive_leave();
+                    let is_node_listening =
+                        events_measurer.is_listening_to(&old_entered, &exclusive_leave);
+                    if is_node_listening
+                        && let Some(area) = events_measurer.try_area_of(&old_entered)
+                    {
+                        collateral_emmitable_events.push(events_measurer.new_emmitable_event(
+                            old_entered,
+                            exclusive_leave,
+                            source_event.clone(),
+                            Some(area),
+                        ));
+                    }
+                }
+            }
+        }
 
         collateral_emmitable_events
     }
@@ -125,13 +164,35 @@ impl<Key: NodeKey> NodesState<Key> {
     pub(crate) fn filter_emmitable_events<
         Emmitable: EmmitableEvent<Key = Key, Name = Name>,
         Name: NameOfEvent,
+        Source: SourceEvent,
     >(
-        &self,
+        &mut self,
         emmitable_events: &mut Vec<Emmitable>,
+        events_measurer: &impl EventsMeasurer<Key = Key, Name = Name>,
+        potential_events: &PotentialEvents<Key, Name, Source>,
     ) {
+        let mut entered_node: Option<Key> = None;
+        for events in potential_events.values() {
+            for PotentialEvent { node_key, name, .. } in events.iter() {
+                match name {
+                    // Update hovered nodes state
+                    name if name.is_moved() => {
+                        if events_measurer.is_listening_to(node_key, &Name::new_exclusive_enter()) {
+                            entered_node = Some(*node_key);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
         emmitable_events.retain(|ev| {
             match ev.name() {
-                // Only let through enter events when the node was not hovered
+                // Exclusive enter events deduplicated against `entered_node`.
+                _ if ev.name().is_exclusive_enter() => {
+                    entered_node.as_ref() == Some(&ev.key()) && entered_node != self.entered_node
+                }
+
+                // Non-exclusive enter events deduplicated against `hovered_nodes`.
                 _ if ev.name().is_enter() => !self.hovered_nodes.contains(&ev.key()),
 
                 // Only let through release events when the node was already pressed
@@ -140,6 +201,7 @@ impl<Key: NodeKey> NodesState<Key> {
                 _ => true,
             }
         });
+        self.entered_node = entered_node;
     }
 
     /// Create the nodes states given the [PotentialEvent]s.
@@ -201,8 +263,7 @@ impl<Key: NodeKey> NodesState<Key> {
         }
     }
 
-    /// Apply the given [NodesStatesUpdate] in a way so that only newly hovered/pressed nodes are cached.
-    /// Any discard of nodes in the [NodesStatesUpdate] wont matter here.
+    /// Apply the given [NodesStatesUpdate], extending the cached hovered/pressed nodes.
     pub fn apply_update(&mut self, update: NodesStatesUpdate<Key>) {
         self.hovered_nodes.extend(update.hovered_nodes);
         self.pressed_nodes.extend(update.pressed_nodes);

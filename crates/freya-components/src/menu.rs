@@ -241,7 +241,7 @@ pub struct MenuItem {
     pub(crate) theme: Option<MenuItemThemePartial>,
     children: Vec<Element>,
     on_press: Option<EventHandler<Event<PressEventData>>>,
-    on_pointer_enter: Option<EventHandler<Event<PointerEventData>>>,
+    on_pointer_over: Option<EventHandler<Event<PointerEventData>>>,
     selected: bool,
     key: DiffKey,
 }
@@ -265,11 +265,11 @@ impl MenuItem {
         self
     }
 
-    pub fn on_pointer_enter<F>(mut self, f: F) -> Self
+    pub fn on_pointer_over<F>(mut self, f: F) -> Self
     where
         F: Into<EventHandler<Event<PointerEventData>>>,
     {
-        self.on_pointer_enter = Some(f.into());
+        self.on_pointer_over = Some(f.into());
         self
     }
 
@@ -313,14 +313,14 @@ impl ComponentOwned for MenuItem {
                 .alignment(BorderAlignment::Inner)
         };
 
-        let on_pointer_enter = move |e| {
+        let on_pointer_over = move |e| {
             hovering.set(true);
-            if let Some(on_pointer_enter) = &self.on_pointer_enter {
-                on_pointer_enter.call(e);
+            if let Some(on_pointer_over) = &self.on_pointer_over {
+                on_pointer_over.call(e);
             }
         };
 
-        let on_pointer_leave = move |_| {
+        let on_pointer_out = move |_| {
             hovering.set(false);
         };
 
@@ -348,8 +348,8 @@ impl ComponentOwned for MenuItem {
             .color(theme.color)
             .text_align(TextAlign::Start)
             .main_align(Alignment::Center)
-            .on_pointer_enter(on_pointer_enter)
-            .on_pointer_leave(on_pointer_leave)
+            .on_pointer_over(on_pointer_over)
+            .on_pointer_out(on_pointer_out)
             .on_press(on_press)
             .children(self.children)
     }
@@ -407,7 +407,7 @@ impl ComponentOwned for MenuButton {
         let parent_menu_id = use_consume::<MenuId>();
 
         MenuItem::new()
-            .on_pointer_enter(move |_| close_menus_until(&mut menus, parent_menu_id))
+            .on_pointer_over(move |_| close_menus_until(&mut menus, parent_menu_id))
             .map(self.on_press.clone(), |el, on_press| el.on_press(on_press))
             .children(self.children)
     }
@@ -474,7 +474,7 @@ impl ComponentOwned for SubMenu {
 
         let show_submenu = menus.read().contains(&submenu_id);
 
-        let on_pointer_enter = move |_| {
+        let on_pointer_over = move |_| {
             close_menus_until(&mut menus, parent_menu_id);
             push_menu(&mut menus, submenu_id);
         };
@@ -485,7 +485,7 @@ impl ComponentOwned for SubMenu {
         };
 
         MenuItem::new()
-            .on_pointer_enter(on_pointer_enter)
+            .on_pointer_over(on_pointer_over)
             .on_press(on_press)
             .child(rect().horizontal().maybe_child(self.label.clone()))
             .maybe_child(show_submenu.then(|| {

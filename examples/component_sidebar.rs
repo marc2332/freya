@@ -31,29 +31,36 @@ struct AppSideBar;
 impl Component for AppSideBar {
     fn render(&self) -> impl IntoElement {
         NativeRouter::new().child(
-            SideBar::new()
-                .bar(
-                    rect()
-                        .child(
-                            ActivableRoute::new(
-                                Route::Home,
-                                Link::new(Route::Home).child(SideBarItem::new().child("Home")),
+            rect()
+                .horizontal()
+                .child(
+                    ScrollView::new().width(Size::px(200.)).child(
+                        rect()
+                            .theme_background()
+                            .padding(8.)
+                            .height(Size::fill())
+                            .child(
+                                ActivableRoute::new(
+                                    Route::Home,
+                                    Link::new(Route::Home).child(SideBarItem::new().child("Home")),
+                                )
+                                .exact(true),
                             )
-                            .exact(true),
-                        )
-                        .child(ActivableRoute::new(
-                            Route::Settings,
-                            Link::new(Route::Settings).child(SideBarItem::new().child("Settings")),
-                        ))
-                        .child(
-                            SideBarItem::new()
-                                .on_press(|_| {
-                                    println!("Pressed 🦀");
-                                })
-                                .child("Crab 🦀"),
-                        ),
+                            .child(ActivableRoute::new(
+                                Route::Settings,
+                                Link::new(Route::Settings)
+                                    .child(SideBarItem::new().child("Settings")),
+                            ))
+                            .child(
+                                SideBarItem::new()
+                                    .on_press(|_| {
+                                        println!("Pressed 🦀");
+                                    })
+                                    .child("Crab 🦀"),
+                            ),
+                    ),
                 )
-                .content(rect().expanded().center().child(Outlet::<Route>::new())),
+                .child(rect().expanded().center().child(Outlet::<Route>::new())),
         )
     }
 }

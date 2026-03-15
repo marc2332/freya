@@ -41,20 +41,7 @@
 //!                         .a11y_id(focus.a11y_id())
 //!                         .on_mouse_down(move |_| focus.request_focus())
 //!                         .on_key_down(move |e: Event<KeyboardEventData>| {
-//!                             if let Some(ch) = e.try_as_str() {
-//!                                 let _ = handle.write(ch.as_bytes());
-//!                             } else {
-//!                                 let _ = handle.write(match &e.key {
-//!                                     Key::Named(NamedKey::Enter) => b"\n",
-//!                                     Key::Named(NamedKey::Backspace) => &[0x7f],
-//!                                     Key::Named(NamedKey::Tab) => b"\t",
-//!                                     Key::Named(NamedKey::ArrowUp) => b"\x1b[A",
-//!                                     Key::Named(NamedKey::ArrowDown) => b"\x1b[B",
-//!                                     Key::Named(NamedKey::ArrowLeft) => b"\x1b[D",
-//!                                     Key::Named(NamedKey::ArrowRight) => b"\x1b[C",
-//!                                     _ => return,
-//!                                 });
-//!                             }
+//!                             let _ = handle.write_key(&e.key, e.modifiers);
 //!                         }),
 //!                 )
 //!                 .expanded()

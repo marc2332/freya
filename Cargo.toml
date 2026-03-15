@@ -6,7 +6,6 @@ publish = false
 [features]
 hotpath = ["freya/hotpath"]
 hotpath-alloc = ["hotpath/hotpath-alloc"]
-hotpath-off = ["hotpath/hotpath-off"]
 devtools = ["freya/devtools"]
 performance = ["freya/performance"]
 plot = ["freya/plot"]
@@ -117,7 +116,7 @@ rfd = "0.17"
 
 # Desktop renderer
 raw-window-handle = "0.6.0"
-winit = "0.30.0"
+winit = "0.30.13"
 
 # Tray
 tray-icon = "0.21"
@@ -136,7 +135,7 @@ accesskit = "0.24.0"
 accesskit_winit = "0.32.0"
 
 # Performance
-hotpath = "0.10"
+hotpath = "0.14"
 
 # Errors
 anyhow = "1.0.100"

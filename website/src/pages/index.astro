@@ -1,6 +1,7 @@
 ---
 import { Code } from "astro:components";
 import Layout from "../layouts/Layout.astro";
+import FeatureSection from "../components/FeatureSection.astro";
 
 const EXAMPLE_CODE = `
 fn app() -> impl IntoElement {
@@ -41,34 +42,172 @@ fn app() -> impl IntoElement {
     rect().child(counter).child(actions)
 }
 `.trim();
+
+const features = [
+  {
+    title: "Out of the Box Components",
+    description:
+      "Freya ships with a rich set of built-in components, from simple ones like Button, Switch, and Slider to more complex ones like VirtualScrollView, Calendar, and ColorPicker.",
+    mediaUrl:
+      "https://github.com/user-attachments/assets/3dd1b7bf-0c9e-4257-a308-f2e3ca057ff1",
+    mediaType: "image" as const,
+  },
+  {
+    title: "Smooth Animations",
+    description:
+      "Create transitions for colors, sizes, positions, and other visual properties. The animation API gives you full control over timing, easing functions, and animation sequences.",
+    mediaUrl:
+      "https://github.com/user-attachments/assets/ab0c4637-7c04-4dd3-8c6f-c841d4e163d7",
+    mediaType: "image" as const,
+  },
+  {
+    title: "Rich Text Editing",
+    description:
+      "Text editing capabilities that go beyond simple input fields. Build rich text editors with cursor management, text selection, keyboard shortcuts, custom formatting, and virtualization.",
+    mediaUrl:
+      "https://github.com/user-attachments/assets/27fbbcab-3ab4-4dc7-b984-47cec280123c",
+    mediaType: "image" as const,
+  },
+  {
+    title: "Code Editor",
+    description:
+      "Create full-featured code editors with Rope-based text editing and tree-sitter syntax highlighting. State agnostic, so it works with any data source that can be turned into a Writable.",
+    mediaUrl:
+      "https://github.com/user-attachments/assets/4d6c4571-ae74-4c24-a05f-9c715b6b3438",
+    mediaType: "image" as const,
+  },
+  {
+    title: "Routing & Navigation",
+    description:
+      "Define routes, manage navigation state, and transition between different views. Build multi-page applications with a declarative routing API.",
+    mediaUrl:
+      "https://github.com/user-attachments/assets/1b3ed156-7e29-43f7-a11c-455ba0520223",
+    mediaType: "image" as const,
+  },
+  {
+    title: "Advanced Plotting & Charts",
+    description:
+      "Create charts, graphs, and interactive data visualizations directly within your application using the Plotters library integration.",
+    mediaUrl:
+      "https://github.com/user-attachments/assets/236285ea-a2c2-4739-a59d-029a7c3ef601",
+    mediaType: "video" as const,
+  },
+  {
+    title: "WebView Integration",
+    description:
+      "Embed web content into your native applications. Display web-based content alongside native UI components, or build hybrid applications with ease.",
+    mediaUrl:
+      "https://github.com/user-attachments/assets/60d6db71-fa22-4bbb-a4ad-1ff00a056614",
+    mediaType: "image" as const,
+  },
+  {
+    title: "Terminal Emulation",
+    description:
+      "Full PTY (pseudo-terminal) support for building integrated terminal applications, SSH clients, or development tools right inside your app.",
+    mediaUrl:
+      "https://github.com/user-attachments/assets/12322dad-cb89-450b-bd8f-c9d5fbe2d45a",
+    mediaType: "image" as const,
+  },
+  {
+    title: "Developer Tools",
+    description:
+      "Examine the component tree in real-time with built-in developer tools. Inspect properties, debug layouts, and understand your UI structure as you build.",
+    mediaUrl:
+      "https://github.com/user-attachments/assets/906fdbec-7b3c-4dc4-a420-95fdf852b1e4",
+    mediaType: "image" as const,
+    wide: true,
+  },
+];
 ---
 
 <Layout title="Freya - GUI Library for Rust">
-    <div class="flex flex-col lg:flex-row justify-center items-center pb-8">
-        <img class="mx-auto mb-8 sm:m-0" src="/logo.svg" width="150">
-        <div class="inline-block sm:p-4">
-            <p>Build cross-platform GUI applications using 🦀 <a href="https://www.rust-lang.org/" class="underline">Rust</a>. <br/>Powered by 🎨 <a href="https://skia.org/" rel="noreferrer"class="underline">Skia</a>.</p>
-            <br/>
-            <a class="sm:inline-block sm:my-0 block text-start sm:text-center px-6 my-2 mr-2 py-2 bg-sky-500 rounded-lg text-black hover:bg-sky-600 transition-colors delay-[10]" href="https://docs.rs/freya/latest/freya/_docs/introduction/index.html">Get Started</a>
-            <a class="sm:inline-block sm:my-0 block text-start sm:text-center px-6 my-2 mr-2 py-2 bg-orange-300 rounded-lg text-black hover:bg-orange-400 transition-colors delay-[10]" href="https://github.com/marc2332/freya">Source Code</a>
-            <a class="sm:inline-block sm:my-0 block text-start sm:text-center px-6 my-2 mr-2 py-2 bg-pink-300 rounded-lg text-black hover:bg-pink-400 transition-colors delay-[10]" href="https://github.com/sponsors/marc2332">Sponsor</a>
-        </div>
+  <div class="flex flex-col lg:flex-row justify-center items-center pb-8">
+    <img class="mx-auto mb-8 sm:m-0" src="/logo.svg" width="150" />
+    <div class="inline-block sm:p-4">
+      <p>
+        Build cross-platform GUI applications using 🦀 <a
+          href="https://www.rust-lang.org/"
+          class="underline">Rust</a
+        >. <br />Powered by 🎨 <a
+          href="https://skia.org/"
+          rel="noreferrer"
+          class="underline">Skia</a
+        >.
+      </p>
+      <br />
+      <a
+        class="sm:inline-block sm:my-0 block text-start sm:text-center px-6 my-2 mr-2 py-2 bg-sky-500 rounded-lg text-black hover:bg-sky-600 transition-colors delay-[10]"
+        href="https://docs.rs/freya/latest/freya/_docs/introduction/index.html"
+        >Get Started</a
+      >
+      <a
+        class="sm:inline-block sm:my-0 block text-start sm:text-center px-6 my-2 mr-2 py-2 bg-orange-300 rounded-lg text-black hover:bg-orange-400 transition-colors delay-[10]"
+        href="https://github.com/marc2332/freya">Source Code</a
+      >
+      <a
+        class="sm:inline-block sm:my-0 block text-start sm:text-center px-6 my-2 mr-2 py-2 bg-pink-300 rounded-lg text-black hover:bg-pink-400 transition-colors delay-[10]"
+        href="https://github.com/sponsors/marc2332">Sponsor</a
+      >
     </div>
-    <div class="p-6 py-8 lg:w-[60rem] lg:flex gap-10 block  justify-evenly items-center mx-auto text-black border border-stone-800 m-2 rounded-2xl bg-custom-dark-gray">
-        <div class="text-xs">
-            <Code code={EXAMPLE_CODE} lang="rs" />
-        </div>
-        <div class="flex justify-center flex-col items-center gap-y-8">
-            <video muted autoplay playsinline loop class="rounded-xl" >
-                <source src="/demo.webm" type="video/webm" >
-            </video>
-            <a class="w-36 bg-custom-purple p-2 text-center rounded-lg text-white hover:bg-custom-purple-dark transition-colors delay-[10]" href="https://github.com/marc2332/freya#want-to-try-it-">Run locally</a>
-        </div>
+  </div>
+
+  <div
+    class="p-6 py-8 lg:w-[60rem] lg:flex gap-10 block justify-evenly items-center mx-auto text-black border border-stone-800 m-2 rounded-2xl bg-custom-dark-gray"
+  >
+    <div class="text-xs hidden lg:block">
+      <Code code={EXAMPLE_CODE} lang="rs" />
     </div>
+    <div class="flex justify-center flex-col items-center gap-y-8">
+      <video muted autoplay playsinline loop class="rounded-xl">
+        <source src="/demo.webm" type="video/webm" />
+      </video>
+      <a
+        class="w-36 bg-custom-purple p-2 text-center rounded-lg text-white hover:bg-custom-purple-dark transition-colors delay-[10]"
+        href="https://github.com/marc2332/freya#trying-it-out">Run locally</a
+      >
+    </div>
+  </div>
+
+  <div class="mt-16 lg:mt-24 divide-y divide-stone-800/50">
+    {
+      features.map((feature, i) => (
+        <FeatureSection
+          title={feature.title}
+          description={feature.description}
+          mediaUrl={feature.mediaUrl}
+          mediaType={feature.mediaType}
+          reverse={i % 2 !== 0}
+          wide={feature.wide}
+        />
+      ))
+    }
+  </div>
+
+  <div class="text-center py-16 lg:py-24 border-t border-stone-800/50">
+    <h2 class="text-3xl lg:text-4xl font-bold mb-4">Ready to get started?</h2>
+    <p class="text-stone-400 text-lg mb-8 max-w-xl mx-auto">
+      Build cross-platform, native GUI applications with Rust and Skia.
+    </p>
+    <div class="flex flex-wrap justify-center gap-2">
+      <a
+        class="px-6 py-2 bg-sky-500 rounded-lg text-black hover:bg-sky-600 transition-colors delay-[10]"
+        href="https://docs.rs/freya/latest/freya/_docs/introduction/index.html"
+        >Get Started</a
+      >
+      <a
+        class="px-6 py-2 bg-orange-300 rounded-lg text-black hover:bg-orange-400 transition-colors delay-[10]"
+        href="https://github.com/marc2332/freya">Source Code</a
+      >
+      <a
+        class="px-6 py-2 bg-pink-300 rounded-lg text-black hover:bg-pink-400 transition-colors delay-[10]"
+        href="https://github.com/sponsors/marc2332">Sponsor</a
+      >
+    </div>
+  </div>
 </Layout>
 
 <style>
-    video::-internal-media-controls-overlay-cast-button {
-        display: none;
-    }
+  video::-internal-media-controls-overlay-cast-button {
+    display: none;
+  }
 </style>

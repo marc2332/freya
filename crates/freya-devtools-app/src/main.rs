@@ -126,10 +126,14 @@ pub fn app() -> impl IntoElement {
 struct NavBar;
 impl Component for NavBar {
     fn render(&self) -> impl IntoElement {
-        SideBar::new()
-            .width(Size::px(100.))
-            .bar(
+        rect()
+            .horizontal()
+            .child(
                 rect()
+                    .theme_background()
+                    .height(Size::fill())
+                    .width(Size::px(100.))
+                    .padding(8.)
                     .child(ActivableRoute::new(
                         Route::TreeInspector {},
                         Link::new(Route::TreeInspector {}).child(SideBarItem::new().child("Tree")),
@@ -139,7 +143,7 @@ impl Component for NavBar {
                         Link::new(Route::Misc {}).child(SideBarItem::new().child("Misc")),
                     )),
             )
-            .content(
+            .child(
                 rect()
                     .padding(Gaps::new_all(8.))
                     .child(Outlet::<Route>::new()),

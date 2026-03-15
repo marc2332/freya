@@ -124,6 +124,7 @@ pub mod prelude {
         platform::*,
         reactive_context::ReactiveContext,
         rendering_ticker::RenderingTicker,
+        scope_id::ScopeId,
         style::{
             border::*,
             color::*,

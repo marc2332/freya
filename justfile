@@ -33,7 +33,7 @@ tc:
     cargo nextest run --workspace --exclude examples --features all-tests
 
 t-core:
-   cargo nextest run --package freya-core
+   cargo nextest run --package freya-core --package ragnarok
 
 pe:
     cargo run --example dev_perf --release
