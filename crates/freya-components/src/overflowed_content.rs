@@ -1,11 +1,11 @@
 use std::time::Duration;
 
 use freya_animation::prelude::{
-    use_animation,
     AnimDirection,
     AnimNum,
     Ease,
     Function,
+    use_animation,
 };
 use freya_core::prelude::*;
 use torin::{
