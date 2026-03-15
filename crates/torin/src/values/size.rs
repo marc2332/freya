@@ -103,13 +103,79 @@ impl PartialEq for SizeFn {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(PartialEq, Clone, Debug)]
 pub enum Size {
+    /// Sizes the element based on its content. This is the default.
+    ///
+    /// Can also be created with [`Size::auto`].
+    ///
+    /// ```
+    /// # use torin::prelude::*;
+    /// let size = Size::auto();
+    /// ```
     Inner,
+
+    /// Expands to fill all the available space from its parent.
+    ///
+    /// Can also be created with [`Size::fill`].
+    ///
+    /// ```
+    /// # use torin::prelude::*;
+    /// let size = Size::fill();
+    /// ```
     Fill,
+
+    /// Expand to the biggest sibling when using [`Content::fit`](crate::content::Content::fit).
+    ///
+    /// Can also be created with [`Size::fill_minimum`].
+    ///
+    /// ```
+    /// # use torin::prelude::*;
+    /// let size = Size::fill_minimum();
+    /// ```
     FillMinimum,
+
+    /// Sizes as a percentage relative to the parent's size.
+    ///
+    /// Can also be created with [`Size::percent`].
+    ///
+    /// ```
+    /// # use torin::prelude::*;
+    /// let size = Size::percent(50.0);
+    /// ```
     Percentage(Length),
+
+    /// Fixed size in pixels.
+    ///
+    /// Can also be created with [`Size::px`].
+    ///
+    /// ```
+    /// # use torin::prelude::*;
+    /// let size = Size::px(200.0);
+    /// ```
     Pixels(Length),
+
+    /// Sizes as a percentage relative to the root (window) size.
+    ///
+    /// Can also be created with [`Size::window_percent`].
+    ///
+    /// ```
+    /// # use torin::prelude::*;
+    /// let size = Size::window_percent(80.0);
+    /// ```
     RootPercentage(Length),
+
+    /// Dynamic size computed by a closure at layout time.
+    ///
+    /// Can also be created with [`Size::func`] or [`Size::func_data`].
     Fn(Box<SizeFn>),
+
+    /// Flex grow factor, fills the available space proportionally in the final layout phase.
+    ///
+    /// Can also be created with [`Size::flex`].
+    ///
+    /// ```
+    /// # use torin::prelude::*;
+    /// let size = Size::flex(1.0);
+    /// ```
     Flex(Length),
 }
 
@@ -120,6 +186,54 @@ impl Default for Size {
 }
 
 impl Size {
+    /// Use an [`Inner`](Size::Inner) size.
+    pub fn auto() -> Size {
+        Size::Inner
+    }
+
+    /// Use a [`Fill`](Size::Fill) size.
+    pub fn fill() -> Size {
+        Size::Fill
+    }
+
+    /// Use a [`FillMinimum`](Size::FillMinimum) size.
+    pub fn fill_minimum() -> Size {
+        Size::FillMinimum
+    }
+
+    /// Use a [`Percentage`](Size::Percentage) size.
+    pub fn percent(percent: impl Into<f32>) -> Size {
+        Size::Percentage(Length::new(percent.into()))
+    }
+
+    /// Use a [`Pixels`](Size::Pixels) size.
+    pub fn px(px: impl Into<f32>) -> Size {
+        Size::Pixels(Length::new(px.into()))
+    }
+
+    /// Use a [`RootPercentage`](Size::RootPercentage) size.
+    pub fn window_percent(percent: impl Into<f32>) -> Size {
+        Size::RootPercentage(Length::new(percent.into()))
+    }
+
+    /// Use a [`Flex`](Size::Flex) size.
+    pub fn flex(flex: impl Into<f32>) -> Size {
+        Size::Flex(Length::new(flex.into()))
+    }
+
+    /// Use a dynamic [`Fn`](Size::Fn) size computed by the given closure.
+    pub fn func(func: impl Fn(SizeFnContext) -> Option<f32> + 'static + Sync + Send) -> Size {
+        Self::Fn(Box::new(SizeFn::new(func)))
+    }
+
+    /// Use a dynamic [`Fn`](Size::Fn) size with hashable data for equality checks.
+    pub fn func_data<D: Hash>(
+        func: impl Fn(SizeFnContext) -> Option<f32> + 'static + Sync + Send,
+        data: &D,
+    ) -> Size {
+        Self::Fn(Box::new(SizeFn::new_data(func, data)))
+    }
+
     pub(crate) fn flex_grow(&self) -> Option<Length> {
         match self {
             Self::Flex(f) => Some(*f),
