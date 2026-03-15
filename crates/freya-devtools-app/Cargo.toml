@@ -27,8 +27,8 @@ torin = { workspace = true }
 accesskit = { workspace = true }
 serde_json = { workspace = true }
 
-async-tungstenite = { version = "0.31" }
+async-tungstenite = { version = "0.33" }
 futures-util = { workspace = true }
 smol = "2.0.2"
-tungstenite = { version = "0.27", features = ["handshake"] }
+tungstenite = { version = "0.28", features = ["handshake"] }
 async-lock = { version = "3.4.1" }
