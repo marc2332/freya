@@ -153,8 +153,6 @@ impl ragnarok::NameOfEvent for EventName {
             Self::MouseUp | Self::TouchEnd => {
                 events.insert(Self::PointerPress);
             }
-            // PointerOut is synthesized as the leave event; it also derives PointerLeave
-            // so that both events are emitted when a node stops being hovered.
             Self::PointerOut => {
                 events.insert(Self::PointerLeave);
             }
