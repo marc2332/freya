@@ -43,7 +43,7 @@ jobs:
           git checkout ${{ github.event.pull_request.head.sha }}
           {
             echo 'metrics<<EOF'
-            just ps-ci | grep '^{"profiling_mode"'
+            just ps-ci | grep '^{"type":"hotpath_report"'
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
       - id: base_timing_metrics
@@ -54,7 +54,7 @@ jobs:
           git checkout ${{ github.event.pull_request.base.sha }}
           {
             echo 'metrics<<EOF'
-            just ps-ci | grep '^{"profiling_mode"'
+            just ps-ci | grep '^{"type":"hotpath_report"'
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
       - id: head_alloc_metrics
@@ -65,7 +65,7 @@ jobs:
           git checkout ${{ github.event.pull_request.head.sha }}
           {
             echo 'metrics<<EOF'
-            just pa-ci | grep '^{"profiling_mode"'
+            just pa-ci | grep '^{"type":"hotpath_report"'
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
       - id: base_alloc_metrics
@@ -76,7 +76,7 @@ jobs:
           git checkout ${{ github.event.pull_request.base.sha }}
           {
             echo 'metrics<<EOF'
-            just pa-ci | grep '^{"profiling_mode"'
+            just pa-ci | grep '^{"type":"hotpath_report"'
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
       - name: Post PR comment - alloc mode
