@@ -254,10 +254,9 @@ impl Component for TerminalPanel {
                                         }
                                     })
                                     .on_key_down(move |e: Event<KeyboardEventData>| {
-                                        let mods = e.modifiers;
-                                        let ctrl_shift =
-                                            mods.contains(Modifiers::CONTROL | Modifiers::SHIFT);
-                                        let ctrl = mods.contains(Modifiers::CONTROL);
+                                        let ctrl_shift = e
+                                            .modifiers
+                                            .contains(Modifiers::CONTROL | Modifiers::SHIFT);
 
                                         match &e.key {
                                             Key::Character(ch)
@@ -274,43 +273,8 @@ impl Component for TerminalPanel {
                                                     let _ = handle.paste(&text);
                                                 }
                                             }
-                                            Key::Character(ch) if ctrl && ch.len() == 1 => {
-                                                let _ = handle.write(&[ch.as_bytes()[0] & 0x1f]);
-                                            }
-                                            Key::Named(NamedKey::Enter) => {
-                                                let _ = handle.write(b"\r");
-                                            }
-                                            Key::Named(NamedKey::Backspace) => {
-                                                let _ = handle.write(&[0x7f]);
-                                            }
-                                            Key::Named(NamedKey::Delete) => {
-                                                let _ = handle.write(b"\x1b[3~");
-                                            }
-                                            Key::Named(NamedKey::Shift) => {
-                                                handle.shift_pressed(true);
-                                            }
-                                            Key::Named(NamedKey::Tab) => {
-                                                let _ = handle.write(b"\t");
-                                            }
-                                            Key::Named(NamedKey::Escape) => {
-                                                let _ = handle.write(&[0x1b]);
-                                            }
-                                            Key::Named(NamedKey::ArrowUp) => {
-                                                let _ = handle.write(b"\x1b[A");
-                                            }
-                                            Key::Named(NamedKey::ArrowDown) => {
-                                                let _ = handle.write(b"\x1b[B");
-                                            }
-                                            Key::Named(NamedKey::ArrowLeft) => {
-                                                let _ = handle.write(b"\x1b[D");
-                                            }
-                                            Key::Named(NamedKey::ArrowRight) => {
-                                                let _ = handle.write(b"\x1b[C");
-                                            }
                                             _ => {
-                                                if let Some(ch) = e.try_as_str() {
-                                                    let _ = handle.write(ch.as_bytes());
-                                                }
+                                                let _ = handle.write_key(&e.key, e.modifiers);
                                             }
                                         }
                                     }),

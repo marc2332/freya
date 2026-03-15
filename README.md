@@ -671,7 +671,7 @@ fn app() -> impl IntoElement {
         let mut cmd = CommandBuilder::new("bash");
         cmd.env("TERM", "xterm-256color");
         cmd.env("COLORTERM", "truecolor");
-        TerminalHandle::new(cmd).ok()
+        TerminalHandle::new(TerminalId::new(), cmd, None).ok()
     });
 
     rect()
@@ -684,28 +684,7 @@ fn app() -> impl IntoElement {
             Terminal::new(handle.clone())
                 .a11y_id(focus.a11y_id())
                 .on_key_down(move |e: Event<KeyboardEventData>| {
-                    if e.modifiers.contains(Modifiers::CONTROL)
-                        && matches!(&e.key, Key::Character(ch) if ch.len() == 1)
-                    {
-                        if let Key::Character(ch) = &e.key {
-                            let _ = handle.write(&[ch.as_bytes()[0] & 0x1f]);
-                        }
-                    } else if let Some(ch) = e.try_as_str() {
-                        let _ = handle.write(ch.as_bytes());
-                    } else {
-                        let _ = handle.write(match &e.key {
-                            Key::Named(NamedKey::Enter) => b"\r",
-                            Key::Named(NamedKey::Backspace) => &[0x7f],
-                            Key::Named(NamedKey::Delete) => b"\x1b[3~",
-                            Key::Named(NamedKey::Tab) => b"\t",
-                            Key::Named(NamedKey::Escape) => &[0x1b],
-                            Key::Named(NamedKey::ArrowUp) => b"\x1b[A",
-                            Key::Named(NamedKey::ArrowDown) => b"\x1b[B",
-                            Key::Named(NamedKey::ArrowLeft) => b"\x1b[D",
-                            Key::Named(NamedKey::ArrowRight) => b"\x1b[C",
-                            _ => return,
-                        });
-                    };
+                    let _ = handle.write_key(&e.key, e.modifiers);
                 })
         } else {
             "Terminal exited".into_element()
