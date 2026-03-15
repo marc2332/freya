@@ -75,7 +75,11 @@ impl<T: EventsMeasurer + private::Sealed> EventsMeasurerRunner for T {
         // Get potential collateral events, e.g. mousemove -> mouseenter
         let collateral_emmitable_events =
             nodes_state.retain_states(self, &emmitable_events, source_events);
-        nodes_state.filter_emmitable_events::<Self::Emmitable, Self::Name>(&mut emmitable_events);
+        nodes_state.filter_emmitable_events::<Self::Emmitable, Self::Name, Self::Source>(
+            &mut emmitable_events,
+            self,
+            &potential_events,
+        );
         let nodes_states_update = nodes_state
             .create_update::<Self::Emmitable, Self::Name, Self::Source>(self, &potential_events);
 

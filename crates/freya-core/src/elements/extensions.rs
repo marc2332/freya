@@ -228,6 +228,8 @@ pub trait EventHandlersExt: Sized {
         pointer_down => EventName::PointerDown;
         pointer_enter => EventName::PointerEnter;
         pointer_leave => EventName::PointerLeave;
+        pointer_over => EventName::PointerOver;
+        pointer_out => EventName::PointerOut;
     }
 
     event_handlers! {
