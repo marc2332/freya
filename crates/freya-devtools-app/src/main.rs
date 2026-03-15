@@ -128,12 +128,12 @@ impl Component for NavBar {
     fn render(&self) -> impl IntoElement {
         rect()
             .horizontal()
-            .theme_background()
-            .height(Size::fill())
-            .width(Size::px(100.))
-            .padding(8.)
             .child(
                 rect()
+                    .theme_background()
+                    .height(Size::fill())
+                    .width(Size::px(100.))
+                    .padding(8.)
                     .child(ActivableRoute::new(
                         Route::TreeInspector {},
                         Link::new(Route::TreeInspector {}).child(SideBarItem::new().child("Tree")),
