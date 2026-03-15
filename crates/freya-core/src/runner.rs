@@ -904,6 +904,20 @@ impl Runner {
         (parent_node_id, index_inside_parent)
     }
 
+    /// Recursively finds the root element [NodeId] of a scope.
+    /// When a scope's first child is another component (scope), this follows
+    /// the chain until it finds the first actual element.
+    fn find_scope_root_node_id(&self, scope_id: ScopeId) -> NodeId {
+        let scope_rc = self.scopes.get(&scope_id).unwrap();
+        let scope = scope_rc.borrow();
+        let path_node = scope.nodes.get(&[0]).unwrap();
+        if let Some(child_scope_id) = path_node.scope_id {
+            self.find_scope_root_node_id(child_scope_id)
+        } else {
+            path_node.node_id
+        }
+    }
+
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     fn apply_diff(
         &mut self,
@@ -1228,18 +1242,16 @@ impl Runner {
                 scope.borrow_mut().nodes.insert_entry(&to_path, path_entry);
 
                 if let Some(scope_id) = scope_id {
+                    let scope_root_node_id = self.find_scope_root_node_id(scope_id);
                     let scope_rc = self.scopes.get(&scope_id).cloned().unwrap();
-
                     let scope = scope_rc.borrow();
-
-                    let scope_root_node_id = scope.nodes.get(&[0]).map(|node| node.node_id);
 
                     // Mark the scope root node id as moved
                     mutations
                         .moved
                         .entry(scope.parent_node_id_in_parent)
                         .or_default()
-                        .push((to, scope_root_node_id.unwrap()));
+                        .push((to, scope_root_node_id));
                 } else {
                     // Mark the element as moved
                     mutations
