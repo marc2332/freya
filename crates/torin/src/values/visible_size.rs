@@ -1,16 +1,11 @@
 use crate::prelude::Length;
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(Default, PartialEq, Clone, Debug)]
 pub enum VisibleSize {
+    #[default]
     Full,
     InnerPercentage(Length),
-}
-
-impl Default for VisibleSize {
-    fn default() -> Self {
-        Self::Full
-    }
 }
 
 impl VisibleSize {

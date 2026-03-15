@@ -101,8 +101,9 @@ impl PartialEq for SizeFn {
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(Default, PartialEq, Clone, Debug)]
 pub enum Size {
+    #[default]
     Inner,
     Fill,
     FillMinimum,
@@ -111,12 +112,6 @@ pub enum Size {
     RootPercentage(Length),
     Fn(Box<SizeFn>),
     Flex(Length),
-}
-
-impl Default for Size {
-    fn default() -> Self {
-        Self::Inner
-    }
 }
 
 impl Size {

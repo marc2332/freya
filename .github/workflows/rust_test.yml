@@ -25,7 +25,7 @@ jobs:
         fetch-depth: 2
         submodules: true
     - name: Install stable rust toolchain
-      uses: dtolnay/rust-toolchain@1.90
+      uses: dtolnay/rust-toolchain@1.94
     - name: Install nextest
       uses: taiki-e/install-action@nextest
     - name: Install just

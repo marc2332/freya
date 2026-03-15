@@ -20,7 +20,7 @@ jobs:
       - name: Fetch all remote branches (including main)
         run: |
           git fetch --all --prune
-      - uses: dtolnay/rust-toolchain@1.90
+      - uses: dtolnay/rust-toolchain@1.94
       - name: Install just
         uses: taiki-e/install-action@just
       - name: Install hotpath-ci CLI
