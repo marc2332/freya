@@ -33,14 +33,6 @@ use crate::{
 pub type WindowBuilderHook =
     Box<dyn FnOnce(WindowAttributes, &ActiveEventLoop) -> WindowAttributes + Send + Sync>;
 pub type WindowHandleHook = Box<dyn FnOnce(&mut Window) + Send + Sync>;
-pub type EventLoopBuilderHook = Box<
-    dyn for<'a> FnOnce(
-            &'a mut winit::event_loop::EventLoopBuilder<crate::renderer::NativeEvent>,
-        )
-            -> &'a mut winit::event_loop::EventLoopBuilder<crate::renderer::NativeEvent>
-        + Send,
->;
-
 /// Decision returned by the `on_close` hook to determine whether a window should close.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum CloseDecision {
@@ -247,7 +239,6 @@ pub struct LaunchConfig {
     pub(crate) fallback_fonts: Vec<Cow<'static, str>>,
     pub(crate) tasks: Vec<TaskHandler>,
     pub(crate) exit_on_close: bool,
-    pub(crate) event_loop_builder_hook: Option<EventLoopBuilderHook>,
 }
 
 impl Default for LaunchConfig {
@@ -261,7 +252,6 @@ impl Default for LaunchConfig {
             fallback_fonts: default_fonts(),
             tasks: Vec::new(),
             exit_on_close: true,
-            event_loop_builder_hook: None,
         }
     }
 }
@@ -365,21 +355,6 @@ impl LaunchConfig {
     {
         self.tasks
             .push(Box::new(move |proxy| Box::pin(task(proxy))));
-        self
-    }
-
-    /// Customize the winit [EventLoopBuilder](winit::event_loop::EventLoopBuilder) before the event loop is created.
-    /// This can be used to configure platform-specific options on the event loop.
-    pub fn with_event_loop_builder(
-        mut self,
-        hook: impl for<'a> FnOnce(
-            &'a mut winit::event_loop::EventLoopBuilder<crate::renderer::NativeEvent>,
-        ) -> &'a mut winit::event_loop::EventLoopBuilder<
-            crate::renderer::NativeEvent,
-        > + Send
-        + 'static,
-    ) -> Self {
-        self.event_loop_builder_hook = Some(Box::new(hook));
         self
     }
 }

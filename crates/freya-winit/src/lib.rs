@@ -43,9 +43,41 @@ pub mod tray {
     pub use crate::tray_icon::*;
 }
 
+/// Launch the application.
 pub fn launch(launch_config: LaunchConfig) {
-    use std::collections::HashMap;
+    use winit::event_loop::EventLoop;
 
+    setup_panic_hook();
+
+    let event_loop = EventLoop::<NativeEvent>::with_user_event()
+        .build()
+        .expect("Failed to create event loop.");
+
+    launch_inner(launch_config, event_loop);
+}
+
+/// Launch the application with access to the [`EventLoopBuilder`](winit::event_loop::EventLoopBuilder)
+/// and the constructed [`EventLoop`](winit::event_loop::EventLoop).
+pub fn launch_with_event_loop(
+    builder_hook: impl FnOnce(&mut winit::event_loop::EventLoopBuilder<NativeEvent>),
+    setup: impl FnOnce(&winit::event_loop::EventLoop<NativeEvent>) -> LaunchConfig,
+) {
+    use winit::event_loop::EventLoop;
+
+    setup_panic_hook();
+
+    let mut event_loop_builder = EventLoop::<NativeEvent>::with_user_event();
+    builder_hook(&mut event_loop_builder);
+    let event_loop = event_loop_builder
+        .build()
+        .expect("Failed to create event loop.");
+
+    let launch_config = setup(&event_loop);
+
+    launch_inner(launch_config, event_loop);
+}
+
+fn setup_panic_hook() {
     #[cfg(all(not(debug_assertions), not(target_os = "android")))]
     {
         let previous_hook = std::panic::take_hook();
@@ -59,6 +91,13 @@ pub fn launch(launch_config: LaunchConfig) {
             std::process::exit(1);
         }));
     }
+}
+
+fn launch_inner(
+    launch_config: LaunchConfig,
+    event_loop: winit::event_loop::EventLoop<NativeEvent>,
+) {
+    use std::collections::HashMap;
 
     use freya_core::integration::*;
     use freya_engine::prelude::{
@@ -66,17 +105,6 @@ pub fn launch(launch_config: LaunchConfig) {
         FontMgr,
         TypefaceFontProvider,
     };
-    use winit::event_loop::EventLoop;
-
-    let mut event_loop_builder = EventLoop::<NativeEvent>::with_user_event();
-
-    if let Some(hook) = launch_config.event_loop_builder_hook {
-        (hook)(&mut event_loop_builder);
-    }
-
-    let event_loop = event_loop_builder
-        .build()
-        .expect("Failed to create event loop.");
 
     let proxy = event_loop.create_proxy();
 
