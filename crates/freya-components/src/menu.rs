@@ -3,6 +3,7 @@ use torin::{
     content::Content,
     prelude::{
         Alignment,
+        Area,
         Position,
     },
     size::Size,
@@ -169,24 +170,46 @@ impl ComponentOwned for MenuContainer {
     fn render(self) -> impl IntoElement {
         let focus = use_focus();
         let theme = get_theme!(self.theme, menu_container);
+        let mut measured = use_state(|| None::<(Area, f32, f32)>);
 
         use_provide_context(move || MenuGroup {
             group_id: focus.a11y_id(),
         });
 
+        let (offset_x, offset_y, opacity) = match *measured.read() {
+            None => (0.0, 0.0, 0.0),
+            Some((area, win_w, win_h)) => (
+                overflow_offset(area.origin.x, area.size.width, win_w),
+                overflow_offset(area.origin.y, area.size.height, win_h),
+                1.0,
+            ),
+        };
+
         rect()
-            .a11y_id(focus.a11y_id())
-            .a11y_member_of(focus.a11y_id())
-            .a11y_focusable(true)
-            .a11y_role(AccessibilityRole::Menu)
-            .position(Position::new_absolute())
-            .shadow((0.0, 4.0, 10.0, 0., theme.shadow))
-            .background(theme.background)
-            .corner_radius(theme.corner_radius)
-            .padding(theme.padding)
-            .border(Border::new().width(1.).fill(theme.border_fill))
             .content(Content::fit())
-            .children(self.children)
+            .opacity(opacity)
+            .offset_x(offset_x)
+            .offset_y(offset_y)
+            .on_sized(move |e: Event<SizedEventData>| {
+                if measured.peek().is_none() {
+                    let window = Platform::get().root_size.peek();
+                    measured.set(Some((e.area, window.width, window.height)));
+                }
+            })
+            .child(
+                rect()
+                    .a11y_id(focus.a11y_id())
+                    .a11y_member_of(focus.a11y_id())
+                    .a11y_focusable(true)
+                    .a11y_role(AccessibilityRole::Menu)
+                    .shadow((0.0, 4.0, 10.0, 0., theme.shadow))
+                    .background(theme.background)
+                    .corner_radius(theme.corner_radius)
+                    .padding(theme.padding)
+                    .border(Border::new().width(1.).fill(theme.border_fill))
+                    .content(Content::fit())
+                    .children(self.children),
+            )
     }
 
     fn render_key(&self) -> DiffKey {
@@ -218,7 +241,7 @@ pub struct MenuItem {
     pub(crate) theme: Option<MenuItemThemePartial>,
     children: Vec<Element>,
     on_press: Option<EventHandler<Event<PressEventData>>>,
-    on_pointer_over: Option<EventHandler<Event<PointerEventData>>>,
+    on_pointer_enter: Option<EventHandler<Event<PointerEventData>>>,
     selected: bool,
     key: DiffKey,
 }
@@ -242,11 +265,11 @@ impl MenuItem {
         self
     }
 
-    pub fn on_pointer_over<F>(mut self, f: F) -> Self
+    pub fn on_pointer_enter<F>(mut self, f: F) -> Self
     where
         F: Into<EventHandler<Event<PointerEventData>>>,
     {
-        self.on_pointer_over = Some(f.into());
+        self.on_pointer_enter = Some(f.into());
         self
     }
 
@@ -290,14 +313,16 @@ impl ComponentOwned for MenuItem {
                 .alignment(BorderAlignment::Inner)
         };
 
-        let on_pointer_over = move |e| {
+        let on_pointer_enter = move |e: Event<PointerEventData>| {
             hovering.set(true);
-            if let Some(on_pointer_over) = &self.on_pointer_over {
-                on_pointer_over.call(e);
+            e.stop_propagation();
+            e.prevent_default();
+            if let Some(on_pointer_enter) = &self.on_pointer_enter {
+                on_pointer_enter.call(e);
             }
         };
 
-        let on_pointer_out = move |_| {
+        let on_pointer_leave = move |_| {
             hovering.set(false);
         };
 
@@ -325,8 +350,8 @@ impl ComponentOwned for MenuItem {
             .color(theme.color)
             .text_align(TextAlign::Start)
             .main_align(Alignment::Center)
-            .on_pointer_over(on_pointer_over)
-            .on_pointer_out(on_pointer_out)
+            .on_pointer_enter(on_pointer_enter)
+            .on_pointer_leave(on_pointer_leave)
             .on_press(on_press)
             .children(self.children)
     }
@@ -384,7 +409,7 @@ impl ComponentOwned for MenuButton {
         let parent_menu_id = use_consume::<MenuId>();
 
         MenuItem::new()
-            .on_pointer_over(move |_| close_menus_until(&mut menus, parent_menu_id))
+            .on_pointer_enter(move |_| close_menus_until(&mut menus, parent_menu_id))
             .map(self.on_press.clone(), |el, on_press| el.on_press(on_press))
             .children(self.children)
     }
@@ -451,7 +476,7 @@ impl ComponentOwned for SubMenu {
 
         let show_submenu = menus.read().contains(&submenu_id);
 
-        let on_pointer_over = move |_| {
+        let on_pointer_enter = move |_| {
             close_menus_until(&mut menus, parent_menu_id);
             push_menu(&mut menus, submenu_id);
         };
@@ -462,7 +487,7 @@ impl ComponentOwned for SubMenu {
         };
 
         MenuItem::new()
-            .on_pointer_over(on_pointer_over)
+            .on_pointer_enter(on_pointer_enter)
             .on_press(on_press)
             .child(rect().horizontal().maybe_child(self.label.clone()))
             .maybe_child(show_submenu.then(|| {
@@ -480,6 +505,17 @@ impl ComponentOwned for SubMenu {
 
     fn render_key(&self) -> DiffKey {
         self.key.clone().or(self.default_key())
+    }
+}
+
+/// Returns a negative offset to shift an element back within the window boundary,
+/// or `0.0` if it already fits.
+fn overflow_offset(origin: f32, size: f32, window: f32) -> f32 {
+    let overflow = origin + size - window;
+    if overflow > 0.0 {
+        -overflow.min(origin)
+    } else {
+        0.0
     }
 }
 
