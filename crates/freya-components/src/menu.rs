@@ -315,8 +315,6 @@ impl ComponentOwned for MenuItem {
 
         let on_pointer_enter = move |e: Event<PointerEventData>| {
             hovering.set(true);
-            e.stop_propagation();
-            e.prevent_default();
             if let Some(on_pointer_enter) = &self.on_pointer_enter {
                 on_pointer_enter.call(e);
             }
