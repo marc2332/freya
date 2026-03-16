@@ -48,20 +48,16 @@ pub mod tray {
 /// If a custom event loop was provided via [`LaunchConfig::with_event_loop`], it will be used.
 /// Otherwise a default one is created.
 pub fn launch(mut launch_config: LaunchConfig) {
+    use std::collections::HashMap;
+
+    use freya_core::integration::*;
+    use freya_engine::prelude::{
+        FontCollection,
+        FontMgr,
+        TypefaceFontProvider,
+    };
     use winit::event_loop::EventLoop;
 
-    setup_panic_hook();
-
-    let event_loop = launch_config.event_loop.take().unwrap_or_else(|| {
-        EventLoop::<NativeEvent>::with_user_event()
-            .build()
-            .expect("Failed to create event loop.")
-    });
-
-    launch_inner(launch_config, event_loop);
-}
-
-fn setup_panic_hook() {
     #[cfg(all(not(debug_assertions), not(target_os = "android")))]
     {
         let previous_hook = std::panic::take_hook();
@@ -75,20 +71,12 @@ fn setup_panic_hook() {
             std::process::exit(1);
         }));
     }
-}
 
-fn launch_inner(
-    launch_config: LaunchConfig,
-    event_loop: winit::event_loop::EventLoop<NativeEvent>,
-) {
-    use std::collections::HashMap;
-
-    use freya_core::integration::*;
-    use freya_engine::prelude::{
-        FontCollection,
-        FontMgr,
-        TypefaceFontProvider,
-    };
+    let event_loop = launch_config.event_loop.take().unwrap_or_else(|| {
+        EventLoop::<NativeEvent>::with_user_event()
+            .build()
+            .expect("Failed to create event loop.")
+    });
 
     let proxy = event_loop.create_proxy();
 
