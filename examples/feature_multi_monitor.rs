@@ -15,25 +15,15 @@ fn main() {
             .await
             .unwrap();
 
-        for (i, monitor) in monitors.into_iter().enumerate() {
-            let name = monitor.name().unwrap_or_else(|| "Unknown".into());
+        for monitor in monitors {
             let position = monitor.position();
-            let title = format!("Monitor {i}: {name}");
-            let monitor_clone = monitor.clone();
 
             let _ = proxy
                 .with(move |ctx| {
                     ctx.launch_window(
-                        WindowConfig::new(move || app(monitor_clone.clone()))
+                        WindowConfig::new(move || app(monitor.clone()))
                             .with_size(400., 300.)
-                            .with_window_attributes(move |attrs, _| {
-                                attrs.with_title(title).with_position(
-                                    freya::winit::dpi::PhysicalPosition::new(
-                                        position.x + 100,
-                                        position.y + 100,
-                                    ),
-                                )
-                            }),
+                            .with_window_attributes(move |attrs, _| attrs.with_position(position)),
                     )
                 })
                 .await;
