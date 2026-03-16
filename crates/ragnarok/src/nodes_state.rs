@@ -87,7 +87,7 @@ impl<Key: NodeKey> NodesState<Key> {
                 return true;
             }
 
-            // Safe: `cursor_still_inside` is only false when a movement event exists
+            // Cursor moved outside this node, emit leave events
             let source_event = source_movement_event.unwrap();
             for derived_event in Name::new_leave().get_derived_events() {
                 if events_measurer.is_listening_to(node_key, &derived_event) {
@@ -154,7 +154,7 @@ impl<Key: NodeKey> NodesState<Key> {
 
         emmitable_events.retain(|ev| match ev.name() {
             // Deduplicate exclusive enter against `entered_node`
-            _ if ev.name().is_exclusive_enter()  => {
+            _ if ev.name().is_exclusive_enter() => {
                 entered_node.as_ref() == Some(&ev.key()) && entered_node != self.entered_node
             }
             // Deduplicate non-exclusive enter against `hovered_nodes`
