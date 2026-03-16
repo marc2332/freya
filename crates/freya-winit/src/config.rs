@@ -239,6 +239,7 @@ pub struct LaunchConfig {
     pub(crate) fallback_fonts: Vec<Cow<'static, str>>,
     pub(crate) tasks: Vec<TaskHandler>,
     pub(crate) exit_on_close: bool,
+    pub(crate) event_loop: Option<winit::event_loop::EventLoop<crate::renderer::NativeEvent>>,
 }
 
 impl Default for LaunchConfig {
@@ -252,6 +253,7 @@ impl Default for LaunchConfig {
             fallback_fonts: default_fonts(),
             tasks: Vec::new(),
             exit_on_close: true,
+            event_loop: None,
         }
     }
 }
@@ -355,6 +357,16 @@ impl LaunchConfig {
     {
         self.tasks
             .push(Box::new(move |proxy| Box::pin(task(proxy))));
+        self
+    }
+
+    /// Provide a custom winit [EventLoop](winit::event_loop::EventLoop) to use instead of the default one.
+    /// This allows configuring platform-specific options on the event loop builder before passing it.
+    pub fn with_event_loop(
+        mut self,
+        event_loop: winit::event_loop::EventLoop<crate::renderer::NativeEvent>,
+    ) -> Self {
+        self.event_loop = Some(event_loop);
         self
     }
 }

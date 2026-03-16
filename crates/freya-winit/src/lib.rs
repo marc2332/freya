@@ -44,35 +44,19 @@ pub mod tray {
 }
 
 /// Launch the application.
-pub fn launch(launch_config: LaunchConfig) {
+///
+/// If a custom event loop was provided via [`LaunchConfig::with_event_loop`], it will be used.
+/// Otherwise a default one is created.
+pub fn launch(mut launch_config: LaunchConfig) {
     use winit::event_loop::EventLoop;
 
     setup_panic_hook();
 
-    let event_loop = EventLoop::<NativeEvent>::with_user_event()
-        .build()
-        .expect("Failed to create event loop.");
-
-    launch_inner(launch_config, event_loop);
-}
-
-/// Launch the application with access to the [`EventLoopBuilder`](winit::event_loop::EventLoopBuilder)
-/// and the constructed [`EventLoop`](winit::event_loop::EventLoop).
-pub fn launch_with_event_loop(
-    builder_hook: impl FnOnce(&mut winit::event_loop::EventLoopBuilder<NativeEvent>),
-    setup: impl FnOnce(&winit::event_loop::EventLoop<NativeEvent>) -> LaunchConfig,
-) {
-    use winit::event_loop::EventLoop;
-
-    setup_panic_hook();
-
-    let mut event_loop_builder = EventLoop::<NativeEvent>::with_user_event();
-    builder_hook(&mut event_loop_builder);
-    let event_loop = event_loop_builder
-        .build()
-        .expect("Failed to create event loop.");
-
-    let launch_config = setup(&event_loop);
+    let event_loop = launch_config.event_loop.take().unwrap_or_else(|| {
+        EventLoop::<NativeEvent>::with_user_event()
+            .build()
+            .expect("Failed to create event loop.")
+    });
 
     launch_inner(launch_config, event_loop);
 }

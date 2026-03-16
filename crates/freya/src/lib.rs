@@ -95,7 +95,10 @@ pub mod prelude {
             LaunchConfig,
             WindowConfig,
         },
-        renderer::RendererContext,
+        renderer::{
+            NativeEvent,
+            RendererContext,
+        },
     };
 
     pub use crate::components::*;
@@ -107,29 +110,6 @@ pub mod prelude {
         let launch_config = launch_config
             .with_plugin(freya_performance_plugin::PerformanceOverlayPlugin::default());
         freya_winit::launch(launch_config)
-    }
-
-    /// See [`freya_winit::launch_with_event_loop`].
-    pub fn launch_with_event_loop(
-        builder_hook: impl FnOnce(
-            &mut freya_winit::winit::event_loop::EventLoopBuilder<
-                freya_winit::renderer::NativeEvent,
-            >,
-        ),
-        setup: impl FnOnce(
-            &freya_winit::winit::event_loop::EventLoop<freya_winit::renderer::NativeEvent>,
-        ) -> LaunchConfig,
-    ) {
-        freya_winit::launch_with_event_loop(builder_hook, |event_loop| {
-            let launch_config = setup(event_loop);
-            #[cfg(feature = "devtools")]
-            let launch_config =
-                launch_config.with_plugin(freya_devtools::DevtoolsPlugin::default());
-            #[cfg(feature = "performance")]
-            let launch_config = launch_config
-                .with_plugin(freya_performance_plugin::PerformanceOverlayPlugin::default());
-            launch_config
-        })
     }
 
     #[cfg_attr(feature = "docs", doc(cfg(feature = "router")))]

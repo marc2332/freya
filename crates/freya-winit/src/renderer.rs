@@ -124,7 +124,7 @@ pub struct RendererContext<'a> {
     pub screen_reader: &'a mut ScreenReader,
     pub font_manager: &'a mut FontMgr,
     pub font_collection: &'a mut FontCollection,
-    pub(crate) active_event_loop: &'a ActiveEventLoop,
+    pub active_event_loop: &'a ActiveEventLoop,
 }
 
 impl RendererContext<'_> {
