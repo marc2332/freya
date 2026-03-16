@@ -95,10 +95,14 @@ pub mod prelude {
             LaunchConfig,
             WindowConfig,
         },
-        renderer::RendererContext,
+        renderer::{
+            NativeEvent,
+            RendererContext,
+        },
     };
 
     pub use crate::components::*;
+
     pub fn launch(launch_config: LaunchConfig) {
         #[cfg(feature = "devtools")]
         let launch_config = launch_config.with_plugin(freya_devtools::DevtoolsPlugin::default());
