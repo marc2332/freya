@@ -245,6 +245,14 @@ impl TerminalHandle {
                 self.write(b"\r")?;
                 Ok(true)
             }
+            Key::Named(NamedKey::Backspace) if ctrl => {
+                self.write(&[0x08])?;
+                Ok(true)
+            }
+            Key::Named(NamedKey::Backspace) if alt => {
+                self.write(&[0x1b, 0x7f])?;
+                Ok(true)
+            }
             Key::Named(NamedKey::Backspace) => {
                 self.write(&[0x7f])?;
                 Ok(true)
