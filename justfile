@@ -9,12 +9,12 @@ f-check:
 c:
     taplo check
     cargo clippy --workspace --examples --features "all-debug" -- -D warnings
-    cargo doc --workspace --features "all-debug"
+    cargo doc --no-deps --workspace --features "all-debug"
 
 c-ci:
     taplo check
     cargo clippy --workspace --examples --features "all-debug, vulkan, metal" -- -D warnings
-    cargo doc --workspace --features "all-debug, vulkan, metal"
+    cargo doc --no-deps --workspace --features "all-debug, vulkan, metal"
 
 e example:
     cargo run --example {{example}}
