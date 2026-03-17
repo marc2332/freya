@@ -236,11 +236,6 @@ impl Input {
         self
     }
 
-    pub fn key(mut self, key: impl Into<DiffKey>) -> Self {
-        self.key = key.into();
-        self
-    }
-
     pub fn style_variant(mut self, style_variant: impl Into<InputStyleVariant>) -> Self {
         self.style_variant = style_variant.into();
         self
@@ -346,7 +341,7 @@ impl Component for Input {
                 }
                 // On change
                 key => {
-                    if *key != Key::Named(NamedKey::Enter) && *key != Key::Named(NamedKey::Tab) {
+                    if *key != Key::Named(NamedKey::Tab) {
                         e.stop_propagation();
                         movement_timeout.reset();
                         editable.process_event(EditableEvent::KeyDown {
