@@ -276,6 +276,30 @@ impl I18n {
         })
     }
 
+    /// Create a global [`I18n`] that lives for the entire application lifetime.
+    /// This is useful for sharing i18n state across multiple windows.
+    ///
+    /// You would usually want to call this in your `main` function, not anywhere else.
+    ///
+    /// # Example
+    ///
+    /// ```rust, ignore
+    /// # use freya::prelude::*;
+    /// # use freya_i18n::prelude::*;
+    ///
+    /// fn main() {
+    ///     let i18n = I18n::create_global(
+    ///         I18nConfig::new(langid!("en-US"))
+    ///             .with_locale((langid!("en-US"), include_str!("./i18n/en-US.ftl"))),
+    ///     )
+    ///     .unwrap();
+    ///
+    ///     launch(
+    ///         LaunchConfig::new()
+    ///             .with_window(WindowConfig::new_app(MyApp { i18n })),
+    ///     );
+    /// }
+    /// ```
     pub fn create_global(
         I18nConfig {
             id: selected_language,

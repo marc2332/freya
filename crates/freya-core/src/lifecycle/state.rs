@@ -112,7 +112,7 @@ use crate::{
 /// ```rust, ignore
 /// # use freya::prelude::*;
 /// fn main() {
-///     let count = State::create_global(0i32);
+///     let count = State::create_global(0);
 ///
 ///     launch(
 ///         LaunchConfig::new()
@@ -591,7 +591,8 @@ impl<T> State<T> {
     /// # use freya::prelude::*;
     ///
     /// fn main() {
-    ///     let count = State::create_global(0i32);
+    ///     let count = State::create_global(0);
+
     ///
     ///     launch(
     ///         LaunchConfig::new()
@@ -600,7 +601,6 @@ impl<T> State<T> {
     ///     );
     /// }
     /// ```
-    ///
     /// # Memory Management
     ///
     /// Global state is leaked using `Box::leak()` and will not be automatically cleaned up.
