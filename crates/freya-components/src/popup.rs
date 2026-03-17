@@ -98,6 +98,9 @@ impl Component for PopupBackground {
 ///
 /// # Preview
 /// ![Popup Preview][popup]
+#[doc(alias = "alert")]
+#[doc(alias = "dialog")]
+#[doc(alias = "window")]
 #[cfg_attr(feature = "docs",
     doc = embed_doc_image::embed_image!("popup", "images/gallery_popup.png"),
 )]

@@ -126,10 +126,14 @@ pub fn app() -> impl IntoElement {
 struct NavBar;
 impl Component for NavBar {
     fn render(&self) -> impl IntoElement {
-        SideBar::new()
-            .width(Size::px(100.))
-            .bar(
+        rect()
+            .horizontal()
+            .child(
                 rect()
+                    .theme_background()
+                    .height(Size::fill())
+                    .width(Size::px(100.))
+                    .padding(8.)
                     .child(ActivableRoute::new(
                         Route::TreeInspector {},
                         Link::new(Route::TreeInspector {}).child(SideBarItem::new().child("Tree")),
@@ -139,7 +143,7 @@ impl Component for NavBar {
                         Link::new(Route::Misc {}).child(SideBarItem::new().child("Misc")),
                     )),
             )
-            .content(
+            .child(
                 rect()
                     .padding(Gaps::new_all(8.))
                     .child(Outlet::<Route>::new()),
@@ -318,55 +322,59 @@ impl Component for LayoutForTreeInspector {
         ResizableContainer::new()
             .direction(Direction::Horizontal)
             .panel(
-                ResizablePanel::new(60.).child(rect().padding(10.).child(NodesTree {
-                    selected_node_id,
-                    selected_window_id,
-                    on_selected: EventHandler::new(move |(window_id, node_id)| {
-                        let message = Message::Text(
-                            serde_json::to_string(&IncomingMessage {
-                                action: IncomingMessageAction::HighlightNode { window_id, node_id },
-                            })
-                            .unwrap()
-                            .into(),
-                        );
-                        let client = radio.read().client.clone();
-                        spawn(async move {
-                            client
-                                .lock()
-                                .await
-                                .as_mut()
+                ResizablePanel::new(PanelSize::percent(60.)).child(rect().padding(10.).child(
+                    NodesTree {
+                        selected_node_id,
+                        selected_window_id,
+                        on_selected: EventHandler::new(move |(window_id, node_id)| {
+                            let message = Message::Text(
+                                serde_json::to_string(&IncomingMessage {
+                                    action: IncomingMessageAction::HighlightNode {
+                                        window_id,
+                                        node_id,
+                                    },
+                                })
                                 .unwrap()
-                                .send(message)
-                                .await
-                                .ok();
-                        });
-                    }),
-                    on_hover: EventHandler::new(move |(window_id, node_id)| {
-                        let message = Message::Text(
-                            serde_json::to_string(&IncomingMessage {
-                                action: IncomingMessageAction::HoverNode { window_id, node_id },
-                            })
-                            .unwrap()
-                            .into(),
-                        );
-                        let client = radio.read().client.clone();
-                        spawn(async move {
-                            client
-                                .lock()
-                                .await
-                                .as_mut()
+                                .into(),
+                            );
+                            let client = radio.read().client.clone();
+                            spawn(async move {
+                                client
+                                    .lock()
+                                    .await
+                                    .as_mut()
+                                    .unwrap()
+                                    .send(message)
+                                    .await
+                                    .ok();
+                            });
+                        }),
+                        on_hover: EventHandler::new(move |(window_id, node_id)| {
+                            let message = Message::Text(
+                                serde_json::to_string(&IncomingMessage {
+                                    action: IncomingMessageAction::HoverNode { window_id, node_id },
+                                })
                                 .unwrap()
-                                .send(message)
-                                .await
-                                .ok();
-                        });
-                    }),
-                })),
+                                .into(),
+                            );
+                            let client = radio.read().client.clone();
+                            spawn(async move {
+                                client
+                                    .lock()
+                                    .await
+                                    .as_mut()
+                                    .unwrap()
+                                    .send(message)
+                                    .await
+                                    .ok();
+                            });
+                        }),
+                    },
+                )),
             )
-            .panel(
-                is_expanded_vertical
-                    .then(|| ResizablePanel::new(40.).child(Outlet::<Route>::new())),
-            )
+            .panel(is_expanded_vertical.then(|| {
+                ResizablePanel::new(PanelSize::percent(40.)).child(Outlet::<Route>::new())
+            }))
     }
 }
 

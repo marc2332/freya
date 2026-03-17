@@ -9,11 +9,19 @@
         "*"
       ],
       "matchUpdateTypes": [
-        "minor",
-        "patch"
+        "minor"
       ],
       "groupName": "all non-major dependencies",
-      "groupSlug": "all-minor-patch"
+      "groupSlug": "all-minor"
+    },
+    {
+      "matchPackagePatterns": [
+        "*"
+      ],
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      "enabled": false
     }
   ]
 }
