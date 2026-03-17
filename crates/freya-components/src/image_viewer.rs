@@ -289,7 +289,7 @@ impl Component for ImageViewer {
 
                 // Fetch asset if still pending or errored
                 if matches!(
-                    asset_cacher.read_asset(&asset_config),
+                    asset_cacher.read_asset(asset_config),
                     Some(Asset::Pending) | Some(Asset::Error(_))
                 ) {
                     // Mark asset as loading
