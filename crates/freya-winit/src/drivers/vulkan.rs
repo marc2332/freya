@@ -491,7 +491,7 @@ fn create_logical_device(
     Ok((device, queue))
 }
 
-#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments, clippy::type_complexity)]
 fn create_swapchain(
     instance: &Instance,
     device: &Device,

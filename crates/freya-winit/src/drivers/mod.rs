@@ -28,6 +28,7 @@ pub enum GraphicsDriver {
 }
 
 impl GraphicsDriver {
+    #[allow(clippy::needless_return)]
     pub fn new(
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
