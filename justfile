@@ -54,7 +54,7 @@ pa-ci:
     cargo run --example dev_perf --features "hotpath, hotpath-alloc" --release
 
 ba:
-    cargo build --all-targets --features "all-debug"
+    cargo build --all-targets --workspace -F freya/all-debug
 
 bindings:
     cargo build --package freya --package freya-testing --features "mocked-engine, all-bindings" --no-default-features
