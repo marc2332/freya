@@ -250,7 +250,6 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
         let focus = use_focus();
         let mut timeout = use_timeout(|| Duration::from_millis(800));
         let mut pressing_shift = use_state(|| false);
-        let mut pressing_alt = use_state(|| false);
         let mut clicking_scrollbar = use_state::<Option<(Axis, f64)>>(|| None);
         let mut size = use_state(SizedEventData::default);
         let mut scroll_controller = self
@@ -418,8 +417,6 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
             let data = e;
             if data.key == Key::Named(NamedKey::Shift) {
                 pressing_shift.set(true);
-            } else if data.key == Key::Named(NamedKey::Alt) {
-                pressing_alt.set(true);
             }
         };
 
@@ -427,8 +424,6 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
             let data = e;
             if data.key == Key::Named(NamedKey::Shift) {
                 pressing_shift.set(false);
-            } else if data.key == Key::Named(NamedKey::Alt) {
-                pressing_alt.set(false);
             }
         };
 

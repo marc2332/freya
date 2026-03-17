@@ -73,6 +73,27 @@ use crate::{
     },
 };
 
+/// Returns `true` for accessibility roles that require IME input (text fields, terminals, etc.).
+fn is_ime_role(role: AccessibilityRole) -> bool {
+    matches!(
+        role,
+        AccessibilityRole::TextInput
+            | AccessibilityRole::MultilineTextInput
+            | AccessibilityRole::PasswordInput
+            | AccessibilityRole::SearchInput
+            | AccessibilityRole::DateInput
+            | AccessibilityRole::DateTimeInput
+            | AccessibilityRole::WeekInput
+            | AccessibilityRole::MonthInput
+            | AccessibilityRole::TimeInput
+            | AccessibilityRole::EmailInput
+            | AccessibilityRole::NumberInput
+            | AccessibilityRole::PhoneNumberInput
+            | AccessibilityRole::UrlInput
+            | AccessibilityRole::Terminal
+    )
+}
+
 pub struct WinitRenderer {
     pub windows_configs: Vec<WindowConfig>,
     #[cfg(feature = "tray")]
@@ -92,6 +113,7 @@ pub struct WinitRenderer {
     pub font_collection: FontCollection,
     pub futures: Vec<Pin<Box<dyn std::future::Future<Output = ()>>>>,
     pub waker: Waker,
+    pub exit_on_close: bool,
 }
 
 pub struct RendererContext<'a> {
@@ -102,7 +124,7 @@ pub struct RendererContext<'a> {
     pub screen_reader: &'a mut ScreenReader,
     pub font_manager: &'a mut FontMgr,
     pub font_collection: &'a mut FontCollection,
-    pub(crate) active_event_loop: &'a ActiveEventLoop,
+    pub active_event_loop: &'a ActiveEventLoop,
 }
 
 impl RendererContext<'_> {
@@ -543,7 +565,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                         };
 
                                         // Only exit when there is no window and no tray
-                                        if !has_windows && !has_tray {
+                                        if !has_windows && !has_tray && self.exit_on_close {
                                             active_event_loop.exit();
                                         }
                                     }
@@ -646,7 +668,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         };
 
                         // Only exit when there is no windows and no tray
-                        if !has_windows && !has_tray {
+                        if !has_windows && !has_tray && self.exit_on_close {
                             event_loop.exit();
                         }
                     }
@@ -765,9 +787,12 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                     .set_if_modified(update.focus);
                                 let node_id = app.accessibility.focused_node_id().unwrap();
                                 let layout_node = app.tree.layout.get(&node_id).unwrap();
-                                app.platform.focused_accessibility_node.set_if_modified(
-                                    AccessibilityTree::create_node(node_id, layout_node, &app.tree),
-                                );
+                                let focused_node =
+                                    AccessibilityTree::create_node(node_id, layout_node, &app.tree);
+                                app.window.set_ime_allowed(is_ime_role(focused_node.role()));
+                                app.platform
+                                    .focused_accessibility_node
+                                    .set_if_modified(focused_node);
                                 if let Some(mode) = mode {
                                     app.platform.navigation_mode.set(mode);
                                 }
@@ -787,9 +812,12 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                     .set_if_modified(update.focus);
                                 let node_id = app.accessibility.focused_node_id().unwrap();
                                 let layout_node = app.tree.layout.get(&node_id).unwrap();
-                                app.platform.focused_accessibility_node.set_if_modified(
-                                    AccessibilityTree::create_node(node_id, layout_node, &app.tree),
-                                );
+                                let focused_node =
+                                    AccessibilityTree::create_node(node_id, layout_node, &app.tree);
+                                app.window.set_ime_allowed(is_ime_role(focused_node.role()));
+                                app.platform
+                                    .focused_accessibility_node
+                                    .set_if_modified(focused_node);
 
                                 let area = layout_node.visible_area();
                                 app.window.set_ime_cursor_area(

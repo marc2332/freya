@@ -363,6 +363,28 @@ where
                 }
 
                 area = parent_area.cast_unit();
+
+                // Recompute the origin for non-stacked inner-sized elements
+                // now that the final size is known, and translate cached children accordingly.
+                if !node.position.is_stacked()
+                    && (node.width.inner_sized() || node.height.inner_sized())
+                {
+                    let new_origin = node.position.get_origin(
+                        &available_parent_area,
+                        &initial_parent_area,
+                        area.size,
+                        &self.layout_metadata.root_area,
+                    );
+                    let diff_x = new_origin.x - area.origin.x;
+                    let diff_y = new_origin.y - area.origin.y;
+                    area.origin = new_origin;
+                    inner_area.origin.x += diff_x;
+                    inner_area.origin.y += diff_y;
+
+                    if diff_x != 0.0 || diff_y != 0.0 {
+                        self.recursive_translate(node_id, Length::new(diff_x), Length::new(diff_y));
+                    }
+                }
             }
 
             let layout_node = LayoutNode {

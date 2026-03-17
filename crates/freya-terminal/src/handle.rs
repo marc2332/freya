@@ -18,7 +18,11 @@ use freya_core::{
         UserEvent,
     },
 };
-use keyboard_types::Modifiers;
+use keyboard_types::{
+    Key,
+    Modifiers,
+    NamedKey,
+};
 use portable_pty::{
     MasterPty,
     PtySize,
@@ -194,6 +198,133 @@ impl TerminalHandle {
         *self.last_write_time.borrow_mut() = Instant::now();
         self.scroll_to_bottom();
         Ok(())
+    }
+
+    /// Process a key event and write the corresponding terminal escape sequence to the PTY.
+    ///
+    /// Handles standard terminal keys (Enter, Backspace, Tab, Escape, arrows, Delete),
+    /// Ctrl+letter control codes, modified Enter (Shift/Ctrl via CSI u encoding),
+    /// regular character input, and shift state tracking for mouse selection.
+    ///
+    /// Returns `Ok(true)` if the key was handled, `Ok(false)` if not recognized.
+    ///
+    /// Application-level shortcuts like clipboard copy/paste should be handled
+    /// by the caller before calling this method.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// # use freya_terminal::prelude::*;
+    /// # use keyboard_types::{Key, Modifiers};
+    /// # let handle: TerminalHandle = unimplemented!();
+    /// # let key = Key::Character("a".into());
+    /// # let modifiers = Modifiers::empty();
+    /// let _ = handle.write_key(&key, modifiers);
+    /// ```
+    pub fn write_key(&self, key: &Key, modifiers: Modifiers) -> Result<bool, TerminalError> {
+        let shift = modifiers.contains(Modifiers::SHIFT);
+        let ctrl = modifiers.contains(Modifiers::CONTROL);
+        let alt = modifiers.contains(Modifiers::ALT);
+
+        match key {
+            Key::Character(ch) if ctrl && ch.len() == 1 => {
+                self.write(&[ch.as_bytes()[0] & 0x1f])?;
+                Ok(true)
+            }
+            Key::Named(NamedKey::Enter) if shift || ctrl => {
+                if self.parser.borrow().screen().alternate_screen() {
+                    let m = 1 + shift as u8 + (alt as u8) * 2 + (ctrl as u8) * 4;
+                    let seq = format!("\x1b[13;{m}u");
+                    self.write(seq.as_bytes())?;
+                } else {
+                    self.write(b"\r")?;
+                }
+                Ok(true)
+            }
+            Key::Named(NamedKey::Enter) => {
+                self.write(b"\r")?;
+                Ok(true)
+            }
+            Key::Named(NamedKey::Backspace) if ctrl => {
+                self.write(&[0x08])?;
+                Ok(true)
+            }
+            Key::Named(NamedKey::Backspace) if alt => {
+                self.write(&[0x1b, 0x7f])?;
+                Ok(true)
+            }
+            Key::Named(NamedKey::Backspace) => {
+                self.write(&[0x7f])?;
+                Ok(true)
+            }
+            Key::Named(NamedKey::Delete) if alt || ctrl || shift => {
+                let m = 1 + shift as u8 + (alt as u8) * 2 + (ctrl as u8) * 4;
+                let seq = format!("\x1b[3;{m}~");
+                self.write(seq.as_bytes())?;
+                Ok(true)
+            }
+            Key::Named(NamedKey::Delete) => {
+                self.write(b"\x1b[3~")?;
+                Ok(true)
+            }
+            Key::Named(NamedKey::Shift) => {
+                self.shift_pressed(true);
+                Ok(true)
+            }
+            Key::Named(NamedKey::Tab) => {
+                self.write(b"\t")?;
+                Ok(true)
+            }
+            Key::Named(NamedKey::Escape) => {
+                self.write(&[0x1b])?;
+                Ok(true)
+            }
+            Key::Named(
+                dir @ (NamedKey::ArrowUp
+                | NamedKey::ArrowDown
+                | NamedKey::ArrowLeft
+                | NamedKey::ArrowRight),
+            ) => {
+                let ch = match dir {
+                    NamedKey::ArrowUp => 'A',
+                    NamedKey::ArrowDown => 'B',
+                    NamedKey::ArrowRight => 'C',
+                    NamedKey::ArrowLeft => 'D',
+                    _ => unreachable!(),
+                };
+                if shift || ctrl {
+                    let m = 1 + shift as u8 + (alt as u8) * 2 + (ctrl as u8) * 4;
+                    let seq = format!("\x1b[1;{m}{ch}");
+                    self.write(seq.as_bytes())?;
+                } else {
+                    self.write(&[0x1b, b'[', ch as u8])?;
+                }
+                Ok(true)
+            }
+            Key::Character(ch) => {
+                self.write(ch.as_bytes())?;
+                Ok(true)
+            }
+            _ => Ok(false),
+        }
+    }
+
+    /// Write text to the PTY as a paste operation.
+    ///
+    /// If bracketed paste mode is enabled, wraps the text with `\x1b[200~` ... `\x1b[201~`.
+    pub fn paste(&self, text: &str) -> Result<(), TerminalError> {
+        let bracketed = self.parser.borrow().screen().bracketed_paste();
+
+        let mut data = Vec::with_capacity(text.len() + 12);
+        if bracketed {
+            data.extend_from_slice(b"\x1b[200~");
+        }
+        data.extend_from_slice(text.as_bytes());
+        if bracketed {
+            data.extend_from_slice(b"\x1b[201~");
+        }
+
+        self.write(&data)
     }
 
     /// Write data to the PTY without resetting scroll or selection state.

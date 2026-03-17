@@ -21,11 +21,7 @@ use torin::{
         Position,
         VisibleSize,
     },
-    size::{
-        Size,
-        SizeFn,
-        SizeFnContext,
-    },
+    size::Size,
 };
 
 use crate::{
@@ -72,166 +68,37 @@ use crate::{
     },
 };
 
-pub trait SizeExt {
-    fn auto() -> Size;
-    fn fill() -> Size;
-    fn fill_minimum() -> Size;
-    fn percent(percent: impl Into<f32>) -> Size;
-    fn px(px: impl Into<f32>) -> Size;
-    fn window_percent(percent: impl Into<f32>) -> Size;
-    fn flex(flex: impl Into<f32>) -> Size;
-    fn func(func: impl Fn(SizeFnContext) -> Option<f32> + 'static + Sync + Send) -> Size;
-    fn func_data<D: Hash>(
-        func: impl Fn(SizeFnContext) -> Option<f32> + 'static + Sync + Send,
-        data: &D,
-    ) -> Size;
-}
-
-impl SizeExt for Size {
-    fn auto() -> Size {
-        Size::Inner
-    }
-
-    fn fill() -> Size {
-        Size::Fill
-    }
-
-    fn fill_minimum() -> Size {
-        Size::FillMinimum
-    }
-
-    fn percent(percent: impl Into<f32>) -> Size {
-        Size::Percentage(Length::new(percent.into()))
-    }
-
-    fn px(px: impl Into<f32>) -> Size {
-        Size::Pixels(Length::new(px.into()))
-    }
-
-    fn window_percent(percent: impl Into<f32>) -> Size {
-        Size::RootPercentage(Length::new(percent.into()))
-    }
-
-    fn flex(flex: impl Into<f32>) -> Size {
-        Size::Flex(Length::new(flex.into()))
-    }
-
-    fn func(func: impl Fn(SizeFnContext) -> Option<f32> + 'static + Sync + Send) -> Size {
-        Self::Fn(Box::new(SizeFn::new(func)))
-    }
-
-    fn func_data<D: Hash>(
-        func: impl Fn(SizeFnContext) -> Option<f32> + 'static + Sync + Send,
-        data: &D,
-    ) -> Size {
-        Self::Fn(Box::new(SizeFn::new_data(func, data)))
-    }
-}
-
-pub trait DirectionExt {
-    fn vertical() -> Direction;
-    fn horizontal() -> Direction;
-}
-
-impl DirectionExt for Direction {
-    fn vertical() -> Direction {
-        Direction::Vertical
-    }
-    fn horizontal() -> Direction {
-        Direction::Horizontal
-    }
-}
-
-pub trait AlignmentExt {
-    fn start() -> Alignment;
-    fn center() -> Alignment;
-    fn end() -> Alignment;
-    fn space_between() -> Alignment;
-    fn space_evenly() -> Alignment;
-    fn space_around() -> Alignment;
-}
-
-impl AlignmentExt for Alignment {
-    fn start() -> Alignment {
-        Alignment::Start
-    }
-
-    fn center() -> Alignment {
-        Alignment::Center
-    }
-
-    fn end() -> Alignment {
-        Alignment::End
-    }
-
-    fn space_between() -> Alignment {
-        Alignment::SpaceBetween
-    }
-
-    fn space_evenly() -> Alignment {
-        Alignment::SpaceEvenly
-    }
-
-    fn space_around() -> Alignment {
-        Alignment::SpaceAround
-    }
-}
-
-pub trait ContentExt {
-    fn normal() -> Content;
-    fn fit() -> Content;
-    fn flex() -> Content;
-    fn wrap() -> Content;
-    fn wrap_spacing(spacing: f32) -> Content;
-}
-
-impl ContentExt for Content {
-    fn normal() -> Content {
-        Content::Normal
-    }
-
-    fn fit() -> Content {
-        Content::Fit
-    }
-
-    fn flex() -> Content {
-        Content::Flex
-    }
-
-    fn wrap() -> Content {
-        Content::Wrap { wrap_spacing: None }
-    }
-
-    fn wrap_spacing(spacing: f32) -> Content {
-        Content::Wrap {
-            wrap_spacing: Some(spacing),
-        }
-    }
-}
-
-pub trait VisibleSizeExt {
-    fn full() -> VisibleSize;
-    fn inner_percent(value: impl Into<f32>) -> VisibleSize;
-}
-
-impl VisibleSizeExt for VisibleSize {
-    fn full() -> VisibleSize {
-        VisibleSize::Full
-    }
-
-    fn inner_percent(value: impl Into<f32>) -> VisibleSize {
-        VisibleSize::InnerPercentage(Length::new(value.into()))
-    }
-}
-
+/// Trait for composing child elements.
 pub trait ChildrenExt: Sized {
+    /// Returns a mutable reference to the internal children vector.
+    ///
+    /// # Example
+    /// ```ignore
+    /// impl ChildrenExt for MyElement {
+    ///     fn get_children(&mut self) -> &mut Vec<Element> {
+    ///         &mut self.elements
+    ///     }
+    /// }
+    /// ```
     fn get_children(&mut self) -> &mut Vec<Element>;
 
+    /// Extends the children with an iterable of [`Element`]s.
+    ///
+    /// # Example
+    /// ```ignore
+    /// rect().children(["Hello", "World"].map(|t| label().text(t).into_element()))
+    /// ```
     fn children(mut self, children: impl IntoIterator<Item = Element>) -> Self {
         self.get_children().extend(children);
         self
     }
 
+    /// Appends a child only when the [`Option`] is [`Some`].
+    ///
+    /// # Example
+    /// ```ignore
+    /// rect().maybe_child(show_badge.then(|| label().text("New")))
+    /// ```
     fn maybe_child<C: IntoElement>(mut self, child: Option<C>) -> Self {
         if let Some(child) = child {
             self.get_children().push(child.into_element());
@@ -239,6 +106,12 @@ pub trait ChildrenExt: Sized {
         self
     }
 
+    /// Appends a single child element.
+    ///
+    /// # Example
+    /// ```ignore
+    /// rect().child(label().text("Hello"))
+    /// ```
     fn child<C: IntoElement>(mut self, child: C) -> Self {
         self.get_children().push(child.into_element());
         self
@@ -355,6 +228,8 @@ pub trait EventHandlersExt: Sized {
         pointer_down => EventName::PointerDown;
         pointer_enter => EventName::PointerEnter;
         pointer_leave => EventName::PointerLeave;
+        pointer_over => EventName::PointerOver;
+        pointer_out => EventName::PointerOut;
     }
 
     event_handlers! {

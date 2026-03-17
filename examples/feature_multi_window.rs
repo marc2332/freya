@@ -6,11 +6,11 @@
 use freya::prelude::*;
 
 fn main() {
-    launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
+    let count = State::create_global(0);
+    launch(LaunchConfig::new().with_window(WindowConfig::new(move || app(count))))
 }
 
-fn app() -> impl IntoElement {
-    let count = use_state(|| 0);
+fn app(count: State<i32>) -> impl IntoElement {
     let mut windows = use_state(Vec::new);
 
     let on_open = move |_| {

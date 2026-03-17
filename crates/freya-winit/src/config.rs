@@ -33,7 +33,6 @@ use crate::{
 pub type WindowBuilderHook =
     Box<dyn FnOnce(WindowAttributes, &ActiveEventLoop) -> WindowAttributes + Send + Sync>;
 pub type WindowHandleHook = Box<dyn FnOnce(&mut Window) + Send + Sync>;
-
 /// Decision returned by the `on_close` hook to determine whether a window should close.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum CloseDecision {
@@ -172,7 +171,16 @@ impl WindowConfig {
         self
     }
 
-    /// Specify Window icon.
+    /// Specify the Window icon. Use [`LaunchConfig::window_icon`] to load the icon from bytes.
+    ///
+    /// # Example
+    /// ```no_run
+    /// # use freya::prelude::*;
+    /// const ICON: &[u8] = include_bytes!("../../../examples/freya_icon.png");
+    ///
+    /// WindowConfig::new(app).with_icon(LaunchConfig::window_icon(ICON));
+    /// # fn app() -> impl IntoElement { "" }
+    /// ```
     pub fn with_icon(mut self, icon: Icon) -> Self {
         self.icon = Some(icon);
         self
@@ -230,6 +238,8 @@ pub struct LaunchConfig {
     pub(crate) embedded_fonts: EmbeddedFonts,
     pub(crate) fallback_fonts: Vec<Cow<'static, str>>,
     pub(crate) tasks: Vec<TaskHandler>,
+    pub(crate) exit_on_close: bool,
+    pub(crate) event_loop: Option<winit::event_loop::EventLoop<crate::renderer::NativeEvent>>,
 }
 
 impl Default for LaunchConfig {
@@ -242,6 +252,8 @@ impl Default for LaunchConfig {
             embedded_fonts: Default::default(),
             fallback_fonts: default_fonts(),
             tasks: Vec::new(),
+            exit_on_close: true,
+            event_loop: None,
         }
     }
 }
@@ -251,6 +263,7 @@ impl LaunchConfig {
         LaunchConfig::default()
     }
 
+    /// Load a window icon from image bytes. Pass the result to [`WindowConfig::with_icon`].
     pub fn window_icon(icon: &[u8]) -> Icon {
         let reader = ImageReader::new(Cursor::new(icon))
             .with_guessed_format()
@@ -326,6 +339,13 @@ impl LaunchConfig {
         self
     }
 
+    /// Whether to exit the event loop when all windows are closed. Defaults to `true`.
+    /// Set to `false` to keep the event loop alive even when no windows remain.
+    pub fn with_exit_on_close(mut self, exit_on_close: bool) -> Self {
+        self.exit_on_close = exit_on_close;
+        self
+    }
+
     /// Register a single-thread launch task.
     /// The task receives a [LaunchProxy] that can be used to get access to [RendererContext](crate::renderer::RendererContext).
     /// The provided callback should return a `'static` future which will be scheduled on the renderer
@@ -337,6 +357,16 @@ impl LaunchConfig {
     {
         self.tasks
             .push(Box::new(move |proxy| Box::pin(task(proxy))));
+        self
+    }
+
+    /// Provide a custom winit [EventLoop](winit::event_loop::EventLoop) to use instead of the default one.
+    /// This allows configuring platform-specific options on the event loop builder before passing it.
+    pub fn with_event_loop(
+        mut self,
+        event_loop: winit::event_loop::EventLoop<crate::renderer::NativeEvent>,
+    ) -> Self {
+        self.event_loop = Some(event_loop);
         self
     }
 }

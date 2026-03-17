@@ -23,7 +23,7 @@ jobs:
         fetch-depth: 2
         submodules: true
     - name: Install stable rust toolchain
-      uses: dtolnay/rust-toolchain@1.90
+      uses: dtolnay/rust-toolchain@1.94
     - name: Install just
       uses: taiki-e/install-action@just
     - name: Set up cargo cache
