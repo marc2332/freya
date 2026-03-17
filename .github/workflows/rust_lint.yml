@@ -46,3 +46,38 @@ jobs:
       run: just c-ci
     - name: Format
       run: just f-check
+
+  build-macos:
+    runs-on: macos-latest
+    concurrency:
+      group: rust-lint-macos-${{ github.ref_name }}
+      cancel-in-progress: true
+
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        fetch-depth: 2
+        submodules: true
+    - name: Install stable rust toolchain
+      uses: dtolnay/rust-toolchain@1.94
+      with:
+        components: rustfmt, clippy
+    - name: Install nightly rust toolchain
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: nightly-2026-03-15
+        components: rustfmt
+    - name: Install just
+      uses: taiki-e/install-action@just
+    - name: Install taplo
+      uses: taiki-e/install-action@taplo
+    - name: Set up cargo cache
+      uses: Swatinem/rust-cache@v2
+      if: github.ref != 'refs/heads/main'
+      with:
+        shared-key: "rust-macos-latest"
+        save-if: ${{ github.ref == 'refs/heads/main' }}
+    - name: Lint
+      run: just c-ci
+    - name: Format
+      run: just f-check
