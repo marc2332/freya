@@ -190,9 +190,9 @@ impl WindowConfig {
     pub fn with_window_attributes(
         mut self,
         window_attributes_hook: impl FnOnce(WindowAttributes, &ActiveEventLoop) -> WindowAttributes
-        + 'static
-        + Send
-        + Sync,
+            + 'static
+            + Send
+            + Sync,
     ) -> Self {
         self.window_attributes_hook = Some(Box::new(window_attributes_hook));
         self
@@ -211,8 +211,8 @@ impl WindowConfig {
     pub fn with_on_close(
         mut self,
         on_close: impl FnMut(crate::renderer::RendererContext, WindowId) -> CloseDecision
-        + 'static
-        + Send,
+            + 'static
+            + Send,
     ) -> Self {
         self.on_close = Some(Box::new(on_close));
         self
@@ -297,6 +297,9 @@ impl LaunchConfig {
 
 impl LaunchConfig {
     /// Register a window configuration. You can call this multiple times.
+    ///
+    /// To create windows dynamically after the application has started,
+    /// see [`WinitPlatformExt::launch_window`].
     pub fn with_window(mut self, window_config: WindowConfig) -> Self {
         self.windows_configs.push(window_config);
         self
@@ -308,7 +311,7 @@ impl LaunchConfig {
         mut self,
         tray_icon: impl FnOnce() -> tray_icon::TrayIcon + 'static + Send,
         tray_handler: impl FnMut(crate::tray_icon::TrayEvent, crate::renderer::RendererContext)
-        + 'static,
+            + 'static,
     ) -> Self {
         self.tray = (Some(Box::new(tray_icon)), Some(Box::new(tray_handler)));
         self
