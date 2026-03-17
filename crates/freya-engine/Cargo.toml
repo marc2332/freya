@@ -15,7 +15,7 @@ categories = ["gui"]
 features = ["mocked-engine"]
 
 [features]
-mocked-engine = []
+mocked-engine = ["dep:glutin"]
 skia-engine = ["dep:freya-skia-safe"]
 vulkan = ["freya-skia-safe/vulkan"]
 metal = ["freya-skia-safe/metal"]
@@ -23,7 +23,7 @@ metal = ["freya-skia-safe/metal"]
 [dependencies]
 bitflags = { workspace = true }
 freya-skia-safe = { workspace = true, optional = true }
-glutin = { workspace = true }
+glutin = { workspace = true, optional = true }
 
 [target."cfg(target_os = \"linux\")".dependencies.freya-skia-safe]
 workspace = true

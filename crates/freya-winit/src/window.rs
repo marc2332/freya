@@ -278,6 +278,7 @@ impl AppWindow {
                 tree: &tree,
                 animation_clock: &animation_clock,
                 runner: &mut runner,
+                graphics_driver: driver.name(),
             },
             PluginHandle::new(event_loop_proxy),
         );

@@ -81,6 +81,7 @@ pub enum PluginEvent<'a> {
         tree: &'a Tree,
         animation_clock: &'a AnimationClock,
         runner: &'a mut Runner,
+        graphics_driver: &'static str,
     },
 
     /// A Window just got closed.

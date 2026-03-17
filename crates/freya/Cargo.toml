@@ -89,6 +89,8 @@ gif = ["freya-components/gif"]
 calendar = ["freya-components/calendar"]
 markdown = ["freya-components/markdown"]
 vulkan = ["freya-winit/vulkan"]
+metal = ["freya-winit/metal"]
+opengl = ["freya-winit/opengl"]
 sdk = ["dep:freya-sdk"]
 tray = ["freya-winit/tray", "dep:tray-icon"]
 material-design = ["dep:freya-material-design"]
@@ -142,3 +144,12 @@ freya-plotters-backend = { workspace = true, optional = true }
 
 # Other
 cfg-if = "1.0"
+
+# Platform-specific graphics backends
+[target.'cfg(target_os = "macos")'.dependencies.freya-winit]
+workspace = true
+features = ["metal"]
+
+[target.'cfg(not(target_os = "macos"))'.dependencies.freya-winit]
+workspace = true
+features = ["vulkan", "opengl"]

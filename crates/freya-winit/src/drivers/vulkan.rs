@@ -119,30 +119,28 @@ impl VulkanDriver {
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
         window_config: &WindowConfig,
-    ) -> (Self, Window) {
-        let window = event_loop
-            .create_window(window_attributes)
-            .expect("Could not create window with Vulkan context");
+    ) -> Result<(Self, Window), Box<dyn std::error::Error>> {
+        let window = event_loop.create_window(window_attributes)?;
 
-        let entry = unsafe { Entry::load().unwrap() };
+        let entry = unsafe { Entry::load()? };
 
-        let instance = create_instance(&entry, window.display_handle().unwrap());
+        let instance = create_instance(&entry, window.display_handle()?)?;
         let surface_fns = InstanceSurfaceFns::new(&entry, &instance);
         let surface = unsafe {
             ash_window::create_surface(
                 &entry,
                 &instance,
-                window.display_handle().unwrap().as_raw(),
-                window.window_handle().unwrap().as_raw(),
+                window.display_handle()?.as_raw(),
+                window.window_handle()?.as_raw(),
                 None,
-            )
-            .unwrap()
+            )?
         };
 
         let (physical_device, queue_family_index) =
-            pick_physical_device(&instance, &surface_fns, surface);
+            pick_physical_device(&instance, &surface_fns, surface)?;
 
-        let (device, queue) = create_logical_device(&instance, physical_device, queue_family_index);
+        let (device, queue) =
+            create_logical_device(&instance, physical_device, queue_family_index)?;
         let device = Arc::new(device);
 
         let swapchain_size = window.inner_size();
@@ -158,7 +156,7 @@ impl VulkanDriver {
                 swapchain_size,
                 None,
                 window_config.transparent,
-            );
+            )?;
 
         let gr_context = create_gr_context(
             &entry,
@@ -167,32 +165,28 @@ impl VulkanDriver {
             device.clone(),
             queue,
             queue_family_index,
-        );
+        )?;
 
         let (image_available_semaphore, render_finished_semaphore, in_flight_fence) =
-            create_sync_objects(&device);
+            create_sync_objects(&device)?;
 
         let cmd_pool = unsafe {
-            device
-                .create_command_pool(
-                    &CommandPoolCreateInfo::default().flags(
-                        CommandPoolCreateFlags::TRANSIENT
-                            | CommandPoolCreateFlags::RESET_COMMAND_BUFFER,
-                    ),
-                    None,
-                )
-                .unwrap()
+            device.create_command_pool(
+                &CommandPoolCreateInfo::default().flags(
+                    CommandPoolCreateFlags::TRANSIENT
+                        | CommandPoolCreateFlags::RESET_COMMAND_BUFFER,
+                ),
+                None,
+            )?
         };
 
         let cmd_buf = unsafe {
-            device
-                .allocate_command_buffers(
-                    &CommandBufferAllocateInfo::default()
-                        .command_pool(cmd_pool)
-                        .level(CommandBufferLevel::PRIMARY)
-                        .command_buffer_count(1),
-                )
-                .unwrap()[0]
+            device.allocate_command_buffers(
+                &CommandBufferAllocateInfo::default()
+                    .command_pool(cmd_pool)
+                    .level(CommandBufferLevel::PRIMARY)
+                    .command_buffer_count(1),
+            )?[0]
         };
 
         let driver = Self {
@@ -220,7 +214,7 @@ impl VulkanDriver {
             cmd_buf,
         };
 
-        (driver, window)
+        Ok((driver, window))
     }
 
     fn recreate_swapchain(&mut self) {
@@ -239,7 +233,8 @@ impl VulkanDriver {
                 self.swapchain_size,
                 Some(old_swapchain),
                 self.transparent,
-            );
+            )
+            .expect("Failed to recreate Vulkan swapchain");
         self.swapchain = swapchain;
         self.swapchain_fns = swapchain_fns;
         self.swapchain_images = swapchain_images;
@@ -393,9 +388,12 @@ impl VulkanDriver {
     }
 }
 
-fn create_instance(entry: &Entry, display_handle: DisplayHandle<'_>) -> Instance {
-    let app_name = CString::new("AnyRender").unwrap();
-    let engine_name = CString::new("No Engine").unwrap();
+fn create_instance(
+    entry: &Entry,
+    display_handle: DisplayHandle<'_>,
+) -> Result<Instance, Box<dyn std::error::Error>> {
+    let app_name = CString::new("AnyRender")?;
+    let engine_name = CString::new("No Engine")?;
     let app_info = ApplicationInfo::default()
         .application_name(&app_name)
         .application_version(make_api_version(0, 1, 0, 0))
@@ -403,9 +401,7 @@ fn create_instance(entry: &Entry, display_handle: DisplayHandle<'_>) -> Instance
         .engine_version(make_api_version(0, 1, 0, 0))
         .api_version(API_VERSION_1_1);
 
-    let extension_names = enumerate_required_extensions(display_handle.as_raw())
-        .unwrap()
-        .to_vec();
+    let extension_names = enumerate_required_extensions(display_handle.as_raw())?.to_vec();
 
     // Enable the Vulkan validation layer extension:
     // const VALIDATION_LAYER_NAME: &CStr = c"VK_LAYER_KHRONOS_validation";
@@ -416,15 +412,15 @@ fn create_instance(entry: &Entry, display_handle: DisplayHandle<'_>) -> Instance
         .enabled_extension_names(&extension_names);
     // .enabled_layer_names(std::slice::from_ref(&validation_layer_name_ptr));
 
-    unsafe { entry.create_instance(&create_info, None).unwrap() }
+    Ok(unsafe { entry.create_instance(&create_info, None)? })
 }
 
 fn pick_physical_device(
     instance: &Instance,
     surface_fns: &InstanceSurfaceFns,
     surface: SurfaceKHR,
-) -> (PhysicalDevice, u32) {
-    let devices = unsafe { instance.enumerate_physical_devices().unwrap() };
+) -> Result<(PhysicalDevice, u32), Box<dyn std::error::Error>> {
+    let devices = unsafe { instance.enumerate_physical_devices()? };
     devices
         .into_iter()
         .find_map(|physical_device| {
@@ -441,14 +437,13 @@ fn pick_physical_device(
                                 index as u32,
                                 surface,
                             )
-                            .unwrap();
+                            .unwrap_or(false);
                         if supports_graphics && supports_surface {
                             Some(index as u32)
                         } else {
                             None
                         }
-                    })
-                    .unwrap()
+                    })?
             };
             let extensions_supported = unsafe {
                 instance
@@ -467,14 +462,14 @@ fn pick_physical_device(
                 None
             }
         })
-        .unwrap()
+        .ok_or_else(|| "No suitable Vulkan physical device found".into())
 }
 
 fn create_logical_device(
     instance: &Instance,
     physical_device: PhysicalDevice,
     queue_family_index: u32,
-) -> (Device, Queue) {
+) -> Result<(Device, Queue), Box<dyn std::error::Error>> {
     let queue_priorities = [1.0f32];
     let queue_create_info = DeviceQueueCreateInfo::default()
         .queue_family_index(queue_family_index)
@@ -489,15 +484,11 @@ fn create_logical_device(
         .enabled_extension_names(&extensions)
         .enabled_features(&features);
 
-    let device = unsafe {
-        instance
-            .create_device(physical_device, &create_info, None)
-            .unwrap()
-    };
+    let device = unsafe { instance.create_device(physical_device, &create_info, None)? };
 
     let queue = unsafe { device.get_device_queue(queue_family_index, 0) };
 
-    (device, queue)
+    Ok((device, queue))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -511,31 +502,28 @@ fn create_swapchain(
     size: PhysicalSize<u32>,
     old_swapchain: Option<SwapchainKHR>,
     transparent: bool,
-) -> (
-    SwapchainKHR,
-    DeviceSwapchainFns,
-    Vec<Image>,
-    Format,
-    Extent2D,
-) {
-    let surface_caps = unsafe {
-        surface_fns
-            .get_physical_device_surface_capabilities(physical_device, surface)
-            .unwrap()
-    };
+) -> Result<
+    (
+        SwapchainKHR,
+        DeviceSwapchainFns,
+        Vec<Image>,
+        Format,
+        Extent2D,
+    ),
+    Box<dyn std::error::Error>,
+> {
+    let surface_caps =
+        unsafe { surface_fns.get_physical_device_surface_capabilities(physical_device, surface)? };
 
-    let surface_formats = unsafe {
-        surface_fns
-            .get_physical_device_surface_formats(physical_device, surface)
-            .unwrap()
-    };
+    let surface_formats =
+        unsafe { surface_fns.get_physical_device_surface_formats(physical_device, surface)? };
 
     let format = surface_formats
         .iter()
         .find(|f| {
             f.format == Format::B8G8R8A8_UNORM && f.color_space == ColorSpaceKHR::SRGB_NONLINEAR
         })
-        .unwrap();
+        .ok_or("No suitable Vulkan surface format found")?;
 
     let present_mode = PresentModeKHR::FIFO;
 
@@ -587,10 +575,10 @@ fn create_swapchain(
         .old_swapchain(old_swapchain.unwrap_or(SwapchainKHR::null()));
 
     let swapchain_fns = DeviceSwapchainFns::new(instance, device);
-    let swapchain = unsafe { swapchain_fns.create_swapchain(&create_info, None).unwrap() };
-    let images = unsafe { swapchain_fns.get_swapchain_images(swapchain).unwrap() };
+    let swapchain = unsafe { swapchain_fns.create_swapchain(&create_info, None)? };
+    let images = unsafe { swapchain_fns.get_swapchain_images(swapchain)? };
 
-    (swapchain, swapchain_fns, images, format.format, extent)
+    Ok((swapchain, swapchain_fns, images, format.format, extent))
 }
 
 fn create_gr_context(
@@ -600,7 +588,7 @@ fn create_gr_context(
     device: Arc<Device>,
     queue: Queue,
     queue_family_index: u32,
-) -> DirectContext {
+) -> Result<DirectContext, Box<dyn std::error::Error>> {
     let get_proc = unsafe {
         |gpo: vk::GetProcOf| {
             let get_device_proc_addr = instance.fp_v1_0().get_device_proc_addr;
@@ -633,22 +621,23 @@ fn create_gr_context(
 
     let context_options = ContextOptions::default();
 
-    direct_contexts::make_vulkan(&backend_context, &context_options).unwrap()
+    direct_contexts::make_vulkan(&backend_context, &context_options)
+        .ok_or_else(|| "Failed to create Vulkan Skia context".into())
 }
 
-fn create_sync_objects(device: &Device) -> (Semaphore, Semaphore, Fence) {
+fn create_sync_objects(
+    device: &Device,
+) -> Result<(Semaphore, Semaphore, Fence), Box<dyn std::error::Error>> {
     let semaphore_info = SemaphoreCreateInfo::default();
     let fence_info = FenceCreateInfo::default().flags(FenceCreateFlags::SIGNALED);
 
-    let image_available_semaphore =
-        unsafe { device.create_semaphore(&semaphore_info, None).unwrap() };
-    let render_finished_semaphore =
-        unsafe { device.create_semaphore(&semaphore_info, None).unwrap() };
-    let in_flight_fence = unsafe { device.create_fence(&fence_info, None).unwrap() };
+    let image_available_semaphore = unsafe { device.create_semaphore(&semaphore_info, None)? };
+    let render_finished_semaphore = unsafe { device.create_semaphore(&semaphore_info, None)? };
+    let in_flight_fence = unsafe { device.create_fence(&fence_info, None)? };
 
-    (
+    Ok((
         image_available_semaphore,
         render_finished_semaphore,
         in_flight_fence,
-    )
+    ))
 }
