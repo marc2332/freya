@@ -583,6 +583,7 @@ impl<T> State<T> {
     /// Create a global [`State`] that lives for the entire application lifetime.
     /// This is useful for sharing state across multiple windows.
     ///
+    /// This is **not** a hook, do not use it inside components like you would [`use_state`].
     /// You would usually want to call this in your `main` function, not anywhere else.
     ///
     /// # Example
@@ -592,7 +593,6 @@ impl<T> State<T> {
     ///
     /// fn main() {
     ///     let count = State::create_global(0);
-
     ///
     ///     launch(
     ///         LaunchConfig::new()

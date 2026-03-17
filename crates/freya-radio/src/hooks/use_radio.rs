@@ -167,6 +167,7 @@ where
     /// Create a global `RadioStation` that lives for the entire application lifetime.
     /// This is useful for sharing state across multiple windows.
     ///
+    /// This is **not** a hook, do not use it inside components like you would [`use_radio`].
     /// You would usually want to call this in your `main` function, not anywhere else.
     ///
     /// # Example

@@ -279,6 +279,7 @@ impl I18n {
     /// Create a global [`I18n`] that lives for the entire application lifetime.
     /// This is useful for sharing i18n state across multiple windows.
     ///
+    /// This is **not** a hook, do not use it inside components like you would [`use_i18n`].
     /// You would usually want to call this in your `main` function, not anywhere else.
     ///
     /// # Example
