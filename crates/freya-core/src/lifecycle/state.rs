@@ -105,11 +105,21 @@ use crate::{
 ///
 /// # Global State
 ///
-/// For state that persists across the entire application lifecycle, you can crate it in your `main` function:
+/// For state that needs to persist across the entire application lifetime (e.g. shared across
+/// multiple windows), create it in your `main` function using [`State::create_global`] and pass
+/// it to each window:
 ///
-/// ```rust,no_run
+/// ```rust, ignore
 /// # use freya::prelude::*;
-/// let global_count = State::create_global(0);
+/// fn main() {
+///     let count = State::create_global(0i32);
+///
+///     launch(
+///         LaunchConfig::new()
+///             .with_window(WindowConfig::new(Window1 { count }))
+///             .with_window(WindowConfig::new(Window2 { count })),
+///     );
+/// }
 /// ```
 ///
 /// # Thread Safety
@@ -570,24 +580,24 @@ impl<T> State<T> {
         State { key, subscribers }
     }
 
-    /// Create a global State that persists for the entire application lifetime.
+    /// Create a global [`State`] that lives for the entire application lifetime.
+    /// This is useful for sharing state across multiple windows.
     ///
-    /// This creates state that is not tied to any component scope and will live
-    /// until the application shuts down. Use sparingly as it can lead to memory leaks
-    /// if not managed carefully.
-    ///
-    /// # Warning
-    ///
-    /// Global state should be used judiciously. Prefer component-scoped state (`use_state()`)
-    /// or shared state (`freya-radio`) for most use cases.
+    /// You would usually want to call this in your `main` function, not anywhere else.
     ///
     /// # Example
     ///
-    /// ```rust,no_run
+    /// ```rust, ignore
     /// # use freya::prelude::*;
-    /// // Create global state in a function
-    /// fn create_global_config() -> State<i32> {
-    ///     State::create_global(42)
+    ///
+    /// fn main() {
+    ///     let count = State::create_global(0i32);
+    ///
+    ///     launch(
+    ///         LaunchConfig::new()
+    ///             .with_window(WindowConfig::new(Window1 { count }))
+    ///             .with_window(WindowConfig::new(Window2 { count })),
+    ///     );
     /// }
     /// ```
     ///
