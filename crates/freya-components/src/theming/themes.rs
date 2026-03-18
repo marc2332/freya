@@ -272,6 +272,7 @@ pub const BASE_THEME: Theme = Theme {
         padding: Preference::Specific(Gaps::new(6., 12., 6., 12.)),
         width: Preference::Specific(Size::Inner),
         height: Preference::Specific(Size::Inner),
+        corner_radius: Preference::Specific(CornerRadius::new_all(99.)),
     },
     slider: SliderThemePreference {
         background: Preference::Reference("surface_primary"),

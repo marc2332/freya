@@ -73,48 +73,31 @@ impl Component for NodeElement {
         });
 
         let on_secondary_press = {
-            let on_expand = self.on_toggle.clone();
+            let on_toggle = self.on_toggle.clone();
             let on_expand_all = self.on_expand_all.clone();
             let on_collapse_all = self.on_collapse_all.clone();
             let is_open = self.is_open;
             move |_| {
-                let on_expand = on_expand.clone();
+                let on_toggle = on_toggle.clone();
                 let on_expand_all = on_expand_all.clone();
                 let on_collapse_all = on_collapse_all.clone();
                 ContextMenu::open(
                     Menu::new()
+                        .child(MenuItem::new().on_press(move |_| on_toggle.call(())).child(
+                            if Some(true) == is_open {
+                                "Collapse"
+                            } else {
+                                "Expand"
+                            },
+                        ))
                         .child(
                             MenuItem::new()
-                                .on_press({
-                                    let on_expand = on_expand.clone();
-                                    move |_| {
-                                        on_expand.call(());
-                                    }
-                                })
-                                .child(if Some(true) == is_open {
-                                    "Collapse"
-                                } else {
-                                    "Expand"
-                                }),
-                        )
-                        .child(
-                            MenuItem::new()
-                                .on_press({
-                                    let on_expand_all = on_expand_all.clone();
-                                    move |_| {
-                                        on_expand_all.call(());
-                                    }
-                                })
+                                .on_press(move |_| on_expand_all.call(()))
                                 .child("Expand All"),
                         )
                         .child(
                             MenuItem::new()
-                                .on_press({
-                                    let on_collapse_all = on_collapse_all.clone();
-                                    move |_| {
-                                        on_collapse_all.call(());
-                                    }
-                                })
+                                .on_press(move |_| on_collapse_all.call(()))
                                 .child("Collapse All"),
                         ),
                 );
