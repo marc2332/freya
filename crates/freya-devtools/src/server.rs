@@ -48,7 +48,7 @@ async fn handle_connection(
     hovered_node: Arc<Mutex<Option<NodeId>>>,
     plugin_handle: PluginHandle,
 ) -> anyhow::Result<()> {
-    let ws_stream = accept_async(stream).await.unwrap();
+    let ws_stream = accept_async(stream).await?;
     let (mut write, mut read) = ws_stream.split();
 
     let windows_snapshot = windows.lock().unwrap().clone();
