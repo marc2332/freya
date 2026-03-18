@@ -392,10 +392,7 @@ impl Component for ResizablePanel {
                 let panel = Panel {
                     initial_size: initial_value,
                     size: initial_value,
-                    min_size: self
-                        .min_size
-                        .unwrap_or(initial_value * 0.25)
-                        .min(self.initial_size.max_size()),
+                    min_size: self.min_size.unwrap_or(initial_value * 0.25),
                     sizing: self.initial_size,
                     id,
                 };
