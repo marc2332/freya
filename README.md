@@ -205,7 +205,7 @@ fn app() -> impl IntoElement {
         let rope = Rope::from_str(&std::fs::read_to_string(&path).unwrap());
         let mut editor = CodeEditorData::new(rope, LanguageId::Rust);
         editor.parse();
-        editor.measure(14.);
+        editor.measure(14., "Jetbrains Mono");
         editor
     });
 
