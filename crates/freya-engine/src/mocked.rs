@@ -1952,6 +1952,10 @@ pub mod svg {
         pub fn set_stroke(&mut self, _value: Paint) {
             unimplemented!("This is mocked")
         }
+
+        pub fn set_stroke_width(&mut self, _value: Length) {
+            unimplemented!("This is mocked")
+        }
     }
 
     pub struct Dom;
