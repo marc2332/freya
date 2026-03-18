@@ -151,6 +151,7 @@ impl ElementExt for SvgElement {
 
         if self.layout != svg.layout || self.bytes != svg.bytes {
             diff.insert(DiffModifies::LAYOUT);
+            diff.insert(DiffModifies::STYLE);
         }
 
         if self.color != svg.color || self.stroke != svg.stroke {
