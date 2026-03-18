@@ -39,7 +39,7 @@ fn app() -> impl IntoElement {
                     .direction(Direction::Horizontal)
                     .panels_iter((1..panels()).map(|panel| {
                         ResizablePanel::new(PanelSize::percent(50.))
-                            .key(&panel)
+                            .key(panel)
                             .order(panel as usize)
                             .initial_size(PanelSize::percent(panel as f32 * 15.))
                             .min_size(panel as f32 * 5.)

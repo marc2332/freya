@@ -56,6 +56,12 @@ pub struct Checkbox {
     size: f32,
 }
 
+impl KeyExt for Checkbox {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
+}
+
 impl Default for Checkbox {
     fn default() -> Self {
         Self::new()
@@ -79,11 +85,6 @@ impl Checkbox {
 
     pub fn theme(mut self, theme: CheckboxThemePartial) -> Self {
         self.theme = Some(theme);
-        self
-    }
-
-    pub fn key(mut self, key: impl Into<DiffKey>) -> Self {
-        self.key = key.into();
         self
     }
 

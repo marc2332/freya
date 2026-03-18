@@ -58,14 +58,20 @@ pub enum SelectStatus {
 #[derive(Clone, PartialEq)]
 pub struct Select {
     pub(crate) theme: Option<SelectThemePartial>,
-    pub selected_item: Option<Element>,
-    pub children: Vec<Element>,
-    pub key: DiffKey,
+    selected_item: Option<Element>,
+    children: Vec<Element>,
+    key: DiffKey,
 }
 
 impl ChildrenExt for Select {
     fn get_children(&mut self) -> &mut Vec<Element> {
         &mut self.children
+    }
+}
+
+impl KeyExt for Select {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
     }
 }
 
@@ -92,11 +98,6 @@ impl Select {
 
     pub fn selected_item(mut self, item: impl Into<Element>) -> Self {
         self.selected_item = Some(item.into());
-        self
-    }
-
-    pub fn key(mut self, key: impl Into<DiffKey>) -> Self {
-        self.key = key.into();
         self
     }
 }
@@ -141,11 +142,12 @@ impl Component for Select {
         use_side_effect(move || {
             let platform = Platform::get();
             if *platform.navigation_mode.read() == NavigationMode::Keyboard {
-                if let Some(member_of) = platform.focused_accessibility_node.read().member_of() {
-                    if member_of != focus.a11y_id() {
-                        open.set_if_modified(false);
-                    }
-                } else {
+                let should_close = platform
+                    .focused_accessibility_node
+                    .read()
+                    .member_of()
+                    .is_none_or(|member_of| member_of != focus.a11y_id());
+                if should_close {
                     open.set_if_modified(false);
                 }
             }

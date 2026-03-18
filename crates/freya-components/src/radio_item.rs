@@ -54,6 +54,12 @@ pub struct RadioItem {
     size: f32,
 }
 
+impl KeyExt for RadioItem {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
+}
+
 impl Default for RadioItem {
     fn default() -> Self {
         Self::new()
@@ -77,11 +83,6 @@ impl RadioItem {
 
     pub fn theme(mut self, theme: RadioItemThemePartial) -> Self {
         self.theme = Some(theme);
-        self
-    }
-
-    pub fn key(mut self, key: impl Into<DiffKey>) -> Self {
-        self.key = key.into();
         self
     }
 

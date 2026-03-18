@@ -84,11 +84,6 @@ impl Slider {
         self.direction = direction;
         self
     }
-
-    pub fn key(mut self, key: impl Into<DiffKey>) -> Self {
-        self.key = key.into();
-        self
-    }
 }
 
 impl Component for Slider {
@@ -108,7 +103,7 @@ impl Component for Slider {
         });
 
         let direction_is_vertical = self.direction == Direction::Vertical;
-        let value = self.value.clamp(0.0, 100.0);
+        let value = self.value;
         let on_moved = self.on_moved.clone();
 
         let on_key_down = {
