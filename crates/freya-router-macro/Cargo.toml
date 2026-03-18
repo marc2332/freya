@@ -8,6 +8,9 @@ license = "MIT"
 repository = "https://github.com/marc2332/freya/"
 keywords = ["gui", "ui", "desktop", "skia", "freya"]
 
+[lints]
+workspace = true
+
 [lib]
 proc-macro = true
 

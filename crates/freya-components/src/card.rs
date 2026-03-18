@@ -227,12 +227,9 @@ impl Component for Card {
             .color(theme_colors.color)
             .map(shadow, |rect, shadow| rect.shadow(shadow))
             .map(self.on_press.clone(), |rect, on_press| {
-                rect.on_press({
-                    let on_press = on_press.clone();
-                    move |e: Event<PressEventData>| {
-                        focus.request_focus();
-                        on_press.call(e);
-                    }
+                rect.on_press(move |e: Event<PressEventData>| {
+                    focus.request_focus();
+                    on_press.call(e);
                 })
             })
             .maybe(is_hoverable, |rect| {

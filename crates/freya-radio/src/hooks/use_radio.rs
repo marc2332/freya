@@ -298,7 +298,7 @@ where
     pub fn write_channel(&mut self, channel: Channel) -> RadioGuard<Value, Channel> {
         let value = self.value.write_unchecked();
         RadioGuard {
-            channels: channel.clone().derive_channel(&*value),
+            channels: channel.derive_channel(&*value),
             station: *self,
             value,
         }

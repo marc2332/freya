@@ -158,7 +158,7 @@ impl ImageSource {
                     .read_to_vec()
                     .map(Bytes::from)?,
                 Self::Path(path) => fs::read(path).map(Bytes::from)?,
-                Self::Bytes(_, bytes) => bytes.clone(),
+                Self::Bytes(_, bytes) => bytes,
             };
             let image = SkImage::from_encoded(unsafe { SkData::new_bytes(&bytes) })
                 .context("Failed to decode Image.")?;

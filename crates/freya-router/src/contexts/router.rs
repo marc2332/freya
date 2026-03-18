@@ -86,7 +86,7 @@ impl RouterContext {
 
         Self {
             inner: State::create(RouterContextInner {
-                subscribers: subscribers.clone(),
+                subscribers,
 
                 internal_route: |route| R::from_str(route).is_ok(),
 
@@ -108,7 +108,7 @@ impl RouterContext {
 
         Self {
             inner: State::create_global(RouterContextInner {
-                subscribers: subscribers.clone(),
+                subscribers,
 
                 internal_route: |route| R::from_str(route).is_ok(),
 

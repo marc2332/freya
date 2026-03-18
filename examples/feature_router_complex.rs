@@ -121,10 +121,8 @@ impl Component for UserLayout {
                             Route::UserPosts {
                                 user_id: user_id.clone(),
                             },
-                            Link::new(Route::UserPosts {
-                                user_id: user_id.clone(),
-                            })
-                            .child(Button::new().rounded_full().child("Posts")),
+                            Link::new(Route::UserPosts { user_id })
+                                .child(Button::new().rounded_full().child("Posts")),
                         )
                         .exact(true),
                     ),
