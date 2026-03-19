@@ -573,6 +573,11 @@ where
 {
     fn get_text_style_data(&mut self) -> &mut TextStyleData;
 
+    fn text_style(mut self, data: TextStyleData) -> Self {
+        *self.get_text_style_data() = data;
+        self
+    }
+
     fn color(mut self, color: impl Into<Color>) -> Self {
         self.get_text_style_data().color = Some(color.into());
         self
