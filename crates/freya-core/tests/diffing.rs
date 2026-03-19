@@ -565,9 +565,9 @@ fn element_diffing4() {
     let mut state = runner.provide_root_context(|| State::create(true));
     let mutations = runner.sync_and_update();
     assert_eq!(mutations.added.len(), 3);
-    assert_eq!(mutations.added[0].2, 0);
-    assert_eq!(mutations.added[1].2, 0);
-    assert_eq!(mutations.added[2].2, 1);
+    assert_eq!(mutations.added[0].index, 0);
+    assert_eq!(mutations.added[1].index, 0);
+    assert_eq!(mutations.added[2].index, 1);
     assert!(mutations.modified.is_empty());
     assert!(mutations.removed.is_empty());
 
@@ -838,7 +838,7 @@ fn element_diffing10() {
     assert!(mutations.removed.is_empty());
     assert_eq!(mutations.moved.len(), 1);
     assert_eq!(mutations.moved.iter().next().unwrap().1.len(), 1);
-    assert_eq!(mutations.moved.iter().next().unwrap().1[0].0, 0);
+    assert_eq!(mutations.moved.iter().next().unwrap().1[0].index, 0);
     tree.apply_mutations(mutations);
 }
 

@@ -95,30 +95,47 @@ impl DevtoolsPlugin {
         canvas.draw_line((x + 1.0, y2), (x + 1.0, y), &paint_inner);
     }
 
+    /// Serializes and broadcasts a message to all connected devtools clients.
+    fn broadcast(&self, message: OutgoingMessage) {
+        let Ok(serialized) = serde_json::to_string(&message) else {
+            return;
+        };
+        let outgoing_message = Message::Text(serialized.into());
+        let websockets = self.websockets.clone();
+        smol::spawn(async move {
+            for websocket in websockets.lock().await.values_mut() {
+                websocket.send(outgoing_message.clone()).await.ok();
+            }
+        })
+        .detach();
+    }
+
     pub fn init(
         &mut self,
         window_id: WindowId,
         animation_clock: &AnimationClock,
         plugin_handle: PluginHandle,
     ) {
-        let start_server = self.windows.lock().unwrap().is_empty();
-
-        self.windows.lock().unwrap().insert(
-            window_id.into(),
-            WindowState {
-                nodes: vec![],
-                animation_clock: animation_clock.clone(),
-            },
-        );
+        let start_server = {
+            let mut windows = self.windows.lock().unwrap();
+            let start_server = windows.is_empty();
+            windows.insert(
+                window_id.into(),
+                WindowState {
+                    nodes: vec![],
+                    animation_clock: animation_clock.clone(),
+                },
+            );
+            start_server
+        };
 
         if start_server {
             let nodes = self.windows.clone();
             let websockets = self.websockets.clone();
             let highlighted_node = self.highlighted_node.clone();
             let hovered_node = self.hovered_node.clone();
-            let plugin_handle = plugin_handle.clone();
             smol::spawn(async move {
-                run_server(
+                if let Err(err) = run_server(
                     nodes,
                     websockets,
                     highlighted_node,
@@ -126,7 +143,9 @@ impl DevtoolsPlugin {
                     plugin_handle,
                 )
                 .await
-                .unwrap();
+                {
+                    eprintln!("Devtools server error: {err:?}");
+                }
             })
             .detach();
         }
@@ -136,21 +155,21 @@ impl DevtoolsPlugin {
         let mut new_nodes = Vec::new();
 
         tree.traverse_depth(|node_id| {
-            // Ignore root element
             let height = tree.heights.get(&node_id).cloned().unwrap();
-            let parent_id = tree.parents.get(&node_id).cloned();
             let layout_node = tree.layout.get(&node_id).cloned().unwrap();
             let text_style_state = tree.text_style_state.get(&node_id).cloned().unwrap();
+            let element = tree.elements.get(&node_id).unwrap();
+            let parent_id = tree.parents.get(&node_id).cloned();
             let layer = tree.layer_state.get(&node_id).map(|s| s.layer).unwrap_or(0);
             let children_len = tree
                 .children
                 .get(&node_id)
                 .map(|c| c.len())
                 .unwrap_or_default();
-            let element = tree.elements.get(&node_id).unwrap();
+
             new_nodes.push(NodeInfo {
                 window_id,
-                is_window: height == 1, // We make the NativeContainer's element appear as the Window
+                is_window: height == 1,
                 node_id,
                 parent_id,
                 children_len,
@@ -167,39 +186,16 @@ impl DevtoolsPlugin {
             });
         });
 
-        // Update nodes snapshot
-        self.windows
-            .lock()
-            .unwrap()
-            .get_mut(&window_id)
-            .unwrap()
-            .nodes = new_nodes;
+        self.broadcast(OutgoingMessage {
+            action: OutgoingMessageAction::Update {
+                window_id,
+                nodes: new_nodes.clone(),
+            },
+        });
 
-        // Notify the existing subscribers of this change
-        let outgoing_message = Message::Text(
-            serde_json::to_string(&OutgoingMessage {
-                action: OutgoingMessageAction::Update {
-                    window_id,
-                    nodes: self
-                        .windows
-                        .lock()
-                        .unwrap()
-                        .get(&window_id)
-                        .cloned()
-                        .unwrap()
-                        .nodes,
-                },
-            })
-            .unwrap()
-            .into(),
-        );
-        let websockets = self.websockets.clone();
-        smol::spawn(async move {
-            for websocket in websockets.lock().await.values_mut() {
-                websocket.send(outgoing_message.clone()).await.unwrap();
-            }
-        })
-        .detach();
+        if let Some(window_state) = self.windows.lock().unwrap().get_mut(&window_id) {
+            window_state.nodes = new_nodes;
+        }
     }
 }
 
@@ -208,28 +204,13 @@ impl FreyaPlugin for DevtoolsPlugin {
         match event {
             PluginEvent::WindowClosed { window, .. } => {
                 let window_id: u64 = window.id().into();
-
-                // Update nodes snapshot
                 self.windows.lock().unwrap().remove(&window_id);
-
-                // Notify the existing subscribers of this change
-                let outgoing_message = Message::Text(
-                    serde_json::to_string(&OutgoingMessage {
-                        action: OutgoingMessageAction::Update {
-                            window_id,
-                            nodes: vec![],
-                        },
-                    })
-                    .unwrap()
-                    .into(),
-                );
-                let websockets = self.websockets.clone();
-                smol::spawn(async move {
-                    for websocket in websockets.lock().await.values_mut() {
-                        websocket.send(outgoing_message.clone()).await.unwrap();
-                    }
-                })
-                .detach();
+                self.broadcast(OutgoingMessage {
+                    action: OutgoingMessageAction::Update {
+                        window_id,
+                        nodes: vec![],
+                    },
+                });
             }
             PluginEvent::AfterRender {
                 tree,
@@ -240,27 +221,19 @@ impl FreyaPlugin for DevtoolsPlugin {
                 let highlighted_node = *self.highlighted_node.lock().unwrap();
                 let hovered_node = *self.hovered_node.lock().unwrap();
 
-                // Draw wireframe for highlighted node (pink and green)
-                if let Some(highlighted_node) = highlighted_node {
-                    let layout_node = tree.layout.get(&highlighted_node);
-                    if let Some(layout_node) = layout_node {
-                        let area = layout_node.visible_area();
-                        Self::draw_wireframe(
-                            canvas,
-                            &area,
-                            Color::from_rgb(255, 192, 203),
-                            Color::GREEN,
-                        );
-                    }
+                if let Some(layout_node) = highlighted_node.and_then(|n| tree.layout.get(&n)) {
+                    let area = layout_node.visible_area();
+                    Self::draw_wireframe(
+                        canvas,
+                        &area,
+                        Color::from_rgb(255, 192, 203),
+                        Color::GREEN,
+                    );
                 }
 
-                // Draw wireframe for hovered node (red and blue)
-                if let Some(hovered_node) = hovered_node {
-                    let layout_node = tree.layout.get(&hovered_node);
-                    if let Some(layout_node) = layout_node {
-                        let area = layout_node.visible_area();
-                        Self::draw_wireframe(canvas, &area, Color::RED, Color::BLUE);
-                    }
+                if let Some(layout_node) = hovered_node.and_then(|n| tree.layout.get(&n)) {
+                    let area = layout_node.visible_area();
+                    Self::draw_wireframe(canvas, &area, Color::RED, Color::BLUE);
                 }
 
                 self.sync(window.id(), window.scale_factor() as f32, tree);

@@ -441,7 +441,6 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
         );
 
         let children = render_range
-            .clone()
             .map(|i| (self.builder)(i, &self.builder_data))
             .collect::<Vec<Element>>();
 
@@ -482,8 +481,8 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
             .on_global_key_down(on_global_key_down)
             .child(
                 rect()
-                    .width(container_width.clone())
-                    .height(container_height.clone())
+                    .width(container_width)
+                    .height(container_height)
                     .horizontal()
                     .child(
                         rect()

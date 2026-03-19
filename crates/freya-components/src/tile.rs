@@ -61,11 +61,6 @@ impl Tile {
         self.on_select = Some(on_select.into());
         self
     }
-
-    pub fn key(mut self, key: impl Into<DiffKey>) -> Self {
-        self.key = key.into();
-        self
-    }
 }
 
 impl Component for Tile {

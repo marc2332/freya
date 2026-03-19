@@ -25,6 +25,13 @@ pub struct FloatingTab {
     children: Vec<Element>,
     /// Optionally handle the `on_press` event in [FloatingTab].
     on_press: Option<EventHandler<Event<PressEventData>>>,
+    key: DiffKey,
+}
+
+impl KeyExt for FloatingTab {
+    fn write_key(&mut self) -> &mut DiffKey {
+        &mut self.key
+    }
 }
 
 impl Default for FloatingTab {
@@ -69,6 +76,7 @@ impl FloatingTab {
             children: vec![],
             theme: None,
             on_press: None,
+            key: DiffKey::None,
         }
     }
 }
@@ -87,6 +95,7 @@ impl Component for FloatingTab {
             width,
             height,
             color,
+            corner_radius,
         } = get_theme!(&self.theme, floating_tab);
 
         let on_pointer_enter = move |_| {
@@ -99,10 +108,13 @@ impl Component for FloatingTab {
             status.set(TabStatus::default());
         };
 
-        let background = match *status.read() {
-            _ if focus_status() == FocusStatus::Keyboard || is_active => hover_background,
-            TabStatus::Hovering => hover_background,
-            TabStatus::Idle => background,
+        let background = if focus_status() == FocusStatus::Keyboard
+            || is_active
+            || *status.read() == TabStatus::Hovering
+        {
+            hover_background
+        } else {
+            background
         };
 
         rect()
@@ -119,7 +131,11 @@ impl Component for FloatingTab {
             .padding(padding)
             .background(background)
             .color(color)
-            .corner_radius(99.)
+            .corner_radius(corner_radius)
             .children(self.children.clone())
+    }
+
+    fn render_key(&self) -> DiffKey {
+        self.key.clone().or(self.default_key())
     }
 }

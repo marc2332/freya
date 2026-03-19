@@ -61,7 +61,7 @@ impl Component for Home {
                 ..Default::default()
             });
             editor.parse();
-            editor.measure(14.);
+            editor.measure(14., "Jetbrains Mono");
             editor
         });
 

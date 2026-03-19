@@ -36,15 +36,15 @@ impl ComponentOwned for ScrollThumb {
             ScrollThumbState::Hovering => scrollbar_theme.hover_thumb_background,
         };
 
-        let on_pointer_enter = move |_| state.set(ScrollThumbState::Hovering);
-        let on_pointer_leave = move |_| state.set(ScrollThumbState::Idle);
+        let on_pointer_over = move |_| state.set(ScrollThumbState::Hovering);
+        let on_pointer_out = move |_| state.set(ScrollThumbState::Idle);
 
         rect()
             .width(width)
             .height(height)
             .padding(4.)
-            .on_pointer_enter(on_pointer_enter)
-            .on_pointer_leave(on_pointer_leave)
+            .on_pointer_over(on_pointer_over)
+            .on_pointer_out(on_pointer_out)
             .on_pointer_down(move |e: Event<PointerEventData>| {
                 if self.axis == Axis::X {
                     self.clicking_scrollbar

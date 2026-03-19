@@ -12,6 +12,7 @@ pub mod gradient;
 pub mod scale;
 pub mod shadow;
 pub mod text_align;
+pub mod text_decoration;
 pub mod text_height;
 pub mod text_overflow;
 pub mod text_shadow;

@@ -205,7 +205,7 @@ fn app() -> impl IntoElement {
         let rope = Rope::from_str(&std::fs::read_to_string(&path).unwrap());
         let mut editor = CodeEditorData::new(rope, LanguageId::Rust);
         editor.parse();
-        editor.measure(14.);
+        editor.measure(14., "Jetbrains Mono");
         editor
     });
 
@@ -703,23 +703,6 @@ fn app() -> impl IntoElement {
 Examine the component tree in real-time.
 
 Enable the `devtools` feature in `freya` and then run the devtools app.
-
-<details>
-<summary>Code</summary>
-
-```rust
-use freya::prelude::*;
-
-fn app() -> impl IntoElement {
-    rect()
-        .expanded()
-        .center()
-        .child("Hello, World!")
-}
-```
-
-</details>
-
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/906fdbec-7b3c-4dc4-a420-95fdf852b1e4">

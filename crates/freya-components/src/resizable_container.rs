@@ -104,7 +104,7 @@ impl ResizableContext {
         if matches!(panel.sizing, PanelSize::Percentage(_)) {
             let mut buffer = panel.size;
 
-            for panel in &mut self
+            for panel in self
                 .panels
                 .iter_mut()
                 .filter(|p| matches!(p.sizing, PanelSize::Percentage(_)))
@@ -138,7 +138,7 @@ impl ResizableContext {
         if matches!(removed_panel.sizing, PanelSize::Percentage(_)) {
             let mut buffer = removed_panel.size;
 
-            for panel in &mut self
+            for panel in self
                 .panels
                 .iter_mut()
                 .filter(|p| matches!(p.sizing, PanelSize::Percentage(_)))
@@ -183,7 +183,7 @@ impl ResizableContext {
         let mut acc_pixels = 0.0;
 
         // Shrink forward panels
-        for panel in &mut self.panels[forward_range].iter_mut() {
+        for panel in self.panels[forward_range].iter_mut() {
             let old_size = panel.size;
             let scale = panel.sizing.flex_scale(flex_factor);
             let new_size =
@@ -198,7 +198,7 @@ impl ResizableContext {
         }
 
         // Grow behind panel
-        if let Some(panel) = &mut self.panels[behind_range].iter_mut().next_back() {
+        if let Some(panel) = self.panels[behind_range].last_mut() {
             let scale = panel.sizing.flex_scale(flex_factor);
             let new_size =
                 (panel.size + acc_pixels * scale).clamp(panel.min_size, panel.sizing.max_size());
@@ -358,11 +358,6 @@ impl ResizablePanel {
         }
     }
 
-    pub fn key(mut self, key: impl Into<DiffKey>) -> Self {
-        self.key = key.into();
-        self
-    }
-
     pub fn initial_size(mut self, initial_size: PanelSize) -> Self {
         self.initial_size = initial_size;
         self
@@ -432,7 +427,7 @@ impl Component for ResizablePanel {
     }
 
     fn render_key(&self) -> DiffKey {
-        self.key.clone().or(DiffKey::None)
+        self.key.clone().or(self.default_key())
     }
 }
 
@@ -503,7 +498,7 @@ impl Component for ResizableHandle {
         };
 
         let on_capture_global_pointer_move = {
-            let mut registry = registry.clone();
+            let mut registry = registry;
             move |e: Event<PointerEventData>| {
                 if *clicking.read() {
                     e.prevent_default();

@@ -8,6 +8,11 @@ use freya_engine::prelude::{
     Canvas,
     FontCollection,
 };
+pub use keyboard_types::{
+    Code,
+    Key,
+    Modifiers,
+};
 use winit::{
     event_loop::EventLoopProxy,
     window::{
@@ -172,6 +177,15 @@ pub enum PluginEvent<'a> {
         window: &'a Window,
         font_collection: &'a FontCollection,
         tree: &'a Tree,
+    },
+
+    /// A keyboard input was received.
+    KeyboardInput {
+        window: &'a Window,
+        key: Key,
+        code: Code,
+        modifiers: Modifiers,
+        is_pressed: bool,
     },
 }
 

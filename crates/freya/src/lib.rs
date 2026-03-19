@@ -37,6 +37,7 @@
 //! - [Elements](self::elements)
 //! - [Hooks](self::_docs::hooks)
 //! - [State](self::_docs::state_management)
+//! - [Remote Data](self::_docs::remote_data)
 //! - [Layers](self::_docs::layers)
 //! - [Development Setup](self::_docs::development_setup)
 //!
@@ -53,6 +54,7 @@
 //! - [Testing](freya_testing)
 //! - [WebView](webview)
 //! - [Terminal](terminal)
+//! - [Devtools](self::_docs::devtools)
 //!
 //! ## Features flags
 //!

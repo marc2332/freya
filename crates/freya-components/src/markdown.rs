@@ -1,4 +1,7 @@
-use std::borrow::Cow;
+use std::{
+    borrow::Cow,
+    mem,
+};
 
 use freya_core::prelude::*;
 use pulldown_cmark::{
@@ -72,11 +75,6 @@ impl MarkdownViewer {
             key: DiffKey::None,
             theme: None,
         }
-    }
-
-    pub fn key(mut self, key: impl Into<DiffKey>) -> Self {
-        self.key = key.into();
-        self
     }
 }
 
@@ -280,7 +278,7 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                     if let Some(level) = in_heading.take() {
                         elements.push(MarkdownElement::Heading {
                             level,
-                            spans: current_spans.clone(),
+                            spans: mem::take(&mut current_spans),
                         });
                     }
                 }
@@ -292,32 +290,28 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                     } else if in_paragraph {
                         in_paragraph = false;
                         elements.push(MarkdownElement::Paragraph {
-                            spans: current_spans.clone(),
+                            spans: mem::take(&mut current_spans),
                         });
                     }
                 }
                 TagEnd::CodeBlock => {
                     in_code_block = false;
                     elements.push(MarkdownElement::CodeBlock {
-                        code: code_block_content.clone(),
+                        code: mem::take(&mut code_block_content),
                         language: code_block_language.take(),
                     });
                 }
                 TagEnd::List(_) => {
+                    let items = mem::take(&mut list_items);
                     if let Some(start) = ordered_list_start.take() {
-                        elements.push(MarkdownElement::OrderedList {
-                            start,
-                            items: list_items.clone(),
-                        });
+                        elements.push(MarkdownElement::OrderedList { start, items });
                     } else {
-                        elements.push(MarkdownElement::UnorderedList {
-                            items: list_items.clone(),
-                        });
+                        elements.push(MarkdownElement::UnorderedList { items });
                     }
                 }
                 TagEnd::Item => {
                     in_list_item = false;
-                    list_items.push(current_list_item.clone());
+                    list_items.push(mem::take(&mut current_list_item));
                 }
                 TagEnd::Strong => bold = false,
                 TagEnd::Emphasis => italic = false,
@@ -325,28 +319,26 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                 TagEnd::BlockQuote(_) => {
                     in_blockquote = false;
                     elements.push(MarkdownElement::Blockquote {
-                        spans: blockquote_spans.clone(),
+                        spans: mem::take(&mut blockquote_spans),
                     });
                 }
                 TagEnd::Table => {
                     elements.push(MarkdownElement::Table {
-                        headers: table_headers.clone(),
-                        rows: table_rows.clone(),
+                        headers: mem::take(&mut table_headers),
+                        rows: mem::take(&mut table_rows),
                     });
                 }
                 TagEnd::TableHead => {
                     // TableHead contains cells directly (no TableRow), so save headers here
-                    table_headers = current_table_row.clone();
-                    current_table_row.clear();
+                    table_headers = mem::take(&mut current_table_row);
                 }
                 TagEnd::TableRow => {
                     // TableRow only appears in body rows, not in TableHead
-                    table_rows.push(current_table_row.clone());
-                    current_table_row.clear();
+                    table_rows.push(mem::take(&mut current_table_row));
                 }
                 TagEnd::TableCell => {
                     in_table_cell = false;
-                    current_table_row.push(current_cell_spans.clone());
+                    current_table_row.push(mem::take(&mut current_cell_spans));
                 }
                 TagEnd::Link => {
                     in_link = false;
@@ -354,7 +346,7 @@ fn parse_markdown(content: &str) -> Vec<MarkdownElement> {
                         elements.push(MarkdownElement::Link {
                             url,
                             title: link_title.take(),
-                            text: link_spans.clone(),
+                            text: mem::take(&mut link_spans),
                         });
                     }
                 }

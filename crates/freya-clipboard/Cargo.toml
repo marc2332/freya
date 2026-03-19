@@ -10,6 +10,9 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["freya"]
 categories = ["gui"]
 
+[lints]
+workspace = true
+
 [package.metadata.docs.rs]
 features = ["freya-core/mocked-engine"]
 

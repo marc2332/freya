@@ -23,14 +23,20 @@ use freya_engine::prelude::{
 use freya_winit::{
     plugins::{
         FreyaPlugin,
+        Key,
+        Modifiers,
         PluginEvent,
         PluginHandle,
     },
     reexports::winit::window::WindowId,
 };
 
+/// Performance overlay plugin that displays FPS, timing metrics, and other
+/// diagnostics on top of the rendered frame. Hidden by default, toggle with
+/// Ctrl+Shift+P (Cmd+Shift+P on macOS).
 #[derive(Default)]
 pub struct PerformanceOverlayPlugin {
+    enabled: bool,
     metrics: HashMap<WindowId, WindowMetrics>,
 }
 
@@ -66,6 +72,22 @@ impl PerformanceOverlayPlugin {
 impl FreyaPlugin for PerformanceOverlayPlugin {
     fn on_event(&mut self, event: &mut PluginEvent, _handle: PluginHandle) {
         match event {
+            PluginEvent::KeyboardInput {
+                key,
+                modifiers,
+                is_pressed,
+                ..
+            } => {
+                let toggle_modifier = if cfg!(target_os = "macos") {
+                    Modifiers::META | Modifiers::SHIFT
+                } else {
+                    Modifiers::CONTROL | Modifiers::SHIFT
+                };
+                let is_p = matches!(key, Key::Character(c) if c.eq_ignore_ascii_case("p"));
+                if *is_pressed && is_p && *modifiers == toggle_modifier {
+                    self.enabled = !self.enabled;
+                }
+            }
             PluginEvent::WindowCreated {
                 window,
                 graphics_driver,
@@ -123,6 +145,9 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 tree,
                 animation_clock,
             } => {
+                if !self.enabled {
+                    return;
+                }
                 let metrics = self.get_metrics(window.id());
                 let started_render = metrics.started_render.take().unwrap();
 
