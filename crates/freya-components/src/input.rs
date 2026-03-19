@@ -10,9 +10,11 @@ use std::{
 use freya_core::prelude::*;
 use freya_edit::*;
 use torin::{
+    gaps::Gaps,
     prelude::{
         Alignment,
         Area,
+        Content,
         Direction,
     },
     size::Size,
@@ -157,6 +159,8 @@ pub struct Input {
     layout_variant: InputLayoutVariant,
     text_align: TextAlign,
     a11y_id: Option<AccessibilityId>,
+    leading: Option<Element>,
+    trailing: Option<Element>,
 }
 
 impl KeyExt for Input {
@@ -183,6 +187,8 @@ impl Input {
             layout_variant: InputLayoutVariant::Normal,
             text_align: TextAlign::default(),
             a11y_id: None,
+            leading: None,
+            trailing: None,
         }
     }
 
@@ -268,6 +274,18 @@ impl Input {
 
     pub fn a11y_id(mut self, a11y_id: impl Into<AccessibilityId>) -> Self {
         self.a11y_id = Some(a11y_id.into());
+        self
+    }
+
+    /// Optional element rendered before the text input.
+    pub fn leading(mut self, leading: impl Into<Element>) -> Self {
+        self.leading = Some(leading.into());
+        self
+    }
+
+    /// Optional element rendered after the text input.
+    pub fn trailing(mut self, trailing: impl Into<Element>) -> Self {
+        self.trailing = Some(trailing.into());
         self
     }
 }
@@ -550,10 +568,17 @@ impl Component for Input {
             .background(background.mul_if(!self.enabled, 0.85))
             .border(border)
             .corner_radius(theme_layout.corner_radius)
-            .main_align(Alignment::center())
+            .content(Content::Flex)
+            .direction(Direction::Horizontal)
             .cross_align(Alignment::center())
+            .maybe_child(
+                self.leading
+                    .clone()
+                    .map(|leading| rect().padding(Gaps::new(0., 0., 0., 8.)).child(leading)),
+            )
             .child(
                 ScrollView::new()
+                    .width(Size::flex(1.))
                     .height(Size::Inner)
                     .direction(Direction::Horizontal)
                     .show_scrollbar(false)
@@ -575,6 +600,11 @@ impl Component for Input {
                             .span(text.to_string())
                             .map(preedit_text, |el, preedit_text| el.span(preedit_text)),
                     ),
+            )
+            .maybe_child(
+                self.trailing
+                    .clone()
+                    .map(|trailing| rect().padding(Gaps::new(0., 8., 0., 0.)).child(trailing)),
             )
     }
 
