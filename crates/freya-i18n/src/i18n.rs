@@ -11,7 +11,7 @@ use fluent::{
 use freya_core::prelude::*;
 use unic_langid::LanguageIdentifier;
 
-use super::error::Error;
+use crate::error::Error;
 
 /// `Locale` is a "place-holder" around what will eventually be a `fluent::FluentBundle`
 #[cfg_attr(test, derive(Debug, PartialEq))]
@@ -21,6 +21,9 @@ pub struct Locale {
 }
 
 impl Locale {
+    /// Create a [`Locale`] from a static string containing Fluent (`.ftl`) content.
+    ///
+    /// Typically used with [`include_str!`] to embed locale files at compile time.
     pub fn new_static(id: LanguageIdentifier, str: &'static str) -> Self {
         Self {
             id,
@@ -28,6 +31,9 @@ impl Locale {
         }
     }
 
+    /// Create a [`Locale`] from a filesystem path to a Fluent (`.ftl`) file.
+    ///
+    /// The file will be read at runtime when the locale is loaded into a bundle.
     pub fn new_dynamic(id: LanguageIdentifier, path: impl Into<PathBuf>) -> Self {
         Self {
             id,
@@ -215,16 +221,66 @@ fn is_ftl_file(entry: &std::path::Path) -> bool {
     entry.is_file() && entry.extension().map(|ext| ext == "ftl").unwrap_or(false)
 }
 
-/// Provide an existing [`I18n`] to descendant components.
-/// This is useful for sharing the same global state across different parts of the component tree
-/// or across multiple windows.
+/// Provide an existing [`I18n`] instance to descendant components.
+///
+/// This is useful for sharing the same global i18n state across different parts of the
+/// component tree or across multiple windows. Typically paired with [`I18n::create_global`].
+///
+/// ```rust,no_run
+/// # use freya::prelude::*;
+/// # use freya::i18n::*;
+/// struct MyApp {
+///     i18n: I18n,
+/// }
+///
+/// impl App for MyApp {
+///     fn render(&self) -> impl IntoElement {
+///         // Make the I18n instance available to all descendant components
+///         use_share_i18n(move || self.i18n);
+///
+///         rect().child(t!("hello_world"))
+///     }
+/// }
+/// ```
 pub fn use_share_i18n(i18n: impl FnOnce() -> I18n) {
     use_provide_context(i18n);
 }
 
-/// Initialize the i18n provider.
+/// Initialize an [`I18n`] instance and provide it to descendant components.
 ///
-/// See [I18n::create] for a manual I18n initialization where you can also handle errors.
+/// This is the recommended way to set up i18n in your application. Call it once in a root
+/// component and then use [`I18n::get`] (or the `t!`, `te!`, `tid!` macros) in any
+/// descendant component to access translations.
+///
+/// See [`I18n::create`] for a manual initialization where you can also handle errors.
+///
+/// # Panics
+///
+/// Panics if the [`I18nConfig`] fails to produce a valid Fluent bundle.
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// # use freya::i18n::*;
+/// fn app() -> impl IntoElement {
+///     let mut i18n = use_init_i18n(|| {
+///         I18nConfig::new(langid!("en-US"))
+///             .with_locale(Locale::new_static(
+///                 langid!("en-US"),
+///                 include_str!("../../../examples/i18n/en-US.ftl"),
+///             ))
+///             .with_locale(Locale::new_dynamic(
+///                 langid!("es-ES"),
+///                 "../../../examples/i18n/es-ES.ftl",
+///             ))
+///     });
+///
+///     let change_to_spanish = move |_| i18n.set_language(langid!("es-ES"));
+///
+///     rect()
+///         .child(t!("hello_world"))
+///         .child(Button::new().on_press(change_to_spanish).child("Spanish"))
+/// }
+/// ```
 pub fn use_init_i18n(init: impl FnOnce() -> I18nConfig) -> I18n {
     use_provide_context(move || {
         // Coverage false -ve: See https://github.com/xd009642/tarpaulin/issues/1675
@@ -235,6 +291,18 @@ pub fn use_init_i18n(init: impl FnOnce() -> I18nConfig) -> I18n {
     })
 }
 
+/// The main handle for accessing and managing internationalization state.
+///
+/// `I18n` holds the selected language, fallback language, locale resources, and the active
+/// [Fluent](https://projectfluent.org/) bundle used for translating messages. It is `Clone + Copy`
+/// so it can be freely passed around in components.
+///
+/// There are several ways to obtain an `I18n` instance:
+/// - [`use_init_i18n`] to create and provide it to descendant components.
+/// - [`I18n::create`] to manually create one from an [`I18nConfig`] (useful when you need to handle errors).
+/// - [`I18n::create_global`] to create one with global lifetime, suitable for multi-window apps.
+/// - [`I18n::get`] or [`I18n::try_get`] to retrieve an already-provided instance from the component context.
+/// - [`use_share_i18n`] to re-provide an existing instance to a different part of the component tree.
 #[derive(Clone, Copy)]
 pub struct I18n {
     selected_language: State<LanguageIdentifier>,
@@ -245,14 +313,53 @@ pub struct I18n {
 }
 
 impl I18n {
+    /// Try to retrieve the [`I18n`] instance from the component context.
+    ///
+    /// Returns `None` if no [`I18n`] has been provided via [`use_init_i18n`] or [`use_share_i18n`]
+    /// in an ancestor component.
     pub fn try_get() -> Option<Self> {
         try_consume_context()
     }
 
+    /// Retrieve the [`I18n`] instance from the component context.
+    ///
+    /// This is the primary way to access the i18n state from within a component that is a
+    /// descendant of a component that called [`use_init_i18n`] or [`use_share_i18n`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if no [`I18n`] has been provided in an ancestor component.
+    ///
+    /// ```rust
+    /// # use freya::prelude::*;
+    /// # use freya::i18n::*;
+    /// #[derive(PartialEq)]
+    /// struct MyComponent;
+    ///
+    /// impl Component for MyComponent {
+    ///     fn render(&self) -> impl IntoElement {
+    ///         let mut i18n = I18n::get();
+    ///
+    ///         let change_to_english = move |_| i18n.set_language(langid!("en-US"));
+    ///
+    ///         rect()
+    ///             .child(t!("hello_world"))
+    ///             .child(Button::new().on_press(change_to_english).child("English"))
+    ///     }
+    /// }
+    /// ```
     pub fn get() -> Self {
         consume_context()
     }
 
+    /// Manually create an [`I18n`] instance from an [`I18nConfig`].
+    ///
+    /// Unlike [`use_init_i18n`], this does not automatically provide the instance to descendant
+    /// components. Use [`use_share_i18n`] to share it afterwards, or call this when you need
+    /// explicit error handling during initialization.
+    ///
+    /// The created state is scoped to the current component. For global state that outlives
+    /// any single component, see [`I18n::create_global`].
     pub fn create(
         I18nConfig {
             id: selected_language,
@@ -276,6 +383,41 @@ impl I18n {
         })
     }
 
+    /// Create an [`I18n`] instance with global lifetime.
+    ///
+    /// Unlike [`I18n::create`], the state created here is not scoped to any component and will
+    /// live for the entire duration of the application. This is useful for multi-window apps
+    /// where i18n state needs to be created in `main` and then shared across different windows
+    /// via [`use_share_i18n`].
+    ///
+    /// ```rust,no_run
+    /// # use freya::prelude::*;
+    /// # use freya::i18n::*;
+    /// struct MyApp {
+    ///     i18n: I18n,
+    /// }
+    ///
+    /// impl App for MyApp {
+    ///     fn render(&self) -> impl IntoElement {
+    ///         // Re-provide the global I18n to this window's component tree
+    ///         use_share_i18n(move || self.i18n);
+    ///
+    ///         rect().child(t!("hello_world"))
+    ///     }
+    /// }
+    ///
+    /// fn main() {
+    ///     // Create I18n with global lifetime in main, before any window is opened
+    ///     let i18n = I18n::create_global(I18nConfig::new(langid!("en-US")).with_locale((
+    ///         langid!("en-US"),
+    ///         include_str!("../../../examples/i18n/en-US.ftl"),
+    ///     )))
+    ///     .expect("Failed to create I18n");
+    ///
+    ///     // Pass it to each window's app struct
+    ///     launch(LaunchConfig::new().with_window(WindowConfig::new_app(MyApp { i18n })))
+    /// }
+    /// ```
     pub fn create_global(
         I18nConfig {
             id: selected_language,
@@ -299,6 +441,15 @@ impl I18n {
         })
     }
 
+    /// Translate a message by its identifier, optionally with Fluent arguments.
+    ///
+    /// The `msg` can be a simple message id (e.g. `"hello"`) or a dotted attribute
+    /// id (e.g. `"my_component.placeholder"`). See [`I18n::decompose_identifier`] for details.
+    ///
+    /// Returns an error if the message id is not found, the pattern is missing,
+    /// or Fluent reports errors during formatting.
+    ///
+    /// Prefer the `t!`, `te!`, or `tid!` macros for ergonomic translations.
     pub fn try_translate_with_args(
         &self,
         msg: &str,
@@ -333,6 +484,12 @@ impl I18n {
             .ok_or_else(|| Error::FluentErrorsDetected(format!("{errors:#?}")))
     }
 
+    /// Split a message identifier into its message id and optional attribute name.
+    ///
+    /// - `"hello"` returns `("hello", None)`
+    /// - `"my_component.placeholder"` returns `("my_component", Some("placeholder"))`
+    ///
+    /// Returns an error if the identifier contains more than one dot.
     pub fn decompose_identifier(msg: &str) -> Result<(&str, Option<&str>), Error> {
         let parts: Vec<&str> = msg.split('.').collect();
         match parts.as_slice() {
@@ -342,6 +499,13 @@ impl I18n {
         }
     }
 
+    /// Translate a message by its identifier, optionally with Fluent arguments.
+    ///
+    /// This is the panicking version of [`I18n::try_translate_with_args`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if the translation fails for any reason.
     pub fn translate_with_args(&self, msg: &str, args: Option<&FluentArgs>) -> String {
         let result = self.try_translate_with_args(msg, args);
         match result {
@@ -350,11 +514,21 @@ impl I18n {
         }
     }
 
+    /// Translate a message by its identifier, without arguments.
+    ///
+    /// Shorthand for `self.try_translate_with_args(msg, None)`.
     #[inline]
     pub fn try_translate(&self, msg: &str) -> Result<String, Error> {
         self.try_translate_with_args(msg, None)
     }
 
+    /// Translate a message by its identifier, without arguments.
+    ///
+    /// This is the panicking version of [`I18n::try_translate`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if the translation fails for any reason.
     pub fn translate(&self, msg: &str) -> String {
         let result = self.try_translate(msg);
         match result {
@@ -374,13 +548,21 @@ impl I18n {
         self.fallback_language.read().clone()
     }
 
-    /// Update the selected language.
+    /// Update the selected language, rebuilding the active Fluent bundle.
+    ///
+    /// Returns an error if the bundle cannot be rebuilt for the new language.
     pub fn try_set_language(&mut self, id: LanguageIdentifier) -> Result<(), Error> {
         *self.selected_language.write() = id;
         self.try_update_active_bundle()
     }
 
-    /// Update the selected language.
+    /// Update the selected language, rebuilding the active Fluent bundle.
+    ///
+    /// This is the panicking version of [`I18n::try_set_language`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if the bundle cannot be rebuilt for the new language.
     pub fn set_language(&mut self, id: LanguageIdentifier) {
         let id_name = id.to_string();
         let result = self.try_set_language(id);
@@ -390,7 +572,10 @@ impl I18n {
         }
     }
 
-    /// Update the fallback language.
+    /// Update the fallback language, rebuilding the active Fluent bundle.
+    ///
+    /// The given language must have a corresponding [`Locale`] registered in the config.
+    /// Returns an error if no locale exists for the language or if the bundle cannot be rebuilt.
     pub fn try_set_fallback_language(&mut self, id: LanguageIdentifier) -> Result<(), Error> {
         self.locales
             .read()
@@ -401,7 +586,13 @@ impl I18n {
         self.try_update_active_bundle()
     }
 
-    /// Update the fallback language.
+    /// Update the fallback language, rebuilding the active Fluent bundle.
+    ///
+    /// This is the panicking version of [`I18n::try_set_fallback_language`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if no locale exists for the language or if the bundle cannot be rebuilt.
     pub fn set_fallback_language(&mut self, id: LanguageIdentifier) {
         let id_name = id.to_string();
         let result = self.try_set_fallback_language(id);
