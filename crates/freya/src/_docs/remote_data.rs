@@ -40,9 +40,6 @@
 //! }
 //! ```
 //!
-//! The trait requires `Clone + PartialEq + Hash + Eq` on the implementing type,
-//! and `Hash + PartialEq + Clone` on `Keys`.
-//!
 //! ### Using a query in a component
 //!
 //! Call [`use_query`](crate::query::use_query) with a [`Query`](crate::query::Query) to subscribe
