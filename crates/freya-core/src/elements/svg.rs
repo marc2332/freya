@@ -107,6 +107,7 @@ pub fn svg(bytes: impl Into<SvgBytes>) -> Svg {
             effect: None,
             color: Color::BLACK,
             stroke: None,
+            stroke_width: None,
             fill: None,
             relative_layer: Layer::default(),
         },
@@ -121,6 +122,7 @@ pub struct SvgElement {
     pub bytes: SvgBytes,
     pub color: Color,
     pub stroke: Option<Color>,
+    pub stroke_width: Option<f32>,
     pub fill: Option<Color>,
     pub effect: Option<EffectData>,
     pub relative_layer: Layer,
@@ -153,7 +155,10 @@ impl ElementExt for SvgElement {
             diff.insert(DiffModifies::LAYOUT);
         }
 
-        if self.color != svg.color || self.stroke != svg.stroke {
+        if self.color != svg.color
+            || self.stroke != svg.stroke
+            || self.stroke_width != svg.stroke_width
+        {
             diff.insert(DiffModifies::STYLE);
         }
 
@@ -226,6 +231,9 @@ impl ElementExt for SvgElement {
                 }
                 _ => {}
             }
+            if let Some(stroke_width) = self.stroke_width {
+                root.set_stroke_width(svg::Length::new(stroke_width, svg::LengthUnit::PX));
+            }
             Some((
                 Size2D::new(root.width().value, root.height().value),
                 Rc::new(RefCell::new(svg_dom)),
@@ -269,6 +277,9 @@ impl ElementExt for SvgElement {
         }
         if let Some(stroke) = self.stroke {
             root.set_stroke(svg::Paint::from_color(stroke.into()));
+        }
+        if let Some(stroke_width) = self.stroke_width {
+            root.set_stroke_width(svg::Length::new(stroke_width, svg::LengthUnit::PX));
         }
         svg_dom.render(context.canvas);
         context.canvas.restore();
@@ -341,6 +352,12 @@ impl Svg {
 
     pub fn stroke(mut self, stroke: impl Into<Color>) -> Self {
         self.element.stroke = Some(stroke.into());
+        self
+    }
+
+    /// Override the SVG stroke width.
+    pub fn stroke_width(mut self, stroke_width: impl Into<f32>) -> Self {
+        self.element.stroke_width = Some(stroke_width.into());
         self
     }
 
