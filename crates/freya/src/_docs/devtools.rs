@@ -20,7 +20,7 @@
 //! cargo run --features devtools
 //! ```
 //!
-//! No code changes are needed — when the feature is active, Freya's `launch` function automatically registers the devtools server plugin.
+//! No code changes are needed. When the feature is active, Freya's `launch` function automatically registers the devtools server plugin.
 //!
 //! ## Running the Devtools App
 //!
