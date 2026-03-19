@@ -311,7 +311,8 @@ impl Component for Input {
             }
         });
 
-        let display_placeholder = value.read().is_empty() && self.placeholder.is_some();
+        let display_placeholder =
+            value.read().is_empty() && self.placeholder.is_some() && ime_preedit.read().is_none();
         let on_validate = self.on_validate.clone();
         let on_submit = self.on_submit.clone();
 
