@@ -9,6 +9,7 @@ use freya_core::{
         FontSlant,
         Shadow,
         TextAlign,
+        TextDecoration,
         TextHeightBehavior,
         TextOverflow,
         TextShadow,
@@ -179,6 +180,10 @@ impl NodeStateAttributes for NodeState {
                 "font_width",
                 AttributeType::Measure(self.text_style.font_width.into()),
             ),
+            (
+                "text_decoration",
+                AttributeType::TextDecoration(self.text_style.text_decoration),
+            ),
         ];
 
         for shadow in self.style.shadows.iter() {
@@ -215,6 +220,7 @@ pub enum AttributeType<'a> {
     TextOverflow(&'a TextOverflow),
     TextHeightBehavior(&'a TextHeightBehavior),
     FontSlant(FontSlant),
+    TextDecoration(TextDecoration),
     Length(Length),
     Layer(i16),
     CursorMode(CursorMode),

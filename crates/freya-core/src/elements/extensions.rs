@@ -626,6 +626,11 @@ where
             .push(text_shadow.into());
         self
     }
+
+    fn text_decoration(mut self, text_decoration: impl Into<TextDecoration>) -> Self {
+        self.get_text_style_data().text_decoration = Some(text_decoration.into());
+        self
+    }
 }
 
 pub trait StyleExt
