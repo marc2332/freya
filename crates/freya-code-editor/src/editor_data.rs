@@ -66,15 +66,21 @@ impl CodeEditorData {
             .run_parser(&self.rope, self.language_id, edit, &self.theme);
     }
 
-    pub fn measure(&mut self, font_size: f32) {
-        self.metrics.measure_longest_line(font_size, &self.rope);
+    pub fn measure(&mut self, font_size: f32, font_family: &str) {
+        self.metrics
+            .measure_longest_line(font_size, font_family, &self.rope);
     }
 
     pub fn set_theme(&mut self, theme: SyntaxTheme) {
         self.theme = theme;
     }
 
-    pub fn process(&mut self, font_size: f32, edit_event: EditableEvent) -> bool {
+    pub fn process(
+        &mut self,
+        font_size: f32,
+        font_family: &str,
+        edit_event: EditableEvent,
+    ) -> bool {
         let mut processed = false;
         match edit_event {
             EditableEvent::Down {
@@ -176,7 +182,7 @@ impl CodeEditorData {
                         let event = self.process_key(key, &modifiers, true, true, true);
                         if event.contains(TextEvent::TEXT_CHANGED) {
                             self.parse();
-                            self.measure(font_size);
+                            self.measure(font_size, font_family);
                             self.dragging = TextDragging::default();
                         }
                         if !event.is_empty() {

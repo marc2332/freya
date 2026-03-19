@@ -120,9 +120,9 @@ impl NodeStateAttributes for NodeState {
                 let background = &self.style.background;
                 let fill = match *background {
                     Fill::Color(background) => AttributeType::Color(background),
-                    Fill::LinearGradient(_) => AttributeType::Gradient(background.clone()),
-                    Fill::RadialGradient(_) => AttributeType::Gradient(background.clone()),
-                    Fill::ConicGradient(_) => AttributeType::Gradient(background.clone()),
+                    Fill::LinearGradient(_) | Fill::RadialGradient(_) | Fill::ConicGradient(_) => {
+                        AttributeType::Gradient(background.clone())
+                    }
                 };
                 ("background", fill)
             },

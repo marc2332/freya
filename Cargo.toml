@@ -3,6 +3,9 @@ name = "examples"
 edition = "2024"
 publish = false
 
+[lints]
+workspace = true
+
 [features]
 hotpath = ["freya/hotpath"]
 hotpath-alloc = ["hotpath/hotpath-alloc"]
@@ -208,6 +211,9 @@ blocking = { workspace = true }
 portable-pty = "0.9"
 vt100 = "0.16"
 futures-util = { workspace = true }
+
+[workspace.lints.clippy]
+redundant_clone = "warn"
 
 [profile.release]
 lto = true

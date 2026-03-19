@@ -51,7 +51,7 @@ impl MutationCapability for SetUserName {
 
     async fn run(&self, keys: &Self::Keys) -> Result<Self::Ok, Self::Err> {
         let name = keys.1.clone();
-        self.0.write_unchecked().set_name(name.clone());
+        self.0.write_unchecked().set_name(name);
         Ok(())
     }
 

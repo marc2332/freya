@@ -11,6 +11,9 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["gui"]
 categories = ["gui"]
 
+[lints]
+workspace = true
+
 [features]
 # Icons
 all = ["lucide"]

@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use freya_components::scrollviews::{
     ScrollController,
     ScrollEvent,
@@ -23,6 +25,7 @@ pub struct CodeEditor {
     read_only: bool,
     gutter: bool,
     show_whitespace: bool,
+    font_family: Cow<'static, str>,
     a11y_id: AccessibilityId,
     theme: Readable<EditorTheme>,
 }
@@ -39,6 +42,7 @@ impl CodeEditor {
             read_only: false,
             gutter: true,
             show_whitespace: true,
+            font_family: Cow::Borrowed("Jetbrains Mono"),
             a11y_id,
             theme: DEFAULT_EDITOR_THEME.into(),
         }
@@ -73,6 +77,12 @@ impl CodeEditor {
         self
     }
 
+    /// Sets the font family used in the editor. Defaults to `"Jetbrains Mono"`.
+    pub fn font_family(mut self, font_family: impl Into<Cow<'static, str>>) -> Self {
+        self.font_family = font_family.into();
+        self
+    }
+
     /// Sets the editor theme.
     pub fn theme(mut self, theme: impl IntoReadable<EditorTheme>) -> Self {
         self.theme = theme.into_readable();
@@ -89,6 +99,7 @@ impl Component for CodeEditor {
             read_only,
             gutter,
             show_whitespace,
+            font_family,
             a11y_id,
             theme,
         } = self.clone();
@@ -139,15 +150,21 @@ impl Component for CodeEditor {
 
         let on_key_up = {
             let mut editor = editor.clone();
+            let font_family = font_family.clone();
             move |e: Event<KeyboardEventData>| {
                 editor.write_if(|mut editor| {
-                    editor.process(font_size, EditableEvent::KeyUp { key: &e.key })
+                    editor.process(
+                        font_size,
+                        &font_family,
+                        EditableEvent::KeyUp { key: &e.key },
+                    )
                 });
             }
         };
 
         let on_key_down = {
             let mut editor = editor.clone();
+            let font_family = font_family.clone();
             move |e: Event<KeyboardEventData>| {
                 e.stop_propagation();
 
@@ -213,7 +230,7 @@ impl Component for CodeEditor {
                     let mut changed = false;
 
                     for event in events {
-                        changed |= editor.process(font_size, event);
+                        changed |= editor.process(font_size, &font_family, event);
                     }
 
                     changed
@@ -223,9 +240,10 @@ impl Component for CodeEditor {
 
         let on_global_pointer_press = {
             let mut editor = editor.clone();
+            let font_family = font_family.clone();
             move |_: Event<PointerEventData>| {
                 editor.write_if(|mut editor_editor| {
-                    editor_editor.process(font_size, EditableEvent::Release)
+                    editor_editor.process(font_size, &font_family, EditableEvent::Release)
                 });
             }
         };
@@ -250,6 +268,7 @@ impl Component for CodeEditor {
                             read_only,
                             gutter,
                             show_whitespace,
+                            font_family: font_family.clone(),
                             theme: theme.clone(),
                         }
                         .into()

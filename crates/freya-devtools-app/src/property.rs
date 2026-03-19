@@ -7,6 +7,26 @@ use freya_core::{
     },
 };
 
+const NAME_COLOR: (u8, u8, u8) = (102, 163, 217);
+const SEPARATOR_COLOR: (u8, u8, u8) = (215, 215, 215);
+const VALUE_COLOR: (u8, u8, u8) = (252, 181, 172);
+
+fn color_swatch(color: Color) -> impl IntoElement {
+    rect()
+        .width(Size::px(17.))
+        .height(Size::px(17.))
+        .corner_radius(CornerRadius::new_all(5.))
+        .background(Color::WHITE)
+        .padding(2.5)
+        .child(
+            rect()
+                .corner_radius(CornerRadius::new_all(3.))
+                .width(Size::fill())
+                .height(Size::fill())
+                .background(color),
+        )
+}
+
 #[derive(Clone, PartialEq)]
 pub struct Property {
     name: String,
@@ -33,9 +53,9 @@ impl Component for Property {
                 paragraph()
                     .width(Size::fill())
                     .font_size(15.)
-                    .span(Span::new(self.name.clone()).color((102, 163, 217)))
-                    .span(Span::new(": ").color((215, 215, 215)))
-                    .span(Span::new(self.value.clone()).color((252, 181, 172))),
+                    .span(Span::new(self.name.clone()).color(NAME_COLOR))
+                    .span(Span::new(": ").color(SEPARATOR_COLOR))
+                    .span(Span::new(self.value.clone()).color(VALUE_COLOR)),
             )
     }
 }
@@ -59,15 +79,10 @@ impl Component for GradientProperty {
     fn render(&self) -> impl IntoElement {
         paragraph()
             .line_height(1.9)
-            .span(Span::new(self.name.to_string()))
             .font_size(15.)
-            .color(Color::from_rgb(102, 163, 217))
-            .span(Span::new(": "))
-            .font_size(15.)
-            .color(Color::from_rgb(215, 215, 215))
-            .span(Span::new(format!("{:?}", self.fill)))
-            .font_size(15.)
-            .color(Color::from_rgb(252, 181, 172))
+            .span(Span::new(self.name.to_string()).color(NAME_COLOR))
+            .span(Span::new(": ").color(SEPARATOR_COLOR))
+            .span(Span::new(format!("{:?}", self.fill)).color(VALUE_COLOR))
     }
 }
 
@@ -96,30 +111,16 @@ impl Component for ColorProperty {
             .child(
                 paragraph()
                     .font_size(15.)
-                    .span(Span::new(self.name.clone()).color(Color::from_rgb(102, 163, 217)))
-                    .span(Span::new(": ").color(Color::from_rgb(215, 215, 215))),
+                    .span(Span::new(self.name.clone()).color(NAME_COLOR))
+                    .span(Span::new(": ").color(SEPARATOR_COLOR)),
             )
             .child(rect().width(Size::px(5.)))
-            .child(
-                rect()
-                    .width(Size::px(17.))
-                    .height(Size::px(17.))
-                    .corner_radius(CornerRadius::new_all(5.))
-                    .background(Color::WHITE)
-                    .padding(2.5)
-                    .child(
-                        rect()
-                            .corner_radius(CornerRadius::new_all(3.))
-                            .width(Size::fill())
-                            .height(Size::fill())
-                            .background(self.color),
-                    ),
-            )
+            .child(color_swatch(self.color))
             .child(rect().width(Size::px(5.)))
             .child(
                 label()
                     .font_size(15.)
-                    .color(Color::from_rgb(252, 181, 172))
+                    .color(Color::from_rgb(VALUE_COLOR.0, VALUE_COLOR.1, VALUE_COLOR.2))
                     .text(self.color.pretty()),
             )
     }
@@ -150,28 +151,15 @@ impl Component for ShadowProperty {
             .font_size(15.)
             .children(vec![
                 paragraph()
-                    .span(Span::new(self.name.clone()).color(Color::from_rgb(102, 163, 217)))
-                    .span(Span::new(": ").color(Color::from_rgb(215, 215, 215)))
-                    .span(Span::new(self.shadow.to_string()).color(Color::from_rgb(252, 181, 172)))
+                    .span(Span::new(self.name.clone()).color(NAME_COLOR))
+                    .span(Span::new(": ").color(SEPARATOR_COLOR))
+                    .span(Span::new(self.shadow.to_string()).color(VALUE_COLOR))
                     .into(),
                 rect().width(Size::px(5.)).into(),
-                rect()
-                    .width(Size::px(17.))
-                    .height(Size::px(17.))
-                    .corner_radius(CornerRadius::new_all(8.))
-                    .background(Color::WHITE)
-                    .padding(2.5)
-                    .child(
-                        rect()
-                            .corner_radius(CornerRadius::new_all(3.))
-                            .width(Size::fill())
-                            .height(Size::fill())
-                            .background(self.shadow.color),
-                    )
-                    .into(),
+                color_swatch(self.shadow.color).into_element(),
                 rect().width(Size::px(5.)).into(),
                 label()
-                    .color(Color::from_rgb(252, 181, 172))
+                    .color(Color::from_rgb(VALUE_COLOR.0, VALUE_COLOR.1, VALUE_COLOR.2))
                     .text(format!("{:?}", self.shadow.color))
                     .into(),
             ])
@@ -203,29 +191,16 @@ impl Component for BorderProperty {
             .children(vec![
                 paragraph()
                     .font_size(15.)
-                    .span(Span::new(self.name.clone()).color((102, 163, 217)))
-                    .span(Span::new(": ").color((215, 215, 215)))
-                    .span(Span::new(self.border.pretty()).color((252, 181, 172)))
+                    .span(Span::new(self.name.clone()).color(NAME_COLOR))
+                    .span(Span::new(": ").color(SEPARATOR_COLOR))
+                    .span(Span::new(self.border.pretty()).color(VALUE_COLOR))
                     .into(),
                 rect().width(Size::px(5.)).into(),
-                rect()
-                    .width(Size::px(17.))
-                    .height(Size::px(17.))
-                    .corner_radius(CornerRadius::new_all(5.))
-                    .background(Color::WHITE)
-                    .padding(2.5)
-                    .child(
-                        rect()
-                            .corner_radius(CornerRadius::new_all(3.))
-                            .width(Size::fill())
-                            .height(Size::fill())
-                            .background(self.border.fill),
-                    )
-                    .into(),
+                color_swatch(self.border.fill).into_element(),
                 rect().width(Size::px(5.)).into(),
                 label()
                     .font_size(15.)
-                    .color(Color::from_rgb(252, 181, 172))
+                    .color(Color::from_rgb(VALUE_COLOR.0, VALUE_COLOR.1, VALUE_COLOR.2))
                     .text(self.border.fill.pretty())
                     .into(),
             ])
@@ -250,6 +225,10 @@ impl TextShadowProperty {
 impl Component for TextShadowProperty {
     fn render(&self) -> impl IntoElement {
         let color = self.text_shadow.color;
+        let value = format!(
+            "{} {} {}",
+            self.text_shadow.offset.0, self.text_shadow.offset.1, self.text_shadow.blur_sigma
+        );
 
         rect()
             .width(Size::fill())
@@ -258,36 +237,15 @@ impl Component for TextShadowProperty {
             .font_size(15.)
             .children(vec![
                 paragraph()
-                    .span(Span::new(self.name.to_string()).color(Color::from_rgb(102, 163, 217)))
-                    .span(Span::new(": ").color(Color::from_rgb(215, 215, 215)))
-                    .span(
-                        Span::new(format!(
-                            "{} {} {}",
-                            self.text_shadow.offset.0,
-                            self.text_shadow.offset.1,
-                            self.text_shadow.blur_sigma
-                        ))
-                        .color(Color::from_rgb(252, 181, 172)),
-                    )
+                    .span(Span::new(self.name.to_string()).color(NAME_COLOR))
+                    .span(Span::new(": ").color(SEPARATOR_COLOR))
+                    .span(Span::new(value).color(VALUE_COLOR))
                     .into(),
                 rect().width(Size::px(5.)).into(),
-                rect()
-                    .width(Size::px(17.))
-                    .height(Size::px(17.))
-                    .corner_radius(CornerRadius::new_all(5.))
-                    .background(Color::WHITE)
-                    .padding(2.5)
-                    .child(
-                        rect()
-                            .corner_radius(CornerRadius::new_all(3.))
-                            .width(Size::fill())
-                            .height(Size::fill())
-                            .background(color),
-                    )
-                    .into(),
+                color_swatch(color).into_element(),
                 rect().width(Size::px(5.)).into(),
                 label()
-                    .color(Color::from_rgb(252, 181, 172))
+                    .color(Color::from_rgb(VALUE_COLOR.0, VALUE_COLOR.1, VALUE_COLOR.2))
                     .text(format!("{:?}", color))
                     .into(),
             ])

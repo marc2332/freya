@@ -30,7 +30,7 @@ impl EditorMetrics {
         }
     }
 
-    pub fn measure_longest_line(&mut self, font_size: f32, rope: &Rope) {
+    pub fn measure_longest_line(&mut self, font_size: f32, font_family: &str, rope: &Rope) {
         // We assume the font used is monospaced.
 
         // Calculate character width by measuring a reference character
@@ -38,7 +38,7 @@ impl EditorMetrics {
         let mut paragraph_style = ParagraphStyle::default();
         let mut text_style = TextStyle::default();
         text_style.set_font_size(font_size);
-        text_style.set_font_families(&["Jetbrains Mono"]);
+        text_style.set_font_families(&[font_family]);
         paragraph_style.set_text_style(&text_style);
         let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
 

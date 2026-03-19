@@ -362,6 +362,7 @@ define_theme! {
         height: Size,
         padding: Gaps,
         color: Color,
+        corner_radius: CornerRadius,
     }
 }
 

@@ -51,7 +51,7 @@ fn on_render(ctx: &mut RenderContext, (cursor_x, cursor_y): (f64, f64)) {
 
     let mut chart = ChartBuilder::on(&backend)
         .caption("3D Plot Test", ("sans", 20))
-        .build_cartesian_3d(x_axis.clone(), -3.0..3.0, z_axis.clone())
+        .build_cartesian_3d(x_axis, -3.0..3.0, z_axis)
         .unwrap();
 
     chart.with_projection(|mut pb| {

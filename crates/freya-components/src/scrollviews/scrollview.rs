@@ -365,14 +365,14 @@ impl Component for ScrollView {
             .on_global_key_down(on_global_key_down)
             .child(
                 rect()
-                    .width(container_width.clone())
-                    .height(container_height.clone())
+                    .width(container_width)
+                    .height(container_height)
                     .horizontal()
                     .child(
                         rect()
                             .direction(direction)
                             .width(content_width)
-                            .height(content_height.clone())
+                            .height(content_height)
                             .max_width(layout.maximum_width.clone())
                             .max_height(layout.maximum_height.clone())
                             .offset_x(corrected_scrolled_x)

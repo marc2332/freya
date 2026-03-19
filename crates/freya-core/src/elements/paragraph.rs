@@ -513,7 +513,7 @@ impl ElementExt for ParagraphElement {
                     .get_glyph_position_at_coordinate((f32::MAX, f32::MAX))
                     .position as usize;
                 let last_rects = paragraph.get_rects_for_range(
-                    (text_len - 1)..text_len,
+                    text_len.saturating_sub(1)..text_len,
                     RectHeightStyle::Tight,
                     RectWidthStyle::Tight,
                 );
@@ -529,7 +529,7 @@ impl ElementExt for ParagraphElement {
                 let paint_color = self.cursor_style_data.color;
                 match self.cursor_style {
                     CursorStyle::Underline => {
-                        let thickness = 2.0_f32;
+                        let thickness = 2.0;
                         let underline_rect = SkRect::new(
                             cursor_area.min_x() + cursor_rect.left,
                             cursor_area.min_y() + cursor_rect.bottom - thickness

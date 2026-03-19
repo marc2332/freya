@@ -11,6 +11,9 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia", "freya"]
 categories = ["gui", "caching"]
 
+[lints]
+workspace = true
+
 [features]
 serde = ["dep:serde", "euclid/serde"]
 

@@ -88,7 +88,7 @@ impl MetalDriver {
                         .expect("NSView pointer is null");
 
                     view.setWantsLayer(true);
-                    view.setLayer(Some(&layer.clone()));
+                    view.setLayer(Some(&layer));
                 }
                 _ => panic!("Metal driver only supports AppKit (macOS) windows"),
             };

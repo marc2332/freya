@@ -229,7 +229,10 @@ pub type TrayHandler =
 pub type TaskHandler =
     Box<dyn FnOnce(crate::renderer::LaunchProxy) -> Pin<Box<dyn Future<Output = ()>>> + 'static>;
 
-/// Launch configuration.
+/// Configuration for the initial state of the application.
+///
+/// Use this to register windows, plugins, fonts, and other settings
+/// that should be ready before the application starts.
 pub struct LaunchConfig {
     pub(crate) windows_configs: Vec<WindowConfig>,
     #[cfg(feature = "tray")]
@@ -294,6 +297,9 @@ impl LaunchConfig {
 
 impl LaunchConfig {
     /// Register a window configuration. You can call this multiple times.
+    ///
+    /// To create windows dynamically after the application has started,
+    /// see [`WinitPlatformExt::launch_window`].
     pub fn with_window(mut self, window_config: WindowConfig) -> Self {
         self.windows_configs.push(window_config);
         self
