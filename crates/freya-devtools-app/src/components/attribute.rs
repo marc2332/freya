@@ -10,6 +10,32 @@ use crate::property::{
     TextShadowProperty,
 };
 
+pub fn attributes_list(attributes: Vec<(&str, AttributeType)>) -> Element {
+    ScrollView::new()
+        .children(
+            attributes
+                .into_iter()
+                .enumerate()
+                .filter_map(|(i, (name, attribute))| {
+                    let background = if i % 2 == 0 {
+                        Color::from_af32rgb(0.1, 255, 255, 255)
+                    } else {
+                        Color::TRANSPARENT
+                    };
+                    let element = attribute_element(name, attribute)?;
+                    Some(
+                        rect()
+                            .key(i)
+                            .background(background)
+                            .padding((5., 16.))
+                            .child(element)
+                            .into(),
+                    )
+                }),
+        )
+        .into()
+}
+
 pub fn attribute_element(name: &str, attribute: AttributeType<'_>) -> Option<Element> {
     match attribute {
         AttributeType::Measure(measure) => Some(Property::new(name, measure.to_string()).into()),

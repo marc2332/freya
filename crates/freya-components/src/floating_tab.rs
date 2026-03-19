@@ -95,6 +95,7 @@ impl Component for FloatingTab {
             width,
             height,
             color,
+            corner_radius,
         } = get_theme!(&self.theme, floating_tab);
 
         let on_pointer_enter = move |_| {
@@ -130,7 +131,7 @@ impl Component for FloatingTab {
             .padding(padding)
             .background(background)
             .color(color)
-            .corner_radius(99.)
+            .corner_radius(corner_radius)
             .children(self.children.clone())
     }
 
