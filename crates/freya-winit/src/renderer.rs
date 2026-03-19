@@ -905,11 +905,26 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         ElementState::Pressed => KeyboardEventName::KeyDown,
                         ElementState::Released => KeyboardEventName::KeyUp,
                     };
+                    let key = winit_mappings::map_winit_key(&event.logical_key);
+                    let code = winit_mappings::map_winit_physical_key(&event.physical_key);
+                    let modifiers = winit_mappings::map_winit_modifiers(app.modifiers_state);
+
+                    self.plugins.send(
+                        PluginEvent::KeyboardInput {
+                            window: &app.window,
+                            key: key.clone(),
+                            code,
+                            modifiers,
+                            is_pressed: event.state.is_pressed(),
+                        },
+                        PluginHandle::new(&self.proxy),
+                    );
+
                     let platform_event = PlatformEvent::Keyboard {
                         name,
-                        key: winit_mappings::map_winit_key(&event.logical_key),
-                        code: winit_mappings::map_winit_physical_key(&event.physical_key),
-                        modifiers: winit_mappings::map_winit_modifiers(app.modifiers_state),
+                        key,
+                        code,
+                        modifiers,
                     };
                     let mut events_measurer_adapter = EventsMeasurerAdapter {
                         tree: &mut app.tree,
