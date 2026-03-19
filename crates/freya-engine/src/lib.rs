@@ -31,6 +31,7 @@ pub mod prelude {
         Rect as SkRect,
         Surface as SkSurface,
         TextAlign as SkTextAlign,
+        TextDecoration as SkTextDecoration,
         TextHeightBehavior as SkTextHeightBehavior,
         TextShadow as SkTextShadow,
         *,

@@ -20,12 +20,22 @@ use crate::{
     },
 };
 
+/// Tracks the position and length of IME preedit text within the rope.
+#[derive(Clone, Debug)]
+pub struct PreeditState {
+    /// Start position in UTF-16 code units.
+    pub start: usize,
+    /// Length in UTF-16 code units.
+    pub len: usize,
+}
+
 /// TextEditor implementing a Rope
 pub struct RopeEditor {
     pub(crate) rope: Rope,
     pub(crate) selection: TextSelection,
     pub(crate) indentation: u8,
     pub(crate) history: EditorHistory,
+    pub(crate) preedit: Option<PreeditState>,
 }
 
 impl Display for RopeEditor {
@@ -47,11 +57,90 @@ impl RopeEditor {
             selection,
             indentation,
             history,
+            preedit: None,
         }
     }
 
     pub fn rope(&self) -> &Rope {
         &self.rope
+    }
+
+    /// Insert or replace IME preedit text at the current cursor position.
+    ///
+    /// The preedit text is inserted directly into the rope without recording
+    /// undo history. If there is already active preedit text, it is replaced.
+    /// An empty `text` clears the preedit.
+    pub fn set_preedit(&mut self, text: &str) {
+        // Remove existing preedit text from the rope if any
+        let preedit_start = if let Some(preedit) = self.preedit.take() {
+            let start_char = self.rope.utf16_cu_to_char(preedit.start);
+            let end_char = self.rope.utf16_cu_to_char(preedit.start + preedit.len);
+            self.rope.remove(start_char..end_char);
+            preedit.start
+        } else {
+            self.cursor_pos()
+        };
+
+        // Insert new preedit text at the start position
+        let start_char = self.rope.utf16_cu_to_char(preedit_start);
+        let len_before = self.rope.len_utf16_cu();
+        self.rope.insert(start_char, text);
+        let len_after = self.rope.len_utf16_cu();
+        let preedit_len = len_after - len_before;
+
+        self.preedit = Some(PreeditState {
+            start: preedit_start,
+            len: preedit_len,
+        });
+        self.selection = TextSelection::Cursor(preedit_start + preedit_len);
+    }
+
+    /// Remove active preedit text from the rope and restore the cursor.
+    pub fn clear_preedit(&mut self) {
+        if let Some(preedit) = self.preedit.take() {
+            let start_char = self.rope.utf16_cu_to_char(preedit.start);
+            let end_char = self.rope.utf16_cu_to_char(preedit.start + preedit.len);
+            self.rope.remove(start_char..end_char);
+            self.selection = TextSelection::Cursor(preedit.start);
+        }
+    }
+
+    /// Whether there is active IME preedit text in the rope.
+    pub fn has_preedit(&self) -> bool {
+        self.preedit.is_some()
+    }
+
+    /// Returns the rope content with preedit text excluded.
+    ///
+    /// This represents the "committed" text that should be synced
+    /// to external state.
+    pub fn committed_text(&self) -> String {
+        if let Some(preedit) = &self.preedit {
+            let start_char = self.rope.utf16_cu_to_char(preedit.start);
+            let end_char = self.rope.utf16_cu_to_char(preedit.start + preedit.len);
+            let before = self.rope.slice(..start_char);
+            let after = self.rope.slice(end_char..);
+            format!("{before}{after}")
+        } else {
+            self.rope.to_string()
+        }
+    }
+
+    /// Returns the rope text split into (before_preedit, preedit, after_preedit).
+    ///
+    /// If there is no active preedit, returns the full rope text as `before`
+    /// with empty preedit and after segments.
+    pub fn preedit_text_segments(&self) -> (String, String, String) {
+        if let Some(preedit) = &self.preedit {
+            let start_char = self.rope.utf16_cu_to_char(preedit.start);
+            let end_char = self.rope.utf16_cu_to_char(preedit.start + preedit.len);
+            let before = self.rope.slice(..start_char).to_string();
+            let preedit_text = self.rope.slice(start_char..end_char).to_string();
+            let after = self.rope.slice(end_char..).to_string();
+            (before, preedit_text, after)
+        } else {
+            (self.rope.to_string(), String::new(), String::new())
+        }
     }
 }
 
@@ -256,5 +345,87 @@ impl<'a> Iterator for LinesIterator<'a> {
             text: line.into(),
             utf16_len: line.len_utf16_cu(),
         })
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::time::Duration;
+
+    use super::RopeEditor;
+    use crate::{
+        EditorHistory,
+        TextSelection,
+        text_editor::TextEditor,
+    };
+
+    fn editor(text: &str) -> RopeEditor {
+        RopeEditor::new(
+            text.to_string(),
+            TextSelection::new_cursor(0),
+            4,
+            EditorHistory::new(Duration::ZERO),
+        )
+    }
+
+    #[test]
+    fn preedit_lifecycle() {
+        let mut ed = editor("Hello World");
+        // Place cursor at position 5 ("Hello| World")
+        ed.move_cursor_to(5);
+
+        // Initially no preedit
+        assert!(!ed.has_preedit());
+        assert_eq!(ed.committed_text(), "Hello World");
+
+        // Set preedit: text is inserted into the rope, cursor moves after it
+        ed.set_preedit("你好");
+        assert!(ed.has_preedit());
+        assert_eq!(ed.rope().to_string(), "Hello你好 World");
+        assert_eq!(ed.committed_text(), "Hello World");
+        assert_eq!(ed.cursor_pos(), 5 + "你好".encode_utf16().count());
+
+        // Replace preedit with different text
+        ed.set_preedit("世界abc");
+        assert!(ed.has_preedit());
+        assert_eq!(ed.rope().to_string(), "Hello世界abc World");
+        assert_eq!(ed.committed_text(), "Hello World");
+        assert_eq!(ed.cursor_pos(), 5 + "世界abc".encode_utf16().count());
+
+        // Clear preedit (simulates Ime::Preedit("", None))
+        ed.clear_preedit();
+        assert!(!ed.has_preedit());
+        assert_eq!(ed.rope().to_string(), "Hello World");
+        assert_eq!(ed.committed_text(), "Hello World");
+        assert_eq!(ed.cursor_pos(), 5);
+    }
+
+    #[test]
+    fn preedit_skips_undo_history_and_clear_restores() {
+        let mut ed = editor("Hello");
+        ed.move_cursor_to(5);
+        assert!(!ed.history.can_undo());
+
+        // Insert preedit — should NOT create undo history
+        ed.set_preedit("XY");
+        assert!(!ed.history.can_undo());
+        assert_eq!(ed.rope().to_string(), "HelloXY");
+
+        // Replace preedit — still no undo history
+        ed.set_preedit("Z");
+        assert!(!ed.history.can_undo());
+        assert_eq!(ed.rope().to_string(), "HelloZ");
+
+        // clear_preedit restores rope and cursor
+        ed.clear_preedit();
+        assert!(!ed.has_preedit());
+        assert!(!ed.history.can_undo());
+        assert_eq!(ed.rope().to_string(), "Hello");
+        assert_eq!(ed.cursor_pos(), 5);
+
+        // Clearing again is a no-op
+        ed.clear_preedit();
+        assert_eq!(ed.rope().to_string(), "Hello");
+        assert_eq!(ed.cursor_pos(), 5);
     }
 }

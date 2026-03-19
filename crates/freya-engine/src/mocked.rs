@@ -506,7 +506,7 @@ impl From<i32> for Width {
 
 bitflags! {
     #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-    pub struct SkTextDecoration: u32 {
+    pub struct TextDecoration: u32 {
         const NO_DECORATION = 0;
         const UNDERLINE = 1;
         const OVERLINE = 2;
@@ -514,16 +514,16 @@ bitflags! {
     }
 }
 
-impl Default for SkTextDecoration {
+impl Default for TextDecoration {
     fn default() -> Self {
-        SkTextDecoration::NO_DECORATION
+        TextDecoration::NO_DECORATION
     }
 }
 
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq, Default, Debug)]
 pub struct Decoration {
-    pub ty: SkTextDecoration,
+    pub ty: TextDecoration,
     pub mode: SkTextDecorationMode,
     pub color: Color,
     pub style: SkTextDecorationStyle,
@@ -627,7 +627,7 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_decoration_type(&mut self, decoration: SkTextDecoration) {
+    pub fn set_decoration_type(&mut self, decoration: TextDecoration) {
         unimplemented!("This is mocked")
     }
 

@@ -138,6 +138,7 @@ pub mod prelude {
             scale::*,
             shadow::*,
             text_align::*,
+            text_decoration::*,
             text_height::*,
             text_overflow::*,
             text_shadow::*,

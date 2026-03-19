@@ -305,7 +305,6 @@ impl Component for Input {
         let mut status = use_state(InputStatus::default);
         let mut editable = use_editable(|| self.value.read().to_string(), EditableConfig::new);
         let mut is_dragging = use_state(|| false);
-        let mut ime_preedit = use_state(|| None);
         let mut value = self.value.clone();
 
         let theme_colors = match self.style_variant {
@@ -329,18 +328,27 @@ impl Component for Input {
             }
         });
 
-        let display_placeholder = value.read().is_empty() && self.placeholder.is_some();
+        let display_placeholder = value.read().is_empty()
+            && self.placeholder.is_some()
+            && !editable.editor().read().has_preedit();
         let on_validate = self.on_validate.clone();
         let on_submit = self.on_submit.clone();
 
-        if &*value.read() != editable.editor().read().rope() {
-            editable.editor_mut().write().set(&value.read());
-            editable.editor_mut().write().editor_history().clear();
-            editable.editor_mut().write().clear_selection();
+        if *value.read() != editable.editor().read().committed_text() {
+            let mut editor = editable.editor_mut().write();
+            editor.clear_preedit();
+            editor.set(&value.read());
+            editor.editor_history().clear();
+            editor.clear_selection();
         }
 
         let on_ime_preedit = move |e: Event<ImePreeditEventData>| {
-            ime_preedit.set(Some(e.data().text.clone()));
+            let mut editor = editable.editor_mut().write();
+            if e.data().text.is_empty() {
+                editor.clear_preedit();
+            } else {
+                editor.set_preedit(&e.data().text);
+            }
         };
 
         let on_key_down = move |e: Event<KeyboardEventData>| {
@@ -348,7 +356,7 @@ impl Component for Input {
                 // On submit
                 Key::Named(NamedKey::Enter) => {
                     if let Some(on_submit) = &on_submit {
-                        let text = editable.editor().peek().to_string();
+                        let text = editable.editor().peek().committed_text();
                         on_submit.call(text);
                     }
                 }
@@ -366,7 +374,7 @@ impl Component for Input {
                             key: &e.key,
                             modifiers: e.modifiers,
                         });
-                        let text = editable.editor().read().rope().to_string();
+                        let text = editable.editor().read().committed_text();
 
                         let apply_change = match &on_validate {
                             Some(on_validate) => {
@@ -532,15 +540,11 @@ impl Component for Input {
         };
 
         let value = self.value.read();
-        let text = match (self.mode.clone(), &self.placeholder) {
+        let a11y_text: Cow<str> = match (self.mode.clone(), &self.placeholder) {
             (_, Some(ph)) if display_placeholder => Cow::Borrowed(ph.as_ref()),
             (InputMode::Hidden(ch), _) => Cow::Owned(ch.to_string().repeat(value.len())),
             (InputMode::Shown, _) => Cow::Borrowed(value.as_ref()),
         };
-
-        let preedit_text = (!display_placeholder)
-            .then(|| ime_preedit.read().clone())
-            .flatten();
 
         let a11_role = match self.mode {
             InputMode::Hidden(_) => AccessibilityRole::PasswordInput,
@@ -551,7 +555,7 @@ impl Component for Input {
             .a11y_id(a11y_id)
             .a11y_focusable(self.enabled)
             .a11y_auto_focus(self.auto_focus)
-            .a11y_alt(text.clone())
+            .a11y_alt(a11y_text)
             .a11y_role(a11_role)
             .maybe(self.enabled, |el| {
                 el.on_key_up(on_key_up)
@@ -597,8 +601,39 @@ impl Component for Input {
                             .text_align(self.text_align)
                             .max_lines(1)
                             .highlights(text_selection.map(|h| vec![h]))
-                            .span(text.to_string())
-                            .map(preedit_text, |el, preedit_text| el.span(preedit_text)),
+                            .maybe(display_placeholder, |el| {
+                                el.span(self.placeholder.as_ref().unwrap().to_string())
+                            })
+                            .maybe(!display_placeholder, |el| {
+                                let editor = editable.editor().read();
+                                if editor.has_preedit() {
+                                    let (b, p, a) = editor.preedit_text_segments();
+                                    let (b, p, a) = match self.mode.clone() {
+                                        InputMode::Hidden(ch) => {
+                                            let ch = ch.to_string();
+                                            (
+                                                ch.repeat(b.chars().count()),
+                                                ch.repeat(p.chars().count()),
+                                                ch.repeat(a.chars().count()),
+                                            )
+                                        }
+                                        InputMode::Shown => (b, p, a),
+                                    };
+                                    el.span(b)
+                                        .span(
+                                            Span::new(p).text_decoration(TextDecoration::Underline),
+                                        )
+                                        .span(a)
+                                } else {
+                                    let text = match self.mode.clone() {
+                                        InputMode::Hidden(ch) => {
+                                            ch.to_string().repeat(editor.rope().len_chars())
+                                        }
+                                        InputMode::Shown => editor.rope().to_string(),
+                                    };
+                                    el.span(text)
+                                }
+                            }),
                     ),
             )
             .maybe_child(
