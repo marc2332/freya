@@ -81,7 +81,7 @@ pub mod prelude {
     };
 
     pub use crate::{
-        error::Error as DioxusI18nError,
+        error::Error,
         i18n::*,
         t,
         te,
