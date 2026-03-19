@@ -23,7 +23,7 @@ pub enum ClipboardError {
 /// }
 ///
 /// // Write to the clipboard
-/// Clipboard::set("Hello, Dioxus!".to_string());
+/// Clipboard::set("Hello, Freya!".to_string());
 /// ```
 #[derive(Clone, Copy, PartialEq)]
 pub struct Clipboard;
