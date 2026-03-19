@@ -45,4 +45,4 @@ Documentation is located in `./crates/freya/src/_docs`.
 - When you are just starting to work on something you must not run any check or format command right away, leave that for the end and ask the developer for confirmation
 - Most hooks APIs like `use_state` return `Copy` values like `State`, when moving these around there is no need to `.clone()` them as they are `Copy` already.
 - Do not use em dash (—).
-- When runnin rust tests you dont need to run the whole test suite (`just tc`), prefer to run individual test / packages instead.
+- When running rust tests you dont need to run the whole test suite (`just tc`), prefer to run individual test / packages instead.
