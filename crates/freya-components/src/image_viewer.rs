@@ -277,46 +277,50 @@ impl Component for ImageViewer {
         let mut asset_cacher = use_hook(AssetCacher::get);
         let mut assets_tasks = use_state::<Vec<TaskHandle>>(Vec::new);
 
-        use_side_effect_with_deps(&self.source, move |source| {
-            let source = source.clone();
+        use_side_effect_with_deps(
+            &(self.source.clone(), asset_config),
+            move |(source, asset_config): &(ImageSource, AssetConfiguration)| {
+                let source = source.clone();
 
-            // Cancel previous asset fetching requests
-            for asset_task in assets_tasks.write().drain(..) {
-                asset_task.cancel();
-            }
+                // Cancel previous asset fetching requests
+                for asset_task in assets_tasks.write().drain(..) {
+                    asset_task.cancel();
+                }
 
-            // Fetch asset if still pending or errored
-            if matches!(
-                asset_cacher.read_asset(&asset_config),
-                Some(Asset::Pending) | Some(Asset::Error(_))
-            ) {
-                // Mark asset as loading
-                asset_cacher.update_asset(asset_config.clone(), Asset::Loading);
+                // Fetch asset if still pending or errored
+                if matches!(
+                    asset_cacher.read_asset(asset_config),
+                    Some(Asset::Pending) | Some(Asset::Error(_))
+                ) {
+                    // Mark asset as loading
+                    asset_cacher.update_asset(asset_config.clone(), Asset::Loading);
 
-                let asset_config = asset_config.clone();
-                let asset_task = spawn(async move {
-                    match source.bytes().await {
-                        Ok((image, bytes)) => {
-                            // Image loaded
-                            let image_holder = ImageHolder {
-                                bytes,
-                                image: Rc::new(RefCell::new(image)),
-                            };
-                            asset_cacher.update_asset(
-                                asset_config.clone(),
-                                Asset::Cached(Rc::new(image_holder)),
-                            );
+                    let asset_config = asset_config.clone();
+                    let asset_task = spawn(async move {
+                        match source.bytes().await {
+                            Ok((image, bytes)) => {
+                                // Image loaded
+                                let image_holder = ImageHolder {
+                                    bytes,
+                                    image: Rc::new(RefCell::new(image)),
+                                };
+                                asset_cacher.update_asset(
+                                    asset_config.clone(),
+                                    Asset::Cached(Rc::new(image_holder)),
+                                );
+                            }
+                            Err(err) => {
+                                // Image errored asset_cacher
+                                asset_cacher
+                                    .update_asset(asset_config, Asset::Error(err.to_string()));
+                            }
                         }
-                        Err(err) => {
-                            // Image errored asset_cacher
-                            asset_cacher.update_asset(asset_config, Asset::Error(err.to_string()));
-                        }
-                    }
-                });
+                    });
 
-                assets_tasks.write().push(asset_task);
-            }
-        });
+                    assets_tasks.write().push(asset_task);
+                }
+            },
+        );
 
         match asset {
             Asset::Cached(asset) => {
