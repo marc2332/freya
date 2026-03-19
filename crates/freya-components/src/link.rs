@@ -110,7 +110,7 @@ impl Component for Link {
         };
 
         let tooltip_text = match &self.tooltip {
-            LinkTooltip::Default => url.clone(),
+            LinkTooltip::Default => url,
             LinkTooltip::None => None,
             LinkTooltip::Custom(str) => Some(str.clone()),
         };

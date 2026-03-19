@@ -134,7 +134,6 @@ impl DevtoolsPlugin {
             let websockets = self.websockets.clone();
             let highlighted_node = self.highlighted_node.clone();
             let hovered_node = self.hovered_node.clone();
-            let plugin_handle = plugin_handle.clone();
             smol::spawn(async move {
                 if let Err(err) = run_server(
                     nodes,

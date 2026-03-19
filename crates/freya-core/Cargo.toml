@@ -9,6 +9,9 @@ readme = "../../README.md"
 homepage = "https://freyaui.dev/"
 repository = "https://github.com/marc2332/freya"
 
+[lints]
+workspace = true
+
 [package.metadata.docs.rs]
 features = ["mocked-engine"]
 

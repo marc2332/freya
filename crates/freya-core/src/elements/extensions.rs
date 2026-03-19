@@ -281,12 +281,9 @@ pub trait EventHandlersExt: Sized {
                 }
             }
         })
-        .on_key_down({
-            let on_press = on_press.clone();
-            move |e: Event<KeyboardEventData>| {
-                if Focus::is_pressed(&e) {
-                    on_press.call(e.map(PressEventData::Keyboard))
-                }
+        .on_key_down(move |e: Event<KeyboardEventData>| {
+            if Focus::is_pressed(&e) {
+                on_press.call(e.map(PressEventData::Keyboard))
             }
         })
     }
@@ -299,18 +296,15 @@ pub trait EventHandlersExt: Sized {
         on_pointer_press: impl Into<EventHandler<Event<PressEventData>>>,
     ) -> Self {
         let on_pointer_press = on_pointer_press.into();
-        self.on_pointer_press({
-            let on_pointer_press = on_pointer_press.clone();
-            move |e: Event<PointerEventData>| {
-                let event = e.try_map(|d| match d {
-                    PointerEventData::Mouse(m) if m.button == Some(MouseButton::Right) => {
-                        Some(PressEventData::Mouse(m))
-                    }
-                    _ => None,
-                });
-                if let Some(event) = event {
-                    on_pointer_press.call(event);
+        self.on_pointer_press(move |e: Event<PointerEventData>| {
+            let event = e.try_map(|d| match d {
+                PointerEventData::Mouse(m) if m.button == Some(MouseButton::Right) => {
+                    Some(PressEventData::Mouse(m))
                 }
+                _ => None,
+            });
+            if let Some(event) = event {
+                on_pointer_press.call(event);
             }
         })
     }
@@ -333,12 +327,9 @@ pub trait EventHandlersExt: Sized {
                 }
             }
         })
-        .on_key_down({
-            let on_press = on_press.clone();
-            move |e: Event<KeyboardEventData>| {
-                if Focus::is_pressed(&e) {
-                    on_press.call(e.map(PressEventData::Keyboard))
-                }
+        .on_key_down(move |e: Event<KeyboardEventData>| {
+            if Focus::is_pressed(&e) {
+                on_press.call(e.map(PressEventData::Keyboard))
             }
         })
     }

@@ -171,7 +171,7 @@ impl GifSource {
                     .read_to_vec()
                     .map(Bytes::from)?,
                 Self::Path(path) => fs::read(path).map(Bytes::from)?,
-                Self::Bytes(_, bytes) => bytes.clone(),
+                Self::Bytes(_, bytes) => bytes,
             };
             Ok(bytes)
         })
@@ -373,10 +373,8 @@ impl Component for GifViewer {
                             match source.bytes().await {
                                 Ok(bytes) => {
                                     // Cache the GIF bytes
-                                    asset_cacher.update_asset(
-                                        asset_config,
-                                        Asset::Cached(Rc::new(bytes.clone())),
-                                    );
+                                    asset_cacher
+                                        .update_asset(asset_config, Asset::Cached(Rc::new(bytes)));
                                 }
                                 Err(err) => {
                                     asset_cacher

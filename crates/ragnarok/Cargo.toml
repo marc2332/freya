@@ -11,6 +11,9 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui"]
 categories = ["gui"]
 
+[lints]
+workspace = true
+
 [dependencies]
 euclid = { workspace = true }
 itertools = { workspace = true }
