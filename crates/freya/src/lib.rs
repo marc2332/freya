@@ -53,6 +53,7 @@
 //! - [Testing](freya_testing)
 //! - [WebView](webview)
 //! - [Terminal](terminal)
+//! - [Devtools](self::_docs::devtools)
 //!
 //! ## Features flags
 //!
