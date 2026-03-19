@@ -77,10 +77,10 @@ impl ComponentOwned for ScrollBar {
             ),
         };
 
-        let on_pointer_enter = move |_| {
+        let on_pointer_over = move |_| {
             state.set(ScrollBarState::Hovering);
         };
-        let on_pointer_leave = move |_| state.set(ScrollBarState::Idle);
+        let on_pointer_out = move |_| state.set(ScrollBarState::Idle);
 
         rect()
             .position(Position::new_absolute())
@@ -100,8 +100,8 @@ impl ComponentOwned for ScrollBar {
                     })
                     .cross_align(Alignment::end())
                     .background(scrollbar_theme.background.with_a(opacity))
-                    .on_pointer_enter(on_pointer_enter)
-                    .on_pointer_leave(on_pointer_leave)
+                    .on_pointer_over(on_pointer_over)
+                    .on_pointer_out(on_pointer_out)
                     .child(
                         rect()
                             .width(inner_width)
