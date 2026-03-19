@@ -66,10 +66,9 @@
 //!
 //! impl Component for UserProfile {
 //!     fn render(&self) -> impl IntoElement {
-//!         let user = use_query(Query::new(self.0, FetchUser));
+//!         let query = use_query(Query::new(self.0, FetchUser));
 //!
-//!         let state = user.read().state();
-//!         match &*state {
+//!         match &*query.read().state() {
 //!             QueryStateData::Pending => "Loading...".to_string(),
 //!             QueryStateData::Loading { res } => {
 //!                 format!("Refreshing... Previous: {:?}", res)
@@ -251,15 +250,11 @@
 //!     fn render(&self) -> impl IntoElement {
 //!         let mutation = use_mutation(Mutation::new(UpdateUser { user_id: self.0 }));
 //!
-//!         let state = mutation.read().state();
-//!         let status = if state.is_loading() {
-//!             "Saving..."
-//!         } else if state.is_ok() {
-//!             "Saved!"
-//!         } else if state.is_err() {
-//!             "Error"
-//!         } else {
-//!             "Ready"
+//!         let status = match &*mutation.read().state() {
+//!             MutationStateData::Pending => "Ready",
+//!             MutationStateData::Loading { .. } => "Saving...",
+//!             MutationStateData::Settled { res, .. } if res.is_ok() => "Saved!",
+//!             MutationStateData::Settled { .. } => "Error",
 //!         };
 //!
 //!         rect().child(status).child(
