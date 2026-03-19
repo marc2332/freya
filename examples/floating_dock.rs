@@ -100,7 +100,6 @@ impl Component for DockIcon {
                 .into()
         } else {
             ImageViewer::new(self.icon_path.clone())
-                .sampling_mode(SamplingMode::Trilinear)
                 .width(Size::px(28.))
                 .height(Size::px(28.))
                 .into()

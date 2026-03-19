@@ -99,9 +99,9 @@ pub enum AspectRatio {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub enum SamplingMode {
-    #[default]
     Nearest,
     Bilinear,
+    #[default]
     Trilinear,
     Mitchell,
     CatmullRom,
