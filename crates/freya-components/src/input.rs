@@ -520,9 +520,7 @@ impl Component for Input {
             (InputMode::Shown, _) => Cow::Borrowed(value.as_ref()),
         };
 
-        let preedit_text = (!display_placeholder)
-            .then(|| ime_preedit.read().clone())
-            .flatten();
+        let preedit_text = ime_preedit.read().clone();
 
         let a11_role = match self.mode {
             InputMode::Hidden(_) => AccessibilityRole::PasswordInput,
