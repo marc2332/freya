@@ -222,18 +222,15 @@ impl Component for Calendar {
             }
         });
 
-        let on_next = EventHandler::from({
-            let on_view_change = on_view_change.clone();
-            move |_: Event<PressEventData>| {
-                if let Some(handler) = &on_view_change {
-                    let new_month = if view_month == 12 { 1 } else { view_month + 1 };
-                    let new_year = if view_month == 12 {
-                        view_year + 1
-                    } else {
-                        view_year
-                    };
-                    handler.call(CalendarDate::new(new_year, new_month, 1));
-                }
+        let on_next = EventHandler::from(move |_: Event<PressEventData>| {
+            if let Some(handler) = &on_view_change {
+                let new_month = if view_month == 12 { 1 } else { view_month + 1 };
+                let new_year = if view_month == 12 {
+                    view_year + 1
+                } else {
+                    view_year
+                };
+                handler.call(CalendarDate::new(new_year, new_month, 1));
             }
         });
 

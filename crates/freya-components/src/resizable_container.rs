@@ -498,7 +498,7 @@ impl Component for ResizableHandle {
         };
 
         let on_capture_global_pointer_move = {
-            let mut registry = registry.clone();
+            let mut registry = registry;
             move |e: Event<PointerEventData>| {
                 if *clicking.read() {
                     e.prevent_default();

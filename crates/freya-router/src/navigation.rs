@@ -105,7 +105,7 @@ impl From<String> for NavigationTarget {
                 true => NavigationTarget::Internal(value),
                 false => NavigationTarget::External(value),
             },
-            None => NavigationTarget::External(value.to_string()),
+            None => NavigationTarget::External(value),
         }
     }
 }

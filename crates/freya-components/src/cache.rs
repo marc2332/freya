@@ -130,12 +130,10 @@ impl AssetCacher {
     pub fn update_asset(&mut self, asset_config: AssetConfiguration, new_asset: Asset) {
         let mut registry = self.registry.write();
 
-        let asset = registry
-            .entry(asset_config.clone())
-            .or_insert_with(|| AssetState {
-                asset: Asset::Pending,
-                users: AssetUsers::Listeners(Rc::default()),
-            });
+        let asset = registry.entry(asset_config).or_insert_with(|| AssetState {
+            asset: Asset::Pending,
+            users: AssetUsers::Listeners(Rc::default()),
+        });
 
         asset.asset = new_asset;
 

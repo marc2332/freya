@@ -390,6 +390,9 @@ impl I18n {
     /// where i18n state needs to be created in `main` and then shared across different windows
     /// via [`use_share_i18n`].
     ///
+    /// This is **not** a hook, do not use it inside components like you would [`use_init_i18n`].
+    /// You would usually want to call this in your `main` function.
+    ///
     /// ```rust,no_run
     /// # use freya::prelude::*;
     /// # use freya::i18n::*;
