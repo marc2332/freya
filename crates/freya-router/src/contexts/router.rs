@@ -97,6 +97,27 @@ impl RouterContext {
         }
     }
 
+    /// Create a global [`RouterContext`] that lives for the entire application lifetime.
+    /// This is useful for sharing router state across multiple windows.
+    ///
+    /// This is **not** a hook, do not use it inside components like you would [`use_router`].
+    /// You would usually want to call this in your `main` function, not anywhere else.
+    ///
+    /// # Example
+    ///
+    /// ```rust, ignore
+    /// # use freya::prelude::*;
+    /// # use freya::router::*;
+    ///
+    /// fn main() {
+    ///     let router = RouterContext::create_global::<Route>(RouterConfig::default());
+    ///
+    ///     launch(
+    ///         LaunchConfig::new()
+    ///             .with_window(WindowConfig::new_app(MyApp { router })),
+    ///     );
+    /// }
+    /// ```
     pub fn create_global<R: Routable + 'static>(cfg: RouterConfig<R>) -> Self {
         let subscribers = Rc::new(RefCell::new(FxHashSet::default()));
 
