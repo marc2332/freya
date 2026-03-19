@@ -92,7 +92,7 @@ pub fn input_validator_test() {
     // Focus
     test.click_cursor((15.0, 15.0));
 
-    // Type invalid text (letters) — should be rejected
+    // Type invalid text (letters), should be rejected
     test.write_text("abc");
 
     let label = test.find(|_, element| {
@@ -100,7 +100,7 @@ pub fn input_validator_test() {
     });
     assert!(label.is_some());
 
-    // Type valid text (digits) — should be accepted
+    // Type valid text (digits), should be accepted
     test.write_text("123");
 
     let label = test.find(|_, element| {
@@ -190,7 +190,7 @@ pub fn input_escape_unfocus_test() {
     // Press Escape to unfocus
     test.press_key(Key::Named(NamedKey::Escape));
 
-    // Type more text — should not be captured since the input lost focus
+    // Type more text, should not be captured since the input lost focus
     test.write_text("world");
 
     let label = test.find(|_, element| {
@@ -211,7 +211,7 @@ pub fn input_auto_focus_test() {
 
     let mut test = launch_test(auto_focus_app);
 
-    // Type without clicking — auto_focus should have focused the input
+    // Type without clicking, auto_focus should have focused the input
     test.write_text("typed");
 
     let label = test.find(|_, element| {
