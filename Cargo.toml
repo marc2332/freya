@@ -112,7 +112,7 @@ euclid = "0.22.9"
 itertools = "0.14.0"
 
 # Rendering
-freya-skia-safe = { version = "0.93.6", features = ["gl", "textlayout", "svg"] }
+freya-skia-safe = { version = "0.93.10", features = ["gl", "textlayout", "svg"] }
 bytes = "1.10.1"
 rfd = "0.17"
 
@@ -151,7 +151,7 @@ tokio = { version = "1.0", default-features = false }
 
 # Rendering
 [target."cfg(target_os = \"linux\")".dependencies.freya-skia-safe]
-version = "0.93.6"
+version = "0.93.10"
 features = ["gl", "textlayout", "svg", "x11", "wayland"]
 
 [dev-dependencies]
