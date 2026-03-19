@@ -29,6 +29,8 @@ Documentation is located in `./crates/freya/src/_docs`.
 - Never use `cargo check` just `just c`
 - Components are data types (usually structs) that implement `PartialEq` and the `Component` trait 
 - Freya has a built-in `Into<Label>` for `String` and `&str`, so, `label().text("Hey")` could be just simplified to `"Hey"`
+- When dynamically modifying an element (rect, paragraph, etc) do not store it in a variable so that you get access to the element, instead simply declare it as the
+  last returning value in the component and then use apis like `when(bool, callback)` or `map(value, callback)` to modify it.
 
 ## General instructions
 
@@ -42,3 +44,5 @@ Documentation is located in `./crates/freya/src/_docs`.
 - Avoid creating temporary branches unless told
 - When you are just starting to work on something you must not run any check or format command right away, leave that for the end and ask the developer for confirmation
 - Most hooks APIs like `use_state` return `Copy` values like `State`, when moving these around there is no need to `.clone()` them as they are `Copy` already.
+- Do not use em dash (—).
+- When running rust tests you dont need to run the whole test suite (`just tc`), prefer to run individual test / packages instead.
