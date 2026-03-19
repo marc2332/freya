@@ -190,6 +190,10 @@ impl ElementExt for SvgElement {
         Cow::Borrowed(&self.accessibility)
     }
 
+    fn events_handlers(&'_ self) -> Option<Cow<'_, FxHashMap<EventName, EventHandlerType>>> {
+        Some(Cow::Borrowed(&self.event_handlers))
+    }
+
     fn layer(&self) -> Layer {
         self.relative_layer
     }
