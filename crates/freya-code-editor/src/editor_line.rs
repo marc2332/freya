@@ -27,6 +27,7 @@ pub struct EditorLineUI {
     pub(crate) read_only: bool,
     pub(crate) gutter: bool,
     pub(crate) show_whitespace: bool,
+    pub(crate) font_family: Cow<'static, str>,
     pub(crate) theme: Readable<EditorTheme>,
 }
 
@@ -43,6 +44,7 @@ impl Component for EditorLineUI {
             read_only,
             gutter,
             show_whitespace,
+            font_family,
             theme,
         } = self.clone();
 
@@ -59,10 +61,12 @@ impl Component for EditorLineUI {
 
         let on_mouse_down = {
             let mut editor = editor.clone();
+            let font_family = font_family.clone();
             move |e: Event<MouseEventData>| {
                 editor.write_if(|mut editor_editor| {
                     editor_editor.process(
                         font_size,
+                        &font_family,
                         EditableEvent::Down {
                             location: e.element_location,
                             editor_line: EditorLine::Paragraph(line_index),
@@ -73,17 +77,21 @@ impl Component for EditorLineUI {
             }
         };
 
-        let on_mouse_move = move |e: Event<MouseEventData>| {
-            editor.write_if(|mut editor_editor| {
-                editor_editor.process(
-                    font_size,
-                    EditableEvent::Move {
-                        location: e.element_location,
-                        editor_line: EditorLine::Paragraph(line_index),
-                        holder: &holder.read(),
-                    },
-                )
-            });
+        let on_mouse_move = {
+            let font_family = font_family.clone();
+            move |e: Event<MouseEventData>| {
+                editor.write_if(|mut editor_editor| {
+                    editor_editor.process(
+                        font_size,
+                        &font_family,
+                        EditableEvent::Move {
+                            location: e.element_location,
+                            editor_line: EditorLine::Paragraph(line_index),
+                            holder: &holder.read(),
+                        },
+                    )
+                });
+            }
         };
 
         let cursor_index = if read_only {
@@ -141,7 +149,7 @@ impl Component for EditorLineUI {
                     .width(Size::px(longest_width))
                     .min_width(Size::fill())
                     .height(Size::fill())
-                    .font_family("Jetbrains Mono")
+                    .font_family(font_family)
                     .max_lines(1)
                     .color(theme.text)
                     .spans_iter(line.iter().map(|span| {
