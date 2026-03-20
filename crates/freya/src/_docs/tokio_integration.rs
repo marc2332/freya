@@ -127,5 +127,5 @@
 //!
 //! ## Examples
 //!
-//! - [`integration_tokio.rs`](https://github.com/marc2332/freya/tree/main/examples/integration_tokio.rs) - Minimal Tokio runtime setup
-//! - [`sdk_watch.rs`](https://github.com/marc2332/freya/tree/main/examples/sdk_watch.rs) - Reactive watch channel with `use_track_watcher`
+//! - [`integration_tokio.rs`](https://github.com/marc2332/freya/tree/main/examples/integration_tokio.rs) : Minimal Tokio runtime setup
+//! - [`sdk_watch.rs`](https://github.com/marc2332/freya/tree/main/examples/sdk_watch.rs) : Reactive watch channel with `use_track_watcher`
