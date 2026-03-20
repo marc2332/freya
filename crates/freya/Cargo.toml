@@ -154,6 +154,6 @@ cfg-if = "1.0"
 workspace = true
 features = ["metal"]
 
-[target.'cfg(not(target_os = "macos"))'.dependencies.freya-winit]
+[target.'cfg(any(target_os = "linux", target_os = "windows"))'.dependencies.freya-winit]
 workspace = true
 features = ["vulkan", "opengl"]

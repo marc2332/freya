@@ -2,6 +2,8 @@
 pub use skia_safe::gpu::mtl;
 #[cfg(feature = "vulkan")]
 pub use skia_safe::gpu::vk;
+#[cfg(feature = "opengl")]
+pub use skia_safe::gpu::gl::{Format, FramebufferInfo, Interface};
 pub use skia_safe::{
     AlphaType,
     Bitmap,
@@ -64,11 +66,6 @@ pub use skia_safe::{
         SurfaceOrigin,
         backend_render_targets,
         direct_contexts,
-        gl::{
-            Format,
-            FramebufferInfo,
-            Interface,
-        },
         surfaces::{
             render_target,
             wrap_backend_render_target,

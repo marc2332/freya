@@ -85,7 +85,7 @@ freya = { path = "../freya" }
 
 [features]
 hotpath = ["hotpath/hotpath"]
-opengl = ["dep:gl", "dep:glutin", "dep:glutin-winit"]
+opengl = ["dep:gl", "dep:glutin", "dep:glutin-winit", "freya-engine/opengl"]
 vulkan = ["dep:ash", "dep:ash-window", "freya-engine/vulkan"]
 metal = [
   "dep:objc2",
