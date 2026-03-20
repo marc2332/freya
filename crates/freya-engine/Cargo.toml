@@ -38,5 +38,10 @@ workspace = true
 optional = true
 features = ["textlayout", "svg", "metal"]
 
+[target."cfg(target_os = \"windows\")".dependencies.freya-skia-safe]
+workspace = true
+optional = true
+features = ["gl", "textlayout", "svg"]
+
 [dev-dependencies]
 freya-engine = { path = "./", features = ["skia-engine"] }
