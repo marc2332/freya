@@ -271,6 +271,10 @@ impl TerminalHandle {
                 self.shift_pressed(true);
                 Ok(true)
             }
+            Key::Named(NamedKey::Tab) if shift => {
+                self.write(b"\x1b[Z")?;
+                Ok(true)
+            }
             Key::Named(NamedKey::Tab) => {
                 self.write(b"\t")?;
                 Ok(true)
