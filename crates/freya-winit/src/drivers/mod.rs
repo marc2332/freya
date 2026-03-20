@@ -45,34 +45,39 @@ impl GraphicsDriver {
 
         // Vulkan by default with OpenGL as fallback.
         // Set FREYA_RENDERER=opengl to force OpenGL.
-        let force_opengl =
-            std::env::var("FREYA_RENDERER").is_ok_and(|v| v.eq_ignore_ascii_case("opengl"));
+        #[cfg(not(feature = "metal"))]
+        {
+            let force_opengl =
+                std::env::var("FREYA_RENDERER").is_ok_and(|v| v.eq_ignore_ascii_case("opengl"));
 
-        if !force_opengl {
-            #[cfg(feature = "vulkan")]
-            {
-                let vk_attrs = window_attributes.clone();
-                match vulkan::VulkanDriver::new(event_loop, vk_attrs, window_config) {
-                    Ok((driver, window)) => return (Self::Vulkan(driver), window),
-                    Err(err) => {
-                        tracing::warn!(
-                            "Vulkan initialization failed, falling back to OpenGL: {err}"
-                        );
+            if !force_opengl {
+                #[cfg(feature = "vulkan")]
+                {
+                    let vk_attrs = window_attributes.clone();
+                    match vulkan::VulkanDriver::new(event_loop, vk_attrs, window_config) {
+                        Ok((driver, window)) => return (Self::Vulkan(driver), window),
+                        Err(err) => {
+                            tracing::warn!(
+                                "Vulkan initialization failed, falling back to OpenGL: {err}"
+                            );
+                        }
                     }
                 }
             }
+
+            #[cfg(feature = "opengl")]
+            {
+                let (driver, window) =
+                    gl::OpenGLDriver::new(event_loop, window_attributes, window_config);
+
+                return (Self::OpenGl(driver), window);
+            }
+
+            #[cfg(not(feature = "opengl"))]
+            panic!(
+                "No graphics backend available. Enable the `opengl`, `vulkan`, or `metal` feature."
+            );
         }
-
-        #[cfg(feature = "opengl")]
-        {
-            let (driver, window) =
-                gl::OpenGLDriver::new(event_loop, window_attributes, window_config);
-
-            return (Self::OpenGl(driver), window);
-        }
-
-        #[cfg(not(feature = "opengl"))]
-        panic!("No graphics backend available. Enable the `opengl`, `vulkan`, or `metal` feature.");
     }
 
     pub fn present(
