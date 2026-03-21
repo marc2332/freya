@@ -20,9 +20,6 @@ features = ["mocked-engine"]
 [features]
 mocked-engine = ["dep:glutin"]
 skia-engine = ["dep:freya-skia-safe"]
-opengl = ["freya-skia-safe/gl"]
-vulkan = ["freya-skia-safe/vulkan"]
-metal = ["freya-skia-safe/metal"]
 
 [dependencies]
 bitflags = { workspace = true }
@@ -32,17 +29,17 @@ glutin = { workspace = true, optional = true }
 [target."cfg(target_os = \"linux\")".dependencies.freya-skia-safe]
 workspace = true
 optional = true
-features = ["textlayout", "svg", "x11", "wayland"]
+features = ["textlayout", "svg", "x11", "wayland", "vulkan", "gl"]
 
 [target."cfg(target_os = \"macos\")".dependencies.freya-skia-safe]
 workspace = true
 optional = true
-features = ["textlayout", "svg"]
+features = ["textlayout", "svg", "metal"]
 
 [target."cfg(target_os = \"windows\")".dependencies.freya-skia-safe]
 workspace = true
 optional = true
-features = ["textlayout", "svg"]
+features = ["textlayout", "svg", "vulkan", "gl"]
 
 [dev-dependencies]
 freya-engine = { path = "./", features = ["skia-engine"] }
