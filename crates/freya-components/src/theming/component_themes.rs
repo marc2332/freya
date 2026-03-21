@@ -281,6 +281,7 @@ define_theme! {
         color: Color,
         background: Color,
         border_fill: Color,
+        font_size: f32,
     }
 }
 

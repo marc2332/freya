@@ -84,6 +84,7 @@ impl Component for Tooltip {
             background,
             color,
             border_fill,
+            font_size,
         } = theme;
 
         rect()
@@ -100,7 +101,7 @@ impl Component for Tooltip {
             .child(
                 label()
                     .max_lines(1)
-                    .font_size(14.)
+                    .font_size(font_size)
                     .color(color)
                     .text(self.text.clone()),
             )
