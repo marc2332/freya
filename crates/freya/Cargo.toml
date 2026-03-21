@@ -146,3 +146,6 @@ freya-plotters-backend = { workspace = true, optional = true }
 
 # Other
 cfg-if = "1.0"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "time", "sync"] }
