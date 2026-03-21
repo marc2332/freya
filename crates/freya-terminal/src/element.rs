@@ -316,7 +316,11 @@ impl ElementExt for Terminal {
                 if cell.is_wide_continuation() {
                     continue;
                 }
-                let cell_bg = map_vt100_color(cell.bgcolor(), self.background);
+                let cell_bg = if cell.inverse() {
+                    map_vt100_color(cell.fgcolor(), self.foreground)
+                } else {
+                    map_vt100_color(cell.bgcolor(), self.background)
+                };
                 if cell_bg != self.background {
                     let left = area.min_x() + (col_idx as f32) * char_width;
                     let top = y;
@@ -342,9 +346,14 @@ impl ElementExt for Terminal {
                 if cell.is_wide_continuation() {
                     continue;
                 }
-                let color = map_vt100_color(cell.fgcolor(), self.foreground);
+                let cell_fg = if cell.inverse() {
+                    map_vt100_color(cell.bgcolor(), self.background)
+                } else {
+                    map_vt100_color(cell.fgcolor(), self.foreground)
+                };
                 cell.contents().hash(&mut state);
-                color.hash(&mut state);
+                cell_fg.hash(&mut state);
+                cell.inverse().hash(&mut state);
             }
 
             let key = state.finish();
@@ -364,8 +373,13 @@ impl ElementExt for Terminal {
                     } else {
                         " "
                     };
+                    let cell_fg = if cell.inverse() {
+                        map_vt100_color(cell.bgcolor(), self.background)
+                    } else {
+                        map_vt100_color(cell.fgcolor(), self.foreground)
+                    };
                     let mut cell_style = text_style.clone();
-                    cell_style.set_color(map_vt100_color(cell.fgcolor(), self.foreground));
+                    cell_style.set_color(cell_fg);
                     builder.push_style(&cell_style);
                     builder.add_text(text);
                 }
@@ -375,7 +389,7 @@ impl ElementExt for Terminal {
                 cache.borrow_mut().insert(key, Rc::new(paragraph));
             }
 
-            if row_idx == buffer.cursor_row && buffer.scroll_offset == 0 {
+            if row_idx == buffer.cursor_row && buffer.scroll_offset == 0 && buffer.cursor_visible {
                 let cursor_idx = buffer.cursor_col;
                 let left = area.min_x() + (cursor_idx as f32) * char_width;
                 let top = y;

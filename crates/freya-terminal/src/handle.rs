@@ -232,13 +232,9 @@ impl TerminalHandle {
                 Ok(true)
             }
             Key::Named(NamedKey::Enter) if shift || ctrl => {
-                if self.parser.borrow().screen().alternate_screen() {
-                    let m = 1 + shift as u8 + (alt as u8) * 2 + (ctrl as u8) * 4;
-                    let seq = format!("\x1b[13;{m}u");
-                    self.write(seq.as_bytes())?;
-                } else {
-                    self.write(b"\r")?;
-                }
+                let m = 1 + shift as u8 + (alt as u8) * 2 + (ctrl as u8) * 4;
+                let seq = format!("\x1b[13;{m}u");
+                self.write(seq.as_bytes())?;
                 Ok(true)
             }
             Key::Named(NamedKey::Enter) => {
@@ -269,6 +265,10 @@ impl TerminalHandle {
             }
             Key::Named(NamedKey::Shift) => {
                 self.shift_pressed(true);
+                Ok(true)
+            }
+            Key::Named(NamedKey::Tab) if shift => {
+                self.write(b"\x1b[Z")?;
                 Ok(true)
             }
             Key::Named(NamedKey::Tab) => {
