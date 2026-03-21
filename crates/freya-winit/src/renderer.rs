@@ -623,6 +623,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     app.window.request_redraw();
                     app.process_layout_on_next_render = true;
                     app.tree.layout.reset();
+                    app.tree.text_cache.reset();
                 }
                 WindowEvent::CloseRequested => {
                     let mut on_close_hook = self

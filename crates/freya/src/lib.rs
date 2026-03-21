@@ -55,6 +55,7 @@
 //! - [Testing](freya_testing)
 //! - [WebView](webview)
 //! - [Terminal](terminal)
+//! - [Tokio Integration](self::_docs::tokio_integration)
 //! - [Devtools](self::_docs::devtools)
 //!
 //! ## Features flags

@@ -53,4 +53,6 @@ pub struct TerminalBuffer {
     pub scroll_offset: usize,
     /// Total number of scrollback lines available
     pub total_scrollback: usize,
+    /// Whether the terminal cursor should be visible
+    pub cursor_visible: bool,
 }

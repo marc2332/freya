@@ -77,6 +77,7 @@ pub(crate) fn extract_buffer(
         selection: None,
         scroll_offset,
         total_scrollback,
+        cursor_visible: !parser.screen().hide_cursor(),
     }
 }
 

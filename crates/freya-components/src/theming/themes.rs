@@ -208,6 +208,7 @@ pub const BASE_THEME: Theme = Theme {
         background: Preference::Reference("surface_tertiary"),
         color: Preference::Reference("text_primary"),
         border_fill: Preference::Reference("surface_primary"),
+        font_size: Preference::Specific(14.),
     },
     circular_loader: CircularLoaderThemePreference {
         primary_color: Preference::Reference("surface_primary"),

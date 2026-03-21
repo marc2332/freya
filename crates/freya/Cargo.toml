@@ -157,3 +157,6 @@ features = ["metal"]
 [target.'cfg(any(target_os = "linux", target_os = "windows"))'.dependencies.freya-winit]
 workspace = true
 features = ["vulkan", "opengl"]
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "time", "sync"] }
