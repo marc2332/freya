@@ -8,7 +8,7 @@
 //! hello = Hello, {$name}!
 //! ```
 
-/// Translate message from key, returning [`crate::prelude::DioxusI18nError`] if id not found...
+/// Translate message from key, returning [`crate::prelude::Error`] if id not found...
 ///
 /// ```rust
 /// # use freya::prelude::*;

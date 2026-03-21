@@ -122,7 +122,9 @@ impl Component for SelectableText {
         };
 
         let on_global_pointer_down = move |_: Event<PointerEventData>| {
-            editable.editor_mut().write().clear_selection();
+            if *status.read() == SelectableTextStatus::Idle {
+                editable.editor_mut().write().clear_selection();
+            }
         };
 
         let on_pointer_enter = move |_| {

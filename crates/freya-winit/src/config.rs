@@ -299,7 +299,7 @@ impl LaunchConfig {
     /// Register a window configuration. You can call this multiple times.
     ///
     /// To create windows dynamically after the application has started,
-    /// see [`WinitPlatformExt::launch_window`].
+    /// see [`crate::extensions::WinitPlatformExt::launch_window()`].
     pub fn with_window(mut self, window_config: WindowConfig) -> Self {
         self.windows_configs.push(window_config);
         self

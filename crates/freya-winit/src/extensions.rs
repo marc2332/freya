@@ -29,7 +29,7 @@ pub trait WinitPlatformExt {
     /// Dynamically launch a new window at runtime with the given configuration.
     ///
     /// This is meant to create windows on the fly after the application has started,
-    /// as opposed to the initial windows registered via [`LaunchConfig`].
+    /// as opposed to the initial windows registered via [`crate::config::LaunchConfig`].
     ///
     /// Returns the [`WindowId`] of the newly created window once it has been created.
     ///
@@ -90,7 +90,7 @@ pub trait WinitPlatformExt {
     /// If `window_id` is `None`, the callback will be executed on the current window.
     /// This allows direct manipulation of the underlying winit [`Window`] for advanced use cases.
     ///
-    /// To create new windows dynamically, see [`WinitPlatformExt::launch_window`].
+    /// To create new windows dynamically, see [`WinitPlatformExt::launch_window()`].
     ///
     /// # Example
     ///
