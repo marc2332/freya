@@ -14,7 +14,7 @@ c:
 c-ci:
     taplo check
     cargo clippy --workspace --examples --features "all-debug, vulkan, metal" -- -D warnings
-    cargo doc --no-deps --workspace --features "all-debug, vulkan, metal"
+    RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --workspace --features "all-debug, vulkan, metal"
 
 e example:
     cargo run --example {{example}}
