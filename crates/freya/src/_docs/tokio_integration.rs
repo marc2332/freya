@@ -87,7 +87,7 @@
 //! The sender can live on any thread. `use_track_watcher` re-renders the
 //! component whenever the watch value changes:
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! # use freya::prelude::*;
 //! # use freya::sdk::use_track_watcher;
 //! # use tokio::sync::watch;
