@@ -27,9 +27,9 @@ tracing = { workspace = true }
 bytes = { workspace = true }
 
 # Rendering OpenGL
-gl = { workspace = true }
-glutin = { workspace = true }
-glutin-winit = { workspace = true }
+gl = { workspace = true, optional = true }
+glutin = { workspace = true, optional = true }
+glutin-winit = { workspace = true, optional = true }
 
 # Rendering VUlkan
 ash = { workspace = true, optional = true }
@@ -85,6 +85,7 @@ freya = { path = "../freya" }
 
 [features]
 hotpath = ["hotpath/hotpath"]
+opengl = ["dep:gl", "dep:glutin", "dep:glutin-winit", "freya-engine/opengl"]
 vulkan = ["dep:ash", "dep:ash-window", "freya-engine/vulkan"]
 metal = [
   "dep:objc2",

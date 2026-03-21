@@ -1,3 +1,9 @@
+#[cfg(feature = "opengl")]
+pub use skia_safe::gpu::gl::{
+    Format,
+    FramebufferInfo,
+    Interface,
+};
 #[cfg(feature = "metal")]
 pub use skia_safe::gpu::mtl;
 #[cfg(feature = "vulkan")]
@@ -64,11 +70,6 @@ pub use skia_safe::{
         SurfaceOrigin,
         backend_render_targets,
         direct_contexts,
-        gl::{
-            Format,
-            FramebufferInfo,
-            Interface,
-        },
         surfaces::{
             render_target,
             wrap_backend_render_target,

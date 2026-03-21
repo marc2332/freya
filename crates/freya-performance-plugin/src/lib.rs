@@ -42,6 +42,8 @@ pub struct PerformanceOverlayPlugin {
 
 #[derive(Default)]
 struct WindowMetrics {
+    graphics_driver: &'static str,
+
     frames: Vec<Instant>,
     fps_historic: Vec<usize>,
     max_fps: usize,
@@ -85,6 +87,13 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 if *is_pressed && is_p && *modifiers == toggle_modifier {
                     self.enabled = !self.enabled;
                 }
+            }
+            PluginEvent::WindowCreated {
+                window,
+                graphics_driver,
+                ..
+            } => {
+                self.get_metrics(window.id()).graphics_driver = graphics_driver;
             }
             PluginEvent::AfterRedraw { window, .. } => {
                 let metrics = self.get_metrics(window.id());
@@ -254,6 +263,13 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 add_text(
                     &mut paragraph_builder,
                     format!("Animation clock speed: {}x \n", animation_clock.speed()),
+                    14.0,
+                );
+
+                // Graphics driver
+                add_text(
+                    &mut paragraph_builder,
+                    format!("Graphics: {} \n", metrics.graphics_driver),
                     14.0,
                 );
 

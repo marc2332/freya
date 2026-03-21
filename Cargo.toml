@@ -12,8 +12,7 @@ hotpath-alloc = ["hotpath/hotpath-alloc"]
 devtools = ["freya/devtools"]
 performance = ["freya/performance"]
 plot = ["freya/plot"]
-vulkan = ["freya-winit/vulkan"]
-metal = ["freya-winit/metal"]
+
 
 [workspace]
 members = [
@@ -113,7 +112,7 @@ euclid = "0.22.9"
 itertools = "0.14.0"
 
 # Rendering
-skia-safe = { version = "0.93.1", features = ["gl", "textlayout", "svg"] }
+freya-skia-safe = { version = "0.93.10", features = ["textlayout", "svg"] }
 bytes = "1.10.1"
 rfd = "0.17"
 
@@ -150,11 +149,6 @@ image = "0.25.8"
 # SDK
 tokio = { version = "1.0", default-features = false }
 
-# Rendering
-[target."cfg(target_os = \"linux\")".dependencies.skia-safe]
-version = "0.93.1"
-features = ["gl", "textlayout", "svg", "x11", "wayland"]
-
 [dev-dependencies]
 freya = { workspace = true, features = ["all"] }
 freya-core = { workspace = true, features = ["debug-integrity", "test"] }
@@ -175,7 +169,7 @@ freya-webview = { workspace = true }
 freya-terminal = { workspace = true }
 freya-code-editor = { workspace = true }
 
-skia-safe = { workspace = true }
+freya-skia-safe = { workspace = true }
 
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }

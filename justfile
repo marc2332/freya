@@ -13,8 +13,8 @@ c:
 
 c-ci:
     taplo check
-    cargo clippy --workspace --examples --features "all-debug, vulkan, metal" -- -D warnings
-    RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --workspace --features "all-debug, vulkan, metal"
+    cargo clippy --workspace --examples --features "all-debug" -- -D warnings
+    RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --workspace --features "all-debug"
 
 e example:
     cargo run --example {{example}}
@@ -54,7 +54,7 @@ pa-ci:
     cargo run --example dev_perf --features "hotpath, hotpath-alloc" --release
 
 ba:
-    cargo build --all-targets --all-features
+    cargo build --all-targets --workspace -F freya/all-debug
 
 bindings:
     cargo build --package freya --package freya-testing --features "mocked-engine, all-bindings" --no-default-features

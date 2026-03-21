@@ -39,6 +39,7 @@
 //! - [State](self::_docs::state_management)
 //! - [Remote Data](self::_docs::remote_data)
 //! - [Layers](self::_docs::layers)
+//! - [Platforms](self::_docs::platforms)
 //! - [Development Setup](self::_docs::development_setup)
 //!
 //! ### Learn
