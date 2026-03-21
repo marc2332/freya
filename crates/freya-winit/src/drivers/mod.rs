@@ -1,8 +1,8 @@
-#[cfg(feature = "opengl")]
+#[cfg(any(target_os = "linux", target_os = "windows"))]
 mod gl;
-#[cfg(all(feature = "metal", target_os = "macos"))]
+#[cfg(target_os = "macos")]
 mod metal;
-#[cfg(feature = "vulkan")]
+#[cfg(any(target_os = "linux", target_os = "windows"))]
 mod vulkan;
 
 use freya_engine::prelude::Surface as SkiaSurface;
@@ -19,11 +19,11 @@ use crate::config::WindowConfig;
 
 #[allow(clippy::large_enum_variant)]
 pub enum GraphicsDriver {
-    #[cfg(feature = "opengl")]
+    #[cfg(any(target_os = "linux", target_os = "windows"))]
     OpenGl(gl::OpenGLDriver),
-    #[cfg(all(feature = "metal", target_os = "macos"))]
+    #[cfg(target_os = "macos")]
     Metal(metal::MetalDriver),
-    #[cfg(feature = "vulkan")]
+    #[cfg(any(target_os = "linux", target_os = "windows"))]
     Vulkan(vulkan::VulkanDriver),
 }
 
@@ -35,7 +35,7 @@ impl GraphicsDriver {
         window_config: &WindowConfig,
     ) -> (Self, Window) {
         // Metal (macOS)
-        #[cfg(feature = "metal")]
+        #[cfg(target_os = "macos")]
         {
             let (driver, window) =
                 metal::MetalDriver::new(event_loop, window_attributes, window_config);
@@ -45,38 +45,27 @@ impl GraphicsDriver {
 
         // Vulkan by default with OpenGL as fallback.
         // Set FREYA_RENDERER=opengl to force OpenGL.
-        #[cfg(not(feature = "metal"))]
+        #[cfg(not(target_os = "macos"))]
         {
             let force_opengl =
                 std::env::var("FREYA_RENDERER").is_ok_and(|v| v.eq_ignore_ascii_case("opengl"));
 
             if !force_opengl {
-                #[cfg(feature = "vulkan")]
-                {
-                    let vk_attrs = window_attributes.clone();
-                    match vulkan::VulkanDriver::new(event_loop, vk_attrs, window_config) {
-                        Ok((driver, window)) => return (Self::Vulkan(driver), window),
-                        Err(err) => {
-                            tracing::warn!(
-                                "Vulkan initialization failed, falling back to OpenGL: {err}"
-                            );
-                        }
+                let vk_attrs = window_attributes.clone();
+                match vulkan::VulkanDriver::new(event_loop, vk_attrs, window_config) {
+                    Ok((driver, window)) => return (Self::Vulkan(driver), window),
+                    Err(err) => {
+                        tracing::warn!(
+                            "Vulkan initialization failed, falling back to OpenGL: {err}"
+                        );
                     }
                 }
             }
 
-            #[cfg(feature = "opengl")]
-            {
-                let (driver, window) =
-                    gl::OpenGLDriver::new(event_loop, window_attributes, window_config);
+            let (driver, window) =
+                gl::OpenGLDriver::new(event_loop, window_attributes, window_config);
 
-                return (Self::OpenGl(driver), window);
-            }
-
-            #[cfg(not(feature = "opengl"))]
-            panic!(
-                "No graphics backend available. Enable the `opengl`, `vulkan`, or `metal` feature."
-            );
+            return (Self::OpenGl(driver), window);
         }
     }
 
@@ -87,11 +76,11 @@ impl GraphicsDriver {
         render: impl FnOnce(&mut SkiaSurface),
     ) {
         match self {
-            #[cfg(feature = "opengl")]
+            #[cfg(any(target_os = "linux", target_os = "windows"))]
             Self::OpenGl(gl) => gl.present(window, render),
-            #[cfg(all(feature = "metal", target_os = "macos"))]
+            #[cfg(target_os = "macos")]
             Self::Metal(mtl) => mtl.present(size, window, render),
-            #[cfg(feature = "vulkan")]
+            #[cfg(any(target_os = "linux", target_os = "windows"))]
             Self::Vulkan(vk) => vk.present(size, window, render),
         }
     }
@@ -99,22 +88,22 @@ impl GraphicsDriver {
     /// The name of the active graphics driver.
     pub fn name(&self) -> &'static str {
         match self {
-            #[cfg(feature = "opengl")]
+            #[cfg(any(target_os = "linux", target_os = "windows"))]
             Self::OpenGl(_) => "OpenGL",
-            #[cfg(all(feature = "metal", target_os = "macos"))]
+            #[cfg(target_os = "macos")]
             Self::Metal(_) => "Metal",
-            #[cfg(feature = "vulkan")]
+            #[cfg(any(target_os = "linux", target_os = "windows"))]
             Self::Vulkan(_) => "Vulkan",
         }
     }
 
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
         match self {
-            #[cfg(feature = "opengl")]
+            #[cfg(any(target_os = "linux", target_os = "windows"))]
             Self::OpenGl(gl) => gl.resize(size),
-            #[cfg(all(feature = "metal", target_os = "macos"))]
+            #[cfg(target_os = "macos")]
             Self::Metal(mtl) => mtl.resize(size),
-            #[cfg(feature = "vulkan")]
+            #[cfg(any(target_os = "linux", target_os = "windows"))]
             Self::Vulkan(vk) => vk.resize(size),
         }
     }

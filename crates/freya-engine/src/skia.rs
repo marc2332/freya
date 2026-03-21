@@ -1,12 +1,12 @@
-#[cfg(feature = "opengl")]
+#[cfg(any(target_os = "linux", target_os = "windows"))]
 pub use skia_safe::gpu::gl::{
     Format,
     FramebufferInfo,
     Interface,
 };
-#[cfg(feature = "metal")]
+#[cfg(target_os = "macos")]
 pub use skia_safe::gpu::mtl;
-#[cfg(feature = "vulkan")]
+#[cfg(any(target_os = "linux", target_os = "windows"))]
 pub use skia_safe::gpu::vk;
 pub use skia_safe::{
     AlphaType,
