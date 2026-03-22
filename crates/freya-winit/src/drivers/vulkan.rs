@@ -543,12 +543,27 @@ fn create_swapchain(
     };
     let image_count = surface_caps.min_image_count.max(2);
 
-    let composite_alpha = if transparent
-        && surface_caps
+    // Not all compositors support every alpha mode.
+    // Try modes in preference order to avoid silently falling back to OPAQUE.
+    let composite_alpha = if transparent {
+        if surface_caps
             .supported_composite_alpha
             .contains(CompositeAlphaFlagsKHR::PRE_MULTIPLIED)
-    {
-        CompositeAlphaFlagsKHR::PRE_MULTIPLIED
+        {
+            CompositeAlphaFlagsKHR::PRE_MULTIPLIED
+        } else if surface_caps
+            .supported_composite_alpha
+            .contains(CompositeAlphaFlagsKHR::POST_MULTIPLIED)
+        {
+            CompositeAlphaFlagsKHR::POST_MULTIPLIED
+        } else if surface_caps
+            .supported_composite_alpha
+            .contains(CompositeAlphaFlagsKHR::INHERIT)
+        {
+            CompositeAlphaFlagsKHR::INHERIT
+        } else {
+            CompositeAlphaFlagsKHR::OPAQUE
+        }
     } else {
         CompositeAlphaFlagsKHR::OPAQUE
     };
