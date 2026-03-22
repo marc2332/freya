@@ -562,7 +562,10 @@ fn create_swapchain(
         {
             CompositeAlphaFlagsKHR::INHERIT
         } else {
-            CompositeAlphaFlagsKHR::OPAQUE
+            return Err(
+                "Transparency requested but Vulkan surface only supports OPAQUE composite alpha"
+                    .into(),
+            );
         }
     } else {
         CompositeAlphaFlagsKHR::OPAQUE
