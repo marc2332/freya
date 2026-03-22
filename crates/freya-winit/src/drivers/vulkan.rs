@@ -543,8 +543,8 @@ fn create_swapchain(
     };
     let image_count = surface_caps.min_image_count.max(2);
 
-    // Not all compositors support every alpha mode.
-    // Try modes in preference order to avoid silently falling back to OPAQUE.
+    // If transparency is requested but the surface doesn't support a suitable
+    // composite alpha mode, bail out so the caller can fall back to OpenGL.
     let composite_alpha = if transparent {
         if surface_caps
             .supported_composite_alpha
@@ -556,16 +556,8 @@ fn create_swapchain(
             .contains(CompositeAlphaFlagsKHR::POST_MULTIPLIED)
         {
             CompositeAlphaFlagsKHR::POST_MULTIPLIED
-        } else if surface_caps
-            .supported_composite_alpha
-            .contains(CompositeAlphaFlagsKHR::INHERIT)
-        {
-            CompositeAlphaFlagsKHR::INHERIT
         } else {
-            return Err(
-                "Transparency requested but Vulkan surface only supports OPAQUE composite alpha"
-                    .into(),
-            );
+            return Err("Vulkan surface does not support transparent composite alpha".into());
         }
     } else {
         CompositeAlphaFlagsKHR::OPAQUE
