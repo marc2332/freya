@@ -26,7 +26,7 @@ fn app() -> impl IntoElement {
             )
             .into()
     })
-    .length(300)
+    .length(300usize)
     .item_size(50.)
     .height(Size::percent(100.))
 }

@@ -46,7 +46,7 @@ use crate::scrollviews::{
 ///                 .child(format!("Item {i}"))
 ///                 .into()
 ///         })
-///         .length(300)
+///         .length(300usize)
 ///         .item_size(25.),
 ///     )
 /// }
@@ -70,7 +70,7 @@ pub struct VirtualScrollView<D, B: Fn(usize, &D) -> Element> {
     builder: B,
     builder_data: D,
     item_size: f32,
-    length: i32,
+    length: usize,
     layout: LayoutData,
     show_scrollbar: bool,
     scroll_with_arrows: bool,
@@ -214,7 +214,7 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
         self
     }
 
-    pub fn length(mut self, length: impl Into<i32>) -> Self {
+    pub fn length(mut self, length: impl Into<usize>) -> Self {
         self.length = length.into();
         self
     }
