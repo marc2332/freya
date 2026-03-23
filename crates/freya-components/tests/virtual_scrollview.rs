@@ -12,7 +12,7 @@ pub fn virtual_scroll_view_wheel() {
                 .text(format!("{i} Hello, World!"))
                 .into()
         })
-        .length(30)
+        .length(30usize)
         .item_size(50.)
     }
 
@@ -64,7 +64,7 @@ pub fn virtual_scroll_view_scrollbar() {
                 .text(format!("{i} Hello, World!"))
                 .into()
         })
-        .length(30)
+        .length(30usize)
         .item_size(50.)
     }
 
@@ -162,7 +162,7 @@ pub fn virtual_scroll_view_controlled() {
                     },
                     scroll_controller,
                 )
-                .length(30)
+                .length(30usize)
                 .item_size(50.)
                 .width(Size::flex(1.)),
             )
@@ -177,7 +177,7 @@ pub fn virtual_scroll_view_controlled() {
                     },
                     scroll_controller,
                 )
-                .length(30)
+                .length(30usize)
                 .item_size(50.)
                 .width(Size::flex(1.)),
             )
@@ -252,7 +252,7 @@ pub fn virtual_scroll_view_keyboard_navigation() {
                 .text(format!("{i} Hello, World!"))
                 .into()
         })
-        .length(30)
+        .length(30usize)
         .item_size(50.)
     }
 
@@ -355,7 +355,7 @@ pub fn virtual_scroll_view_keyboard_navigation_horizontal() {
                 .text(format!("{i}"))
                 .into()
         })
-        .length(30)
+        .length(30usize)
         .item_size(50.)
         .direction(Direction::Horizontal)
     }
