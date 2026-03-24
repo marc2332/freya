@@ -1,10 +1,7 @@
 use std::{
     any::Any,
     borrow::Cow,
-    cell::{
-        OnceCell,
-        RefCell,
-    },
+    cell::RefCell,
     rc::Rc,
 };
 
@@ -59,7 +56,7 @@ use crate::{
 struct TerminalMeasure {
     char_width: f32,
     line_height: f32,
-    font: OnceCell<Font>,
+    font: Font,
     font_family: String,
     font_size: f32,
     row_cache: RefCell<FifoCache<u64, CachedRow>>,
@@ -432,12 +429,29 @@ impl ElementExt for Terminal {
             on_measured.call((char_width, line_height));
         }
 
+        let typeface = context
+            .font_collection
+            .find_typefaces(&[&self.font_family], FontStyle::default())
+            .into_iter()
+            .next()
+            .expect("Terminal font family not found");
+
+        let mut font = Font::from_typeface(typeface, self.font_size);
+        font.set_subpixel(true);
+        font.set_edging(FontEdging::SubpixelAntiAlias);
+        font.set_hinting(match self.font_size as u32 {
+            0..=6 => FontHinting::Full,
+            7..=12 => FontHinting::Normal,
+            13..=24 => FontHinting::Slight,
+            _ => FontHinting::None,
+        });
+
         Some((
             Size2D::new(context.area_size.width.max(100.0), height),
             Rc::new(TerminalMeasure {
                 char_width,
                 line_height,
-                font: OnceCell::new(),
+                font,
                 font_family: self.font_family.clone(),
                 font_size: self.font_size,
                 row_cache: RefCell::new(FifoCache::new()),
@@ -455,26 +469,7 @@ impl ElementExt for Terminal {
             .downcast_ref::<TerminalMeasure>()
             .unwrap();
 
-        let font = measure.font.get_or_init(|| {
-            let typeface = context
-                .font_collection
-                .find_typefaces(&[&measure.font_family], FontStyle::default())
-                .into_iter()
-                .next()
-                .expect("Terminal font family not found");
-
-            let mut font = Font::from_typeface(typeface, measure.font_size);
-            font.set_subpixel(true);
-            font.set_edging(FontEdging::SubpixelAntiAlias);
-
-            font.set_hinting(match measure.font_size as u32 {
-                0..=6 => FontHinting::Full,
-                7..=12 => FontHinting::Normal,
-                13..=24 => FontHinting::Slight,
-                _ => FontHinting::None,
-            });
-            font
-        });
+        let font = &measure.font;
 
         let (_, metrics) = font.metrics();
         let baseline_offset = -metrics.ascent;
