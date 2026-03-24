@@ -112,7 +112,7 @@ impl AppWindow {
         active_event_loop: &ActiveEventLoop,
         event_loop_proxy: &EventLoopProxy<NativeEvent>,
         plugins: &mut PluginsManager,
-        font_collection: &FontCollection,
+        font_collection: &mut FontCollection,
         font_manager: &FontMgr,
         fallback_fonts: &[Cow<'static, str>],
         screen_reader: ScreenReader,
