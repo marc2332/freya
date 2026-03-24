@@ -304,7 +304,7 @@ impl ElementExt for ParagraphElement {
                 paragraph_style.set_text_align(context.text_style_state.text_align.into());
 
                 let mut paragraph_builder =
-                    ParagraphBuilder::new(&paragraph_style, context.font_collection.clone());
+                    ParagraphBuilder::new(&paragraph_style, &*context.font_collection);
 
                 for span in &self.spans {
                     let text_style_state =
