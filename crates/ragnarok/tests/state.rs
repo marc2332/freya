@@ -30,6 +30,8 @@ enum EventName {
 
     KeyboardDown,
 
+    TouchReleased,
+
     CaptureGlobalMouseMove,
 }
 
@@ -180,6 +182,7 @@ enum TestSourceEvent {
     MouseDown { cursor: CursorPoint },
     MouseMove { cursor: CursorPoint },
     MouseUp { cursor: CursorPoint },
+    TouchReleased { cursor: CursorPoint },
 }
 
 impl SourceEvent for TestSourceEvent {
@@ -193,11 +196,16 @@ impl SourceEvent for TestSourceEvent {
         matches!(self, Self::MouseMove { .. })
     }
 
+    fn is_touch_released(&self) -> bool {
+        matches!(self, Self::TouchReleased { .. })
+    }
+
     fn try_location(&self) -> Option<ragnarok::CursorPoint> {
         match self {
             Self::MouseDown { cursor } => Some(*cursor),
             Self::MouseMove { cursor } => Some(*cursor),
             Self::MouseUp { cursor } => Some(*cursor),
+            Self::TouchReleased { cursor } => Some(*cursor),
         }
     }
 
@@ -206,6 +214,7 @@ impl SourceEvent for TestSourceEvent {
             Self::MouseMove { .. } => EventName::MouseMove,
             Self::MouseDown { .. } => EventName::MouseDown,
             Self::MouseUp { .. } => EventName::MouseUp,
+            Self::TouchReleased { .. } => EventName::TouchReleased,
         }
     }
 }
@@ -787,4 +796,191 @@ fn entered_node_transitions() {
 
     assert!(!nodes_state.is_hovered(0));
     assert!(!nodes_state.is_hovered(1));
+}
+
+#[test]
+fn touch_released_event() {
+    let mut test_measurer = TestMeasurer::default();
+    let mut nodes_state = NodesState::default();
+
+    test_measurer.add(0, None, 0, Area::new((0., 0.).into(), (100., 100.).into()));
+    test_measurer.listen_to(0, EventName::MouseEnter);
+    test_measurer.listen_to(0, EventName::MouseOut);
+    test_measurer.listen_to(0, EventName::MouseLeave);
+    test_measurer.listen_to(0, EventName::TouchReleased);
+
+    // Move into the node to hover it
+    let processed_events = test_measurer.run(
+        &mut vec![TestSourceEvent::MouseMove {
+            cursor: (25., 25.).into(),
+        }],
+        &mut nodes_state,
+        None,
+    );
+    TestExecutor::without_handler().run(&mut nodes_state, processed_events);
+    assert!(nodes_state.is_hovered(0));
+
+    // Touch released inside the node
+    let processed_events = test_measurer.run(
+        &mut vec![TestSourceEvent::TouchReleased {
+            cursor: (25., 25.).into(),
+        }],
+        &mut nodes_state,
+        None,
+    );
+
+    assert!(
+        processed_events
+            .emmitable_events
+            .iter()
+            .any(|e| e.name == EventName::TouchReleased && e.key == 0)
+    );
+    TestExecutor::without_handler().run(&mut nodes_state, processed_events);
+}
+
+#[test]
+fn touch_released_outside_node() {
+    let mut test_measurer = TestMeasurer::default();
+    let mut nodes_state = NodesState::default();
+
+    test_measurer.add(0, None, 0, Area::new((0., 0.).into(), (100., 100.).into()));
+    test_measurer.listen_to(0, EventName::MouseEnter);
+    test_measurer.listen_to(0, EventName::MouseOut);
+    test_measurer.listen_to(0, EventName::MouseLeave);
+    test_measurer.listen_to(0, EventName::TouchReleased);
+
+    // Move into the node to hover it
+    let processed_events = test_measurer.run(
+        &mut vec![TestSourceEvent::MouseMove {
+            cursor: (25., 25.).into(),
+        }],
+        &mut nodes_state,
+        None,
+    );
+    TestExecutor::without_handler().run(&mut nodes_state, processed_events);
+    assert!(nodes_state.is_hovered(0));
+
+    // Touch released outside the node triggers leave
+    let processed_events = test_measurer.run(
+        &mut vec![TestSourceEvent::TouchReleased {
+            cursor: (600., 700.).into(),
+        }],
+        &mut nodes_state,
+        None,
+    );
+
+    assert!(
+        !processed_events
+            .emmitable_events
+            .iter()
+            .any(|e| e.name == EventName::TouchReleased && e.key == 0)
+    );
+
+    let leave_events: Vec<_> = processed_events
+        .emmitable_events
+        .iter()
+        .filter(|e| e.name == EventName::MouseOut || e.name == EventName::MouseLeave)
+        .collect();
+    assert!(!leave_events.is_empty());
+
+    TestExecutor::without_handler().run(&mut nodes_state, processed_events);
+    assert!(!nodes_state.is_hovered(0));
+}
+
+#[test]
+fn touch_released_without_listener() {
+    let mut test_measurer = TestMeasurer::default();
+    let mut nodes_state = NodesState::default();
+
+    test_measurer.add(0, None, 0, Area::new((0., 0.).into(), (100., 100.).into()));
+
+    // Touch released inside the node but no listener
+    let processed_events = test_measurer.run(
+        &mut vec![TestSourceEvent::TouchReleased {
+            cursor: (25., 25.).into(),
+        }],
+        &mut nodes_state,
+        None,
+    );
+
+    assert!(processed_events.emmitable_events.is_empty());
+    TestExecutor::without_handler().run(&mut nodes_state, processed_events);
+}
+
+#[test]
+fn touch_released_after_mouse_down() {
+    let mut test_measurer = TestMeasurer::default();
+    let mut nodes_state = NodesState::default();
+
+    test_measurer.add(0, None, 0, Area::new((0., 0.).into(), (100., 100.).into()));
+    test_measurer.listen_to(0, EventName::MouseDown);
+    test_measurer.listen_to(0, EventName::TouchReleased);
+
+    // Mouse down on the node
+    let processed_events = test_measurer.run(
+        &mut vec![TestSourceEvent::MouseDown {
+            cursor: (25., 25.).into(),
+        }],
+        &mut nodes_state,
+        None,
+    );
+    TestExecutor::without_handler().run(&mut nodes_state, processed_events);
+    assert!(nodes_state.is_pressed(0));
+
+    // Touch released on the node
+    let processed_events = test_measurer.run(
+        &mut vec![TestSourceEvent::TouchReleased {
+            cursor: (25., 25.).into(),
+        }],
+        &mut nodes_state,
+        None,
+    );
+
+    assert!(
+        processed_events
+            .emmitable_events
+            .iter()
+            .any(|e| e.name == EventName::TouchReleased && e.key == 0)
+    );
+    TestExecutor::without_handler().run(&mut nodes_state, processed_events);
+}
+
+#[test]
+fn touch_released_multiple_nodes() {
+    let mut test_measurer = TestMeasurer::default();
+    let mut nodes_state = NodesState::default();
+
+    test_measurer.add(0, None, 0, Area::new((0., 0.).into(), (100., 100.).into()));
+    test_measurer.listen_to(0, EventName::TouchReleased);
+
+    test_measurer.add(
+        1,
+        None,
+        0,
+        Area::new((200., 200.).into(), (100., 100.).into()),
+    );
+    test_measurer.listen_to(1, EventName::TouchReleased);
+
+    // Touch released on node 0 only
+    let processed_events = test_measurer.run(
+        &mut vec![TestSourceEvent::TouchReleased {
+            cursor: (25., 25.).into(),
+        }],
+        &mut nodes_state,
+        None,
+    );
+
+    assert!(
+        processed_events
+            .emmitable_events
+            .iter()
+            .any(|e| e.name == EventName::TouchReleased && e.key == 0)
+    );
+    assert!(
+        !processed_events
+            .emmitable_events
+            .iter()
+            .any(|e| e.name == EventName::TouchReleased && e.key == 1)
+    );
+    TestExecutor::without_handler().run(&mut nodes_state, processed_events);
 }

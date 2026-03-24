@@ -251,7 +251,7 @@ impl ragnarok::NameOfEvent for EventName {
     }
 
     fn is_pressed(&self) -> bool {
-        matches!(self, Self::MouseDown | Self::PointerDown)
+        matches!(self, Self::MouseDown | Self::PointerDown | Self::TouchStart)
     }
 
     fn is_released(&self) -> bool {
