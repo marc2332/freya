@@ -850,6 +850,7 @@ pub enum FontHinting {
     Full,
 }
 
+#[derive(Default)]
 pub struct FontStyle;
 
 impl FontStyle {

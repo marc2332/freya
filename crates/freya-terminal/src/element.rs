@@ -540,12 +540,13 @@ impl ElementExt for Terminal {
             text_renderer.render_text(&buffer.rows, area.min_y(), area.max_y());
         }
 
-        if buffer.scroll_offset == 0 && buffer.cursor_visible {
-            if let Some(row) = buffer.rows.get(buffer.cursor_row) {
-                let cursor_y = area.min_y() + (buffer.cursor_row as f32) * measure.line_height;
-                if cursor_y + measure.line_height <= area.max_y() {
-                    renderer.render_cursor(row, cursor_y, buffer.cursor_col, font);
-                }
+        if buffer.scroll_offset == 0
+            && buffer.cursor_visible
+            && let Some(row) = buffer.rows.get(buffer.cursor_row)
+        {
+            let cursor_y = area.min_y() + (buffer.cursor_row as f32) * measure.line_height;
+            if cursor_y + measure.line_height <= area.max_y() {
+                renderer.render_cursor(row, cursor_y, buffer.cursor_col, font);
             }
         }
 
