@@ -837,6 +837,19 @@ pub enum PaintStyle {
     StrokeAndFill = 2,
 }
 
+pub enum FontEdging {
+    Alias,
+    AntiAlias,
+    SubpixelAntiAlias,
+}
+
+pub enum FontHinting {
+    None,
+    Slight,
+    Normal,
+    Full,
+}
+
 pub struct FontStyle;
 
 impl FontStyle {
@@ -853,6 +866,14 @@ impl FontMgr {
         &self,
         _bytes: &[u8],
         _ttc_index: impl Into<Option<usize>>,
+    ) -> Option<Typeface> {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn match_family_style(
+        &self,
+        _family_name: impl AsRef<str>,
+        _style: FontStyle,
     ) -> Option<Typeface> {
         unimplemented!("This is mocked")
     }
@@ -907,6 +928,14 @@ impl FontCollection {
     }
 
     pub fn paragraph_cache_mut(&mut self) -> &mut ParagraphCache {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn find_typefaces(
+        &mut self,
+        _family_names: &[impl AsRef<str>],
+        _font_style: FontStyle,
+    ) -> Vec<Typeface> {
         unimplemented!("This is mocked")
     }
 }
@@ -1325,6 +1354,25 @@ impl Canvas {
     pub fn save_layer_alpha_f(&self, bounds: impl Into<Option<Rect>>, alpha: f32) -> usize {
         unimplemented!("This is mocked")
     }
+
+    pub fn draw_str(
+        &self,
+        _str: impl AsRef<str>,
+        _origin: impl Into<Point>,
+        _font: &Font,
+        _paint: &Paint,
+    ) -> &Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn draw_text_blob(
+        &self,
+        _blob: impl AsRef<TextBlob>,
+        _origin: impl Into<Point>,
+        _paint: &Paint,
+    ) -> &Self {
+        unimplemented!("This is mocked")
+    }
 }
 
 pub enum SrcRectConstraint {
@@ -1452,6 +1500,81 @@ pub struct TextBox {
 }
 
 pub struct Font;
+
+impl Default for Font {
+    fn default() -> Self {
+        unimplemented!("This is mocked")
+    }
+}
+
+impl Font {
+    pub fn new(_typeface: impl Into<Typeface>, _size: impl Into<Option<f32>>) -> Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn from_typeface(_typeface: impl Into<Typeface>, _size: impl Into<Option<f32>>) -> Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn set_size(&mut self, _size: f32) -> &mut Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn set_subpixel(&mut self, _subpixel: bool) -> &mut Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn set_hinting(&mut self, _hinting: FontHinting) -> &mut Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn set_edging(&mut self, _edging: FontEdging) -> &mut Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn set_force_auto_hinting(&mut self, _force: bool) -> &mut Self {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn measure_str(&self, _str: impl AsRef<str>, _paint: Option<&Paint>) -> (f32, Rect) {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn metrics(&self) -> (f32, FontMetrics) {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn spacing(&self) -> f32 {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn count_text(&self, _text: impl AsRef<str>) -> usize {
+        unimplemented!("This is mocked")
+    }
+
+    pub fn text_to_glyphs_vec(&self, _text: impl AsRef<str>) -> Vec<u16> {
+        unimplemented!("This is mocked")
+    }
+}
+
+pub struct TextBlob;
+
+impl TextBlob {
+    pub fn from_pos_text_h(
+        _text: impl AsRef<str>,
+        _x_pos: &[f32],
+        _const_y: f32,
+        _font: &Font,
+    ) -> Option<TextBlob> {
+        unimplemented!("This is mocked")
+    }
+}
+
+impl AsRef<TextBlob> for TextBlob {
+    fn as_ref(&self) -> &TextBlob {
+        self
+    }
+}
 
 pub struct FontInfo;
 

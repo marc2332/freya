@@ -1,10 +1,9 @@
 use std::{
     any::Any,
     borrow::Cow,
-    cell::RefCell,
-    hash::{
-        Hash,
-        Hasher,
+    cell::{
+        OnceCell,
+        RefCell,
     },
     rc::Rc,
 };
@@ -19,6 +18,8 @@ use freya_core::{
         Element,
         ElementExt,
         EventHandlerType,
+        LayoutContext,
+        RenderContext,
     },
     events::name::EventName,
     fifo_cache::FifoCache,
@@ -26,25 +27,229 @@ use freya_core::{
     tree::DiffModifies,
 };
 use freya_engine::prelude::{
+    Canvas,
+    Font,
+    FontEdging,
+    FontHinting,
+    FontStyle,
     Paint,
     PaintStyle,
     ParagraphBuilder,
     ParagraphStyle,
-    SkParagraph,
     SkRect,
+    TextBlob,
     TextStyle,
 };
-use rustc_hash::{
-    FxHashMap,
-    FxHasher,
+use rustc_hash::FxHashMap;
+use torin::prelude::{
+    Area,
+    Size2D,
 };
 
 use crate::{
     colors::map_vt100_color,
     handle::TerminalHandle,
+    rendering::{
+        CachedRow,
+        TextRenderer,
+    },
 };
 
-/// Internal terminal rendering element
+/// Cached layout measurements and font for text drawing.
+struct TerminalMeasure {
+    char_width: f32,
+    line_height: f32,
+    font: OnceCell<Font>,
+    font_family: String,
+    font_size: f32,
+    row_cache: RefCell<FifoCache<u64, CachedRow>>,
+}
+
+/// Renders selection, backgrounds, cursor, and scrollbar.
+struct TerminalRenderer<'a> {
+    canvas: &'a Canvas,
+    paint: &'a mut Paint,
+    area: Area,
+    char_width: f32,
+    line_height: f32,
+    baseline_offset: f32,
+    foreground: Color,
+    background: Color,
+    selection_color: Color,
+}
+
+impl TerminalRenderer<'_> {
+    fn render_background(&mut self) {
+        self.paint.set_color(self.background);
+        self.canvas.draw_rect(
+            SkRect::new(
+                self.area.min_x(),
+                self.area.min_y(),
+                self.area.max_x(),
+                self.area.max_y(),
+            ),
+            self.paint,
+        );
+    }
+
+    fn render_selection(
+        &mut self,
+        row_idx: usize,
+        row_len: usize,
+        y: f32,
+        selection_bounds: &(i64, usize, i64, usize),
+    ) {
+        let (display_start, start_col, display_end, end_col) = selection_bounds;
+        let row_i = row_idx as i64;
+
+        if row_i < *display_start || row_i > *display_end {
+            return;
+        }
+
+        let sel_start = if row_i == *display_start {
+            *start_col
+        } else {
+            0
+        };
+        let sel_end = if row_i == *display_end {
+            (*end_col).min(row_len)
+        } else {
+            row_len
+        };
+
+        if sel_start < sel_end {
+            let left = self.area.min_x() + (sel_start as f32) * self.char_width;
+            let right = self.area.min_x() + (sel_end as f32) * self.char_width;
+            self.paint.set_color(self.selection_color);
+            self.canvas.draw_rect(
+                SkRect::new(left, y, right, y + self.line_height),
+                self.paint,
+            );
+        }
+    }
+
+    fn render_cell_backgrounds(&mut self, row: &[vt100::Cell], y: f32) {
+        let mut run_start: Option<(usize, Color)> = None;
+        let mut col = 0;
+        while col < row.len() {
+            let cell = &row[col];
+            if cell.is_wide_continuation() {
+                col += 1;
+                continue;
+            }
+            let cell_bg = if cell.inverse() {
+                map_vt100_color(cell.fgcolor(), self.foreground)
+            } else {
+                map_vt100_color(cell.bgcolor(), self.background)
+            };
+            let end_col = if cell.is_wide() { col + 2 } else { col + 1 };
+
+            if cell_bg != self.background {
+                match &run_start {
+                    Some((_, color)) if *color == cell_bg => {}
+                    Some((start, color)) => {
+                        self.render_cell_background(*start, col, *color, y);
+                        run_start = Some((col, cell_bg));
+                    }
+                    None => {
+                        run_start = Some((col, cell_bg));
+                    }
+                }
+            } else if let Some((start, color)) = run_start.take() {
+                self.render_cell_background(start, col, color, y);
+            }
+            col = end_col;
+        }
+        if let Some((start, color)) = run_start {
+            self.render_cell_background(start, col, color, y);
+        }
+    }
+
+    fn render_cell_background(&mut self, start: usize, end: usize, color: Color, y: f32) {
+        let left = self.area.min_x() + (start as f32) * self.char_width;
+        let right = self.area.min_x() + (end as f32) * self.char_width;
+        self.paint.set_color(color);
+        self.canvas.draw_rect(
+            SkRect::new(left, y, right, y + self.line_height),
+            self.paint,
+        );
+    }
+
+    fn render_cursor(&mut self, row: &[vt100::Cell], y: f32, cursor_col: usize, font: &Font) {
+        let left = self.area.min_x() + (cursor_col as f32) * self.char_width;
+        let right = left + self.char_width.max(1.0);
+        let bottom = y + self.line_height.max(1.0);
+
+        self.paint.set_color(self.foreground);
+        self.canvas
+            .draw_rect(SkRect::new(left, y, right, bottom), self.paint);
+
+        let content = row
+            .get(cursor_col)
+            .map(|cell| {
+                if cell.has_contents() {
+                    cell.contents()
+                } else {
+                    " "
+                }
+            })
+            .unwrap_or(" ");
+
+        self.paint.set_color(self.background);
+        if let Some(blob) = TextBlob::from_pos_text_h(content, &[0.0], 0.0, font) {
+            self.canvas
+                .draw_text_blob(&blob, (left, y + self.baseline_offset), self.paint);
+        }
+    }
+
+    fn render_scrollbar(
+        &mut self,
+        scroll_offset: usize,
+        total_scrollback: usize,
+        rows_count: usize,
+    ) {
+        let viewport_height = self.area.height();
+        let total_rows = rows_count + total_scrollback;
+        let total_content_height = total_rows as f32 * self.line_height;
+
+        let scrollbar_height = (viewport_height * viewport_height / total_content_height).max(20.0);
+        let track_height = viewport_height - scrollbar_height;
+
+        let scroll_ratio = scroll_offset as f32 / total_scrollback as f32;
+        let thumb_y = self.area.min_y() + track_height * (1.0 - scroll_ratio);
+
+        let scrollbar_x = self.area.max_x() - 4.0;
+        let corner_radius = 2.0;
+
+        self.paint.set_anti_alias(true);
+        self.paint.set_color(Color::from_argb(50, 0, 0, 0));
+        self.canvas.draw_round_rect(
+            SkRect::new(
+                scrollbar_x,
+                self.area.min_y(),
+                self.area.max_x(),
+                self.area.max_y(),
+            ),
+            corner_radius,
+            corner_radius,
+            self.paint,
+        );
+
+        self.paint.set_color(Color::from_argb(60, 255, 255, 255));
+        self.canvas.draw_round_rect(
+            SkRect::new(
+                scrollbar_x,
+                thumb_y,
+                self.area.max_x(),
+                thumb_y + scrollbar_height,
+            ),
+            corner_radius,
+            corner_radius,
+            self.paint,
+        );
+    }
+}
+
 #[derive(Clone)]
 pub struct Terminal {
     handle: TerminalHandle,
@@ -88,13 +293,11 @@ impl Terminal {
         }
     }
 
-    /// Set the selection highlight color
     pub fn selection_color(mut self, selection_color: impl Into<Color>) -> Self {
         self.selection_color = selection_color.into();
         self
     }
 
-    /// Set callback for when dimensions are measured (char_width, line_height)
     pub fn on_measured(mut self, callback: impl Into<EventHandler<(f32, f32)>>) -> Self {
         self.on_measured = Some(callback.into());
         self
@@ -156,7 +359,8 @@ impl ElementExt for Terminal {
             diff.insert(DiffModifies::LAYOUT);
         }
 
-        if self.background != terminal.foreground
+        if self.foreground != terminal.foreground
+            || self.background != terminal.background
             || self.selection_color != terminal.selection_color
         {
             diff.insert(DiffModifies::STYLE);
@@ -185,299 +389,171 @@ impl ElementExt for Terminal {
         true
     }
 
-    fn measure(
-        &self,
-        context: freya_core::element::LayoutContext,
-    ) -> Option<(torin::prelude::Size2D, Rc<dyn Any>)> {
-        let mut measure_builder =
+    fn measure(&self, context: LayoutContext) -> Option<(Size2D, Rc<dyn Any>)> {
+        // Measure char width and line height using a reference glyph
+        let mut builder =
             ParagraphBuilder::new(&ParagraphStyle::default(), context.font_collection.clone());
-        let mut text_style = TextStyle::new();
-        text_style.set_font_size(self.font_size);
-        text_style.set_font_families(&[self.font_family.as_str()]);
-        measure_builder.push_style(&text_style);
-        measure_builder.add_text("W");
-        let mut measure_paragraph = measure_builder.build();
-        measure_paragraph.layout(f32::MAX);
-        let mut line_height = measure_paragraph.height();
+
+        let mut style = TextStyle::new();
+        style.set_font_size(self.font_size);
+        style.set_font_families(&[self.font_family.as_str()]);
+        builder.push_style(&style);
+        builder.add_text("W");
+
+        let mut paragraph = builder.build();
+        paragraph.layout(f32::MAX);
+        let mut line_height = paragraph.height();
         if line_height <= 0.0 || line_height.is_nan() {
             line_height = (self.font_size * 1.2).max(1.0);
         }
+        let char_width = paragraph.max_intrinsic_width();
 
         let mut height = context.area_size.height;
         if height <= 0.0 {
             height = (line_height * 24.0).max(200.0);
         }
 
-        let char_width = measure_paragraph.max_intrinsic_width();
-        let mut target_cols = if char_width > 0.0 {
+        let target_cols = if char_width > 0.0 {
             (context.area_size.width / char_width).floor() as u16
         } else {
-            1
-        };
-        if target_cols == 0 {
-            target_cols = 1;
+            0
         }
-        let mut target_rows = if line_height > 0.0 {
+        .max(1);
+        let target_rows = if line_height > 0.0 {
             (height / line_height).floor() as u16
         } else {
-            1
-        };
-        if target_rows == 0 {
-            target_rows = 1;
+            0
         }
+        .max(1);
 
         self.handle.resize(target_rows, target_cols);
 
-        // Store dimensions and notify callback
         if let Some(on_measured) = &self.on_measured {
             on_measured.call((char_width, line_height));
         }
 
         Some((
-            torin::prelude::Size2D::new(context.area_size.width.max(100.0), height),
-            Rc::new(RefCell::new(FifoCache::<u64, Rc<SkParagraph>>::new())),
+            Size2D::new(context.area_size.width.max(100.0), height),
+            Rc::new(TerminalMeasure {
+                char_width,
+                line_height,
+                font: OnceCell::new(),
+                font_family: self.font_family.clone(),
+                font_size: self.font_size,
+                row_cache: RefCell::new(FifoCache::new()),
+            }),
         ))
     }
 
-    fn render(&self, context: freya_core::element::RenderContext) {
+    fn render(&self, context: RenderContext) {
         let area = context.layout_node.visible_area();
-        let cache = context
+        let measure = context
             .layout_node
             .data
             .as_ref()
             .unwrap()
-            .downcast_ref::<RefCell<FifoCache<u64, Rc<SkParagraph>>>>()
+            .downcast_ref::<TerminalMeasure>()
             .unwrap();
 
+        let font = measure.font.get_or_init(|| {
+            let typeface = context
+                .font_collection
+                .find_typefaces(&[&measure.font_family], FontStyle::default())
+                .into_iter()
+                .next()
+                .expect("Terminal font family not found");
+
+            let mut font = Font::from_typeface(typeface, measure.font_size);
+            font.set_subpixel(true);
+            font.set_edging(FontEdging::SubpixelAntiAlias);
+
+            font.set_hinting(match measure.font_size as u32 {
+                0..=6 => FontHinting::Full,
+                7..=12 => FontHinting::Normal,
+                13..=24 => FontHinting::Slight,
+                _ => FontHinting::None,
+            });
+            font
+        });
+
+        let (_, metrics) = font.metrics();
+        let baseline_offset = -metrics.ascent;
         let buffer = self.handle.read_buffer();
 
         let mut paint = Paint::default();
+        paint.set_anti_alias(true);
         paint.set_style(PaintStyle::Fill);
-        paint.set_color(self.background);
-        context.canvas.draw_rect(
-            SkRect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
-            &paint,
-        );
 
-        let mut text_style = TextStyle::new();
-        text_style.set_color(self.foreground);
-        text_style.set_font_families(&[self.font_family.as_str()]);
-        text_style.set_font_size(self.font_size);
+        let mut renderer = TerminalRenderer {
+            canvas: context.canvas,
+            paint: &mut paint,
+            area,
+            char_width: measure.char_width,
+            line_height: measure.line_height,
+            baseline_offset,
+            foreground: self.foreground,
+            background: self.background,
+            selection_color: self.selection_color,
+        };
 
-        let mut measure_builder =
-            ParagraphBuilder::new(&ParagraphStyle::default(), context.font_collection.clone());
-        measure_builder.push_style(&text_style);
-        measure_builder.add_text("W");
-        let mut measure_paragraph = measure_builder.build();
-        measure_paragraph.layout(f32::MAX);
-        let char_width = measure_paragraph.max_intrinsic_width();
-        let mut line_height = measure_paragraph.height();
-        if line_height <= 0.0 || line_height.is_nan() {
-            line_height = (self.font_size * 1.2).max(1.0);
-        }
+        renderer.render_background();
+
+        let selection_bounds = buffer.selection.as_ref().and_then(|sel| {
+            if sel.is_empty() {
+                None
+            } else {
+                Some(sel.display_positions(buffer.scroll_offset))
+            }
+        });
 
         let mut y = area.min_y();
-
         for (row_idx, row) in buffer.rows.iter().enumerate() {
-            if y + line_height > area.max_y() {
+            if y + measure.line_height > area.max_y() {
                 break;
             }
 
-            if let Some(selection) = &buffer.selection {
-                let (display_start, start_col, display_end, end_col) =
-                    selection.display_positions(buffer.scroll_offset);
-                let row_i = row_idx as i64;
-
-                if !selection.is_empty() && row_i >= display_start && row_i <= display_end {
-                    let sel_start_col = if row_i == display_start { start_col } else { 0 };
-                    let sel_end_col = if row_i == display_end {
-                        end_col
-                    } else {
-                        row.len()
-                    };
-
-                    for col_idx in sel_start_col..sel_end_col.min(row.len()) {
-                        let left = area.min_x() + (col_idx as f32) * char_width;
-                        let top = y;
-                        let right = left + char_width;
-                        let bottom = top + line_height;
-
-                        let mut sel_paint = Paint::default();
-                        sel_paint.set_style(PaintStyle::Fill);
-                        sel_paint.set_color(self.selection_color);
-                        context
-                            .canvas
-                            .draw_rect(SkRect::new(left, top, right, bottom), &sel_paint);
-                    }
-                }
+            if let Some(bounds) = &selection_bounds {
+                renderer.render_selection(row_idx, row.len(), y, bounds);
             }
 
-            for (col_idx, cell) in row.iter().enumerate() {
-                if cell.is_wide_continuation() {
-                    continue;
-                }
-                let cell_bg = if cell.inverse() {
-                    map_vt100_color(cell.fgcolor(), self.foreground)
-                } else {
-                    map_vt100_color(cell.bgcolor(), self.background)
-                };
-                if cell_bg != self.background {
-                    let left = area.min_x() + (col_idx as f32) * char_width;
-                    let top = y;
-                    let cell_width = if cell.is_wide() {
-                        char_width * 2.0
-                    } else {
-                        char_width
-                    };
-                    let right = left + cell_width;
-                    let bottom = top + line_height;
+            renderer.render_cell_backgrounds(row, y);
 
-                    let mut bg_paint = Paint::default();
-                    bg_paint.set_style(PaintStyle::Fill);
-                    bg_paint.set_color(cell_bg);
-                    context
-                        .canvas
-                        .draw_rect(SkRect::new(left, top, right, bottom), &bg_paint);
-                }
-            }
-
-            let mut state = FxHasher::default();
-            for cell in row.iter() {
-                if cell.is_wide_continuation() {
-                    continue;
-                }
-                let cell_fg = if cell.inverse() {
-                    map_vt100_color(cell.bgcolor(), self.background)
-                } else {
-                    map_vt100_color(cell.fgcolor(), self.foreground)
-                };
-                cell.contents().hash(&mut state);
-                cell_fg.hash(&mut state);
-                cell.inverse().hash(&mut state);
-            }
-
-            let key = state.finish();
-            if let Some(paragraph) = cache.borrow().get(&key) {
-                paragraph.paint(context.canvas, (area.min_x(), y));
-            } else {
-                let mut builder = ParagraphBuilder::new(
-                    &ParagraphStyle::default(),
-                    context.font_collection.clone(),
-                );
-                for cell in row.iter() {
-                    if cell.is_wide_continuation() {
-                        continue;
-                    }
-                    let text = if cell.has_contents() {
-                        cell.contents()
-                    } else {
-                        " "
-                    };
-                    let cell_fg = if cell.inverse() {
-                        map_vt100_color(cell.bgcolor(), self.background)
-                    } else {
-                        map_vt100_color(cell.fgcolor(), self.foreground)
-                    };
-                    let mut cell_style = text_style.clone();
-                    cell_style.set_color(cell_fg);
-                    builder.push_style(&cell_style);
-                    builder.add_text(text);
-                }
-                let mut paragraph = builder.build();
-                paragraph.layout(f32::MAX);
-                paragraph.paint(context.canvas, (area.min_x(), y));
-                cache.borrow_mut().insert(key, Rc::new(paragraph));
-            }
-
-            if row_idx == buffer.cursor_row && buffer.scroll_offset == 0 && buffer.cursor_visible {
-                let cursor_idx = buffer.cursor_col;
-                let left = area.min_x() + (cursor_idx as f32) * char_width;
-                let top = y;
-                let right = left + char_width.max(1.0);
-                let bottom = top + line_height.max(1.0);
-
-                let mut cursor_paint = Paint::default();
-                cursor_paint.set_style(PaintStyle::Fill);
-                cursor_paint.set_color(self.foreground);
-                context
-                    .canvas
-                    .draw_rect(SkRect::new(left, top, right, bottom), &cursor_paint);
-
-                let content = row
-                    .get(cursor_idx)
-                    .map(|cell| {
-                        if cell.has_contents() {
-                            cell.contents()
-                        } else {
-                            " "
-                        }
-                    })
-                    .unwrap_or(" ");
-
-                let mut fg_text_style = text_style.clone();
-                fg_text_style.set_color(self.background);
-                let mut fg_builder = ParagraphBuilder::new(
-                    &ParagraphStyle::default(),
-                    context.font_collection.clone(),
-                );
-                fg_builder.push_style(&fg_text_style);
-                fg_builder.add_text(content);
-                let mut fg_paragraph = fg_builder.build();
-                fg_paragraph.layout((right - left).max(1.0));
-                fg_paragraph.paint(context.canvas, (left, top));
-            }
-
-            y += line_height;
+            y += measure.line_height;
         }
 
-        // Scroll indicator
-        if buffer.total_scrollback > 0 {
-            let viewport_height = area.height();
-            let total_rows = buffer.rows_count + buffer.total_scrollback;
-            let total_content_height = total_rows as f32 * line_height;
-
-            let scrollbar_height =
-                (viewport_height * viewport_height / total_content_height).max(20.0);
-            let track_height = viewport_height - scrollbar_height;
-
-            let scroll_ratio = if buffer.total_scrollback > 0 {
-                buffer.scroll_offset as f32 / buffer.total_scrollback as f32
-            } else {
-                0.0
+        {
+            let mut text_renderer = TextRenderer {
+                canvas: context.canvas,
+                font,
+                font_collection: context.font_collection,
+                paint: renderer.paint,
+                row_cache: &mut measure.row_cache.borrow_mut(),
+                area_min_x: area.min_x(),
+                char_width: measure.char_width,
+                line_height: measure.line_height,
+                baseline_offset,
+                foreground: self.foreground,
+                background: self.background,
+                font_family: &measure.font_family,
+                font_size: measure.font_size,
             };
+            text_renderer.render_text(&buffer.rows, area.min_y(), area.max_y());
+        }
 
-            let thumb_y_offset = track_height * (1.0 - scroll_ratio);
+        if buffer.scroll_offset == 0 && buffer.cursor_visible {
+            if let Some(row) = buffer.rows.get(buffer.cursor_row) {
+                let cursor_y = area.min_y() + (buffer.cursor_row as f32) * measure.line_height;
+                if cursor_y + measure.line_height <= area.max_y() {
+                    renderer.render_cursor(row, cursor_y, buffer.cursor_col, font);
+                }
+            }
+        }
 
-            let scrollbar_width = 4.0;
-            let scrollbar_x = area.max_x() - scrollbar_width;
-            let scrollbar_y = area.min_y() + thumb_y_offset;
-
-            let corner_radius = 2.0;
-            let mut track_paint = Paint::default();
-            track_paint.set_anti_alias(true);
-            track_paint.set_style(PaintStyle::Fill);
-            track_paint.set_color(Color::from_argb(50, 0, 0, 0));
-            context.canvas.draw_round_rect(
-                SkRect::new(scrollbar_x, area.min_y(), area.max_x(), area.max_y()),
-                corner_radius,
-                corner_radius,
-                &track_paint,
-            );
-
-            let mut thumb_paint = Paint::default();
-            thumb_paint.set_anti_alias(true);
-            thumb_paint.set_style(PaintStyle::Fill);
-            thumb_paint.set_color(Color::from_argb(60, 255, 255, 255));
-            context.canvas.draw_round_rect(
-                SkRect::new(
-                    scrollbar_x,
-                    scrollbar_y,
-                    area.max_x(),
-                    scrollbar_y + scrollbar_height,
-                ),
-                corner_radius,
-                corner_radius,
-                &thumb_paint,
+        if buffer.total_scrollback > 0 {
+            renderer.render_scrollbar(
+                buffer.scroll_offset,
+                buffer.total_scrollback,
+                buffer.rows_count,
             );
         }
     }
