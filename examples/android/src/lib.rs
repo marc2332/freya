@@ -23,12 +23,14 @@ fn android_main(droid_app: AndroidApp) {
         android_logger::Config::default().with_max_level(log::LevelFilter::Debug),
     );
 
-    let mut event_loop_builder = EventLoop::<NativeEvent>::with_user_event();
-    event_loop_builder.with_android_app(droid_app);
+    let event_loop = EventLoop::<NativeEvent>::with_user_event()
+        .with_android_app(droid_app)
+        .build()
+        .expect("Failed to build event loop");
 
     launch(
         LaunchConfig::new()
             .with_window(WindowConfig::new(app::app).with_size(500., 450.))
-            .with_event_loop_builder(event_loop_builder),
+            .with_event_loop(event_loop),
     )
 }
