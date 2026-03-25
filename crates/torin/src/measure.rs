@@ -338,7 +338,7 @@ where
                 if node.width.inner_sized() {
                     parent_area.size.width = node.width.min_max(
                         parent_area.size.width,
-                        parent_area.size.width,
+                        initial_parent_area.size.width,
                         available_parent_area.size.width,
                         0.,
                         0.,
@@ -351,7 +351,7 @@ where
                 if node.height.inner_sized() {
                     parent_area.size.height = node.height.min_max(
                         parent_area.size.height,
-                        parent_area.size.height,
+                        initial_parent_area.size.height,
                         available_parent_area.size.height,
                         0.,
                         0.,
