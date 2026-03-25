@@ -64,8 +64,8 @@ rfd = { workspace = true }
 [target.'cfg(target_os = "linux")'.dependencies]
 gtk = { version = "0.18.2", optional = true }
 
-# Rendering OpenGL + Vulkan (Linux/Windows)
-[target.'cfg(any(target_os = "linux", target_os = "windows"))'.dependencies]
+# Rendering OpenGL + Vulkan (Linux/Windows/Android)
+[target.'cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))'.dependencies]
 gl = { workspace = true }
 glutin = { workspace = true }
 glutin-winit = { workspace = true }

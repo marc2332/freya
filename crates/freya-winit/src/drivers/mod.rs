@@ -1,8 +1,8 @@
-#[cfg(any(target_os = "linux", target_os = "windows"))]
+#[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
 mod gl;
 #[cfg(target_os = "macos")]
 mod metal;
-#[cfg(any(target_os = "linux", target_os = "windows"))]
+#[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
 mod vulkan;
 
 use freya_engine::prelude::Surface as SkiaSurface;
@@ -17,11 +17,11 @@ use winit::{
 
 #[allow(clippy::large_enum_variant)]
 pub enum GraphicsDriver {
-    #[cfg(any(target_os = "linux", target_os = "windows"))]
+    #[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
     OpenGl(gl::OpenGLDriver),
     #[cfg(target_os = "macos")]
     Metal(metal::MetalDriver),
-    #[cfg(any(target_os = "linux", target_os = "windows"))]
+    #[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
     Vulkan(vulkan::VulkanDriver),
 }
 
@@ -71,11 +71,11 @@ impl GraphicsDriver {
         render: impl FnOnce(&mut SkiaSurface),
     ) {
         match self {
-            #[cfg(any(target_os = "linux", target_os = "windows"))]
+            #[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
             Self::OpenGl(gl) => gl.present(window, render),
             #[cfg(target_os = "macos")]
             Self::Metal(mtl) => mtl.present(size, window, render),
-            #[cfg(any(target_os = "linux", target_os = "windows"))]
+            #[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
             Self::Vulkan(vk) => vk.present(size, window, render),
         }
     }
@@ -83,22 +83,22 @@ impl GraphicsDriver {
     /// The name of the active graphics driver.
     pub fn name(&self) -> &'static str {
         match self {
-            #[cfg(any(target_os = "linux", target_os = "windows"))]
+            #[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
             Self::OpenGl(_) => "OpenGL",
             #[cfg(target_os = "macos")]
             Self::Metal(_) => "Metal",
-            #[cfg(any(target_os = "linux", target_os = "windows"))]
+            #[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
             Self::Vulkan(_) => "Vulkan",
         }
     }
 
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
         match self {
-            #[cfg(any(target_os = "linux", target_os = "windows"))]
+            #[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
             Self::OpenGl(gl) => gl.resize(size),
             #[cfg(target_os = "macos")]
             Self::Metal(mtl) => mtl.resize(size),
-            #[cfg(any(target_os = "linux", target_os = "windows"))]
+            #[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
             Self::Vulkan(vk) => vk.resize(size),
         }
     }

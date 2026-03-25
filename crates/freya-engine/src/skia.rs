@@ -1,4 +1,4 @@
-#[cfg(any(target_os = "linux", target_os = "windows"))]
+#[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
 pub use skia_safe::gpu::gl::{
     Format,
     FramebufferInfo,
@@ -6,7 +6,7 @@ pub use skia_safe::gpu::gl::{
 };
 #[cfg(target_os = "macos")]
 pub use skia_safe::gpu::mtl;
-#[cfg(any(target_os = "linux", target_os = "windows"))]
+#[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
 pub use skia_safe::gpu::vk;
 pub use skia_safe::{
     AlphaType,
