@@ -170,6 +170,9 @@ impl ragnarok::SourceEvent for PlatformEvent {
             Self::Mouse {
                 name: MouseEventName::MouseMove,
                 ..
+            } | Self::Touch {
+                phase: TouchPhase::Moved,
+                ..
             }
         )
     }
@@ -180,6 +183,20 @@ impl ragnarok::SourceEvent for PlatformEvent {
             &self,
             Self::Mouse {
                 name: MouseEventName::MouseDown,
+                ..
+            } | Self::Touch {
+                name: TouchEventName::TouchStart,
+                ..
+            }
+        )
+    }
+
+    /// Check if this event is a touch released event.
+    fn is_touch_released(&self) -> bool {
+        matches!(
+            &self,
+            Self::Touch {
+                phase: TouchPhase::Ended,
                 ..
             }
         )
