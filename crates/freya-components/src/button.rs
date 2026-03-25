@@ -104,6 +104,7 @@ pub struct Button {
     elements: Vec<Element>,
     on_press: Option<EventHandler<Event<PressEventData>>>,
     on_secondary_press: Option<EventHandler<Event<PressEventData>>>,
+    on_pointer_down: Option<EventHandler<Event<PointerEventData>>>,
     key: DiffKey,
     style_variant: ButtonStyleVariant,
     layout_variant: ButtonLayoutVariant,
@@ -138,6 +139,7 @@ impl Button {
             layout_variant: ButtonLayoutVariant::Normal,
             on_press: None,
             on_secondary_press: None,
+            on_pointer_down: None,
             elements: Vec::default(),
             enabled: true,
             focusable: true,
@@ -183,6 +185,14 @@ impl Button {
         on_secondary_press: impl Into<EventHandler<Event<PressEventData>>>,
     ) -> Self {
         self.on_secondary_press = Some(on_secondary_press.into());
+        self
+    }
+
+    pub fn on_pointer_down(
+        mut self,
+        on_pointer_down: impl Into<EventHandler<Event<PointerEventData>>>,
+    ) -> Self {
+        self.on_pointer_down = Some(on_pointer_down.into());
         self
     }
 
@@ -284,38 +294,42 @@ impl Component for Button {
             .color(theme_colors.color.mul_if(!self.enabled, 0.9))
             .center()
             .maybe(self.enabled, |rect| {
-                rect.on_pointer_down(|e: Event<PointerEventData>| e.stop_propagation())
-                    .on_all_press({
-                        let on_press = self.on_press.clone();
-                        let on_secondary_press = self.on_secondary_press.clone();
-                        move |e: Event<PressEventData>| {
-                            focus.request_focus();
-                            match e.data() {
-                                PressEventData::Mouse(data) => match data.button {
-                                    Some(MouseButton::Left) => {
-                                        if let Some(handler) = &on_press {
-                                            handler.call(e);
-                                        }
-                                    }
-                                    Some(MouseButton::Right) => {
-                                        if let Some(handler) = &on_secondary_press {
-                                            handler.call(e);
-                                        }
-                                    }
-                                    _ => {}
-                                },
-                                PressEventData::Touch(_) | PressEventData::Keyboard(_) => {
+                rect.map(self.on_pointer_down.clone(), |rect, on_pointer_down| {
+                    rect.on_pointer_down(move |e: Event<PointerEventData>| {
+                        on_pointer_down.call(e);
+                    })
+                })
+                .on_all_press({
+                    let on_press = self.on_press.clone();
+                    let on_secondary_press = self.on_secondary_press.clone();
+                    move |e: Event<PressEventData>| {
+                        focus.request_focus();
+                        match e.data() {
+                            PressEventData::Mouse(data) => match data.button {
+                                Some(MouseButton::Left) => {
                                     if let Some(handler) = &on_press {
                                         handler.call(e);
                                     }
                                 }
+                                Some(MouseButton::Right) => {
+                                    if let Some(handler) = &on_secondary_press {
+                                        handler.call(e);
+                                    }
+                                }
+                                _ => {}
+                            },
+                            PressEventData::Touch(_) | PressEventData::Keyboard(_) => {
+                                if let Some(handler) = &on_press {
+                                    handler.call(e);
+                                }
                             }
                         }
-                    })
-                    .on_pointer_over(move |_| {
-                        hovering.set(true);
-                    })
-                    .on_pointer_out(move |_| hovering.set_if_modified(false))
+                    }
+                })
+                .on_pointer_over(move |_| {
+                    hovering.set(true);
+                })
+                .on_pointer_out(move |_| hovering.set_if_modified(false))
             })
             .on_pointer_enter(move |_| {
                 if enabled() {
