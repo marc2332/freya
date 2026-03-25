@@ -35,7 +35,7 @@ impl GraphicsDriver {
         #[cfg(target_os = "macos")]
         {
             let (driver, window) =
-                metal::MetalDriver::new(event_loop, window_attributes, window_config);
+                metal::MetalDriver::new(event_loop, window_attributes);
 
             return (Self::Metal(driver), window);
         }
