@@ -79,6 +79,7 @@ impl OpenGLDriver {
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
     ) -> (Self, Window) {
+        let transparent = window_attributes.transparent;
         let template = ConfigTemplateBuilder::new()
             .with_alpha_size(8)
             .with_transparency(window_attributes.transparent);
@@ -88,8 +89,9 @@ impl OpenGLDriver {
             .build(event_loop, template, |configs| {
                 configs
                     .reduce(|accum, config| {
-                        let transparency_check = config.supports_transparency().unwrap_or(false)
-                            & !accum.supports_transparency().unwrap_or(false);
+                        let transparency_check = transparent
+                            && config.supports_transparency().unwrap_or(false)
+                            && !accum.supports_transparency().unwrap_or(false);
 
                         if transparency_check || config.num_samples() < accum.num_samples() {
                             config
