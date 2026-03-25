@@ -31,7 +31,7 @@ jobs:
           unzip -q ndk.zip -d /home/runner
           rm ndk.zip
       - name: Install stable rust toolchain
-        uses: dtolnay/rust-toolchain@1.90
+        uses: dtolnay/rust-toolchain@1.94
         with:
           targets: aarch64-linux-android
       - name: Install cargo-ndk
