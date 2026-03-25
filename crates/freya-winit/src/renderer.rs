@@ -331,11 +331,8 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
             // so we don't end up with a completely black surface with broken rendering.
             let old_windows: Vec<_> = self.windows.drain().collect();
             for (_, mut app_window) in old_windows {
-                let (new_driver, new_window) = GraphicsDriver::new(
-                    active_event_loop,
-                    app_window.window_attributes.clone(),
-                    &app_window.window_config,
-                );
+                let (new_driver, new_window) =
+                    GraphicsDriver::new(active_event_loop, app_window.window_attributes.clone());
 
                 let new_id = new_window.id();
                 app_window.driver = new_driver;

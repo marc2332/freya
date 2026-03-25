@@ -27,10 +27,7 @@ use crate::{
         FreyaPlugin,
         PluginsManager,
     },
-    renderer::{
-        LaunchProxy,
-        NativeEvent,
-    },
+    renderer::LaunchProxy,
 };
 
 pub type WindowBuilderHook =
