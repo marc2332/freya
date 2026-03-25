@@ -57,8 +57,6 @@ use winit::{
     },
 };
 
-use crate::config::WindowConfig;
-
 /// Graphics driver using OpenGL.
 pub struct OpenGLDriver {
     pub(crate) gr_context: DirectContext,
@@ -80,19 +78,20 @@ impl OpenGLDriver {
     pub fn new(
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
-        window_config: &WindowConfig,
     ) -> (Self, Window) {
+        let transparent = window_attributes.transparent;
         let template = ConfigTemplateBuilder::new()
             .with_alpha_size(8)
-            .with_transparency(window_config.transparent);
+            .with_transparency(window_attributes.transparent);
 
         let display_builder = DisplayBuilder::new().with_window_attributes(Some(window_attributes));
         let (window, gl_config) = display_builder
             .build(event_loop, template, |configs| {
                 configs
                     .reduce(|accum, config| {
-                        let transparency_check = config.supports_transparency().unwrap_or(false)
-                            & !accum.supports_transparency().unwrap_or(false);
+                        let transparency_check = transparent
+                            && config.supports_transparency().unwrap_or(false)
+                            && !accum.supports_transparency().unwrap_or(false);
 
                         if transparency_check || config.num_samples() < accum.num_samples() {
                             config
