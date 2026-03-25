@@ -1,7 +1,7 @@
 [package]
 name = "freya-query"
 description = "Fully-typed, async, reusable cached data management for Freya 🧬"
-version = "0.4.0-rc.13"
+version = "0.4.0-rc.15"
 edition = "2024"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
@@ -10,6 +10,9 @@ homepage = "https://freyaui.dev/"
 repository = "https://github.com/marc2332/freya"
 keywords = ["freya", "async", "state", "synchronization"]
 categories = ["gui", "asynchronous"]
+
+[lints]
+workspace = true
 
 [package.metadata.docs.rs]
 features = ["freya-core/mocked-engine"]

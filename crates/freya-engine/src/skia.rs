@@ -1,6 +1,12 @@
-#[cfg(feature = "metal")]
+#[cfg(any(target_os = "linux", target_os = "windows"))]
+pub use skia_safe::gpu::gl::{
+    Format,
+    FramebufferInfo,
+    Interface,
+};
+#[cfg(target_os = "macos")]
 pub use skia_safe::gpu::mtl;
-#[cfg(feature = "vulkan")]
+#[cfg(any(target_os = "linux", target_os = "windows"))]
 pub use skia_safe::gpu::vk;
 pub use skia_safe::{
     AlphaType,
@@ -64,11 +70,6 @@ pub use skia_safe::{
         SurfaceOrigin,
         backend_render_targets,
         direct_contexts,
-        gl::{
-            Format,
-            FramebufferInfo,
-            Interface,
-        },
         surfaces::{
             render_target,
             wrap_backend_render_target,

@@ -92,12 +92,31 @@ impl MutationRemove {
     }
 }
 
+pub struct MutationAdd {
+    pub node_id: NodeId,
+    pub parent_id: NodeId,
+    pub index: u32,
+    pub element: Rc<dyn ElementExt>,
+}
+
+pub struct MutationModified {
+    pub node_id: NodeId,
+    pub element: Rc<dyn ElementExt>,
+    pub flags: DiffModifies,
+}
+
+#[derive(Debug)]
+pub struct MutationMove {
+    pub index: u32,
+    pub node_id: NodeId,
+}
+
 #[derive(Default)]
 pub struct Mutations {
-    pub added: Vec<(NodeId, NodeId, u32, Rc<dyn ElementExt>)>,
-    pub modified: Vec<(NodeId, Rc<dyn ElementExt>, DiffModifies)>,
+    pub added: Vec<MutationAdd>,
+    pub modified: Vec<MutationModified>,
     pub removed: Vec<MutationRemove>,
-    pub moved: HashMap<NodeId, Vec<(u32, NodeId)>>,
+    pub moved: HashMap<NodeId, Vec<MutationMove>>,
 }
 
 impl Debug for Mutations {
@@ -106,11 +125,22 @@ impl Debug for Mutations {
             "Added: {:?} Modified: {:?} Removed: {:?} Moved: {:?}",
             self.added
                 .iter()
-                .map(|(a, b, c, _)| (*a, *b, *c))
+                .map(|m| (m.node_id, m.parent_id, m.index))
                 .collect::<Vec<_>>(),
-            self.modified.iter().map(|(a, _, _)| *a).collect::<Vec<_>>(),
+            self.modified.iter().map(|m| m.node_id).collect::<Vec<_>>(),
             self.removed,
             self.moved
+                .iter()
+                .map(|(parent_id, moves)| {
+                    (
+                        parent_id,
+                        moves
+                            .iter()
+                            .map(|m| (m.index, m.node_id))
+                            .collect::<Vec<_>>(),
+                    )
+                })
+                .collect::<Vec<_>>()
         ))
     }
 }
@@ -904,6 +934,20 @@ impl Runner {
         (parent_node_id, index_inside_parent)
     }
 
+    /// Recursively finds the root element [NodeId] of a scope.
+    /// When a scope's first child is another component (scope), this follows
+    /// the chain until it finds the first actual element.
+    fn find_scope_root_node_id(&self, scope_id: ScopeId) -> NodeId {
+        let scope_rc = self.scopes.get(&scope_id).unwrap();
+        let scope = scope_rc.borrow();
+        let path_node = scope.nodes.get(&[0]).unwrap();
+        if let Some(child_scope_id) = path_node.scope_id {
+            self.find_scope_root_node_id(child_scope_id)
+        } else {
+            path_node.node_id
+        }
+    }
+
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     fn apply_diff(
         &mut self,
@@ -1171,12 +1215,12 @@ impl Runner {
                     );
                 }
                 PathElement::Element { element, .. } => {
-                    mutations.added.push((
-                        self.node_id_counter,
-                        parent_node_id,
-                        index_inside_parent,
-                        element.clone(),
-                    ));
+                    mutations.added.push(MutationAdd {
+                        node_id: self.node_id_counter,
+                        parent_id: parent_node_id,
+                        index: index_inside_parent,
+                        element: element.clone(),
+                    });
 
                     self.node_to_scope
                         .insert(self.node_id_counter, scope.borrow().id);
@@ -1228,25 +1272,26 @@ impl Runner {
                 scope.borrow_mut().nodes.insert_entry(&to_path, path_entry);
 
                 if let Some(scope_id) = scope_id {
+                    let scope_root_node_id = self.find_scope_root_node_id(scope_id);
                     let scope_rc = self.scopes.get(&scope_id).cloned().unwrap();
-
                     let scope = scope_rc.borrow();
-
-                    let scope_root_node_id = scope.nodes.get(&[0]).map(|node| node.node_id);
 
                     // Mark the scope root node id as moved
                     mutations
                         .moved
                         .entry(scope.parent_node_id_in_parent)
                         .or_default()
-                        .push((to, scope_root_node_id.unwrap()));
+                        .push(MutationMove {
+                            index: to,
+                            node_id: scope_root_node_id,
+                        });
                 } else {
                     // Mark the element as moved
                     mutations
                         .moved
                         .entry(*parent_node_id)
                         .or_default()
-                        .push((to, node_id));
+                        .push(MutationMove { index: to, node_id });
                 }
             }
         }
@@ -1264,7 +1309,11 @@ impl Runner {
                         .get(&modified)
                         .map(|path_node| path_node.node_id)
                         .unwrap();
-                    mutations.modified.push((node_id, element.clone(), flags));
+                    mutations.modified.push(MutationModified {
+                        node_id,
+                        element: element.clone(),
+                        flags,
+                    });
                 }
             });
         }

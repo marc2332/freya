@@ -114,6 +114,7 @@ pub struct WinitRenderer {
     pub font_collection: FontCollection,
     pub futures: Vec<Pin<Box<dyn std::future::Future<Output = ()>>>>,
     pub waker: Waker,
+    pub exit_on_close: bool,
 }
 
 pub struct RendererContext<'a> {
@@ -124,7 +125,7 @@ pub struct RendererContext<'a> {
     pub screen_reader: &'a mut ScreenReader,
     pub font_manager: &'a mut FontMgr,
     pub font_collection: &'a mut FontCollection,
-    pub(crate) active_event_loop: &'a ActiveEventLoop,
+    pub active_event_loop: &'a ActiveEventLoop,
 }
 
 impl RendererContext<'_> {
@@ -591,7 +592,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                         };
 
                                         // Only exit when there is no window and no tray
-                                        if !has_windows && !has_tray {
+                                        if !has_windows && !has_tray && self.exit_on_close {
                                             active_event_loop.exit();
                                         }
                                     }
@@ -649,6 +650,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     app.window.request_redraw();
                     app.process_layout_on_next_render = true;
                     app.tree.layout.reset();
+                    app.tree.text_cache.reset();
                 }
                 WindowEvent::CloseRequested => {
                     let mut on_close_hook = self
@@ -694,7 +696,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         };
 
                         // Only exit when there is no windows and no tray
-                        if !has_windows && !has_tray {
+                        if !has_windows && !has_tray && self.exit_on_close {
                             event_loop.exit();
                         }
                     }
@@ -931,11 +933,26 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                         ElementState::Pressed => KeyboardEventName::KeyDown,
                         ElementState::Released => KeyboardEventName::KeyUp,
                     };
+                    let key = winit_mappings::map_winit_key(&event.logical_key);
+                    let code = winit_mappings::map_winit_physical_key(&event.physical_key);
+                    let modifiers = winit_mappings::map_winit_modifiers(app.modifiers_state);
+
+                    self.plugins.send(
+                        PluginEvent::KeyboardInput {
+                            window: &app.window,
+                            key: key.clone(),
+                            code,
+                            modifiers,
+                            is_pressed: event.state.is_pressed(),
+                        },
+                        PluginHandle::new(&self.proxy),
+                    );
+
                     let platform_event = PlatformEvent::Keyboard {
                         name,
-                        key: winit_mappings::map_winit_key(&event.logical_key),
-                        code: winit_mappings::map_winit_physical_key(&event.physical_key),
-                        modifiers: winit_mappings::map_winit_modifiers(app.modifiers_state),
+                        key,
+                        code,
+                        modifiers,
                     };
                     let mut events_measurer_adapter = EventsMeasurerAdapter {
                         tree: &mut app.tree,

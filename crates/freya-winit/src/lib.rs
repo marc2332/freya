@@ -43,8 +43,20 @@ pub mod tray {
     pub use crate::tray_icon::*;
 }
 
-pub fn launch(launch_config: LaunchConfig) {
+/// Launch the application.
+///
+/// If a custom event loop was provided via [`LaunchConfig::with_event_loop`], it will be used.
+/// Otherwise a default one is created.
+pub fn launch(mut launch_config: LaunchConfig) {
     use std::collections::HashMap;
+
+    use freya_core::integration::*;
+    use freya_engine::prelude::{
+        FontCollection,
+        FontMgr,
+        TypefaceFontProvider,
+    };
+    use winit::event_loop::EventLoop;
 
     #[cfg(all(not(debug_assertions), not(target_os = "android")))]
     {
@@ -60,21 +72,11 @@ pub fn launch(launch_config: LaunchConfig) {
         }));
     }
 
-    use freya_core::integration::*;
-    use freya_engine::prelude::{
-        FontCollection,
-        FontMgr,
-        TypefaceFontProvider,
-    };
-    use winit::event_loop::EventLoop;
-
-    let mut event_loop_builder = launch_config
-        .event_loop_builder
-        .unwrap_or_else(EventLoop::<NativeEvent>::with_user_event);
-
-    let event_loop = event_loop_builder
-        .build()
-        .expect("Failed to create event loop.");
+    let event_loop = launch_config.event_loop.take().unwrap_or_else(|| {
+        EventLoop::<NativeEvent>::with_user_event()
+            .build()
+            .expect("Failed to create event loop.")
+    });
 
     let proxy = event_loop.create_proxy();
 
@@ -126,6 +128,7 @@ pub fn launch(launch_config: LaunchConfig) {
         fallback_fonts: launch_config.fallback_fonts,
         screen_reader,
         waker,
+        exit_on_close: launch_config.exit_on_close,
     };
 
     #[cfg(feature = "tray")]

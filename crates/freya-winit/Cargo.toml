@@ -1,6 +1,6 @@
 [package]
 name = "freya-winit"
-version = "0.4.0-rc.13"
+version = "0.4.0-rc.15"
 description = "Winit renderer for Freya"
 edition = "2024"
 license = "MIT"
@@ -10,6 +10,9 @@ homepage = "https://freyaui.dev/"
 repository = "https://github.com/marc2332/freya"
 keywords = ["gui"]
 categories = ["gui", "asynchronous"]
+
+[lints]
+workspace = true
 
 [package.metadata.docs.rs]
 features = ["freya-core/mocked-engine"]
@@ -22,15 +25,6 @@ tracing = { workspace = true }
 
 # Rendering
 bytes = { workspace = true }
-
-# Rendering OpenGL
-gl = { workspace = true }
-glutin = { workspace = true }
-glutin-winit = { workspace = true }
-
-# Rendering VUlkan
-ash = { workspace = true, optional = true }
-ash-window = { workspace = true, optional = true }
 
 # Window
 raw-window-handle = { workspace = true }
@@ -70,27 +64,27 @@ rfd = { workspace = true }
 [target.'cfg(target_os = "linux")'.dependencies]
 gtk = { version = "0.18.2", optional = true }
 
+# Rendering OpenGL + Vulkan (Linux/Windows)
+[target.'cfg(any(target_os = "linux", target_os = "windows"))'.dependencies]
+gl = { workspace = true }
+glutin = { workspace = true }
+glutin-winit = { workspace = true }
+ash = { workspace = true }
+ash-window = { workspace = true }
+
+# Rendering Metal (macOS)
 [target.'cfg(target_os = "macos")'.dependencies]
-objc2-core-foundation = { version = "0.3.2", optional = true }
-objc2 = { version = "0.6", optional = true }
-objc2-metal = { version = "0.3", optional = true }
-objc2-quartz-core = { version = "0.3", optional = true }
-objc2-app-kit = { version = "0.3", optional = true }
+objc2-core-foundation = { version = "0.3.2" }
+objc2 = { version = "0.6" }
+objc2-metal = { version = "0.3" }
+objc2-quartz-core = { version = "0.3" }
+objc2-app-kit = { version = "0.3" }
 
 [dev-dependencies]
 freya = { path = "../freya" }
 
 [features]
 hotpath = ["hotpath/hotpath"]
-vulkan = ["dep:ash", "dep:ash-window", "freya-engine/vulkan"]
-metal = [
-  "dep:objc2",
-  "dep:objc2-metal",
-  "dep:objc2-quartz-core",
-  "dep:objc2-app-kit",
-  "dep:objc2-core-foundation",
-  "freya-engine/metal",
-]
 skia-engine = ["freya-engine/skia-engine"]
-tray = ["dep:tray-icon", "dep:gtk", "dep:objc2-core-foundation"]
+tray = ["dep:tray-icon", "dep:gtk"]
 tracing = []

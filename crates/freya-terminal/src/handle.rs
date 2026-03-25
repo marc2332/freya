@@ -18,7 +18,11 @@ use freya_core::{
         UserEvent,
     },
 };
-use keyboard_types::Modifiers;
+use keyboard_types::{
+    Key,
+    Modifiers,
+    NamedKey,
+};
 use portable_pty::{
     MasterPty,
     PtySize,
@@ -124,6 +128,10 @@ pub struct TerminalHandle {
     pub(crate) output_notifier: ArcNotify,
     /// Notifier that signals when the window title changes via OSC 0 or OSC 2.
     pub(crate) title_notifier: ArcNotify,
+    /// Clipboard content set by the terminal app via OSC 52.
+    pub(crate) clipboard_content: Rc<RefCell<Option<String>>>,
+    /// Notifier that signals when clipboard content changes via OSC 52.
+    pub(crate) clipboard_notifier: ArcNotify,
     /// Tracks when user last wrote input to the PTY.
     pub(crate) last_write_time: Rc<RefCell<Instant>>,
     /// Currently pressed mouse button (for drag/motion tracking).
@@ -194,6 +202,115 @@ impl TerminalHandle {
         *self.last_write_time.borrow_mut() = Instant::now();
         self.scroll_to_bottom();
         Ok(())
+    }
+
+    /// Process a key event and write the corresponding terminal escape sequence to the PTY.
+    ///
+    /// Handles standard terminal keys (Enter, Backspace, Tab, Escape, arrows, Delete),
+    /// Ctrl+letter control codes, modified Enter (Shift/Ctrl via CSI u encoding),
+    /// regular character input, and shift state tracking for mouse selection.
+    ///
+    /// Returns `Ok(true)` if the key was handled, `Ok(false)` if not recognized.
+    ///
+    /// Application-level shortcuts like clipboard copy/paste should be handled
+    /// by the caller before calling this method.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// # use freya_terminal::prelude::*;
+    /// # use keyboard_types::{Key, Modifiers};
+    /// # let handle: TerminalHandle = unimplemented!();
+    /// # let key = Key::Character("a".into());
+    /// # let modifiers = Modifiers::empty();
+    /// let _ = handle.write_key(&key, modifiers);
+    /// ```
+    pub fn write_key(&self, key: &Key, modifiers: Modifiers) -> Result<bool, TerminalError> {
+        let shift = modifiers.contains(Modifiers::SHIFT);
+        let ctrl = modifiers.contains(Modifiers::CONTROL);
+        let alt = modifiers.contains(Modifiers::ALT);
+
+        match key {
+            Key::Character(ch) if ctrl && ch.len() == 1 => {
+                self.write(&[ch.as_bytes()[0] & 0x1f])?;
+                Ok(true)
+            }
+            Key::Named(NamedKey::Enter) if shift || ctrl => {
+                let m = 1 + shift as u8 + (alt as u8) * 2 + (ctrl as u8) * 4;
+                let seq = format!("\x1b[13;{m}u");
+                self.write(seq.as_bytes())?;
+                Ok(true)
+            }
+            Key::Named(NamedKey::Enter) => {
+                self.write(b"\r")?;
+                Ok(true)
+            }
+            Key::Named(NamedKey::Backspace) if ctrl => {
+                self.write(&[0x08])?;
+                Ok(true)
+            }
+            Key::Named(NamedKey::Backspace) if alt => {
+                self.write(&[0x1b, 0x7f])?;
+                Ok(true)
+            }
+            Key::Named(NamedKey::Backspace) => {
+                self.write(&[0x7f])?;
+                Ok(true)
+            }
+            Key::Named(NamedKey::Delete) if alt || ctrl || shift => {
+                let m = 1 + shift as u8 + (alt as u8) * 2 + (ctrl as u8) * 4;
+                let seq = format!("\x1b[3;{m}~");
+                self.write(seq.as_bytes())?;
+                Ok(true)
+            }
+            Key::Named(NamedKey::Delete) => {
+                self.write(b"\x1b[3~")?;
+                Ok(true)
+            }
+            Key::Named(NamedKey::Shift) => {
+                self.shift_pressed(true);
+                Ok(true)
+            }
+            Key::Named(NamedKey::Tab) if shift => {
+                self.write(b"\x1b[Z")?;
+                Ok(true)
+            }
+            Key::Named(NamedKey::Tab) => {
+                self.write(b"\t")?;
+                Ok(true)
+            }
+            Key::Named(NamedKey::Escape) => {
+                self.write(&[0x1b])?;
+                Ok(true)
+            }
+            Key::Named(
+                dir @ (NamedKey::ArrowUp
+                | NamedKey::ArrowDown
+                | NamedKey::ArrowLeft
+                | NamedKey::ArrowRight),
+            ) => {
+                let ch = match dir {
+                    NamedKey::ArrowUp => 'A',
+                    NamedKey::ArrowDown => 'B',
+                    NamedKey::ArrowRight => 'C',
+                    NamedKey::ArrowLeft => 'D',
+                    _ => unreachable!(),
+                };
+                if shift || ctrl {
+                    let m = 1 + shift as u8 + (alt as u8) * 2 + (ctrl as u8) * 4;
+                    let seq = format!("\x1b[1;{m}{ch}");
+                    self.write(seq.as_bytes())?;
+                } else {
+                    self.write(&[0x1b, b'[', ch as u8])?;
+                }
+                Ok(true)
+            }
+            Key::Character(ch) => {
+                self.write(ch.as_bytes())?;
+                Ok(true)
+            }
+            _ => Ok(false),
+        }
     }
 
     /// Write text to the PTY as a paste operation.
@@ -317,6 +434,11 @@ impl TerminalHandle {
     /// Returns `None` if the shell hasn't reported a title yet.
     pub fn title(&self) -> Option<String> {
         self.title.borrow().clone()
+    }
+
+    /// Get the latest clipboard content set by the terminal app via OSC 52.
+    pub fn clipboard_content(&self) -> Option<String> {
+        self.clipboard_content.borrow().clone()
     }
 
     /// Send a wheel event to the PTY.
@@ -521,6 +643,11 @@ impl TerminalHandle {
     /// Can be called repeatedly in a loop to react to title updates from the shell.
     pub fn title_changed(&self) -> impl std::future::Future<Output = ()> + '_ {
         self.title_notifier.notified()
+    }
+
+    /// Returns a future that completes when the terminal app sets clipboard content via OSC 52.
+    pub fn clipboard_changed(&self) -> impl std::future::Future<Output = ()> + '_ {
+        self.clipboard_notifier.notified()
     }
 
     pub fn last_write_elapsed(&self) -> std::time::Duration {

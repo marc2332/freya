@@ -13,7 +13,6 @@ use freya::{
 };
 use freya_core::integration::NodeId;
 use freya_devtools::{
-    IncomingMessage,
     IncomingMessageAction,
     OutgoingMessage,
     OutgoingMessageAction,
@@ -36,7 +35,6 @@ mod property;
 mod state;
 mod tabs;
 
-use async_tungstenite::tungstenite::protocol::Message;
 use hooks::use_node_info;
 use tabs::{
     computed_layout::computed_layout,
@@ -126,10 +124,14 @@ pub fn app() -> impl IntoElement {
 struct NavBar;
 impl Component for NavBar {
     fn render(&self) -> impl IntoElement {
-        SideBar::new()
-            .width(Size::px(100.))
-            .bar(
+        rect()
+            .horizontal()
+            .child(
                 rect()
+                    .theme_background()
+                    .height(Size::fill())
+                    .width(Size::px(100.))
+                    .padding(8.)
                     .child(ActivableRoute::new(
                         Route::TreeInspector {},
                         Link::new(Route::TreeInspector {}).child(SideBarItem::new().child("Tree")),
@@ -139,9 +141,10 @@ impl Component for NavBar {
                         Link::new(Route::Misc {}).child(SideBarItem::new().child("Misc")),
                     )),
             )
-            .content(
+            .child(
                 rect()
                     .padding(Gaps::new_all(8.))
+                    .overflow(Overflow::Clip)
                     .child(Outlet::<Route>::new()),
             )
     }
@@ -184,6 +187,26 @@ impl Route {
             _ => None,
         }
     }
+}
+
+fn info_label(value: impl Into<String>, suffix: &str) -> impl IntoElement {
+    paragraph()
+        .max_lines(1)
+        .height(Size::px(20.))
+        .span(Span::new(value.into()))
+        .span(Span::new(format!(" {suffix}")).color((200, 200, 200)))
+}
+
+fn inspector_tab(route: Route, text: &'static str) -> impl IntoElement {
+    ActivableRoute::new(
+        route.clone(),
+        Link::new(route).child(
+            FloatingTab::new()
+                .corner_radius(CornerRadius::new_all(8.))
+                .padding(Gaps::new_all(8.))
+                .child(label().text(text).max_lines(1)),
+        ),
+    )
 }
 
 #[derive(PartialEq, Clone, Copy)]
@@ -233,36 +256,15 @@ impl Component for LayoutForNodeInspector {
                                         rect()
                                             .horizontal()
                                             .spacing(6.)
-                                            .child(
-                                                paragraph()
-                                                    .max_lines(1)
-                                                    .height(Size::px(20.))
-                                                    .span(Span::new(area))
-                                                    .span(
-                                                        Span::new(" area").color((200, 200, 200)),
-                                                    ),
-                                            )
-                                            .child(
-                                                paragraph()
-                                                    .max_lines(1)
-                                                    .height(Size::px(20.))
-                                                    .span(Span::new(
-                                                        node_info.children_len.to_string(),
-                                                    ))
-                                                    .span(
-                                                        Span::new(" children")
-                                                            .color((200, 200, 200)),
-                                                    ),
-                                            )
-                                            .child(
-                                                paragraph()
-                                                    .max_lines(1)
-                                                    .height(Size::px(20.))
-                                                    .span(Span::new(node_info.layer.to_string()))
-                                                    .span(
-                                                        Span::new(" layer").color((200, 200, 200)),
-                                                    ),
-                                            ),
+                                            .child(info_label(area, "area"))
+                                            .child(info_label(
+                                                node_info.children_len.to_string(),
+                                                "children",
+                                            ))
+                                            .child(info_label(
+                                                node_info.layer.to_string(),
+                                                "layer",
+                                            )),
                                     )
                                     .child(computed_layout(inner_area, padding, margin)),
                             ),
@@ -276,25 +278,17 @@ impl Component for LayoutForNodeInspector {
                         rect()
                             .direction(Direction::Horizontal)
                             .padding((0., 4.))
-                            .child(ActivableRoute::new(
+                            .child(inspector_tab(
                                 Route::NodeInspectorStyle { node_id, window_id },
-                                Link::new(Route::NodeInspectorStyle { node_id, window_id }).child(
-                                    FloatingTab::new().child(label().text("Style").max_lines(1)),
-                                ),
+                                "Style",
                             ))
-                            .child(ActivableRoute::new(
+                            .child(inspector_tab(
                                 Route::NodeInspectorLayout { node_id, window_id },
-                                Link::new(Route::NodeInspectorLayout { node_id, window_id }).child(
-                                    FloatingTab::new().child(label().text("Layout").max_lines(1)),
-                                ),
+                                "Layout",
                             ))
-                            .child(ActivableRoute::new(
+                            .child(inspector_tab(
                                 Route::NodeInspectorTextStyle { node_id, window_id },
-                                Link::new(Route::NodeInspectorTextStyle { node_id, window_id })
-                                    .child(
-                                        FloatingTab::new()
-                                            .child(label().text("Text Style").max_lines(1)),
-                                    ),
+                                "Text Style",
                             )),
                     ),
             )
@@ -318,55 +312,32 @@ impl Component for LayoutForTreeInspector {
         ResizableContainer::new()
             .direction(Direction::Horizontal)
             .panel(
-                ResizablePanel::new(60.).child(rect().padding(10.).child(NodesTree {
-                    selected_node_id,
-                    selected_window_id,
-                    on_selected: EventHandler::new(move |(window_id, node_id)| {
-                        let message = Message::Text(
-                            serde_json::to_string(&IncomingMessage {
-                                action: IncomingMessageAction::HighlightNode { window_id, node_id },
-                            })
-                            .unwrap()
-                            .into(),
-                        );
-                        let client = radio.read().client.clone();
-                        spawn(async move {
-                            client
-                                .lock()
-                                .await
-                                .as_mut()
-                                .unwrap()
-                                .send(message)
-                                .await
-                                .ok();
-                        });
-                    }),
-                    on_hover: EventHandler::new(move |(window_id, node_id)| {
-                        let message = Message::Text(
-                            serde_json::to_string(&IncomingMessage {
-                                action: IncomingMessageAction::HoverNode { window_id, node_id },
-                            })
-                            .unwrap()
-                            .into(),
-                        );
-                        let client = radio.read().client.clone();
-                        spawn(async move {
-                            client
-                                .lock()
-                                .await
-                                .as_mut()
-                                .unwrap()
-                                .send(message)
-                                .await
-                                .ok();
-                        });
-                    }),
-                })),
+                ResizablePanel::new(PanelSize::percent(60.)).child(rect().padding(10.).child(
+                    NodesTree {
+                        selected_node_id,
+                        selected_window_id,
+                        on_selected: EventHandler::new(move |(window_id, node_id)| {
+                            radio
+                                .read()
+                                .send_action(IncomingMessageAction::HighlightNode {
+                                    window_id,
+                                    node_id,
+                                });
+                        }),
+                        on_hover: EventHandler::new(move |(window_id, node_id)| {
+                            radio.read().send_action(IncomingMessageAction::HoverNode {
+                                window_id,
+                                node_id,
+                            });
+                        }),
+                    },
+                )),
             )
-            .panel(
-                is_expanded_vertical
-                    .then(|| ResizablePanel::new(40.).child(Outlet::<Route>::new())),
-            )
+            .panel(is_expanded_vertical.then(|| {
+                ResizablePanel::new(PanelSize::px(400.))
+                    .min_size(300.)
+                    .child(Outlet::<Route>::new())
+            }))
     }
 }
 

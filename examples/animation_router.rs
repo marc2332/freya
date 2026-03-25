@@ -186,7 +186,7 @@ impl Component for AppContainer {
 
 fn bottom_tab<R: Routable + PartialEq>(route: R, exact: bool, label: &'static str) -> Link {
     Link::new(route.clone())
-        .child(ActivableRoute::new(route.clone(), FloatingTab::new().child(label)).exact(exact))
+        .child(ActivableRoute::new(route, FloatingTab::new().child(label)).exact(exact))
 }
 
 #[derive(PartialEq)]

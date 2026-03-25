@@ -37,10 +37,7 @@ use crate::{
         SegmentedButton,
     },
     select::Select,
-    sidebar::{
-        SideBar,
-        SideBarItem,
-    },
+    sidebar::SideBarItem,
     slider::Slider,
     switch::Switch,
     table::Table,
@@ -67,7 +64,6 @@ pub struct Theme {
     pub switch: SwitchThemePreference,
     pub scrollbar: ScrollBarThemePreference,
     pub progressbar: ProgressBarThemePreference,
-    pub sidebar: SideBarThemePreference,
     pub sidebar_item: SideBarItemThemePreference,
     #[cfg(feature = "router")]
     pub link: LinkThemePreference,
@@ -257,17 +253,6 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub SideBar {
-       %[fields]
-        color: Color,
-        background: Color,
-        padding: Gaps,
-        spacing: f32,
-    }
-}
-
-define_theme! {
-    %[component]
     pub SideBarItem {
         %[fields]
         color: Color,
@@ -296,6 +281,7 @@ define_theme! {
         color: Color,
         background: Color,
         border_fill: Color,
+        font_size: f32,
     }
 }
 
@@ -377,6 +363,7 @@ define_theme! {
         height: Size,
         padding: Gaps,
         color: Color,
+        corner_radius: CornerRadius,
     }
 }
 

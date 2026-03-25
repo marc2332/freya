@@ -40,7 +40,6 @@ use crate::theming::{
         SegmentedButtonThemePreference,
         SelectThemePreference,
         SideBarItemThemePreference,
-        SideBarThemePreference,
         SliderThemePreference,
         SwitchThemePreference,
         TableThemePreference,
@@ -192,18 +191,12 @@ pub const BASE_THEME: Theme = Theme {
         progress_background: Preference::Reference("primary"),
         height: Preference::Specific(20.),
     },
-    sidebar: SideBarThemePreference {
-        color: Preference::Reference("text_primary"),
-        background: Preference::Reference("surface_tertiary"),
-        padding: Preference::Specific(Gaps::new_all(8.)),
-        spacing: Preference::Specific(4.),
-    },
     sidebar_item: SideBarItemThemePreference {
         color: Preference::Reference("text_primary"),
         background: Preference::Reference("surface_tertiary"),
         active_background: Preference::Reference("surface_secondary"),
         hover_background: Preference::Reference("hover"),
-        corner_radius: Preference::Specific(CornerRadius::new_all(99.)),
+        corner_radius: Preference::Specific(CornerRadius::new_all(12.)),
         margin: Preference::Specific(Gaps::new_all(0.)),
         padding: Preference::Specific(Gaps::new(8., 12., 8., 12.)),
     },
@@ -215,6 +208,7 @@ pub const BASE_THEME: Theme = Theme {
         background: Preference::Reference("surface_tertiary"),
         color: Preference::Reference("text_primary"),
         border_fill: Preference::Reference("surface_primary"),
+        font_size: Preference::Specific(14.),
     },
     circular_loader: CircularLoaderThemePreference {
         primary_color: Preference::Reference("surface_primary"),
@@ -279,6 +273,7 @@ pub const BASE_THEME: Theme = Theme {
         padding: Preference::Specific(Gaps::new(6., 12., 6., 12.)),
         width: Preference::Specific(Size::Inner),
         height: Preference::Specific(Size::Inner),
+        corner_radius: Preference::Specific(CornerRadius::new_all(99.)),
     },
     slider: SliderThemePreference {
         background: Preference::Reference("surface_primary"),

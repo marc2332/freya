@@ -37,22 +37,26 @@
 //! - [Elements](self::elements)
 //! - [Hooks](self::_docs::hooks)
 //! - [State](self::_docs::state_management)
+//! - [Remote Data](self::_docs::remote_data)
 //! - [Layers](self::_docs::layers)
+//! - [Platforms](self::_docs::platforms)
 //! - [Development Setup](self::_docs::development_setup)
 //!
 //! ### Learn
 //! - [Built-in Components](crate::components)
 //! - [Built-in Components Gallery](crate::components::gallery)
-//! - [i18n](freya_i18n)
-//! - [Animation](freya_animation::prelude::use_animation)
-//! - [Routing](freya_router)
-//! - [Clipboard](freya_clipboard)
-//! - [Icons](freya_icons)
-//! - [Material Design](freya_material_design)
+//! - [i18n]
+//! - [Animation](crate::animation::use_animation)
+//! - [Routing](router)
+//! - [Clipboard](clipboard)
+//! - [Icons](icons)
+//! - [Material Design](material_design)
 //! - [Plotters](freya_plotters_backend)
 //! - [Testing](freya_testing)
-//! - [WebView](freya_webview)
-//! - [Terminal](freya_terminal)
+//! - [WebView](webview)
+//! - [Terminal](terminal)
+//! - [Tokio Integration](self::_docs::tokio_integration)
+//! - [Devtools](self::_docs::devtools)
 //!
 //! ## Features flags
 //!
@@ -95,10 +99,14 @@ pub mod prelude {
             LaunchConfig,
             WindowConfig,
         },
-        renderer::RendererContext,
+        renderer::{
+            NativeEvent,
+            RendererContext,
+        },
     };
 
     pub use crate::components::*;
+
     pub fn launch(launch_config: LaunchConfig) {
         #[cfg(feature = "devtools")]
         let launch_config = launch_config.with_plugin(freya_devtools::DevtoolsPlugin::default());

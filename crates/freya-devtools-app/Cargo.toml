@@ -1,6 +1,6 @@
 [package]
 name = "freya-devtools-app"
-version = "0.4.0-rc.13"
+version = "0.4.0-rc.15"
 description = "Devtools App for Freya app"
 edition = "2024"
 license = "MIT"
@@ -10,6 +10,9 @@ homepage = "https://freyaui.dev/"
 repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia"]
 categories = ["gui", "asynchronous"]
+
+[lints]
+workspace = true
 
 [features]
 skia-engine = ["freya-core/skia-engine"]

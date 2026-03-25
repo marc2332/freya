@@ -142,7 +142,7 @@ impl AppWindow {
             window_attributes = window_attributes_hook(window_attributes, active_event_loop);
         }
         let (driver, mut window) =
-            GraphicsDriver::new(active_event_loop, window_attributes.clone(), &window_config);
+            GraphicsDriver::new(active_event_loop, window_attributes.clone());
 
         if let Some(window_handle_hook) = window_config.window_handle_hook.take() {
             window_handle_hook(&mut window);
@@ -282,6 +282,7 @@ impl AppWindow {
                 tree: &tree,
                 animation_clock: &animation_clock,
                 runner: &mut runner,
+                graphics_driver: driver.name(),
             },
             PluginHandle::new(event_loop_proxy),
         );

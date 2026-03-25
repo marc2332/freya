@@ -167,7 +167,6 @@ impl Component for ScrollView {
         let focus = use_focus();
         let mut timeout = use_timeout(|| Duration::from_millis(800));
         let mut pressing_shift = use_state(|| false);
-        let mut pressing_alt = use_state(|| false);
         let mut clicking_scrollbar = use_state::<Option<(Axis, f64)>>(|| None);
         let mut size = use_state(SizedEventData::default);
         let mut scroll_controller = self
@@ -364,8 +363,6 @@ impl Component for ScrollView {
             let data = e;
             if data.key == Key::Named(NamedKey::Shift) {
                 pressing_shift.set(true);
-            } else if data.key == Key::Named(NamedKey::Alt) {
-                pressing_alt.set(true);
             }
         };
 
@@ -373,8 +370,6 @@ impl Component for ScrollView {
             let data = e;
             if data.key == Key::Named(NamedKey::Shift) {
                 pressing_shift.set(false);
-            } else if data.key == Key::Named(NamedKey::Alt) {
-                pressing_alt.set(false);
             }
         };
 
@@ -410,14 +405,14 @@ impl Component for ScrollView {
             .on_pointer_down(on_pointer_down)
             .child(
                 rect()
-                    .width(container_width.clone())
-                    .height(container_height.clone())
+                    .width(container_width)
+                    .height(container_height)
                     .horizontal()
                     .child(
                         rect()
                             .direction(direction)
                             .width(content_width)
-                            .height(content_height.clone())
+                            .height(content_height)
                             .max_width(layout.maximum_width.clone())
                             .max_height(layout.maximum_height.clone())
                             .offset_x(corrected_scrolled_x)

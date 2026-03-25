@@ -162,6 +162,7 @@ pub struct UseAnimation<Animated: AnimatedValue> {
     pub(crate) config: State<AnimConfiguration>,
     pub(crate) is_running: State<bool>,
     pub(crate) has_run_yet: State<bool>,
+    pub(crate) runs: State<usize>,
     pub(crate) task: State<Option<TaskHandle>>,
     pub(crate) last_direction: State<AnimDirection>,
 }
@@ -229,10 +230,16 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
         self.has_run_yet
     }
 
+    /// How many times the animation has been run.
+    pub fn runs(&self) -> State<usize> {
+        self.runs
+    }
+
     /// Run the animation with a given [`AnimDirection`]
     pub fn run(&self, mut direction: AnimDirection) {
         let mut is_running = self.is_running;
         let mut has_run_yet = self.has_run_yet;
+        let mut runs = self.runs;
         let mut task = self.task;
         let mut last_direction = self.last_direction;
 
@@ -264,6 +271,7 @@ impl<Animated: AnimatedValue> UseAnimation<Animated> {
             if !peek_has_run_yet {
                 *has_run_yet.write() = true;
             }
+            *runs.write() += 1;
             is_running.set(true);
 
             loop {
@@ -424,6 +432,7 @@ pub fn use_animation<Animated: AnimatedValue>(
         let mut animated_value = State::create(Animated::default());
         let is_running = State::create(false);
         let has_run_yet = State::create(false);
+        let runs = State::create(0);
         let task = State::create(None);
         let last_direction = State::create(AnimDirection::Forward);
 
@@ -432,6 +441,7 @@ pub fn use_animation<Animated: AnimatedValue>(
             config,
             is_running,
             has_run_yet,
+            runs,
             task,
             last_direction,
         };
@@ -495,6 +505,7 @@ pub fn use_animation_with_dependencies<Animated: AnimatedValue, D: 'static + Clo
         let mut animated_value = State::create(Animated::default());
         let is_running = State::create(false);
         let has_run_yet = State::create(false);
+        let runs = State::create(0);
         let task = State::create(None);
         let last_direction = State::create(AnimDirection::Forward);
 
@@ -503,6 +514,7 @@ pub fn use_animation_with_dependencies<Animated: AnimatedValue, D: 'static + Clo
             config,
             is_running,
             has_run_yet,
+            runs,
             task,
             last_direction,
         };

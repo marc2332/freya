@@ -27,7 +27,7 @@ jobs:
           prefix-key: "docs"
 
       - name: cargo doc
-        run: RUSTDOCFLAGS="--cfg docsrs" cargo +nightly-2025-09-25 doc --no-deps --workspace --features "all, docs"
+        run: RUSTDOCFLAGS="--cfg docsrs" cargo +nightly-2026-03-15 doc --no-deps --workspace --features "all, docs"
       - name: Ensure nightly rustfmt
         uses: dtolnay/rust-toolchain@master
         with:

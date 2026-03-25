@@ -177,22 +177,26 @@ impl ragnarok::SourceEvent for PlatformEvent {
         )
     }
 
-    fn is_touch_released(&self) -> bool {
-        matches!(
-            &self,
-            Self::Touch {
-                phase: TouchPhase::Ended,
-                ..
-            }
-        )
-    }
-
     /// Check if this event can press state of a Node.
     fn is_pressed(&self) -> bool {
         matches!(
             &self,
             Self::Mouse {
                 name: MouseEventName::MouseDown,
+                ..
+            } | Self::Touch {
+                name: TouchEventName::TouchStart,
+                ..
+            }
+        )
+    }
+
+    /// Check if this event is a touch released event.
+    fn is_touch_released(&self) -> bool {
+        matches!(
+            &self,
+            Self::Touch {
+                phase: TouchPhase::Ended,
                 ..
             }
         )

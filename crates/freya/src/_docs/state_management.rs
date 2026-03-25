@@ -454,6 +454,10 @@
 //!   - Apps that require precise updates for max performance
 //!   - Multi-window applications
 //!
+//! - **Use Freya Query** ([`remote_data`](crate::_docs::remote_data)) for:
+//!   - Async data from external sources (HTTP APIs, databases)
+//!   - Cached, deduplicated, and automatically refreshed data
+//!
 //! ## Examples
 //!
 //! Check out these examples in the repository:

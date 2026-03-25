@@ -89,7 +89,7 @@ fn app() -> impl IntoElement {
         }
     };
 
-    let len = filtered_data.len() as i32;
+    let len = filtered_data.len();
 
     rect().padding(8.).child(
         Table::new()

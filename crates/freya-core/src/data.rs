@@ -46,6 +46,7 @@ use crate::{
         scale::Scale,
         shadow::Shadow,
         text_align::TextAlign,
+        text_decoration::TextDecoration,
         text_height::TextHeightBehavior,
         text_overflow::TextOverflow,
         text_shadow::TextShadow,
@@ -124,6 +125,7 @@ pub struct TextStyleState {
     pub text_height: TextHeightBehavior,
     pub text_overflow: TextOverflow,
     pub text_shadows: Vec<TextShadow>,
+    pub text_decoration: TextDecoration,
     pub font_slant: FontSlant,
     pub font_weight: FontWeight,
     pub font_width: FontWidth,
@@ -139,6 +141,7 @@ impl Default for TextStyleState {
             text_height: TextHeightBehavior::default(),
             text_overflow: TextOverflow::default(),
             text_shadows: Vec::new(),
+            text_decoration: TextDecoration::default(),
             font_slant: FontSlant::default(),
             font_weight: FontWeight::default(),
             font_width: FontWidth::default(),
@@ -154,6 +157,7 @@ impl TextStyleState {
         let text_height = data.text_height.unwrap_or_default();
         let text_overflow = data.text_overflow.clone().unwrap_or_default();
         let text_shadows = data.text_shadows.clone();
+        let text_decoration = data.text_decoration.unwrap_or_default();
 
         // Font values can be inherited
         let font_size = data.font_size.unwrap_or(parent.font_size);
@@ -169,6 +173,7 @@ impl TextStyleState {
             text_height,
             text_overflow,
             text_shadows,
+            text_decoration,
             font_size,
             font_slant,
             font_weight,
@@ -207,6 +212,7 @@ pub struct TextStyleData {
     pub text_height: Option<TextHeightBehavior>,
     pub text_overflow: Option<TextOverflow>,
     pub text_shadows: Vec<TextShadow>,
+    pub text_decoration: Option<TextDecoration>,
     pub font_slant: Option<FontSlant>,
     pub font_weight: Option<FontWeight>,
     pub font_width: Option<FontWidth>,

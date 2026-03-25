@@ -84,6 +84,7 @@ impl Component for Tooltip {
             background,
             color,
             border_fill,
+            font_size,
         } = theme;
 
         rect()
@@ -100,7 +101,7 @@ impl Component for Tooltip {
             .child(
                 label()
                     .max_lines(1)
-                    .font_size(14.)
+                    .font_size(font_size)
                     .color(color)
                     .text(self.text.clone()),
             )
@@ -181,11 +182,11 @@ impl Component for TooltipContainer {
 
         let (scale, opacity) = animation.read().value();
 
-        let on_pointer_enter = move |_| {
+        let on_pointer_over = move |_| {
             is_hovering.set(true);
         };
 
-        let on_pointer_leave = move |_| {
+        let on_pointer_out = move |_| {
             is_hovering.set(false);
         };
 
@@ -205,8 +206,8 @@ impl Component for TooltipContainer {
             .a11y_role(AccessibilityRole::Tooltip)
             .direction(direction)
             .on_sized(on_sized)
-            .on_pointer_enter(on_pointer_enter)
-            .on_pointer_leave(on_pointer_leave)
+            .on_pointer_over(on_pointer_over)
+            .on_pointer_out(on_pointer_out)
             .children(self.children.clone())
             .child(
                 rect()

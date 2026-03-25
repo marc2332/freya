@@ -1,12 +1,15 @@
 [package]
 name = "freya-router-macro"
-version = "0.4.0-rc.13"
+version = "0.4.0-rc.15"
 authors = ["Evan Almloff", "Marc Espín <mespinsanz@gmail.com>"]
 edition = "2024"
 description = "Macro for Freya Router"
 license = "MIT"
 repository = "https://github.com/marc2332/freya/"
 keywords = ["gui", "ui", "desktop", "skia", "freya"]
+
+[lints]
+workspace = true
 
 [lib]
 proc-macro = true

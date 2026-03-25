@@ -46,7 +46,7 @@ use crate::scrollviews::{
 ///                 .child(format!("Item {i}"))
 ///                 .into()
 ///         })
-///         .length(300)
+///         .length(300usize)
 ///         .item_size(25.),
 ///     )
 /// }
@@ -70,7 +70,7 @@ pub struct VirtualScrollView<D, B: Fn(usize, &D) -> Element> {
     builder: B,
     builder_data: D,
     item_size: f32,
-    length: i32,
+    length: usize,
     layout: LayoutData,
     show_scrollbar: bool,
     scroll_with_arrows: bool,
@@ -219,7 +219,7 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
         self
     }
 
-    pub fn length(mut self, length: impl Into<i32>) -> Self {
+    pub fn length(mut self, length: impl Into<usize>) -> Self {
         self.length = length.into();
         self
     }
@@ -260,7 +260,6 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
         let focus = use_focus();
         let mut timeout = use_timeout(|| Duration::from_millis(800));
         let mut pressing_shift = use_state(|| false);
-        let mut pressing_alt = use_state(|| false);
         let mut clicking_scrollbar = use_state::<Option<(Axis, f64)>>(|| None);
         let mut size = use_state(SizedEventData::default);
         let mut scroll_controller = self
@@ -451,8 +450,6 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
             let data = e;
             if data.key == Key::Named(NamedKey::Shift) {
                 pressing_shift.set(true);
-            } else if data.key == Key::Named(NamedKey::Alt) {
-                pressing_alt.set(true);
             }
         };
 
@@ -460,8 +457,6 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
             let data = e;
             if data.key == Key::Named(NamedKey::Shift) {
                 pressing_shift.set(false);
-            } else if data.key == Key::Named(NamedKey::Alt) {
-                pressing_alt.set(false);
             }
         };
 
@@ -479,7 +474,6 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
         );
 
         let children = render_range
-            .clone()
             .map(|i| (self.builder)(i, &self.builder_data))
             .collect::<Vec<Element>>();
 
@@ -530,8 +524,8 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
             .on_pointer_down(on_pointer_down)
             .child(
                 rect()
-                    .width(container_width.clone())
-                    .height(container_height.clone())
+                    .width(container_width)
+                    .height(container_height)
                     .horizontal()
                     .child(
                         rect()

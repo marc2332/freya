@@ -1,20 +1,20 @@
 f:
     taplo fmt
-    cargo +nightly-2025-09-25 fmt --all -- --error-on-unformatted --unstable-features
+    cargo +nightly-2026-03-15 fmt --all -- --error-on-unformatted --unstable-features
 
 f-check:
     taplo fmt --check
-    cargo +nightly-2025-09-25 fmt --all --check -- --error-on-unformatted --unstable-features
+    cargo +nightly-2026-03-15 fmt --all --check -- --error-on-unformatted --unstable-features
 
 c:
     taplo check
     cargo clippy --workspace --examples --features "all-debug" -- -D warnings
-    cargo doc --workspace --features "all-debug"
+    cargo doc --no-deps --workspace --features "all-debug"
 
 c-ci:
     taplo check
-    cargo clippy --workspace --examples --features "all-debug, vulkan, metal" -- -D warnings
-    cargo doc --workspace --features "all-debug, vulkan, metal"
+    cargo clippy --workspace --examples --features "all-debug" -- -D warnings
+    RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --workspace --features "all-debug"
 
 e example:
     cargo run --example {{example}}
@@ -27,13 +27,16 @@ t-layout:
     cargo nextest run --package torin
 
 d:
-    RUSTDOCFLAGS="--cfg docsrs" cargo +nightly-2025-09-25 doc --no-deps --workspace --features "all, docs" --open
+    RUSTDOCFLAGS="--cfg docsrs" cargo +nightly-2026-03-15 doc --no-deps --workspace --features "all, docs" --open
 
 tc:
     cargo nextest run --workspace --exclude examples --features all-tests
 
+t-components:
+    cargo nextest run --package freya-components --features freya/gif,freya/markdown
+
 t-core:
-   cargo nextest run --package freya-core
+   cargo nextest run --package freya-core --package ragnarok
 
 pe:
     cargo run --example dev_perf --release
@@ -51,7 +54,7 @@ pa-ci:
     cargo run --example dev_perf --features "hotpath, hotpath-alloc" --release
 
 ba:
-    cargo build --all-targets --all-features
+    cargo build --all-targets --workspace -F freya/all-debug
 
 bindings:
     cargo build --package freya --package freya-testing --features "mocked-engine, all-bindings" --no-default-features

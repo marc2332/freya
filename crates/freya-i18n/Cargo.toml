@@ -1,12 +1,15 @@
 [package]
 name = "freya-i18n"
-version = "0.4.0-rc.13"
+version = "0.4.0-rc.15"
 edition = "2024"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
 description = "i18n integration for Freya Apps based on Fluent Project."
 license = "MIT"
 repository = "https://github.com/marc2332/freya"
 categories = ["accessibility", "gui", "localization", "internationalization"]
+
+[lints]
+workspace = true
 
 [package.metadata.docs.rs]
 features = ["freya-core/mocked-engine"]

@@ -77,6 +77,7 @@ pub(crate) fn extract_buffer(
         selection: None,
         scroll_offset,
         total_scrollback,
+        cursor_visible: !parser.screen().hide_cursor(),
     }
 }
 
@@ -96,6 +97,8 @@ pub(crate) fn spawn_pty(
     let title_notifier = ArcNotify::new();
     let cwd: Rc<RefCell<Option<PathBuf>>> = Rc::new(RefCell::new(None));
     let title: Rc<RefCell<Option<String>>> = Rc::new(RefCell::new(None));
+    let clipboard_content: Rc<RefCell<Option<String>>> = Rc::new(RefCell::new(None));
+    let clipboard_notifier = ArcNotify::new();
 
     let pty_system = native_pty_system();
     let pair = pty_system
@@ -160,6 +163,8 @@ pub(crate) fn spawn_pty(
         let cwd = cwd.clone();
         let title = title.clone();
         let title_notifier = title_notifier.clone();
+        let clipboard_content = clipboard_content.clone();
+        let clipboard_notifier = clipboard_notifier.clone();
         async move {
             let mut tw_parser = TermwizParser::new();
             loop {
@@ -221,6 +226,10 @@ pub(crate) fn spawn_pty(
                                         *title.borrow_mut() = Some(t);
                                         title_notifier.notify();
                                     }
+                                    OperatingSystemCommand::SetSelection(_sel, text) => {
+                                        *clipboard_content.borrow_mut() = Some(text);
+                                        clipboard_notifier.notify();
+                                    }
                                     _ => {}
                                 },
                                 _ => {}
@@ -261,6 +270,8 @@ pub(crate) fn spawn_pty(
         cwd,
         title,
         title_notifier,
+        clipboard_content,
+        clipboard_notifier,
         output_notifier,
         last_write_time: Rc::new(RefCell::new(Instant::now())),
         pressed_button: Rc::new(RefCell::new(None)),

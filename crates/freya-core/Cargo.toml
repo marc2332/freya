@@ -1,6 +1,6 @@
 [package]
 name = "freya-core"
-version = "0.4.0-rc.13"
+version = "0.4.0-rc.15"
 description = "Reactivity runtime, tree management, accessibility integration, rendering pipeline and more, for Freya"
 edition = "2024"
 license = "MIT"
@@ -8,6 +8,9 @@ authors = ["Marc Espín <mespinsanz@gmail.com>"]
 readme = "../../README.md"
 homepage = "https://freyaui.dev/"
 repository = "https://github.com/marc2332/freya"
+
+[lints]
+workspace = true
 
 [package.metadata.docs.rs]
 features = ["mocked-engine"]

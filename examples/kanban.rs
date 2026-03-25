@@ -111,7 +111,7 @@ fn column(mut tasks: State<Vec<Task>>, status: TaskStatus, title: String) -> imp
                 .corner_radius(8.0)
                 .child(
                     label()
-                        .text(title.clone())
+                        .text(title)
                         .font_size(18.0)
                         .font_weight(FontWeight::BOLD),
                 )

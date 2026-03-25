@@ -1,6 +1,16 @@
 use freya::prelude::*;
 use torin::gaps::Gaps;
 
+fn gap_label(tooltip_text: &'static str, value: f32) -> impl IntoElement {
+    TooltipContainer::new(Tooltip::new(tooltip_text)).child(
+        label()
+            .text_align(TextAlign::Center)
+            .width(Size::px(25.))
+            .height(Size::px(25.))
+            .text(format!("{value}")),
+    )
+}
+
 pub fn computed_layout(inner_area: String, padding: Gaps, margin: Gaps) -> impl IntoElement {
     rect().width(Size::fill()).max_width(Size::px(300.)).child(
         rect()
@@ -11,15 +21,7 @@ pub fn computed_layout(inner_area: String, padding: Gaps, margin: Gaps) -> impl 
             .background((40, 40, 40))
             .content(Content::Flex)
             .corner_radius(CornerRadius::new_all(5.))
-            .child(
-                TooltipContainer::new(Tooltip::new("Top margin")).child(
-                    label()
-                        .text_align(TextAlign::Center)
-                        .width(Size::px(25.))
-                        .height(Size::px(25.))
-                        .text(format!("{}", margin.top())),
-                ),
-            )
+            .child(gap_label("Top margin", margin.top()))
             .child(
                 rect()
                     .direction(Direction::Horizontal)
@@ -27,15 +29,7 @@ pub fn computed_layout(inner_area: String, padding: Gaps, margin: Gaps) -> impl 
                     .width(Size::fill())
                     .cross_align(Alignment::center())
                     .content(Content::Flex)
-                    .child(
-                        TooltipContainer::new(Tooltip::new("Left margin")).child(
-                            label()
-                                .text_align(TextAlign::Center)
-                                .width(Size::px(25.))
-                                .height(Size::px(25.))
-                                .text(format!("{}", margin.left())),
-                        ),
-                    )
+                    .child(gap_label("Left margin", margin.left()))
                     .child(
                         rect()
                             .width(Size::flex(1.))
@@ -44,30 +38,14 @@ pub fn computed_layout(inner_area: String, padding: Gaps, margin: Gaps) -> impl 
                             .cross_align(Alignment::Center)
                             .background((71, 180, 240))
                             .corner_radius(CornerRadius::new_all(5.))
-                            .child(
-                                TooltipContainer::new(Tooltip::new("Top padding")).child(
-                                    label()
-                                        .text_align(TextAlign::Center)
-                                        .width(Size::px(25.))
-                                        .height(Size::px(25.))
-                                        .text(format!("{}", padding.top())),
-                                ),
-                            )
+                            .child(gap_label("Top padding", padding.top()))
                             .child(
                                 rect()
                                     .direction(Direction::Horizontal)
                                     .height(Size::flex(1.))
                                     .content(Content::Flex)
                                     .cross_align(Alignment::center())
-                                    .child(
-                                        TooltipContainer::new(Tooltip::new("Left padding")).child(
-                                            label()
-                                                .text_align(TextAlign::Center)
-                                                .width(Size::px(25.))
-                                                .height(Size::px(25.))
-                                                .text(format!("{}", padding.left())),
-                                        ),
-                                    )
+                                    .child(gap_label("Left padding", padding.left()))
                                     .child(
                                         rect()
                                             .width(Size::flex(1.))
@@ -81,44 +59,12 @@ pub fn computed_layout(inner_area: String, padding: Gaps, margin: Gaps) -> impl 
                                                     .child(label().text(inner_area)),
                                             ),
                                     )
-                                    .child(
-                                        TooltipContainer::new(Tooltip::new("Right padding")).child(
-                                            label()
-                                                .text_align(TextAlign::Center)
-                                                .width(Size::px(25.))
-                                                .height(Size::px(25.))
-                                                .text(format!("{}", padding.right())),
-                                        ),
-                                    ),
+                                    .child(gap_label("Right padding", padding.right())),
                             )
-                            .child(
-                                TooltipContainer::new(Tooltip::new("Bottom padding")).child(
-                                    label()
-                                        .text_align(TextAlign::Center)
-                                        .width(Size::px(25.))
-                                        .height(Size::px(25.))
-                                        .text(format!("{}", padding.bottom())),
-                                ),
-                            ),
+                            .child(gap_label("Bottom padding", padding.bottom())),
                     )
-                    .child(
-                        TooltipContainer::new(Tooltip::new("Right margin")).child(
-                            label()
-                                .text_align(TextAlign::Center)
-                                .width(Size::px(25.))
-                                .height(Size::px(25.))
-                                .text(format!("{}", margin.right())),
-                        ),
-                    ),
+                    .child(gap_label("Right margin", margin.right())),
             )
-            .child(
-                TooltipContainer::new(Tooltip::new("Bottom margin")).child(
-                    label()
-                        .text_align(TextAlign::Center)
-                        .width(Size::px(25.))
-                        .height(Size::px(25.))
-                        .text(format!("{}", margin.bottom())),
-                ),
-            ),
+            .child(gap_label("Bottom margin", margin.bottom())),
     )
 }

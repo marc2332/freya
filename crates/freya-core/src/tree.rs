@@ -62,6 +62,9 @@ use crate::{
     layers::Layers,
     node_id::NodeId,
     runner::{
+        MutationAdd,
+        MutationModified,
+        MutationMove,
         MutationRemove,
         Mutations,
     },
@@ -229,29 +232,32 @@ impl Tree {
                 }
             }
 
-            for (node_id, parent_node_id, index_inside_parent, element) in mutations
+            for MutationAdd {
+                node_id,
+                parent_id,
+                index,
+                element,
+            } in mutations
                 .added
                 .into_iter()
-                .sorted_by_key(|(_, parent_node_id, index_inside_parent, _)| {
-                    (*parent_node_id, *index_inside_parent)
-                })
+                .sorted_by_key(|m| (m.parent_id, m.index))
             {
-                let parent_height = *self.heights.entry(parent_node_id).or_default();
+                let parent_height = *self.heights.entry(parent_id).or_default();
 
-                self.parents.insert(node_id, parent_node_id);
+                self.parents.insert(node_id, parent_id);
                 self.heights.insert(node_id, parent_height + 1);
 
-                let parent = self.children.entry(parent_node_id).or_default();
+                let parent = self.children.entry(parent_id).or_default();
 
                 // TODO: Improve this
-                if parent.len() < index_inside_parent as usize + 1 {
-                    parent.resize(index_inside_parent as usize + 1, NodeId::PLACEHOLDER);
+                if parent.len() < index as usize + 1 {
+                    parent.resize(index as usize + 1, NodeId::PLACEHOLDER);
 
-                    parent[index_inside_parent as usize] = node_id;
-                } else if parent.get(index_inside_parent as usize) == Some(&NodeId::PLACEHOLDER) {
-                    parent[index_inside_parent as usize] = node_id;
+                    parent[index as usize] = node_id;
+                } else if parent.get(index as usize) == Some(&NodeId::PLACEHOLDER) {
+                    parent[index as usize] = node_id;
                 } else {
-                    parent.insert(index_inside_parent as usize, node_id);
+                    parent.insert(index as usize, node_id);
                 }
 
                 // Add events
@@ -267,15 +273,15 @@ impl Tree {
 
             for (parent_node_id, movements) in mutations.moved {
                 let parent = self.children.get_mut(&parent_node_id).unwrap();
-                for (to, node_id) in movements.iter() {
-                    let from = parent.iter().position(|id| id == node_id).unwrap();
+                for MutationMove { index: to, node_id } in movements {
+                    let from = parent.iter().position(|id| *id == node_id).unwrap();
 
-                    if from < *to as usize {
-                        parent.insert(*to as usize, *node_id);
+                    if from < to as usize {
+                        parent.insert(to as usize, node_id);
                         parent.remove(from);
                     } else {
                         parent.remove(from);
-                        parent.insert(*to as usize, *node_id);
+                        parent.insert(to as usize, node_id);
                     }
                 }
                 let mut diff = DiffModifies::empty();
@@ -285,7 +291,12 @@ impl Tree {
                 dirty.push((parent_node_id, diff));
             }
 
-            for (node_id, element, flags) in mutations.modified {
+            for MutationModified {
+                node_id,
+                element,
+                flags,
+            } in mutations.modified
+            {
                 dirty.push((node_id, flags));
 
                 let old_element = self.elements.remove(&node_id).unwrap();

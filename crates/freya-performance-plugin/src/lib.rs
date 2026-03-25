@@ -23,19 +23,27 @@ use freya_engine::prelude::{
 use freya_winit::{
     plugins::{
         FreyaPlugin,
+        Key,
+        Modifiers,
         PluginEvent,
         PluginHandle,
     },
     reexports::winit::window::WindowId,
 };
 
+/// Performance overlay plugin that displays FPS, timing metrics, and other
+/// diagnostics on top of the rendered frame. Hidden by default, toggle with
+/// Ctrl+Shift+P (Cmd+Shift+P on macOS).
 #[derive(Default)]
 pub struct PerformanceOverlayPlugin {
+    enabled: bool,
     metrics: HashMap<WindowId, WindowMetrics>,
 }
 
 #[derive(Default)]
 struct WindowMetrics {
+    graphics_driver: &'static str,
+
     frames: Vec<Instant>,
     fps_historic: Vec<usize>,
     max_fps: usize,
@@ -64,6 +72,29 @@ impl PerformanceOverlayPlugin {
 impl FreyaPlugin for PerformanceOverlayPlugin {
     fn on_event(&mut self, event: &mut PluginEvent, _handle: PluginHandle) {
         match event {
+            PluginEvent::KeyboardInput {
+                key,
+                modifiers,
+                is_pressed,
+                ..
+            } => {
+                let toggle_modifier = if cfg!(target_os = "macos") {
+                    Modifiers::META | Modifiers::SHIFT
+                } else {
+                    Modifiers::CONTROL | Modifiers::SHIFT
+                };
+                let is_p = matches!(key, Key::Character(c) if c.eq_ignore_ascii_case("p"));
+                if *is_pressed && is_p && *modifiers == toggle_modifier {
+                    self.enabled = !self.enabled;
+                }
+            }
+            PluginEvent::WindowCreated {
+                window,
+                graphics_driver,
+                ..
+            } => {
+                self.get_metrics(window.id()).graphics_driver = graphics_driver;
+            }
             PluginEvent::AfterRedraw { window, .. } => {
                 let metrics = self.get_metrics(window.id());
                 let now = Instant::now();
@@ -114,6 +145,9 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 tree,
                 animation_clock,
             } => {
+                if !self.enabled {
+                    return;
+                }
                 let metrics = self.get_metrics(window.id());
                 let started_render = metrics.started_render.take().unwrap();
 
@@ -229,6 +263,13 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 add_text(
                     &mut paragraph_builder,
                     format!("Animation clock speed: {}x \n", animation_clock.speed()),
+                    14.0,
+                );
+
+                // Graphics driver
+                add_text(
+                    &mut paragraph_builder,
+                    format!("Graphics: {} \n", metrics.graphics_driver),
                     14.0,
                 );
 

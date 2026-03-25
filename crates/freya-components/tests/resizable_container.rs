@@ -6,8 +6,8 @@ use torin::prelude::Direction;
 pub fn resizable_container_basic() {
     fn resizable_container_app() -> impl IntoElement {
         ResizableContainer::new()
-            .panel(ResizablePanel::new(50.).child(label().text("Panel 1")))
-            .panel(ResizablePanel::new(50.).child(label().text("Panel 2")))
+            .panel(ResizablePanel::new(PanelSize::percent(50.)).child(label().text("Panel 1")))
+            .panel(ResizablePanel::new(PanelSize::percent(50.)).child(label().text("Panel 2")))
     }
 
     let mut test = launch_test(resizable_container_app);
@@ -31,8 +31,8 @@ pub fn resizable_container_horizontal() {
     fn resizable_container_horizontal_app() -> impl IntoElement {
         ResizableContainer::new()
             .direction(Direction::Horizontal)
-            .panel(ResizablePanel::new(50.).child(label().text("Left")))
-            .panel(ResizablePanel::new(50.).child(label().text("Right")))
+            .panel(ResizablePanel::new(PanelSize::percent(50.)).child(label().text("Left")))
+            .panel(ResizablePanel::new(PanelSize::percent(50.)).child(label().text("Right")))
     }
 
     let mut test = launch_test(resizable_container_horizontal_app);
@@ -55,8 +55,14 @@ pub fn resizable_container_horizontal() {
 pub fn resizable_container_drag_divider() {
     fn resizable_container_drag_app() -> impl IntoElement {
         ResizableContainer::new()
-            .panel(ResizablePanel::new(50.).child(label().expanded().text("Panel 1")))
-            .panel(ResizablePanel::new(50.).child(label().expanded().text("Panel 2")))
+            .panel(
+                ResizablePanel::new(PanelSize::percent(50.))
+                    .child(label().expanded().text("Panel 1")),
+            )
+            .panel(
+                ResizablePanel::new(PanelSize::percent(50.))
+                    .child(label().expanded().text("Panel 2")),
+            )
     }
 
     let mut test = launch_test(resizable_container_drag_app);
@@ -99,12 +105,12 @@ pub fn resizable_container_min_size() {
     fn resizable_container_min_size_app() -> impl IntoElement {
         ResizableContainer::new()
             .panel(
-                ResizablePanel::new(50.)
+                ResizablePanel::new(PanelSize::percent(50.))
                     .min_size(100.)
                     .child(label().expanded().text("Panel 1")),
             )
             .panel(
-                ResizablePanel::new(50.)
+                ResizablePanel::new(PanelSize::percent(50.))
                     .min_size(50.)
                     .child(label().expanded().text("Panel 2")),
             )
@@ -151,9 +157,9 @@ pub fn resizable_container_min_size() {
 pub fn resizable_container_multiple_panels() {
     fn resizable_container_multiple_app() -> impl IntoElement {
         ResizableContainer::new()
-            .panel(ResizablePanel::new(33.33).child(label().text("Panel 1")))
-            .panel(ResizablePanel::new(33.33).child(label().text("Panel 2")))
-            .panel(ResizablePanel::new(33.33).child(label().text("Panel 3")))
+            .panel(ResizablePanel::new(PanelSize::percent(33.33)).child(label().text("Panel 1")))
+            .panel(ResizablePanel::new(PanelSize::percent(33.33)).child(label().text("Panel 2")))
+            .panel(ResizablePanel::new(PanelSize::percent(33.33)).child(label().text("Panel 3")))
     }
 
     let mut test = launch_test(resizable_container_multiple_app);
@@ -180,13 +186,19 @@ pub fn resizable_container_multiple_panels() {
 pub fn resizable_container_nested() {
     fn resizable_container_nested_app() -> impl IntoElement {
         ResizableContainer::new()
-            .panel(ResizablePanel::new(50.).child(label().text("Left")))
+            .panel(ResizablePanel::new(PanelSize::percent(50.)).child(label().text("Left")))
             .panel(
-                ResizablePanel::new(50.).child(
+                ResizablePanel::new(PanelSize::percent(50.)).child(
                     ResizableContainer::new()
                         .direction(Direction::Horizontal)
-                        .panel(ResizablePanel::new(50.).child(label().text("Top Right")))
-                        .panel(ResizablePanel::new(50.).child(label().text("Bottom Right"))),
+                        .panel(
+                            ResizablePanel::new(PanelSize::percent(50.))
+                                .child(label().text("Top Right")),
+                        )
+                        .panel(
+                            ResizablePanel::new(PanelSize::percent(50.))
+                                .child(label().text("Bottom Right")),
+                        ),
                 ),
             )
     }
@@ -247,7 +259,7 @@ pub fn resizable_container_dynamic_panels() {
 
                 for i in 0..count {
                     container = container.panel(
-                        ResizablePanel::new(percentage)
+                        ResizablePanel::new(PanelSize::percent(percentage))
                             .child(label().expanded().text(format!("Panel {}", i + 1))),
                     );
                 }
@@ -392,4 +404,74 @@ pub fn resizable_container_dynamic_panels() {
 
     let panel1_height = panel_labels[0].layout().area.height();
     assert!((panel1_height - 450.0).abs() < 10.0);
+}
+
+#[test]
+pub fn resizable_container_pixel_panels() {
+    fn resizable_container_pixel_app() -> impl IntoElement {
+        ResizableContainer::new()
+            .panel(
+                ResizablePanel::new(PanelSize::px(200.))
+                    .child(label().expanded().text("Pixel Panel")),
+            )
+            .panel(
+                ResizablePanel::new(PanelSize::percent(50.))
+                    .child(label().expanded().text("Flex Panel")),
+            )
+    }
+
+    let mut test = launch_test(resizable_container_pixel_app);
+    test.sync_and_update();
+
+    let labels = test.find_many(|node, element| Label::try_downcast(element).map(move |_| node));
+
+    assert_eq!(labels.len(), 2);
+
+    // Container is 500px, handle is 4px
+    // Pixel panel: 200px
+    // Flex panel gets the rest: 500 - 200 - 4 = 296px
+    let pixel_panel_height = labels[0].layout().area.height();
+    let flex_panel_height = labels[1].layout().area.height();
+
+    assert!(
+        (pixel_panel_height - 200.0).abs() < 2.0,
+        "Pixel panel height {} should be ~200px",
+        pixel_panel_height
+    );
+    assert!(
+        (flex_panel_height - 296.0).abs() < 2.0,
+        "Flex panel height {} should be ~296px",
+        flex_panel_height
+    );
+}
+
+#[test]
+pub fn resizable_container_two_pixel_panels() {
+    fn resizable_container_two_pixel_app() -> impl IntoElement {
+        ResizableContainer::new()
+            .direction(Direction::Horizontal)
+            .panel(ResizablePanel::new(PanelSize::px(150.)).child(label().expanded().text("Left")))
+            .panel(ResizablePanel::new(PanelSize::px(300.)).child(label().expanded().text("Right")))
+    }
+
+    let mut test = launch_test(resizable_container_two_pixel_app);
+    test.sync_and_update();
+
+    let labels = test.find_many(|node, element| Label::try_downcast(element).map(move |_| node));
+
+    assert_eq!(labels.len(), 2);
+
+    let left_width = labels[0].layout().area.width();
+    let right_width = labels[1].layout().area.width();
+
+    assert!(
+        (left_width - 150.0).abs() < 2.0,
+        "Left panel width {} should be ~150px",
+        left_width
+    );
+    assert!(
+        (right_width - 300.0).abs() < 2.0,
+        "Right panel width {} should be ~300px",
+        right_width
+    );
 }

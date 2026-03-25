@@ -81,13 +81,6 @@ impl CalendarDate {
     }
 }
 
-#[derive(Debug, Default, PartialEq, Clone, Copy)]
-pub enum CalendarDayStatus {
-    #[default]
-    Idle,
-    Hovering,
-}
-
 /// A calendar component for date selection.
 ///
 /// # Example
@@ -202,7 +195,6 @@ impl Component for Calendar {
         let first_day = CalendarDate::first_day_of_month(view_year, view_month, self.week_start);
         let month_name = CalendarDate::month_name(view_month);
 
-        // Previous month info for leading days
         let prev_month = if view_month == 1 { 12 } else { view_month - 1 };
         let prev_year = if view_month == 1 {
             view_year - 1
@@ -215,8 +207,7 @@ impl Component for Calendar {
         let on_view_change = self.on_view_change.clone();
         let selected = self.selected;
 
-        // Navigation handlers
-        let on_prev = {
+        let on_prev = EventHandler::from({
             let on_view_change = on_view_change.clone();
             move |_: Event<PressEventData>| {
                 if let Some(handler) = &on_view_change {
@@ -229,29 +220,41 @@ impl Component for Calendar {
                     handler.call(CalendarDate::new(new_year, new_month, 1));
                 }
             }
-        };
+        });
 
-        let on_next = {
-            let on_view_change = on_view_change.clone();
-            move |_: Event<PressEventData>| {
-                if let Some(handler) = &on_view_change {
-                    let new_month = if view_month == 12 { 1 } else { view_month + 1 };
-                    let new_year = if view_month == 12 {
-                        view_year + 1
-                    } else {
-                        view_year
-                    };
-                    handler.call(CalendarDate::new(new_year, new_month, 1));
-                }
+        let on_next = EventHandler::from(move |_: Event<PressEventData>| {
+            if let Some(handler) = &on_view_change {
+                let new_month = if view_month == 12 { 1 } else { view_month + 1 };
+                let new_year = if view_month == 12 {
+                    view_year + 1
+                } else {
+                    view_year
+                };
+                handler.call(CalendarDate::new(new_year, new_month, 1));
             }
-        };
+        });
 
-        let mut rows: Vec<Element> = Vec::new();
+        let nav_button = |on_press: EventHandler<Event<PressEventData>>, rotate| {
+            Button::new()
+                .flat()
+                .width(Size::px(32.))
+                .height(Size::px(32.))
+                .hover_background(nav_button_hover_background)
+                .on_press(on_press)
+                .child(
+                    ArrowIcon::new()
+                        .fill(color)
+                        .width(Size::px(16.))
+                        .height(Size::px(16.))
+                        .rotate(rotate),
+                )
+        };
 
         let weekday_names = match self.week_start {
             WeekStart::Sunday => ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
             WeekStart::Monday => ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
         };
+
         let header_cells = weekday_names.iter().map(|day_name| {
             rect()
                 .width(Size::px(36.))
@@ -260,74 +263,48 @@ impl Component for Calendar {
                 .child(label().text(*day_name).color(header_color).font_size(12.))
                 .into()
         });
-        rows.push(rect().horizontal().children(header_cells).into());
 
-        let mut current_day: i32 = 1 - first_day as i32;
-        let total_days = first_day + days_in_month;
-        let total_weeks = total_days.div_ceil(7);
+        let total_cells = (first_day + days_in_month).div_ceil(7) * 7;
+        let day_cells = (0..total_cells).map(|i| {
+            let current_day = i as i32 - first_day as i32 + 1;
 
-        for _ in 0..total_weeks {
-            let mut week_cells: Vec<Element> = Vec::new();
+            let (day, day_color, enabled) = if current_day < 1 {
+                let day = (days_in_prev_month as i32 + current_day) as u32;
+                (day, day_other_month_color, false)
+            } else if current_day as u32 > days_in_month {
+                let day = current_day as u32 - days_in_month;
+                (day, day_other_month_color, false)
+            } else {
+                (current_day as u32, color, true)
+            };
 
-            for _ in 0..7 {
-                if current_day < 1 {
-                    // Previous month
-                    let day = (days_in_prev_month as i32 + current_day) as u32;
-                    week_cells.push(
-                        CalendarDay::new()
-                            .key(day)
-                            .day(day)
-                            .color(day_other_month_color)
-                            .corner_radius(day_corner_radius)
-                            .enabled(false)
-                            .into(),
-                    );
-                } else if current_day as u32 > days_in_month {
-                    // Next month
-                    let day = current_day as u32 - days_in_month;
-                    week_cells.push(
-                        CalendarDay::new()
-                            .key(day)
-                            .day(day)
-                            .color(day_other_month_color)
-                            .corner_radius(day_corner_radius)
-                            .enabled(false)
-                            .into(),
-                    );
-                } else {
-                    // Current month
-                    let day = current_day as u32;
-                    let date = CalendarDate::new(view_year, view_month, day);
-                    let is_selected = selected == Some(date);
+            let date = CalendarDate::new(view_year, view_month, current_day as u32);
+            let is_selected = enabled && selected == Some(date);
+            let on_change = on_change.clone();
 
-                    let on_change = on_change.clone();
+            let (bg, hover_bg) = if is_selected {
+                (day_selected_background, day_selected_background)
+            } else if enabled {
+                (day_background, day_hover_background)
+            } else {
+                (Color::TRANSPARENT, Color::TRANSPARENT)
+            };
 
-                    let (background, hover_background) = if is_selected {
-                        (day_selected_background, day_selected_background)
-                    } else {
-                        (day_background, day_hover_background)
-                    };
-
-                    week_cells.push(
-                        CalendarDay::new()
-                            .key(day)
-                            .day(day)
-                            .background(background)
-                            .hover_background(hover_background)
-                            .color(color)
-                            .corner_radius(day_corner_radius)
-                            .map(on_change, |el, on_change| {
-                                el.on_press(move |_| on_change.call(date))
-                            })
-                            .into(),
-                    );
-                }
-
-                current_day += 1;
-            }
-
-            rows.push(rect().horizontal().children(week_cells).into());
-        }
+            CalendarDay::new()
+                .key(day)
+                .day(day)
+                .background(bg)
+                .hover_background(hover_bg)
+                .color(day_color)
+                .corner_radius(day_corner_radius)
+                .enabled(enabled)
+                .maybe(enabled, |el| {
+                    el.map(on_change, |el, on_change| {
+                        el.on_press(move |_| on_change.call(date))
+                    })
+                })
+                .into()
+        });
 
         rect()
             .background(background)
@@ -341,18 +318,7 @@ impl Component for Calendar {
                     .padding((0., 0., 8., 0.))
                     .cross_align(Alignment::center())
                     .content(Content::flex())
-                    .child(
-                        NavButton::new()
-                            .hover_background(nav_button_hover_background)
-                            .on_press(on_prev)
-                            .child(
-                                ArrowIcon::new()
-                                    .fill(color)
-                                    .width(Size::px(16.))
-                                    .height(Size::px(16.))
-                                    .rotate(90.),
-                            ),
-                    )
+                    .child(nav_button(on_prev, 90.))
                     .child(
                         label()
                             .width(Size::flex(1.))
@@ -362,69 +328,20 @@ impl Component for Calendar {
                             .max_lines(1)
                             .font_size(16.),
                     )
-                    .child(
-                        NavButton::new()
-                            .hover_background(nav_button_hover_background)
-                            .on_press(on_next)
-                            .child(
-                                ArrowIcon::new()
-                                    .fill(color)
-                                    .width(Size::px(16.))
-                                    .height(Size::px(16.))
-                                    .rotate(-90.),
-                            ),
-                    ),
+                    .child(nav_button(on_next, -90.)),
             )
-            .children(rows)
+            .child(
+                rect()
+                    .horizontal()
+                    .content(Content::wrap())
+                    .width(Size::fill())
+                    .children(header_cells)
+                    .children(day_cells),
+            )
     }
 
     fn render_key(&self) -> DiffKey {
         self.key.clone().or(self.default_key())
-    }
-}
-
-#[derive(Clone, PartialEq)]
-struct NavButton {
-    hover_background: Color,
-    children: Vec<Element>,
-    on_press: Option<EventHandler<Event<PressEventData>>>,
-}
-
-impl NavButton {
-    fn new() -> Self {
-        Self {
-            hover_background: Color::TRANSPARENT,
-            children: Vec::new(),
-            on_press: None,
-        }
-    }
-
-    fn hover_background(mut self, hover_background: Color) -> Self {
-        self.hover_background = hover_background;
-        self
-    }
-
-    fn on_press(mut self, on_press: impl Into<EventHandler<Event<PressEventData>>>) -> Self {
-        self.on_press = Some(on_press.into());
-        self
-    }
-}
-
-impl ChildrenExt for NavButton {
-    fn get_children(&mut self) -> &mut Vec<Element> {
-        &mut self.children
-    }
-}
-
-impl Component for NavButton {
-    fn render(&self) -> impl IntoElement {
-        Button::new()
-            .flat()
-            .width(Size::px(32.))
-            .height(Size::px(32.))
-            .hover_background(self.hover_background)
-            .map(self.on_press.clone(), |el, on_press| el.on_press(on_press))
-            .children(self.children.clone())
     }
 }
 

@@ -13,10 +13,7 @@ use freya_core::{
 };
 use image::ImageReader;
 use winit::{
-    event_loop::{
-        ActiveEventLoop,
-        EventLoopBuilder,
-    },
+    event_loop::ActiveEventLoop,
     window::{
         Icon,
         Window,
@@ -39,7 +36,6 @@ use crate::{
 pub type WindowBuilderHook =
     Box<dyn FnOnce(WindowAttributes, &ActiveEventLoop) -> WindowAttributes + Send + Sync>;
 pub type WindowHandleHook = Box<dyn FnOnce(&mut Window) + Send + Sync>;
-
 /// Decision returned by the `on_close` hook to determine whether a window should close.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum CloseDecision {
@@ -178,7 +174,16 @@ impl WindowConfig {
         self
     }
 
-    /// Specify Window icon.
+    /// Specify the Window icon. Use [`LaunchConfig::window_icon`] to load the icon from bytes.
+    ///
+    /// # Example
+    /// ```no_run
+    /// # use freya::prelude::*;
+    /// const ICON: &[u8] = include_bytes!("../../../examples/freya_icon.png");
+    ///
+    /// WindowConfig::new(app).with_icon(LaunchConfig::window_icon(ICON));
+    /// # fn app() -> impl IntoElement { "" }
+    /// ```
     pub fn with_icon(mut self, icon: Icon) -> Self {
         self.icon = Some(icon);
         self
@@ -227,7 +232,10 @@ pub type TrayHandler =
 pub type TaskHandler =
     Box<dyn FnOnce(crate::renderer::LaunchProxy) -> Pin<Box<dyn Future<Output = ()>>> + 'static>;
 
-/// Launch configuration.
+/// Configuration for the initial state of the application.
+///
+/// Use this to register windows, plugins, fonts, and other settings
+/// that should be ready before the application starts.
 pub struct LaunchConfig {
     pub(crate) windows_configs: Vec<WindowConfig>,
     #[cfg(feature = "tray")]
@@ -236,7 +244,8 @@ pub struct LaunchConfig {
     pub(crate) embedded_fonts: EmbeddedFonts,
     pub(crate) fallback_fonts: Vec<Cow<'static, str>>,
     pub(crate) tasks: Vec<TaskHandler>,
-    pub(crate) event_loop_builder: Option<EventLoopBuilder<NativeEvent>>,
+    pub(crate) exit_on_close: bool,
+    pub(crate) event_loop: Option<winit::event_loop::EventLoop<crate::renderer::NativeEvent>>,
 }
 
 impl Default for LaunchConfig {
@@ -249,7 +258,8 @@ impl Default for LaunchConfig {
             embedded_fonts: Default::default(),
             fallback_fonts: default_fonts(),
             tasks: Vec::new(),
-            event_loop_builder: None,
+            exit_on_close: true,
+            event_loop: None,
         }
     }
 }
@@ -259,6 +269,7 @@ impl LaunchConfig {
         LaunchConfig::default()
     }
 
+    /// Load a window icon from image bytes. Pass the result to [`WindowConfig::with_icon`].
     pub fn window_icon(icon: &[u8]) -> Icon {
         let reader = ImageReader::new(Cursor::new(icon))
             .with_guessed_format()
@@ -289,6 +300,9 @@ impl LaunchConfig {
 
 impl LaunchConfig {
     /// Register a window configuration. You can call this multiple times.
+    ///
+    /// To create windows dynamically after the application has started,
+    /// see [`crate::extensions::WinitPlatformExt::launch_window()`].
     pub fn with_window(mut self, window_config: WindowConfig) -> Self {
         self.windows_configs.push(window_config);
         self
@@ -334,6 +348,13 @@ impl LaunchConfig {
         self
     }
 
+    /// Whether to exit the event loop when all windows are closed. Defaults to `true`.
+    /// Set to `false` to keep the event loop alive even when no windows remain.
+    pub fn with_exit_on_close(mut self, exit_on_close: bool) -> Self {
+        self.exit_on_close = exit_on_close;
+        self
+    }
+
     /// Register a single-thread launch task.
     /// The task receives a [LaunchProxy] that can be used to get access to [RendererContext](crate::renderer::RendererContext).
     /// The provided callback should return a `'static` future which will be scheduled on the renderer
@@ -348,11 +369,13 @@ impl LaunchConfig {
         self
     }
 
-    pub fn with_event_loop_builder(
+    /// Provide a custom winit [EventLoop](winit::event_loop::EventLoop) to use instead of the default one.
+    /// This allows configuring platform-specific options on the event loop builder before passing it.
+    pub fn with_event_loop(
         mut self,
-        event_loop_builder: EventLoopBuilder<NativeEvent>,
+        event_loop: winit::event_loop::EventLoop<crate::renderer::NativeEvent>,
     ) -> Self {
-        self.event_loop_builder.replace(event_loop_builder);
+        self.event_loop = Some(event_loop);
         self
     }
 }

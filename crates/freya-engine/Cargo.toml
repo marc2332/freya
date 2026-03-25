@@ -1,7 +1,7 @@
 [package]
 name = "freya-engine"
 description = "Abstract Freya's graphics APIs"
-version = "0.4.0-rc.13"
+version = "0.4.0-rc.15"
 edition = "2024"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
@@ -11,29 +11,35 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia", "graphics"]
 categories = ["gui"]
 
+[lints]
+workspace = true
+
 [package.metadata.docs.rs]
 features = ["mocked-engine"]
 
 [features]
-mocked-engine = []
-skia-engine = ["dep:skia-safe"]
-vulkan = ["skia-safe/vulkan"]
-metal = ["skia-safe/metal"]
+mocked-engine = ["dep:glutin"]
+skia-engine = ["dep:freya-skia-safe"]
 
 [dependencies]
 bitflags = { workspace = true }
-skia-safe = { workspace = true, optional = true }
-glutin = { workspace = true }
+freya-skia-safe = { workspace = true, optional = true }
+glutin = { workspace = true, optional = true }
 
-[target."cfg(target_os = \"linux\")".dependencies.skia-safe]
+[target."cfg(target_os = \"linux\")".dependencies.freya-skia-safe]
 workspace = true
 optional = true
-features = ["gl", "textlayout", "svg", "x11", "wayland"]
+features = ["textlayout", "svg", "x11", "wayland", "vulkan", "gl"]
 
-[target."cfg(target_os = \"macos\")".dependencies.skia-safe]
+[target."cfg(target_os = \"macos\")".dependencies.freya-skia-safe]
 workspace = true
 optional = true
-features = ["gl", "textlayout", "svg", "metal"]
+features = ["textlayout", "svg", "metal"]
+
+[target."cfg(target_os = \"windows\")".dependencies.freya-skia-safe]
+workspace = true
+optional = true
+features = ["textlayout", "svg", "vulkan", "gl"]
 
 [dev-dependencies]
 freya-engine = { path = "./", features = ["skia-engine"] }

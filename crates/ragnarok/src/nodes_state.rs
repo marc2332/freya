@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use rustc_hash::{
     FxHashMap,
     FxHashSet,
@@ -18,6 +16,7 @@ use crate::{
 pub struct NodesState<Key: NodeKey> {
     pressed_nodes: FxHashSet<Key>,
     hovered_nodes: FxHashSet<Key>,
+    entered_node: Option<Key>,
 }
 
 impl<Key: NodeKey> Default for NodesState<Key> {
@@ -25,6 +24,7 @@ impl<Key: NodeKey> Default for NodesState<Key> {
         Self {
             pressed_nodes: FxHashSet::default(),
             hovered_nodes: FxHashSet::default(),
+            entered_node: None,
         }
     }
 }
@@ -33,8 +33,7 @@ pub type PotentialEvents<Key, Name, Source> =
     FxHashMap<Name, Vec<PotentialEvent<Key, Name, Source>>>;
 
 impl<Key: NodeKey> NodesState<Key> {
-    /// Retain or not the states of the nodes given the [EmmitableEvent]s and based on the sideffects of these removals
-    /// a set of [PotentialEvent]s are returned.
+    /// Retain node states given the [EmmitableEvent]s, emitting leave events as side effects.
     pub(crate) fn retain_states<
         Emmitable: EmmitableEvent<Key = Key, Name = Name>,
         Name: NameOfEvent,
@@ -52,74 +51,92 @@ impl<Key: NodeKey> NodesState<Key> {
     ) -> Vec<Emmitable> {
         let mut collateral_emmitable_events = Vec::default();
 
-        // Any press event at all
         let source_press_event = source_events.iter().any(|e| e.is_pressed());
 
-        // Pressed Nodes
         #[allow(unused_variables)]
         self.pressed_nodes.retain(|node_key| {
-            // Check if a Tree event that presses this Node will get emitted
             let emmitable_press_event = emmitable_events
                 .iter()
                 .any(|event| event.name().is_pressed() && &event.key() == node_key);
 
-            // If there has been a mouse press but a Tree event was not emitted to this node, then we safely assume
-            // the user does no longer want to press this Node
+            // A press occurred but not on this node, so it's no longer pressed
             if !emmitable_press_event && source_press_event {
                 #[cfg(debug_assertions)]
                 tracing::info!("Unmarked as pressed {:?}", node_key);
 
-                // Remove the node from the list of pressed nodes
                 return false;
             }
 
             true
         });
 
-        // Any movement event at all
         let source_movement_event = source_events
             .iter()
             .find(|e| e.is_moved() || e.is_touch_released());
+        let mut removed_from_hovered = FxHashSet::default();
 
-        // Hovered Nodes
         self.hovered_nodes.retain(|node_key| {
-            // Check if a Tree event that moves the cursor in this Node will get emitted
-            let emmitable_movement_event = emmitable_events.iter().any(|event| {
-                (event.name().is_moved() || event.name().is_enter()) && &event.key() == node_key
-            });
+            let Some(area) = events_measurer.try_area_of(node_key) else {
+                removed_from_hovered.insert(*node_key);
+                return false;
+            };
 
-            if !emmitable_movement_event {
-                // If there has been a mouse movement but a Tree event was not emitted to this node, then we safely assume
-                // the user does no longer want to hover this Node
-                if let Some(source_event) = source_movement_event {
-                    if let Some(area) = events_measurer.try_area_of(node_key) {
-                        // Emit a leave event as the cursor was moved outside the Node bounds
-                        let event = Name::new_leave();
-                        for derived_event in event.get_derived_events() {
-                            let is_node_listening =
-                                events_measurer.is_listening_to(node_key, &derived_event);
-                            if is_node_listening {
-                                collateral_emmitable_events.push(
-                                    events_measurer.new_emmitable_event(
-                                        *node_key,
-                                        derived_event,
-                                        source_event.clone(),
-                                        Some(area),
-                                    ),
-                                );
-                            }
-                        }
+            let cursor_still_inside = source_movement_event
+                .and_then(|e| e.try_location())
+                .is_none_or(|cursor| events_measurer.is_point_inside(node_key, cursor));
 
-                        #[cfg(debug_assertions)]
-                        tracing::info!("Unmarked as hovered {:?}", node_key);
-                    }
+            if cursor_still_inside {
+                return true;
+            }
 
-                    // Remove the node from the list of hovered nodes
-                    return false;
+            // Cursor moved outside this node, emit leave events
+            let source_event = source_movement_event.unwrap();
+            for derived_event in Name::new_leave().get_derived_events() {
+                if events_measurer.is_listening_to(node_key, &derived_event) {
+                    collateral_emmitable_events.push(events_measurer.new_emmitable_event(
+                        *node_key,
+                        derived_event,
+                        source_event.clone(),
+                        Some(area),
+                    ));
                 }
             }
-            true
+
+            #[cfg(debug_assertions)]
+            tracing::info!("Unmarked as hovered {:?}", node_key);
+
+            removed_from_hovered.insert(*node_key);
+
+            false
         });
+
+        // Emit exclusive leave when the deepest node changes
+        // but the old node is still hovered (otherwise the regular leave covers it).
+        if let Some(source_event) = source_movement_event {
+            let new_deepest = emmitable_events
+                .iter()
+                .find(|e| e.name().is_exclusive_enter())
+                .map(|e| e.key());
+
+            if let Some(old_entered) = self.entered_node {
+                let deepest_changed = new_deepest != Some(old_entered);
+                let still_hovered = !removed_from_hovered.contains(&old_entered);
+
+                if deepest_changed && still_hovered {
+                    let exclusive_leave = Name::new_exclusive_leave();
+                    if events_measurer.is_listening_to(&old_entered, &exclusive_leave)
+                        && let Some(area) = events_measurer.try_area_of(&old_entered)
+                    {
+                        collateral_emmitable_events.push(events_measurer.new_emmitable_event(
+                            old_entered,
+                            exclusive_leave,
+                            source_event.clone(),
+                            Some(area),
+                        ));
+                    }
+                }
+            }
+        }
 
         collateral_emmitable_events
     }
@@ -128,28 +145,32 @@ impl<Key: NodeKey> NodesState<Key> {
         Emmitable: EmmitableEvent<Key = Key, Name = Name>,
         Name: NameOfEvent,
     >(
-        &self,
+        &mut self,
         emmitable_events: &mut Vec<Emmitable>,
     ) {
-        emmitable_events.retain(|ev| {
-            match ev.name() {
-                // Only let through enter events when the node was not hovered
-                _ if ev.name().is_enter() => !self.hovered_nodes.contains(&ev.key()),
+        let entered_node = emmitable_events
+            .iter()
+            .rev()
+            .find(|e| e.name().is_moved() || e.name().is_exclusive_enter())
+            .map(|e| e.key());
 
-                // Only let through release events when the node was already pressed
-                _ if ev.name().is_released() => self.pressed_nodes.contains(&ev.key()),
-
-                _ => true,
+        emmitable_events.retain(|ev| match ev.name() {
+            // Deduplicate exclusive enter against `entered_node`
+            _ if ev.name().is_exclusive_enter() => {
+                entered_node.as_ref() == Some(&ev.key()) && entered_node != self.entered_node
             }
+            // Deduplicate non-exclusive enter against `hovered_nodes`
+            _ if ev.name().is_enter() => !self.hovered_nodes.contains(&ev.key()),
+            // Only emit release events for already-pressed nodes
+            _ if ev.name().is_released() => self.pressed_nodes.contains(&ev.key()),
+            _ => true,
         });
+
+        self.entered_node = entered_node;
     }
 
     /// Create the nodes states given the [PotentialEvent]s.
-    pub fn create_update<
-        Emmitable: EmmitableEvent<Key = Key, Name = Name>,
-        Name: NameOfEvent,
-        Source: SourceEvent,
-    >(
+    pub fn create_update<Name: NameOfEvent, Source: SourceEvent>(
         &self,
         events_measurer: &impl EventsMeasurer<Key = Key, Name = Name>,
         potential_events: &PotentialEvents<Key, Name, Source>,
@@ -157,7 +178,6 @@ impl<Key: NodeKey> NodesState<Key> {
         let mut hovered_nodes = FxHashSet::default();
         let mut pressed_nodes = FxHashSet::default();
 
-        // Update the state of the nodes given the new events.
         for events in potential_events.values() {
             let mut child_node: Option<Key> = None;
 
@@ -168,26 +188,21 @@ impl<Key: NodeKey> NodesState<Key> {
                     continue;
                 }
 
+                // If the background isn't transparent,
+                // we must make sure that next nodes are parent of it.
+                // This only matters for events that don't go through solids (e.g. cursor click events)
                 if !events_measurer.is_node_transparent(node_key) && !name.does_go_through_solid() {
-                    // If the background isn't transparent,
-                    // we must make sure that next nodes are parent of it
-                    // This only matters for events that bubble up (e.g. cursor click events)
                     child_node = Some(*node_key);
                 }
 
                 match name {
-                    // Update hovered nodes state
                     name if name.is_moved() => {
-                        // Mark the Node as hovered if it wasn't already
                         hovered_nodes.insert(*node_key);
 
                         #[cfg(debug_assertions)]
                         tracing::info!("Marked as hovered {:?}", node_key);
                     }
-
-                    // Update pressed nodes state
                     name if name.is_pressed() => {
-                        // Mark the Node as pressed if it wasn't already
                         pressed_nodes.insert(*node_key);
 
                         #[cfg(debug_assertions)]
@@ -197,14 +212,14 @@ impl<Key: NodeKey> NodesState<Key> {
                 }
             }
         }
+
         NodesStatesUpdate {
             pressed_nodes,
             hovered_nodes,
         }
     }
 
-    /// Apply the given [NodesStatesUpdate] in a way so that only newly hovered/pressed nodes are cached.
-    /// Any discard of nodes in the [NodesStatesUpdate] wont matter here.
+    /// Apply the given [NodesStatesUpdate], extending the cached hovered/pressed nodes.
     pub fn apply_update(&mut self, update: NodesStatesUpdate<Key>) {
         self.hovered_nodes.extend(update.hovered_nodes);
         self.pressed_nodes.extend(update.pressed_nodes);
@@ -228,17 +243,16 @@ pub struct NodesStatesUpdate<Key: NodeKey> {
 impl<Key: NodeKey> Default for NodesStatesUpdate<Key> {
     fn default() -> Self {
         Self {
-            pressed_nodes: HashSet::default(),
-            hovered_nodes: HashSet::default(),
+            pressed_nodes: FxHashSet::default(),
+            hovered_nodes: FxHashSet::default(),
         }
     }
 }
 
 impl<Key: NodeKey> NodesStatesUpdate<Key> {
-    /// Discard the state of a given [NodeKey] and a [NameOfEvent] in this [NodesStatesUpdate].
+    /// Discard the state of a given [NodeKey] and [NameOfEvent] in this [NodesStatesUpdate].
     pub fn discard<Name: NameOfEvent>(&mut self, name: &Name, node_key: &Key) {
         match name {
-            // Just like a movement makes the node hover, a discard movement also unhovers it
             _ if name.is_moved() => {
                 self.hovered_nodes.remove(node_key);
             }

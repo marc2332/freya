@@ -167,6 +167,7 @@ where
     /// Create a global `RadioStation` that lives for the entire application lifetime.
     /// This is useful for sharing state across multiple windows.
     ///
+    /// This is **not** a hook, do not use it inside components like you would [`use_radio`].
     /// You would usually want to call this in your `main` function, not anywhere else.
     ///
     /// # Example
@@ -298,7 +299,7 @@ where
     pub fn write_channel(&mut self, channel: Channel) -> RadioGuard<Value, Channel> {
         let value = self.value.write_unchecked();
         RadioGuard {
-            channels: channel.clone().derive_channel(&*value),
+            channels: channel.derive_channel(&*value),
             station: *self,
             value,
         }

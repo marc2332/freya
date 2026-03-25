@@ -16,6 +16,11 @@ pub enum SelectableTextStatus {
 #[derive(Clone, PartialEq)]
 pub struct SelectableText {
     value: Cow<'static, str>,
+    layout: LayoutData,
+    accessibility: AccessibilityData,
+    text_style_data: TextStyleData,
+    max_lines: Option<usize>,
+    line_height: Option<f32>,
     key: DiffKey,
 }
 
@@ -25,12 +30,47 @@ impl KeyExt for SelectableText {
     }
 }
 
+impl LayoutExt for SelectableText {
+    fn get_layout(&mut self) -> &mut LayoutData {
+        &mut self.layout
+    }
+}
+
+impl ContainerExt for SelectableText {}
+
+impl AccessibilityExt for SelectableText {
+    fn get_accessibility_data(&mut self) -> &mut AccessibilityData {
+        &mut self.accessibility
+    }
+}
+
+impl TextStyleExt for SelectableText {
+    fn get_text_style_data(&mut self) -> &mut TextStyleData {
+        &mut self.text_style_data
+    }
+}
+
 impl SelectableText {
     pub fn new(value: impl Into<Cow<'static, str>>) -> Self {
         Self {
             value: value.into(),
+            layout: LayoutData::default(),
+            accessibility: AccessibilityData::default(),
+            text_style_data: TextStyleData::default(),
+            max_lines: None,
+            line_height: None,
             key: DiffKey::None,
         }
+    }
+
+    pub fn max_lines(mut self, max_lines: impl Into<Option<usize>>) -> Self {
+        self.max_lines = max_lines.into();
+        self
+    }
+
+    pub fn line_height(mut self, line_height: impl Into<Option<f32>>) -> Self {
+        self.line_height = line_height.into();
+        self
     }
 }
 
@@ -82,7 +122,9 @@ impl Component for SelectableText {
         };
 
         let on_global_pointer_down = move |_: Event<PointerEventData>| {
-            editable.editor_mut().write().clear_selection();
+            if *status.read() == SelectableTextStatus::Idle {
+                editable.editor_mut().write().clear_selection();
+            }
         };
 
         let on_pointer_enter = move |_| {
@@ -127,11 +169,15 @@ impl Component for SelectableText {
         };
 
         paragraph()
+            .layout(self.layout.clone())
+            .accessibility(self.accessibility.clone())
+            .text_style(self.text_style_data.clone())
+            .max_lines(self.max_lines)
+            .line_height(self.line_height)
+            .a11y_id(focus.a11y_id())
             .a11y_focusable(true)
             .holder(holder.read().clone())
-            .a11y_focusable(true)
             .cursor_color(Color::BLACK)
-            .a11y_id(focus.a11y_id())
             .highlights(highlights.map(|h| vec![h]))
             .on_mouse_up(on_mouse_up)
             .on_global_pointer_move(on_global_pointer_move)

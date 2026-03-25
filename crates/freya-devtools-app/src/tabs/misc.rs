@@ -1,10 +1,6 @@
 use freya::prelude::*;
-use freya_devtools::{
-    IncomingMessage,
-    IncomingMessageAction,
-};
+use freya_devtools::IncomingMessageAction;
 use freya_radio::hooks::use_radio;
-use tungstenite::Message;
 
 use crate::state::DevtoolsChannel;
 
@@ -16,22 +12,9 @@ impl Component for Misc {
 
         use_side_effect(move || {
             let radio = radio.read();
-
-            let client = radio.client.clone();
             let animation_speed = AnimationClock::MAX_SPEED / 100. * radio.animation_speed;
-            let message = Message::Text(
-                serde_json::to_string(&IncomingMessage {
-                    action: IncomingMessageAction::SetSpeedTo {
-                        speed: animation_speed,
-                    },
-                })
-                .unwrap()
-                .into(),
-            );
-            spawn(async move {
-                if let Some(client) = client.lock().await.as_mut() {
-                    client.send(message).await.ok();
-                }
+            radio.send_action(IncomingMessageAction::SetSpeedTo {
+                speed: animation_speed,
             });
         });
         let speed = radio.read().animation_speed;

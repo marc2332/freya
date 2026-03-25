@@ -3,15 +3,16 @@ name = "examples"
 edition = "2024"
 publish = false
 
+[lints]
+workspace = true
+
 [features]
 hotpath = ["freya/hotpath"]
 hotpath-alloc = ["hotpath/hotpath-alloc"]
-hotpath-off = ["hotpath/hotpath-off"]
 devtools = ["freya/devtools"]
 performance = ["freya/performance"]
 plot = ["freya/plot"]
-vulkan = ["freya-winit/vulkan"]
-metal = ["freya-winit/metal"]
+
 
 [workspace]
 members = [
@@ -48,36 +49,36 @@ members = [
 ]
 
 [workspace.dependencies]
-freya = { path = "./crates/freya", version = "0.4.0-rc.13" }
-freya-core = { path = "./crates/freya-core", version = "0.4.0-rc.13" }
-torin = { path = "./crates/torin", version = "0.4.0-rc.13" }
-ragnarok = { path = "./crates/ragnarok", version = "0.4.0-rc.13" }
-freya-clipboard = { path = "./crates/freya-clipboard", version = "0.4.0-rc.13" }
-freya-edit = { path = "./crates/freya-edit", version = "0.4.0-rc.13" }
-freya-winit = { path = "./crates/freya-winit", version = "0.4.0-rc.13" }
-freya-components = { path = "./crates/freya-components", version = "0.4.0-rc.13" }
-pathgraph = { path = "./crates/pathgraph/", version = "0.4.0-rc.13" }
-freya-animation = { path = "./crates/freya-animation", version = "0.4.0-rc.13" }
-freya-router = { path = "./crates/freya-router", version = "0.4.0-rc.13" }
-freya-router-macro = { path = "./crates/freya-router-macro", version = "0.4.0-rc.13" }
-freya-testing = { path = "./crates/freya-testing", version = "0.4.0-rc.13" }
-freya-i18n = { path = "./crates/freya-i18n", version = "0.4.0-rc.13" }
-freya-performance-plugin = { path = "./crates/freya-performance-plugin", version = "0.4.0-rc.13" }
-freya-radio = { path = "./crates/freya-radio", version = "0.4.0-rc.13" }
-freya-engine = { path = "./crates/freya-engine", version = "0.4.0-rc.13" }
-freya-devtools = { path = "./crates/freya-devtools", version = "0.4.0-rc.13" }
+freya = { path = "./crates/freya", version = "0.4.0-rc.15" }
+freya-core = { path = "./crates/freya-core", version = "0.4.0-rc.15" }
+torin = { path = "./crates/torin", version = "0.4.0-rc.15" }
+ragnarok = { path = "./crates/ragnarok", version = "0.4.0-rc.15" }
+freya-clipboard = { path = "./crates/freya-clipboard", version = "0.4.0-rc.15" }
+freya-edit = { path = "./crates/freya-edit", version = "0.4.0-rc.15" }
+freya-winit = { path = "./crates/freya-winit", version = "0.4.0-rc.15" }
+freya-components = { path = "./crates/freya-components", version = "0.4.0-rc.15" }
+pathgraph = { path = "./crates/pathgraph/", version = "0.4.0-rc.15" }
+freya-animation = { path = "./crates/freya-animation", version = "0.4.0-rc.15" }
+freya-router = { path = "./crates/freya-router", version = "0.4.0-rc.15" }
+freya-router-macro = { path = "./crates/freya-router-macro", version = "0.4.0-rc.15" }
+freya-testing = { path = "./crates/freya-testing", version = "0.4.0-rc.15" }
+freya-i18n = { path = "./crates/freya-i18n", version = "0.4.0-rc.15" }
+freya-performance-plugin = { path = "./crates/freya-performance-plugin", version = "0.4.0-rc.15" }
+freya-radio = { path = "./crates/freya-radio", version = "0.4.0-rc.15" }
+freya-engine = { path = "./crates/freya-engine", version = "0.4.0-rc.15" }
+freya-devtools = { path = "./crates/freya-devtools", version = "0.4.0-rc.15" }
 freya-icons = { path = "./crates/freya-icons", features = [
   "all",
-], version = "0.4.0-rc.13" }
+], version = "0.4.0-rc.15" }
 freya-sdk = { path = "./crates/freya-sdk", features = [
   "all",
-], version = "0.4.0-rc.13" }
-freya-material-design = { path = "./crates/freya-material-design", version = "0.4.0-rc.13" }
-freya-plotters-backend = { path = "./crates/freya-plotters-backend", version = "0.4.0-rc.13" }
-freya-query = { path = "./crates/freya-query", version = "0.4.0-rc.13" }
-freya-webview = { path = "./crates/freya-webview", version = "0.4.0-rc.13" }
-freya-terminal = { path = "./crates/freya-terminal", version = "0.4.0-rc.13" }
-freya-code-editor = { path = "./crates/freya-code-editor", version = "0.4.0-rc.13" }
+], version = "0.4.0-rc.15" }
+freya-material-design = { path = "./crates/freya-material-design", version = "0.4.0-rc.15" }
+freya-plotters-backend = { path = "./crates/freya-plotters-backend", version = "0.4.0-rc.15" }
+freya-query = { path = "./crates/freya-query", version = "0.4.0-rc.15" }
+freya-webview = { path = "./crates/freya-webview", version = "0.4.0-rc.15" }
+freya-terminal = { path = "./crates/freya-terminal", version = "0.4.0-rc.15" }
+freya-code-editor = { path = "./crates/freya-code-editor", version = "0.4.0-rc.15" }
 
 # core
 generational-box = "0.7"
@@ -112,13 +113,13 @@ euclid = "0.22.9"
 itertools = "0.14.0"
 
 # Rendering
-skia-safe = { version = "0.93.1", features = ["gl", "textlayout", "svg"] }
+freya-skia-safe = { version = "0.93.10", features = ["textlayout", "svg"] }
 bytes = "1.10.1"
 rfd = "0.17"
 
 # Desktop renderer
 raw-window-handle = "0.6.0"
-winit = "0.30.0"
+winit = "0.30.13"
 
 # Tray
 tray-icon = "0.21"
@@ -137,7 +138,7 @@ accesskit = "0.24.0"
 accesskit_winit = "0.32.0"
 
 # Performance
-hotpath = "0.10"
+hotpath = "0.14"
 
 # Errors
 anyhow = "1.0.100"
@@ -148,11 +149,6 @@ image = "0.25.8"
 
 # SDK
 tokio = { version = "1.0", default-features = false }
-
-# Rendering
-[target."cfg(target_os = \"linux\")".dependencies.skia-safe]
-version = "0.93.1"
-features = ["gl", "textlayout", "svg", "x11", "wayland"]
 
 [dev-dependencies]
 freya = { workspace = true, features = ["all"] }
@@ -174,7 +170,7 @@ freya-webview = { workspace = true }
 freya-terminal = { workspace = true }
 freya-code-editor = { workspace = true }
 
-skia-safe = { workspace = true }
+freya-skia-safe = { workspace = true }
 
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
@@ -210,6 +206,9 @@ blocking = { workspace = true }
 portable-pty = "0.9"
 vt100 = "0.16"
 futures-util = { workspace = true }
+
+[workspace.lints.clippy]
+redundant_clone = "warn"
 
 [profile.release]
 lto = true
