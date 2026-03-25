@@ -86,8 +86,6 @@ use winit::{
     },
 };
 
-use crate::config::WindowConfig;
-
 /// Graphics driver using Vulkan.
 pub struct VulkanDriver {
     _entry: Entry, // Dont drop until backend is dropped
@@ -118,8 +116,8 @@ impl VulkanDriver {
     pub fn new(
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
-        window_config: &WindowConfig,
     ) -> Result<(Self, Window), Box<dyn std::error::Error>> {
+        let transparent = window_attributes.transparent;
         let window = event_loop.create_window(window_attributes)?;
 
         let entry = unsafe { Entry::load()? };
@@ -155,7 +153,7 @@ impl VulkanDriver {
                 queue_family_index,
                 swapchain_size,
                 None,
-                window_config.transparent,
+                transparent,
             )?;
 
         let gr_context = create_gr_context(
@@ -206,7 +204,7 @@ impl VulkanDriver {
             swapchain_image_index: 0,
             swapchain_suboptimal: false,
             swapchain_size,
-            transparent: window_config.transparent,
+            transparent,
             gr_context,
             image_available_semaphore,
             render_finished_semaphore,
@@ -543,12 +541,22 @@ fn create_swapchain(
     };
     let image_count = surface_caps.min_image_count.max(2);
 
-    let composite_alpha = if transparent
-        && surface_caps
+    // If transparency is requested but the surface doesn't support a suitable
+    // composite alpha mode, bail out so the caller can fall back to OpenGL.
+    let composite_alpha = if transparent {
+        if surface_caps
             .supported_composite_alpha
             .contains(CompositeAlphaFlagsKHR::PRE_MULTIPLIED)
-    {
-        CompositeAlphaFlagsKHR::PRE_MULTIPLIED
+        {
+            CompositeAlphaFlagsKHR::PRE_MULTIPLIED
+        } else if surface_caps
+            .supported_composite_alpha
+            .contains(CompositeAlphaFlagsKHR::POST_MULTIPLIED)
+        {
+            CompositeAlphaFlagsKHR::POST_MULTIPLIED
+        } else {
+            return Err("Vulkan surface does not support transparent composite alpha".into());
+        }
     } else {
         CompositeAlphaFlagsKHR::OPAQUE
     };

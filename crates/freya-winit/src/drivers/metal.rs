@@ -39,8 +39,6 @@ use winit::{
     },
 };
 
-use crate::config::WindowConfig;
-
 /// Graphics driver using Metal (macOS native).
 pub struct MetalDriver {
     metal_layer: Retained<CAMetalLayer>,
@@ -52,8 +50,8 @@ impl MetalDriver {
     pub fn new(
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
-        window_config: &WindowConfig,
     ) -> (Self, Window) {
+        let transparent = window_attributes.transparent;
         let window = event_loop
             .create_window(window_attributes)
             .expect("Could not create window with Metal context");
@@ -73,7 +71,7 @@ impl MetalDriver {
             layer.setDrawableSize(CGSize::new(size.width as f64, size.height as f64));
 
             // Handle transparency
-            if window_config.transparent {
+            if transparent {
                 layer.setOpaque(false);
             }
 

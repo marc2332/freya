@@ -15,8 +15,6 @@ use winit::{
     },
 };
 
-use crate::config::WindowConfig;
-
 #[allow(clippy::large_enum_variant)]
 pub enum GraphicsDriver {
     #[cfg(any(target_os = "linux", target_os = "windows"))]
@@ -32,13 +30,11 @@ impl GraphicsDriver {
     pub fn new(
         event_loop: &ActiveEventLoop,
         window_attributes: WindowAttributes,
-        window_config: &WindowConfig,
     ) -> (Self, Window) {
         // Metal (macOS)
         #[cfg(target_os = "macos")]
         {
-            let (driver, window) =
-                metal::MetalDriver::new(event_loop, window_attributes, window_config);
+            let (driver, window) = metal::MetalDriver::new(event_loop, window_attributes);
 
             return (Self::Metal(driver), window);
         }
@@ -52,7 +48,7 @@ impl GraphicsDriver {
 
             if !force_opengl {
                 let vk_attrs = window_attributes.clone();
-                match vulkan::VulkanDriver::new(event_loop, vk_attrs, window_config) {
+                match vulkan::VulkanDriver::new(event_loop, vk_attrs) {
                     Ok((driver, window)) => return (Self::Vulkan(driver), window),
                     Err(err) => {
                         tracing::warn!(
@@ -62,8 +58,7 @@ impl GraphicsDriver {
                 }
             }
 
-            let (driver, window) =
-                gl::OpenGLDriver::new(event_loop, window_attributes, window_config);
+            let (driver, window) = gl::OpenGLDriver::new(event_loop, window_attributes);
 
             return (Self::OpenGl(driver), window);
         }

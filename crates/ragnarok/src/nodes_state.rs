@@ -70,7 +70,9 @@ impl<Key: NodeKey> NodesState<Key> {
             true
         });
 
-        let source_movement_event = source_events.iter().find(|e| e.is_moved());
+        let source_movement_event = source_events
+            .iter()
+            .find(|e| e.is_moved() || e.is_touch_released());
         let mut removed_from_hovered = FxHashSet::default();
 
         self.hovered_nodes.retain(|node_key| {

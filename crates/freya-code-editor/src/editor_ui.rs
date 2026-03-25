@@ -274,7 +274,7 @@ impl Component for CodeEditor {
                         .into()
                     })
                     .scroll_controller(scroll_controller)
-                    .length(lines_len as i32)
+                    .length(lines_len)
                     .item_size(line_height),
                 ),
         )

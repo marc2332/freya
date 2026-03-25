@@ -96,7 +96,7 @@ impl Component for ShaderEditor {
                     }
                     .into()
                 })
-                .length(editable.editor().read().len_lines() as i32)
+                .length(editable.editor().read().len_lines())
                 .item_size(27.),
             )
     }

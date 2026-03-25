@@ -33,6 +33,11 @@ fn app() -> impl IntoElement {
                             });
                         }
                     }
+                    _ = terminal_handle.clipboard_changed().fuse() => {
+                        if let Some(text) = terminal_handle.clipboard_content() {
+                            let _ = Clipboard::set(text);
+                        }
+                    }
                 }
             }
         }
