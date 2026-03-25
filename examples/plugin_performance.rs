@@ -12,7 +12,7 @@ use freya_performance_plugin::PerformanceOverlayPlugin;
 fn main() {
     launch(
         LaunchConfig::new()
-            .with_plugin(PerformanceOverlayPlugin::default())
+            .with_plugin(PerformanceOverlayPlugin::default().with_visible(true))
             .with_window(WindowConfig::new(app)),
     )
 }

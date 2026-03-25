@@ -21,5 +21,6 @@ features = ["freya-engine/mocked-engine"]
 skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
+freya-core = { workspace = true }
 freya-winit = { workspace = true }
 freya-engine = { workspace = true }

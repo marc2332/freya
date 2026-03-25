@@ -317,7 +317,7 @@ impl LaunchConfig {
         self
     }
 
-    /// Register a plugin.
+    /// Register a plugin. Replaces any existing plugin with the same ID.
     pub fn with_plugin(mut self, plugin: impl FreyaPlugin + 'static) -> Self {
         self.plugins.add_plugin(plugin);
         self
