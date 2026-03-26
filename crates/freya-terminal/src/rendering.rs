@@ -70,6 +70,7 @@ impl TextRenderer<'_> {
         color: Color,
     ) {
         if let Some(blob) = TextBlob::from_pos_text_h(glyphs, glyph_positions, 0.0, self.font) {
+            self.paint.set_color(color);
             self.canvas
                 .draw_text_blob(&blob, (self.area_min_x, text_y), self.paint);
             blobs.push((blob, color));
@@ -145,16 +146,12 @@ impl TextRenderer<'_> {
             let text = Self::cell_text(cell);
             let x = (col_idx as f32) * self.char_width;
 
-            if let Some(prev_color) = current_color {
-                if prev_color != cell_fg {
+            if current_color != Some(cell_fg) {
+                if let Some(prev_color) = current_color {
                     self.render_blob(&glyphs, &glyph_positions, text_y, &mut blobs, prev_color);
                     glyphs.clear();
                     glyph_positions.clear();
-                    self.paint.set_color(cell_fg);
-                    current_color = Some(cell_fg);
                 }
-            } else {
-                self.paint.set_color(cell_fg);
                 current_color = Some(cell_fg);
             }
             for _ in text.chars() {

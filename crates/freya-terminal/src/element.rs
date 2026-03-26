@@ -56,6 +56,7 @@ use crate::{
 struct TerminalMeasure {
     char_width: f32,
     line_height: f32,
+    baseline_offset: f32,
     font: Font,
     font_family: String,
     font_size: f32,
@@ -94,22 +95,18 @@ impl TerminalRenderer<'_> {
         row_idx: usize,
         row_len: usize,
         y: f32,
-        selection_bounds: &(i64, usize, i64, usize),
+        bounds: &(i64, usize, i64, usize),
     ) {
-        let (display_start, start_col, display_end, end_col) = selection_bounds;
+        let (start_row, start_col, end_row, end_col) = *bounds;
         let row_i = row_idx as i64;
 
-        if row_i < *display_start || row_i > *display_end {
+        if row_i < start_row || row_i > end_row {
             return;
         }
 
-        let sel_start = if row_i == *display_start {
-            *start_col
-        } else {
-            0
-        };
-        let sel_end = if row_i == *display_end {
-            (*end_col).min(row_len)
+        let sel_start = if row_i == start_row { start_col } else { 0 };
+        let sel_end = if row_i == end_row {
+            end_col.min(row_len)
         } else {
             row_len
         };
@@ -446,11 +443,15 @@ impl ElementExt for Terminal {
             _ => FontHinting::None,
         });
 
+        let (_, metrics) = font.metrics();
+        let baseline_offset = -metrics.ascent;
+
         Some((
             Size2D::new(context.area_size.width.max(100.0), height),
             Rc::new(TerminalMeasure {
                 char_width,
                 line_height,
+                baseline_offset,
                 font,
                 font_family: self.font_family.clone(),
                 font_size: self.font_size,
@@ -470,9 +471,7 @@ impl ElementExt for Terminal {
             .unwrap();
 
         let font = &measure.font;
-
-        let (_, metrics) = font.metrics();
-        let baseline_offset = -metrics.ascent;
+        let baseline_offset = measure.baseline_offset;
         let buffer = self.handle.read_buffer();
 
         let mut paint = Paint::default();
