@@ -1673,3 +1673,55 @@ fn deeply_nested_component_move() {
     tree.verify_tree_integrity();
     assert_eq!(tree.elements.len(), runner.node_to_scope.len());
 }
+
+#[test]
+fn ordered_movements_first_to_last() {
+    fn app() -> Element {
+        let state = use_consume::<State<bool>>();
+        if state() {
+            rect()
+                .child(rect().key(1))
+                .child(rect().key(2))
+                .child(rect().key(3))
+                .child(rect().key(4))
+                .into()
+        } else {
+            rect()
+                .child(rect().key(2))
+                .child(rect().key(3))
+                .child(rect().key(4))
+                .child(rect().key(1))
+                .into()
+        }
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+    let mut state = runner.provide_root_context(|| State::create(true));
+
+    let mutations = runner.sync_and_update();
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+
+    let initial_children = tree.children.get(&NodeId::from(2)).unwrap().clone();
+
+    state.set(false);
+    let mutations = runner.sync_and_update();
+    assert!(mutations.added.is_empty());
+    assert!(mutations.removed.is_empty());
+    assert!(!mutations.moved.is_empty());
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+
+    let reordered_children = tree.children.get(&NodeId::from(2)).unwrap();
+    assert_eq!(
+        reordered_children,
+        &vec![
+            initial_children[1],
+            initial_children[2],
+            initial_children[3],
+            initial_children[0],
+        ]
+    );
+}
