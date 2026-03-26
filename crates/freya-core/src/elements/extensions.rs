@@ -1,32 +1,69 @@
 use std::{
     borrow::Cow,
-    hash::{Hash, Hasher},
+    hash::{
+        Hash,
+        Hasher,
+    },
 };
 
 use paste::paste;
-use rustc_hash::{FxHashMap, FxHasher};
+use rustc_hash::{
+    FxHashMap,
+    FxHasher,
+};
 use torin::{
     content::Content,
     gaps::Gaps,
-    prelude::{Alignment, Direction, Length, Position, VisibleSize},
+    prelude::{
+        Alignment,
+        Direction,
+        Length,
+        Position,
+        VisibleSize,
+    },
     size::Size,
 };
 
 use crate::{
-    data::{AccessibilityData, EffectData, LayoutData, Overflow, TextStyleData},
+    data::{
+        AccessibilityData,
+        EffectData,
+        LayoutData,
+        Overflow,
+        TextStyleData,
+    },
     diff_key::DiffKey,
-    element::{Element, EventHandlerType},
-    elements::image::{AspectRatio, ImageCover, ImageData, SamplingMode},
+    element::{
+        Element,
+        EventHandlerType,
+    },
+    elements::image::{
+        AspectRatio,
+        ImageCover,
+        ImageData,
+        SamplingMode,
+    },
     event_handler::EventHandler,
     events::{
-        data::{Event, KeyboardEventData, MouseEventData, SizedEventData, WheelEventData},
+        data::{
+            Event,
+            KeyboardEventData,
+            MouseEventData,
+            SizedEventData,
+            WheelEventData,
+        },
         name::EventName,
     },
     layers::Layer,
     prelude::*,
     style::{
-        font_size::FontSize, font_slant::FontSlant, font_weight::FontWeight, font_width::FontWidth,
-        scale::Scale, text_height::TextHeightBehavior, text_overflow::TextOverflow,
+        font_size::FontSize,
+        font_slant::FontSlant,
+        font_weight::FontWeight,
+        font_width::FontWidth,
+        scale::Scale,
+        text_height::TextHeightBehavior,
+        text_overflow::TextOverflow,
         text_shadow::TextShadow,
     },
 };
