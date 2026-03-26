@@ -273,7 +273,9 @@ impl Tree {
 
             for (parent_node_id, movements) in mutations.moved {
                 let parent = self.children.get_mut(&parent_node_id).unwrap();
-                for MutationMove { index: to, node_id } in movements {
+                for MutationMove { index: to, node_id } in
+                    movements.into_iter().sorted_by_key(|m| m.index)
+                {
                     let from = parent.iter().position(|id| *id == node_id).unwrap();
 
                     if from < to as usize {

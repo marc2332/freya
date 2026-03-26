@@ -47,24 +47,13 @@ all = [
 all-publish = [
   "all",
   "docs",
-  "performance",
   "mocked-engine",
   "freya-components/docs",
   "dep:freya-testing",
   "dep:freya-plotters-backend",
 ]
-all-bindings = [
-  "all",
-  "performance",
-  "dep:freya-testing",
-  "dep:freya-plotters-backend",
-]
-all-debug = [
-  "all",
-  "performance",
-  "dep:freya-testing",
-  "dep:freya-plotters-backend",
-]
+all-bindings = ["all", "dep:freya-testing", "dep:freya-plotters-backend"]
+all-debug = ["all", "dep:freya-testing", "dep:freya-plotters-backend"]
 all-tests = [
   "router",
   "i18n",
@@ -87,7 +76,7 @@ remote-asset = ["freya-components/remote-asset"]
 i18n = ["dep:freya-i18n"]
 engine = []
 devtools = ["dep:freya-devtools", "freya-core/devtools"]
-performance = ["freya-performance-plugin"]
+performance = []
 plot = ["dep:plotters", "dep:freya-plotters-backend"]
 gif = ["freya-components/gif"]
 calendar = ["freya-components/calendar"]
@@ -125,7 +114,7 @@ freya-terminal = { workspace = true, optional = true }
 freya-code-editor = { workspace = true, optional = true }
 
 # Performance
-freya-performance-plugin = { workspace = true, optional = true }
+freya-performance-plugin = { workspace = true }
 freya-material-design = { workspace = true, optional = true }
 freya-testing = { workspace = true, optional = true }
 
