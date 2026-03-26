@@ -147,7 +147,7 @@ pub struct LayoutContext<'a> {
     pub node_id: NodeId,
     pub torin_node: &'a torin::node::Node,
     pub area_size: &'a Size2D,
-    pub font_collection: &'a FontCollection,
+    pub font_collection: &'a mut FontCollection,
     pub font_manager: &'a FontMgr,
     pub text_style_state: &'a TextStyleState,
     pub fallback_fonts: &'a [Cow<'static, str>],

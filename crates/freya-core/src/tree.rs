@@ -576,7 +576,7 @@ impl Tree {
     pub fn measure_layout(
         &mut self,
         size: Size2D,
-        font_collection: &FontCollection,
+        font_collection: &mut FontCollection,
         font_manager: &FontMgr,
         events_sender: &UnboundedSender<EventsChunk>,
         scale_factor: f64,
@@ -684,7 +684,7 @@ pub struct MutationsApplyResult {
 }
 
 pub struct LayoutMeasurerAdapter<'a> {
-    pub font_collection: &'a FontCollection,
+    pub font_collection: &'a mut FontCollection,
     pub font_manager: &'a FontMgr,
     elements: &'a FxHashMap<NodeId, Rc<dyn ElementExt>>,
     text_style_state: &'a FxHashMap<NodeId, TextStyleState>,

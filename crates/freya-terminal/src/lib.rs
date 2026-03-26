@@ -73,6 +73,7 @@ pub mod element;
 pub mod handle;
 pub mod parser;
 pub mod pty;
+mod rendering;
 
 /// Prelude module for convenient imports.
 pub mod prelude {

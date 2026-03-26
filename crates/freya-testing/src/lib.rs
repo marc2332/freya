@@ -297,7 +297,7 @@ impl TestingRunner {
         self.tree.borrow_mut().text_cache.reset();
         self.tree.borrow_mut().measure_layout(
             self.size,
-            &self.font_collection,
+            &mut self.font_collection,
             &self.font_manager,
             &self.events_sender,
             self.scale_factor,
@@ -345,7 +345,7 @@ impl TestingRunner {
         });
         self.tree.borrow_mut().measure_layout(
             self.size,
-            &self.font_collection,
+            &mut self.font_collection,
             &self.font_manager,
             &self.events_sender,
             self.scale_factor,
