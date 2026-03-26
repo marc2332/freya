@@ -143,7 +143,7 @@ impl TextRenderer<'_> {
             }
             let cell_fg = self.cell_foreground(cell);
             let text = Self::cell_text(cell);
-            let x = ((col_idx as f32) * self.char_width).round();
+            let x = (col_idx as f32) * self.char_width;
 
             if let Some(prev_color) = current_color {
                 if prev_color != cell_fg {
