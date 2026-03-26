@@ -97,7 +97,7 @@ impl Component for NodesTree {
                 .into_element();
         }
 
-        let items_len = items.len() as i32;
+        let items_len = items.len();
 
         VirtualScrollView::new_with_data(
             (

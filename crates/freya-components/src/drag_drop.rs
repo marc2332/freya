@@ -4,6 +4,13 @@ use freya_core::{
 };
 use torin::prelude::*;
 
+#[derive(Clone, Copy)]
+enum DragPhase {
+    Idle,
+    Pressing(CursorPoint),
+    Dragging(CursorPoint),
+}
+
 fn use_drag<T: 'static>() -> State<Option<T>> {
     match try_consume_root_context() {
         Some(s) => s,
@@ -26,6 +33,8 @@ pub struct DragZone<T: Clone + 'static + PartialEq> {
     data: T,
     /// Show the children when dragging. Defaults to `true`.
     show_while_dragging: bool,
+    /// Minimum distance in pixels the cursor must move before dragging starts. Defaults to `4.0`.
+    drag_threshold: f64,
     key: DiffKey,
 }
 
@@ -42,6 +51,7 @@ impl<T: Clone + PartialEq + 'static> DragZone<T> {
             children: children.into(),
             drag_element: None,
             show_while_dragging: true,
+            drag_threshold: 4.0,
             key: DiffKey::default(),
         }
     }
@@ -55,40 +65,61 @@ impl<T: Clone + PartialEq + 'static> DragZone<T> {
         self.drag_element = Some(drag_element.into());
         self
     }
+
+    pub fn drag_threshold(mut self, drag_threshold: f64) -> Self {
+        self.drag_threshold = drag_threshold;
+        self
+    }
 }
 
 impl<T: Clone + PartialEq> Component for DragZone<T> {
     fn render(&self) -> impl IntoElement {
         let mut drags = use_drag::<T>();
-        let mut position = use_state::<Option<CursorPoint>>(|| None);
+        let mut phase = use_state(|| DragPhase::Idle);
         let data = self.data.clone();
+        let drag_threshold = self.drag_threshold;
 
-        let on_global_pointer_move = move |e: Event<PointerEventData>| {
-            if position.read().is_some() {
-                position.set(Some(e.global_location()));
+        let on_global_pointer_move = move |e: Event<PointerEventData>| match phase() {
+            DragPhase::Dragging(_) => {
+                phase.set(DragPhase::Dragging(e.global_location()));
             }
+            DragPhase::Pressing(press_point) => {
+                let current = e.global_location();
+                let dx = current.x - press_point.x;
+                let dy = current.y - press_point.y;
+
+                if (dx * dx + dy * dy).sqrt() >= drag_threshold {
+                    phase.set(DragPhase::Dragging(current));
+                    *drags.write() = Some(data.clone());
+                }
+            }
+            DragPhase::Idle => {}
         };
 
         let on_pointer_down = move |e: Event<PointerEventData>| {
             if e.data().button() != Some(MouseButton::Left) {
                 return;
             }
-            position.set(Some(e.global_location()));
-            *drags.write() = Some(data.clone());
+            phase.set(DragPhase::Pressing(e.global_location()));
         };
 
         let on_global_pointer_press = move |_: Event<PointerEventData>| {
-            if position.read().is_some() {
-                position.set(None);
+            if !matches!(phase(), DragPhase::Idle) {
+                phase.set(DragPhase::Idle);
                 *drags.write() = None;
             }
+        };
+
+        let dragging_position = match phase() {
+            DragPhase::Dragging(pos) => Some(pos),
+            _ => None,
         };
 
         rect()
             .on_global_pointer_press(on_global_pointer_press)
             .on_global_pointer_move(on_global_pointer_move)
             .on_pointer_down(on_pointer_down)
-            .maybe_child((position.read().zip(self.drag_element.clone())).map(
+            .maybe_child((dragging_position.zip(self.drag_element.clone())).map(
                 |(position, drag_element)| {
                     let (x, y) = position.to_f32().to_tuple();
                     rect()
@@ -102,7 +133,7 @@ impl<T: Clone + PartialEq> Component for DragZone<T> {
                 },
             ))
             .maybe_child(
-                (self.show_while_dragging || position.read().is_none())
+                (self.show_while_dragging || dragging_position.is_none())
                     .then(|| self.children.clone()),
             )
     }

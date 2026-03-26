@@ -128,6 +128,10 @@ pub struct TerminalHandle {
     pub(crate) output_notifier: ArcNotify,
     /// Notifier that signals when the window title changes via OSC 0 or OSC 2.
     pub(crate) title_notifier: ArcNotify,
+    /// Clipboard content set by the terminal app via OSC 52.
+    pub(crate) clipboard_content: Rc<RefCell<Option<String>>>,
+    /// Notifier that signals when clipboard content changes via OSC 52.
+    pub(crate) clipboard_notifier: ArcNotify,
     /// Tracks when user last wrote input to the PTY.
     pub(crate) last_write_time: Rc<RefCell<Instant>>,
     /// Currently pressed mouse button (for drag/motion tracking).
@@ -432,6 +436,11 @@ impl TerminalHandle {
         self.title.borrow().clone()
     }
 
+    /// Get the latest clipboard content set by the terminal app via OSC 52.
+    pub fn clipboard_content(&self) -> Option<String> {
+        self.clipboard_content.borrow().clone()
+    }
+
     /// Send a wheel event to the PTY.
     ///
     /// This sends mouse wheel events as escape sequences to the running process.
@@ -634,6 +643,11 @@ impl TerminalHandle {
     /// Can be called repeatedly in a loop to react to title updates from the shell.
     pub fn title_changed(&self) -> impl std::future::Future<Output = ()> + '_ {
         self.title_notifier.notified()
+    }
+
+    /// Returns a future that completes when the terminal app sets clipboard content via OSC 52.
+    pub fn clipboard_changed(&self) -> impl std::future::Future<Output = ()> + '_ {
+        self.clipboard_notifier.notified()
     }
 
     pub fn last_write_elapsed(&self) -> std::time::Duration {

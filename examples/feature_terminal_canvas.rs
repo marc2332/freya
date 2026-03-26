@@ -143,6 +143,9 @@ impl Component for TerminalPanel {
                             .main_align(Alignment::End)
                             .child(
                                 Button::new()
+                                    .on_pointer_down(|e: Event<PointerEventData>| {
+                                        e.stop_propagation()
+                                    })
                                     .on_press(on_close)
                                     .padding(4.)
                                     .rounded_full()
