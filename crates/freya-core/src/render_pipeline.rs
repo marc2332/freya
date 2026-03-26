@@ -1,9 +1,19 @@
 use freya_engine::prelude::{
-    Canvas, ClipOp, FontCollection, FontMgr, SaveLayerRec, SkMatrix, SkPoint, blur,
+    Canvas,
+    ClipOp,
+    FontCollection,
+    FontMgr,
+    SaveLayerRec,
+    SkMatrix,
+    SkPoint,
+    blur,
 };
 
 use crate::{
-    element::{ClipContext, RenderContext},
+    element::{
+        ClipContext,
+        RenderContext,
+    },
     prelude::Color,
     style::shadow::ShadowPosition,
     tree::Tree,
