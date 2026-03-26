@@ -146,6 +146,10 @@ impl WebViewPlugin {
 }
 
 impl FreyaPlugin for WebViewPlugin {
+    fn plugin_id(&self) -> &'static str {
+        "freya-webview"
+    }
+
     fn on_event(&mut self, event: &mut PluginEvent, _handle: PluginHandle) {
         match event {
             PluginEvent::RunnerCreated { runner, .. } => {

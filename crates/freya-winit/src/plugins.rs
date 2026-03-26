@@ -1,5 +1,6 @@
 use std::{
     cell::RefCell,
+    collections::HashMap,
     rc::Rc,
 };
 
@@ -58,16 +59,19 @@ impl PluginHandle {
 /// Manages all loaded plugins.
 #[derive(Default, Clone)]
 pub struct PluginsManager {
-    plugins: Rc<RefCell<Vec<Box<dyn FreyaPlugin>>>>,
+    plugins: Rc<RefCell<HashMap<&'static str, Box<dyn FreyaPlugin>>>>,
 }
 
 impl PluginsManager {
+    /// Add or replace a plugin by its ID. Last insert wins.
     pub fn add_plugin(&mut self, plugin: impl FreyaPlugin + 'static) {
-        self.plugins.borrow_mut().push(Box::new(plugin))
+        self.plugins
+            .borrow_mut()
+            .insert(plugin.plugin_id(), Box::new(plugin));
     }
 
     pub fn send(&mut self, mut event: PluginEvent, handle: PluginHandle) {
-        for plugin in self.plugins.borrow_mut().iter_mut() {
+        for plugin in self.plugins.borrow_mut().values_mut() {
             plugin.on_event(&mut event, handle.clone())
         }
     }
@@ -191,6 +195,9 @@ pub enum PluginEvent<'a> {
 
 /// Skeleton for Freya plugins.
 pub trait FreyaPlugin {
+    /// Unique identifier for this plugin. Used for deduplication.
+    fn plugin_id(&self) -> &'static str;
+
     /// React on events emitted by Freya.
     fn on_event(&mut self, event: &mut PluginEvent, handle: PluginHandle);
 }
