@@ -6,6 +6,7 @@ use std::{
     },
 };
 
+use freya_core::prelude::UserEvent;
 use freya_engine::prelude::{
     Color,
     FontStyle,
@@ -29,6 +30,11 @@ use freya_winit::{
         PluginHandle,
     },
     reexports::winit::window::WindowId,
+    renderer::{
+        NativeEvent,
+        NativeWindowEvent,
+        NativeWindowEventAction,
+    },
 };
 
 /// Performance overlay plugin that displays FPS, timing metrics, and other
@@ -64,15 +70,26 @@ struct WindowMetrics {
 }
 
 impl PerformanceOverlayPlugin {
+    /// Set whether the overlay is visible by default.
+    pub fn with_visible(mut self, visible: bool) -> Self {
+        self.enabled = visible;
+        self
+    }
+
     fn get_metrics(&mut self, id: WindowId) -> &mut WindowMetrics {
         self.metrics.entry(id).or_default()
     }
 }
 
 impl FreyaPlugin for PerformanceOverlayPlugin {
-    fn on_event(&mut self, event: &mut PluginEvent, _handle: PluginHandle) {
+    fn plugin_id(&self) -> &'static str {
+        "freya-performance-overlay"
+    }
+
+    fn on_event(&mut self, event: &mut PluginEvent, handle: PluginHandle) {
         match event {
             PluginEvent::KeyboardInput {
+                window,
                 key,
                 modifiers,
                 is_pressed,
@@ -86,6 +103,10 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 let is_p = matches!(key, Key::Character(c) if c.eq_ignore_ascii_case("p"));
                 if *is_pressed && is_p && *modifiers == toggle_modifier {
                     self.enabled = !self.enabled;
+                    handle.send_event_loop_event(NativeEvent::Window(NativeWindowEvent {
+                        window_id: window.id(),
+                        action: NativeWindowEventAction::User(UserEvent::RequestRedraw),
+                    }));
                 }
             }
             PluginEvent::WindowCreated {

@@ -200,6 +200,10 @@ impl DevtoolsPlugin {
 }
 
 impl FreyaPlugin for DevtoolsPlugin {
+    fn plugin_id(&self) -> &'static str {
+        "freya-devtools"
+    }
+
     fn on_event(&mut self, event: &mut PluginEvent, plugin_handle: PluginHandle) {
         match event {
             PluginEvent::WindowClosed { window, .. } => {
