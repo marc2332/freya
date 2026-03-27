@@ -8,6 +8,7 @@ pub enum EventName {
     // Platform Mouse or Touch
     PointerPress,
     PointerDown,
+    PointerMove,
     PointerEnter,
     PointerLeave,
     PointerOver,
@@ -112,6 +113,10 @@ impl EventName {
         matches!(self, Self::PointerDown)
     }
 
+    pub fn is_pointer_move(&self) -> bool {
+        matches!(self, Self::PointerMove)
+    }
+
     pub fn is_press(&self) -> bool {
         matches!(self, Self::PointerPress)
     }
@@ -144,6 +149,7 @@ impl ragnarok::NameOfEvent for EventName {
 
         match self {
             Self::MouseMove | Self::TouchMove => {
+                events.insert(Self::PointerMove);
                 events.insert(Self::PointerEnter);
                 events.insert(Self::PointerOver);
             }
@@ -186,6 +192,7 @@ impl ragnarok::NameOfEvent for EventName {
                 events.extend([
                     Self::MouseMove,
                     Self::TouchMove,
+                    Self::PointerMove,
                     Self::PointerEnter,
                     Self::PointerOver,
                     Self::GlobalPointerMove,
@@ -224,6 +231,7 @@ impl ragnarok::NameOfEvent for EventName {
             &self,
             Self::MouseMove
                 | Self::TouchMove
+                | Self::PointerMove
                 | Self::CaptureGlobalPointerMove
                 | Self::GlobalPointerMove
         )
