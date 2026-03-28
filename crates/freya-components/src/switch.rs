@@ -1,11 +1,18 @@
 use accesskit::Toggled;
 use freya_animation::prelude::*;
 use freya_core::prelude::*;
-use torin::{alignment::Alignment, gaps::Gaps, size::Size};
+use torin::{
+    alignment::Alignment,
+    gaps::Gaps,
+    size::Size,
+};
 
 use crate::{
     get_theme,
-    theming::component_themes::{SwitchColorsThemePartial, SwitchLayoutThemePartial},
+    theming::component_themes::{
+        SwitchColorsThemePartial,
+        SwitchLayoutThemePartial,
+    },
 };
 
 #[derive(Clone, PartialEq)]
@@ -146,10 +153,13 @@ impl Component for Switch {
                 conf.on_change(OnChange::Rerun);
 
                 let value = (
-                    AnimNum::new(switch_layout.thumb_offset, switch_layout.toggled_thumb_offset)
-                        .time(300)
-                        .function(Function::Expo)
-                        .ease(Ease::Out),
+                    AnimNum::new(
+                        switch_layout.thumb_offset,
+                        switch_layout.toggled_thumb_offset,
+                    )
+                    .time(300)
+                    .function(Function::Expo)
+                    .ease(Ease::Out),
                     AnimNum::new(switch_layout.thumb_size, switch_layout.toggled_thumb_size)
                         .time(300)
                         .function(Function::Expo)

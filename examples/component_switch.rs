@@ -18,8 +18,13 @@ fn app() -> impl IntoElement {
             toggled.toggle();
         }))
         .child(Switch::new().toggled(toggled).enabled(false))
-        .child(Switch::new().expanded().toggled(toggled).on_toggle(move |_| {
-            toggled.toggle();
-        }))
+        .child(
+            Switch::new()
+                .expanded()
+                .toggled(toggled)
+                .on_toggle(move |_| {
+                    toggled.toggle();
+                }),
+        )
         .child(Switch::new().expanded().toggled(toggled).enabled(false))
 }
