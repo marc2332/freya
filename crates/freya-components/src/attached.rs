@@ -1,5 +1,3 @@
-use std::ops::Deref;
-
 use freya_core::prelude::*;
 use torin::prelude::{
     Area,
@@ -94,16 +92,15 @@ impl Component for Attached {
         let mut inner_area: State<Option<Area>> = use_state(|| None);
         let mut attached_area: State<Option<Area>> = use_state(|| None);
 
-        let inner = inner_area.read();
-        let attached = attached_area.read();
+        let inner = *inner_area.read();
+        let attached = *attached_area.read();
 
-        let has_attachment = !self.children.is_empty();
-        let is_measured = inner.deref().is_some() && attached.deref().is_some();
+        let is_measured = inner.is_some() && attached.is_some();
 
-        let inner_width = inner.deref().map(|a| a.width()).unwrap_or_default();
-        let inner_height = inner.deref().map(|a| a.height()).unwrap_or_default();
-        let attached_width = attached.deref().map(|a| a.width()).unwrap_or_default();
-        let attached_height = attached.deref().map(|a| a.height()).unwrap_or_default();
+        let inner_width = inner.map(|a| a.width()).unwrap_or_default();
+        let inner_height = inner.map(|a| a.height()).unwrap_or_default();
+        let attached_width = attached.map(|a| a.width()).unwrap_or_default();
+        let attached_height = attached.map(|a| a.height()).unwrap_or_default();
 
         let position = match self.position {
             AttachedPosition::Top => Position::new_absolute()
@@ -123,13 +120,9 @@ impl Component for Attached {
         rect()
             .on_sized(move |e: Event<SizedEventData>| inner_area.set(Some(e.area)))
             .child(self.inner.clone())
-            .maybe_child(has_attachment.then(|| {
+            .maybe_child((!self.children.is_empty()).then(|| {
                 rect()
-                    .on_sized(move |e: Event<SizedEventData>| {
-                        if has_attachment {
-                            attached_area.set(Some(e.area))
-                        }
-                    })
+                    .on_sized(move |e: Event<SizedEventData>| attached_area.set(Some(e.area)))
                     .position(position)
                     .layer(Layer::Overlay)
                     .opacity(if is_measured { 1. } else { 0. })

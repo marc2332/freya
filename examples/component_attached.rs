@@ -10,16 +10,14 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    let mut open = use_state(|| false);
+    let mut show = use_state(|| false);
 
-    rect().expanded().center().child(
-        Attached::new(Button::new().on_press(move |_| open.toggle()).child("Menu"))
-            .bottom()
-            .maybe_child(open().then(|| {
-                Menu::new()
-                    .child(MenuButton::new().child("Profile"))
-                    .child(MenuButton::new().child("Settings"))
-                    .child(MenuButton::new().child("Log out"))
-            })),
+    rect().center().expanded().child(
+        Attached::new(
+            Button::new()
+                .child("Toggle")
+                .on_press(move |_| show.toggle()),
+        )
+        .maybe_child(show().then(|| rect().child(Button::new().child("Attached")))),
     )
 }
