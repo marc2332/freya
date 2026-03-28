@@ -1,7 +1,10 @@
 use std::ops::Deref;
 
 use freya_core::prelude::*;
-use torin::prelude::{Area, Position};
+use torin::prelude::{
+    Area,
+    Position,
+};
 
 /// Position where the attached element will be placed relative to the inner element.
 #[derive(PartialEq, Clone, Copy, Debug, Default)]
