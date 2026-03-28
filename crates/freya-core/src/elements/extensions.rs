@@ -290,13 +290,13 @@ pub trait EventHandlersExt: Sized {
 
     /// Also called the context menu click in other platforms.
     /// Gets triggered when:
-    /// - **Click**: There is a `MouseUp` (Right button) event in the same element that there had been a `MouseDown` just before
-    fn on_secondary_press(
+    /// - **Click**: There is a `MouseDown` (Right button) event
+    fn on_secondary_down(
         self,
-        on_pointer_press: impl Into<EventHandler<Event<PressEventData>>>,
+        on_secondary_down: impl Into<EventHandler<Event<PressEventData>>>,
     ) -> Self {
-        let on_pointer_press = on_pointer_press.into();
-        self.on_pointer_press(move |e: Event<PointerEventData>| {
+        let on_secondary_down = on_secondary_down.into();
+        self.on_pointer_down(move |e: Event<PointerEventData>| {
             let event = e.try_map(|d| match d {
                 PointerEventData::Mouse(m) if m.button == Some(MouseButton::Right) => {
                     Some(PressEventData::Mouse(m))
@@ -304,7 +304,7 @@ pub trait EventHandlersExt: Sized {
                 _ => None,
             });
             if let Some(event) = event {
-                on_pointer_press.call(event);
+                on_secondary_down.call(event);
             }
         })
     }

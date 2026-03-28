@@ -103,7 +103,7 @@ pub struct Button {
     pub(crate) theme_layout: Option<ButtonLayoutThemePartial>,
     elements: Vec<Element>,
     on_press: Option<EventHandler<Event<PressEventData>>>,
-    on_secondary_press: Option<EventHandler<Event<PressEventData>>>,
+    on_secondary_down: Option<EventHandler<Event<PressEventData>>>,
     on_pointer_down: Option<EventHandler<Event<PointerEventData>>>,
     key: DiffKey,
     style_variant: ButtonStyleVariant,
@@ -138,7 +138,7 @@ impl Button {
             style_variant: ButtonStyleVariant::Normal,
             layout_variant: ButtonLayoutVariant::Normal,
             on_press: None,
-            on_secondary_press: None,
+            on_secondary_down: None,
             on_pointer_down: None,
             elements: Vec::default(),
             enabled: true,
@@ -180,11 +180,11 @@ impl Button {
         self
     }
 
-    pub fn on_secondary_press(
+    pub fn on_secondary_down(
         mut self,
-        on_secondary_press: impl Into<EventHandler<Event<PressEventData>>>,
+        on_secondary_down: impl Into<EventHandler<Event<PressEventData>>>,
     ) -> Self {
-        self.on_secondary_press = Some(on_secondary_press.into());
+        self.on_secondary_down = Some(on_secondary_down.into());
         self
     }
 
@@ -301,7 +301,7 @@ impl Component for Button {
                 })
                 .on_all_press({
                     let on_press = self.on_press.clone();
-                    let on_secondary_press = self.on_secondary_press.clone();
+                    let on_secondary_down = self.on_secondary_down.clone();
                     move |e: Event<PressEventData>| {
                         focus.request_focus();
                         match e.data() {
@@ -312,7 +312,7 @@ impl Component for Button {
                                     }
                                 }
                                 Some(MouseButton::Right) => {
-                                    if let Some(handler) = &on_secondary_press {
+                                    if let Some(handler) = &on_secondary_down {
                                         handler.call(e);
                                     }
                                 }
