@@ -59,16 +59,16 @@ impl Component for EditorLineUI {
         let gutter_width = font_size * 5.0;
         let is_line_selected = editor_data.cursor_row() == line_index;
 
-        let on_mouse_down = {
+        let on_pointer_down = {
             let mut editor = editor.clone();
             let font_family = font_family.clone();
-            move |e: Event<MouseEventData>| {
+            move |e: Event<PointerEventData>| {
                 editor.write_if(|mut editor_editor| {
                     editor_editor.process(
                         font_size,
                         &font_family,
                         EditableEvent::Down {
-                            location: e.element_location,
+                            location: e.element_location(),
                             editor_line: EditorLine::Paragraph(line_index),
                             holder: &holder.read(),
                         },
@@ -77,15 +77,15 @@ impl Component for EditorLineUI {
             }
         };
 
-        let on_mouse_move = {
+        let on_pointer_move = {
             let font_family = font_family.clone();
-            move |e: Event<MouseEventData>| {
+            move |e: Event<PointerEventData>| {
                 editor.write_if(|mut editor_editor| {
                     editor_editor.process(
                         font_size,
                         &font_family,
                         EditableEvent::Move {
-                            location: e.element_location,
+                            location: e.element_location(),
                             editor_line: EditorLine::Paragraph(line_index),
                             holder: &holder.read(),
                         },
@@ -137,8 +137,8 @@ impl Component for EditorLineUI {
             .child(
                 paragraph()
                     .holder(holder.read().clone())
-                    .on_mouse_down(on_mouse_down)
-                    .on_mouse_move(on_mouse_move)
+                    .on_pointer_down(on_pointer_down)
+                    .on_pointer_move(on_pointer_move)
                     .cursor_color(theme.cursor)
                     .cursor_style(CursorStyle::Block)
                     .cursor_index(cursor_index)

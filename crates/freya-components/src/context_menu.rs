@@ -6,6 +6,12 @@ use torin::prelude::CursorPoint;
 
 use crate::menu::Menu;
 
+#[derive(Clone, Copy, PartialEq)]
+pub(crate) enum ContextMenuCloseRequest {
+    None,
+    Pending,
+}
+
 /// Context for managing a global context menu.
 ///
 /// # Example
@@ -16,7 +22,7 @@ use crate::menu::Menu;
 ///     let mut show_menu = use_state(|| false);
 ///
 ///     rect()
-///         .on_secondary_press(move |_| {
+///         .on_secondary_down(move |_| {
 ///             ContextMenu::open(Menu::new().child(MenuButton::new().child("Option 1")));
 ///             show_menu.set(true);
 ///         })
@@ -27,6 +33,7 @@ use crate::menu::Menu;
 pub struct ContextMenu {
     pub(crate) location: State<CursorPoint>,
     pub(crate) menu: State<Option<(CursorPoint, Menu)>>,
+    pub(crate) close_request: State<ContextMenuCloseRequest>,
 }
 
 impl ContextMenu {
@@ -37,6 +44,10 @@ impl ContextMenu {
                 let context_menu_state = ContextMenu {
                     location: State::create_in_scope(CursorPoint::default(), ScopeId::ROOT),
                     menu: State::create_in_scope(None, ScopeId::ROOT),
+                    close_request: State::create_in_scope(
+                        ContextMenuCloseRequest::None,
+                        ScopeId::ROOT,
+                    ),
                 };
                 provide_context_for_scope_id(context_menu_state, ScopeId::ROOT);
                 context_menu_state
@@ -51,6 +62,7 @@ impl ContextMenu {
     pub fn open(menu: Menu) {
         let mut this = Self::get();
         this.menu.set(Some(((this.location)(), menu)));
+        this.close_request.set(ContextMenuCloseRequest::None);
     }
 
     pub fn close() {

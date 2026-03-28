@@ -5,7 +5,10 @@ use freya_core::{
 };
 use torin::prelude::Position;
 
-use crate::context_menu::ContextMenu;
+use crate::context_menu::{
+    ContextMenu,
+    ContextMenuCloseRequest,
+};
 
 pub fn integration(app: AppComponent) -> impl IntoElement {
     let platform = use_hook(Platform::get);
@@ -48,6 +51,14 @@ pub fn integration(app: AppComponent) -> impl IntoElement {
             rect()
                 .layer(Layer::Overlay)
                 .position(Position::new_global().left(location.x).top(location.y))
-                .child(menu.on_close(move |_| context.menu.set(None)))
+                .child(menu.on_close(move |_| match (context.close_request)() {
+                    ContextMenuCloseRequest::None => {
+                        context.close_request.set(ContextMenuCloseRequest::Pending);
+                    }
+                    ContextMenuCloseRequest::Pending => {
+                        context.menu.set(None);
+                        context.close_request.set(ContextMenuCloseRequest::None);
+                    }
+                }))
         }))
 }

@@ -170,7 +170,11 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                     return;
                 }
                 let metrics = self.get_metrics(window.id());
+                let scale_factor = window.scale_factor() as f32;
                 let started_render = metrics.started_render.take().unwrap();
+
+                canvas.save();
+                canvas.scale((scale_factor, scale_factor));
 
                 let finished_render = started_render.elapsed();
                 let finished_presenting = metrics.finished_presenting.unwrap_or_default();
@@ -320,6 +324,8 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                     let y = start_y - *fps as f32 + 2.0;
                     canvas.draw_circle((x, y), 2.0, &paint);
                 }
+
+                canvas.restore();
             }
             _ => {}
         }
