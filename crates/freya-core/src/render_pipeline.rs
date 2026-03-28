@@ -15,6 +15,7 @@ use crate::{
         RenderContext,
     },
     prelude::Color,
+    style::shadow::ShadowPosition,
     tree::Tree,
 };
 
@@ -118,10 +119,22 @@ impl RenderPipeline<'_> {
 
                     let render_rect = element.render_rect(&visible_area, self.scale_factor as f32);
 
-                    // Apply inherited opacity effects
+                    // Apply inherited opacity effects with bounds expanded
+                    // to accommodate outset shadows
+                    let mut layer_bounds = *render_rect.rect();
+                    let scale_factor = self.scale_factor as f32;
+
+                    for shadow in element.style().shadows.iter() {
+                        if shadow.position == ShadowPosition::Normal {
+                            let outset_x = shadow.x.abs() + shadow.spread + shadow.blur;
+                            let outset_y = shadow.y.abs() + shadow.spread + shadow.blur;
+                            layer_bounds = layer_bounds
+                                .with_outset((outset_x * scale_factor, outset_y * scale_factor));
+                        }
+                    }
+
                     for opacity in effect_state.opacities.iter() {
-                        self.canvas
-                            .save_layer_alpha_f(*render_rect.rect(), *opacity);
+                        self.canvas.save_layer_alpha_f(layer_bounds, *opacity);
                     }
 
                     // Transform the canvas area given the scale effects
