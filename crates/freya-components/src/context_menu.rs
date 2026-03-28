@@ -21,7 +21,10 @@ pub(crate) enum ContextMenuCloseRequest {
 /// fn app() -> impl IntoElement {
 ///     rect()
 ///         .on_secondary_down(move |e: Event<PressEventData>| {
-///             ContextMenu::open_from_event(&e, Menu::new().child(MenuButton::new().child("Option 1")));
+///             ContextMenu::open_from_event(
+///                 &e,
+///                 Menu::new().child(MenuButton::new().child("Option 1")),
+///             );
 ///         })
 ///         .child("Right click to open menu")
 /// }
