@@ -75,6 +75,22 @@ impl ButtonSegment {
         }
     }
 
+    /// Get the theme override for this component.
+    pub fn get_theme(&self) -> Option<&ButtonSegmentThemePartial> {
+        self.theme.as_ref()
+    }
+
+    /// Set a theme override for this component.
+    pub fn theme(mut self, theme: ButtonSegmentThemePartial) -> Self {
+        self.theme = Some(theme);
+        self
+    }
+
+    /// Whether this segment is currently selected.
+    pub fn is_selected(&self) -> bool {
+        self.selected
+    }
+
     pub fn selected(mut self, selected: impl Into<bool>) -> Self {
         self.selected = selected.into();
         self
