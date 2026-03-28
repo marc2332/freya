@@ -29,11 +29,12 @@ Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliqu
  Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
  Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
 
-fn popup(i: i32, mut show_popup: State<Option<i32>>) -> impl IntoElement {
+fn popup(mut show_popup: State<Option<i32>>) -> impl IntoElement {
     Popup::new()
+        .show(show_popup().is_some())
         .on_close_request(move |_| show_popup.set(None))
         .child(PopupTitle::new("Title".to_string()))
-        .child(
+        .maybe_child(show_popup().map(|i| {
             PopupContent::new().child(
                 rect()
                     .horizontal()
@@ -47,8 +48,8 @@ fn popup(i: i32, mut show_popup: State<Option<i32>>) -> impl IntoElement {
                             .child(card(i)),
                     )
                     .child(LOREM_IPSUM),
-            ),
-        )
+            )
+        }))
         .child(
             PopupButtons::new()
                 .child(
@@ -77,7 +78,7 @@ fn app() -> impl IntoElement {
         .center()
         .expanded()
         .horizontal()
-        .maybe_child(show_popup().map(|i| popup(i, show_popup)))
+        .child(popup(show_popup))
         .children((0..5).map(|i| {
             rect()
                 .key(i)

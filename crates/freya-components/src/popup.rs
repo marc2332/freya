@@ -21,39 +21,35 @@ use crate::{
 pub struct PopupBackground {
     pub children: Element,
     pub on_press: EventHandler<Event<PressEventData>>,
+    pub background: Color,
 }
 
 impl PopupBackground {
     pub fn new(
         children: Element,
         on_press: impl Into<EventHandler<Event<PressEventData>>>,
+        background: Color,
     ) -> Self {
         Self {
             children,
             on_press: on_press.into(),
+            background,
         }
     }
 }
 
 impl Component for PopupBackground {
     fn render(&self) -> impl IntoElement {
-        let animation = use_animation(|conf| {
-            conf.on_creation(OnCreation::Run);
-            AnimColor::new((0, 0, 0, 0), (0, 0, 0, 150)).time(150)
-        });
-        let background = animation.get().value();
         let on_press = self.on_press.clone();
 
         rect()
-            .layer(Layer::Overlay)
-            .position(Position::new_global())
             .child(
                 rect()
                     .on_press(on_press)
                     .position(Position::new_global().top(0.).left(0.))
                     .height(Size::window_percent(100.))
                     .width(Size::window_percent(100.))
-                    .background(background),
+                    .background(self.background),
             )
             .child(
                 rect()
@@ -73,17 +69,30 @@ impl Component for PopupBackground {
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-/// Popup::new()
-///     .width(Size::px(250.))
-///     .child(PopupTitle::new("Title".to_string()))
-///     .child(PopupContent::new().child("Hello, World!"))
-///     .child(
-///         PopupButtons::new().child(
+///     let mut show_popup = use_state(|| true);
+///
+///     rect()
+///         .child(
+///             Popup::new()
+///                 .show(show_popup())
+///                 .width(Size::px(250.))
+///                 .on_close_request(move |_| show_popup.set(false))
+///                 .child(PopupTitle::new("Title".to_string()))
+///                 .child(PopupContent::new().child("Hello, World!"))
+///                 .child(
+///                     PopupButtons::new().child(
+///                         Button::new()
+///                             .on_press(move |_| show_popup.set(false))
+///                             .expanded()
+///                             .filled()
+///                             .child("Accept"),
+///                     ),
+///                 ),
+///         )
+///         .child(
 ///             Button::new()
-///                 .expanded()
-///                 .filled()
-///                 .child("Accept"),
-///             ),
+///                 .child("Open")
+///                 .on_press(move |_| show_popup.toggle()),
 ///         )
 /// }
 /// # use freya_testing::prelude::*;
@@ -108,6 +117,7 @@ impl Component for PopupBackground {
 pub struct Popup {
     pub(crate) theme: Option<PopupThemePartial>,
     children: Vec<Element>,
+    show: Readable<bool>,
     on_close_request: Option<EventHandler<()>>,
     close_on_escape_key: bool,
     width: Size,
@@ -131,11 +141,17 @@ impl Popup {
         Self {
             theme: None,
             children: vec![],
+            show: true.into(),
             on_close_request: None,
             close_on_escape_key: true,
             width: Size::px(500.),
             key: DiffKey::None,
         }
+    }
+
+    pub fn show(mut self, show: impl Into<Readable<bool>>) -> Self {
+        self.show = show.into();
+        self
     }
 
     pub fn on_close_request(mut self, on_close_request: impl Into<EventHandler<()>>) -> Self {
@@ -157,8 +173,22 @@ impl ChildrenExt for Popup {
 
 impl Component for Popup {
     fn render(&self) -> impl IntoElement {
-        let animations = use_animation(|conf| {
-            conf.on_creation(OnCreation::Run);
+        let show = *self.show.read();
+
+        let bg_animation = use_animation_with_dependencies(&show, |conf, show| {
+            conf.on_creation(OnCreation::Finish);
+            conf.on_change(OnChange::Rerun);
+
+            let value = AnimColor::new((0, 0, 0, 0), (0, 0, 0, 150)).time(150);
+
+            if *show { value } else { value.into_reversed() }
+        });
+
+        // Depends on `show` to restart on reopen
+        let content_animation = use_animation_with_dependencies(&show, |conf, _| {
+            conf.on_creation(OnCreation::Finish);
+            conf.on_change(OnChange::Rerun);
+
             (
                 AnimNum::new(0.85, 1.)
                     .time(250)
@@ -171,9 +201,9 @@ impl Component for Popup {
             )
         });
 
-        let PopupTheme { background, color } = get_theme!(&self.theme, popup);
+        let should_render = show || *bg_animation.is_running().read();
 
-        let (scale, opacity) = &*animations.read();
+        let PopupTheme { background, color } = get_theme!(&self.theme, popup);
 
         let request_to_close = {
             let handler = self.on_close_request.clone();
@@ -194,26 +224,42 @@ impl Component for Popup {
             }
         };
 
-        PopupBackground::new(
-            rect()
-                .a11y_role(AccessibilityRole::Dialog)
-                .scale((scale.value(), scale.value()))
-                .opacity(opacity.value())
-                .corner_radius(12.)
-                .background(background)
-                .color(color)
-                .shadow(Shadow::new().y(4.).blur(5.).color((0, 0, 0, 30)))
-                .width(self.width.clone())
-                .height(Size::auto())
-                .spacing(4.)
-                .padding(8.)
-                .on_global_key_down(on_global_key_down)
-                .children(self.children.clone())
-                .into(),
-            move |_| {
-                request_to_close();
-            },
-        )
+        rect()
+            .layer(Layer::Overlay)
+            .position(Position::new_global())
+            .maybe_child(should_render.then(|| {
+                let bg_color = bg_animation.get().value();
+
+                let (scale, opacity) = &*content_animation.read();
+
+                let (scale, opacity) = if show {
+                    (scale.value(), opacity.value())
+                } else {
+                    (1., 0.)
+                };
+
+                PopupBackground::new(
+                    rect()
+                        .a11y_role(AccessibilityRole::Dialog)
+                        .scale((scale, scale))
+                        .opacity(opacity)
+                        .corner_radius(12.)
+                        .background(background)
+                        .color(color)
+                        .shadow(Shadow::new().y(4.).blur(5.).color((0, 0, 0, 30)))
+                        .width(self.width.clone())
+                        .height(Size::auto())
+                        .spacing(4.)
+                        .padding(8.)
+                        .on_global_key_down(on_global_key_down)
+                        .children(self.children.clone())
+                        .into(),
+                    move |_| {
+                        request_to_close();
+                    },
+                    bg_color,
+                )
+            }))
     }
 
     fn render_key(&self) -> DiffKey {
