@@ -144,7 +144,7 @@ impl Component for CodeEditor {
         let line_height = (font_size * line_height).floor();
         let lines_len = editor_data.metrics.syntax_blocks.len();
 
-        let on_mouse_down = move |_| {
+        let on_pointer_down = move |_: Event<PointerEventData>| {
             focus.request_focus();
         };
 
@@ -257,7 +257,7 @@ impl Component for CodeEditor {
                     el.on_key_down(on_key_down).on_key_up(on_key_up)
                 })
                 .on_global_pointer_press(on_global_pointer_press)
-                .on_mouse_down(on_mouse_down)
+                .on_pointer_down(on_pointer_down)
                 .child(
                     VirtualScrollView::new(move |line_index, _| {
                         EditorLineUI {

@@ -84,6 +84,7 @@ impl EmmitableEvent {
                 || name.is_left()
                 || name.is_press()
                 || name.is_down()
+                || name.is_pointer_move()
                 || name.is_global_pointer() =>
             {
                 let global_location = cursor / scale_factor;
@@ -117,6 +118,7 @@ impl EmmitableEvent {
                 || name.is_left()
                 || name.is_press()
                 || name.is_down()
+                || name.is_pointer_move()
                 || name.is_global_pointer() =>
             {
                 let global_location = location / scale_factor;
