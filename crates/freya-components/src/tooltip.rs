@@ -13,16 +13,12 @@ use freya_animation::{
     prelude::AnimNum,
 };
 use freya_core::prelude::*;
-use torin::{
-    prelude::{
-        Alignment,
-        Area,
-        Direction,
-    },
-    size::Size,
-};
 
 use crate::{
+    attached::{
+        Attached,
+        AttachedPosition,
+    },
     context_menu::ContextMenu,
     get_theme,
     theming::component_themes::{
@@ -112,18 +108,11 @@ impl Component for Tooltip {
     }
 }
 
-#[derive(PartialEq, Clone, Copy, Debug, Default)]
-pub enum TooltipPosition {
-    Besides,
-    #[default]
-    Below,
-}
-
 #[derive(PartialEq)]
 pub struct TooltipContainer {
     tooltip: Tooltip,
     children: Vec<Element>,
-    position: TooltipPosition,
+    position: AttachedPosition,
     key: DiffKey,
 }
 
@@ -144,12 +133,12 @@ impl TooltipContainer {
         Self {
             tooltip,
             children: vec![],
-            position: TooltipPosition::Below,
+            position: AttachedPosition::Bottom,
             key: DiffKey::None,
         }
     }
 
-    pub fn position(mut self, position: TooltipPosition) -> Self {
+    pub fn position(mut self, position: AttachedPosition) -> Self {
         self.position = position;
         self
     }
@@ -158,7 +147,6 @@ impl TooltipContainer {
 impl Component for TooltipContainer {
     fn render(&self) -> impl IntoElement {
         let mut is_hovering = use_state(|| false);
-        let mut size = use_state(Area::default);
 
         let animation = use_animation(move |conf| {
             conf.on_change(OnChange::Rerun);
@@ -190,54 +178,30 @@ impl Component for TooltipContainer {
             is_hovering.set(false);
         };
 
-        let on_sized = move |e: Event<SizedEventData>| {
-            size.set(e.area);
-        };
-
-        let direction = match self.position {
-            TooltipPosition::Below => Direction::vertical(),
-            TooltipPosition::Besides => Direction::horizontal(),
-        };
-
         let is_visible = opacity > 0. && !ContextMenu::is_open();
+
+        let padding = match self.position {
+            AttachedPosition::Top => (0., 0., 5., 0.),
+            AttachedPosition::Bottom => (5., 0., 0., 0.),
+            AttachedPosition::Left => (0., 5., 0., 0.),
+            AttachedPosition::Right => (0., 0., 0., 5.),
+        };
 
         rect()
             .a11y_focusable(false)
             .a11y_role(AccessibilityRole::Tooltip)
-            .direction(direction)
-            .on_sized(on_sized)
             .on_pointer_over(on_pointer_over)
             .on_pointer_out(on_pointer_out)
-            .children(self.children.clone())
             .child(
-                rect()
-                    .width(Size::px(0.))
-                    .height(Size::px(0.))
-                    .layer(Layer::Overlay)
-                    .opacity(opacity)
-                    .overflow(if is_visible {
-                        Overflow::None
-                    } else {
-                        Overflow::Clip
-                    })
-                    .child({
-                        match self.position {
-                            TooltipPosition::Below => rect()
-                                .width(Size::px(size.read().width()))
-                                .cross_align(Alignment::Center)
-                                .main_align(Alignment::Center)
-                                .scale(scale)
-                                .padding((5., 0., 0., 0.))
-                                .child(self.tooltip.clone()),
-                            TooltipPosition::Besides => rect()
-                                .height(Size::px(size.read().height()))
-                                .cross_align(Alignment::Center)
-                                .main_align(Alignment::Center)
-                                .scale(scale)
-                                .padding((0., 0., 0., 5.))
-                                .child(self.tooltip.clone()),
-                        }
-                    }),
+                Attached::new(rect().children(self.children.clone()))
+                    .position(self.position)
+                    .maybe_child(is_visible.then(|| {
+                        rect()
+                            .opacity(opacity)
+                            .scale(scale)
+                            .padding(padding)
+                            .child(self.tooltip.clone())
+                    })),
             )
     }
 
