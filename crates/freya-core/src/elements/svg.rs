@@ -157,6 +157,7 @@ impl ElementExt for SvgElement {
         }
 
         if self.color != svg.color
+            || self.fill != svg.fill
             || self.stroke != svg.stroke
             || self.stroke_width != svg.stroke_width
         {
