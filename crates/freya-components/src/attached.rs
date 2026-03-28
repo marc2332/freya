@@ -89,44 +89,36 @@ impl Attached {
 
 impl Component for Attached {
     fn render(&self) -> impl IntoElement {
-        let mut container_size = use_state(Area::default);
-        let mut attached_size = use_state(Area::default);
+        let mut inner_area = use_state(Area::default);
+        let mut attached_area = use_state(Area::default);
 
-        let on_container_sized = move |e: Event<SizedEventData>| {
-            container_size.set(e.area);
-        };
+        let inner_width = inner_area.read().width();
+        let inner_height = inner_area.read().height();
+        let attached_width = attached_area.read().width();
+        let attached_height = attached_area.read().height();
 
-        let on_attached_sized = move |e: Event<SizedEventData>| {
-            attached_size.set(e.area);
-        };
-
-        let container_w = container_size.read().width();
-        let container_h = container_size.read().height();
-        let attached_w = attached_size.read().width();
-        let attached_h = attached_size.read().height();
-
-        let attached_position = match self.position {
+        let position = match self.position {
             AttachedPosition::Top => Position::new_absolute()
-                .top(-attached_h)
-                .left((container_w - attached_w) / 2.),
+                .top(-attached_height)
+                .left((inner_width - attached_width) / 2.),
             AttachedPosition::Bottom => Position::new_absolute()
-                .top(container_h)
-                .left((container_w - attached_w) / 2.),
+                .top(inner_height)
+                .left((inner_width - attached_width) / 2.),
             AttachedPosition::Left => Position::new_absolute()
-                .top((container_h - attached_h) / 2.)
-                .left(-attached_w),
+                .top((inner_height - attached_height) / 2.)
+                .left(-attached_width),
             AttachedPosition::Right => Position::new_absolute()
-                .top((container_h - attached_h) / 2.)
-                .left(container_w),
+                .top((inner_height - attached_height) / 2.)
+                .left(inner_width),
         };
 
         rect()
-            .on_sized(on_container_sized)
+            .on_sized(move |e: Event<SizedEventData>| inner_area.set(e.area))
             .child(self.inner.clone())
             .child(
                 rect()
-                    .on_sized(on_attached_sized)
-                    .position(attached_position)
+                    .on_sized(move |e: Event<SizedEventData>| attached_area.set(e.area))
+                    .position(position)
                     .layer(Layer::Overlay)
                     .children(self.children.clone()),
             )
