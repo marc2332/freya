@@ -17,23 +17,17 @@
 //! ```
 
 pub mod button;
-pub mod card;
-pub mod chip;
 pub mod floating_tab;
 pub mod menu;
 pub mod ripple;
-pub mod segmented_button;
 pub mod sidebar;
 
 pub mod prelude {
     pub use crate::{
         button::*,
-        card::*,
-        chip::*,
         floating_tab::*,
         menu::*,
         ripple::*,
-        segmented_button::*,
         sidebar::*,
     };
 }
