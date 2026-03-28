@@ -107,8 +107,8 @@ impl Component for Ripple {
         });
         let duration = self.duration;
 
-        let on_mouse_down = move |e: Event<MouseEventData>| {
-            let location = e.element_location;
+        let on_pointer_down = move |e: Event<PointerEventData>| {
+            let location = e.element_location();
             let id = ripple_counter();
             *ripple_counter.write() += 1;
 
@@ -126,7 +126,7 @@ impl Component for Ripple {
             .layout(self.layout.clone())
             .interactive(false)
             .overflow(Overflow::Clip)
-            .on_mouse_down(on_mouse_down)
+            .on_pointer_down(on_pointer_down)
             .on_sized(move |e: Event<SizedEventData>| container_area.set(e.area))
             .children(self.children.clone())
             .children(ripples.read().iter().map(|ripple| {

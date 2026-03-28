@@ -72,7 +72,7 @@ impl Component for NodeElement {
                 .child(ArrowIcon::new().rotate(arrow_degrees).fill(Color::WHITE))
         });
 
-        let on_secondary_press = {
+        let on_secondary_down = {
             let on_toggle = self.on_toggle.clone();
             let on_expand_all = self.on_expand_all.clone();
             let on_collapse_all = self.on_collapse_all.clone();
@@ -120,7 +120,7 @@ impl Component for NodeElement {
                 Color::from((45, 45, 45))
             })
             .on_press(on_select)
-            .on_secondary_press(on_secondary_press)
+            .on_secondary_down(on_secondary_down)
             .child(
                 rect()
                     .offset_x(margin_left)

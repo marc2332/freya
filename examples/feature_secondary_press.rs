@@ -10,7 +10,7 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    let on_secondary_press = move |_| {
+    let on_secondary_down = move |_| {
         ContextMenu::open(
             Menu::new().child(
                 MenuItem::new()
@@ -25,6 +25,6 @@ fn app() -> impl IntoElement {
     rect().expanded().center().child(
         label()
             .text("Right click to copy")
-            .on_secondary_press(on_secondary_press),
+            .on_secondary_down(on_secondary_down),
     )
 }

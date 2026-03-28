@@ -63,11 +63,12 @@ pub struct PluginsManager {
 }
 
 impl PluginsManager {
-    /// Add or replace a plugin by its ID. Last insert wins.
+    /// Add a plugin by its ID. First insert wins.
     pub fn add_plugin(&mut self, plugin: impl FreyaPlugin + 'static) {
         self.plugins
             .borrow_mut()
-            .insert(plugin.plugin_id(), Box::new(plugin));
+            .entry(plugin.plugin_id())
+            .or_insert(Box::new(plugin));
     }
 
     pub fn send(&mut self, mut event: PluginEvent, handle: PluginHandle) {
