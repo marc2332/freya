@@ -262,6 +262,9 @@ impl ElementExt for SvgElement {
         context
             .canvas
             .translate(context.layout_node.visible_area().origin.to_tuple());
+        context
+            .canvas
+            .scale((context.scale_factor as f32, context.scale_factor as f32));
 
         root.set_color(self.color.into());
         if let Some(fill) = self.fill {
