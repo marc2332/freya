@@ -1,8 +1,7 @@
+use std::ops::Deref;
+
 use freya_core::prelude::*;
-use torin::prelude::{
-    Area,
-    Position,
-};
+use torin::prelude::{Area, Position};
 
 /// Position where the attached element will be placed relative to the inner element.
 #[derive(PartialEq, Clone, Copy, Debug, Default)]
@@ -89,13 +88,19 @@ impl Attached {
 
 impl Component for Attached {
     fn render(&self) -> impl IntoElement {
-        let mut inner_area = use_state(Area::default);
-        let mut attached_area = use_state(Area::default);
+        let mut inner_area: State<Option<Area>> = use_state(|| None);
+        let mut attached_area: State<Option<Area>> = use_state(|| None);
 
-        let inner_width = inner_area.read().width();
-        let inner_height = inner_area.read().height();
-        let attached_width = attached_area.read().width();
-        let attached_height = attached_area.read().height();
+        let inner = inner_area.read();
+        let attached = attached_area.read();
+
+        let has_attachment = !self.children.is_empty();
+        let is_measured = inner.deref().is_some() && attached.deref().is_some();
+
+        let inner_width = inner.deref().map(|a| a.width()).unwrap_or_default();
+        let inner_height = inner.deref().map(|a| a.height()).unwrap_or_default();
+        let attached_width = attached.deref().map(|a| a.width()).unwrap_or_default();
+        let attached_height = attached.deref().map(|a| a.height()).unwrap_or_default();
 
         let position = match self.position {
             AttachedPosition::Top => Position::new_absolute()
@@ -113,15 +118,20 @@ impl Component for Attached {
         };
 
         rect()
-            .on_sized(move |e: Event<SizedEventData>| inner_area.set(e.area))
+            .on_sized(move |e: Event<SizedEventData>| inner_area.set(Some(e.area)))
             .child(self.inner.clone())
-            .child(
+            .maybe_child(has_attachment.then(|| {
                 rect()
-                    .on_sized(move |e: Event<SizedEventData>| attached_area.set(e.area))
+                    .on_sized(move |e: Event<SizedEventData>| {
+                        if has_attachment {
+                            attached_area.set(Some(e.area))
+                        }
+                    })
                     .position(position)
                     .layer(Layer::Overlay)
-                    .children(self.children.clone()),
-            )
+                    .opacity(if is_measured { 1. } else { 0. })
+                    .children(self.children.clone())
+            }))
     }
 
     fn render_key(&self) -> DiffKey {
