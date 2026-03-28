@@ -63,6 +63,12 @@ cfg_if::cfg_if! {
 }
 
 cfg_if::cfg_if! {
+    if #[cfg(feature = "video")] {
+        pub use freya_video::{VideoControls, VideoPlayer, VideoSource};
+    }
+}
+
+cfg_if::cfg_if! {
     if #[cfg(feature = "markdown")] {
         pub mod markdown;
     }

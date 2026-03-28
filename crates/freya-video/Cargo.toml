@@ -1,0 +1,31 @@
+[package]
+name = "freya-video"
+version = "0.4.0-rc.16"
+edition = "2024"
+description = "Video player component for Freya"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "ui", "desktop", "skia", "video"]
+categories = ["gui", "asynchronous"]
+
+[features]
+## Enable support for network streams (HTTP, HLS/m3u8, RTMP, etc.).
+## Requires FFmpeg to be compiled with the corresponding protocol support.
+streaming = []
+
+[lints]
+workspace = true
+
+[dependencies]
+freya-core = { workspace = true }
+freya-engine = { workspace = true }
+torin = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+async-io = { workspace = true }
+blocking = { workspace = true }
+ffmpeg-next = { workspace = true }
+rodio = { workspace = true }

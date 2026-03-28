@@ -43,6 +43,7 @@ members = [
   "./crates/freya-webview",
   "./crates/freya-terminal",
   "./crates/freya-code-editor",
+  "./crates/freya-video",
   "./examples/ai-chat",
   "./examples/state_query_sqlite",
 ]
@@ -78,6 +79,7 @@ freya-query = { path = "./crates/freya-query", version = "0.4.0-rc.16" }
 freya-webview = { path = "./crates/freya-webview", version = "0.4.0-rc.16" }
 freya-terminal = { path = "./crates/freya-terminal", version = "0.4.0-rc.16" }
 freya-code-editor = { path = "./crates/freya-code-editor", version = "0.4.0-rc.16" }
+freya-video = { path = "./crates/freya-video", version = "0.4.0-rc.16" }
 
 # core
 generational-box = "0.7"
@@ -150,6 +152,10 @@ thiserror = "2.0.17"
 # Images
 image = "0.25.8"
 
+# Video
+ffmpeg-next = "8"
+rodio = { version = "0.19", default-features = false }
+
 # SDK
 tokio = { version = "1.0", default-features = false }
 
@@ -172,6 +178,7 @@ freya-devtools = { workspace = true, features = ["server", "client"] }
 freya-webview = { workspace = true }
 freya-terminal = { workspace = true }
 freya-code-editor = { workspace = true }
+freya-video = { workspace = true, features = ["streaming"] }
 
 freya-skia-safe = { workspace = true }
 
