@@ -301,7 +301,8 @@ impl Component for ColorPicker {
                                 if ContextMenu::is_open() {
                                     ContextMenu::close();
                                 } else {
-                                    ContextMenu::open(
+                                    ContextMenu::open_from_event(
+                                        &e,
                                         Menu::new()
                                             .child(
                                                 MenuButton::new()

@@ -19,12 +19,9 @@ pub(crate) enum ContextMenuCloseRequest {
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     let mut show_menu = use_state(|| false);
-///
 ///     rect()
-///         .on_secondary_down(move |_| {
-///             ContextMenu::open(Menu::new().child(MenuButton::new().child("Option 1")));
-///             show_menu.set(true);
+///         .on_secondary_down(move |e: Event<PressEventData>| {
+///             ContextMenu::open_from_event(&e, Menu::new().child(MenuButton::new().child("Option 1")));
 ///         })
 ///         .child("Right click to open menu")
 /// }
@@ -59,10 +56,31 @@ impl ContextMenu {
         Self::get().menu.read().is_some()
     }
 
+    /// Open the context menu with the given menu.
+    /// Prefer using [`ContextMenu::open_from_event`] instead as it correctly handles
+    /// the close behavior based on the source event.
     pub fn open(menu: Menu) {
         let mut this = Self::get();
         this.menu.set(Some(((this.location)(), menu)));
         this.close_request.set(ContextMenuCloseRequest::None);
+    }
+
+    /// Open the context menu with the given menu, using the source event to determine
+    /// the close behavior. When opened from a primary button (left click) press event,
+    /// the first close request is consumed to prevent the menu from closing immediately.
+    /// When opened from a secondary button (right click) down event, the menu can be
+    /// closed with a single click.
+    pub fn open_from_event(event: &Event<PressEventData>, menu: Menu) {
+        let mut this = Self::get();
+        this.menu.set(Some(((this.location)(), menu)));
+
+        let close_request = match event.data() {
+            PressEventData::Mouse(mouse) if mouse.button == Some(MouseButton::Left) => {
+                ContextMenuCloseRequest::Pending
+            }
+            _ => ContextMenuCloseRequest::None,
+        };
+        this.close_request.set(close_request);
     }
 
     pub fn close() {

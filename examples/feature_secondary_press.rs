@@ -10,8 +10,9 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    let on_secondary_down = move |_| {
-        ContextMenu::open(
+    let on_secondary_down = move |e: Event<PressEventData>| {
+        ContextMenu::open_from_event(
+            &e,
             Menu::new().child(
                 MenuItem::new()
                     .on_press(move |_| {
