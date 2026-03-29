@@ -165,6 +165,7 @@ pub mod components {
     pub use freya_components::{
         accordion::*,
         activable_route_context::*,
+        attached::*,
         button::*,
         canvas::*,
         card::*,
