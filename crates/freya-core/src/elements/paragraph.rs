@@ -322,6 +322,11 @@ impl ElementExt for ParagraphElement {
                         f32::from(text_style_state.font_size) * context.scale_factor as f32,
                     );
                     text_style.set_font_families(&font_families);
+                    text_style.set_font_style(FontStyle::new(
+                        text_style_state.font_weight.into(),
+                        text_style_state.font_width.into(),
+                        text_style_state.font_slant.into(),
+                    ));
                     text_style.set_decoration_type(text_style_state.text_decoration.into());
                     paragraph_builder.push_style(&text_style);
                     paragraph_builder.add_text(&span.text);
