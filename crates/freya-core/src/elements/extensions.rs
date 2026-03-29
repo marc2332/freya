@@ -770,6 +770,7 @@ where
 {
     fn get_effect(&mut self) -> &mut EffectData;
 
+    /// Mark this element as scrollable. You are probably looking for the [`ScrollView`](freya_components::ScrollView) component instead.
     fn scrollable(mut self, scrollable: impl Into<bool>) -> Self {
         self.get_effect().scrollable = scrollable.into();
         self
