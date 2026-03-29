@@ -369,7 +369,7 @@ pub const BASE_THEME: Theme = Theme {
         hover_icon_fill: Preference::Reference("secondary"),
     },
     menu_item: MenuItemThemePreference {
-        background: Preference::Reference("background"),
+        background: Preference::Specific(Color::TRANSPARENT),
         hover_background: Preference::Reference("surface_secondary"),
         select_background: Preference::Reference("surface_secondary"),
         border_fill: Preference::Specific(Color::TRANSPARENT),
@@ -506,7 +506,7 @@ pub const DARK_THEME: Theme = Theme {
         text_primary: Color::from_rgb(250, 250, 250),
         text_secondary: Color::from_rgb(210, 210, 210),
         text_placeholder: Color::from_rgb(150, 150, 150),
-        text_inverse: Color::BLACK,
+        text_inverse: Color::WHITE,
         text_highlight: Color::from_rgb(96, 145, 224),
 
         // States
