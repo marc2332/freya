@@ -170,9 +170,41 @@ impl ImageSource {
 
 /// Image viewer component.
 ///
+/// Supports loading images from embedded bytes, file paths, and URLs.
+/// Loading images from URLs requires the `remote-asset` feature to be enabled.
+///
 /// # Example
 ///
+/// ### Embedded bytes
+///
 /// ```rust
+/// # use freya::prelude::*;
+/// fn app() -> impl IntoElement {
+///     let source: ImageSource = (
+///         "rust-logo",
+///         include_bytes!("../../../examples/rust_logo.png"),
+///     )
+///         .into();
+///
+///     ImageViewer::new(source)
+/// }
+/// ```
+///
+/// ### File path
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// # use std::path::PathBuf;
+/// fn app() -> impl IntoElement {
+///     let source: ImageSource = PathBuf::from("./examples/rust_logo.png").into();
+///
+///     ImageViewer::new(source)
+/// }
+/// ```
+///
+/// ### URL (requires `remote-asset` feature)
+///
+/// ```rust,ignore
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
 ///     let source: ImageSource =
@@ -181,7 +213,9 @@ impl ImageSource {
 ///
 ///     ImageViewer::new(source)
 /// }
+/// ```
 ///
+/// ```rust
 /// # use freya_testing::prelude::*;
 /// # use std::path::PathBuf;
 /// # launch_doc(|| {
