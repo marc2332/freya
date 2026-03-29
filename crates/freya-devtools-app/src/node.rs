@@ -77,11 +77,12 @@ impl Component for NodeElement {
             let on_expand_all = self.on_expand_all.clone();
             let on_collapse_all = self.on_collapse_all.clone();
             let is_open = self.is_open;
-            move |_| {
+            move |e: Event<PressEventData>| {
                 let on_toggle = on_toggle.clone();
                 let on_expand_all = on_expand_all.clone();
                 let on_collapse_all = on_collapse_all.clone();
-                ContextMenu::open(
+                ContextMenu::open_from_event(
+                    &e,
                     Menu::new()
                         .child(MenuItem::new().on_press(move |_| on_toggle.call(())).child(
                             if Some(true) == is_open {

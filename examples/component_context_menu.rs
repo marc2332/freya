@@ -34,11 +34,11 @@ fn app() -> impl IntoElement {
 
     rect().theme_background().center().expanded().child(
         Button::new()
-            .on_press(move |_| {
+            .on_press(move |e: Event<PressEventData>| {
                 if ContextMenu::is_open() {
                     ContextMenu::close();
                 } else {
-                    ContextMenu::open(context_menu())
+                    ContextMenu::open_from_event(&e, context_menu())
                 }
             })
             .child("Open"),
