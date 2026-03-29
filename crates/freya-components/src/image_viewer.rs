@@ -216,6 +216,7 @@ impl ImageSource {
 /// ```
 ///
 /// ```rust
+/// # use freya::prelude::*;
 /// # use freya_testing::prelude::*;
 /// # use std::path::PathBuf;
 /// # launch_doc(|| {
