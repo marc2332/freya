@@ -396,6 +396,10 @@
 //! `Writable` but only exposes read operations. This is useful when a component only needs to
 //! display data without modifying it.
 //!
+//! Note that calling `.read()` on a `Readable` only subscribes to changes if the underlying
+//! source supports it. For example, a `Readable` created from a [`State<T>`](crate::prelude::State)
+//! or a `RadioSlice` will subscribe, but a `Readable` created from a plain value will not.
+//!
 //! Sources that can be converted to `Readable`:
 //! - [`State<T>`](crate::prelude::State) from `use_state` via [`IntoReadable`](crate::prelude::IntoReadable)
 //! - [`RadioSlice`](freya_radio::prelude::RadioSlice) from Freya Radio via [`IntoReadable`](crate::prelude::IntoReadable)
