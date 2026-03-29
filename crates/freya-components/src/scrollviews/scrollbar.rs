@@ -78,9 +78,15 @@ impl ComponentOwned for ScrollBar {
         };
 
         let on_pointer_over = move |_| {
-            state.set(ScrollBarState::Hovering);
+            if !cfg!(target_os = "android") {
+                state.set(ScrollBarState::Hovering);
+            }
         };
-        let on_pointer_out = move |_| state.set(ScrollBarState::Idle);
+        let on_pointer_out = move |_| {
+            if !cfg!(target_os = "android") {
+                state.set(ScrollBarState::Idle);
+            }
+        };
 
         rect()
             .position(Position::new_absolute())
