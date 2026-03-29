@@ -1,6 +1,7 @@
 use freya_core::prelude::*;
 use torin::{
     content::Content,
+    gaps::Gaps,
     prelude::{
         Alignment,
         Area,
@@ -186,6 +187,7 @@ impl ComponentOwned for MenuContainer {
         };
 
         rect()
+            .layer(Layer::Overlay)
             .content(Content::fit())
             .opacity(opacity)
             .offset_x(offset_x)
@@ -236,14 +238,29 @@ pub struct MenuGroup {
 ///         .child("Open File")
 /// }
 /// ```
-#[derive(Default, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct MenuItem {
     pub(crate) theme: Option<MenuItemThemePartial>,
     children: Vec<Element>,
     on_press: Option<EventHandler<Event<PressEventData>>>,
     on_pointer_enter: Option<EventHandler<Event<PointerEventData>>>,
     selected: bool,
+    padding: Gaps,
     key: DiffKey,
+}
+
+impl Default for MenuItem {
+    fn default() -> Self {
+        Self {
+            theme: None,
+            children: Vec::new(),
+            on_press: None,
+            on_pointer_enter: None,
+            selected: false,
+            padding: (4.0, 10.0).into(),
+            key: DiffKey::None,
+        }
+    }
 }
 
 impl KeyExt for MenuItem {
@@ -275,6 +292,28 @@ impl MenuItem {
 
     pub fn selected(mut self, selected: bool) -> Self {
         self.selected = selected;
+        self
+    }
+
+    /// Set the padding for this menu item.
+    pub fn padding(mut self, padding: impl Into<Gaps>) -> Self {
+        self.padding = padding.into();
+        self
+    }
+
+    /// Get the current padding.
+    pub fn get_padding(&self) -> Gaps {
+        self.padding
+    }
+
+    /// Get the theme override for this component.
+    pub fn get_theme(&self) -> Option<&MenuItemThemePartial> {
+        self.theme.as_ref()
+    }
+
+    /// Set a theme override for this component.
+    pub fn theme(mut self, theme: MenuItemThemePartial) -> Self {
+        self.theme = Some(theme);
         self
     }
 }
@@ -341,13 +380,15 @@ impl ComponentOwned for MenuItem {
             .a11y_member_of(group_id)
             .min_width(Size::px(105.))
             .width(Size::fill_minimum())
-            .padding((4.0, 10.0))
+            .content(Content::fit())
+            .padding(self.padding)
             .corner_radius(theme.corner_radius)
             .background(background)
             .border(border)
             .color(theme.color)
             .text_align(TextAlign::Start)
             .main_align(Alignment::Center)
+            .overflow(Overflow::Clip)
             .on_pointer_enter(on_pointer_enter)
             .on_pointer_leave(on_pointer_leave)
             .on_press(on_press)

@@ -40,7 +40,7 @@ pub enum ChipStatus {
 #[cfg_attr(feature = "docs",
     doc = embed_doc_image::embed_image!("chip", "images/gallery_chip.png"),
 )]
-#[derive(PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct Chip {
     pub(crate) theme: Option<ChipThemePartial>,
     children: Vec<Element>,
@@ -68,6 +68,12 @@ impl Chip {
         Self::default()
     }
 
+    /// Get the theme override for this component.
+    pub fn get_theme(&self) -> Option<&ChipThemePartial> {
+        self.theme.as_ref()
+    }
+
+    /// Set a theme override for this component.
     pub fn theme(mut self, theme: ChipThemePartial) -> Self {
         self.theme = Some(theme);
         self

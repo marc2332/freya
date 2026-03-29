@@ -19,7 +19,7 @@ pub enum TabStatus {
     Hovering,
 }
 
-#[derive(PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct FloatingTab {
     pub(crate) theme: Option<FloatingTabThemePartial>,
     children: Vec<Element>,
@@ -78,6 +78,17 @@ impl FloatingTab {
             on_press: None,
             key: DiffKey::None,
         }
+    }
+
+    /// Get the theme override for this component.
+    pub fn get_theme(&self) -> Option<&FloatingTabThemePartial> {
+        self.theme.as_ref()
+    }
+
+    /// Set a theme override for this component.
+    pub fn theme(mut self, theme: FloatingTabThemePartial) -> Self {
+        self.theme = Some(theme);
+        self
     }
 }
 
