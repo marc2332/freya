@@ -319,8 +319,7 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
                 clicking_scrollbar.set(None);
             }
 
-            if drag_scrolling && (dragging_content.read().is_some() || drag_origin.read().is_some())
-            {
+            if drag_scrolling && (dragging_content().is_some() || drag_origin().is_some()) {
                 dragging_content.set(None);
                 drag_origin.set(None);
             }
@@ -368,18 +367,18 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
 
         let on_capture_global_pointer_move = move |e: Event<PointerEventData>| {
             if drag_scrolling {
-                if let Some(prev) = *dragging_content.peek() {
+                if let Some(prev) = dragging_content() {
                     let coords = e.global_location();
-                    let delta = (prev - coords).cast::<f32>();
+                    let delta = prev - coords;
 
-                    scroll_controller.scroll_to_y((corrected_scrolled_y - delta.y) as i32);
-                    scroll_controller.scroll_to_x((corrected_scrolled_x - delta.x) as i32);
+                    scroll_controller.scroll_to_y((corrected_scrolled_y - delta.y as f32) as i32);
+                    scroll_controller.scroll_to_x((corrected_scrolled_x - delta.x as f32) as i32);
 
                     dragging_content.set(Some(coords));
                     e.prevent_default();
                     timeout.reset();
                     return;
-                } else if let Some(origin) = *drag_origin.peek() {
+                } else if let Some(origin) = drag_origin() {
                     let coords = e.global_location();
                     let distance = (origin - coords).abs();
 

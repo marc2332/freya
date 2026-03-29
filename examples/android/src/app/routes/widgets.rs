@@ -1,6 +1,7 @@
 use freya::{
     material_design::{
         ButtonRippleExt,
+        MenuItemRippleExt,
         Ripple,
     },
     prelude::*,
@@ -33,15 +34,20 @@ impl Component for WidgetsDemo {
                     .width(Size::fill())
                     .padding(16.)
                     .spacing(20.)
-                    .child(rect().spacing(8.).child("Dark Theme").child(
-                        Switch::new().toggled(is_dark).on_toggle(move |_| {
-                            if is_dark {
-                                theme.set(LIGHT_THEME);
-                            } else {
-                                theme.set(DARK_THEME);
-                            }
-                        }),
-                    ))
+                    .child(
+                        rect().spacing(8.).child("Dark Theme").child(
+                            Switch::new()
+                                .expanded()
+                                .toggled(is_dark)
+                                .on_toggle(move |_| {
+                                    if is_dark {
+                                        theme.set(LIGHT_THEME);
+                                    } else {
+                                        theme.set(DARK_THEME);
+                                    }
+                                }),
+                        ),
+                    )
                     .child(
                         rect()
                             .spacing(8.)
@@ -61,12 +67,13 @@ impl Component for WidgetsDemo {
                                     MenuItem::new()
                                         .selected(selected() == i)
                                         .on_press(move |_| selected.set(i))
+                                        .ripple()
                                         .child(val.to_string())
                                         .into()
                                 })),
                         ),
                     )
-                    .child(Button::new().ripple().child("Ripple Button"))
+                    .child(Button::new().expanded().ripple().child("Ripple Button"))
                     .child(ripple_card(
                         (230, 230, 240),
                         (30, 30, 30),

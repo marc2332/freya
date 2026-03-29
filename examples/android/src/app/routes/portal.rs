@@ -21,7 +21,7 @@ impl Component for PortalDemo {
                     .width(Size::fill())
                     .spacing(12.)
                     .padding(12.)
-                    .maybe_child(show_popup().map(|i| portal_popup(i, show_popup)))
+                    .child(portal_popup(show_popup))
                     .children((0..5).map(|i| {
                         rect()
                             .key(i)
@@ -56,8 +56,12 @@ fn portal_card(i: i32) -> impl IntoElement {
     )
 }
 
-fn portal_popup(i: i32, mut show_popup: State<Option<i32>>) -> impl IntoElement {
+fn portal_popup(mut show_popup: State<Option<i32>>) -> impl IntoElement {
+    let show = show_popup().is_some();
+    let i = show_popup().unwrap_or(0);
+
     Popup::new()
+        .show(show)
         .on_close_request(move |_| show_popup.set(None))
         .width(Size::px(350.))
         .child(PopupTitle::new(format!("Card {i}")))

@@ -3,6 +3,7 @@ mod routes;
 use freya::{
     animation::*,
     icons::lucide,
+    material_design::FloatingTabRippleExt,
     prelude::*,
     router::*,
 };
@@ -74,7 +75,7 @@ impl Component for AppTopBar {
                         .horizontal()
                         .width(Size::fill())
                         .main_align(Alignment::center())
-                        .padding(4.)
+                        .padding((4., 4., 20., 4.))
                         .spacing(4.)
                         .child(tab(Route::ScrollViewDemo, "Scroll", lucide::scroll_text))
                         .child(tab(
@@ -91,14 +92,20 @@ impl Component for AppTopBar {
 }
 
 fn tab(route: Route, label: &'static str, icon: fn() -> Bytes) -> ActivableRoute<Route> {
+    let theme = get_theme_or_default();
     ActivableRoute::new(
         route.clone(),
         Link::new(route).child(
-            FloatingTab::new().child(
+            FloatingTab::new().ripple().child(
                 rect()
                     .center()
                     .spacing(2.)
-                    .child(svg(icon()).width(Size::px(18.)).height(Size::px(18.)))
+                    .child(
+                        svg(icon())
+                            .stroke(theme.read().colors.text_primary)
+                            .width(Size::px(18.))
+                            .height(Size::px(18.)),
+                    )
                     .child(label),
             ),
         ),
