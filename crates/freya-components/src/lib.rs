@@ -2,6 +2,7 @@
 
 pub mod accordion;
 pub mod activable_route_context;
+pub mod attached;
 pub mod button;
 pub mod cache;
 #[cfg(feature = "calendar")]

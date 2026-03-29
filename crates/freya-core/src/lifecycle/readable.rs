@@ -103,12 +103,17 @@ impl<T: 'static> Readable<T> {
         }
     }
 
-    /// Read the value and subscribe to changes.
+    /// Read the value, subscribing to changes if the underlying source supports it.
+    ///
+    /// Whether this actually subscribes depends on how the `Readable` was created:
+    /// - From [`State<T>`]: subscribes to state changes.
+    /// - From a `RadioSlice`: subscribes to radio channel changes.
+    /// - From a plain value ([`from_value`](Self::from_value)): no subscription, just returns the value.
     pub fn read(&self) -> ReadableRef<T> {
         (self.read_fn)()
     }
 
-    /// Read the value without subscribing.
+    /// Read the value without subscribing to changes.
     pub fn peek(&self) -> ReadableRef<T> {
         (self.peek_fn)()
     }

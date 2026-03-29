@@ -61,7 +61,9 @@ pub struct Theme {
     pub filled_card: CardColorsThemePreference,
     pub outline_card: CardColorsThemePreference,
     pub accordion: AccordionThemePreference,
-    pub switch: SwitchThemePreference,
+    pub switch: SwitchColorsThemePreference,
+    pub switch_layout: SwitchLayoutThemePreference,
+    pub expanded_switch_layout: SwitchLayoutThemePreference,
     pub scrollbar: ScrollBarThemePreference,
     pub progressbar: ProgressBarThemePreference,
     pub sidebar_item: SideBarItemThemePreference,
@@ -216,15 +218,35 @@ define_theme! {
 }
 
 define_theme! {
+    for = Switch;
+    theme_field = theme_colors;
+
     %[component]
-    pub Switch {
+    pub SwitchColors {
         %[fields]
-        margin: Gaps,
         background: Color,
         thumb_background: Color,
         toggled_background: Color,
         toggled_thumb_background: Color,
         focus_border_fill: Color,
+    }
+}
+
+define_theme! {
+    for = Switch;
+    theme_field = theme_layout;
+
+    %[component]
+    pub SwitchLayout {
+        %[fields]
+        margin: Gaps,
+        width: f32,
+        height: f32,
+        padding: f32,
+        thumb_size: f32,
+        toggled_thumb_size: f32,
+        thumb_offset: f32,
+        toggled_thumb_offset: f32,
     }
 }
 

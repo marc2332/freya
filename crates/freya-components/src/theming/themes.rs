@@ -41,7 +41,8 @@ use crate::theming::{
         SelectThemePreference,
         SideBarItemThemePreference,
         SliderThemePreference,
-        SwitchThemePreference,
+        SwitchColorsThemePreference,
+        SwitchLayoutThemePreference,
         TableThemePreference,
         Theme,
         TooltipThemePreference,
@@ -170,13 +171,32 @@ pub const BASE_THEME: Theme = Theme {
         background: Preference::Reference("surface_tertiary"),
         border_fill: Preference::Reference("border"),
     },
-    switch: SwitchThemePreference {
-        margin: Preference::Specific(Gaps::new_all(0.)),
+    switch: SwitchColorsThemePreference {
         background: Preference::Reference("surface_secondary"),
         thumb_background: Preference::Reference("surface_inverse"),
         toggled_background: Preference::Reference("secondary"),
         toggled_thumb_background: Preference::Reference("primary"),
         focus_border_fill: Preference::Reference("border_focus"),
+    },
+    switch_layout: SwitchLayoutThemePreference {
+        margin: Preference::Specific(Gaps::new_all(0.)),
+        width: Preference::Specific(48.),
+        height: Preference::Specific(28.),
+        padding: Preference::Specific(4.),
+        thumb_size: Preference::Specific(16.),
+        toggled_thumb_size: Preference::Specific(20.),
+        thumb_offset: Preference::Specific(2.),
+        toggled_thumb_offset: Preference::Specific(20.),
+    },
+    expanded_switch_layout: SwitchLayoutThemePreference {
+        margin: Preference::Specific(Gaps::new_all(0.)),
+        width: Preference::Specific(56.),
+        height: Preference::Specific(32.),
+        padding: Preference::Specific(4.),
+        thumb_size: Preference::Specific(18.),
+        toggled_thumb_size: Preference::Specific(22.),
+        thumb_offset: Preference::Specific(2.),
+        toggled_thumb_offset: Preference::Specific(26.),
     },
     scrollbar: ScrollBarThemePreference {
         background: Preference::Reference("surface_primary"),
@@ -349,7 +369,7 @@ pub const BASE_THEME: Theme = Theme {
         hover_icon_fill: Preference::Reference("secondary"),
     },
     menu_item: MenuItemThemePreference {
-        background: Preference::Reference("background"),
+        background: Preference::Specific(Color::TRANSPARENT),
         hover_background: Preference::Reference("surface_secondary"),
         select_background: Preference::Reference("surface_secondary"),
         border_fill: Preference::Specific(Color::TRANSPARENT),
@@ -486,7 +506,7 @@ pub const DARK_THEME: Theme = Theme {
         text_primary: Color::from_rgb(250, 250, 250),
         text_secondary: Color::from_rgb(210, 210, 210),
         text_placeholder: Color::from_rgb(150, 150, 150),
-        text_inverse: Color::BLACK,
+        text_inverse: Color::WHITE,
         text_highlight: Color::from_rgb(96, 145, 224),
 
         // States

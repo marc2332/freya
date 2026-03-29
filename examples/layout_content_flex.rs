@@ -4,8 +4,6 @@
 )]
 use freya::prelude::*;
 
-// NOTES: Cross align does not use the new height so centering does not work as expected
-
 fn main() {
     launch(LaunchConfig::new().with_window(WindowConfig::new(app)))
 }

@@ -17,11 +17,17 @@
 //! ```
 
 pub mod button;
+pub mod floating_tab;
+pub mod menu;
 pub mod ripple;
+pub mod sidebar;
 
 pub mod prelude {
     pub use crate::{
         button::*,
+        floating_tab::*,
+        menu::*,
         ripple::*,
+        sidebar::*,
     };
 }

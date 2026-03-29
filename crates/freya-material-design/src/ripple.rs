@@ -69,6 +69,8 @@ impl LayoutExt for Ripple {
 
 impl ContainerExt for Ripple {}
 
+impl ContainerWithContentExt for Ripple {}
+
 impl Ripple {
     pub fn new() -> Self {
         Self {

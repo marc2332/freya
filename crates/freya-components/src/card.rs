@@ -114,6 +114,16 @@ impl Card {
         }
     }
 
+    /// Get the current layout variant.
+    pub fn get_layout_variant(&self) -> &CardLayoutVariant {
+        &self.layout_variant
+    }
+
+    /// Get the layout theme override.
+    pub fn get_theme_layout(&self) -> Option<&CardLayoutThemePartial> {
+        self.theme_layout.as_ref()
+    }
+
     /// Set the style variant.
     pub fn style_variant(mut self, style_variant: impl Into<CardStyleVariant>) -> Self {
         self.style_variant = style_variant.into();

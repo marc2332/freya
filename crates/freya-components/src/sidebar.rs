@@ -52,7 +52,7 @@ pub enum SideBarItemStatus {
 /// # Preview
 /// ![SideBarItem Preview][SideBarItem]
 
-#[derive(PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct SideBarItem {
     /// Theme override.
     pub(crate) theme: Option<SideBarItemThemePartial>,
@@ -101,6 +101,17 @@ impl SideBarItem {
 
     pub fn overflow(mut self, overflow: impl Into<Overflow>) -> Self {
         self.overflow = overflow.into();
+        self
+    }
+
+    /// Get the theme override for this component.
+    pub fn get_theme(&self) -> Option<&SideBarItemThemePartial> {
+        self.theme.as_ref()
+    }
+
+    /// Set a theme override for this component.
+    pub fn theme(mut self, theme: SideBarItemThemePartial) -> Self {
+        self.theme = Some(theme);
         self
     }
 }

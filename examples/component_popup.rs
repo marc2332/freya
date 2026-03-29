@@ -9,11 +9,12 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    let mut show_popup = use_state(|| true);
+    let mut show_popup = use_state(|| false);
 
     rect()
-        .maybe_child(show_popup().then(|| {
+        .child(
             Popup::new()
+                .show(show_popup())
                 .on_close_request(move |_| show_popup.set(false))
                 .child(PopupTitle::new("Title".to_string()))
                 .child(PopupContent::new().child("Hello, World!"))
@@ -25,8 +26,8 @@ fn app() -> impl IntoElement {
                             .filled()
                             .child("Accept"),
                     ),
-                )
-        }))
+                ),
+        )
         .child(
             Button::new()
                 .child("Open")

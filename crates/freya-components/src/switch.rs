@@ -9,8 +9,17 @@ use torin::{
 
 use crate::{
     get_theme,
-    theming::component_themes::SwitchThemePartial,
+    theming::component_themes::{
+        SwitchColorsThemePartial,
+        SwitchLayoutThemePartial,
+    },
 };
+
+#[derive(Clone, PartialEq)]
+pub enum SwitchLayoutVariant {
+    Normal,
+    Expanded,
+}
 
 /// Toggle between `true` and `false`.
 ///
@@ -53,7 +62,9 @@ use crate::{
 )]
 #[derive(Clone, PartialEq)]
 pub struct Switch {
-    pub(crate) theme: Option<SwitchThemePartial>,
+    pub(crate) theme_colors: Option<SwitchColorsThemePartial>,
+    pub(crate) theme_layout: Option<SwitchLayoutThemePartial>,
+    layout_variant: SwitchLayoutVariant,
     toggled: Readable<bool>,
     on_toggle: Option<EventHandler<()>>,
     enabled: bool,
@@ -77,7 +88,9 @@ impl Switch {
         Self {
             toggled: false.into(),
             on_toggle: None,
-            theme: None,
+            theme_colors: None,
+            theme_layout: None,
+            layout_variant: SwitchLayoutVariant::Normal,
             enabled: true,
             key: DiffKey::None,
         }
@@ -97,11 +110,36 @@ impl Switch {
         self.enabled = enabled.into();
         self
     }
+
+    pub fn layout_variant(mut self, layout_variant: impl Into<SwitchLayoutVariant>) -> Self {
+        self.layout_variant = layout_variant.into();
+        self
+    }
+
+    pub fn theme_colors(mut self, theme: SwitchColorsThemePartial) -> Self {
+        self.theme_colors = Some(theme);
+        self
+    }
+
+    pub fn theme_layout(mut self, theme: SwitchLayoutThemePartial) -> Self {
+        self.theme_layout = Some(theme);
+        self
+    }
+
+    /// Shortcut for [Self::layout_variant] and [SwitchLayoutVariant::Expanded].
+    pub fn expanded(self) -> Self {
+        self.layout_variant(SwitchLayoutVariant::Expanded)
+    }
 }
 
 impl Component for Switch {
     fn render(self: &Switch) -> impl IntoElement {
-        let theme = get_theme!(&self.theme, switch);
+        let theme_colors = get_theme!(&self.theme_colors, switch);
+        let theme_layout = match self.layout_variant {
+            SwitchLayoutVariant::Normal => get_theme!(&self.theme_layout, switch_layout),
+            SwitchLayoutVariant::Expanded => get_theme!(&self.theme_layout, expanded_switch_layout),
+        };
+
         let mut hovering = use_state(|| false);
         let focus = use_focus();
         let focus_status = use_focus_status(focus);
@@ -109,27 +147,30 @@ impl Component for Switch {
         let toggled = *self.toggled.read();
 
         let animation = use_animation_with_dependencies(
-            &(theme.clone(), toggled),
-            |conf, (switch_theme, toggled)| {
+            &(theme_colors.clone(), theme_layout.clone(), toggled),
+            |conf, (switch_colors, switch_layout, toggled)| {
                 conf.on_creation(OnCreation::Finish);
                 conf.on_change(OnChange::Rerun);
 
                 let value = (
-                    AnimNum::new(2., 22.)
+                    AnimNum::new(
+                        switch_layout.thumb_offset,
+                        switch_layout.toggled_thumb_offset,
+                    )
+                    .time(300)
+                    .function(Function::Expo)
+                    .ease(Ease::Out),
+                    AnimNum::new(switch_layout.thumb_size, switch_layout.toggled_thumb_size)
                         .time(300)
                         .function(Function::Expo)
                         .ease(Ease::Out),
-                    AnimNum::new(14., 18.)
-                        .time(300)
-                        .function(Function::Expo)
-                        .ease(Ease::Out),
-                    AnimColor::new(switch_theme.background, switch_theme.toggled_background)
+                    AnimColor::new(switch_colors.background, switch_colors.toggled_background)
                         .time(300)
                         .function(Function::Expo)
                         .ease(Ease::Out),
                     AnimColor::new(
-                        switch_theme.thumb_background,
-                        switch_theme.toggled_thumb_background,
+                        switch_colors.thumb_background,
+                        switch_colors.toggled_thumb_background,
                     )
                     .time(300)
                     .function(Function::Expo)
@@ -155,7 +196,7 @@ impl Component for Switch {
             Border::new()
                 .width(2.)
                 .alignment(BorderAlignment::Inner)
-                .fill(theme.focus_border_fill.mul_if(!self.enabled, 0.9))
+                .fill(theme_colors.focus_border_fill.mul_if(!self.enabled, 0.9))
         } else {
             Border::new()
         };
@@ -166,9 +207,9 @@ impl Component for Switch {
             .a11y_focusable(self.enabled)
             .a11y_role(AccessibilityRole::Switch)
             .a11y_builder(|builder| builder.set_toggled(Toggled::from(toggled)))
-            .width(Size::px(48.))
-            .height(Size::px(25.))
-            .padding(Gaps::new_all(4.0))
+            .width(Size::px(theme_layout.width))
+            .height(Size::px(theme_layout.height))
+            .padding(Gaps::new_all(theme_layout.padding))
             .main_align(Alignment::center())
             .offset_x(offset_x)
             .corner_radius(CornerRadius::new_all(50.))
