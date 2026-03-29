@@ -1,7 +1,8 @@
 #[cfg(target_os = "android")]
-use freya::{
-    performance::PerformanceOverlayPlugin,
-    prelude::{LaunchConfig, WindowConfig, launch},
+use freya::prelude::{
+    LaunchConfig,
+    WindowConfig,
+    launch,
 };
 #[cfg(target_os = "android")]
 use winit::platform::android::activity::AndroidApp;
@@ -29,8 +30,7 @@ fn android_main(droid_app: AndroidApp) {
 
     launch(
         LaunchConfig::new()
-            .with_plugin(PerformanceOverlayPlugin::default().with_visible(true))
-            .with_window(WindowConfig::new(app::app).with_size(500., 450.))
+            .with_window(WindowConfig::new(app::app))
             .with_event_loop(event_loop),
     )
 }

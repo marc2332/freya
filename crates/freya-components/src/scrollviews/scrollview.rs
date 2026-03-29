@@ -3,6 +3,7 @@ use std::time::Duration;
 use freya_core::prelude::*;
 use freya_sdk::timeout::use_timeout;
 use torin::{
+    geometry::CursorPoint,
     node::Node,
     prelude::{
         Direction,
@@ -172,7 +173,8 @@ impl Component for ScrollView {
         let mut scroll_controller = self
             .scroll_controller
             .unwrap_or_else(|| use_scroll_controller(ScrollConfig::default));
-        let mut dragging_content = use_state::<Option<(f64, f64)>>(|| None);
+        let mut dragging_content = use_state::<Option<CursorPoint>>(|| None);
+        let mut drag_origin = use_state::<Option<CursorPoint>>(|| None);
         let (scrolled_x, scrolled_y) = scroll_controller.into();
         let layout = &self.layout.layout;
         let direction = layout.direction;
@@ -230,8 +232,10 @@ impl Component for ScrollView {
                 clicking_scrollbar.set(None);
             }
 
-            if drag_scrolling && dragging_content.read().is_some() {
+            if drag_scrolling && (dragging_content.read().is_some() || drag_origin.read().is_some())
+            {
                 dragging_content.set(None);
+                drag_origin.set(None);
             }
         };
 
@@ -277,18 +281,30 @@ impl Component for ScrollView {
 
         let on_capture_global_pointer_move = move |e: Event<PointerEventData>| {
             if drag_scrolling {
-                let current_drag = *dragging_content.peek();
-                if let Some((prev_x, prev_y)) = current_drag {
+                if let Some(prev) = *dragging_content.peek() {
                     let coords = e.global_location();
-                    let delta_x = (prev_x - coords.x) as f32;
-                    let delta_y = (prev_y - coords.y) as f32;
+                    let delta = (prev - coords).cast::<f32>();
 
-                    scroll_controller.scroll_to_y((corrected_scrolled_y - delta_y) as i32);
-                    scroll_controller.scroll_to_x((corrected_scrolled_x - delta_x) as i32);
+                    scroll_controller.scroll_to_y((corrected_scrolled_y - delta.y) as i32);
+                    scroll_controller.scroll_to_x((corrected_scrolled_x - delta.x) as i32);
 
-                    dragging_content.set(Some((coords.x, coords.y)));
+                    dragging_content.set(Some(coords));
                     e.prevent_default();
                     timeout.reset();
+                    return;
+                } else if let Some(origin) = *drag_origin.peek() {
+                    let coords = e.global_location();
+                    let distance = (origin - coords).abs();
+
+                    // Small threshold so taps can reach children (e.g. hover on buttons)
+                    // without being immediately consumed by drag scrolling.
+                    const DRAG_THRESHOLD: f64 = 2.0;
+
+                    if distance.x > DRAG_THRESHOLD || distance.y > DRAG_THRESHOLD {
+                        dragging_content.set(Some(coords));
+                        e.prevent_default();
+                        timeout.reset();
+                    }
                     return;
                 }
             }
@@ -375,8 +391,7 @@ impl Component for ScrollView {
 
         let on_pointer_down = move |e: Event<PointerEventData>| {
             if drag_scrolling {
-                let coords = e.global_location();
-                dragging_content.set(Some((coords.x, coords.y)));
+                drag_origin.set(Some(e.global_location()));
                 focus.request_focus();
                 timeout.reset();
             }
