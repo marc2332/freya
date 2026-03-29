@@ -300,6 +300,13 @@ impl Component for ScrollView {
                     const DRAG_THRESHOLD: f64 = 2.0;
 
                     if distance.x > DRAG_THRESHOLD || distance.y > DRAG_THRESHOLD {
+                        let delta = origin - coords;
+
+                        scroll_controller
+                            .scroll_to_y((corrected_scrolled_y - delta.y as f32) as i32);
+                        scroll_controller
+                            .scroll_to_x((corrected_scrolled_x - delta.x as f32) as i32);
+
                         dragging_content.set(Some(coords));
                         e.prevent_default();
                         timeout.reset();
