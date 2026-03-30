@@ -33,6 +33,11 @@ pub mod tree;
 pub mod tree_layout_adapter;
 pub mod user_event;
 
+#[cfg(feature = "hotreload")]
+pub mod hotreload {
+    pub use dioxus_devtools::*;
+}
+
 /// Used by all end users.
 pub mod prelude {
     pub use bytes::Bytes;

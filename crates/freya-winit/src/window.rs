@@ -1,73 +1,30 @@
-use std::{
-    borrow::Cow,
-    path::PathBuf,
-    rc::Rc,
-    sync::Arc,
-    task::Waker,
-};
+use std::{borrow::Cow, path::PathBuf, rc::Rc, sync::Arc, task::Waker};
 
 use accesskit_winit::Adapter;
-use freya_clipboard::copypasta::{
-    ClipboardContext,
-    ClipboardProvider,
-};
-use freya_components::{
-    cache::AssetCacher,
-    integration::integration,
-};
-use freya_core::{
-    integration::*,
-    prelude::Color,
-};
-use freya_engine::prelude::{
-    FontCollection,
-    FontMgr,
-};
-use futures_util::task::{
-    ArcWake,
-    waker,
-};
+use freya_clipboard::copypasta::{ClipboardContext, ClipboardProvider};
+use freya_components::{cache::AssetCacher, integration::integration};
+use freya_core::{integration::*, prelude::Color};
+use freya_engine::prelude::{FontCollection, FontMgr};
+use futures_util::task::{ArcWake, waker};
 use ragnarok::NodesState;
 use raw_window_handle::HasDisplayHandle;
 #[cfg(target_os = "linux")]
 use raw_window_handle::RawDisplayHandle;
-use torin::prelude::{
-    CursorPoint,
-    Size2D,
-};
+use torin::prelude::{CursorPoint, Size2D};
 use winit::{
     dpi::LogicalSize,
     event::ElementState,
-    event_loop::{
-        ActiveEventLoop,
-        EventLoopProxy,
-    },
+    event_loop::{ActiveEventLoop, EventLoopProxy},
     keyboard::ModifiersState,
-    window::{
-        Theme,
-        Window,
-        WindowAttributes,
-        WindowId,
-    },
+    window::{Theme, Window, WindowAttributes, WindowId},
 };
 
 use crate::{
     accessibility::AccessibilityTask,
-    config::{
-        OnCloseHook,
-        WindowConfig,
-    },
+    config::{OnCloseHook, WindowConfig},
     drivers::GraphicsDriver,
-    plugins::{
-        PluginEvent,
-        PluginHandle,
-        PluginsManager,
-    },
-    renderer::{
-        NativeEvent,
-        NativeWindowEvent,
-        NativeWindowEventAction,
-    },
+    plugins::{PluginEvent, PluginHandle, PluginsManager},
+    renderer::{NativeEvent, NativeWindowEvent, NativeWindowEventAction},
 };
 
 pub struct AppWindow {
@@ -106,6 +63,8 @@ pub struct AppWindow {
     pub(crate) on_close: Option<OnCloseHook>,
 
     pub(crate) window_attributes: WindowAttributes,
+    #[cfg(feature = "hotreload")]
+    pub(crate) hot_reload_receiver: futures_channel::mpsc::UnboundedReceiver<()>,
 }
 
 impl AppWindow {
@@ -119,6 +78,9 @@ impl AppWindow {
         font_manager: &FontMgr,
         fallback_fonts: &[Cow<'static, str>],
         screen_reader: ScreenReader,
+        #[cfg(feature = "hotreload")] hot_reload_receiver: futures_channel::mpsc::UnboundedReceiver<
+            (),
+        >,
     ) -> Self {
         let mut window_attributes = Window::default_attributes()
             .with_resizable(window_config.resizable)
@@ -322,6 +284,9 @@ impl AppWindow {
             on_close,
 
             window_attributes,
+
+            #[cfg(feature = "hotreload")]
+            hot_reload_receiver,
         }
     }
 

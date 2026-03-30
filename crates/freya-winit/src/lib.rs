@@ -6,12 +6,7 @@ use std::sync::Arc;
 
 use crate::{
     config::LaunchConfig,
-    renderer::{
-        LaunchProxy,
-        NativeEvent,
-        NativeGenericEvent,
-        WinitRenderer,
-    },
+    renderer::{LaunchProxy, NativeEvent, NativeGenericEvent, WinitRenderer},
 };
 mod accessibility;
 pub mod config;
@@ -25,10 +20,7 @@ mod window;
 mod winit_mappings;
 
 pub use extensions::*;
-use futures_util::task::{
-    ArcWake,
-    waker,
-};
+use futures_util::task::{ArcWake, waker};
 
 use crate::winit::event_loop::EventLoopProxy;
 
@@ -51,11 +43,7 @@ pub fn launch(mut launch_config: LaunchConfig) {
     use std::collections::HashMap;
 
     use freya_core::integration::*;
-    use freya_engine::prelude::{
-        FontCollection,
-        FontMgr,
-        TypefaceFontProvider,
-    };
+    use freya_engine::prelude::{FontCollection, FontMgr, TypefaceFontProvider};
     use winit::event_loop::EventLoop;
 
     #[cfg(all(not(debug_assertions), not(target_os = "android")))]
@@ -129,19 +117,15 @@ pub fn launch(mut launch_config: LaunchConfig) {
         screen_reader,
         waker,
         exit_on_close: launch_config.exit_on_close,
+        #[cfg(feature = "hotreload")]
+        hot_reload_receiver: launch_config.hot_reload_receiver,
     };
 
     #[cfg(feature = "tray")]
     {
         use crate::{
-            renderer::{
-                NativeTrayEvent,
-                NativeTrayEventAction,
-            },
-            tray::{
-                TrayIconEvent,
-                menu::MenuEvent,
-            },
+            renderer::{NativeTrayEvent, NativeTrayEventAction},
+            tray::{TrayIconEvent, menu::MenuEvent},
         };
 
         let proxy = renderer.proxy.clone();

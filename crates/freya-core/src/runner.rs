@@ -2,54 +2,30 @@ use std::{
     any::TypeId,
     cell::RefCell,
     cmp::Ordering,
-    collections::{
-        HashMap,
-        HashSet,
-        VecDeque,
-    },
+    collections::{HashMap, HashSet, VecDeque},
     fmt::Debug,
     rc::Rc,
     sync::atomic::AtomicU64,
 };
 
-use futures_lite::{
-    FutureExt,
-    StreamExt,
-};
+use futures_lite::{FutureExt, StreamExt};
 use itertools::Itertools;
 use pathgraph::PathGraph;
-use rustc_hash::{
-    FxHashMap,
-    FxHashSet,
-};
+use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::{
     current_context::CurrentContext,
     diff_key::DiffKey,
-    element::{
-        Element,
-        ElementExt,
-        EventHandlerType,
-    },
+    element::{Element, ElementExt, EventHandlerType},
     events::{
-        data::{
-            Event,
-            EventType,
-        },
+        data::{Event, EventType},
         name::EventName,
     },
     node_id::NodeId,
     path_element::PathElement,
-    prelude::{
-        Task,
-        TaskId,
-    },
+    prelude::{Task, TaskId},
     reactive_context::ReactiveContext,
-    scope::{
-        PathNode,
-        Scope,
-        ScopeStorage,
-    },
+    scope::{PathNode, Scope, ScopeStorage},
     scope_id::ScopeId,
     tree::DiffModifies,
 };
@@ -704,7 +680,14 @@ impl Runner {
                 },
                 || {
                     let scope = scope_rc.borrow();
-                    (scope.comp)(scope.props.clone())
+                    #[cfg(feature = "hot")]
+                    {
+                        subsecond::call(|| (scope.comp)(scope.props.clone()))
+                    }
+                    #[cfg(not(feature = "hot"))]
+                    {
+                        (scope.comp)(scope.props.clone())
+                    }
                 },
             );
 
@@ -847,7 +830,15 @@ impl Runner {
                         },
                         || {
                             let scope = scope_rc.borrow();
-                            (scope.comp)(scope.props.clone())
+                            let scope = scope_rc.borrow();
+                            #[cfg(feature = "hot")]
+                            {
+                                subsecond::call(|| (scope.comp)(scope.props.clone()))
+                            }
+                            #[cfg(not(feature = "hot"))]
+                            {
+                                (scope.comp)(scope.props.clone())
+                            }
                         },
                     )
                 });
@@ -1341,6 +1332,15 @@ impl Runner {
                     }
                 });
         }
+    }
+
+    pub fn mark_all_scopes_dirty(&mut self) {
+        for scope_id in self.scopes.keys().cloned().collect::<Vec<_>>() {
+            self.dirty_scopes.insert(scope_id);
+        }
+        let _ = self
+            .sender
+            .unbounded_send(Message::MarkScopeAsDirty(ScopeId::ROOT));
     }
 }
 
