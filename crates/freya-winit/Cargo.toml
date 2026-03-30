@@ -72,6 +72,12 @@ glutin-winit = { workspace = true }
 ash = { workspace = true }
 ash-window = { workspace = true }
 
+# Rendering OpenGL (Android)
+[target.'cfg(target_os = "android")'.dependencies]
+gl = { workspace = true }
+glutin = { workspace = true }
+glutin-winit = { workspace = true }
+
 # Rendering Metal (macOS)
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2-core-foundation = { version = "0.3.2" }

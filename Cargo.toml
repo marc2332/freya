@@ -45,6 +45,7 @@ members = [
   "./crates/freya-code-editor",
   "./examples/ai-chat",
   "./examples/state_query_sqlite",
+  "./examples/android",
 ]
 
 [workspace.dependencies]
@@ -112,7 +113,7 @@ euclid = "0.22.9"
 itertools = "0.14.0"
 
 # Rendering
-freya-skia-safe = { version = "0.94.0", features = [
+freya-skia-safe = { version = "0.96.1", features = [
   "textlayout",
   "svg",
   "webp",

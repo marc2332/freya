@@ -175,7 +175,7 @@ impl Component for Popup {
     fn render(&self) -> impl IntoElement {
         let show = *self.show.read();
 
-        let bg_animation = use_animation_with_dependencies(&show, |conf, show| {
+        let background_animation = use_animation_with_dependencies(&show, |conf, show| {
             conf.on_creation(OnCreation::Finish);
             conf.on_change(OnChange::Rerun);
 
@@ -201,7 +201,7 @@ impl Component for Popup {
             )
         });
 
-        let should_render = show || *bg_animation.is_running().read();
+        let should_render = show || *background_animation.is_running().read();
 
         let PopupTheme { background, color } = get_theme!(&self.theme, popup);
 
@@ -228,7 +228,7 @@ impl Component for Popup {
             .layer(Layer::Overlay)
             .position(Position::new_global())
             .maybe_child(should_render.then(|| {
-                let bg_color = bg_animation.get().value();
+                let background_color = background_animation.get().value();
 
                 let (scale, opacity) = &*content_animation.read();
 
@@ -257,7 +257,7 @@ impl Component for Popup {
                     move |_| {
                         request_to_close();
                     },
-                    bg_color,
+                    background_color,
                 )
             }))
     }

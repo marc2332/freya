@@ -6,6 +6,7 @@ use std::{
 use freya_core::prelude::*;
 use freya_sdk::timeout::use_timeout;
 use torin::{
+    geometry::CursorPoint,
     node::Node,
     prelude::Direction,
     size::Size,
@@ -76,6 +77,7 @@ pub struct VirtualScrollView<D, B: Fn(usize, &D) -> Element> {
     scroll_with_arrows: bool,
     scroll_controller: Option<ScrollController>,
     invert_scroll_wheel: bool,
+    drag_scrolling: bool,
     key: DiffKey,
 }
 
@@ -123,6 +125,7 @@ impl<B: Fn(usize, &()) -> Element> VirtualScrollView<(), B> {
             scroll_with_arrows: true,
             scroll_controller: None,
             invert_scroll_wheel: false,
+            drag_scrolling: cfg!(target_os = "android"),
             key: DiffKey::None,
         }
     }
@@ -143,6 +146,7 @@ impl<B: Fn(usize, &()) -> Element> VirtualScrollView<(), B> {
             scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
             invert_scroll_wheel: false,
+            drag_scrolling: cfg!(target_os = "android"),
             key: DiffKey::None,
         }
     }
@@ -165,6 +169,7 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
             scroll_with_arrows: true,
             scroll_controller: None,
             invert_scroll_wheel: false,
+            drag_scrolling: cfg!(target_os = "android"),
             key: DiffKey::None,
         }
     }
@@ -190,6 +195,7 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
             scroll_with_arrows: true,
             scroll_controller: Some(scroll_controller),
             invert_scroll_wheel: false,
+            drag_scrolling: cfg!(target_os = "android"),
             key: DiffKey::None,
         }
     }
@@ -224,6 +230,11 @@ impl<D, B: Fn(usize, &D) -> Element> VirtualScrollView<D, B> {
         self
     }
 
+    pub fn drag_scrolling(mut self, drag_scrolling: bool) -> Self {
+        self.drag_scrolling = drag_scrolling;
+        self
+    }
+
     pub fn scroll_controller(
         mut self,
         scroll_controller: impl Into<Option<ScrollController>>,
@@ -255,9 +266,12 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
         let mut scroll_controller = self
             .scroll_controller
             .unwrap_or_else(|| use_scroll_controller(ScrollConfig::default));
+        let mut dragging_content = use_state::<Option<CursorPoint>>(|| None);
+        let mut drag_origin = use_state::<Option<CursorPoint>>(|| None);
         let (scrolled_x, scrolled_y) = scroll_controller.into();
         let layout = &self.layout.layout;
         let direction = layout.direction;
+        let drag_scrolling = self.drag_scrolling;
 
         let (inner_width, inner_height) = match direction {
             Direction::Vertical => (
@@ -304,6 +318,11 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
                 e.prevent_default();
                 clicking_scrollbar.set(None);
             }
+
+            if drag_scrolling && (dragging_content().is_some() || drag_origin().is_some()) {
+                dragging_content.set(None);
+                drag_origin.set(None);
+            }
         };
 
         let on_wheel = move |e: Event<WheelEventData>| {
@@ -347,6 +366,42 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
         };
 
         let on_capture_global_pointer_move = move |e: Event<PointerEventData>| {
+            if drag_scrolling {
+                if let Some(prev) = dragging_content() {
+                    let coords = e.global_location();
+                    let delta = prev - coords;
+
+                    scroll_controller.scroll_to_y((corrected_scrolled_y - delta.y as f32) as i32);
+                    scroll_controller.scroll_to_x((corrected_scrolled_x - delta.x as f32) as i32);
+
+                    dragging_content.set(Some(coords));
+                    e.prevent_default();
+                    timeout.reset();
+                    return;
+                } else if let Some(origin) = drag_origin() {
+                    let coords = e.global_location();
+                    let distance = (origin - coords).abs();
+
+                    // Small threshold so taps can reach children (e.g. hover on buttons)
+                    // without being immediately consumed by drag scrolling.
+                    const DRAG_THRESHOLD: f64 = 2.0;
+
+                    if distance.x > DRAG_THRESHOLD || distance.y > DRAG_THRESHOLD {
+                        let delta = origin - coords;
+
+                        scroll_controller
+                            .scroll_to_y((corrected_scrolled_y - delta.y as f32) as i32);
+                        scroll_controller
+                            .scroll_to_x((corrected_scrolled_x - delta.x as f32) as i32);
+
+                        dragging_content.set(Some(coords));
+                        e.prevent_default();
+                        timeout.reset();
+                    }
+                    return;
+                }
+            }
+
             let clicking_scrollbar = clicking_scrollbar.peek();
 
             if let Some((Axis::Y, y)) = *clicking_scrollbar {
@@ -461,6 +516,14 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
             }
         };
 
+        let on_pointer_down = move |e: Event<PointerEventData>| {
+            if drag_scrolling {
+                drag_origin.set(Some(e.global_location()));
+                focus.request_focus();
+                timeout.reset();
+            }
+        };
+
         rect()
             .width(layout.width.clone())
             .height(layout.height.clone())
@@ -479,6 +542,7 @@ impl<D: PartialEq + 'static, B: Fn(usize, &D) -> Element + 'static> Component
             .on_key_down(on_key_down)
             .on_global_key_up(on_global_key_up)
             .on_global_key_down(on_global_key_down)
+            .on_pointer_down(on_pointer_down)
             .child(
                 rect()
                     .width(container_width)

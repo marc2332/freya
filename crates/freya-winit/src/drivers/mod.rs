@@ -1,4 +1,4 @@
-#[cfg(any(target_os = "linux", target_os = "windows"))]
+#[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
 mod gl;
 #[cfg(target_os = "macos")]
 mod metal;
@@ -17,7 +17,7 @@ use winit::{
 
 #[allow(clippy::large_enum_variant)]
 pub enum GraphicsDriver {
-    #[cfg(any(target_os = "linux", target_os = "windows"))]
+    #[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
     OpenGl(gl::OpenGLDriver),
     #[cfg(target_os = "macos")]
     Metal(metal::MetalDriver),
@@ -39,9 +39,17 @@ impl GraphicsDriver {
             return (Self::Metal(driver), window);
         }
 
+        // OpenGL only on Android.
+        #[cfg(target_os = "android")]
+        {
+            let (driver, window) = gl::OpenGLDriver::new(event_loop, window_attributes);
+
+            return (Self::OpenGl(driver), window);
+        }
+
         // Vulkan by default with OpenGL as fallback.
         // Set FREYA_RENDERER=opengl to force OpenGL.
-        #[cfg(not(target_os = "macos"))]
+        #[cfg(all(not(target_os = "macos"), not(target_os = "android")))]
         {
             let force_opengl =
                 std::env::var("FREYA_RENDERER").is_ok_and(|v| v.eq_ignore_ascii_case("opengl"));
@@ -66,24 +74,24 @@ impl GraphicsDriver {
 
     pub fn present(
         &mut self,
-        size: PhysicalSize<u32>,
+        _size: PhysicalSize<u32>,
         window: &Window,
         render: impl FnOnce(&mut SkiaSurface),
     ) {
         match self {
-            #[cfg(any(target_os = "linux", target_os = "windows"))]
+            #[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
             Self::OpenGl(gl) => gl.present(window, render),
             #[cfg(target_os = "macos")]
-            Self::Metal(mtl) => mtl.present(size, window, render),
+            Self::Metal(mtl) => mtl.present(_size, window, render),
             #[cfg(any(target_os = "linux", target_os = "windows"))]
-            Self::Vulkan(vk) => vk.present(size, window, render),
+            Self::Vulkan(vk) => vk.present(_size, window, render),
         }
     }
 
     /// The name of the active graphics driver.
     pub fn name(&self) -> &'static str {
         match self {
-            #[cfg(any(target_os = "linux", target_os = "windows"))]
+            #[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
             Self::OpenGl(_) => "OpenGL",
             #[cfg(target_os = "macos")]
             Self::Metal(_) => "Metal",
@@ -94,7 +102,7 @@ impl GraphicsDriver {
 
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
         match self {
-            #[cfg(any(target_os = "linux", target_os = "windows"))]
+            #[cfg(any(target_os = "linux", target_os = "windows", target_os = "android"))]
             Self::OpenGl(gl) => gl.resize(size),
             #[cfg(target_os = "macos")]
             Self::Metal(mtl) => mtl.resize(size),

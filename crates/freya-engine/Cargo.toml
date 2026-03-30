@@ -41,5 +41,10 @@ workspace = true
 optional = true
 features = ["textlayout", "svg", "vulkan", "gl"]
 
+[target."cfg(target_os = \"android\")".dependencies.freya-skia-safe]
+workspace = true
+optional = true
+features = ["textlayout", "svg", "gl"]
+
 [dev-dependencies]
 freya-engine = { path = "./", features = ["skia-engine"] }
