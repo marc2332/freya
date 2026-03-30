@@ -758,6 +758,7 @@ Thanks to my sponsors for supporting this project! 😄
 - [Aiving](https://github.com/Aiving) for having made heavy contributions to [rust-skia](https://github.com/rust-skia/rust-skia/) for better SVG support, and helped optimizing images rendering in Freya.
 - [RobertasJ](https://github.com/RobertasJ) for having added nested parenthesis to the `calc()` function and also pushed for improvements in the animation APIs.
 - And to the rest of contributors and anybody who gave me any kind of feedback!
+- [SparkyTD](https://github.com/SparkyTD) for contributing support for Android.
 
 ### History with Dioxus
 Freya 0.1, 0.2 and 0.3 were based on the core crates of Dioxus. Starting 0.4 Freya does no longer use Dioxus, instead it uses its own reactive core, partially inspired by Dioxus but yet with lots of differences.
