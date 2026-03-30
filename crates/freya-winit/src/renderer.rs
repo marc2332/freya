@@ -3,7 +3,6 @@ use std::{borrow::Cow, fmt, pin::Pin, task::Waker};
 use accesskit_winit::WindowEvent as AccessibilityWindowEvent;
 use freya_core::integration::*;
 use freya_engine::prelude::{FontCollection, FontMgr};
-#[cfg(feature = "hotreload")]
 use futures_lite::future::FutureExt as _;
 use futures_util::{FutureExt as _, StreamExt, select};
 use ragnarok::{EventsExecutorRunner, EventsMeasurerRunner};
@@ -399,8 +398,11 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     match action {
                         NativeWindowEventAction::PollRunner => {
                             let mut cx = std::task::Context::from_waker(&app.waker);
+                            #[cfg(feature = "hotreload")]
+                            let mut hotreload_triggered = false;
 
                             {
+                                #[cfg(feature = "hotreload")]
                                 let fut = std::pin::pin!(async {
                                     select! {
                                         events_chunk = app.events_receiver.next() => {
@@ -420,10 +422,34 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                             }
                                         },
                                         _ = app.runner.handle_events().fuse() => {},
-                                        // #[cfg(feature = "hotreload")]
                                         _ = app.hot_reload_receiver.next() => {
+                                            hotreload_triggered = true;
+                                            app.runner.clear_all_scopes_storage();
                                             app.runner.mark_all_scopes_dirty();
                                         },
+                                    }
+                                });
+
+                                #[cfg(not(feature = "hotreload"))]
+                                let fut = std::pin::pin!(async {
+                                    select! {
+                                        events_chunk = app.events_receiver.next() => {
+                                            match events_chunk {
+                                                Some(EventsChunk::Processed(processed_events)) => {
+                                                    let events_executor_adapter = EventsExecutorAdapter {
+                                                        runner: &mut app.runner,
+                                                    };
+                                                    events_executor_adapter.run(&mut app.nodes_state, processed_events);
+                                                }
+                                                Some(EventsChunk::Batch(events)) => {
+                                                    for event in events {
+                                                        app.runner.handle_event(event.node_id, event.name, event.data, event.bubbles);
+                                                    }
+                                                }
+                                                _ => {}
+                                            }
+                                        },
+                                        _ = app.runner.handle_events().fuse() => {},
                                     }
                                 });
 
@@ -449,6 +475,12 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                             );
                             let mutations = app.runner.sync_and_update();
                             let result = app.runner.run_in(|| app.tree.apply_mutations(mutations));
+                            #[cfg(feature = "hotreload")]
+                            if hotreload_triggered {
+                                // Hot-patch updates can alter layout/style paths that don't always set needs_render.
+                                app.process_layout_on_next_render = true;
+                                app.window.request_redraw();
+                            }
                             if result.needs_render {
                                 app.process_layout_on_next_render = true;
                                 app.window.request_redraw();

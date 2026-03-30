@@ -236,6 +236,18 @@ impl AppWindow {
 
         let waker = waker(Arc::new(TreeHandle(event_loop_proxy.clone(), window.id())));
 
+        #[cfg(feature = "hotreload")]
+        {
+            let event_loop_proxy = event_loop_proxy.clone();
+            let window_id = window.id();
+            freya_core::hotreload::subsecond::register_handler(Arc::new(move || {
+                let _ = event_loop_proxy.send_event(NativeEvent::Window(NativeWindowEvent {
+                    window_id,
+                    action: NativeWindowEventAction::PollRunner,
+                }));
+            }));
+        }
+
         plugins.send(
             PluginEvent::WindowCreated {
                 window: &window,

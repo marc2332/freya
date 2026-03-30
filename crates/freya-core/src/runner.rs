@@ -1341,6 +1341,13 @@ impl Runner {
             .sender
             .unbounded_send(Message::MarkScopeAsDirty(ScopeId::ROOT));
     }
+
+    /// Resets all scope storages, clearing `use_state` values back to their initial state.
+    pub fn clear_all_scopes_storage(&mut self) {
+        for storage in self.scopes_storages.borrow_mut().values_mut() {
+            storage.reset();
+        }
+    }
 }
 
 #[derive(Default, Debug)]

@@ -226,8 +226,6 @@ pub struct LaunchConfig {
     pub(crate) tasks: Vec<TaskHandler>,
     pub(crate) exit_on_close: bool,
     pub(crate) event_loop: Option<winit::event_loop::EventLoop<crate::renderer::NativeEvent>>,
-    #[cfg(feature = "hotreload")]
-    pub(crate) hot_reload_receiver: Option<futures_channel::mpsc::UnboundedReceiver<()>>,
 }
 
 impl Default for LaunchConfig {
@@ -242,7 +240,6 @@ impl Default for LaunchConfig {
             tasks: Vec::new(),
             exit_on_close: true,
             event_loop: None,
-            hot_reload_receiver: None,
         }
     }
 }
@@ -288,18 +285,6 @@ impl LaunchConfig {
     /// see [`crate::extensions::WinitPlatformExt::launch_window()`].
     pub fn with_window(mut self, window_config: WindowConfig) -> Self {
         self.windows_configs.push(window_config);
-        self
-    }
-
-    #[cfg(feature = "hotreload")]
-    pub fn with_hotreload(mut self) -> Self {
-        use freya_core::hotreload;
-        let (hot_tx, hot_rx) = futures_channel::mpsc::unbounded::<()>();
-        hotreload::connect_subsecond();
-        hotreload::subsecond::register_handler(std::sync::Arc::new(move || {
-            let _ = hot_tx.unbounded_send(());
-        }));
-        self.hot_reload_receiver = Some(hot_rx);
         self
     }
 
