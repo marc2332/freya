@@ -14,19 +14,30 @@ use freya_core::{
 use crate::theming::component_themes::Theme;
 
 /// Provides a custom [`Theme`].
+/// If a [`Theme`] context already exists, it reuses it instead of creating a new one.
 pub fn use_init_theme(theme_cb: impl FnOnce() -> Theme) -> State<Theme> {
     use_hook(|| {
-        let state = State::create(theme_cb());
-        provide_context(state);
-        state
+        if let Some(existing) = try_consume_context::<State<Theme>>() {
+            existing
+        } else {
+            let state = State::create(theme_cb());
+            provide_context(state);
+            state
+        }
     })
 }
 
+/// Provides a custom [`Theme`] at the root scope.
+/// If a [`Theme`] context already exists at the root, it reuses it instead of creating a new one.
 pub fn use_init_root_theme(theme_cb: impl FnOnce() -> Theme) -> State<Theme> {
     use_hook(|| {
-        let state = State::create_in_scope(theme_cb(), ScopeId::ROOT);
-        provide_context_for_scope_id(state, ScopeId::ROOT);
-        state
+        if let Some(existing) = try_consume_context::<State<Theme>>() {
+            existing
+        } else {
+            let state = State::create_in_scope(theme_cb(), ScopeId::ROOT);
+            provide_context_for_scope_id(state, ScopeId::ROOT);
+            state
+        }
     })
 }
 

@@ -15,6 +15,7 @@ impl Component for WidgetsDemo {
         let mut theme = use_theme();
         let is_dark = *theme.read() == DARK_THEME;
 
+        let input_text = use_state(String::new);
         let mut slider_value = use_state(|| 50.0f64);
 
         let values = use_hook(|| {
@@ -72,6 +73,18 @@ impl Component for WidgetsDemo {
                                         .into()
                                 })),
                         ),
+                    )
+                    .child(
+                        rect()
+                            .spacing(8.)
+                            .child("Text Input")
+                            .child(
+                                Input::new(input_text)
+                                    .expanded()
+                                    .flat()
+                                    .placeholder("Type something..."),
+                            )
+                            .child(format!("Value: {}", input_text.read())),
                     )
                     .child(Button::new().expanded().ripple().child("Ripple Button"))
                     .child(ripple_card(

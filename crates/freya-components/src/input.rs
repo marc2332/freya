@@ -407,6 +407,7 @@ impl Component for Input {
 
         let on_input_pointer_down = move |e: Event<PointerEventData>| {
             e.stop_propagation();
+            e.prevent_default();
             is_dragging.set(true);
             movement_timeout.reset();
             if !display_placeholder {
@@ -424,6 +425,7 @@ impl Component for Input {
 
         let on_pointer_down = move |e: Event<PointerEventData>| {
             e.stop_propagation();
+            e.prevent_default();
             is_dragging.set(true);
             movement_timeout.reset();
             if !display_placeholder {

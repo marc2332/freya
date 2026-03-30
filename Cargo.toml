@@ -43,6 +43,7 @@ members = [
   "./crates/freya-webview",
   "./crates/freya-terminal",
   "./crates/freya-code-editor",
+  "./crates/freya-android",
   "./examples/ai-chat",
   "./examples/state_query_sqlite",
   "./examples/android",
@@ -79,6 +80,7 @@ freya-query = { path = "./crates/freya-query", version = "0.4.0-rc.16" }
 freya-webview = { path = "./crates/freya-webview", version = "0.4.0-rc.16" }
 freya-terminal = { path = "./crates/freya-terminal", version = "0.4.0-rc.16" }
 freya-code-editor = { path = "./crates/freya-code-editor", version = "0.4.0-rc.16" }
+freya-android = { path = "./crates/freya-android", version = "0.4.0-rc.16" }
 
 # core
 generational-box = "0.7"

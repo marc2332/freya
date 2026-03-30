@@ -1,0 +1,22 @@
+[package]
+name = "freya-android"
+version = "0.4.0-rc.16"
+description = "Android integration for Freya"
+edition = "2024"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "android"]
+categories = ["gui"]
+
+[lints]
+workspace = true
+
+[dependencies]
+freya-core = { workspace = true }
+freya-components = { workspace = true }
+freya-winit = { workspace = true }
+jni = "0.19.0"
+winit = { workspace = true }
+tracing = { workspace = true }

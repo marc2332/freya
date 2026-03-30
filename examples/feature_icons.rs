@@ -19,7 +19,7 @@ fn app() -> impl IntoElement {
         .expanded()
         .child(
             svg(icons::lucide::antenna())
-                .theme_accent_color()
+                .color((120, 50, 255))
                 .width(Size::px(100.))
                 .height(Size::px(100.)),
         )
