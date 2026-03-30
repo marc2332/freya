@@ -28,11 +28,13 @@ use crate::{
     loader::CircularLoader,
 };
 
+/// Supported image sources for [`ImageViewer`].
+///
 /// ### URI
 ///
 /// Good to load remote images.
 ///
-/// > Needs the `remote-asset` feature enabled.
+/// > Requires the `remote-asset` feature to be enabled.
 ///
 /// ```rust
 /// # use freya::prelude::*;
@@ -170,12 +172,10 @@ impl ImageSource {
 
 /// Image viewer component.
 ///
-/// Supports loading images from embedded bytes, file paths, and URLs.
-/// Loading images from URLs requires the `remote-asset` feature to be enabled.
+/// Handles async loading, caching, and error states for images.
+/// See [`ImageSource`] for all supported image sources.
 ///
 /// # Example
-///
-/// ### Embedded bytes
 ///
 /// ```rust
 /// # use freya::prelude::*;
@@ -185,31 +185,6 @@ impl ImageSource {
 ///         include_bytes!("../../../examples/rust_logo.png"),
 ///     )
 ///         .into();
-///
-///     ImageViewer::new(source)
-/// }
-/// ```
-///
-/// ### File path
-///
-/// ```rust
-/// # use freya::prelude::*;
-/// # use std::path::PathBuf;
-/// fn app() -> impl IntoElement {
-///     let source: ImageSource = PathBuf::from("./examples/rust_logo.png").into();
-///
-///     ImageViewer::new(source)
-/// }
-/// ```
-///
-/// ### URL (requires `remote-asset` feature)
-///
-/// ```rust,ignore
-/// # use freya::prelude::*;
-/// fn app() -> impl IntoElement {
-///     let source: ImageSource =
-///         "https://upload.wikimedia.org/wikipedia/commons/8/8a/Gecarcinus_quadratus_%28Nosara%29.jpg"
-///             .into();
 ///
 ///     ImageViewer::new(source)
 /// }
