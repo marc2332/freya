@@ -180,9 +180,11 @@ impl ImageSource {
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app() -> impl IntoElement {
-///     let source: ImageSource =
-///         "https://upload.wikimedia.org/wikipedia/commons/8/8a/Gecarcinus_quadratus_%28Nosara%29.jpg"
-///             .into();
+///     let source: ImageSource = (
+///         "rust-logo",
+///         include_bytes!("../../../examples/rust_logo.png"),
+///     )
+///         .into();
 ///
 ///     ImageViewer::new(source)
 /// }
