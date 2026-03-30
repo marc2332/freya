@@ -1,4 +1,5 @@
-//! [image()] makes it possible to render a Skia image into the canvas.
+//! Low-level [image()] element for rendering raw Skia images.
+//! For most use cases, prefer the higher-level `ImageViewer` component.
 
 use std::{
     any::Any,
@@ -58,8 +59,11 @@ use crate::{
     tree::DiffModifies,
 };
 
-/// [image] makes it possible to render a Skia image into the canvas.
-/// You most likely want to use a higher level than this, like the component `ImageViewer`.
+/// Low-level element that renders a raw Skia image into the canvas.
+///
+/// This requires you to manually load and decode the image bytes into a [`SkImage`].
+/// For most use cases, prefer the `ImageViewer` component which handles
+/// async loading, caching, error states, and supports multiple image sources out of the box.
 ///
 /// See the available methods in [Image].
 pub fn image(image_holder: ImageHolder) -> Image {
