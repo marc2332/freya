@@ -98,7 +98,14 @@ impl Component for WidgetsDemo {
                         (30, 30, 30),
                         Some((255, 80, 80)),
                         "Red ripple",
-                    )),
+                    ))
+                    .child(
+                        rect().spacing(8.).child("Remote Image").child(
+                            ImageViewer::new("https://picsum.photos/500/1000")
+                                .width(Size::fill())
+                                .aspect_ratio(AspectRatio::Max),
+                        ),
+                    ),
             )
     }
 }

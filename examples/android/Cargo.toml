@@ -11,6 +11,7 @@ freya = { workspace = true, features = [
   "code-editor",
   "markdown",
   "icons",
+  "remote-asset",
 ] }
 freya-winit = { workspace = true }
 env_logger = "0.11.9"
