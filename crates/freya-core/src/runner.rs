@@ -680,11 +680,11 @@ impl Runner {
                 },
                 || {
                     let scope = scope_rc.borrow();
-                    #[cfg(feature = "hot")]
+                    #[cfg(feature = "hotreload")]
                     {
                         subsecond::call(|| (scope.comp)(scope.props.clone()))
                     }
-                    #[cfg(not(feature = "hot"))]
+                    #[cfg(not(feature = "hotreload"))]
                     {
                         (scope.comp)(scope.props.clone())
                     }
@@ -830,12 +830,11 @@ impl Runner {
                         },
                         || {
                             let scope = scope_rc.borrow();
-                            let scope = scope_rc.borrow();
-                            #[cfg(feature = "hot")]
+                            #[cfg(feature = "hotreload")]
                             {
                                 subsecond::call(|| (scope.comp)(scope.props.clone()))
                             }
-                            #[cfg(not(feature = "hot"))]
+                            #[cfg(not(feature = "hotreload"))]
                             {
                                 (scope.comp)(scope.props.clone())
                             }

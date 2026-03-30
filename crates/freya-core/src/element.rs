@@ -1,63 +1,29 @@
-use std::{
-    any::Any,
-    borrow::Cow,
-    fmt::Debug,
-    rc::Rc,
-};
+use std::{any::Any, borrow::Cow, fmt::Debug, rc::Rc};
 
-use freya_engine::prelude::{
-    Canvas,
-    FontCollection,
-    FontMgr,
-    SkRRect,
-    SkRect,
-};
+use freya_engine::prelude::{Canvas, FontCollection, FontMgr, SkRRect, SkRect};
 use rustc_hash::FxHashMap;
 use torin::{
-    prelude::{
-        Area,
-        LayoutNode,
-        Size2D,
-    },
+    prelude::{Area, LayoutNode, Size2D},
     scaled::Scaled,
 };
 
 use crate::{
-    data::{
-        AccessibilityData,
-        EffectData,
-        LayoutData,
-        StyleState,
-        TextStyleData,
-        TextStyleState,
-    },
+    data::{AccessibilityData, EffectData, LayoutData, StyleState, TextStyleData, TextStyleState},
     diff_key::DiffKey,
     event_handler::EventHandler,
     events::{
         data::{
-            Event,
-            KeyboardEventData,
-            MouseEventData,
-            PointerEventData,
-            SizedEventData,
-            TouchEventData,
-            WheelEventData,
+            Event, KeyboardEventData, MouseEventData, PointerEventData, SizedEventData,
+            TouchEventData, WheelEventData,
         },
         name::EventName,
     },
     helpers::from_fn_standalone_borrowed_keyed,
     layers::Layer,
     node_id::NodeId,
-    prelude::{
-        FileEventData,
-        ImePreeditEventData,
-        MaybeExt,
-    },
+    prelude::{FileEventData, ImePreeditEventData, MaybeExt},
     text_cache::TextCache,
-    tree::{
-        DiffModifies,
-        Tree,
-    },
+    tree::{DiffModifies, Tree},
 };
 
 pub trait ElementExt: Any {
@@ -253,11 +219,18 @@ impl PartialEq for AppComponent {
 
 impl<F, E> From<F> for AppComponent
 where
-    F: Fn() -> E + 'static,
+    F: Fn() -> E + Clone + 'static,
     E: IntoElement,
 {
     fn from(render: F) -> Self {
         AppComponent {
+            #[cfg(feature = "hotreload")]
+            render: Rc::new(move || {
+                crate::hotreload::subsecond::HotFn::current(render.clone())
+                    .call(())
+                    .into_element()
+            }),
+            #[cfg(not(feature = "hotreload"))]
             render: Rc::new(move || render().into_element()),
         }
     }
