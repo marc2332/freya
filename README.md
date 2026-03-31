@@ -772,6 +772,8 @@ A Claude Code skill with Freya best practices and patterns is available. Install
 /plugin install freya@freya-marketplace
 ```
 
+For other AI coding agents, you can use the skill document directly as context: [plugins/freya/skills/freya/SKILL.md](plugins/freya/skills/freya/SKILL.md)
+
 ### License
 
 [MIT License](./LICENSE.md)
