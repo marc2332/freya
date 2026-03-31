@@ -117,18 +117,18 @@ impl Component for Select {
             conf.on_change(OnChange::Rerun);
             conf.on_creation(OnCreation::Finish);
 
-            let scale = AnimNum::new(0.85, 1.)
-                .time(300)
+            let scale = AnimNum::new(0.9, 1.)
+                .time(125)
                 .ease(Ease::Out)
-                .function(Function::Expo);
+                .function(Function::Quart);
             let opacity = AnimNum::new(0., 1.)
-                .time(300)
+                .time(125)
                 .ease(Ease::Out)
-                .function(Function::Expo);
-            let offset_y = AnimNum::new(-10., 1.)
-                .time(300)
+                .function(Function::Quart);
+            let offset_y = AnimNum::new(-8., 1.)
+                .time(125)
                 .ease(Ease::Out)
-                .function(Function::Expo);
+                .function(Function::Quart);
             if open() {
                 (scale, opacity, offset_y)
             } else {
