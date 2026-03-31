@@ -381,6 +381,10 @@ impl VulkanDriver {
     }
 
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
+        // Zero-area sizes (e.g. minimized on Windows) are invalid for Vulkan swapchains.
+        if size.width == 0 || size.height == 0 {
+            return;
+        }
         self.swapchain_size = size;
         self.recreate_swapchain();
     }
