@@ -420,6 +420,131 @@ i18n.set_language(langid!("es-ES"));
 
 For multi-window apps, create with `I18n::create_global` in `main` and share with `use_share_i18n`.
 
+## Animations
+
+Use `use_animation` for manual control and `use_animation_transition` to animate between two values reactively:
+
+```rust
+// Manual: call .start() / .reverse() yourself
+let mut anim = use_animation(|_| AnimColor::new((240, 240, 240), (200, 80, 80)).time(400));
+rect().background(&*anim.read()).on_press(move |_| anim.start())
+
+// Transition: re-runs automatically when the tracked value changes
+let color = use_animation_transition(is_active, |from, to| AnimColor::new(from, to).time(300));
+rect().background(&*color.read())
+```
+
+Animate colors (`AnimColor`), sizes, positions, and other numeric properties. Easing functions and sequencing are supported.
+
+## Routing
+
+Enable with `features = ["router"]`. Define routes with `#[derive(Routable)]`, render them with `router::<Route>()`, place the current page with `outlet::<Route>()`, and navigate with `Link` or `RouterContext::get().replace(...)`:
+
+```rust
+#[derive(Routable, Clone, PartialEq)]
+enum Route {
+    #[route("/")]
+    Home,
+    #[route("/settings")]
+    Settings,
+}
+
+fn app() -> impl IntoElement {
+    router::<Route>(|| RouterConfig::default())
+}
+```
+
+## Headless Testing
+
+`freya-testing` lets you test components without a window. Use `TestingRunner` to mount a component, simulate interactions, and assert on state:
+
+```rust
+use freya_testing::prelude::*;
+
+let (mut runner, state) = TestingRunner::new(app, (300., 300.).into(), |r| {
+    r.provide_root_context(|| State::create(0))
+}, 1.);
+
+runner.sync_and_update();
+runner.click_cursor((15., 15.));
+assert_eq!(*state.peek(), 1);
+```
+
+Call `runner.render_to_file("out.png")` to snapshot the current UI.
+
+## Icons
+
+Enable with `features = ["icons"]`. Uses Lucide icons rendered as SVGs:
+
+```rust
+use freya::icons;
+
+svg(icons::lucide::antenna()).color((120, 50, 255)).expanded()
+```
+
+## Rich Text Editing
+
+Use `use_editable` to manage a text editor with cursor, selection, keyboard shortcuts, and virtualization. Wire it to a `paragraph()` element's event handlers and feed `EditableEvent`s from mouse/keyboard events. See `examples/` for full wiring.
+
+## Code Editor
+
+Enable with `features = ["code-editor"]`. `CodeEditorData` holds a `Rope`-backed buffer with tree-sitter syntax highlighting. Pass it to the `CodeEditor` component:
+
+```rust
+let editor = use_state(|| {
+    let mut e = CodeEditorData::new(Rope::from_str(src), LanguageId::Rust);
+    e.parse();
+    e.measure(14., "Jetbrains Mono");
+    e
+});
+CodeEditor::new(editor, focus.a11y_id())
+```
+
+## Plotting
+
+Enable with `features = ["plot"]`. Use the `plot()` element with a `RenderCallback` and draw into it using the Plotters API via `PlotSkiaBackend`:
+
+```rust
+plot(RenderCallback::new(|ctx| {
+    let backend = PlotSkiaBackend::new(ctx.canvas, ctx.font_collection, size).into_drawing_area();
+    // ... Plotters drawing code
+})).expanded()
+```
+
+## Material Design
+
+Enable with `features = ["material-design"]`. Adds style modifiers like `.ripple()` to built-in components:
+
+```rust
+use freya::material_design::*;
+Button::new().ripple().child("Click me")
+```
+
+## WebView
+
+Enable with `features = ["webview"]`. Embeds a browser view into your UI:
+
+```rust
+use freya::webview::*;
+WebView::new("https://example.com").expanded()
+```
+
+## Terminal
+
+Enable with `features = ["terminal"]`. Spawns a PTY process and renders it as a terminal:
+
+```rust
+use freya::terminal::*;
+let mut cmd = CommandBuilder::new("bash");
+cmd.env("TERM", "xterm-256color");
+let handle = TerminalHandle::new(TerminalId::new(), cmd, None).ok();
+// Render with Terminal::new(handle) and forward keyboard events via handle.write_key()
+```
+
+## Developer Tools
+
+Enable with `features = ["devtools"]`. Adds a real-time component tree inspector. Run the devtools app alongside your app to examine layout, props, and state.
+
 ## Crate Features
 
 Add to your `Cargo.toml` as needed:
