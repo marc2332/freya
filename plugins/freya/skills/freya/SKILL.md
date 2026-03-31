@@ -8,6 +8,11 @@ user-invocable: true
 
 Freya is a cross-platform, native, declarative GUI library for Rust.
 
+Start by asking the user what they would like to do:
+- Lint and improve existing code
+- Refactor existing code
+- Add a new feature
+
 ## Components
 
 ### Struct Components (for stateful UI)
