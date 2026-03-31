@@ -88,7 +88,10 @@ Common layout shorthands: `.center()` centers children on both axes; `.expanded(
 rect()
     .when(show_badge, |r| r.child("New"))
     .map(|r| if large { r.height(Size::px(200.)) } else { r })
+    .maybe_child(optional_element) // appends only when Some
 ```
+
+`.maybe_child(Option<impl IntoElement>)` is the idiomatic way to conditionally append a child that may or may not exist.
 
 ### Labels from &str and String
 
@@ -248,6 +251,33 @@ Context is the right tool for dependency injection (e.g. passing a DB client, co
 - Context API - dependency injection and non-reactive shared values across the tree; prefer over statics
 - Freya Radio - large/nested state, surgical per-channel updates, multi-window
 - `Readable`/`Writable` - reusable components that don't care about backing storage
+
+## Derived State and Side Effects
+
+For simple derived values, compute them directly in `render` - no hook needed:
+
+```rust
+let doubled = *count.read() * 2;
+```
+
+For expensive computations that should only re-run when their dependencies change, use `use_memo`. It subscribes to any `State` read inside the callback and caches the result:
+
+```rust
+let expensive = use_memo(move || {
+    let n = *count.read(); // subscribed - reruns when count changes
+    compute_something(n)
+});
+let value = expensive.read();
+```
+
+For side effects that should re-run when state changes (e.g. logging, triggering external systems), use `use_side_effect`. Do not use it to sync one state into another - derive values directly or use `use_memo` instead:
+
+```rust
+use_side_effect(move || {
+    let value = *count.read(); // subscribed
+    println!("count changed: {value}");
+});
+```
 
 ## Async
 
