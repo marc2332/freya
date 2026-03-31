@@ -763,6 +763,15 @@ Thanks to my sponsors for supporting this project! 😄
 ### History with Dioxus
 Freya 0.1, 0.2 and 0.3 were based on the core crates of Dioxus. Starting 0.4 Freya does no longer use Dioxus, instead it uses its own reactive core, partially inspired by Dioxus but yet with lots of differences.
 
+### Claude Code Skill
+
+A Claude Code skill with Freya best practices and patterns is available. Install it with:
+
+```
+/plugin marketplace add marc2332/freya
+/plugin install freya@freya-marketplace
+```
+
 ### License
 
 [MIT License](./LICENSE.md)
