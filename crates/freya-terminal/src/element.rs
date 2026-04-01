@@ -64,9 +64,7 @@ struct TerminalMeasure {
 }
 
 /// Renders selection, backgrounds, cursor, and scrollbar.
-struct TerminalRenderer<'a> {
-    canvas: &'a Canvas,
-    paint: &'a mut Paint,
+struct TerminalRenderer {
     area: Area,
     char_width: f32,
     line_height: f32,
@@ -76,26 +74,28 @@ struct TerminalRenderer<'a> {
     selection_color: Color,
 }
 
-impl TerminalRenderer<'_> {
-    fn render_background(&mut self) {
-        self.paint.set_color(self.background);
-        self.canvas.draw_rect(
+impl TerminalRenderer {
+    fn render_background(&self, canvas: &Canvas, paint: &mut Paint) {
+        paint.set_color(self.background);
+        canvas.draw_rect(
             SkRect::new(
                 self.area.min_x(),
                 self.area.min_y(),
                 self.area.max_x(),
                 self.area.max_y(),
             ),
-            self.paint,
+            paint,
         );
     }
 
     fn render_selection(
-        &mut self,
+        &self,
         row_idx: usize,
         row_len: usize,
         y: f32,
         bounds: &(i64, usize, i64, usize),
+        canvas: &Canvas,
+        paint: &mut Paint,
     ) {
         let (start_row, start_col, end_row, end_col) = *bounds;
         let row_i = row_idx as i64;
@@ -114,15 +114,21 @@ impl TerminalRenderer<'_> {
         if sel_start < sel_end {
             let left = self.area.min_x() + (sel_start as f32) * self.char_width;
             let right = self.area.min_x() + (sel_end as f32) * self.char_width;
-            self.paint.set_color(self.selection_color);
-            self.canvas.draw_rect(
+            paint.set_color(self.selection_color);
+            canvas.draw_rect(
                 SkRect::new(left, y.round(), right, (y + self.line_height).round()),
-                self.paint,
+                paint,
             );
         }
     }
 
-    fn render_cell_backgrounds(&mut self, row: &[vt100::Cell], y: f32) {
+    fn render_cell_backgrounds(
+        &self,
+        row: &[vt100::Cell],
+        y: f32,
+        canvas: &Canvas,
+        paint: &mut Paint,
+    ) {
         let mut run_start: Option<(usize, Color)> = None;
         let mut col = 0;
         while col < row.len() {
@@ -142,7 +148,7 @@ impl TerminalRenderer<'_> {
                 match &run_start {
                     Some((_, color)) if *color == cell_bg => {}
                     Some((start, color)) => {
-                        self.render_cell_background(*start, col, *color, y);
+                        self.render_cell_background(*start, col, *color, y, canvas, paint);
                         run_start = Some((col, cell_bg));
                     }
                     None => {
@@ -150,33 +156,48 @@ impl TerminalRenderer<'_> {
                     }
                 }
             } else if let Some((start, color)) = run_start.take() {
-                self.render_cell_background(start, col, color, y);
+                self.render_cell_background(start, col, color, y, canvas, paint);
             }
             col = end_col;
         }
         if let Some((start, color)) = run_start {
-            self.render_cell_background(start, col, color, y);
+            self.render_cell_background(start, col, color, y, canvas, paint);
         }
     }
 
-    fn render_cell_background(&mut self, start: usize, end: usize, color: Color, y: f32) {
+    fn render_cell_background(
+        &self,
+        start: usize,
+        end: usize,
+        color: Color,
+        y: f32,
+        canvas: &Canvas,
+        paint: &mut Paint,
+    ) {
         let left = self.area.min_x() + (start as f32) * self.char_width;
         let right = self.area.min_x() + (end as f32) * self.char_width;
-        self.paint.set_color(color);
-        self.canvas.draw_rect(
+        paint.set_color(color);
+        canvas.draw_rect(
             SkRect::new(left, y.round(), right, (y + self.line_height).round()),
-            self.paint,
+            paint,
         );
     }
 
-    fn render_cursor(&mut self, row: &[vt100::Cell], y: f32, cursor_col: usize, font: &Font) {
+    fn render_cursor(
+        &self,
+        row: &[vt100::Cell],
+        y: f32,
+        cursor_col: usize,
+        font: &Font,
+        canvas: &Canvas,
+        paint: &mut Paint,
+    ) {
         let left = self.area.min_x() + (cursor_col as f32) * self.char_width;
         let right = left + self.char_width.max(1.0);
         let bottom = y + self.line_height.max(1.0);
 
-        self.paint.set_color(self.foreground);
-        self.canvas
-            .draw_rect(SkRect::new(left, y.round(), right, bottom.round()), self.paint);
+        paint.set_color(self.foreground);
+        canvas.draw_rect(SkRect::new(left, y.round(), right, bottom.round()), paint);
 
         let content = row
             .get(cursor_col)
@@ -189,18 +210,19 @@ impl TerminalRenderer<'_> {
             })
             .unwrap_or(" ");
 
-        self.paint.set_color(self.background);
+        paint.set_color(self.background);
         if let Some(blob) = TextBlob::from_pos_text_h(content, &[0.0], 0.0, font) {
-            self.canvas
-                .draw_text_blob(&blob, (left, y + self.baseline_offset), self.paint);
+            canvas.draw_text_blob(&blob, (left, y + self.baseline_offset), paint);
         }
     }
 
     fn render_scrollbar(
-        &mut self,
+        &self,
         scroll_offset: usize,
         total_scrollback: usize,
         rows_count: usize,
+        canvas: &Canvas,
+        paint: &mut Paint,
     ) {
         let viewport_height = self.area.height();
         let total_rows = rows_count + total_scrollback;
@@ -215,9 +237,9 @@ impl TerminalRenderer<'_> {
         let scrollbar_x = self.area.max_x() - 4.0;
         let corner_radius = 2.0;
 
-        self.paint.set_anti_alias(true);
-        self.paint.set_color(Color::from_argb(50, 0, 0, 0));
-        self.canvas.draw_round_rect(
+        paint.set_anti_alias(true);
+        paint.set_color(Color::from_argb(50, 0, 0, 0));
+        canvas.draw_round_rect(
             SkRect::new(
                 scrollbar_x,
                 self.area.min_y(),
@@ -226,11 +248,11 @@ impl TerminalRenderer<'_> {
             ),
             corner_radius,
             corner_radius,
-            self.paint,
+            paint,
         );
 
-        self.paint.set_color(Color::from_argb(60, 255, 255, 255));
-        self.canvas.draw_round_rect(
+        paint.set_color(Color::from_argb(60, 255, 255, 255));
+        canvas.draw_round_rect(
             SkRect::new(
                 scrollbar_x,
                 thumb_y,
@@ -239,7 +261,7 @@ impl TerminalRenderer<'_> {
             ),
             corner_radius,
             corner_radius,
-            self.paint,
+            paint,
         );
     }
 }
@@ -384,12 +406,14 @@ impl ElementExt for Terminal {
     }
 
     fn measure(&self, context: LayoutContext) -> Option<(Size2D, Rc<dyn Any>)> {
+        let scaled_font_size = self.font_size * context.scale_factor as f32;
+
         // Measure char width and line height using a reference glyph
         let mut builder =
             ParagraphBuilder::new(&ParagraphStyle::default(), context.font_collection.clone());
 
         let mut style = TextStyle::new();
-        style.set_font_size(self.font_size);
+        style.set_font_size(scaled_font_size);
         style.set_font_families(&[self.font_family.as_str()]);
         builder.push_style(&style);
         builder.add_text("W");
@@ -423,7 +447,8 @@ impl ElementExt for Terminal {
         self.handle.resize(target_rows, target_cols);
 
         if let Some(on_measured) = &self.on_measured {
-            on_measured.call((char_width, line_height));
+            let scale = context.scale_factor as f32;
+            on_measured.call((char_width / scale, line_height / scale));
         }
 
         let typeface = context
@@ -433,10 +458,10 @@ impl ElementExt for Terminal {
             .next()
             .expect("Terminal font family not found");
 
-        let mut font = Font::from_typeface(typeface, self.font_size);
+        let mut font = Font::from_typeface(typeface, scaled_font_size);
         font.set_subpixel(true);
         font.set_edging(FontEdging::SubpixelAntiAlias);
-        font.set_hinting(match self.font_size as u32 {
+        font.set_hinting(match scaled_font_size as u32 {
             0..=6 => FontHinting::Full,
             7..=12 => FontHinting::Normal,
             13..=24 => FontHinting::Slight,
@@ -453,7 +478,7 @@ impl ElementExt for Terminal {
                 baseline_offset,
                 font,
                 font_family: self.font_family.clone(),
-                font_size: self.font_size,
+                font_size: scaled_font_size,
                 row_cache: RefCell::new(FifoCache::new()),
             }),
         ))
@@ -477,9 +502,7 @@ impl ElementExt for Terminal {
         paint.set_anti_alias(true);
         paint.set_style(PaintStyle::Fill);
 
-        let mut renderer = TerminalRenderer {
-            canvas: context.canvas,
-            paint: &mut paint,
+        let renderer = TerminalRenderer {
             area,
             char_width: measure.char_width,
             line_height: measure.line_height,
@@ -489,7 +512,7 @@ impl ElementExt for Terminal {
             selection_color: self.selection_color,
         };
 
-        renderer.render_background();
+        renderer.render_background(context.canvas, &mut paint);
 
         let selection_bounds = buffer.selection.as_ref().and_then(|sel| {
             if sel.is_empty() {
@@ -499,39 +522,34 @@ impl ElementExt for Terminal {
             }
         });
 
-        let mut y = area.min_y();
-        for (row_idx, row) in buffer.rows.iter().enumerate() {
-            if y + measure.line_height > area.max_y() {
-                break;
-            }
-
-            if let Some(bounds) = &selection_bounds {
-                renderer.render_selection(row_idx, row.len(), y, bounds);
-            }
-
-            renderer.render_cell_backgrounds(row, y);
-
-            y += measure.line_height;
-        }
-
-        {
-            let mut text_renderer = TextRenderer {
-                canvas: context.canvas,
-                font,
-                font_collection: context.font_collection,
-                paint: renderer.paint,
-                row_cache: &mut measure.row_cache.borrow_mut(),
-                area_min_x: area.min_x(),
-                char_width: measure.char_width,
-                line_height: measure.line_height,
-                baseline_offset,
-                foreground: self.foreground,
-                background: self.background,
-                font_family: &measure.font_family,
-                font_size: measure.font_size,
-            };
-            text_renderer.render_text(&buffer.rows, area.min_y(), area.max_y());
-        }
+        let mut text_renderer = TextRenderer {
+            canvas: context.canvas,
+            font,
+            font_collection: context.font_collection,
+            paint: &mut paint,
+            row_cache: &mut measure.row_cache.borrow_mut(),
+            area_min_x: area.min_x(),
+            char_width: measure.char_width,
+            line_height: measure.line_height,
+            baseline_offset,
+            foreground: self.foreground,
+            background: self.background,
+            font_family: &measure.font_family,
+            font_size: measure.font_size,
+        };
+        text_renderer.render_text(
+            &buffer.rows,
+            area.min_y(),
+            area.max_y(),
+            |row, y, canvas, paint| {
+                renderer.render_cell_backgrounds(row, y, canvas, paint);
+            },
+            |row_idx, row, y, canvas, paint| {
+                if let Some(bounds) = &selection_bounds {
+                    renderer.render_selection(row_idx, row.len(), y, bounds, canvas, paint);
+                }
+            },
+        );
 
         if buffer.scroll_offset == 0
             && buffer.cursor_visible
@@ -539,7 +557,14 @@ impl ElementExt for Terminal {
         {
             let cursor_y = area.min_y() + (buffer.cursor_row as f32) * measure.line_height;
             if cursor_y + measure.line_height <= area.max_y() {
-                renderer.render_cursor(row, cursor_y, buffer.cursor_col, font);
+                renderer.render_cursor(
+                    row,
+                    cursor_y,
+                    buffer.cursor_col,
+                    font,
+                    context.canvas,
+                    &mut paint,
+                );
             }
         }
 
@@ -548,6 +573,8 @@ impl ElementExt for Terminal {
                 buffer.scroll_offset,
                 buffer.total_scrollback,
                 buffer.rows_count,
+                context.canvas,
+                &mut paint,
             );
         }
     }
