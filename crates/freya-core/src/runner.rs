@@ -1367,9 +1367,9 @@ impl Runner {
     }
 
     /// Resets all scope storages, clearing hook values back to their initial state.
-    /// Contexts are preserved so that imperatively-provided root contexts (e.g. [`Platform`]) survive the reload.
-    /// Each reset runs inside [`CurrentContext::run`] so that drop handlers registered via [`use_drop`]
-    /// (e.g. `use_asset` cleanup) can safely call [`spawn_forever`] during value destruction.
+    /// Contexts are preserved so that imperatively-provided root contexts (e.g. [`crate::prelude::Platform`]) survive the reload.
+    /// Each reset runs inside [`CurrentContext::run`] so that drop handlers registered via [`crate::prelude::use_drop`]
+    /// (e.g. `use_asset` cleanup) can safely call [`crate::prelude::spawn_forever`] during value destruction.
     pub fn clear_all_scopes_storage(&mut self) {
         let mut scopes_storages = self.scopes_storages.borrow_mut();
         let scopes = scopes_storages.keys().cloned().collect::<Vec<_>>();
