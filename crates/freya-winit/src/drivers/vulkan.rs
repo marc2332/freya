@@ -250,6 +250,11 @@ impl VulkanDriver {
         window: &Window,
         render: impl FnOnce(&mut SkiaSurface),
     ) {
+        // Zero-area sizes (e.g. minimized on Windows) are invalid for Vulkan swapchains.
+        if size.width == 0 || size.height == 0 {
+            return;
+        }
+
         let mut surface = unsafe {
             self.device
                 .wait_for_fences(&[self.in_flight_fence], true, u64::MAX)
