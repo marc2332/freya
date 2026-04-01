@@ -37,7 +37,11 @@ pub fn try_consume_own_context<T: Clone + 'static>() -> Option<T> {
         let scopes_storages = context.scopes_storages.borrow();
         let scopes_storage = scopes_storages.get(&context.scope_id)?;
         let type_id = TypeId::of::<T>();
-        scopes_storage.contexts.get(&type_id)?.downcast_ref::<T>().cloned()
+        scopes_storage
+            .contexts
+            .get(&type_id)?
+            .downcast_ref::<T>()
+            .cloned()
     })
 }
 

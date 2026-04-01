@@ -1,36 +1,73 @@
 use std::{
     any::Any,
     borrow::Cow,
-    collections::{VecDeque, hash_map::Entry},
+    collections::{
+        VecDeque,
+        hash_map::Entry,
+    },
     fmt::Debug,
     rc::Rc,
 };
 
 use bitflags::bitflags;
-use freya_engine::prelude::{FontCollection, FontMgr};
+use freya_engine::prelude::{
+    FontCollection,
+    FontMgr,
+};
 use futures_channel::mpsc::UnboundedSender;
 use itertools::Itertools;
-use rustc_hash::{FxHashMap, FxHashSet};
+use rustc_hash::{
+    FxHashMap,
+    FxHashSet,
+};
 use torin::{
-    prelude::{Area, LayoutMeasurer, Size2D},
-    torin::{DirtyReason, Torin},
+    prelude::{
+        Area,
+        LayoutMeasurer,
+        Size2D,
+    },
+    torin::{
+        DirtyReason,
+        Torin,
+    },
 };
 
 use crate::{
     accessibility::groups::AccessibilityGroups,
-    data::{AccessibilityState, EffectState, LayerState, TextStyleState},
-    element::{ElementExt, LayoutContext},
+    data::{
+        AccessibilityState,
+        EffectState,
+        LayerState,
+        TextStyleState,
+    },
+    element::{
+        ElementExt,
+        LayoutContext,
+    },
     elements::rect::RectElement,
     events::{
-        data::{EventType, SizedEventData},
+        data::{
+            EventType,
+            SizedEventData,
+        },
         emittable::EmmitableEvent,
         name::EventName,
     },
     extended_hashmap::ExtendedHashMap,
-    integration::{AccessibilityDirtyNodes, AccessibilityGenerator, EventsChunk},
+    integration::{
+        AccessibilityDirtyNodes,
+        AccessibilityGenerator,
+        EventsChunk,
+    },
     layers::Layers,
     node_id::NodeId,
-    runner::{MutationAdd, MutationModified, MutationMove, MutationRemove, Mutations},
+    runner::{
+        MutationAdd,
+        MutationModified,
+        MutationMove,
+        MutationRemove,
+        Mutations,
+    },
     text_cache::TextCache,
     tree_layout_adapter::TreeAdapterFreya,
 };

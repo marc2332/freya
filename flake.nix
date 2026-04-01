@@ -26,6 +26,7 @@
         commonPackages = [
           pkgs.python3
           pkgs.dioxus-cli
+          pkgs.taplo
         ];
 
         commonBuildInputs = with pkgs; [

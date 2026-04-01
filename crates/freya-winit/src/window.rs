@@ -1,30 +1,73 @@
-use std::{borrow::Cow, path::PathBuf, rc::Rc, sync::Arc, task::Waker};
+use std::{
+    borrow::Cow,
+    path::PathBuf,
+    rc::Rc,
+    sync::Arc,
+    task::Waker,
+};
 
 use accesskit_winit::Adapter;
-use freya_clipboard::copypasta::{ClipboardContext, ClipboardProvider};
-use freya_components::{cache::AssetCacher, integration::integration};
-use freya_core::{integration::*, prelude::Color};
-use freya_engine::prelude::{FontCollection, FontMgr};
-use futures_util::task::{ArcWake, waker};
+use freya_clipboard::copypasta::{
+    ClipboardContext,
+    ClipboardProvider,
+};
+use freya_components::{
+    cache::AssetCacher,
+    integration::integration,
+};
+use freya_core::{
+    integration::*,
+    prelude::Color,
+};
+use freya_engine::prelude::{
+    FontCollection,
+    FontMgr,
+};
+use futures_util::task::{
+    ArcWake,
+    waker,
+};
 use ragnarok::NodesState;
 use raw_window_handle::HasDisplayHandle;
 #[cfg(target_os = "linux")]
 use raw_window_handle::RawDisplayHandle;
-use torin::prelude::{CursorPoint, Size2D};
+use torin::prelude::{
+    CursorPoint,
+    Size2D,
+};
 use winit::{
     dpi::LogicalSize,
     event::ElementState,
-    event_loop::{ActiveEventLoop, EventLoopProxy},
+    event_loop::{
+        ActiveEventLoop,
+        EventLoopProxy,
+    },
     keyboard::ModifiersState,
-    window::{Theme, Window, WindowAttributes, WindowId},
+    window::{
+        Theme,
+        Window,
+        WindowAttributes,
+        WindowId,
+    },
 };
 
 use crate::{
     accessibility::AccessibilityTask,
-    config::{OnCloseHook, WindowConfig},
+    config::{
+        OnCloseHook,
+        WindowConfig,
+    },
     drivers::GraphicsDriver,
-    plugins::{PluginEvent, PluginHandle, PluginsManager},
-    renderer::{NativeEvent, NativeWindowEvent, NativeWindowEventAction},
+    plugins::{
+        PluginEvent,
+        PluginHandle,
+        PluginsManager,
+    },
+    renderer::{
+        NativeEvent,
+        NativeWindowEvent,
+        NativeWindowEventAction,
+    },
 };
 
 pub struct AppWindow {

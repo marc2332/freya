@@ -1,12 +1,18 @@
 use std::{
     any::Any,
-    hash::{Hash, Hasher},
+    hash::{
+        Hash,
+        Hasher,
+    },
     rc::Rc,
 };
 
 use rustc_hash::FxHasher;
 
-use crate::{diff_key::DiffKey, element::Element};
+use crate::{
+    diff_key::DiffKey,
+    element::Element,
+};
 
 #[cfg(feature = "test")]
 pub fn from_fn_captured<T: Fn() -> Element + 'static>(comp: T) -> Element {

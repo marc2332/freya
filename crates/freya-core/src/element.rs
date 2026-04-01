@@ -1,29 +1,63 @@
-use std::{any::Any, borrow::Cow, fmt::Debug, rc::Rc};
+use std::{
+    any::Any,
+    borrow::Cow,
+    fmt::Debug,
+    rc::Rc,
+};
 
-use freya_engine::prelude::{Canvas, FontCollection, FontMgr, SkRRect, SkRect};
+use freya_engine::prelude::{
+    Canvas,
+    FontCollection,
+    FontMgr,
+    SkRRect,
+    SkRect,
+};
 use rustc_hash::FxHashMap;
 use torin::{
-    prelude::{Area, LayoutNode, Size2D},
+    prelude::{
+        Area,
+        LayoutNode,
+        Size2D,
+    },
     scaled::Scaled,
 };
 
 use crate::{
-    data::{AccessibilityData, EffectData, LayoutData, StyleState, TextStyleData, TextStyleState},
+    data::{
+        AccessibilityData,
+        EffectData,
+        LayoutData,
+        StyleState,
+        TextStyleData,
+        TextStyleState,
+    },
     diff_key::DiffKey,
     event_handler::EventHandler,
     events::{
         data::{
-            Event, KeyboardEventData, MouseEventData, PointerEventData, SizedEventData,
-            TouchEventData, WheelEventData,
+            Event,
+            KeyboardEventData,
+            MouseEventData,
+            PointerEventData,
+            SizedEventData,
+            TouchEventData,
+            WheelEventData,
         },
         name::EventName,
     },
     helpers::from_fn_standalone_borrowed_keyed,
     layers::Layer,
     node_id::NodeId,
-    prelude::{FileEventData, ImePreeditEventData, MaybeExt},
+    prelude::{
+        FileEventData,
+        ImePreeditEventData,
+        MaybeExt,
+    },
     text_cache::TextCache,
-    tree::{DiffModifies, Tree},
+    tree::{
+        DiffModifies,
+        Tree,
+    },
 };
 
 pub trait ElementExt: Any {

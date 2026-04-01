@@ -1,15 +1,32 @@
-use std::{borrow::Cow, fmt::Debug, future::Future, io::Cursor, pin::Pin};
+use std::{
+    borrow::Cow,
+    fmt::Debug,
+    future::Future,
+    io::Cursor,
+    pin::Pin,
+};
 
 use bytes::Bytes;
-use freya_core::{integration::*, prelude::Color};
+use freya_core::{
+    integration::*,
+    prelude::Color,
+};
 use image::ImageReader;
 use winit::{
     event_loop::ActiveEventLoop,
-    window::{Icon, Window, WindowAttributes, WindowId},
+    window::{
+        Icon,
+        Window,
+        WindowAttributes,
+        WindowId,
+    },
 };
 
 use crate::{
-    plugins::{FreyaPlugin, PluginsManager},
+    plugins::{
+        FreyaPlugin,
+        PluginsManager,
+    },
     renderer::LaunchProxy,
 };
 

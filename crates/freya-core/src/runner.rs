@@ -2,30 +2,54 @@ use std::{
     any::TypeId,
     cell::RefCell,
     cmp::Ordering,
-    collections::{HashMap, HashSet, VecDeque},
+    collections::{
+        HashMap,
+        HashSet,
+        VecDeque,
+    },
     fmt::Debug,
     rc::Rc,
     sync::atomic::AtomicU64,
 };
 
-use futures_lite::{FutureExt, StreamExt};
+use futures_lite::{
+    FutureExt,
+    StreamExt,
+};
 use itertools::Itertools;
 use pathgraph::PathGraph;
-use rustc_hash::{FxHashMap, FxHashSet};
+use rustc_hash::{
+    FxHashMap,
+    FxHashSet,
+};
 
 use crate::{
     current_context::CurrentContext,
     diff_key::DiffKey,
-    element::{Element, ElementExt, EventHandlerType},
+    element::{
+        Element,
+        ElementExt,
+        EventHandlerType,
+    },
     events::{
-        data::{Event, EventType},
+        data::{
+            Event,
+            EventType,
+        },
         name::EventName,
     },
     node_id::NodeId,
     path_element::PathElement,
-    prelude::{Task, TaskId},
+    prelude::{
+        Task,
+        TaskId,
+    },
     reactive_context::ReactiveContext,
-    scope::{PathNode, Scope, ScopeStorage},
+    scope::{
+        PathNode,
+        Scope,
+        ScopeStorage,
+    },
     scope_id::ScopeId,
     tree::DiffModifies,
 };

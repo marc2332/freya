@@ -1,30 +1,77 @@
-use std::{borrow::Cow, fmt, pin::Pin, task::Waker};
+use std::{
+    borrow::Cow,
+    fmt,
+    pin::Pin,
+    task::Waker,
+};
 
 use accesskit_winit::WindowEvent as AccessibilityWindowEvent;
 use freya_core::integration::*;
-use freya_engine::prelude::{FontCollection, FontMgr};
+use freya_engine::prelude::{
+    FontCollection,
+    FontMgr,
+};
 use futures_lite::future::FutureExt as _;
-use futures_util::{FutureExt as _, StreamExt, select};
-use ragnarok::{EventsExecutorRunner, EventsMeasurerRunner};
+use futures_util::{
+    FutureExt as _,
+    StreamExt,
+    select,
+};
+use ragnarok::{
+    EventsExecutorRunner,
+    EventsMeasurerRunner,
+};
 use rustc_hash::FxHashMap;
-use torin::prelude::{CursorPoint, Size2D};
+use torin::prelude::{
+    CursorPoint,
+    Size2D,
+};
 #[cfg(all(feature = "tray", not(target_os = "linux")))]
 use tray_icon::TrayIcon;
 use winit::{
     application::ApplicationHandler,
-    dpi::{LogicalPosition, LogicalSize},
-    event::{ElementState, Ime, MouseScrollDelta, Touch, TouchPhase, WindowEvent},
-    event_loop::{ActiveEventLoop, EventLoopProxy},
-    window::{Theme, Window, WindowId},
+    dpi::{
+        LogicalPosition,
+        LogicalSize,
+    },
+    event::{
+        ElementState,
+        Ime,
+        MouseScrollDelta,
+        Touch,
+        TouchPhase,
+        WindowEvent,
+    },
+    event_loop::{
+        ActiveEventLoop,
+        EventLoopProxy,
+    },
+    window::{
+        Theme,
+        Window,
+        WindowId,
+    },
 };
 
 use crate::{
     accessibility::AccessibilityTask,
-    config::{CloseDecision, WindowConfig},
+    config::{
+        CloseDecision,
+        WindowConfig,
+    },
     drivers::GraphicsDriver,
-    plugins::{PluginEvent, PluginHandle, PluginsManager},
+    plugins::{
+        PluginEvent,
+        PluginHandle,
+        PluginsManager,
+    },
     window::AppWindow,
-    winit_mappings::{self, map_winit_mouse_button, map_winit_touch_force, map_winit_touch_phase},
+    winit_mappings::{
+        self,
+        map_winit_mouse_button,
+        map_winit_touch_force,
+        map_winit_touch_phase,
+    },
 };
 
 /// Returns `true` for accessibility roles that require IME input (text fields, terminals, etc.).
