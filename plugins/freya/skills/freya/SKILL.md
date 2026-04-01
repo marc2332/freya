@@ -8,6 +8,11 @@ user-invocable: true
 
 Freya is a cross-platform, native, declarative GUI library for Rust.
 
+General rules:
+- Do not write unnecessary comments in code.
+- Do not use em dashes.
+- Be simple, elegant, and concise.
+
 Start by asking the user what they would like to do:
 - Lint and improve existing code
 - Refactor existing code
@@ -115,7 +120,12 @@ Hooks are prefixed with `use_` (e.g. `use_state`, `use_animation`). Follow these
 
 1. **Only call hooks at the top level of `render`** - never inside conditionals, loops, or closures.
 2. **Hooks must be called in the same order on every render.**
-3. **Capture hook values in `move` closures** for event handlers:
+3. **Never call hooks inside event handlers** - call them at the top of `render` and capture the values in `move` closures instead.
+4. **Never call hooks inside loops** - the number of hook calls must be constant across renders.
+5. **Never call hooks outside of components** - hooks only work inside a `render` method or a function component.
+6. **Never call hooks inside async tasks** - `spawn` callbacks are async and cannot call hooks; capture state before spawning. Some hooks have non-hook counterparts that are safe to call in async contexts (e.g. `use_consume` → `consume_context()`).
+
+**Capture hook values in `move` closures** for event handlers:
 
 ```rust
 let mut state = use_state(|| false);
@@ -307,23 +317,16 @@ use_hook(move || {
 
 ### Async functions in components
 
-Components and hooks are synchronous - you cannot `await` inside `render`. Spawn a task and store the result in state:
+Components and hooks are synchronous - you cannot `await` inside `render`. Prefer `use_future` for typical async work (see below). Only reach for `use_hook` + `spawn` when you need fine-grained control over the task lifecycle:
 
 ```rust
-impl Component for MyComponent {
-    fn render(&self) -> impl IntoElement {
-        let mut result = use_state(|| String::new());
-
-        use_hook(move || {
-            spawn(async move {
-                let s = some_async_fn().await;
-                result.set(s);
-            });
-        });
-
-        result.read().as_str()
-    }
-}
+// Only when you need manual control
+use_hook(move || {
+    spawn(async move {
+        let s = some_async_fn().await;
+        result.set(s);
+    });
+});
 ```
 
 ### use_future
