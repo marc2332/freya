@@ -1342,11 +1342,39 @@ impl Runner {
             .unbounded_send(Message::MarkScopeAsDirty(ScopeId::ROOT));
     }
 
-    /// Resets all scope storages, clearing `use_state` values back to their initial state.
+    /// Resets all scope storages, clearing hook values back to their initial state.
+    /// Contexts are preserved so that imperatively-provided root contexts (e.g. [`Platform`]) survive the reload.
+    /// Each reset runs inside [`CurrentContext::run`] so that drop handlers registered via [`use_drop`]
+    /// (e.g. `use_asset` cleanup) can safely call [`spawn_forever`] during value destruction.
     pub fn clear_all_scopes_storage(&mut self) {
-        for storage in self.scopes_storages.borrow_mut().values_mut() {
-            storage.reset();
+        let mut scopes_storages = self.scopes_storages.borrow_mut();
+        let scopes = scopes_storages.keys().cloned().collect::<Vec<_>>();
+        for scope_id in scopes {
+            CurrentContext::run(
+                CurrentContext {
+                    scope_id,
+                    scopes_storages: self.scopes_storages.clone(),
+                    tasks: self.tasks.clone(),
+                    task_id_counter: self.task_id_counter.clone(),
+                    sender: self.sender.clone(),
+                },
+                || {
+                    if let Some(storage) = scopes_storages.get_mut(&scope_id) {
+                        storage.reset_hooks();
+                    }
+                },
+            );
         }
+    }
+
+    /// Cancels all running tasks and drains any pending messages those tasks may have queued.
+    /// Must be called before [`Self::clear_all_scopes_storage`] during hot-reload so that stale
+    /// task wakers cannot keep firing [`Message::PollTask`] after the scope state is reset,
+    /// which would otherwise saturate the main thread with empty update cycles.
+    pub fn clear_all_tasks(&mut self) {
+        self.tasks.borrow_mut().clear();
+        self.dirty_tasks.clear();
+        while self.receiver.try_recv().is_ok() {}
     }
 }
 

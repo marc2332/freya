@@ -424,6 +424,7 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                                         _ = app.runner.handle_events().fuse() => {},
                                         _ = app.hot_reload_receiver.next() => {
                                             hotreload_triggered = true;
+                                            app.runner.clear_all_tasks();
                                             app.runner.clear_all_scopes_storage();
                                             app.runner.mark_all_scopes_dirty();
                                         },
