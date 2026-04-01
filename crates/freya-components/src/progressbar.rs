@@ -13,9 +13,20 @@ use torin::{
 };
 
 use crate::{
+    define_theme,
     get_theme,
-    theming::component_themes::ProgressBarThemePartial,
 };
+
+define_theme! {
+    %[component]
+    pub ProgressBar {
+        %[fields]
+        color: Color,
+        background: Color,
+        progress_background: Color,
+        height: f32,
+    }
+}
 
 /// ProgressBar component.
 ///
@@ -77,7 +88,7 @@ impl ProgressBar {
 
 impl Component for ProgressBar {
     fn render(&self) -> impl IntoElement {
-        let progressbar_theme = get_theme!(&self.theme, progressbar);
+        let progressbar_theme = get_theme!(&self.theme, ProgressBarThemePreference, "progressbar");
 
         let progress = use_reactive(&self.progress.clamp(0., 100.));
         let animation = use_animation_transition(progress, |from, to| {

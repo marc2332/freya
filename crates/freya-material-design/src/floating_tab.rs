@@ -1,7 +1,10 @@
 use std::time::Duration;
 
 use freya_components::{
-    floating_tab::FloatingTab,
+    floating_tab::{
+        FloatingTab,
+        FloatingTabThemePreference,
+    },
     get_theme,
 };
 use freya_core::prelude::*;
@@ -76,7 +79,7 @@ impl Component for RippleFloatingTab {
     fn render(&self) -> impl IntoElement {
         let mut tab = self.tab.clone();
 
-        let theme = get_theme!(&tab.get_theme(), floating_tab);
+        let theme = get_theme!(&tab.get_theme(), FloatingTabThemePreference, "floating_tab");
 
         let ripple = self.ripple.clone().padding(theme.padding);
 

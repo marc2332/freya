@@ -3,9 +3,18 @@ use freya_core::prelude::*;
 use torin::size::Size;
 
 use crate::{
+    define_theme,
     get_theme,
-    theming::component_themes::CircularLoaderThemePartial,
 };
+
+define_theme! {
+    %[component]
+    pub CircularLoader {
+        %[fields]
+        primary_color: Color,
+        inversed_color: Color,
+    }
+}
 
 /// Circular loader component.
 ///
@@ -64,7 +73,11 @@ impl CircularLoader {
 
 impl Component for CircularLoader {
     fn render(&self) -> impl IntoElement {
-        let theme = get_theme!(&self.theme, circular_loader);
+        let theme = get_theme!(
+            &self.theme,
+            CircularLoaderThemePreference,
+            "circular_loader"
+        );
 
         let animation = use_animation(|conf| {
             conf.on_creation(OnCreation::Run);

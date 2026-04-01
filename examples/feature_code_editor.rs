@@ -16,7 +16,7 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    use_init_theme(|| DARK_THEME);
+    use_init_theme(dark_theme);
     let focus = use_focus();
     let custom_theme = use_state(|| EditorTheme {
         background: (20, 20, 20).into(),

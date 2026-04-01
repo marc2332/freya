@@ -8,12 +8,42 @@ use torin::{
 };
 
 use crate::{
+    define_theme,
     get_theme,
-    theming::component_themes::{
-        SwitchColorsThemePartial,
-        SwitchLayoutThemePartial,
-    },
 };
+
+define_theme! {
+    for = Switch;
+    theme_field = theme_colors;
+
+    %[component]
+    pub SwitchColors {
+        %[fields]
+        background: Color,
+        thumb_background: Color,
+        toggled_background: Color,
+        toggled_thumb_background: Color,
+        focus_border_fill: Color,
+    }
+}
+
+define_theme! {
+    for = Switch;
+    theme_field = theme_layout;
+
+    %[component]
+    pub SwitchLayout {
+        %[fields]
+        margin: Gaps,
+        width: f32,
+        height: f32,
+        padding: f32,
+        thumb_size: f32,
+        toggled_thumb_size: f32,
+        thumb_offset: f32,
+        toggled_thumb_offset: f32,
+    }
+}
 
 #[derive(Clone, PartialEq)]
 pub enum SwitchLayoutVariant {
@@ -134,10 +164,18 @@ impl Switch {
 
 impl Component for Switch {
     fn render(self: &Switch) -> impl IntoElement {
-        let theme_colors = get_theme!(&self.theme_colors, switch);
+        let theme_colors = get_theme!(&self.theme_colors, SwitchColorsThemePreference, "switch");
         let theme_layout = match self.layout_variant {
-            SwitchLayoutVariant::Normal => get_theme!(&self.theme_layout, switch_layout),
-            SwitchLayoutVariant::Expanded => get_theme!(&self.theme_layout, expanded_switch_layout),
+            SwitchLayoutVariant::Normal => get_theme!(
+                &self.theme_layout,
+                SwitchLayoutThemePreference,
+                "switch_layout"
+            ),
+            SwitchLayoutVariant::Expanded => get_theme!(
+                &self.theme_layout,
+                SwitchLayoutThemePreference,
+                "expanded_switch_layout"
+            ),
         };
 
         let mut hovering = use_state(|| false);
@@ -146,11 +184,11 @@ impl Component for Switch {
 
         let toggled = *self.toggled.read();
 
-        let animation = use_animation_with_dependencies(
+        let mut animation = use_animation_with_dependencies(
             &(theme_colors.clone(), theme_layout.clone(), toggled),
             |conf, (switch_colors, switch_layout, toggled)| {
                 conf.on_creation(OnCreation::Finish);
-                conf.on_change(OnChange::Rerun);
+                conf.on_change(OnChange::Finish);
 
                 let value = (
                     AnimNum::new(
@@ -184,6 +222,10 @@ impl Component for Switch {
                 }
             },
         );
+
+        use_side_effect_with_deps(&toggled, move |_| {
+            animation.start();
+        });
 
         let enabled = use_reactive(&self.enabled);
         use_drop(move || {

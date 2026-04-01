@@ -3,8 +3,8 @@ use freya_core::prelude::PreferredTheme;
 use crate::theming::{
     component_themes::Theme,
     themes::{
-        DARK_THEME,
-        LIGHT_THEME,
+        dark_theme,
+        light_theme,
     },
 };
 
@@ -15,8 +15,8 @@ pub trait FromPreference {
 impl FromPreference for PreferredTheme {
     fn to_theme(&self) -> Theme {
         match self {
-            PreferredTheme::Dark => DARK_THEME,
-            PreferredTheme::Light => LIGHT_THEME,
+            PreferredTheme::Dark => dark_theme(),
+            PreferredTheme::Light => light_theme(),
         }
     }
 }

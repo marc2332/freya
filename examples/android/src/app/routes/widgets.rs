@@ -13,7 +13,7 @@ pub struct WidgetsDemo;
 impl Component for WidgetsDemo {
     fn render(&self) -> impl IntoElement {
         let mut theme = use_theme();
-        let is_dark = *theme.read() == DARK_THEME;
+        let is_dark = theme.read().name == "dark";
 
         let mut slider_value = use_state(|| 50.0f64);
 
@@ -41,9 +41,9 @@ impl Component for WidgetsDemo {
                                 .toggled(is_dark)
                                 .on_toggle(move |_| {
                                     if is_dark {
-                                        theme.set(LIGHT_THEME);
+                                        theme.set(light_theme());
                                     } else {
-                                        theme.set(DARK_THEME);
+                                        theme.set(dark_theme());
                                     }
                                 }),
                         ),

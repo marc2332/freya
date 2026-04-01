@@ -3,12 +3,19 @@ use freya_core::prelude::*;
 use torin::prelude::*;
 
 use crate::{
+    define_theme,
     get_theme,
-    theming::component_themes::{
-        RadioItemTheme,
-        RadioItemThemePartial,
-    },
 };
+
+define_theme! {
+    %[component]
+    pub RadioItem {
+        %[fields]
+        unselected_fill: Color,
+        selected_fill: Color,
+        border_fill: Color,
+    }
+}
 
 /// Radio component.
 ///
@@ -100,7 +107,7 @@ impl Component for RadioItem {
             unselected_fill,
             selected_fill,
             border_fill,
-        } = get_theme!(&self.theme, radio);
+        } = get_theme!(&self.theme, RadioItemThemePreference, "radio");
 
         let animation = use_animation_with_dependencies(&self.selected, move |conf, selected| {
             conf.on_change(OnChange::Rerun);
