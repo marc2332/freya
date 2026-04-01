@@ -78,8 +78,8 @@ rect()
     .height(Size::px(100.))
     .center()       // centers children both axes
     .expanded()     // fills available space in parent's main axis
-    .when(is_active, |r| r.child("Active"))
-    .map(|r| r.expanded())
+    .maybe(is_active, |r| r.child("Active"))
+    .map(some_value, |r, v| r.child(v.to_string()))
 
 // Bad - storing to modify later
 let mut element = rect();
@@ -91,12 +91,14 @@ Common layout shorthands: `.center()` centers children on both axes; `.expanded(
 
 ```rust
 rect()
-    .when(show_badge, |r| r.child("New"))
-    .map(|r| if large { r.height(Size::px(200.)) } else { r })
-    .maybe_child(optional_element) // appends only when Some
+    .maybe(show_badge, |r| r.child("New"))          // bool condition
+    .map(large_size, |r, size| r.height(size))       // Option<T>, passes value
+    .maybe_child(optional_element)                   // Option<impl IntoElement>
 ```
 
-`.maybe_child(Option<impl IntoElement>)` is the idiomatic way to conditionally append a child that may or may not exist.
+- `.maybe(bool, |el| el)` - applies the callback when the condition is true
+- `.map(Option<T>, |el, val| el)` - applies the callback when the `Option` is `Some`, passing the inner value
+- `.maybe_child(Option<impl IntoElement>)` - appends a child only when `Some`
 
 ### Labels from &str and String
 
