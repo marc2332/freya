@@ -116,7 +116,7 @@ impl TerminalRenderer<'_> {
             let right = self.area.min_x() + (sel_end as f32) * self.char_width;
             self.paint.set_color(self.selection_color);
             self.canvas.draw_rect(
-                SkRect::new(left, y, right, y + self.line_height),
+                SkRect::new(left, y.round(), right, (y + self.line_height).round()),
                 self.paint,
             );
         }
@@ -164,7 +164,7 @@ impl TerminalRenderer<'_> {
         let right = self.area.min_x() + (end as f32) * self.char_width;
         self.paint.set_color(color);
         self.canvas.draw_rect(
-            SkRect::new(left, y, right, y + self.line_height),
+            SkRect::new(left, y.round(), right, (y + self.line_height).round()),
             self.paint,
         );
     }
@@ -176,7 +176,7 @@ impl TerminalRenderer<'_> {
 
         self.paint.set_color(self.foreground);
         self.canvas
-            .draw_rect(SkRect::new(left, y, right, bottom), self.paint);
+            .draw_rect(SkRect::new(left, y.round(), right, bottom.round()), self.paint);
 
         let content = row
             .get(cursor_col)
@@ -443,8 +443,7 @@ impl ElementExt for Terminal {
             _ => FontHinting::None,
         });
 
-        let (_, metrics) = font.metrics();
-        let baseline_offset = -metrics.ascent;
+        let baseline_offset = paragraph.alphabetic_baseline();
 
         Some((
             Size2D::new(context.area_size.width.max(100.0), height),
