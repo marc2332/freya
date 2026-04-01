@@ -250,7 +250,6 @@ impl VulkanDriver {
         window: &Window,
         render: impl FnOnce(&mut SkiaSurface),
     ) {
-        // Zero-area sizes (e.g. minimized on Windows) are invalid for Vulkan swapchains.
         if size.width == 0 || size.height == 0 {
             return;
         }
@@ -386,7 +385,6 @@ impl VulkanDriver {
     }
 
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
-        // Zero-area sizes (e.g. minimized on Windows) are invalid for Vulkan swapchains.
         if size.width == 0 || size.height == 0 {
             return;
         }
