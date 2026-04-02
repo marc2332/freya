@@ -422,7 +422,9 @@ impl<T> State<T> {
         match self.key.try_write() {
             Ok(val) => with(val),
             Err(e) => {
-                panic!("Writing to the State with a closure failed because it is already borrowed.\n{e}")
+                panic!(
+                    "Writing to the State with a closure failed because it is already borrowed.\n{e}"
+                )
             }
         }
     }
@@ -443,7 +445,9 @@ impl<T> State<T> {
         match self.key.try_write() {
             Ok(val) => val,
             Err(e) => {
-                panic!("Writing (unchecked) to the State failed because it is already borrowed.\n{e}")
+                panic!(
+                    "Writing (unchecked) to the State failed because it is already borrowed.\n{e}"
+                )
             }
         }
     }
