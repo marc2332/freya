@@ -27,27 +27,18 @@ fn app() -> impl IntoElement {
     let now = std::time::Instant::now();
 
     rect()
-        .center()
         .expanded()
-        .background((255, 0, 0))
-        .child(
-            rect()
-            .expanded()
-            .background_shader(ShaderFill::new(
-                SHADER,
-                move |effect, bounds| {
-                    let mut builder = UniformsBuilder::default();
-                    builder.set(
-                        "iResolution",
-                        UniformValue::Float3(bounds.width(), bounds.height(), 0.),
-                    );
+        .background_shader(ShaderFill::new(SHADER, move |effect, bounds| {
+            let mut builder = UniformsBuilder::default();
+            builder.set(
+                "iResolution",
+                UniformValue::Float3(bounds.width(), bounds.height(), 0.),
+            );
 
-                    builder.set("iTime", UniformValue::Float(now.elapsed().as_secs_f32()));
+            builder.set("iTime", UniformValue::Float(now.elapsed().as_secs_f32()));
 
-                    let uniforms = builder.build(effect);
+            let uniforms = builder.build(effect);
 
-                    effect.make_shader(skia_safe::Data::new_copy(&uniforms), &[], None)
-                },
-            ))
-        )
+            effect.make_shader(skia_safe::Data::new_copy(&uniforms), &[], None)
+        }))
 }

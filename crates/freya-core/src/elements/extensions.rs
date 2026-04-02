@@ -57,7 +57,15 @@ use crate::{
     layers::Layer,
     prelude::*,
     style::{
-        font_size::FontSize, font_slant::FontSlant, font_weight::FontWeight, font_width::FontWidth, scale::Scale, shader::ShaderFill, text_height::TextHeightBehavior, text_overflow::TextOverflow, text_shadow::TextShadow
+        font_size::FontSize,
+        font_slant::FontSlant,
+        font_weight::FontWeight,
+        font_width::FontWidth,
+        scale::Scale,
+        shader::ShaderFill,
+        text_height::TextHeightBehavior,
+        text_overflow::TextOverflow,
+        text_shadow::TextShadow,
     },
 };
 

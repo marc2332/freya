@@ -8,11 +8,14 @@ use torin::prelude::Area;
 
 use crate::{
     prelude::Color,
-    style::{gradient::{
-        ConicGradient,
-        LinearGradient,
-        RadialGradient,
-    }, shader::ShaderFill},
+    style::{
+        gradient::{
+            ConicGradient,
+            LinearGradient,
+            RadialGradient,
+        },
+        shader::ShaderFill,
+    },
 };
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
