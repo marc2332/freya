@@ -120,8 +120,8 @@ impl NodeStateAttributes for NodeState {
                 let background = &self.style.background;
                 let fill = match *background {
                     Fill::Color(background) => AttributeType::Color(background),
-                    Fill::LinearGradient(_) | Fill::RadialGradient(_) | Fill::ConicGradient(_) => {
-                        AttributeType::Gradient(background.clone())
+                    Fill::LinearGradient(_) | Fill::RadialGradient(_) | Fill::ConicGradient(_) | Fill::Shader(_) => {
+                        AttributeType::Fill(background.clone())
                     }
                 };
                 ("background", fill)
@@ -201,7 +201,7 @@ impl NodeStateAttributes for NodeState {
 pub enum AttributeType<'a> {
     Color(Color),
     OptionalColor(Option<Color>),
-    Gradient(Fill),
+    Fill(Fill),
     Size(&'a Size),
     VisibleSize(&'a VisibleSize),
     Measure(f32),

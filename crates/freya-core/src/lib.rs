@@ -136,6 +136,7 @@ pub mod prelude {
             font_width::*,
             gradient::*,
             scale::*,
+            shader::*,
             shadow::*,
             text_align::*,
             text_decoration::*,

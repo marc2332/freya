@@ -57,14 +57,7 @@ use crate::{
     layers::Layer,
     prelude::*,
     style::{
-        font_size::FontSize,
-        font_slant::FontSlant,
-        font_weight::FontWeight,
-        font_width::FontWidth,
-        scale::Scale,
-        text_height::TextHeightBehavior,
-        text_overflow::TextOverflow,
-        text_shadow::TextShadow,
+        font_size::FontSize, font_slant::FontSlant, font_weight::FontWeight, font_width::FontWidth, scale::Scale, shader::ShaderFill, text_height::TextHeightBehavior, text_overflow::TextOverflow, text_shadow::TextShadow
     },
 };
 
@@ -653,6 +646,11 @@ where
 
     fn background_radial_gradient<S: Into<RadialGradient>>(mut self, background: S) -> Self {
         self.get_style().background = Fill::RadialGradient(Box::new(background.into()));
+        self
+    }
+
+    fn background_shader(mut self, background: impl Into<ShaderFill>) -> Self {
+        self.get_style().background = Fill::Shader(background.into());
         self
     }
 

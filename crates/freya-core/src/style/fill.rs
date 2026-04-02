@@ -8,17 +8,18 @@ use torin::prelude::Area;
 
 use crate::{
     prelude::Color,
-    style::gradient::{
+    style::{gradient::{
         ConicGradient,
         LinearGradient,
         RadialGradient,
-    },
+    }, shader::ShaderFill},
 };
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, PartialEq)]
 pub enum Fill {
     Color(Color),
+    Shader(ShaderFill),
     LinearGradient(Box<LinearGradient>),
     RadialGradient(Box<RadialGradient>),
     ConicGradient(Box<ConicGradient>),
@@ -48,6 +49,9 @@ impl Fill {
             Fill::ConicGradient(gradient) => {
                 paint.set_shader(gradient.into_shader(area));
             }
+            Fill::Shader(shader) => {
+                paint.set_shader(shader.prepare(area));
+            }
         }
     }
 }
@@ -68,6 +72,7 @@ impl fmt::Display for Fill {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Color(color) => color.fmt(f),
+            Self::Shader(shader) => shader.fmt(f),
             Self::LinearGradient(gradient) => gradient.as_ref().fmt(f),
             Self::RadialGradient(gradient) => gradient.as_ref().fmt(f),
             Self::ConicGradient(gradient) => gradient.as_ref().fmt(f),
