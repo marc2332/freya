@@ -665,6 +665,27 @@ where
     }
 }
 
+impl<Value, Channel> WritableUtils<Value> for Radio<Value, Channel>
+where
+    Channel: RadioChannel<Value>,
+    Value: 'static,
+{
+    fn write_state(&mut self) -> WriteRef<'static, Value> {
+        let antenna = self.antenna.peek();
+        let channel = antenna.channel.clone();
+        let value = antenna.station.value.write_unchecked();
+        for ch in channel.derive_channel(&*value) {
+            antenna.station.notify_listeners(&ch);
+        }
+        antenna.station.cleanup();
+        value
+    }
+
+    fn peek_state(&self) -> ReadRef<'static, Value> {
+        self.antenna.peek().station.peek_unchecked()
+    }
+}
+
 impl<Channel> Copy for ChannelSelection<Channel> where Channel: Copy {}
 
 #[derive(Clone)]

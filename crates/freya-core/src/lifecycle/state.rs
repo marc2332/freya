@@ -18,6 +18,7 @@ use rustc_hash::FxHashSet;
 
 use crate::{
     current_context::CurrentContext,
+    lifecycle::writable_utils::WritableUtils,
     prelude::use_hook,
     reactive_context::ReactiveContext,
     scope_id::ScopeId,
@@ -372,35 +373,6 @@ impl<T> State<T> {
         self.key.write()
     }
 
-    /// Modify the state value using a closure and notify subscribers.
-    ///
-    /// This method provides a convenient way to mutate the state value using a closure,
-    /// automatically handling subscriber notification.
-    ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// # use freya::prelude::*;
-    /// let mut counter = use_state(|| 0);
-    ///
-    /// counter.with_mut(|mut value| {
-    ///     *value += 1;
-    ///     *value *= 2;
-    /// });
-    ///
-    /// // Equivalent to:
-    /// *counter.write() += 1;
-    /// *counter.write() *= 2;
-    /// // But more efficient (single notification)
-    /// ```
-    pub fn with_mut(&mut self, with: impl FnOnce(WriteRef<'static, T>))
-    where
-        T: 'static,
-    {
-        self.subscribers.write().borrow_mut().retain(|s| s.notify());
-        with(self.key.write());
-    }
-
     /// Get a mutable reference without requiring a mutable borrow of the State.
     ///
     /// This is an advanced method that allows writing to the state without having
@@ -425,101 +397,6 @@ impl<T> State<T> {
     /// notifications based on whether the value actually changed.
     pub(crate) fn write_silently(&self) -> WriteRef<'static, T> {
         self.key.write()
-    }
-
-    /// Replace the current state value with a new one.
-    ///
-    /// This method completely replaces the existing value with the provided one
-    /// and notifies all subscribers.
-    ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// # use freya::prelude::*;
-    /// let mut status = use_state(|| "idle");
-    ///
-    /// // Replace the value
-    /// status.set("loading");
-    /// status.set("complete");
-    /// ```
-    ///
-    /// # See Also
-    ///
-    /// - `set_if_modified()` to avoid unnecessary updates when the value hasn't changed
-    pub fn set(&mut self, value: T)
-    where
-        T: 'static,
-    {
-        *self.write() = value;
-    }
-
-    /// Replace the state value only if it's different from the current value.
-    ///
-    /// This method compares the new value with the current value using `PartialEq`.
-    /// If they are different, it updates the state and notifies subscribers.
-    /// If they are the same, no update occurs.
-    ///
-    /// # Performance Benefits
-    ///
-    /// This prevents unnecessary re-renders when setting the same value repeatedly.
-    ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// # use freya::prelude::*;
-    /// let mut count = use_state(|| 0);
-    ///
-    /// // This will update and notify subscribers
-    /// count.set_if_modified(5);
-    ///
-    /// // This will do nothing (value is already 5)
-    /// count.set_if_modified(5);
-    /// ```
-    ///
-    /// # Requirements
-    ///
-    /// The type `T` must implement `PartialEq`.
-    pub fn set_if_modified(&mut self, value: T)
-    where
-        T: 'static + PartialEq,
-    {
-        let is_equal = *self.peek() == value;
-        if !is_equal {
-            self.set(value);
-        }
-    }
-
-    /// Replace the state value if modified and execute a callback.
-    ///
-    /// Similar to `set_if_modified()`, but also runs a callback function if the value
-    /// was actually changed.
-    ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// # use freya::prelude::*;
-    /// let mut score = use_state(|| 0);
-    ///
-    /// score.set_if_modified_and_then(100, || {
-    ///     println!("High score achieved!");
-    ///     // Trigger additional logic like saving to storage
-    /// });
-    /// ```
-    ///
-    /// # Use Cases
-    ///
-    /// - Logging state changes
-    /// - Triggering side effects only when value changes
-    /// - Analytics tracking
-    pub fn set_if_modified_and_then(&mut self, value: T, then: impl FnOnce())
-    where
-        T: 'static + PartialEq,
-    {
-        let is_equal = *self.peek() == value;
-        if !is_equal {
-            self.set(value);
-            then();
-        }
     }
 
     /// Create a new State attached to the current component's scope.
