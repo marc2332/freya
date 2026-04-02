@@ -98,7 +98,7 @@ impl Component for Link {
                 if let Some(url) = &url {
                     let _ = open::that(url);
                 } else {
-                    RouterContext::get().push(to.clone());
+                    let _ = RouterContext::get().push(to.clone());
                 }
             }
         };
