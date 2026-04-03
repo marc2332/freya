@@ -245,6 +245,7 @@ define_theme! {
         padding: f32,
         thumb_size: f32,
         toggled_thumb_size: f32,
+        pressed_thumb_size_offset: f32,
         thumb_offset: f32,
         toggled_thumb_offset: f32,
     }

@@ -1,0 +1,12 @@
+{
+  "name": "freya",
+  "description": "Freya Rust GUI framework best practices skill for Claude Code",
+  "version": "1.0.0",
+  "author": {
+    "name": "Marc Espín"
+  },
+  "homepage": "https://freyaui.dev",
+  "repository": "https://github.com/marc2332/freya",
+  "license": "MIT",
+  "keywords": ["freya", "rust", "gui", "best-practices"]
+}
