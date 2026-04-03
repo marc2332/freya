@@ -1,8 +1,7 @@
 #![cfg(target_os = "android")]
 
 use freya_components::theming::{
-    hooks::use_init_theme,
-    themes::LIGHT_THEME,
+    hooks::use_init_theme, themes::light_theme,
 };
 use freya_core::{
     integration::*,
@@ -105,7 +104,7 @@ impl PartialEq for AndroidRoot {
 
 impl Component for AndroidRoot {
     fn render(&self) -> impl IntoElement {
-        let theme = use_init_theme(|| LIGHT_THEME);
+        let theme = use_init_theme(light_theme);
 
         // Sync status bar appearance with theme
         use_side_effect(move || {
