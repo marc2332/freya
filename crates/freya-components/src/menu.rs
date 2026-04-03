@@ -280,7 +280,7 @@ impl Default for MenuItem {
             on_press: None,
             on_pointer_enter: None,
             selected: false,
-            padding: (4.0, 10.0).into(),
+            padding: (6.0, 12.0).into(),
             key: DiffKey::None,
         }
     }
