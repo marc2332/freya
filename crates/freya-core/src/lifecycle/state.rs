@@ -222,6 +222,7 @@ impl<T: std::ops::Not<Output = T> + Clone + 'static> State<T> {
     /// # Common Types
     ///
     /// Works with `bool`, custom enum types, etc.
+    #[track_caller]
     pub fn toggled(&mut self) -> T {
         let value = self.read().clone();
         let neg_value = !value;
@@ -243,6 +244,7 @@ impl<T: std::ops::Not<Output = T> + Clone + 'static> State<T> {
     /// // Toggle visibility
     /// is_visible.toggle(); // false -> true
     /// ```
+    #[track_caller]
     pub fn toggle(&mut self) {
         self.toggled();
     }
@@ -299,11 +301,17 @@ impl<T> State<T> {
     /// let count = use_state(|| 0);
     /// let current_value = count.read();
     /// ```
+    #[track_caller]
     pub fn read(&self) -> ReadRef<'static, T> {
         if let Some(mut rc) = ReactiveContext::try_current() {
             rc.subscribe(&self.subscribers.read());
         }
-        self.key.read()
+        match self.key.try_read() {
+            Ok(val) => val,
+            Err(e) => {
+                panic!("Reading the State failed because it is already borrowed.\n{e}")
+            }
+        }
     }
 
     /// Read the current value without subscribing to changes.
@@ -337,8 +345,14 @@ impl<T> State<T> {
     /// # Performance Note
     ///
     /// Prefer `read()` over `peek()` unless you specifically need non-reactive access.
+    #[track_caller]
     pub fn peek(&self) -> ReadRef<'static, T> {
-        self.key.read()
+        match self.key.try_read() {
+            Ok(val) => val,
+            Err(e) => {
+                panic!("Peeking the State failed because it is already borrowed.\n{e}")
+            }
+        }
     }
 
     /// Get a mutable reference to the state value and notify subscribers.
@@ -367,9 +381,15 @@ impl<T> State<T> {
     ///
     /// - `with_mut()` for closure-based mutations
     /// - `set()` for replacing the entire value
+    #[track_caller]
     pub fn write(&mut self) -> WriteRef<'static, T> {
         self.subscribers.write().borrow_mut().retain(|s| s.notify());
-        self.key.write()
+        match self.key.try_write() {
+            Ok(val) => val,
+            Err(e) => {
+                panic!("Writing to the State failed because it is already borrowed.\n{e}")
+            }
+        }
     }
 
     /// Modify the state value using a closure and notify subscribers.
@@ -393,12 +413,20 @@ impl<T> State<T> {
     /// *counter.write() *= 2;
     /// // But more efficient (single notification)
     /// ```
+    #[track_caller]
     pub fn with_mut(&mut self, with: impl FnOnce(WriteRef<'static, T>))
     where
         T: 'static,
     {
         self.subscribers.write().borrow_mut().retain(|s| s.notify());
-        with(self.key.write());
+        match self.key.try_write() {
+            Ok(val) => with(val),
+            Err(e) => {
+                panic!(
+                    "Writing to the State with a closure failed because it is already borrowed.\n{e}"
+                )
+            }
+        }
     }
 
     /// Get a mutable reference without requiring a mutable borrow of the State.
@@ -411,9 +439,17 @@ impl<T> State<T> {
     ///
     /// This method should only be used when you cannot obtain a mutable reference
     /// to the `State` but still need to modify it. Prefer `write()` when possible.
+    #[track_caller]
     pub fn write_unchecked(&self) -> WriteRef<'static, T> {
         self.subscribers.write().borrow_mut().retain(|s| s.notify());
-        self.key.write()
+        match self.key.try_write() {
+            Ok(val) => val,
+            Err(e) => {
+                panic!(
+                    "Writing (unchecked) to the State failed because it is already borrowed.\n{e}"
+                )
+            }
+        }
     }
 
     /// Get a mutable reference without notifying subscribers.
@@ -423,8 +459,14 @@ impl<T> State<T> {
     ///
     /// This is primarily used internally by `Writable::write_if()` to enable conditional
     /// notifications based on whether the value actually changed.
+    #[track_caller]
     pub(crate) fn write_silently(&self) -> WriteRef<'static, T> {
-        self.key.write()
+        match self.key.try_write() {
+            Ok(val) => val,
+            Err(e) => {
+                panic!("Silently writing to the State failed because it is already borrowed.\n{e}")
+            }
+        }
     }
 
     /// Replace the current state value with a new one.
@@ -446,6 +488,7 @@ impl<T> State<T> {
     /// # See Also
     ///
     /// - `set_if_modified()` to avoid unnecessary updates when the value hasn't changed
+    #[track_caller]
     pub fn set(&mut self, value: T)
     where
         T: 'static,
@@ -479,6 +522,7 @@ impl<T> State<T> {
     /// # Requirements
     ///
     /// The type `T` must implement `PartialEq`.
+    #[track_caller]
     pub fn set_if_modified(&mut self, value: T)
     where
         T: 'static + PartialEq,
@@ -511,6 +555,7 @@ impl<T> State<T> {
     /// - Logging state changes
     /// - Triggering side effects only when value changes
     /// - Analytics tracking
+    #[track_caller]
     pub fn set_if_modified_and_then(&mut self, value: T, then: impl FnOnce())
     where
         T: 'static + PartialEq,
@@ -617,6 +662,7 @@ impl<T> State<T> {
     }
 
     /// Subscribe the current reactive context to this state's changes.
+    #[track_caller]
     pub(crate) fn subscribe(&self) {
         if let Some(mut rc) = ReactiveContext::try_current() {
             rc.subscribe(&self.subscribers.read());
@@ -624,6 +670,7 @@ impl<T> State<T> {
     }
 
     /// Notify all subscribers that the state has changed.
+    #[track_caller]
     pub(crate) fn notify(&self) {
         self.subscribers.write().borrow_mut().retain(|s| s.notify());
     }
@@ -659,6 +706,7 @@ impl<T> State<Option<T>> {
     /// - Moving values out of reactive state
     /// - One-time consumption of optional state
     /// - State transitions where the value is no longer needed
+    #[track_caller]
     pub fn take(&mut self) -> Option<T>
     where
         T: 'static,
