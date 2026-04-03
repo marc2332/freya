@@ -1,7 +1,8 @@
 #![cfg(target_os = "android")]
 
 use freya_components::theming::{
-    hooks::use_init_theme, themes::light_theme,
+    hooks::use_init_theme,
+    themes::light_theme,
 };
 use freya_core::{
     integration::*,
