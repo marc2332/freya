@@ -1725,3 +1725,120 @@ fn ordered_movements_first_to_last() {
         ]
     );
 }
+
+fn page_a(_: &()) -> Element {
+    label().text("Page A").into()
+}
+
+fn page_b(_: &()) -> Element {
+    label().text("Page B").into()
+}
+
+fn outlet(_: &()) -> Element {
+    label().text("Outlet").into()
+}
+
+/// Two keyed elements swap positions while the component inside one
+/// changes type. This triggers an addition whose parent is a move
+/// destination. The addition must be deferred until after the move.
+#[test]
+fn moved_element_with_child_component_type_change() {
+    fn app() -> Element {
+        let state = use_consume::<State<bool>>();
+
+        if state() {
+            rect()
+                .child(
+                    rect()
+                        .key("left")
+                        .child(from_fn_standalone_borrowed((), page_a)),
+                )
+                .child(
+                    rect()
+                        .key("right")
+                        .child(from_fn_standalone_borrowed((), outlet)),
+                )
+                .into()
+        } else {
+            rect()
+                .child(
+                    rect()
+                        .key("right")
+                        .child(from_fn_standalone_borrowed((), outlet)),
+                )
+                .child(
+                    rect()
+                        .key("left")
+                        .child(from_fn_standalone_borrowed((), page_b)),
+                )
+                .into()
+        }
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+    let mut state = runner.provide_root_context(|| State::create(true));
+
+    let mutations = runner.sync_and_update();
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+
+    state.set(false);
+    let mutations = runner.sync_and_update();
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+}
+
+/// Same as above but the component is nested deeper: the moved element
+/// is a grandparent of the added component.
+#[test]
+fn moved_element_with_deeply_nested_child_type_change() {
+    fn app() -> Element {
+        let state = use_consume::<State<bool>>();
+
+        if state() {
+            rect()
+                .child(
+                    rect()
+                        .key("left")
+                        .child(rect().child(from_fn_standalone_borrowed((), page_a))),
+                )
+                .child(
+                    rect()
+                        .key("right")
+                        .child(rect().child(from_fn_standalone_borrowed((), outlet))),
+                )
+                .into()
+        } else {
+            rect()
+                .child(
+                    rect()
+                        .key("right")
+                        .child(rect().child(from_fn_standalone_borrowed((), outlet))),
+                )
+                .child(
+                    rect()
+                        .key("left")
+                        .child(rect().child(from_fn_standalone_borrowed((), page_b))),
+                )
+                .into()
+        }
+    }
+
+    let mut runner = Runner::new(app);
+    let mut tree = Tree::default();
+    let mut state = runner.provide_root_context(|| State::create(true));
+
+    let mutations = runner.sync_and_update();
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+
+    state.set(false);
+    let mutations = runner.sync_and_update();
+    tree.apply_mutations(mutations);
+    tree.verify_tree_integrity();
+    assert_eq!(tree.elements.len(), runner.node_to_scope.len());
+}
