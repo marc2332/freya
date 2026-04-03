@@ -215,6 +215,8 @@ impl Component for ColorPicker {
             move |e: Event<PointerEventData>| {
                 dragging.set(DragTarget::Sv);
                 update_sv(e.global_location());
+                e.stop_propagation();
+                e.prevent_default();
             }
         };
 
@@ -223,12 +225,18 @@ impl Component for ColorPicker {
             move |e: Event<PointerEventData>| {
                 dragging.set(DragTarget::Hue);
                 update_hue(e.global_location());
+                e.stop_propagation();
+                e.prevent_default();
             }
         };
 
         let on_global_pointer_move = move |e: Event<PointerEventData>| match *dragging.read() {
-            DragTarget::Sv => update_sv(e.global_location()),
-            DragTarget::Hue => update_hue(e.global_location()),
+            DragTarget::Sv => {
+                update_sv(e.global_location());
+            }
+            DragTarget::Hue => {
+                update_hue(e.global_location());
+            }
             DragTarget::None => {}
         };
 
@@ -344,15 +352,18 @@ impl Component for ColorPicker {
                     )
             });
 
-        rect().horizontal().spacing(8.).child(preview).child(
-            rect()
-                .width(Size::px(0.))
-                .height(Size::px(0.))
-                .opacity(opacity)
-                .maybe(opacity > 0., |el| {
-                    el.child(rect().scale(scale).child(popup))
-                }),
-        )
+        rect()
+            .horizontal()
+            .spacing(8.)
+            .child(preview)
+            .maybe_child((opacity > 0.).then(|| {
+                rect()
+                    .layer(Layer::Overlay)
+                    .width(Size::px(0.))
+                    .height(Size::px(0.))
+                    .opacity(opacity)
+                    .child(rect().scale(scale).child(popup))
+            }))
     }
 
     fn render_key(&self) -> DiffKey {

@@ -76,6 +76,14 @@ impl PluginsManager {
             plugin.on_event(&mut event, handle.clone())
         }
     }
+
+    /// Compose the root element through all plugins' root components.
+    pub fn wrap_root(&self, mut root: Element) -> Element {
+        for plugin in self.plugins.borrow().values() {
+            root = plugin.root_component(root);
+        }
+        root
+    }
 }
 
 /// Event emitted to Plugins.
@@ -201,4 +209,10 @@ pub trait FreyaPlugin {
 
     /// React on events emitted by Freya.
     fn on_event(&mut self, event: &mut PluginEvent, handle: PluginHandle);
+
+    /// Wrap the root element with a custom component.
+    /// Called during window creation. The default implementation returns the element unchanged.
+    fn root_component(&self, root: Element) -> Element {
+        root
+    }
 }

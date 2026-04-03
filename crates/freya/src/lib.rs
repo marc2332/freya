@@ -328,5 +328,10 @@ pub mod performance {
     pub use freya_performance_plugin::*;
 }
 
+#[cfg(target_os = "android")]
+pub mod android {
+    pub use freya_android::*;
+}
+
 #[cfg(doc)]
 pub mod _docs;

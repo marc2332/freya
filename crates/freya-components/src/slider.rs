@@ -180,10 +180,9 @@ impl Component for Slider {
             clicking.set(false);
         };
 
-        let on_capture_global_pointer_move = move |e: Event<PointerEventData>| {
+        let on_global_pointer_move = move |e: Event<PointerEventData>| {
+            e.stop_propagation();
             if *clicking.peek() {
-                e.stop_propagation();
-                e.prevent_default();
                 let coordinates = e.global_location();
                 on_moved.call(calc_percentage(
                     coordinates.x - size.read().min_x() as f64,
@@ -273,7 +272,7 @@ impl Component for Slider {
             .maybe(self.enabled, |rect| {
                 rect.on_key_down(on_key_down)
                     .on_pointer_down(on_pointer_down)
-                    .on_capture_global_pointer_move(on_capture_global_pointer_move)
+                    .on_global_pointer_move(on_global_pointer_move)
                     .on_global_pointer_press(on_global_pointer_press)
             })
             .on_pointer_enter(on_pointer_enter)
