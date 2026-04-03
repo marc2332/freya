@@ -3,10 +3,11 @@ use std::time::Duration;
 use freya_components::{
     button::{
         Button,
+        ButtonLayoutThemePartialExt,
+        ButtonLayoutThemePreference,
         ButtonLayoutVariant,
     },
     get_theme,
-    theming::component_themes::ButtonLayoutThemePartialExt,
 };
 use freya_core::prelude::*;
 
@@ -80,12 +81,24 @@ impl Component for RippleButton {
         let mut button = self.button.clone();
 
         let theme_layout = match button.get_layout_variant() {
-            ButtonLayoutVariant::Normal => get_theme!(&button.get_theme_layout(), button_layout),
+            ButtonLayoutVariant::Normal => get_theme!(
+                &button.get_theme_layout(),
+                ButtonLayoutThemePreference,
+                "button_layout"
+            ),
             ButtonLayoutVariant::Compact => {
-                get_theme!(&button.get_theme_layout(), compact_button_layout)
+                get_theme!(
+                    &button.get_theme_layout(),
+                    ButtonLayoutThemePreference,
+                    "compact_button_layout"
+                )
             }
             ButtonLayoutVariant::Expanded => {
-                get_theme!(&button.get_theme_layout(), expanded_button_layout)
+                get_theme!(
+                    &button.get_theme_layout(),
+                    ButtonLayoutThemePreference,
+                    "expanded_button_layout"
+                )
             }
         };
 

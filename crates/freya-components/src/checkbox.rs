@@ -3,13 +3,21 @@ use freya_core::prelude::*;
 use torin::prelude::*;
 
 use crate::{
+    define_theme,
     get_theme,
     icons::tick::TickIcon,
-    theming::component_themes::{
-        CheckboxTheme,
-        CheckboxThemePartial,
-    },
 };
+
+define_theme! {
+    %[component]
+    pub Checkbox {
+        %[fields]
+        unselected_fill: Color,
+        selected_fill: Color,
+        selected_icon_fill: Color,
+        border_fill: Color,
+    }
+}
 
 /// Checkbox component.
 ///
@@ -103,7 +111,7 @@ impl Component for Checkbox {
             unselected_fill,
             selected_fill,
             selected_icon_fill,
-        } = get_theme!(&self.theme, checkbox);
+        } = get_theme!(&self.theme, CheckboxThemePreference, "checkbox");
 
         let animation = use_animation_with_dependencies(&self.selected, move |conf, selected| {
             conf.on_change(OnChange::Rerun);

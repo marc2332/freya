@@ -1,107 +1,60 @@
-use freya_core::prelude::*;
-use torin::{
-    gaps::Gaps,
-    size::Size,
+use std::{
+    any::Any,
+    fmt,
 };
 
-#[cfg(feature = "calendar")]
-use crate::calendar::Calendar;
-#[cfg(feature = "router")]
-use crate::link::Link;
-#[cfg(feature = "markdown")]
-use crate::markdown::MarkdownViewer;
-#[cfg(feature = "titlebar")]
-use crate::titlebar::TitlebarButton;
-use crate::{
-    accordion::Accordion,
-    button::Button,
-    card::Card,
-    checkbox::Checkbox,
-    chip::Chip,
-    color_picker::ColorPicker,
-    define_theme,
-    floating_tab::FloatingTab,
-    input::Input,
-    loader::CircularLoader,
-    menu::{
-        MenuContainer,
-        MenuItem,
-    },
-    popup::Popup,
-    progressbar::ProgressBar,
-    radio_item::RadioItem,
-    resizable_container::ResizableHandle,
-    scrollviews::ScrollBar,
-    segmented_button::{
-        ButtonSegment,
-        SegmentedButton,
-    },
-    select::Select,
-    sidebar::SideBarItem,
-    slider::Slider,
-    switch::Switch,
-    table::Table,
-    theming::themes::LIGHT_THEME,
-    tooltip::Tooltip,
+use freya_core::{
+    integration::FxHashMap,
+    prelude::*,
 };
 
-#[derive(Clone, Debug, PartialEq)]
+use crate::theming::themes::light_theme;
+
 pub struct Theme {
     pub name: &'static str,
     pub colors: ColorsSheet,
-    pub button_layout: ButtonLayoutThemePreference,
-    pub compact_button_layout: ButtonLayoutThemePreference,
-    pub expanded_button_layout: ButtonLayoutThemePreference,
-    pub button: ButtonColorsThemePreference,
-    pub filled_button: ButtonColorsThemePreference,
-    pub outline_button: ButtonColorsThemePreference,
-    pub flat_button: ButtonColorsThemePreference,
-    pub card_layout: CardLayoutThemePreference,
-    pub compact_card_layout: CardLayoutThemePreference,
-    pub filled_card: CardColorsThemePreference,
-    pub outline_card: CardColorsThemePreference,
-    pub accordion: AccordionThemePreference,
-    pub switch: SwitchColorsThemePreference,
-    pub switch_layout: SwitchLayoutThemePreference,
-    pub expanded_switch_layout: SwitchLayoutThemePreference,
-    pub scrollbar: ScrollBarThemePreference,
-    pub progressbar: ProgressBarThemePreference,
-    pub sidebar_item: SideBarItemThemePreference,
-    #[cfg(feature = "router")]
-    pub link: LinkThemePreference,
-    pub tooltip: TooltipThemePreference,
-    pub circular_loader: CircularLoaderThemePreference,
-    pub input_layout: InputLayoutThemePreference,
-    pub compact_input_layout: InputLayoutThemePreference,
-    pub expanded_input_layout: InputLayoutThemePreference,
-    pub input: InputColorsThemePreference,
-    pub filled_input: InputColorsThemePreference,
-    pub flat_input: InputColorsThemePreference,
-    pub radio: RadioItemThemePreference,
-    pub checkbox: CheckboxThemePreference,
-    pub resizable_handle: ResizableHandleThemePreference,
-    pub floating_tab: FloatingTabThemePreference,
-    pub slider: SliderThemePreference,
-    pub color_picker: ColorPickerThemePreference,
-    pub select: SelectThemePreference,
-    pub popup: PopupThemePreference,
-    pub table: TableThemePreference,
-    #[cfg(feature = "markdown")]
-    pub markdown_viewer: MarkdownViewerThemePreference,
-    pub chip: ChipThemePreference,
-    pub menu_item: MenuItemThemePreference,
-    pub menu_container: MenuContainerThemePreference,
-    pub button_segment: ButtonSegmentThemePreference,
-    pub segmented_button: SegmentedButtonThemePreference,
-    #[cfg(feature = "calendar")]
-    pub calendar: CalendarThemePreference,
-    #[cfg(feature = "titlebar")]
-    pub titlebar_button: TitlebarButtonThemePreference,
+    themes: FxHashMap<&'static str, Box<dyn Any>>,
+}
+
+impl Theme {
+    pub fn new(name: &'static str, colors: ColorsSheet) -> Self {
+        Self {
+            name,
+            colors,
+            themes: FxHashMap::default(),
+        }
+    }
+
+    /// Get a component theme by key.
+    pub fn get<T: 'static>(&self, key: &str) -> Option<&T> {
+        self.themes.get(key).and_then(|v| v.downcast_ref())
+    }
+
+    /// Set a component theme by key.
+    pub fn set<T: 'static>(&mut self, key: &'static str, val: T) {
+        self.themes.insert(key, Box::new(val));
+    }
+}
+
+impl fmt::Debug for Theme {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Theme")
+            .field("name", &self.name)
+            .field("colors", &self.colors)
+            .field("themes", &format!("({} entries)", self.themes.len()))
+            .finish()
+    }
+}
+
+impl PartialEq for Theme {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name && self.colors == other.colors
+    }
 }
 
 impl Default for Theme {
     fn default() -> Self {
-        LIGHT_THEME
+        light_theme()
     }
 }
 
@@ -148,437 +101,4 @@ pub struct ColorsSheet {
     // Utility
     pub overlay: Color,
     pub shadow: Color,
-}
-
-define_theme! {
-    for = Button;
-    theme_field = theme_layout;
-
-    %[component]
-    pub ButtonLayout {
-        %[fields]
-        margin: Gaps,
-        corner_radius: CornerRadius,
-        width: Size,
-        height: Size,
-        padding: Gaps,
-    }
-}
-
-define_theme! {
-    for = Button;
-    theme_field = theme_colors;
-
-    %[component]
-    pub ButtonColors {
-        %[fields]
-        background: Color,
-        hover_background: Color,
-        border_fill: Color,
-        focus_border_fill: Color,
-        color: Color,
-    }
-}
-
-define_theme! {
-    for = Card;
-    theme_field = theme_layout;
-
-    %[component]
-    pub CardLayout {
-        %[fields]
-        corner_radius: CornerRadius,
-        padding: Gaps,
-    }
-}
-
-define_theme! {
-    for = Card;
-    theme_field = theme_colors;
-
-    %[component]
-    pub CardColors {
-        %[fields]
-        background: Color,
-        hover_background: Color,
-        border_fill: Color,
-        color: Color,
-        shadow: Color,
-    }
-}
-
-define_theme! {
-    %[component]
-    pub Accordion {
-        %[fields]
-        color: Color,
-        background: Color,
-        border_fill: Color,
-    }
-}
-
-define_theme! {
-    for = Switch;
-    theme_field = theme_colors;
-
-    %[component]
-    pub SwitchColors {
-        %[fields]
-        background: Color,
-        thumb_background: Color,
-        toggled_background: Color,
-        toggled_thumb_background: Color,
-        focus_border_fill: Color,
-    }
-}
-
-define_theme! {
-    for = Switch;
-    theme_field = theme_layout;
-
-    %[component]
-    pub SwitchLayout {
-        %[fields]
-        margin: Gaps,
-        width: f32,
-        height: f32,
-        padding: f32,
-        thumb_size: f32,
-        toggled_thumb_size: f32,
-        pressed_thumb_size_offset: f32,
-        thumb_offset: f32,
-        toggled_thumb_offset: f32,
-    }
-}
-
-define_theme! {
-    %[component]
-    pub ScrollBar {
-        %[fields]
-        background: Color,
-        thumb_background: Color,
-        hover_thumb_background: Color,
-        active_thumb_background: Color,
-        size: f32,
-    }
-}
-
-define_theme! {
-    %[component]
-    pub ProgressBar {
-        %[fields]
-        color: Color,
-        background: Color,
-        progress_background: Color,
-        height: f32,
-    }
-}
-
-define_theme! {
-    %[component]
-    pub SideBarItem {
-        %[fields]
-        color: Color,
-        background: Color,
-        hover_background: Color,
-        active_background: Color,
-        corner_radius: CornerRadius,
-        margin: Gaps,
-        padding: Gaps,
-    }
-}
-
-#[cfg(feature = "router")]
-define_theme! {
-    %[component]
-    pub Link {
-        %[fields]
-        color: Color,
-    }
-}
-
-define_theme! {
-    %[component]
-    pub Tooltip {
-        %[fields]
-        color: Color,
-        background: Color,
-        border_fill: Color,
-        font_size: f32,
-    }
-}
-
-define_theme! {
-    %[component]
-    pub CircularLoader {
-        %[fields]
-        primary_color: Color,
-        inversed_color: Color,
-    }
-}
-
-define_theme! {
-    for = Input;
-    theme_field = theme_layout;
-
-    %[component]
-    pub InputLayout {
-        %[fields]
-        corner_radius: CornerRadius,
-        inner_margin: Gaps,
-    }
-}
-
-define_theme! {
-    for = Input;
-    theme_field = theme_colors;
-
-    %[component]
-    pub InputColors {
-        %[fields]
-        background: Color,
-        hover_background: Color,
-        border_fill: Color,
-        focus_border_fill: Color,
-        color: Color,
-        placeholder_color: Color,
-    }
-}
-
-define_theme! {
-    %[component]
-    pub RadioItem {
-        %[fields]
-        unselected_fill: Color,
-        selected_fill: Color,
-        border_fill: Color,
-    }
-}
-
-define_theme! {
-    %[component]
-    pub Checkbox {
-        %[fields]
-        unselected_fill: Color,
-        selected_fill: Color,
-        selected_icon_fill: Color,
-        border_fill: Color,
-    }
-}
-
-define_theme! {
-    %[component]
-    pub ResizableHandle {
-        %[fields]
-        background: Color,
-        hover_background: Color,
-        corner_radius: CornerRadius,
-    }
-}
-
-define_theme! {
-    %[component]
-    pub FloatingTab {
-        %[fields]
-        background: Color,
-        hover_background: Color,
-        width: Size,
-        height: Size,
-        padding: Gaps,
-        color: Color,
-        corner_radius: CornerRadius,
-    }
-}
-
-define_theme! {
-    %[component]
-    pub Slider {
-        %[fields]
-        background: Color,
-        thumb_background: Color,
-        thumb_inner_background: Color,
-        border_fill: Color,
-    }
-}
-
-define_theme! {
-    %[component]
-    pub ColorPicker {
-        %[fields]
-        background: Color,
-        color: Color,
-        border_fill: Color,
-    }
-}
-
-define_theme! {
-    %[component]
-    pub Select {
-        %[fields]
-        width: Size,
-        margin: Gaps,
-        select_background: Color,
-        background_button: Color,
-        hover_background: Color,
-        border_fill: Color,
-        focus_border_fill: Color,
-        arrow_fill: Color,
-        color: Color,
-    }
-}
-
-define_theme! {
-    %[component]
-    pub Popup {
-        %[fields]
-        background: Color,
-        color: Color,
-    }
-}
-
-define_theme! {
-    %[component]
-    pub Table {
-        %[fields]
-        background: Color,
-        arrow_fill: Color,
-        hover_row_background: Color,
-        row_background: Color,
-        divider_fill: Color,
-        corner_radius: CornerRadius,
-        color: Color,
-    }
-}
-
-#[cfg(feature = "markdown")]
-define_theme! {
-    %[component]
-    pub MarkdownViewer {
-        %[fields]
-        color: Color,
-        background_code: Color,
-        color_code: Color,
-        background_blockquote: Color,
-        border_blockquote: Color,
-        background_divider: Color,
-        heading_h1: f32,
-        heading_h2: f32,
-        heading_h3: f32,
-        heading_h4: f32,
-        heading_h5: f32,
-        heading_h6: f32,
-        paragraph_size: f32,
-        code_font_size: f32,
-        table_font_size: f32,
-    }
-}
-
-define_theme! {
-    %[component]
-    pub Chip {
-        %[fields]
-        background: Color,
-        hover_background: Color,
-        selected_background: Color,
-        border_fill: Color,
-        selected_border_fill: Color,
-        hover_border_fill: Color,
-        focus_border_fill: Color,
-        margin: f32,
-        corner_radius: CornerRadius,
-        width: Size,
-        height: Size,
-        padding: Gaps,
-        color: Color,
-        hover_color: Color,
-        selected_color: Color,
-        selected_icon_fill: Color,
-        hover_icon_fill: Color,
-    }
-}
-
-define_theme! {
-    %[component]
-    pub MenuContainer {
-        %[fields]
-        background: Color,
-        padding: Gaps,
-        shadow: Color,
-        border_fill: Color,
-        corner_radius: CornerRadius,
-    }
-}
-
-define_theme! {
-    %[component]
-    pub MenuItem {
-       %[fields]
-        background: Color,
-        hover_background: Color,
-        select_background: Color,
-        border_fill: Color,
-        select_border_fill: Color,
-        corner_radius: CornerRadius,
-        color: Color,
-    }
-}
-
-define_theme! {
-    %[component]
-    pub ButtonSegment {
-        %[fields]
-        background: Color,
-        hover_background: Color,
-        disabled_background: Color,
-        selected_background: Color,
-        focus_background: Color,
-        padding: Gaps,
-        selected_padding: Gaps,
-        width: Size,
-        height: Size,
-        color: Color,
-        selected_icon_fill: Color,
-    }
-}
-
-define_theme! {
-    %[component]
-    pub SegmentedButton {
-        %[fields]
-        background: Color,
-        border_fill: Color,
-        corner_radius: CornerRadius,
-    }
-}
-
-#[cfg(feature = "calendar")]
-define_theme! {
-    %[component]
-    pub Calendar {
-        %[fields]
-        background: Color,
-        day_background: Color,
-        day_hover_background: Color,
-        day_selected_background: Color,
-        color: Color,
-        day_other_month_color: Color,
-        header_color: Color,
-        corner_radius: CornerRadius,
-        padding: Gaps,
-        day_corner_radius: CornerRadius,
-        nav_button_hover_background: Color,
-    }
-}
-
-#[cfg(feature = "titlebar")]
-define_theme! {
-    %[component]
-    pub TitlebarButton {
-        %[fields]
-        background: Color,
-        hover_background: Color,
-        corner_radius: CornerRadius,
-        width: Size,
-        height: Size,
-    }
 }

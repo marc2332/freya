@@ -1,14 +1,29 @@
 use freya_core::prelude::*;
-use torin::size::Size;
+use torin::{
+    gaps::Gaps,
+    size::Size,
+};
 
 use crate::{
     activable_route_context::use_activable_route,
+    define_theme,
     get_theme,
-    theming::component_themes::{
-        SideBarItemTheme,
-        SideBarItemThemePartial,
-    },
 };
+
+define_theme! {
+    %[component]
+    pub SideBarItem {
+        %[fields]
+        color: Color,
+        background: Color,
+        hover_background: Color,
+        active_background: Color,
+        corner_radius: CornerRadius,
+        margin: Gaps,
+        padding: Gaps,
+    }
+}
+
 #[derive(Debug, Default, PartialEq, Clone, Copy)]
 pub enum SideBarItemStatus {
     /// Default state.
@@ -126,7 +141,7 @@ impl Component for SideBarItem {
             corner_radius,
             padding,
             color,
-        } = get_theme!(&self.theme, sidebar_item);
+        } = get_theme!(&self.theme, SideBarItemThemePreference, "sidebar_item");
         let mut status = use_state(SideBarItemStatus::default);
         let is_active = use_activable_route();
 

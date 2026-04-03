@@ -2,7 +2,10 @@ use std::time::Duration;
 
 use freya_components::{
     get_theme,
-    sidebar::SideBarItem,
+    sidebar::{
+        SideBarItem,
+        SideBarItemThemePreference,
+    },
 };
 use freya_core::prelude::*;
 use torin::size::Size;
@@ -80,7 +83,11 @@ impl Component for RippleSideBarItem {
     fn render(&self) -> impl IntoElement {
         let mut item = self.item.clone();
 
-        let theme = get_theme!(&item.get_theme(), sidebar_item);
+        let theme = get_theme!(
+            &item.get_theme(),
+            SideBarItemThemePreference,
+            "sidebar_item"
+        );
 
         let ripple = self
             .ripple

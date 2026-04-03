@@ -14,21 +14,39 @@ use chrono::{
 use freya_core::prelude::*;
 use torin::{
     content::Content,
+    gaps::Gaps,
     prelude::Alignment,
     size::Size,
 };
 
 use crate::{
-    button::Button,
-    get_theme,
-    icons::arrow::ArrowIcon,
-    theming::component_themes::{
+    button::{
+        Button,
         ButtonColorsThemePartialExt,
         ButtonLayoutThemePartialExt,
-        CalendarTheme,
-        CalendarThemePartial,
     },
+    define_theme,
+    get_theme,
+    icons::arrow::ArrowIcon,
 };
+
+define_theme! {
+    %[component]
+    pub Calendar {
+        %[fields]
+        background: Color,
+        day_background: Color,
+        day_hover_background: Color,
+        day_selected_background: Color,
+        color: Color,
+        day_other_month_color: Color,
+        header_color: Color,
+        corner_radius: CornerRadius,
+        padding: Gaps,
+        day_corner_radius: CornerRadius,
+        nav_button_hover_background: Color,
+    }
+}
 
 /// A simple date representation for the calendar.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -172,7 +190,7 @@ impl KeyExt for Calendar {
 
 impl Component for Calendar {
     fn render(&self) -> impl IntoElement {
-        let theme = get_theme!(&self.theme, calendar);
+        let theme = get_theme!(&self.theme, CalendarThemePreference, "calendar");
 
         let CalendarTheme {
             background,

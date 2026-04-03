@@ -9,8 +9,8 @@ fn main() {
 }
 
 fn app() -> impl IntoElement {
-    let mut theme = use_init_theme(|| LIGHT_THEME);
-    let is_light = *theme.read() == LIGHT_THEME;
+    let mut theme = use_init_theme(light_theme);
+    let is_light = theme.read().name == "light";
 
     rect()
         .theme_background()
@@ -21,9 +21,9 @@ fn app() -> impl IntoElement {
         .child("Switch theme")
         .child(Switch::new().toggled(is_light).on_toggle(move |_| {
             if is_light {
-                theme.set(DARK_THEME);
+                theme.set(dark_theme());
             } else {
-                theme.set(LIGHT_THEME);
+                theme.set(light_theme());
             }
         }))
 }

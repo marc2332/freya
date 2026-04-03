@@ -3,11 +3,27 @@ use freya_core::prelude::*;
 use torin::prelude::*;
 
 use crate::{
+    define_theme,
     get_theme,
     icons::arrow::ArrowIcon,
     menu::MenuGroup,
-    theming::component_themes::SelectThemePartial,
 };
+
+define_theme! {
+    %[component]
+    pub Select {
+        %[fields]
+        width: Size,
+        margin: Gaps,
+        select_background: Color,
+        background_button: Color,
+        hover_background: Color,
+        border_fill: Color,
+        focus_border_fill: Color,
+        arrow_fill: Color,
+        color: Color,
+    }
+}
 
 #[derive(Debug, Default, PartialEq, Clone, Copy)]
 pub enum SelectStatus {
@@ -104,7 +120,7 @@ impl Select {
 
 impl Component for Select {
     fn render(&self) -> impl IntoElement {
-        let theme = get_theme!(&self.theme, select);
+        let theme = get_theme!(&self.theme, SelectThemePreference, "select");
         let focus = use_focus();
         let focus_status = use_focus_status(focus);
         let mut status = use_state(SelectStatus::default);

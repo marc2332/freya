@@ -30,7 +30,7 @@ fn context_menu() -> Menu {
 }
 
 fn app() -> impl IntoElement {
-    use_init_root_theme(|| DARK_THEME);
+    use_init_root_theme(dark_theme);
 
     rect().theme_background().center().expanded().child(
         Button::new()

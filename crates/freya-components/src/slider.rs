@@ -2,9 +2,20 @@ use freya_core::prelude::*;
 use torin::prelude::*;
 
 use crate::{
+    define_theme,
     get_theme,
-    theming::component_themes::SliderThemePartial,
 };
+
+define_theme! {
+    %[component]
+    pub Slider {
+        %[fields]
+        background: Color,
+        thumb_background: Color,
+        thumb_inner_background: Color,
+        border_fill: Color,
+    }
+}
 
 /// Slider component.
 ///
@@ -88,7 +99,7 @@ impl Slider {
 
 impl Component for Slider {
     fn render(&self) -> impl IntoElement {
-        let theme = get_theme!(&self.theme, slider);
+        let theme = get_theme!(&self.theme, SliderThemePreference, "slider");
         let focus = use_focus();
         let focus_status = use_focus_status(focus);
         let mut hovering = use_state(|| false);

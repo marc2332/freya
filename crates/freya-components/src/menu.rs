@@ -11,12 +11,35 @@ use torin::{
 };
 
 use crate::{
+    define_theme,
     get_theme,
-    theming::component_themes::{
-        MenuContainerThemePartial,
-        MenuItemThemePartial,
-    },
 };
+
+define_theme! {
+    %[component]
+    pub MenuContainer {
+        %[fields]
+        background: Color,
+        padding: Gaps,
+        shadow: Color,
+        border_fill: Color,
+        corner_radius: CornerRadius,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub MenuItem {
+        %[fields]
+        background: Color,
+        hover_background: Color,
+        select_background: Color,
+        border_fill: Color,
+        select_border_fill: Color,
+        corner_radius: CornerRadius,
+        color: Color,
+    }
+}
 
 /// Floating menu container.
 ///
@@ -170,7 +193,7 @@ impl MenuContainer {
 impl ComponentOwned for MenuContainer {
     fn render(self) -> impl IntoElement {
         let focus = use_focus();
-        let theme = get_theme!(self.theme, menu_container);
+        let theme = get_theme!(self.theme, MenuContainerThemePreference, "menu_container");
         let mut measured = use_state(|| None::<(Area, f32, f32)>);
 
         use_provide_context(move || MenuGroup {
@@ -326,7 +349,7 @@ impl ChildrenExt for MenuItem {
 
 impl ComponentOwned for MenuItem {
     fn render(self) -> impl IntoElement {
-        let theme = get_theme!(self.theme, menu_item);
+        let theme = get_theme!(self.theme, MenuItemThemePreference, "menu_item");
         let mut hovering = use_state(|| false);
         let focus = use_focus();
         let focus_status = use_focus_status(focus);
