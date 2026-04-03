@@ -19,6 +19,11 @@ features = ["freya-core/mocked-engine"]
 
 [features]
 skia-engine = ["freya-core/skia-engine"]
+rust = ["dep:tree-sitter-rust"]
+md = ["dep:tree-sitter-md"]
+json = ["dep:tree-sitter-json"]
+toml = ["dep:tree-sitter-toml-ng"]
+sql = ["dep:tree-sitter-sequel"]
 
 [dependencies]
 freya-core = { workspace = true }
@@ -30,8 +35,9 @@ ropey = { workspace = true }
 
 smallvec = "1.15.1"
 tree-sitter = "0.26"
-tree-sitter-rust = "0.24"
-tree-sitter-md = "0.5"
-tree-sitter-json = "0.24"
-tree-sitter-toml-ng = "0.7"
+tree-sitter-rust = { version = "0.24", optional = true }
+tree-sitter-md = { version = "0.5", optional = true }
+tree-sitter-json = { version = "0.24", optional = true }
+tree-sitter-toml-ng = { version = "0.7", optional = true }
+tree-sitter-sequel = { version = "0.3.11", optional = true }
 rustc-hash = { workspace = true }
