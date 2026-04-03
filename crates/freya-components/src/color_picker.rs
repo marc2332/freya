@@ -23,13 +23,23 @@ use torin::prelude::{
 use crate::{
     button::Button,
     context_menu::ContextMenu,
+    define_theme,
     get_theme,
     menu::{
         Menu,
         MenuButton,
     },
-    theming::component_themes::ColorPickerThemePartial,
 };
+
+define_theme! {
+    %[component]
+    pub ColorPicker {
+        %[fields]
+        background: Color,
+        color: Color,
+        border_fill: Color,
+    }
+}
 
 /// HSV-based gradient color picker.
 ///
@@ -123,7 +133,7 @@ impl Component for ColorPicker {
                 open.toggle();
             });
 
-        let theme = get_theme!(&self.theme, color_picker);
+        let theme = get_theme!(&self.theme, ColorPickerThemePreference, "color_picker");
         let hue_bar = rect()
             .height(Size::px(18.))
             .width(Size::fill())

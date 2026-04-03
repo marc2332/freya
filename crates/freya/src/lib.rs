@@ -174,6 +174,7 @@ pub mod components {
         color_picker::*,
         context_menu::*,
         cursor_area::*,
+        define_theme,
         drag_drop::*,
         draggable_canvas::*,
         element_expansions::*,
@@ -203,7 +204,10 @@ pub mod components {
         switch::*,
         table::*,
         theming::{
-            component_themes::*,
+            component_themes::{
+                ColorsSheet,
+                Theme,
+            },
             extensions::*,
             hooks::*,
             macros::Preference,

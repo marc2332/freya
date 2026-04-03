@@ -76,6 +76,7 @@ pub use unic_langid;
 pub mod prelude {
     pub use unic_langid::{
         LanguageIdentifier,
+        LanguageIdentifierError,
         lang,
         langid,
     };

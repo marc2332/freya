@@ -32,9 +32,16 @@ impl Display for ParseRouteError {
     }
 }
 
-/// An error that can occur when navigating.
+/// An error that can occur when navigating to an external URL.
 #[derive(Debug, Clone)]
 pub struct ExternalNavigationFailure(pub String);
+
+impl Error for ExternalNavigationFailure {}
+impl Display for ExternalNavigationFailure {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "External navigation failed: {}", self.0)
+    }
+}
 
 struct RouterContextInner {
     subscribers: Rc<RefCell<FxHashSet<ReactiveContext>>>,
@@ -59,12 +66,12 @@ impl RouterContextInner {
         }
     }
 
-    fn external(&mut self, external: String) -> Option<ExternalNavigationFailure> {
+    fn external(&mut self, external: String) -> Result<(), ExternalNavigationFailure> {
         let failure = ExternalNavigationFailure(external);
 
         self.update_subscribers();
 
-        Some(failure)
+        Err(failure)
     }
 }
 
@@ -179,7 +186,10 @@ impl RouterContext {
     /// Push a new location.
     ///
     /// The previous location will be available to go back to.
-    pub fn push(&self, target: impl Into<NavigationTarget>) -> Option<ExternalNavigationFailure> {
+    pub fn push(
+        &self,
+        target: impl Into<NavigationTarget>,
+    ) -> Result<(), ExternalNavigationFailure> {
         let target = target.into();
         {
             let mut write = self.inner.write_unchecked();
@@ -190,7 +200,7 @@ impl RouterContext {
         }
 
         self.change_route();
-        None
+        Ok(())
     }
 
     /// Replace the current location.
@@ -199,7 +209,7 @@ impl RouterContext {
     pub fn replace(
         &self,
         target: impl Into<NavigationTarget>,
-    ) -> Option<ExternalNavigationFailure> {
+    ) -> Result<(), ExternalNavigationFailure> {
         let target = target.into();
         {
             let mut write = self.inner.write_unchecked();
@@ -210,7 +220,7 @@ impl RouterContext {
         }
 
         self.change_route();
-        None
+        Ok(())
     }
 
     /// The route that is currently active.
@@ -297,7 +307,7 @@ where
     pub fn push(
         &self,
         target: impl Into<NavigationTarget<R>>,
-    ) -> Option<ExternalNavigationFailure> {
+    ) -> Result<(), ExternalNavigationFailure> {
         self.inner.push(target.into())
     }
 
@@ -307,7 +317,7 @@ where
     pub fn replace(
         &self,
         target: impl Into<NavigationTarget<R>>,
-    ) -> Option<ExternalNavigationFailure> {
+    ) -> Result<(), ExternalNavigationFailure> {
         self.inner.replace(target.into())
     }
 

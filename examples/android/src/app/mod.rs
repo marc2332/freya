@@ -56,7 +56,7 @@ struct AppTopBar;
 
 impl Component for AppTopBar {
     fn render(&self) -> impl IntoElement {
-        use_init_root_theme(|| LIGHT_THEME);
+        use_init_theme(light_theme);
 
         NativeRouter::new().child(AnimatedRouter::<Route>::new(
             rect()

@@ -20,12 +20,20 @@ use crate::{
         AttachedPosition,
     },
     context_menu::ContextMenu,
+    define_theme,
     get_theme,
-    theming::component_themes::{
-        TooltipTheme,
-        TooltipThemePartial,
-    },
 };
+
+define_theme! {
+    %[component]
+    pub Tooltip {
+        %[fields]
+        color: Color,
+        background: Color,
+        border_fill: Color,
+        font_size: f32,
+    }
+}
 
 /// Tooltip component.
 ///
@@ -75,7 +83,7 @@ impl Tooltip {
 
 impl Component for Tooltip {
     fn render(&self) -> impl IntoElement {
-        let theme = get_theme!(&self.theme, tooltip);
+        let theme = get_theme!(&self.theme, TooltipThemePreference, "tooltip");
         let TooltipTheme {
             background,
             color,

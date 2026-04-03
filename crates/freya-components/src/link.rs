@@ -5,13 +5,21 @@ use freya_router::prelude::{
 };
 
 use crate::{
+    define_theme,
     get_theme,
-    theming::component_themes::LinkThemePartial,
     tooltip::{
         Tooltip,
         TooltipContainer,
     },
 };
+
+define_theme! {
+    %[component]
+    pub Link {
+        %[fields]
+        color: Color,
+    }
+}
 
 /// Tooltip configuration for the [`Link`] component.
 #[derive(Clone, PartialEq)]
@@ -72,7 +80,7 @@ impl Link {
 
 impl Component for Link {
     fn render(&self) -> impl IntoElement {
-        let theme = get_theme!(&self.theme, link);
+        let theme = get_theme!(&self.theme, LinkThemePreference, "link");
         let mut is_hovering = use_state(|| false);
 
         let url = if let NavigationTarget::External(ref url) = self.to {
@@ -98,7 +106,7 @@ impl Component for Link {
                 if let Some(url) = &url {
                     let _ = open::that(url);
                 } else {
-                    RouterContext::get().push(to.clone());
+                    let _ = RouterContext::get().push(to.clone());
                 }
             }
         };

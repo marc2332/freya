@@ -1,13 +1,37 @@
 use freya_core::prelude::*;
+use torin::gaps::Gaps;
 
 use crate::{
+    define_theme,
     get_theme,
-    theming::component_themes::{
-        CardColorsThemePartial,
-        CardLayoutThemePartial,
-        CardLayoutThemePartialExt,
-    },
 };
+
+define_theme! {
+    for = Card;
+    theme_field = theme_layout;
+
+    %[component]
+    pub CardLayout {
+        %[fields]
+        corner_radius: CornerRadius,
+        padding: Gaps,
+    }
+}
+
+define_theme! {
+    for = Card;
+    theme_field = theme_colors;
+
+    %[component]
+    pub CardColors {
+        %[fields]
+        background: Color,
+        hover_background: Color,
+        border_fill: Color,
+        color: Color,
+        shadow: Color,
+    }
+}
 
 /// Style variants for the Card component.
 #[derive(Clone, PartialEq)]
@@ -191,12 +215,24 @@ impl Component for Card {
         });
 
         let theme_colors = match self.style_variant {
-            CardStyleVariant::Filled => get_theme!(&self.theme_colors, filled_card),
-            CardStyleVariant::Outline => get_theme!(&self.theme_colors, outline_card),
+            CardStyleVariant::Filled => {
+                get_theme!(&self.theme_colors, CardColorsThemePreference, "filled_card")
+            }
+            CardStyleVariant::Outline => get_theme!(
+                &self.theme_colors,
+                CardColorsThemePreference,
+                "outline_card"
+            ),
         };
         let theme_layout = match self.layout_variant {
-            CardLayoutVariant::Normal => get_theme!(&self.theme_layout, card_layout),
-            CardLayoutVariant::Compact => get_theme!(&self.theme_layout, compact_card_layout),
+            CardLayoutVariant::Normal => {
+                get_theme!(&self.theme_layout, CardLayoutThemePreference, "card_layout")
+            }
+            CardLayoutVariant::Compact => get_theme!(
+                &self.theme_layout,
+                CardLayoutThemePreference,
+                "compact_card_layout"
+            ),
         };
 
         let border = if focus_status() == FocusStatus::Keyboard {

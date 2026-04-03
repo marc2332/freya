@@ -9,13 +9,25 @@ use torin::{
 };
 
 use crate::{
+    define_theme,
     get_theme,
     scrollviews::{
         ScrollThumb,
         shared::Axis,
     },
-    theming::component_themes::ScrollBarThemePartial,
 };
+
+define_theme! {
+    %[component]
+    pub ScrollBar {
+        %[fields]
+        background: Color,
+        thumb_background: Color,
+        hover_thumb_background: Color,
+        active_thumb_background: Color,
+        size: f32,
+    }
+}
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 enum ScrollBarState {
@@ -35,7 +47,7 @@ pub struct ScrollBar {
 
 impl ComponentOwned for ScrollBar {
     fn render(self) -> impl IntoElement {
-        let scrollbar_theme = get_theme!(&self.theme, scrollbar);
+        let scrollbar_theme = get_theme!(&self.theme, ScrollBarThemePreference, "scrollbar");
 
         let mut state = use_state(|| ScrollBarState::Idle);
 

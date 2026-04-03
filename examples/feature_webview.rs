@@ -24,7 +24,7 @@ struct Tab {
 }
 
 fn app() -> impl IntoElement {
-    use_init_root_theme(|| DARK_THEME);
+    use_init_root_theme(dark_theme);
     let mut tabs = use_state(|| {
         vec![Tab {
             id: WebViewId::new(),

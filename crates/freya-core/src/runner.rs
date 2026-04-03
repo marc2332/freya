@@ -948,6 +948,68 @@ impl Runner {
         }
     }
 
+    fn process_addition(
+        &mut self,
+        scope: &Rc<RefCell<Scope>>,
+        added: &[u32],
+        path_element: &PathElement,
+        mutations: &mut Mutations,
+        parents_to_resync_scopes: &mut FxHashSet<Box<[u32]>>,
+    ) {
+        let (parent_node_id, index_inside_parent) = if added == [0] {
+            let parent_id = scope.borrow().parent_id;
+            let scope_id = scope.borrow().id;
+            let parent_node_id = scope.borrow().parent_node_id_in_parent;
+            self.find_scope_root_parent_info(parent_id, parent_node_id, scope_id)
+        } else {
+            parents_to_resync_scopes.insert(Box::from(&added[..added.len() - 1]));
+            (
+                scope
+                    .borrow()
+                    .nodes
+                    .get(&added[..added.len() - 1])
+                    .unwrap()
+                    .node_id,
+                added[added.len() - 1],
+            )
+        };
+
+        self.node_id_counter += 1;
+
+        path_element.with_element(added, |element| match element {
+            PathElement::Component { .. } => {
+                self.scope_id_counter += 1;
+                let scope_id = self.scope_id_counter;
+
+                scope.borrow_mut().nodes.insert(
+                    added,
+                    PathNode {
+                        node_id: self.node_id_counter,
+                        scope_id: Some(scope_id),
+                    },
+                );
+            }
+            PathElement::Element { element, .. } => {
+                mutations.added.push(MutationAdd {
+                    node_id: self.node_id_counter,
+                    parent_id: parent_node_id,
+                    index: index_inside_parent,
+                    element: element.clone(),
+                });
+
+                self.node_to_scope
+                    .insert(self.node_id_counter, scope.borrow().id);
+                scope.borrow_mut().nodes.insert(
+                    added,
+                    PathNode {
+                        node_id: self.node_id_counter,
+                        scope_id: None,
+                    },
+                );
+            }
+        });
+    }
+
     #[cfg_attr(feature = "hotpath", hotpath::measure)]
     fn apply_diff(
         &mut self,
@@ -1166,6 +1228,11 @@ impl Runner {
         // ]
         //
         // This way, no addition offsets the next additions in line.
+        // Additions whose parent is a move destination must be deferred until
+        // after moves are applied, because the nodes graph still has old-tree
+        // layout and the parent element hasn't been repositioned yet.
+        let mut deferred_adds = Vec::new();
+
         for added in diff
             .added
             .iter()
@@ -1180,59 +1247,20 @@ impl Runner {
             })
             .rev()
         {
-            let (parent_node_id, index_inside_parent) = if added.as_ref() == [0] {
-                let parent_id = scope.borrow().parent_id;
-                let scope_id = scope.borrow().id;
-                let parent_node_id = scope.borrow().parent_node_id_in_parent;
-                self.find_scope_root_parent_info(parent_id, parent_node_id, scope_id)
-            } else {
-                // Only do it for non-scope-roots because the root is is always in the same position therefore it doesnt make sense to resync from its parent
-                parents_to_resync_scopes.insert(Box::from(&added[..added.len() - 1]));
-                (
-                    scope
-                        .borrow()
-                        .nodes
-                        .get(&added[..added.len() - 1])
-                        .unwrap()
-                        .node_id,
-                    added[added.len() - 1],
-                )
-            };
+            let parent = &added[..added.len() - 1];
+            let has_moved_ancestor = resolve_old_path(parent, &diff.moved) != *parent;
+            if has_moved_ancestor {
+                deferred_adds.push(added.clone());
+                continue;
+            }
 
-            self.node_id_counter += 1;
-
-            path_element.with_element(added, |element| match element {
-                PathElement::Component { .. } => {
-                    self.scope_id_counter += 1;
-                    let scope_id = self.scope_id_counter;
-
-                    scope.borrow_mut().nodes.insert(
-                        added,
-                        PathNode {
-                            node_id: self.node_id_counter,
-                            scope_id: Some(scope_id),
-                        },
-                    );
-                }
-                PathElement::Element { element, .. } => {
-                    mutations.added.push(MutationAdd {
-                        node_id: self.node_id_counter,
-                        parent_id: parent_node_id,
-                        index: index_inside_parent,
-                        element: element.clone(),
-                    });
-
-                    self.node_to_scope
-                        .insert(self.node_id_counter, scope.borrow().id);
-                    scope.borrow_mut().nodes.insert(
-                        added,
-                        PathNode {
-                            node_id: self.node_id_counter,
-                            scope_id: None,
-                        },
-                    );
-                }
-            });
+            self.process_addition(
+                scope,
+                added,
+                path_element,
+                mutations,
+                &mut parents_to_resync_scopes,
+            );
         }
 
         for (parent, movements) in diff.moved.into_iter().sorted_by(|(a, _), (b, _)| {
@@ -1294,6 +1322,17 @@ impl Runner {
                         .push(MutationMove { index: to, node_id });
                 }
             }
+        }
+
+        // Process deferred additions now that moves have repositioned parents
+        for added in &deferred_adds {
+            self.process_addition(
+                scope,
+                added,
+                path_element,
+                mutations,
+                &mut parents_to_resync_scopes,
+            );
         }
 
         for (modified, flags) in diff.modified {

@@ -1,16 +1,42 @@
 use freya_core::prelude::*;
-use torin::size::Size;
+use torin::{
+    gaps::Gaps,
+    size::Size,
+};
 
 use crate::{
+    define_theme,
     get_theme,
     icons::tick::TickIcon,
-    theming::component_themes::{
-        ButtonSegmentTheme,
-        ButtonSegmentThemePartial,
-        SegmentedButtonTheme,
-        SegmentedButtonThemePartial,
-    },
 };
+
+define_theme! {
+    %[component]
+    pub ButtonSegment {
+        %[fields]
+        background: Color,
+        hover_background: Color,
+        disabled_background: Color,
+        selected_background: Color,
+        focus_background: Color,
+        padding: Gaps,
+        selected_padding: Gaps,
+        width: Size,
+        height: Size,
+        color: Color,
+        selected_icon_fill: Color,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub SegmentedButton {
+        %[fields]
+        background: Color,
+        border_fill: Color,
+        corner_radius: CornerRadius,
+    }
+}
 
 /// Identifies the current status of the [`ButtonSegment`]s.
 #[derive(Debug, Default, PartialEq, Clone, Copy)]
@@ -121,7 +147,7 @@ impl KeyExt for ButtonSegment {
 
 impl Component for ButtonSegment {
     fn render(&self) -> impl IntoElement {
-        let theme = get_theme!(&self.theme, button_segment);
+        let theme = get_theme!(&self.theme, ButtonSegmentThemePreference, "button_segment");
         let mut status = use_state(|| ButtonSegmentStatus::Idle);
         let focus = use_focus();
         let focus_status = use_focus_status(focus);
@@ -296,7 +322,11 @@ impl KeyExt for SegmentedButton {
 
 impl Component for SegmentedButton {
     fn render(&self) -> impl IntoElement {
-        let theme = get_theme!(&self.theme, segmented_button);
+        let theme = get_theme!(
+            &self.theme,
+            SegmentedButtonThemePreference,
+            "segmented_button"
+        );
 
         let SegmentedButtonTheme {
             background,
