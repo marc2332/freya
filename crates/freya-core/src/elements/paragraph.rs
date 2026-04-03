@@ -288,7 +288,8 @@ impl ElementExt for ParagraphElement {
                 }
 
                 if let Some(line_height) = self.line_height {
-                    text_style.set_height_override(true).set_height(line_height);
+                    text_style.set_height_override(true);
+                    text_style.set_height(line_height);
                 }
 
                 for text_shadow in context.text_style_state.text_shadows.iter() {
@@ -328,6 +329,10 @@ impl ElementExt for ParagraphElement {
                         text_style_state.font_slant.into(),
                     ));
                     text_style.set_decoration_type(text_style_state.text_decoration.into());
+                    if let Some(line_height) = self.line_height {
+                        text_style.set_height_override(true);
+                        text_style.set_height(line_height);
+                    }
                     paragraph_builder.push_style(&text_style);
                     paragraph_builder.add_text(&span.text);
                 }
