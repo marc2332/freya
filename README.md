@@ -198,7 +198,7 @@ Enable with the `code-editor` feature.
 
 ```rust
 fn app() -> impl IntoElement {
-    use_init_theme(|| DARK_THEME);
+    use_init_theme(dark_theme);
     let focus = use_focus();
     let editor = use_state(|| {
         let path = PathBuf::from("./crates/freya-code-editor/src/editor_ui.rs");
