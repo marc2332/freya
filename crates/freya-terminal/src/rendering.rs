@@ -77,13 +77,22 @@ impl TextRenderer<'_> {
         }
     }
 
-    pub fn render_text(&mut self, rows: &[Vec<vt100::Cell>], area_min_y: f32, area_max_y: f32) {
+    pub fn render_text(
+        &mut self,
+        rows: &[Vec<vt100::Cell>],
+        area_min_y: f32,
+        area_max_y: f32,
+        mut pre_row: impl FnMut(&[vt100::Cell], f32, &Canvas, &mut Paint),
+        mut post_row: impl FnMut(usize, &[vt100::Cell], f32, &Canvas, &mut Paint),
+    ) {
         let mut y = area_min_y;
 
-        for row in rows {
+        for (row_idx, row) in rows.iter().enumerate() {
             if y + self.line_height > area_max_y {
                 break;
             }
+
+            pre_row(row, y, self.canvas, self.paint);
 
             let mut hasher = FxHasher::default();
             let mut needs_fallback = false;
@@ -122,6 +131,8 @@ impl TextRenderer<'_> {
             } else {
                 self.render_textblob(row, text_y, cache_key);
             }
+
+            post_row(row_idx, row, y, self.canvas, self.paint);
 
             y += self.line_height;
         }
