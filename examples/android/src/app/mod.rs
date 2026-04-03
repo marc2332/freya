@@ -13,7 +13,7 @@ pub fn app() -> impl IntoElement {
     Router::<Route>::new(RouterConfig::default)
 }
 
-#[derive(Routable, Clone, PartialEq)]
+#[derive(Routable, Clone, PartialEq, Hash)]
 #[rustfmt::skip]
 pub enum Route {
     #[layout(AppTopBar)]
@@ -113,8 +113,14 @@ fn tab(route: Route, label: &'static str, icon: fn() -> Bytes) -> ActivableRoute
     .exact(true)
 }
 
-fn animated_page(scale: f32, corner_radius: f32, content: impl Into<Element>) -> Rect {
+fn animated_page(
+    key: impl std::hash::Hash,
+    scale: f32,
+    corner_radius: f32,
+    content: impl Into<Element>,
+) -> Rect {
     rect()
+        .key(key)
         .width(Size::percent(100.))
         .height(Size::percent(100.))
         .center()
@@ -126,19 +132,24 @@ fn animated_page(scale: f32, corner_radius: f32, content: impl Into<Element>) ->
 
 #[derive(Clone, PartialEq)]
 struct FromRouteToCurrent {
-    from: Element,
-    left_to_right: bool,
+    from: Option<(Route, Element, bool)>,
+    to: Route,
     area: State<Area>,
 }
 
 impl Component for FromRouteToCurrent {
     fn render(&self) -> impl IntoElement {
         let mut animated_router = use_animated_router::<Route>();
+        let left_to_right = self.from.as_ref().map(|v| v.2).unwrap_or_default();
+        let is_transitioning = self.from.is_some();
         let animations = use_animation_with_dependencies(
-            &(self.left_to_right, self.from.clone()),
-            move |conf, (left_to_right, _)| {
+            &(left_to_right, is_transitioning, left_to_right),
+            move |conf, (left_to_right, is_transitioning, _)| {
                 conf.on_change(OnChange::Rerun);
-                conf.on_creation(OnCreation::Run);
+
+                if *is_transitioning {
+                    conf.on_creation(OnCreation::Run);
+                }
 
                 let (start, end) = if *left_to_right { (1., 0.) } else { (0., 1.) };
                 (
@@ -169,28 +180,43 @@ impl Component for FromRouteToCurrent {
         });
 
         let (offset, scale_a, scale_b, corner_radius) = animations.get().value();
-        let (scale_out, scale_in) = if self.left_to_right {
-            (scale_a, scale_b)
-        } else {
-            (scale_b, scale_a)
-        };
 
         let width = self.area.read().width();
         let offset = width - (offset * width);
 
         let to = Outlet::<Route>::new().into_element();
-        let (left, right) = if self.left_to_right {
-            (self.from.clone(), to)
-        } else {
-            (to, self.from.clone())
-        };
 
-        rect()
-            .expanded()
-            .offset_x(-offset)
-            .horizontal()
-            .child(animated_page(scale_out, corner_radius, left))
-            .child(animated_page(scale_in, corner_radius, right))
+        if let Some((from_route, from, left_to_right)) = self.from.clone() {
+            let to_route = self.to.clone();
+            let (left, right) = if left_to_right {
+                (from, to)
+            } else {
+                (to, from)
+            };
+            let (scale_out, scale_in) = if left_to_right {
+                (scale_a, scale_b)
+            } else {
+                (scale_b, scale_a)
+            };
+            let (key_left, key_right) = if left_to_right {
+                (from_route, to_route)
+            } else {
+                (to_route, from_route)
+            };
+            rect()
+                .expanded()
+                .offset_x(-offset)
+                .horizontal()
+                .child(animated_page(key_left, scale_out, corner_radius, left))
+                .child(animated_page(key_right, scale_in, corner_radius, right))
+        } else {
+            rect().expanded().horizontal().child(animated_page(
+                self.to.clone(),
+                1.,
+                corner_radius,
+                to,
+            ))
+        }
     }
 }
 
@@ -200,36 +226,21 @@ struct AnimatedOutlet;
 impl Component for AnimatedOutlet {
     fn render(&self) -> impl IntoElement {
         let mut area = use_state(Area::default);
-        let mut animated_router = use_animated_router();
-        let involves_scroll = matches!(
-            &*animated_router.read(),
-            AnimatedRouterContext::FromTo(from, to)
-                if *from == Route::ScrollViewDemo || *to == Route::ScrollViewDemo
-        );
+        let animated_router = use_animated_router();
 
-        let from_route = if involves_scroll {
-            animated_router.write().settle();
-            None
-        } else {
-            match &*animated_router.read() {
-                AnimatedRouterContext::FromTo(from, to) => {
-                    let left_to_right = route_index(to) > route_index(from);
-                    Some((route_element(from), left_to_right))
-                }
-                _ => None,
+        let (from, to) = match &*animated_router.read() {
+            AnimatedRouterContext::FromTo(from, to) => {
+                let left_to_right = route_index(to) > route_index(from);
+                (
+                    Some((from.clone(), route_element(from), left_to_right)),
+                    to.clone(),
+                )
             }
+            AnimatedRouterContext::In(route) => (None, route.clone()),
         };
 
         rect()
             .on_sized(move |e: Event<SizedEventData>| area.set(e.area))
-            .child(match from_route {
-                Some((from, left_to_right)) => FromRouteToCurrent {
-                    left_to_right,
-                    from,
-                    area,
-                }
-                .into_element(),
-                None => animated_page(1., 0., Outlet::<Route>::new()).into_element(),
-            })
+            .child(FromRouteToCurrent { from, to, area })
     }
 }
