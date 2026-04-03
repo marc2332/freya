@@ -92,6 +92,7 @@ where
     }
 
     /// Read the slice value and subscribe to changes.
+    #[track_caller]
     #[allow(invalid_reference_casting)]
     pub fn read(&'_ self) -> ReadRef<'_, SliceValue> {
         self.subscribe_if_not();
@@ -99,6 +100,7 @@ where
     }
 
     /// Read the slice value and subscribe to changes, with 'static lifetime.
+    #[track_caller]
     #[allow(invalid_reference_casting)]
     pub fn read_unchecked(&'_ self) -> ReadRef<'static, SliceValue> {
         self.subscribe_if_not();
@@ -106,12 +108,14 @@ where
     }
 
     /// Read the slice value without subscribing.
+    #[track_caller]
     #[allow(invalid_reference_casting)]
     pub fn peek(&'_ self) -> ReadRef<'_, SliceValue> {
         self.peek_unchecked()
     }
 
     /// Read the slice value without subscribing, with 'static lifetime.
+    #[track_caller]
     #[allow(invalid_reference_casting)]
     pub fn peek_unchecked(&'_ self) -> ReadRef<'static, SliceValue> {
         let inner = self.station.peek_unchecked();
@@ -199,6 +203,7 @@ where
     }
 
     /// Read the slice value and subscribe to changes.
+    #[track_caller]
     #[allow(invalid_reference_casting)]
     pub fn read(&'_ self) -> ReadRef<'_, SliceValue> {
         self.subscribe_if_not();
@@ -206,6 +211,7 @@ where
     }
 
     /// Read the slice value and subscribe to changes, with 'static lifetime.
+    #[track_caller]
     #[allow(invalid_reference_casting)]
     pub fn read_unchecked(&'_ self) -> ReadRef<'static, SliceValue> {
         self.subscribe_if_not();
@@ -213,12 +219,14 @@ where
     }
 
     /// Read the slice value without subscribing.
+    #[track_caller]
     #[allow(invalid_reference_casting)]
     pub fn peek(&'_ self) -> ReadRef<'_, SliceValue> {
         self.peek_unchecked()
     }
 
     /// Read the slice value without subscribing, with 'static lifetime.
+    #[track_caller]
     #[allow(invalid_reference_casting)]
     pub fn peek_unchecked(&'_ self) -> ReadRef<'static, SliceValue> {
         let inner = self.station.peek_unchecked();
@@ -230,12 +238,14 @@ where
     }
 
     /// Write the slice value, with 'static lifetime.
+    #[track_caller]
     pub fn write_unchecked(&'_ self) -> WriteRef<'static, SliceValue> {
         self.notify();
         self.write_silently()
     }
 
     /// Write the slice value without notifying.
+    #[track_caller]
     pub fn write_silently(&'_ self) -> WriteRef<'static, SliceValue> {
         let value = self.station.value.write_unchecked();
         let selector = self.selector.clone();
@@ -252,6 +262,7 @@ where
     }
 
     /// Write the slice value.
+    #[track_caller]
     pub fn write(&'_ mut self) -> WriteRef<'_, SliceValue> {
         self.write_unchecked()
     }
