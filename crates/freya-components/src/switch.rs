@@ -190,7 +190,7 @@ impl Component for Switch {
             &(theme_colors.clone(), theme_layout.clone(), toggled),
             |conf, (switch_colors, switch_layout, toggled)| {
                 conf.on_creation(OnCreation::Finish);
-                conf.on_change(OnChange::Finish);
+                conf.on_change(OnChange::Rerun);
 
                 let value = (
                     AnimNum::new(
