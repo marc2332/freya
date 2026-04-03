@@ -268,6 +268,22 @@ where
     }
 }
 
+impl<Value, SliceValue, Channel> WritableUtils<SliceValue>
+    for RadioSliceMut<Value, SliceValue, Channel>
+where
+    Channel: RadioChannel<Value>,
+    Value: 'static,
+    SliceValue: 'static,
+{
+    fn write_state(&mut self) -> WriteRef<'static, SliceValue> {
+        self.write_unchecked()
+    }
+
+    fn peek_state(&self) -> ReadRef<'static, SliceValue> {
+        self.peek_unchecked()
+    }
+}
+
 impl<Value, Channel> Radio<Value, Channel>
 where
     Channel: RadioChannel<Value>,
