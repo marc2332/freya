@@ -1,7 +1,4 @@
-use std::{
-    cell::RefCell,
-    rc::Rc,
-};
+use std::{cell::RefCell, rc::Rc};
 
 pub struct Callback<A, R>(Rc<RefCell<dyn FnMut(A) -> R>>);
 

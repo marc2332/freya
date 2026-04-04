@@ -1,0 +1,32 @@
+[package]
+name = "freya-hotreload"
+version = "0.4.0-rc.16"
+description = "All related to hotreload on freya"
+edition = "2024"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../README.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+
+[lints]
+workspace = true
+
+[package.metadata.docs.rs]
+features = ["serve"]
+
+[dependencies]
+# Core/async
+futures-util = { workspace = true }
+futures-channel = { workspace = true }
+
+# Hotreload
+serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+subsecond = "0.7.4"
+subsecond-types = "0.7.4"
+
+[features]
+serve = ["serde"]
+serde = ["dep:serde", "serde_json"]
+devtools = ["serde"]

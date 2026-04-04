@@ -60,8 +60,7 @@ paste = "1.0.15"
 
 # Devtools
 serde = { version = "1", optional = true }
-subsecond = { version = "0.7.4", optional = true }
-dioxus-devtools = { version = "0.7.4", optional = true }
+freya-hotreload = { path = "../freya-hotreload", features = ["serde"] }
 
 # Cursor styling
 cursor-icon = "1.2.0"
@@ -74,7 +73,7 @@ freya-engine = { path = "../freya-engine", features = ["skia-engine"] }
 
 [features]
 hotpath = ["hotpath/hotpath", "ragnarok/hotpath"]
-hotreload = ["dep:subsecond", "dep:dioxus-devtools"]
+hotreload = ["freya-hotreload/devtools"]
 debug-integrity = []
 devtools = ["serde"]
 serde = ["dep:serde"]
