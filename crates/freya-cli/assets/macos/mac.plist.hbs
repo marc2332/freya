@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+	<dict>
+		<key>CFBundleDisplayName</key>
+		<string>{{ display_name }}</string>
+
+		<key>CFBundleExecutable</key>
+		<string>{{ executable_name }}</string>
+
+		<key>CFBundleIdentifier</key>
+		<string>{{ bundle_identifier }}</string>
+
+		<key>CFBundleName</key>
+		<string>{{ bundle_name }}</string>
+
+		<key>CFBundleIconFile</key>
+		<string>icon.icns</string>
+
+		<key>CFBundleInfoDictionaryVersion</key>
+		<string>6.0</string>
+
+		<key>CFBundlePackageType</key>
+		<string>APPL</string>
+
+		<key>CFBundleShortVersionString</key>
+		<string>{{ version }}</string>
+
+		<key>CFBundleVersion</key>
+		<string>{{ version }}</string>
+
+		<key>LSMinimumSystemVersion</key>
+		<string>{{ minimum_system_version }}</string>
+
+		<!-- Permission usage descriptions from Dioxus.toml [permissions] section -->
+		{{#each permissions}}
+		<key>{{ this.key }}</key>
+		<string>{{ this.description }}</string>
+		{{/each}}
+
+		{{#if url_schemes}}
+		<!-- URL schemes from Dioxus.toml [deep_links] and [macos] sections -->
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					{{#each url_schemes}}
+					<string>{{ this }}</string>
+					{{/each}}
+				</array>
+			</dict>
+		</array>
+		{{/if}}
+
+		<!-- Additional plist entries from Dioxus.toml [macos.plist] section -->
+		{{{ plist_entries }}}
+
+		<!-- Raw plist XML from Dioxus.toml [macos.raw.info_plist] -->
+		{{{ raw_plist }}}
+	</dict>
+</plist>

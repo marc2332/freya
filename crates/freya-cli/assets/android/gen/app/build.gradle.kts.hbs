@@ -1,0 +1,77 @@
+plugins {
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    {{#each gradle_plugins}}
+    id("{{ this }}")
+    {{/each}}
+}
+
+android {
+    namespace="{{ application_id }}"
+    compileSdk = {{ compile_sdk }}
+    defaultConfig {
+        applicationId = "{{ application_id }}"
+        minSdk = {{ min_sdk }}
+        targetSdk = {{ target_sdk }}
+        versionCode = 1
+        versionName = "{{ version }}"
+    }
+    {{#if android_bundle}}
+    signingConfigs {
+        create("release") {
+            storeFile = file("../../../../../../../{{ android_bundle.jks_file }}")
+            storePassword = "{{ android_bundle.jks_password }}"
+            keyAlias = "{{ android_bundle.key_alias }}"
+            keyPassword = "{{ android_bundle.key_password }}"
+        }
+    }
+    {{/if}}
+    buildTypes {
+        getByName("debug") {
+            isDebuggable = true
+            isJniDebuggable = true
+            isMinifyEnabled = false
+            packaging {
+                jniLibs.keepDebugSymbols.add("*/arm64-v8a/*.so")
+                jniLibs.keepDebugSymbols.add("*/armeabi-v7a/*.so")
+                jniLibs.keepDebugSymbols.add("*/x86/*.so")
+                jniLibs.keepDebugSymbols.add("*/x86_64/*.so")
+            }
+        }
+        getByName("release") {
+            isMinifyEnabled = true
+            {{#if android_bundle}}
+            signingConfig = signingConfigs.getByName("release")
+            {{/if}}
+            proguardFiles(
+                *fileTree(".") { include("**/*.pro") }
+                    .plus(getDefaultProguardFile("proguard-android-optimize.txt"))
+                    .toList().toTypedArray()
+            )
+        }
+    }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    buildFeatures {
+        buildConfig = true
+    }
+    sourceSets {
+        getByName("main") {
+            java.srcDirs("src/main/kotlin", "src/main/java")
+        }
+    }
+}
+
+dependencies {
+    implementation("androidx.webkit:webkit:1.13.0")
+    implementation("androidx.appcompat:appcompat:1.7.1")
+    implementation("com.google.android.material:material:1.13.0")
+    {{#each gradle_dependencies}}
+    implementation("{{ this }}")
+    {{/each}}
+}
