@@ -18,6 +18,7 @@ plot = ["freya/plot"]
 [workspace]
 members = [
   "./crates/freya",
+  "./crates/freya-cli",
   "./crates/freya-core",
   "./crates/torin",
   "./crates/ragnarok",
@@ -27,6 +28,7 @@ members = [
   "./crates/freya-components",
   "./crates/pathgraph",
   "./crates/freya-animation",
+  "./crates/freya-hotreload",
   "./crates/freya-router",
   "./crates/freya-router-macro",
   "./crates/freya-testing",
