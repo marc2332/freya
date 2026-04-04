@@ -70,7 +70,7 @@ pub struct WindowConfig {
     pub(crate) resizable: bool,
     /// Icon for the Window.
     pub(crate) icon: Option<Icon>,
-    /// Application ID for the Window (used on Linux/Wayland/X11).
+    /// Application ID for the Window.
     pub(crate) app_id: Option<String>,
     /// Hook function called with the Window Attributes.
     pub(crate) window_attributes_hook: Option<WindowBuilderHook>,
@@ -190,10 +190,7 @@ impl WindowConfig {
         self
     }
 
-    /// Specify the application ID for the Window.
-    ///
-    /// On Linux (Wayland/X11), this sets the application ID which should match
-    /// the `.desktop` file distributed with your program.
+    /// Set the application ID for the Window, should match the `.desktop` file of your program.
     pub fn with_app_id(mut self, app_id: impl Into<String>) -> Self {
         self.app_id = Some(app_id.into());
         self
