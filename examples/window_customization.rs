@@ -16,6 +16,7 @@ fn main() {
                 .with_background(Color::TRANSPARENT)
                 .with_decorations(false)
                 .with_transparency(true)
+                .with_app_id("org.example.window_customization")
                 .with_window_attributes(move |attributes, el| {
                     // Centers the window
                     if let Some(monitor) = el

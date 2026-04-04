@@ -70,6 +70,8 @@ pub struct WindowConfig {
     pub(crate) resizable: bool,
     /// Icon for the Window.
     pub(crate) icon: Option<Icon>,
+    /// Application ID for the Window (used on Linux/Wayland/X11).
+    pub(crate) app_id: Option<String>,
     /// Hook function called with the Window Attributes.
     pub(crate) window_attributes_hook: Option<WindowBuilderHook>,
     /// Hook function called with the Window.
@@ -90,6 +92,7 @@ impl Debug for WindowConfig {
             .field("background", &self.background)
             .field("resizable", &self.resizable)
             .field("icon", &self.icon)
+            .field("app_id", &self.app_id)
             .finish()
     }
 }
@@ -117,6 +120,7 @@ impl WindowConfig {
             background: Color::WHITE,
             resizable: true,
             icon: None,
+            app_id: None,
             window_attributes_hook: None,
             window_handle_hook: None,
             on_close: None,
@@ -183,6 +187,15 @@ impl WindowConfig {
     /// ```
     pub fn with_icon(mut self, icon: Icon) -> Self {
         self.icon = Some(icon);
+        self
+    }
+
+    /// Specify the application ID for the Window.
+    ///
+    /// On Linux (Wayland/X11), this sets the application ID which should match
+    /// the `.desktop` file distributed with your program.
+    pub fn with_app_id(mut self, app_id: impl Into<String>) -> Self {
+        self.app_id = Some(app_id.into());
         self
     }
 
