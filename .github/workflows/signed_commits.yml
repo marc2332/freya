@@ -1,0 +1,12 @@
+name: Check Signed Commits
+
+on:
+  pull_request_target:
+
+jobs:
+  check-signed-commits:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check for unsigned commits
+      uses: 1Password/check-signed-commits-action@v1
