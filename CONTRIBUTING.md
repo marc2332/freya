@@ -2,6 +2,40 @@
 
 Hey! I hope this guide can help you contribute to Freya. If you simply have question or issues you can go to the [Discussions Tab](https://github.com/marc2332/freya/discussions) or the [Issues Tracker](https://github.com/marc2332/freya/issues).
 
+## Getting Started
+
+### Clone the Repository
+
+```sh
+git clone --recurse-submodules https://github.com/marc2332/freya.git
+cd freya
+```
+
+### Required Tools
+
+You will need the following tools installed:
+
+- [Rust](https://www.rust-lang.org/tools/install) (stable and nightly toolchains)
+- [just](https://github.com/casey/just) - Command runner
+- [taplo](https://taplo.tamasfe.dev/) - TOML formatter
+- [cargo-nextest](https://nexte.st/) - Test runner
+
+Install nightly Rust (required for formatting):
+```sh
+rustup toolchain install nightly-2026-03-15
+```
+
+Install `just`, `taplo` and `cargo-nextest`:
+```sh
+cargo install just taplo-cli cargo-nextest
+# or with binstall for faster installation:
+cargo binstall just taplo-cli cargo-nextest
+```
+
+### OS Dependencies
+
+See the [Development Setup](https://docs.rs/freya/latest/freya/_docs/development_setup/index.html) documentation for platform-specific dependencies (Linux packages, Windows Visual Studio, etc).
+
 ## Commands
 
 Running an example from the `/examples` folder:
