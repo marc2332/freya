@@ -23,6 +23,6 @@ skia-engine = ["freya-core/skia-engine"]
 freya-core = { workspace = true }
 freya-components = { workspace = true }
 freya-winit = { workspace = true }
-jni = "0.19.0"
+jni = "0.22"
 winit = { workspace = true }
 tracing = { workspace = true }
