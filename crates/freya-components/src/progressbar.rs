@@ -1,8 +1,8 @@
 use freya_animation::{
     easing::Function,
     hook::{
-        use_animation_transition,
         Ease,
+        use_animation_transition,
     },
     prelude::AnimNum,
 };
@@ -80,6 +80,9 @@ impl ProgressBar {
         self
     }
 
+    /// Shows the progress bar percentage label
+    ///
+    /// This is set to true by default
     pub fn show_progress(mut self, show_progress: bool) -> Self {
         self.show_progress = show_progress;
         self
