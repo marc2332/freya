@@ -18,6 +18,7 @@ workspace = true
 features = ["freya-core/mocked-engine"]
 
 [features]
+all = ["rust", "md", "json", "toml", "sql"]
 skia-engine = ["freya-core/skia-engine"]
 rust = ["dep:tree-sitter-rust"]
 md = ["dep:tree-sitter-md"]
