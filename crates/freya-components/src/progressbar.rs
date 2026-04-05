@@ -126,8 +126,8 @@ impl Component for ProgressBar {
                     .height(Size::fill())
                     .corner_radius(99.)
                     .background(progressbar_theme.progress_background)
-                    .maybe(self.show_progress, |r| {
-                        r.child(
+                    .maybe(self.show_progress, |el| {
+                        el.child(
                             label()
                                 .width(Size::fill())
                                 .color(progressbar_theme.color)
