@@ -215,7 +215,10 @@ impl ElementExt for SvgElement {
             let mut root = svg_dom.root();
             match self.layout.width {
                 Size::Pixels(px) => {
-                    root.set_width(svg::Length::new(px.get(), svg::LengthUnit::PX));
+                    root.set_width(svg::Length::new(
+                        px.get() * context.scale_factor as f32,
+                        svg::LengthUnit::PX,
+                    ));
                 }
                 Size::Percentage(per) => {
                     root.set_width(svg::Length::new(per.get(), svg::LengthUnit::Percentage));
@@ -227,7 +230,10 @@ impl ElementExt for SvgElement {
             }
             match self.layout.height {
                 Size::Pixels(px) => {
-                    root.set_height(svg::Length::new(px.get(), svg::LengthUnit::PX));
+                    root.set_height(svg::Length::new(
+                        px.get() * context.scale_factor as f32,
+                        svg::LengthUnit::PX,
+                    ));
                 }
                 Size::Percentage(per) => {
                     root.set_height(svg::Length::new(per.get(), svg::LengthUnit::Percentage));
@@ -276,9 +282,6 @@ impl ElementExt for SvgElement {
         context
             .canvas
             .translate(context.layout_node.visible_area().origin.to_tuple());
-        context
-            .canvas
-            .scale((context.scale_factor as f32, context.scale_factor as f32));
 
         root.set_color(self.color.into());
         if let Some(fill) = self.fill {

@@ -80,6 +80,9 @@ impl ProgressBar {
         self
     }
 
+    /// Shows the progress bar percentage label
+    ///
+    /// This is set to true by default
     pub fn show_progress(mut self, show_progress: bool) -> Self {
         self.show_progress = show_progress;
         self
@@ -123,14 +126,16 @@ impl Component for ProgressBar {
                     .height(Size::fill())
                     .corner_radius(99.)
                     .background(progressbar_theme.progress_background)
-                    .child(
-                        label()
-                            .width(Size::fill())
-                            .color(progressbar_theme.color)
-                            .text_align(TextAlign::Center)
-                            .text(format!("{}%", self.progress))
-                            .max_lines(1),
-                    ),
+                    .maybe(self.show_progress, |el| {
+                        el.child(
+                            label()
+                                .width(Size::fill())
+                                .color(progressbar_theme.color)
+                                .text_align(TextAlign::Center)
+                                .text(format!("{}%", self.progress))
+                                .max_lines(1),
+                        )
+                    }),
             )
     }
 

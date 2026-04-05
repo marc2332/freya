@@ -95,6 +95,12 @@ impl Drop for InnerOwnedTaskHandle {
 #[derive(Clone)]
 pub struct OwnedTaskHandle(Rc<InnerOwnedTaskHandle>);
 
+impl PartialEq for OwnedTaskHandle {
+    fn eq(&self, other: &Self) -> bool {
+        Rc::ptr_eq(&self.0, &other.0)
+    }
+}
+
 impl OwnedTaskHandle {
     pub fn cancel(&self) {
         self.0.0.cancel();
