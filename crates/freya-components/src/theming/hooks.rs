@@ -1,7 +1,13 @@
 use freya_core::{
     prelude::{
-        Readable, State, WritableUtils, provide_context, provide_context_for_scope_id,
-        try_consume_context, use_consume, use_hook,
+        Readable,
+        State,
+        WritableUtils,
+        provide_context,
+        provide_context_for_scope_id,
+        try_consume_context,
+        use_consume,
+        use_hook,
     },
     scope_id::ScopeId,
 };
