@@ -309,7 +309,7 @@ impl Component for Calendar {
             };
 
             CalendarDay::new()
-                .key(day)
+                .key(i)
                 .day(day)
                 .background(bg)
                 .hover_background(hover_bg)
