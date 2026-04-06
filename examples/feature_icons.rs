@@ -17,6 +17,7 @@ fn app() -> impl IntoElement {
         .main_align(Alignment::SpaceEvenly)
         .cross_align(Alignment::Center)
         .expanded()
+        .color(Color::GREEN)
         .child(
             svg(icons::lucide::antenna())
                 .theme_accent_color()
@@ -27,6 +28,11 @@ fn app() -> impl IntoElement {
             svg(icons::lucide::shield())
                 .color((120, 50, 255))
                 .stroke_width(4.0)
+                .width(Size::px(100.))
+                .height(Size::px(100.)),
+        )
+        .child(
+            svg(icons::lucide::settings())
                 .width(Size::px(100.))
                 .height(Size::px(100.)),
         )

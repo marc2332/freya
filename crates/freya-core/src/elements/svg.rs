@@ -105,7 +105,7 @@ pub fn svg(bytes: impl Into<SvgBytes>) -> Svg {
             event_handlers: HashMap::default(),
             bytes: bytes.into(),
             effect: None,
-            color: Color::BLACK,
+            color: None,
             stroke: None,
             stroke_width: None,
             fill: None,
@@ -120,7 +120,7 @@ pub struct SvgElement {
     pub layout: LayoutData,
     pub event_handlers: FxHashMap<EventName, EventHandlerType>,
     pub bytes: SvgBytes,
-    pub color: Color,
+    pub color: Option<Color>,
     pub stroke: Option<Color>,
     pub stroke_width: Option<f32>,
     pub fill: Option<Color>,
@@ -283,7 +283,7 @@ impl ElementExt for SvgElement {
             .canvas
             .translate(context.layout_node.visible_area().origin.to_tuple());
 
-        root.set_color(self.color.into());
+        root.set_color(self.color.unwrap_or(context.text_style_state.color).into());
         if let Some(fill) = self.fill {
             root.set_fill(svg::Paint::from_color(fill.into()));
         }
@@ -353,7 +353,7 @@ impl Svg {
     }
 
     pub fn color(mut self, color: impl Into<Color>) -> Self {
-        self.element.color = color.into();
+        self.element.color = Some(color.into());
         self
     }
 
