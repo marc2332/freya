@@ -1,12 +1,7 @@
 use freya_core::{
     prelude::{
-        Readable,
-        State,
-        provide_context,
-        provide_context_for_scope_id,
-        try_consume_context,
-        use_consume,
-        use_hook,
+        Readable, State, provide_context, provide_context_for_scope_id, try_consume_context,
+        use_consume, use_hook,
     },
     scope_id::ScopeId,
 };
@@ -17,7 +12,8 @@ use crate::theming::component_themes::Theme;
 /// If a [`Theme`] context already exists, it reuses it instead of creating a new one.
 pub fn use_init_theme(theme_cb: impl FnOnce() -> Theme) -> State<Theme> {
     use_hook(|| {
-        if let Some(existing) = try_consume_context::<State<Theme>>() {
+        if let Some(mut existing) = try_consume_context::<State<Theme>>() {
+            existing.set(theme_cb());
             existing
         } else {
             let state = State::create(theme_cb());
