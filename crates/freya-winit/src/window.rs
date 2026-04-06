@@ -142,6 +142,11 @@ impl AppWindow {
             window_attributes =
                 window_attributes.with_max_inner_size(LogicalSize::<f64>::from(max_size));
         }
+        #[cfg(target_os = "linux")]
+        if let Some(app_id) = window_config.app_id.take() {
+            use winit::platform::wayland::WindowAttributesExtWayland;
+            window_attributes = window_attributes.with_name(&app_id, &app_id);
+        }
         if let Some(window_attributes_hook) = window_config.window_attributes_hook.take() {
             window_attributes = window_attributes_hook(window_attributes, active_event_loop);
         }
@@ -157,7 +162,13 @@ impl AppWindow {
         let (events_sender, events_receiver) = futures_channel::mpsc::unbounded();
 
         let app = window_config.app.clone();
-        let mut runner = Runner::new(move || integration(app.clone()).into_element());
+        let mut runner = Runner::new({
+            let plugins = plugins.clone();
+            move || {
+                let el = integration(app.clone()).into_element();
+                plugins.wrap_root(el)
+            }
+        });
 
         runner.provide_root_context(|| screen_reader);
 

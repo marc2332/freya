@@ -4,6 +4,7 @@ use std::{
 };
 
 use crate::{
+    lifecycle::writable_utils::WritableUtils,
     prelude::{
         ReadRef,
         State,
@@ -106,10 +107,12 @@ impl<T: 'static + PartialEq> Memo<T> {
         Memo { state }
     }
 
+    #[track_caller]
     pub fn read(&self) -> ReadRef<'static, T> {
         self.state.read()
     }
 
+    #[track_caller]
     pub fn peek(&self) -> ReadRef<'static, T> {
         self.state.peek()
     }

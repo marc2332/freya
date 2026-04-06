@@ -7,13 +7,24 @@ use torin::{
 };
 
 use crate::{
+    define_theme,
     get_theme,
     icons::arrow::ArrowIcon,
-    theming::component_themes::{
-        TableTheme,
-        TableThemePartial,
-    },
 };
+
+define_theme! {
+    %[component]
+    pub Table {
+        %[fields]
+        background: Color,
+        arrow_fill: Color,
+        hover_row_background: Color,
+        row_background: Color,
+        divider_fill: Color,
+        corner_radius: CornerRadius,
+        color: Color,
+    }
+}
 
 #[derive(Clone, Copy, PartialEq, Default)]
 pub enum OrderDirection {
@@ -45,7 +56,8 @@ impl KeyExt for TableArrow {
 
 impl Component for TableArrow {
     fn render(&self) -> impl IntoElement {
-        let TableTheme { arrow_fill, .. } = get_theme!(None::<TableThemePartial>, table);
+        let TableTheme { arrow_fill, .. } =
+            get_theme!(None::<TableThemePartial>, TableThemePreference, "table");
         let rotate = match self.order_direction {
             OrderDirection::Down => 0.,
             OrderDirection::Up => 180.,
@@ -159,7 +171,7 @@ impl KeyExt for TableRow {
 
 impl Component for TableRow {
     fn render(&self) -> impl IntoElement {
-        let theme = get_theme!(&self.theme, table);
+        let theme = get_theme!(&self.theme, TableThemePreference, "table");
         let config = use_try_consume::<TableConfig>().unwrap_or_default();
         let mut state = use_state(|| TableRowState::Idle);
         let TableTheme {
@@ -435,7 +447,7 @@ impl Component for Table {
             divider_fill,
             color,
             ..
-        } = get_theme!(&self.theme, table);
+        } = get_theme!(&self.theme, TableThemePreference, "table");
 
         let config = match &self.column_widths {
             Some(widths) => TableConfig::with_column_widths(widths.clone()),

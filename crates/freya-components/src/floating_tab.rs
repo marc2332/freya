@@ -1,13 +1,28 @@
 use freya_core::prelude::*;
+use torin::{
+    gaps::Gaps,
+    size::Size,
+};
 
 use crate::{
     activable_route_context::use_activable_route,
+    define_theme,
     get_theme,
-    theming::component_themes::{
-        FloatingTabTheme,
-        FloatingTabThemePartial,
-    },
 };
+
+define_theme! {
+    %[component]
+    pub FloatingTab {
+        %[fields]
+        background: Color,
+        hover_background: Color,
+        width: Size,
+        height: Size,
+        padding: Gaps,
+        color: Color,
+        corner_radius: CornerRadius,
+    }
+}
 
 /// Current status of the Tab.
 #[derive(Debug, Default, PartialEq, Clone, Copy)]
@@ -107,7 +122,7 @@ impl Component for FloatingTab {
             height,
             color,
             corner_radius,
-        } = get_theme!(&self.theme, floating_tab);
+        } = get_theme!(&self.theme, FloatingTabThemePreference, "floating_tab");
 
         let on_pointer_enter = move |_| {
             Cursor::set(CursorIcon::Pointer);

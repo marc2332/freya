@@ -2,9 +2,20 @@ use freya_core::prelude::*;
 use torin::prelude::*;
 
 use crate::{
+    define_theme,
     get_theme,
-    theming::component_themes::SliderThemePartial,
 };
+
+define_theme! {
+    %[component]
+    pub Slider {
+        %[fields]
+        background: Color,
+        thumb_background: Color,
+        thumb_inner_background: Color,
+        border_fill: Color,
+    }
+}
 
 /// Slider component.
 ///
@@ -88,7 +99,7 @@ impl Slider {
 
 impl Component for Slider {
     fn render(&self) -> impl IntoElement {
-        let theme = get_theme!(&self.theme, slider);
+        let theme = get_theme!(&self.theme, SliderThemePreference, "slider");
         let focus = use_focus();
         let focus_status = use_focus_status(focus);
         let mut hovering = use_state(|| false);
@@ -169,10 +180,9 @@ impl Component for Slider {
             clicking.set(false);
         };
 
-        let on_capture_global_pointer_move = move |e: Event<PointerEventData>| {
+        let on_global_pointer_move = move |e: Event<PointerEventData>| {
+            e.stop_propagation();
             if *clicking.peek() {
-                e.stop_propagation();
-                e.prevent_default();
                 let coordinates = e.global_location();
                 on_moved.call(calc_percentage(
                     coordinates.x - size.read().min_x() as f64,
@@ -262,7 +272,7 @@ impl Component for Slider {
             .maybe(self.enabled, |rect| {
                 rect.on_key_down(on_key_down)
                     .on_pointer_down(on_pointer_down)
-                    .on_capture_global_pointer_move(on_capture_global_pointer_move)
+                    .on_global_pointer_move(on_global_pointer_move)
                     .on_global_pointer_press(on_global_pointer_press)
             })
             .on_pointer_enter(on_pointer_enter)

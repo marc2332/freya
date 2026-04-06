@@ -17,6 +17,7 @@ mod accessibility;
 pub mod config;
 mod drivers;
 pub mod extensions;
+pub mod integration;
 pub mod plugins;
 pub mod renderer;
 #[cfg(feature = "tray")]

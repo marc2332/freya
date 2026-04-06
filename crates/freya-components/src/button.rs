@@ -1,13 +1,43 @@
 use freya_core::prelude::*;
+use torin::{
+    gaps::Gaps,
+    size::Size,
+};
 
 use crate::{
+    define_theme,
     get_theme,
-    theming::component_themes::{
-        ButtonColorsThemePartial,
-        ButtonLayoutThemePartial,
-        ButtonLayoutThemePartialExt,
-    },
 };
+
+define_theme! {
+    for = Button;
+    theme_field = theme_layout;
+
+    %[component]
+    pub ButtonLayout {
+        %[fields]
+        margin: Gaps,
+        corner_radius: CornerRadius,
+        width: Size,
+        height: Size,
+        padding: Gaps,
+    }
+}
+
+define_theme! {
+    for = Button;
+    theme_field = theme_colors;
+
+    %[component]
+    pub ButtonColors {
+        %[fields]
+        background: Color,
+        hover_background: Color,
+        border_fill: Color,
+        focus_border_fill: Color,
+        color: Color,
+    }
+}
 
 #[derive(Clone, PartialEq)]
 pub enum ButtonStyleVariant {
@@ -252,15 +282,41 @@ impl Component for Button {
         });
 
         let theme_colors = match self.style_variant {
-            ButtonStyleVariant::Normal => get_theme!(&self.theme_colors, button),
-            ButtonStyleVariant::Outline => get_theme!(&self.theme_colors, outline_button),
-            ButtonStyleVariant::Filled => get_theme!(&self.theme_colors, filled_button),
-            ButtonStyleVariant::Flat => get_theme!(&self.theme_colors, flat_button),
+            ButtonStyleVariant::Normal => {
+                get_theme!(&self.theme_colors, ButtonColorsThemePreference, "button")
+            }
+            ButtonStyleVariant::Outline => get_theme!(
+                &self.theme_colors,
+                ButtonColorsThemePreference,
+                "outline_button"
+            ),
+            ButtonStyleVariant::Filled => get_theme!(
+                &self.theme_colors,
+                ButtonColorsThemePreference,
+                "filled_button"
+            ),
+            ButtonStyleVariant::Flat => get_theme!(
+                &self.theme_colors,
+                ButtonColorsThemePreference,
+                "flat_button"
+            ),
         };
         let theme_layout = match self.layout_variant {
-            ButtonLayoutVariant::Normal => get_theme!(&self.theme_layout, button_layout),
-            ButtonLayoutVariant::Compact => get_theme!(&self.theme_layout, compact_button_layout),
-            ButtonLayoutVariant::Expanded => get_theme!(&self.theme_layout, expanded_button_layout),
+            ButtonLayoutVariant::Normal => get_theme!(
+                &self.theme_layout,
+                ButtonLayoutThemePreference,
+                "button_layout"
+            ),
+            ButtonLayoutVariant::Compact => get_theme!(
+                &self.theme_layout,
+                ButtonLayoutThemePreference,
+                "compact_button_layout"
+            ),
+            ButtonLayoutVariant::Expanded => get_theme!(
+                &self.theme_layout,
+                ButtonLayoutThemePreference,
+                "expanded_button_layout"
+            ),
         };
 
         let border = if focus_status() == FocusStatus::Keyboard {

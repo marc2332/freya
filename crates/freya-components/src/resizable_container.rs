@@ -11,12 +11,19 @@ use torin::{
 };
 
 use crate::{
+    define_theme,
     get_theme,
-    theming::component_themes::{
-        ResizableHandleTheme,
-        ResizableHandleThemePartial,
-    },
 };
+
+define_theme! {
+    %[component]
+    pub ResizableHandle {
+        %[fields]
+        background: Color,
+        hover_background: Color,
+        corner_radius: CornerRadius,
+    }
+}
 
 /// Sizing mode for a resizable panel.
 #[derive(PartialEq, Clone, Copy, Debug)]
@@ -463,7 +470,11 @@ impl Component for ResizableHandle {
             background,
             hover_background,
             corner_radius,
-        } = get_theme!(&self.theme, resizable_handle);
+        } = get_theme!(
+            &self.theme,
+            ResizableHandleThemePreference,
+            "resizable_handle"
+        );
         let mut size = use_state(Area::default);
         let mut clicking = use_state(|| false);
         let mut status = use_state(HandleStatus::default);

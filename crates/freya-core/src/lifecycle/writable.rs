@@ -95,22 +95,26 @@ impl<T: 'static> Writable<T> {
     }
 
     /// Read the value and subscribe to changes.
+    #[track_caller]
     pub fn read(&self) -> ReadRef<'static, T> {
         self.subscribe();
         self.peek()
     }
 
     /// Read the value without subscribing.
+    #[track_caller]
     pub fn peek(&self) -> ReadRef<'static, T> {
         (self.peek_fn)()
     }
 
     /// Write the value and notify subscribers.
+    #[track_caller]
     pub fn write(&mut self) -> WriteRef<'static, T> {
         self.notify();
         (self.write_fn)()
     }
 
+    #[track_caller]
     pub fn write_if(&mut self, with: impl FnOnce(WriteRef<'static, T>) -> bool) -> bool {
         let changed = with((self.write_fn)());
         if changed {

@@ -65,12 +65,6 @@ bindings:
 dev-app:
     cargo run --package freya-devtools-app
 
-setup:
-    cargo install cargo-binstall
-    cargo binstall taplo-cli
-    cargo install cargo-nextest
-    git submodule update --recursive --remote
-
 run-examples:
     for ex_file in examples/*.rs; do \
         ex=$(basename "$ex_file" .rs); \

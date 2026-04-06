@@ -60,6 +60,7 @@ use crate::{
         WindowConfig,
     },
     drivers::GraphicsDriver,
+    integration::is_ime_role,
     plugins::{
         PluginEvent,
         PluginHandle,
@@ -73,27 +74,6 @@ use crate::{
         map_winit_touch_phase,
     },
 };
-
-/// Returns `true` for accessibility roles that require IME input (text fields, terminals, etc.).
-fn is_ime_role(role: AccessibilityRole) -> bool {
-    matches!(
-        role,
-        AccessibilityRole::TextInput
-            | AccessibilityRole::MultilineTextInput
-            | AccessibilityRole::PasswordInput
-            | AccessibilityRole::SearchInput
-            | AccessibilityRole::DateInput
-            | AccessibilityRole::DateTimeInput
-            | AccessibilityRole::WeekInput
-            | AccessibilityRole::MonthInput
-            | AccessibilityRole::TimeInput
-            | AccessibilityRole::EmailInput
-            | AccessibilityRole::NumberInput
-            | AccessibilityRole::PhoneNumberInput
-            | AccessibilityRole::UrlInput
-            | AccessibilityRole::Terminal
-    )
-}
 
 pub struct WinitRenderer {
     pub windows_configs: Vec<WindowConfig>,
@@ -755,7 +735,10 @@ impl ApplicationHandler<NativeEvent> for WinitRenderer {
                     app.modifiers_state = modifiers.state();
                 }
                 WindowEvent::Focused(is_focused) => {
-                    app.just_focused = is_focused;
+                    if cfg!(not(target_os = "android")) {
+                        // The focused workaround is only for desktop targets
+                        app.just_focused = is_focused;
+                    }
                 }
                 WindowEvent::RedrawRequested => {
                     hotpath::measure_block!("RedrawRequested", {
